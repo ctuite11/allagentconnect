@@ -774,18 +774,23 @@ const ListingCard = ({
     const totalPhotos = getTotalPhotos();
     const compactPhotoUrl = compactAgentOwned ? getPhotoByIndex(0) : getPhotoByIndex(currentPhotoIndex);
     const showCarouselArrows = !compactAgentOwned && totalPhotos > 1;
-    /** Agent viewing buyer hot-sheet saves: read-only filled heart (not `FavoriteButton`). */
+    const showRemovableBuyerFavoriteHeart = compactSavedHeartOverlay;
+    /** Agent hot-sheet activity: read-only filled heart when buyer saved the listing. */
     const showHotSheetFavoriteHeart =
       isHotSheetFavorite === true && hideCompactFavorite && !compactSavedHeartOverlay;
+    const showInteractiveFavoriteButton =
+      !hideCompactFavorite && !suppressFavoriteHeartChrome && !compactSavedHeartOverlay;
+    const showHotSheetFavoriteBadge =
+      isHotSheetFavorite === true && !hideCompactFavorite && !compactSavedHeartOverlay;
 
     const showFavoriteChrome =
+      showRemovableBuyerFavoriteHeart ||
       showHotSheetFavoriteHeart ||
-      compactSavedHeartOverlay ||
-      (!suppressFavoriteHeartChrome && (isHotSheetFavorite || !hideCompactFavorite));
+      showInteractiveFavoriteButton ||
+      showHotSheetFavoriteBadge;
 
     const showCompactTopChromeRow =
-      !compactAgentOwned &&
-      (Boolean(onSelect) || showFavoriteChrome);
+      !compactAgentOwned && (Boolean(onSelect) || showFavoriteChrome);
 
     return <Card
         className={cn(
@@ -836,7 +841,7 @@ const ListingCard = ({
                   </div>
                 ) : null}
               </div>
-              {(showFavoriteChrome || compactSavedHeartOverlay) && (
+              {showFavoriteChrome ? (
                 <div
                   className="pointer-events-auto flex h-9 min-w-0 max-w-[calc(100%-3.5rem)] items-center justify-end gap-1"
                   onClick={(e) => e.stopPropagation()}
@@ -853,12 +858,12 @@ const ListingCard = ({
                       />
                     </span>
                   ) : null}
-                  {isHotSheetFavorite && !hideCompactFavorite ? (
+                  {showHotSheetFavoriteBadge ? (
                     <span className="inline-flex h-9 shrink-0 items-center justify-center" title="Favorited on hot sheet">
                       <Heart className="h-[22px] w-[22px] fill-[#FF2D55] text-[#FF2D55] stroke-[#FF2D55]" aria-hidden strokeWidth={1.5} />
                     </span>
                   ) : null}
-                  {compactSavedHeartOverlay ? (
+                  {showRemovableBuyerFavoriteHeart ? (
                     onCompactSavedHeartClick ? (
                       <button
                         type="button"
@@ -885,7 +890,7 @@ const ListingCard = ({
                       </span>
                     )
                   ) : null}
-                  {!hideCompactFavorite && showFavoriteChrome ? (
+                  {showInteractiveFavoriteButton ? (
                     <FavoriteButton
                       listingId={listing.id}
                       size="icon"
@@ -894,7 +899,7 @@ const ListingCard = ({
                     />
                   ) : null}
                 </div>
-              )}
+              ) : null}
             </div>
           ) : null}
           {/* Neighborhood overlay — property type lives in content stack below price. */}
@@ -1032,6 +1037,24 @@ const ListingCard = ({
             </p>
           ) : null}
 
+          <div
+            className={cn(
+              "flex w-full flex-col",
+              (showCompactCommentsRow ||
+                showUnifiedAttributionFooter ||
+                interestSignals) &&
+                "mt-auto",
+            )}
+          >
+          {showUnifiedAttributionFooter ? (
+            <ListingCardAttributionStrip
+              brokerageName={brokerageAttribution}
+              contact={resolvedListingAgentContact}
+              defaultSubject={resolvedListingEmailSubject}
+              className="mt-1"
+            />
+          ) : null}
+
           {interestSignals ? (
             <div className="w-full pt-1">
               <ListingInterestSignals
@@ -1042,12 +1065,6 @@ const ListingCard = ({
             </div>
           ) : null}
 
-          <div
-            className={cn(
-              "flex w-full flex-col",
-              (showCompactCommentsRow || showUnifiedAttributionFooter) && "mt-auto",
-            )}
-          >
           {/* Comment row — minimal on Favorites / hot-sheet grids; legacy row if agent attribution without buyer flag */}
           {showCompactCommentsRow && (
             <div
@@ -1057,7 +1074,10 @@ const ListingCard = ({
                 showCompactComments
                   ? cn(
                       "mt-2 w-full",
-                      (compactListedByMessageSeparator || onOpenChat) &&
+                      (compactListedByMessageSeparator ||
+                        onOpenChat ||
+                        showUnifiedAttributionFooter ||
+                        interestSignals) &&
                         "border-t border-neutral-200 pt-2.5",
                       onOpenChat && showCompactComments && "cursor-pointer",
                     )
@@ -1168,15 +1188,6 @@ const ListingCard = ({
               )}
             </div>
           )}
-
-          {showUnifiedAttributionFooter ? (
-            <ListingCardAttributionStrip
-              brokerageName={brokerageAttribution}
-              contact={resolvedListingAgentContact}
-              defaultSubject={resolvedListingEmailSubject}
-              className="mt-1"
-            />
-          ) : null}
           </div>
           
           {showActions && (listing.status === 'active' || listing.status === 'coming_soon') && (
