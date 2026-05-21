@@ -16,7 +16,7 @@ import {
   type ListingCardModel,
 } from "@/components/success-hub/listingCardAdapter";
 import type { ListedByAgentProfile } from "@/lib/listingListedBy";
-import { listingRowForAgentSplitMapCompact, type AgentSplitListing } from "@/lib/agentSplitResults";
+import type { AgentSplitListing } from "@/lib/agentSplitResults";
 import { removeBuyerFavoriteForAgent } from "@/lib/removeBuyerFavoriteForAgent";
 
 function titleCaseToken(term: string): string {
@@ -375,7 +375,7 @@ export default function AgentClientFavorites() {
 
         return (
           <SuccessHubListingCard
-            listing={listingRowForAgentSplitMapCompact(cardListing)}
+            listing={cardListing}
             hideCompactFavorite
             compactSavedHeartOverlay
             compactListedByMessageSeparator

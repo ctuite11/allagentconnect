@@ -779,7 +779,7 @@ const ListingCard = ({
 
     const showCompactTopChromeRow =
       !compactAgentOwned &&
-      (Boolean(onSelect) || showFavoriteChrome || !compactSavedHeartOverlay);
+      (Boolean(onSelect) || showFavoriteChrome || compactSavedHeartOverlay);
 
     return <Card
         className={cn(
@@ -830,7 +830,7 @@ const ListingCard = ({
                   </div>
                 ) : null}
               </div>
-              {showFavoriteChrome && (
+              {(showFavoriteChrome || compactSavedHeartOverlay) && (
                 <div
                   className="pointer-events-auto flex h-9 min-w-0 max-w-[calc(100%-3.5rem)] items-center justify-end gap-1"
                   onClick={(e) => e.stopPropagation()}
@@ -840,14 +840,41 @@ const ListingCard = ({
                       <Heart className="h-[22px] w-[22px] fill-[#FF2D55] text-[#FF2D55] stroke-[#FF2D55]" aria-hidden strokeWidth={1.5} />
                     </span>
                   )}
-                  {!hideCompactFavorite && (
+                  {compactSavedHeartOverlay ? (
+                    onCompactSavedHeartClick ? (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onCompactSavedHeartClick();
+                        }}
+                        className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-0 bg-transparent p-0 shadow-none outline-none transition-transform hover:scale-105 focus-visible:ring-2 focus-visible:ring-white/35"
+                        aria-label="Remove from favorites"
+                      >
+                        <Heart
+                          className="h-[22px] w-[22px] fill-[#FF2D55] stroke-white [stroke-width:2.25px] [paint-order:stroke_fill]"
+                          strokeWidth={2.25}
+                          aria-hidden
+                        />
+                      </button>
+                    ) : (
+                      <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center" aria-hidden>
+                        <Heart
+                          className="h-[22px] w-[22px] fill-[#FF2D55] stroke-white [stroke-width:2.25px] [paint-order:stroke_fill]"
+                          strokeWidth={2.25}
+                          aria-hidden
+                        />
+                      </span>
+                    )
+                  ) : null}
+                  {!hideCompactFavorite && showFavoriteChrome ? (
                     <FavoriteButton
                       listingId={listing.id}
                       size="icon"
                       photoIcon
                       hideTooltip={hideFavoriteTooltip}
                     />
-                  )}
+                  ) : null}
                 </div>
               )}
             </div>
@@ -894,33 +921,6 @@ const ListingCard = ({
             ) : (
               <div className="h-full w-full bg-zinc-50" aria-hidden />
             )}
-            {compactSavedHeartOverlay ? (
-              onCompactSavedHeartClick ? (
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onCompactSavedHeartClick();
-                  }}
-                  className="absolute right-2 top-2 z-20 inline-flex h-9 w-9 items-center justify-center rounded-full border-0 bg-transparent p-0 shadow-none outline-none transition-transform hover:scale-105 focus-visible:ring-2 focus-visible:ring-white/35"
-                  aria-label="Remove from favorites"
-                >
-                  <Heart
-                    className="h-[22px] w-[22px] fill-[#FF2D55] stroke-white [stroke-width:2.25px] [paint-order:stroke_fill]"
-                    strokeWidth={2.25}
-                    aria-hidden
-                  />
-                </button>
-              ) : (
-                <div className="pointer-events-none absolute right-2 top-2 z-20" aria-hidden>
-                  <Heart
-                    className="h-[22px] w-[22px] fill-[#FF2D55] stroke-white [stroke-width:2.25px] [paint-order:stroke_fill]"
-                    strokeWidth={2.25}
-                    aria-hidden
-                  />
-                </div>
-              )
-            ) : null}
           </div>
           
           {/* Status Change Banner (top priority) */}
@@ -998,20 +998,14 @@ const ListingCard = ({
             ) : null}
           </div>
 
-          {!showUnifiedAttributionFooter && (compactAgentOwned ? false : isFavorites) ? (
-            <div className="mt-1">
-              {listedByAttribution ? (
-                <p
-                  className="truncate text-[11px] font-normal leading-snug text-neutral-500"
-                  title={listedByAttribution}
-                >
-                  {listedByAttribution}
-                </p>
-              ) : (
-                <div className="h-[14px]" aria-hidden />
-              )}
-            </div>
-          ) : !showUnifiedAttributionFooter && listedByAttribution ? (
+          {!showUnifiedAttributionFooter && (compactAgentOwned ? false : isFavorites) && listedByAttribution ? (
+            <p
+              className="mt-1 truncate text-[11px] font-normal leading-snug text-neutral-500"
+              title={listedByAttribution}
+            >
+              {listedByAttribution}
+            </p>
+          ) : !showUnifiedAttributionFooter && !isFavorites && listedByAttribution ? (
             <p
               className="mt-1 truncate text-[11px] font-normal leading-snug text-neutral-500"
               title={listedByAttribution}
@@ -1020,6 +1014,22 @@ const ListingCard = ({
             </p>
           ) : null}
 
+          {interestSignals ? (
+            <div className="w-full pt-1">
+              <ListingInterestSignals
+                savesCount={interestSignals.saves_count}
+                commentsCount={interestSignals.comments_count}
+                hotsheetMatchCount={interestSignals.hotsheet_match_count}
+              />
+            </div>
+          ) : null}
+
+          <div
+            className={cn(
+              "flex w-full flex-col",
+              (showCompactCommentsRow || showUnifiedAttributionFooter) && "mt-auto",
+            )}
+          >
           {/* Comment row — minimal on Favorites / hot-sheet grids; legacy row if agent attribution without buyer flag */}
           {showCompactCommentsRow && (
             <div
@@ -1141,17 +1151,6 @@ const ListingCard = ({
             </div>
           )}
 
-          {/* Interest Signals row */}
-          {interestSignals && (
-            <div className="w-full pt-1">
-              <ListingInterestSignals
-                savesCount={interestSignals.saves_count}
-                commentsCount={interestSignals.comments_count}
-                hotsheetMatchCount={interestSignals.hotsheet_match_count}
-              />
-            </div>
-          )}
-
           {showUnifiedAttributionFooter ? (
             <ListingCardAttributionStrip
               brokerageName={brokerageAttribution}
@@ -1160,6 +1159,7 @@ const ListingCard = ({
               className="mt-1"
             />
           ) : null}
+          </div>
           
           {showActions && (listing.status === 'active' || listing.status === 'coming_soon') && (
             <div className="pt-2 border-t mt-2 space-y-2">
