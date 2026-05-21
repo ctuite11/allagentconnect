@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import PropertyMap from "@/components/PropertyMap";
+import { formatListingShareEmailStreetLine } from "@/lib/buildHotSheetShareEmailHtml";
 import {
   type ListingRecord,
   type AgentOfficeRecord,
@@ -45,6 +46,7 @@ import { ArrowLeft, MapPin, Heart } from "lucide-react";
 import { AacBackButton } from "@/components/layout/AacBackLink";
 import { AacPageIntro } from "@/components/layout/AacPageIntro";
 import { toast } from "sonner";
+import { BulkShareListingsDialog } from "@/components/BulkShareListingsDialog";
 import { buyerFavoritesSplitPane } from "@/lib/buyerUi";
 import type { ListedByAgentProfile } from "@/lib/listingListedBy";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -55,6 +57,8 @@ interface Listing {
   city: string;
   state: string;
   zip_code: string;
+  unit_number?: string | null;
+  condo_details?: unknown;
   price: number;
   price_range_min?: number | null;
   price_range_max?: number | null;
@@ -492,6 +496,30 @@ const Favorites = ({
     return sortedFavoritesWithListing.filter((fav) => selectedFavoriteIds.has(fav.id));
   }, [buyerMode, displayFavorites, sortedFavoritesWithListing, sessionKeptListingIds, selectedFavoriteIds]);
 
+  const favoriteListingIdsForShare = useMemo(
+    () =>
+      favoritesForShare
+        .map((f) => normalizeEmbeddedListing(f)?.id)
+        .filter((id): id is string => Boolean(id)),
+    [favoritesForShare],
+  );
+
+  const clearShareSelection = useCallback(() => {
+    if (buyerMode) {
+      const sharedSet = new Set(favoriteListingIdsForShare);
+      setSessionKeptListingIds((prev) => {
+        const next = new Set(prev);
+        sharedSet.forEach((id) => next.delete(id));
+        return next;
+      });
+    } else {
+      setSelectedFavoriteIds(new Set());
+    }
+  }, [buyerMode, favoriteListingIdsForShare]);
+
+  const buyerFavoritesShareTriggerClass =
+    "h-7 gap-0 whitespace-nowrap rounded-md border border-neutral-200 bg-white px-2.5 text-xs font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:border-neutral-300 hover:bg-neutral-50/90 disabled:pointer-events-none disabled:opacity-40 [&_svg]:mr-1 [&_svg]:!h-3 [&_svg]:!w-3 [&_svg]:text-neutral-600";
+
   const listingRowsForMap: Favorite[] = useMemo(
     () => (buyerMode ? displayFavorites : sortedFavoritesWithListing),
     [buyerMode, displayFavorites, sortedFavoritesWithListing],
@@ -700,7 +728,7 @@ const Favorites = ({
             .map((listing) => {
               const listingUrl = `${window.location.origin}/consumer-property/${listing.id}`;
               const price = listing.price ? `$${listing.price.toLocaleString()}` : "Price unavailable";
-              const address = escapeHtml(listing.address || "Address unavailable");
+              const address = escapeHtml(formatListingShareEmailStreetLine(listing));
               const cityStateZip = escapeHtml(
                 `${listing.city || ""}, ${listing.state || ""} ${listing.zip_code || ""}`.trim(),
               );
@@ -730,7 +758,11 @@ const Favorites = ({
             .map((listing) => {
               const listingUrl = `${window.location.origin}/consumer-property/${listing.id}`;
               const price = listing.price ? `$${listing.price.toLocaleString()}` : "Price unavailable";
-              const address = `${listing.address || ""}, ${listing.city || ""}, ${listing.state || ""} ${listing.zip_code || ""}`.trim();
+              const street = formatListingShareEmailStreetLine(listing);
+              const cityStateZip = `${listing.city || ""}, ${listing.state || ""} ${listing.zip_code || ""}`
+                .trim()
+                .replace(/^,\s*|,\s*$/g, "");
+              const address = [street, cityStateZip].filter(Boolean).join(", ");
               return `- ${address} - ${price} - ${listingUrl}`;
             })
             .join("\n");
@@ -792,7 +824,7 @@ const Favorites = ({
           .map((listing) => {
             const listingUrl = `${window.location.origin}/property/${listing.id}`;
             const price = listing.price ? `$${listing.price.toLocaleString()}` : "Price unavailable";
-            const address = escapeHtml(listing.address || "Address unavailable");
+            const address = escapeHtml(formatListingShareEmailStreetLine(listing));
             const cityStateZip = escapeHtml(
               `${listing.city || ""}, ${listing.state || ""} ${listing.zip_code || ""}`.trim(),
             );
@@ -822,7 +854,11 @@ const Favorites = ({
           .map((listing) => {
             const listingUrl = `${window.location.origin}/property/${listing.id}`;
             const price = listing.price ? `$${listing.price.toLocaleString()}` : "Price unavailable";
-            const address = `${listing.address || ""}, ${listing.city || ""}, ${listing.state || ""} ${listing.zip_code || ""}`.trim();
+            const street = formatListingShareEmailStreetLine(listing);
+            const cityStateZip = `${listing.city || ""}, ${listing.state || ""} ${listing.zip_code || ""}`
+              .trim()
+              .replace(/^,\s*|,\s*$/g, "");
+            const address = [street, cityStateZip].filter(Boolean).join(", ");
             return `- ${address} - ${price} - ${listingUrl}`;
           })
           .join("\n");
@@ -1081,15 +1117,15 @@ const Favorites = ({
                             >
                               Unselect all
                             </Button>
-                            <Button
-                              type="button"
-                              size="sm"
-                              variant="outline"
-                              className="h-7 rounded-md border-neutral-200 bg-white px-2.5 text-xs font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:bg-neutral-50"
-                              onClick={shareVisibleSelected}
-                            >
-                              Share selected
-                            </Button>
+                            <BulkShareListingsDialog
+                              listingIds={favoriteListingIdsForShare}
+                              listingCount={favoriteListingIdsForShare.length}
+                              senderProfileSource="buyer"
+                              triggerVariant="outline"
+                              triggerClassName={buyerFavoritesShareTriggerClass}
+                              triggerLabel={`Share selected (${favoriteListingIdsForShare.length})`}
+                              onSuccessfulShare={clearShareSelection}
+                            />
                           </>
                         )}
                         {visibleSelectionState.someVisible && (
@@ -1116,15 +1152,15 @@ const Favorites = ({
                                 </Button>
                               </>
                             )}
-                            <Button
-                              type="button"
-                              size="sm"
-                              variant="outline"
-                              className="h-7 rounded-md border-neutral-200 bg-white px-2.5 text-xs font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:bg-neutral-50"
-                              onClick={shareVisibleSelected}
-                            >
-                              Share selected
-                            </Button>
+                            <BulkShareListingsDialog
+                              listingIds={favoriteListingIdsForShare}
+                              listingCount={favoriteListingIdsForShare.length}
+                              senderProfileSource="buyer"
+                              triggerVariant="outline"
+                              triggerClassName={buyerFavoritesShareTriggerClass}
+                              triggerLabel={`Share selected (${favoriteListingIdsForShare.length})`}
+                              onSuccessfulShare={clearShareSelection}
+                            />
                           </>
                         )}
                         {visibleSelectionState.noneVisible && (
@@ -1224,65 +1260,6 @@ const Favorites = ({
               </section>
             </div>
           </main>
-        )}
-
-        {shareModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/35 p-4 backdrop-blur-[1px]">
-            <div className="w-full max-w-2xl rounded-2xl border border-neutral-200/90 bg-white p-5 shadow-[0_8px_30px_rgba(0,0,0,0.08)] sm:p-6">
-              <h3 className="text-sm font-semibold tracking-tight text-neutral-900">Share selected listings</h3>
-              <div className="mt-3 space-y-3">
-                <div className="space-y-1.5">
-                  <Label htmlFor="share-to-email" className="text-xs text-neutral-600">
-                    To email
-                  </Label>
-                  <Input
-                    id="share-to-email"
-                    type="email"
-                    placeholder="name@example.com"
-                    value={shareToEmail}
-                    onChange={(e) => setShareToEmail(e.target.value)}
-                    className="focus-visible:border-neutral-900 focus-visible:ring-1 focus-visible:ring-neutral-300/80"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="share-subject" className="text-xs text-neutral-600">
-                    Subject
-                  </Label>
-                  <Input
-                    id="share-subject"
-                    value={shareSubject}
-                    onChange={(e) => setShareSubject(e.target.value)}
-                    className="focus-visible:border-neutral-900 focus-visible:ring-1 focus-visible:ring-neutral-300/80"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="share-message" className="text-xs text-neutral-600">
-                    Message
-                  </Label>
-                  <Textarea
-                    id="share-message"
-                    className="min-h-[180px] focus-visible:border-neutral-900 focus-visible:ring-1 focus-visible:ring-neutral-300/80"
-                    value={shareMessage}
-                    onChange={(e) => setShareMessage(e.target.value)}
-                  />
-                </div>
-              </div>
-              <div className="mt-5 flex justify-end gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="border-neutral-200"
-                  onClick={() => setShareModalOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button type="button" size="sm" onClick={handleSendShareEmail} disabled={shareSending}>
-                  {shareSending ? "Sending…" : "Send email"}
-                </Button>
-              </div>
-            </div>
-          </div>
         )}
 
         <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
