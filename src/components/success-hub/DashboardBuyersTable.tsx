@@ -151,7 +151,7 @@ export function DashboardBuyersTable({ buyers }: DashboardBuyersTableProps) {
                           </span>
                         </p>
                       </div>
-                    </button>
+                    </div>
                   </li>
                 ))}
               </ul>
