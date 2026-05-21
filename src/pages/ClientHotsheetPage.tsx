@@ -124,7 +124,11 @@ const ClientHotsheetPage = () => {
   const navigate = useNavigate();
   const buyerByIdMatch = useMatch({ path: "/client/hot-sheets/:id", end: true });
   const isBuyerHotSheetByIdRoute = Boolean(buyerByIdMatch && hotSheetIdParam);
-  const contentTopClass = isBuyerHotSheetByIdRoute ? "pt-4" : "pt-20";
+  /** Id route lives in BuyerShell; token route is standalone (legacy top offset). */
+  const contentTopClass = isBuyerHotSheetByIdRoute ? "" : "pt-20";
+  const buyerHotSheetMainClass = isBuyerHotSheetByIdRoute
+    ? "mx-auto w-full max-w-7xl px-6 pt-4 pb-12 md:px-8"
+    : buyerPageMain;
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [hotSheet, setHotSheet] = useState<any>(null);
@@ -144,6 +148,10 @@ const ClientHotsheetPage = () => {
   const [deleteHotSheetBusy, setDeleteHotSheetBusy] = useState(false);
   const [selectedListingIds, setSelectedListingIds] = useState<Set<string>>(new Set());
   const hidePublicFooter = isBuyerHotSheetByIdRoute || Boolean(currentUser);
+  /** Selection + share toolbar and card checkboxes (signed-in buyer with loaded sheet). */
+  const enableBuyerListingSelection = Boolean(
+    hotSheet?.id && (isBuyerHotSheetByIdRoute || currentUser),
+  );
 
   const toggleListingSelection = useCallback((id: string) => {
     setSelectedListingIds((prev) => {
@@ -711,7 +719,7 @@ const ClientHotsheetPage = () => {
 
   return (
     <div className={`flex flex-col ${buyerPageShell} ${contentTopClass}`}>
-      <main className={`flex-1 ${buyerPageMain}`}>
+      <main className={`flex-1 ${buyerHotSheetMainClass}`}>
         <div>
           <header className="mb-4">
             <AacBackButton
@@ -836,13 +844,13 @@ const ClientHotsheetPage = () => {
                 <span className="text-[13px] font-semibold tracking-tight text-neutral-900">
                   Matches <span className="font-normal tabular-nums text-neutral-500">{listings.length}</span>
                 </span>
-                {isBuyerHotSheetByIdRoute && listings.length > 0 && selectedListingIds.size > 0 ? (
+                {enableBuyerListingSelection && listings.length > 0 && selectedListingIds.size > 0 ? (
                   <span className="text-[12px] tabular-nums text-neutral-500">
                     ({selectedListingIds.size} selected)
                   </span>
                 ) : null}
               </div>
-              {isBuyerHotSheetByIdRoute && listings.length > 0 ? (
+              {enableBuyerListingSelection && listings.length > 0 ? (
                 <div
                   className="flex flex-wrap items-center gap-2 px-1 sm:px-0.5"
                   aria-label="Result actions"
@@ -880,7 +888,7 @@ const ClientHotsheetPage = () => {
                     onSuccessfulShare={clearListingSelection}
                   />
                 </div>
-              ) : isBuyerHotSheetByIdRoute ? (
+              ) : isBuyerHotSheetByIdRoute && !currentUser ? (
                 <p className="px-1 text-[12px] leading-snug text-neutral-500 sm:px-0.5">
                   Results update as new listings match your saved criteria.
                 </p>
@@ -914,7 +922,7 @@ const ClientHotsheetPage = () => {
                     setListingChatListingId(listing.id);
                     setListingChatOpen(true);
                   }}
-                  {...(isBuyerHotSheetByIdRoute
+                  {...(enableBuyerListingSelection
                     ? {
                         onSelect: toggleListingSelection,
                         isSelected: selectedListingIds.has(listing.id),
