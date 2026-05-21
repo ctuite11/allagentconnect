@@ -977,7 +977,7 @@ const ListingCard = ({
             <p className="min-h-[2.25rem] min-w-0 flex-1 break-words text-[13px] font-normal leading-snug text-neutral-800">{displayAddress}</p>
           </div>
 
-          <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs tabular-nums text-neutral-900">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs tabular-nums text-neutral-900">
             {listing.bedrooms ? (
               <div className="flex items-center gap-1">
                 <Bed className="h-3.5 w-3.5 shrink-0 text-neutral-600" aria-hidden />
@@ -1530,7 +1530,7 @@ const ListingCard = ({
 
       <CardContent className="p-3">
         {/* Price → property type → address */}
-        <div className="mb-2 flex items-start justify-between gap-3">
+        <div className="mb-1 flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
             <div className="text-lg font-bold text-neutral-900">{displayPrice}</div>
             <ListingCardPropertyTypeLine propertyType={listing.property_type} className="mt-0.5" />
@@ -1556,7 +1556,7 @@ const ListingCard = ({
         </div>
 
         {/* Beds, Baths, SqFt */}
-        <div className="mb-2 flex gap-4 text-base font-semibold text-neutral-900">
+        <div className="mb-2 -mt-0.5 flex gap-4 text-base font-semibold text-neutral-900">
           {listing.bedrooms !== null && (
             <div className="flex items-center gap-1.5">
               <Bed className="h-5 w-5 text-neutral-500" />
