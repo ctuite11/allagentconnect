@@ -63,7 +63,6 @@ import { buildListingsQuery } from "@/lib/buildListingsQuery";
 import type { ListedByAgentProfile } from "@/lib/listingListedBy";
 import { formatHotSheetRef } from "@/lib/formatHotSheetRef";
 import { formatCriteriaDisplayLabels } from "@/lib/formatCriteriaDisplay";
-import { PersonalHotSheetShareActions } from "@/components/share/PersonalHotSheetShareActions";
 
 /** One row per `hot_sheet_clients` recipient for compact review strip. */
 interface ReviewRecipient {
@@ -198,9 +197,6 @@ const HotSheetReview = () => {
       reviewRecipients.every((r) => r.inviteAccepted || r.buyerLinked),
     [reviewRecipients],
   );
-
-  /** My Hot Sheets — no CRM buyers linked (criteria-only personal saves). */
-  const isPersonalHotSheet = clientCount === 0 && reviewRecipients.length === 0;
 
   const handleAgentHotSheetReviewBack = () => {
     const preferBuyerFrom =
@@ -1228,28 +1224,6 @@ const HotSheetReview = () => {
             toolbarAriaLabel="Hot sheet results"
             toolbarActionsExtra={
               <>
-                {isPersonalHotSheet && id && hotSheet ? (
-                  <PersonalHotSheetShareActions
-                    hotSheetId={id}
-                    title={hotSheet.name}
-                    selectedListingIds={Array.from(selectedListings)}
-                    selectedListingPreviews={listings
-                      .filter((listing) => selectedListings.has(listing.id))
-                      .map((listing) => ({
-                        id: listing.id,
-                        address: listing.address,
-                        city: listing.city,
-                        state: listing.state,
-                        zip_code: listing.zip_code,
-                        price: listing.price,
-                        bedrooms: listing.bedrooms,
-                        bathrooms: listing.bathrooms,
-                        square_feet: listing.square_feet,
-                        property_type: listing.property_type,
-                        photos: listing.photos,
-                      }))}
-                  />
-                ) : null}
                 {buyerContextClientId ? (
                   <Button
                     type="button"

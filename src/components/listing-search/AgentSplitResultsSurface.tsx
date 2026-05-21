@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode, type ReactElement } from "react";
+import { useCallback, useMemo, useState, type ReactNode, type ReactElement } from "react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -119,28 +119,39 @@ export function AgentSplitResultsSurface({
     ? sortedListings.filter((l) => selectedRows.has(l.id))
     : sortedListings;
 
+  const displayedListingIds = useMemo(
+    () => displayedListings.map((l) => l.id),
+    [displayedListings],
+  );
+
+  const addAllVisible = useCallback(() => {
+    setSelectedRows((prev) => {
+      const next = new Set(prev);
+      displayedListings.forEach((l) => next.add(l.id));
+      return next;
+    });
+  }, [displayedListings, setSelectedRows]);
+
+  const unselectAllVisible = useCallback(() => {
+    setSelectedRows((prev) => {
+      const next = new Set(prev);
+      displayedListings.forEach((l) => next.delete(l.id));
+      return next;
+    });
+  }, [displayedListings, setSelectedRows]);
+
+  const clearShareSelection = useCallback(() => {
+    setSelectedRows((prev) => {
+      const next = new Set(prev);
+      displayedListingIds.forEach((id) => {
+        if (prev.has(id)) next.delete(id);
+      });
+      return next;
+    });
+  }, [displayedListingIds, setSelectedRows]);
+
   const showMapSplit =
     effectiveResultsView === "map" && !loading && !loadError && displayedListings.length > 0;
-
-  const toggleSelectAll = () => {
-    if (onSelectAll) {
-      onSelectAll();
-      return;
-    }
-    if (selectedRows.size === displayedListings.length && displayedListings.length > 0) {
-      setSelectedRows(new Set());
-    } else {
-      setSelectedRows(new Set(displayedListings.map((l) => l.id)));
-    }
-  };
-
-  const handleKeepSelectedClick = () => {
-    if (onKeepSelected) {
-      onKeepSelected();
-      return;
-    }
-    setShowSelectedOnly(!showSelectedOnly);
-  };
 
   const toggleRowSelection = (id: string, e?: React.SyntheticEvent) => {
     if (!selectionEnabled) return;
@@ -212,7 +223,7 @@ export function AgentSplitResultsSurface({
           >
             {loading ? "Results: —" : `Results: ${displayedListings.length.toLocaleString()}`}
           </p>
-          <div className="flex min-w-0 shrink-0 justify-end">
+          <div className="flex min-w-0 shrink-0 items-center justify-end gap-2">
             {showViewToggle ? (
               <div className="flex min-w-0 items-center gap-1.5">
                 <span className={cn(labelClass, "whitespace-nowrap")}>View</span>
@@ -244,97 +255,100 @@ export function AgentSplitResultsSurface({
                 </div>
               </div>
             ) : null}
+            <div className={cn("min-w-0", compact ? "max-w-[7.5rem]" : "w-full max-w-[8.5rem] min-[520px]:max-w-[11rem]")}>
+              <Select value={sortSelectValue} onValueChange={handleSortSelect}>
+                <SelectTrigger
+                  className={cn(
+                    compact
+                      ? "h-7 rounded-md border-neutral-200/90 bg-white px-2 text-[11px] font-medium text-neutral-900 shadow-none focus-visible:ring-2 focus-visible:ring-neutral-300/50 focus-visible:ring-offset-2"
+                      : "h-8 rounded-md border-neutral-200/90 bg-white text-xs font-medium text-neutral-900 shadow-none focus-visible:ring-2 focus-visible:ring-neutral-300/50 focus-visible:ring-offset-2",
+                  )}
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="rounded-lg border border-neutral-200 bg-white shadow-[0_4px_20px_rgba(0,0,0,0.08)]">
+                  <SelectItem value="date_new">Date (New)</SelectItem>
+                  <SelectItem value="date_old">Date (Old)</SelectItem>
+                  <SelectItem value="price_high">Price (High)</SelectItem>
+                  <SelectItem value="price_low">Price (Low)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
       </div>
     );
   };
 
-  const renderResultsActionsRow = (variant: "page" | "column") => {
-    const compact = variant === "column";
-    const actionBtnClass = compact
-      ? "h-7 shrink-0 whitespace-nowrap rounded-md border border-neutral-200 bg-white px-2 text-[11px] font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-200 ease-out hover:border-neutral-300 hover:bg-neutral-50/90"
-      : "h-8 rounded-lg border border-neutral-200 bg-white px-3 text-[13px] font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-200 ease-out hover:border-neutral-300 hover:bg-neutral-50/90";
-    const actionIconClass = compact
-      ? "mr-0.5 h-3 w-3 shrink-0 text-neutral-600 [&_svg]:text-neutral-600"
-      : "mr-1 h-3.5 w-3.5 shrink-0 text-neutral-600 [&_svg]:text-neutral-600";
-    const shareTriggerClass = compact
-      ? "h-7 gap-0 whitespace-nowrap rounded-md border border-neutral-200 bg-white px-2 text-[11px] font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-200 hover:border-neutral-300 hover:bg-neutral-50/90 [&_svg]:mr-1 [&_svg]:!h-3 [&_svg]:!w-3 [&_svg]:text-neutral-600"
-      : "h-8 gap-0 rounded-lg border border-neutral-200 bg-white px-3 text-[13px] font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-200 hover:border-neutral-300 hover:bg-neutral-50/90 [&_svg]:mr-1 [&_svg]:size-3.5 [&_svg]:text-neutral-600";
-    const sortTriggerClass = compact
-      ? "h-7 w-[min(100%,118px)] min-w-[7rem] rounded-md border-neutral-200 bg-white px-2 text-[11px] font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300/45 focus-visible:ring-offset-2"
-      : "h-8 w-[136px] rounded-lg border-neutral-200 bg-white px-2.5 text-[13px] text-neutral-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300/45 focus-visible:ring-offset-2";
+  const handleAddAllVisible = useCallback(() => {
+    if (onSelectAll) {
+      if (selectedRows.size === 0) {
+        onSelectAll();
+      } else if (selectedRows.size < displayedListings.length) {
+        setSelectedRows(new Set(displayedListings.map((l) => l.id)));
+      }
+      return;
+    }
+    addAllVisible();
+  }, [onSelectAll, selectedRows.size, displayedListings, addAllVisible, setSelectedRows]);
+
+  const handleUnselectAllVisible = useCallback(() => {
+    if (
+      onSelectAll &&
+      selectedRows.size === displayedListings.length &&
+      displayedListings.length > 0
+    ) {
+      onSelectAll();
+      return;
+    }
+    unselectAllVisible();
+  }, [onSelectAll, selectedRows.size, displayedListings.length, unselectAllVisible]);
+
+  const renderResultsActionsRow = () => {
+    const saveHotSheetBtn =
+      showSaveToHotSheet ? (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="h-7 rounded-md border-neutral-200 bg-white px-2.5 text-xs font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:bg-neutral-50"
+          onClick={() => {
+            if (selectedRows.size === 0) {
+              toast.error("You haven't selected any properties", {
+                description: "Select one or more properties from the results to save a hotsheet.",
+              });
+              return;
+            }
+            setHotSheetDialogOpen(true);
+          }}
+        >
+          Save as Hot Sheet
+        </Button>
+      ) : null;
 
     return (
-      <div className="w-full">
-        <div
-          className="flex w-full flex-col gap-2 min-[520px]:flex-row min-[520px]:items-center min-[520px]:justify-between"
-          aria-label="Result actions"
-        >
-          <div className="flex min-w-0 w-full min-[520px]:w-auto min-[520px]:flex-1 flex-wrap items-center gap-2">
-            {selectionEnabled ? (
-              <>
-                <Button variant="outline" size="sm" onClick={toggleSelectAll} className={actionBtnClass}>
-                  <ListChecks className={actionIconClass} />
-                  {selectedRows.size === displayedListings.length && displayedListings.length > 0
-                    ? "Deselect All"
-                    : "Select All"}
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={selectedRows.size === 0 && !showSelectedOnly && !onKeepSelected}
-                  onClick={handleKeepSelectedClick}
-                  className={cn(actionBtnClass, "disabled:opacity-50")}
-                >
-                  <Check className={actionIconClass} />
-                  {showSelectedOnly && !onKeepSelected ? "Show All" : "Keep Selected"}
-                </Button>
-              </>
-            ) : null}
+      <div className="w-full" aria-label="Result actions">
+        {selectionEnabled ? (
+          <AgentSplitResultsSelectionActions
+            displayedListingIds={displayedListingIds}
+            selectedRows={selectedRows}
+            showSelectedOnly={showSelectedOnly && !onKeepSelected}
+            onAddAllVisible={handleAddAllVisible}
+            onUnselectAllVisible={handleUnselectAllVisible}
+            onKeepSelectedOnly={() => setShowSelectedOnly(true)}
+            onShowAll={() => setShowSelectedOnly(false)}
+            onKeepSelectedCustom={onKeepSelected}
+            onSuccessfulShare={clearShareSelection}
+          >
             {toolbarActionsExtra}
-            {showSaveToHotSheet ? (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  if (selectedRows.size === 0) {
-                    toast.error("You haven't selected any properties", {
-                      description: "Select one or more properties from the results to save a hotsheet.",
-                    });
-                    return;
-                  }
-                  setHotSheetDialogOpen(true);
-                }}
-                className={actionBtnClass}
-              >
-                <FileSpreadsheet className={actionIconClass} />
-                Save as Hot Sheet
-              </Button>
-            ) : null}
-            {selectedRows.size > 0 ? (
-              <BulkShareListingsDialog
-                listingIds={Array.from(selectedRows)}
-                listingCount={selectedRows.size}
-                triggerVariant="outline"
-                triggerClassName={shareTriggerClass}
-              />
-            ) : null}
+            {saveHotSheetBtn}
+          </AgentSplitResultsSelectionActions>
+        ) : (
+          <div className="flex flex-wrap items-center gap-2">
+            {toolbarActionsExtra}
+            {saveHotSheetBtn}
           </div>
-          <div className="flex justify-end min-[520px]:justify-end">
-            <Select value={sortSelectValue} onValueChange={handleSortSelect}>
-              <SelectTrigger className={sortTriggerClass}>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="rounded-lg border border-neutral-200 bg-white shadow-[0_4px_20px_rgba(0,0,0,0.08)]">
-                <SelectItem value="date_new">Date (New)</SelectItem>
-                <SelectItem value="date_old">Date (Old)</SelectItem>
-                <SelectItem value="price_high">Price (High)</SelectItem>
-                <SelectItem value="price_low">Price (Low)</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
+        )}
       </div>
     );
   };
@@ -342,7 +356,7 @@ export function AgentSplitResultsSurface({
   const renderToolbarStrips = () => (
     <>
             <div className="border-t border-neutral-100 pt-2">{renderResultsTopStrip("page")}</div>
-      <div className="border-t border-neutral-100 pb-2 pt-2">{renderResultsActionsRow("page")}</div>
+      <div className="border-t border-neutral-100 pb-2 pt-2">{renderResultsActionsRow()}</div>
     </>
   );
 
@@ -420,7 +434,7 @@ export function AgentSplitResultsSurface({
               {renderResultsTopStrip("column")}
             </div>
             <div className="shrink-0 border-b border-neutral-100 bg-white px-3 py-2 sm:px-5 sm:py-2.5">
-              {renderResultsActionsRow("column")}
+              {renderResultsActionsRow()}
             </div>
             <div className="min-h-0 flex-1 overflow-y-auto lg:min-h-0">
               <div className="px-3 py-3 sm:px-5 sm:py-4">

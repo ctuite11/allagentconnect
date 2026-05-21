@@ -1,0 +1,129 @@
+import { useMemo, type ReactNode } from "react";
+import { Button } from "@/components/ui/button";
+import { BulkShareListingsDialog } from "@/components/BulkShareListingsDialog";
+import { cn } from "@/lib/utils";
+
+const PILL_CLASS =
+  "h-7 rounded-md border-neutral-200 bg-white px-2.5 text-xs font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:bg-neutral-50";
+
+const SHARE_TRIGGER_CLASS =
+  "h-7 gap-0 whitespace-nowrap rounded-md border border-neutral-200 bg-white px-2.5 text-xs font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:border-neutral-300 hover:bg-neutral-50/90 disabled:pointer-events-none disabled:opacity-40 [&_svg]:mr-1 [&_svg]:!h-3 [&_svg]:!w-3 [&_svg]:text-neutral-600";
+
+type AgentSplitResultsSelectionActionsProps = {
+  displayedListingIds: string[];
+  selectedRows: Set<string>;
+  showSelectedOnly: boolean;
+  onAddAllVisible: () => void;
+  onUnselectAllVisible: () => void;
+  onKeepSelectedOnly: () => void;
+  onShowAll: () => void;
+  /** One-shot keep (e.g. prune hot sheet) instead of filter-only keep/show. */
+  onKeepSelectedCustom?: () => void;
+  onSuccessfulShare?: () => void;
+  /** Extra pills (e.g. Save as Hot Sheet) rendered after share controls. */
+  children?: ReactNode;
+  className?: string;
+};
+
+export function AgentSplitResultsSelectionActions({
+  displayedListingIds,
+  selectedRows,
+  showSelectedOnly,
+  onAddAllVisible,
+  onUnselectAllVisible,
+  onKeepSelectedOnly,
+  onShowAll,
+  onKeepSelectedCustom,
+  onSuccessfulShare,
+  children,
+  className,
+}: AgentSplitResultsSelectionActionsProps) {
+  const listingIdsForShare = useMemo(
+    () => displayedListingIds.filter((id) => selectedRows.has(id)),
+    [displayedListingIds, selectedRows],
+  );
+
+  const visibleSelectionState = useMemo(() => {
+    const n = displayedListingIds.length;
+    if (n === 0) return { allVisible: false, someVisible: false, noneVisible: true };
+    const selected = displayedListingIds.filter((id) => selectedRows.has(id)).length;
+    if (selected === 0) return { allVisible: false, someVisible: false, noneVisible: true };
+    if (selected === n) return { allVisible: true, someVisible: false, noneVisible: false };
+    return { allVisible: false, someVisible: true, noneVisible: false };
+  }, [displayedListingIds, selectedRows]);
+
+  if (displayedListingIds.length === 0) return null;
+
+  const shareDialog =
+    listingIdsForShare.length > 0 ? (
+      <BulkShareListingsDialog
+        listingIds={listingIdsForShare}
+        listingCount={listingIdsForShare.length}
+        triggerVariant="outline"
+        triggerClassName={SHARE_TRIGGER_CLASS}
+        triggerLabel={`Share selected (${listingIdsForShare.length})`}
+        onSuccessfulShare={onSuccessfulShare}
+      />
+    ) : null;
+
+  return (
+    <div className={cn("flex flex-wrap items-center gap-2", className)}>
+      {visibleSelectionState.allVisible && (
+        <>
+          <Button type="button" size="sm" variant="outline" className={PILL_CLASS} onClick={onUnselectAllVisible}>
+            Unselect all
+          </Button>
+          {shareDialog}
+        </>
+      )}
+      {visibleSelectionState.someVisible && (
+        <>
+          {!showSelectedOnly && !onKeepSelectedCustom && (
+            <>
+              <Button type="button" size="sm" variant="outline" className={PILL_CLASS} onClick={onAddAllVisible}>
+                Select all
+              </Button>
+              <Button type="button" size="sm" variant="outline" className={PILL_CLASS} onClick={onKeepSelectedOnly}>
+                Keep selected only
+              </Button>
+            </>
+          )}
+          {!showSelectedOnly && onKeepSelectedCustom && (
+            <>
+              <Button type="button" size="sm" variant="outline" className={PILL_CLASS} onClick={onAddAllVisible}>
+                Select all
+              </Button>
+              <Button type="button" size="sm" variant="outline" className={PILL_CLASS} onClick={onKeepSelectedCustom}>
+                Keep selected
+              </Button>
+            </>
+          )}
+          {shareDialog}
+        </>
+      )}
+      {visibleSelectionState.allVisible && onKeepSelectedCustom && (
+        <Button type="button" size="sm" variant="outline" className={PILL_CLASS} onClick={onKeepSelectedCustom}>
+          Keep selected
+        </Button>
+      )}
+      {visibleSelectionState.noneVisible && (
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          className={PILL_CLASS}
+          onClick={onAddAllVisible}
+          disabled={displayedListingIds.length === 0}
+        >
+          Select all
+        </Button>
+      )}
+      {showSelectedOnly && (
+        <Button type="button" size="sm" className="h-7 rounded-md px-2.5 text-xs font-medium" onClick={onShowAll}>
+          Show all
+        </Button>
+      )}
+      {children}
+    </div>
+  );
+}
