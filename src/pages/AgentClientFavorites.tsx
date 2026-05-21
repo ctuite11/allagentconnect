@@ -338,6 +338,7 @@ export default function AgentClientFavorites() {
       onBack={handleBack}
       resultsFromPath={resultsFromPath}
       showSaveToHotSheet={false}
+      selectionEnabled={false}
       allowListView={false}
       loadingMessage="Loading favorites…"
       toolbarAriaLabel="Buyer favorites toolbar"
@@ -345,7 +346,7 @@ export default function AgentClientFavorites() {
         title: "Buyer favorites | All Agent Connect",
         description: "View listings your buyer has favorited.",
       }}
-      renderListingCard={(listing, helpers) => {
+      renderListingCard={(listing) => {
         const favoriteRow = favoriteByListingId.get(listing.id);
         const cardListing = {
           ...mapAgentClientFavoriteRpcToListingCard(
@@ -390,8 +391,6 @@ export default function AgentClientFavorites() {
                 : undefined
             }
             compactDetailNavigateState={{ from: resultsFromPath }}
-            onSelect={helpers.onSelect}
-            isSelected={helpers.isSelected}
           />
         );
       }}
