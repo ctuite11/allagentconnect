@@ -4,6 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AgentSplitResultsSurface } from "@/components/listing-search/AgentSplitResultsSurface";
 import type { AgentSplitListing } from "@/lib/agentSplitResults";
+import {
+  listingAgentContactFromRow,
+  listingEmailSubjectFromRow,
+} from "@/lib/listingAgentContact";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Send, MapPin, ChevronDown, Pencil, Heart } from "lucide-react";
@@ -112,6 +116,8 @@ interface Listing {
   zip_code: string;
   neighborhood?: string | null;
   agent_id: string;
+  agent_name?: string | null;
+  agent_email?: string | null;
   price: number;
   bedrooms: number | null;
   bathrooms: number | null;
@@ -612,22 +618,30 @@ const HotSheetReview = () => {
       if (agentIds.length > 0) {
         const { data: agents } = await supabase
           .from("agent_profiles")
-          .select("id, first_name, last_name, company, office_name")
+          .select("id, first_name, last_name, company, office_name, email")
           .in("id", agentIds as string[]);
 
         const byId = new Map((agents ?? []).map((a) => [a.id, a]));
-        nextListings = nextListings.map((l) => ({
-          ...l,
-                  agent_profile:
-            typeof l.agent_id === "string" && byId.has(l.agent_id)
-              ? {
-                  company: byId.get(l.agent_id)?.company ?? null,
-                  office_name: byId.get(l.agent_id)?.office_name ?? null,
-                  first_name: byId.get(l.agent_id)?.first_name ?? null,
-                  last_name: byId.get(l.agent_id)?.last_name ?? null,
-                }
-              : undefined,
-        }));
+        nextListings = nextListings.map((l) => {
+          const agent = typeof l.agent_id === "string" ? byId.get(l.agent_id) : undefined;
+          const agentName = agent
+            ? `${agent.first_name ?? ""} ${agent.last_name ?? ""}`.trim()
+            : "";
+          return {
+            ...l,
+            agent_email: agent?.email ?? (l as Listing).agent_email ?? null,
+            agent_name: agentName || ((l as Listing).agent_name ?? null),
+            agent_profile:
+              agent
+                ? {
+                    company: agent.company ?? null,
+                    office_name: agent.office_name ?? null,
+                    first_name: agent.first_name ?? null,
+                    last_name: agent.last_name ?? null,
+                  }
+                : undefined,
+          };
+        });
       }
 
       let visibleListings = nextListings;
@@ -1206,6 +1220,7 @@ const HotSheetReview = () => {
           <AgentSplitResultsSurface
             variant="embedded"
             hidePageIntro
+            showAgentEmailContact
             listings={splitListings}
             loading={false}
             loadError={null}
@@ -1400,6 +1415,9 @@ const HotSheetReview = () => {
                   }
                   compactSelectionAccent="aacGreen"
                   compactDetailNavigateState={{ from: resultsFromPath }}
+                  showAgentEmailContact
+                  listingAgentContact={listingAgentContactFromRow(row)}
+                  listingEmailSubject={listingEmailSubjectFromRow(row)}
                 />
               );
             }}

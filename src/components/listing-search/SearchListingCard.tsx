@@ -20,6 +20,12 @@ import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import ContactAgentDialog from "@/components/ContactAgentDialog";
+import { ListingAgentEmailContact } from "@/components/listing/ListingAgentEmailContact";
+import {
+  listingAgentContactFromRow,
+  listingEmailSubjectFromRow,
+  type ListingAgentContact,
+} from "@/lib/listingAgentContact";
 import { LISTING_STATUS, isComingSoon } from "@/constants/status";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 import DcmlsBadge from "@/components/DcmlsBadge";
@@ -88,6 +94,10 @@ interface SearchListingCardProps {
   onSelect?: (id: string, e?: React.SyntheticEvent) => void;
   onRowClick?: (listing: SearchListing) => void;
   fromPath?: string;
+  /** Agent-only: internal email to listing agent (bottom-right). */
+  showAgentEmailContact?: boolean;
+  listingAgentContact?: ListingAgentContact | null;
+  listingEmailSubject?: string;
 }
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
@@ -156,10 +166,19 @@ export const SearchListingCard = ({
   onSelect,
   onRowClick,
   fromPath,
+  showAgentEmailContact = false,
+  listingAgentContact: listingAgentContactProp = null,
+  listingEmailSubject: listingEmailSubjectProp,
 }: SearchListingCardProps) => {
   const navigate = useNavigate();
   const [contactOpen, setContactOpen] = useState(false);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
+
+  const resolvedListingAgentContact = showAgentEmailContact
+    ? (listingAgentContactProp ?? listingAgentContactFromRow(listing))
+    : null;
+  const resolvedListingEmailSubject =
+    listingEmailSubjectProp ?? listingEmailSubjectFromRow(listing);
 
   const photoUrl = getFirstPhoto(listing);
   const allPhotos = getAllPhotos(listing);
@@ -219,26 +238,41 @@ export const SearchListingCard = ({
             )}
           </div>
         )}
-        {listing.agent_name && (
-          <div className="min-w-0 text-right flex-shrink-0">
-            <span className={labelClass}>List Agent: </span>
-            <span className={valueClass}>{listing.agent_name}</span>
-            {listing.agent_phone && (
-              <span className={`${labelClass} ml-2`}>
-                <Phone className="mr-0.5 inline h-2.5 w-2.5 text-neutral-500" />{formatPhoneNumber(listing.agent_phone)}
-              </span>
-            )}
-            {!compact && listing.agent_email && (
-              <span className={`${labelClass} ml-2`}>{listing.agent_email}</span>
-            )}
-            {listing.agent_id && (
-              <button
-                onClick={(e) => { e.stopPropagation(); setContactOpen(true); }}
-                className="ml-3 inline-flex items-center gap-1 text-xs font-medium text-neutral-700 underline-offset-2 transition-colors hover:text-neutral-900 hover:underline"
-              >
-                <Mail className="h-3 w-3" />
-                {!compact && "Contact"}
-              </button>
+        {(listing.agent_name || resolvedListingAgentContact) && (
+          <div className="min-w-0 flex-shrink-0 text-right">
+            {resolvedListingAgentContact ? (
+              <div onClick={(e) => e.stopPropagation()}>
+                <ListingAgentEmailContact
+                  contact={resolvedListingAgentContact}
+                  defaultSubject={resolvedListingEmailSubject}
+                />
+              </div>
+            ) : (
+              <>
+                <span className={labelClass}>List Agent: </span>
+                <span className={valueClass}>{listing.agent_name}</span>
+                {listing.agent_phone && (
+                  <span className={`${labelClass} ml-2`}>
+                    <Phone className="mr-0.5 inline h-2.5 w-2.5 text-neutral-500" />
+                    {formatPhoneNumber(listing.agent_phone)}
+                  </span>
+                )}
+                {!compact && listing.agent_email && (
+                  <span className={`${labelClass} ml-2`}>{listing.agent_email}</span>
+                )}
+                {listing.agent_id && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setContactOpen(true);
+                    }}
+                    className="ml-3 inline-flex items-center gap-1 text-xs font-medium text-neutral-700 underline-offset-2 transition-colors hover:text-neutral-900 hover:underline"
+                  >
+                    <Mail className="h-3 w-3" />
+                    {!compact && "Contact"}
+                  </button>
+                )}
+              </>
             )}
           </div>
         )}
@@ -579,20 +613,31 @@ export const SearchListingCard = ({
             >
               <ExternalLink className="h-4 w-4" /> View
             </button>
-            {listing.agent_id && (
+            {resolvedListingAgentContact ? (
+              <div onClick={(e) => e.stopPropagation()}>
+                <ListingAgentEmailContact
+                  contact={resolvedListingAgentContact}
+                  defaultSubject={resolvedListingEmailSubject}
+                  className="text-sm"
+                />
+              </div>
+            ) : listing.agent_id ? (
               <button
-                onClick={(e) => { e.stopPropagation(); setContactOpen(true); }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setContactOpen(true);
+                }}
                 className="inline-flex items-center gap-1.5 text-sm font-medium text-neutral-600 transition hover:text-neutral-900"
               >
                 <Mail className="h-4 w-4 text-neutral-500" /> Contact
               </button>
-            )}
+            ) : null}
           </div>
         </div>
       </Card>
 
       {/* Contact Dialog */}
-      {listing.agent_id && (
+      {!showAgentEmailContact && listing.agent_id && (
         <ContactAgentDialog
           listingId={listing.id}
           agentId={listing.agent_id}

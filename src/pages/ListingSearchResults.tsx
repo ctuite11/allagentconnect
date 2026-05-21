@@ -23,6 +23,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import SaveToHotSheetDialog from "@/components/SaveToHotSheetDialog";
 import { listingEffectiveNumericPrice } from "@/lib/formatListingPriceDisplay";
 import { applyListingPriceOverlapFilter } from "@/lib/applyListingPriceOverlapFilter";
+import {
+  listingAgentContactFromRow,
+  listingEmailSubjectFromRow,
+} from "@/lib/listingAgentContact";
 
 /** Drop list-side agent/office fields so compact `ListingCard` has no “Listed by” row (buyer map grid parity). */
 function listingRowForMapCompactGrid(row: any): any {
@@ -557,6 +561,9 @@ const ListingSearchResults = () => {
                             }}
                             onSelect={(id) => toggleRowSelection(id)}
                             isSelected={safeSelectedRows.has(listing.id)}
+                            showAgentEmailContact
+                            listingAgentContact={listingAgentContactFromRow(listing)}
+                            listingEmailSubject={listingEmailSubjectFromRow(listing)}
                           />
                         ))}
                       </div>
@@ -575,6 +582,7 @@ const ListingSearchResults = () => {
                 selectedRows={safeSelectedRows}
                 onToggleSelect={toggleRowSelection}
                 fromPath={`/listing-results${window.location.search}`}
+                showAgentEmailContact
               />
             )}
           </section>

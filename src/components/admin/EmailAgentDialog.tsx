@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -21,14 +21,30 @@ interface EmailAgentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   recipients: Array<{ id: string; email: string; name: string }>;
+  /** Pre-fills subject when the dialog opens (e.g. listing address). */
+  defaultSubject?: string;
+  /** Hide admin-only templates (agent listing contact from result cards). */
+  showTemplatePicker?: boolean;
 }
 
-export function EmailAgentDialog({ open, onOpenChange, recipients }: EmailAgentDialogProps) {
+export function EmailAgentDialog({
+  open,
+  onOpenChange,
+  recipients,
+  defaultSubject,
+  showTemplatePicker = true,
+}: EmailAgentDialogProps) {
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
   const [template, setTemplate] = useState<string>("custom");
   const messageRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (open && defaultSubject?.trim()) {
+      setSubject(defaultSubject.trim());
+    }
+  }, [open, defaultSubject]);
 
   const handleSend = async () => {
     const isTemplated =
@@ -111,42 +127,46 @@ export function EmailAgentDialog({ open, onOpenChange, recipients }: EmailAgentD
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="email-template">Template</Label>
-            <Select
-              value={template}
-              onValueChange={(v) => {
-                setTemplate(v);
-                if (v === "early-access-update-v1" || v === "early-access-update-v2") {
-                  setSubject((prev) => prev || "A first look inside All Agent Connect");
-                }
-                if (v === "founding-partner-invitation") {
-                  setSubject((prev) => prev || "You're invited: Founding Partner of All Agent Connect");
-                }
-              }}
-            >
-              <SelectTrigger id="email-template" className="border-slate-200">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="custom">Custom message</SelectItem>
-                <SelectItem value="founding-partner-invitation">
-                  Founding Partner — Exclusive Invitation
-                </SelectItem>
-                <SelectItem value="early-access-update-v2">
-                  Early Access — First Look (v2, recommended)
-                </SelectItem>
-                <SelectItem value="early-access-update-v1">
-                  Early Access Update — Product Tour
-                </SelectItem>
-              </SelectContent>
-            </Select>
-            {(template === "early-access-update-v1" || template === "early-access-update-v2" || template === "founding-partner-invitation") && (
-              <p className="text-xs text-muted-foreground">
-                Pre-built email featuring product screenshots and short captions. Custom message below is ignored.
-              </p>
-            )}
-          </div>
+          {showTemplatePicker ? (
+            <div className="space-y-2">
+              <Label htmlFor="email-template">Template</Label>
+              <Select
+                value={template}
+                onValueChange={(v) => {
+                  setTemplate(v);
+                  if (v === "early-access-update-v1" || v === "early-access-update-v2") {
+                    setSubject((prev) => prev || "A first look inside All Agent Connect");
+                  }
+                  if (v === "founding-partner-invitation") {
+                    setSubject((prev) => prev || "You're invited: Founding Partner of All Agent Connect");
+                  }
+                }}
+              >
+                <SelectTrigger id="email-template" className="border-slate-200">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="custom">Custom message</SelectItem>
+                  <SelectItem value="founding-partner-invitation">
+                    Founding Partner — Exclusive Invitation
+                  </SelectItem>
+                  <SelectItem value="early-access-update-v2">
+                    Early Access — First Look (v2, recommended)
+                  </SelectItem>
+                  <SelectItem value="early-access-update-v1">
+                    Early Access Update — Product Tour
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              {(template === "early-access-update-v1" ||
+                template === "early-access-update-v2" ||
+                template === "founding-partner-invitation") && (
+                <p className="text-xs text-muted-foreground">
+                  Pre-built email featuring product screenshots and short captions. Custom message below is ignored.
+                </p>
+              )}
+            </div>
+          ) : null}
 
           <div className="space-y-2">
             <Label htmlFor="email-subject">Subject *</Label>

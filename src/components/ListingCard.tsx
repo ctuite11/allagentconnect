@@ -29,6 +29,12 @@ import {
   listingSelectionCardGridSelected,
   listingSelectionCheckboxClass,
 } from "@/lib/listingSelectionStyles";
+import { ListingAgentEmailContact } from "@/components/listing/ListingAgentEmailContact";
+import {
+  listingAgentContactFromRow,
+  listingEmailSubjectFromRow,
+  type ListingAgentContact,
+} from "@/lib/listingAgentContact";
 import { formatListingIdLabel, LISTING_ID_NAV_CLASS } from "@/lib/listingIdDisplay";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { LISTING_STATUS, isComingSoon, isActive } from "@/constants/status";
@@ -172,6 +178,12 @@ interface ListingCardProps {
    * Use only on agent client favorites — omit elsewhere.
    */
   compactListedByMessageSeparator?: boolean;
+  /** Agent-only: bottom-right email affordance to the listing agent (internal queue). */
+  showAgentEmailContact?: boolean;
+  /** When set, used instead of reading contact fields from `listing` (e.g. map compact strips agent fields). */
+  listingAgentContact?: ListingAgentContact | null;
+  /** Optional subject prefill for the email composer. */
+  listingEmailSubject?: string;
 }
 const ListingCard = ({
   listing,
@@ -201,10 +213,19 @@ const ListingCard = ({
   compactSavedHeartOverlay = false,
   onCompactSavedHeartClick,
   compactListedByMessageSeparator = false,
+  showAgentEmailContact = false,
+  listingAgentContact: listingAgentContactProp = null,
+  listingEmailSubject: listingEmailSubjectProp,
 }: ListingCardProps) => {
   const navigate = useNavigate();
   const { role } = useAuthRole();
   const suppressFavoriteHeartChrome = role === "agent" || role === "admin";
+
+  const resolvedListingAgentContact = showAgentEmailContact
+    ? (listingAgentContactProp ?? listingAgentContactFromRow(listing))
+    : null;
+  const resolvedListingEmailSubject =
+    listingEmailSubjectProp ?? listingEmailSubjectFromRow(listing);
 
   const rowProfile = (listing as { agent_profile?: ListedByAgentProfile }).agent_profile;
   const listedByFromProfiles = resolveListedByAttribution(listing as ListedBySource, rowProfile ?? supplementalAgentProfile);
@@ -1119,6 +1140,19 @@ const ListingCard = ({
               />
             </div>
           )}
+
+          {resolvedListingAgentContact ? (
+            <div
+              className="mt-1.5 flex justify-end pt-0.5"
+              onClick={(e) => e.stopPropagation()}
+              onKeyDown={(e) => e.stopPropagation()}
+            >
+              <ListingAgentEmailContact
+                contact={resolvedListingAgentContact}
+                defaultSubject={resolvedListingEmailSubject}
+              />
+            </div>
+          ) : null}
           
           {showActions && (listing.status === 'active' || listing.status === 'coming_soon') && (
             <div className="pt-2 border-t mt-2 space-y-2">

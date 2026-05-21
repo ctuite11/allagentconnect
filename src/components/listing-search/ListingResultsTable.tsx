@@ -1,4 +1,8 @@
 import { SearchListingCard } from "@/components/listing-search/SearchListingCard";
+import {
+  listingAgentContactFromRow,
+  listingEmailSubjectFromRow,
+} from "@/lib/listingAgentContact";
 import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 
 interface Listing {
@@ -54,6 +58,7 @@ interface ListingResultsTableProps {
   selectedRows: Set<string>;
   onToggleSelect: (id: string, e?: React.SyntheticEvent) => void;
   fromPath?: string;
+  showAgentEmailContact?: boolean;
 }
 
 const ListingResultsTable = ({
@@ -63,6 +68,7 @@ const ListingResultsTable = ({
   selectedRows,
   onToggleSelect,
   fromPath,
+  showAgentEmailContact = false,
 }: ListingResultsTableProps) => {
   if (loading) {
     return (
@@ -91,6 +97,9 @@ const ListingResultsTable = ({
           onSelect={onToggleSelect}
           onRowClick={onRowClick}
           fromPath={fromPath}
+          showAgentEmailContact={showAgentEmailContact}
+          listingAgentContact={showAgentEmailContact ? listingAgentContactFromRow(listing) : null}
+          listingEmailSubject={listingEmailSubjectFromRow(listing)}
         />
       ))}
     </div>

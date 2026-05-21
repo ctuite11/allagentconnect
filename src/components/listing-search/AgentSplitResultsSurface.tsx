@@ -20,6 +20,10 @@ import {
   sortAgentSplitListings,
   type AgentSplitListing,
 } from "@/lib/agentSplitResults";
+import {
+  agentSplitListingAgentContact,
+  listingEmailSubjectFromRow,
+} from "@/lib/listingAgentContact";
 
 export type AgentSplitResultsListingRenderHelpers = {
   isSelected: boolean;
@@ -63,6 +67,8 @@ export type AgentSplitResultsSurfaceProps = {
   containerClassName?: string;
   /** When false, hides Map/List toggle and keeps map + card grid only. */
   allowListView?: boolean;
+  /** Agent-only: email listing agent from result cards (internal queue). */
+  showAgentEmailContact?: boolean;
 };
 
 /**
@@ -97,6 +103,7 @@ export function AgentSplitResultsSurface({
   renderListingCard,
   containerClassName,
   allowListView = true,
+  showAgentEmailContact = false,
 }: AgentSplitResultsSurfaceProps) {
   const navigate = useNavigate();
   const [sortColumn, setSortColumn] = useState("list_date");
@@ -394,6 +401,10 @@ export function AgentSplitResultsSurface({
     if (renderListingCard) {
       return renderListingCard(listing, helpers);
     }
+    const listingAgentContact = showAgentEmailContact
+      ? agentSplitListingAgentContact(listing)
+      : null;
+
     return (
       <ListingCard
         listing={listingRowForAgentSplitMapCompact(listing) as unknown as React.ComponentProps<typeof ListingCard>["listing"]}
@@ -406,6 +417,9 @@ export function AgentSplitResultsSurface({
         compactDetailNavigateState={{ from: resultsFromPath }}
         onSelect={helpers.onSelect}
         isSelected={helpers.isSelected}
+        showAgentEmailContact={showAgentEmailContact}
+        listingAgentContact={listingAgentContact}
+        listingEmailSubject={listingEmailSubjectFromRow(listing)}
       />
     );
   };
@@ -467,6 +481,7 @@ export function AgentSplitResultsSurface({
           selectedRows={selectionEnabled ? safeSelectedRows : new Set()}
           onToggleSelect={selectionEnabled ? toggleRowSelection : () => {}}
           fromPath={resultsFromPath}
+          showAgentEmailContact={showAgentEmailContact}
         />
       )}
     </section>
