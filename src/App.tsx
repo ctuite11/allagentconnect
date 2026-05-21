@@ -196,8 +196,10 @@ function AgentBuyersDoubleSegmentRedirect() {
 }
 
 function FavoritesEntry() {
-  const { role, loading } = useAuthRole();
-  if (loading) {
+  const { user, role, loading } = useAuthRole();
+  // Wait while auth is loading OR while we have a user but role hasn't resolved yet.
+  // Without this, a transient `role === null` redirects an authenticated user to /auth on hard refresh.
+  if (loading || (user && !role)) {
     return (
       <div className="flex min-h-screen flex-col bg-white" aria-busy="true">
         <div className="border-b border-neutral-200 px-5 py-3 md:px-7">
@@ -364,7 +366,7 @@ const App = () => (
                   <Route path="/listing-search" element={<RouteGuard requireRole="agent"><ListingSearch /></RouteGuard>} />
                   <Route path="/listing-results" element={<RouteGuard requireRole="agent"><ListingSearchResults /></RouteGuard>} />
                   <Route path="/agent-search" element={<MLSPINSearch />} />
-                  <Route path="/my-favorites" element={<MyFavorites />} />
+                  <Route path="/my-favorites" element={<RouteGuard requireRole={["agent", "admin"]}><MyFavorites /></RouteGuard>} />
                   <Route path="/agent/hot-sheets" element={<RouteGuard requireRole="agent"><HotSheets isAgentMode /></RouteGuard>} />
                   <Route path="/agent/off-market" element={<Navigate to="/agent/listings?status=off_market" replace />} />
                   <Route path="/hot-sheets/:id/review" element={<RouteGuard requireRole="agent"><HotSheetReview /></RouteGuard>} />
