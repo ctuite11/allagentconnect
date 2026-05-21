@@ -372,7 +372,7 @@ const MyFavorites = () => {
 
       toast.success(`Removed ${selectedListings.size} from favorites`);
       setSelectedListings(new Set());
-      void fetchFavorites();
+      if (authUser) void fetchFavorites(authUser.id);
     } catch (error: unknown) {
       console.error("Error deleting listings:", error);
       toast.error("Failed to remove selections");
