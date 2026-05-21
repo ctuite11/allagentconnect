@@ -8,6 +8,7 @@ import { getListingIdsWithinRadius } from "@/lib/buildRadiusFilter";
 import { parseAdvancedParams } from "@/lib/buildSearchParams";
 
 import ListingResultsTable from "@/components/listing-search/ListingResultsTable";
+import { AgentSplitResultsSelectionActions } from "@/components/listing-search/AgentSplitResultsSelectionActions";
 import ListingCard from "@/components/ListingCard";
 import PropertyMap from "@/components/PropertyMap";
 import { cn } from "@/lib/utils";
