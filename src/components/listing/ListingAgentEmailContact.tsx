@@ -30,7 +30,7 @@ export function ListingAgentEmailContact({
           setOpen(true);
         }}
         className={cn(
-          "inline-flex max-w-full items-center gap-1 rounded-sm text-[11px] font-medium leading-tight text-neutral-800 transition-colors hover:text-neutral-950",
+          "inline-flex max-w-full items-center gap-1 rounded-sm py-0 text-[11px] font-medium leading-none text-neutral-800 transition-colors hover:text-neutral-950",
           className,
         )}
         aria-label={`Email ${contact.agentName}`}

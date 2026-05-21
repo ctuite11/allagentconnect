@@ -29,7 +29,8 @@ import {
 import { LISTING_STATUS, isComingSoon } from "@/constants/status";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 import DcmlsBadge from "@/components/DcmlsBadge";
-import { resolveListedByAttribution } from "@/lib/listingListedBy";
+import { resolveBrokerageAttribution, resolveListedByAttribution } from "@/lib/listingListedBy";
+import { ListingCardAttributionStrip } from "@/components/listing/ListingCardAttributionStrip";
 import { formatListingIdLabel, LISTING_ID_NAV_CLASS, LISTING_ID_NAV_CLASS_SEARCH_SURFACE } from "@/lib/listingIdDisplay";
 import { buildDisplayAddress, cn, listingCardStreetHeading } from "@/lib/utils";
 import {
@@ -196,6 +197,10 @@ export const SearchListingCard = ({
 
   const fullAddress = buildDisplayAddress(listing);
   const listedByLine = resolveListedByAttribution(listing);
+  const brokerageAttribution = resolveBrokerageAttribution(listing);
+  const showUnifiedAttributionFooter = Boolean(
+    showAgentEmailContact && (brokerageAttribution || resolvedListingAgentContact),
+  );
 
   const handleCardClick = () => {
     if (onRowClick) {
@@ -453,12 +458,12 @@ export const SearchListingCard = ({
               </div>
             )}
 
-            {listedByLine && (
+            {listedByLine && !showUnifiedAttributionFooter && (
               <p
                 className={`truncate text-[12px] font-normal text-neutral-500 ${facts.length > 0 ? "mt-3" : "mt-4"}`}
-                title={`Listed by: ${listedByLine}`}
+                title={listedByLine}
               >
-                Listed by: {listedByLine}
+                {listedByLine}
               </p>
             )}
 
@@ -483,11 +488,19 @@ export const SearchListingCard = ({
         </div>
 
         {/* SECTION 4 — Attribution footer (full card width) */}
-        {(listing.list_office || listing.agent_name) && (
+        {showUnifiedAttributionFooter ? (
+          <div className="border-t border-zinc-200 mx-5 mb-4 pt-2">
+            <ListingCardAttributionStrip
+              brokerageName={brokerageAttribution}
+              contact={resolvedListingAgentContact}
+              defaultSubject={resolvedListingEmailSubject}
+            />
+          </div>
+        ) : (listing.list_office || listing.agent_name) ? (
           <div className="border-t border-zinc-200 mx-5 mb-4 pt-2.5">
             <AttributionRow />
           </div>
-        )}
+        ) : null}
       </div>
       {/* ══ MOBILE (< md) — search-specific compact layout ═════════════ */}
       <Card
@@ -600,11 +613,19 @@ export const SearchListingCard = ({
             </div>
           )}
 
-          {(listing.list_office || listing.agent_name) && (
+          {showUnifiedAttributionFooter ? (
+            <div className="mt-2 border-t border-neutral-100 pt-2">
+              <ListingCardAttributionStrip
+                brokerageName={brokerageAttribution}
+                contact={resolvedListingAgentContact}
+                defaultSubject={resolvedListingEmailSubject}
+              />
+            </div>
+          ) : (listing.list_office || listing.agent_name) ? (
             <div className="mt-2.5 border-t border-neutral-100 pt-2.5">
               <AttributionRow compact />
             </div>
-          )}
+          ) : null}
 
           <div className="mt-3 flex items-center justify-end gap-3 border-t border-neutral-100 pt-3">
             <button
@@ -613,7 +634,7 @@ export const SearchListingCard = ({
             >
               <ExternalLink className="h-4 w-4" /> View
             </button>
-            {resolvedListingAgentContact ? (
+            {!showAgentEmailContact && resolvedListingAgentContact ? (
               <div onClick={(e) => e.stopPropagation()}>
                 <ListingAgentEmailContact
                   contact={resolvedListingAgentContact}
@@ -621,7 +642,7 @@ export const SearchListingCard = ({
                   className="text-sm"
                 />
               </div>
-            ) : listing.agent_id ? (
+            ) : !showAgentEmailContact && listing.agent_id ? (
               <button
                 onClick={(e) => {
                   e.stopPropagation();

@@ -50,3 +50,21 @@ export function resolveListedByAttribution(
 
   return null;
 }
+
+/** Brokerage / office only — for compact attribution footers (agent name lives on the contact chip). */
+export function resolveBrokerageAttribution(
+  listing: ListedBySource,
+  agentProfile?: ListedByAgentProfile | null,
+): string | null {
+  for (const c of [listing.brokerage_name, listing.listing_brokerage, listing.list_office]) {
+    const v = pick(c);
+    if (v) return v;
+  }
+
+  if (agentProfile) {
+    const corp = pick(agentProfile.company) || pick(agentProfile.office_name);
+    if (corp) return corp;
+  }
+
+  return null;
+}

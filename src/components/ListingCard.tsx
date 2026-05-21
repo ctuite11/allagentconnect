@@ -29,7 +29,6 @@ import {
   listingSelectionCardGridSelected,
   listingSelectionCheckboxClass,
 } from "@/lib/listingSelectionStyles";
-import { ListingAgentEmailContact } from "@/components/listing/ListingAgentEmailContact";
 import {
   listingAgentContactFromRow,
   listingEmailSubjectFromRow,
@@ -39,10 +38,12 @@ import { formatListingIdLabel, LISTING_ID_NAV_CLASS } from "@/lib/listingIdDispl
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { LISTING_STATUS, isComingSoon, isActive } from "@/constants/status";
 import {
+  resolveBrokerageAttribution,
   resolveListedByAttribution,
   type ListedByAgentProfile,
   type ListedBySource,
 } from "@/lib/listingListedBy";
+import { ListingCardAttributionStrip } from "@/components/listing/ListingCardAttributionStrip";
 import { formatListingPriceDisplay, listingEffectiveNumericPrice } from "@/lib/formatListingPriceDisplay";
 
 /** Normalize MLS photos (array, JSON string, single URL string) for compact/grid photo helpers. */
@@ -237,6 +238,14 @@ const ListingCard = ({
       : typeof agentInfo?.name === "string" && agentInfo.name.trim()
         ? agentInfo.name.trim()
         : null);
+
+  const brokerageAttribution = resolveBrokerageAttribution(
+    listing as ListedBySource,
+    rowProfile ?? supplementalAgentProfile,
+  );
+  const showUnifiedAttributionFooter = Boolean(
+    showAgentEmailContact && (brokerageAttribution || resolvedListingAgentContact),
+  );
   const [agentCount, setAgentCount] = useState<number>(0);
   const [buyerCount, setBuyerCount] = useState<number>(0);
   const [loadingMatches, setLoadingMatches] = useState(false);
@@ -987,25 +996,25 @@ const ListingCard = ({
             ) : null}
           </div>
 
-          {(compactAgentOwned ? false : isFavorites) ? (
-            <div className="mt-1.5">
+          {!showUnifiedAttributionFooter && (compactAgentOwned ? false : isFavorites) ? (
+            <div className="mt-1">
               {listedByAttribution ? (
                 <p
                   className="truncate text-[11px] font-normal leading-snug text-neutral-500"
-                  title={`Listed by: ${listedByAttribution}`}
+                  title={listedByAttribution}
                 >
-                  Listed by: {listedByAttribution}
+                  {listedByAttribution}
                 </p>
               ) : (
                 <div className="h-[14px]" aria-hidden />
               )}
             </div>
-          ) : listedByAttribution ? (
+          ) : !showUnifiedAttributionFooter && listedByAttribution ? (
             <p
-              className="mt-1.5 truncate text-[11px] font-normal leading-snug text-neutral-500"
-              title={`Listed by: ${listedByAttribution}`}
+              className="mt-1 truncate text-[11px] font-normal leading-snug text-neutral-500"
+              title={listedByAttribution}
             >
-              Listed by: {listedByAttribution}
+              {listedByAttribution}
             </p>
           ) : null}
 
@@ -1141,17 +1150,13 @@ const ListingCard = ({
             </div>
           )}
 
-          {resolvedListingAgentContact ? (
-            <div
-              className="mt-1.5 flex justify-end pt-0.5"
-              onClick={(e) => e.stopPropagation()}
-              onKeyDown={(e) => e.stopPropagation()}
-            >
-              <ListingAgentEmailContact
-                contact={resolvedListingAgentContact}
-                defaultSubject={resolvedListingEmailSubject}
-              />
-            </div>
+          {showUnifiedAttributionFooter ? (
+            <ListingCardAttributionStrip
+              brokerageName={brokerageAttribution}
+              contact={resolvedListingAgentContact}
+              defaultSubject={resolvedListingEmailSubject}
+              className="mt-1"
+            />
           ) : null}
           
           {showActions && (listing.status === 'active' || listing.status === 'coming_soon') && (
