@@ -774,12 +774,18 @@ const ListingCard = ({
     const totalPhotos = getTotalPhotos();
     const compactPhotoUrl = compactAgentOwned ? getPhotoByIndex(0) : getPhotoByIndex(currentPhotoIndex);
     const showCarouselArrows = !compactAgentOwned && totalPhotos > 1;
+    /** Agent viewing buyer hot-sheet saves: read-only filled heart (not `FavoriteButton`). */
+    const showHotSheetFavoriteHeart =
+      isHotSheetFavorite === true && hideCompactFavorite && !compactSavedHeartOverlay;
+
     const showFavoriteChrome =
-      !suppressFavoriteHeartChrome && (isHotSheetFavorite || !hideCompactFavorite);
+      showHotSheetFavoriteHeart ||
+      compactSavedHeartOverlay ||
+      (!suppressFavoriteHeartChrome && (isHotSheetFavorite || !hideCompactFavorite));
 
     const showCompactTopChromeRow =
       !compactAgentOwned &&
-      (Boolean(onSelect) || showFavoriteChrome || compactSavedHeartOverlay);
+      (Boolean(onSelect) || showFavoriteChrome);
 
     return <Card
         className={cn(
@@ -835,11 +841,23 @@ const ListingCard = ({
                   className="pointer-events-auto flex h-9 min-w-0 max-w-[calc(100%-3.5rem)] items-center justify-end gap-1"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  {isHotSheetFavorite && (
+                  {showHotSheetFavoriteHeart ? (
+                    <span
+                      className="inline-flex h-9 shrink-0 items-center justify-center"
+                      title="Buyer favorited on hot sheet"
+                    >
+                      <Heart
+                        className="h-[22px] w-[22px] fill-[#FF2D55] stroke-white [stroke-width:2.25px] [paint-order:stroke_fill]"
+                        strokeWidth={2.25}
+                        aria-hidden
+                      />
+                    </span>
+                  ) : null}
+                  {isHotSheetFavorite && !hideCompactFavorite ? (
                     <span className="inline-flex h-9 shrink-0 items-center justify-center" title="Favorited on hot sheet">
                       <Heart className="h-[22px] w-[22px] fill-[#FF2D55] text-[#FF2D55] stroke-[#FF2D55]" aria-hidden strokeWidth={1.5} />
                     </span>
-                  )}
+                  ) : null}
                   {compactSavedHeartOverlay ? (
                     onCompactSavedHeartClick ? (
                       <button

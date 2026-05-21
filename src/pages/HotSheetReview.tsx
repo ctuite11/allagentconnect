@@ -1150,9 +1150,26 @@ const HotSheetReview = () => {
               </>
             }
             actions={
-              <span className="text-[11px] font-medium tabular-nums text-neutral-400">
-                {id ? formatHotSheetRef(id) : ""}
-              </span>
+              <div className="flex flex-wrap items-center justify-end gap-2">
+                {buyerContextClientId ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="h-8 gap-1.5 rounded-md border-neutral-200 bg-white px-3 text-[12px] font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-200 ease-out hover:border-neutral-300 hover:bg-neutral-50/80"
+                    onClick={() => navigate(`/agent/buyers/${buyerContextClientId}/favorites`)}
+                  >
+                    <Heart
+                      className="h-3.5 w-3.5 shrink-0 fill-[#FF2D55] text-[#FF2D55] stroke-[#FF2D55]"
+                      strokeWidth={2}
+                      aria-hidden
+                    />
+                    Favorites
+                  </Button>
+                ) : null}
+                <span className="text-[11px] font-medium tabular-nums text-neutral-400">
+                  {id ? formatHotSheetRef(id) : ""}
+                </span>
+              </div>
             }
           />
 
@@ -1239,21 +1256,6 @@ const HotSheetReview = () => {
             toolbarAriaLabel="Hot sheet results"
             toolbarActionsExtra={
               <>
-                {buyerContextClientId ? (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="h-8 gap-1.5 rounded-md border-neutral-200 bg-white px-3 text-[12px] font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-200 ease-out hover:border-neutral-300 hover:bg-neutral-50/80"
-                    onClick={() => navigate(`/agent/buyers/${buyerContextClientId}/favorites`)}
-                  >
-                    <Heart
-                      className="h-3.5 w-3.5 shrink-0 fill-[#FF2D55] text-[#FF2D55] stroke-[#FF2D55]"
-                      strokeWidth={2}
-                      aria-hidden
-                    />
-                    Favorites
-                  </Button>
-                ) : null}
                 {!isSharedWorkspace && !invitesSent && (unacceptedCount > 0 || acceptedCount > 0) ? (
                   <Button
                     type="button"

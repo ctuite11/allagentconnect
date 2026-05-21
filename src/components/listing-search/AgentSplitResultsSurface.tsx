@@ -320,6 +320,9 @@ export function AgentSplitResultsSurface({
     );
   };
 
+  const hasResultsActionsRow =
+    selectionEnabled || Boolean(toolbarActionsExtra) || showSaveToHotSheet;
+
   const renderResultsActionsRow = () => {
     const saveHotSheetBtn =
       showSaveToHotSheet ? (
@@ -456,9 +459,11 @@ export function AgentSplitResultsSurface({
             <div className="shrink-0 border-b border-neutral-200/90 bg-white px-3 py-2 sm:px-5 sm:py-2.5">
               {renderResultsTopStrip("column")}
             </div>
-            <div className="shrink-0 border-b border-neutral-100 bg-white px-3 py-2 sm:px-5 sm:py-2.5">
-              {renderResultsActionsRow()}
-            </div>
+            {hasResultsActionsRow ? (
+              <div className="shrink-0 border-b border-neutral-100 bg-white px-3 py-2 sm:px-5 sm:py-2.5">
+                {renderResultsActionsRow()}
+              </div>
+            ) : null}
             <div className="min-h-0 flex-1 overflow-y-auto lg:min-h-0">
               <div className="px-3 py-3 sm:px-5 sm:py-4">
                 <div className="grid grid-cols-1 gap-3 sm:gap-4 xl:grid-cols-2">
