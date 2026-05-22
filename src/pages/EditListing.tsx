@@ -13,7 +13,7 @@ import { LoadingScreen } from "@/components/LoadingScreen";
 import { getNeighborhoodsForLocation } from "@/lib/locationData";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ADD_LISTING_EDIT_STATUSES, LISTING_STATUS } from "@/constants/status";
-import { buildDcmlsPayload } from "@/lib/dcmlsFilter";
+import { dcmlsPublishSnapshot } from "@/lib/dcmlsPublishPayload";
 import { DcmlsPublishControl } from "@/components/listing/DcmlsPublishControl";
 
 const EditListing: React.FC = () => {
@@ -246,16 +246,8 @@ const EditListing: React.FC = () => {
       go_live_date: goLiveDate || null,
       auto_activate_days: status === LISTING_STATUS.NEW && typeof autoActivateDays === "number" ? autoActivateDays : null,
       auto_activate_on: computedAutoActivateOn,
-      // DCMLS publish fields
-      ...buildDcmlsPayload(
-        publishToDcmls,
-        dcmlsPublishedAt,
-        {
-          address,
-          price: typeof price === 'number' ? price : (typeof price === 'string' ? parseFloat(price) : null),
-          property_type: propertyType,
-        }
-      ),
+      // DCMLS gated: keep internal-only snapshot (valid not_published, never draft/labels)
+      ...dcmlsPublishSnapshot(false),
     };
 
     // Add type-specific fields
