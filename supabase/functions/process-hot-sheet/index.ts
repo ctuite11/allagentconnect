@@ -349,7 +349,10 @@ const handler = async (req: Request): Promise<Response> => {
         
         // Get client email from hot_sheet_clients junction table OR from criteria
         let clientEmail = null;
-        
+        let clientFirstName: string | null = null;
+        let clientLastName: string | null = null;
+        let clientPhone: string | null = null;
+
         // First try: Junction table
         if (hotSheetClients && hotSheetClients.length > 0) {
           const firstClient = Array.isArray(hotSheetClients[0].clients)
@@ -357,6 +360,9 @@ const handler = async (req: Request): Promise<Response> => {
             : hotSheetClients[0].clients;
           if (firstClient && firstClient.email) {
             clientEmail = firstClient.email;
+            clientFirstName = firstClient.first_name ?? null;
+            clientLastName = firstClient.last_name ?? null;
+            clientPhone = (firstClient as { phone?: string | null }).phone ?? null;
             console.log("Found client email from junction table:", clientEmail);
           }
         }
@@ -382,6 +388,9 @@ const handler = async (req: Request): Promise<Response> => {
               client_id: hotSheet.client_id || null,
               hot_sheet_id: hotSheet.id,
               client_email: clientEmail,
+              client_first_name: clientFirstName,
+              client_last_name: clientLastName,
+              client_phone: clientPhone,
               suppress_initial_matches: true,
             },
             expires_at: null
