@@ -703,16 +703,7 @@ export function ShareListingsDialog({
         </div>
 
         {/* Footer */}
-        <div className="flex shrink-0 flex-col gap-3 border-t border-neutral-200 bg-white px-4 py-3 sm:flex-row sm:items-center sm:justify-end sm:gap-4 sm:px-5 sm:py-3.5">
-          <div className="min-h-0 flex-1 sm:flex sm:max-w-[55%] sm:items-center">
-            {!canSubmit && !submitting ? (
-              <p className="text-[11px] leading-snug text-neutral-600">
-                Add a recipient email (or pick a contact) and complete sender fields.
-              </p>
-            ) : submitting ? (
-              <p className="text-[11px] leading-snug text-neutral-600">Sending your message…</p>
-            ) : null}
-          </div>
+        <div className="flex shrink-0 items-center justify-end gap-2 border-t border-neutral-200 bg-white px-4 py-3 sm:px-5 sm:py-3.5">
           <div className="flex w-full shrink-0 items-center justify-end gap-2 sm:w-auto">
             <DialogClose asChild>
               <Button type="button" variant="ghost" size="sm" disabled={submitting} className="h-9 rounded-lg text-[13px] text-neutral-700 hover:bg-neutral-100 disabled:opacity-50">
