@@ -1,148 +1,44 @@
-## Targeted audit: `/favorites`
+# Plan: Wire the buyer's heart on Hot Sheet results to `hot_sheet_favorites`
 
-You’re right — the problematic target is the Favorites flow, not Admin Approvals.
+## Audit result (root cause)
 
-What I verified:
-- Hard navigation to `/favorites` loads the app bundle with no runtime error.
-- The page is then redirected to `/auth`.
-- No Favorites data requests are visible before the redirect, which means the failure happens in the auth/routing gate before the Favorites query meaningfully runs.
-- The existing code has multiple independent auth checks on the Favorites path, so the page can decide “not signed in” from a transient auth-read result even after the global route guard has started resolving auth.
+On the buyer's Hot Sheet results page (`src/pages/ClientHotsheetPage.tsx`), the heart **does render** — for `role === "buyer"`, `suppressFavoriteHeartChrome` is false so `<FavoriteButton />` is mounted on each card (lines ~899–906 in `ListingCard.tsx`).
 
-## Root causes on the Favorites path
+The problem is what that heart writes to:
 
-### 1. `/favorites` has layered auth decisions
+- `FavoriteButton` (`src/components/FavoriteButton.tsx`) only reads/writes the generic **`favorites`** table (`{ user_id, listing_id }`).
+- The agent's Hot Sheet Review reads only from **`hot_sheet_favorites`** (`{ hot_sheet_id, listing_id, user_id }`).
 
-Current route:
+So when a buyer hearts a listing on their Hot Sheet results page, it lands in `favorites` — invisible to the agent's Hot Sheet Review and to any per–hot-sheet view. That's why "hearts appear on the Favorites cards" (the buyer's own Favorites page reads `favorites`) but nothing surfaces in the hot-sheet context for the agent.
 
-```tsx
-<Route path="/favorites" element={<RouteGuard requireAuth><FavoritesEntry /></RouteGuard>} />
-```
+`ClientHotsheetPage` already passes `hotSheetId={hotSheet?.id}` to `ListingCard`, but `ListingCard` never forwards it to `FavoriteButton`, and `FavoriteButton` has no hot-sheet write path.
 
-Then `FavoritesEntry` reads global auth role again:
+## Fix
 
-```tsx
-if (role === "agent" || role === "admin") return <Navigate to="/my-favorites" replace />;
-if (role === "buyer") return <BuyerFavorites />;
-return <Navigate to="/auth" replace />;
-```
+Single behavior change: when `FavoriteButton` is mounted inside a hot-sheet context, **also** insert/delete a matching row in `hot_sheet_favorites` alongside the existing `favorites` write. No new UI, no role gating changes, no schema changes.
 
-So even when `RouteGuard` allows an authenticated user, `FavoritesEntry` can still redirect to `/auth` if `role` is temporarily `null` or unresolved.
+### Files
 
-That is the same class of bug as before: render/redirect before auth + role are fully known.
+1. **`src/components/FavoriteButton.tsx`**
+   - Add optional `hotSheetId?: string` prop.
+   - On initial load: if `hotSheetId`, also OR-check `hot_sheet_favorites` for `(user_id, listing_id, hot_sheet_id)` when computing initial filled state (so the heart shows filled if the row exists in either table).
+   - On toggle ON: keep the existing `favorites` insert; additionally upsert into `hot_sheet_favorites` `{ user_id, listing_id, hot_sheet_id }` (ignore duplicate-key conflict).
+   - On toggle OFF: keep the existing `favorites` delete; additionally delete the matching `hot_sheet_favorites` row.
+   - All hot-sheet writes are guarded by `if (hotSheetId)`; behavior elsewhere is unchanged.
 
-### 2. `Favorites.tsx` does its own `getUser()` check and redirects
+2. **`src/components/ListingCard.tsx`**
+   - In the `showInteractiveFavoriteButton` branch (≈ line 899), forward the existing `hotSheetId` prop to `<FavoriteButton hotSheetId={hotSheetId} … />`.
 
-Inside `src/pages/Favorites.tsx`:
+3. **No change** to `ClientHotsheetPage.tsx` — it already passes `hotSheetId` to `ListingCard`.
 
-```tsx
-const { data: { user } } = await supabase.auth.getUser();
-if (!user) {
-  toast.error(...);
-  navigate("/auth");
-  return;
-}
-```
+4. **No change** to `HotSheetReview.tsx` — its read of `hot_sheet_favorites` already drives the agent's read-only heart and will start lighting up immediately once buyers favorite from the hot-sheet page.
 
-This is fragile on hard refresh because `getUser()` validates against the auth server. If token restore/refresh is still settling or a transient auth call hiccups, the page navigates away even though the session may recover.
+5. **RLS check (read-only verification — no migration unless needed):** confirm `hot_sheet_favorites` already allows the authenticated buyer (recipient) to `insert` / `delete` their own rows scoped to `hot_sheet_id`s they have access to. If a policy is missing we'll add a minimal one in a follow-up migration — flagged here so it's not a surprise, but not pre-emptively written since the table is already in active use elsewhere (`ClientHotSheet.tsx` writes to it today).
 
-Favorites should not own auth routing. The route guard already owns auth routing.
+## What stays the same
+- `ListingCard` role gating (`suppressFavoriteHeartChrome` for agents/admins) — unchanged.
+- The buyer's `/favorites` page continues to work off the `favorites` table, so anything hearted on a hot sheet still also shows there.
+- Agent's Hot Sheet Review continues to render hearts only when a `hot_sheet_favorites` row exists — but now those rows will actually get created.
 
-### 3. `/my-favorites` is not protected consistently
-
-Agents/admins hitting `/favorites` are redirected to `/my-favorites`, but `/my-favorites` is currently under `AgentLayout` without `RouteGuard`:
-
-```tsx
-<Route path="/my-favorites" element={<MyFavorites />} />
-```
-
-Then `MyFavorites.tsx` also calls `supabase.auth.getUser()` and navigates to `/auth` if it doesn’t immediately get a user.
-
-So the agent/admin Favorites path has the same hard-refresh fragility as buyer Favorites.
-
-### 4. Favorites data fetches are not gated by auth readiness
-
-Favorites data should load only after the global auth provider has finished restoring session and resolving role. Right now the page still performs its own auth read on mount.
-
-The durable fix is to make Favorites consume the existing global auth state instead of doing browser-side `getUser()` redirects.
-
-## Implementation plan
-
-### Step 1: Make `FavoritesEntry` wait instead of redirecting on temporary `role=null`
-
-Update `src/App.tsx` `FavoritesEntry`:
-
-- Keep the existing loading skeleton while `useAuthRole().loading` is true.
-- If there is a user but role is still `null`, show a loading state, not `/auth`.
-- Only redirect to `/auth` when global auth says there is no user after loading is complete.
-- Keep existing role routing:
-  - admin/agent → `/my-favorites`
-  - buyer → `<BuyerFavorites />`
-
-This prevents `/favorites` from bouncing to `/auth` during the role-resolution gap.
-
-### Step 2: Protect `/my-favorites` with `RouteGuard`
-
-Update `src/App.tsx`:
-
-```tsx
-<Route path="/my-favorites" element={<RouteGuard requireRole={["agent", "admin"]}><MyFavorites /></RouteGuard>} />
-```
-
-This makes the agent/admin Favorites path use the same single auth gate as other protected workspace routes.
-
-### Step 3: Refactor `Favorites.tsx` to use `useAuthRole()` instead of `getUser()` for page auth
-
-Update `src/pages/Favorites.tsx`:
-
-- Import `useAuthRole`.
-- Replace `checkAuth()` with an effect keyed by global auth state:
-  - if auth is still loading: do nothing
-  - if no user after loading: let `RouteGuard` redirect; do not run local `navigate("/auth")`
-  - if user exists: set local user and call `fetchFavorites(user.id)`
-- Remove the page-level `getUser()` redirect.
-
-This makes Favorites wait for the same auth-ready source as the route guard.
-
-### Step 4: Refactor `MyFavorites.tsx` the same way
-
-Update `src/pages/MyFavorites.tsx`:
-
-- Import `useAuthRole`.
-- Do not call `supabase.auth.getUser()` for initial page auth.
-- Use the global `user.id` from `useAuthRole()` once loading is complete.
-- Let `RouteGuard` own redirects.
-- Keep the existing favorites queries and UI unchanged.
-
-### Step 5: Keep data queries unchanged, only change auth gating
-
-Do not redesign the Favorites UI.
-Do not change favorites tables, RLS, or listing-card behavior.
-Do not change the buyer/agent visual shells.
-
-The only behavior change is: Favorites waits for authenticated state before querying or redirecting.
-
-### Step 6: Verify the exact failure
-
-After implementation, verify:
-
-1. Hard refresh `/favorites` as buyer:
-   - stays on `/favorites`
-   - shows buyer Favorites or empty state
-   - no bounce to `/auth`
-2. Hard refresh `/favorites` as agent/admin:
-   - redirects to `/my-favorites`
-   - loads agent/admin Favorites
-   - no bounce to `/auth`
-3. Hard refresh `/favorites` signed out:
-   - clean redirect to `/auth`
-4. Console:
-   - no auth errors
-   - no repeated redirect loop
-
-## Files to change
-
-- `src/App.tsx`
-- `src/pages/Favorites.tsx`
-- `src/pages/MyFavorites.tsx`
-
-No database or backend changes are needed.
+## Expected outcome
+Buyer opens the Hot Sheet results page → hearts a listing → row written to both `favorites` and `hot_sheet_favorites`. Agent opens Hot Sheet Review → sees the red filled heart on that listing card immediately.
