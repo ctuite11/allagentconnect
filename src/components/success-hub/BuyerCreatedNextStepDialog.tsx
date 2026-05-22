@@ -75,13 +75,18 @@ export function BuyerCreatedNextStepDialog({
             {/* Primary — best next action */}
             <button
               onClick={handleCreateHotSheet}
-              className="w-full inline-flex items-center justify-between gap-3 h-12 px-4 rounded-xl bg-[#0E56F5] text-white font-medium text-[14px] hover:bg-[#0B47CC] transition-colors"
+              className="w-full inline-flex items-center justify-between gap-3 min-h-12 py-2 px-4 rounded-xl bg-[#0E56F5] text-white font-medium text-[14px] hover:bg-[#0B47CC] transition-colors"
             >
-              <span className="inline-flex items-center gap-2.5">
-                <ListPlus className="w-4 h-4" />
-                Send Invite with Hot Sheet
+              <span className="inline-flex flex-col items-start gap-0.5 text-left min-w-0">
+                <span className="inline-flex items-center gap-2.5">
+                  <ListPlus className="w-4 h-4" />
+                  Send Invite with Hot Sheet
+                </span>
+                <span className="pl-6 text-[12px] font-normal text-white/80">
+                  Set criteria, review matches, then send
+                </span>
               </span>
-              <ArrowRight className="w-4 h-4 opacity-80" />
+              <ArrowRight className="w-4 h-4 opacity-80 shrink-0" />
             </button>
 
             {/* Secondary — opens reviewable invite draft */}
