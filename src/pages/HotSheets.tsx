@@ -828,6 +828,10 @@ const HotSheets = ({
                 nameLabel="Hot Sheet Name"
                 titleCaseName={false}
                 onClick={() => openPersonalHotSheet(sheet.id)}
+                onEditClick={() => {
+                  setEditingHotSheetId(sheet.id);
+                  setEditDialogOpen(true);
+                }}
               />
             ))}
           </div>
