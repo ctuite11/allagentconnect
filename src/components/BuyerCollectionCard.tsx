@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Eye, Heart } from "lucide-react";
+import { useState, type MouseEvent } from "react";
+import { Eye, Heart, Pencil } from "lucide-react";
 import {
   buyerCollectionCardRoot,
   buyerImageMosaicCell,
@@ -13,6 +13,8 @@ interface BuyerCollectionCardProps {
   onClick: () => void;
   /** When set, shows a Favorites control (CRM buyer favorites) next to View. */
   onFavoritesClick?: () => void;
+  /** When set, shows an Edit button overlay on the card. */
+  onEditClick?: (e: MouseEvent<HTMLButtonElement>) => void;
   /** Metadata row label. Default: Buyer Name */
   nameLabel?: string;
   /** When false, show the name as stored (e.g. hot sheet titles). Default: title-case like buyer names. */
@@ -64,6 +66,7 @@ export function BuyerCollectionCard({
   photos,
   onClick,
   onFavoritesClick,
+  onEditClick,
   nameLabel = "Buyer Name",
   titleCaseName = true,
 }: BuyerCollectionCardProps) {
@@ -73,7 +76,21 @@ export function BuyerCollectionCard({
     : clientName.trim() || "Untitled hot sheet";
 
   return (
-    <article
+    <div className="relative h-full min-h-0">
+      {onEditClick ? (
+        <button
+          type="button"
+          aria-label="Edit hot sheet"
+          onClick={(e) => {
+            e.stopPropagation();
+            onEditClick(e);
+          }}
+          className="absolute right-2 top-2 z-20 flex h-8 w-8 items-center justify-center rounded-md border border-neutral-200 bg-white shadow-sm transition-colors hover:bg-neutral-50"
+        >
+          <Pencil className="h-3.5 w-3.5 text-neutral-700" aria-hidden strokeWidth={2} />
+        </button>
+      ) : null}
+      <article
       role="button"
       tabIndex={0}
       className={`${buyerCollectionCardRoot} flex min-h-[19rem] flex-col outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40 focus-visible:ring-offset-2 md:min-h-[20rem]`}
@@ -128,6 +145,7 @@ export function BuyerCollectionCard({
           </div>
         </div>
       </div>
-    </article>
+      </article>
+    </div>
   );
 }
