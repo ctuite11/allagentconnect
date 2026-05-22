@@ -1102,7 +1102,6 @@ const HotSheetReview = () => {
     }
   };
 
-  const handleSendFirstBatchLegacy = async () => {
   const handleNotifyWithMatches = async () => {
     try {
       setSending(true);
