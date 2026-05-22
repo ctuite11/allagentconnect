@@ -1,69 +1,47 @@
 ## Goal
 
-Connect the **New Buyer** dialog to the agent's CRM **Contacts** so the agent can:
-1. **Pick** an existing contact and have name/email/phone pre-filled, then convert them into a buyer (their `client_type` flips to `buyer`).
-2. If the typed email is **not** in Contacts, see a small inline option to **also add this person to Contacts as a buyer** before sending the invite.
+When an agent picks **Send Invite with Hot Sheet** after adding a buyer, the flow should land on the Hot Sheet review page so they can verify the matched listings, remove unwanted ones, and only then send the invite — instead of the invite being sent the moment the sheet is created.
 
-## UX changes (CreateBuyerDialog.tsx)
+## Current behavior (the bug)
 
-```text
-┌─ New Buyer ────────────────────────────────────┐
-│  [ Search existing contact… ▼ ]  ← new combobox │
-│  ────────── or enter new ──────────             │
-│  First name      Last name                      │
-│  Email                                          │
-│  Phone (optional)                               │
-│                                                 │
-│  ☑ Also add to Contacts as a buyer              │
-│     (only shown when email is NOT in contacts)  │
-│                                                 │
-│            [Cancel]  [Create Buyer]             │
-└─────────────────────────────────────────────────┘
-```
+1. Add Buyer → "Send Invite with Hot Sheet" → navigates to `BuyerAccount` with `?createHotSheet=1`.
+2. `CreateHotSheetDialog` opens with `lockedToClient`. On save it:
+   - creates the hot sheet
+   - **immediately calls `enqueueHotSheetClientInvites(...)`** (file `src/components/CreateHotSheetDialog.tsx`, lines ~978–1003), which fires the buyer's invite email with sample listings.
+   - then navigates to `/hot-sheets/:id/review`.
+3. By the time the agent reaches the review page (where listing removal lives), the email has already been queued.
 
-### Behavior
+`HotSheetBuyerDetail.tsx` uses the dialog the same way (also navigates to review on success), so removing auto-send is consistent across both entry points. The review page already has a `Send Invites` action and a "Removed listings" panel — no changes needed there.
 
-- **Contact picker (top)**: Command/Combobox listing the agent's `clients` rows (any `client_type`). Selecting one:
-  - Pre-fills first/last/email/phone (read-only chip-style indicator "From Contacts").
-  - On submit, reuses that `clients.id`. If `client_type !== 'buyer'`, update it to `'buyer'`. Then create the `client_agent_relationships` row exactly as today.
-  - Hides the "Also add to Contacts" checkbox (already a contact).
+## Plan
 
-- **Manual entry**:
-  - As the agent types email, debounce-check against this agent's `clients` by email (case-insensitive).
-  - If a match exists → auto-switch to "from contacts" mode (same as picking).
-  - If no match → show the **"Also add to Contacts as a buyer"** checkbox, **default ON**.
-    - ON → current insert path (already inserts into `clients` with `client_type='buyer'`).
-    - OFF → skip the `clients` insert and only create the relationship via a CRM-less path. **Note:** today the schema requires `crm_client_id` on the relationship, so OFF is not viable without schema work. Recommend keeping the checkbox **always-on and disabled with helper text** ("New buyers are saved to Contacts") OR removing the checkbox and just showing an inline note. See "Decision needed" below.
+### 1. Stop auto-sending invites from `CreateHotSheetDialog`
 
-## Data rules
+File: `src/components/CreateHotSheetDialog.tsx`
 
-- Existing contact selected:
-  - `UPDATE clients SET client_type='buyer' WHERE id=<picked> AND agent_id=me` (only if not already buyer).
-  - Backfill missing phone/first/last from form values (don't overwrite existing non-null fields).
-  - Then `INSERT INTO client_agent_relationships (agent_id, crm_client_id, status='pending', client_id=null)` — same as current "no existing relationship" branch.
-  - Reuse existing `agent_reactivate_buyer` RPC if a prior ended relationship exists.
+- Remove the `lockedToClient && createdHotSheet && selectedClients.length > 0` block that calls `enqueueHotSheetClientInvites` and `kick-email-queue` (lines ~978–1003).
+- Replace it with a simple `toast.success("Hot sheet created. Review the matches and send the invite when ready.")`.
+- Drop the now-unused `enqueueHotSheetClientInvites` import if nothing else in the file uses it.
+- Update the dialog's helper copy at lines ~1127–1129 and ~2074–2079 so it no longer promises that confirming "sends the invite email"; instead it tells the agent: "We'll save the hot sheet and open the review page so you can confirm matches before sending."
 
-- New contact (not in CRM):
-  - Same insert as today (`clients` row with `client_type='buyer'`) + relationship row.
+### 2. Keep navigation as-is
 
-## Decision needed
+- `BuyerAccount.tsx` and `HotSheetBuyerDetail.tsx` already navigate to `/hot-sheets/:id/review` on `onSuccess`. No change.
+- On the review page the agent sees matched listings, can remove any (existing functionality), then clicks **Send Invites** — which is the only place the invite email gets queued.
 
-The current schema/flow always creates a `clients` row for a new buyer (so they're already in Contacts). The user said: *"if the buyer is not in contacts then need option before invite to add to contacts as a buyer."* This implies they think buyers can exist without a contact row — but today they can't.
+### 3. Light copy tweak on the "Buyer Added" dialog (optional, non-blocking)
 
-Two ways to honor the intent:
+File: `src/components/success-hub/BuyerCreatedNextStepDialog.tsx`
 
-- **Option A (recommended, no schema change):** Always add to Contacts; surface a clear inline note "This buyer will also be saved to your Contacts." Add the **picker** on top so the agent can choose an existing contact instead of duplicating.
-- **Option B:** Allow buyer relationships without a `clients` row. Requires schema work (nullable `crm_client_id`, new RLS, audit of all consumers of `My Buyers`). Larger scope.
-
-I'll proceed with **Option A** unless you tell me to do B.
-
-## Files to change
-
-- `src/components/CreateBuyerDialog.tsx` — add contact picker (Command + Popover), pre-fill logic, email lookup, status-flip update, helper text.
-- (No new files, no schema migration, no edge function changes.)
+- Change the secondary line under "Send Invite with Hot Sheet" so it accurately reflects the new flow, e.g. _"Set criteria, review matches, then send"_ — keeps the user from expecting an instant send.
 
 ## Out of scope
 
-- Bulk convert from Contacts page.
-- Changing the invite email content.
-- Schema changes to relax `crm_client_id`.
+- No changes to `HotSheetReview.tsx`, `enqueueHotSheetClientInvites.ts`, edge functions, schema, or RLS.
+- No change to the "Invite Client Now" path (workspace-only invite, no hot sheet) — it stays as-is.
+- Bulk/multi-client hot sheet flows already route through review and are unaffected.
+
+## Files touched
+
+- `src/components/CreateHotSheetDialog.tsx` — remove auto-invite block, update copy.
+- `src/components/success-hub/BuyerCreatedNextStepDialog.tsx` — minor subtitle tweak.
