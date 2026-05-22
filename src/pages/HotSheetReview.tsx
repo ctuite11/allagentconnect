@@ -1386,6 +1386,7 @@ const HotSheetReview = () => {
             }
             renderListingCard={(listing, helpers) => {
               const row = listing as unknown as Listing;
+              const buyerSavedOnHotSheet = buyerHotSheetFavoriteIds.has(row.id);
               return (
                 <ListingCard
                   listing={row}
@@ -1393,8 +1394,12 @@ const HotSheetReview = () => {
                   showActions={false}
                   showCompactComments
                   compactListedByMessageSeparator
-                  onSelect={helpers.onSelect ? () => helpers.onSelect!(row.id) : undefined}
-                  isSelected={helpers.isSelected}
+                  onSelect={
+                    !isSharedWorkspace && helpers.onSelect
+                      ? () => helpers.onSelect!(row.id)
+                      : undefined
+                  }
+                  isSelected={!isSharedWorkspace && helpers.isSelected}
                   chatMessages={messagesMap[row.id] || []}
                   onNewMessage={handleNewMessage}
                   onOpenChat={() => {
@@ -1412,9 +1417,7 @@ const HotSheetReview = () => {
                   }}
                   hotSheetId={id ?? undefined}
                   hideCompactFavorite={isSharedWorkspace}
-                  isHotSheetFavorite={
-                    isSharedWorkspace ? buyerHotSheetFavoriteIds.has(row.id) : undefined
-                  }
+                  isHotSheetFavorite={isSharedWorkspace ? buyerSavedOnHotSheet : undefined}
                   compactSelectionAccent="aacGreen"
                   compactDetailNavigateState={{ from: resultsFromPath }}
                   showAgentEmailContact

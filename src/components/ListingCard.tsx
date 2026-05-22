@@ -777,7 +777,9 @@ const ListingCard = ({
     const showRemovableBuyerFavoriteHeart = compactSavedHeartOverlay;
     /** Agent hot-sheet activity: read-only filled heart when buyer saved the listing. */
     const showHotSheetFavoriteHeart =
-      isHotSheetFavorite === true && hideCompactFavorite && !compactSavedHeartOverlay;
+      isHotSheetFavorite === true &&
+      !compactSavedHeartOverlay &&
+      (hideCompactFavorite || suppressFavoriteHeartChrome);
     const showInteractiveFavoriteButton =
       !hideCompactFavorite && !suppressFavoriteHeartChrome && !compactSavedHeartOverlay;
     const showHotSheetFavoriteBadge =
@@ -805,11 +807,15 @@ const ListingCard = ({
             <div
               className={cn(
                 "pointer-events-none absolute inset-x-0 top-0 z-10 flex items-center gap-2 px-2 pt-2",
-                showFavoriteChrome ? "justify-between" : "justify-start"
+                onSelect && showFavoriteChrome
+                  ? "justify-between"
+                  : showFavoriteChrome
+                    ? "justify-end"
+                    : "justify-start",
               )}
             >
+              {onSelect ? (
               <div className="pointer-events-auto flex h-9 min-w-[2.25rem] shrink-0 items-center justify-center">
-                {onSelect ? (
                   <div
                     role="checkbox"
                     aria-checked={isSelected}
@@ -839,8 +845,8 @@ const ListingCard = ({
                       </svg>
                     )}
                   </div>
-                ) : null}
               </div>
+              ) : null}
               {showFavoriteChrome ? (
                 <div
                   className="pointer-events-auto flex h-9 min-w-0 max-w-[calc(100%-3.5rem)] items-center justify-end gap-1"
