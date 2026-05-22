@@ -902,6 +902,7 @@ const ListingCard = ({
                       size="icon"
                       photoIcon
                       hideTooltip={hideFavoriteTooltip}
+                      hotSheetId={hotSheetId}
                     />
                   ) : null}
                 </div>
