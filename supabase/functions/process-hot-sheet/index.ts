@@ -76,7 +76,8 @@ const handler = async (req: Request): Promise<Response> => {
         clients (
           first_name,
           last_name,
-          email
+          email,
+          phone
         )
       `)
       .eq("hot_sheet_id", hotSheetId);
