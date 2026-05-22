@@ -821,7 +821,7 @@ const HotSheetReview = () => {
           .maybeSingle(),
         supabase
           .from("clients")
-          .select("id, email, first_name, last_name")
+          .select("id, email, first_name, last_name, phone")
           .in("id", recipientClientIds),
         supabase
           .from("share_tokens")
@@ -834,12 +834,18 @@ const HotSheetReview = () => {
         : agentDisplayName;
 
       // Map client data by id for O(1) lookup
-      const clientMap = new Map<string, { email: string; name: string }>();
+      const clientMap = new Map<
+        string,
+        { email: string; name: string; first_name: string | null; last_name: string | null; phone: string | null }
+      >();
       for (const c of (clientsRes.data ?? [])) {
         if (c.email) {
           clientMap.set(c.id, {
             email: c.email,
             name: `${c.first_name ?? ""} ${c.last_name ?? ""}`.trim() || c.email,
+            first_name: c.first_name ?? null,
+            last_name: c.last_name ?? null,
+            phone: (c as { phone?: string | null }).phone ?? null,
           });
         }
       }
@@ -921,6 +927,9 @@ const HotSheetReview = () => {
                 type: "client_hotsheet_invite",
                 client_id: clientId,
                 client_email: clientData.email,
+                client_first_name: clientData.first_name,
+                client_last_name: clientData.last_name,
+                client_phone: clientData.phone,
                 hot_sheet_id: hotSheet.id,
                 suppress_initial_matches: true,
               },
@@ -954,7 +963,9 @@ const HotSheetReview = () => {
           `?invitation_token=${encodeURIComponent(finalToken)}` +
           `&email=${encodeURIComponent(clientData.email)}` +
           `&agent_id=${encodeURIComponent(user.id)}` +
-          `&client_id=${encodeURIComponent(clientId)}`;
+          `&client_id=${encodeURIComponent(clientId)}` +
+          (clientData.first_name ? `&first_name=${encodeURIComponent(clientData.first_name)}` : "") +
+          (clientData.last_name ? `&last_name=${encodeURIComponent(clientData.last_name)}` : "");
 
         console.log(
           `[handleSendInvites] enqueue attempt → ${clientData.email} (mode=${mode}, tokenId=${tokenId})`,
