@@ -1,29 +1,43 @@
-## Correction plan
+# Populate buyer name on Create Password page after re-invite
 
-Your rule is correct: when an agent removes a buyer, that buyer’s access/invite state must be treated as ended. If the agent later adds the same person again, the app must create a new invite and the buyer must accept it again.
+## Problem
 
-## Root cause found
+When an agent removes a buyer and later re-adds them, the new hot sheet invite email leads to the Create Password page with empty First/Last name fields. The accept page (`ClientInvitationSetup.tsx`) already reads name seeds from two sources:
 
-- The removal function deletes the buyer’s hot sheets and marks the relationship inactive, but it only revokes pending invite tokens.
-- Accepted old invite tokens can remain active even when their hot sheet was deleted.
-- The invite UI then sees that old accepted/non-revoked token by email and incorrectly decides: “this buyer was already invited / no invite needed.”
+1. URL params `first_name` / `last_name`
+2. `share_tokens.payload.client_first_name` / `client_last_name`
 
-## What I will change
+…but two of the three invite-creation paths don't write those fields, so re-invites land on the page blank.
 
-1. **Fix buyer removal cleanup**
-   - Update the buyer-removal database function so removal revokes all hot sheet invite tokens for that agent + buyer email/client, including previously accepted tokens.
-   - Keep historical rows for audit, but mark them inactive via `revoked_at` so they no longer grant access or block future invites.
+## Root cause
 
-2. **Ignore orphaned invite history**
-   - Update invite eligibility checks so they only consider non-revoked tokens tied to existing/current hot sheets.
-   - Old tokens for deleted hot sheets will no longer count as “already invited.”
+- `src/lib/enqueueHotSheetClientInvites.ts` — already includes the names in payload + URL. ✅
+- `src/pages/HotSheetReview.tsx` (`handleSendInvites`, around lines 822-957) — selects only `email, first_name, last_name` from `clients`, but stores **only** `client_email` in the token payload and omits `first_name` / `last_name` from both the payload and the invite URL. ❌
+- `src/pages/HotSheetBuyerDetail.tsx` (`handleResendInvite`, around lines 195-248) — token payload and URL omit name fields entirely. ❌
+- `supabase/functions/process-hot-sheet/index.ts` (around lines 374-389) — token payload omits name fields. ❌
 
-3. **Force fresh invite after re-add**
-   - Update `HotSheetReview.tsx` and `enqueueHotSheetClientInvites.ts` so a newly-added buyer with no active accepted relationship for the current lifecycle gets a new token/email, even if the same email had an old accepted invite before removal.
+## Plan
 
-4. **Backfill the broken current data**
-   - Revoke existing stale/orphaned invite tokens where the referenced hot sheet no longer exists, including the lingering accepted token that is blocking this buyer.
-   - This makes the current n.lopach case eligible for a fresh invite immediately.
+1. **`src/pages/HotSheetReview.tsx`**
+   - Extend the `clients` select to include `phone`.
+   - Extend the `clientMap` entries to keep `first_name`, `last_name`, `phone`.
+   - When inserting a new `share_tokens` row, add `client_first_name`, `client_last_name`, `client_phone` to the payload.
+   - Append `&first_name=…&last_name=…` (when present) to the `hotSheetLink`, matching `enqueueHotSheetClientInvites`.
 
-5. **Validate the send path**
-   - Confirm that the new invite is queued with a new token and that selected listings are not sent until the buyer accepts the new invite.
+2. **`src/pages/HotSheetBuyerDetail.tsx`**
+   - Where the buyer record is loaded for this page, ensure first/last name and phone are available (most likely already on `buyer`).
+   - When inserting a fresh `share_tokens` row in `handleResendInvite`, include `client_first_name`, `client_last_name`, `client_phone` in the payload.
+   - Append `first_name` / `last_name` query params to `hotSheetLink` when present.
+
+3. **`supabase/functions/process-hot-sheet/index.ts`**
+   - When the email comes from the junction-table `clients` row, also pull `first_name`, `last_name`, `phone` and add `client_first_name`, `client_last_name`, `client_phone` to the new token payload.
+
+4. **Verify**
+   - Re-add a previously-removed buyer (e.g., `n.lopach`), send a hot sheet invite, open the email link, confirm First/Last fields are pre-filled on the Create Password page.
+   - Confirm existing flows that already populate names (URL params, accepted invites) continue to work.
+
+## Out of scope
+
+- No UI/visual changes to `ClientInvitationSetup`.
+- No schema or RLS changes.
+- No changes to the buyer removal/cleanup logic shipped previously.

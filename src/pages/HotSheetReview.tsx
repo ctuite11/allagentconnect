@@ -821,7 +821,7 @@ const HotSheetReview = () => {
           .maybeSingle(),
         supabase
           .from("clients")
-          .select("id, email, first_name, last_name")
+          .select("id, email, first_name, last_name, phone")
           .in("id", recipientClientIds),
         supabase
           .from("share_tokens")
@@ -834,12 +834,18 @@ const HotSheetReview = () => {
         : agentDisplayName;
 
       // Map client data by id for O(1) lookup
-      const clientMap = new Map<string, { email: string; name: string }>();
+      const clientMap = new Map<
+        string,
+        { email: string; name: string; first_name: string | null; last_name: string | null; phone: string | null }
+      >();
       for (const c of (clientsRes.data ?? [])) {
         if (c.email) {
           clientMap.set(c.id, {
             email: c.email,
             name: `${c.first_name ?? ""} ${c.last_name ?? ""}`.trim() || c.email,
+            first_name: c.first_name ?? null,
+            last_name: c.last_name ?? null,
+            phone: (c as { phone?: string | null }).phone ?? null,
           });
         }
       }
