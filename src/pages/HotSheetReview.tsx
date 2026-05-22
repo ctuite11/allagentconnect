@@ -927,6 +927,9 @@ const HotSheetReview = () => {
                 type: "client_hotsheet_invite",
                 client_id: clientId,
                 client_email: clientData.email,
+                client_first_name: clientData.first_name,
+                client_last_name: clientData.last_name,
+                client_phone: clientData.phone,
                 hot_sheet_id: hotSheet.id,
                 suppress_initial_matches: true,
               },
@@ -960,7 +963,9 @@ const HotSheetReview = () => {
           `?invitation_token=${encodeURIComponent(finalToken)}` +
           `&email=${encodeURIComponent(clientData.email)}` +
           `&agent_id=${encodeURIComponent(user.id)}` +
-          `&client_id=${encodeURIComponent(clientId)}`;
+          `&client_id=${encodeURIComponent(clientId)}` +
+          (clientData.first_name ? `&first_name=${encodeURIComponent(clientData.first_name)}` : "") +
+          (clientData.last_name ? `&last_name=${encodeURIComponent(clientData.last_name)}` : "");
 
         console.log(
           `[handleSendInvites] enqueue attempt → ${clientData.email} (mode=${mode}, tokenId=${tokenId})`,
