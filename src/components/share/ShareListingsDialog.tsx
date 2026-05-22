@@ -117,11 +117,12 @@ const CONTACT_ADD_FEEDBACK_MS = 2800;
 
 /** Passive field / preview icons — monochrome modal chrome */
 const ICON_NEUTRAL = "text-neutral-400";
-/** Primary share actions only */
-const ICON_ACTION = "text-[#0E56F5]";
+const ICON_SLOT = "pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2";
+/** Wraps inputs so Lucide icons inherit neutral stroke (not primary focus blue) */
+const FIELD_ICON_WRAP = "relative text-neutral-400";
 
 const INPUT_CLASS =
-  "border-neutral-200/90 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.03)] focus-visible:border-neutral-300 focus-visible:ring-1 focus-visible:ring-neutral-200/80";
+  "border-neutral-200/90 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.03)] focus-visible:!border-neutral-300 focus-visible:ring-1 focus-visible:!ring-neutral-200/70 focus-visible:ring-offset-0";
 
 type ContactAddFeedback = "added" | "already-added" | null;
 
@@ -335,11 +336,11 @@ export function ShareListingsDialog({
           {/* Listing preview / bulk summary */}
           {selectedCount === 1 && listingPreview ? (
             <div className="flex items-start gap-3 rounded-lg border border-neutral-200 bg-white p-3 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
-              <div className="mt-0.5 shrink-0 rounded-md border border-neutral-200 bg-white p-2 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+              <div className={cn("mt-0.5 shrink-0 rounded-md border border-neutral-200 bg-white p-2 shadow-[0_1px_2px_rgba(0,0,0,0.04)]", ICON_NEUTRAL)}>
                 {previewVariant === "hot-sheet" ? (
-                  <Layers className={cn("h-4 w-4", ICON_NEUTRAL)} />
+                  <Layers className="h-4 w-4" />
                 ) : (
-                  <Home className={cn("h-4 w-4", ICON_NEUTRAL)} />
+                  <Home className="h-4 w-4" />
                 )}
               </div>
               <div className="min-w-0 flex-1">
@@ -365,8 +366,8 @@ export function ShareListingsDialog({
             </div>
           ) : selectedCount > 1 ? (
             <div className="flex items-start gap-3 rounded-lg border border-neutral-200 bg-white p-3 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
-              <div className="mt-0.5 shrink-0 rounded-md border border-neutral-200 bg-white p-2 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
-                <Layers className={cn("h-4 w-4", ICON_NEUTRAL)} />
+              <div className={cn("mt-0.5 shrink-0 rounded-md border border-neutral-200 bg-white p-2 shadow-[0_1px_2px_rgba(0,0,0,0.04)]", ICON_NEUTRAL)}>
+                <Layers className="h-4 w-4" />
               </div>
               <div className="min-w-0 flex-1">
                 <div className="text-sm font-medium text-neutral-900">Sharing {selectedCount} listings</div>
@@ -383,8 +384,8 @@ export function ShareListingsDialog({
               {recipients.length > 0 ? "Add another contact" : "Search contact"}
             </div>
 
-            <div ref={contactSearchRef} className="relative">
-              <Search className={cn("pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2", ICON_NEUTRAL)} />
+            <div ref={contactSearchRef} className={FIELD_ICON_WRAP}>
+              <Search className={ICON_SLOT} />
               <Input
                 value={contactQuery}
                 onChange={(e) => setContactQuery(e.target.value)}
@@ -498,10 +499,10 @@ export function ShareListingsDialog({
               type="button"
               variant="outline"
               size="sm"
-              className="h-9 w-full rounded-lg border-neutral-200 text-[13px] font-medium text-neutral-900 shadow-[0_1px_2px_rgba(0,0,0,0.03)] hover:border-neutral-300 hover:bg-neutral-50"
+              className="h-9 w-full rounded-lg border-neutral-200 text-[13px] font-medium text-neutral-900 shadow-[0_1px_2px_rgba(0,0,0,0.03)] hover:border-neutral-300 hover:bg-neutral-50 [&_svg]:text-neutral-400"
               onClick={() => setManualMode(!manualMode)}
             >
-              <PencilLine className={cn("mr-2 h-3.5 w-3.5", ICON_ACTION)} />
+              <PencilLine className="mr-2 h-3.5 w-3.5" />
               Enter manually
             </Button>
 
@@ -523,8 +524,8 @@ export function ShareListingsDialog({
 
                   <div className="space-y-1.5">
                     <div className="text-xs font-medium text-neutral-700">Recipient email</div>
-                    <div className="relative">
-                      <Mail className={cn("pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2", ICON_NEUTRAL)} />
+                    <div className={FIELD_ICON_WRAP}>
+                      <Mail className={ICON_SLOT} />
                       <Input
                         value={recipientEmail}
                         onChange={(e) => setRecipientEmail(e.target.value)}
@@ -541,8 +542,8 @@ export function ShareListingsDialog({
                 {recipientName.trim() && recipientEmail.trim() && onSaveContact && !showSavePrompt && (
                   <div className="space-y-3 rounded-lg border border-neutral-200 bg-white p-3 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
                     <div className="flex items-start gap-3">
-                      <div className="rounded-md border border-neutral-200 bg-white p-2 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
-                        <UserPlus className={cn("h-4 w-4", ICON_NEUTRAL)} />
+                      <div className={cn("rounded-md border border-neutral-200 bg-white p-2 shadow-[0_1px_2px_rgba(0,0,0,0.04)]", ICON_NEUTRAL)}>
+                        <UserPlus className="h-4 w-4" />
                       </div>
                       <div className="min-w-0">
                         <div className="text-[13px] font-medium leading-snug text-neutral-900">
@@ -610,8 +611,8 @@ export function ShareListingsDialog({
 
             <div className="space-y-1.5">
               <div className="text-xs font-medium text-neutral-700">Your name <span className="text-neutral-400">*</span></div>
-              <div className="relative">
-                <User className={cn("pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2", ICON_NEUTRAL)} />
+              <div className={FIELD_ICON_WRAP}>
+                <User className={ICON_SLOT} />
                 <Input
                   value={senderName}
                   onChange={(e) => setSenderName(e.target.value)}
@@ -623,8 +624,8 @@ export function ShareListingsDialog({
 
             <div className="space-y-1.5">
               <div className="text-xs font-medium text-neutral-700">Your email <span className="text-neutral-400">*</span></div>
-              <div className="relative">
-                <Mail className={cn("pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2", ICON_NEUTRAL)} />
+              <div className={FIELD_ICON_WRAP}>
+                <Mail className={ICON_SLOT} />
                 <Input
                   value={senderEmail}
                   onChange={(e) => setSenderEmail(e.target.value)}
@@ -640,8 +641,8 @@ export function ShareListingsDialog({
               <div className="text-xs font-medium text-neutral-700">
                 Your phone <span className="font-normal text-neutral-500">(optional)</span>
               </div>
-              <div className="relative">
-                <Phone className={cn("pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2", ICON_NEUTRAL)} />
+              <div className={FIELD_ICON_WRAP}>
+                <Phone className={ICON_SLOT} />
                 <Input
                   value={senderPhone}
                   onChange={(e) => setSenderPhone(e.target.value)}
@@ -724,7 +725,7 @@ export function ShareListingsDialog({
               size="sm"
               onClick={onSubmit}
               disabled={!canSubmit || submitting}
-              className="h-9 min-w-[8.5rem] rounded-lg bg-[#0E56F5] px-4 text-[13px] font-medium text-white hover:bg-[#0B46CC] disabled:opacity-50"
+              className="h-9 min-w-[8.5rem] rounded-lg !bg-[#0E56F5] px-4 text-[13px] font-medium !text-white hover:!bg-[#0B46CC] disabled:opacity-50"
             >
               <Send className="mr-2 h-3.5 w-3.5 shrink-0 text-white" aria-hidden />
               <span>
