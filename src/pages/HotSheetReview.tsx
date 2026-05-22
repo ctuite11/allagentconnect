@@ -1103,27 +1103,6 @@ const HotSheetReview = () => {
   };
 
   const handleSendFirstBatchLegacy = async () => {
-    if (selectedListings.size === 0) return;
-    try {
-      setSending(true);
-
-      const { error } = await supabase.functions.invoke("process-hot-sheet", {
-        body: {
-          hotSheetId: id,
-          sendInitialBatch: true,
-          selectedListingIds: Array.from(selectedListings),
-        },
-      });
-      if (error) throw error;
-      toast.success(`Sent ${selectedListings.size} listing${selectedListings.size !== 1 ? "s" : ""} to client`);
-    } catch (error: any) {
-      console.error("Error sending listings:", error);
-      toast.error("Failed to send listings");
-    } finally {
-      setSending(false);
-    }
-  };
-
   const handleNotifyWithMatches = async () => {
     try {
       setSending(true);
