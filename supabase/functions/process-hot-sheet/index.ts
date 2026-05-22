@@ -88,9 +88,10 @@ const handler = async (req: Request): Promise<Response> => {
     // Those fields only exist inside the payload JSONB. Filter by payload.type in JS below.
     const { data: acceptedTokens, error: tokenErr } = await adminClient
       .from("share_tokens")
-      .select("payload, accepted_at")
+      .select("payload, accepted_at, revoked_at")
       .eq("agent_id", hotSheet.user_id)
-      .not("accepted_at", "is", null);
+      .not("accepted_at", "is", null)
+      .is("revoked_at", null);
 
     if (tokenErr) {
       console.warn("Warning: could not fetch accepted tokens:", tokenErr.message);
