@@ -1255,8 +1255,9 @@ const HotSheetReview = () => {
             containerClassName="min-w-0 px-0"
             toolbarAriaLabel="Hot sheet results"
             toolbarActionsExtra={
+              !isSharedWorkspace ? (
               <>
-                {!isSharedWorkspace && !invitesSent && (unacceptedCount > 0 || acceptedCount > 0) ? (
+                {!invitesSent && (unacceptedCount > 0 || acceptedCount > 0) ? (
                   <Button
                     type="button"
                     className="h-8 gap-1.5 rounded-md border border-[#0B46CC]/20 bg-[#0E56F5] px-3 text-[12px] font-medium text-white shadow-[0_1px_2px_rgba(0,0,0,0.08)] transition-colors duration-200 hover:bg-[#0B46CC] focus-visible:ring-2 focus-visible:ring-neutral-400/60 focus-visible:ring-offset-2"
@@ -1285,7 +1286,7 @@ const HotSheetReview = () => {
                           return allAlreadyInvited ? "Resend Invite" : "Send Listings with Invite";
                         })()}
                   </Button>
-                ) : !isSharedWorkspace && !invitesSent && acceptedCount > 0 ? (
+                ) : !invitesSent && acceptedCount > 0 ? (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button
@@ -1310,6 +1311,7 @@ const HotSheetReview = () => {
                   </DropdownMenu>
                 ) : null}
               </>
+              ) : undefined
             }
             beforeResults={
               !isSharedWorkspace && removedListings.length > 0 ? (
