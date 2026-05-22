@@ -162,6 +162,11 @@ interface ListingCardProps {
    * Omit everywhere else — default is plain `/property/:id`.
    */
   compactDetailNavigateState?: Record<string, unknown>;
+  /**
+   * When set, compact detail opens this path (e.g. buyer `/consumer-property/:id?returnTo=…`).
+   * Omit for agent/public surfaces — default is `/property/:id`.
+   */
+  compactListingDetailTo?: string;
   /** Agent MLS search / workflow: hide consumer favorite heart on compact cards only. */
   hideCompactFavorite?: boolean;
   /** Omit FavoriteButton hover tooltip (e.g. hot sheet matches — toast only). */
@@ -751,11 +756,12 @@ const ListingCard = ({
   // Compact view (for HotSheets and search results)
   if (viewMode === 'compact') {
     const openListingDetail = () => {
+      const detailPath = compactListingDetailTo ?? `/property/${listing.id}`;
       if (compactDetailNavigateState !== undefined) {
-        navigate(`/property/${listing.id}`, { state: compactDetailNavigateState });
+        navigate(detailPath, { state: compactDetailNavigateState });
         return;
       }
-      navigate(`/property/${listing.id}`);
+      navigate(detailPath);
     };
     const compactIdLabel = formatListingIdLabel(listing);
 

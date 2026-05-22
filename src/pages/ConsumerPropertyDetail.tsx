@@ -449,16 +449,21 @@ const ConsumerPropertyDetail = () => {
           onClick={() => {
             const p = new URLSearchParams(location.search);
             const st = (location.state as { from?: string } | null)?.from;
+            const returnTo = p.get("returnTo");
+            if (returnTo && returnTo.startsWith("/") && !returnTo.startsWith("//")) {
+              navigate(returnTo);
+              return;
+            }
             if (p.get("from") === "favorites" || st === "/client/favorites" || st === "/favorites") {
               navigate("/favorites");
               return;
             }
-            if (st) {
+            if (typeof st === "string" && st.startsWith("/") && !st.startsWith("//")) {
               navigate(st);
               return;
             }
             const lastSearch = sessionStorage.getItem("buyer_last_search_url");
-            navigate(lastSearch || "/browse");
+            navigate(lastSearch || "/client/dashboard");
           }}
           className="text-[13px]"
         />

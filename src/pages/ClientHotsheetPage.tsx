@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, type ComponentProps } from "react";
+import { useState, useEffect, useCallback, useMemo, type ComponentProps } from "react";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { useParams, useNavigate, useMatch } from "react-router-dom";
 import Footer from "@/components/Footer";
@@ -151,6 +151,24 @@ const ClientHotsheetPage = () => {
   /** Selection + share toolbar and card checkboxes (signed-in buyer with loaded sheet). */
   const enableBuyerListingSelection = Boolean(
     hotSheet?.id && (isBuyerHotSheetByIdRoute || currentUser),
+  );
+
+  /** Buyer portal listing detail + back (BuyerShell `/consumer-property/:id`). */
+  const buyerHotSheetReturnPath = useMemo(() => {
+    if (!hotSheet?.id || !currentUser) return null;
+    if (isBuyerHotSheetByIdRoute && hotSheetIdParam) {
+      return `/client/hot-sheets/${hotSheetIdParam}`;
+    }
+    return `/client/hot-sheets/${hotSheet.id}`;
+  }, [hotSheet?.id, currentUser, isBuyerHotSheetByIdRoute, hotSheetIdParam]);
+
+  const getBuyerListingDetailPath = useCallback(
+    (listingId: string) => {
+      if (!buyerHotSheetReturnPath) return undefined;
+      const q = new URLSearchParams({ returnTo: buyerHotSheetReturnPath });
+      return `/consumer-property/${listingId}?${q.toString()}`;
+    },
+    [buyerHotSheetReturnPath],
   );
 
   const toggleListingSelection = useCallback((id: string) => {
@@ -918,6 +936,12 @@ const ClientHotsheetPage = () => {
                   hotSheetId={hotSheet?.id}
                   chatMessages={listingChatByListingId[listing.id] ?? []}
                   onNewMessage={handleListingChatMessage}
+                  compactListingDetailTo={
+                    buyerHotSheetReturnPath ? getBuyerListingDetailPath(listing.id) : undefined
+                  }
+                  compactDetailNavigateState={
+                    buyerHotSheetReturnPath ? { from: buyerHotSheetReturnPath } : undefined
+                  }
                   onOpenChat={() => {
                     setListingChatListingId(listing.id);
                     setListingChatOpen(true);
