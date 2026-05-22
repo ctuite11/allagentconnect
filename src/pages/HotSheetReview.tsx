@@ -825,7 +825,7 @@ const HotSheetReview = () => {
           .in("id", recipientClientIds),
         supabase
           .from("share_tokens")
-          .select("id, token, payload, accepted_at")
+          .select("id, token, payload, accepted_at, revoked_at")
           .eq("agent_id", user.id),
       ]);
 
@@ -852,6 +852,7 @@ const HotSheetReview = () => {
         const payload = t.payload as Record<string, unknown> | null;
         if (payload?.type !== "client_hotsheet_invite") continue;
         if (String(payload.hot_sheet_id ?? "") !== hotSheetIdNorm) continue;
+        if ((t as any).revoked_at) continue;
         const cid = typeof payload.client_id === "string" ? payload.client_id : null;
         if (!cid) continue;
         const row: SheetInviteToken = {
