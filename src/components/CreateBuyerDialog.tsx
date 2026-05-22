@@ -361,18 +361,28 @@ export function CreateBuyerDialog({ open, onOpenChange, onSuccess }: CreateBuyer
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
-                  <Command>
+                  <Command
+                    filter={(value, search) => {
+                      if (!search) return 1;
+                      return value.toLowerCase().includes(search.toLowerCase()) ? 1 : 0;
+                    }}
+                  >
                     <CommandInput placeholder="Search by name or email…" />
                     <CommandList>
                       <CommandEmpty>No contacts found.</CommandEmpty>
                       <CommandGroup>
                         {contacts.map((c) => {
                           const name = `${c.first_name ?? ""} ${c.last_name ?? ""}`.trim() || c.email || "Unnamed";
+                          const searchValue = [c.first_name, c.last_name, c.email]
+                            .filter(Boolean)
+                            .join(" ")
+                            .toLowerCase();
                           return (
                             <CommandItem
                               key={c.id}
-                              value={`${name} ${c.email ?? ""}`}
+                              value={searchValue || name.toLowerCase()}
                               onSelect={() => applyContact(c)}
+                              className="data-[selected=true]:bg-muted data-[selected=true]:text-foreground aria-selected:bg-muted aria-selected:text-foreground"
                             >
                               <Check className={cn("mr-2 h-4 w-4 opacity-0")} />
                               <div className="flex flex-col min-w-0">
