@@ -205,6 +205,9 @@ const HotSheetBuyerDetail = () => {
               type: "client_hotsheet_invite",
               client_id: clientId,
               client_email: buyer.email,
+              client_first_name: buyer.firstName ?? null,
+              client_last_name: buyer.lastName ?? null,
+              client_phone: buyer.phone ?? null,
               hot_sheet_id: hs.id,
               suppress_initial_matches: true,
             },
@@ -245,7 +248,9 @@ const HotSheetBuyerDetail = () => {
         `?invitation_token=${encodeURIComponent(token)}` +
         `&email=${encodeURIComponent(buyer.email)}` +
         `&agent_id=${encodeURIComponent(user.id)}` +
-        `&client_id=${encodeURIComponent(clientId)}`;
+        `&client_id=${encodeURIComponent(clientId)}` +
+        (buyer.firstName ? `&first_name=${encodeURIComponent(buyer.firstName)}` : "") +
+        (buyer.lastName ? `&last_name=${encodeURIComponent(buyer.lastName)}` : "");
 
       const { error: invokeErr } = await supabase.functions.invoke("send-hot-sheet-invite", {
         body: {
