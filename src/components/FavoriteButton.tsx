@@ -30,6 +30,11 @@ interface FavoriteButtonProps {
   hideTooltip?: boolean;
   /** Called after a successful favorite toggle (not on sign-in redirect or error). */
   onToggleSuccess?: (isFavorite: boolean) => void;
+  /**
+   * When set (buyer Hot Sheet results page), the toggle also writes to
+   * `hot_sheet_favorites` so the agent's Hot Sheet Review reflects the buyer's pick.
+   */
+  hotSheetId?: string;
 }
 
 const FavoriteButton = ({
@@ -43,6 +48,7 @@ const FavoriteButton = ({
   tooltip: tooltipOver,
   hideTooltip = false,
   onToggleSuccess,
+  hotSheetId,
 }: FavoriteButtonProps) => {
   const [isFavorite, setIsFavorite] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -53,20 +59,30 @@ const FavoriteButton = ({
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         setUserId(user.id);
-        
-        const { data } = await supabase
-          .from("favorites")
-          .select("id")
-          .eq("user_id", user.id)
-          .eq("listing_id", listingId)
-          .maybeSingle();
-        
-        setIsFavorite(!!data);
+
+        const [{ data: favRow }, hotSheetRow] = await Promise.all([
+          supabase
+            .from("favorites")
+            .select("id")
+            .eq("user_id", user.id)
+            .eq("listing_id", listingId)
+            .maybeSingle(),
+          hotSheetId
+            ? supabase
+                .from("hot_sheet_favorites")
+                .select("id")
+                .eq("hot_sheet_id", hotSheetId)
+                .eq("listing_id", listingId)
+                .maybeSingle()
+            : Promise.resolve({ data: null } as { data: { id: string } | null }),
+        ]);
+
+        setIsFavorite(!!favRow || !!hotSheetRow.data);
       }
     };
 
     checkFavoriteStatus();
-  }, [listingId, rerunCheckKey]);
+  }, [listingId, rerunCheckKey, hotSheetId]);
 
   const handleToggleFavorite = async () => {
     if (!userId) {
@@ -92,7 +108,15 @@ const FavoriteButton = ({
           .eq("listing_id", listingId);
 
         if (error) throw error;
-        
+
+        if (hotSheetId) {
+          await supabase
+            .from("hot_sheet_favorites")
+            .delete()
+            .eq("hot_sheet_id", hotSheetId)
+            .eq("listing_id", listingId);
+        }
+
         setIsFavorite(false);
         toast.success("Removed from favorites");
         onToggleSuccess?.(false);
@@ -106,7 +130,20 @@ const FavoriteButton = ({
           });
 
         if (error) throw error;
-        
+
+        if (hotSheetId) {
+          const { error: hsError } = await supabase
+            .from("hot_sheet_favorites")
+            .insert({
+              hot_sheet_id: hotSheetId,
+              listing_id: listingId,
+            });
+          // Ignore duplicate-key conflicts; surface anything else to console only.
+          if (hsError && !/duplicate key|unique/i.test(hsError.message ?? "")) {
+            console.warn("[FavoriteButton] hot_sheet_favorites insert failed:", hsError);
+          }
+        }
+
         setIsFavorite(true);
         toast.success("Added to favorites");
         onToggleSuccess?.(true);
