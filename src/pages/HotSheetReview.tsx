@@ -1077,6 +1077,53 @@ const HotSheetReview = () => {
     }
   };
 
+  /** Send selected (or all matching) listings to already-accepted buyers via process-hot-sheet. */
+  const sendSelectedListingsDirect = async () => {
+    if (!hotSheet?.id) return;
+    try {
+      const body: Record<string, unknown> = {
+        hotSheetId: hotSheet.id,
+        sendInitialBatch: true,
+      };
+      if (selectedListings.size > 0) {
+        body.selectedListingIds = Array.from(selectedListings);
+      }
+      const { error } = await supabase.functions.invoke("process-hot-sheet", { body });
+      if (error) throw error;
+      toast.success(
+        selectedListings.size > 0
+          ? `Sent ${selectedListings.size} listing${selectedListings.size !== 1 ? "s" : ""} to accepted clients.`
+          : "Current matches sent to accepted clients.",
+      );
+      await fetchHotSheetAndListings();
+    } catch (e: any) {
+      console.error("[HotSheetReview] sendSelectedListingsDirect error", e);
+      toast.error(e?.message ?? "Failed to send listings");
+    }
+  };
+
+  const handleSendFirstBatchLegacy = async () => {
+    if (selectedListings.size === 0) return;
+    try {
+      setSending(true);
+
+      const { error } = await supabase.functions.invoke("process-hot-sheet", {
+        body: {
+          hotSheetId: id,
+          sendInitialBatch: true,
+          selectedListingIds: Array.from(selectedListings),
+        },
+      });
+      if (error) throw error;
+      toast.success(`Sent ${selectedListings.size} listing${selectedListings.size !== 1 ? "s" : ""} to client`);
+    } catch (error: any) {
+      console.error("Error sending listings:", error);
+      toast.error("Failed to send listings");
+    } finally {
+      setSending(false);
+    }
+  };
+
   const handleNotifyWithMatches = async () => {
     try {
       setSending(true);
