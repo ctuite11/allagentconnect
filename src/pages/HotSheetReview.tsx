@@ -383,13 +383,14 @@ const HotSheetReview = () => {
             const tokensForThisHotSheet = (stRows ?? []).filter((t: any) => {
               return (
                 t?.payload?.type === "client_hotsheet_invite" &&
-                String(t?.payload?.hot_sheet_id ?? "") === String(hotSheetData.id)
+                String(t?.payload?.hot_sheet_id ?? "") === String(hotSheetData.id) &&
+                !t?.revoked_at
               );
             });
 
             /** Any hot-sheet invite tokens for this agent (all sheets / buyers) — one-time dashboard invite eligibility. */
             const allInviteForAgent = (stRows ?? []).filter(
-              (t: any) => t?.payload?.type === "client_hotsheet_invite",
+              (t: any) => t?.payload?.type === "client_hotsheet_invite" && !t?.revoked_at,
             );
             const globalInviteByClientId = new Map<string, any[]>();
             const globalInviteByEmail = new Map<string, any[]>();
@@ -824,7 +825,7 @@ const HotSheetReview = () => {
           .in("id", recipientClientIds),
         supabase
           .from("share_tokens")
-          .select("id, token, payload, accepted_at")
+          .select("id, token, payload, accepted_at, revoked_at")
           .eq("agent_id", user.id),
       ]);
 
@@ -851,6 +852,7 @@ const HotSheetReview = () => {
         const payload = t.payload as Record<string, unknown> | null;
         if (payload?.type !== "client_hotsheet_invite") continue;
         if (String(payload.hot_sheet_id ?? "") !== hotSheetIdNorm) continue;
+        if ((t as any).revoked_at) continue;
         const cid = typeof payload.client_id === "string" ? payload.client_id : null;
         if (!cid) continue;
         const row: SheetInviteToken = {
