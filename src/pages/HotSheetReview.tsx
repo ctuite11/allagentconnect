@@ -996,20 +996,18 @@ const HotSheetReview = () => {
           return;
         }
         if (skippedAcceptedInvite > 0 && skippedAcceptedInvite >= recipientsWithEmail) {
-          toast.info(
-            "Everyone on this hot sheet has already accepted the invitation. Use Notify to send listing updates.",
-          );
-          await fetchHotSheetAndListings();
+          // Everyone already accepted — send selected listings directly via the
+          // standard process-hot-sheet path instead of stopping.
+          await sendSelectedListingsDirect();
           return;
         }
         if (
           recipientsWithEmail > 0 &&
           skippedAcceptedInvite + skippedDashboardIneligible >= recipientsWithEmail
         ) {
-          toast.info(
-            "No new search invitations needed — buyers were already invited or are in your search. Use Notify to send listings.",
-          );
-          await fetchHotSheetAndListings();
+          // No new invites needed (buyers already invited or already in search).
+          // Just send the selected listings to accepted recipients.
+          await sendSelectedListingsDirect();
           return;
         }
         if (skippedTokenInsert > 0) {
