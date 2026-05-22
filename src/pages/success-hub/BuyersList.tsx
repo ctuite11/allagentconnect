@@ -130,7 +130,7 @@ export default function BuyersList() {
       // outstanding `client_hotsheet_invite` token (no relationship, no membership yet).
       const { data: tokenRows, error: tokenErr } = await supabase
         .from("share_tokens")
-        .select("payload, accepted_at")
+        .select("payload, accepted_at, revoked_at")
         .eq("agent_id", user.id);
       if (tokenErr) {
         console.error("Error loading invite tokens for buyer union:", tokenErr);
@@ -140,6 +140,7 @@ export default function BuyersList() {
         const p = (t as any).payload as Record<string, unknown> | null;
         if (!p || String(p.type ?? "") !== "client_hotsheet_invite") continue;
         if ((t as any).accepted_at) continue;
+        if ((t as any).revoked_at) continue;
         const cid = p.client_id != null ? String(p.client_id).trim() : "";
         if (cid) pendingInviteClientIds.add(cid);
       }
