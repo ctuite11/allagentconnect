@@ -1,44 +1,69 @@
-# Plan: Wire the buyer's heart on Hot Sheet results to `hot_sheet_favorites`
+## Goal
 
-## Audit result (root cause)
+Connect the **New Buyer** dialog to the agent's CRM **Contacts** so the agent can:
+1. **Pick** an existing contact and have name/email/phone pre-filled, then convert them into a buyer (their `client_type` flips to `buyer`).
+2. If the typed email is **not** in Contacts, see a small inline option to **also add this person to Contacts as a buyer** before sending the invite.
 
-On the buyer's Hot Sheet results page (`src/pages/ClientHotsheetPage.tsx`), the heart **does render** — for `role === "buyer"`, `suppressFavoriteHeartChrome` is false so `<FavoriteButton />` is mounted on each card (lines ~899–906 in `ListingCard.tsx`).
+## UX changes (CreateBuyerDialog.tsx)
 
-The problem is what that heart writes to:
+```text
+┌─ New Buyer ────────────────────────────────────┐
+│  [ Search existing contact… ▼ ]  ← new combobox │
+│  ────────── or enter new ──────────             │
+│  First name      Last name                      │
+│  Email                                          │
+│  Phone (optional)                               │
+│                                                 │
+│  ☑ Also add to Contacts as a buyer              │
+│     (only shown when email is NOT in contacts)  │
+│                                                 │
+│            [Cancel]  [Create Buyer]             │
+└─────────────────────────────────────────────────┘
+```
 
-- `FavoriteButton` (`src/components/FavoriteButton.tsx`) only reads/writes the generic **`favorites`** table (`{ user_id, listing_id }`).
-- The agent's Hot Sheet Review reads only from **`hot_sheet_favorites`** (`{ hot_sheet_id, listing_id, user_id }`).
+### Behavior
 
-So when a buyer hearts a listing on their Hot Sheet results page, it lands in `favorites` — invisible to the agent's Hot Sheet Review and to any per–hot-sheet view. That's why "hearts appear on the Favorites cards" (the buyer's own Favorites page reads `favorites`) but nothing surfaces in the hot-sheet context for the agent.
+- **Contact picker (top)**: Command/Combobox listing the agent's `clients` rows (any `client_type`). Selecting one:
+  - Pre-fills first/last/email/phone (read-only chip-style indicator "From Contacts").
+  - On submit, reuses that `clients.id`. If `client_type !== 'buyer'`, update it to `'buyer'`. Then create the `client_agent_relationships` row exactly as today.
+  - Hides the "Also add to Contacts" checkbox (already a contact).
 
-`ClientHotsheetPage` already passes `hotSheetId={hotSheet?.id}` to `ListingCard`, but `ListingCard` never forwards it to `FavoriteButton`, and `FavoriteButton` has no hot-sheet write path.
+- **Manual entry**:
+  - As the agent types email, debounce-check against this agent's `clients` by email (case-insensitive).
+  - If a match exists → auto-switch to "from contacts" mode (same as picking).
+  - If no match → show the **"Also add to Contacts as a buyer"** checkbox, **default ON**.
+    - ON → current insert path (already inserts into `clients` with `client_type='buyer'`).
+    - OFF → skip the `clients` insert and only create the relationship via a CRM-less path. **Note:** today the schema requires `crm_client_id` on the relationship, so OFF is not viable without schema work. Recommend keeping the checkbox **always-on and disabled with helper text** ("New buyers are saved to Contacts") OR removing the checkbox and just showing an inline note. See "Decision needed" below.
 
-## Fix
+## Data rules
 
-Single behavior change: when `FavoriteButton` is mounted inside a hot-sheet context, **also** insert/delete a matching row in `hot_sheet_favorites` alongside the existing `favorites` write. No new UI, no role gating changes, no schema changes.
+- Existing contact selected:
+  - `UPDATE clients SET client_type='buyer' WHERE id=<picked> AND agent_id=me` (only if not already buyer).
+  - Backfill missing phone/first/last from form values (don't overwrite existing non-null fields).
+  - Then `INSERT INTO client_agent_relationships (agent_id, crm_client_id, status='pending', client_id=null)` — same as current "no existing relationship" branch.
+  - Reuse existing `agent_reactivate_buyer` RPC if a prior ended relationship exists.
 
-### Files
+- New contact (not in CRM):
+  - Same insert as today (`clients` row with `client_type='buyer'`) + relationship row.
 
-1. **`src/components/FavoriteButton.tsx`**
-   - Add optional `hotSheetId?: string` prop.
-   - On initial load: if `hotSheetId`, also OR-check `hot_sheet_favorites` for `(user_id, listing_id, hot_sheet_id)` when computing initial filled state (so the heart shows filled if the row exists in either table).
-   - On toggle ON: keep the existing `favorites` insert; additionally upsert into `hot_sheet_favorites` `{ user_id, listing_id, hot_sheet_id }` (ignore duplicate-key conflict).
-   - On toggle OFF: keep the existing `favorites` delete; additionally delete the matching `hot_sheet_favorites` row.
-   - All hot-sheet writes are guarded by `if (hotSheetId)`; behavior elsewhere is unchanged.
+## Decision needed
 
-2. **`src/components/ListingCard.tsx`**
-   - In the `showInteractiveFavoriteButton` branch (≈ line 899), forward the existing `hotSheetId` prop to `<FavoriteButton hotSheetId={hotSheetId} … />`.
+The current schema/flow always creates a `clients` row for a new buyer (so they're already in Contacts). The user said: *"if the buyer is not in contacts then need option before invite to add to contacts as a buyer."* This implies they think buyers can exist without a contact row — but today they can't.
 
-3. **No change** to `ClientHotsheetPage.tsx` — it already passes `hotSheetId` to `ListingCard`.
+Two ways to honor the intent:
 
-4. **No change** to `HotSheetReview.tsx` — its read of `hot_sheet_favorites` already drives the agent's read-only heart and will start lighting up immediately once buyers favorite from the hot-sheet page.
+- **Option A (recommended, no schema change):** Always add to Contacts; surface a clear inline note "This buyer will also be saved to your Contacts." Add the **picker** on top so the agent can choose an existing contact instead of duplicating.
+- **Option B:** Allow buyer relationships without a `clients` row. Requires schema work (nullable `crm_client_id`, new RLS, audit of all consumers of `My Buyers`). Larger scope.
 
-5. **RLS check (read-only verification — no migration unless needed):** confirm `hot_sheet_favorites` already allows the authenticated buyer (recipient) to `insert` / `delete` their own rows scoped to `hot_sheet_id`s they have access to. If a policy is missing we'll add a minimal one in a follow-up migration — flagged here so it's not a surprise, but not pre-emptively written since the table is already in active use elsewhere (`ClientHotSheet.tsx` writes to it today).
+I'll proceed with **Option A** unless you tell me to do B.
 
-## What stays the same
-- `ListingCard` role gating (`suppressFavoriteHeartChrome` for agents/admins) — unchanged.
-- The buyer's `/favorites` page continues to work off the `favorites` table, so anything hearted on a hot sheet still also shows there.
-- Agent's Hot Sheet Review continues to render hearts only when a `hot_sheet_favorites` row exists — but now those rows will actually get created.
+## Files to change
 
-## Expected outcome
-Buyer opens the Hot Sheet results page → hearts a listing → row written to both `favorites` and `hot_sheet_favorites`. Agent opens Hot Sheet Review → sees the red filled heart on that listing card immediately.
+- `src/components/CreateBuyerDialog.tsx` — add contact picker (Command + Popover), pre-fill logic, email lookup, status-flip update, helper text.
+- (No new files, no schema migration, no edge function changes.)
+
+## Out of scope
+
+- Bulk convert from Contacts page.
+- Changing the invite email content.
+- Schema changes to relax `crm_client_id`.
