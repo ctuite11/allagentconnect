@@ -48,7 +48,7 @@ export async function enqueueHotSheetClientInvites({
   const [agentProfileRes, clientsRes, existingTokensRes, relationshipRes] = await Promise.all([
     supabase.from("agent_profiles").select("first_name, last_name").eq("id", agentUserId).maybeSingle(),
     supabase.from("clients").select("id, email, first_name, last_name, phone").in("id", uniqueIds),
-    supabase.from("share_tokens").select("id, token, payload, accepted_at").eq("agent_id", agentUserId),
+    supabase.from("share_tokens").select("id, token, payload, accepted_at, revoked_at").eq("agent_id", agentUserId),
     supabase
       .from("client_agent_relationships")
       .select("crm_client_id, client_id, status")
@@ -84,7 +84,10 @@ export async function enqueueHotSheetClientInvites({
   const hotSheetIdNorm = String(hotSheetId);
   const stRows = existingTokensRes.data ?? [];
 
-  const allInviteForAgent = stRows.filter((t: { payload?: { type?: string } }) => t?.payload?.type === "client_hotsheet_invite");
+  const allInviteForAgent = stRows.filter(
+    (t: { payload?: { type?: string }; revoked_at?: string | null }) =>
+      t?.payload?.type === "client_hotsheet_invite" && !t?.revoked_at,
+  );
   const globalInviteByClientId = new Map<string, unknown[]>();
   const globalInviteByEmail = new Map<string, unknown[]>();
   for (const t of allInviteForAgent) {
@@ -119,6 +122,7 @@ export async function enqueueHotSheetClientInvites({
     const payload = t.payload as Record<string, unknown> | null;
     if (payload?.type !== "client_hotsheet_invite") continue;
     if (String(payload.hot_sheet_id ?? "") !== hotSheetIdNorm) continue;
+    if ((t as { revoked_at?: string | null }).revoked_at) continue;
     const cid = typeof payload.client_id === "string" ? payload.client_id : null;
     if (!cid) continue;
     const row: SheetInviteToken = {
