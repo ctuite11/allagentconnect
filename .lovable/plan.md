@@ -1,47 +1,38 @@
-## Goal
+## Issue
 
-When an agent picks **Send Invite with Hot Sheet** after adding a buyer, the flow should land on the Hot Sheet review page so they can verify the matched listings, remove unwanted ones, and only then send the invite — instead of the invite being sent the moment the sheet is created.
+Removing the buyer **n.lopachak@gmail.com** (Nataliia) from her Buyer Account fails with the generic "Couldn't remove this buyer client" toast.
 
-## Current behavior (the bug)
+## Root cause
 
-1. Add Buyer → "Send Invite with Hot Sheet" → navigates to `BuyerAccount` with `?createHotSheet=1`.
-2. `CreateHotSheetDialog` opens with `lockedToClient`. On save it:
-   - creates the hot sheet
-   - **immediately calls `enqueueHotSheetClientInvites(...)`** (file `src/components/CreateHotSheetDialog.tsx`, lines ~978–1003), which fires the buyer's invite email with sample listings.
-   - then navigates to `/hot-sheets/:id/review`.
-3. By the time the agent reaches the review page (where listing removal lives), the email has already been queued.
+The `agent_end_client_relationship(p_client_id)` Postgres function raises an exception when zero relationship rows are updated:
 
-`HotSheetBuyerDetail.tsx` uses the dialog the same way (also navigates to review on success), so removing auto-send is consistent across both entry points. The review page already has a `Send Invites` action and a "Removed listings" panel — no changes needed there.
+```sql
+IF rows_affected = 0 THEN
+  RAISE EXCEPTION 'No active or pending relationship found for agent % with identifier %.', auth.uid(), p_client_id;
+END IF;
+```
 
-## Plan
+For this buyer the `client_agent_relationships` row is already `status = 'inactive'` with `ended_at` set (she was previously removed). The cascade-cleanup steps inside the function still run, but the trailing `UPDATE` matches nothing → exception → frontend shows the generic error.
 
-### 1. Stop auto-sending invites from `CreateHotSheetDialog`
+There's no remaining active relationship, no hot-sheet membership, and no outstanding invite token, so once the function succeeds she'll drop out of My Buyers / Buyer Account naturally.
 
-File: `src/components/CreateHotSheetDialog.tsx`
+## Fix
 
-- Remove the `lockedToClient && createdHotSheet && selectedClients.length > 0` block that calls `enqueueHotSheetClientInvites` and `kick-email-queue` (lines ~978–1003).
-- Replace it with a simple `toast.success("Hot sheet created. Review the matches and send the invite when ready.")`.
-- Drop the now-unused `enqueueHotSheetClientInvites` import if nothing else in the file uses it.
-- Update the dialog's helper copy at lines ~1127–1129 and ~2074–2079 so it no longer promises that confirming "sends the invite email"; instead it tells the agent: "We'll save the hot sheet and open the review page so you can confirm matches before sending."
+Migration that replaces the body of `public.agent_end_client_relationship` to make it idempotent:
 
-### 2. Keep navigation as-is
+- Keep all existing cascade cleanup (hot sheets, sent listings, comments, listing status, notifications, favorites, hot_sheet_clients, share token revocation, relationship update).
+- Remove the final `RAISE EXCEPTION` block.
+- Always return `rows_affected` (0 when nothing was updated).
 
-- `BuyerAccount.tsx` and `HotSheetBuyerDetail.tsx` already navigate to `/hot-sheets/:id/review` on `onSuccess`. No change.
-- On the review page the agent sees matched listings, can remove any (existing functionality), then clicks **Send Invites** — which is the only place the invite email gets queued.
+Result: clicking Remove on a buyer who is already detached succeeds, clears any leftover artifacts, and the UI shows the success toast and navigates away.
 
-### 3. Light copy tweak on the "Buyer Added" dialog (optional, non-blocking)
+## Scope
 
-File: `src/components/success-hub/BuyerCreatedNextStepDialog.tsx`
-
-- Change the secondary line under "Send Invite with Hot Sheet" so it accurately reflects the new flow, e.g. _"Set criteria, review matches, then send"_ — keeps the user from expecting an instant send.
+- Single migration file `CREATE OR REPLACE FUNCTION public.agent_end_client_relationship(...)` — function body change only, signature unchanged.
+- No frontend changes; `RemoveBuyerClientAction.tsx` already handles the rows-affected return and shows success.
+- No schema, RLS, table, or other function changes.
 
 ## Out of scope
 
-- No changes to `HotSheetReview.tsx`, `enqueueHotSheetClientInvites.ts`, edge functions, schema, or RLS.
-- No change to the "Invite Client Now" path (workspace-only invite, no hot sheet) — it stays as-is.
-- Bulk/multi-client hot sheet flows already route through review and are unaffected.
-
-## Files touched
-
-- `src/components/CreateHotSheetDialog.tsx` — remove auto-invite block, update copy.
-- `src/components/success-hub/BuyerCreatedNextStepDialog.tsx` — minor subtitle tweak.
+- Cleaning up the orphaned `share_tokens` whose `payload.client_id` points at deleted `clients` rows.
+- Any change to BuyersList union logic — already correctly excludes inactive relationships.
