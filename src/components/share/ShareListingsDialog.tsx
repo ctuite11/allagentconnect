@@ -115,6 +115,14 @@ const DEFAULT_MESSAGE_CHIPS = [
 
 const CONTACT_ADD_FEEDBACK_MS = 2800;
 
+/** Passive field / preview icons — monochrome modal chrome */
+const ICON_NEUTRAL = "text-neutral-400";
+/** Primary share actions only */
+const ICON_ACTION = "text-[#0E56F5]";
+
+const INPUT_CLASS =
+  "border-neutral-200/90 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.03)] focus-visible:border-neutral-300 focus-visible:ring-1 focus-visible:ring-neutral-200/80";
+
 type ContactAddFeedback = "added" | "already-added" | null;
 
 export function ShareListingsDialog({
@@ -300,7 +308,7 @@ export function ShareListingsDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="flex max-h-[90vh] flex-col gap-0 overflow-hidden rounded-xl border border-neutral-200 bg-white p-0 shadow-[0_4px_24px_rgba(0,0,0,0.08)] sm:max-w-xl [&>button.absolute]:rounded-md [&>button.absolute]:transition-colors [&>button.absolute]:data-[state=open]:bg-white [&>button.absolute]:hover:bg-neutral-100"
+        className="flex max-h-[90vh] flex-col gap-0 overflow-hidden rounded-xl border border-neutral-200 bg-white p-0 shadow-[0_4px_24px_rgba(0,0,0,0.08)] sm:max-w-xl [&>button.absolute]:rounded-md [&>button.absolute]:text-neutral-700 [&>button.absolute]:transition-colors [&>button.absolute]:data-[state=open]:bg-white [&>button.absolute]:hover:bg-neutral-100 [&>button.absolute_svg]:text-neutral-700"
         hideCloseButton={false}
         onKeyDown={handleKeyDown}
       >
@@ -329,9 +337,9 @@ export function ShareListingsDialog({
             <div className="flex items-start gap-3 rounded-lg border border-neutral-200 bg-white p-3 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
               <div className="mt-0.5 shrink-0 rounded-md border border-neutral-200 bg-white p-2 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
                 {previewVariant === "hot-sheet" ? (
-                  <Layers className="h-4 w-4 text-neutral-500" />
+                  <Layers className={cn("h-4 w-4", ICON_NEUTRAL)} />
                 ) : (
-                  <Home className="h-4 w-4 text-neutral-500" />
+                  <Home className={cn("h-4 w-4", ICON_NEUTRAL)} />
                 )}
               </div>
               <div className="min-w-0 flex-1">
@@ -358,7 +366,7 @@ export function ShareListingsDialog({
           ) : selectedCount > 1 ? (
             <div className="flex items-start gap-3 rounded-lg border border-neutral-200 bg-white p-3 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
               <div className="mt-0.5 shrink-0 rounded-md border border-neutral-200 bg-white p-2 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
-                <Layers className="h-4 w-4 text-neutral-500" />
+                <Layers className={cn("h-4 w-4", ICON_NEUTRAL)} />
               </div>
               <div className="min-w-0 flex-1">
                 <div className="text-sm font-medium text-neutral-900">Sharing {selectedCount} listings</div>
@@ -376,12 +384,12 @@ export function ShareListingsDialog({
             </div>
 
             <div ref={contactSearchRef} className="relative">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500" />
+              <Search className={cn("pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2", ICON_NEUTRAL)} />
               <Input
                 value={contactQuery}
                 onChange={(e) => setContactQuery(e.target.value)}
                 placeholder="Search by name or email…"
-                className="h-9 rounded-lg border-neutral-200 bg-white pl-9 text-[13px] text-neutral-900 shadow-[0_1px_2px_rgba(0,0,0,0.03)] placeholder:text-neutral-400 focus-visible:border-neutral-400 focus-visible:ring-1 focus-visible:ring-neutral-200/80"
+                className={cn("h-9 rounded-lg pl-9 text-[13px] text-neutral-900 placeholder:text-neutral-400", INPUT_CLASS)}
                 autoFocus
               />
               {showContactDropdown && contactResults.length > 0 && (
@@ -465,10 +473,10 @@ export function ShareListingsDialog({
                               <button
                                 type="button"
                                 onClick={() => onRemoveRecipient(idx)}
-                                className="-mr-0.5 ml-0.5 rounded-full p-1 transition-colors hover:bg-neutral-100"
+                                className="-mr-0.5 ml-0.5 rounded-full p-1 text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-500"
                                 aria-label={`Remove ${r.name}`}
                               >
-                                <X className="h-3 w-3 text-neutral-500" />
+                                <X className="h-3 w-3" />
                               </button>
                             )}
                           </div>
@@ -493,7 +501,7 @@ export function ShareListingsDialog({
               className="h-9 w-full rounded-lg border-neutral-200 text-[13px] font-medium text-neutral-900 shadow-[0_1px_2px_rgba(0,0,0,0.03)] hover:border-neutral-300 hover:bg-neutral-50"
               onClick={() => setManualMode(!manualMode)}
             >
-              <PencilLine className="mr-2 h-3.5 w-3.5" />
+              <PencilLine className={cn("mr-2 h-3.5 w-3.5", ICON_ACTION)} />
               Enter manually
             </Button>
 
@@ -503,12 +511,12 @@ export function ShareListingsDialog({
                   <div className="space-y-1.5">
                     <div className="text-xs font-medium text-neutral-700">Recipient name</div>
                     <div className="relative">
-                      <User className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500" />
+                      <User className={cn("pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2", ICON_NEUTRAL)} />
                       <Input
                         value={recipientName}
                         onChange={(e) => setRecipientName(e.target.value)}
                         placeholder="Jane Buyer"
-                        className="h-9 rounded-lg border-neutral-200 bg-white pl-9 text-[13px] text-neutral-900 shadow-[0_1px_2px_rgba(0,0,0,0.03)] focus-visible:border-neutral-400 focus-visible:ring-1 focus-visible:ring-neutral-200/80"
+                        className={cn("h-9 rounded-lg pl-9 text-[13px] text-neutral-900", INPUT_CLASS)}
                       />
                     </div>
                   </div>
@@ -516,14 +524,14 @@ export function ShareListingsDialog({
                   <div className="space-y-1.5">
                     <div className="text-xs font-medium text-neutral-700">Recipient email</div>
                     <div className="relative">
-                      <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500" />
+                      <Mail className={cn("pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2", ICON_NEUTRAL)} />
                       <Input
                         value={recipientEmail}
                         onChange={(e) => setRecipientEmail(e.target.value)}
                         placeholder="jane@email.com"
                         type="email"
                         autoComplete="email"
-                        className="h-9 rounded-lg border-neutral-200 bg-white pl-9 text-[13px] text-neutral-900 shadow-[0_1px_2px_rgba(0,0,0,0.03)] focus-visible:border-neutral-400 focus-visible:ring-1 focus-visible:ring-neutral-200/80"
+                        className={cn("h-9 rounded-lg pl-9 text-[13px] text-neutral-900", INPUT_CLASS)}
                       />
                     </div>
                   </div>
@@ -534,7 +542,7 @@ export function ShareListingsDialog({
                   <div className="space-y-3 rounded-lg border border-neutral-200 bg-white p-3 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
                     <div className="flex items-start gap-3">
                       <div className="rounded-md border border-neutral-200 bg-white p-2 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
-                        <UserPlus className="h-4 w-4 text-neutral-500" />
+                        <UserPlus className={cn("h-4 w-4", ICON_NEUTRAL)} />
                       </div>
                       <div className="min-w-0">
                         <div className="text-[13px] font-medium leading-snug text-neutral-900">
@@ -584,7 +592,7 @@ export function ShareListingsDialog({
                       onClick={handleManualAddRecipient}
                       className="h-8 rounded-lg border-neutral-200 text-[13px] font-medium text-neutral-900 shadow-[0_1px_2px_rgba(0,0,0,0.03)] hover:border-neutral-300 hover:bg-neutral-50"
                     >
-                      <Plus className="mr-2 h-3.5 w-3.5" />
+                      <Plus className={cn("mr-2 h-3.5 w-3.5", ICON_NEUTRAL)} />
                       Add another contact
                     </Button>
                     <div className="pointer-events-none absolute bottom-full left-0 z-20 mb-2 hidden rounded-md border border-neutral-200 bg-neutral-900 px-2.5 py-1.5 text-xs text-white shadow-[0_4px_14px_rgba(0,0,0,0.12)] group-hover:block">
@@ -603,12 +611,12 @@ export function ShareListingsDialog({
             <div className="space-y-1.5">
               <div className="text-xs font-medium text-neutral-700">Your name <span className="text-neutral-400">*</span></div>
               <div className="relative">
-                <User className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500" />
+                <User className={cn("pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2", ICON_NEUTRAL)} />
                 <Input
                   value={senderName}
                   onChange={(e) => setSenderName(e.target.value)}
                   aria-required
-                  className="h-9 rounded-lg border-neutral-200 bg-white pl-9 text-[13px] text-neutral-900 shadow-[0_1px_2px_rgba(0,0,0,0.03)] focus-visible:border-neutral-400 focus-visible:ring-1 focus-visible:ring-neutral-200/80"
+                  className={cn("h-9 rounded-lg pl-9 text-[13px] text-neutral-900", INPUT_CLASS)}
                 />
               </div>
             </div>
@@ -616,14 +624,14 @@ export function ShareListingsDialog({
             <div className="space-y-1.5">
               <div className="text-xs font-medium text-neutral-700">Your email <span className="text-neutral-400">*</span></div>
               <div className="relative">
-                <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500" />
+                <Mail className={cn("pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2", ICON_NEUTRAL)} />
                 <Input
                   value={senderEmail}
                   onChange={(e) => setSenderEmail(e.target.value)}
                   type="email"
                   autoComplete="email"
                   aria-required
-                  className="h-9 rounded-lg border-neutral-200 bg-white pl-9 text-[13px] text-neutral-900 shadow-[0_1px_2px_rgba(0,0,0,0.03)] focus-visible:border-neutral-400 focus-visible:ring-1 focus-visible:ring-neutral-200/80"
+                  className={cn("h-9 rounded-lg pl-9 text-[13px] text-neutral-900", INPUT_CLASS)}
                 />
               </div>
             </div>
@@ -633,7 +641,7 @@ export function ShareListingsDialog({
                 Your phone <span className="font-normal text-neutral-500">(optional)</span>
               </div>
               <div className="relative">
-                <Phone className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500" />
+                <Phone className={cn("pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2", ICON_NEUTRAL)} />
                 <Input
                   value={senderPhone}
                   onChange={(e) => setSenderPhone(e.target.value)}
@@ -644,7 +652,7 @@ export function ShareListingsDialog({
                     }
                   }}
                   placeholder="(617) 555-0123"
-                  className="h-9 rounded-lg border-neutral-200 bg-white pl-9 text-[13px] text-neutral-900 shadow-[0_1px_2px_rgba(0,0,0,0.03)] focus-visible:border-neutral-400 focus-visible:ring-1 focus-visible:ring-neutral-200/80"
+                  className={cn("h-9 rounded-lg pl-9 text-[13px] text-neutral-900", INPUT_CLASS)}
                 />
               </div>
             </div>
@@ -688,7 +696,7 @@ export function ShareListingsDialog({
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Add a short note…"
-              className="min-h-[100px] resize-y rounded-lg border-neutral-200 bg-white text-[13px] text-neutral-900 shadow-[0_1px_2px_rgba(0,0,0,0.03)] placeholder:text-neutral-400 focus-visible:border-neutral-400 focus-visible:ring-1 focus-visible:ring-neutral-200/80"
+              className={cn("min-h-[100px] resize-y rounded-lg text-[13px] text-neutral-900 placeholder:text-neutral-400", INPUT_CLASS)}
             />
           </section>
         </div>
@@ -716,9 +724,9 @@ export function ShareListingsDialog({
               size="sm"
               onClick={onSubmit}
               disabled={!canSubmit || submitting}
-              className="h-9 min-w-[8.5rem] rounded-lg px-4 text-[13px] font-medium disabled:opacity-50"
+              className="h-9 min-w-[8.5rem] rounded-lg bg-[#0E56F5] px-4 text-[13px] font-medium text-white hover:bg-[#0B46CC] disabled:opacity-50"
             >
-              <Send className="mr-2 h-3.5 w-3.5 shrink-0" aria-hidden />
+              <Send className="mr-2 h-3.5 w-3.5 shrink-0 text-white" aria-hidden />
               <span>
                 {submitting
                   ? "Sending…"
