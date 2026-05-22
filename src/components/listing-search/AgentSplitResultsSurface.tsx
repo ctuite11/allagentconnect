@@ -456,7 +456,12 @@ export function AgentSplitResultsSurface({
           </section>
 
           <section className="flex h-auto min-h-0 max-lg:min-h-[48vh] flex-col overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)] lg:h-full lg:min-h-0">
-            <div className="shrink-0 border-b border-neutral-200/90 bg-white px-3 py-2 sm:px-5 sm:py-2.5">
+            <div
+              className={cn(
+                "shrink-0 bg-white px-3 py-2 sm:px-5 sm:py-2.5",
+                hasResultsActionsRow && "border-b border-neutral-200/90",
+              )}
+            >
               {renderResultsTopStrip("column")}
             </div>
             {hasResultsActionsRow ? (
