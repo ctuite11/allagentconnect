@@ -581,7 +581,7 @@ const ClientInvitationSetup = () => {
               </h1>
               <p className="text-[15px] sm:text-base text-zinc-500 leading-relaxed max-w-md">
                 {inviterName} invited you to view listings, save favorites, receive Hot Sheets,
-                and communicate privately. Create your password to activate your account.
+                and communicate privately. Create a password to activate your account.
               </p>
             </div>
 
@@ -652,7 +652,7 @@ const ClientInvitationSetup = () => {
                 </p>
 
                 <div className="space-y-1.5">
-                  <Label htmlFor="password" className="text-[13px] text-zinc-600">Password</Label>
+                  <Label htmlFor="password" className="text-[13px] text-zinc-600">Create a password</Label>
                   <PasswordInput
                     id="password"
                     value={password}
@@ -678,12 +678,12 @@ const ClientInvitationSetup = () => {
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label htmlFor="confirmPassword" className="text-[13px] text-zinc-600">Confirm password</Label>
+                  <Label htmlFor="confirmPassword" className="text-[13px] text-zinc-600">Confirm your password</Label>
                   <PasswordInput
                     id="confirmPassword"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Confirm password"
+                    placeholder="Confirm your password"
                     className="h-11 rounded-xl"
                     required
                   />
