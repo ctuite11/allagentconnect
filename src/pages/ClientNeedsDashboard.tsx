@@ -267,7 +267,7 @@ const ClientNeedsDashboard = () => {
 
           <section data-preferences-section className="space-y-2.5">
             <div>
-              <h2 className="text-xl font-semibold text-neutral-900">Set email alert settings</h2>
+              <h2 className="text-xl font-semibold text-neutral-900">Email alert settings</h2>
               <p className="mt-1.5 text-sm leading-relaxed text-neutral-600">
                 Set your coverage area to limit unwanted email alerts.
               </p>
