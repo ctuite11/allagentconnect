@@ -11,7 +11,23 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ChevronDown, ChevronUp, Check, Loader2, UserPlus, X } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronUp,
+  Check,
+  CircleDot,
+  DollarSign,
+  Home,
+  ListFilter,
+  Loader2,
+  MapPin,
+  Ruler,
+  SlidersHorizontal,
+  UserPlus,
+  Users,
+  X,
+  type LucideIcon,
+} from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { US_STATES, COUNTIES_BY_STATE } from "@/data/usStatesCountiesData";
@@ -34,6 +50,12 @@ import { cn } from "@/lib/utils";
 /** Nested cards in this dialog — keep white surface and subtle shadow (override global Card lift). */
 const HS_DIALOG_CARD =
   "!shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:!translate-y-0 hover:!shadow-[0_1px_3px_rgba(0,0,0,0.06)] rounded-xl border-neutral-200";
+
+const HS_SECTION_ICON = "h-4 w-4 shrink-0 text-neutral-400";
+
+function HsSectionIcon({ icon: Icon }: { icon: LucideIcon }) {
+  return <Icon className={HS_SECTION_ICON} aria-hidden />;
+}
 
 interface CreateHotSheetDialogProps {
   open: boolean;
@@ -1174,8 +1196,11 @@ export function CreateHotSheetDialog({
           <Card className={cn("border", HS_DIALOG_CARD)}>
             <CardHeader className="space-y-2 p-4 pb-3 sm:p-5 sm:pb-3">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <CardTitle className="text-[15px] font-semibold leading-snug text-neutral-900">
-                  Contacts <span className="font-normal text-neutral-500">*</span>
+                <CardTitle className="flex items-center gap-2 text-[15px] font-semibold leading-snug text-neutral-900">
+                  <HsSectionIcon icon={Users} />
+                  <span>
+                    Contacts <span className="font-normal text-neutral-500">*</span>
+                  </span>
                 </CardTitle>
                 <div className="flex flex-wrap items-center gap-2">
                   {!lockedToClient && (
@@ -1410,7 +1435,10 @@ export function CreateHotSheetDialog({
             <Card className={cn("border", HS_DIALOG_CARD)}>
               <CollapsibleTrigger className="w-full">
                 <CardHeader className="flex cursor-pointer flex-row items-center justify-between p-4 pb-3 hover:bg-neutral-50/80 sm:p-5 sm:pb-3">
-                  <CardTitle className="text-[15px] font-semibold text-neutral-900">Search criteria</CardTitle>
+                  <CardTitle className="flex items-center gap-2 text-[15px] font-semibold text-neutral-900">
+                    <HsSectionIcon icon={SlidersHorizontal} />
+                    Search criteria
+                  </CardTitle>
                   {criteriaOpen ? <ChevronUp className="h-4 w-4 text-neutral-600" /> : <ChevronDown className="h-4 w-4 text-neutral-600" />}
                 </CardHeader>
               </CollapsibleTrigger>
@@ -1420,11 +1448,14 @@ export function CreateHotSheetDialog({
                   <Collapsible open={townsOpen} onOpenChange={setTownsOpen}>
                     <CollapsibleTrigger className="w-full">
                       <div className="flex cursor-pointer items-center justify-between rounded-lg border border-neutral-200 p-3 hover:bg-neutral-50/80">
-                        <div className="space-y-1 text-left">
-                          <Label className="cursor-pointer text-xs font-semibold uppercase tracking-wide text-neutral-700">
-                            Location
-                          </Label>
-                          <p className="text-xs text-neutral-500">{locationSummary}</p>
+                        <div className="flex min-w-0 items-start gap-2 text-left">
+                          <HsSectionIcon icon={MapPin} />
+                          <div className="min-w-0 space-y-1">
+                            <Label className="cursor-pointer text-xs font-semibold uppercase tracking-wide text-neutral-700">
+                              Location
+                            </Label>
+                            <p className="text-xs text-neutral-500">{locationSummary}</p>
+                          </div>
                         </div>
                         {townsOpen ? <ChevronUp className="h-4 w-4 text-neutral-600" /> : <ChevronDown className="h-4 w-4 text-neutral-600" />}
                       </div>
@@ -1613,14 +1644,17 @@ export function CreateHotSheetDialog({
                   <Collapsible open={propertyTypeOpen} onOpenChange={setPropertyTypeOpen}>
                     <CollapsibleTrigger className="w-full">
                       <div className="flex cursor-pointer items-center justify-between rounded-lg border border-neutral-200 p-3 hover:bg-neutral-50/80">
-                        <Label className="cursor-pointer text-xs font-semibold uppercase tracking-wide text-neutral-700">
-                          Property type
-                          {propertyTypes.length > 0 && (
-                            <span className="ml-2 text-xs font-normal text-neutral-500">
-                              ({propertyTypes.length} selected)
-                            </span>
-                          )}
-                        </Label>
+                        <div className="flex min-w-0 items-center gap-2">
+                          <HsSectionIcon icon={Home} />
+                          <Label className="cursor-pointer text-xs font-semibold uppercase tracking-wide text-neutral-700">
+                            Property type
+                            {propertyTypes.length > 0 && (
+                              <span className="ml-2 text-xs font-normal text-neutral-500">
+                                ({propertyTypes.length} selected)
+                              </span>
+                            )}
+                          </Label>
+                        </div>
                         {propertyTypeOpen ? <ChevronUp className="h-4 w-4 text-neutral-600" /> : <ChevronDown className="h-4 w-4 text-neutral-600" />}
                       </div>
                     </CollapsibleTrigger>
@@ -1662,14 +1696,17 @@ export function CreateHotSheetDialog({
                   <Collapsible open={statusOpen} onOpenChange={setStatusOpen}>
                     <CollapsibleTrigger className="w-full">
                       <div className="flex cursor-pointer items-center justify-between rounded-lg border border-neutral-200 p-3 hover:bg-neutral-50/80">
-                        <Label className="cursor-pointer text-xs font-semibold uppercase tracking-wide text-neutral-700">
-                          Status
-                          {statuses.length > 0 && (
-                            <span className="ml-2 text-xs font-normal text-neutral-500">
-                              ({statuses.length} selected)
-                            </span>
-                          )}
-                        </Label>
+                        <div className="flex min-w-0 items-center gap-2">
+                          <HsSectionIcon icon={CircleDot} />
+                          <Label className="cursor-pointer text-xs font-semibold uppercase tracking-wide text-neutral-700">
+                            Status
+                            {statuses.length > 0 && (
+                              <span className="ml-2 text-xs font-normal text-neutral-500">
+                                ({statuses.length} selected)
+                              </span>
+                            )}
+                          </Label>
+                        </div>
                         {statusOpen ? <ChevronUp className="h-4 w-4 text-neutral-600" /> : <ChevronDown className="h-4 w-4 text-neutral-600" />}
                       </div>
                     </CollapsibleTrigger>
@@ -1709,7 +1746,10 @@ export function CreateHotSheetDialog({
 
                   {/* Price Range */}
                   <div className="space-y-4 border-t pt-4">
-                    <Label className="text-sm font-semibold">Price Range</Label>
+                    <Label className="flex items-center gap-2 text-sm font-semibold text-neutral-900">
+                      <HsSectionIcon icon={DollarSign} />
+                      Price Range
+                    </Label>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="min-price">Min Price</Label>
@@ -1764,7 +1804,10 @@ export function CreateHotSheetDialog({
 
                   {/* Standard Search Criteria */}
                   <div className="space-y-4 border-t pt-4">
-                    <Label className="text-sm font-semibold uppercase">Standard Search Criteria</Label>
+                    <Label className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-neutral-900">
+                      <HsSectionIcon icon={ListFilter} />
+                      Standard Search Criteria
+                    </Label>
                     
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                       <div className="space-y-2">
@@ -1816,7 +1859,10 @@ export function CreateHotSheetDialog({
                     </div>
 
                     <div className="space-y-2">
-                      <Label className="text-sm font-semibold">Living Area Total (SqFt)</Label>
+                      <Label className="flex items-center gap-2 text-sm font-semibold text-neutral-900">
+                        <HsSectionIcon icon={Ruler} />
+                        Living Area Total (SqFt)
+                      </Label>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label htmlFor="min-sqft">Min</Label>

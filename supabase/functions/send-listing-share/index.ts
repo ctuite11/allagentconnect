@@ -81,6 +81,8 @@ const handler = async (req: Request): Promise<Response> => {
               city: listing.city,
               state: listing.state,
               zipCode: listing.zip_code,
+              unit_number: listing.unit_number,
+              condo_details: listing.condo_details,
               price: listing.price,
               bedrooms: listing.bedrooms,
               bathrooms: listing.bathrooms,

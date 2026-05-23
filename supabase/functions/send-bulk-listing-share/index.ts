@@ -119,6 +119,8 @@ const handler = async (req: Request): Promise<Response> => {
         city: l.city,
         state: l.state,
         zipCode: l.zip_code,
+        unit_number: l.unit_number,
+        condo_details: l.condo_details,
         price: l.price,
         bedrooms: l.bedrooms,
         bathrooms: l.bathrooms,

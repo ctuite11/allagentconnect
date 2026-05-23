@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { SearchCriteria } from "@/components/search/UnifiedPropertySearch";
 import PropertyMap from "@/components/PropertyMap";
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
+import { formatListingShareEmailStreetLine } from "@/lib/buildHotSheetShareEmailHtml";
 import { isDcmlsHost } from "@/lib/host";
 import {
   RENT_PRICE_ABS_MAX,
@@ -350,7 +351,7 @@ export default function BuyerMapSearch() {
           .map((listing) => {
             const listingUrl = `${window.location.origin}/consumer-property/${listing.id}`;
             const price = listing.price ? `$${listing.price.toLocaleString()}` : "Price unavailable";
-            const address = escapeHtml(listing.address || "Address unavailable");
+            const address = escapeHtml(formatListingShareEmailStreetLine(listing));
             const cityStateZip = escapeHtml(
               `${listing.city || ""}, ${listing.state || ""} ${listing.zip_code || ""}`.trim(),
             );
@@ -380,7 +381,11 @@ export default function BuyerMapSearch() {
           .map((listing) => {
             const listingUrl = `${window.location.origin}/consumer-property/${listing.id}`;
             const price = listing.price ? `$${listing.price.toLocaleString()}` : "Price unavailable";
-            const address = `${listing.address || ""}, ${listing.city || ""}, ${listing.state || ""} ${listing.zip_code || ""}`.trim();
+            const street = formatListingShareEmailStreetLine(listing);
+            const cityStateZip = `${listing.city || ""}, ${listing.state || ""} ${listing.zip_code || ""}`
+              .trim()
+              .replace(/^,\s*|,\s*$/g, "");
+            const address = [street, cityStateZip].filter(Boolean).join(", ");
             return `- ${address} - ${price} - ${listingUrl}`;
           })
           .join("\n");
