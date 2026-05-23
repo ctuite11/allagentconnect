@@ -63,6 +63,24 @@ export async function removeBuyerClient(opts: {
       buyerId: opts.buyerId,
       agentId: user.id,
     });
+
+    // Revoke the buyer's auth login so they can't sign in anywhere
+    // (AAC consumer, DCMLS) after removal. Non-fatal on error — the
+    // relationship removal already succeeded.
+    try {
+      const { data: revokeData, error: revokeErr } =
+        await supabase.functions.invoke("revoke-buyer-auth", {
+          body: { buyer_client_id: opts.buyerId },
+        });
+      if (revokeErr) {
+        console.warn("revoke-buyer-auth failed:", revokeErr);
+      } else {
+        console.info("revoke-buyer-auth result:", revokeData);
+      }
+    } catch (e) {
+      console.warn("revoke-buyer-auth threw:", e);
+    }
+
     toast.success("Buyer removed. Hot sheets and history cleared. They're still in Contacts.");
     return true;
   } catch (err) {
