@@ -1424,6 +1424,7 @@ export type Database = {
           body: string
           conversation_id: string
           created_at: string
+          email_enqueued_at: string | null
           id: string
           read_at: string | null
           recipient_agent_id: string
@@ -1434,6 +1435,7 @@ export type Database = {
           body: string
           conversation_id: string
           created_at?: string
+          email_enqueued_at?: string | null
           id?: string
           read_at?: string | null
           recipient_agent_id: string
@@ -1444,6 +1446,7 @@ export type Database = {
           body?: string
           conversation_id?: string
           created_at?: string
+          email_enqueued_at?: string | null
           id?: string
           read_at?: string | null
           recipient_agent_id?: string
@@ -4346,6 +4349,10 @@ export type Database = {
         Returns: string
       }
       owns_submission: { Args: { p_submission_id: string }; Returns: boolean }
+      process_pending_message_emails: {
+        Args: { grace_minutes?: number }
+        Returns: number
+      }
       rate_limit_consume: {
         Args: { p_key: string; p_limit: number; p_window_seconds: number }
         Returns: Json
