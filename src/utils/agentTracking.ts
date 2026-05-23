@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { resolveActiveBuyerAgentId } from "@/lib/resolveActiveBuyerAgentId";
 
 /**
  * Sync sticky agent from DB truth.
@@ -13,22 +14,10 @@ export async function syncStickyFromDB(): Promise<string | null> {
       return null;
     }
 
-    const { data, error } = await supabase
-      .from("client_agent_relationships")
-      .select("agent_id")
-      .eq("client_id", user.id)
-      .eq("status", "active")
-      .maybeSingle();
-
-    if (error) {
-      console.warn("syncStickyFromDB: query error, clearing sticky", error.message);
-      clearPrimaryAgentId();
-      return null;
-    }
-
-    if (data?.agent_id) {
-      setPrimaryAgentId(data.agent_id);
-      return data.agent_id;
+    const agentId = await resolveActiveBuyerAgentId(user.id, user.email);
+    if (agentId) {
+      setPrimaryAgentId(agentId);
+      return agentId;
     }
 
     clearPrimaryAgentId();

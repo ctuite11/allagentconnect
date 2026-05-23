@@ -170,12 +170,19 @@ const ConsumerPropertyDetail = () => {
   const [emailDialogOpen, setEmailDialogOpen] = useState(false);
 
   const handleMessageAgent = async (targetAgentId: string | null | undefined) => {
+    const resolvedAgentId =
+      targetAgentId ?? stickyAgentProfile?.id ?? stickyAgentId ?? agentProfile?.id ?? null;
+
     try {
-      if (!targetAgentId || !listing?.id) return;
+      if (!resolvedAgentId || !listing?.id) {
+        toast.error("No agent is available to message for this listing.");
+        return;
+      }
 
       const { data, error } = await supabase.auth.getUser();
       if (error) {
         console.error("auth.getUser error:", error);
+        toast.error("Could not verify your session. Please sign in again.");
         return;
       }
 
@@ -187,12 +194,12 @@ const ConsumerPropertyDetail = () => {
 
       const conversationId = await findOrCreateConversation(
         userId,
-        targetAgentId,
+        resolvedAgentId,
         { listingId: listing.id }
       );
 
       if (!conversationId) {
-        console.error("findOrCreateConversation returned no id");
+        toast.error("Could not start a message thread. Please try again.");
         return;
       }
 
@@ -201,6 +208,9 @@ const ConsumerPropertyDetail = () => {
       });
     } catch (err) {
       console.error("Failed to start conversation:", err);
+      const msg =
+        err instanceof Error ? err.message : "Could not start a message thread. Please try again.";
+      toast.error(msg);
     }
   };
 
@@ -767,6 +777,7 @@ const ConsumerPropertyDetail = () => {
                       <ContactMyAgentDialog
                         open={emailDialogOpen}
                         onOpenChange={setEmailDialogOpen}
+                        agentUserId={stickyAgentId ?? stickyAgentProfile.id}
                         agentDisplayName={
                           `${stickyAgentProfile.first_name} ${stickyAgentProfile.last_name}`.trim()
                         }

@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { PageTitle } from "@/components/ui/page-title";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 // Navigation removed - rendered globally in App.tsx
 import Footer from "@/components/Footer";
 import ListingCard from "@/components/ListingCard";
@@ -95,6 +95,7 @@ interface BrowsePropertiesNewProps {
 
 const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = {}) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [listings, setListings] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [fetchError, setFetchError] = useState(false);
@@ -109,6 +110,15 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
 
   const { role } = useUserRole(user);
   const searchMode = role === "agent" ? "agent" : "consumer";
+
+  const buyerListingDetailTo = useMemo(() => {
+    if (!forceBuyer) return undefined;
+    const returnTo = `${location.pathname}${location.search}`;
+    return (listingId: string) => {
+      const q = new URLSearchParams({ returnTo });
+      return `/consumer-property/${listingId}?${q.toString()}`;
+    };
+  }, [forceBuyer, location.pathname, location.search]);
 
   const [criteria, setCriteria] = useState<SearchCriteria>(() => defaultSaleToolbarCriteria());
   const isRentSearch = criteria.listingType === "for_rent";
@@ -854,7 +864,13 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
                       <div className="min-h-0 flex-1">
                         <PropertyMap
                           listings={listings}
-                          onListingClick={(listingId) => navigate(`/property/${listingId}`)}
+                          onListingClick={(listingId) =>
+                            navigate(
+                              buyerListingDetailTo
+                                ? buyerListingDetailTo(listingId)
+                                : `/property/${listingId}`,
+                            )
+                          }
                         />
                       </div>
                     </section>
@@ -873,6 +889,11 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
                               listing={listing}
                               viewMode="compact"
                               showActions={false}
+                              compactListingDetailTo={
+                                buyerListingDetailTo
+                                  ? buyerListingDetailTo(listing.id)
+                                  : undefined
+                              }
                               agentInfo={
                                 agentMap[listing.agent_id]
                                   ? {
@@ -897,6 +918,11 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
                             listing={listing}
                             viewMode="compact"
                             showActions={false}
+                            compactListingDetailTo={
+                              buyerListingDetailTo
+                                ? buyerListingDetailTo(listing.id)
+                                : undefined
+                            }
                             agentInfo={
                               agentMap[listing.agent_id]
                                 ? {

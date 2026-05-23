@@ -16,6 +16,71 @@ function json(body: unknown, status = 200) {
   });
 }
 
+/** Resolve representing agent for an authenticated buyer (service role). */
+async function resolveBuyerAgentId(
+  supabaseAdmin: ReturnType<typeof createClient>,
+  userId: string,
+  buyerEmail: string,
+  preferredAgentId?: string | null,
+): Promise<string | null> {
+  const validateAgent = async (agentId: string): Promise<boolean> => {
+    const { data: direct } = await supabaseAdmin
+      .from("client_agent_relationships")
+      .select("id")
+      .eq("client_id", userId)
+      .eq("agent_id", agentId)
+      .in("status", ["active", "pending"])
+      .is("ended_at", null)
+      .limit(1);
+    if (direct?.length) return true;
+
+    const { data: crmLinked } = await supabaseAdmin
+      .from("client_agent_relationships")
+      .select("id, clients!inner(email)")
+      .eq("agent_id", agentId)
+      .is("client_id", null)
+      .in("status", ["active", "pending"])
+      .is("ended_at", null)
+      .ilike("clients.email", buyerEmail)
+      .limit(1);
+    return Boolean(crmLinked?.length);
+  };
+
+  if (preferredAgentId) {
+    const ok = await validateAgent(preferredAgentId);
+    if (ok) return preferredAgentId;
+  }
+
+  const { data: directRows } = await supabaseAdmin
+    .from("client_agent_relationships")
+    .select("agent_id")
+    .eq("client_id", userId)
+    .eq("status", "active")
+    .is("ended_at", null)
+    .order("created_at", { ascending: false })
+    .limit(1);
+
+  if (directRows?.[0]?.agent_id) {
+    return directRows[0].agent_id as string;
+  }
+
+  const { data: crmRows } = await supabaseAdmin
+    .from("client_agent_relationships")
+    .select("agent_id, clients!inner(email)")
+    .is("client_id", null)
+    .in("status", ["active", "pending"])
+    .is("ended_at", null)
+    .ilike("clients.email", buyerEmail)
+    .order("created_at", { ascending: false })
+    .limit(1);
+
+  if (crmRows?.[0]?.agent_id) {
+    return crmRows[0].agent_id as string;
+  }
+
+  return null;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return json({ success: false, error: "Method not allowed" }, 405);
@@ -24,7 +89,6 @@ serve(async (req) => {
   const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-  // 1) Authenticate caller
   const authHeader = req.headers.get("Authorization") ?? "";
   if (!authHeader.startsWith("Bearer ")) return json({ success: false, error: "Missing auth token" }, 401);
 
@@ -39,8 +103,7 @@ serve(async (req) => {
   const buyerEmail = (userData.user.email ?? "").trim();
   if (!buyerEmail) return json({ success: false, error: "Buyer email not found" }, 400);
 
-  // 2) Parse body
-  let input: { subject?: string; message?: string };
+  let input: { subject?: string; message?: string; agentId?: string };
   try {
     input = await req.json();
   } catch {
@@ -55,20 +118,17 @@ serve(async (req) => {
 
   const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
 
-  // 3) Resolve active agent from client_agent_relationships
-  const { data: rel, error: relErr } = await supabaseAdmin
-    .from("client_agent_relationships")
-    .select("agent_id")
-    .eq("client_id", userId)
-    .eq("status", "active")
-    .maybeSingle();
+  const agentId = await resolveBuyerAgentId(
+    supabaseAdmin,
+    userId,
+    buyerEmail,
+    input.agentId?.trim() || null,
+  );
 
-  if (relErr) return json({ success: false, error: relErr.message }, 500);
-  if (!rel?.agent_id) return json({ success: false, error: "No active agent relationship" }, 400);
+  if (!agentId) {
+    return json({ success: false, error: "No active agent relationship" }, 400);
+  }
 
-  const agentId = rel.agent_id as string;
-
-  // 4) Resolve agent email/name from agent_profiles (fallback to profiles)
   let agentEmail: string | null = null;
   let agentName: string | null = null;
 
@@ -100,7 +160,6 @@ serve(async (req) => {
 
   if (!agentEmail) return json({ success: false, error: "Agent email not found" }, 400);
 
-  // 5) Resolve buyer name from profiles
   const { data: buyerProfile } = await supabaseAdmin
     .from("profiles")
     .select("first_name, last_name")
@@ -111,25 +170,22 @@ serve(async (req) => {
     [buyerProfile?.first_name, buyerProfile?.last_name].filter(Boolean).join(" ").trim() ||
     "Your client";
 
-  // 6) Enqueue email job
-  const { error: jobErr } = await supabaseAdmin
-    .from("email_jobs")
-    .insert({
-      payload: {
-        provider: "resend",
-        template: "client-agent-message",
-        to: agentEmail,
+  const { error: jobErr } = await supabaseAdmin.from("email_jobs").insert({
+    payload: {
+      provider: "resend",
+      template: "client-agent-message",
+      to: agentEmail,
+      subject: finalSubject,
+      variables: {
+        agentName: agentName || "Agent",
+        clientName: buyerName,
+        clientEmail: buyerEmail,
         subject: finalSubject,
-        variables: {
-          agentName: agentName || "Agent",
-          clientName: buyerName,
-          clientEmail: buyerEmail,
-          subject: finalSubject,
-          message,
-        },
-        reply_to: buyerEmail,
+        message,
       },
-    });
+      reply_to: buyerEmail,
+    },
+  });
 
   if (jobErr) {
     return json({ success: false, error: `Email enqueue failed: ${jobErr.message}` }, 500);

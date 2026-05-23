@@ -4,6 +4,24 @@ interface ConversationOptions {
   listingId?: string | null;
 }
 
+/** True when both users archived the thread (e.g. after agent removed buyer). */
+async function isConversationArchivedForBothUsers(
+  conversationId: string,
+  userA: string,
+  userB: string,
+): Promise<boolean> {
+  const { data, error } = await supabase
+    .from("conversation_participants")
+    .select("user_id, is_archived")
+    .eq("conversation_id", conversationId)
+    .in("user_id", [userA, userB]);
+
+  if (error || !data?.length) return false;
+
+  const byUser = new Map(data.map((row) => [row.user_id, row.is_archived === true]));
+  return byUser.get(userA) === true && byUser.get(userB) === true;
+}
+
 /**
  * Find or create a 1:1 conversation between two agents.
  * Optionally scoped to a specific listing.
@@ -46,16 +64,11 @@ export async function findOrCreateConversation(
     // If both participants archived this thread (e.g. after a removed
     // relationship), do NOT auto-unarchive. Force a fresh conversation row
     // so the new relationship starts with an empty inbox thread.
-    const { data: parts } = await supabase
-      .from("conversation_participants")
-      .select("user_id, is_archived")
-      .eq("conversation_id", existing.id)
-      .in("user_id", [currentUserId, otherUserId]);
-
-    const bothArchived =
-      Array.isArray(parts) &&
-      parts.length >= 2 &&
-      parts.every((p) => p.is_archived === true);
+    const bothArchived = await isConversationArchivedForBothUsers(
+      existing.id,
+      currentUserId,
+      otherUserId,
+    );
 
     if (!bothArchived) {
       await ensureParticipants(existing.id);
@@ -113,5 +126,6 @@ async function ensureParticipants(conversationId: string): Promise<void> {
 
   if (error) {
     console.error("[ensureParticipants] ensure_conversation_participants_for_caller failed:", error);
+    throw new Error(error.message || "Could not prepare this conversation.");
   }
 }

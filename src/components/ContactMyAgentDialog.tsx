@@ -10,13 +10,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { invokeEdgeFunction } from "@/lib/invokeEdgeFunction";
 
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   /** @deprecated No longer required — kept for backward compat with CRM-based callers */
   crmClientId?: string;
+  /** Auth user id of the buyer's representing agent (sticky agent). */
+  agentUserId?: string | null;
   agentDisplayName?: string | null;
   defaultSubject?: string;
 };
@@ -51,29 +53,17 @@ export function ContactMyAgentDialog({
 
     setSending(true);
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const token = sessionData?.session?.access_token;
-      
-
-      const { data, error } = await supabase.functions.invoke(
-        "send-buyer-agent-email",
-        {
-          body: {
-            subject: subject.trim(),
-            message: message.trim(),
-          },
-          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-        }
-      );
-
-      if (error) throw error;
-      if (!data?.success)
-        throw new Error(data?.error || "Failed to send message");
+      await invokeEdgeFunction("send-buyer-agent-email", {
+        subject: subject.trim(),
+        message: message.trim(),
+        ...(agentUserId ? { agentId: agentUserId } : {}),
+      });
 
       toast.success("Message sent to your agent");
       onOpenChange(false);
-    } catch (e: any) {
-      toast.error(e?.message || "Failed to send message");
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Failed to send message";
+      toast.error(msg);
     } finally {
       setSending(false);
     }
