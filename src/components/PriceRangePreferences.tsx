@@ -307,7 +307,7 @@ const PriceRangePreferences = ({ agentId, onFiltersUpdated, onDataChange }: Pric
               {isOpen ? <ChevronUp className="h-5 w-5 text-neutral-400" strokeWidth={2} /> : <ChevronDown className="h-5 w-5 text-neutral-400" strokeWidth={2} />}
             </div>
             <CardDescription className="mt-1 text-left text-sm text-neutral-500">
-              Set your preferred price range for client need notifications
+              Receive alerts that match your preferred pricing.
             </CardDescription>
             {!isOpen && getSummaryText() && (
               <div className="mt-2 rounded-xl border border-neutral-200 bg-white px-3 py-2 text-left">

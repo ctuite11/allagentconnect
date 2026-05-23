@@ -194,7 +194,7 @@ const GeographicPreferencesManager = ({
               )}
             </div>
             <CardDescription className="mt-1 text-left text-sm text-neutral-500">
-              Select states, counties, and towns for notifications
+              Limit alerts to your preferred markets.
             </CardDescription>
             {!isOpen && selectedTowns.length > 0 && (
               <div className="mt-2 rounded-xl border border-neutral-200 bg-white px-3 py-2 text-left">

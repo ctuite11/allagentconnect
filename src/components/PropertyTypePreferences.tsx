@@ -127,7 +127,7 @@ const PropertyTypePreferences = ({ agentId, onFiltersUpdated, onDataChange }: Pr
               )}
             </div>
             <CardDescription className="mt-1 text-left text-sm text-neutral-500">
-              Select which property types you want to receive notifications about
+              Choose which property types trigger alerts.
             </CardDescription>
             {!isOpen && selectedTypes.length > 0 && (
               <div className="mt-2 rounded-xl border border-neutral-200 bg-white px-3 py-2 text-left">
