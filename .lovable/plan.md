@@ -1,43 +1,52 @@
-# Populate buyer name on Create Password page after re-invite
+# Block removed buyers from logging in
 
 ## Problem
 
-When an agent removes a buyer and later re-adds them, the new hot sheet invite email leads to the Create Password page with empty First/Last name fields. The accept page (`ClientInvitationSetup.tsx`) already reads name seeds from two sources:
+When an agent removes a buyer, `agent_end_client_relationship` clears the relationship, hot sheets, and invite tokens — but the buyer's `auth.users` account is untouched. She can still sign in at `/consumer/auth` (and on DCMLS once it launches) using her existing password, even though she has no active relationship.
 
-1. URL params `first_name` / `last_name`
-2. `share_tokens.payload.client_first_name` / `client_last_name`
+## Goal
 
-…but two of the three invite-creation paths don't write those fields, so re-invites land on the page blank.
+After removal, the buyer should not be able to log in anywhere as a buyer. Re-adding her must require a fresh invite + password setup (which already works on the data side).
 
-## Root cause
+## Approach
 
-- `src/lib/enqueueHotSheetClientInvites.ts` — already includes the names in payload + URL. ✅
-- `src/pages/HotSheetReview.tsx` (`handleSendInvites`, around lines 822-957) — selects only `email, first_name, last_name` from `clients`, but stores **only** `client_email` in the token payload and omits `first_name` / `last_name` from both the payload and the invite URL. ❌
-- `src/pages/HotSheetBuyerDetail.tsx` (`handleResendInvite`, around lines 195-248) — token payload and URL omit name fields entirely. ❌
-- `supabase/functions/process-hot-sheet/index.ts` (around lines 374-389) — token payload omits name fields. ❌
+Add a server-side step to the buyer-removal flow that revokes the buyer's auth credential when they have no remaining active/pending agent relationships and are not themselves an agent/admin.
 
-## Plan
+### 1. New edge function: `revoke-buyer-auth`
 
-1. **`src/pages/HotSheetReview.tsx`**
-   - Extend the `clients` select to include `phone`.
-   - Extend the `clientMap` entries to keep `first_name`, `last_name`, `phone`.
-   - When inserting a new `share_tokens` row, add `client_first_name`, `client_last_name`, `client_phone` to the payload.
-   - Append `&first_name=…&last_name=…` (when present) to the `hotSheetLink`, matching `enqueueHotSheetClientInvites`.
+- Verifies the caller is an authenticated agent.
+- Takes `buyer_client_id` (the `clients.id`).
+- Looks up the buyer's email from `clients`, then resolves the matching `auth.users` row by email.
+- Safety gates — only proceed if ALL true:
+  - User has no role of `agent` or `admin` in `user_roles`.
+  - User has zero rows in `client_agent_relationships` with `status IN ('active','pending')` and `ended_at IS NULL` (across any agent).
+  - User has zero rows in `hot_sheet_clients` joined to existing `hot_sheets`.
+- Action: delete the buyer's auth user via `supabase.auth.admin.deleteUser(userId)`. Reuse the FK-blocker clearing pattern from `delete-users/index.ts` so cleanup is safe (profiles, favorites, buyer_qualifications, buyer_credentials, notification_preferences, conversation_participants, hot_sheet_comments, share_tokens.accepted_by_user_id → null, etc.).
+- If safety gates fail (buyer still tied to another agent, or is also an agent), do nothing and return `{ skipped: true, reason }`. We never silently lock out a multi-agent buyer.
 
-2. **`src/pages/HotSheetBuyerDetail.tsx`**
-   - Where the buyer record is loaded for this page, ensure first/last name and phone are available (most likely already on `buyer`).
-   - When inserting a fresh `share_tokens` row in `handleResendInvite`, include `client_first_name`, `client_last_name`, `client_phone` in the payload.
-   - Append `first_name` / `last_name` query params to `hotSheetLink` when present.
+Deletion (vs ban) is the right call here because:
+- The existing removal flow already wipes hot sheets, comments, favorites, relationships.
+- Re-adding the buyer creates a brand-new invite + password setup, so a stale auth row only causes confusion.
+- It matches the user's stated intent: "no lingering history."
 
-3. **`supabase/functions/process-hot-sheet/index.ts`**
-   - When the email comes from the junction-table `clients` row, also pull `first_name`, `last_name`, `phone` and add `client_first_name`, `client_last_name`, `client_phone` to the new token payload.
+### 2. Wire into removal flow
 
-4. **Verify**
-   - Re-add a previously-removed buyer (e.g., `n.lopach`), send a hot sheet invite, open the email link, confirm First/Last fields are pre-filled on the Create Password page.
-   - Confirm existing flows that already populate names (URL params, accepted invites) continue to work.
+In `src/components/success-hub/RemoveBuyerClientAction.tsx → removeBuyerClient`, after the existing `agent_end_client_relationship` RPC succeeds, call `supabase.functions.invoke('revoke-buyer-auth', { body: { buyer_client_id } })`. Treat any error as non-fatal (toast warning, log) — the relationship removal already succeeded and is the source of truth.
+
+### 3. Backfill the current case
+
+One-off: revoke the auth login for the buyer who is currently in the broken state (e.g., `n.lopachak@gmail.com`) after verifying the safety gates above pass for her. Done via the same edge function path so the logic is exercised end-to-end.
 
 ## Out of scope
 
-- No UI/visual changes to `ClientInvitationSetup`.
-- No schema or RLS changes.
-- No changes to the buyer removal/cleanup logic shipped previously.
+- No UI changes.
+- No change to the existing `agent_end_client_relationship` SQL — auth.users mutations don't belong in a SECURITY DEFINER SQL function.
+- No change to invite/accept flows; they already work once the auth row is gone.
+- DCMLS-side login UI is unchanged — it will share the same `auth.users` table, so removing the row blocks both apps.
+
+## Verification
+
+1. As agent, remove a buyer who is only your client → buyer's auth row is gone; `/consumer/auth` login fails with "invalid credentials".
+2. Re-add the buyer → fresh invite email, Create Password page works, buyer can log in again.
+3. Remove a buyer who is also active with another agent → auth row preserved, edge function returns `skipped`.
+4. Remove a buyer who is also an agent/admin → auth row preserved.
