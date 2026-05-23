@@ -214,6 +214,7 @@ const ListingCard = ({
   showCompactComments = false,
   compactAgentOwned = false,
   compactDetailNavigateState,
+  compactListingDetailTo,
   hideCompactFavorite = false,
   hideFavoriteTooltip = false,
   compactSelectionAccent: _compactSelectionAccent = "default",
