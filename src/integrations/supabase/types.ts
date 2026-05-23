@@ -4191,6 +4191,10 @@ export type Database = {
         Args: { p_crm_client_id: string }
         Returns: Json
       }
+      archive_conversations_between_users: {
+        Args: { p_user_a: string; p_user_b: string }
+        Returns: undefined
+      }
       auto_activate_listings: { Args: never; Returns: undefined }
       can_authenticated_buyer_view_hot_sheet_client: {
         Args: { p_crm_client_id: string; p_hot_sheet_id: string }
