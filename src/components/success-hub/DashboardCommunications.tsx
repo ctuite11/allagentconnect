@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, type NavigateFunction } from "react-router-dom";
 import { MessageSquare } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -34,6 +34,12 @@ function getInitials(name: string | null) {
     .join("")
     .toUpperCase()
     .slice(0, 2);
+}
+
+function openThread(navigate: NavigateFunction, conversationId: string) {
+  navigate(`/messages/${conversationId}`, {
+    state: { from: "/agent-dashboard", fromLabel: "Back to Dashboard" },
+  });
 }
 
 export function DashboardCommunications({ conversations, compact, inboxPreview }: DashboardCommunicationsProps) {
@@ -128,12 +134,16 @@ export function DashboardCommunications({ conversations, compact, inboxPreview }
             {rows.map((c) => (
               <li
                 key={c.conversation_id}
-                className={`flex cursor-pointer items-center gap-2.5 rounded-lg border border-transparent bg-white transition-colors duration-150 hover:border-neutral-200 hover:bg-neutral-50/90 md:gap-3 ${compact ? "px-3 py-2" : "px-4 py-3"}`}
-                onClick={() =>
-                  navigate(`/messages/${c.conversation_id}`, {
-                    state: { from: "/agent-dashboard", fromLabel: "Back to Dashboard" },
-                  })
-                }
+                role="button"
+                tabIndex={0}
+                className={`flex cursor-pointer items-center gap-2.5 rounded-lg border border-transparent bg-white transition-colors duration-150 hover:border-neutral-200 hover:bg-neutral-50/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40 focus-visible:ring-inset md:gap-3 ${compact ? "px-3 py-2" : "px-4 py-3"}`}
+                onClick={() => openThread(navigate, c.conversation_id)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    openThread(navigate, c.conversation_id);
+                  }
+                }}
               >
                 <Avatar className={`shrink-0 ${compact ? "h-7 w-7" : "h-8 w-8"}`}>
                   {c.other_headshot_url && (
