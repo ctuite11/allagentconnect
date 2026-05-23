@@ -14,8 +14,30 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { toast } from "sonner";
-import { Send, ArrowLeft, Loader2, ChevronDown, ChevronUp } from "lucide-react";
+import { Send, ArrowLeft, Loader2, ChevronDown, ChevronUp, MapPin, Home, DollarSign, Building2 } from "lucide-react";
 import AACMonogram from "@/components/ui/AACMonogram";
+import {
+  commsChevron,
+  commsCountBadge,
+  commsDialogBody,
+  commsDialogContent,
+  commsDialogDescription,
+  commsDialogHeaderPad,
+  commsDialogTitle,
+  commsFieldLabel,
+  commsInput,
+  commsLabel,
+  commsMessageCard,
+  commsSelectTrigger,
+  commsOutlineButton,
+  commsRecipientPreview,
+  commsSectionBody,
+  commsSectionIcon,
+  commsSectionShell,
+  commsSectionTitle,
+  commsSectionTriggerRow,
+  commsTextarea,
+} from "@/components/communication-center/commsCenterFormStyles";
 import { supabase } from "@/integrations/supabase/client";
 import { US_STATES, COUNTIES_BY_STATE } from "@/data/usStatesCountiesData";
 import { useTownsPicker } from "@/hooks/useTownsPicker";
@@ -380,13 +402,13 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto border border-neutral-200 bg-white p-0">
-        <div className="p-6 pb-0">
+      <DialogContent className={commsDialogContent}>
+        <div className={commsDialogHeaderPad}>
           <DialogHeader>
-            <DialogTitle className="text-xl font-semibold text-neutral-900">
+            <DialogTitle className={commsDialogTitle}>
               {showConfirmation ? "Confirm & Send" : `Send ${categoryTitle}`}
             </DialogTitle>
-            <DialogDescription className="text-neutral-600">
+            <DialogDescription className={commsDialogDescription}>
               {showConfirmation
                 ? "Review your message before sending"
                 : "Compose and send a message to matching agents"}
@@ -431,9 +453,9 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
             </div>
 
             {!loadingCount && recipientCount !== null && (
-              <div className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
+              <div className={commsRecipientPreview}>
                 <div className="flex items-center gap-3">
-                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#16A34A] text-white">
+                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-600 text-white">
                     <AACMonogram className="h-3 w-3 text-white" />
                   </div>
                   <span className="text-sm text-neutral-600">
@@ -459,7 +481,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                 variant="outline"
                 onClick={handleSend}
                 disabled={sending}
-                className="rounded-lg border-neutral-200 bg-white text-neutral-800 shadow-none hover:bg-neutral-50 hover:text-neutral-900"
+                className={commsOutlineButton}
               >
                 {sending ? (
                   <>
@@ -476,11 +498,11 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
             </div>
           </div>
         ) : (
-          <div className="space-y-6 p-6">
+          <div className={commsDialogBody}>
             {/* Recipient Count */}
-            <div className="rounded-2xl border border-neutral-200 bg-white px-5 py-4 shadow-sm">
+            <div className={commsRecipientPreview}>
               <div className="flex items-center gap-3">
-                <AACMonogram className="h-6 w-6 text-[#16A34A]" />
+                <AACMonogram className="h-6 w-6 text-emerald-600" />
                 {loadingCount ? (
                   <span className="text-sm text-neutral-500">
                     Calculating recipients...
@@ -500,23 +522,20 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
             {showLocationFields && (
               <div className="space-y-6">
                 {/* State and County - Always visible */}
-                <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm">
+                <div className={commsSectionShell}>
                   <div className="border-b border-neutral-200 px-6 pb-3 pt-5">
                     <div className="flex items-center gap-3">
-                      <svg className="h-5 w-5 text-[#16A34A]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                      </svg>
-                      <span className="text-base font-semibold text-neutral-900">Location</span>
+                      <MapPin className={commsSectionIcon} strokeWidth={2} />
+                      <span className={commsSectionTitle}>Location</span>
                       <span className="text-xs font-medium text-destructive">*Required</span>
                     </div>
                   </div>
                   <div className="p-6">
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label className="text-sm font-medium text-neutral-700">State</Label>
+                        <Label className={commsLabel}>State</Label>
                         <Select value={state} onValueChange={(val) => setState(val)}>
-                          <SelectTrigger className="h-11 rounded-lg border-neutral-300 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20">
+                          <SelectTrigger className={commsSelectTrigger}>
                             <SelectValue placeholder="Select state" />
                           </SelectTrigger>
                           <SelectContent className="bg-white">
@@ -529,9 +548,9 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                         </Select>
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-sm font-medium text-neutral-700">County</Label>
+                        <Label className={commsLabel}>County</Label>
                         <Select value={selectedCountyId} onValueChange={(val) => setSelectedCountyId(val)}>
-                          <SelectTrigger className="h-11 rounded-lg border-neutral-300 bg-white focus:border-primary focus:ring-2 focus:ring-primary/20">
+                          <SelectTrigger className={commsSelectTrigger}>
                             <SelectValue placeholder="All Counties" />
                           </SelectTrigger>
                           <SelectContent className="bg-white">
@@ -550,32 +569,30 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
 
                 {/* Towns & Neighborhoods Section */}
                 <Collapsible open={townsOpen} onOpenChange={setTownsOpen}>
-                  <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm">
+                  <div className={commsSectionShell}>
                     <CollapsibleTrigger className="w-full focus:outline-none focus-visible:outline-none">
-                      <div className="flex items-center justify-between px-6 pb-3 pt-5 transition-colors hover:bg-neutral-50/80">
+                      <div className={commsSectionTriggerRow}>
                         <div className="flex items-center gap-3">
-                          <svg className="h-5 w-5 text-[#16A34A]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                          </svg>
-                          <span className="text-base font-semibold text-neutral-900">Towns & Neighborhoods</span>
+                          <Building2 className={commsSectionIcon} strokeWidth={2} />
+                          <span className={commsSectionTitle}>Towns & Neighborhoods</span>
                           {selectedCities.length > 0 && (
-                            <span className="rounded-md border border-neutral-200 bg-white px-2 py-0.5 text-xs font-medium text-neutral-600">
+                            <span className={commsCountBadge}>
                               {selectedCities.length} selected
                             </span>
                           )}
                         </div>
                         {townsOpen ? (
-                          <ChevronUp className="h-4 w-4 text-neutral-400" strokeWidth={2} />
+                          <ChevronUp className={commsChevron} strokeWidth={2} />
                         ) : (
-                          <ChevronDown className="h-4 w-4 text-neutral-400" strokeWidth={2} />
+                          <ChevronDown className={commsChevron} strokeWidth={2} />
                         )}
                       </div>
                     </CollapsibleTrigger>
                     <CollapsibleContent>
-                      <div className="space-y-4 border-t border-neutral-200 p-6 pt-4">
+                      <div className={commsSectionBody}>
                         {/* Show Areas Yes/No */}
                         <div className="flex items-center gap-4">
-                          <Label className="text-sm font-medium text-neutral-700">Show Areas</Label>
+                          <Label className={commsLabel}>Show Areas</Label>
                           <div className="flex gap-4">
                             <div className="flex items-center space-x-2">
                               <input
@@ -584,7 +601,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                                 name="show-areas"
                                 checked={showAreas === true}
                                 onChange={() => setShowAreas(true)}
-                                className="w-4 h-4 accent-primary"
+                                className="h-4 w-4 accent-emerald-600"
                               />
                               <Label htmlFor="show-yes" className="text-sm cursor-pointer">Yes</Label>
                             </div>
@@ -595,7 +612,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                                 name="show-areas"
                                 checked={showAreas === false}
                                 onChange={() => setShowAreas(false)}
-                                className="w-4 h-4 accent-primary"
+                                className="h-4 w-4 accent-emerald-600"
                               />
                               <Label htmlFor="show-no" className="text-sm cursor-pointer">No</Label>
                             </div>
@@ -607,7 +624,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                           placeholder="Type Full or Partial Name"
                           value={citySearch}
                           onChange={(e) => setCitySearch(e.target.value)}
-                          className="h-11 rounded-lg border-neutral-300 bg-white text-sm placeholder:text-neutral-400 focus:border-primary focus:ring-2 focus:ring-primary/20"
+                          className={commsInput}
                         />
 
                         {/* Two-column: Towns list + Selected towns */}
@@ -643,7 +660,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
 
                           <div className="space-y-2">
                              <div className="flex items-center justify-between mb-2">
-                               <Label className="text-sm font-medium text-neutral-700">Selected Towns</Label>
+                               <Label className={commsLabel}>Selected Towns</Label>
                                {selectedCities.length > 0 && (
                                  <button
                                    type="button"
@@ -691,24 +708,22 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                 {/* Property Types - HIDDEN for general_discussion */}
                 {category !== "general_discussion" && (
                   <Collapsible open={propertyTypesOpen} onOpenChange={setPropertyTypesOpen}>
-                    <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm">
+                    <div className={commsSectionShell}>
                       <CollapsibleTrigger className="w-full focus:outline-none focus-visible:outline-none">
-                        <div className="flex items-center justify-between px-6 pb-3 pt-5 transition-colors hover:bg-neutral-50/80">
+                        <div className={commsSectionTriggerRow}>
                           <div className="flex items-center gap-3">
-                            <svg className="h-5 w-5 text-[#16A34A]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                            </svg>
-                            <span className="text-base font-semibold text-neutral-900">Property Types</span>
+                            <Home className={commsSectionIcon} strokeWidth={2} />
+                            <span className={commsSectionTitle}>Property Types</span>
                             {propertyTypes.length > 0 && (
-                              <span className="rounded-md border border-neutral-200 bg-white px-2 py-0.5 text-xs font-medium text-neutral-600">
+                              <span className={commsCountBadge}>
                                 {propertyTypes.length} selected
                               </span>
                             )}
                           </div>
                           {propertyTypesOpen ? (
-                            <ChevronUp className="h-4 w-4 text-neutral-400" strokeWidth={2} />
+                            <ChevronUp className={commsChevron} strokeWidth={2} />
                           ) : (
-                            <ChevronDown className="h-4 w-4 text-neutral-400" strokeWidth={2} />
+                            <ChevronDown className={commsChevron} strokeWidth={2} />
                           )}
                         </div>
                       </CollapsibleTrigger>
@@ -747,24 +762,22 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                 {/* Price Range - HIDDEN for general_discussion */}
                 {category !== "general_discussion" && (
                   <Collapsible open={priceRangeOpen} onOpenChange={setPriceRangeOpen}>
-                    <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm">
+                    <div className={commsSectionShell}>
                       <CollapsibleTrigger className="w-full focus:outline-none focus-visible:outline-none">
-                        <div className="flex items-center justify-between px-6 pb-3 pt-5 transition-colors hover:bg-neutral-50/80">
+                        <div className={commsSectionTriggerRow}>
                           <div className="flex items-center gap-3">
-                            <svg className="h-5 w-5 text-[#16A34A]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
-                            </svg>
-                            <span className="text-base font-semibold text-neutral-900">Price Range</span>
+                            <DollarSign className={commsSectionIcon} strokeWidth={2} />
+                            <span className={commsSectionTitle}>Price Range</span>
                             {(minPrice || maxPrice) && (
-                              <span className="rounded-md border border-neutral-200 bg-white px-2 py-0.5 text-xs font-medium text-neutral-600">
+                              <span className={commsCountBadge}>
                                 ${minPriceDisplay || '0'} - ${maxPriceDisplay || '∞'}
                               </span>
                             )}
                           </div>
                           {priceRangeOpen ? (
-                            <ChevronUp className="h-4 w-4 text-neutral-400" strokeWidth={2} />
+                            <ChevronUp className={commsChevron} strokeWidth={2} />
                           ) : (
-                            <ChevronDown className="h-4 w-4 text-neutral-400" strokeWidth={2} />
+                            <ChevronDown className={commsChevron} strokeWidth={2} />
                           )}
                         </div>
                       </CollapsibleTrigger>
@@ -772,7 +785,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                         <div className="border-t border-neutral-200 p-6 pt-4">
                           <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
-                              <Label htmlFor="minPrice" className="text-sm font-medium text-neutral-700">
+                              <Label htmlFor="minPrice" className={commsLabel}>
                                 Minimum Price
                               </Label>
                               <div className="relative">
@@ -784,7 +797,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                                   value={minPriceDisplay}
                                   onChange={(e) => handleMinPriceChange(e.target.value)}
                                   placeholder={category === "renter_need" ? "1,000" : "500,000"}
-                                  className="pl-7 h-11 rounded-lg border-neutral-300 bg-white placeholder:text-neutral-400 focus:border-primary focus:ring-2 focus:ring-primary/20"
+                                  className={`pl-7 ${commsInput}`}
                                   disabled={noMinPrice}
                                 />
                               </div>
@@ -807,7 +820,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                               </div>
                             </div>
                             <div className="space-y-2">
-                              <Label htmlFor="maxPrice" className="text-sm font-medium text-neutral-700">
+                              <Label htmlFor="maxPrice" className={commsLabel}>
                                 Maximum Price
                               </Label>
                               <div className="relative">
@@ -819,7 +832,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                                   value={maxPriceDisplay}
                                   onChange={(e) => handleMaxPriceChange(e.target.value)}
                                   placeholder={category === "renter_need" ? "5,000" : "2,000,000"}
-                                  className="pl-7 h-11 rounded-lg border-neutral-300 bg-white placeholder:text-neutral-400 focus:border-primary focus:ring-2 focus:ring-primary/20"
+                                  className={`pl-7 ${commsInput}`}
                                   disabled={noMaxPrice}
                                 />
                               </div>
@@ -851,26 +864,30 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
             )}
 
             {/* Subject & Message */}
-            <div className="space-y-4 rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
+            <div className={commsMessageCard}>
               <div className="space-y-2.5">
-                <Label htmlFor="subject" className="text-sm font-medium text-neutral-800">Subject *</Label>
+                <Label htmlFor="subject" className={commsFieldLabel}>
+                  Subject *
+                </Label>
                 <Input
                   id="subject"
                   value={subject}
                   onChange={(e) => setSubject(e.target.value)}
                   placeholder="Enter subject line"
-                  className="h-11 rounded-lg border-neutral-300 bg-white placeholder:text-neutral-400 focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  className={commsInput}
                 />
               </div>
 
               <div className="space-y-2.5">
-                <Label htmlFor="message" className="text-sm font-medium text-neutral-800">Message *</Label>
+                <Label htmlFor="message" className={commsFieldLabel}>
+                  Message *
+                </Label>
                 <Textarea
                   id="message"
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   placeholder="Enter your message..."
-                  className="min-h-[180px] rounded-lg border-neutral-300 bg-white resize-none placeholder:text-neutral-400 focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  className={commsTextarea}
                 />
               </div>
             </div>
@@ -880,7 +897,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                 type="button"
                 variant="outline"
                 onClick={handleClose}
-                className="rounded-lg"
+                className={commsOutlineButton}
               >
                 Cancel
               </Button>
@@ -888,7 +905,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                 type="button"
                 variant="outline"
                 onClick={handleSend}
-                className="rounded-lg border-neutral-200 bg-white text-neutral-800 shadow-none hover:bg-neutral-50 hover:text-neutral-900"
+                className={commsOutlineButton}
               >
                 <Send className="h-4 w-4 mr-2" />
                 Preview & Send

@@ -12,19 +12,40 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
-import { 
-  Send, 
-  Users, 
-  Loader2, 
-  ChevronDown, 
-  ChevronUp, 
+import {
+  Send,
+  Loader2,
+  ChevronDown,
+  ChevronUp,
   MapPin,
   Home,
   DollarSign,
-  Info
+  Info,
 } from "lucide-react";
+import AACMonogram from "@/components/ui/AACMonogram";
+import {
+  commsChevron,
+  commsCountBadge,
+  commsDialogBody,
+  commsDialogContent,
+  commsDialogDescription,
+  commsDialogHeaderPad,
+  commsDialogTitle,
+  commsFieldLabel,
+  commsInput,
+  commsLabel,
+  commsMessageCard,
+  commsOutlineButton,
+  commsPopoverContent,
+  commsRecipientPreview,
+  commsSectionBody,
+  commsSectionIcon,
+  commsSectionShell,
+  commsSectionTitle,
+  commsSectionTriggerRow,
+  commsTextarea,
+} from "@/components/communication-center/commsCenterFormStyles";
 import { supabase } from "@/integrations/supabase/client";
 import { US_STATES, COUNTIES_BY_STATE } from "@/data/usStatesCountiesData";
 import { useTownsPicker } from "@/hooks/useTownsPicker";
@@ -260,63 +281,62 @@ export function SendEmailDialog({ open, onOpenChange, onSuccess }: SendEmailDial
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0">
-        <div className="p-6 pb-0">
+      <DialogContent className={commsDialogContent}>
+        <div className={commsDialogHeaderPad}>
           <DialogHeader>
-            <DialogTitle className="text-xl font-semibold">Send Email</DialogTitle>
-            <DialogDescription className="text-muted-foreground">
+            <DialogTitle className={commsDialogTitle}>Send Email</DialogTitle>
+            <DialogDescription className={commsDialogDescription}>
               Send a targeted email to users whose preferences match your selected geography
             </DialogDescription>
           </DialogHeader>
         </div>
 
-        <div className="space-y-5 p-6">
-          {/* Recipient Count */}
-          <div className="bg-secondary/50 border border-border rounded-xl p-4">
+        <div className={commsDialogBody}>
+          <div className={commsRecipientPreview}>
             <div className="flex items-center gap-3">
-              <div className="h-8 w-8 rounded-lg bg-muted border border-border flex items-center justify-center">
-                <Users className="h-4 w-4 text-primary" />
-              </div>
+              <AACMonogram className="h-6 w-6 text-emerald-600" />
               {loadingCount ? (
-                <span className="text-sm text-muted-foreground">Calculating recipients...</span>
+                <span className="text-sm text-neutral-500">Calculating recipients...</span>
               ) : recipientCount !== null ? (
-                <span className="text-sm">
-                  This email will be sent to <strong className="text-foreground font-semibold">{recipientCount}</strong> users
+                <span className="text-sm text-neutral-700">
+                  Sending to{" "}
+                  <strong className="font-semibold text-neutral-900">{recipientCount}</strong>{" "}
+                  {recipientCount === 1 ? "agent" : "agents"}
                 </span>
               ) : (
-                <span className="text-sm text-muted-foreground">Select criteria to see recipient count</span>
+                <span className="text-sm text-neutral-500">Select criteria to see recipient count</span>
               )}
             </div>
           </div>
 
           {/* Geographic Selection - Required */}
           <Collapsible open={geoExpanded} onOpenChange={setGeoExpanded}>
-            <div className="rounded-xl border border-border bg-card overflow-hidden">
+            <div className={commsSectionShell}>
               <CollapsibleTrigger className="w-full focus:outline-none focus-visible:outline-none">
-                <div className="flex items-center justify-between px-4 py-3 bg-background hover:bg-muted/50 transition-colors">
-                  <div className="flex items-center gap-3">
-                    <div className="h-8 w-8 rounded-lg bg-teal-500/10 flex items-center justify-center">
-                      <MapPin className="h-4 w-4 text-teal-600 dark:text-teal-400" />
-                    </div>
-                    <span className="font-medium text-foreground">Geographic Area</span>
+                <div className={commsSectionTriggerRow}>
+                  <div className="flex min-w-0 items-center gap-3">
+                    <MapPin className={commsSectionIcon} strokeWidth={2} aria-hidden />
+                    <span className={commsSectionTitle}>Geographic Area</span>
                     <span className="text-xs font-medium text-destructive">*Required</span>
                   </div>
-                  <div className="h-6 w-6 rounded-md bg-secondary flex items-center justify-center">
-                    {geoExpanded ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
-                  </div>
+                  {geoExpanded ? (
+                    <ChevronUp className={commsChevron} strokeWidth={2} aria-hidden />
+                  ) : (
+                    <ChevronDown className={commsChevron} strokeWidth={2} aria-hidden />
+                  )}
                 </div>
               </CollapsibleTrigger>
               <CollapsibleContent>
-                <div className="px-4 pb-5 pt-2 space-y-4 border-t border-border bg-secondary/20">
+                <div className={commsSectionBody}>
                   {/* State and County */}
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label className="text-sm font-medium text-foreground">State</Label>
+                      <Label className={commsLabel}>State</Label>
                       <Select value={state} onValueChange={setState}>
-                        <SelectTrigger className="h-10 rounded-lg border-neutral-200 bg-white">
+                        <SelectTrigger className={commsInput}>
                           <SelectValue placeholder="Select state" />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="bg-white">
                           {US_STATES.map((s) => (
                             <SelectItem key={s.code} value={s.code}>
                               {s.name}
@@ -326,12 +346,12 @@ export function SendEmailDialog({ open, onOpenChange, onSuccess }: SendEmailDial
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-sm font-medium text-foreground">County</Label>
+                      <Label className={commsLabel}>County</Label>
                       <Select value={selectedCountyId} onValueChange={setSelectedCountyId}>
-                        <SelectTrigger className="h-10 rounded-lg border-neutral-200 bg-white">
+                        <SelectTrigger className={commsInput}>
                           <SelectValue placeholder="All counties" />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="bg-white">
                           <SelectItem value="all">All Counties</SelectItem>
                           {counties.map((county) => (
                             <SelectItem key={county.id} value={county.id}>
@@ -346,26 +366,29 @@ export function SendEmailDialog({ open, onOpenChange, onSuccess }: SendEmailDial
                   {/* Towns */}
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label className="text-sm font-medium text-foreground">Towns</Label>
+                      <Label className={commsLabel}>Towns</Label>
                       <Popover open={townsOpen} onOpenChange={setTownsOpen}>
                         <PopoverTrigger asChild>
-                          <Button variant="outline" className="w-full justify-start font-normal h-10 rounded-lg border-neutral-200 bg-white hover:bg-neutral-soft">
+                          <Button
+                            variant="outline"
+                            className={`w-full justify-start font-normal ${commsInput} hover:bg-neutral-50`}
+                          >
                             {selectedCities.length > 0 
                               ? `${selectedCities.length} selected` 
                               : "Select towns..."}
                           </Button>
                         </PopoverTrigger>
-                        <PopoverContent className="w-[320px] p-0 rounded-xl border-border shadow-lg" align="start">
-                          <div className="p-3 border-b border-border bg-secondary/30">
+                        <PopoverContent className={commsPopoverContent} align="start">
+                          <div className="border-b border-neutral-200 p-3">
                             <Input
                               placeholder="Search towns..."
                               value={citySearch}
                               onChange={(e) => setCitySearch(e.target.value)}
-                              className="h-9 rounded-lg border-neutral-200 bg-white"
+                              className={commsInput}
                             />
                           </div>
                           <ScrollArea className="h-[220px]">
-                            <div className="p-2 bg-background">
+                            <div className="p-2">
                               <TownsPicker
                                 towns={townsList.filter(t => 
                                   !citySearch || t.toLowerCase().includes(citySearch.toLowerCase())
@@ -383,11 +406,11 @@ export function SendEmailDialog({ open, onOpenChange, onSuccess }: SendEmailDial
                       </Popover>
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-sm font-medium text-foreground">Selected</Label>
-                      <div className="min-h-[40px] p-3 border border-border rounded-lg bg-secondary/30 text-sm">
+                      <Label className={commsLabel}>Selected</Label>
+                      <div className="min-h-[44px] rounded-lg border border-neutral-200 bg-white p-3 text-sm">
                         {selectedCities.length > 0 
                           ? selectedCities.slice(0, 3).join(", ") + (selectedCities.length > 3 ? ` +${selectedCities.length - 3} more` : "")
-                          : <span className="text-muted-foreground">No towns selected</span>
+                          : <span className="text-neutral-400">No towns selected</span>
                         }
                       </div>
                     </div>
@@ -399,27 +422,25 @@ export function SendEmailDialog({ open, onOpenChange, onSuccess }: SendEmailDial
 
           {/* Property Types */}
           <Collapsible open={propertyExpanded} onOpenChange={setPropertyExpanded}>
-            <div className="rounded-xl border border-border bg-card overflow-hidden">
+            <div className={commsSectionShell}>
               <CollapsibleTrigger className="w-full focus:outline-none focus-visible:outline-none">
-                <div className="flex items-center justify-between px-4 py-3 bg-background hover:bg-muted/50 transition-colors">
-                  <div className="flex items-center gap-3">
-                    <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center">
-                      <Home className="h-4 w-4 text-primary" />
-                    </div>
-                    <span className="font-medium text-foreground">Property Types</span>
+                <div className={commsSectionTriggerRow}>
+                  <div className="flex min-w-0 items-center gap-3">
+                    <Home className={commsSectionIcon} strokeWidth={2} aria-hidden />
+                    <span className={commsSectionTitle}>Property Types</span>
                     {propertyTypes.length > 0 && (
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-foreground font-medium">
-                        {propertyTypes.length} selected
-                      </span>
+                      <span className={commsCountBadge}>{propertyTypes.length} selected</span>
                     )}
                   </div>
-                  <div className="h-6 w-6 rounded-md bg-secondary flex items-center justify-center">
-                    {propertyExpanded ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
-                  </div>
+                  {propertyExpanded ? (
+                    <ChevronUp className={commsChevron} strokeWidth={2} aria-hidden />
+                  ) : (
+                    <ChevronDown className={commsChevron} strokeWidth={2} aria-hidden />
+                  )}
                 </div>
               </CollapsibleTrigger>
               <CollapsibleContent>
-                <div className="px-4 pb-5 pt-2 border-t border-border bg-secondary/20">
+                <div className={commsSectionBody}>
                   <div className="grid grid-cols-3 gap-x-6 gap-y-3">
                     {PROPERTY_TYPES.map((type) => (
                       <div key={type.value} className="flex items-center space-x-2.5">
@@ -427,9 +448,9 @@ export function SendEmailDialog({ open, onOpenChange, onSuccess }: SendEmailDial
                           id={type.value}
                           checked={propertyTypes.includes(type.value)}
                           onCheckedChange={() => handlePropertyTypeToggle(type.value)}
-                          className="rounded-[4px] border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                          className="rounded-[4px] border-neutral-300"
                         />
-                        <label htmlFor={type.value} className="text-sm cursor-pointer text-foreground">
+                        <label htmlFor={type.value} className="cursor-pointer text-sm text-neutral-700">
                           {type.label}
                         </label>
                       </div>
@@ -442,44 +463,45 @@ export function SendEmailDialog({ open, onOpenChange, onSuccess }: SendEmailDial
 
           {/* Price Range */}
           <Collapsible open={priceExpanded} onOpenChange={setPriceExpanded}>
-            <div className="rounded-xl border border-border bg-card overflow-hidden">
+            <div className={commsSectionShell}>
               <CollapsibleTrigger className="w-full focus:outline-none focus-visible:outline-none">
-                <div className="flex items-center justify-between px-4 py-3 bg-background hover:bg-muted/50 transition-colors">
-                  <div className="flex items-center gap-3">
-                    <div className="h-8 w-8 rounded-lg bg-green-500/10 flex items-center justify-center">
-                      <DollarSign className="h-4 w-4 text-green-600 dark:text-green-400" />
-                    </div>
-                    <span className="font-medium text-foreground">Price Range</span>
+                <div className={commsSectionTriggerRow}>
+                  <div className="flex min-w-0 items-center gap-3">
+                    <DollarSign className={commsSectionIcon} strokeWidth={2} aria-hidden />
+                    <span className={commsSectionTitle}>Price Range</span>
                     {(minPrice || maxPrice) && (
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 font-medium">
-                        {minPrice ? `$${parseInt(minPrice).toLocaleString()}` : "Any"} - {maxPrice ? `$${parseInt(maxPrice).toLocaleString()}` : "Any"}
+                      <span className={commsCountBadge}>
+                        {minPrice ? `$${parseInt(minPrice, 10).toLocaleString()}` : "Any"} -{" "}
+                        {maxPrice ? `$${parseInt(maxPrice, 10).toLocaleString()}` : "Any"}
                       </span>
                     )}
                   </div>
-                  <div className="h-6 w-6 rounded-md bg-secondary flex items-center justify-center">
-                    {priceExpanded ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
-                  </div>
+                  {priceExpanded ? (
+                    <ChevronUp className={commsChevron} strokeWidth={2} aria-hidden />
+                  ) : (
+                    <ChevronDown className={commsChevron} strokeWidth={2} aria-hidden />
+                  )}
                 </div>
               </CollapsibleTrigger>
               <CollapsibleContent>
-                <div className="px-4 pb-5 pt-2 border-t border-border bg-secondary/20">
+                <div className={commsSectionBody}>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label className="text-sm font-medium text-foreground">Min Price</Label>
+                      <Label className={commsLabel}>Min Price</Label>
                       <Input
                         placeholder="No minimum"
                         value={minPrice}
-                        onChange={(e) => setMinPrice(e.target.value.replace(/[^0-9]/g, ''))}
-                        className="h-10 rounded-lg border-neutral-200 bg-white"
+                        onChange={(e) => setMinPrice(e.target.value.replace(/[^0-9]/g, ""))}
+                        className={commsInput}
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-sm font-medium text-foreground">Max Price</Label>
+                      <Label className={commsLabel}>Max Price</Label>
                       <Input
                         placeholder="No maximum"
                         value={maxPrice}
-                        onChange={(e) => setMaxPrice(e.target.value.replace(/[^0-9]/g, ''))}
-                        className="h-10 rounded-lg border-neutral-200 bg-white"
+                        onChange={(e) => setMaxPrice(e.target.value.replace(/[^0-9]/g, ""))}
+                        className={commsInput}
                       />
                     </div>
                   </div>
@@ -488,80 +510,80 @@ export function SendEmailDialog({ open, onOpenChange, onSuccess }: SendEmailDial
             </div>
           </Collapsible>
 
-          {/* Template Selection */}
-          <div className="space-y-2.5">
-            <Label className="text-sm font-medium text-foreground">Template</Label>
-            <Select value={template} onValueChange={setTemplate}>
-              <SelectTrigger className="h-10 rounded-lg border-neutral-200 bg-white">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {EMAIL_TEMPLATES.map((t) => (
-                  <SelectItem key={t.value} value={t.value}>
-                    {t.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className={commsMessageCard}>
+            <div className="space-y-2.5">
+              <Label className={commsFieldLabel}>Template</Label>
+              <Select value={template} onValueChange={setTemplate}>
+                <SelectTrigger className={commsInput}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-white">
+                  {EMAIL_TEMPLATES.map((t) => (
+                    <SelectItem key={t.value} value={t.value}>
+                      {t.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2.5">
+              <Label className={commsFieldLabel}>Subject *</Label>
+              <Input
+                placeholder="Email subject..."
+                value={subject}
+                onChange={(e) => setSubject(e.target.value)}
+                maxLength={200}
+                className={commsInput}
+              />
+            </div>
+
+            <div className="space-y-2.5">
+              <Label className={commsFieldLabel}>Message *</Label>
+              <Textarea
+                placeholder="Your message..."
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                rows={6}
+                maxLength={5000}
+                className={commsTextarea}
+              />
+              <p className="text-right text-xs text-neutral-500">{message.length}/5000</p>
+            </div>
           </div>
 
-          {/* Subject */}
-          <div className="space-y-2.5">
-            <Label className="text-sm font-medium text-foreground">Subject *</Label>
-            <Input
-              placeholder="Email subject..."
-              value={subject}
-              onChange={(e) => setSubject(e.target.value)}
-              maxLength={200}
-              className="h-10 rounded-lg border-neutral-200 bg-white"
-            />
-          </div>
-
-          {/* Message */}
-          <div className="space-y-2.5">
-            <Label className="text-sm font-medium text-foreground">Message *</Label>
-            <Textarea
-              placeholder="Your message..."
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              rows={6}
-              maxLength={5000}
-              className="rounded-lg border-neutral-200 bg-white resize-none"
-            />
-            <p className="text-xs text-muted-foreground text-right">{message.length}/5000</p>
-          </div>
-
-          {/* Reply Notice */}
-          <div className="flex items-start gap-3 p-4 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-xl">
-            <Info className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
-            <p className="text-sm text-amber-800 dark:text-amber-200">
+          <div className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4">
+            <Info className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" aria-hidden />
+            <p className="text-sm text-amber-900">
               Replies will be delivered to your email inbox, not to DirectConnectMLS.
             </p>
           </div>
 
-          {/* Send Copy to Self Option */}
-          <div className="flex items-center justify-between p-4 bg-secondary/30 border border-border rounded-xl">
+          <div className="flex items-center justify-between rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm">
             <div className="space-y-0.5">
-              <Label className="text-sm font-medium">Send a copy to myself</Label>
-              <p className="text-xs text-muted-foreground">
+              <Label className="text-sm font-medium text-neutral-900">Send a copy to myself</Label>
+              <p className="text-xs text-neutral-500">
                 Receive a copy of this email at your registered email address
               </p>
             </div>
-            <Switch
-              checked={sendCopyToSelf}
-              onCheckedChange={setSendCopyToSelf}
-            />
+            <Switch checked={sendCopyToSelf} onCheckedChange={setSendCopyToSelf} />
           </div>
 
-          {/* Actions */}
           <div className="flex justify-end gap-3 pt-2">
-            <Button variant="brandOutline" onClick={handleClose} disabled={sending} className="rounded-lg">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleClose}
+              disabled={sending}
+              className={commsOutlineButton}
+            >
               Cancel
             </Button>
-            <Button 
-              onClick={handleSend} 
+            <Button
+              type="button"
+              onClick={handleSend}
               disabled={sending || !subject.trim() || !message.trim() || !state}
-              className="rounded-lg"
+              className={`${commsOutlineButton} bg-neutral-900 text-white hover:bg-neutral-800 hover:text-white`}
             >
               {sending ? (
                 <>
