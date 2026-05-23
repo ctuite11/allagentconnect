@@ -1,52 +1,43 @@
-# Block removed buyers from logging in
+# Delete Buyer Auth on Removal
 
-## Problem
+When an agent removes a buyer client, delete the buyer's Cloud auth user so they can no longer log in to AAC (or DCMLS later). The only way back in is a fresh invite from an agent, which creates a new auth account via the existing create-password flow.
 
-When an agent removes a buyer, `agent_end_client_relationship` clears the relationship, hot sheets, and invite tokens — but the buyer's `auth.users` account is untouched. She can still sign in at `/consumer/auth` (and on DCMLS once it launches) using her existing password, even though she has no active relationship.
+## Behavior
 
-## Goal
+- Agent removes buyer → CRM contact stays (history preserved) → buyer's `auth.users` row is deleted → buyer's session is invalidated → `/consumer/auth` login fails.
+- Agent re-invites the same email → fresh share token → buyer creates a new password → new auth user → can log in again.
+- If the same email is also a client of another agent (multi-agent buyer), auth is preserved so the other relationship still works. (This safety gate already exists.)
+- Agents and admins are never auth-deleted via this path.
 
-After removal, the buyer should not be able to log in anywhere as a buyer. Re-adding her must require a fresh invite + password setup (which already works on the data side).
+## What's already wired
 
-## Approach
+- Edge function `supabase/functions/revoke-buyer-auth/index.ts` exists and contains:
+  - Caller agent verification
+  - Email lookup from `clients` → match in `auth.users`
+  - Safety gates (skip if user has agent/admin role, has other active/pending `client_agent_relationships`, or has authored `hot_sheet_comments`)
+  - FK cleanup (favorites, qualifications, credentials, notification prefs, conversation participants; nullifies `share_tokens.accepted_by_user_id`, `listing_status_history.changed_by`)
+  - `auth.admin.deleteUser()` call
+- `RemoveBuyerClientAction.tsx` already invokes `revoke-buyer-auth` after `agent_end_client_relationship` (non-fatal on failure).
 
-Add a server-side step to the buyer-removal flow that revokes the buyer's auth credential when they have no remaining active/pending agent relationships and are not themselves an agent/admin.
+## Steps
 
-### 1. New edge function: `revoke-buyer-auth`
-
-- Verifies the caller is an authenticated agent.
-- Takes `buyer_client_id` (the `clients.id`).
-- Looks up the buyer's email from `clients`, then resolves the matching `auth.users` row by email.
-- Safety gates — only proceed if ALL true:
-  - User has no role of `agent` or `admin` in `user_roles`.
-  - User has zero rows in `client_agent_relationships` with `status IN ('active','pending')` and `ended_at IS NULL` (across any agent).
-  - User has zero rows in `hot_sheet_clients` joined to existing `hot_sheets`.
-- Action: delete the buyer's auth user via `supabase.auth.admin.deleteUser(userId)`. Reuse the FK-blocker clearing pattern from `delete-users/index.ts` so cleanup is safe (profiles, favorites, buyer_qualifications, buyer_credentials, notification_preferences, conversation_participants, hot_sheet_comments, share_tokens.accepted_by_user_id → null, etc.).
-- If safety gates fail (buyer still tied to another agent, or is also an agent), do nothing and return `{ skipped: true, reason }`. We never silently lock out a multi-agent buyer.
-
-Deletion (vs ban) is the right call here because:
-- The existing removal flow already wipes hot sheets, comments, favorites, relationships.
-- Re-adding the buyer creates a brand-new invite + password setup, so a stale auth row only causes confusion.
-- It matches the user's stated intent: "no lingering history."
-
-### 2. Wire into removal flow
-
-In `src/components/success-hub/RemoveBuyerClientAction.tsx → removeBuyerClient`, after the existing `agent_end_client_relationship` RPC succeeds, call `supabase.functions.invoke('revoke-buyer-auth', { body: { buyer_client_id } })`. Treat any error as non-fatal (toast warning, log) — the relationship removal already succeeded and is the source of truth.
-
-### 3. Backfill the current case
-
-One-off: revoke the auth login for the buyer who is currently in the broken state (e.g., `n.lopachak@gmail.com`) after verifying the safety gates above pass for her. Done via the same edge function path so the logic is exercised end-to-end.
+1. **Deploy** `revoke-buyer-auth` so the wired call actually executes in production.
+2. **Refine safety gate**: drop the `hot_sheet_comments` author check — historical comments shouldn't block deletion. Replace with: nullify/preserve comment `sender_id` references via FK cleanup so deletion succeeds while comments remain.
+3. **Backfill the current orphan**: delete `n.lopachak@gmail.com`'s auth user (and any equivalent buyer-role auth users with zero active/pending relationships) by invoking the deployed function or an equivalent one-shot admin call.
+4. **Verify**:
+   - Remove a single-agent buyer → `auth.users` row gone; login attempt at `/consumer/auth` returns invalid credentials; existing session is revoked.
+   - Re-invite same email → create-password flow succeeds → new auth user → login works.
+   - Multi-agent buyer removed by one agent → auth preserved (function returns `skipped`).
+   - Agent or admin accidentally targeted → auth preserved.
 
 ## Out of scope
 
-- No UI changes.
-- No change to the existing `agent_end_client_relationship` SQL — auth.users mutations don't belong in a SECURITY DEFINER SQL function.
-- No change to invite/accept flows; they already work once the auth row is gone.
-- DCMLS-side login UI is unchanged — it will share the same `auth.users` table, so removing the row blocks both apps.
+- No UI changes to the removal confirmation dialog.
+- No changes to `agent_end_client_relationship` SQL (auth mutations stay in the edge function).
+- No changes to invite/accept flow.
+- No DCMLS-side changes (shared `auth.users` automatically gates DCMLS once it launches).
 
-## Verification
+## Technical notes
 
-1. As agent, remove a buyer who is only your client → buyer's auth row is gone; `/consumer/auth` login fails with "invalid credentials".
-2. Re-add the buyer → fresh invite email, Create Password page works, buyer can log in again.
-3. Remove a buyer who is also active with another agent → auth row preserved, edge function returns `skipped`.
-4. Remove a buyer who is also an agent/admin → auth row preserved.
+- Backfill is a one-shot admin operation, not a migration (touches `auth.users`).
+- Edge function continues to return `{ success, deleted_user_id }` or `{ skipped, reason }`; client logs but does not block removal on failure.

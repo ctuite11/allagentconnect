@@ -16,12 +16,12 @@ const BLOCKER_CHECKS = [
   { table: "notification_preferences", column: "user_id" },
   { table: "client_agent_relationships", column: "client_id" },
   { table: "conversation_participants", column: "user_id" },
-  { table: "hot_sheet_comments", column: "sender_id" },
 ] as const;
 
 const NULLABLE_FK_CHECKS = [
   { table: "share_tokens", column: "accepted_by_user_id" },
   { table: "listing_status_history", column: "changed_by" },
+  { table: "hot_sheet_comments", column: "sender_id" },
 ] as const;
 
 async function clearBlockers(supabase: any, userId: string) {
