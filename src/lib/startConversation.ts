@@ -1,5 +1,4 @@
 import { supabase } from "@/integrations/supabase/client";
-import { unarchiveConversationForUser } from "@/lib/archiveConversationsForUser";
 
 interface ConversationOptions {
   listingId?: string | null;
@@ -44,9 +43,25 @@ export async function findOrCreateConversation(
   }
 
   if (existing) {
-    await ensureParticipants(existing.id);
-    await unarchiveConversationForUser(supabase, existing.id);
-    return existing.id;
+    // If both participants archived this thread (e.g. after a removed
+    // relationship), do NOT auto-unarchive. Force a fresh conversation row
+    // so the new relationship starts with an empty inbox thread.
+    const { data: parts } = await supabase
+      .from("conversation_participants")
+      .select("user_id, is_archived")
+      .eq("conversation_id", existing.id)
+      .in("user_id", [currentUserId, otherUserId]);
+
+    const bothArchived =
+      Array.isArray(parts) &&
+      parts.length >= 2 &&
+      parts.every((p) => p.is_archived === true);
+
+    if (!bothArchived) {
+      await ensureParticipants(existing.id);
+      return existing.id;
+    }
+    // fall through and try to insert a new row
   }
 
   // Create new conversation
@@ -61,6 +76,18 @@ export async function findOrCreateConversation(
     .single();
 
   if (createError || !newConvo) {
+    // Unique-constraint conflict (listing-scoped 1:1 already exists, both
+    // archived). Fall back to the existing row and ensure the caller's
+    // participant row is unarchived so they can see their new message.
+    if (createError?.code === "23505" && existing) {
+      await ensureParticipants(existing.id);
+      await supabase
+        .from("conversation_participants")
+        .update({ is_archived: false })
+        .eq("conversation_id", existing.id)
+        .eq("user_id", currentUserId);
+      return existing.id;
+    }
     console.error("[findOrCreateConversation] insert failed", {
       message: createError?.message,
       code: createError?.code,
