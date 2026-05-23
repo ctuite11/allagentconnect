@@ -265,11 +265,13 @@ const ClientNeedsDashboard = () => {
             <NotificationPreferenceCards />
           </section>
 
-          <section data-preferences-section className="space-y-2">
-            <h2 className="text-xl font-semibold text-neutral-900">My Preferences</h2>
-            <p className="text-sm text-neutral-500">
-              Narrow which agent-network communications activity can trigger Comms Center email alerts.
-            </p>
+          <section data-preferences-section className="space-y-2.5">
+            <div>
+              <h2 className="text-xl font-semibold text-neutral-900">Set email alert settings</h2>
+              <p className="mt-1.5 text-sm leading-relaxed text-neutral-600">
+                Set your coverage area to limit unwanted email alerts.
+              </p>
+            </div>
 
             <div className="space-y-2.5">
               <PriceRangePreferences
