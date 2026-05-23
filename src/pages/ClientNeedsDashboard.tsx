@@ -84,10 +84,6 @@ const ClientNeedsDashboard = () => {
     setEmailAlertNoticeDismissed(true);
   };
 
-  const scrollToEmailAlertSettings = () => {
-    document.querySelector("[data-preferences-section]")?.scrollIntoView({ behavior: "smooth" });
-  };
-
   const checkAuth = async () => {
     const {
       data: { session },
@@ -286,41 +282,35 @@ const ClientNeedsDashboard = () => {
             <NotificationPreferenceCards />
           </section>
 
-          {!emailAlertNoticeDismissed && (
-            <div className="relative rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
-              <button
-                type="button"
-                onClick={dismissEmailAlertNotice}
-                aria-label="Dismiss notice"
-                className="absolute right-4 top-4 rounded-md p-1 text-neutral-400 transition-colors hover:bg-neutral-50 hover:text-neutral-600"
-              >
-                <X className="h-4 w-4" strokeWidth={2} aria-hidden />
-              </button>
-              <div className="flex gap-3 pr-6">
-                <SlidersHorizontal
-                  className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600"
-                  strokeWidth={2}
-                  aria-hidden
-                />
-                <div>
-                  <h3 className="text-base font-semibold text-neutral-900">Set your email alert coverage</h3>
-                  <p className="mt-1.5 text-sm leading-relaxed text-neutral-600">
-                    Choose the areas, price ranges, and property types you want to hear about. This helps keep Comms
-                    Center alerts relevant and prevents unwanted emails.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={scrollToEmailAlertSettings}
-                    className="mt-3 inline-flex h-8 items-center rounded-lg border border-neutral-200 bg-white px-3 text-sm font-medium text-neutral-800 transition-colors hover:bg-neutral-50 hover:text-neutral-900"
-                  >
-                    Update alert settings
-                  </button>
+          <div className="space-y-5">
+            {!emailAlertNoticeDismissed && (
+              <div className="relative rounded-2xl border border-emerald-100 bg-emerald-50/60 p-5">
+                <button
+                  type="button"
+                  onClick={dismissEmailAlertNotice}
+                  aria-label="Dismiss notice"
+                  className="absolute right-4 top-4 rounded-md p-1 text-neutral-400 transition-colors hover:bg-emerald-100/80 hover:text-neutral-600"
+                >
+                  <X className="h-4 w-4" strokeWidth={2} aria-hidden />
+                </button>
+                <div className="flex gap-3 pr-6">
+                  <SlidersHorizontal
+                    className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600"
+                    strokeWidth={2}
+                    aria-hidden
+                  />
+                  <div>
+                    <h3 className="text-base font-semibold text-neutral-900">Set your email alert coverage</h3>
+                    <p className="mt-1.5 text-sm leading-relaxed text-neutral-600">
+                      Choose the areas, price ranges, and property types you want to hear about. This helps keep Comms
+                      Center alerts relevant and prevents unwanted emails.
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
 
-          <section data-preferences-section className="space-y-2.5">
+            <section data-preferences-section className="space-y-2.5">
             <div>
               <h2 className="text-xl font-semibold text-neutral-900">Email alert settings</h2>
               <p className="mt-1.5 text-sm leading-relaxed text-neutral-600">
@@ -346,6 +336,7 @@ const ClientNeedsDashboard = () => {
               />
             </div>
           </section>
+          </div>
 
           <section className="space-y-2">
             <h2 className="text-xl font-semibold text-neutral-900">Notification Settings</h2>
