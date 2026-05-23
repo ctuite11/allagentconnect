@@ -1,26 +1,42 @@
-# Archive Buyer↔Agent Threads on Removal; Fresh Thread on Re-invite
+## Goal
 
-## Problem
-
-`agent_end_client_relationship` ends the relationship and clears hot sheets but doesn't touch `conversation_participants`. On re-invite, `findOrCreateConversation` finds the old `conversations` row and unarchives it, restoring the old thread with full history in both inboxes.
-
-## Changes
-
-### Migration: `supabase/migrations/20260523120000_archive_buyer_agent_conversations_on_remove.sql`
-- New `archive_conversations_between_users(user_a uuid, user_b uuid)` — sets `is_archived = true` on every `conversation_participants` row for both users on conversations where they are both participants.
-- Update `agent_end_client_relationship` and `agent_end_client_relationship_by_id` to call it after ending the relationship and clearing hot sheets.
-
-### `src/lib/startConversation.ts`
-- In `findOrCreateConversation`, when an existing conversation's participant rows are archived for **both** sides, skip it and insert a fresh `conversations` row.
-- Remove the auto-unarchive on find/create.
-- Direct thread open via `useConversation` still unarchives (explicit user action) — unchanged.
+Stop emailing recipients about direct messages they've already read in-app. Add a 10-minute grace window before any message-notification email is sent. If the recipient reads the message in-app at any point before that window expires, no email is sent. Applies to both agent and buyer sides — any `conversation_messages` row with a recipient.
 
 ## Behavior
 
-- Remove buyer → both inboxes lose the thread; messages remain in DB.
-- Re-invite → next "start chat" creates a brand-new conversation; only the new thread appears.
-- Old archived threads still accessible by direct URL (audit trail).
+- Send a message → **no email immediately**.
+- Wait **10 minutes**.
+- A scheduled job runs every minute and enqueues an email only for messages where:
+  - `read_at IS NULL`
+  - `created_at < now() - interval '10 minutes'`
+  - `email_enqueued_at IS NULL`
+  - `recipient_agent_id IS NOT NULL` and `<> sender_agent_id`
+- If the recipient opens the thread within 10 minutes (sets `read_at`), the row is skipped permanently — no email, regardless of whether they replied.
+- After enqueue, `email_enqueued_at` is stamped so it can never be enqueued twice.
+
+This works identically for agent recipients and buyer recipients, since both sides use `conversation_messages.recipient_agent_id` (the column name is legacy; it stores the recipient user id either way) and both sides set `read_at` via the existing `useConversation` flow when the thread is opened.
+
+## Changes
+
+### Migration (single new file)
+
+1. Add column `email_enqueued_at timestamptz` to `public.conversation_messages` and a partial index on `(created_at) WHERE read_at IS NULL AND email_enqueued_at IS NULL`.
+2. Drop the existing `enqueue_message_email` AFTER INSERT trigger so inserts no longer enqueue immediately. Keep the function definition harmless or drop it.
+3. Create `public.process_pending_message_emails(grace_minutes int default 10)`:
+   - Selects unread, un-enqueued messages older than the grace window with a valid recipient.
+   - Resolves recipient email + sender display name using the same agent_profiles → profiles fallback the current trigger uses.
+   - Inserts the same `new-message-notification` payload into `email_jobs` (relative `cta_url = '/messages/' || conversation_id`).
+   - Stamps `email_enqueued_at = now()` per row.
+4. Schedule with `pg_cron` every minute, idempotently:
+   - `select cron.unschedule('process-pending-message-emails')` if it exists, then `cron.schedule('process-pending-message-emails', '* * * * *', $$ select public.process_pending_message_emails(10); $$);`
+
+### No frontend changes
+
+`useConversation` already writes `read_at` when a recipient opens the thread on either side. That's the read signal. No UI work.
 
 ## Out of scope
 
-- No changes to CRM contacts, `agent_reactivate_buyer`, invite acceptance, manual archive UI, hot sheet comments, or `revoke-buyer-auth`.
+- Hot sheet comment emails, listing inquiry emails, client→agent contact emails — separate pipelines, untouched.
+- Per-user email preferences / mute toggle.
+- Push or in-app toast changes.
+- Email template copy.
