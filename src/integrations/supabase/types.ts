@@ -934,6 +934,39 @@ export type Database = {
         }
         Relationships: []
       }
+      agent_verification_audit: {
+        Row: {
+          action: string
+          admin_user_id: string | null
+          agent_user_id: string
+          created_at: string
+          id: string
+          new_status: string | null
+          notes: string | null
+          previous_status: string | null
+        }
+        Insert: {
+          action: string
+          admin_user_id?: string | null
+          agent_user_id: string
+          created_at?: string
+          id?: string
+          new_status?: string | null
+          notes?: string | null
+          previous_status?: string | null
+        }
+        Update: {
+          action?: string
+          admin_user_id?: string | null
+          agent_user_id?: string
+          created_at?: string
+          id?: string
+          new_status?: string | null
+          notes?: string | null
+          previous_status?: string | null
+        }
+        Relationships: []
+      }
       audit_logs: {
         Row: {
           action: string
