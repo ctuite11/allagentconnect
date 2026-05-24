@@ -99,6 +99,11 @@ export function mapMarketRowToListingCard(row: {
     listing_number: row.listing_number ?? undefined,
     agent_id: row.agent_id,
     neighborhood: row.neighborhood?.trim() || undefined,
+    unit_number:
+      row.unit_number != null && String(row.unit_number).trim() !== ""
+        ? String(row.unit_number).trim()
+        : undefined,
+    condo_details: row.condo_details ?? undefined,
     brokerage_name: broker || undefined,
     listing_stats: {
       view_count: 0,
