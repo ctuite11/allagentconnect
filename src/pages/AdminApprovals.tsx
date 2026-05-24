@@ -42,6 +42,15 @@ import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 import { AGENT_STATUS_OPTIONS, AGENT_STATUS_CONFIG, getStatusConfig } from "@/constants/status";
 import { Pill, type PillVariant } from "@/components/ui/pill";
 import { Seo } from "@/components/Seo";
+import { assessRisks, hasRedFlag, type Risk } from "@/lib/agentSignupValidation";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface Agent {
   id: string;
@@ -86,6 +95,38 @@ const stateNames: Record<string, string> = {
 
 type SortField = "name" | "status" | "created_at" | "company";
 type SortDirection = "asc" | "desc";
+
+function risksForAgent(a: Agent): Risk[] {
+  return assessRisks({
+    firstName: a.first_name,
+    lastName: a.last_name,
+    email: a.email,
+    phone: a.phone,
+    licenseState: a.license_state || "",
+    licenseNumber: a.license_number || "",
+    company: a.company,
+  });
+}
+
+function RiskBadges({ risks }: { risks: Risk[] }) {
+  if (risks.length === 0) return null;
+  return (
+    <div className="mt-2 flex flex-wrap gap-1.5">
+      {risks.map((r) => (
+        <span
+          key={r.code}
+          className={
+            r.severity === "red"
+              ? "inline-flex items-center gap-1 rounded-full bg-rose-50 px-2 py-0.5 text-xs font-medium text-rose-700 ring-1 ring-rose-200"
+              : "inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700 ring-1 ring-amber-200"
+          }
+        >
+          {r.severity === "red" ? "⚠" : "•"} {r.label}
+        </span>
+      ))}
+    </div>
+  );
+}
 
 export default function AdminApprovals() {
   const navigate = useNavigate();
