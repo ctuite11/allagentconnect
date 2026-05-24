@@ -1083,6 +1083,73 @@ export default function AdminApprovals() {
           fetchAgents();
         }}
       />
+
+      <Dialog
+        open={verifyConfirm !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setVerifyConfirm(null);
+            setConfirmText("");
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Confirm verification — flagged submission</DialogTitle>
+            <DialogDescription>
+              This agent's submission has data that looks suspicious. Review carefully before approving.
+            </DialogDescription>
+          </DialogHeader>
+          {verifyConfirm && (
+            <div className="space-y-4">
+              <div className="rounded-lg bg-rose-50 p-3 ring-1 ring-rose-200">
+                <div className="text-sm font-medium text-rose-900">
+                  {verifyConfirm.agent.first_name} {verifyConfirm.agent.last_name} — {verifyConfirm.agent.email}
+                </div>
+                <ul className="mt-2 space-y-1 text-sm text-rose-800">
+                  {verifyConfirm.risks.map((r) => (
+                    <li key={r.code}>• {r.label}</li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-zinc-700">
+                  Type <span className="font-mono">VERIFY</span> to confirm:
+                </label>
+                <Input
+                  className="mt-1"
+                  value={confirmText}
+                  onChange={(e) => setConfirmText(e.target.value)}
+                  placeholder="VERIFY"
+                  autoFocus
+                />
+              </div>
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setVerifyConfirm(null);
+                    setConfirmText("");
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  disabled={confirmText.trim() !== "VERIFY"}
+                  onClick={() => {
+                    const a = verifyConfirm.agent;
+                    setVerifyConfirm(null);
+                    setConfirmText("");
+                    handleStatusChange(a, "verified");
+                  }}
+                >
+                  Approve anyway
+                </Button>
+              </DialogFooter>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
