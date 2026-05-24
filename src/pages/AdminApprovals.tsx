@@ -183,6 +183,13 @@ export default function AdminApprovals() {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showBulkDeleteDialog, setShowBulkDeleteDialog] = useState(false);
 
+  // Risk-flagged verification confirmation dialog
+  const [verifyConfirm, setVerifyConfirm] = useState<{
+    agent: Agent;
+    risks: Risk[];
+  } | null>(null);
+  const [confirmText, setConfirmText] = useState("");
+
   // Fetch all agents via edge function (bypasses RLS issues)
   const fetchAgents = async () => {
     if (!isAdmin) return;
