@@ -18,6 +18,7 @@ interface ConvertRequest {
   licenseState?: string;
   licenseNumber?: string;
   brokerage?: string;
+  skipEmail?: boolean;
 }
 
 interface RateLimitResult {
@@ -174,7 +175,17 @@ serve(async (req: Request): Promise<Response> => {
 
   try {
     const body: ConvertRequest = await req.json();
-    const { earlyAccessId, email, firstName, lastName, phone, licenseState, licenseNumber, brokerage } = body;
+    const {
+      earlyAccessId,
+      email,
+      firstName,
+      lastName,
+      phone,
+      licenseState,
+      licenseNumber,
+      brokerage,
+      skipEmail,
+    } = body;
 
     if (!email || !firstName || !lastName) {
       return new Response(
@@ -313,6 +324,18 @@ serve(async (req: Request): Promise<Response> => {
 
     if (roleError && !roleError.message?.includes("duplicate")) {
       console.error("Error assigning agent role:", roleError);
+    }
+
+    if (skipEmail) {
+      console.log(`Skipping welcome email for ${email} (skipEmail=true)`);
+      return new Response(
+        JSON.stringify({
+          success: true,
+          userId,
+          message: "Account created (welcome email skipped)",
+        }),
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
     }
 
     // Generate password reset link - use PUBLIC_SITE_URL env var for redirect

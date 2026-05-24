@@ -298,7 +298,7 @@ export default function AdminApprovals() {
       if (agent.is_early_access && newStatus === "verified") {
         console.log(`Converting early access user to full account: ${agent.email}`);
         
-        // Call the conversion edge function which creates auth user + sends password setup email
+        // Call the conversion edge function which creates auth user (email skipped; approval email sent separately)
         const { data, error } = await supabase.functions.invoke("convert-early-access-to-account", {
           body: {
             earlyAccessId: agent.id,
@@ -309,6 +309,7 @@ export default function AdminApprovals() {
             licenseState: agent.license_state,
             licenseNumber: agent.license_number,
             brokerage: agent.company,
+            skipEmail: true,
           },
         });
 
