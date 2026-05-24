@@ -56,12 +56,12 @@ function WorkspaceSkeletonRails() {
   return (
     <div className="space-y-6" aria-busy="true" role="status" aria-live="polite">
       <span className="sr-only">Loading workspace…</span>
-      <div className="rounded-xl border border-neutral-200 bg-white px-5 py-4 shadow-sm">
-        <Skeleton className="h-8 w-44 max-w-full rounded-md bg-neutral-100 sm:h-9" />
-        <Skeleton className="mt-2 h-4 w-32 rounded-md bg-neutral-100" />
-        <Skeleton className="mt-3 h-3.5 max-w-xl rounded-md bg-neutral-100" />
-        <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-start">
-          <Skeleton className="h-16 w-16 shrink-0 rounded-full bg-neutral-100" />
+      <div className="rounded-xl border border-neutral-200 bg-white px-5 py-3 shadow-sm">
+        <Skeleton className="h-7 w-36 max-w-full rounded-md bg-neutral-100" />
+        <Skeleton className="mt-1.5 h-3.5 w-28 rounded-md bg-neutral-100" />
+        <Skeleton className="mt-1 h-3 max-w-xl rounded-md bg-neutral-100" />
+        <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-start">
+          <Skeleton className="h-14 w-14 shrink-0 rounded-full bg-neutral-100" />
           <div className="min-w-0 flex-1 space-y-2">
             <Skeleton className="h-4 w-40 rounded-md bg-neutral-100" />
             <Skeleton className="h-3 w-52 rounded-md bg-neutral-100" />
