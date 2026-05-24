@@ -48,6 +48,9 @@ verify_jwt = false
 [functions.send-auth-email]
 verify_jwt = false
 
+[functions.validate-agent-signup]
+verify_jwt = false
+
 [functions.delete-users]
 verify_jwt = false
 
