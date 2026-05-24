@@ -3,13 +3,13 @@ import Footer from "@/components/Footer";
 import { useAuthRole } from "@/hooks/useAuthRole";
 
 export default function PublicAgentProfile() {
-  const { role, loading } = useAuthRole();
-  const showPublicFooter = !loading && role !== "agent" && role !== "admin";
+  const { role } = useAuthRole();
+  const isAgentAppViewer = role === "agent" || role === "admin";
 
   return (
     <>
-      <AgentProfile publicMode />
-      {showPublicFooter && <Footer />}
+      <AgentProfile publicMode={!isAgentAppViewer} />
+      {!isAgentAppViewer && <Footer />}
     </>
   );
 }
