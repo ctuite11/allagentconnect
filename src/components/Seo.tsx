@@ -1,6 +1,6 @@
 import { Helmet } from "react-helmet-async";
 import { useLocation } from "react-router-dom";
-import { getBrandForRoute } from "@/lib/branding";
+import { getBrandForRoute, type BrandType, AAC_BRAND, DCMLS_BRAND } from "@/lib/branding";
 
 interface SeoProps {
   title?: string;
@@ -11,6 +11,8 @@ interface SeoProps {
   noindex?: boolean;
   canonical?: string;
   jsonLd?: Record<string, unknown>;
+  /** Force AAC or DCMLS branding regardless of route (e.g. authenticated agent app views). */
+  brandType?: BrandType;
 }
 
 /**
@@ -26,9 +28,11 @@ export function Seo({
   noindex = false,
   canonical,
   jsonLd,
+  brandType,
 }: SeoProps) {
   const location = useLocation();
-  const brand = getBrandForRoute(location.pathname);
+  const brand =
+    brandType === "aac" ? AAC_BRAND : brandType === "dcmls" ? DCMLS_BRAND : getBrandForRoute(location.pathname);
 
   const defaultSiteName = "All Agent Connect";
   const defaultTitle = "All Agent Connect";

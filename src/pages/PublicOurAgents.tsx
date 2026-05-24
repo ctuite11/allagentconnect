@@ -1,10 +1,20 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Navigate } from "react-router-dom";
 import OurAgents from "./OurAgents";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
+import { useAuthRole } from "@/hooks/useAuthRole";
 
 export default function PublicOurAgents() {
   const navigate = useNavigate();
+  const { role, loading } = useAuthRole();
+
+  if (!loading && (role === "agent" || role === "admin")) {
+    return <Navigate to="/our-members" replace />;
+  }
+
+  if (loading) {
+    return null;
+  }
 
   return (
     <>

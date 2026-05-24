@@ -231,6 +231,8 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
         image={agent.headshot_url || undefined}
         canonical={agentProfileUrl}
         type="profile"
+        noindex={!publicMode}
+        brandType={publicMode ? undefined : "aac"}
         jsonLd={{
           "@context": "https://schema.org",
           "@type": "Person",

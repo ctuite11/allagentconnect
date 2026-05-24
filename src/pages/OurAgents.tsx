@@ -365,12 +365,13 @@ function AgentPhotoTileGrid({ agents, onViewProfile, hideDirectContact = false }
   return (
     <div className="flex min-h-screen flex-col bg-white">
       <Seo
-        title={effectivePublicMode ? "Find an Agent | All Agent Connect" : "Agent Network | All Agent Connect"}
+        title={effectivePublicMode ? "Find an Agent | All Agent Connect" : "AAC Referral Network | All Agent Connect"}
         description={effectivePublicMode
           ? "Browse local real estate agents, compare profiles, and connect with someone who fits your move."
           : "Browse the All Agent Connect member network, discover agents, and build professional connections."}
         canonical={effectivePublicMode ? "https://allagentconnect.com/our-agents" : "https://allagentconnect.com/our-members"}
         noindex={!effectivePublicMode}
+        brandType={effectivePublicMode ? undefined : "aac"}
       />
       <main className="flex-1 pb-10">
         {/* Page Header + Search */}

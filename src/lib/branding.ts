@@ -2,6 +2,8 @@
  * Branding utilities for AAC vs DCMLS route detection and dynamic branding
  */
 
+import { isDcmlsHost } from "@/lib/host";
+
 export type BrandType = 'aac' | 'dcmls';
 
 export interface BrandConfig {
@@ -37,16 +39,24 @@ export const DCMLS_BRAND: BrandConfig = {
   ogImage: 'https://directconnectmls.com/og-image.jpg',
 };
 
+const AGENT_DIRECTORY_ROUTES = ["/our-agents", "/agents", "/find-agent"];
+
+/**
+ * Public agent directory — DCMLS branding only on the DCMLS consumer host.
+ */
+function isAgentDirectoryRoute(pathname: string): boolean {
+  return AGENT_DIRECTORY_ROUTES.includes(pathname);
+}
+
 /**
  * Routes that are considered DCMLS consumer-facing
  */
 const DCMLS_ROUTES = [
-  '/',
-  '/browse',
-  '/search',
-  '/our-agents',
-  '/consumer-property',
-  '/consumer',
+  "/",
+  "/browse",
+  "/search",
+  "/consumer-property",
+  "/consumer",
 ];
 
 /**
@@ -90,6 +100,10 @@ const AAC_ROUTES = [
  * Determine if a route path is DCMLS consumer-facing
  */
 export function isDcmlsRoute(pathname: string): boolean {
+  if (isAgentDirectoryRoute(pathname)) {
+    return isDcmlsHost();
+  }
+
   // Exact matches
   if (DCMLS_ROUTES.includes(pathname)) return true;
 
