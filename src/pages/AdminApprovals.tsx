@@ -945,6 +945,9 @@ export default function AdminApprovals() {
                           </>
                         )}
                       </div>
+                      {agent.agent_status === "pending" && (
+                        <RiskBadges risks={risksForAgent(agent)} />
+                      )}
                     </div>
                     
                     <div className="flex items-center gap-3 shrink-0">
@@ -973,7 +976,15 @@ export default function AdminApprovals() {
                   {/* Row 2: Actions */}
                   <div className="mt-3 flex items-center gap-2 text-sm">
                     <button 
-                      onClick={() => handleStatusChange(agent, "verified")}
+                      onClick={() => {
+                        const risks = risksForAgent(agent);
+                        if (hasRedFlag(risks) && agent.agent_status !== "verified") {
+                          setConfirmText("");
+                          setVerifyConfirm({ agent, risks });
+                        } else {
+                          handleStatusChange(agent, "verified");
+                        }
+                      }}
                       disabled={isProcessing || agent.agent_status === "verified"}
                       className={agent.agent_status === "verified" 
                         ? "text-zinc-500 cursor-not-allowed flex items-center gap-1" 
