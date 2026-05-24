@@ -89,6 +89,7 @@ import Register from "./pages/Register";
 import AgentMatch from "./pages/AgentMatch";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
+import Blog from "./pages/Blog";
 import DesignMockup from "./pages/DesignMockup";
 import HomepageV2 from "./pages/HomepageV2";
 import AgentDiagnostics from "./pages/AgentDiagnostics";
@@ -295,6 +296,7 @@ const App = () => (
                 <Route path="/home" element={<Index />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/contact" element={<Contact />} />
+                <Route path="/blog" element={<Blog />} />
                 {/* Auth routes */}
                 <Route element={<PublicLayout />}>
                   <Route path="/auth" element={<Auth />} />
