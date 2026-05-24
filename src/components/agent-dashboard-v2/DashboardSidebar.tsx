@@ -19,6 +19,7 @@ import {
   Search,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { isAgentHotSheetsNavActive } from "@/lib/sidebarNavActive";
 import { supabase } from "@/integrations/supabase/client";
 import { useUnreadConversations } from "@/hooks/useUnreadConversations";
 import AACMonogram from "@/components/ui/AACMonogram";
@@ -167,6 +168,9 @@ export function DashboardSidebar({
     // Search-related routes that should always highlight "Search"
     const searchPrefixes = ["/listing-results", "/idx-search", "/listing-search"];
     if (searchPrefixes.some((p) => path.startsWith(p))) return "Search";
+
+    // Hot sheet list, review, and buyer-detail routes (not under /agent/hot-sheets prefix)
+    if (isAgentHotSheetsNavActive(path)) return "Hot Sheets";
 
     return "Success Hub";
   })();

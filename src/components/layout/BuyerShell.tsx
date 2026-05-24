@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Outlet, NavLink, useNavigate } from "react-router-dom";
+import { Outlet, NavLink, useNavigate, useLocation } from "react-router-dom";
 import {
   Search,
   LayoutDashboard,
@@ -15,6 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import AACMonogram from "@/components/ui/AACMonogram";
 import { useUnreadConversations } from "@/hooks/useUnreadConversations";
 import { buyerPageShell } from "@/lib/buyerUi";
+import { isBuyerHotSheetsNavActive } from "@/lib/sidebarNavActive";
 
 const NAV_ITEMS = [
   { to: "/client/search", label: "Search", icon: Search },
@@ -25,12 +26,20 @@ const NAV_ITEMS = [
   { to: "/client/account", label: "Account", icon: User },
 ];
 
+function isBuyerNavItemActive(to: string, pathname: string): boolean {
+  if (to === "/hot-sheets") {
+    return isBuyerHotSheetsNavActive(pathname);
+  }
+  return pathname === to || pathname.startsWith(`${to}/`);
+}
+
 /**
  * Top-bar shell for all buyer-authenticated pages.
  * Replaces the global marketing Navigation for buyer routes.
  */
 export function BuyerShell() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const { unreadCount } = useUnreadConversations();
 
@@ -65,17 +74,19 @@ export function BuyerShell() {
 
           {/* Desktop nav */}
           <nav className="hidden items-center gap-1 overflow-visible sm:flex">
-            {NAV_ITEMS.map(({ to, label, icon: Icon }) => (
+            {NAV_ITEMS.map(({ to, label, icon: Icon }) => {
+              const isActive = isBuyerNavItemActive(to, location.pathname);
+              return (
               <NavLink
                 key={to}
                 to={to}
-                className={({ isActive }) =>
+                className={() =>
                   `inline-flex items-center gap-1.5 px-3 py-2 text-sm transition-colors duration-150 ${
                     isActive ? "text-zinc-900 font-semibold" : "text-zinc-600 font-medium hover:text-zinc-900"
                   }`
                 }
               >
-                {({ isActive }) =>
+                {() =>
                   to === "/messages" ? (
                     <>
                       <span className="relative inline-flex shrink-0">
@@ -104,7 +115,8 @@ export function BuyerShell() {
                   )
                 }
               </NavLink>
-            ))}
+              );
+            })}
           </nav>
 
           {/* Right actions */}
@@ -132,12 +144,14 @@ export function BuyerShell() {
         {/* Mobile menu */}
         {mobileOpen && (
           <div className="sm:hidden border-t border-neutral-100 bg-white px-4 py-3 space-y-1">
-            {NAV_ITEMS.map(({ to, label, icon: Icon }) => (
+            {NAV_ITEMS.map(({ to, label, icon: Icon }) => {
+              const isActive = isBuyerNavItemActive(to, location.pathname);
+              return (
               <NavLink
                 key={to}
                 to={to}
                 onClick={() => setMobileOpen(false)}
-                className={({ isActive }) =>
+                className={() =>
                   `flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-150 ${
                     isActive
                       ? "text-zinc-900 font-semibold bg-zinc-50"
@@ -145,7 +159,7 @@ export function BuyerShell() {
                   }`
                 }
               >
-                {({ isActive }) => (
+                {() => (
                   <>
                     <Icon
                       className={`h-4 w-4 ${
@@ -161,7 +175,8 @@ export function BuyerShell() {
                   </>
                 )}
               </NavLink>
-            ))}
+              );
+            })}
             <button
               onClick={handleLogout}
               className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-lg text-sm font-medium text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 transition-colors"
