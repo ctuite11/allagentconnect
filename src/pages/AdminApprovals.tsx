@@ -42,6 +42,15 @@ import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 import { AGENT_STATUS_OPTIONS, AGENT_STATUS_CONFIG, getStatusConfig } from "@/constants/status";
 import { Pill, type PillVariant } from "@/components/ui/pill";
 import { Seo } from "@/components/Seo";
+import { assessRisks, hasRedFlag, type Risk } from "@/lib/agentSignupValidation";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface Agent {
   id: string;
@@ -86,6 +95,38 @@ const stateNames: Record<string, string> = {
 
 type SortField = "name" | "status" | "created_at" | "company";
 type SortDirection = "asc" | "desc";
+
+function risksForAgent(a: Agent): Risk[] {
+  return assessRisks({
+    firstName: a.first_name,
+    lastName: a.last_name,
+    email: a.email,
+    phone: a.phone,
+    licenseState: a.license_state || "",
+    licenseNumber: a.license_number || "",
+    company: a.company,
+  });
+}
+
+function RiskBadges({ risks }: { risks: Risk[] }) {
+  if (risks.length === 0) return null;
+  return (
+    <div className="mt-2 flex flex-wrap gap-1.5">
+      {risks.map((r) => (
+        <span
+          key={r.code}
+          className={
+            r.severity === "red"
+              ? "inline-flex items-center gap-1 rounded-full bg-rose-50 px-2 py-0.5 text-xs font-medium text-rose-700 ring-1 ring-rose-200"
+              : "inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700 ring-1 ring-amber-200"
+          }
+        >
+          {r.severity === "red" ? "⚠" : "•"} {r.label}
+        </span>
+      ))}
+    </div>
+  );
+}
 
 export default function AdminApprovals() {
   const navigate = useNavigate();
@@ -141,6 +182,13 @@ export default function AdminApprovals() {
   const [emailRecipients, setEmailRecipients] = useState<Array<{ id: string; email: string; name: string }>>([]);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showBulkDeleteDialog, setShowBulkDeleteDialog] = useState(false);
+
+  // Risk-flagged verification confirmation dialog
+  const [verifyConfirm, setVerifyConfirm] = useState<{
+    agent: Agent;
+    risks: Risk[];
+  } | null>(null);
+  const [confirmText, setConfirmText] = useState("");
 
   // Fetch all agents via edge function (bypasses RLS issues)
   const fetchAgents = async () => {
@@ -897,6 +945,9 @@ export default function AdminApprovals() {
                           </>
                         )}
                       </div>
+                      {agent.agent_status === "pending" && (
+                        <RiskBadges risks={risksForAgent(agent)} />
+                      )}
                     </div>
                     
                     <div className="flex items-center gap-3 shrink-0">
@@ -925,7 +976,15 @@ export default function AdminApprovals() {
                   {/* Row 2: Actions */}
                   <div className="mt-3 flex items-center gap-2 text-sm">
                     <button 
-                      onClick={() => handleStatusChange(agent, "verified")}
+                      onClick={() => {
+                        const risks = risksForAgent(agent);
+                        if (hasRedFlag(risks) && agent.agent_status !== "verified") {
+                          setConfirmText("");
+                          setVerifyConfirm({ agent, risks });
+                        } else {
+                          handleStatusChange(agent, "verified");
+                        }
+                      }}
                       disabled={isProcessing || agent.agent_status === "verified"}
                       className={agent.agent_status === "verified" 
                         ? "text-zinc-500 cursor-not-allowed flex items-center gap-1" 
@@ -1024,6 +1083,73 @@ export default function AdminApprovals() {
           fetchAgents();
         }}
       />
+
+      <Dialog
+        open={verifyConfirm !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setVerifyConfirm(null);
+            setConfirmText("");
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Confirm verification — flagged submission</DialogTitle>
+            <DialogDescription>
+              This agent's submission has data that looks suspicious. Review carefully before approving.
+            </DialogDescription>
+          </DialogHeader>
+          {verifyConfirm && (
+            <div className="space-y-4">
+              <div className="rounded-lg bg-rose-50 p-3 ring-1 ring-rose-200">
+                <div className="text-sm font-medium text-rose-900">
+                  {verifyConfirm.agent.first_name} {verifyConfirm.agent.last_name} — {verifyConfirm.agent.email}
+                </div>
+                <ul className="mt-2 space-y-1 text-sm text-rose-800">
+                  {verifyConfirm.risks.map((r) => (
+                    <li key={r.code}>• {r.label}</li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-zinc-700">
+                  Type <span className="font-mono">VERIFY</span> to confirm:
+                </label>
+                <Input
+                  className="mt-1"
+                  value={confirmText}
+                  onChange={(e) => setConfirmText(e.target.value)}
+                  placeholder="VERIFY"
+                  autoFocus
+                />
+              </div>
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setVerifyConfirm(null);
+                    setConfirmText("");
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  disabled={confirmText.trim() !== "VERIFY"}
+                  onClick={() => {
+                    const a = verifyConfirm.agent;
+                    setVerifyConfirm(null);
+                    setConfirmText("");
+                    handleStatusChange(a, "verified");
+                  }}
+                >
+                  Approve anyway
+                </Button>
+              </DialogFooter>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

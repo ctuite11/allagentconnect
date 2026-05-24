@@ -27,6 +27,7 @@ export function ContactMyAgentDialog({
   open,
   onOpenChange,
   crmClientId,
+  agentUserId,
   agentDisplayName,
   defaultSubject,
 }: Props) {

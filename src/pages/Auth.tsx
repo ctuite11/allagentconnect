@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 import { authDebug } from "@/lib/authDebug";
 import { resolveUserRole, getRouteForRole } from "@/lib/resolveUserRole";
 import { AacMonogramLoader } from "@/components/AacMonogramLoader";
+import { validateAgentSignup } from "@/lib/agentSignupValidation";
 
 /** Premium white card — email-template aligned (soft border, subtle shadow). */
 const authCardSurface =
@@ -462,6 +463,48 @@ const Auth = () => {
 
       if (password !== confirmPassword) {
         toast.error("Passwords do not match");
+        return;
+      }
+
+      // Hard-fail signup if any submission looks fake. Mirrors the
+      // server-side validate-agent-signup edge function. Both must pass.
+      const signupErrors = validateAgentSignup({
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        email: validatedEmail,
+        phone: phone.trim() || null,
+        licenseState,
+        licenseNumber: licenseNumber.trim(),
+      });
+      if (signupErrors.length > 0) {
+        toast.error(signupErrors[0]);
+        return;
+      }
+
+      // Server-side mirror — blocks direct-API bypass.
+      try {
+        const { data: validateData, error: validateError } = await withTimeout(
+          supabase.functions.invoke('validate-agent-signup', {
+            body: {
+              firstName: firstName.trim(),
+              lastName: lastName.trim(),
+              email: validatedEmail,
+              phone: phone.trim() || null,
+              licenseState,
+              licenseNumber: licenseNumber.trim(),
+            },
+          }),
+          15000,
+          "Validate signup"
+        );
+        const serverErrors = (validateData as { ok?: boolean; errors?: string[] } | null)?.errors;
+        if (validateError || (serverErrors && serverErrors.length > 0)) {
+          toast.error(serverErrors?.[0] || validateError?.message || "Signup failed validation");
+          return;
+        }
+      } catch (e) {
+        console.error('[REGISTER] Step 0.5 server validation error:', e);
+        toast.error("Could not validate signup. Please try again.");
         return;
       }
 
