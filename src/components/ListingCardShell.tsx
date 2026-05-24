@@ -16,17 +16,17 @@
 
 import type { MouseEvent, ReactNode } from "react";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { ListingStatusBadge } from "@/components/ui/status-badge";
 import {
-  MapPin, Bed, Bath, Home, Sparkles,
+  Bed, Bath, Home, Sparkles,
   TrendingDown, RefreshCw, Calendar,
 } from "lucide-react";
 import { format } from "date-fns";
 import DcmlsBadge from "@/components/DcmlsBadge";
 import { formatListingIdLabel, LISTING_ID_NAV_CLASS } from "@/lib/listingIdDisplay";
 import { formatListingPropertyTypeLabel } from "@/lib/format";
-import { cn, listingCardStreetHeading } from "@/lib/utils";
+import { ListingCardAddressLine } from "@/components/listing/ListingCardAddressLine";
+import { cn } from "@/lib/utils";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -257,20 +257,7 @@ export function ListingCardShell({
           {/* Col 1-6: Address, location, metadata */}
           <div className="col-span-6 flex flex-col">
             {addressSlot || (
-              <>
-                <h3 className="mb-1.5 min-h-[2.25rem] break-words text-sm font-semibold">
-                  {listingCardStreetHeading(listing)}
-                </h3>
-                <div className="flex items-center text-muted-foreground text-xs mb-2">
-                  <MapPin className="w-3 h-3 mr-1 shrink-0 text-[#047857]" aria-hidden />
-                  {listing.city}, {listing.state} {listing.zip_code}
-                  {listing.neighborhood && (
-                    <Badge variant="secondary" className="ml-2 text-xs">
-                      {listing.neighborhood}
-                    </Badge>
-                  )}
-                </div>
-              </>
+              <ListingCardAddressLine listing={listing} className="mb-2" />
             )}
 
             {/* Info row: listing number + extras (DOM only on listing detail pages) */}

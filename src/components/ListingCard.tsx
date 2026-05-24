@@ -4,7 +4,7 @@ import { ListingCardShell } from "@/components/ListingCardShell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ListingStatusBadge } from "@/components/ui/status-badge";
-import { MapPin, Bed, Bath, Home, Edit, Trash2, Eye, Calendar, Users, Mail, Heart, Star, BarChart3, Sparkles, TrendingDown, RefreshCw, Maximize, ChevronLeft, ChevronRight, Phone, User, MessageSquare } from "lucide-react";
+import { Bed, Bath, Home, Edit, Trash2, Eye, Calendar, Users, Mail, Heart, Star, BarChart3, Sparkles, TrendingDown, RefreshCw, Maximize, ChevronLeft, ChevronRight, Phone, User, MessageSquare } from "lucide-react";
 import { ListingInterestSignals } from "./ListingInterestSignals";
 import type { ListingSignals } from "@/hooks/useListingInterestSignals";
 import { useNavigate } from "react-router-dom";
@@ -23,7 +23,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
-import { buildDisplayAddress, cn, listingCardStreetHeading, propertyTypeToEnum } from "@/lib/utils";
+import { cn, propertyTypeToEnum } from "@/lib/utils";
+import { ListingCardAddressLine } from "@/components/listing/ListingCardAddressLine";
 import {
   listingSelectionCardCompactSelected,
   listingSelectionCardGridSelected,
@@ -751,9 +752,6 @@ const ListingCard = ({
   };
   const daysOnMarket = calculateDaysOnMarket();
 
-  // Use shared display address helper
-  const displayAddress = buildDisplayAddress(listing);
-
   // Compact view (for HotSheets and search results)
   if (viewMode === 'compact') {
     const openListingDetail = () => {
@@ -1003,16 +1001,11 @@ const ListingCard = ({
 
           <ListingCardPropertyTypeLine propertyType={listing.property_type} className="mt-0.5" />
 
-          <div
-            className={cn(
-              "flex min-w-0 cursor-pointer items-start gap-1.5",
-              listing.property_type ? "mt-1" : undefined,
-            )}
+          <ListingCardAddressLine
+            listing={listing}
+            className={listing.property_type ? "mt-1" : undefined}
             onClick={openListingDetail}
-          >
-            <MapPin className="mt-1 h-3.5 w-3.5 shrink-0 text-[#50C878]" aria-hidden strokeWidth={2} />
-            <p className="min-h-[2.25rem] min-w-0 flex-1 break-words text-[13px] font-normal leading-snug text-neutral-800">{displayAddress}</p>
-          </div>
+          />
 
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs tabular-nums text-neutral-900">
             {listing.bedrooms ? (
@@ -1577,21 +1570,10 @@ const ListingCard = ({
           <div className="min-w-0 flex-1">
             <div className="text-lg font-bold text-neutral-900">{displayPrice}</div>
             <ListingCardPropertyTypeLine propertyType={listing.property_type} className="mt-0.5" />
-            <div
-              className={cn(
-                "flex min-w-0 items-start gap-1.5",
-                listing.property_type ? "mt-1" : "mt-1.5",
-              )}
-            >
-              <MapPin className="mt-1 h-4 w-4 shrink-0 text-[#50C878]" aria-hidden strokeWidth={2} />
-              <h3 className="min-h-[2.25rem] min-w-0 break-words text-sm font-semibold leading-tight text-foreground">
-                {listingCardStreetHeading(listing)}
-              </h3>
-            </div>
-            <p className="mt-0.5 pl-5 text-xs text-muted-foreground">
-              {listing.neighborhood ? `${listing.neighborhood.toLowerCase().replace(/\b\w/g, c => c.toUpperCase())}, ` : ''}
-              {listing.city?.toLowerCase().replace(/\b\w/g, c => c.toUpperCase())}, {listing.state?.toUpperCase()} {listing.zip_code}
-            </p>
+            <ListingCardAddressLine
+              listing={listing}
+              className={listing.property_type ? "mt-1" : "mt-1.5"}
+            />
           </div>
           {pricePerSqft ? (
             <div className="shrink-0 text-right text-xs text-neutral-600">${pricePerSqft}/sqft</div>

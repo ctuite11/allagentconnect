@@ -11,7 +11,7 @@ import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { ListingStatusBadge } from "@/components/ui/status-badge";
 import {
-  MapPin, Bed, Bath, Home, Calendar,
+  Bed, Bath, Home, Calendar,
   Check, Mail, ExternalLink,
   Phone, Camera, FileText, Video,
   ChevronLeft, ChevronRight,
@@ -33,7 +33,8 @@ import { resolveBrokerageAttribution, resolveListedByAttribution } from "@/lib/l
 import { ListingCardAttributionStrip } from "@/components/listing/ListingCardAttributionStrip";
 import { ListingCardPropertyTypeLine } from "@/components/listing/ListingCardPropertyTypeLine";
 import { formatListingIdLabel, LISTING_ID_NAV_CLASS, LISTING_ID_NAV_CLASS_SEARCH_SURFACE } from "@/lib/listingIdDisplay";
-import { buildDisplayAddress, cn, listingCardStreetHeading } from "@/lib/utils";
+import { buildDisplayAddress, cn } from "@/lib/utils";
+import { ListingCardAddressLine } from "@/components/listing/ListingCardAddressLine";
 import {
   listingSelectionCheckboxClass,
   listingSelectionSearchCardSelected,
@@ -404,27 +405,11 @@ export const SearchListingCard = ({
                     {listingIdLabel}
                   </button>
                 )}
-                <h3 className="mt-0.5 min-h-[2.25rem] break-words text-sm font-semibold leading-tight tracking-[-0.01em] text-foreground">
-                  <a
-                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={(e) => e.stopPropagation()}
-                    className="transition-colors hover:text-neutral-800"
-                  >
-                    {listingCardStreetHeading(listing)}
-                  </a>
-                </h3>
-                <div className="mt-1 flex items-center gap-1.5 text-xs text-neutral-600">
-                  <MapPin className="h-3 w-3 flex-shrink-0 text-neutral-500" />
-                  <span>{listing.city}, {listing.state} {listing.zip_code}</span>
-                  {listing.neighborhood && (
-                    <>
-                      <span className="text-neutral-400">·</span>
-                      <span>{listing.neighborhood}</span>
-                    </>
-                  )}
-                </div>
+                <ListingCardAddressLine
+                  listing={listing}
+                  className="mt-0.5"
+                  mapsHref={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fullAddress)}`}
+                />
               </div>
 
               {/* CENTER: Status */}
@@ -552,13 +537,7 @@ export const SearchListingCard = ({
                 ) : null}
               </div>
               <ListingCardPropertyTypeLine propertyType={listing.property_type} className="mt-0.5" />
-              <h3 className="mt-1 min-h-[2.25rem] break-words text-sm font-semibold leading-tight text-foreground">
-                {listingCardStreetHeading(listing)}
-              </h3>
-              <div className="mt-0.5 flex items-center text-xs text-neutral-600">
-                <MapPin className="w-3 h-3 mr-0.5" />
-                {listing.city}, {listing.state} {listing.zip_code}
-              </div>
+              <ListingCardAddressLine listing={listing} className="mt-1" />
               <div className="mt-1.5 flex items-center gap-2 flex-wrap">
                 <ListingStatusBadge status={listing.status} size="sm" />
                 {listingIdLabel && (
