@@ -43,6 +43,8 @@ import { AGENT_STATUS_OPTIONS, AGENT_STATUS_CONFIG, getStatusConfig } from "@/co
 import { Pill, type PillVariant } from "@/components/ui/pill";
 import { Seo } from "@/components/Seo";
 import { assessRisks, hasRedFlag, type Risk } from "@/lib/agentSignupValidation";
+import { useAgentPresenceBatch } from "@/hooks/useAgentLastSeen";
+import { AgentOnlinePresenceBadge } from "@/components/ui/AgentOnlinePresenceBadge";
 import {
   Dialog,
   DialogContent,
@@ -189,6 +191,13 @@ export default function AdminApprovals() {
     risks: Risk[];
   } | null>(null);
   const [confirmText, setConfirmText] = useState("");
+
+  // Online presence for real (non-early-access) agents
+  const realAgentIds = useMemo(
+    () => agents.filter((a) => !a.is_early_access).map((a) => a.id),
+    [agents]
+  );
+  const presenceMap = useAgentPresenceBatch(realAgentIds);
 
   // Fetch all agents via edge function (bypasses RLS issues)
   const fetchAgents = async () => {
@@ -909,6 +918,9 @@ export default function AdminApprovals() {
                         <span className="font-mono text-xs text-black">{agent.aac_id}</span>
                         <span className="text-zinc-300">•</span>
                         <span className="font-semibold text-[#0E56F5]">{agent.first_name} {agent.last_name}</span>
+                        {!agent.is_early_access && presenceMap.get(agent.id)?.isOnline && (
+                          <AgentOnlinePresenceBadge />
+                        )}
                         <span className="text-zinc-300">•</span>
                         <span className="text-zinc-600">{agent.email}</span>
                         {agent.company && (
