@@ -14,6 +14,74 @@ function toTitleCase(str: string): string {
     .join(' ');
 }
 
+/**
+ * USPS-style terminal street suffixes for listing card display.
+ * Keys are lowercase tokens (periods stripped). Values are canonical abbreviations.
+ * "Way" stays "Way" per AAC display standard.
+ */
+const DISPLAY_STREET_SUFFIX_ABBREV: Readonly<Record<string, string>> = {
+  street: "St",
+  st: "St",
+  avenue: "Ave",
+  ave: "Ave",
+  road: "Rd",
+  rd: "Rd",
+  boulevard: "Blvd",
+  blvd: "Blvd",
+  lane: "Ln",
+  ln: "Ln",
+  drive: "Dr",
+  dr: "Dr",
+  court: "Ct",
+  ct: "Ct",
+  place: "Pl",
+  pl: "Pl",
+  terrace: "Ter",
+  ter: "Ter",
+  circle: "Cir",
+  cir: "Cir",
+  way: "Way",
+};
+
+/** Normalize only the last street token (avoids "Courtney" → "Ctney" etc.). */
+function abbreviateTerminalStreetSuffixOnSegment(segment: string): string {
+  const trimmed = segment.trim();
+  if (!trimmed) return segment;
+
+  const unitSuffixMatch = trimmed.match(/(\s+#\S[\s\S]*)$/);
+  const unitSuffix = unitSuffixMatch?.[1] ?? "";
+  const streetCore = unitSuffix ? trimmed.slice(0, -unitSuffix.length).trimEnd() : trimmed;
+
+  const tokens = streetCore.split(/\s+/);
+  if (tokens.length === 0) return segment;
+
+  const lastIdx = tokens.length - 1;
+  const bare = tokens[lastIdx].replace(/\./g, "").toLowerCase();
+  const canonical = DISPLAY_STREET_SUFFIX_ABBREV[bare];
+  if (canonical) {
+    tokens[lastIdx] = canonical;
+    return tokens.join(" ") + unitSuffix;
+  }
+  return segment;
+}
+
+/** Abbreviate suffixes on the street portion only (before `, City`). */
+function applyDisplayStreetSuffixAbbreviation(addressLine: string, city: string): string {
+  const cityTrim = (city || "").trim();
+  if (!cityTrim) {
+    return abbreviateTerminalStreetSuffixOnSegment(addressLine);
+  }
+
+  const marker = `, ${cityTrim}`;
+  const idx = addressLine.toLowerCase().indexOf(marker.toLowerCase());
+  if (idx === -1) {
+    return abbreviateTerminalStreetSuffixOnSegment(addressLine);
+  }
+
+  const street = abbreviateTerminalStreetSuffixOnSegment(addressLine.slice(0, idx));
+  return street + addressLine.slice(idx);
+}
+
 /** Minimal listing slice for formatting street + MLS unit (column or condo_details). */
 export type ListingAddressUnitSource = {
   address: string;
@@ -107,6 +175,8 @@ export function buildDisplayAddress(listing: ListingAddressUnitSource) {
     const tail = `${city}, ${state} ${zip}`;
     base = `${base}, ${tail}`;
   }
+
+  base = applyDisplayStreetSuffixAbbreviation(base, city);
 
   // Convert to Title Case before returning
   return toTitleCase(base);
