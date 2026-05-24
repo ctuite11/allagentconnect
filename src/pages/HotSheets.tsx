@@ -842,11 +842,23 @@ const HotSheets = ({
 
   const renderBuyersSection = () => (
     <section className={`${AAC_CARD_SHELL} p-5 md:p-6`} aria-labelledby="agent-buyer-hot-sheets-heading">
-      <div className="space-y-1">
-        <h2 id="agent-buyer-hot-sheets-heading" className={DASH_SECTION_TITLE}>
-          Buyer Hot Sheets
-        </h2>
-        <p className={DASH_SECTION_DESC}>Hot sheets linked to your buyers.</p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0 space-y-1">
+          <h2 id="agent-buyer-hot-sheets-heading" className={DASH_SECTION_TITLE}>
+            Buyer Hot Sheets
+          </h2>
+          <p className={DASH_SECTION_DESC}>Hot sheets linked to your buyers.</p>
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="h-8 shrink-0 gap-1.5 rounded-lg border-neutral-200 bg-white px-3 text-xs font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:bg-neutral-50"
+          onClick={() => setCreateDialogOpen(true)}
+        >
+          <Plus className="h-3.5 w-3.5 shrink-0" strokeWidth={2} aria-hidden />
+          Create new buyer hot sheet
+        </Button>
       </div>
 
       <div className="mt-5">
