@@ -19,6 +19,8 @@ type Agent = {
 type Props = {
   agent: Agent;
   onClick: (id: string) => void;
+  /** When true, show emerald Online badge beside the name (referral network only). */
+  showPresenceBadge?: boolean;
   isOnline?: boolean;
   hideDirectContact?: boolean;
 };
@@ -33,7 +35,13 @@ function titleCase(s: string) {
     .join(" ");
 }
 
-export default function AgentPhotoTile({ agent, onClick, isOnline, hideDirectContact = false }: Props) {
+export default function AgentPhotoTile({
+  agent,
+  onClick,
+  showPresenceBadge = false,
+  isOnline = false,
+  hideDirectContact = false,
+}: Props) {
   const rawName =
     [agent.first_name, agent.last_name].filter(Boolean).join(" ") || "Agent";
   const fullName = titleCase(rawName);
@@ -63,16 +71,25 @@ export default function AgentPhotoTile({ agent, onClick, isOnline, hideDirectCon
               <UserRound className="h-14 w-14 text-neutral-300" aria-hidden strokeWidth={1.25} />
             </div>
           )}
-          {isOnline && (
-            <span className="absolute bottom-2 right-2 h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-white" />
-          )}
         </div>
 
         {/* TEXT BLOCK */}
         <div className="px-4 pb-4 pt-4 md:px-5 md:pb-5 md:pt-5">
-          <div className="truncate text-[17px] font-semibold leading-snug tracking-tight text-neutral-900 md:text-[18px]">
-            {fullName}
-          </div>
+          <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[17px] font-semibold leading-snug tracking-tight text-neutral-900 md:text-[18px]">
+            <span className="min-w-0 truncate">{fullName}</span>
+            {showPresenceBadge && isOnline ? (
+              <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-1.5 py-0.5">
+                <span
+                  className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500 ring-2 ring-emerald-100"
+                  title="Online"
+                  aria-hidden
+                />
+                <span className="text-[10px] font-medium uppercase tracking-wide text-emerald-700">
+                  Online
+                </span>
+              </span>
+            ) : null}
+          </p>
           <div className="mt-1.5 truncate text-[13px] leading-snug text-neutral-600 md:text-[14px]">
             {brokerage || <span className="text-transparent">.</span>}
           </div>

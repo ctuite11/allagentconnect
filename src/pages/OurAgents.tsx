@@ -255,8 +255,18 @@ const OurAgents = ({
   }, [counties]);
 
 /** Sub-component that wraps the grid with batch presence */
-function AgentPhotoTileGrid({ agents, onViewProfile, hideDirectContact = false }: { agents: EnrichedAgent[]; onViewProfile: (id: string) => void; hideDirectContact?: boolean }) {
-  const userIds = useMemo(() => agents.map((a) => a.id), [agents]);
+function AgentPhotoTileGrid({
+  agents,
+  onViewProfile,
+  hideDirectContact = false,
+  showPresence = false,
+}: {
+  agents: EnrichedAgent[];
+  onViewProfile: (id: string) => void;
+  hideDirectContact?: boolean;
+  showPresence?: boolean;
+}) {
+  const userIds = useMemo(() => (showPresence ? agents.map((a) => a.id) : []), [agents, showPresence]);
   const presenceMap = useAgentPresenceBatch(userIds);
 
   return (
@@ -266,7 +276,8 @@ function AgentPhotoTileGrid({ agents, onViewProfile, hideDirectContact = false }
           key={agent.id}
           agent={agent}
           onClick={onViewProfile}
-          isOnline={presenceMap.get(agent.id)?.isOnline}
+          showPresenceBadge={showPresence}
+          isOnline={showPresence ? presenceMap.get(agent.id)?.isOnline === true : false}
           hideDirectContact={hideDirectContact}
         />
       ))}
@@ -446,7 +457,12 @@ function AgentPhotoTileGrid({ agents, onViewProfile, hideDirectContact = false }
               </div>
             ) : (
               <>
-                <AgentPhotoTileGrid agents={filteredAgents} onViewProfile={handleViewProfile} hideDirectContact={effectivePublicMode} />
+                <AgentPhotoTileGrid
+                  agents={filteredAgents}
+                  onViewProfile={handleViewProfile}
+                  hideDirectContact={effectivePublicMode}
+                  showPresence={effectiveAgentMode}
+                />
 
                 {/* Pagination Controls */}
                 {totalCount > PAGE_SIZE && (
