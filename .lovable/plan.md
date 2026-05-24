@@ -1,42 +1,84 @@
-## Goal
+# Harden Agent Approval Gate
 
-Stop emailing recipients about direct messages they've already read in-app. Add a 10-minute grace window before any message-notification email is sent. If the recipient reads the message in-app at any point before that window expires, no email is sent. Applies to both agent and buyer sides — any `conversation_messages` row with a recipient.
+## Context
 
-## Behavior
+Sikander Khan got a verified agent account because:
+1. Self-signup created `auth.users` + `agent_settings` with `verified_at = NULL` (gate held).
+2. An admin (`chris@allagentconnect.com`) clicked **Verify** in `/admin-approvals` ~1h46m later, which set `verified_at = now()` and sent the approval email.
 
-- Send a message → **no email immediately**.
-- Wait **10 minutes**.
-- A scheduled job runs every minute and enqueues an email only for messages where:
-  - `read_at IS NULL`
-  - `created_at < now() - interval '10 minutes'`
-  - `email_enqueued_at IS NULL`
-  - `recipient_agent_id IS NOT NULL` and `<> sender_agent_id`
-- If the recipient opens the thread within 10 minutes (sets `read_at`), the row is skipped permanently — no email, regardless of whether they replied.
-- After enqueue, `email_enqueued_at` is stamped so it can never be enqueued twice.
+The system *did* require admin approval — but nothing flagged that license `123456` and area code `030` were obviously bogus, and there's no audit trail.
 
-This works identically for agent recipients and buyer recipients, since both sides use `conversation_messages.recipient_agent_id` (the column name is legacy; it stores the recipient user id either way) and both sides set `read_at` via the existing `useConversation` flow when the thread is opened.
-
-## Changes
-
-### Migration (single new file)
-
-1. Add column `email_enqueued_at timestamptz` to `public.conversation_messages` and a partial index on `(created_at) WHERE read_at IS NULL AND email_enqueued_at IS NULL`.
-2. Drop the existing `enqueue_message_email` AFTER INSERT trigger so inserts no longer enqueue immediately. Keep the function definition harmless or drop it.
-3. Create `public.process_pending_message_emails(grace_minutes int default 10)`:
-   - Selects unread, un-enqueued messages older than the grace window with a valid recipient.
-   - Resolves recipient email + sender display name using the same agent_profiles → profiles fallback the current trigger uses.
-   - Inserts the same `new-message-notification` payload into `email_jobs` (relative `cta_url = '/messages/' || conversation_id`).
-   - Stamps `email_enqueued_at = now()` per row.
-4. Schedule with `pg_cron` every minute, idempotently:
-   - `select cron.unschedule('process-pending-message-emails')` if it exists, then `cron.schedule('process-pending-message-emails', '* * * * *', $$ select public.process_pending_message_emails(10); $$);`
-
-### No frontend changes
-
-`useConversation` already writes `read_at` when a recipient opens the thread on either side. That's the read signal. No UI work.
+This plan does **four things**: (1) immediate cleanup of this account, (2) make fake submissions hard at signup, (3) make fake submissions impossible to miss in the admin queue, (4) verification audit log.
 
 ## Out of scope
 
-- Hot sheet comment emails, listing inquiry emails, client→agent contact emails — separate pipelines, untouched.
-- Per-user email preferences / mute toggle.
-- Push or in-app toast changes.
-- Email template copy.
+- RLS rewrites — `verified_at IS NULL` gating already blocks unverified agents from agent-only actions.
+- Real license-board API integration (separate effort).
+- Buyer signup flow.
+
+## 1. Immediate cleanup — revoke Sikander's account
+
+Data update via insert tool:
+- `agent_settings`: `verified_at = NULL`, `approval_email_sent = false` for `user_id f7942f66…`.
+- `agent_profiles`: clear `aac_id` so the slot is reusable.
+- Default: keep the auth user (he can re-apply with real info). **Open question 1** below.
+
+## 2. Signup-side validators
+
+New `src/lib/agentSignupValidation.ts` + Zod schema in `src/pages/Auth.tsx`. Hard-fail with toast — these are not warnings.
+
+| Field | Rule |
+|---|---|
+| Phone | 10 digits; area-code first digit 2–9; exchange first digit 2–9. Rejects `(030) 241-3631`. |
+| License number | Reject all-same-digit, strictly sequential (`123456`/`654321`), or <4 chars. |
+| License last name | Must equal form `last_name` (case-insensitive). |
+| Email | Reject disposable-domain list (mailinator, tempmail, guerrillamail, 10minutemail, yopmail, …). |
+| First/last name | Min 2 chars; letters, spaces, hyphens, apostrophes only. |
+
+Same checks duplicated server-side in a new `validate-agent-signup` edge function called immediately before `signUp()` so direct-API bypass isn't possible.
+
+## 3. AdminApprovals red-flag surfacing (`src/pages/AdminApprovals.tsx`)
+
+`RiskBadges` component on every pending card runs the same validators and renders red pills next to flagged fields:
+
+- "Invalid phone" (red)
+- "Placeholder license" (red)
+- "Last name mismatch" (red)
+- "Disposable email" (red)
+- "No company" (amber — soft signal)
+
+If **any red badge** is present, the **Verify** button becomes a confirm dialog: *"This submission has flagged data: [list]. Type VERIFY to confirm approval."* That's the speed bump that would have stopped this one.
+
+## 4. Verification audit log
+
+New table:
+```
+public.agent_verification_audit (
+  id uuid pk,
+  agent_user_id uuid,
+  admin_user_id uuid,
+  action text check (action in ('verified','rejected','restricted','reverted')),
+  notes text,
+  created_at timestamptz default now()
+)
+```
+
+- RLS: admins read-only.
+- Insert via security-definer trigger on `agent_settings.verified_at` change so it can't be skipped.
+- New tab on `/admin-approvals` showing recent decisions with admin name + timestamp.
+
+## 5. Acceptance checks
+
+- Signup with phone `(030) 241-3631` is rejected client- and server-side.
+- Signup with license `123456` is rejected.
+- An existing pending submission with any red flag shows badges and requires typing VERIFY.
+- After Verify, `agent_verification_audit` has a row with the admin's user id.
+- Sikander's account no longer has `verified_at`; he lands on `/pending-verification` if he logs in.
+
+## Open questions
+
+1. **Sikander's account**: revoke `verified_at` only (he can re-apply if real), or hard-delete the auth user? Default: revoke only.
+2. **Disposable-email list**: small built-in list now, or wire to a maintained external list later? Default: built-in.
+3. **Last-name match**: exact case-insensitive, or fuzzy? Default: exact case-insensitive.
+
+Reply with answers (or "go with defaults") and I'll implement.
