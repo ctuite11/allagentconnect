@@ -1,30 +1,29 @@
-## Goal
+## Plan: Rename email + transfer all listings to Austyn
 
-Show an online/offline indicator for each agent row in the Admin panel (`/admin/approvals` — `src/pages/AdminApprovals.tsx`), reusing the existing presence system.
+Got it — `chris@allagentconnect.com` is your admin account and will be left fully intact (auth row, profile, roles, everything). Only its **listings** move off it.
 
-## Approach
+### Single atomic migration
 
-The project already has a presence system:
-- `agent_presence.last_seen_at` updated by `useAgentPresence` heartbeat
-- `useAgentPresenceBatch(userIds)` hook returns `{ lastSeenAt, isOnline }` per user (5‑min threshold, 60s refresh)
-- `AgentOnlinePresenceBadge` component renders the canonical AAC "Online" pill
+1. **Rename `tuite.chris11@gmail.com` → `agentaustyn@gmail.com`** (id `ea18faa4-700f-4143-8c8e-436795a623af`)
+   - `auth.users.email` → `agentaustyn@gmail.com`
+   - `auth.users.email_confirmed_at` → `now()` (so Austyn can log in after a password reset; bypasses the confirm-email flow)
+   - Clear pending `email_change*` fields
+   - `public.profiles.email` → `agentaustyn@gmail.com`, `first_name` → `Austyn`, `last_name` cleared
+   - `public.agent_profiles` (if row exists): same email + name update; leave `aac_id`, headshot, logo, bio, office fields untouched
 
-We'll wire these into the admin table — no new DB tables, no new heartbeat logic.
+2. **Transfer listings**
+   - `UPDATE public.listings SET agent_id = 'ea18faa4-…-a623af' WHERE agent_id = '1fc50da1-…-e24dc5ed8c'` (the 4 listings currently on `chris@allagentconnect.com`)
+   - Add a `listing_audit_log` entry per listing for traceability
 
-## Changes
+### Explicitly NOT touched
+- `chris@allagentconnect.com` auth user, profile, **`user_roles` (admin role preserved)**, agent_profile, settings — all left exactly as-is
+- That account simply ends up with 0 listings; admin access, login, and everything else continue to work normally
+- Branding/avatars/bio/license on Austyn's profile (edit later in UI)
+- Buyer relationships, hot sheets, conversations, CRM clients
 
-**`src/pages/AdminApprovals.tsx`**
-1. Import `useAgentPresenceBatch` and `AgentOnlinePresenceBadge`.
-2. Compute `realAgentIds = agents.filter(a => !a.is_early_access).map(a => a.id)` (early-access rows have no auth user, so no presence).
-3. `const presence = useAgentPresenceBatch(realAgentIds);`
-4. In the row at line ~911, next to the agent name, render the badge when `presence.get(agent.id)?.isOnline` is true. For offline real agents, render a subtle muted dot + "Offline" (or nothing — see question).
-5. Add an optional small "Last seen" timestamp tooltip on hover for offline agents (using `lastSeenAt`).
+### End state
+- `agentaustyn@gmail.com` → 7 listings (3 original + 4 transferred), must use "Forgot password" on first login
+- `chris@allagentconnect.com` → 0 listings, still admin, fully functional
 
-## Out of scope
-
-- No schema changes. No edge function changes. Early-access rows show no presence chip.
-- No filter/sort by online status (can be added later if wanted).
-
-## Question for you
-
-Should offline real agents show a muted "Offline · 5m ago" indicator, or stay blank and only show the green pill when online? I'll default to **blank when offline, green pill when online** unless you say otherwise.
+### One question before I run it
+What surname should Austyn's profile have? Options: leave `last_name` blank, or give me a specific last name.
