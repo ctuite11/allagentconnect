@@ -1,5 +1,6 @@
 import React from "react";
 import { UserRound } from "lucide-react";
+import { AgentOnlinePresenceBadge } from "@/components/ui/AgentOnlinePresenceBadge";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 
 type Agent = {
@@ -56,8 +57,8 @@ export default function AgentPhotoTile({
     >
       {/* Card container */}
       <div className="overflow-hidden rounded-2xl border border-neutral-200/90 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-[box-shadow,border-color,transform] duration-200 ease-out group-hover:-translate-y-px group-hover:border-neutral-300/90 group-hover:shadow-[0_4px_12px_rgba(0,0,0,0.07)]">
-        {/* PHOTO - 3:4 portrait ratio */}
-        <div className="relative aspect-[3/4] w-full overflow-hidden bg-white leading-[0]">
+        {/* PHOTO — no presence overlay; Online pill is inline beside the name below */}
+        <div className="aspect-[3/4] w-full overflow-hidden bg-white leading-[0]">
           {agent.headshot_url ? (
             <img
               src={agent.headshot_url}
@@ -75,20 +76,9 @@ export default function AgentPhotoTile({
 
         {/* TEXT BLOCK */}
         <div className="px-4 pb-4 pt-4 md:px-5 md:pb-5 md:pt-5">
-          <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[17px] font-semibold leading-snug tracking-tight text-neutral-900 md:text-[18px]">
+          <p className="flex flex-wrap items-center gap-2 text-[17px] font-semibold leading-snug tracking-tight text-neutral-900 md:text-[18px]">
             <span className="min-w-0 truncate">{fullName}</span>
-            {showPresenceBadge && isOnline ? (
-              <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-1.5 py-0.5">
-                <span
-                  className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500 ring-2 ring-emerald-100"
-                  title="Online"
-                  aria-hidden
-                />
-                <span className="text-[10px] font-medium uppercase tracking-wide text-emerald-700">
-                  Online
-                </span>
-              </span>
-            ) : null}
+            {showPresenceBadge && isOnline ? <AgentOnlinePresenceBadge /> : null}
           </p>
           <div className="mt-1.5 truncate text-[13px] leading-snug text-neutral-600 md:text-[14px]">
             {brokerage || <span className="text-transparent">.</span>}
