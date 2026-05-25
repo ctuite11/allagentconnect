@@ -93,11 +93,13 @@ const SECTION_PAD = "py-9 md:py-11";
 const LISTINGS_SECTION = "border-t border-neutral-100 pt-14 pb-10 md:pt-16 md:pb-12";
 const EYEBROW = "text-[10px] font-medium uppercase tracking-[0.14em] text-neutral-400";
 
+const PROFILE_INSTAGRAM_GRADIENT_ID = "aac-profile-ig-gradient";
+
 const socialIconMap = [
   { key: "linkedin", icon: Linkedin, iconClass: "text-[#0A66C2]" },
   { key: "facebook", icon: Facebook, iconClass: "text-[#1877F2]" },
-  { key: "instagram", icon: Instagram, iconClass: "text-[#E1306C]" },
-  { key: "twitter", icon: Twitter, iconClass: "text-neutral-700" },
+  { key: "instagram", icon: Instagram, useGradient: true },
+  { key: "twitter", icon: Twitter, iconClass: "text-neutral-600" },
 ] as const;
 
 interface AgentProfileProps {
@@ -420,21 +422,39 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
 
                 {activeSocials.length > 0 ? (
                   <div
-                    className="mt-3 flex flex-wrap items-center justify-center gap-0.5 lg:justify-start"
-                    role="list"
+                    className="mt-2.5 flex items-center justify-center gap-1 lg:justify-start"
                     aria-label="Social profiles"
                   >
-                    {activeSocials.map(({ key, icon: Icon, iconClass }) => (
+                    <svg aria-hidden="true" className="absolute h-0 w-0 overflow-hidden">
+                      <defs>
+                        <linearGradient
+                          id={PROFILE_INSTAGRAM_GRADIENT_ID}
+                          x1="0%"
+                          y1="100%"
+                          x2="100%"
+                          y2="0%"
+                        >
+                          <stop offset="0%" stopColor="#833AB4" />
+                          <stop offset="50%" stopColor="#FD1D1D" />
+                          <stop offset="100%" stopColor="#FCAF45" />
+                        </linearGradient>
+                      </defs>
+                    </svg>
+                    {activeSocials.map(({ key, icon: Icon, iconClass, useGradient }) => (
                       <a
                         key={key}
-                        role="listitem"
                         href={agent.social_links![key as keyof typeof agent.social_links] as string}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex h-9 w-9 items-center justify-center rounded-md transition-all duration-150 hover:bg-neutral-50 hover:scale-[1.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 focus-visible:ring-offset-2"
+                        className="inline-flex items-center justify-center p-0.5 opacity-[0.88] transition-opacity hover:opacity-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-300 focus-visible:ring-offset-1"
                         aria-label={key}
                       >
-                        <Icon className={cn("h-5 w-5", iconClass)} strokeWidth={1.75} aria-hidden />
+                        <Icon
+                          className={cn("h-4 w-4", !useGradient && iconClass)}
+                          strokeWidth={1.5}
+                          stroke={useGradient ? `url(#${PROFILE_INSTAGRAM_GRADIENT_ID})` : undefined}
+                          aria-hidden
+                        />
                       </a>
                     ))}
                   </div>
