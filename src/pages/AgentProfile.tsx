@@ -194,20 +194,19 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
         <span className="sr-only">Loading agent profile…</span>
         <div className={`${PROFILE_PAGE} pt-5`}>
           <Skeleton className="h-4 w-36 rounded-md bg-neutral-100" />
-          <div className="mt-6 flex flex-col gap-10 border-b border-neutral-100 pb-10 lg:grid lg:grid-cols-[280px_1fr_200px] lg:items-start lg:gap-12">
-            <Skeleton className="mx-auto aspect-[4/5] min-h-[300px] w-full max-w-[300px] rounded-lg bg-neutral-100 lg:mx-0 lg:max-w-none" />
-            <div className="min-w-0 flex-1 space-y-3 lg:flex lg:justify-between lg:gap-8">
+          <div className="mt-6 flex flex-col gap-6 border-b border-neutral-100 pb-10 lg:grid lg:grid-cols-[280px_1fr] lg:items-start lg:gap-8">
+            <Skeleton className="mx-auto h-[360px] w-full max-w-[300px] rounded-lg bg-neutral-100 lg:mx-0 lg:max-w-none" />
+            <div className="min-w-0 space-y-3 lg:flex lg:gap-8">
               <div className="flex-1 space-y-3">
                 <Skeleton className="h-8 max-w-md rounded-md bg-neutral-100" />
                 <Skeleton className="h-4 w-48 rounded-md bg-neutral-100" />
-                <Skeleton className="h-4 w-56 rounded-md bg-neutral-100" />
-                <Skeleton className="h-16 max-w-sm rounded-md bg-neutral-100" />
+                <Skeleton className="h-12 max-w-sm rounded-md bg-neutral-100" />
                 <div className="flex flex-wrap gap-2 pt-1">
                   <Skeleton className="h-9 w-[8.5rem] rounded-lg bg-neutral-100" />
                   <Skeleton className="h-9 w-[9rem] rounded-lg bg-neutral-100" />
                 </div>
               </div>
-              <Skeleton className="mx-auto h-20 w-[180px] rounded-xl bg-neutral-100 lg:mx-0" />
+              <Skeleton className="mx-auto h-14 w-32 rounded bg-neutral-100 lg:mx-0" />
             </div>
           </div>
           <div className="mt-8 space-y-3 border-b border-neutral-200/90 py-8">
@@ -305,20 +304,20 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
         />
       </div>
 
-      {/* Hero */}
-      <div className={`${PROFILE_PAGE} border-b border-neutral-100 pb-12 pt-4 md:pb-14 md:pt-6`}>
-        <div className="flex flex-col gap-10 lg:grid lg:grid-cols-[minmax(260px,360px)_minmax(0,1fr)_minmax(200px,280px)] lg:items-start lg:gap-x-12 xl:gap-x-16">
-          {/* Agent photo — editorial portrait frame */}
-          <div className="relative mx-auto w-full max-w-[300px] shrink-0 sm:max-w-[340px] lg:mx-0 lg:w-full lg:max-w-none">
-            <div className="aspect-[4/5] min-h-[min(72vw,420px)] w-full overflow-hidden rounded-lg border border-neutral-200/70 bg-[#fafafa] sm:min-h-[400px] lg:min-h-[440px]">
+      {/* Hero — photo + composed identity band */}
+      <div className={`${PROFILE_PAGE} border-b border-neutral-100 pb-10 pt-4 md:pb-12 md:pt-6`}>
+        <div className="flex flex-col gap-6 sm:gap-7 lg:grid lg:grid-cols-[minmax(240px,320px)_minmax(0,1fr)] lg:items-start lg:gap-8 xl:gap-10">
+          {/* Photo — height follows image; object-top reduces dead space below */}
+          <div className="mx-auto w-full max-w-[300px] shrink-0 sm:max-w-[320px] lg:mx-0 lg:max-w-none">
+            <div className="overflow-hidden rounded-lg border border-neutral-200/60 bg-neutral-50/40">
               {agent.headshot_url ? (
                 <img
                   src={agent.headshot_url}
                   alt={`${agent.first_name} ${agent.last_name}`}
-                  className="h-full w-full object-contain object-center"
+                  className="block w-full max-h-[min(68vw,480px)] object-contain object-top lg:max-h-[500px]"
                 />
               ) : (
-                <div className="flex h-full w-full flex-col items-center justify-center bg-neutral-50">
+                <div className="flex aspect-[4/5] min-h-[280px] w-full flex-col items-center justify-center">
                   <UserRound className="h-16 w-16 text-neutral-200" strokeWidth={1.25} aria-hidden />
                   <span className="mt-3 text-xs tracking-wide text-neutral-400">
                     {agent.first_name?.[0]}
@@ -329,123 +328,130 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
             </div>
           </div>
 
-          <div className="min-w-0 text-center lg:pt-2 lg:text-left">
-            <div className="flex flex-wrap items-center justify-center gap-2.5 lg:justify-start">
-              <h1 className="text-2xl font-medium tracking-tight text-neutral-900 md:text-[2rem] md:leading-[1.15]">
-                {agent.first_name} {agent.last_name}
-              </h1>
-              {isOnline ? <AgentOnlinePresenceBadge className="mt-0.5" /> : null}
-            </div>
-            {agent.title ? (
-              <p className="mt-2 text-[15px] leading-relaxed text-neutral-500">{agent.title}</p>
-            ) : null}
-            {agent.company || agent.office_name || agent.aac_id ? (
-              <p className="mt-1.5 text-[14px] leading-relaxed text-neutral-500">
-                {[agent.company || agent.office_name, agent.aac_id ? `AAC ${agent.aac_id}` : null]
-                  .filter(Boolean)
-                  .join(" · ")}
-              </p>
-            ) : null}
+          <div className="flex min-w-0 flex-col gap-0 lg:flex-row lg:items-start lg:gap-8 xl:gap-10">
+            <div className="min-w-0 flex-1 text-center lg:text-left">
+              <div className="flex flex-wrap items-center justify-center gap-2 lg:justify-start">
+                <h1 className="text-2xl font-medium tracking-tight text-neutral-900 md:text-[2rem] md:leading-[1.15]">
+                  {agent.first_name} {agent.last_name}
+                </h1>
+                {isOnline ? <AgentOnlinePresenceBadge /> : null}
+              </div>
+              {agent.title ? (
+                <p className="mt-1.5 text-[15px] leading-tight text-neutral-500">{agent.title}</p>
+              ) : null}
+              {agent.company || agent.office_name || agent.aac_id ? (
+                <p className="mt-1 text-[14px] leading-tight text-neutral-500">
+                  {[agent.company || agent.office_name, agent.aac_id ? `AAC ${agent.aac_id}` : null]
+                    .filter(Boolean)
+                    .join(" · ")}
+                </p>
+              ) : null}
 
-            {(profileContactRows.length > 0 || websiteUrl) ? (
-              <div className="mt-5 space-y-1.5 text-[14px] leading-snug">
-                {profileContactRows.map((item, i) => (
-                  <p key={i}>
-                    <a
-                      href={item.href}
-                      className="inline-flex max-w-full items-start gap-2 text-neutral-800 transition-colors hover:text-neutral-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 focus-visible:ring-offset-2"
-                    >
-                      <item.icon className="mt-1 h-3 w-3 shrink-0 text-neutral-300" aria-hidden />
-                      <span>
-                        <span className="text-neutral-400">{item.sublabel} </span>
-                        {item.label}
-                      </span>
-                    </a>
-                  </p>
-                ))}
-                {websiteUrl ? (
-                  <p>
-                    <a
-                      href={websiteUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex max-w-full items-start gap-2 text-neutral-800 transition-colors hover:text-neutral-950"
-                    >
-                      <Globe className="mt-1 h-3 w-3 shrink-0 text-neutral-300" aria-hidden />
-                      <span className="truncate">
-                        {agent.social_links!.website!.replace(/^https?:\/\//, "").replace(/\/$/, "")}
-                      </span>
-                    </a>
-                  </p>
+              {(profileContactRows.length > 0 || websiteUrl) ? (
+                <ul className="mt-4 space-y-1 text-[14px]">
+                  {profileContactRows.map((item, i) => (
+                    <li key={i}>
+                      <a
+                        href={item.href}
+                        className="inline-flex max-w-full items-center gap-2.5 leading-tight text-neutral-800 transition-colors hover:text-neutral-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 focus-visible:ring-offset-2"
+                      >
+                        <item.icon className="h-3.5 w-3.5 shrink-0 text-neutral-400" aria-hidden />
+                        <span>
+                          <span className="text-neutral-400">{item.sublabel} </span>
+                          {item.label}
+                        </span>
+                      </a>
+                    </li>
+                  ))}
+                  {websiteUrl ? (
+                    <li>
+                      <a
+                        href={websiteUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex max-w-full items-center gap-2.5 leading-tight text-neutral-800 transition-colors hover:text-neutral-950"
+                      >
+                        <Globe className="h-3.5 w-3.5 shrink-0 text-neutral-400" aria-hidden />
+                        <span className="truncate">
+                          {agent.social_links!.website!.replace(/^https?:\/\//, "").replace(/\/$/, "")}
+                        </span>
+                      </a>
+                    </li>
+                  ) : null}
+                </ul>
+              ) : null}
+
+              <div className="mt-4 border-t border-neutral-100 pt-4">
+                <div className="flex flex-wrap items-center justify-center gap-2 lg:justify-start">
+                  <ContactAgentProfileDialog
+                    agentId={agent.id}
+                    agentName={`${agent.first_name} ${agent.last_name}`}
+                    agentEmail={agent.email}
+                    buttonText={`Email ${agent.first_name}`}
+                    triggerClassName="h-[34px] min-w-[7.75rem] rounded-md border border-neutral-800 bg-neutral-900 px-5 text-[13px] font-medium tracking-wide text-white hover:bg-neutral-800"
+                  />
+
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-[34px] min-w-[7.75rem] rounded-md border-neutral-200 bg-white px-5 text-[13px] font-medium tracking-wide text-neutral-800 hover:bg-neutral-50/80"
+                    disabled={isStartingChat}
+                    onClick={async () => {
+                      if (!user?.id) {
+                        navigate("/auth");
+                        return;
+                      }
+                      if (!agent.id) return;
+                      setIsStartingChat(true);
+                      try {
+                        const convoId = await findOrCreateConversation(user.id, agent.id);
+                        if (convoId) navigate(`/messages/${convoId}`);
+                      } catch (e) {
+                        toast.error("Could not start conversation");
+                      } finally {
+                        setIsStartingChat(false);
+                      }
+                    }}
+                  >
+                    <MessageSquare className="mr-1.5 h-3.5 w-3.5 text-neutral-500" aria-hidden />
+                    Message
+                  </Button>
+                </div>
+
+                {activeSocials.length > 0 ? (
+                  <div
+                    className="mt-3 flex flex-wrap items-center justify-center gap-0.5 lg:justify-start"
+                    role="list"
+                    aria-label="Social profiles"
+                  >
+                    {activeSocials.map(({ key, icon: Icon, iconClass }) => (
+                      <a
+                        key={key}
+                        role="listitem"
+                        href={agent.social_links![key as keyof typeof agent.social_links] as string}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-md transition-all duration-150 hover:bg-neutral-50 hover:scale-[1.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 focus-visible:ring-offset-2"
+                        aria-label={key}
+                      >
+                        <Icon className={cn("h-5 w-5", iconClass)} strokeWidth={1.75} aria-hidden />
+                      </a>
+                    ))}
+                  </div>
                 ) : null}
               </div>
-            ) : null}
+            </div>
 
-            <div className="mt-5 border-t border-neutral-100/80 pt-5">
-              <div className="flex flex-wrap items-center justify-center gap-2 lg:justify-start">
-                <ContactAgentProfileDialog
-                  agentId={agent.id}
-                  agentName={`${agent.first_name} ${agent.last_name}`}
-                  agentEmail={agent.email}
-                  buttonText={`Email ${agent.first_name}`}
-                  triggerClassName="h-[34px] min-w-[7.75rem] rounded-md border border-neutral-800 bg-neutral-900 px-5 text-[13px] font-medium tracking-wide text-white hover:bg-neutral-800"
+            {agent.logo_url ? (
+              <div className="mt-6 flex shrink-0 justify-center border-t border-neutral-100 pt-6 lg:mt-0 lg:w-[min(100%,200px)] lg:flex-col lg:items-start lg:justify-start lg:border-l lg:border-t-0 lg:border-neutral-100 lg:pl-8 lg:pt-0 xl:pl-10">
+                <img
+                  src={agent.logo_url}
+                  alt={agent.company || agent.office_name || "Brokerage logo"}
+                  className="max-h-[3.25rem] w-auto max-w-[200px] object-contain object-left lg:max-h-[3.75rem] lg:max-w-[180px]"
                 />
-
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="h-[34px] min-w-[7.75rem] rounded-md border-neutral-200 bg-white px-5 text-[13px] font-medium tracking-wide text-neutral-800 hover:bg-neutral-50/80"
-                  disabled={isStartingChat}
-                  onClick={async () => {
-                    if (!user?.id) {
-                      navigate("/auth");
-                      return;
-                    }
-                    if (!agent.id) return;
-                    setIsStartingChat(true);
-                    try {
-                      const convoId = await findOrCreateConversation(user.id, agent.id);
-                      if (convoId) navigate(`/messages/${convoId}`);
-                    } catch (e) {
-                      toast.error("Could not start conversation");
-                    } finally {
-                      setIsStartingChat(false);
-                    }
-                  }}
-                >
-                  <MessageSquare className="mr-1.5 h-3.5 w-3.5 text-neutral-500" aria-hidden />
-                  Message
-                </Button>
               </div>
-
-              {activeSocials.length > 0 ? (
-                <div className="mt-3 flex items-center justify-center gap-2 lg:justify-start">
-                  {activeSocials.map(({ key, icon: Icon, iconClass }) => (
-                    <a
-                      key={key}
-                      href={agent.social_links![key as keyof typeof agent.social_links] as string}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex h-[34px] w-[34px] items-center justify-center rounded-md transition-all duration-150 hover:scale-105 hover:bg-neutral-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 focus-visible:ring-offset-2"
-                      aria-label={key}
-                    >
-                      <Icon className={cn("h-4.5 w-4.5", iconClass)} aria-hidden />
-                    </a>
-                  ))}
-                </div>
-              ) : null}
-            </div>
+            ) : null}
           </div>
-
-          {agent.logo_url ? (
-            <div className="flex justify-center px-2 lg:justify-end lg:items-start lg:pt-3">
-              <img
-                src={agent.logo_url}
-                alt={agent.company || agent.office_name || "Brokerage logo"}
-                className="max-h-[5rem] w-auto max-w-[min(100%,280px)] object-contain object-center lg:max-h-[5.5rem] lg:max-w-[300px]"
-              />
-            </div>
-          ) : null}
         </div>
       </div>
 
