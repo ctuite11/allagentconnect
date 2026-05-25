@@ -186,16 +186,20 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
         <span className="sr-only">Loading agent profile…</span>
         <div className="mx-auto max-w-6xl px-5 pt-5 md:px-8">
           <Skeleton className="h-4 w-36 rounded-md bg-neutral-100" />
-          <div className="mt-6 flex flex-col gap-6 border-b border-neutral-200/90 pb-8 sm:flex-row sm:items-start sm:gap-8">
-            <Skeleton className="mx-auto h-[112px] w-[112px] shrink-0 rounded-2xl bg-neutral-100 sm:mx-0 md:h-[120px] md:w-[120px]" />
-            <div className="min-w-0 flex-1 space-y-3">
-              <Skeleton className="h-8 max-w-md rounded-md bg-neutral-100" />
-              <Skeleton className="h-4 w-48 rounded-md bg-neutral-100" />
-              <Skeleton className="h-4 w-56 rounded-md bg-neutral-100" />
-              <div className="flex flex-wrap gap-2 pt-2">
-                <Skeleton className="h-9 w-[8.5rem] rounded-lg bg-neutral-100" />
-                <Skeleton className="h-9 w-[9rem] rounded-lg bg-neutral-100" />
+          <div className="mt-6 flex flex-col gap-8 border-b border-neutral-200/90 pb-8 lg:flex-row lg:items-start">
+            <Skeleton className="mx-auto aspect-[3/4] w-[200px] shrink-0 rounded-xl bg-neutral-100 sm:mx-0 md:w-[240px]" />
+            <div className="min-w-0 flex-1 space-y-3 lg:flex lg:justify-between lg:gap-8">
+              <div className="flex-1 space-y-3">
+                <Skeleton className="h-8 max-w-md rounded-md bg-neutral-100" />
+                <Skeleton className="h-4 w-48 rounded-md bg-neutral-100" />
+                <Skeleton className="h-4 w-56 rounded-md bg-neutral-100" />
+                <Skeleton className="h-16 max-w-sm rounded-md bg-neutral-100" />
+                <div className="flex flex-wrap gap-2 pt-1">
+                  <Skeleton className="h-9 w-[8.5rem] rounded-lg bg-neutral-100" />
+                  <Skeleton className="h-9 w-[9rem] rounded-lg bg-neutral-100" />
+                </div>
               </div>
+              <Skeleton className="mx-auto h-20 w-[180px] rounded-xl bg-neutral-100 lg:mx-0" />
             </div>
           </div>
           <div className="mt-8 space-y-3 border-b border-neutral-200/90 py-8">
@@ -225,16 +229,37 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
     (s) => agent.social_links?.[s.key as keyof typeof agent.social_links]
   );
 
-  const contactItems = [
-    agent.office_phone && { icon: Phone, label: `Office ${formatPhoneNumber(agent.office_phone)}`, href: `tel:${agent.office_phone}` },
-    agent.cell_phone && { icon: Phone, label: `Cell ${formatPhoneNumber(agent.cell_phone)}`, href: `tel:${agent.cell_phone}` },
-    agent.email && { icon: Mail, label: agent.email, href: `mailto:${agent.email}` },
-    agent.social_links?.website && {
-      icon: Globe,
-      label: agent.social_links.website.replace(/^https?:\/\//, "").replace(/\/$/, ""),
-      href: agent.social_links.website.startsWith("http") ? agent.social_links.website : `https://${agent.social_links.website}`,
+  const profileContactRows = [
+    agent.cell_phone && {
+      icon: Phone,
+      label: formatPhoneNumber(agent.cell_phone),
+      sublabel: "Cell",
+      href: `tel:${agent.cell_phone}`,
     },
-  ].filter(Boolean) as { icon: typeof Phone; label: string; href: string }[];
+    agent.office_phone && {
+      icon: Phone,
+      label: formatPhoneNumber(agent.office_phone),
+      sublabel: "Office",
+      href: `tel:${agent.office_phone}`,
+    },
+    agent.email && {
+      icon: Mail,
+      label: agent.email,
+      sublabel: "Email",
+      href: `mailto:${agent.email}`,
+    },
+  ].filter(Boolean) as {
+    icon: typeof Phone;
+    label: string;
+    sublabel: string;
+    href: string;
+  }[];
+
+  const websiteUrl = agent.social_links?.website
+    ? agent.social_links.website.startsWith("http")
+      ? agent.social_links.website
+      : `https://${agent.social_links.website}`
+    : null;
 
   const agentFullName = `${agent.first_name} ${agent.last_name}`;
   const agentProfileUrl = `${getPublicOrigin()}/agent/${agent.aac_id || agent.id}`;
@@ -274,100 +299,152 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
 
       {/* Hero */}
       <div className="mx-auto max-w-6xl border-b border-neutral-200/90 px-5 pb-8 pt-6 md:px-8 md:pb-10 md:pt-8">
-        <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-start">
-          <div className="relative shrink-0">
-            {agent.headshot_url ? (
-              <img
-                src={agent.headshot_url}
-                alt={`${agent.first_name} ${agent.last_name}`}
-                className="h-[112px] w-[112px] rounded-2xl border border-neutral-200/90 object-cover shadow-[0_1px_2px_rgba(0,0,0,0.04)] md:h-[120px] md:w-[120px]"
-              />
-            ) : (
-              <div className="flex h-[112px] w-[112px] flex-col items-center justify-center rounded-2xl border border-neutral-200/90 bg-neutral-100 md:h-[120px] md:w-[120px]">
-                <UserRound className="h-12 w-12 text-neutral-300" strokeWidth={1.25} aria-hidden />
-                <span className="mt-1 text-xs font-semibold tracking-tight text-neutral-500">
-                  {agent.first_name?.[0]}
-                  {agent.last_name?.[0]}
-                </span>
-              </div>
-            )}
+        <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:gap-10">
+          {/* Agent photo — portrait-friendly for headshot, full-body, or team */}
+          <div className="relative mx-auto w-full max-w-[220px] shrink-0 sm:mx-0 sm:w-[200px] md:w-[240px]">
+            <div className="aspect-[3/4] w-full overflow-hidden rounded-xl border border-neutral-200/90 bg-neutral-50 shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
+              {agent.headshot_url ? (
+                <img
+                  src={agent.headshot_url}
+                  alt={`${agent.first_name} ${agent.last_name}`}
+                  className="h-full w-full object-contain object-center"
+                />
+              ) : (
+                <div className="flex h-full w-full flex-col items-center justify-center bg-neutral-100">
+                  <UserRound className="h-14 w-14 text-neutral-300" strokeWidth={1.25} aria-hidden />
+                  <span className="mt-2 text-xs font-semibold tracking-tight text-neutral-500">
+                    {agent.first_name?.[0]}
+                    {agent.last_name?.[0]}
+                  </span>
+                </div>
+              )}
+            </div>
             {isOnline ? (
               <span
-                className="absolute bottom-1.5 right-1.5 h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-white"
+                className="absolute bottom-2 right-2 h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-white"
                 aria-label="Online"
               />
             ) : null}
           </div>
 
-          <div className="min-w-0 flex-1 text-center sm:text-left">
-            <h1 className="text-xl font-semibold tracking-tight text-neutral-900 md:text-2xl">
-              {agent.first_name} {agent.last_name}
-            </h1>
-            {agent.title ? (
-              <p className="mt-1 text-[15px] text-neutral-600">{agent.title}</p>
-            ) : null}
-            {agent.company || agent.aac_id ? (
-              <p className="mt-1 flex flex-wrap items-center justify-center gap-x-1.5 gap-y-0.5 text-[13px] text-neutral-500 sm:justify-start">
-                {agent.company ? <span>{agent.company}</span> : null}
-                {agent.company && agent.aac_id ? <span className="text-neutral-300">·</span> : null}
-                {agent.aac_id ? (
-                  <span className="font-mono text-xs text-neutral-400">{agent.aac_id}</span>
-                ) : null}
-              </p>
-            ) : null}
+          <div className="flex min-w-0 flex-1 flex-col gap-6 lg:flex-row lg:items-start lg:justify-between lg:gap-8">
+            <div className="min-w-0 flex-1 text-center sm:text-left">
+              <h1 className="text-xl font-semibold tracking-tight text-neutral-900 md:text-[1.65rem] md:leading-tight">
+                {agent.first_name} {agent.last_name}
+              </h1>
+              {agent.title ? (
+                <p className="mt-1.5 text-[15px] leading-snug text-neutral-600">{agent.title}</p>
+              ) : null}
+              {agent.company || agent.office_name || agent.aac_id ? (
+                <p className="mt-1 flex flex-wrap items-center justify-center gap-x-1.5 gap-y-0.5 text-[13px] text-neutral-500 sm:justify-start">
+                  {(agent.company || agent.office_name) ? (
+                    <span>{agent.company || agent.office_name}</span>
+                  ) : null}
+                  {(agent.company || agent.office_name) && agent.aac_id ? (
+                    <span className="text-neutral-300">·</span>
+                  ) : null}
+                  {agent.aac_id ? (
+                    <span className="font-mono text-xs text-neutral-400">{agent.aac_id}</span>
+                  ) : null}
+                </p>
+              ) : null}
 
-            <div className="mt-5 flex flex-wrap items-center justify-center gap-2 sm:justify-start">
-              <ContactAgentProfileDialog
-                agentId={agent.id}
-                agentName={`${agent.first_name} ${agent.last_name}`}
-                agentEmail={agent.email}
-                buttonText={`Email ${agent.first_name}`}
-                triggerClassName="border border-neutral-200 bg-neutral-900 text-white shadow-[0_1px_2px_rgba(0,0,0,0.06)] hover:bg-neutral-800"
-              />
+              {profileContactRows.length > 0 ? (
+                <ul className="mt-5 space-y-2">
+                  {profileContactRows.map((item, i) => (
+                    <li key={i}>
+                      <a
+                        href={item.href}
+                        className="inline-flex max-w-full items-center gap-2 rounded-sm text-[13px] text-neutral-700 outline-none transition-colors hover:text-neutral-900 focus-visible:ring-2 focus-visible:ring-neutral-300 focus-visible:ring-offset-2 sm:max-w-none"
+                      >
+                        <item.icon className="h-3.5 w-3.5 shrink-0 text-neutral-400" aria-hidden />
+                        <span className="shrink-0 text-[11px] font-medium uppercase tracking-wide text-neutral-400">
+                          {item.sublabel}
+                        </span>
+                        <span className="min-w-0 truncate font-normal">{item.label}</span>
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
 
-              <Button
-                size="sm"
-                variant="outline"
-                className="rounded-lg border-neutral-200 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:bg-neutral-50"
-                disabled={isStartingChat}
-                onClick={async () => {
-                  if (!user?.id) {
-                    navigate("/auth");
-                    return;
-                  }
-                  if (!agent.id) return;
-                  setIsStartingChat(true);
-                  try {
-                    const convoId = await findOrCreateConversation(user.id, agent.id);
-                    if (convoId) navigate(`/messages/${convoId}`);
-                  } catch (e) {
-                    toast.error("Could not start conversation");
-                  } finally {
-                    setIsStartingChat(false);
-                  }
-                }}
-              >
-                <MessageSquare className="mr-1.5 h-3.5 w-3.5" aria-hidden />
-                Message
-              </Button>
+              {websiteUrl ? (
+                <a
+                  href={websiteUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-3 inline-flex items-center gap-1.5 text-[13px] text-neutral-600 transition-colors hover:text-neutral-900"
+                >
+                  <Globe className="h-3.5 w-3.5 shrink-0 text-neutral-400" aria-hidden />
+                  <span className="truncate">
+                    {agent.social_links!.website!.replace(/^https?:\/\//, "").replace(/\/$/, "")}
+                  </span>
+                </a>
+              ) : null}
+
+              <div className="mt-5 flex flex-wrap items-center justify-center gap-2 sm:justify-start">
+                <ContactAgentProfileDialog
+                  agentId={agent.id}
+                  agentName={`${agent.first_name} ${agent.last_name}`}
+                  agentEmail={agent.email}
+                  buttonText={`Email ${agent.first_name}`}
+                  triggerClassName="h-9 rounded-lg border border-neutral-800 bg-neutral-900 px-4 text-[13px] font-medium text-white shadow-[0_1px_2px_rgba(0,0,0,0.08)] hover:bg-neutral-800"
+                />
+
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-9 rounded-lg border-neutral-200 bg-white px-4 text-[13px] font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:bg-neutral-50"
+                  disabled={isStartingChat}
+                  onClick={async () => {
+                    if (!user?.id) {
+                      navigate("/auth");
+                      return;
+                    }
+                    if (!agent.id) return;
+                    setIsStartingChat(true);
+                    try {
+                      const convoId = await findOrCreateConversation(user.id, agent.id);
+                      if (convoId) navigate(`/messages/${convoId}`);
+                    } catch (e) {
+                      toast.error("Could not start conversation");
+                    } finally {
+                      setIsStartingChat(false);
+                    }
+                  }}
+                >
+                  <MessageSquare className="mr-1.5 h-3.5 w-3.5" aria-hidden />
+                  Message
+                </Button>
+              </div>
+
+              {activeSocials.length > 0 ? (
+                <div className="mt-4 flex flex-wrap items-center justify-center gap-1.5 sm:justify-start">
+                  {activeSocials.map(({ key, icon: Icon }) => (
+                    <a
+                      key={key}
+                      href={agent.social_links![key as keyof typeof agent.social_links] as string}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex h-8 w-8 items-center justify-center rounded-full border border-neutral-200/90 bg-white text-neutral-500 transition-colors hover:border-neutral-300 hover:text-neutral-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 focus-visible:ring-offset-2"
+                      aria-label={key}
+                    >
+                      <Icon className="h-3.5 w-3.5" aria-hidden />
+                    </a>
+                  ))}
+                </div>
+              ) : null}
             </div>
 
-            {contactItems.length > 0 ? (
-              <div className="mt-5 flex flex-wrap items-center justify-center gap-x-0 gap-y-2 text-[13px] text-neutral-600 sm:justify-start">
-                {contactItems.map((item, i) => (
-                  <span key={i} className="flex items-center">
-                    {i > 0 ? <span className="mx-2 text-neutral-300">·</span> : null}
-                    <a
-                      href={item.href}
-                      target={item.icon === Globe ? "_blank" : undefined}
-                      rel={item.icon === Globe ? "noopener noreferrer" : undefined}
-                      className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-sm text-neutral-600 outline-none transition-colors hover:text-neutral-900 focus-visible:ring-2 focus-visible:ring-neutral-300 focus-visible:ring-offset-2"
-                    >
-                      <item.icon className="h-3.5 w-3.5 shrink-0 text-neutral-500" aria-hidden />
-                      {item.label}
-                    </a>
-                  </span>
-                ))}
+            {agent.logo_url ? (
+              <div className="flex shrink-0 justify-center lg:justify-end lg:pt-1">
+                <div className="flex h-[72px] w-[min(100%,220px)] items-center justify-center rounded-xl border border-neutral-200/90 bg-white px-5 py-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)] lg:h-20 lg:w-[200px]">
+                  <img
+                    src={agent.logo_url}
+                    alt={agent.company || agent.office_name || "Brokerage logo"}
+                    className="max-h-full max-w-full object-contain"
+                  />
+                </div>
               </div>
             ) : null}
           </div>
@@ -388,30 +465,6 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
               </div>
               <p className="max-w-2xl whitespace-pre-wrap text-[15px] leading-relaxed text-neutral-700">{agent.bio}</p>
             </div>
-
-            {activeSocials.length > 0 ? (
-              <div className="mt-8 flex flex-wrap items-center justify-center gap-2 md:justify-start">
-                {activeSocials.map(({ key, icon: Icon }) => (
-                  <a
-                    key={key}
-                    href={agent.social_links![key as keyof typeof agent.social_links] as string}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex h-9 w-9 items-center justify-center rounded-full border border-neutral-200/90 bg-white text-neutral-600 shadow-[0_1px_2px_rgba(0,0,0,0.03)] transition-colors hover:border-neutral-300 hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 focus-visible:ring-offset-2"
-                  >
-                    <Icon className="h-4 w-4" aria-hidden />
-                  </a>
-                ))}
-              </div>
-            ) : null}
-
-            {agent.logo_url ? (
-              <div className="mt-8 flex justify-center md:justify-start">
-                <div className="rounded-xl border border-neutral-200/90 bg-white px-4 py-3 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
-                  <img src={agent.logo_url} alt="" className="h-8 max-w-[160px] object-contain" />
-                </div>
-              </div>
-            ) : null}
           </section>
         )}
 
