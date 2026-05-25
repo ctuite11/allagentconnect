@@ -4,6 +4,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import ListingCard from "@/components/ListingCard";
 import { mapMarketRowToListingCard } from "@/components/success-hub/listingCardAdapter";
+import {
+  listingEmailSubjectFromRow,
+  type ListingAgentContact,
+} from "@/lib/listingAgentContact";
 import { AacBackButton } from "@/components/layout/AacBackLink";
 import { AacPageIntro } from "@/components/layout/AacPageIntro";
 import {
