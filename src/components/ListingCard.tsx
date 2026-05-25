@@ -158,6 +158,8 @@ interface ListingCardProps {
    * no carousel arrows, no NEW LISTING / promo banners — same typography/shell as buyer compact cards.
    */
   compactAgentOwned?: boolean;
+  /** Neighborhood image pill on compact cards (e.g. agent profile); independent of `compactAgentOwned`. */
+  compactShowNeighborhood?: boolean;
   /**
    * When set, compact `viewMode` navigations to listing detail include this router `state` (e.g. `{ from }` back link).
    * Omit everywhere else — default is plain `/property/:id`.
@@ -214,6 +216,7 @@ const ListingCard = ({
   isFavorites = false,
   showCompactComments = false,
   compactAgentOwned = false,
+  compactShowNeighborhood = false,
   compactDetailNavigateState,
   compactListingDetailTo,
   hideCompactFavorite = false,
@@ -915,7 +918,8 @@ const ListingCard = ({
             </div>
           ) : null}
           {/* Neighborhood overlay — property type lives in content stack below price. */}
-          {!compactAgentOwned && (listing.neighborhood || (listing as any).attom_data?.neighborhood) && (
+          {(!compactAgentOwned || compactShowNeighborhood) &&
+            (listing.neighborhood || (listing as any).attom_data?.neighborhood) && (
             <div className="absolute bottom-2 right-2 z-10">
               <span className="inline-flex items-center rounded-full bg-background/90 text-foreground px-2.5 py-1 text-xs font-medium shadow-md backdrop-blur-sm">
                 {listing.neighborhood || (listing as any).attom_data?.neighborhood}

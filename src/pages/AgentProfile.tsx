@@ -508,6 +508,7 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
                     viewMode="compact"
                     showActions={false}
                     compactAgentOwned
+                    compactShowNeighborhood
                     hideMlsMeta={publicMode}
                     showAgentEmailContact={showListingAgentEmail}
                     listingAgentContact={profileListingAgentContact}
