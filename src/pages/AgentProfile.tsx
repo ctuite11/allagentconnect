@@ -93,21 +93,31 @@ type ProfileSocialBrand = "linkedin" | "facebook" | "instagram" | "twitter";
 
 const PROFILE_INSTAGRAM_GRADIENT_ID = "aac-profile-ig-gradient";
 
-/** Filled brand marks (~24–28px) — matches editorial profile reference */
+/** Filled platform marks (~28px) — blue square, blue circle, gradient square, black X */
 function ProfileSocialBrandIcon({ brand }: { brand: ProfileSocialBrand }) {
   return (
-    <svg className="h-7 w-7 shrink-0" viewBox="0 0 24 24" aria-hidden>
+    <svg
+      className="block h-[28px] w-[28px] shrink-0"
+      viewBox="0 0 28 28"
+      aria-hidden
+    >
       {brand === "linkedin" ? (
-        <path
-          fill="#0A66C2"
-          d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.042 2.042 0 01-2.063-2.065 2.042 2.042 0 012.063-2.063 2.042 2.042 0 012.064 2.063 2.042 2.042 0 01-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"
-        />
+        <>
+          <rect width="28" height="28" rx="5" fill="#0A66C2" />
+          <path
+            fill="#fff"
+            d="M9.2 11.4h2.3v9.2H9.2V11.4zm1.15-4.6a1.35 1.35 0 110 2.7 1.35 1.35 0 010-2.7M14.5 11.4h2.2v1.3h.03c.4-.75 1.4-1.55 2.9-1.55 3.1 0 3.7 2 3.7 4.7v4.3h-2.3v-4.2c0-1.25-.02-2.85-1.75-2.85-1.75 0-2 1.35-2 2.75v4.3h-2.3V11.4z"
+          />
+        </>
       ) : null}
       {brand === "facebook" ? (
-        <path
-          fill="#1877F2"
-          d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"
-        />
+        <>
+          <circle cx="14" cy="14" r="14" fill="#1877F2" />
+          <path
+            fill="#fff"
+            d="M17.9 9.2h-2.1c-1.6 0-2.1.95-2.1 2.35v2.45H11.5v2.8h2.2v7.25h2.85v-7.25h2.5l.35-2.8h-2.85v-2.1c0-.75.2-1.15 1.2-1.15h1.65V9.2z"
+          />
+        </>
       ) : null}
       {brand === "instagram" ? (
         <>
@@ -124,16 +134,16 @@ function ProfileSocialBrandIcon({ brand }: { brand: ProfileSocialBrand }) {
               <stop offset="100%" stopColor="#FCAF45" />
             </linearGradient>
           </defs>
-          <path
-            fill={`url(#${PROFILE_INSTAGRAM_GRADIENT_ID})`}
-            d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"
-          />
+          <rect width="28" height="28" rx="7" fill={`url(#${PROFILE_INSTAGRAM_GRADIENT_ID})`} />
+          <rect x="7.5" y="7.5" width="13" height="13" rx="4" fill="none" stroke="#fff" strokeWidth="1.75" />
+          <circle cx="21" cy="7" r="1.35" fill="#fff" />
+          <circle cx="14" cy="14" r="3.25" fill="none" stroke="#fff" strokeWidth="1.75" />
         </>
       ) : null}
       {brand === "twitter" ? (
         <path
           fill="#14171A"
-          d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"
+          d="M16.2 8.5h2.6l-5.7 6.5 6.7 8.8h-5.2l-4.1-5.4-4.7 5.4H7.1l6.1-7-6.6-8.3h5.3l3.7 4.9 4.3-4.9zm-1.4 15.1h1.4L10.2 10.2H8.7l6.1 13.4z"
         />
       ) : null}
     </svg>
@@ -430,6 +440,7 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
               ) : null}
 
               <div className="mt-4 border-t border-neutral-100 pt-4">
+                <div className="flex w-full flex-col items-center gap-2 lg:w-auto lg:items-start">
                 <div className="flex flex-wrap items-center justify-center gap-2 lg:justify-start">
                   <ContactAgentProfileDialog
                     agentId={agent.id}
@@ -468,7 +479,7 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
 
                 {activeSocials.length > 0 ? (
                   <div
-                    className="mt-3 flex items-center justify-center gap-3 lg:justify-start lg:gap-3.5"
+                    className="flex items-center gap-3 self-center lg:self-start"
                     aria-label="Social profiles"
                   >
                     {activeSocials.map(({ key, brand }) => (
@@ -477,7 +488,7 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
                         href={agent.social_links![key as keyof typeof agent.social_links] as string}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center transition-opacity duration-150 hover:opacity-80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-300 focus-visible:ring-offset-2"
+                        className="inline-flex shrink-0 items-center transition-opacity duration-150 hover:opacity-85 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-300 focus-visible:ring-offset-2"
                         aria-label={key}
                       >
                         <ProfileSocialBrandIcon brand={brand} />
@@ -485,6 +496,7 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
                     ))}
                   </div>
                 ) : null}
+                </div>
               </div>
             </div>
 
