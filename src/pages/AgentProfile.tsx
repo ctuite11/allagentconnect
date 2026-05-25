@@ -234,9 +234,10 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
     );
   }
 
-  const activeSocials = socialIconMap.filter(
-    (s) => agent.social_links?.[s.key as keyof typeof agent.social_links]
-  );
+  const activeSocials = socialIconMap.filter((s) => {
+    const url = agent.social_links?.[s.key as keyof typeof agent.social_links];
+    return typeof url === "string" && url.trim().length > 0;
+  });
 
   const profileContactRows = [
     agent.cell_phone && {
