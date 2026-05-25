@@ -85,6 +85,11 @@ interface Testimonial {
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+const PROFILE_PAGE = "mx-auto w-full max-w-[82rem] px-6 md:px-10 lg:px-12";
+const SECTION_RULE = "border-t border-neutral-100";
+const SECTION_PAD = "py-10 md:py-12";
+const EYEBROW = "text-[10px] font-medium uppercase tracking-[0.14em] text-neutral-400";
+
 const socialIconMap = [
   { key: "linkedin", icon: Linkedin },
   { key: "facebook", icon: Facebook },
@@ -184,10 +189,10 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
     return (
       <div className="min-h-screen bg-white pb-16" aria-busy="true" role="status">
         <span className="sr-only">Loading agent profile…</span>
-        <div className="mx-auto max-w-6xl px-5 pt-5 md:px-8">
+        <div className={`${PROFILE_PAGE} pt-5`}>
           <Skeleton className="h-4 w-36 rounded-md bg-neutral-100" />
-          <div className="mt-6 flex flex-col gap-8 border-b border-neutral-200/90 pb-8 lg:flex-row lg:items-start">
-            <Skeleton className="mx-auto aspect-[3/4] w-[200px] shrink-0 rounded-xl bg-neutral-100 sm:mx-0 md:w-[240px]" />
+          <div className="mt-6 flex flex-col gap-10 border-b border-neutral-100 pb-10 lg:grid lg:grid-cols-[280px_1fr_200px] lg:items-start lg:gap-12">
+            <Skeleton className="mx-auto aspect-[4/5] min-h-[300px] w-full max-w-[300px] rounded-lg bg-neutral-100 lg:mx-0 lg:max-w-none" />
             <div className="min-w-0 flex-1 space-y-3 lg:flex lg:justify-between lg:gap-8">
               <div className="flex-1 space-y-3">
                 <Skeleton className="h-8 max-w-md rounded-md bg-neutral-100" />
@@ -285,7 +290,7 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
           ...(agent.bio ? { description: agent.bio.substring(0, 200) } : {}),
         }}
       />
-      <div className="mx-auto max-w-6xl px-5 md:px-8">
+      <div className={PROFILE_PAGE}>
         <AacPageIntro
           withTopPadding
           back={
@@ -298,11 +303,11 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
       </div>
 
       {/* Hero */}
-      <div className="mx-auto max-w-6xl border-b border-neutral-200/90 px-5 pb-8 pt-6 md:px-8 md:pb-10 md:pt-8">
-        <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:gap-10">
-          {/* Agent photo — portrait-friendly for headshot, full-body, or team */}
-          <div className="relative mx-auto w-full max-w-[220px] shrink-0 sm:mx-0 sm:w-[200px] md:w-[240px]">
-            <div className="aspect-[3/4] w-full overflow-hidden rounded-xl border border-neutral-200/90 bg-neutral-50 shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
+      <div className={`${PROFILE_PAGE} border-b border-neutral-100 pb-12 pt-4 md:pb-14 md:pt-6`}>
+        <div className="flex flex-col gap-10 lg:grid lg:grid-cols-[minmax(260px,360px)_minmax(0,1fr)_minmax(200px,280px)] lg:items-start lg:gap-x-12 xl:gap-x-16">
+          {/* Agent photo — editorial portrait frame */}
+          <div className="relative mx-auto w-full max-w-[300px] shrink-0 sm:max-w-[340px] lg:mx-0 lg:w-full lg:max-w-none">
+            <div className="aspect-[4/5] min-h-[min(72vw,420px)] w-full overflow-hidden rounded-lg border border-neutral-200/70 bg-[#fafafa] sm:min-h-[400px] lg:min-h-[440px]">
               {agent.headshot_url ? (
                 <img
                   src={agent.headshot_url}
@@ -310,9 +315,9 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
                   className="h-full w-full object-contain object-center"
                 />
               ) : (
-                <div className="flex h-full w-full flex-col items-center justify-center bg-neutral-100">
-                  <UserRound className="h-14 w-14 text-neutral-300" strokeWidth={1.25} aria-hidden />
-                  <span className="mt-2 text-xs font-semibold tracking-tight text-neutral-500">
+                <div className="flex h-full w-full flex-col items-center justify-center bg-neutral-50">
+                  <UserRound className="h-16 w-16 text-neutral-200" strokeWidth={1.25} aria-hidden />
+                  <span className="mt-3 text-xs tracking-wide text-neutral-400">
                     {agent.first_name?.[0]}
                     {agent.last_name?.[0]}
                   </span>
@@ -321,80 +326,75 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
             </div>
             {isOnline ? (
               <span
-                className="absolute bottom-2 right-2 h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-white"
+                className="absolute bottom-3 right-3 h-2 w-2 rounded-full bg-emerald-500 ring-2 ring-white"
                 aria-label="Online"
               />
             ) : null}
           </div>
 
-          <div className="flex min-w-0 flex-1 flex-col gap-6 lg:flex-row lg:items-start lg:justify-between lg:gap-8">
-            <div className="min-w-0 flex-1 text-center sm:text-left">
-              <h1 className="text-xl font-semibold tracking-tight text-neutral-900 md:text-[1.65rem] md:leading-tight">
-                {agent.first_name} {agent.last_name}
-              </h1>
-              {agent.title ? (
-                <p className="mt-1.5 text-[15px] leading-snug text-neutral-600">{agent.title}</p>
-              ) : null}
-              {agent.company || agent.office_name || agent.aac_id ? (
-                <p className="mt-1 flex flex-wrap items-center justify-center gap-x-1.5 gap-y-0.5 text-[13px] text-neutral-500 sm:justify-start">
-                  {(agent.company || agent.office_name) ? (
-                    <span>{agent.company || agent.office_name}</span>
-                  ) : null}
-                  {(agent.company || agent.office_name) && agent.aac_id ? (
-                    <span className="text-neutral-300">·</span>
-                  ) : null}
-                  {agent.aac_id ? (
-                    <span className="font-mono text-xs text-neutral-400">{agent.aac_id}</span>
-                  ) : null}
-                </p>
-              ) : null}
+          <div className="min-w-0 text-center lg:pt-2 lg:text-left">
+            <h1 className="text-2xl font-medium tracking-tight text-neutral-900 md:text-[2rem] md:leading-[1.15]">
+              {agent.first_name} {agent.last_name}
+            </h1>
+            {agent.title ? (
+              <p className="mt-2 text-[15px] leading-relaxed text-neutral-500">{agent.title}</p>
+            ) : null}
+            {agent.company || agent.office_name || agent.aac_id ? (
+              <p className="mt-1.5 text-[14px] leading-relaxed text-neutral-500">
+                {[agent.company || agent.office_name, agent.aac_id ? `AAC ${agent.aac_id}` : null]
+                  .filter(Boolean)
+                  .join(" · ")}
+              </p>
+            ) : null}
 
-              {profileContactRows.length > 0 ? (
-                <ul className="mt-5 space-y-2">
-                  {profileContactRows.map((item, i) => (
-                    <li key={i}>
-                      <a
-                        href={item.href}
-                        className="inline-flex max-w-full items-center gap-2 rounded-sm text-[13px] text-neutral-700 outline-none transition-colors hover:text-neutral-900 focus-visible:ring-2 focus-visible:ring-neutral-300 focus-visible:ring-offset-2 sm:max-w-none"
-                      >
-                        <item.icon className="h-3.5 w-3.5 shrink-0 text-neutral-400" aria-hidden />
-                        <span className="shrink-0 text-[11px] font-medium uppercase tracking-wide text-neutral-400">
-                          {item.sublabel}
-                        </span>
-                        <span className="min-w-0 truncate font-normal">{item.label}</span>
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              ) : null}
+            {(profileContactRows.length > 0 || websiteUrl) ? (
+              <div className="mt-6 space-y-2 text-[14px] leading-relaxed">
+                {profileContactRows.map((item, i) => (
+                  <p key={i}>
+                    <a
+                      href={item.href}
+                      className="inline-flex max-w-full items-start gap-2 text-neutral-800 transition-colors hover:text-neutral-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 focus-visible:ring-offset-2"
+                    >
+                      <item.icon className="mt-1 h-3 w-3 shrink-0 text-neutral-300" aria-hidden />
+                      <span>
+                        <span className="text-neutral-400">{item.sublabel} </span>
+                        {item.label}
+                      </span>
+                    </a>
+                  </p>
+                ))}
+                {websiteUrl ? (
+                  <p>
+                    <a
+                      href={websiteUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex max-w-full items-start gap-2 text-neutral-800 transition-colors hover:text-neutral-950"
+                    >
+                      <Globe className="mt-1 h-3 w-3 shrink-0 text-neutral-300" aria-hidden />
+                      <span className="truncate">
+                        {agent.social_links!.website!.replace(/^https?:\/\//, "").replace(/\/$/, "")}
+                      </span>
+                    </a>
+                  </p>
+                ) : null}
+              </div>
+            ) : null}
 
-              {websiteUrl ? (
-                <a
-                  href={websiteUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-3 inline-flex items-center gap-1.5 text-[13px] text-neutral-600 transition-colors hover:text-neutral-900"
-                >
-                  <Globe className="h-3.5 w-3.5 shrink-0 text-neutral-400" aria-hidden />
-                  <span className="truncate">
-                    {agent.social_links!.website!.replace(/^https?:\/\//, "").replace(/\/$/, "")}
-                  </span>
-                </a>
-              ) : null}
-
-              <div className="mt-5 flex flex-wrap items-center justify-center gap-2 sm:justify-start">
+            <div className="mt-7 border-t border-neutral-100 pt-6">
+              <div className="flex flex-wrap items-center justify-center gap-2.5 lg:justify-start">
                 <ContactAgentProfileDialog
                   agentId={agent.id}
                   agentName={`${agent.first_name} ${agent.last_name}`}
                   agentEmail={agent.email}
                   buttonText={`Email ${agent.first_name}`}
-                  triggerClassName="h-9 rounded-lg border border-neutral-800 bg-neutral-900 px-4 text-[13px] font-medium text-white shadow-[0_1px_2px_rgba(0,0,0,0.08)] hover:bg-neutral-800"
+                  triggerClassName="h-[34px] min-w-[7.75rem] rounded-md border border-neutral-800 bg-neutral-900 px-5 text-[13px] font-medium tracking-wide text-white hover:bg-neutral-800"
                 />
 
                 <Button
                   size="sm"
                   variant="outline"
-                  className="h-9 rounded-lg border-neutral-200 bg-white px-4 text-[13px] font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:bg-neutral-50"
+                  className="h-[34px] min-w-[7.75rem] rounded-md border-neutral-200 bg-white px-5 text-[13px] font-medium tracking-wide text-neutral-800 hover:bg-neutral-50/80"
                   disabled={isStartingChat}
                   onClick={async () => {
                     if (!user?.id) {
@@ -413,109 +413,114 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
                     }
                   }}
                 >
-                  <MessageSquare className="mr-1.5 h-3.5 w-3.5" aria-hidden />
+                  <MessageSquare className="mr-1.5 h-3.5 w-3.5 text-neutral-500" aria-hidden />
                   Message
                 </Button>
-              </div>
 
-              {activeSocials.length > 0 ? (
-                <div className="mt-4 flex flex-wrap items-center justify-center gap-1.5 sm:justify-start">
-                  {activeSocials.map(({ key, icon: Icon }) => (
-                    <a
-                      key={key}
-                      href={agent.social_links![key as keyof typeof agent.social_links] as string}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex h-8 w-8 items-center justify-center rounded-full border border-neutral-200/90 bg-white text-neutral-500 transition-colors hover:border-neutral-300 hover:text-neutral-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 focus-visible:ring-offset-2"
-                      aria-label={key}
-                    >
-                      <Icon className="h-3.5 w-3.5" aria-hidden />
-                    </a>
-                  ))}
-                </div>
-              ) : null}
+                {activeSocials.length > 0 ? (
+                  <>
+                    <span
+                      className="mx-0.5 hidden h-5 w-px bg-neutral-200 sm:inline"
+                      aria-hidden
+                    />
+                    <div className="flex items-center gap-1">
+                      {activeSocials.map(({ key, icon: Icon }) => (
+                        <a
+                          key={key}
+                          href={agent.social_links![key as keyof typeof agent.social_links] as string}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex h-7 w-7 items-center justify-center rounded-full text-neutral-400 transition-colors hover:bg-neutral-50 hover:text-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 focus-visible:ring-offset-2"
+                          aria-label={key}
+                        >
+                          <Icon className="h-3.5 w-3.5" aria-hidden />
+                        </a>
+                      ))}
+                    </div>
+                  </>
+                ) : null}
+              </div>
             </div>
-
-            {agent.logo_url ? (
-              <div className="flex shrink-0 justify-center lg:justify-end lg:pt-1">
-                <div className="flex h-[72px] w-[min(100%,220px)] items-center justify-center rounded-xl border border-neutral-200/90 bg-white px-5 py-4 shadow-[0_1px_2px_rgba(0,0,0,0.04)] lg:h-20 lg:w-[200px]">
-                  <img
-                    src={agent.logo_url}
-                    alt={agent.company || agent.office_name || "Brokerage logo"}
-                    className="max-h-full max-w-full object-contain"
-                  />
-                </div>
-              </div>
-            ) : null}
           </div>
+
+          {agent.logo_url ? (
+            <div className="flex justify-center lg:justify-end lg:self-center">
+              <div className="flex h-24 w-full max-w-[260px] items-center justify-center rounded-lg border border-neutral-200/70 bg-white px-6 py-5 lg:h-28 lg:w-[260px]">
+                <img
+                  src={agent.logo_url}
+                  alt={agent.company || agent.office_name || "Brokerage logo"}
+                  className="max-h-[4.5rem] max-w-full object-contain"
+                />
+              </div>
+            </div>
+          ) : null}
         </div>
       </div>
 
       {/* Content */}
-      <div className="mx-auto max-w-6xl px-5 pb-16 pt-2 md:px-8">
+      <div className={`${PROFILE_PAGE} pb-20`}>
         {/* About */}
         {agent.bio && (
-          <section className="border-t border-neutral-200/90 py-8 md:py-10">
-            <div className="grid gap-6 md:grid-cols-[minmax(0,11rem)_1fr] md:gap-10">
-              <div className="md:pt-0.5">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-neutral-500">About</p>
-                <h2 className="mt-1 text-base font-semibold leading-snug tracking-tight text-neutral-900">
-                  About {agent.first_name}
-                </h2>
-              </div>
-              <p className="max-w-2xl whitespace-pre-wrap text-[15px] leading-relaxed text-neutral-700">{agent.bio}</p>
-            </div>
+          <section className={`${SECTION_RULE} ${SECTION_PAD}`}>
+            <p className={EYEBROW}>About</p>
+            <p className="mt-5 max-w-3xl whitespace-pre-wrap text-[16px] leading-[1.75] text-neutral-700">
+              {agent.bio}
+            </p>
           </section>
         )}
 
         {/* Testimonials */}
         {testimonials.length > 0 ? (
-          <section className="border-t border-neutral-200/90 py-8 md:py-10">
-            <div className="mb-6 text-center md:mb-8 md:text-left">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-neutral-500">Testimonials</p>
-              <h2 className="mt-1 text-base font-semibold tracking-tight text-neutral-900 md:text-lg">
-                What clients say
-              </h2>
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <section className={`${SECTION_RULE} ${SECTION_PAD}`}>
+            <p className={`${EYEBROW} text-center lg:text-left`}>Testimonials</p>
+            <h2 className="mt-2 text-center text-lg font-medium tracking-tight text-neutral-900 lg:text-left">
+              Client notes
+            </h2>
+            <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6">
               {testimonials.slice(0, 6).map((testimonial) => (
-                <div
+                <article
                   key={testimonial.id}
-                  className="relative rounded-2xl border border-neutral-200/90 bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-[box-shadow,border-color] hover:border-neutral-300/90 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)]"
+                  className="flex flex-col rounded-lg border border-neutral-100 bg-white p-6 md:p-7"
                 >
-                  <Quote className="mb-3 h-5 w-5 text-neutral-200" aria-hidden />
                   {testimonial.rating ? (
-                    <div className="mb-3 flex gap-0.5">
+                    <div className="mb-4 flex gap-0.5">
                       {[...Array(5)].map((_, i) => (
                         <Star
                           key={i}
-                          className={`h-3.5 w-3.5 ${
+                          className={`h-3 w-3 ${
                             i < testimonial.rating!
-                              ? "fill-amber-500 text-amber-500"
+                              ? "fill-neutral-400 text-neutral-400"
                               : "text-neutral-200"
                           }`}
                           aria-hidden
                         />
                       ))}
                     </div>
-                  ) : null}
-                  <p className="text-[14px] leading-relaxed text-neutral-600">&ldquo;{testimonial.testimonial_text}&rdquo;</p>
-                  <p className="mt-3 text-[13px] font-semibold text-neutral-900">— {testimonial.client_name}</p>
-                  {testimonial.client_title ? (
-                    <p className="text-xs text-neutral-500">{testimonial.client_title}</p>
-                  ) : null}
-                </div>
+                  ) : (
+                    <Quote className="mb-4 h-4 w-4 text-neutral-200" aria-hidden />
+                  )}
+                  <p className="flex-1 text-[15px] leading-[1.65] text-neutral-600">
+                    &ldquo;{testimonial.testimonial_text}&rdquo;
+                  </p>
+                  <footer className="mt-5 border-t border-neutral-50 pt-4">
+                    <p className="text-[13px] font-medium text-neutral-900">{testimonial.client_name}</p>
+                    {testimonial.client_title ? (
+                      <p className="mt-0.5 text-[12px] text-neutral-400">{testimonial.client_title}</p>
+                    ) : null}
+                  </footer>
+                </article>
               ))}
             </div>
           </section>
         ) : null}
 
         {/* Listings */}
-        <section className="border-t border-neutral-200/90 py-8 md:py-10">
-          <div className="mb-6 text-center md:mb-8 md:text-left">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-neutral-500">Listings</p>
-            <h2 className="mt-1 text-base font-semibold tracking-tight text-neutral-900 md:text-lg">Active listings</h2>
-          </div>
+        <section className={`${SECTION_RULE} ${SECTION_PAD}`}>
+          <p className={`${EYEBROW} text-center lg:text-left`}>Listings</p>
+          <h2 className="mt-2 text-center text-lg font-medium tracking-tight text-neutral-900 lg:text-left">
+            Active listings
+          </h2>
+          <div className="mt-8">
 
           {listings.length === 0 ? (
             <p className="text-center text-[13px] text-neutral-600">
@@ -571,6 +576,7 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
               ))}
             </div>
           )}
+          </div>
         </section>
       </div>
     </div>
