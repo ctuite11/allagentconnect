@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -95,13 +95,25 @@ interface AgentProfileProps {
 const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
   const { id: idOrCode } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuthRole();
+  const { user, role } = useAuthRole();
   const [agent, setAgent] = useState<AgentProfileData | null>(null);
   const [listings, setListings] = useState<any[]>([]);
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [loading, setLoading] = useState(true);
   const [isStartingChat, setIsStartingChat] = useState(false);
   const { isOnline } = useAgentLastSeen(agent?.id);
+
+  /** Internal AAC email — authenticated agents/admins viewing in-app profile only. */
+  const showListingAgentEmail = !publicMode && (role === "agent" || role === "admin");
+  const profileListingAgentContact = useMemo((): ListingAgentContact | null => {
+    if (!showListingAgentEmail || !agent?.email?.trim()) return null;
+    const name = [agent.first_name, agent.last_name].filter(Boolean).join(" ").trim();
+    return {
+      agentId: agent.id,
+      agentEmail: agent.email.trim(),
+      agentName: name || "Listing agent",
+    };
+  }, [showListingAgentEmail, agent]);
 
   useEffect(() => {
     fetchAgentProfile();
@@ -493,6 +505,9 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
                     showActions={false}
                     compactAgentOwned
                     hideMlsMeta={publicMode}
+                    showAgentEmailContact={showListingAgentEmail}
+                    listingAgentContact={profileListingAgentContact}
+                    listingEmailSubject={listingEmailSubjectFromRow(listing)}
                   />
                 </div>
               ))}
