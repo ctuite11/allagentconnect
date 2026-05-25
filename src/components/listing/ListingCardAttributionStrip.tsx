@@ -22,16 +22,23 @@ export function ListingCardAttributionStrip({
 
   return (
     <div
-      className={cn("flex items-center justify-between gap-2", className)}
+      className={cn(
+        "flex min-h-[18px] min-w-0 items-center justify-between gap-2",
+        className,
+      )}
       onClick={(e) => e.stopPropagation()}
       onKeyDown={(e) => e.stopPropagation()}
     >
       <div className="flex min-w-0 flex-1 items-center gap-1">
         {brokerage ? (
           <>
-            <Building2 className="h-3 w-3 shrink-0 text-neutral-400" strokeWidth={1.75} aria-hidden />
+            <Building2
+              className="h-3 w-3 shrink-0 text-neutral-400"
+              strokeWidth={1.75}
+              aria-hidden
+            />
             <span
-              className="truncate text-[11px] font-normal leading-none text-neutral-500"
+              className="truncate text-[11px] font-normal leading-[13px] text-neutral-500"
               title={brokerage}
             >
               {brokerage}
@@ -40,13 +47,11 @@ export function ListingCardAttributionStrip({
         ) : null}
       </div>
       {contact ? (
-        <div className="shrink-0">
-          <ListingAgentEmailContact
-            contact={contact}
-            defaultSubject={defaultSubject}
-            className="leading-none"
-          />
-        </div>
+        <ListingAgentEmailContact
+          contact={contact}
+          defaultSubject={defaultSubject}
+          className="shrink-0"
+        />
       ) : null}
     </div>
   );

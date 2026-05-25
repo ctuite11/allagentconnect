@@ -30,13 +30,13 @@ export function ListingAgentEmailContact({
           setOpen(true);
         }}
         className={cn(
-          "inline-flex max-w-full items-center gap-1 rounded-sm py-0 text-[11px] font-medium leading-none text-neutral-800 transition-colors hover:text-neutral-950",
+          "inline-flex max-w-full items-center gap-1 rounded-sm py-0 text-[11px] font-normal leading-[13px] text-neutral-800 transition-colors hover:text-neutral-950",
           className,
         )}
         aria-label={`Email ${contact.agentName}`}
       >
         <span className="min-w-0 truncate">{contact.agentName}</span>
-        <Mail className="h-3.5 w-3.5 shrink-0 text-[#0E56F5]" strokeWidth={2} aria-hidden />
+        <Mail className="h-3 w-3 shrink-0 text-[#0E56F5]" strokeWidth={2} aria-hidden />
       </button>
       <EmailAgentDialog
         open={open}
