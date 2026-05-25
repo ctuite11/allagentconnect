@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import ListingCard from "@/components/ListingCard";
+import { mapMarketRowToListingCard } from "@/components/success-hub/listingCardAdapter";
 import { AacBackButton } from "@/components/layout/AacBackLink";
 import { AacPageIntro } from "@/components/layout/AacPageIntro";
 import {
@@ -460,48 +460,41 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
               </button>
             </p>
           ) : (
-            <div className="grid gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 lg:gap-5">
               {listings.map((listing) => (
-                <Card
-                  key={listing.id}
-                  role="link"
-                  tabIndex={0}
-                  className="group cursor-pointer overflow-hidden rounded-2xl border border-neutral-200/90 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-[transform,box-shadow,border-color] duration-200 hover:-translate-y-px hover:border-neutral-300/90 hover:shadow-[0_6px_20px_rgba(0,0,0,0.07)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 focus-visible:ring-offset-2"
-                  onClick={() => navigate(`/property/${listing.id}`)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      navigate(`/property/${listing.id}`);
-                    }
-                  }}
-                >
-                  <div className="relative h-44 overflow-hidden">
-                    <img
-                      src={listing.photos && listing.photos.length > 0 ? listing.photos[0].url : "/placeholder.svg"}
-                      alt={listing.address}
-                      className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
-                    />
-                    <div className="absolute left-3 top-3">
-                      <Badge className="border-0 bg-neutral-900 px-2 py-0.5 text-xs font-semibold text-white shadow-sm">
-                        ${listing.price.toLocaleString()}
-                      </Badge>
-                    </div>
-                    <Badge className="absolute right-3 top-3 border border-neutral-200/80 bg-white/95 text-[10px] font-medium text-neutral-800 shadow-sm backdrop-blur-sm">
-                      {listing.listing_type === "for_sale" ? "For sale" : "For rent"}
-                    </Badge>
-                  </div>
-                  <CardContent className="p-4">
-                    <p className="break-words text-sm font-semibold text-neutral-900">{listing.address}</p>
-                    <p className="mt-0.5 text-xs text-neutral-500">
-                      {listing.city}, {listing.state} {listing.zip_code}
-                    </p>
-                    <div className="mt-2 flex gap-3 border-t border-neutral-100 pt-2 text-xs tabular-nums text-neutral-600">
-                      {listing.bedrooms ? <span>{listing.bedrooms} bed</span> : null}
-                      {listing.bathrooms ? <span>{listing.bathrooms} bath</span> : null}
-                      {listing.square_feet ? <span>{listing.square_feet.toLocaleString()} sqft</span> : null}
-                    </div>
-                  </CardContent>
-                </Card>
+                <div key={listing.id} className="min-w-0 max-w-full">
+                  <ListingCard
+                    listing={mapMarketRowToListingCard({
+                      id: listing.id,
+                      address: listing.address,
+                      city: listing.city,
+                      state: listing.state,
+                      zip_code: listing.zip_code,
+                      price: listing.price,
+                      listing_type: listing.listing_type,
+                      price_range_min: listing.price_range_min,
+                      price_range_max: listing.price_range_max,
+                      property_type: listing.property_type,
+                      bedrooms: listing.bedrooms,
+                      bathrooms: listing.bathrooms,
+                      square_feet: listing.square_feet,
+                      photos: listing.photos,
+                      status: listing.status,
+                      created_at: listing.created_at,
+                      active_date: listing.active_date,
+                      listing_number: listing.listing_number,
+                      agent_id: listing.agent_id,
+                      neighborhood: listing.neighborhood,
+                      unit_number: listing.unit_number,
+                      condo_details: listing.condo_details,
+                      brokerage: agent?.company?.trim() || agent?.office_name?.trim() || undefined,
+                    })}
+                    viewMode="compact"
+                    showActions={false}
+                    compactAgentOwned
+                    hideMlsMeta={publicMode}
+                  />
+                </div>
               ))}
             </div>
           )}
