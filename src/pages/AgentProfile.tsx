@@ -32,6 +32,8 @@ import { findOrCreateConversation } from "@/lib/startConversation";
 import { useAuthRole } from "@/hooks/useAuthRole";
 import { Seo } from "@/components/Seo";
 import { getPublicOrigin } from "@/lib/getPublicUrl";
+import { AgentOnlinePresenceBadge } from "@/components/ui/AgentOnlinePresenceBadge";
+import { cn } from "@/lib/utils";
 
 interface AgentProfileData {
   id: string;
@@ -324,18 +326,15 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
                 </div>
               )}
             </div>
-            {isOnline ? (
-              <span
-                className="absolute bottom-3 right-3 h-2 w-2 rounded-full bg-emerald-500 ring-2 ring-white"
-                aria-label="Online"
-              />
-            ) : null}
           </div>
 
           <div className="min-w-0 text-center lg:pt-2 lg:text-left">
-            <h1 className="text-2xl font-medium tracking-tight text-neutral-900 md:text-[2rem] md:leading-[1.15]">
-              {agent.first_name} {agent.last_name}
-            </h1>
+            <div className="flex flex-wrap items-center justify-center gap-2.5 lg:justify-start">
+              <h1 className="text-2xl font-medium tracking-tight text-neutral-900 md:text-[2rem] md:leading-[1.15]">
+                {agent.first_name} {agent.last_name}
+              </h1>
+              {isOnline ? <AgentOnlinePresenceBadge className="mt-0.5" /> : null}
+            </div>
             {agent.title ? (
               <p className="mt-2 text-[15px] leading-relaxed text-neutral-500">{agent.title}</p>
             ) : null}
@@ -416,30 +415,24 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
                   <MessageSquare className="mr-1.5 h-3.5 w-3.5 text-neutral-500" aria-hidden />
                   Message
                 </Button>
-
-                {activeSocials.length > 0 ? (
-                  <>
-                    <span
-                      className="mx-0.5 hidden h-5 w-px bg-neutral-200 sm:inline"
-                      aria-hidden
-                    />
-                    <div className="flex items-center gap-1">
-                      {activeSocials.map(({ key, icon: Icon }) => (
-                        <a
-                          key={key}
-                          href={agent.social_links![key as keyof typeof agent.social_links] as string}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex h-7 w-7 items-center justify-center rounded-full text-neutral-400 transition-colors hover:bg-neutral-50 hover:text-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 focus-visible:ring-offset-2"
-                          aria-label={key}
-                        >
-                          <Icon className="h-3.5 w-3.5" aria-hidden />
-                        </a>
-                      ))}
-                    </div>
-                  </>
-                ) : null}
               </div>
+
+              {activeSocials.length > 0 ? (
+                <div className="mt-4 flex items-center justify-center gap-2.5 lg:justify-start">
+                  {activeSocials.map(({ key, icon: Icon, iconClass }) => (
+                    <a
+                      key={key}
+                      href={agent.social_links![key as keyof typeof agent.social_links] as string}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex h-7 w-7 items-center justify-center rounded-full text-neutral-300 transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 focus-visible:ring-offset-2"
+                      aria-label={key}
+                    >
+                      <Icon className={cn("h-3.5 w-3.5", iconClass)} aria-hidden />
+                    </a>
+                  ))}
+                </div>
+              ) : null}
             </div>
           </div>
 
@@ -459,57 +452,70 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
 
       {/* Content */}
       <div className={`${PROFILE_PAGE} pb-20`}>
-        {/* About */}
-        {agent.bio && (
+        {/* About + testimonials sidebar */}
+        {(agent.bio || testimonials.length > 0) ? (
           <section className={`${SECTION_RULE} ${SECTION_PAD}`}>
-            <p className={EYEBROW}>About</p>
-            <p className="mt-5 max-w-3xl whitespace-pre-wrap text-[16px] leading-[1.75] text-neutral-700">
-              {agent.bio}
-            </p>
-          </section>
-        )}
-
-        {/* Testimonials */}
-        {testimonials.length > 0 ? (
-          <section className={`${SECTION_RULE} ${SECTION_PAD}`}>
-            <p className={`${EYEBROW} text-center lg:text-left`}>Testimonials</p>
-            <h2 className="mt-2 text-center text-lg font-medium tracking-tight text-neutral-900 lg:text-left">
-              Client notes
-            </h2>
-            <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6">
-              {testimonials.slice(0, 6).map((testimonial) => (
-                <article
-                  key={testimonial.id}
-                  className="flex flex-col rounded-lg border border-neutral-100 bg-white p-6 md:p-7"
-                >
-                  {testimonial.rating ? (
-                    <div className="mb-4 flex gap-0.5">
-                      {[...Array(5)].map((_, i) => (
-                        <Star
-                          key={i}
-                          className={`h-3 w-3 ${
-                            i < testimonial.rating!
-                              ? "fill-neutral-400 text-neutral-400"
-                              : "text-neutral-200"
-                          }`}
-                          aria-hidden
-                        />
-                      ))}
-                    </div>
-                  ) : (
-                    <Quote className="mb-4 h-4 w-4 text-neutral-200" aria-hidden />
-                  )}
-                  <p className="flex-1 text-[15px] leading-[1.65] text-neutral-600">
-                    &ldquo;{testimonial.testimonial_text}&rdquo;
+            <div
+              className={cn(
+                "flex flex-col gap-10",
+                agent.bio && testimonials.length > 0 && "lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(220px,300px)] lg:items-start lg:gap-x-12 xl:gap-x-16",
+              )}
+            >
+              {agent.bio ? (
+                <div className="min-w-0">
+                  <p className={EYEBROW}>About</p>
+                  <p className="mt-5 max-w-3xl whitespace-pre-wrap text-[16px] leading-[1.75] text-neutral-700">
+                    {agent.bio}
                   </p>
-                  <footer className="mt-5 border-t border-neutral-50 pt-4">
-                    <p className="text-[13px] font-medium text-neutral-900">{testimonial.client_name}</p>
-                    {testimonial.client_title ? (
-                      <p className="mt-0.5 text-[12px] text-neutral-400">{testimonial.client_title}</p>
-                    ) : null}
-                  </footer>
-                </article>
-              ))}
+                </div>
+              ) : null}
+
+              {testimonials.length > 0 ? (
+                <aside
+                  className={cn(
+                    "min-w-0",
+                    agent.bio && "lg:border-l lg:border-neutral-100 lg:pl-10 xl:pl-12",
+                  )}
+                >
+                  <p className={EYEBROW}>Testimonials</p>
+                  <h2 className="mt-2 text-base font-medium tracking-tight text-neutral-900">Client notes</h2>
+                  <div className="mt-5 flex flex-col gap-3.5">
+                    {testimonials.slice(0, 6).map((testimonial) => (
+                      <article
+                        key={testimonial.id}
+                        className="rounded-lg border border-neutral-100 bg-white px-4 py-4"
+                      >
+                        {testimonial.rating ? (
+                          <div className="mb-2.5 flex gap-0.5">
+                            {[...Array(5)].map((_, i) => (
+                              <Star
+                                key={i}
+                                className={`h-2.5 w-2.5 ${
+                                  i < testimonial.rating!
+                                    ? "fill-neutral-400 text-neutral-400"
+                                    : "text-neutral-200"
+                                }`}
+                                aria-hidden
+                              />
+                            ))}
+                          </div>
+                        ) : (
+                          <Quote className="mb-2.5 h-3.5 w-3.5 text-neutral-200" aria-hidden />
+                        )}
+                        <p className="text-[13px] leading-[1.6] text-neutral-600">
+                          &ldquo;{testimonial.testimonial_text}&rdquo;
+                        </p>
+                        <footer className="mt-3 border-t border-neutral-50 pt-3">
+                          <p className="text-[12px] font-medium text-neutral-900">{testimonial.client_name}</p>
+                          {testimonial.client_title ? (
+                            <p className="mt-0.5 text-[11px] text-neutral-400">{testimonial.client_title}</p>
+                          ) : null}
+                        </footer>
+                      </article>
+                    ))}
+                  </div>
+                </aside>
+              ) : null}
             </div>
           </section>
         ) : null}
