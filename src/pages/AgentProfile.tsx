@@ -89,14 +89,15 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 
 const PROFILE_PAGE = "mx-auto w-full max-w-[82rem] px-6 md:px-10 lg:px-12";
 const SECTION_RULE = "border-t border-neutral-100";
-const SECTION_PAD = "py-10 md:py-12";
+const SECTION_PAD = "py-9 md:py-11";
+const LISTINGS_SECTION = "border-t border-neutral-100 pt-14 pb-10 md:pt-16 md:pb-12";
 const EYEBROW = "text-[10px] font-medium uppercase tracking-[0.14em] text-neutral-400";
 
 const socialIconMap = [
-  { key: "linkedin", icon: Linkedin },
-  { key: "facebook", icon: Facebook },
-  { key: "instagram", icon: Instagram },
-  { key: "twitter", icon: Twitter },
+  { key: "linkedin", icon: Linkedin, iconClass: "text-[#0A66C2]" },
+  { key: "facebook", icon: Facebook, iconClass: "text-[#1877F2]" },
+  { key: "instagram", icon: Instagram, iconClass: "text-[#E1306C]" },
+  { key: "twitter", icon: Twitter, iconClass: "text-neutral-700" },
 ] as const;
 
 interface AgentProfileProps {
@@ -347,7 +348,7 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
             ) : null}
 
             {(profileContactRows.length > 0 || websiteUrl) ? (
-              <div className="mt-6 space-y-2 text-[14px] leading-relaxed">
+              <div className="mt-5 space-y-1.5 text-[14px] leading-snug">
                 {profileContactRows.map((item, i) => (
                   <p key={i}>
                     <a
@@ -380,8 +381,8 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
               </div>
             ) : null}
 
-            <div className="mt-7 border-t border-neutral-100 pt-6">
-              <div className="flex flex-wrap items-center justify-center gap-2.5 lg:justify-start">
+            <div className="mt-5 border-t border-neutral-100/80 pt-5">
+              <div className="flex flex-wrap items-center justify-center gap-2 lg:justify-start">
                 <ContactAgentProfileDialog
                   agentId={agent.id}
                   agentName={`${agent.first_name} ${agent.last_name}`}
@@ -418,17 +419,17 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
               </div>
 
               {activeSocials.length > 0 ? (
-                <div className="mt-4 flex items-center justify-center gap-2.5 lg:justify-start">
+                <div className="mt-3 flex items-center justify-center gap-2 lg:justify-start">
                   {activeSocials.map(({ key, icon: Icon, iconClass }) => (
                     <a
                       key={key}
                       href={agent.social_links![key as keyof typeof agent.social_links] as string}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex h-7 w-7 items-center justify-center rounded-full text-neutral-300 transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 focus-visible:ring-offset-2"
+                      className="flex h-[34px] w-[34px] items-center justify-center rounded-md transition-all duration-150 hover:scale-105 hover:bg-neutral-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 focus-visible:ring-offset-2"
                       aria-label={key}
                     >
-                      <Icon className={cn("h-3.5 w-3.5", iconClass)} aria-hidden />
+                      <Icon className={cn("h-4.5 w-4.5", iconClass)} aria-hidden />
                     </a>
                   ))}
                 </div>
@@ -437,14 +438,12 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
           </div>
 
           {agent.logo_url ? (
-            <div className="flex justify-center lg:justify-end lg:self-center">
-              <div className="flex h-24 w-full max-w-[260px] items-center justify-center rounded-lg border border-neutral-200/70 bg-white px-6 py-5 lg:h-28 lg:w-[260px]">
-                <img
-                  src={agent.logo_url}
-                  alt={agent.company || agent.office_name || "Brokerage logo"}
-                  className="max-h-[4.5rem] max-w-full object-contain"
-                />
-              </div>
+            <div className="flex justify-center px-2 lg:justify-end lg:items-start lg:pt-3">
+              <img
+                src={agent.logo_url}
+                alt={agent.company || agent.office_name || "Brokerage logo"}
+                className="max-h-[5rem] w-auto max-w-[min(100%,280px)] object-contain object-center lg:max-h-[5.5rem] lg:max-w-[300px]"
+              />
             </div>
           ) : null}
         </div>
@@ -457,14 +456,14 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
           <section className={`${SECTION_RULE} ${SECTION_PAD}`}>
             <div
               className={cn(
-                "flex flex-col gap-10",
+                "flex flex-col gap-8",
                 agent.bio && testimonials.length > 0 && "lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(220px,300px)] lg:items-start lg:gap-x-12 xl:gap-x-16",
               )}
             >
               {agent.bio ? (
                 <div className="min-w-0">
                   <p className={EYEBROW}>About</p>
-                  <p className="mt-5 max-w-3xl whitespace-pre-wrap text-[16px] leading-[1.75] text-neutral-700">
+                  <p className="mt-4 max-w-3xl whitespace-pre-wrap text-[16px] leading-[1.75] text-neutral-700">
                     {agent.bio}
                   </p>
                 </div>
@@ -473,13 +472,12 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
               {testimonials.length > 0 ? (
                 <aside
                   className={cn(
-                    "min-w-0",
-                    agent.bio && "lg:border-l lg:border-neutral-100 lg:pl-10 xl:pl-12",
+                    "min-w-0 lg:pt-0",
+                    agent.bio && "lg:border-l lg:border-neutral-100/80 lg:pl-9 xl:pl-11",
                   )}
                 >
                   <p className={EYEBROW}>Testimonials</p>
-                  <h2 className="mt-2 text-base font-medium tracking-tight text-neutral-900">Client notes</h2>
-                  <div className="mt-5 flex flex-col gap-3.5">
+                  <div className="mt-4 flex flex-col gap-3">
                     {testimonials.slice(0, 6).map((testimonial) => (
                       <article
                         key={testimonial.id}
@@ -521,12 +519,12 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
         ) : null}
 
         {/* Listings */}
-        <section className={`${SECTION_RULE} ${SECTION_PAD}`}>
-          <p className={`${EYEBROW} text-center lg:text-left`}>Listings</p>
-          <h2 className="mt-2 text-center text-lg font-medium tracking-tight text-neutral-900 lg:text-left">
+        <section className={LISTINGS_SECTION}>
+          <p className={EYEBROW}>Listings</p>
+          <h2 className="mt-3 text-lg font-medium tracking-tight text-neutral-900 md:text-xl">
             Active listings
           </h2>
-          <div className="mt-8">
+          <div className="mt-10 md:mt-11">
 
           {listings.length === 0 ? (
             <p className="text-center text-[13px] text-neutral-600">
