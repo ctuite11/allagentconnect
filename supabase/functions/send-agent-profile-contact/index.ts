@@ -131,7 +131,7 @@ const handler = async (req: Request): Promise<Response> => {
     const html = buildAacEmail({
       headline: "New message from your network",
       body: bodyHtml,
-      preheader: `New message from ${senderName}`,
+      preheader: `${senderName} sent you a message on All Agent Connect`,
     });
 
     const emailResponse = await fetch("https://api.resend.com/emails", {
@@ -144,7 +144,7 @@ const handler = async (req: Request): Promise<Response> => {
         from: "All Agent Connect <hello@mail.allagentconnect.com>",
         to: [agentEmail],
         reply_to: senderEmail,
-        subject: subject || `New message from ${senderName}`,
+        subject: subject || `${senderName} sent you a message on All Agent Connect`,
         html,
       }),
     });
