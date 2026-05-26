@@ -9,6 +9,7 @@ import { FormattedInput } from "@/components/ui/formatted-input";
 import { Mail } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
+import { useSenderProfilePrefill } from "@/lib/currentSenderProfile";
 
 const contactMessageSchema = z.object({
   sender_name: z.string().trim().min(1, "Please enter your name").max(100),
