@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,11 @@ import { Mail } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { cn } from "@/lib/utils";
+import { useAuthRole } from "@/hooks/useAuthRole";
+import {
+  fetchAgentSenderProfile,
+  type AgentSenderProfile,
+} from "@/lib/agentSenderProfile";
 
 const contactMessageSchema = z.object({
   sender_name: z.string().trim().min(1, "Please enter your name").max(100),
@@ -19,37 +24,78 @@ const contactMessageSchema = z.object({
   subject: z.string().trim().min(1, "Please enter a subject").max(200),
 });
 
+const EMPTY_FORM = {
+  sender_name: "",
+  sender_email: "",
+  sender_phone: "",
+  subject: "",
+  message: "",
+};
+
 interface ContactAgentProfileDialogProps {
   agentId: string;
   agentName: string;
   agentEmail: string;
   buttonText?: string;
   triggerClassName?: string;
+  /** Logged-in viewer sender (agent/admin) — skips fetch when provided. */
+  initialSender?: AgentSenderProfile | null;
 }
 
-const ContactAgentProfileDialog = ({ agentId, agentName, agentEmail, buttonText = "Contact Agent", triggerClassName }: ContactAgentProfileDialogProps) => {
+const ContactAgentProfileDialog = ({
+  agentId: _agentId,
+  agentName,
+  agentEmail,
+  buttonText = "Contact Agent",
+  triggerClassName,
+  initialSender = null,
+}: ContactAgentProfileDialogProps) => {
+  const { role } = useAuthRole();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    sender_name: "",
-    sender_email: "",
-    sender_phone: "",
-    subject: "",
-    message: "",
-  });
+  const [formData, setFormData] = useState(EMPTY_FORM);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const prefillSenderFields = useCallback(async () => {
+    if (initialSender?.name || initialSender?.email) {
+      setFormData((prev) => ({
+        ...prev,
+        sender_name: initialSender.name || prev.sender_name,
+        sender_email: initialSender.email || prev.sender_email,
+        sender_phone: initialSender.phone ?? prev.sender_phone,
+      }));
+      return;
+    }
+
+    if (role !== "agent" && role !== "admin") return;
+
+    const sender = await fetchAgentSenderProfile();
+    if (!sender) return;
+
+    setFormData((prev) => ({
+      ...prev,
+      sender_name: sender.name || prev.sender_name,
+      sender_email: sender.email || prev.sender_email,
+      sender_phone: sender.phone || prev.sender_phone,
+    }));
+  }, [initialSender, role]);
+
+  const handleOpenChange = (next: boolean) => {
+    setOpen(next);
+    if (next) {
+      void prefillSenderFields();
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrors({});
 
     try {
-      // Validate form data
       const validatedData = contactMessageSchema.parse(formData);
-      
+
       setLoading(true);
 
-      // Send email notification to agent
       try {
         await supabase.functions.invoke("send-agent-profile-contact", {
           body: {
@@ -70,14 +116,8 @@ const ContactAgentProfileDialog = ({ agentId, agentName, agentEmail, buttonText 
 
       toast.success("Message sent successfully. The agent will follow up soon.");
       setOpen(false);
-      setFormData({
-        sender_name: "",
-        sender_email: "",
-        sender_phone: "",
-        subject: "",
-        message: "",
-      });
-    } catch (error: any) {
+      setFormData(EMPTY_FORM);
+    } catch (error: unknown) {
       if (error instanceof z.ZodError) {
         const newErrors: Record<string, string> = {};
         error.errors.forEach((err) => {
@@ -95,7 +135,7 @@ const ContactAgentProfileDialog = ({ agentId, agentName, agentEmail, buttonText 
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button size="sm" className={cn("gap-2 rounded-lg", triggerClassName)}>
           <Mail className="h-4 w-4" />

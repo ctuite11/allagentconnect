@@ -30,6 +30,10 @@ import { Seo } from "@/components/Seo";
 import { getPublicOrigin } from "@/lib/getPublicUrl";
 import { AgentOnlinePresenceBadge } from "@/components/ui/AgentOnlinePresenceBadge";
 import { cn } from "@/lib/utils";
+import {
+  fetchAgentSenderProfile,
+  type AgentSenderProfile,
+} from "@/lib/agentSenderProfile";
 
 interface AgentProfileData {
   id: string;
@@ -170,7 +174,22 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [loading, setLoading] = useState(true);
   const [isStartingChat, setIsStartingChat] = useState(false);
+  const [viewerSender, setViewerSender] = useState<AgentSenderProfile | null>(null);
   const { isOnline } = useAgentLastSeen(agent?.id);
+
+  useEffect(() => {
+    if (!user?.id || (role !== "agent" && role !== "admin")) {
+      setViewerSender(null);
+      return;
+    }
+    let cancelled = false;
+    void fetchAgentSenderProfile().then((sender) => {
+      if (!cancelled) setViewerSender(sender);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id, role]);
 
   /** Internal AAC email — authenticated agents/admins viewing in-app profile only. */
   const showListingAgentEmail = !publicMode && (role === "agent" || role === "admin");
@@ -448,6 +467,7 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
                     agentEmail={agent.email}
                     buttonText={`Email ${agent.first_name}`}
                     triggerClassName="h-[34px] min-w-[7.75rem] rounded-md border border-neutral-800 bg-neutral-900 px-5 text-[13px] font-medium tracking-wide text-white hover:bg-neutral-800"
+                    initialSender={viewerSender}
                   />
 
                   <Button
