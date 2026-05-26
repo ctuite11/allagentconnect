@@ -691,29 +691,21 @@ const PropertyDetail = () => {
           />
         </div>
 
-        {/* ========== LISTING HEADER — Address + Price above hero, constrained to media column width ========== */}
-        <div className="mx-auto max-w-6xl px-4 pb-2">
-          <div className="lg:w-[68%] pr-2">
-            <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-              <h1 className="flex items-baseline gap-1.5 text-lg font-semibold tracking-tight text-neutral-900">
-                <MapPin className="relative top-px h-4 w-4 shrink-0 text-neutral-500" />
-                {buildDisplayAddress(listing as any)}
-              </h1>
-              <div className="text-right">
-                <p className="text-lg font-bold tracking-tight text-neutral-900">
-                  ${listing?.price?.toLocaleString() ?? "—"}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
         {/* Full-page two-column layout (grid); rail pinned on desktop via usePropertyDetailRailPosition */}
         <div ref={layoutRef} className="mx-auto max-w-6xl overflow-visible px-4">
           <div className="grid grid-cols-1 gap-6 overflow-visible lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start">
             
             {/* Primary column — hero + detail + agent tools */}
             <div className="min-w-0 overflow-visible">
+              <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 pb-2">
+                <h1 className="flex min-w-0 items-baseline gap-1.5 text-lg font-semibold tracking-tight text-neutral-900">
+                  <MapPin className="relative top-px h-4 w-4 shrink-0 text-neutral-500" />
+                  {buildDisplayAddress(listing as any)}
+                </h1>
+                <p className="shrink-0 text-lg font-bold tracking-tight text-neutral-900">
+                  ${listing?.price?.toLocaleString() ?? "—"}
+                </p>
+              </div>
               <div className="relative pb-6">
                 <div className="relative h-[380px] overflow-hidden rounded-xl border border-neutral-200 shadow-[0_4px_24px_rgba(0,0,0,0.07)] sm:h-[480px] sm:rounded-2xl lg:h-[560px]">
                   <div className="absolute inset-0 bg-neutral-950">
