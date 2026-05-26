@@ -78,6 +78,8 @@ import { getListingPublicUrl, getListingShareUrl } from "@/lib/getPublicUrl";
 import { getStatusConfig } from "@/constants/status";
 import { syncStickyFromDB } from "@/utils/agentTracking";
 import { findOrCreateConversation } from "@/lib/startConversation";
+import { useAuthRole } from "@/hooks/useAuthRole";
+import ContactAgentDialog from "@/components/ContactAgentDialog";
 
 // ATTRIBUTION MASKING (BUYER UI)
 // Buyers must NEVER contact listing.agent_id from this page.
@@ -169,6 +171,9 @@ const ConsumerPropertyDetail = () => {
   const [stickyAgentId, setStickyAgentId] = useState<string | null>(null);
   const [stickyAgentProfile, setStickyAgentProfile] = useState<AgentProfile | null>(null);
   const [emailDialogOpen, setEmailDialogOpen] = useState(false);
+  const [listingContactDialogOpen, setListingContactDialogOpen] = useState(false);
+  const { role } = useAuthRole();
+  const isAgentView = role === "agent" || role === "admin";
 
   const handleMessageAgent = async (targetAgentId: string | null | undefined) => {
     const resolvedAgentId =
@@ -537,13 +542,15 @@ const ConsumerPropertyDetail = () => {
                     </Badge>
                   </div>
 
-                  {/* Favorite - Top Right */}
-                  <div
-                    className="absolute top-3 right-3 z-20"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <FavoriteButton listingId={listing.id} size="icon" photoIcon />
-                  </div>
+                  {/* Favorite - Top Right (buyers/guests only) */}
+                  {!isAgentView && (
+                    <div
+                      className="absolute top-3 right-3 z-20"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <FavoriteButton listingId={listing.id} size="icon" photoIcon />
+                    </div>
+                  )}
 
                   {/* Carousel Arrows */}
                   {activeMediaTab === "photos" && listing.photos && listing.photos.length > 1 && (
@@ -698,8 +705,78 @@ const ConsumerPropertyDetail = () => {
             {/* RIGHT COLUMN - Hero Sidebar (~32%) */}
             <div className={`${propertyRailCol} ${propertyRailStack} ${propertyRailSticky}`}>
 
-              {/* Your Agent Card (attribution masking) */}
-              {stickyAgentProfile ? (
+              {/* Agent/admin: listing agent contact via AAC email (no buyer CTAs) */}
+              {isAgentView && agentProfile ? (
+                <Card className={cn(consumerSectionCard, "shadow-sm")}>
+                  <CardContent className="space-y-4 p-5">
+                    <div className="flex items-center gap-4">
+                      <AgentAvatar
+                        name={`${agentProfile.first_name} ${agentProfile.last_name}`}
+                        headshotUrl={agentProfile.headshot_url ?? null}
+                        userId={agentProfile.id}
+                        size="xl"
+                        avatarClassName="h-16 w-16 border-2 border-neutral-200"
+                        fallbackClassName="bg-neutral-100"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-500">Listing agent</p>
+                        <p className="font-bold text-lg leading-tight">
+                          {agentProfile.first_name} {agentProfile.last_name}
+                        </p>
+                        <p className="text-sm text-neutral-600">
+                          {agentProfile.title || "Realtor"} · {agentProfile.company || "Brokerage"}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2.5 text-sm">
+                      {agentProfile.cell_phone && (
+                        <a href={`tel:${agentProfile.cell_phone}`} className="flex items-center gap-2.5 transition-colors hover:text-neutral-900">
+                          <Phone className="h-4 w-4 shrink-0 text-neutral-500" />
+                          <span className="font-medium">{formatPhoneNumber(agentProfile.cell_phone)}</span>
+                          <span className="ml-auto text-xs text-neutral-500">Mobile</span>
+                        </a>
+                      )}
+                      {agentProfile.phone && agentProfile.phone !== agentProfile.cell_phone && (
+                        <a href={`tel:${agentProfile.phone}`} className="flex items-center gap-2.5 transition-colors hover:text-neutral-900">
+                          <Building2 className="h-4 w-4 shrink-0 text-neutral-500" />
+                          <span className="font-medium">{formatPhoneNumber(agentProfile.phone)}</span>
+                          <span className="ml-auto text-xs text-neutral-500">Office</span>
+                        </a>
+                      )}
+                      {agentProfile.email && (
+                        <button
+                          type="button"
+                          onClick={() => setListingContactDialogOpen(true)}
+                          className="flex w-full items-center gap-2.5 text-left transition-colors hover:text-neutral-900"
+                        >
+                          <Mail className="h-4 w-4 shrink-0 text-neutral-500" />
+                          <span className="font-medium truncate">{agentProfile.email}</span>
+                        </button>
+                      )}
+                    </div>
+
+                    <Button
+                      size="lg"
+                      variant="outline"
+                      className="w-full gap-2 border-neutral-200 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:bg-neutral-50"
+                      onClick={() => setListingContactDialogOpen(true)}
+                    >
+                      <Mail className="h-4 w-4" />
+                      Email listing agent
+                    </Button>
+
+                    <ContactAgentDialog
+                      listingId={listing.id}
+                      agentId={listing.agent_id}
+                      listingAddress={formatListingEmailSubjectLocation(listing) || `${listing.address}, ${listing.city}, ${listing.state}`}
+                      open={listingContactDialogOpen}
+                      onOpenChange={setListingContactDialogOpen}
+                      hideTrigger
+                    />
+                  </CardContent>
+                </Card>
+              ) : stickyAgentProfile ? (
                 <Card className={cn(consumerSectionCard, "shadow-sm")}>
                   <CardContent className="space-y-4 p-5">
                     <div className="flex items-center gap-4">
@@ -881,10 +958,12 @@ const ConsumerPropertyDetail = () => {
                 );
               })()}
 
-              <ScheduleShowingDialog
-                listingId={listing.id}
-                listingAddress={formatListingEmailSubjectLocation(listing) || `${listing.address}, ${listing.city}, ${listing.state}`}
-              />
+              {!isAgentView && (
+                <ScheduleShowingDialog
+                  listingId={listing.id}
+                  listingAddress={formatListingEmailSubjectLocation(listing) || `${listing.address}, ${listing.city}, ${listing.state}`}
+                />
+              )}
 
               {buyerCompensationCard}
             </div>

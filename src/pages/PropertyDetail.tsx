@@ -828,13 +828,15 @@ const PropertyDetail = () => {
                       </Badge>
                     </div>
 
-                    {/* Heart Control - Top Right Overlay */}
-                    <div
-                      className="absolute top-3 right-3 z-20"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <FavoriteButton listingId={listing.id} size="icon" photoIcon />
-                    </div>
+                    {/* Heart Control - Top Right Overlay (buyers/guests only) */}
+                    {!isAgentView && (
+                      <div
+                        className="absolute top-3 right-3 z-20"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <FavoriteButton listingId={listing.id} size="icon" photoIcon />
+                      </div>
+                    )}
                     
                     {/* Carousel Arrow Controls - Only for Photos */}
                     {activeMediaTab === 'photos' && listing.photos && listing.photos.length > 1 && (
@@ -1012,70 +1014,101 @@ const PropertyDetail = () => {
             {/* RIGHT COLUMN - Hero Sidebar (~32%) - Clean, no internal scrolling */}
             <div className="lg:w-[32%] space-y-3 lg:sticky lg:top-24 lg:self-start">
 
-              {/* Primary Consumer CTAs */}
-              <Card className="rounded-xl border border-neutral-200 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
-                <CardContent className="space-y-2.5 p-4">
-                  <h3 className="text-sm font-semibold text-neutral-900">Take the next step</h3>
+              {/* Primary CTAs — buyer/guest vs agent/admin */}
+              {!isAgentView ? (
+                <Card className="rounded-xl border border-neutral-200 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
+                  <CardContent className="space-y-2.5 p-4">
+                    <h3 className="text-sm font-semibold text-neutral-900">Take the next step</h3>
 
-                  <Button
-                    size="sm"
-                    className={cn(
-                      "h-9 w-full text-[13px] font-medium shadow-none",
-                      listingDetailPrimaryCtaClass,
-                    )}
-                    onClick={() => setContactDialogOpen(true)}
-                  >
-                    Contact Agent
-                  </Button>
+                    <Button
+                      size="sm"
+                      className={cn(
+                        "h-9 w-full text-[13px] font-medium shadow-none",
+                        listingDetailPrimaryCtaClass,
+                      )}
+                      onClick={() => setContactDialogOpen(true)}
+                    >
+                      Contact Agent
+                    </Button>
 
-                  <ScheduleShowingDialog
-                    listingId={listing.id}
-                    listingAddress={formatListingEmailSubjectLocation(listing)}
-                    triggerLabel="Request a Showing"
-                    triggerVariant="outline"
-                    triggerClassName={cn(
-                      "h-9 w-full rounded-lg text-[13px] font-medium shadow-none",
-                      isAgentView ? listingDetailOutlineCtaClass : "border-neutral-200 hover:bg-neutral-50",
-                    )}
-                  />
+                    <ScheduleShowingDialog
+                      listingId={listing.id}
+                      listingAddress={formatListingEmailSubjectLocation(listing)}
+                      triggerLabel="Request a Showing"
+                      triggerVariant="outline"
+                      triggerClassName="h-9 w-full rounded-lg border-neutral-200 text-[13px] font-medium shadow-none hover:bg-neutral-50"
+                    />
 
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className={cn(
-                      "h-9 w-full rounded-lg text-[13px] font-medium shadow-none",
-                      isAgentView ? listingDetailOutlineCtaClass : "border-neutral-200 hover:bg-neutral-50",
-                    )}
-                    onClick={() => setContactDialogOpen(true)}
-                  >
-                    Ask a Question
-                  </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-9 w-full rounded-lg border-neutral-200 text-[13px] font-medium shadow-none hover:bg-neutral-50"
+                      onClick={() => setContactDialogOpen(true)}
+                    >
+                      Ask a Question
+                    </Button>
 
-                  <FavoriteButton
-                    listingId={listing.id}
-                    size="sm"
-                    variant="outline"
-                    className={cn(
-                      "h-9 w-full rounded-lg text-[13px] font-medium shadow-none",
-                      isAgentView ? listingDetailOutlineCtaClass : "border-neutral-200 hover:bg-neutral-50",
-                    )}
-                    labels={{
-                      signIn: "Sign In to Save Home",
-                      default: "Save Home",
-                      saved: "Saved Home",
-                    }}
-                  />
+                    <FavoriteButton
+                      listingId={listing.id}
+                      size="sm"
+                      variant="outline"
+                      className="h-9 w-full rounded-lg border-neutral-200 text-[13px] font-medium shadow-none hover:bg-neutral-50"
+                      labels={{
+                        signIn: "Sign In to Save Home",
+                        default: "Save Home",
+                        saved: "Saved Home",
+                      }}
+                    />
 
-                  <ContactAgentDialog
-                    listingId={listing.id}
-                    agentId={listing.agent_id}
-                    listingAddress={formatListingEmailSubjectLocation(listing)}
-                    open={contactDialogOpen}
-                    onOpenChange={setContactDialogOpen}
-                    hideTrigger
-                  />
-                </CardContent>
-              </Card>
+                    <ContactAgentDialog
+                      listingId={listing.id}
+                      agentId={listing.agent_id}
+                      listingAddress={formatListingEmailSubjectLocation(listing)}
+                      open={contactDialogOpen}
+                      onOpenChange={setContactDialogOpen}
+                      hideTrigger
+                    />
+                  </CardContent>
+                </Card>
+              ) : (
+                <Card className="rounded-xl border border-neutral-200 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
+                  <CardContent className="space-y-2.5 p-4">
+                    <h3 className="text-sm font-semibold text-neutral-900">Listing inquiry</h3>
+
+                    <ScheduleShowingDialog
+                      listingId={listing.id}
+                      listingAddress={formatListingEmailSubjectLocation(listing)}
+                      triggerLabel="Request a Showing"
+                      triggerVariant="outline"
+                      triggerClassName={cn(
+                        "h-9 w-full rounded-lg text-[13px] font-medium shadow-none",
+                        listingDetailOutlineCtaClass,
+                      )}
+                    />
+
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className={cn(
+                        "h-9 w-full rounded-lg text-[13px] font-medium shadow-none",
+                        listingDetailOutlineCtaClass,
+                      )}
+                      onClick={() => setContactDialogOpen(true)}
+                    >
+                      Ask a Question
+                    </Button>
+
+                    <ContactAgentDialog
+                      listingId={listing.id}
+                      agentId={listing.agent_id}
+                      listingAddress={formatListingEmailSubjectLocation(listing)}
+                      open={contactDialogOpen}
+                      onOpenChange={setContactDialogOpen}
+                      hideTrigger
+                    />
+                  </CardContent>
+                </Card>
+              )}
               
               {/* Listing Agent Card - PRIMARY (top) */}
               {agentProfile && (
@@ -1123,13 +1156,24 @@ const PropertyDetail = () => {
                         </a>
                       )}
                       {agentProfile.email && (
-                        <a
-                          href={`mailto:${agentProfile.email}`}
-                          className="flex items-center gap-2.5 transition-colors hover:text-neutral-900"
-                        >
-                          <Mail className="h-4 w-4 shrink-0 text-neutral-500" />
-                          <span className="font-medium truncate">{agentProfile.email}</span>
-                        </a>
+                        isAgentView ? (
+                          <button
+                            type="button"
+                            onClick={() => setContactDialogOpen(true)}
+                            className="flex w-full items-center gap-2.5 text-left transition-colors hover:text-neutral-900"
+                          >
+                            <Mail className="h-4 w-4 shrink-0 text-neutral-500" />
+                            <span className="font-medium truncate">{agentProfile.email}</span>
+                          </button>
+                        ) : (
+                          <a
+                            href={`mailto:${agentProfile.email}`}
+                            className="flex items-center gap-2.5 transition-colors hover:text-neutral-900"
+                          >
+                            <Mail className="h-4 w-4 shrink-0 text-neutral-500" />
+                            <span className="font-medium truncate">{agentProfile.email}</span>
+                          </a>
+                        )
                       )}
                       {agentProfile.social_links?.website && (
                         <a
@@ -1144,11 +1188,13 @@ const PropertyDetail = () => {
                       )}
                     </div>
 
-                    <ContactAgentDialog
-                      listingId={listing.id}
-                      agentId={listing.agent_id}
-                      listingAddress={formatListingEmailSubjectLocation(listing)}
-                    />
+                    {!isAgentView && (
+                      <ContactAgentDialog
+                        listingId={listing.id}
+                        agentId={listing.agent_id}
+                        listingAddress={formatListingEmailSubjectLocation(listing)}
+                      />
+                    )}
                     
                     {/* Message about this listing button - agents/admins only */}
                     {canMessageListingAgent && (
