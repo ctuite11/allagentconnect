@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -37,6 +37,14 @@ export function ContactMatchesDialog({
   const [agentName, setAgentName] = useState("");
   const [agentEmail, setAgentEmail] = useState("");
   const [agentPhone, setAgentPhone] = useState("");
+
+  const applySender = useCallback((sender: { name: string; email: string; phone: string }) => {
+    setAgentName(sender.name);
+    setAgentEmail(sender.email);
+    setAgentPhone(sender.phone);
+  }, []);
+
+  useSenderProfilePrefill(open, applySender, "agent");
 
   const handleSend = async () => {
     if (!message.trim()) {

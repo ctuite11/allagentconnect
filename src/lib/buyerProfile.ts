@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { getCurrentSenderProfile, type SenderProfile } from "@/lib/currentSenderProfile";
 
 export type BuyerProfileFields = {
   userId: string;
@@ -69,40 +70,12 @@ export function displayNameFromProfile(
   return display || emailFallback?.trim() || "";
 }
 
-export type BuyerSenderProfile = {
-  name: string;
-  email: string;
-  phone: string;
-};
+/** @deprecated Prefer `SenderProfile` from `@/lib/currentSenderProfile`. */
+export type BuyerSenderProfile = SenderProfile;
 
-/** Sender fields for buyer-side listing share (profiles + auth session fallbacks). */
+/** Buyer-table sender prefill — use `getCurrentSenderProfile({ source: "auto" })` when role may vary. */
 export async function fetchBuyerSenderProfile(): Promise<BuyerSenderProfile | null> {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return null;
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("first_name, last_name, email, phone")
-    .eq("id", user.id)
-    .maybeSingle();
-
-  const metadataName =
-    typeof user.user_metadata?.display_name === "string"
-      ? user.user_metadata.display_name.trim()
-      : "";
-  const name =
-    displayNameFromProfile(profile?.first_name, profile?.last_name, metadataName || user.email) ||
-    metadataName ||
-    user.email?.split("@")[0] ||
-    "";
-
-  return {
-    name,
-    email: profile?.email?.trim() || user.email || "",
-    phone: profile?.phone?.trim() || "",
-  };
+  return getCurrentSenderProfile({ source: "buyer" });
 }
 
 export function profileInitials(

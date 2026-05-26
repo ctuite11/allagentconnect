@@ -31,9 +31,9 @@ import { getPublicOrigin } from "@/lib/getPublicUrl";
 import { AgentOnlinePresenceBadge } from "@/components/ui/AgentOnlinePresenceBadge";
 import { cn } from "@/lib/utils";
 import {
-  fetchAgentSenderProfile,
-  type AgentSenderProfile,
-} from "@/lib/agentSenderProfile";
+  getCurrentSenderProfile,
+  type SenderProfile,
+} from "@/lib/currentSenderProfile";
 
 interface AgentProfileData {
   id: string;
@@ -174,22 +174,22 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [loading, setLoading] = useState(true);
   const [isStartingChat, setIsStartingChat] = useState(false);
-  const [viewerSender, setViewerSender] = useState<AgentSenderProfile | null>(null);
+  const [viewerSender, setViewerSender] = useState<SenderProfile | null>(null);
   const { isOnline } = useAgentLastSeen(agent?.id);
 
   useEffect(() => {
-    if (!user?.id || (role !== "agent" && role !== "admin")) {
+    if (!user?.id) {
       setViewerSender(null);
       return;
     }
     let cancelled = false;
-    void fetchAgentSenderProfile().then((sender) => {
+    void getCurrentSenderProfile({ source: "auto" }).then((sender) => {
       if (!cancelled) setViewerSender(sender);
     });
     return () => {
       cancelled = true;
     };
-  }, [user?.id, role]);
+  }, [user?.id]);
 
   /** Internal AAC email — authenticated agents/admins viewing in-app profile only. */
   const showListingAgentEmail = !publicMode && (role === "agent" || role === "admin");

@@ -17,6 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { formatCriteriaDisplayLabel, formatCriteriaDisplayLabels } from "@/lib/formatCriteriaDisplay";
+import { getCurrentSenderProfile } from "@/lib/currentSenderProfile";
 
 interface Client {
   id: string;
@@ -97,32 +98,9 @@ const SaveToHotSheetDialog = ({ open, onOpenChange, selectedListingIds, currentS
   useEffect(() => {
     if (!open) return;
 
-    const loadAgentProfile = async () => {
-      try {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-        if (!user) return;
-
-        const { data: profile } = await supabase
-          .from("agent_profiles")
-          .select("first_name, last_name, email")
-          .eq("id", user.id)
-          .maybeSingle();
-
-        if (profile) {
-          const formatted =
-            [profile.first_name, profile.last_name].filter(Boolean).join(" ").trim() ||
-            profile.email ||
-            "Me";
-          setAgentDisplayName(formatted);
-        }
-      } catch (error) {
-        console.error("Error loading agent profile:", error);
-      }
-    };
-
-    void loadAgentProfile();
+    void getCurrentSenderProfile({ source: "agent" }).then((sender) => {
+      if (sender?.name) setAgentDisplayName(sender.name);
+    });
   }, [open]);
 
   // Reset state when dialog closes

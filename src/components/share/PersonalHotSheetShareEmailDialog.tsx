@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { invokeEdgeFunction } from "@/lib/invokeEdgeFunction";
@@ -13,6 +13,7 @@ import {
   type ListingPreview,
   type Recipient,
 } from "@/components/share/ShareListingsDialog";
+import { useSenderProfilePrefill } from "@/lib/currentSenderProfile";
 
 const HOT_SHEET_MESSAGE_CHIPS = [
   "Here are listings that match your search criteria.",
@@ -57,6 +58,15 @@ export function PersonalHotSheetShareEmailDialog({
   const [showManualEntry, setShowManualEntry] = useState(false);
   const [recipients, setRecipients] = useState<Recipient[]>([]);
 
+  const applySender = useCallback((sender: { name: string; firstName: string; email: string; phone: string }) => {
+    setAgentFirstName(sender.firstName);
+    setAgentName(sender.name);
+    setAgentEmail(sender.email);
+    setAgentPhone(sender.phone);
+  }, []);
+
+  useSenderProfilePrefill(open, applySender, "agent");
+
   const selectedCount = selectedListingIds.length;
   const singleListingPreview =
     selectedCount === 1 ? selectedListingPreviews[0] : undefined;
@@ -80,9 +90,7 @@ export function PersonalHotSheetShareEmailDialog({
   const previewVariant = selectedCount === 1 && singleListingPreview ? "listing" : "listing";
 
   useEffect(() => {
-    if (open) {
-      void loadAgentProfile();
-    } else {
+    if (!open) {
       setRecipientName("");
       setRecipientEmail("");
       setMessage("");
@@ -130,30 +138,6 @@ export function PersonalHotSheetShareEmailDialog({
     const debounce = setTimeout(searchClients, 300);
     return () => clearTimeout(debounce);
   }, [clientSearch]);
-
-  const loadAgentProfile = async () => {
-    try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data: profile } = await supabase
-        .from("agent_profiles")
-        .select("first_name, last_name, email, phone, cell_phone")
-        .eq("id", user.id)
-        .single();
-
-      if (profile) {
-        setAgentFirstName(profile.first_name?.trim() || "");
-        setAgentName(`${profile.first_name} ${profile.last_name}`.trim());
-        setAgentEmail(profile.email);
-        setAgentPhone(profile.cell_phone || profile.phone || "");
-      }
-    } catch (error) {
-      console.error("Error loading agent profile:", error);
-    }
-  };
 
   const handleSaveContact = async (name: string, email: string) => {
     try {

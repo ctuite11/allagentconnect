@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -54,6 +54,17 @@ const ContactAgentDialog = ({
     message: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const applySender = useCallback((sender: { name: string; email: string; phone: string }) => {
+    setFormData((prev) => ({
+      ...prev,
+      sender_name: sender.name || prev.sender_name,
+      sender_email: sender.email || prev.sender_email,
+      sender_phone: sender.phone || prev.sender_phone,
+    }));
+  }, []);
+
+  useSenderProfilePrefill(open, applySender, "auto");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

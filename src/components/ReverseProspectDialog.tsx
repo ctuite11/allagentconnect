@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { propertyTypeToEnum } from "@/lib/utils";
 import { Loader2, MapPin, DollarSign, Home, Users, User } from "lucide-react";
+import { useSenderProfilePrefill } from "@/lib/currentSenderProfile";
 
 interface ReverseProspectDialogProps {
   open: boolean;
@@ -52,33 +53,19 @@ export function ReverseProspectDialog({
   const [agentGroups, setAgentGroups] = useState<AgentGroup[]>([]);
   const [loadingMatches, setLoadingMatches] = useState(false);
 
+  const applySender = useCallback((sender: { name: string; email: string; phone: string }) => {
+    setAgentName(sender.name);
+    setAgentEmail(sender.email);
+    setAgentPhone(sender.phone);
+  }, []);
+
+  useSenderProfilePrefill(open, applySender, "agent");
+
   useEffect(() => {
     if (open && listing) {
       loadMatches();
-      loadAgentProfile();
     }
   }, [open, listing]);
-
-  const loadAgentProfile = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data: profile } = await supabase
-        .from("agent_profiles")
-        .select("first_name, last_name, email, cell_phone")
-        .eq("id", user.id)
-        .single();
-
-      if (profile) {
-        setAgentName(`${profile.first_name} ${profile.last_name}`.trim());
-        setAgentEmail(profile.email);
-        setAgentPhone(profile.cell_phone || "");
-      }
-    } catch (error) {
-      console.error("Error loading agent profile:", error);
-    }
-  };
 
   const matchesListing = (criteria: any): boolean => {
     if (!criteria) return false;

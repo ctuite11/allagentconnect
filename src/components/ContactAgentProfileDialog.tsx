@@ -10,11 +10,10 @@ import { Mail } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { cn } from "@/lib/utils";
-import { useAuthRole } from "@/hooks/useAuthRole";
 import {
-  fetchAgentSenderProfile,
-  type AgentSenderProfile,
-} from "@/lib/agentSenderProfile";
+  getCurrentSenderProfile,
+  type SenderProfile,
+} from "@/lib/currentSenderProfile";
 
 const contactMessageSchema = z.object({
   sender_name: z.string().trim().min(1, "Please enter your name").max(100),
@@ -38,8 +37,8 @@ interface ContactAgentProfileDialogProps {
   agentEmail: string;
   buttonText?: string;
   triggerClassName?: string;
-  /** Logged-in viewer sender (agent/admin) — skips fetch when provided. */
-  initialSender?: AgentSenderProfile | null;
+  /** Logged-in viewer sender — skips fetch when provided. */
+  initialSender?: SenderProfile | null;
 }
 
 const ContactAgentProfileDialog = ({
@@ -50,7 +49,6 @@ const ContactAgentProfileDialog = ({
   triggerClassName,
   initialSender = null,
 }: ContactAgentProfileDialogProps) => {
-  const { role } = useAuthRole();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState(EMPTY_FORM);
@@ -67,9 +65,7 @@ const ContactAgentProfileDialog = ({
       return;
     }
 
-    if (role !== "agent" && role !== "admin") return;
-
-    const sender = await fetchAgentSenderProfile();
+    const sender = await getCurrentSenderProfile({ source: "auto" });
     if (!sender) return;
 
     setFormData((prev) => ({
@@ -78,7 +74,7 @@ const ContactAgentProfileDialog = ({
       sender_email: sender.email || prev.sender_email,
       sender_phone: sender.phone || prev.sender_phone,
     }));
-  }, [initialSender, role]);
+  }, [initialSender]);
 
   const handleOpenChange = (next: boolean) => {
     setOpen(next);

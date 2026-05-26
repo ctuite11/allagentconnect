@@ -2,13 +2,14 @@
  * Single Listing Share Dialog
  * Wrapper around the universal ShareListingsDialog for sharing a single listing.
  */
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Share2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { ShareListingsDialog, Recipient, ListingPreview } from "@/components/share/ShareListingsDialog";
+import { useSenderProfilePrefill } from "@/lib/currentSenderProfile";
 
 interface ShareListingDialogProps {
   listingId: string;
@@ -37,9 +38,16 @@ export const ShareListingDialog = ({ listingId, listingAddress }: ShareListingDi
   const [listingPreview, setListingPreview] = useState<ListingPreview | undefined>();
   const [recipients, setRecipients] = useState<Recipient[]>([]);
 
+  const applySender = useCallback((sender: { name: string; email: string; phone: string }) => {
+    setAgentName(sender.name);
+    setAgentEmail(sender.email);
+    setAgentPhone(sender.phone);
+  }, []);
+
+  useSenderProfilePrefill(open, applySender, "agent");
+
   useEffect(() => {
     if (open) {
-      loadAgentProfile();
       loadListingPreview();
     } else {
       // Reset form when closing
@@ -52,27 +60,6 @@ export const ShareListingDialog = ({ listingId, listingAddress }: ShareListingDi
       setRecipients([]);
     }
   }, [open, listingId]);
-
-  const loadAgentProfile = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data: profile } = await supabase
-        .from('agent_profiles')
-        .select('first_name, last_name, email, cell_phone, phone')
-        .eq('id', user.id)
-        .single();
-
-      if (profile) {
-        setAgentName(`${profile.first_name} ${profile.last_name}`);
-        setAgentEmail(profile.email);
-        setAgentPhone(profile.cell_phone || profile.phone || '');
-      }
-    } catch (error) {
-      console.error("Error loading agent profile:", error);
-    }
-  };
 
   const loadListingPreview = async () => {
     try {

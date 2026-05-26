@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,6 +27,16 @@ export default function AccessErrorContactDialog({ open, onOpenChange, defaultEm
   const [senderEmail, setSenderEmail] = useState(defaultEmail);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const applySender = useCallback(
+    (sender: { name: string; email: string }) => {
+      if (!defaultName) setSenderName(sender.name);
+      if (!defaultEmail) setSenderEmail(sender.email);
+    },
+    [defaultEmail, defaultName],
+  );
+
+  useSenderProfilePrefill(open, applySender, "auto");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

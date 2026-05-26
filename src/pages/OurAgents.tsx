@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { FormattedInput } from "@/components/ui/formatted-input";
 import { ChevronLeft, ChevronRight, Search } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getCurrentSenderProfile } from "@/lib/currentSenderProfile";
 import { z } from "zod";
 import { PageHeader } from "@/components/ui/page-header";
 import { LISTING_STATUS } from "@/constants/status";
@@ -555,6 +556,18 @@ const MessageForm = ({ agentId, agentName, agentEmail, onSuccess }: MessageFormP
     message: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    void getCurrentSenderProfile({ source: "auto" }).then((sender) => {
+      if (!sender) return;
+      setFormData((prev) => ({
+        ...prev,
+        sender_name: sender.name || prev.sender_name,
+        sender_email: sender.email || prev.sender_email,
+        sender_phone: sender.phone || prev.sender_phone,
+      }));
+    });
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
