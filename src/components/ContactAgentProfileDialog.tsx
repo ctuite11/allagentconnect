@@ -198,7 +198,7 @@ const ContactAgentProfileDialog = ({
               id="subject"
               value={formData.subject}
               onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-              placeholder="How can they help?"
+              
               maxLength={200}
             />
             {errors.subject && <p className="text-sm text-destructive">{errors.subject}</p>}
@@ -210,7 +210,7 @@ const ContactAgentProfileDialog = ({
               id="message"
               value={formData.message}
               onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-              placeholder="Tell them about the home search or move you have in mind"
+              
               rows={5}
               maxLength={1000}
             />
