@@ -78,7 +78,8 @@ export function MarketActivityRow() {
   const selectedListingIds = Array.from(selectedIds);
   const selectedCount = selectedListingIds.length;
 
-  const parseListing = useCallback((row: any, companyMap: Record<string, string>): MarketListingRow => {
+  const parseListing = useCallback((row: any, agentMeta: Record<string, AgentListingMeta>): MarketListingRow => {
+    const meta = agentMeta[row.agent_id];
     return {
       id: row.id,
       address: row.address,
@@ -100,7 +101,9 @@ export function MarketActivityRow() {
       active_date: typeof row.active_date === "string" ? row.active_date : null,
       listing_number: typeof row.listing_number === "string" ? row.listing_number : null,
       agent_id: row.agent_id,
-      brokerage: companyMap[row.agent_id] || "AAC Agent",
+      brokerage: meta?.company || "AAC Agent",
+      agent_email: meta?.email || undefined,
+      listing_agent_name: meta?.name || undefined,
       neighborhood: typeof row.neighborhood === "string" ? row.neighborhood : null,
       unit_number:
         row.unit_number != null && String(row.unit_number).trim() !== ""
