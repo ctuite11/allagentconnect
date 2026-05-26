@@ -778,6 +778,9 @@ setHeaderBackgroundType(profile.header_background_type || "color");
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                   />
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Used as the From / Reply-To and recipient for all app emails (listing inquiries, messages, alerts). Your sign-in email stays the same.
+                  </p>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
