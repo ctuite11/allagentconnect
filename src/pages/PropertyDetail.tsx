@@ -708,10 +708,10 @@ const PropertyDetail = () => {
 
         {/* ========== HERO SECTION: TWO-COLUMN GRID ========== */}
         <div className="mx-auto max-w-6xl px-4">
-          <div className="flex flex-col lg:flex-row gap-6 items-start">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-stretch">
             
-            {/* LEFT COLUMN - Media + scrollable detail (~68%) */}
-            <div className="min-w-0 lg:w-[68%]">
+            {/* LEFT COLUMN - Media + scrollable detail */}
+            <div className="min-w-0 flex-1">
               <div className="relative pb-6">
                 <div className="relative h-[380px] overflow-hidden rounded-xl border border-neutral-200 shadow-[0_4px_24px_rgba(0,0,0,0.07)] sm:h-[480px] sm:rounded-2xl lg:h-[560px]">
                   <div className="absolute inset-0 bg-neutral-950">
@@ -1452,8 +1452,9 @@ const PropertyDetail = () => {
 
             </div>
 
-            {/* RIGHT COLUMN - Sticky sidebar (agent CTAs + listing agent card) */}
-            <div className="w-full space-y-3 lg:sticky lg:top-24 lg:z-10 lg:max-h-[calc(100vh-6rem)] lg:w-[32%] lg:self-start lg:overflow-y-auto">
+            {/* RIGHT COLUMN - full-height rail; sticky on inner wrapper only */}
+            <div className="w-full lg:w-[360px] lg:shrink-0">
+              <div className="space-y-3 lg:sticky lg:top-24">
               {!isAgentView && (
                 <Card className="rounded-xl border border-neutral-200 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
                   <CardContent className="space-y-2.5 p-4">
@@ -1721,6 +1722,7 @@ const PropertyDetail = () => {
                   </CardContent>
                 </Card>
               )}
+              </div>
             </div>
           </div>
         </div>
