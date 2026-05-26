@@ -48,13 +48,14 @@ async function fetchListingEnrichmentForFavorites(
     id: string;
     first_name: string;
     last_name: string;
+    email: string | null;
     company: string | null;
     office_name: string | null;
   }[] = [];
   if (agentIds.length > 0) {
     const { data: ap } = await supabase
       .from("agent_profiles")
-      .select("id, first_name, last_name, company, office_name")
+      .select("id, first_name, last_name, email, company, office_name")
       .in("id", agentIds);
     agents = (ap ?? []) as typeof agents;
   }
@@ -79,6 +80,9 @@ async function fetchListingEnrichmentForFavorites(
     price_range_max?: number | null;
   }[]) {
     const ap = row.agent_id ? byAgent.get(row.agent_id) : undefined;
+    const agentName = ap
+      ? `${ap.first_name ?? ""} ${ap.last_name ?? ""}`.trim()
+      : "";
     const agent_profile: ListedByAgentProfile | undefined = ap
       ? {
           company: ap.company,
@@ -95,6 +99,12 @@ async function fetchListingEnrichmentForFavorites(
       created_at: row.created_at,
       status: typeof row.status === "string" ? row.status : undefined,
       agent_id: row.agent_id ?? "",
+      agent_email: typeof ap?.email === "string" ? ap.email.trim() || undefined : undefined,
+      listing_agent_name: agentName || undefined,
+      brokerage_name:
+        (typeof ap?.company === "string" && ap.company.trim()) ||
+        (typeof ap?.office_name === "string" && ap.office_name.trim()) ||
+        undefined,
       agent_profile,
       latitude: row.latitude ?? null,
       longitude: row.longitude ?? null,

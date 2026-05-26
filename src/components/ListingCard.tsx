@@ -107,6 +107,7 @@ interface ListingCardProps {
     /** MLS / feed listing agent or office (search results) */
     listing_agent_name?: string | null;
     agent_name?: string | null;
+    agent_email?: string | null;
     brokerage_name?: string | null;
     listing_brokerage?: string | null;
     list_office?: string | null;
@@ -1032,14 +1033,7 @@ const ListingCard = ({
             ) : null}
           </div>
 
-          {!showUnifiedAttributionFooter && (compactAgentOwned ? false : isFavorites) && listedByAttribution ? (
-            <p
-              className="mt-1 truncate text-[11px] font-normal leading-snug text-neutral-500"
-              title={listedByAttribution}
-            >
-              {listedByAttribution}
-            </p>
-          ) : !showUnifiedAttributionFooter && !isFavorites && listedByAttribution ? (
+          {!showUnifiedAttributionFooter && listedByAttribution ? (
             <p
               className="mt-1 truncate text-[11px] font-normal leading-snug text-neutral-500"
               title={listedByAttribution}

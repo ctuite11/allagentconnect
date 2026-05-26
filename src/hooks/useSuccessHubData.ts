@@ -9,6 +9,7 @@ export interface SuccessHubSummary {
   profile: {
     first_name: string;
     last_name: string;
+    email: string | null;
     headshot_url: string | null;
     company: string | null;
     title: string | null;
@@ -224,7 +225,7 @@ export function useSuccessHubData(): UseSuccessHubDataResult {
         // Agent profile
         supabase
           .from("agent_profiles")
-          .select("first_name,last_name,headshot_url,company,title")
+          .select("first_name,last_name,email,headshot_url,company,title")
           .eq("id", agentId)
           .maybeSingle(),
 
@@ -347,6 +348,10 @@ export function useSuccessHubData(): UseSuccessHubDataResult {
         ? {
             first_name: (profileData as any).first_name ?? "",
             last_name: (profileData as any).last_name ?? "",
+            email:
+              typeof (profileData as any).email === "string"
+                ? (profileData as any).email.trim() || null
+                : null,
             headshot_url: (profileData as any).headshot_url ?? null,
             company: (profileData as any).company ?? null,
             title: (profileData as any).title ?? null,

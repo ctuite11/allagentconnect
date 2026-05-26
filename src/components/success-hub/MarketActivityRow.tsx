@@ -37,7 +37,15 @@ interface MarketListingRow {
   neighborhood: string | null;
   unit_number: string | null;
   condo_details: unknown;
+  agent_email?: string;
+  listing_agent_name?: string;
 }
+
+type AgentListingMeta = {
+  company: string;
+  name: string;
+  email: string;
+};
 
 /** Pool size from Supabase before visibility filter. */
 const FETCH_LISTING_LIMIT = 42;
@@ -126,20 +134,25 @@ export function MarketActivityRow() {
     }
 
     const agentIds = [...new Set(data.map((r: any) => r.agent_id))];
-    const companyMap: Record<string, string> = {};
+    const agentMeta: Record<string, AgentListingMeta> = {};
     if (agentIds.length > 0) {
       const { data: profiles } = await supabase
         .from("agent_profiles")
-        .select("id, company")
+        .select("id, company, first_name, last_name, email")
         .in("id", agentIds);
       if (profiles) {
         for (const p of profiles) {
-          if (p.company) companyMap[p.id] = p.company;
+          const name = `${p.first_name ?? ""} ${p.last_name ?? ""}`.trim();
+          agentMeta[p.id] = {
+            company: (typeof p.company === "string" && p.company.trim()) || "AAC Agent",
+            name: name || "Listing agent",
+            email: typeof p.email === "string" ? p.email.trim() : "",
+          };
         }
       }
     }
 
-    const parsed = data.map((row: any) => parseListing(row, companyMap));
+    const parsed = data.map((row: any) => parseListing(row, agentMeta));
     const visible = filterVisibleListings(parsed, userId);
     setPoolListings(visible);
     setLoading(false);
@@ -183,15 +196,23 @@ export function MarketActivityRow() {
 
       if (!data) return;
 
-      const companyMap: Record<string, string> = {};
+      const agentMeta: Record<string, AgentListingMeta> = {};
       const { data: profile } = await supabase
         .from("agent_profiles")
-        .select("id, company")
+        .select("id, company, first_name, last_name, email")
         .eq("id", data.agent_id)
         .maybeSingle();
-      if (profile?.company) companyMap[profile.id] = profile.company;
+      if (profile) {
+        const name = `${profile.first_name ?? ""} ${profile.last_name ?? ""}`.trim();
+        agentMeta[profile.id] = {
+          company:
+            (typeof profile.company === "string" && profile.company.trim()) || "AAC Agent",
+          name: name || "Listing agent",
+          email: typeof profile.email === "string" ? profile.email.trim() : "",
+        };
+      }
 
-      const parsed = parseListing(data, companyMap);
+      const parsed = parseListing(data, agentMeta);
       const visible = filterVisibleListings([parsed], currentUserId);
 
       setPoolListings((prev) => {

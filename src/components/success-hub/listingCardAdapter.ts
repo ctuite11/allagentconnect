@@ -2,8 +2,24 @@ import type { ComponentProps } from "react";
 import ListingCard from "@/components/ListingCard";
 import type { SuccessHubSummary } from "@/hooks/useSuccessHubData";
 import { LISTING_STATUS } from "@/constants/status";
+import {
+  listingAgentContactFromRow,
+  listingEmailSubjectFromRow,
+  type ListingAgentContact,
+} from "@/lib/listingAgentContact";
 
 export type ListingCardModel = ComponentProps<typeof ListingCard>["listing"];
+
+/** Agent contact + email subject for Success Hub `ListingCard` tiles (explicit, not inferred in-card). */
+export function successHubListingAttributionProps(listing: ListingCardModel): {
+  listingAgentContact: ListingAgentContact | null;
+  listingEmailSubject: string | undefined;
+} {
+  return {
+    listingAgentContact: listingAgentContactFromRow(listing),
+    listingEmailSubject: listingEmailSubjectFromRow(listing),
+  };
+}
 
 /** Row shape from RPC `get_client_favorites_for_agent` (joined listing fields). */
 export type AgentClientFavoriteRpcRow = {
@@ -76,8 +92,14 @@ export function mapMarketRowToListingCard(row: {
   condo_details?: unknown;
   /** Display brokerage once via listing attribution (avoid duplicate agentInfo + Listed by). */
   brokerage?: string;
+  agent_email?: string | null;
+  listing_agent_name?: string | null;
+  agent_name?: string | null;
 }): ListingCardModel {
   const broker = row.brokerage?.trim();
+  const agentEmail = row.agent_email?.trim();
+  const agentName =
+    row.listing_agent_name?.trim() || row.agent_name?.trim() || undefined;
   return {
     id: row.id,
     address: row.address ?? "",
@@ -105,6 +127,8 @@ export function mapMarketRowToListingCard(row: {
         : undefined,
     condo_details: row.condo_details ?? undefined,
     brokerage_name: broker || undefined,
+    agent_email: agentEmail || undefined,
+    listing_agent_name: agentName,
     listing_stats: {
       view_count: 0,
       save_count: 0,
@@ -146,7 +170,8 @@ export function mapSummaryListingToListingCard(
     active_date: typeof l.active_date === "string" ? l.active_date : undefined,
     created_at: typeof l.created_at === "string" ? l.created_at : undefined,
     brokerage_name: company || undefined,
-    listing_agent_name: !company && fullName ? fullName : undefined,
+    agent_email: listedByProfile?.email?.trim() || undefined,
+    listing_agent_name: fullName || undefined,
     listing_stats: {
       view_count: l.view_count,
       save_count: 0,

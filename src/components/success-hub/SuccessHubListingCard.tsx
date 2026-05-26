@@ -1,5 +1,6 @@
 import type { ComponentProps } from "react";
 import ListingCard from "@/components/ListingCard";
+import { successHubListingAttributionProps } from "@/components/success-hub/listingCardAdapter";
 import { cn } from "@/lib/utils";
 
 export type SuccessHubListingCardProps = Omit<
@@ -13,24 +14,34 @@ export type SuccessHubListingCardProps = Omit<
 
 /**
  * Success Hub listing tile — standard `ListingCard` compact only.
- * No typography/icon overrides (those caused cross-surface regressions).
- * Pass `compactAgentOwned` for agent-owned grids (Success Hub «My listings»): no favorites overlay, single photo, no promo banners — same compact shell as market/search.
+ * Agent-only surfaces: always shows brokerage + listing-agent email strip when data exists.
+ * Pass `compactAgentOwned` for Success Hub «My listings» (no favorites chrome on photo).
  */
 export function SuccessHubListingCard({
   hideMlsMeta,
   className,
   compactClickTo,
+  listing,
+  showAgentEmailContact = true,
+  listingAgentContact: listingAgentContactProp,
+  listingEmailSubject: listingEmailSubjectProp,
   ...rest
 }: SuccessHubListingCardProps) {
+  const resolvedAttribution = successHubListingAttributionProps(listing);
+
   return (
     <div className={cn("min-w-0 max-w-full", compactClickTo && "cursor-pointer", className)}>
       <ListingCard
         {...rest}
+        listing={listing}
         viewMode="compact"
         showActions={false}
         hideMlsMeta={hideMlsMeta ?? false}
         isFavorites
         compactListingDetailTo={compactClickTo}
+        showAgentEmailContact={showAgentEmailContact}
+        listingAgentContact={listingAgentContactProp ?? resolvedAttribution.listingAgentContact}
+        listingEmailSubject={listingEmailSubjectProp ?? resolvedAttribution.listingEmailSubject}
       />
     </div>
   );
