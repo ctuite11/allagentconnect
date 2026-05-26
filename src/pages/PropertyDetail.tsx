@@ -251,6 +251,7 @@ const PropertyDetail = () => {
 
   // Role detection + URL-based client mode
   const { user, role, loading: roleLoading } = useAuthRole();
+  const { layoutRef, railStyle } = usePropertyDetailRailPosition();
   const isAgent = role === "agent";
   const isAdmin = role === "admin";
   const isBuyer = role === "buyer";
@@ -645,7 +646,6 @@ const PropertyDetail = () => {
   const detailTitle =
     "flex items-center gap-2 text-base font-semibold tracking-tight text-neutral-900";
   const detailTitleIcon = "h-5 w-5 shrink-0 text-neutral-600";
-  const { layoutRef, railStyle } = usePropertyDetailRailPosition();
 
   return (
     <div className="min-h-screen overflow-visible bg-white pt-0">
