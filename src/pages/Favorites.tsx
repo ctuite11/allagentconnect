@@ -691,8 +691,7 @@ const Favorites = ({
   const shareVisibleSelected = useCallback(() => {
     if (favoritesForShare.length === 0) return;
     if (favoritesForShare.length === 1) {
-      const row = normalizeEmbeddedListing(favoritesForShare[0]);
-      const listing = row?.listing;
+      const listing = normalizeEmbeddedListing(favoritesForShare[0]);
       setShareSubject(
         listing ? buildNewListingSharedEmailSubject(listing) : "New listing shared",
       );
