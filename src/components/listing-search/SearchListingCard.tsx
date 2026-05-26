@@ -199,6 +199,7 @@ export const SearchListingCard = ({
       : null;
 
   const fullAddress = buildDisplayAddress(listing);
+  const emailSubjectLocation = formatListingEmailSubjectLocation(listing);
   const listedByLine = resolveListedByAttribution(listing);
   const brokerageAttribution = resolveBrokerageAttribution(listing);
   const showUnifiedAttributionFooter = Boolean(
