@@ -29,15 +29,7 @@ export function listingAgentContactFromRow(row: unknown): ListingAgentContact | 
   return { agentId, agentEmail, agentName };
 }
 
-export function listingEmailSubjectFromRow(row: unknown): string | undefined {
-  if (!row || typeof row !== "object") return undefined;
-  const r = row as Record<string, unknown>;
-  const address = typeof r.address === "string" ? r.address.trim() : "";
-  const city = typeof r.city === "string" ? r.city.trim() : "";
-  const state = typeof r.state === "string" ? r.state.trim() : "";
-  const line = [address, city, state].filter(Boolean).join(", ");
-  return line ? `Listing: ${line}` : undefined;
-}
+export { listingEmailSubjectFromRow } from "@/lib/listingEmailSubject";
 
 export function agentSplitListingAgentContact(listing: AgentSplitListing): ListingAgentContact | null {
   return listingAgentContactFromRow(listing);

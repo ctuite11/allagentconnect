@@ -33,6 +33,7 @@ import { resolveBrokerageAttribution, resolveListedByAttribution } from "@/lib/l
 import { ListingCardAttributionStrip } from "@/components/listing/ListingCardAttributionStrip";
 import { ListingCardPropertyTypeLine } from "@/components/listing/ListingCardPropertyTypeLine";
 import { formatListingIdLabel, LISTING_ID_NAV_CLASS, LISTING_ID_NAV_CLASS_SEARCH_SURFACE } from "@/lib/listingIdDisplay";
+import { formatListingEmailSubjectLocation } from "@/lib/listingEmailSubject";
 import { buildDisplayAddress, cn } from "@/lib/utils";
 import { ListingCardAddressLine } from "@/components/listing/ListingCardAddressLine";
 import {
@@ -647,7 +648,7 @@ export const SearchListingCard = ({
         <ContactAgentDialog
           listingId={listing.id}
           agentId={listing.agent_id}
-          listingAddress={fullAddress}
+          listingAddress={emailSubjectLocation || fullAddress}
           open={contactOpen}
           onOpenChange={setContactOpen}
           hideTrigger

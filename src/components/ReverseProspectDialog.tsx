@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { propertyTypeToEnum } from "@/lib/utils";
 import { Loader2, MapPin, DollarSign, Home, Users, User } from "lucide-react";
 import { useSenderProfilePrefill } from "@/lib/currentSenderProfile";
+import { formatListingEmailSubjectLocation } from "@/lib/listingEmailSubject";
 
 interface ReverseProspectDialogProps {
   open: boolean;
@@ -250,7 +251,7 @@ export function ReverseProspectDialog({
           agentEmail,
           agentPhone: agentPhone || null,
           message,
-          listingAddress: `${listing.address}, ${listing.city}, ${listing.state}`,
+          listingAddress: formatListingEmailSubjectLocation(listing),
           listingPrice: `$${listing.price.toLocaleString()}`,
           filters: {
             state: listing.state,

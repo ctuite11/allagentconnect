@@ -45,6 +45,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
+import { formatListingEmailSubjectLocation } from "@/lib/listingEmailSubject";
 import { buildDisplayAddress } from "@/lib/utils";
 import { useListingView } from "@/hooks/useListingView";
 import { PropertyMetaTags } from "@/components/PropertyMetaTags";
@@ -781,7 +782,7 @@ const ConsumerPropertyDetail = () => {
                         agentDisplayName={
                           `${stickyAgentProfile.first_name} ${stickyAgentProfile.last_name}`.trim()
                         }
-                        defaultSubject={`Question about ${listing.address}, ${listing.city}`}
+                        defaultSubject={`Question about ${formatListingEmailSubjectLocation(listing) || listing.address}`}
                       />
                     </div>
                   </CardContent>
@@ -882,7 +883,7 @@ const ConsumerPropertyDetail = () => {
 
               <ScheduleShowingDialog
                 listingId={listing.id}
-                listingAddress={`${listing.address}, ${listing.city}, ${listing.state}`}
+                listingAddress={formatListingEmailSubjectLocation(listing) || `${listing.address}, ${listing.city}, ${listing.state}`}
               />
 
               {buyerCompensationCard}

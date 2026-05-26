@@ -1,6 +1,9 @@
 import { getPrimaryPhotoUrl } from "@/components/buyer/buyerListingDisplay";
 import { getListingPublicUrl, getPublicOrigin } from "@/lib/getPublicUrl";
+import { buildPersonalListingShareEmailSubject } from "@/lib/listingEmailSubject";
 import { listingCardStreetHeading, type ListingAddressUnitSource } from "@/lib/utils";
+
+export { buildPersonalListingShareEmailSubject } from "@/lib/listingEmailSubject";
 
 export type ListingShareEmailListing = {
   id: string;
@@ -104,16 +107,6 @@ function buildListingShareEmailCard(listing: ListingShareEmailListing): string {
   ].join("");
 }
 
-export function buildPersonalListingShareEmailSubject(
-  agentFirstName: string,
-  listingCount: number,
-): string {
-  const name = agentFirstName.trim() || "Your agent";
-  return listingCount === 1
-    ? `${name} shared a listing with you`
-    : `${name} shared listings with you`;
-}
-
 function buildPersonalMessageBlock(userMessage: string): string {
   const trimmed = userMessage.trim();
   if (!trimmed) return "";
@@ -134,7 +127,11 @@ export function buildHotSheetShareEmailHtml(params: {
 }): string {
   const { userMessage, listings, agentFirstName } = params;
   const listingCount = listings.length;
-  const introHeadline = buildPersonalListingShareEmailSubject(agentFirstName, listingCount);
+  const introHeadline = buildPersonalListingShareEmailSubject(
+    agentFirstName,
+    listingCount,
+    listingCount === 1 ? listings[0] : null,
+  );
   const safeIntroHeadline = escapeHtml(introHeadline);
 
   const listingCardsHtml = listings.map(buildListingShareEmailCard).join("");

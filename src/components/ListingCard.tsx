@@ -35,6 +35,7 @@ import {
   listingEmailSubjectFromRow,
   type ListingAgentContact,
 } from "@/lib/listingAgentContact";
+import { formatListingEmailSubjectLocation } from "@/lib/listingEmailSubject";
 import { formatListingIdLabel, LISTING_ID_NAV_CLASS } from "@/lib/listingIdDisplay";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { LISTING_STATUS, isComingSoon, isActive } from "@/constants/status";
@@ -1652,7 +1653,7 @@ const ListingCard = ({
             <ContactAgentDialog
               listingId={listing.id}
               agentId={agentProfile.id}
-              listingAddress={`${listing.address}, ${listing.city}, ${listing.state}`}
+              listingAddress={formatListingEmailSubjectLocation(listing)}
               buttonSize="sm"
               buttonVariant="default"
             />

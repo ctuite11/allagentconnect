@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
+import { buildPropertySharedEmailSubject } from "../_shared/listingEmailSubject.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -67,7 +68,15 @@ const handler = async (req: Request): Promise<Response> => {
           template: 'listing-share',
           category: 'listing_shares',
           to: recipientEmail,
-          subject: `Property Shared: ${listing.address}`,
+          subject: buildPropertySharedEmailSubject({
+            address: listing.address,
+            city: listing.city,
+            state: listing.state,
+            zip_code: listing.zip_code,
+            unit_number: listing.unit_number,
+            condo_details: listing.condo_details,
+            property_type: listing.property_type,
+          }),
           reply_to: agentEmail,
           variables: {
             recipientName,

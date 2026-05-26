@@ -207,7 +207,11 @@ export function PersonalHotSheetShareEmailDialog({
 
       await invokeEdgeFunction("send-bulk-email", {
         recipients: allRecipients,
-        subject: buildPersonalListingShareEmailSubject(agentFirstName || agentName, selectedCount),
+        subject: buildPersonalListingShareEmailSubject(
+          agentFirstName || agentName,
+          selectedCount,
+          selectedCount === 1 ? listingsForEmail[0] : null,
+        ),
         message: composedMessageHtml,
         agentId: user.id,
         agentEmail: agentEmail.trim(),

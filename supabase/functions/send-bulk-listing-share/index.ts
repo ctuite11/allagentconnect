@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { buildBulkListingShareEmailSubject } from "../_shared/listingEmailSubject.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -139,7 +140,18 @@ const handler = async (req: Request): Promise<Response> => {
           template: "bulk-listing-share",
           category: "listing_shares",
           to: recipientEmail,
-          subject: `${agentName} shared ${listings.length} property listing${listings.length > 1 ? 's' : ''} with you`,
+          subject: buildBulkListingShareEmailSubject(
+            agentName,
+            listings.map((l: { address: string; city: string; state: string; zip_code: string; unit_number?: string; condo_details?: unknown; property_type?: string }) => ({
+              address: l.address,
+              city: l.city,
+              state: l.state,
+              zip_code: l.zip_code,
+              unit_number: l.unit_number,
+              condo_details: l.condo_details,
+              property_type: l.property_type,
+            })),
+          ),
           reply_to: agentEmail,
           variables: {
             recipientName,

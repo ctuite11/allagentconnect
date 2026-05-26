@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import PropertyMap from "@/components/PropertyMap";
 import { formatListingShareEmailStreetLine } from "@/lib/buildHotSheetShareEmailHtml";
+import { buildNewListingSharedEmailSubject } from "@/lib/listingEmailSubject";
 import {
   type ListingRecord,
   type AgentOfficeRecord,
@@ -689,7 +690,15 @@ const Favorites = ({
 
   const shareVisibleSelected = useCallback(() => {
     if (favoritesForShare.length === 0) return;
-    setShareSubject(`Share selected listings (${favoritesForShare.length})`);
+    if (favoritesForShare.length === 1) {
+      const row = normalizeEmbeddedListing(favoritesForShare[0]);
+      const listing = row?.listing;
+      setShareSubject(
+        listing ? buildNewListingSharedEmailSubject(listing) : "New listing shared",
+      );
+    } else {
+      setShareSubject(`Share selected listings (${favoritesForShare.length})`);
+    }
     setShareMessage("Here are some listings I wanted to share:");
     setShareModalOpen(true);
   }, [favoritesForShare]);

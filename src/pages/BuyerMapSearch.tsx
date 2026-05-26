@@ -7,6 +7,7 @@ import { SearchCriteria } from "@/components/search/UnifiedPropertySearch";
 import PropertyMap from "@/components/PropertyMap";
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
 import { formatListingShareEmailStreetLine } from "@/lib/buildHotSheetShareEmailHtml";
+import { buildNewListingSharedEmailSubject } from "@/lib/listingEmailSubject";
 import { isDcmlsHost } from "@/lib/host";
 import {
   RENT_PRICE_ABS_MAX,
@@ -266,7 +267,11 @@ export default function BuyerMapSearch() {
 
   const shareVisibleSelected = useCallback(() => {
     if (selectedVisibleListings.length === 0) return;
-    setShareSubject(`Share selected listings (${selectedVisibleListings.length})`);
+    if (selectedVisibleListings.length === 1) {
+      setShareSubject(buildNewListingSharedEmailSubject(selectedVisibleListings[0]!));
+    } else {
+      setShareSubject(`Share selected listings (${selectedVisibleListings.length})`);
+    }
     setShareMessage("Here are some listings I wanted to share:");
     setShareModalOpen(true);
   }, [selectedVisibleListings]);

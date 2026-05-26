@@ -24,6 +24,7 @@ import SocialShareMenu from "@/components/SocialShareMenu";
 import { Seo } from "@/components/Seo";
 import { EmailShareModal } from "@/components/EmailShareModal";
 import { getListingPublicUrl, getListingShareUrl } from "@/lib/getPublicUrl";
+import { formatListingEmailSubjectLocation } from "@/lib/listingEmailSubject";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -1502,7 +1503,11 @@ const MyListings = () => {
         open={!!emailListing}
         onOpenChange={(open) => !open && setEmailListing(null)}
         listingUrl={emailListing ? getListingShareUrl(emailListing.id) : ""}
-        listingAddress={emailListing ? `${emailListing.address}, ${emailListing.city}` : ""}
+        listingAddress={
+          emailListing
+            ? formatListingEmailSubjectLocation(emailListing) || `${emailListing.address}, ${emailListing.city}`
+            : ""
+        }
       />
       </AgentAacPage>
     </>

@@ -10,6 +10,7 @@ import { Clock, Calendar } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { formatListingEmailSubjectLocation } from "@/lib/listingEmailSubject";
 
 const showingRequestSchema = z.object({
   requester_name: z.string().trim().min(1, "Please enter your name").max(100),
@@ -72,7 +73,7 @@ const ScheduleShowingDialog = ({
       // Fetch listing details
       const { data: listingData } = await supabase
         .from("listings")
-        .select("agent_id, address, city, state, photos")
+        .select("agent_id, address, city, state, photos, unit_number, condo_details, property_type")
         .eq("id", listingId)
         .single();
 
@@ -85,7 +86,7 @@ const ScheduleShowingDialog = ({
         .maybeSingle();
 
         if (agentData) {
-          const fullAddress = `${listingData.address}, ${listingData.city}, ${listingData.state}`;
+          const fullAddress = formatListingEmailSubjectLocation(listingData);
           const photoUrl = listingData.photos && Array.isArray(listingData.photos) && listingData.photos.length > 0 
             ? listingData.photos[0] 
             : null;

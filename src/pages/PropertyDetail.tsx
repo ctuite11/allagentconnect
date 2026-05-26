@@ -54,6 +54,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
+import { formatListingEmailSubjectLocation } from "@/lib/listingEmailSubject";
 import { buildDisplayAddress, cn } from "@/lib/utils";
 
 const listingDetailPrimaryCtaClass =
@@ -1029,7 +1030,7 @@ const PropertyDetail = () => {
 
                   <ScheduleShowingDialog
                     listingId={listing.id}
-                    listingAddress={`${listing.address}, ${listing.city}, ${listing.state}`}
+                    listingAddress={formatListingEmailSubjectLocation(listing)}
                     triggerLabel="Request a Showing"
                     triggerVariant="outline"
                     triggerClassName={cn(
@@ -1068,7 +1069,7 @@ const PropertyDetail = () => {
                   <ContactAgentDialog
                     listingId={listing.id}
                     agentId={listing.agent_id}
-                    listingAddress={`${listing.address}, ${listing.city}, ${listing.state}`}
+                    listingAddress={formatListingEmailSubjectLocation(listing)}
                     open={contactDialogOpen}
                     onOpenChange={setContactDialogOpen}
                     hideTrigger
@@ -1146,7 +1147,7 @@ const PropertyDetail = () => {
                     <ContactAgentDialog
                       listingId={listing.id}
                       agentId={listing.agent_id}
-                      listingAddress={`${listing.address}, ${listing.city}, ${listing.state}`}
+                      listingAddress={formatListingEmailSubjectLocation(listing)}
                     />
                     
                     {/* Message about this listing button - agents/admins only */}
