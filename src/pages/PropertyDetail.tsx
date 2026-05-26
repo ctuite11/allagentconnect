@@ -708,10 +708,10 @@ const PropertyDetail = () => {
 
         {/* ========== HERO SECTION: TWO-COLUMN GRID ========== */}
         <div className="mx-auto max-w-6xl px-4">
-          <div className="flex flex-col lg:flex-row gap-6">
+          <div className="flex flex-col lg:flex-row gap-6 items-start">
             
-            {/* LEFT COLUMN - Floating Photo Carousel (~68%) */}
-            <div className="lg:w-[68%]">
+            {/* LEFT COLUMN - Media + scrollable detail (~68%) */}
+            <div className="min-w-0 lg:w-[68%]">
               <div className="relative pb-6">
                 <div className="relative h-[380px] overflow-hidden rounded-xl border border-neutral-200 shadow-[0_4px_24px_rgba(0,0,0,0.07)] sm:h-[480px] sm:rounded-2xl lg:h-[560px]">
                   <div className="absolute inset-0 bg-neutral-950">
@@ -941,296 +941,14 @@ const PropertyDetail = () => {
                 </div>
               </div>
 
-            </div>
-
-
-            {/* RIGHT COLUMN - Hero Sidebar (~32%) - Clean, no internal scrolling */}
-            <div className="lg:w-[32%] space-y-3 lg:sticky lg:top-24 lg:self-start">
-
-              {/* Buyer/guest: Take the next step first */}
-              {!isAgentView && (
-                <Card className="rounded-xl border border-neutral-200 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
-                  <CardContent className="space-y-2.5 p-4">
-                    <h3 className="text-sm font-semibold text-neutral-900">Take the next step</h3>
-
-                    <Button
-                      size="sm"
-                      className={cn(
-                        "h-9 w-full text-[13px] font-medium shadow-none",
-                        listingDetailPrimaryCtaClass,
-                      )}
-                      onClick={() => setContactDialogOpen(true)}
-                    >
-                      Contact Agent
-                    </Button>
-
-                    <ScheduleShowingDialog
-                      listingId={listing.id}
-                      listingAddress={formatListingEmailSubjectLocation(listing)}
-                      triggerLabel="Request a Showing"
-                      triggerVariant="outline"
-                      triggerClassName="h-9 w-full rounded-lg border-neutral-200 text-[13px] font-medium shadow-none hover:bg-neutral-50"
-                    />
-
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-9 w-full rounded-lg border-neutral-200 text-[13px] font-medium shadow-none hover:bg-neutral-50"
-                      onClick={() => setContactDialogOpen(true)}
-                    >
-                      Ask a Question
-                    </Button>
-
-                    <FavoriteButton
-                      listingId={listing.id}
-                      size="sm"
-                      variant="outline"
-                      className="h-9 w-full rounded-lg border-neutral-200 text-[13px] font-medium shadow-none hover:bg-neutral-50"
-                      labels={{
-                        signIn: "Sign In to Save Home",
-                        default: "Save Home",
-                        saved: "Saved Home",
-                      }}
-                    />
-
-                    <ContactAgentDialog
-                      listingId={listing.id}
-                      agentId={listing.agent_id}
-                      listingAddress={formatListingEmailSubjectLocation(listing)}
-                      open={contactDialogOpen}
-                      onOpenChange={setContactDialogOpen}
-                      hideTrigger
-                    />
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Listing Agent Card — first for agent/admin; after CTAs for buyers */}
-              {agentProfile && (
-                <Card className="rounded-xl border border-neutral-200 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
-                  <CardContent className="space-y-4 p-4">
-                    <div className="flex items-center gap-4">
-                      <AgentAvatar
-                        name={`${agentProfile.first_name} ${agentProfile.last_name}`}
-                        headshotUrl={agentProfile.headshot_url ?? null}
-                        userId={agentProfile.id}
-                        size="xl"
-                        avatarClassName="h-16 w-16 border border-neutral-200"
-                        fallbackClassName="bg-neutral-800 text-white"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[11px] font-medium uppercase tracking-wide text-neutral-500">Listing Agent</p>
-                        <p className="text-lg font-bold leading-tight text-neutral-900">
-                          {agentProfile.first_name} {agentProfile.last_name}
-                        </p>
-                        <p className="text-sm text-neutral-600">
-                          {agentProfile.title || 'Realtor'} · {agentProfile.company || "Brokerage"}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2.5 text-sm">
-                      {agentProfile.cell_phone && (
-                        <a
-                          href={`tel:${agentProfile.cell_phone}`}
-                          className="flex items-center gap-2.5 transition-colors hover:text-neutral-900"
-                        >
-                          <Phone className="h-4 w-4 shrink-0 text-neutral-500" />
-                          <span className="font-medium">{formatPhoneNumber(agentProfile.cell_phone)}</span>
-                          <span className="ml-auto text-xs text-neutral-500">Mobile</span>
-                        </a>
-                      )}
-                      {agentProfile.phone && agentProfile.phone !== agentProfile.cell_phone && (
-                        <a
-                          href={`tel:${agentProfile.phone}`}
-                          className="flex items-center gap-2.5 transition-colors hover:text-neutral-900"
-                        >
-                          <Building2 className="h-4 w-4 shrink-0 text-neutral-500" />
-                          <span className="font-medium">{formatPhoneNumber(agentProfile.phone)}</span>
-                          <span className="ml-auto text-xs text-neutral-500">Office</span>
-                        </a>
-                      )}
-                      {agentProfile.email && (
-                        isAgentView ? (
-                          <button
-                            type="button"
-                            onClick={() => setContactDialogOpen(true)}
-                            className="flex w-full items-center gap-2.5 text-left transition-colors hover:text-neutral-900"
-                          >
-                            <Mail className="h-4 w-4 shrink-0 text-[#0E56F5]" />
-                            <span className="font-medium truncate">{agentProfile.email}</span>
-                          </button>
-                        ) : (
-                          <a
-                            href={`mailto:${agentProfile.email}`}
-                            className="flex items-center gap-2.5 transition-colors hover:text-neutral-900"
-                          >
-                            <Mail className="h-4 w-4 shrink-0 text-neutral-500" />
-                            <span className="font-medium truncate">{agentProfile.email}</span>
-                          </a>
-                        )
-                      )}
-                      {agentProfile.social_links?.website && (
-                        <a
-                          href={agentProfile.social_links.website}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-2.5 text-neutral-700 underline-offset-2 hover:text-neutral-900 hover:underline"
-                        >
-                          <Globe className="h-4 w-4 shrink-0 text-neutral-500" />
-                          <span className="font-medium">Website</span>
-                        </a>
-                      )}
-                    </div>
-
-                    {!isAgentView && (
-                      <ContactAgentDialog
-                        listingId={listing.id}
-                        agentId={listing.agent_id}
-                        listingAddress={formatListingEmailSubjectLocation(listing)}
-                      />
-                    )}
-                    
-                    {/* Message about this listing — agents/admins viewing another agent's listing */}
-                    {canMessageListingAgent && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className={cn(
-                          "h-9 w-full gap-2 rounded-lg text-[13px] font-medium shadow-none disabled:pointer-events-none disabled:opacity-60",
-                          listingDetailOutlineCtaClass,
-                        )}
-                        onClick={handleMessageListingAgent}
-                        disabled={isStartingChat}
-                        aria-busy={isStartingChat}
-                      >
-                        <MessageSquare className="h-4 w-4" />
-                        {isStartingChat
-                          ? "Opening…"
-                          : listing?.id
-                            ? "Message about this listing"
-                            : "Message"}
-                      </Button>
-                    )}
-
-                    {isAgentView && (
-                      <ContactAgentDialog
-                        listingId={listing.id}
-                        agentId={listing.agent_id}
-                        listingAddress={formatListingEmailSubjectLocation(listing)}
-                        open={contactDialogOpen}
-                        onOpenChange={setContactDialogOpen}
-                        hideTrigger
-                      />
-                    )}
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Agent/admin: Listing inquiry (under listing agent card) */}
-              {isAgentView && (
-                <Card className="rounded-xl border border-neutral-200 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
-                  <CardContent className="space-y-2.5 p-4">
-                    <h3 className="text-sm font-semibold text-neutral-900">Listing inquiry</h3>
-
-                    <ScheduleShowingDialog
-                      listingId={listing.id}
-                      listingAddress={formatListingEmailSubjectLocation(listing)}
-                      triggerLabel="Request a Showing"
-                      triggerVariant="outline"
-                      triggerClassName={cn(
-                        "h-9 w-full rounded-lg text-[13px] font-medium shadow-none",
-                        listingDetailOutlineCtaClass,
-                      )}
-                    />
-
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className={cn(
-                        "h-9 w-full gap-2 rounded-lg text-[13px] font-medium shadow-none",
-                        listingDetailOutlineCtaClass,
-                      )}
-                      onClick={() => setContactDialogOpen(true)}
-                    >
-                      <HelpCircle className="h-4 w-4" />
-                      Ask a Question
-                    </Button>
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Listing courtesy of */}
-              <Card className="rounded-xl border border-neutral-200 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
-                <CardContent className="p-3">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-neutral-200 bg-white">
-                      <img
-                        src={agentLogo}
-                        alt={`${agentProfile?.company || 'Brokerage'} logo`}
-                        className="h-full w-full object-contain"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = DEFAULT_BROKERAGE_LOGO_URL;
-                        }}
-                      />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-[10px] font-medium uppercase tracking-wide text-neutral-500">Listing courtesy of</p>
-                      <p className="truncate text-sm font-medium text-neutral-900">
-                        {agentProfile?.company || "Brokerage"}
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Agent tools — last in sidebar */}
-              {isAgentView && (
-                <Card className="rounded-xl border border-neutral-200 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
-                  <CardContent className="space-y-1.5 px-3 py-3">
-                    {isListingOwner && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => navigate(`/agent/listings/edit/${id}`, { state: { from: location.pathname + location.search } })}
-                        className={cn(
-                          "h-8 w-full justify-start gap-2 rounded-lg text-[13px] shadow-none",
-                          listingDetailOutlineCtaClass,
-                        )}
-                      >
-                        <Edit2 className="h-3.5 w-3.5" />
-                        Edit Listing
-                      </Button>
-                    )}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        const el = document.getElementById('agent-tools-section');
-                        el?.scrollIntoView({ behavior: 'smooth' });
-                      }}
-                      className={cn(
-                        "h-8 w-full justify-start gap-2 rounded-lg text-[13px] shadow-none",
-                        listingDetailOutlineCtaClass,
-                      )}
-                    >
-                      <Activity className="h-3.5 w-3.5" />
-                      View Agent Tools
-                    </Button>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
-          </div>
-        </div>
-        {/* END HERO GRID */}
-
-
-        {/* ========== MAIN CONTENT BELOW (MINIMAL GAP) ========== */}
-        <div className="mx-auto max-w-6xl px-4 pt-2 pb-8">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            {/* LEFT COLUMN - Main Content */}
-            <div className="lg:col-span-2 space-y-4">
+              {/* ========== MAIN CONTENT BELOW HERO ========== */}
+              <div className="pt-2 pb-8">
+                <div
+                  className={cn(
+                    isAgentView ? "space-y-4" : "grid grid-cols-1 gap-4 lg:grid-cols-3",
+                  )}
+                >
+                  <div className={cn(isAgentView ? "space-y-4" : "space-y-4 lg:col-span-2")}>
               {/* Overview/Description with Read More */}
               {listing.description && (() => {
                 const MAX_CHARS = 650;
@@ -1475,12 +1193,12 @@ const PropertyDetail = () => {
                 </Card>
               )}
 
-            </div>
+                  </div>
 
-            {/* RIGHT COLUMN - Consumer-facing content (not in hero sidebar) */}
-            <div className="space-y-6">
+                  {!isAgentView && (
+                    <div className="space-y-6">
               {/* Buyer Agent Compensation - Client View Only (single line with info popup) */}
-              {!isAgentView && compensationDisplay && (
+              {compensationDisplay && (
                 <Card className="rounded-xl border border-emerald-200/90 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
                   <CardContent className="px-4 py-3">
                     <div className="flex flex-wrap items-center gap-2">
@@ -1525,24 +1243,20 @@ const PropertyDetail = () => {
                 </Card>
               )}
 
-              {/* Buyer Agent Showcase - Client View Only */}
-              {!isAgentView && (
-                <BuyerAgentShowcase 
-                  listingZip={listing.zip_code} 
-                  listingId={listing.id} 
-                />
-              )}
+              <BuyerAgentShowcase 
+                listingZip={listing.zip_code} 
+                listingId={listing.id} 
+              />
 
               {/* ATTRIBUTION MASKING: No "Contact listing agent" fallback.
                   Buyers redirect to /consumer-property/:id; non-agents early-return above. */}
-            </div>
-          </div>
-        </div>
+                    </div>
+                  )}
+                </div>
+              </div>
 
-        {/* ========== AGENT TOOLS SECTION (Agent-Only, NOT sticky) - 50/50 layout ========== */}
-        {isAgentView && (
-          <div id="agent-tools-section" className="mx-auto max-w-6xl px-4 pb-8">
-            <div className="border-t pt-6 mt-4">
+              {isAgentView && (
+                <div id="agent-tools-section" className="border-t pt-6 mt-4 pb-8">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="flex items-center gap-2 text-lg font-semibold text-neutral-900">
                   <Activity className="h-5 w-5 text-neutral-500" />
@@ -1733,9 +1447,283 @@ const PropertyDetail = () => {
                 </Card>
               </div>
 
+                </div>
+              )}
+
+            </div>
+
+            {/* RIGHT COLUMN - Sticky sidebar (agent CTAs + listing agent card) */}
+            <div className="w-full space-y-3 lg:sticky lg:top-24 lg:z-10 lg:max-h-[calc(100vh-6rem)] lg:w-[32%] lg:self-start lg:overflow-y-auto">
+              {!isAgentView && (
+                <Card className="rounded-xl border border-neutral-200 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
+                  <CardContent className="space-y-2.5 p-4">
+                    <h3 className="text-sm font-semibold text-neutral-900">Take the next step</h3>
+
+                    <Button
+                      size="sm"
+                      className={cn(
+                        "h-9 w-full text-[13px] font-medium shadow-none",
+                        listingDetailPrimaryCtaClass,
+                      )}
+                      onClick={() => setContactDialogOpen(true)}
+                    >
+                      Contact Agent
+                    </Button>
+
+                    <ScheduleShowingDialog
+                      listingId={listing.id}
+                      listingAddress={formatListingEmailSubjectLocation(listing)}
+                      triggerLabel="Request a Showing"
+                      triggerVariant="outline"
+                      triggerClassName="h-9 w-full rounded-lg border-neutral-200 text-[13px] font-medium shadow-none hover:bg-neutral-50"
+                    />
+
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-9 w-full rounded-lg border-neutral-200 text-[13px] font-medium shadow-none hover:bg-neutral-50"
+                      onClick={() => setContactDialogOpen(true)}
+                    >
+                      Ask a Question
+                    </Button>
+
+                    <FavoriteButton
+                      listingId={listing.id}
+                      size="sm"
+                      variant="outline"
+                      className="h-9 w-full rounded-lg border-neutral-200 text-[13px] font-medium shadow-none hover:bg-neutral-50"
+                      labels={{
+                        signIn: "Sign In to Save Home",
+                        default: "Save Home",
+                        saved: "Saved Home",
+                      }}
+                    />
+
+                    <ContactAgentDialog
+                      listingId={listing.id}
+                      agentId={listing.agent_id}
+                      listingAddress={formatListingEmailSubjectLocation(listing)}
+                      open={contactDialogOpen}
+                      onOpenChange={setContactDialogOpen}
+                      hideTrigger
+                    />
+                  </CardContent>
+                </Card>
+              )}
+
+              {agentProfile && (
+                <Card className="rounded-xl border border-neutral-200 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
+                  <CardContent className="space-y-4 p-4">
+                    <div className="flex items-center gap-4">
+                      <AgentAvatar
+                        name={`${agentProfile.first_name} ${agentProfile.last_name}`}
+                        headshotUrl={agentProfile.headshot_url ?? null}
+                        userId={agentProfile.id}
+                        size="xl"
+                        avatarClassName="h-16 w-16 border border-neutral-200"
+                        fallbackClassName="bg-neutral-800 text-white"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[11px] font-medium uppercase tracking-wide text-neutral-500">Listing Agent</p>
+                        <p className="text-lg font-bold leading-tight text-neutral-900">
+                          {agentProfile.first_name} {agentProfile.last_name}
+                        </p>
+                        <p className="text-sm text-neutral-600">
+                          {agentProfile.title || "Realtor"} · {agentProfile.company || "Brokerage"}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2.5 text-sm">
+                      {agentProfile.cell_phone && (
+                        <a
+                          href={`tel:${agentProfile.cell_phone}`}
+                          className="flex items-center gap-2.5 transition-colors hover:text-neutral-900"
+                        >
+                          <Phone className="h-4 w-4 shrink-0 text-neutral-500" />
+                          <span className="font-medium">{formatPhoneNumber(agentProfile.cell_phone)}</span>
+                          <span className="ml-auto text-xs text-neutral-500">Mobile</span>
+                        </a>
+                      )}
+                      {agentProfile.phone && agentProfile.phone !== agentProfile.cell_phone && (
+                        <a
+                          href={`tel:${agentProfile.phone}`}
+                          className="flex items-center gap-2.5 transition-colors hover:text-neutral-900"
+                        >
+                          <Building2 className="h-4 w-4 shrink-0 text-neutral-500" />
+                          <span className="font-medium">{formatPhoneNumber(agentProfile.phone)}</span>
+                          <span className="ml-auto text-xs text-neutral-500">Office</span>
+                        </a>
+                      )}
+                      {agentProfile.email && (
+                        isAgentView ? (
+                          <button
+                            type="button"
+                            onClick={() => setContactDialogOpen(true)}
+                            className="flex w-full items-center gap-2.5 text-left transition-colors hover:text-neutral-900"
+                          >
+                            <Mail className="h-4 w-4 shrink-0 text-[#0E56F5]" />
+                            <span className="font-medium truncate">{agentProfile.email}</span>
+                          </button>
+                        ) : (
+                          <a
+                            href={`mailto:${agentProfile.email}`}
+                            className="flex items-center gap-2.5 transition-colors hover:text-neutral-900"
+                          >
+                            <Mail className="h-4 w-4 shrink-0 text-neutral-500" />
+                            <span className="font-medium truncate">{agentProfile.email}</span>
+                          </a>
+                        )
+                      )}
+                      {agentProfile.social_links?.website && (
+                        <a
+                          href={agentProfile.social_links.website}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2.5 text-neutral-700 underline-offset-2 hover:text-neutral-900 hover:underline"
+                        >
+                          <Globe className="h-4 w-4 shrink-0 text-neutral-500" />
+                          <span className="font-medium">Website</span>
+                        </a>
+                      )}
+                    </div>
+
+                    {!isAgentView && (
+                      <ContactAgentDialog
+                        listingId={listing.id}
+                        agentId={listing.agent_id}
+                        listingAddress={formatListingEmailSubjectLocation(listing)}
+                      />
+                    )}
+
+                    {canMessageListingAgent && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className={cn(
+                          "h-9 w-full gap-2 rounded-lg text-[13px] font-medium shadow-none disabled:pointer-events-none disabled:opacity-60",
+                          listingDetailOutlineCtaClass,
+                        )}
+                        onClick={handleMessageListingAgent}
+                        disabled={isStartingChat}
+                        aria-busy={isStartingChat}
+                      >
+                        <MessageSquare className="h-4 w-4" />
+                        {isStartingChat
+                          ? "Opening…"
+                          : listing?.id
+                            ? "Message about this listing"
+                            : "Message"}
+                      </Button>
+                    )}
+
+                    {isAgentView && (
+                      <ContactAgentDialog
+                        listingId={listing.id}
+                        agentId={listing.agent_id}
+                        listingAddress={formatListingEmailSubjectLocation(listing)}
+                        open={contactDialogOpen}
+                        onOpenChange={setContactDialogOpen}
+                        hideTrigger
+                      />
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
+              {isAgentView && (
+                <Card className="rounded-xl border border-neutral-200 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
+                  <CardContent className="space-y-2.5 p-4">
+                    <h3 className="text-sm font-semibold text-neutral-900">Listing inquiry</h3>
+
+                    <ScheduleShowingDialog
+                      listingId={listing.id}
+                      listingAddress={formatListingEmailSubjectLocation(listing)}
+                      triggerLabel="Request a Showing"
+                      triggerVariant="outline"
+                      triggerClassName={cn(
+                        "h-9 w-full rounded-lg text-[13px] font-medium shadow-none",
+                        listingDetailOutlineCtaClass,
+                      )}
+                    />
+
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className={cn(
+                        "h-9 w-full gap-2 rounded-lg text-[13px] font-medium shadow-none",
+                        listingDetailOutlineCtaClass,
+                      )}
+                      onClick={() => setContactDialogOpen(true)}
+                    >
+                      <HelpCircle className="h-4 w-4" />
+                      Ask a Question
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
+
+              <Card className="rounded-xl border border-neutral-200 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+                <CardContent className="p-3">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-neutral-200 bg-white">
+                      <img
+                        src={agentLogo}
+                        alt={`${agentProfile?.company || "Brokerage"} logo`}
+                        className="h-full w-full object-contain"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = DEFAULT_BROKERAGE_LOGO_URL;
+                        }}
+                      />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[10px] font-medium uppercase tracking-wide text-neutral-500">Listing courtesy of</p>
+                      <p className="truncate text-sm font-medium text-neutral-900">
+                        {agentProfile?.company || "Brokerage"}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {isAgentView && (
+                <Card className="rounded-xl border border-neutral-200 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
+                  <CardContent className="space-y-1.5 px-3 py-3">
+                    {isListingOwner && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => navigate(`/agent/listings/edit/${id}`, { state: { from: location.pathname + location.search } })}
+                        className={cn(
+                          "h-8 w-full justify-start gap-2 rounded-lg text-[13px] shadow-none",
+                          listingDetailOutlineCtaClass,
+                        )}
+                      >
+                        <Edit2 className="h-3.5 w-3.5" />
+                        Edit Listing
+                      </Button>
+                    )}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const el = document.getElementById("agent-tools-section");
+                        el?.scrollIntoView({ behavior: "smooth" });
+                      }}
+                      className={cn(
+                        "h-8 w-full justify-start gap-2 rounded-lg text-[13px] shadow-none",
+                        listingDetailOutlineCtaClass,
+                      )}
+                    >
+                      <Activity className="h-3.5 w-3.5" />
+                      View Agent Tools
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           </div>
-        )}
+        </div>
       </main>
 
       {/* Photo Gallery Dialog */}
