@@ -693,19 +693,21 @@ const PropertyDetail = () => {
 
         {/* Full-page two-column layout (grid); rail pinned on desktop via usePropertyDetailRailPosition */}
         <div ref={layoutRef} className="mx-auto max-w-6xl overflow-visible px-4">
-          <div className="grid grid-cols-1 gap-6 overflow-visible lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start">
+          <div className="grid grid-cols-1 gap-6 overflow-visible lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-x-6 lg:gap-y-2 lg:items-start">
             
+            {/* Address + price — left column only; sidebar starts on row 2 with photo */}
+            <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 lg:col-start-1 lg:row-start-1">
+              <h1 className="flex min-w-0 items-baseline gap-1.5 text-lg font-semibold tracking-tight text-neutral-900">
+                <MapPin className="relative top-px h-4 w-4 shrink-0 text-neutral-500" />
+                {buildDisplayAddress(listing as any)}
+              </h1>
+              <p className="shrink-0 text-lg font-bold tracking-tight text-neutral-900">
+                ${listing?.price?.toLocaleString() ?? "—"}
+              </p>
+            </div>
+
             {/* Primary column — hero + detail + agent tools */}
-            <div className="min-w-0 overflow-visible">
-              <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 pb-2">
-                <h1 className="flex min-w-0 items-baseline gap-1.5 text-lg font-semibold tracking-tight text-neutral-900">
-                  <MapPin className="relative top-px h-4 w-4 shrink-0 text-neutral-500" />
-                  {buildDisplayAddress(listing as any)}
-                </h1>
-                <p className="shrink-0 text-lg font-bold tracking-tight text-neutral-900">
-                  ${listing?.price?.toLocaleString() ?? "—"}
-                </p>
-              </div>
+            <div className="min-w-0 overflow-visible lg:col-start-1 lg:row-start-2">
               <div className="relative pb-6">
                 <div className="relative h-[380px] overflow-hidden rounded-xl border border-neutral-200 shadow-[0_4px_24px_rgba(0,0,0,0.07)] sm:h-[480px] sm:rounded-2xl lg:h-[560px]">
                   <div className="absolute inset-0 bg-neutral-950">
@@ -1446,8 +1448,8 @@ const PropertyDetail = () => {
 
             </div>
 
-            {/* Right rail — 360px column in flow; inner panel fixed on lg+ while scrolling */}
-            <div className="w-full lg:w-[360px] lg:shrink-0">
+            {/* Right rail — aligns with top of photo (grid row 2) */}
+            <div className="w-full lg:col-start-2 lg:row-start-2 lg:w-[360px] lg:shrink-0 lg:self-start">
               <div className="space-y-3" style={railStyle}>
               {!isAgentView && (
                 <Card className="rounded-xl border border-neutral-200 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
