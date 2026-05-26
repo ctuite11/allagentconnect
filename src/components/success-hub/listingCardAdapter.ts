@@ -21,6 +21,10 @@ export function successHubListingAttributionProps(listing: ListingCardModel): {
   };
 }
 
+function safeTrim(v: unknown): string {
+  return typeof v === "string" ? v.trim() : "";
+}
+
 /** Row shape from RPC `get_client_favorites_for_agent` (joined listing fields). */
 export type AgentClientFavoriteRpcRow = {
   id: string;
@@ -96,10 +100,9 @@ export function mapMarketRowToListingCard(row: {
   listing_agent_name?: string | null;
   agent_name?: string | null;
 }): ListingCardModel {
-  const broker = row.brokerage?.trim();
-  const agentEmail = row.agent_email?.trim();
-  const agentName =
-    row.listing_agent_name?.trim() || row.agent_name?.trim() || undefined;
+  const broker = safeTrim(row.brokerage) || undefined;
+  const agentEmail = safeTrim(row.agent_email) || undefined;
+  const agentName = safeTrim(row.listing_agent_name) || safeTrim(row.agent_name) || undefined;
   return {
     id: row.id,
     address: row.address ?? "",
@@ -126,8 +129,8 @@ export function mapMarketRowToListingCard(row: {
         ? String(row.unit_number).trim()
         : undefined,
     condo_details: row.condo_details ?? undefined,
-    brokerage_name: broker || undefined,
-    agent_email: agentEmail || undefined,
+    brokerage_name: broker,
+    agent_email: agentEmail,
     listing_agent_name: agentName,
     listing_stats: {
       view_count: 0,
@@ -145,12 +148,12 @@ export function mapSummaryListingToListingCard(
   agentId: string | undefined,
   listedByProfile: SuccessHubSummary["profile"] = null,
 ): ListingCardModel {
-  const company = listedByProfile?.company?.trim();
+  const company = safeTrim(listedByProfile?.company) || undefined;
   const fullName = [listedByProfile?.first_name, listedByProfile?.last_name]
-    .map((s) => (typeof s === "string" ? s.trim() : ""))
+    .map((s) => safeTrim(s))
     .filter(Boolean)
     .join(" ")
-    .trim();
+    .trim() || undefined;
   return {
     id: l.id,
     address: l.address,
@@ -169,9 +172,9 @@ export function mapSummaryListingToListingCard(
     listing_number: typeof l.listing_number === "string" ? l.listing_number : undefined,
     active_date: typeof l.active_date === "string" ? l.active_date : undefined,
     created_at: typeof l.created_at === "string" ? l.created_at : undefined,
-    brokerage_name: company || undefined,
-    agent_email: listedByProfile?.email?.trim() || undefined,
-    listing_agent_name: fullName || undefined,
+    brokerage_name: company,
+    agent_email: safeTrim(listedByProfile?.email) || undefined,
+    listing_agent_name: fullName,
     listing_stats: {
       view_count: l.view_count,
       save_count: 0,
