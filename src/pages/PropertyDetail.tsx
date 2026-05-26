@@ -578,10 +578,6 @@ const PropertyDetail = () => {
   };
 
 
-  const handlePreviewClientView = () => {
-    window.open(`${window.location.origin}/property/${listing?.id}?view=client`, '_blank');
-  };
-
   const handlePrint = () => {
     window.print();
   };
@@ -1272,18 +1268,6 @@ const PropertyDetail = () => {
                         Edit Listing
                       </Button>
                     )}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handlePreviewClientView}
-                      className={cn(
-                        "h-8 w-full justify-start gap-2 rounded-lg text-[13px] shadow-none",
-                        listingDetailOutlineCtaClass,
-                      )}
-                    >
-                      <Eye className="h-3.5 w-3.5" />
-                      Preview Client View
-                    </Button>
                     <Button
                       variant="outline"
                       size="sm"

@@ -415,7 +415,7 @@ const App = () => (
                 <Route path="/buyer/auth" element={<Navigate to="/auth" replace />} />
                 <Route path="/submit-client-need" element={<SubmitClientNeed />} />
                 <Route path="/communication-center" element={<Navigate to="/communications" replace />} />
-                <Route path="/property/:id" element={<><PropertyDetail /><Footer /></>} />
+                <Route path="/property/:id" element={<PropertyDetail />} />
                 <Route path="/team/:id" element={<TeamProfile />} />
                 <Route path="/browse" element={<BrowseEntry />} />
                 <Route path="/dashboard" element={<LegacyDashboardRedirect />} />
