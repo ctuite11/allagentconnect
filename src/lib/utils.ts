@@ -85,9 +85,9 @@ function applyDisplayStreetSuffixAbbreviation(addressLine: string, city: string)
 /** Minimal listing slice for formatting street + MLS unit (column or condo_details). */
 export type ListingAddressUnitSource = {
   address: string;
-  city: string;
-  state: string;
-  zip_code: string;
+  city?: string | null;
+  state?: string | null;
+  zip_code?: string | null;
   unit_number?: string | null;
   condo_details?: unknown;
 };

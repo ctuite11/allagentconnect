@@ -252,6 +252,13 @@ setHeaderBackgroundType(profile.header_background_type || "color");
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return null;
 
+      const trimmedEmail = (email || "").trim();
+      if (trimmedEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+        toast.error("Please enter a valid email address.");
+        setSaving(false);
+        return null;
+      }
+
       const { error } = await supabase
         .from("agent_profiles")
         .update({
@@ -262,7 +269,7 @@ setHeaderBackgroundType(profile.header_background_type || "color");
           first_name: firstName,
           last_name: lastName,
           title,
-          email,
+          email: trimmedEmail,
           office_phone: officePhone,
           cell_phone: cellPhone,
           office_name: officeName,
@@ -281,6 +288,23 @@ setHeaderBackgroundType(profile.header_background_type || "color");
         .eq("id", session.user.id);
 
       if (error) throw error;
+
+      // Keep public.profiles.email in sync so every legacy/fallback recipient
+      // resolver (which may read profiles.email if agent_profiles.email is
+      // blank) routes to the same address the agent set in their profile.
+      if (trimmedEmail) {
+        await supabase
+          .from("profiles")
+          .upsert(
+            {
+              id: session.user.id,
+              email: trimmedEmail,
+              first_name: firstName,
+              last_name: lastName,
+            },
+            { onConflict: "id" },
+          );
+      }
 
       // Save property type preferences
       await supabase
@@ -754,6 +778,9 @@ setHeaderBackgroundType(profile.header_background_type || "color");
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                   />
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Used as the From / Reply-To and recipient for all app emails (listing inquiries, messages, alerts). Your sign-in email stays the same.
+                  </p>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
