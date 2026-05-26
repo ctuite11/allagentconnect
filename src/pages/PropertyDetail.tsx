@@ -50,7 +50,6 @@ import {
   Users,
   HelpCircle,
   MessageSquare,
-  Home,
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
@@ -165,20 +164,6 @@ interface ListingPriceHistoryItem {
   note: string | null;
 }
 
-interface SimilarListing {
-  id: string;
-  address: string;
-  city: string;
-  state: string;
-  zip_code: string;
-  price: number;
-  bedrooms: number | null;
-  bathrooms: number | null;
-  square_feet: number | null;
-  photos: any[] | null;
-  status: string;
-}
-
 interface AttomEnrichment {
   attomId: string | null;
   propertyType: string | null;
@@ -262,8 +247,7 @@ const PropertyDetail = () => {
   const [attomData, setAttomData] = useState<AttomEnrichment | null>(null);
   const [attomLoading, setAttomLoading] = useState(false);
   const [priceHistory, setPriceHistory] = useState<ListingPriceHistoryItem[]>([]);
-  const [similarHomes, setSimilarHomes] = useState<SimilarListing[]>([]);
-  
+
   // Role detection + URL-based client mode
   const { user, role, loading: roleLoading } = useAuthRole();
   const isAgent = role === "agent";
@@ -497,56 +481,6 @@ const PropertyDetail = () => {
       cancelled = true;
     };
   }, [listing?.id]);
-
-  useEffect(() => {
-    if (!listing?.id || !listing?.city || !listing?.state) return;
-
-    let cancelled = false;
-
-    const fetchSimilarHomes = async () => {
-      const baseQuery = supabase
-        .from("listings")
-        .select("id, address, city, state, zip_code, price, bedrooms, bathrooms, square_feet, photos, status")
-        .eq("city", listing.city)
-        .eq("state", listing.state)
-        .neq("id", listing.id)
-        .in("status", ["active", "coming_soon"])
-        .order("created_at", { ascending: false });
-
-      const minPrice = Math.max(0, Math.floor((listing.price || 0) * 0.8));
-      const maxPrice = Math.ceil((listing.price || 0) * 1.2);
-
-      const { data: inRange } = await baseQuery
-        .gte("price", minPrice)
-        .lte("price", maxPrice)
-        .limit(3);
-
-      let results = (inRange || []) as SimilarListing[];
-
-      if (results.length === 0) {
-        const { data: fallback } = await supabase
-          .from("listings")
-          .select("id, address, city, state, zip_code, price, bedrooms, bathrooms, square_feet, photos, status")
-          .eq("city", listing.city)
-          .eq("state", listing.state)
-          .neq("id", listing.id)
-          .in("status", ["active", "coming_soon"])
-          .order("created_at", { ascending: false })
-          .limit(3);
-        results = (fallback || []) as SimilarListing[];
-      }
-
-      if (!cancelled) {
-        setSimilarHomes(results);
-      }
-    };
-
-    void fetchSimilarHomes();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [listing?.id, listing?.city, listing?.state, listing?.price]);
 
   const handleShare = async () => {
     const shareUrl = getListingShareUrl(id!);
@@ -1541,52 +1475,6 @@ const PropertyDetail = () => {
                 </Card>
               )}
 
-              {/* Similar Homes */}
-              {similarHomes.length > 0 && (
-                <Card className={detailSurface}>
-                  <CardHeader className="pb-2">
-                    <CardTitle className={detailTitle}>
-                      <Home className={detailTitleIcon} />
-                      Similar homes
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-                      {similarHomes.map((home) => {
-                        const firstPhoto = Array.isArray(home.photos)
-                          ? typeof home.photos[0] === "string"
-                            ? home.photos[0]
-                            : home.photos[0]?.url
-                          : null;
-
-                        return (
-                          <button
-                            key={home.id}
-                            type="button"
-                            onClick={() => navigate(`/property/${home.id}`)}
-                            className="overflow-hidden rounded-lg border border-neutral-200 bg-white text-left shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-[box-shadow,border-color] hover:border-neutral-300 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)]"
-                          >
-                            <div className="h-32 overflow-hidden bg-neutral-100">
-                              {firstPhoto ? (
-                                <img src={firstPhoto} alt={home.address} className="w-full h-full object-cover" />
-                              ) : (
-                                <div className="flex h-full w-full items-center justify-center text-sm text-neutral-500">No photo</div>
-                              )}
-                            </div>
-                            <div className="space-y-1 p-3">
-                              <p className="line-clamp-1 text-sm font-semibold text-neutral-900">${home.price.toLocaleString()}</p>
-                              <p className="line-clamp-1 text-xs text-neutral-600">{home.address}</p>
-                              <p className="text-xs text-neutral-600">
-                                {home.bedrooms ?? "-"} bd • {home.bathrooms ?? "-"} ba • {home.square_feet ? `${home.square_feet.toLocaleString()} sqft` : "-"}
-                              </p>
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
             </div>
 
             {/* RIGHT COLUMN - Consumer-facing content (not in hero sidebar) */}
