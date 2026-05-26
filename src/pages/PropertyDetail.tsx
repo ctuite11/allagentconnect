@@ -294,6 +294,9 @@ const PropertyDetail = () => {
     !!listingAgentId &&
     viewerId !== listingAgentId;
 
+  const isListingOwner =
+    isAgentView && !!viewerId && !!listing?.agent_id && viewerId === listing.agent_id;
+
   /** In-app return path only (blocks protocol-relative `//`). */
   const isSafeInternalReturnPath = (path: string) =>
     path.startsWith("/") && !path.startsWith("//");
@@ -1014,8 +1017,8 @@ const PropertyDetail = () => {
             {/* RIGHT COLUMN - Hero Sidebar (~32%) - Clean, no internal scrolling */}
             <div className="lg:w-[32%] space-y-3 lg:sticky lg:top-24 lg:self-start">
 
-              {/* Primary CTAs — buyer/guest vs agent/admin */}
-              {!isAgentView ? (
+              {/* Buyer/guest: Take the next step first */}
+              {!isAgentView && (
                 <Card className="rounded-xl border border-neutral-200 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
                   <CardContent className="space-y-2.5 p-4">
                     <h3 className="text-sm font-semibold text-neutral-900">Take the next step</h3>
@@ -1070,47 +1073,9 @@ const PropertyDetail = () => {
                     />
                   </CardContent>
                 </Card>
-              ) : (
-                <Card className="rounded-xl border border-neutral-200 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
-                  <CardContent className="space-y-2.5 p-4">
-                    <h3 className="text-sm font-semibold text-neutral-900">Listing inquiry</h3>
-
-                    <ScheduleShowingDialog
-                      listingId={listing.id}
-                      listingAddress={formatListingEmailSubjectLocation(listing)}
-                      triggerLabel="Request a Showing"
-                      triggerVariant="outline"
-                      triggerClassName={cn(
-                        "h-9 w-full rounded-lg text-[13px] font-medium shadow-none",
-                        listingDetailOutlineCtaClass,
-                      )}
-                    />
-
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className={cn(
-                        "h-9 w-full rounded-lg text-[13px] font-medium shadow-none",
-                        listingDetailOutlineCtaClass,
-                      )}
-                      onClick={() => setContactDialogOpen(true)}
-                    >
-                      Ask a Question
-                    </Button>
-
-                    <ContactAgentDialog
-                      listingId={listing.id}
-                      agentId={listing.agent_id}
-                      listingAddress={formatListingEmailSubjectLocation(listing)}
-                      open={contactDialogOpen}
-                      onOpenChange={setContactDialogOpen}
-                      hideTrigger
-                    />
-                  </CardContent>
-                </Card>
               )}
-              
-              {/* Listing Agent Card - PRIMARY (top) */}
+
+              {/* Listing Agent Card — first for agent/admin; after CTAs for buyers */}
               {agentProfile && (
                 <Card className="rounded-xl border border-neutral-200 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
                   <CardContent className="space-y-4 p-4">
@@ -1162,7 +1127,7 @@ const PropertyDetail = () => {
                             onClick={() => setContactDialogOpen(true)}
                             className="flex w-full items-center gap-2.5 text-left transition-colors hover:text-neutral-900"
                           >
-                            <Mail className="h-4 w-4 shrink-0 text-neutral-500" />
+                            <Mail className="h-4 w-4 shrink-0 text-[#0E56F5]" />
                             <span className="font-medium truncate">{agentProfile.email}</span>
                           </button>
                         ) : (
@@ -1196,29 +1161,76 @@ const PropertyDetail = () => {
                       />
                     )}
                     
-                    {/* Message about this listing button - agents/admins only */}
+                    {/* Message about this listing — agents/admins viewing another agent's listing */}
                     {canMessageListingAgent && (
                       <Button
                         variant="outline"
                         size="sm"
-                        className="mt-2 h-9 w-full gap-2 rounded-lg border-neutral-200 text-[13px] font-medium shadow-none hover:bg-neutral-50 disabled:pointer-events-none disabled:opacity-60"
+                        className={cn(
+                          "h-9 w-full gap-2 rounded-lg text-[13px] font-medium shadow-none disabled:pointer-events-none disabled:opacity-60",
+                          listingDetailOutlineCtaClass,
+                        )}
                         onClick={handleMessageListingAgent}
                         disabled={isStartingChat}
                         aria-busy={isStartingChat}
                       >
-                        <MessageSquare className="w-4 h-4" />
-                        {isStartingChat 
-                          ? "Opening…" 
-                          : listing?.id 
-                            ? "Message about this listing" 
+                        <MessageSquare className="h-4 w-4" />
+                        {isStartingChat
+                          ? "Opening…"
+                          : listing?.id
+                            ? "Message about this listing"
                             : "Message"}
                       </Button>
+                    )}
+
+                    {isAgentView && (
+                      <ContactAgentDialog
+                        listingId={listing.id}
+                        agentId={listing.agent_id}
+                        listingAddress={formatListingEmailSubjectLocation(listing)}
+                        open={contactDialogOpen}
+                        onOpenChange={setContactDialogOpen}
+                        hideTrigger
+                      />
                     )}
                   </CardContent>
                 </Card>
               )}
-              
-              {/* Brokerage Strip - SECONDARY (below agent) */}
+
+              {/* Agent/admin: Listing inquiry (under listing agent card) */}
+              {isAgentView && (
+                <Card className="rounded-xl border border-neutral-200 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
+                  <CardContent className="space-y-2.5 p-4">
+                    <h3 className="text-sm font-semibold text-neutral-900">Listing inquiry</h3>
+
+                    <ScheduleShowingDialog
+                      listingId={listing.id}
+                      listingAddress={formatListingEmailSubjectLocation(listing)}
+                      triggerLabel="Request a Showing"
+                      triggerVariant="outline"
+                      triggerClassName={cn(
+                        "h-9 w-full rounded-lg text-[13px] font-medium shadow-none",
+                        listingDetailOutlineCtaClass,
+                      )}
+                    />
+
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className={cn(
+                        "h-9 w-full gap-2 rounded-lg text-[13px] font-medium shadow-none",
+                        listingDetailOutlineCtaClass,
+                      )}
+                      onClick={() => setContactDialogOpen(true)}
+                    >
+                      <HelpCircle className="h-4 w-4" />
+                      Ask a Question
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Listing courtesy of */}
               <Card className="rounded-xl border border-neutral-200 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
                 <CardContent className="p-3">
                   <div className="flex items-center gap-3">
@@ -1242,22 +1254,24 @@ const PropertyDetail = () => {
                 </CardContent>
               </Card>
 
-              {/* ========== AGENT QUICK ACTIONS (stays in sidebar) ========== */}
+              {/* Agent tools — last in sidebar */}
               {isAgentView && (
                 <Card className="rounded-xl border border-neutral-200 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
                   <CardContent className="space-y-1.5 px-3 py-3">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => navigate(`/agent/listings/edit/${id}`, { state: { from: location.pathname + location.search } })}
-                      className={cn(
-                        "h-8 w-full justify-start gap-2 rounded-lg text-[13px] shadow-none",
-                        listingDetailOutlineCtaClass,
-                      )}
-                    >
-                      <Edit2 className="h-3.5 w-3.5" />
-                      Edit Listing
-                    </Button>
+                    {isListingOwner && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => navigate(`/agent/listings/edit/${id}`, { state: { from: location.pathname + location.search } })}
+                        className={cn(
+                          "h-8 w-full justify-start gap-2 rounded-lg text-[13px] shadow-none",
+                          listingDetailOutlineCtaClass,
+                        )}
+                      >
+                        <Edit2 className="h-3.5 w-3.5" />
+                        Edit Listing
+                      </Button>
+                    )}
                     <Button
                       variant="outline"
                       size="sm"
