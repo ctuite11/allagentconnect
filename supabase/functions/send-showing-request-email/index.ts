@@ -66,6 +66,70 @@ function build429Response(resetAt: string): Response {
   });
 }
 
+function escapeHtml(s: string): string {
+  return s
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+/** Form sends YYYY-MM-DD; display as "May 27, 2026". */
+function formatPreferredDate(dateInput: string): string {
+  const trimmed = dateInput?.trim();
+  if (!trimmed) return dateInput;
+
+  const isoMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(trimmed);
+  if (isoMatch) {
+    const year = Number(isoMatch[1]);
+    const month = Number(isoMatch[2]) - 1;
+    const day = Number(isoMatch[3]);
+    const d = new Date(Date.UTC(year, month, day));
+    if (!Number.isNaN(d.getTime())) {
+      return d.toLocaleDateString("en-US", {
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+        timeZone: "UTC",
+      });
+    }
+  }
+
+  const parsed = new Date(trimmed);
+  if (!Number.isNaN(parsed.getTime())) {
+    return parsed.toLocaleDateString("en-US", {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    });
+  }
+
+  return trimmed;
+}
+
+function resolvePublicPhotoUrl(photoUrl: unknown): string {
+  let raw = "";
+  if (typeof photoUrl === "string") {
+    raw = photoUrl.trim();
+  } else if (photoUrl && typeof photoUrl === "object") {
+    const candidate = photoUrl as { url?: unknown; publicUrl?: unknown; src?: unknown; image_url?: unknown };
+    const value = candidate.url ?? candidate.publicUrl ?? candidate.src ?? candidate.image_url;
+    if (typeof value === "string") raw = value.trim();
+  }
+
+  if (!raw || raw.startsWith("/")) return "";
+
+  try {
+    const url = new URL(raw);
+    if (url.protocol !== "http:" && url.protocol !== "https:") return "";
+    if (!url.hostname) return "";
+    return url.href;
+  } catch {
+    return "";
+  }
+}
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -106,6 +170,15 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Sending showing request email to agent:", agentEmail);
 
+    const formattedDate = formatPreferredDate(preferredDate);
+    const safeListingAddress = escapeHtml(listingAddress);
+    const listingPhotoUrl = resolvePublicPhotoUrl(photoUrl);
+    const photoBlock = listingPhotoUrl
+      ? `<div style="margin: 20px 0;">
+              <img src="${escapeHtml(listingPhotoUrl)}" alt="${safeListingAddress}" style="display:block;max-width:100%;height:auto;border-radius:8px;max-height:400px;object-fit:cover;border:0;outline:none;text-decoration:none;" />
+            </div>`
+      : "";
+
     const emailResponse = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -120,13 +193,9 @@ const handler = async (req: Request): Promise<Response> => {
         html: `
           <h2>New Showing Request</h2>
           <p>Hi ${agentName},</p>
-          <p>You have received a new showing request for your listing at <strong>${listingAddress}</strong>.</p>
+          <p>You have received a new showing request for your listing at <strong>${safeListingAddress}</strong>.</p>
           
-          ${photoUrl ? `
-            <div style="margin: 20px 0;">
-              <img src="${photoUrl}" alt="${listingAddress}" style="max-width: 100%; height: auto; border-radius: 8px; max-height: 400px; object-fit: cover;" />
-            </div>
-          ` : ''}
+          ${photoBlock}
           
           <h3>Requester Details:</h3>
           <ul>
@@ -137,7 +206,7 @@ const handler = async (req: Request): Promise<Response> => {
           
           <h3>Showing Details:</h3>
           <ul>
-            <li><strong>Preferred Date:</strong> ${preferredDate}</li>
+            <li><strong>Preferred Date:</strong> ${formattedDate}</li>
             <li><strong>Preferred Time:</strong> ${preferredTime}</li>
           </ul>
           

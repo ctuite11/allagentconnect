@@ -12,6 +12,7 @@ import { z } from "zod";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useSenderProfilePrefill } from "@/lib/currentSenderProfile";
 import { formatListingEmailSubjectLocation } from "@/lib/listingEmailSubject";
+import { getPrimaryPhotoUrl } from "@/components/buyer/buyerListingDisplay";
 
 const showingRequestSchema = z.object({
   requester_name: z.string().trim().min(1, "Please enter your name").max(100),
@@ -99,9 +100,7 @@ const ScheduleShowingDialog = ({
 
         if (agentData) {
           const fullAddress = formatListingEmailSubjectLocation(listingData);
-          const photoUrl = listingData.photos && Array.isArray(listingData.photos) && listingData.photos.length > 0 
-            ? listingData.photos[0] 
-            : null;
+          const photoUrl = getPrimaryPhotoUrl(listingData.photos) ?? undefined;
           
           // Send email notification to agent
           try {
