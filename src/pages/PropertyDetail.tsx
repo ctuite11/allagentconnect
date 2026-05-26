@@ -249,6 +249,7 @@ const PropertyDetail = () => {
   
   const [listing, setListing] = useState<Listing | null>(null);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(false);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
   const [agentProfile, setAgentProfile] = useState<AgentProfile | null>(null);
   const [stats, setStats] = useState({ matches: 0, views: 0 });
@@ -268,23 +269,20 @@ const PropertyDetail = () => {
   const isAdmin = role === "admin";
   const isBuyer = role === "buyer";
 
-  // Redirect buyers to the buyer-safe detail page (keep query + route state, e.g. Favorites back link)
+  /** Buyers, guests, and any non-agent role use the buyer-safe consumer detail route. */
+  const shouldUseConsumerDetail = !roleLoading && !isAgent && !isAdmin;
+
   useEffect(() => {
-    if (!roleLoading && isBuyer && id) {
+    if (shouldUseConsumerDetail && id) {
       const q = location.search;
       navigate(`/consumer-property/${id}${q}`, { replace: true, state: location.state });
     }
-  }, [roleLoading, isBuyer, id, navigate, location]);
-  
+  }, [shouldUseConsumerDetail, id, navigate, location]);
+
   // Check for client mode via URL query param or path suffix
   const searchParams = new URLSearchParams(location.search);
   const isClientMode = searchParams.get('view') === 'client' || location.pathname.endsWith('/client');
   const isAgentView = (isAgent || isAdmin) && !isClientMode;
-
-  // ATTRIBUTION MASKING: PropertyDetail is agent/admin-only UI.
-  // Non-agent visitors must not see any "contact listing agent" UI, even briefly.
-  // Buyers redirect to /consumer-property/:id (effect above).
-  const isNonAgentVisitor = !roleLoading && !isAgent && !isAdmin;
 
   // Can current user message the listing agent?
   const viewerId = user?.id;
@@ -361,6 +359,7 @@ const PropertyDetail = () => {
   useEffect(() => {
     const fetchListing = async () => {
       try {
+        setFetchError(false);
         const { data, error } = await supabase
           .from("listings")
           .select("*")
@@ -404,9 +403,13 @@ const PropertyDetail = () => {
             matches: matchCount || 0,
             views: statsData?.view_count || 0,
           });
+        } else {
+          setListing(null);
         }
       } catch (error: any) {
         console.error("Error fetching listing:", error);
+        setFetchError(true);
+        setListing(null);
       } finally {
         setLoading(false);
       }
@@ -414,6 +417,9 @@ const PropertyDetail = () => {
 
     if (id) {
       fetchListing();
+    } else {
+      setLoading(false);
+      setListing(null);
     }
   }, [id]);
 
@@ -538,15 +544,6 @@ const PropertyDetail = () => {
     };
   }, [listing?.id, listing?.city, listing?.state, listing?.price]);
 
-  // ATTRIBUTION MASKING early return — after all hooks, before any JSX
-  if (isNonAgentVisitor) {
-    return (
-      <div className="p-6 text-sm text-muted-foreground">
-        Redirecting…
-      </div>
-    );
-  }
-
   const handleShare = async () => {
     const shareUrl = getListingShareUrl(id!);
     if (navigator.share) {
@@ -636,8 +633,35 @@ const PropertyDetail = () => {
     return `$${listing.commission_rate.toLocaleString()}`;
   };
 
+  if (roleLoading || shouldUseConsumerDetail) {
+    return <LoadingScreen />;
+  }
+
   if (loading) {
     return <LoadingScreen />;
+  }
+
+  if (fetchError) {
+    return (
+      <div className="min-h-screen bg-white pt-16 sm:pt-20">
+        <div className="mx-auto max-w-lg px-4 py-10">
+          <Card className="rounded-xl border border-neutral-200 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
+            <CardContent className="space-y-4 py-10 text-center">
+              <p className="text-[15px] font-medium text-neutral-900">Couldn&apos;t load this listing</p>
+              <p className="text-sm text-neutral-500">Check your connection and try again.</p>
+              <div className="flex flex-wrap justify-center gap-2 pt-2">
+                <Button variant="outline" className="border-neutral-200" onClick={() => window.location.reload()}>
+                  Try again
+                </Button>
+                <Button variant="outline" className="border-neutral-200" onClick={() => navigate("/browse")}>
+                  Browse homes
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
   }
 
   if (!listing) {
@@ -647,9 +671,15 @@ const PropertyDetail = () => {
           <Card className="rounded-xl border border-neutral-200 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
             <CardContent className="space-y-4 py-10">
               <p className="text-center text-[15px] text-neutral-600">Listing not found</p>
-              <div className="flex justify-center">
+              <p className="text-center text-sm text-neutral-500">
+                This property may be unavailable or the link may be incorrect.
+              </p>
+              <div className="flex justify-center gap-2">
+                <Button variant="outline" className="border-neutral-200" onClick={() => navigate("/browse")}>
+                  Browse homes
+                </Button>
                 <Button variant="outline" className="border-neutral-200" onClick={() => navigate("/")}>
-                  Back to Home
+                  Home
                 </Button>
               </div>
             </CardContent>
@@ -687,8 +717,8 @@ const PropertyDetail = () => {
         title={`${listing.address}, ${listing.city}, ${listing.state}`}
         description={
           listing.description
-            ? `$${listing.price.toLocaleString()} — ${listing.bedrooms} bed, ${listing.bathrooms} bath. ${listing.description.substring(0, 120)}…`
-            : `$${listing.price.toLocaleString()} — ${listing.bedrooms} bed, ${listing.bathrooms} bath in ${listing.city}, ${listing.state}`
+            ? `$${listing.price?.toLocaleString() ?? "—"} — ${listing.bedrooms ?? "—"} bed, ${listing.bathrooms ?? "—"} bath. ${listing.description.substring(0, 120)}…`
+            : `$${listing.price?.toLocaleString() ?? "—"} — ${listing.bedrooms ?? "—"} bed, ${listing.bathrooms ?? "—"} bath in ${listing.city}, ${listing.state}`
         }
         image={mainPhoto || undefined}
         canonical={`${getPublicOrigin()}/property/${id}`}
@@ -790,8 +820,10 @@ const PropertyDetail = () => {
                           #{listing.listing_number}
                         </Badge>
                       )}
-                      <Badge className={`${getStatusColor(listing.status)} bg-white/90 backdrop-blur-sm`}>
-                        {listing.status.charAt(0).toUpperCase() + listing.status.slice(1)}
+                      <Badge className={`${getStatusColor(listing.status ?? "")} bg-white/90 backdrop-blur-sm`}>
+                        {listing.status
+                          ? listing.status.charAt(0).toUpperCase() + listing.status.slice(1)
+                          : "—"}
                       </Badge>
                     </div>
 
