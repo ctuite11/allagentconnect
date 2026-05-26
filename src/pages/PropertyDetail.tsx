@@ -64,6 +64,7 @@ const listingDetailOutlineCtaClass =
   "border-[#0E56F5]/30 text-[#0E56F5] hover:bg-[#0E56F5]/5 hover:text-[#0B46CC]";
 import { useListingView } from "@/hooks/useListingView";
 import { useAuthRole } from "@/hooks/useAuthRole";
+import { usePropertyDetailRailPosition } from "@/hooks/usePropertyDetailRailPosition";
 import { PropertyMetaTags } from "@/components/PropertyMetaTags";
 import { Seo } from "@/components/Seo";
 import { getPublicOrigin } from "@/lib/getPublicUrl";
@@ -644,9 +645,10 @@ const PropertyDetail = () => {
   const detailTitle =
     "flex items-center gap-2 text-base font-semibold tracking-tight text-neutral-900";
   const detailTitleIcon = "h-5 w-5 shrink-0 text-neutral-600";
+  const { layoutRef, railStyle } = usePropertyDetailRailPosition();
 
   return (
-    <div className="min-h-screen bg-white pt-0">
+    <div className="min-h-screen overflow-visible bg-white pt-0">
       <Seo
         title={`${listing.address}, ${listing.city}, ${listing.state}`}
         description={
@@ -680,7 +682,7 @@ const PropertyDetail = () => {
       />
 
 
-      <main className="flex-1">
+      <main className="flex-1 overflow-visible">
         {/* Back Button Row */}
         <div className="mx-auto max-w-6xl px-4">
           <AacPageIntro
@@ -706,12 +708,12 @@ const PropertyDetail = () => {
           </div>
         </div>
 
-        {/* ========== HERO SECTION: TWO-COLUMN GRID ========== */}
-        <div className="mx-auto max-w-6xl px-4">
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-stretch">
+        {/* Full-page two-column layout (grid); rail pinned on desktop via usePropertyDetailRailPosition */}
+        <div ref={layoutRef} className="mx-auto max-w-6xl overflow-visible px-4">
+          <div className="grid grid-cols-1 gap-6 overflow-visible lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start">
             
-            {/* LEFT COLUMN - Media + scrollable detail */}
-            <div className="min-w-0 flex-1">
+            {/* Primary column — hero + detail + agent tools */}
+            <div className="min-w-0 overflow-visible">
               <div className="relative pb-6">
                 <div className="relative h-[380px] overflow-hidden rounded-xl border border-neutral-200 shadow-[0_4px_24px_rgba(0,0,0,0.07)] sm:h-[480px] sm:rounded-2xl lg:h-[560px]">
                   <div className="absolute inset-0 bg-neutral-950">
@@ -1452,9 +1454,9 @@ const PropertyDetail = () => {
 
             </div>
 
-            {/* RIGHT COLUMN - full-height rail; sticky on inner wrapper only */}
+            {/* Right rail — 360px column in flow; inner panel fixed on lg+ while scrolling */}
             <div className="w-full lg:w-[360px] lg:shrink-0">
-              <div className="space-y-3 lg:sticky lg:top-24">
+              <div className="space-y-3" style={railStyle}>
               {!isAgentView && (
                 <Card className="rounded-xl border border-neutral-200 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
                   <CardContent className="space-y-2.5 p-4">
