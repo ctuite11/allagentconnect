@@ -290,7 +290,8 @@ const handler = async (req: Request): Promise<Response> => {
     const isTemplated =
       template === "early-access-update-v1" ||
       template === "early-access-update-v2" ||
-      template === "founding-partner-invitation";
+      template === "founding-partner-invitation" ||
+      template === "private-listing-network";
 
     console.log(`[send-bulk-email] Enqueuing bulk email to ${recipients.length} recipients`);
 
@@ -345,13 +346,15 @@ const handler = async (req: Request): Promise<Response> => {
     // Preserve user-inserted HTML (images, links). Otherwise escape and convert newlines.
     const escapeHtml = (s: string) =>
       s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    const renderedBody = template === "founding-partner-invitation"
-      ? buildFoundingPartnerBody()
-      : template === "early-access-update-v2"
-        ? buildEarlyAccessUpdateV2Body()
-        : template === "early-access-update-v1"
-          ? buildEarlyAccessUpdateBody()
-          : (/<[a-z][\s\S]*>/i.test(message) ? message : escapeHtml(message).replace(/\n/g, "<br>"));
+    const renderedBody = template === "private-listing-network"
+      ? buildPrivateListingNetworkBody()
+      : template === "founding-partner-invitation"
+        ? buildFoundingPartnerBody()
+        : template === "early-access-update-v2"
+          ? buildEarlyAccessUpdateV2Body()
+          : template === "early-access-update-v1"
+            ? buildEarlyAccessUpdateBody()
+            : (/<[a-z][\s\S]*>/i.test(message) ? message : escapeHtml(message).replace(/\n/g, "<br>"));
 
     // Build email HTML template
     const htmlTemplate = `
