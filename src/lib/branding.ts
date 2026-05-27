@@ -52,12 +52,14 @@ function isAgentDirectoryRoute(pathname: string): boolean {
  * Routes that are considered DCMLS consumer-facing
  */
 const DCMLS_ROUTES = [
-  "/",
   "/browse",
   "/search",
   "/consumer-property",
   "/consumer",
 ];
+
+/** Shared paths whose brand follows the active hostname (AAC vs DCMLS). */
+const HOST_BRANDED_ROUTES = ["/", "/homepage-v2"];
 
 /**
  * Routes that are considered AAC agent-facing
@@ -104,13 +106,15 @@ export function isDcmlsRoute(pathname: string): boolean {
     return isDcmlsHost();
   }
 
+  if (HOST_BRANDED_ROUTES.includes(pathname)) {
+    return isDcmlsHost();
+  }
+
   // Exact matches
   if (DCMLS_ROUTES.includes(pathname)) return true;
 
   // Prefix matches for DCMLS routes
-  return DCMLS_ROUTES.some(route =>
-    route !== '/' && pathname.startsWith(route)
-  );
+  return DCMLS_ROUTES.some((route) => pathname.startsWith(route));
 }
 
 /**

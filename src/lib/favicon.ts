@@ -38,7 +38,7 @@ function addLink(rel: string, href: string, attrs: Record<string, string> = {}) 
 }
 
 // Cache-bust query so browsers/CDNs don't serve a stale favicon from a previous deploy.
-const FAVICON_VERSION = "20260418-2";
+const FAVICON_VERSION = "20260527-1";
 
 export function applyFaviconForHost(): void {
   if (typeof document === "undefined") return;

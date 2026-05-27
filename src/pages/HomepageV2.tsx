@@ -1,6 +1,7 @@
 import React from "react";
 import { Helmet } from "react-helmet-async";
 import { Seo } from "@/components/Seo";
+import { isDcmlsHost } from "@/lib/host";
 import HeroSection from "@/components/home-v2/HeroSection";
 import ProofStrip from "@/components/home-v2/ProofStrip";
 import NetworkIntelligence from "@/components/home-v2/NetworkIntelligence";
@@ -22,12 +23,19 @@ const HOMEPAGE_JSON_LD = {
 };
 
 const HomepageV2 = () => {
+  const isDcmls = isDcmlsHost();
+
   return (
     <>
       <Seo
-        title="See the Market Before It Hits the MLS"
+        title={
+          isDcmls
+            ? "See the Market Before It Hits the MLS"
+            : "All Agent Connect | Private Listing Network"
+        }
         description="The private network where agents share off-market listings, buyer demand, and deal intelligence before properties go public."
-        canonical="https://allagentconnect.com"
+        canonical={isDcmls ? undefined : "https://allagentconnect.com"}
+        brandType={isDcmls ? "dcmls" : "aac"}
         jsonLd={HOMEPAGE_JSON_LD}
       />
       <Helmet>
