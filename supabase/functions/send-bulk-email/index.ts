@@ -155,6 +155,18 @@ function buildEarlyAccessUpdateV2Body(): string {
       bullets: ["Buyer needs", "Off-market opportunities", "Rental requests", "Referral discussions", "Sales intel"],
     },
     {
+      img: `${STORAGE_BASE_V2}/06-hot-sheets.png?v=${IMG_VERSION_V2}`,
+      title: "Hot Sheets",
+      desc: "Track listings that matter most with real-time alerts based on saved search criteria — coming soon, new, price drops, back on market, and private inventory.",
+      bullets: ["Saved search alerts", "Coming-soon & new listings", "Price drops & status changes", "Share with buyers in one tap"],
+    },
+    {
+      img: `${STORAGE_BASE_V2}/07-buyers.png?v=${IMG_VERSION_V2}`,
+      title: "Your Buyers",
+      desc: "A dedicated buyer portal that keeps clients engaged — favorites, new matches, unread messages, and hot sheet alerts all in one place.",
+      bullets: ["Buyer dashboard & favorites", "New match notifications", "Direct messaging with you", "Branded under your name"],
+    },
+    {
       img: `${STORAGE_BASE_V2}/05-network.png?v=${IMG_VERSION_V2}`,
       title: "Verified Agent Network",
       desc: "Relationships still matter. AAC helps agents connect directly with trusted professionals across markets and specialties.",
