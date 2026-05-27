@@ -64,7 +64,6 @@ const listingDetailOutlineCtaClass =
   "border-[#0E56F5]/30 text-[#0E56F5] hover:bg-[#0E56F5]/5 hover:text-[#0B46CC]";
 import { useListingView } from "@/hooks/useListingView";
 import { useAuthRole } from "@/hooks/useAuthRole";
-import { usePropertyDetailRailPosition } from "@/hooks/usePropertyDetailRailPosition";
 import { PropertyMetaTags } from "@/components/PropertyMetaTags";
 import { Seo } from "@/components/Seo";
 import { getPublicOrigin } from "@/lib/getPublicUrl";
@@ -251,7 +250,6 @@ const PropertyDetail = () => {
 
   // Role detection + URL-based client mode
   const { user, role, loading: roleLoading } = useAuthRole();
-  const { layoutRef, railStyle } = usePropertyDetailRailPosition();
   const isAgent = role === "agent";
   const isAdmin = role === "admin";
   const isBuyer = role === "buyer";
@@ -691,9 +689,9 @@ const PropertyDetail = () => {
           />
         </div>
 
-        {/* Full-page two-column layout (grid); rail pinned on desktop via usePropertyDetailRailPosition */}
-        <div ref={layoutRef} className="mx-auto max-w-6xl overflow-visible px-4">
-          <div className="grid grid-cols-1 gap-6 overflow-visible lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-x-6 lg:gap-y-2 lg:items-start">
+        {/* Full-page two-column layout (grid); rail sticks on desktop while scrolling */}
+        <div className="mx-auto max-w-6xl overflow-visible px-4">
+          <div className="grid grid-cols-1 gap-6 overflow-visible lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-x-6 lg:gap-y-2">
             
             {/* Address + price — left column only; sidebar starts on row 2 with photo */}
             <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 lg:col-start-1 lg:row-start-1">
@@ -1448,9 +1446,9 @@ const PropertyDetail = () => {
 
             </div>
 
-            {/* Right rail — aligns with top of photo (grid row 2) */}
-            <div className="w-full lg:col-start-2 lg:row-start-2 lg:w-[360px] lg:shrink-0 lg:self-start">
-              <div className="space-y-3" style={railStyle}>
+            {/* Right rail — aligns with top of photo (grid row 2); sticks on lg+ */}
+            <div className="w-full lg:col-start-2 lg:row-start-2 lg:w-[360px] lg:shrink-0">
+              <div className="space-y-3 lg:sticky lg:top-6 lg:z-30">
               {!isAgentView && (
                 <Card className="rounded-xl border border-neutral-200 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
                   <CardContent className="space-y-2.5 p-4">
