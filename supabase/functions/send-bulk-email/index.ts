@@ -192,6 +192,9 @@ function buildEarlyAccessUpdateV2Body(): string {
         <h1 style="margin:0 0 10px;font-size:26px;font-weight:700;line-height:1.2;color:#0f172a;text-align:center;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">The private listing network.</h1>
         <p style="margin:0 auto;max-width:480px;font-size:14px;line-height:1.6;color:#475569;text-align:center;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Share coming-soon listings, off-market inventory, and active buyer demand with verified agents before it goes public.</p>
       </td></tr>
+      <tr><td align="center" style="padding:4px 20px 8px;">
+        <a href="https://allagentconnect.com/register" style="display:inline-block;padding:12px 24px;background:#0E56F5;color:#ffffff;text-decoration:none;font-size:14px;font-weight:600;border-radius:8px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Register for Early Access &rarr;</a>
+      </td></tr>
       <tr><td style="padding:8px 20px 0;">
         <img src="${heroImg}" alt="All Agent Connect homepage" width="560" style="display:block;width:100%;max-width:560px;height:auto;border-radius:12px;border:1px solid #94a3b8;" />
       </td></tr>
@@ -201,6 +204,9 @@ function buildEarlyAccessUpdateV2Body(): string {
         <p style="margin:0;font-size:13px;color:#64748b;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Exclusive, top-tier networking designed for your success.</p>
       </td></tr>
       ${rowHtml}
+      <tr><td align="center" style="padding:40px 20px 0;">
+        <a href="https://allagentconnect.com/register" style="display:inline-block;padding:14px 28px;background:#0E56F5;color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;border-radius:8px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Register for Early Access &rarr;</a>
+      </td></tr>
       <tr><td style="padding:36px 20px 0;border-top:1px solid #e2e8f0;margin-top:32px;">
         <p style="margin:24px 0 4px;font-size:14px;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">More to come soon.</p>
         <p style="margin:0 0 4px;font-size:14px;color:#0f172a;font-weight:600;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Chris Tuite</p>
