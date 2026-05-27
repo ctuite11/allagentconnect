@@ -67,7 +67,7 @@ function build429Response(resetAt: string): Response {
 
 const STORAGE_BASE = `${supabaseUrl}/storage/v1/object/public/email-attachments/early-access-v1`;
 const STORAGE_BASE_V2 = `${supabaseUrl}/storage/v1/object/public/email-attachments/early-access-v2`;
-const IMG_VERSION_V2 = "v4";
+const IMG_VERSION_V2 = "v5";
 const AAC_LOGO_URL = `${supabaseUrl}/storage/v1/object/public/brand-assets/aac-logo-green-black-v4.png`;
 
 function buildEarlyAccessUpdateBody(): string {
@@ -155,6 +155,18 @@ function buildEarlyAccessUpdateV2Body(): string {
       bullets: ["Buyer needs", "Off-market opportunities", "Rental requests", "Referral discussions", "Sales intel"],
     },
     {
+      img: `${STORAGE_BASE_V2}/06-hot-sheets.png?v=${IMG_VERSION_V2}`,
+      title: "Hot Sheets",
+      desc: "Track listings that matter most with real-time alerts based on saved search criteria — coming soon, new, price drops, back on market, and private inventory.",
+      bullets: ["Saved search alerts", "Coming-soon & new listings", "Price drops & status changes", "Share with buyers in one tap"],
+    },
+    {
+      img: `${STORAGE_BASE_V2}/07-buyers.png?v=${IMG_VERSION_V2}`,
+      title: "Your Buyers",
+      desc: "A dedicated buyer portal that keeps clients engaged — favorites, new matches, unread messages, and hot sheet alerts all in one place.",
+      bullets: ["Buyer dashboard & favorites", "New match notifications", "Direct messaging with you", "Branded under your name"],
+    },
+    {
       img: `${STORAGE_BASE_V2}/05-network.png?v=${IMG_VERSION_V2}`,
       title: "Verified Agent Network",
       desc: "Relationships still matter. AAC helps agents connect directly with trusted professionals across markets and specialties.",
@@ -176,10 +188,10 @@ function buildEarlyAccessUpdateV2Body(): string {
       <tr><td align="center" style="padding:0 0 24px;">
         <img src="${AAC_LOGO_URL}" alt="All Agent Connect" height="36" style="display:block;height:36px;width:auto;border:0;outline:none;" />
       </td></tr>
-      <tr><td style="padding:0 0 16px;">
-        <p style="margin:0 0 6px;font-size:12px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#0E56F5;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Private Listing Network</p>
-        <h1 style="margin:0 0 10px;font-size:26px;font-weight:700;line-height:1.2;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">The private listing network.</h1>
-        <p style="margin:0;font-size:14px;line-height:1.6;color:#475569;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Share coming-soon listings, off-market inventory, and active buyer demand with verified agents before it goes public.</p>
+      <tr><td align="center" style="padding:0 0 16px;text-align:center;">
+        <p style="margin:0 0 6px;font-size:12px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#0E56F5;text-align:center;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Private Listing Network</p>
+        <h1 style="margin:0 0 10px;font-size:26px;font-weight:700;line-height:1.2;color:#0f172a;text-align:center;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">The private listing network.</h1>
+        <p style="margin:0 auto;max-width:480px;font-size:14px;line-height:1.6;color:#475569;text-align:center;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Share coming-soon listings, off-market inventory, and active buyer demand with verified agents before it goes public.</p>
       </td></tr>
       <tr><td style="padding:8px 0 0;">
         <img src="${heroImg}" alt="All Agent Connect homepage" width="600" style="display:block;width:100%;max-width:600px;height:auto;border-radius:12px;border:1px solid #94a3b8;" />
