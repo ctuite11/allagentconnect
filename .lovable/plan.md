@@ -1,32 +1,25 @@
-## Goal
-Let a single bulk-email campaign send to up to 1,000 agents in one click, and drain through the queue in a few minutes instead of ~10.
+# Add Batch Range Selector to Bulk Email
 
-## Changes
+Right now the "Email Selected Agents" dialog sends to every selected recipient in one shot. With 1,000 agents selected there's no way to send in controlled waves (e.g. first 250 today, next 250 tomorrow) for warm-up or deliverability protection.
 
-**1. Raise recipient cap in `send-bulk-email`**
-- Change the "Maximum 500 recipients" guard to **1,000**.
-- Keep the existing 2 campaigns / minute / user rate limit (safety net against accidental double-sends).
+## What to add
 
-**2. Tune the email queue for faster drain**
-- Update the single-row `email_send_state` config:
-  - `batch_size`: 10 → **40**
-  - `send_delay_ms`: 200 → **75**
-- Result: ~400–500 emails/min throughput, so 1,000 emails drain in roughly 2–3 minutes instead of ~8–10.
-- No edge-function redeploy needed for this; it's a config-table update.
+In `src/components/admin/EmailAgentDialog.tsx`, above the Recipients preview, add a **Batch** control with:
 
-**3. No UI changes**
-- The "Email Selected Agents" dialog already supports multi-select and the new Private Listing Network template — it'll just accept up to 1,000 recipients now.
+1. **Batch size dropdown** — All / 250 / 500 / 1000
+2. **Batch number selector** — appears when a size is chosen; shows "Batch 1 of N (recipients 1–250)", "Batch 2 of N (251–500)", etc., with Prev/Next buttons
+3. **Live recipient slice** — the Recipients preview, the "Sending to X agents" description, and the actual send call all use the sliced subset (not the full list)
+4. **Send button label** updates to `Send to 250 agents (batch 1 of 4)`
 
-## What stays the same
-- Resend as the delivery provider, existing templates, suppression list, unsubscribe handling, `email_send_log` tracking, retry/DLQ behavior.
-- Per-recipient personalization and tracking pixel logic.
+## Behavior
 
-## How you'll send 1,000
-1. Open Email Selected Agents → pick the 1,000 recipients.
-2. Choose **Private Listing Network — All Agents**.
-3. Send. Campaign enqueues instantly; queue drains over ~2–3 minutes.
-4. Monitor progress in Admin → Email Analytics (`email_send_log`).
+- Order is the order recipients were passed in (already deterministic from the parent multi-select).
+- Choosing "All" = current behavior, no slicing.
+- After a successful send, dialog stays open on the same batch settings but auto-advances to the next batch (with a toast like "Batch 1 sent. Ready for batch 2 of 4.") so the admin can space sends out manually. Closing the dialog resets.
+- Existing 1,000-recipient cap in `send-bulk-email` and 2 campaigns/min rate limit remain unchanged — batching is purely a client-side slicing UX.
 
-## Risks / notes
-- Resend account sending limits still apply at the provider level. If your Resend plan caps daily volume below 1,000, sends will start failing partway through with rate-limit errors visible in `email_send_log`. Worth confirming the Resend plan tier before the first 1,000 blast.
-- Bigger sends = bigger deliverability impact. Recommend warming up (e.g., 250 → 500 → 1,000 over a few days) the first time to protect domain reputation on `mail.allagentconnect.com`.
+## Files touched
+
+- `src/components/admin/EmailAgentDialog.tsx` — add state (`batchSize`, `batchIndex`), compute `currentBatch = recipients.slice(...)`, render the batch controls, pass `currentBatch` everywhere the full `recipients` is used today.
+
+No backend, edge function, or schema changes.

@@ -15,7 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { EmailComposerToolbar } from "@/components/email/EmailComposerToolbar";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, Mail, Users } from "lucide-react";
+import { Loader2, Mail, Users, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface EmailAgentDialogProps {
   open: boolean;
@@ -38,6 +38,8 @@ export function EmailAgentDialog({
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
   const [template, setTemplate] = useState<string>("custom");
+  const [batchSize, setBatchSize] = useState<string>("all"); // "all" | "250" | "500" | "1000"
+  const [batchIndex, setBatchIndex] = useState<number>(0); // 0-based
   const messageRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -45,6 +47,18 @@ export function EmailAgentDialog({
       setSubject(defaultSubject.trim());
     }
   }, [open, defaultSubject]);
+
+  // Reset batch index when recipients or size change
+  useEffect(() => {
+    setBatchIndex(0);
+  }, [batchSize, recipients.length]);
+
+  const sizeNum = batchSize === "all" ? recipients.length : parseInt(batchSize, 10);
+  const totalBatches = sizeNum > 0 ? Math.max(1, Math.ceil(recipients.length / sizeNum)) : 1;
+  const safeBatchIndex = Math.min(batchIndex, totalBatches - 1);
+  const start = safeBatchIndex * sizeNum;
+  const end = Math.min(start + sizeNum, recipients.length);
+  const currentBatch = recipients.slice(start, end);
 
   const handleSend = async () => {
     const isTemplated =
@@ -67,7 +81,7 @@ export function EmailAgentDialog({
 
       const { error } = await supabase.functions.invoke("send-bulk-email", {
         body: {
-          recipients: recipients.map((r) => ({ email: r.email, name: r.name })),
+          recipients: currentBatch.map((r) => ({ email: r.email, name: r.name })),
           subject: subject.trim(),
           message: isTemplated ? "" : message.trim(),
           agentId: user.id,
@@ -78,11 +92,22 @@ export function EmailAgentDialog({
 
       if (error) throw error;
 
-      toast.success(`Email sent to ${recipients.length} recipient${recipients.length > 1 ? "s" : ""}`);
-      setSubject("");
-      setMessage("");
-      setTemplate("custom");
-      onOpenChange(false);
+      const sentCount = currentBatch.length;
+      const hasNext = safeBatchIndex + 1 < totalBatches;
+      if (batchSize !== "all" && hasNext) {
+        toast.success(
+          `Batch ${safeBatchIndex + 1} sent (${sentCount} recipients). Ready for batch ${safeBatchIndex + 2} of ${totalBatches}.`
+        );
+        setBatchIndex(safeBatchIndex + 1);
+      } else {
+        toast.success(`Email sent to ${sentCount} recipient${sentCount > 1 ? "s" : ""}`);
+        setSubject("");
+        setMessage("");
+        setTemplate("custom");
+        setBatchSize("all");
+        setBatchIndex(0);
+        onOpenChange(false);
+      }
     } catch (error: any) {
       console.error("Error sending email:", error);
       toast.error("Failed to send email: " + (error.message || "Unknown error"));
@@ -92,6 +117,7 @@ export function EmailAgentDialog({
   };
 
   const isBulk = recipients.length > 1;
+  const isBatched = batchSize !== "all" && totalBatches > 1;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -107,18 +133,76 @@ export function EmailAgentDialog({
           </div>
           <DialogDescription className="text-muted-foreground">
             {isBulk 
-              ? `Sending to ${recipients.length} agents. Each will receive a separate email.`
+              ? isBatched
+                ? `Sending to ${currentBatch.length} of ${recipients.length} agents (batch ${safeBatchIndex + 1} of ${totalBatches}). Each will receive a separate email.`
+                : `Sending to ${recipients.length} agents. Each will receive a separate email.`
               : `Send an email to ${recipients[0]?.name}`
             }
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
+          {/* Batch Controls */}
+          {isBulk && (
+            <div className="space-y-2">
+              <Label className="text-muted-foreground text-sm">Batch</Label>
+              <div className="flex items-center gap-2">
+                <Select
+                  value={batchSize}
+                  onValueChange={(v) => setBatchSize(v)}
+                >
+                  <SelectTrigger className="border-slate-200 w-[180px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All ({recipients.length})</SelectItem>
+                    <SelectItem value="250">Batches of 250</SelectItem>
+                    <SelectItem value="500">Batches of 500</SelectItem>
+                    <SelectItem value="1000">Batches of 1000</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                {isBatched && (
+                  <div className="flex items-center gap-1">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="rounded-lg border-slate-200 h-9 w-9"
+                      onClick={() => setBatchIndex(Math.max(0, safeBatchIndex - 1))}
+                      disabled={safeBatchIndex === 0}
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                    <div className="px-2 text-sm text-slate-700 min-w-[140px] text-center">
+                      Batch {safeBatchIndex + 1} of {totalBatches}
+                      <div className="text-xs text-muted-foreground">
+                        recipients {start + 1}–{end}
+                      </div>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="rounded-lg border-slate-200 h-9 w-9"
+                      onClick={() => setBatchIndex(Math.min(totalBatches - 1, safeBatchIndex + 1))}
+                      disabled={safeBatchIndex >= totalBatches - 1}
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Recipients Preview */}
           <div className="space-y-2">
-            <Label className="text-muted-foreground text-sm">Recipients</Label>
+            <Label className="text-muted-foreground text-sm">
+              Recipients {isBatched ? `(${currentBatch.length} in this batch)` : `(${recipients.length})`}
+            </Label>
             <div className="max-h-24 overflow-y-auto p-3 rounded-xl border border-slate-200 bg-[#FAFAF8]">
-              {recipients.map((recipient) => (
+              {currentBatch.map((recipient) => (
                 <div key={recipient.id} className="flex items-center gap-2 text-sm py-0.5">
                   <Mail className="h-3 w-3 text-muted-foreground" />
                   <span className="font-medium">{recipient.name}</span>
@@ -227,7 +311,9 @@ export function EmailAgentDialog({
             className="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white"
           >
             {sending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Send Email
+            {isBatched
+              ? `Send to ${currentBatch.length} (batch ${safeBatchIndex + 1} of ${totalBatches})`
+              : `Send Email${isBulk ? ` to ${recipients.length}` : ""}`}
           </Button>
         </DialogFooter>
       </DialogContent>
