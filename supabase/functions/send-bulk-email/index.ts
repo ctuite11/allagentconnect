@@ -279,6 +279,99 @@ function buildFoundingPartnerBody(): string {
     </table>`;
 }
 
+function buildPrivateListingNetworkBody(): string {
+  const heroImg = `${STORAGE_BASE_V2}/01-home.png?v=${IMG_VERSION_V2}`;
+  const ctaUrl = "https://allagentconnect.com/agent-dashboard";
+  const ctaLabel = "Join the Private Listing Network";
+
+  const ctaButton = (label: string) => `
+    <tr><td align="center" style="padding:24px 0 0;">
+      <a href="${ctaUrl}" style="display:inline-block;padding:14px 28px;background:#0E56F5;color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;border-radius:8px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${label} &rarr;</a>
+    </td></tr>`;
+
+  const rows: Array<{ img: string; title: string; desc: string; bullets: string[]; cta: string }> = [
+    {
+      img: `${STORAGE_BASE_V2}/02-success-hub.png?v=${IMG_VERSION_V2}`,
+      title: "Success Hub",
+      desc: "Your private command center for buyers, listings, hot sheets, and referrals — every opportunity in one place.",
+      bullets: ["Buyer management", "Hot sheets & saved searches", "Listing visibility", "Real-time activity"],
+      cta: "Open your Success Hub",
+    },
+    {
+      img: `${STORAGE_BASE_V2}/03-results.png?v=${IMG_VERSION_V2}`,
+      title: "Pre-Market Inventory",
+      desc: "Search coming-soon and off-market listings only verified agents can see — before they ever hit the public market.",
+      bullets: ["Interactive map search", "Real-time off-market updates", "Save as hot sheet", "Share with verified agents"],
+      cta: "Browse the private network",
+    },
+    {
+      img: `${STORAGE_BASE_V2}/04-comms.png?v=${IMG_VERSION_V2}`,
+      title: "Communications Center",
+      desc: "Share buyer needs, off-market opportunities, and referrals directly with the agents who can close them.",
+      bullets: ["Buyer needs", "Off-market opportunities", "Referral discussions", "Sales intel"],
+      cta: "Start a conversation",
+    },
+    {
+      img: `${STORAGE_BASE_V2}/05-network.png?v=${IMG_VERSION_V2}`,
+      title: "Verified Agent Network",
+      desc: "Connect with vetted top producers across every market. Every profile verified, every relationship protected.",
+      bullets: ["Search by name or market", "View agent specialties", "Build trusted relationships", "Grow your network"],
+      cta: "Explore the network",
+    },
+  ];
+
+  const rowHtml = rows.map((r) => `
+    <tr><td style="padding:32px 0 0;">
+      <img src="${r.img}" alt="${r.title}" width="600" style="display:block;width:100%;max-width:600px;height:auto;border-radius:10px;border:1px solid #94a3b8;" />
+      <h2 style="margin:16px 0 10px;font-size:16px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:#0f172a;line-height:1.3;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${r.title}</h2>
+      <div style="width:32px;height:2px;background:#22C55E;margin:0 0 12px;border-radius:1px;"></div>
+      <p style="margin:0 0 12px;font-size:13px;line-height:1.55;color:#475569;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${r.desc}</p>
+      ${r.bullets.map(b => `<p style="margin:0 0 4px;font-size:12px;line-height:1.5;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;"><span style="color:#22C55E;font-weight:700;">&#10003;</span> ${b}</p>`).join("")}
+      <p style="margin:14px 0 0;font-size:13px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;"><a href="${ctaUrl}" style="color:#0E56F5;font-weight:600;text-decoration:none;">${r.cta} &rarr;</a></p>
+    </td></tr>`).join("");
+
+  return `
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:600px;margin:0 auto;">
+      <tr><td align="center" style="padding:0 0 24px;">
+        <img src="${AAC_LOGO_URL}" alt="All Agent Connect" height="36" style="display:block;height:36px;width:auto;border:0;outline:none;" />
+      </td></tr>
+      <tr><td style="padding:0 0 16px;">
+        <p style="margin:0 0 6px;font-size:12px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#0E56F5;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">The Private Listing Network</p>
+        <h1 style="margin:0 0 10px;font-size:26px;font-weight:700;line-height:1.2;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">The private listing network where agents share pre-market intelligence.</h1>
+        <p style="margin:0;font-size:14px;line-height:1.6;color:#475569;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Share coming-soon listings, off-market inventory, and active buyer demand with verified agents &mdash; before it goes public.</p>
+      </td></tr>
+      <tr><td style="padding:8px 0 0;">
+        <img src="${heroImg}" alt="All Agent Connect &mdash; the private listing network" width="600" style="display:block;width:100%;max-width:600px;height:auto;border-radius:12px;border:1px solid #94a3b8;" />
+      </td></tr>
+      ${ctaButton(ctaLabel)}
+      <tr><td align="center" style="padding:20px 0 0;">
+        <p style="margin:0 0 6px;font-size:15px;font-weight:700;letter-spacing:0.02em;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Elite connections. Proven results.</p>
+        <p style="margin:0;font-size:13px;color:#64748b;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Built for the agents shaping their market before the market sees it.</p>
+      </td></tr>
+      ${rowHtml}
+      <tr><td style="padding:36px 0 0;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#F7FBF4;border:1px solid #22C55E;border-radius:10px;">
+          <tr><td align="center" style="padding:22px 24px;">
+            <p style="margin:0 0 6px;font-size:15px;font-weight:700;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Free for verified agents.</p>
+            <p style="margin:0;font-size:13px;color:#475569;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Join the private network of top producers sharing pre-market inventory today.</p>
+          </td></tr>
+        </table>
+      </td></tr>
+      ${ctaButton(ctaLabel)}
+      <tr><td align="center" style="padding:12px 0 0;">
+        <a href="mailto:chris@allagentconnect.com?subject=Private%20Listing%20Network" style="font-size:13px;color:#0E56F5;text-decoration:underline;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Or reply directly to Chris with questions</a>
+      </td></tr>
+      <tr><td style="padding:36px 0 0;border-top:1px solid #e2e8f0;">
+        <p style="margin:24px 0 4px;font-size:14px;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">See you inside.</p>
+        <p style="margin:0 0 4px;font-size:14px;color:#0f172a;font-weight:600;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Chris Tuite</p>
+        <p style="margin:0;font-size:13px;color:#64748b;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Founder, All Agent Connect<br/>617-877-0519 &middot; chris@allagentconnect.com</p>
+      </td></tr>
+      <tr><td style="padding:24px 0 0;">
+        <p style="margin:0;font-size:11px;color:#94a3b8;text-align:center;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">You&rsquo;re receiving this because you&rsquo;re a verified agent in the All Agent Connect network.</p>
+      </td></tr>
+    </table>`;
+}
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
