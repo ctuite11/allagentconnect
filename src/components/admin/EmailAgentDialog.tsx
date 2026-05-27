@@ -50,7 +50,8 @@ export function EmailAgentDialog({
     const isTemplated =
       template === "early-access-update-v1" ||
       template === "early-access-update-v2" ||
-      template === "founding-partner-invitation";
+      template === "founding-partner-invitation" ||
+      template === "private-listing-network";
     if (!subject.trim() || (!isTemplated && !message.trim())) {
       toast.error("Please fill in both subject and message");
       return;
@@ -140,6 +141,9 @@ export function EmailAgentDialog({
                   if (v === "founding-partner-invitation") {
                     setSubject((prev) => prev || "You're invited: Founding Partner of All Agent Connect");
                   }
+                  if (v === "private-listing-network") {
+                    setSubject((prev) => prev || "The private listing network where agents share pre-market intelligence");
+                  }
                 }}
               >
                 <SelectTrigger id="email-template" className="border-slate-200">
@@ -147,6 +151,9 @@ export function EmailAgentDialog({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="custom">Custom message</SelectItem>
+                  <SelectItem value="private-listing-network">
+                    Private Listing Network — All Agents (recommended)
+                  </SelectItem>
                   <SelectItem value="founding-partner-invitation">
                     Founding Partner — Exclusive Invitation
                   </SelectItem>
@@ -160,7 +167,8 @@ export function EmailAgentDialog({
               </Select>
               {(template === "early-access-update-v1" ||
                 template === "early-access-update-v2" ||
-                template === "founding-partner-invitation") && (
+                template === "founding-partner-invitation" ||
+                template === "private-listing-network") && (
                 <p className="text-xs text-muted-foreground">
                   Pre-built email featuring product screenshots and short captions. Custom message below is ignored.
                 </p>
