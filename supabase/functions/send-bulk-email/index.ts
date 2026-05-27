@@ -67,7 +67,7 @@ function build429Response(resetAt: string): Response {
 
 const STORAGE_BASE = `${supabaseUrl}/storage/v1/object/public/email-attachments/early-access-v1`;
 const STORAGE_BASE_V2 = `${supabaseUrl}/storage/v1/object/public/email-attachments/early-access-v2`;
-const IMG_VERSION_V2 = "v5";
+const IMG_VERSION_V2 = "v6";
 const AAC_LOGO_URL = `${supabaseUrl}/storage/v1/object/public/brand-assets/aac-logo-green-black-v4.png`;
 
 function buildEarlyAccessUpdateBody(): string {
