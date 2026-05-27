@@ -404,8 +404,8 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Cap recipients to prevent abuse
-    if (recipients.length > 500) {
-      throw new Error("Maximum 500 recipients allowed per bulk email");
+    if (recipients.length > 1000) {
+      throw new Error("Maximum 1000 recipients allowed per bulk email");
     }
 
     // Database-backed rate limiting: 2 bulk email campaigns per minute per user
