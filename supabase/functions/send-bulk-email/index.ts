@@ -70,6 +70,21 @@ const STORAGE_BASE_V2 = `${supabaseUrl}/storage/v1/object/public/email-attachmen
 const IMG_VERSION_V2 = "v8";
 const AAC_LOGO_URL = `${supabaseUrl}/storage/v1/object/public/brand-assets/aac-logo-green-black-v4.png`;
 
+const FUNCTIONS_HOST = supabaseUrl.replace(/^https?:\/\//, "").replace(/\/+$/, "");
+
+/**
+ * Wrap external http(s) hrefs in the html through the click redirector,
+ * keyed by the per-recipient emailSendId. Skips mailto:, tel:, anchors,
+ * and our own tracking endpoints.
+ */
+function wrapClickTracking(html: string, emailSendId: string): string {
+  return html.replace(/href="(https?:\/\/[^"]+)"/g, (match, url) => {
+    if (FUNCTIONS_HOST && url.includes(FUNCTIONS_HOST)) return match;
+    const wrapped = `${supabaseUrl}/functions/v1/track-email-click?id=${encodeURIComponent(emailSendId)}&u=${encodeURIComponent(url)}`;
+    return `href="${wrapped}"`;
+  });
+}
+
 function buildEarlyAccessUpdateBody(): string {
   const sections = [
     {
