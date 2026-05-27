@@ -20,6 +20,36 @@ Deno.serve(async (req) => {
 
   try {
     const url = new URL(req.url);
+    const supa = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
+    const ua = req.headers.get("user-agent") || null;
+    const ip =
+      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+      req.headers.get("x-real-ip") ||
+      null;
+
+    // Legacy bulk-email link: ?id=<emailSendId>&u=<encoded target>
+    const legacyId = url.searchParams.get("id");
+    const legacyU = url.searchParams.get("u");
+    if (legacyId && legacyU) {
+      let target: URL;
+      try { target = new URL(legacyU); } catch { return redirect(FALLBACK_URL); }
+      if (target.protocol !== "http:" && target.protocol !== "https:") {
+        return redirect(FALLBACK_URL);
+      }
+      supa.from("email_clicks").insert({
+        email_send_id: legacyId,
+        url: legacyU,
+        user_agent: ua,
+        ip_address: ip,
+      }).then(({ error }) => {
+        if (error) console.error("[track-email-click] legacy insert", error);
+      });
+      return redirect(target.toString());
+    }
+
     const jobId = url.searchParams.get("j") || "";
     const r = url.searchParams.get("r") || "";
     const u = url.searchParams.get("u") || "";
@@ -39,16 +69,6 @@ Deno.serve(async (req) => {
     const ok = await verifyClick({ jobId, recipientEmail, category: "" }, u, t);
     if (!ok) return redirect(target.toString());
 
-    // Fire-and-forget click insert — don't block the redirect.
-    const supa = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-    );
-    const ua = req.headers.get("user-agent") || null;
-    const ip =
-      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-      req.headers.get("x-real-ip") ||
-      null;
     supa.from("email_job_clicks").insert({
       job_id: jobId,
       recipient_email: recipientEmail,

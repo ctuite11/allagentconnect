@@ -70,6 +70,21 @@ const STORAGE_BASE_V2 = `${supabaseUrl}/storage/v1/object/public/email-attachmen
 const IMG_VERSION_V2 = "v8";
 const AAC_LOGO_URL = `${supabaseUrl}/storage/v1/object/public/brand-assets/aac-logo-green-black-v4.png`;
 
+const FUNCTIONS_HOST = supabaseUrl.replace(/^https?:\/\//, "").replace(/\/+$/, "");
+
+/**
+ * Wrap external http(s) hrefs in the html through the click redirector,
+ * keyed by the per-recipient emailSendId. Skips mailto:, tel:, anchors,
+ * and our own tracking endpoints.
+ */
+function wrapClickTracking(html: string, emailSendId: string): string {
+  return html.replace(/href="(https?:\/\/[^"]+)"/g, (match, url) => {
+    if (FUNCTIONS_HOST && url.includes(FUNCTIONS_HOST)) return match;
+    const wrapped = `${supabaseUrl}/functions/v1/track-email-click?id=${encodeURIComponent(emailSendId)}&u=${encodeURIComponent(url)}`;
+    return `href="${wrapped}"`;
+  });
+}
+
 function buildEarlyAccessUpdateBody(): string {
   const sections = [
     {
@@ -513,7 +528,8 @@ const handler = async (req: Request): Promise<Response> => {
         ? `${supabaseUrl}/functions/v1/track-email-open?id=${emailSend.id}`
         : "";
 
-      const groupHtml = htmlTemplate.replace("{{GREETING}}", "") + 
+      const groupBase = htmlTemplate.replace("{{GREETING}}", "");
+      const groupHtml = (emailSend ? wrapClickTracking(groupBase, emailSend.id) : groupBase) +
         (trackingPixelUrl ? `<img src="${trackingPixelUrl}" width="1" height="1" style="display:none;" alt="" />` : "");
 
       // Enqueue single group job
@@ -572,8 +588,9 @@ const handler = async (req: Request): Promise<Response> => {
           ? `${supabaseUrl}/functions/v1/track-email-open?id=${emailSend.id}`
           : "";
 
-        const personalizedHtml = htmlTemplate
-          .replace("{{GREETING}}", isTemplated ? "" : `<p>Hello ${recipient.name},</p>`) +
+        const personalizedBase = htmlTemplate
+          .replace("{{GREETING}}", isTemplated ? "" : `<p>Hello ${recipient.name},</p>`);
+        const personalizedHtml = (emailSend ? wrapClickTracking(personalizedBase, emailSend.id) : personalizedBase) +
           (trackingPixelUrl ? `<img src="${trackingPixelUrl}" width="1" height="1" style="display:none;" alt="" />` : "");
 
         return {
