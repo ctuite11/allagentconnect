@@ -78,6 +78,7 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
   const [uploading, setUploading] = useState(false);
   const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
   const [importing, setImporting] = useState(false);
+  const [importProgress, setImportProgress] = useState<string | null>(null);
 
   const parseCSV = (text: string): ParsedClient[] => {
     // Strip UTF-8 BOM
@@ -225,29 +226,59 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
     if (!validationResult?.valid.length) return;
 
     setImporting(true);
+    setImportProgress("Checking for duplicates...");
 
     try {
-      // Check for duplicate emails in the database
       const emails = validationResult.valid.map(c => c.email);
-      const { data: existingClients } = await supabase
-        .from('clients')
-        .select('email')
-        .eq('agent_id', agentId)
-        .in('email', emails);
 
-      const existingEmails = new Set(existingClients?.map(c => c.email) || []);
+      // 1) Batched duplicate-email lookup (chunks of 200) to avoid huge IN()
+      // lists and the 1000-row default return cap.
+      const DEDUPE_CHUNK = 200;
+      const existingEmails = new Set<string>();
+      for (let i = 0; i < emails.length; i += DEDUPE_CHUNK) {
+        const chunk = emails.slice(i, i + DEDUPE_CHUNK);
+        const { data, error } = await supabase
+          .from('clients')
+          .select('email')
+          .eq('agent_id', agentId)
+          .in('email', chunk);
+        if (error) throw error;
+        data?.forEach((c: { email: string }) => existingEmails.add(c.email));
+      }
 
-      // Check which emails already belong to AAC accounts (agents/buyers).
+      // 2) AAC-registered check with bounded concurrency (max 10 in-flight)
+      // instead of firing all 1000+ RPCs at once.
+      setImportProgress("Checking AAC registrations...");
       const aacRegistered = new Set<string>();
-      await Promise.all(
-        emails.map(async (em) => {
+      const RPC_CONCURRENCY = 10;
+      let cursor = 0;
+      const checkOne = async (em: string) => {
+        try {
           const { data } = await supabase.rpc(
             "is_email_registered_with_aac" as any,
             { p_email: em }
           );
           if (data === true) aacRegistered.add(em.toLowerCase());
-        })
+        } catch (err) {
+          console.warn("AAC registration check failed for", em, err);
+        }
+      };
+      const workers = Array.from(
+        { length: Math.min(RPC_CONCURRENCY, emails.length) },
+        async () => {
+          while (true) {
+            const idx = cursor++;
+            if (idx >= emails.length) return;
+            await checkOne(emails[idx]);
+            if (idx % 50 === 0) {
+              setImportProgress(
+                `Checking AAC registrations... ${Math.min(idx + 1, emails.length)} / ${emails.length}`
+              );
+            }
+          }
+        }
       );
+      await Promise.all(workers);
 
       // Filter out duplicates and AAC-registered emails
       const newClients = validationResult.valid.filter(
@@ -269,38 +300,67 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
         return;
       }
 
-      // Insert new clients
-      const { error } = await supabase
-        .from('clients')
-        .insert(
-          newClients.map(client => ({
-            agent_id: agentId,
-            first_name: client.first_name,
-            last_name: client.last_name,
-            email: client.email,
-            phone: client.phone || null,
-            client_type: client.client_type || null,
-          }))
+      // 3) Batched insert (chunks of 500) so a single big payload doesn't
+      // exceed Supabase request limits or time out. Continue on per-batch failure.
+      const INSERT_CHUNK = 500;
+      const rows = newClients.map(client => ({
+        agent_id: agentId,
+        first_name: client.first_name,
+        last_name: client.last_name,
+        email: client.email,
+        phone: client.phone || null,
+        client_type: client.client_type || null,
+      }));
+
+      let insertedCount = 0;
+      let failedCount = 0;
+      const batchErrors: string[] = [];
+      const totalBatches = Math.ceil(rows.length / INSERT_CHUNK);
+
+      for (let b = 0; b < totalBatches; b++) {
+        const batch = rows.slice(b * INSERT_CHUNK, (b + 1) * INSERT_CHUNK);
+        setImportProgress(
+          `Importing ${insertedCount + batch.length} / ${rows.length}...`
         );
+        const { error } = await supabase.from('clients').insert(batch);
+        if (error) {
+          failedCount += batch.length;
+          batchErrors.push(`Batch ${b + 1}: ${error.message}`);
+          console.error("Insert batch failed", b + 1, error);
+          continue;
+        }
+        insertedCount += batch.length;
+      }
 
-      if (error) throw error;
+      const dupSkipped =
+        validationResult.valid.length - newClients.length - aacSkipped;
 
-      const dupSkipped = validationResult.valid.length - newClients.length - aacSkipped;
-
-      toast.success(
-        `Successfully imported ${newClients.length} client(s)` +
-        (dupSkipped > 0 ? `. Skipped ${dupSkipped} duplicate(s)` : '') +
-        (aacSkipped > 0 ? `. Skipped ${aacSkipped} already registered with AAC` : '')
-      );
+      if (insertedCount === 0) {
+        toast.error(
+          `Import failed. ${batchErrors[0] ?? "No clients were imported."}`
+        );
+      } else {
+        toast.success(
+          `Imported ${insertedCount} client(s)` +
+            (dupSkipped > 0 ? `. Skipped ${dupSkipped} duplicate(s)` : '') +
+            (aacSkipped > 0 ? `. Skipped ${aacSkipped} already registered with AAC` : '') +
+            (failedCount > 0 ? `. ${failedCount} failed` : '')
+        );
+      }
       
       onImportComplete();
       onOpenChange(false);
       setValidationResult(null);
     } catch (error: any) {
       console.error("Error importing clients:", error);
-      toast.error("Failed to import clients");
+      toast.error(
+        error?.message
+          ? `Failed to import clients: ${error.message}`
+          : "Failed to import clients"
+      );
     } finally {
       setImporting(false);
+      setImportProgress(null);
     }
   };
 
@@ -443,7 +503,9 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
                   disabled={importing || !agentId || validationResult.valid.length === 0}
                 >
                   {importing && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                  Import {validationResult.valid.length} Client(s)
+                  {importing && importProgress
+                    ? importProgress
+                    : `Import ${validationResult.valid.length} Client(s)`}
                 </Button>
               </div>
             </div>
