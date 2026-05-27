@@ -54,7 +54,7 @@ const HeroSection = () => {
             className="mt-6 font-['Manrope'] font-semibold text-white text-5xl md:text-7xl tracking-tight leading-[0.95]"
             style={{ textShadow: "0 2px 12px rgba(0,0,0,0.35)", textWrap: "balance" as any }}
           >
-            See the market before it happens.
+            The private agent network where agents share pre-market intelligence.
           </h1>
 
           {/* Sub-headline */}
