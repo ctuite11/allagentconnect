@@ -528,7 +528,8 @@ const handler = async (req: Request): Promise<Response> => {
         ? `${supabaseUrl}/functions/v1/track-email-open?id=${emailSend.id}`
         : "";
 
-      const groupHtml = htmlTemplate.replace("{{GREETING}}", "") + 
+      const groupBase = htmlTemplate.replace("{{GREETING}}", "");
+      const groupHtml = (emailSend ? wrapClickTracking(groupBase, emailSend.id) : groupBase) +
         (trackingPixelUrl ? `<img src="${trackingPixelUrl}" width="1" height="1" style="display:none;" alt="" />` : "");
 
       // Enqueue single group job
@@ -587,8 +588,9 @@ const handler = async (req: Request): Promise<Response> => {
           ? `${supabaseUrl}/functions/v1/track-email-open?id=${emailSend.id}`
           : "";
 
-        const personalizedHtml = htmlTemplate
-          .replace("{{GREETING}}", isTemplated ? "" : `<p>Hello ${recipient.name},</p>`) +
+        const personalizedBase = htmlTemplate
+          .replace("{{GREETING}}", isTemplated ? "" : `<p>Hello ${recipient.name},</p>`);
+        const personalizedHtml = (emailSend ? wrapClickTracking(personalizedBase, emailSend.id) : personalizedBase) +
           (trackingPixelUrl ? `<img src="${trackingPixelUrl}" width="1" height="1" style="display:none;" alt="" />` : "");
 
         return {
