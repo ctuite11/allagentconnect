@@ -175,39 +175,39 @@ function buildEarlyAccessUpdateV2Body(): string {
   ];
 
   const rowHtml = rows.map((r) => `
-    <tr><td style="padding:32px 0 0;">
-      <img src="${r.img}" alt="${r.title}" width="600" style="display:block;width:100%;max-width:600px;height:auto;border-radius:10px;border:1px solid #94a3b8;" />
-      <h2 style="margin:16px 0 10px;font-size:16px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:#0f172a;line-height:1.3;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${r.title}</h2>
-      <div style="width:32px;height:2px;background:#22C55E;margin:0 0 12px;border-radius:1px;"></div>
-      <p style="margin:0 0 12px;font-size:13px;line-height:1.55;color:#475569;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${r.desc}</p>
-      ${r.bullets.map(b => `<p style="margin:0 0 4px;font-size:12px;line-height:1.5;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;"><span style="color:#22C55E;font-weight:700;">✓</span> ${b}</p>`).join("")}
+    <tr><td style="padding:32px 20px 0;">
+      <img src="${r.img}" alt="${r.title}" width="560" style="display:block;width:100%;max-width:560px;height:auto;border-radius:10px;border:1px solid #94a3b8;" />
+      <h2 style="margin:16px 0 6px;font-size:16px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#0f172a;line-height:1.3;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${r.title}</h2>
+      <div style="width:24px;height:2px;background:#22C55E;margin:0 0 10px;border-radius:1px;"></div>
+      <p style="margin:0 0 10px;font-size:13px;line-height:1.55;color:#475569;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${r.desc}</p>
+      ${r.bullets.map(b => `<p style="margin:0 0 3px;font-size:12px;line-height:1.4;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;"><span style="color:#22C55E;font-weight:700;">✓</span> ${b}</p>`).join("")}
     </td></tr>`).join("");
 
   return `
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:600px;margin:0 auto;">
-      <tr><td align="center" style="padding:0 0 24px;">
+      <tr><td align="center" style="padding:0 20px 24px;">
         <img src="${AAC_LOGO_URL}" alt="All Agent Connect" height="36" style="display:block;height:36px;width:auto;border:0;outline:none;" />
       </td></tr>
-      <tr><td align="center" style="padding:0 0 16px;text-align:center;">
+      <tr><td align="center" style="padding:0 20px 16px;text-align:center;">
         <p style="margin:0 0 6px;font-size:12px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#0E56F5;text-align:center;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Private Listing Network</p>
         <h1 style="margin:0 0 10px;font-size:26px;font-weight:700;line-height:1.2;color:#0f172a;text-align:center;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">The private listing network.</h1>
         <p style="margin:0 auto;max-width:480px;font-size:14px;line-height:1.6;color:#475569;text-align:center;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Share coming-soon listings, off-market inventory, and active buyer demand with verified agents before it goes public.</p>
       </td></tr>
-      <tr><td style="padding:8px 0 0;">
-        <img src="${heroImg}" alt="All Agent Connect homepage" width="600" style="display:block;width:100%;max-width:600px;height:auto;border-radius:12px;border:1px solid #94a3b8;" />
+      <tr><td style="padding:8px 20px 0;">
+        <img src="${heroImg}" alt="All Agent Connect homepage" width="560" style="display:block;width:100%;max-width:560px;height:auto;border-radius:12px;border:1px solid #94a3b8;" />
       </td></tr>
-      <tr><td align="center" style="padding:20px 0 0;">
+      <tr><td align="center" style="padding:20px 20px 0;">
         <p style="margin:0 0 6px;font-size:15px;font-weight:700;letter-spacing:0.02em;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Elite connections. Proven results.</p>
         <p style="margin:0 0 6px;font-size:14px;font-weight:600;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">The private network for matching buyer needs with off-market inventory.</p>
         <p style="margin:0;font-size:13px;color:#64748b;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Exclusive, top-tier networking designed for your success.</p>
       </td></tr>
       ${rowHtml}
-      <tr><td style="padding:36px 0 0;border-top:1px solid #e2e8f0;margin-top:32px;">
+      <tr><td style="padding:36px 20px 0;border-top:1px solid #e2e8f0;margin-top:32px;">
         <p style="margin:24px 0 4px;font-size:14px;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">More to come soon.</p>
         <p style="margin:0 0 4px;font-size:14px;color:#0f172a;font-weight:600;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Chris Tuite</p>
         <p style="margin:0;font-size:13px;color:#64748b;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Founder, All Agent Connect<br/>617-877-0519 · chris@allagentconnect.com</p>
       </td></tr>
-      <tr><td style="padding:24px 0 0;">
+      <tr><td style="padding:24px 20px 0;">
         <p style="margin:0;font-size:11px;color:#94a3b8;text-align:center;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">You're receiving this because you registered for early access at allagentconnect.com.</p>
       </td></tr>
     </table>`;
