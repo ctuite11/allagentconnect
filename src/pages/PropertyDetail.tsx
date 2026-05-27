@@ -1219,29 +1219,30 @@ const PropertyDetail = () => {
                   Agent Tools
                   <Badge variant="outline" className="ml-2 border-neutral-200 text-xs">Internal Only</Badge>
                 </h2>
-                {/* Views & Matches grouped with Broadcast */}
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-3 text-sm text-neutral-700">
-                    <span className="flex items-center gap-1">
-                      <Eye className="h-4 w-4 text-neutral-500" />
-                      <strong className="text-neutral-900">{stats.views}</strong> Views
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Users className="h-4 w-4 text-neutral-500" />
-                      <strong className="text-neutral-900">{stats.matches}</strong> Matches
-                    </span>
+                {isListingOwner && (
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-3 text-sm text-neutral-700">
+                      <span className="flex items-center gap-1">
+                        <Eye className="h-4 w-4 text-neutral-500" />
+                        <strong className="text-neutral-900">{stats.views}</strong> Views
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Users className="h-4 w-4 text-neutral-500" />
+                        <strong className="text-neutral-900">{stats.matches}</strong> Matches
+                      </span>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled
+                      className="cursor-not-allowed border-neutral-200 px-3 opacity-50 shadow-none"
+                      title="Coming soon in Communications Center"
+                    >
+                      <Send className="w-4 h-4 mr-2" />
+                      Message All Matches
+                    </Button>
                   </div>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    disabled
-                    className="cursor-not-allowed border-neutral-200 px-3 opacity-50 shadow-none"
-                    title="Coming soon in Communications Center"
-                  >
-                    <Send className="w-4 h-4 mr-2" />
-                    Message All Matches
-                  </Button>
-              </div>
+                )}
             </div>
 
             {/* Buyer Agent Compensation - Green Box (moved up) */}
