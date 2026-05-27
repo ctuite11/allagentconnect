@@ -62,6 +62,9 @@ interface DashboardSidebarProps {
   activeItem?: string;
   isAdmin?: boolean;
   className?: string;
+  /** Mobile drawer open state (controlled by AppShell on <lg screens) */
+  mobileOpen?: boolean;
+  onMobileClose?: () => void;
 }
 
 function SectionLabel({ children, collapsed }: { children: React.ReactNode; collapsed: boolean }) {
@@ -138,6 +141,8 @@ export function DashboardSidebar({
   activeItem,
   isAdmin,
   className,
+  mobileOpen = false,
+  onMobileClose,
 }: DashboardSidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
   const navigate = useNavigate();
@@ -178,15 +183,30 @@ export function DashboardSidebar({
   const handleNav = (item: SidebarItem) => {
     if (item.route) {
       navigate(item.route);
+      onMobileClose?.();
     }
   };
 
   return (
     <TooltipProvider delayDuration={200}>
+      {/* Mobile backdrop */}
+      <div
+        onClick={onMobileClose}
+        className={cn(
+          "fixed inset-0 z-40 bg-black/50 backdrop-blur-sm transition-opacity duration-200 lg:hidden",
+          mobileOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+        )}
+        aria-hidden="true"
+      />
       <aside
         className={cn(
-          "flex shrink-0 flex-col bg-zinc-900 h-full transition-all duration-200",
-          collapsed ? "w-[72px]" : "w-[212px]",
+          "flex flex-col bg-zinc-900 transition-all duration-200",
+          // Desktop: in-flow, fixed width
+          "lg:relative lg:h-full lg:shrink-0 lg:translate-x-0",
+          collapsed ? "lg:w-[72px]" : "lg:w-[212px]",
+          // Mobile: off-canvas drawer
+          "fixed inset-y-0 left-0 z-50 w-[260px] max-w-[85vw] h-full shadow-2xl",
+          mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
           className
         )}
       >
