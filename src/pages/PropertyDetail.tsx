@@ -24,7 +24,6 @@ import {
   Bed, 
   Bath, 
   Square, 
-  Calendar,
   Phone,
   Mail,
   Share2,
@@ -1104,47 +1103,6 @@ const PropertyDetail = () => {
                   )}
                 </CardContent>
               </Card>
-
-              {/* Price & Tax History */}
-              {(priceHistory.length > 0 || typeof listing.annual_property_tax === "number" || typeof listing.tax_assessment_value === "number") && (
-                <Card className={detailSurface}>
-                  <CardHeader className="pb-2">
-                    <CardTitle className={detailTitle}>
-                      <Calendar className={detailTitleIcon} />
-                      Price & Tax History
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {(typeof listing.annual_property_tax === "number" || typeof listing.tax_assessment_value === "number") && (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm pb-4 border-b">
-                        {typeof listing.annual_property_tax === "number" && (
-                          <div className="flex justify-between gap-3">
-                            <span className="text-muted-foreground">Annual Property Tax</span>
-                            <span className="font-semibold">${listing.annual_property_tax.toLocaleString()}</span>
-                          </div>
-                        )}
-                        {typeof listing.tax_assessment_value === "number" && (
-                          <div className="flex justify-between gap-3">
-                            <span className="text-muted-foreground">Assessed Value</span>
-                            <span className="font-semibold">${listing.tax_assessment_value.toLocaleString()}</span>
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {priceHistory.length > 0 && (
-                      <div className="space-y-2">
-                        {priceHistory.slice(0, 5).map((entry) => (
-                          <div key={entry.id} className="flex items-center justify-between text-sm">
-                            <span className="text-muted-foreground">{new Date(entry.changed_at).toLocaleDateString()}</span>
-                            <span className="font-semibold">${entry.new_price.toLocaleString()}</span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              )}
 
               {/* Location / Neighborhood */}
               {(listing.latitude || listing.longitude || listing.neighborhood || (attomData && attomData.neighborhood) || listing.walk_score_data) && (
