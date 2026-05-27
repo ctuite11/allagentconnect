@@ -54,7 +54,7 @@ const HeroSection = () => {
             className="mt-6 font-['Manrope'] font-semibold text-white text-4xl md:text-5xl tracking-tight leading-[1.05]"
             style={{ textShadow: "0 2px 12px rgba(0,0,0,0.35)", textWrap: "balance" as any }}
           >
-            The private network where agents share pre-market intelligence.
+            The private listing network.........
           </h1>
 
           {/* Sub-headline */}
