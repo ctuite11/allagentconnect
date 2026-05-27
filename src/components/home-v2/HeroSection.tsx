@@ -14,6 +14,18 @@ const HeroSection = () => {
         />
       </div>
 
+      {/* Lower-left readability wash — soft gradient, not a panel */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        aria-hidden
+        style={{
+          background: [
+            "radial-gradient(ellipse 90% 75% at 12% 88%, rgba(8, 10, 16, 0.78) 0%, rgba(8, 10, 16, 0.42) 42%, transparent 68%)",
+            "linear-gradient(105deg, rgba(10, 12, 18, 0.55) 0%, rgba(10, 12, 18, 0.22) 38%, transparent 58%)",
+          ].join(", "),
+        }}
+      />
+
       {/* Blue glow accent */}
       <div className="absolute top-1/3 left-0 w-[560px] h-[560px] rounded-full bg-aac opacity-[0.07] blur-[140px] pointer-events-none" />
 
@@ -58,8 +70,11 @@ const HeroSection = () => {
           </h1>
 
           {/* Sub-headline */}
-          <p className="mt-5 font-['Manrope'] font-medium text-white/70 text-lg md:text-xl leading-relaxed max-w-2xl">
-            Share coming-soon listings, off-market inventory, and active buyer demand with verified agents before it goes public.
+          <p
+            className="mt-5 font-['Manrope'] font-medium text-white/90 text-lg md:text-xl leading-relaxed max-w-2xl"
+            style={{ textShadow: "0 1px 10px rgba(0,0,0,0.45)" }}
+          >
+            See buyer demand and pre-market opportunities before they hit the public market.
           </p>
 
           {/* CTA */}
