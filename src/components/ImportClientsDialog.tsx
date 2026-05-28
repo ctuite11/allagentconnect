@@ -414,7 +414,7 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
         <DialogHeader>
           <DialogTitle>Import Clients from File</DialogTitle>
           <DialogDescription>
-            Upload a CSV file containing your client contacts. File must include First Name, Last Name, and Email columns.
+            Upload a CSV file containing your client contacts. File must include a Name (or First Name + Last Name) column and Email.
           </DialogDescription>
         </DialogHeader>
 
@@ -428,7 +428,7 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
                   <div className="space-y-2">
                     <p className="font-semibold">CSV Format Requirements:</p>
                     <ul className="list-disc list-inside text-sm space-y-1">
-                      <li><strong>Required columns:</strong> First Name, Last Name, Email</li>
+                      <li><strong>Required columns:</strong> Name (or First Name + Last Name), Email</li>
                       <li><strong>Optional columns:</strong> Phone, Client Type, Office ID</li>
                       <li>First row must be column headers</li>
                       <li>Maximum file size: 20MB</li>
