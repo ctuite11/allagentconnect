@@ -330,7 +330,7 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
       const rows = newClients.map(client => ({
         agent_id: agentId,
         first_name: client.first_name,
-        last_name: client.last_name,
+        last_name: client.last_name || '',
         email: client.email,
         phone: client.phone || null,
         client_type: client.client_type || null,
