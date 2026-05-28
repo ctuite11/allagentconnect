@@ -1395,6 +1395,7 @@ export type Database = {
           is_favorite: boolean
           last_name: string
           notes: string | null
+          office_id: string | null
           phone: string | null
           source: string
           updated_at: string
@@ -1410,6 +1411,7 @@ export type Database = {
           is_favorite?: boolean
           last_name: string
           notes?: string | null
+          office_id?: string | null
           phone?: string | null
           source?: string
           updated_at?: string
@@ -1425,6 +1427,7 @@ export type Database = {
           is_favorite?: boolean
           last_name?: string
           notes?: string | null
+          office_id?: string | null
           phone?: string | null
           source?: string
           updated_at?: string

@@ -52,6 +52,7 @@ const clientRowSchema = z.object({
   email: z.string().trim().email("Invalid email address").max(255),
   phone: z.string().trim().max(20).optional().or(z.literal("")),
   client_type: z.enum(['buyer', 'seller', 'renter', 'agent', 'lender', 'attorney', 'inspector', 'other']).nullable().optional(),
+  office_id: z.string().trim().max(64).nullable().optional(),
 });
 
 interface ImportClientsDialogProps {
@@ -67,6 +68,7 @@ interface ParsedClient {
   email: string;
   phone?: string;
   client_type?: string;
+  office_id?: string | null;
 }
 
 interface ValidationResult {
@@ -95,6 +97,7 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
     const emailIdx = findHeaderIndex(header, ['email', 'e-mail']);
     const phoneIdx = findHeaderIndex(header, ['phone', 'telephone', 'mobile']);
     const clientTypeIdx = header.findIndex(h => h.includes('client') && h.includes('type'));
+    const officeIdIdx = findHeaderIndex(header, ['office id', 'office_id', 'office', 'mls office id', 'mls office']);
     const fullNameIdx = findHeaderIndex(header, ['name']);
 
     // Allow full-name fallback if first/last not found
@@ -129,12 +132,16 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
         ? rawClientType.trim().toLowerCase()
         : null;
 
+      const rawOfficeId = officeIdIdx !== -1 ? values[officeIdIdx] : '';
+      const normalizedOfficeId = rawOfficeId?.trim() ? rawOfficeId.trim() : null;
+
       clients.push({
         first_name: firstName,
         last_name: lastName,
         email: values[emailIdx] || '',
         phone: phoneIdx !== -1 ? values[phoneIdx] : '',
         client_type: normalizedClientType,
+        office_id: normalizedOfficeId,
       });
     }
 
@@ -155,6 +162,7 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
           email: result.data.email,
           phone: result.data.phone,
           client_type: result.data.client_type,
+          office_id: result.data.office_id ?? null,
         });
       } else {
         errors.push({
@@ -310,6 +318,7 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
         email: client.email,
         phone: client.phone || null,
         client_type: client.client_type || null,
+        office_id: client.office_id || null,
       }));
 
       let insertedCount = 0;
@@ -390,7 +399,7 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
                     <p className="font-semibold">CSV Format Requirements:</p>
                     <ul className="list-disc list-inside text-sm space-y-1">
                       <li><strong>Required columns:</strong> First Name, Last Name, Email</li>
-                      <li><strong>Optional columns:</strong> Phone, Notes</li>
+                      <li><strong>Optional columns:</strong> Phone, Client Type, Office ID</li>
                       <li>First row must be column headers</li>
                       <li>Maximum file size: 20MB</li>
                     </ul>
