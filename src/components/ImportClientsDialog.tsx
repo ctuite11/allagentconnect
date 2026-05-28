@@ -138,7 +138,7 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
       clients.push({
         first_name: firstName,
         last_name: lastName,
-        email: values[emailIdx] || '',
+        email: (values[emailIdx] || '').trim().toLowerCase(),
         phone: phoneIdx !== -1 ? values[phoneIdx] : '',
         client_type: normalizedClientType,
         office_id: normalizedOfficeId,
@@ -237,7 +237,20 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
     setImportProgress("Checking for duplicates...");
 
     try {
-      const emails = validationResult.valid.map(c => c.email);
+      // Dedupe within the parsed file (case-insensitive), keep first occurrence.
+      const seenInFile = new Set<string>();
+      const uniqueInFile: ParsedClient[] = [];
+      let inFileDupCount = 0;
+      for (const c of validationResult.valid) {
+        const key = c.email.trim().toLowerCase();
+        if (seenInFile.has(key)) {
+          inFileDupCount++;
+          continue;
+        }
+        seenInFile.add(key);
+        uniqueInFile.push({ ...c, email: key });
+      }
+      const emails = uniqueInFile.map(c => c.email);
 
       // 1) Batched duplicate-email lookup (chunks of 200) to avoid huge IN()
       // lists and the 1000-row default return cap.
@@ -249,9 +262,11 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
           .from('clients')
           .select('email')
           .eq('agent_id', agentId)
-          .in('email', chunk);
+          .or(chunk.map(e => `email.ilike.${e}`).join(','));
         if (error) throw error;
-        data?.forEach((c: { email: string }) => existingEmails.add(c.email));
+        data?.forEach((c: { email: string }) =>
+          existingEmails.add((c.email || '').trim().toLowerCase())
+        );
       }
 
       // 2) AAC-registered check with bounded concurrency (max 10 in-flight)
@@ -289,11 +304,11 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
       await Promise.all(workers);
 
       // Filter out duplicates and AAC-registered emails
-      const newClients = validationResult.valid.filter(
+      const newClients = uniqueInFile.filter(
         (c) => !existingEmails.has(c.email) && !aacRegistered.has(c.email.toLowerCase())
       );
 
-      const aacSkipped = validationResult.valid.filter((c) =>
+      const aacSkipped = uniqueInFile.filter((c) =>
         aacRegistered.has(c.email.toLowerCase())
       ).length;
 
@@ -323,6 +338,7 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
 
       let insertedCount = 0;
       let failedCount = 0;
+      let raceDupSkipped = 0;
       const batchErrors: string[] = [];
       const totalBatches = Math.ceil(rows.length / INSERT_CHUNK);
 
@@ -332,17 +348,29 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
           `Importing ${insertedCount + batch.length} / ${rows.length}...`
         );
         const { error } = await supabase.from('clients').insert(batch);
-        if (error) {
-          failedCount += batch.length;
-          batchErrors.push(`Batch ${b + 1}: ${error.message}`);
-          console.error("Insert batch failed", b + 1, error);
+        if (!error) {
+          insertedCount += batch.length;
           continue;
         }
-        insertedCount += batch.length;
+        // Fall back to per-row inserts: silently skip unique-violation duplicates
+        // (race condition vs. the new partial unique index on (agent_id, lower(email))).
+        console.warn("Batch insert failed, retrying row-by-row", b + 1, error);
+        for (const row of batch) {
+          const { error: rowErr } = await supabase.from('clients').insert(row);
+          if (!rowErr) {
+            insertedCount++;
+          } else if (rowErr.code === '23505') {
+            raceDupSkipped++;
+          } else {
+            failedCount++;
+            batchErrors.push(rowErr.message);
+            console.error("Row insert failed", row.email, rowErr);
+          }
+        }
       }
 
-      const dupSkipped =
-        validationResult.valid.length - newClients.length - aacSkipped;
+      const dbDupSkipped =
+        uniqueInFile.length - newClients.length - aacSkipped + raceDupSkipped;
 
       if (insertedCount === 0) {
         toast.error(
@@ -351,7 +379,8 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
       } else {
         toast.success(
           `Imported ${insertedCount} client(s)` +
-            (dupSkipped > 0 ? `. Skipped ${dupSkipped} duplicate(s)` : '') +
+            (dbDupSkipped > 0 ? `. Skipped ${dbDupSkipped} already in your list` : '') +
+            (inFileDupCount > 0 ? `. Skipped ${inFileDupCount} duplicate(s) in file` : '') +
             (aacSkipped > 0 ? `. Skipped ${aacSkipped} already registered with AAC` : '') +
             (failedCount > 0 ? `. ${failedCount} failed` : '')
         );
