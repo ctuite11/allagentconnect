@@ -98,13 +98,13 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
     const phoneIdx = findHeaderIndex(header, ['phone', 'telephone', 'mobile']);
     const clientTypeIdx = header.findIndex(h => h.includes('client') && h.includes('type'));
     const officeIdIdx = findHeaderIndex(header, ['office id', 'office_id', 'office', 'mls office id', 'mls office']);
-    const fullNameIdx = findHeaderIndex(header, ['name']);
+    const fullNameIdx = findHeaderIndex(header, ['name', 'full name', 'fullname', 'contact name', 'client name']);
 
     // Allow full-name fallback if first/last not found
     const useFullName = firstNameIdx === -1 && lastNameIdx === -1 && fullNameIdx !== -1;
 
     if (!useFullName && (firstNameIdx === -1 || lastNameIdx === -1) || emailIdx === -1) {
-      throw new Error("CSV must contain 'First Name', 'Last Name', and 'Email' columns (or 'Name' and 'Email')");
+      throw new Error("CSV must include either a 'Name' (or 'Full Name') column, or both 'First Name' and 'Last Name' columns, plus 'Email'");
     }
 
     const clients: ParsedClient[] = [];
@@ -118,7 +118,8 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
       let lastName = '';
 
       if (useFullName) {
-        const fullName = (values[fullNameIdx] || '').trim();
+        const fullName = (values[fullNameIdx] || '').trim().replace(/\s+/g, ' ');
+        if (!fullName) continue;
         const parts = fullName.split(/\s+/);
         firstName = parts[0] || '';
         lastName = parts.slice(1).join(' ');
