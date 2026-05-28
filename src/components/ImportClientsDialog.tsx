@@ -159,7 +159,7 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
       if (result.success) {
         valid.push({
           first_name: result.data.first_name,
-          last_name: result.data.last_name,
+          last_name: result.data.last_name ?? '',
           email: result.data.email,
           phone: result.data.phone,
           client_type: result.data.client_type,
