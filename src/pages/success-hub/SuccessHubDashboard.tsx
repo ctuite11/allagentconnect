@@ -9,6 +9,7 @@ import { MarketActivityRow } from "@/components/success-hub/MarketActivityRow";
 import { DashboardCommunications } from "@/components/success-hub/DashboardCommunications";
 import { DashboardBuyersTable } from "@/components/success-hub/DashboardBuyersTable";
 import { SuccessHubHero } from "@/components/success-hub/SuccessHubHero";
+import { NetworkActivitySection } from "@/components/success-hub/networkActivity/NetworkActivitySection";
 import { SuccessHubStatRow } from "@/components/success-hub/SuccessHubStatRow";
 import { SuccessHubListingCard } from "@/components/success-hub/SuccessHubListingCard";
 import { SUCCESS_HUB_LISTINGS_GRID } from "@/components/success-hub/successHubListingLayout";
@@ -81,6 +82,20 @@ function WorkspaceSkeletonRails() {
           </div>
         ))}
       </section>
+      <div className="space-y-3">
+        <Skeleton className="h-5 w-40 rounded-md bg-neutral-100" />
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          {[0, 1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm"
+            >
+              <Skeleton className="h-4 w-32 rounded-md bg-neutral-100" />
+              <Skeleton className="mt-3 h-[120px] w-full rounded-lg bg-neutral-100" />
+            </div>
+          ))}
+        </div>
+      </div>
       <div className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm">
         <Skeleton className="h-[120px] w-full rounded-lg bg-neutral-100" />
       </div>
@@ -184,6 +199,8 @@ function SuccessHubDashboardBody() {
 
       {!loading ? <SuccessHubHero summary={summary} /> : null}
       {!loading ? <SuccessHubStatRow summary={summary} /> : null}
+
+      {!loading ? <NetworkActivitySection /> : null}
 
       {!loading ? (
         <AgentSectionCard className="border-neutral-200 p-5 shadow-sm hover:border-neutral-200 hover:shadow-sm">
