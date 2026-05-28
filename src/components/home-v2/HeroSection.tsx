@@ -31,10 +31,15 @@ const HeroSection = () => {
 
       {/* Top access row */}
       <div className="relative z-10 flex items-center justify-between w-full max-w-[1440px] mx-auto px-6 lg:px-[100px] py-5">
-        <div className="flex items-center gap-1.5">
-          <AACMonogram className="w-8 h-8 text-[#50c878]" />
-          <span className="font-['Manrope'] font-semibold text-white text-lg tracking-[-0.4px] whitespace-nowrap">
-            All Agent Connect
+        <div className="inline-flex flex-col">
+          <div className="flex items-center gap-1.5">
+            <AACMonogram className="w-8 h-8 text-[#50c878]" />
+            <span className="font-['Manrope'] font-semibold text-white text-lg tracking-[-0.4px] whitespace-nowrap">
+              All Agent Connect
+            </span>
+          </div>
+          <span className="self-center mt-0.5 font-['Manrope'] font-light text-[10px] tracking-[0.2em] text-neutral-400">
+            Massachusetts
           </span>
         </div>
         <div className="flex items-center gap-5">
