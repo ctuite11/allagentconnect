@@ -48,7 +48,7 @@ function findHeaderIndex(headers: string[], candidates: string[]): number {
 
 const clientRowSchema = z.object({
   first_name: z.string().trim().min(1, "First name is required").max(100),
-  last_name: z.string().trim().min(1, "Last name is required").max(100),
+  last_name: z.string().trim().max(100).optional().or(z.literal("")),
   email: z.string().trim().email("Invalid email address").max(255),
   phone: z.string().trim().max(20).optional().or(z.literal("")),
   client_type: z.enum(['buyer', 'seller', 'renter', 'agent', 'lender', 'attorney', 'inspector', 'other']).nullable().optional(),
@@ -98,13 +98,13 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
     const phoneIdx = findHeaderIndex(header, ['phone', 'telephone', 'mobile']);
     const clientTypeIdx = header.findIndex(h => h.includes('client') && h.includes('type'));
     const officeIdIdx = findHeaderIndex(header, ['office id', 'office_id', 'office', 'mls office id', 'mls office']);
-    const fullNameIdx = findHeaderIndex(header, ['name']);
+    const fullNameIdx = findHeaderIndex(header, ['name', 'full name', 'fullname', 'contact name', 'client name']);
 
     // Allow full-name fallback if first/last not found
     const useFullName = firstNameIdx === -1 && lastNameIdx === -1 && fullNameIdx !== -1;
 
     if (!useFullName && (firstNameIdx === -1 || lastNameIdx === -1) || emailIdx === -1) {
-      throw new Error("CSV must contain 'First Name', 'Last Name', and 'Email' columns (or 'Name' and 'Email')");
+      throw new Error("CSV must include either a 'Name' (or 'Full Name') column, or both 'First Name' and 'Last Name' columns, plus 'Email'");
     }
 
     const clients: ParsedClient[] = [];
@@ -118,7 +118,8 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
       let lastName = '';
 
       if (useFullName) {
-        const fullName = (values[fullNameIdx] || '').trim();
+        const fullName = (values[fullNameIdx] || '').trim().replace(/\s+/g, ' ');
+        if (!fullName) continue;
         const parts = fullName.split(/\s+/);
         firstName = parts[0] || '';
         lastName = parts.slice(1).join(' ');
@@ -158,7 +159,7 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
       if (result.success) {
         valid.push({
           first_name: result.data.first_name,
-          last_name: result.data.last_name,
+          last_name: result.data.last_name ?? '',
           email: result.data.email,
           phone: result.data.phone,
           client_type: result.data.client_type,
@@ -329,7 +330,7 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
       const rows = newClients.map(client => ({
         agent_id: agentId,
         first_name: client.first_name,
-        last_name: client.last_name,
+        last_name: client.last_name || '',
         email: client.email,
         phone: client.phone || null,
         client_type: client.client_type || null,
@@ -413,7 +414,7 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
         <DialogHeader>
           <DialogTitle>Import Clients from File</DialogTitle>
           <DialogDescription>
-            Upload a CSV file containing your client contacts. File must include First Name, Last Name, and Email columns.
+            Upload a CSV file containing your client contacts. File must include a Name (or First Name + Last Name) column and Email.
           </DialogDescription>
         </DialogHeader>
 
@@ -427,7 +428,7 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
                   <div className="space-y-2">
                     <p className="font-semibold">CSV Format Requirements:</p>
                     <ul className="list-disc list-inside text-sm space-y-1">
-                      <li><strong>Required columns:</strong> First Name, Last Name, Email</li>
+                      <li><strong>Required columns:</strong> Name (or First Name + Last Name), Email</li>
                       <li><strong>Optional columns:</strong> Phone, Client Type, Office ID</li>
                       <li>First row must be column headers</li>
                       <li>Maximum file size: 20MB</li>

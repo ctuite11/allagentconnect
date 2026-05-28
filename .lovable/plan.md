@@ -1,29 +1,23 @@
-# Stop Duplicate Client Imports
+## Goal
+Mailing list CSVs typically have a single "Name" (or "Full Name") column instead of separate First/Last columns. Today the importer accepts a `Name` column as a fallback, but validation still requires `last_name` to be non-empty, so single-word names ("Cher", "Madonna", or a company name) get rejected, and the error message still demands "First Name" and "Last Name".
 
-## Problem
+## Changes to `src/components/ImportClientsDialog.tsx`
 
-The CSV importer (`ImportClientsDialog.tsx`) checks for duplicates against existing rows in `clients` by exact `email` match, but it has three gaps that let duplicates through:
+1. **Expand full-name header detection**
+   - Recognize `name`, `full name`, `fullname`, `contact name`, `client name` as the full-name column.
 
-1. **In-file duplicates** — if the same email appears twice in the CSV, both pass dedupe and both get inserted.
-2. **Case/whitespace mismatch** — existing-email check is case-sensitive. `Jane@x.com` in DB and `jane@x.com` in CSV are treated as different.
-3. **No DB-level guard** — there is no unique constraint on `(agent_id, lower(email))`, so a re-upload during the race window (or a second tab) can still create a duplicate.
+2. **Relax required-column error**
+   - When neither First/Last nor a full-name column is present, throw: "CSV must include either a 'Name' (or 'Full Name') column, or both 'First Name' and 'Last Name' columns, plus 'Email'."
 
-## Plan
+3. **Loosen schema for last name**
+   - Change `last_name` in `clientRowSchema` to `z.string().trim().max(100).optional().or(z.literal(""))` so single-token full names (e.g. "Cher") still validate.
+   - `first_name` stays required (we always have at least one token from the full name, or the row is meaningless).
+   - Insert payload sends `last_name: client.last_name || ''` to satisfy the DB column.
 
-### 1. Frontend dedupe hardening (`src/components/ImportClientsDialog.tsx`)
-- Normalize every parsed email to `trim().toLowerCase()` before validation, dedupe, and insert.
-- Deduplicate within the parsed file: keep the first occurrence of each email, count the rest as "duplicates in file".
-- Lowercase the existing-emails Set comparison so DB matches are case-insensitive.
-- Update the final toast to surface both kinds of skips: in-file duplicates and existing-in-DB duplicates (AAC-registered count stays as-is).
+4. **Full-name parsing edge cases**
+   - If the full-name cell is empty, skip the row (don't push an invalid client).
+   - Trim collapsed whitespace; keep current "first token = first_name, rest = last_name" behavior.
 
-### 2. Database guard (new migration)
-- Add a partial unique index: `CREATE UNIQUE INDEX clients_agent_email_unique ON public.clients (agent_id, lower(email)) WHERE email IS NOT NULL;`
-- Wrap each insert batch in a try/catch so a `23505` unique-violation from a race falls back to per-row insert that skips the conflicting rows (using `.upsert(..., { onConflict: 'agent_id,email', ignoreDuplicates: true })` is not viable because the index is on `lower(email)`, so we'll do a per-row insert-on-error retry and count failures as skipped duplicates).
-
-### Out of scope
-- No phone-based dedupe, no fuzzy name matching, no merging of existing rows, no changes to the AAC-registration check, no UI redesign of the dialog.
-
-## Technical notes
-
-- The existing `email` column is preserved as-typed; only comparisons are lowercased. We do not mutate stored email casing for historical rows.
-- The partial unique index will fail to create if the `clients` table already contains case-insensitive duplicates for the same agent. The migration will first run a `SELECT` (via the migration's own SQL) that surfaces conflicts; if any exist, the migration aborts with a clear error so we can clean them up before retrying. No automatic deletion of existing rows.
+## Out of scope
+- No DB schema changes.
+- No changes to dedupe, AAC-registration check, office_id handling, or UI layout beyond the help-text line that lists required columns (updated to: "Required: Name (or First Name + Last Name), Email").
