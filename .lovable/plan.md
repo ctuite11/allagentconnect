@@ -1,35 +1,29 @@
-# Add `office_id` to CRM contacts (mailing list import)
+# Stop Duplicate Client Imports
 
-## Context
+## Problem
 
-The mailing list upload is the **My Clients → Import CSV** flow (`src/components/ImportClientsDialog.tsx`), which writes into the `clients` table. Today the importer accepts: First Name, Last Name, Email, Phone, and Client Type (buyer/seller/renter/**agent**/lender/attorney/inspector/other) — that's the "client type for agents" lever you used last time.
+The CSV importer (`ImportClientsDialog.tsx`) checks for duplicates against existing rows in `clients` by exact `email` match, but it has three gaps that let duplicates through:
 
-You want to add **`Office ID`** as another optional column so you can tag imported contacts (especially agents) with their office identifier. Since there's no `offices` table in the schema today, `office_id` will be a free-text string (e.g. an MLS office code) — no FK, no constraint.
+1. **In-file duplicates** — if the same email appears twice in the CSV, both pass dedupe and both get inserted.
+2. **Case/whitespace mismatch** — existing-email check is case-sensitive. `Jane@x.com` in DB and `jane@x.com` in CSV are treated as different.
+3. **No DB-level guard** — there is no unique constraint on `(agent_id, lower(email))`, so a re-upload during the race window (or a second tab) can still create a duplicate.
 
 ## Plan
 
-### 1. Database migration
-New file `supabase/migrations/<timestamp>_add_office_id_to_clients.sql`:
-- `ALTER TABLE public.clients ADD COLUMN IF NOT EXISTS office_id text;`
-- `CREATE INDEX IF NOT EXISTS idx_clients_agent_office ON public.clients(agent_user_id, office_id);`
+### 1. Frontend dedupe hardening (`src/components/ImportClientsDialog.tsx`)
+- Normalize every parsed email to `trim().toLowerCase()` before validation, dedupe, and insert.
+- Deduplicate within the parsed file: keep the first occurrence of each email, count the rest as "duplicates in file".
+- Lowercase the existing-emails Set comparison so DB matches are case-insensitive.
+- Update the final toast to surface both kinds of skips: in-file duplicates and existing-in-DB duplicates (AAC-registered count stays as-is).
 
-No RLS, grant, or trigger changes — column inherits existing policies on `clients`.
+### 2. Database guard (new migration)
+- Add a partial unique index: `CREATE UNIQUE INDEX clients_agent_email_unique ON public.clients (agent_id, lower(email)) WHERE email IS NOT NULL;`
+- Wrap each insert batch in a try/catch so a `23505` unique-violation from a race falls back to per-row insert that skips the conflicting rows (using `.upsert(..., { onConflict: 'agent_id,email', ignoreDuplicates: true })` is not viable because the index is on `lower(email)`, so we'll do a per-row insert-on-error retry and count failures as skipped duplicates).
 
-### 2. CSV importer (`src/components/ImportClientsDialog.tsx`)
-- Add `office_id: z.string().trim().max(64).nullable().optional()` to `clientRowSchema`.
-- Add `office_id?: string` to `ParsedClient`.
-- In `parseCSV`, detect header `Office ID` (case-insensitive) with aliases: `office_id`, `office id`, `office`, `mls office id`, `mls office`. Pull the value into `office_id`.
-- Pass `office_id` through `validateClients` and into the insert payload (`office_id: client.office_id || null`).
-- Update the "CSV Format Requirements" help text to list `Office ID` under Optional columns (alongside Phone and Client Type).
+### Out of scope
+- No phone-based dedupe, no fuzzy name matching, no merging of existing rows, no changes to the AAC-registration check, no UI redesign of the dialog.
 
-### 3. Snapshot + docs (per project migration policy)
-- Run `npm run db:snapshot` after the migration is applied so `docs/database/schema_snapshot.sql` reflects the new column. (You'll do this; I'll only write the migration file.)
+## Technical notes
 
-## Out of scope
-- No new `offices` table, no foreign key, no dropdown picker.
-- No UI changes to the My Clients table, filters, or contact detail view (follow-up if you want office to be visible/filterable).
-- No changes to other lists (`agent_early_access`, `coming_soon_signups`, `hot_sheet_subscribers`).
-- No backfill of existing rows — column is nullable, existing data stays as-is.
-
-## Header used
-Primary header label: **`Office ID`** (matches your message). Aliases above keep imports forgiving.
+- The existing `email` column is preserved as-typed; only comparisons are lowercased. We do not mutate stored email casing for historical rows.
+- The partial unique index will fail to create if the `clients` table already contains case-insensitive duplicates for the same agent. The migration will first run a `SELECT` (via the migration's own SQL) that surfaces conflicts; if any exist, the migration aborts with a clear error so we can clean them up before retrying. No automatic deletion of existing rows.
