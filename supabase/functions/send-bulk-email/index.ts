@@ -280,15 +280,15 @@ function buildFoundingPartnerBody(): string {
 
   return `
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:600px;margin:0 auto;">
-      <tr><td style="background-color:#0B0D12;border-radius:12px 12px 0 0;padding:22px 32px 22px;">
-        <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="border-collapse:collapse;">
+      <tr><td align="center" style="background-color:#0B0D12;border-radius:12px 12px 0 0;padding:22px 32px 22px;">
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="border-collapse:collapse;margin:0 auto;">
           <tr>
             <td valign="middle" style="padding-right:12px;">
               <img src="${supabaseUrl}/storage/v1/object/public/brand-assets/aac-monogram-green.svg" width="36" height="36" alt="" style="display:block;border:0;outline:none;" />
             </td>
             <td valign="middle" style="line-height:1.1;">
               <p style="margin:0;font-size:18px;font-weight:600;letter-spacing:-0.01em;color:#ffffff;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">All Agent Connect</p>
-              <p style="margin:4px 0 0;font-size:12px;font-weight:500;letter-spacing:0.24em;text-transform:uppercase;color:#e2e8f0;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Founding Partner</p>
+              <p style="margin:4px 0 0;font-size:12px;font-weight:300;letter-spacing:0.05em;color:#a3a3a3;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Founding Partner</p>
             </td>
           </tr>
         </table>
