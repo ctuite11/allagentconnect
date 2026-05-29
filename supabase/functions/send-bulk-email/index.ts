@@ -559,11 +559,11 @@ const handler = async (req: Request): Promise<Response> => {
           payload: {
             provider: "resend",
             template: "bulk-email-group",
-            from: "Chris Tuite <chris@allagentconnect.com>",
             to: recipients.map(r => r.email).join(","), // Worker will split this
             subject: subject,
             html: groupHtml,
-            reply_to: agentEmail,
+            from: "Chris Tuite <chris@mail.allagentconnect.com>",
+            reply_to: agentEmail || "chris@allagentconnect.com",
             variables: {
               campaignId: campaign.id,
               isGroup: true,
@@ -618,11 +618,11 @@ const handler = async (req: Request): Promise<Response> => {
           payload: {
             provider: "resend",
             template: "bulk-email",
-            from: "Chris Tuite <chris@allagentconnect.com>",
             to: recipient.email,
             subject: subject,
             html: personalizedHtml,
-            reply_to: agentEmail,
+            from: "Chris Tuite <chris@mail.allagentconnect.com>",
+            reply_to: agentEmail || "chris@allagentconnect.com",
             variables: {
               recipientName: recipient.name,
               campaignId: campaign.id,
