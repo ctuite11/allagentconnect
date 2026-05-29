@@ -111,7 +111,7 @@ export function BulkEmailDialog({ open, onOpenChange, recipients }: BulkEmailDia
           message: isTemplated ? "" : personalizedMessage,
           agentId: user.id,
           agentEmail: agentInfo?.email, // Pass agent email for replyTo
-          sendAsGroup: sendAsGroup && recipients.length < 5, // Only allow group mode for small groups
+          sendAsGroup: false, // Always send individually (privacy protected)
           template: isTemplated ? template : undefined,
         },
       });
@@ -182,19 +182,6 @@ export function BulkEmailDialog({ open, onOpenChange, recipients }: BulkEmailDia
               ))}
             </div>
           </div>
-
-          {recipients.length < 5 && (
-            <div className="flex items-center justify-between p-3 rounded-md border bg-accent/10">
-              <Label htmlFor="sendAsGroup" className="text-sm flex-1">
-                Send as group email (allow "Reply All" for collaboration)
-              </Label>
-              <Switch
-                id="sendAsGroup"
-                checked={sendAsGroup}
-                onCheckedChange={setSendAsGroup}
-              />
-            </div>
-          )}
 
           <div className="flex items-center justify-between p-3 rounded-md border bg-accent/10">
             <Label htmlFor="sendCopyToSelf" className="text-sm flex-1">
