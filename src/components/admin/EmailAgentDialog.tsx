@@ -15,7 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { EmailComposerToolbar } from "@/components/email/EmailComposerToolbar";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, Mail, Users, ChevronLeft, ChevronRight } from "lucide-react";
+import { Loader2, Mail, Users, ChevronLeft, ChevronRight, Plus, X } from "lucide-react";
 
 interface EmailAgentDialogProps {
   open: boolean;
@@ -40,6 +40,9 @@ export function EmailAgentDialog({
   const [template, setTemplate] = useState<string>("custom");
   const [batchSize, setBatchSize] = useState<string>("all"); // "all" | "250" | "500" | "1000"
   const [batchIndex, setBatchIndex] = useState<number>(0); // 0-based
+  const [manualRecipients, setManualRecipients] = useState<Array<{ id: string; email: string; name: string }>>([]);
+  const [manualName, setManualName] = useState("");
+  const [manualEmail, setManualEmail] = useState("");
   const messageRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -53,12 +56,41 @@ export function EmailAgentDialog({
     setBatchIndex(0);
   }, [batchSize, recipients.length]);
 
-  const sizeNum = batchSize === "all" ? recipients.length : parseInt(batchSize, 10);
-  const totalBatches = sizeNum > 0 ? Math.max(1, Math.ceil(recipients.length / sizeNum)) : 1;
+  const allRecipients = [...recipients, ...manualRecipients];
+  const sizeNum = batchSize === "all" ? allRecipients.length : parseInt(batchSize, 10);
+  const totalBatches = sizeNum > 0 ? Math.max(1, Math.ceil(allRecipients.length / sizeNum)) : 1;
   const safeBatchIndex = Math.min(batchIndex, totalBatches - 1);
   const start = safeBatchIndex * sizeNum;
-  const end = Math.min(start + sizeNum, recipients.length);
-  const currentBatch = recipients.slice(start, end);
+  const end = Math.min(start + sizeNum, allRecipients.length);
+  const currentBatch = allRecipients.slice(start, end);
+
+  const addManualRecipient = () => {
+    const email = manualEmail.trim();
+    const name = manualName.trim();
+    if (!email) {
+      toast.error("Email is required");
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+    if (allRecipients.some((r) => r.email.toLowerCase() === email.toLowerCase())) {
+      toast.error("This recipient is already in the list");
+      return;
+    }
+    setManualRecipients((prev) => [
+      ...prev,
+      { id: `manual-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, email, name: name || email.split("@")[0] },
+    ]);
+    setManualName("");
+    setManualEmail("");
+  };
+
+  const removeManualRecipient = (id: string) => {
+    setManualRecipients((prev) => prev.filter((r) => r.id !== id));
+  };
 
   const handleSend = async () => {
     const isTemplated =
@@ -106,6 +138,9 @@ export function EmailAgentDialog({
         setTemplate("custom");
         setBatchSize("all");
         setBatchIndex(0);
+        setManualRecipients([]);
+        setManualName("");
+        setManualEmail("");
         onOpenChange(false);
       }
     } catch (error: any) {
@@ -116,7 +151,7 @@ export function EmailAgentDialog({
     }
   };
 
-  const isBulk = recipients.length > 1;
+  const isBulk = allRecipients.length > 1;
   const isBatched = batchSize !== "all" && totalBatches > 1;
 
   return (
@@ -134,9 +169,11 @@ export function EmailAgentDialog({
           <DialogDescription className="text-muted-foreground">
             {isBulk 
               ? isBatched
-                ? `Sending to ${currentBatch.length} of ${recipients.length} agents (batch ${safeBatchIndex + 1} of ${totalBatches}). Each will receive a separate email.`
-                : `Sending to ${recipients.length} agents. Each will receive a separate email.`
-              : `Send an email to ${recipients[0]?.name}`
+                ? `Sending to ${currentBatch.length} of ${allRecipients.length} agents (batch ${safeBatchIndex + 1} of ${totalBatches}). Each will receive a separate email.`
+                : `Sending to ${allRecipients.length} agents. Each will receive a separate email.`
+              : allRecipients[0]
+                ? `Send an email to ${allRecipients[0].name}`
+                : "Add a recipient to get started"
             }
           </DialogDescription>
         </DialogHeader>
@@ -155,7 +192,7 @@ export function EmailAgentDialog({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All ({recipients.length})</SelectItem>
+                    <SelectItem value="all">All ({allRecipients.length})</SelectItem>
                     <SelectItem value="250">Batches of 250</SelectItem>
                     <SelectItem value="500">Batches of 500</SelectItem>
                     <SelectItem value="1000">Batches of 1000</SelectItem>
@@ -199,16 +236,75 @@ export function EmailAgentDialog({
           {/* Recipients Preview */}
           <div className="space-y-2">
             <Label className="text-muted-foreground text-sm">
-              Recipients {isBatched ? `(${currentBatch.length} in this batch)` : `(${recipients.length})`}
+              Recipients {isBatched ? `(${currentBatch.length} in this batch)` : `(${allRecipients.length})`}
             </Label>
-            <div className="max-h-24 overflow-y-auto p-3 rounded-xl border border-slate-200 bg-[#FAFAF8]">
-              {currentBatch.map((recipient) => (
-                <div key={recipient.id} className="flex items-center gap-2 text-sm py-0.5">
-                  <Mail className="h-3 w-3 text-muted-foreground" />
-                  <span className="font-medium">{recipient.name}</span>
-                  <span className="text-muted-foreground">({recipient.email})</span>
-                </div>
-              ))}
+            <div className="max-h-32 overflow-y-auto p-3 rounded-xl border border-slate-200 bg-[#FAFAF8]">
+              {currentBatch.length === 0 ? (
+                <div className="text-xs text-muted-foreground py-1">No recipients yet. Add one below.</div>
+              ) : (
+                currentBatch.map((recipient) => {
+                  const isManual = manualRecipients.some((m) => m.id === recipient.id);
+                  return (
+                    <div key={recipient.id} className="flex items-center gap-2 text-sm py-0.5">
+                      <Mail className="h-3 w-3 text-muted-foreground" />
+                      <span className="font-medium">{recipient.name}</span>
+                      <span className="text-muted-foreground">({recipient.email})</span>
+                      {isManual && (
+                        <button
+                          type="button"
+                          onClick={() => removeManualRecipient(recipient.id)}
+                          className="ml-auto text-muted-foreground hover:text-red-600"
+                          aria-label="Remove recipient"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            {/* Manual add */}
+            <div className="flex items-end gap-2 pt-1">
+              <div className="flex-1 space-y-1">
+                <Label htmlFor="manual-name" className="text-xs text-muted-foreground">Name (optional)</Label>
+                <Input
+                  id="manual-name"
+                  value={manualName}
+                  onChange={(e) => setManualName(e.target.value)}
+                  placeholder="Jane Doe"
+                  className="border-slate-200 h-9"
+                  maxLength={120}
+                />
+              </div>
+              <div className="flex-1 space-y-1">
+                <Label htmlFor="manual-email" className="text-xs text-muted-foreground">Email</Label>
+                <Input
+                  id="manual-email"
+                  type="email"
+                  value={manualEmail}
+                  onChange={(e) => setManualEmail(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      addManualRecipient();
+                    }
+                  }}
+                  placeholder="jane@example.com"
+                  className="border-slate-200 h-9"
+                  maxLength={255}
+                />
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={addManualRecipient}
+                className="rounded-lg border-slate-200 h-9"
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                Add
+              </Button>
             </div>
           </div>
 
@@ -310,13 +406,13 @@ export function EmailAgentDialog({
           </Button>
           <Button
             onClick={handleSend}
-            disabled={sending || !subject.trim() || (template === "custom" && !message.trim())}
+            disabled={sending || !subject.trim() || (template === "custom" && !message.trim()) || allRecipients.length === 0}
             className="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white"
           >
             {sending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {isBatched
               ? `Send to ${currentBatch.length} (batch ${safeBatchIndex + 1} of ${totalBatches})`
-              : `Send Email${isBulk ? ` to ${recipients.length}` : ""}`}
+              : `Send Email${isBulk ? ` to ${allRecipients.length}` : ""}`}
           </Button>
         </DialogFooter>
       </DialogContent>
