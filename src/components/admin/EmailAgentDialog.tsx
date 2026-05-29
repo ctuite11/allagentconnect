@@ -226,7 +226,7 @@ export function EmailAgentDialog({
                     setSubject((prev) => prev || "Private Listing Network - All Agent Connect");
                   }
                   if (v === "founding-partner-invitation") {
-                    setSubject((prev) => prev || "You're invited: Founding Partner of All Agent Connect");
+                    setSubject((prev) => prev || "Become a Founding Partner | All Agent Connect");
                   }
                   if (v === "private-listing-network") {
                     setSubject((prev) => prev || "The private listing network where agents share pre-market intelligence");
