@@ -285,8 +285,8 @@ function buildFoundingPartnerBody(): string {
         <p style="margin:0;font-size:16px;font-weight:600;letter-spacing:-0.01em;color:#ffffff;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">All Agent Connect</p>
         <div style="width:40px;height:2px;background-color:#22C55E;margin:10px auto 0;border-radius:1px;"></div>
       </td></tr>
-      <tr><td style="padding:32px 0 16px;">
-        <h1 style="margin:0 0 14px;font-size:26px;font-weight:700;line-height:1.2;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Why pay to join a network when you can help launch one?</h1>
+      <tr><td style="padding:56px 0 0;">
+        <h1 style="margin:0 0 28px;font-size:26px;font-weight:700;line-height:1.2;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Why pay to join a network when you can help launch one?</h1>
         <table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
           <tr>
             <td style="border-left:3px solid #22C55E;padding:4px 0 4px 14px;">
@@ -297,7 +297,7 @@ function buildFoundingPartnerBody(): string {
           </tr>
         </table>
       </td></tr>
-      <tr><td style="padding:8px 0 0;">
+      <tr><td style="padding:36px 0 0;">
         <img src="${heroImg}" alt="All Agent Connect" width="600" style="display:block;width:100%;max-width:600px;height:auto;border-radius:12px;border:1px solid #94a3b8;" />
       </td></tr>
       ${benefitHtml}
