@@ -353,7 +353,7 @@ async function sendEmail(job: EmailJob, resendApiKey: string): Promise<void> {
       Authorization: `Bearer ${resendApiKey}`,
     },
     body: JSON.stringify({
-      from: `${FROM_NAME} <${FROM_EMAIL}>`,
+      from: (payload as any).from || `${FROM_NAME} <${FROM_EMAIL}>`,
       to: toList,
       subject: payload.subject,
       html,

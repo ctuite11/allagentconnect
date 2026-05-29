@@ -552,6 +552,7 @@ const handler = async (req: Request): Promise<Response> => {
           payload: {
             provider: "resend",
             template: "bulk-email-group",
+            from: "Chris Tuite <chris@allagentconnect.com>",
             to: recipients.map(r => r.email).join(","), // Worker will split this
             subject: subject,
             html: groupHtml,
@@ -610,6 +611,7 @@ const handler = async (req: Request): Promise<Response> => {
           payload: {
             provider: "resend",
             template: "bulk-email",
+            from: "Chris Tuite <chris@allagentconnect.com>",
             to: recipient.email,
             subject: subject,
             html: personalizedHtml,

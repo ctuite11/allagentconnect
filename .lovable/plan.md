@@ -1,28 +1,33 @@
-Add a small "Founding Partner" tagline under "All Agent Connect" inside the black header strip of the Founding Partner email template (`supabase/functions/send-bulk-email/index.ts`).
-
-Styled like the "Massachusetts" line under the homepage logo (light weight, uppercase, wide letter-spacing, muted gray), but bumped slightly so it reads more clearly inside the email's dark strip.
+Make bulk campaign emails (Founding Partner, etc.) send from Chris personally instead of the generic "All Agent Connect &lt;hello@allagentconnect.com&gt;".
 
 ## Change
 
-At line 285 (header strip), after the "All Agent Connect" `<p>` and before the green divider, insert a second line:
+**1. `netlify/functions/email-worker.ts`** (line ~356) — honor a per-job `from` override:
 
-```html
-<p style="margin:6px 0 0;font-size:11px;font-weight:400;letter-spacing:0.22em;text-transform:uppercase;color:#cbd5e1;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Founding Partner</p>
+```ts
+from: payload.from || `${FROM_NAME} <${FROM_EMAIL}>`,
 ```
 
-Spec vs the homepage "Massachusetts" line:
-- Homepage: 11px, font-light, tracking 0.2em, `text-neutral-400` (#9ca3af)
-- Email: 11px, weight 400, letter-spacing 0.22em, color `#cbd5e1` (slate-300) — a touch brighter for better contrast on the dark strip
-
-Also nudge the green divider's top margin from `10px` to `12px` so it doesn't crowd the new line.
-
-## Result
+**2. `supabase/functions/send-bulk-email/index.ts`** — set `from` on both enqueue paths (group send ~line 552, individual send ~line 610):
 
 ```
-[monogram]
-All Agent Connect
-FOUNDING PARTNER
-———  (green bar)
+from: "Chris Tuite <chris@allagentconnect.com>"
 ```
 
-No other content, copy, or layout changes. Footer dark strip (line 314) stays as-is. Then redeploy `send-bulk-email`.
+`reply_to: agentEmail` stays as-is.
+
+## Scope
+
+- Only `send-bulk-email` (the campaign tool you personally send from).
+- All other system emails (auth, hot sheets, transactional notifications, invitations) keep sending from `hello@allagentconnect.com` — unchanged.
+- No DNS work needed; `chris@allagentconnect.com` is already on the verified sending domain.
+
+## Deploy
+
+Redeploy `send-bulk-email`. The Netlify email-worker redeploys on push.
+
+## Inbox preview
+
+Recipients will see:
+
+> **Chris Tuite** &lt;chris@allagentconnect.com&gt;
