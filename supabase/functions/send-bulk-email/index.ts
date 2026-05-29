@@ -280,10 +280,13 @@ function buildFoundingPartnerBody(): string {
 
   return `
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:600px;margin:0 auto;">
-      <tr><td align="center" style="padding:0 0 24px;">
-        <img src="${AAC_LOGO_URL}" alt="All Agent Connect" height="36" style="display:block;height:36px;width:auto;border:0;outline:none;" />
+      <tr><td align="center" style="background-color:#0B0D12;border-radius:12px 12px 0 0;padding:56px 32px 52px;">
+        <img src="${supabaseUrl}/storage/v1/object/public/brand-assets/aac-monogram-green.svg" width="52" height="52" alt="" style="display:block;margin:0 auto 16px;border:0;outline:none;" />
+        <p style="margin:0;font-size:20px;font-weight:600;letter-spacing:-0.01em;color:#ffffff;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">All Agent Connect</p>
+        <div style="width:56px;height:2px;background-color:#22C55E;margin:18px auto 18px;border-radius:1px;"></div>
+        <p style="margin:0;font-size:12px;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.72);font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Massachusetts Founding Partner Invitation</p>
       </td></tr>
-      <tr><td style="padding:0 0 16px;">
+      <tr><td style="padding:32px 0 16px;">
         <h1 style="margin:0 0 14px;font-size:26px;font-weight:700;line-height:1.2;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Why pay to join a network when you can help launch one?</h1>
         <table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
           <tr>
@@ -318,6 +321,13 @@ function buildFoundingPartnerBody(): string {
         <p style="margin:0 0 16px;font-size:14px;color:#0f172a;line-height:1.6;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">The agents helping shape AAC today will have a unique opportunity to help guide its growth tomorrow.</p>
         <p style="margin:0 0 4px;font-size:14px;color:#0f172a;font-weight:600;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Chris Tuite</p>
         <p style="margin:0;font-size:13px;color:#64748b;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Founder, All Agent Connect<br/>617-877-0519 &middot; chris@allagentconnect.com</p>
+      </td></tr>
+      <tr><td align="center" style="background-color:#0B0D12;padding:36px 32px 34px;margin-top:32px;">
+        <img src="${supabaseUrl}/storage/v1/object/public/brand-assets/aac-monogram-green.svg" width="36" height="36" alt="" style="display:block;margin:0 auto 12px;border:0;outline:none;" />
+        <p style="margin:0;font-size:16px;font-weight:600;letter-spacing:-0.01em;color:#ffffff;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">All Agent Connect</p>
+        <div style="width:44px;height:2px;background-color:#22C55E;margin:14px auto 14px;border-radius:1px;"></div>
+        <p style="margin:0 0 8px;font-size:11px;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.72);font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Massachusetts Founding Partner Invitation</p>
+        <p style="margin:0;font-size:12px;color:rgba(255,255,255,0.5);font-style:italic;font-family:Georgia,'Times New Roman',serif;">Built by agents. Built for agents.</p>
       </td></tr>
       <tr><td style="padding:24px 0 0;">
         <p style="margin:0;font-size:11px;color:#94a3b8;text-align:center;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">You&rsquo;re receiving this because you were personally selected for the Founding Partner program.</p>
