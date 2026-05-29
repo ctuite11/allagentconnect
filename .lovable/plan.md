@@ -1,31 +1,47 @@
-## Issue
+# Two small fixes
 
-Per-agent local-parts (`chris.tuite@mail.allagentconnect.com`) are brand-new sender mailboxes with zero reputation. Even with valid SPF/DKIM/DMARC on `mail.allagentconnect.com`, Gmail and Outlook score reputation per-address and route unknown mailboxes to spam during the warm-up period.
+## 1. Change default Founding Partner email subject
 
-The previously-working address was `chris@mail.allagentconnect.com` (and the rest of the app uses `hello@mail.allagentconnect.com`), both of which have established sending history.
+In `src/components/BulkEmailDialog.tsx` (line 208), the default subject auto-filled when the "Founding Partner — Exclusive Invitation" template is chosen is currently:
 
-## Fix
+> "Become a Founding Partner | All Agent Connect"
 
-Drop the per-agent local-part and keep one warmed-up mailbox. Put the logged-in agent's identity in the **display name** only — that's what the recipient sees first in their inbox preview ("From: Jane Smith").
+Change it to:
 
-### New sender format
+> **"Founding Partner Invite | All Agent Connect"**
 
-- **From:** `Jane Smith <hello@mail.allagentconnect.com>`
-- **Reply-To:** Jane's real personal email (e.g. `jane@kw.com`)
+No edge-function change needed — the subject is sent from the dialog. Existing drafts where a user already typed a subject are preserved (the code only sets the default when subject is empty).
 
-Recipient inbox shows **"Jane Smith"** as the sender. Hitting Reply emails Jane directly. The underlying mailbox is the established `hello@mail.allagentconnect.com` that already has good reputation in the queue.
+## 2. Fix Contacts search → "select name in list" behavior
 
-### Changes
+In `src/pages/MyClients.tsx`, the typeahead dropdown under the Contacts search input (lines ~947–981) currently does this when you click a name:
 
-1. In `send-bulk-email/index.ts`, replace the per-agent local-part construction with:
-   - `senderFrom = "{Agent Display Name} <hello@mail.allagentconnect.com>"`
-   - `senderReplyTo = agent's profile email` (unchanged)
-2. Fallback (lookup fails): `"All Agent Connect <hello@mail.allagentconnect.com>"`.
-3. Redeploy `send-bulk-email`.
-4. Send a test from a non-Chris agent account; confirm it lands in the inbox.
+```ts
+onSelect={() => {
+  setDrawerClient(client);
+  setDrawerOpen(true);     // ← opens the contact card drawer
+  setShowAutocomplete(false);
+}}
+```
 
-## Notes
+You want clicking a name in the search dropdown to **select that contact in the list** instead of opening their contact card.
 
-- No DNS changes, no Resend changes, no new domains.
-- This is the same pattern Mailchimp, HubSpot, and Gmail "Send mail as" use — one verified sending address, per-user display name, real-user reply-to.
-- If you later want truly per-agent addresses (for vanity reasons), we'd need to warm each one up over weeks and accept early-spam risk — not recommended.
+New behavior on select:
+1. Set `searchTerm` to the contact's full name so the list filters down to just that person.
+2. Add the contact's id to `selectedClients` (the checkbox-selected set) so the row is visibly selected and bulk actions are enabled.
+3. Close the autocomplete dropdown.
+4. Do **not** open the drawer.
+
+```ts
+onSelect={() => {
+  setSearchTerm(`${client.first_name} ${client.last_name}`);
+  setSelectedClients(new Set([client.id]));
+  setShowAutocomplete(false);
+}}
+```
+
+The contact card still opens via the normal row click — only the search-result behavior changes.
+
+## Files touched
+- `src/components/BulkEmailDialog.tsx` — one string change
+- `src/pages/MyClients.tsx` — `onSelect` handler in the search autocomplete `CommandItem`
