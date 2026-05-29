@@ -294,13 +294,8 @@ function buildFoundingPartnerBody(): string {
       <tr><td align="center" style="padding:28px 0 0;">
         <a href="https://allagentconnect.com/agent-dashboard" style="display:inline-block;padding:14px 32px;background:#0E56F5;color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;border-radius:8px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Accept your invitation &rarr;</a>
       </td></tr>
-      <tr><td style="padding:36px 0 0;border-top:1px solid #e2e8f0;">
-        <p style="margin:24px 0 8px;font-size:13px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Built by an agent</p>
-        <p style="margin:0;font-size:14px;line-height:1.65;color:#334155;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">I&rsquo;ve spent 33 years selling real estate in Massachusetts. AAC was built to help agents share opportunities, buyer demand, and referrals before they reach the public market.</p>
-        <p style="margin:12px 0 0;font-size:14px;color:#0f172a;font-weight:600;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">&mdash; Chris Tuite, Founder</p>
-      </td></tr>
-      <tr><td style="padding:36px 0 0;border-top:1px solid #e2e8f0;">
-        <p style="margin:24px 0 4px;font-size:14px;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Looking forward to building this with you.</p>
+      <tr><td style="padding:36px 0 0;">
+        <p style="margin:0 0 4px;font-size:14px;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Looking forward to building this with you.</p>
         <p style="margin:0 0 4px;font-size:14px;color:#0f172a;font-weight:600;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Chris Tuite</p>
         <p style="margin:0;font-size:13px;color:#64748b;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Founder, All Agent Connect<br/>617-877-0519 &middot; chris@allagentconnect.com</p>
       </td></tr>
