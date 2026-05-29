@@ -278,14 +278,6 @@ function buildFoundingPartnerBody(): string {
       <p style="margin:0;font-size:13px;line-height:1.6;color:#475569;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${b.desc}</p>
     </td></tr>`).join("");
 
-  const perks = [
-    "Permanent Founding Partner badge on your profile",
-    "Lifetime free access to Success Hub, Hot Sheets, and Communications Center",
-    "Personalized onboarding and roadmap input",
-  ];
-  const perksHtml = perks.map((p) => `
-    <p style="margin:0 0 6px;font-size:13px;line-height:1.55;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;"><span style="color:#22C55E;font-weight:700;">&#10003;</span> ${p}</p>`).join("");
-
   return `
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:600px;margin:0 auto;">
       <tr><td align="center" style="padding:0 0 24px;">
@@ -299,10 +291,6 @@ function buildFoundingPartnerBody(): string {
         <img src="${heroImg}" alt="All Agent Connect" width="600" style="display:block;width:100%;max-width:600px;height:auto;border-radius:12px;border:1px solid #94a3b8;" />
       </td></tr>
       ${benefitHtml}
-      <tr><td style="padding:36px 0 0;">
-        <p style="margin:0 0 10px;font-size:13px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Founding Partner perks</p>
-        ${perksHtml}
-      </td></tr>
       <tr><td align="center" style="padding:28px 0 0;">
         <a href="https://allagentconnect.com/agent-dashboard" style="display:inline-block;padding:14px 32px;background:#0E56F5;color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;border-radius:8px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Accept your invitation &rarr;</a>
       </td></tr>
