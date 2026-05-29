@@ -315,7 +315,6 @@ function buildFoundingPartnerBody(): string {
           <img src="${supabaseUrl}/storage/v1/object/public/brand-assets/aac-monogram-green.svg" width="32" height="32" alt="" style="display:block;margin:0 auto 10px;border:0;outline:none;" />
           <p style="margin:0;font-size:15px;font-weight:600;letter-spacing:-0.01em;color:#ffffff;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">All Agent Connect</p>
           <div style="width:36px;height:2px;background-color:#22C55E;margin:10px auto 12px;border-radius:1px;"></div>
-          <p style="margin:0;font-size:12px;color:rgba(255,255,255,0.55);font-style:italic;font-family:Georgia,'Times New Roman',serif;">Built by agents. Built for agents.</p>
         </td></tr></table>
       </td></tr>
       <tr><td style="padding:32px 0 0;">
