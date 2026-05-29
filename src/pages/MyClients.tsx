@@ -955,8 +955,8 @@ const MyClients = () => {
                                     key={client.id}
                                     value={`${client.first_name} ${client.last_name}`}
                                     onSelect={() => {
-                                      setDrawerClient(client);
-                                      setDrawerOpen(true);
+                                      setSearchTerm(`${client.first_name} ${client.last_name}`);
+                                      setSelectedClients(new Set([client.id]));
                                       setShowAutocomplete(false);
                                     }}
                                     className="flex items-center justify-between px-3 py-2 cursor-pointer hover:bg-zinc-50"
