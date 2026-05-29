@@ -1,33 +1,28 @@
-Adjust spacing in the Founding Partner email template (`supabase/functions/send-bulk-email/index.ts`) so the header, headline, quote, and hero image have a clearer visual rhythm.
+Add a small "Founding Partner" tagline under "All Agent Connect" inside the black header strip of the Founding Partner email template (`supabase/functions/send-bulk-email/index.ts`).
 
-## Changes
+Styled like the "Massachusetts" line under the homepage logo (light weight, uppercase, wide letter-spacing, muted gray), but bumped slightly so it reads more clearly inside the email's dark strip.
 
-In the email template around lines 288–302:
+## Change
 
-1. **Header → Headline** (currently `padding:32px 0 16px` on the headline cell)
-   - Increase top padding to ~56px so the headline gets ~56px of breathing room from the dark header strip.
-   - New: `padding:56px 0 0`
+At line 285 (header strip), after the "All Agent Connect" `<p>` and before the green divider, insert a second line:
 
-2. **Headline → Quote** (currently `margin:0 0 14px` on the h1)
-   - Bump to ~28px so the quote sits a touch lower but still feels connected.
-   - New: `margin:0 0 28px`
-
-3. **Quote → Hero image** (currently `padding:8px 0 0` on the image cell — too tight)
-   - Increase to ~36px so the image no longer crowds the quote.
-   - New: `padding:36px 0 0`
-
-No other content, copy, colors, or structure changes. Only the three spacing values above.
-
-## After
-
-```
-Header (dark strip)
-  ↓ ~56px
-Headline ("Why pay to join...")
-  ↓ ~28px
-Quote (green-bar block, Chris Tuite)
-  ↓ ~36px
-Hero image
+```html
+<p style="margin:6px 0 0;font-size:11px;font-weight:400;letter-spacing:0.22em;text-transform:uppercase;color:#cbd5e1;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Founding Partner</p>
 ```
 
-Then redeploy `send-bulk-email` so the next preview reflects the new spacing.
+Spec vs the homepage "Massachusetts" line:
+- Homepage: 11px, font-light, tracking 0.2em, `text-neutral-400` (#9ca3af)
+- Email: 11px, weight 400, letter-spacing 0.22em, color `#cbd5e1` (slate-300) — a touch brighter for better contrast on the dark strip
+
+Also nudge the green divider's top margin from `10px` to `12px` so it doesn't crowd the new line.
+
+## Result
+
+```
+[monogram]
+All Agent Connect
+FOUNDING PARTNER
+———  (green bar)
+```
+
+No other content, copy, or layout changes. Footer dark strip (line 314) stays as-is. Then redeploy `send-bulk-email`.
