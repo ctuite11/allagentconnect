@@ -285,7 +285,15 @@ function buildFoundingPartnerBody(): string {
       </td></tr>
       <tr><td style="padding:0 0 16px;">
         <h1 style="margin:0 0 14px;font-size:26px;font-weight:700;line-height:1.2;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Why pay to join a network when you can help launch one?</h1>
-        <p style="margin:0;font-size:14px;line-height:1.65;color:#334155;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Become a Massachusetts Founding Partner and get access to private listings, active buyer demand, referrals, and pre-market opportunities before the public feeds.</p>
+        <table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+          <tr>
+            <td style="border-left:3px solid #22C55E;padding:4px 0 4px 14px;">
+              <p style="margin:0 0 10px;font-size:16px;line-height:1.55;color:#0f172a;font-style:italic;font-family:Georgia,'Times New Roman',serif;">&ldquo;I built AAC to become something special, and I hope you&rsquo;ll join me as a Founding Partner.&rdquo;</p>
+              <p style="margin:0;font-size:13px;color:#0f172a;font-weight:600;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Chris Tuite</p>
+              <p style="margin:0;font-size:12px;color:#64748b;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Founder, All Agent Connect</p>
+            </td>
+          </tr>
+        </table>
       </td></tr>
       <tr><td style="padding:8px 0 0;">
         <img src="${heroImg}" alt="All Agent Connect" width="600" style="display:block;width:100%;max-width:600px;height:auto;border-radius:12px;border:1px solid #94a3b8;" />
@@ -295,7 +303,7 @@ function buildFoundingPartnerBody(): string {
         <a href="https://allagentconnect.com/register?source=founding_partner" style="display:inline-block;padding:14px 32px;background:#0E56F5;color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;border-radius:8px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Accept your invitation &rarr;</a>
       </td></tr>
       <tr><td style="padding:36px 0 0;">
-        <p style="margin:0 0 16px;font-size:14px;color:#0f172a;line-height:1.6;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Founding Partners will be invited to a private roundtable discussion where I&rsquo;ll walk through what we&rsquo;ve built with All Agent Connect, preview the upcoming launch of Direct Connect MLS and Stealth Seller, and discuss where I believe the industry is headed. Most importantly, I&rsquo;d like your candid feedback on what works, what doesn&rsquo;t, and what you&rsquo;d like to see next.</p>
+        <p style="margin:0 0 16px;font-size:14px;color:#0f172a;line-height:1.6;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Founding Partners will be invited to a private roundtable discussion where I&rsquo;ll walk through what we&rsquo;ve built with All Agent Connect, preview the upcoming launch of Direct Connect MLS and Stealth Seller, and share where I believe the industry is headed. Most importantly, I&rsquo;d like your candid feedback&mdash;what works, what doesn&rsquo;t, and what you&rsquo;d like to see next.</p>
         <p style="margin:0 0 4px;font-size:14px;color:#0f172a;font-weight:600;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Chris Tuite</p>
         <p style="margin:0;font-size:13px;color:#64748b;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Founder, All Agent Connect<br/>617-877-0519 &middot; chris@allagentconnect.com</p>
       </td></tr>
