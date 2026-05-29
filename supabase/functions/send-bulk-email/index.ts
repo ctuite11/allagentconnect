@@ -487,13 +487,11 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("[send-bulk-email] Created campaign:", campaign.id);
 
-    // Resolve the logged-in agent so the email goes out on their behalf.
-    // The whole `mail.allagentconnect.com` subdomain is verified with Resend,
-    // so we can mint a per-agent local-part (e.g. jane.smith@mail.allagentconnect.com).
-    // Reply-To is set to the agent's real inbox so replies route to them directly.
-    const slugify = (s: string) =>
-      s.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, "").slice(0, 40);
-
+    // Send on behalf of the logged-in agent.
+    // Use the established `hello@mail.allagentconnect.com` mailbox (good reputation)
+    // and put the agent's name in the display name. Reply-To routes replies to
+    // the agent's real inbox. Brand-new per-agent local-parts were being
+    // flagged as spam due to zero sender reputation.
     let senderFrom = "All Agent Connect <hello@mail.allagentconnect.com>";
     let senderReplyTo = agentEmail || "hello@allagentconnect.com";
     try {
@@ -507,14 +505,7 @@ const handler = async (req: Request): Promise<Response> => {
         const first = (sender.first_name || "").trim();
         const last = (sender.last_name || "").trim();
         const displayName = [first, last].filter(Boolean).join(" ") || "All Agent Connect";
-        const localFirst = slugify(first);
-        const localLast = slugify(last);
-        const local =
-          localFirst && localLast
-            ? `${localFirst}.${localLast}`
-            : localFirst || localLast || "agent";
-        const fromAddr = `${local}@mail.allagentconnect.com`;
-        senderFrom = `${displayName} <${fromAddr}>`;
+        senderFrom = `${displayName} <hello@mail.allagentconnect.com>`;
         senderReplyTo = sender.email || agentEmail || senderReplyTo;
       }
     } catch (e) {

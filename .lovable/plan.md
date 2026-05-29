@@ -1,21 +1,31 @@
-## Root cause
+## Issue
 
-Resend is rejecting every send with:
-> "The allagentconnect.com domain is not verified."
+Per-agent local-parts (`chris.tuite@mail.allagentconnect.com`) are brand-new sender mailboxes with zero reputation. Even with valid SPF/DKIM/DMARC on `mail.allagentconnect.com`, Gmail and Outlook score reputation per-address and route unknown mailboxes to spam during the warm-up period.
 
-Only `mail.allagentconnect.com` is verified for sending. Recent changes set the From address to `chris@allagentconnect.com` (root domain), which Resend won't accept.
+The previously-working address was `chris@mail.allagentconnect.com` (and the rest of the app uses `hello@mail.allagentconnect.com`), both of which have established sending history.
 
-## Plan
+## Fix
 
-1. **Fix the From address** in the queue worker and bulk-email path:
-   - From: `Chris Tuite <chris@mail.allagentconnect.com>` (verified subdomain)
-   - Reply-To: `chris@allagentconnect.com` (so replies still land in your real inbox)
-   - Applies to both single-recipient and multi-recipient sends.
+Drop the per-agent local-part and keep one warmed-up mailbox. Put the logged-in agent's identity in the **display name** only — that's what the recipient sees first in their inbox preview ("From: Jane Smith").
 
-2. **Keep privacy + individual delivery** behavior unchanged (one email per recipient, no shared To list).
+### New sender format
 
-3. **Redeploy** `process-email-queue` and `send-bulk-email`.
+- **From:** `Jane Smith <hello@mail.allagentconnect.com>`
+- **Reply-To:** Jane's real personal email (e.g. `jane@kw.com`)
 
-4. **Verify** by sending one test email and confirming the queue logs show a successful send instead of a 403.
+Recipient inbox shows **"Jane Smith"** as the sender. Hitting Reply emails Jane directly. The underlying mailbox is the established `hello@mail.allagentconnect.com` that already has good reputation in the queue.
 
-Optional follow-up (not in this fix): verify the root `allagentconnect.com` domain in Resend so we can send directly from `chris@allagentconnect.com` later.
+### Changes
+
+1. In `send-bulk-email/index.ts`, replace the per-agent local-part construction with:
+   - `senderFrom = "{Agent Display Name} <hello@mail.allagentconnect.com>"`
+   - `senderReplyTo = agent's profile email` (unchanged)
+2. Fallback (lookup fails): `"All Agent Connect <hello@mail.allagentconnect.com>"`.
+3. Redeploy `send-bulk-email`.
+4. Send a test from a non-Chris agent account; confirm it lands in the inbox.
+
+## Notes
+
+- No DNS changes, no Resend changes, no new domains.
+- This is the same pattern Mailchimp, HubSpot, and Gmail "Send mail as" use — one verified sending address, per-user display name, real-user reply-to.
+- If you later want truly per-agent addresses (for vanity reasons), we'd need to warm each one up over weeks and accept early-spam risk — not recommended.
