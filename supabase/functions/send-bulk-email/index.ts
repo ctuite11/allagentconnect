@@ -279,7 +279,7 @@ function buildFoundingPartnerBody(): string {
     </td></tr>`).join("");
 
   const whyFounding = [
-    "Early access before public launch",
+    "Early access before the public feeds",
     "Influence future platform development",
     "Founding Partner designation and badge",
     "Priority visibility within the network",
@@ -304,7 +304,7 @@ function buildFoundingPartnerBody(): string {
       </td></tr>
       <tr><td style="padding:0 0 16px;">
         <h1 style="margin:0 0 14px;font-size:26px;font-weight:700;line-height:1.2;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Why pay to join a network when you can help launch one?</h1>
-        <p style="margin:0;font-size:14px;line-height:1.65;color:#334155;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Become a Massachusetts Founding Partner and get access to private listings, active buyer demand, referrals, and pre-market opportunities before public launch.</p>
+        <p style="margin:0;font-size:14px;line-height:1.65;color:#334155;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Become a Massachusetts Founding Partner and get access to private listings, active buyer demand, referrals, and pre-market opportunities before the public feeds.</p>
       </td></tr>
       <tr><td style="padding:8px 0 0;">
         <img src="${heroImg}" alt="All Agent Connect" width="600" style="display:block;width:100%;max-width:600px;height:auto;border-radius:12px;border:1px solid #94a3b8;" />
