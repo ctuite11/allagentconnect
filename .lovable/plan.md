@@ -1,33 +1,17 @@
-Make bulk campaign emails (Founding Partner, etc.) send from Chris personally instead of the generic "All Agent Connect &lt;hello@allagentconnect.com&gt;".
+## Plan
 
-## Change
+1. Update the shared email sender used by the queue so it honors `payload.from` when present, instead of always building the sender from the default `hello` address.
+2. Update the shared email job type to include the optional `from` field already being written by `send-bulk-email`.
+3. Redeploy the queue-processing email function so the deployed sender logic uses the new override.
 
-**1. `netlify/functions/email-worker.ts`** (line ~356) — honor a per-job `from` override:
+## Technical details
 
-```ts
-from: payload.from || `${FROM_NAME} <${FROM_EMAIL}>`,
-```
+- `send-bulk-email` is already enqueueing:
+  - `from: "Chris Tuite <chris@allagentconnect.com>"`
+- The issue is downstream: `supabase/functions/_shared/sendEmail.ts` currently sends every queued email with:
+  - `All Agent Connect <hello@mail.allagentconnect.com>`
+- I’ll change that to:
+  - use `job.payload.from` if present
+  - otherwise fall back to the existing default sender
 
-**2. `supabase/functions/send-bulk-email/index.ts`** — set `from` on both enqueue paths (group send ~line 552, individual send ~line 610):
-
-```
-from: "Chris Tuite <chris@allagentconnect.com>"
-```
-
-`reply_to: agentEmail` stays as-is.
-
-## Scope
-
-- Only `send-bulk-email` (the campaign tool you personally send from).
-- All other system emails (auth, hot sheets, transactional notifications, invitations) keep sending from `hello@allagentconnect.com` — unchanged.
-- No DNS work needed; `chris@allagentconnect.com` is already on the verified sending domain.
-
-## Deploy
-
-Redeploy `send-bulk-email`. The Netlify email-worker redeploys on push.
-
-## Inbox preview
-
-Recipients will see:
-
-> **Chris Tuite** &lt;chris@allagentconnect.com&gt;
+This keeps other system emails unchanged while allowing the Founding Partner/bulk campaign path to send from Chris.

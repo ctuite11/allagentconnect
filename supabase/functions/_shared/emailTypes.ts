@@ -13,6 +13,7 @@ export interface EmailJob {
     subject: string;
     html?: string;
     reply_to?: string;
+    from?: string;
     variables?: Record<string, any>;
   };
 }

@@ -77,7 +77,7 @@ export async function sendEmail(
       Authorization: `Bearer ${resendApiKey}`,
     },
     body: JSON.stringify({
-      from: `${FROM_NAME} <${FROM_EMAIL}>`,
+      from: job.payload.from || `${FROM_NAME} <${FROM_EMAIL}>`,
       to: toList,
       subject: job.payload.subject,
       html,
