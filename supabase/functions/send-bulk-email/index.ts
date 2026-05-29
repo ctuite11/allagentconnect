@@ -314,7 +314,7 @@ function buildFoundingPartnerBody(): string {
         </table>
       </td></tr>
       <tr><td align="center" style="padding:28px 0 0;">
-        <a href="https://allagentconnect.com/register?source=founding_partner" style="display:inline-block;padding:14px 32px;background:#0E56F5;color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;border-radius:8px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Become a Founding Partner &rarr;</a>
+        <a href="https://allagentconnect.com/register?source=founding_partner" style="display:inline-block;padding:14px 32px;background:#0E56F5;color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;border-radius:8px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Founders &rarr;</a>
       </td></tr>
       <tr><td style="padding:36px 0 0;">
         <p style="margin:0 0 16px;font-size:14px;color:#0f172a;line-height:1.6;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Founding Partners will be invited to a private roundtable discussion where I&rsquo;ll walk through what we&rsquo;ve built with All Agent Connect, preview the upcoming launch of Direct Connect MLS and Stealth Seller, and share where I believe the industry is headed. Most importantly, I&rsquo;d like your candid feedback&mdash;what works, what doesn&rsquo;t, and what you&rsquo;d like to see next.</p>
