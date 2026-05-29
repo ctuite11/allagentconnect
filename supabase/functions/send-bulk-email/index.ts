@@ -597,8 +597,8 @@ const handler = async (req: Request): Promise<Response> => {
             to: recipients.map(r => r.email).join(","), // Worker will split this
             subject: subject,
             html: groupHtml,
-            from: "Chris Tuite <chris@mail.allagentconnect.com>",
-            reply_to: agentEmail || "chris@allagentconnect.com",
+            from: senderFrom,
+            reply_to: senderReplyTo,
             variables: {
               campaignId: campaign.id,
               isGroup: true,
@@ -656,8 +656,8 @@ const handler = async (req: Request): Promise<Response> => {
             to: recipient.email,
             subject: subject,
             html: personalizedHtml,
-            from: "Chris Tuite <chris@mail.allagentconnect.com>",
-            reply_to: agentEmail || "chris@allagentconnect.com",
+            from: senderFrom,
+            reply_to: senderReplyTo,
             variables: {
               recipientName: recipient.name,
               campaignId: campaign.id,
