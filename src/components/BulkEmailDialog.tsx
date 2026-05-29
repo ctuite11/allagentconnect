@@ -205,7 +205,7 @@ export function BulkEmailDialog({ open, onOpenChange, recipients }: BulkEmailDia
                 setSubject((prev) => prev || "Private Listing Network - All Agent Connect");
               }
               if (v === "founding-partner-invitation") {
-                setSubject((prev) => prev || "Become a Founding Partner | All Agent Connect");
+                setSubject((prev) => prev || "Founding Partner Invite | All Agent Connect");
               }
             }}>
               <SelectTrigger id="template">
