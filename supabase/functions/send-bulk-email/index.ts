@@ -295,7 +295,7 @@ function buildFoundingPartnerBody(): string {
         <a href="https://allagentconnect.com/agent-dashboard" style="display:inline-block;padding:14px 32px;background:#0E56F5;color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;border-radius:8px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Accept your invitation &rarr;</a>
       </td></tr>
       <tr><td style="padding:36px 0 0;">
-        <p style="margin:0 0 4px;font-size:14px;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Looking forward to building this with you.</p>
+        <p style="margin:0 0 16px;font-size:14px;color:#0f172a;line-height:1.6;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Founding Partners will be invited to a private roundtable discussion where I&rsquo;ll walk through what we&rsquo;ve built with All Agent Connect, preview the upcoming launch of Direct Connect MLS and Stealth Seller, and discuss where I believe the industry is headed. Most importantly, I&rsquo;d like your candid feedback on what works, what doesn&rsquo;t, and what you&rsquo;d like to see next.</p>
         <p style="margin:0 0 4px;font-size:14px;color:#0f172a;font-weight:600;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Chris Tuite</p>
         <p style="margin:0;font-size:13px;color:#64748b;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Founder, All Agent Connect<br/>617-877-0519 &middot; chris@allagentconnect.com</p>
       </td></tr>
