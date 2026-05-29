@@ -280,11 +280,18 @@ function buildFoundingPartnerBody(): string {
 
   return `
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:600px;margin:0 auto;">
-      <tr><td align="center" style="background-color:#0B0D12;border-radius:12px 12px 0 0;padding:24px 32px 22px;">
-        <img src="${supabaseUrl}/storage/v1/object/public/brand-assets/aac-monogram-green.svg" width="36" height="36" alt="" style="display:block;margin:0 auto 10px;border:0;outline:none;" />
-        <p style="margin:0;font-size:16px;font-weight:600;letter-spacing:-0.01em;color:#ffffff;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">All Agent Connect</p>
-        <p style="margin:6px 0 0;font-size:11px;font-weight:400;letter-spacing:0.22em;text-transform:uppercase;color:#cbd5e1;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Founding Partner</p>
-        <div style="width:40px;height:2px;background-color:#22C55E;margin:12px auto 0;border-radius:1px;"></div>
+      <tr><td style="background-color:#0B0D12;border-radius:12px 12px 0 0;padding:22px 32px 22px;">
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="border-collapse:collapse;">
+          <tr>
+            <td valign="middle" style="padding-right:12px;">
+              <img src="${supabaseUrl}/storage/v1/object/public/brand-assets/aac-monogram-green.svg" width="36" height="36" alt="" style="display:block;border:0;outline:none;" />
+            </td>
+            <td valign="middle" style="line-height:1.1;">
+              <p style="margin:0;font-size:18px;font-weight:600;letter-spacing:-0.01em;color:#ffffff;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">All Agent Connect</p>
+              <p style="margin:4px 0 0;font-size:12px;font-weight:500;letter-spacing:0.24em;text-transform:uppercase;color:#e2e8f0;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Founding Partner</p>
+            </td>
+          </tr>
+        </table>
       </td></tr>
       <tr><td style="padding:56px 0 0;">
         <h1 style="margin:0 0 28px;font-size:26px;font-weight:700;line-height:1.2;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Why pay to join a network when you can help launch one?</h1>
