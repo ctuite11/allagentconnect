@@ -301,19 +301,8 @@ function buildFoundingPartnerBody(): string {
         <img src="${heroImg}" alt="All Agent Connect" width="600" style="display:block;width:100%;max-width:600px;height:auto;border-radius:12px;border:1px solid #94a3b8;" />
       </td></tr>
       ${benefitHtml}
-      <tr><td style="padding:40px 0 0;">
-        <h2 style="margin:0 0 10px;font-size:16px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:#0f172a;line-height:1.3;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Founding Partner Benefits</h2>
-        <div style="width:32px;height:2px;background:#22C55E;margin:0 0 16px;border-radius:1px;"></div>
-        <table role="presentation" cellspacing="0" cellpadding="0" style="border-collapse:collapse;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
-          <tr><td valign="top" style="padding:4px 10px 4px 0;color:#22C55E;font-size:14px;font-weight:700;line-height:1.7;">&#10003;</td><td valign="top" style="padding:4px 0;color:#334155;font-size:14px;line-height:1.7;">Lifetime Founding Partner designation</td></tr>
-          <tr><td valign="top" style="padding:4px 10px 4px 0;color:#22C55E;font-size:14px;font-weight:700;line-height:1.7;">&#10003;</td><td valign="top" style="padding:4px 0;color:#334155;font-size:14px;line-height:1.7;">Direct input into future features</td></tr>
-          <tr><td valign="top" style="padding:4px 10px 4px 0;color:#22C55E;font-size:14px;font-weight:700;line-height:1.7;">&#10003;</td><td valign="top" style="padding:4px 0;color:#334155;font-size:14px;line-height:1.7;">Invitation to private roundtable discussions</td></tr>
-          <tr><td valign="top" style="padding:4px 10px 4px 0;color:#22C55E;font-size:14px;font-weight:700;line-height:1.7;">&#10003;</td><td valign="top" style="padding:4px 0;color:#334155;font-size:14px;line-height:1.7;">Early visibility within the AAC network</td></tr>
-          <tr><td valign="top" style="padding:4px 10px 4px 0;color:#22C55E;font-size:14px;font-weight:700;line-height:1.7;">&#10003;</td><td valign="top" style="padding:4px 0;color:#334155;font-size:14px;line-height:1.7;">Help shape the future expansion of AAC and Direct Connect MLS</td></tr>
-        </table>
-      </td></tr>
       <tr><td align="center" style="padding:28px 0 0;">
-        <a href="https://allagentconnect.com/register?source=founding_partner" style="display:inline-block;padding:14px 32px;background:#0E56F5;color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;border-radius:8px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Founders &rarr;</a>
+        <a href="https://allagentconnect.com/register?source=founding_partner" style="display:inline-block;padding:14px 32px;background:#0E56F5;color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;border-radius:8px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Founding Partners &rarr;</a>
       </td></tr>
       <tr><td style="padding:36px 0 0;">
         <p style="margin:0 0 16px;font-size:14px;color:#0f172a;line-height:1.6;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Founding Partners will be invited to a private roundtable discussion where I&rsquo;ll walk through what we&rsquo;ve built with All Agent Connect, preview the upcoming launch of Direct Connect MLS and Stealth Seller, and share where I believe the industry is headed. Most importantly, I&rsquo;d like your candid feedback&mdash;what works, what doesn&rsquo;t, and what you&rsquo;d like to see next.</p>
