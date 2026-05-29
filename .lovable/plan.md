@@ -1,17 +1,21 @@
+## Root cause
+
+Resend is rejecting every send with:
+> "The allagentconnect.com domain is not verified."
+
+Only `mail.allagentconnect.com` is verified for sending. Recent changes set the From address to `chris@allagentconnect.com` (root domain), which Resend won't accept.
+
 ## Plan
 
-1. Update the shared email sender used by the queue so it honors `payload.from` when present, instead of always building the sender from the default `hello` address.
-2. Update the shared email job type to include the optional `from` field already being written by `send-bulk-email`.
-3. Redeploy the queue-processing email function so the deployed sender logic uses the new override.
+1. **Fix the From address** in the queue worker and bulk-email path:
+   - From: `Chris Tuite <chris@mail.allagentconnect.com>` (verified subdomain)
+   - Reply-To: `chris@allagentconnect.com` (so replies still land in your real inbox)
+   - Applies to both single-recipient and multi-recipient sends.
 
-## Technical details
+2. **Keep privacy + individual delivery** behavior unchanged (one email per recipient, no shared To list).
 
-- `send-bulk-email` is already enqueueing:
-  - `from: "Chris Tuite <chris@allagentconnect.com>"`
-- The issue is downstream: `supabase/functions/_shared/sendEmail.ts` currently sends every queued email with:
-  - `All Agent Connect <hello@mail.allagentconnect.com>`
-- I’ll change that to:
-  - use `job.payload.from` if present
-  - otherwise fall back to the existing default sender
+3. **Redeploy** `process-email-queue` and `send-bulk-email`.
 
-This keeps other system emails unchanged while allowing the Founding Partner/bulk campaign path to send from Chris.
+4. **Verify** by sending one test email and confirming the queue logs show a successful send instead of a 403.
+
+Optional follow-up (not in this fix): verify the root `allagentconnect.com` domain in Resend so we can send directly from `chris@allagentconnect.com` later.
