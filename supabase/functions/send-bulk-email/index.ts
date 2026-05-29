@@ -278,17 +278,6 @@ function buildFoundingPartnerBody(): string {
       <p style="margin:0;font-size:13px;line-height:1.6;color:#475569;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${b.desc}</p>
     </td></tr>`).join("");
 
-  const whyFounding = [
-    "Early access before the public feeds",
-    "Influence future platform development",
-    "Founding Partner designation and badge",
-    "Priority visibility within the network",
-    "Direct access to the founder",
-    "Help shape Massachusetts&rsquo; private listing network",
-  ];
-  const whyFoundingHtml = whyFounding.map((p) => `
-    <p style="margin:0 0 6px;font-size:13px;line-height:1.55;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;"><span style="color:#22C55E;font-weight:700;">&#10003;</span> ${p}</p>`).join("");
-
   const perks = [
     "Permanent Founding Partner badge on your profile",
     "Lifetime free access to Success Hub, Hot Sheets, and Communications Center",
@@ -308,14 +297,6 @@ function buildFoundingPartnerBody(): string {
       </td></tr>
       <tr><td style="padding:8px 0 0;">
         <img src="${heroImg}" alt="All Agent Connect" width="600" style="display:block;width:100%;max-width:600px;height:auto;border-radius:12px;border:1px solid #94a3b8;" />
-      </td></tr>
-      <tr><td style="padding:32px 0 0;">
-        <p style="margin:0 0 12px;font-size:15px;font-weight:700;letter-spacing:0.02em;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Why become a Massachusetts Founding Partner?</p>
-        ${whyFoundingHtml}
-      </td></tr>
-      <tr><td align="center" style="padding:24px 0 8px;">
-        <p style="margin:0 0 6px;font-size:15px;font-weight:700;letter-spacing:0.02em;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">What you get as a Founding Partner.</p>
-        <p style="margin:0;font-size:13px;color:#64748b;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Built for the agents helping us build it.</p>
       </td></tr>
       ${benefitHtml}
       <tr><td style="padding:36px 0 0;">
