@@ -241,17 +241,17 @@ function buildFoundingPartnerBody(): string {
     {
       img: `${STORAGE_BASE_V2}/03-results.png?v=${IMG_VERSION_V2}`,
       title: "Pre-market & off-market inventory",
-      desc: "See coming-soon, off-market, and pocket listings before they reach the public market or MLS.",
+      desc: "Discover pre-market and off-market opportunities before they reach the public market.",
     },
     {
       img: `${STORAGE_BASE_V2}/04-comms.png?v=${IMG_VERSION_V2}`,
       title: "Buyer need broadcasting",
-      desc: "Push qualified buyer demand directly to listing agents and surface matches the moment inventory drops.",
+      desc: "Put your buyer needs in front of listing agents before inventory reaches the market.",
     },
     {
       img: `${STORAGE_BASE_V2}/02-success-hub.png?v=${IMG_VERSION_V2}`,
       title: "Success Hub command center",
-      desc: "Pipeline, buyers, listings, hot sheets, referrals, and live market activity in one dashboard built for top producers.",
+      desc: "Buyers, listings, hot sheets, referrals, and live market activity in one command center.",
     },
     {
       img: `${STORAGE_BASE_V2}/06-hot-sheets.png?v=${IMG_VERSION_V2}`,
@@ -266,7 +266,7 @@ function buildFoundingPartnerBody(): string {
     {
       img: `${STORAGE_BASE_V2}/05-network.png?v=${IMG_VERSION_V2}`,
       title: "Verified agent referral network",
-      desc: "Vetted top producers in every market with scrape-protected profiles and a clean way to send and receive referrals.",
+      desc: "Vetted agents in every market with scrape-protected profiles and a clean way to send and receive referrals.",
     },
   ];
 
@@ -277,6 +277,17 @@ function buildFoundingPartnerBody(): string {
       <div style="width:32px;height:2px;background:#22C55E;margin:0 0 12px;border-radius:1px;"></div>
       <p style="margin:0;font-size:13px;line-height:1.6;color:#475569;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${b.desc}</p>
     </td></tr>`).join("");
+
+  const whyFounding = [
+    "Early access before public launch",
+    "Influence future platform development",
+    "Founding Partner designation and badge",
+    "Priority visibility within the network",
+    "Direct access to the founder",
+    "Help shape Massachusetts&rsquo; private listing network",
+  ];
+  const whyFoundingHtml = whyFounding.map((p) => `
+    <p style="margin:0 0 6px;font-size:13px;line-height:1.55;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;"><span style="color:#22C55E;font-weight:700;">&#10003;</span> ${p}</p>`).join("");
 
   const perks = [
     "Permanent Founding Partner badge on your profile",
@@ -298,6 +309,10 @@ function buildFoundingPartnerBody(): string {
       <tr><td style="padding:8px 0 0;">
         <img src="${heroImg}" alt="All Agent Connect" width="600" style="display:block;width:100%;max-width:600px;height:auto;border-radius:12px;border:1px solid #94a3b8;" />
       </td></tr>
+      <tr><td style="padding:32px 0 0;">
+        <p style="margin:0 0 12px;font-size:15px;font-weight:700;letter-spacing:0.02em;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Why become a Massachusetts Founding Partner?</p>
+        ${whyFoundingHtml}
+      </td></tr>
       <tr><td align="center" style="padding:24px 0 8px;">
         <p style="margin:0 0 6px;font-size:15px;font-weight:700;letter-spacing:0.02em;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">What you get as a Founding Partner.</p>
         <p style="margin:0;font-size:13px;color:#64748b;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Built for the agents helping us build it.</p>
@@ -309,6 +324,11 @@ function buildFoundingPartnerBody(): string {
       </td></tr>
       <tr><td align="center" style="padding:28px 0 0;">
         <a href="https://allagentconnect.com/agent-dashboard" style="display:inline-block;padding:14px 32px;background:#0E56F5;color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;border-radius:8px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Accept your invitation &rarr;</a>
+      </td></tr>
+      <tr><td style="padding:36px 0 0;border-top:1px solid #e2e8f0;">
+        <p style="margin:24px 0 8px;font-size:13px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Built by an agent</p>
+        <p style="margin:0;font-size:14px;line-height:1.65;color:#334155;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">I&rsquo;ve spent 33 years selling real estate in Massachusetts. AAC was built to help agents share opportunities, buyer demand, and referrals before they reach the public market.</p>
+        <p style="margin:12px 0 0;font-size:14px;color:#0f172a;font-weight:600;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">&mdash; Chris Tuite, Founder</p>
       </td></tr>
       <tr><td style="padding:36px 0 0;border-top:1px solid #e2e8f0;">
         <p style="margin:24px 0 4px;font-size:14px;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Looking forward to building this with you.</p>
