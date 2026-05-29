@@ -121,6 +121,10 @@ Deno.serve(async (req) => {
     // Normalize email to lowercase
     const normalizedEmail = body.email.toLowerCase().trim();
 
+    // Detect founding partner registrations via source tag from email CTA
+    const normalizedSource = body.source?.trim() || null;
+    const isFoundingPartner = normalizedSource === 'founding_partner';
+
     // Attempt insert - unique constraint will catch duplicates
     const { data, error } = await supabase
       .from('agent_early_access')
@@ -135,10 +139,10 @@ Deno.serve(async (req) => {
         markets: body.markets?.trim() || null,
         specialties: body.specialties || null,
         status: 'pending',
-        founding_partner: false,
+        founding_partner: isFoundingPartner,
         // Listing attribution
         listing_id: body.listing_id || null,
-        source: body.source?.trim() || null,
+        source: normalizedSource,
         registered_from_listing: Boolean(body.listing_id),
       })
       .select('id')
