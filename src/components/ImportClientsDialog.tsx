@@ -96,6 +96,22 @@ interface ParsedCsvResult {
   parseWarnings: string[];
 }
 
+function condenseValidationErrors(errors: ValidationResult["errors"]) {
+  const grouped = new Map<string, { rows: number[]; errors: string[] }>();
+
+  errors.forEach((error) => {
+    const key = error.errors.join("|");
+    const existing = grouped.get(key);
+    if (existing) {
+      existing.rows.push(error.row);
+    } else {
+      grouped.set(key, { rows: [error.row], errors: error.errors });
+    }
+  });
+
+  return Array.from(grouped.values());
+}
+
 export function ImportClientsDialog({ open, onOpenChange, agentId, onImportComplete }: ImportClientsDialogProps) {
   const [uploading, setUploading] = useState(false);
   const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
