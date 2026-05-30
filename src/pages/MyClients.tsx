@@ -189,13 +189,19 @@ const MyClients = () => {
           .select("*")
           .eq("agent_id", userId)
           .order("created_at", { ascending: false })
+          .order("id", { ascending: false })
           .range(from, from + PAGE_SIZE - 1);
         if (error) throw error;
         const batch = data || [];
         all.push(...batch);
         if (batch.length < PAGE_SIZE) break;
       }
-      setClients(all as unknown as Client[]);
+      // Dedupe by id as a safety net against any paginated overlap.
+      const seen = new Set<string>();
+      const unique = all.filter((r) =>
+        seen.has(r.id) ? false : (seen.add(r.id), true)
+      );
+      setClients(unique as unknown as Client[]);
     } catch (error: any) {
       console.error("Error fetching clients:", error);
       toast.error("Failed to load clients");
