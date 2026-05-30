@@ -220,15 +220,17 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
       const rawEmail = emailIdx !== -1 ? cleanCell(values[emailIdx]).toLowerCase() : '';
       const email = isValidEmail(rawEmail) ? rawEmail : '';
 
-      // Skip rows with no usable name AND no valid email
-      if (!firstName && !lastName && !email) {
+      // Skip rows without a valid email — the CRM requires an email per
+      // contact, and junk values like "Compass / Classic Hotline" should
+      // be silently dropped rather than surfaced as validation failures.
+      if (!email) {
         skippedRows++;
         continue;
       }
 
       // Email-only fallback: use local-part as first_name so downstream
       // CRM views always have a display name.
-      if (!firstName && !lastName && email) {
+      if (!firstName && !lastName) {
         firstName = emailLocalPart(email);
       }
 
