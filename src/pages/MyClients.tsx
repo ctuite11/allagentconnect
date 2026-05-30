@@ -170,14 +170,22 @@ const MyClients = () => {
     try {
       setLoading(true);
       setClientsLoadError(false);
-      const { data, error } = await supabase
-        .from("clients_with_relationship_status" as any)
-        .select("*")
-        .eq("agent_id", userId)
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-      setClients((data || []) as unknown as Client[]);
+      // Page through all rows — PostgREST caps each response at 1000 rows.
+      const PAGE_SIZE = 1000;
+      const all: any[] = [];
+      for (let from = 0; ; from += PAGE_SIZE) {
+        const { data, error } = await supabase
+          .from("clients_with_relationship_status" as any)
+          .select("*")
+          .eq("agent_id", userId)
+          .order("created_at", { ascending: false })
+          .range(from, from + PAGE_SIZE - 1);
+        if (error) throw error;
+        const batch = data || [];
+        all.push(...batch);
+        if (batch.length < PAGE_SIZE) break;
+      }
+      setClients(all as unknown as Client[]);
     } catch (error: any) {
       console.error("Error fetching clients:", error);
       toast.error("Failed to load clients");
