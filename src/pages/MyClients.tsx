@@ -74,6 +74,17 @@ interface Client {
   relationship_user_id?: string | null;
 }
 
+// Resolve a non-empty display label for a contact. Falls back to the email local-part
+// so email-only imports never produce "null null" / "undefined undefined" strings.
+const displayName = (c: Client) => {
+  const f = (c.first_name ?? "").trim();
+  const l = (c.last_name ?? "").trim();
+  const full = `${f} ${l}`.trim();
+  if (full) return full;
+  const email = (c.email ?? "").trim();
+  return email ? email.split("@")[0] : "";
+};
+
 const MyClients = () => {
   const navigate = useNavigate();
   const [clients, setClients] = useState<Client[]>([]);
