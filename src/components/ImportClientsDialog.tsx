@@ -102,15 +102,22 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
   const [importing, setImporting] = useState(false);
   const [importProgress, setImportProgress] = useState<string | null>(null);
 
-  const parseCSV = (text: string): ParsedClient[] => {
-    // Strip UTF-8 BOM
-    text = text.replace(/^\uFEFF/, "");
+  const parseCSV = (text: string): ParsedCsvResult => {
+    const parsed = Papa.parse<string[]>(text.replace(/^\uFEFF/, ""), {
+      delimiter: "",
+      delimitersToGuess: [",", "\t", ";"],
+      newline: "",
+      quoteChar: '"',
+      escapeChar: '"',
+      skipEmptyLines: "greedy",
+    });
 
-    const lines = text.split('\n').filter(line => line.trim());
-    if (lines.length === 0) return [];
+    const rows = parsed.data.filter((row) => Array.isArray(row) && !isBlankRow(row));
+    if (rows.length === 0) {
+      return { clients: [], detectedHeaders: [], skippedRows: 0, totalRows: 0, parseWarnings: [] };
+    }
 
-    const delimiter = detectDelimiter(lines[0]);
-    const rawHeader = parseCsvLine(lines[0], delimiter);
+    const rawHeader = rows[0].map(cleanCell);
     const header = rawHeader.map(normalizeHeader);
 
     const firstNameIdx = findHeaderIndex(header, ['first name', 'firstname', 'first', 'given name', 'given', 'fname', 'f name']);
@@ -136,58 +143,55 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
     }
 
     const clients: ParsedClient[] = [];
-    
-    for (let i = 1; i < lines.length; i++) {
-      const values = parseCsvLine(lines[i], delimiter);
-      
-      if (values.length < 2) continue;
+    let skippedRows = 0;
 
-      let firstName = '';
-      let lastName = '';
+    for (let i = 1; i < rows.length; i++) {
+      const values = rows[i].map(cleanCell);
+      const sourceRow = i + 1;
 
-      firstName = firstNameIdx !== -1 ? (values[firstNameIdx] || '').trim() : '';
-      lastName = lastNameIdx !== -1 ? (values[lastNameIdx] || '').trim() : '';
+      let firstName = firstNameIdx !== -1 ? cleanCell(values[firstNameIdx]) : '';
+      let lastName = lastNameIdx !== -1 ? cleanCell(values[lastNameIdx]) : '';
 
-      // Per-row fallback: if first/last empty (or columns missing) but a full-name
-      // column has a value, split it. Handles mixed CSVs where some rows only fill Name.
       if (!firstName && !lastName && hasFullName) {
-        const fullName = (values[fullNameIdx] || '').trim().replace(/\s+/g, ' ');
-        if (fullName) {
-          const parts = fullName.split(/\s+/);
-          firstName = parts[0] || '';
-          lastName = parts.slice(1).join(' ');
-        }
+        const splitName = splitFullName(values[fullNameIdx]);
+        firstName = splitName.firstName;
+        lastName = splitName.lastName;
       }
 
-      // Skip blank rows entirely (no name and no email).
-      if (!firstName && !lastName && !(values[emailIdx] || '').trim()) continue;
+      const email = cleanCell(values[emailIdx]).toLowerCase();
+      if (!firstName && !lastName && !email) {
+        skippedRows++;
+        continue;
+      }
 
-      const rawClientType = clientTypeIdx !== -1 ? values[clientTypeIdx] : '';
-      const normalizedClientType = rawClientType?.trim()
-        ? rawClientType.trim().toLowerCase()
-        : null;
-
-      const rawOfficeId = officeIdIdx !== -1 ? values[officeIdIdx] : '';
-      const normalizedOfficeId = rawOfficeId?.trim() ? rawOfficeId.trim() : null;
+      const rawClientType = clientTypeIdx !== -1 ? cleanCell(values[clientTypeIdx]) : '';
+      const normalizedClientType = rawClientType ? rawClientType.toLowerCase() : null;
+      const rawOfficeId = officeIdIdx !== -1 ? cleanCell(values[officeIdIdx]) : '';
 
       clients.push({
         first_name: firstName,
         last_name: lastName,
-        email: (values[emailIdx] || '').trim().toLowerCase(),
-        phone: phoneIdx !== -1 ? values[phoneIdx] : '',
+        email,
+        phone: phoneIdx !== -1 ? cleanCell(values[phoneIdx]) : '',
         client_type: normalizedClientType,
-        office_id: normalizedOfficeId,
+        office_id: rawOfficeId || null,
+        sourceRow,
       });
     }
 
-    return clients;
+    const parseWarnings = parsed.errors
+      .filter((error) => error.code !== "UndetectableDelimiter")
+      .slice(0, 5)
+      .map((error) => `Row ${(error.row ?? 0) + 1}: ${error.message}`);
+
+    return { clients, detectedHeaders: rawHeader, skippedRows, totalRows: Math.max(rows.length - 1, 0), parseWarnings };
   };
 
-  const validateClients = (clients: ParsedClient[]): ValidationResult => {
+  const validateClients = (parsedCsv: ParsedCsvResult): ValidationResult => {
     const valid: ParsedClient[] = [];
     const errors: Array<{ row: number; errors: string[] }> = [];
 
-    clients.forEach((client, index) => {
+    parsedCsv.clients.forEach((client) => {
       const result = clientRowSchema.safeParse(client);
       
       if (result.success) {
@@ -198,16 +202,24 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
           phone: result.data.phone,
           client_type: result.data.client_type,
           office_id: result.data.office_id ?? null,
+          sourceRow: client.sourceRow,
         });
       } else {
         errors.push({
-          row: index + 2, // +2 because index 0 is row 2 (after header)
+          row: client.sourceRow,
           errors: result.error.errors.map(e => `${e.path.join('.')}: ${e.message}`),
         });
       }
     });
 
-    return { valid, errors };
+    return {
+      valid,
+      errors,
+      detectedHeaders: parsedCsv.detectedHeaders,
+      skippedRows: parsedCsv.skippedRows,
+      totalRows: parsedCsv.totalRows,
+      parseWarnings: parsedCsv.parseWarnings,
+    };
   };
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
