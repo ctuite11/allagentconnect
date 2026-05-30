@@ -544,6 +544,17 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
                 </AlertDescription>
               </Alert>
 
+              <div className="rounded-md border border-border bg-muted/30 p-3 text-xs text-muted-foreground space-y-1">
+                <p><span className="font-medium text-foreground">Detected headers:</span> {validationResult.detectedHeaders.join(', ') || '(none)'}</p>
+                <p>
+                  Parsed {validationResult.totalRows} data row(s)
+                  {validationResult.skippedRows > 0 ? `, skipped ${validationResult.skippedRows} blank row(s)` : ''}.
+                </p>
+                {validationResult.parseWarnings.length > 0 && (
+                  <p><span className="font-medium text-foreground">Parser warnings:</span> {validationResult.parseWarnings.join(' · ')}</p>
+                )}
+              </div>
+
               {/* Errors */}
               {validationResult.errors.length > 0 && (
                 <Alert variant="destructive">
@@ -552,9 +563,11 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
                     <div className="space-y-2">
                       <p className="font-semibold">{validationResult.errors.length} row(s) with errors (will be skipped):</p>
                       <div className="max-h-40 overflow-y-auto space-y-2 text-sm">
-                        {validationResult.errors.slice(0, 10).map((error, idx) => (
+                        {condensedErrors.slice(0, 10).map((error, idx) => (
                           <div key={idx} className="border-l-2 border-destructive pl-2">
-                            <p className="font-medium">Row {error.row}:</p>
+                            <p className="font-medium">
+                              Row{error.rows.length > 1 ? 's' : ''} {error.rows.slice(0, 8).join(', ')}{error.rows.length > 8 ? `, +${error.rows.length - 8} more` : ''}:
+                            </p>
                             <ul className="list-disc list-inside ml-2">
                               {error.errors.map((err, errIdx) => (
                                 <li key={errIdx}>{err}</li>
@@ -562,9 +575,9 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
                             </ul>
                           </div>
                         ))}
-                        {validationResult.errors.length > 10 && (
+                        {condensedErrors.length > 10 && (
                           <p className="text-xs text-muted-foreground">
-                            ...and {validationResult.errors.length - 10} more error(s)
+                            ...and {condensedErrors.length - 10} more error type(s)
                           </p>
                         )}
                       </div>
