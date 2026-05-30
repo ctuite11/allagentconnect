@@ -1,47 +1,17 @@
-# Two small fixes
+## Fix Add Contact "Failed to save client" error
 
-## 1. Change default Founding Partner email subject
+The red toast is a catch-all that hides the real database error. Looking at `MyClients.tsx` insert (line 229) vs the working `CreateBuyerDialog` insert, the contact insert is missing `agent_user_id`, which is likely required by the `clients` table (or by an RLS policy). That's almost certainly what's failing — and it fails on desktop too, but it's more visible on mobile because that's where you tested.
 
-In `src/components/BulkEmailDialog.tsx` (line 208), the default subject auto-filled when the "Founding Partner — Exclusive Invitation" template is chosen is currently:
+## Changes
 
-> "Become a Founding Partner | All Agent Connect"
+**`src/pages/MyClients.tsx` — `handleSubmit`**
 
-Change it to:
+1. Include `agent_user_id: user.id` in the insert payload (matching the pattern used by `CreateBuyerDialog`).
+2. Replace the generic `toast.error("Failed to save client")` with the actual error message: `toast.error(error?.message || "Failed to save client")`, and log the full error (`message`, `code`, `details`, `hint`) to the console for future debugging.
 
-> **"Founding Partner Invite | All Agent Connect"**
+No DB schema, RLS, or UI changes. Strictly the insert payload + error surfacing.
 
-No edge-function change needed — the subject is sent from the dialog. Existing drafts where a user already typed a subject are preserved (the code only sets the default when subject is empty).
+## Verification
 
-## 2. Fix Contacts search → "select name in list" behavior
-
-In `src/pages/MyClients.tsx`, the typeahead dropdown under the Contacts search input (lines ~947–981) currently does this when you click a name:
-
-```ts
-onSelect={() => {
-  setDrawerClient(client);
-  setDrawerOpen(true);     // ← opens the contact card drawer
-  setShowAutocomplete(false);
-}}
-```
-
-You want clicking a name in the search dropdown to **select that contact in the list** instead of opening their contact card.
-
-New behavior on select:
-1. Set `searchTerm` to the contact's full name so the list filters down to just that person.
-2. Add the contact's id to `selectedClients` (the checkbox-selected set) so the row is visibly selected and bulk actions are enabled.
-3. Close the autocomplete dropdown.
-4. Do **not** open the drawer.
-
-```ts
-onSelect={() => {
-  setSearchTerm(`${client.first_name} ${client.last_name}`);
-  setSelectedClients(new Set([client.id]));
-  setShowAutocomplete(false);
-}}
-```
-
-The contact card still opens via the normal row click — only the search-result behavior changes.
-
-## Files touched
-- `src/components/BulkEmailDialog.tsx` — one string change
-- `src/pages/MyClients.tsx` — `onSelect` handler in the search autocomplete `CommandItem`
+- Open Add Contact on mobile, submit a new contact → should succeed.
+- If it still fails, the toast will now show the real Postgres error so we can fix the next layer (e.g. missing column, RLS policy) precisely.

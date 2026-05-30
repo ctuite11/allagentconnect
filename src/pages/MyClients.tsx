@@ -230,6 +230,7 @@ const MyClients = () => {
           .from("clients")
           .insert({
             agent_id: user.id,
+            agent_user_id: user.id,
             first_name: validatedData.first_name,
             last_name: validatedData.last_name,
             email: validatedData.email,
@@ -254,7 +255,14 @@ const MyClients = () => {
         });
         setErrors(newErrors);
       } else {
-        toast.error("Failed to save client");
+        console.error("[MyClients] save client failed", {
+          message: error?.message,
+          code: error?.code,
+          details: error?.details,
+          hint: error?.hint,
+          raw: error,
+        });
+        toast.error(error?.message || "Failed to save client");
       }
     } finally {
       setSaving(false);
