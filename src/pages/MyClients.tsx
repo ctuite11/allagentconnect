@@ -678,16 +678,30 @@ const MyClients = () => {
       wordStartsWith(local, q) ||
       domainRoot.startsWith(q);
 
+    // Token-aware matching for 3+ char queries: every typed token must match
+    // at least one searchable field. This lets "ethan goodrich" match a contact
+    // whose name contains "ethan" and whose email domain contains "goodrich".
+    const searchableFields = [
+      norm(displayName(client)),
+      norm(client.first_name),
+      norm(client.last_name),
+      email,
+      local,
+      domain,
+      domainRoot,
+      norm(client.client_type),
+    ];
+    const phoneDigits = digits(client.phone);
+    const tokens = q.split(/\s+/).filter(Boolean);
     const broadHit =
-      norm(displayName(client)).includes(q) ||
-      norm(client.first_name).includes(q) ||
-      norm(client.last_name).includes(q) ||
-      email.includes(q) ||
-      local.includes(q) ||
-      domain.includes(q) ||
-      domainRoot.includes(q) ||
-      norm(client.client_type).includes(q) ||
-      (searchDigits.length >= 3 && digits(client.phone).includes(searchDigits));
+      tokens.length > 0 &&
+      tokens.every((tok) => {
+        const tokDigits = digits(tok);
+        const fieldHit = searchableFields.some((f) => f.includes(tok));
+        const phoneHit =
+          tokDigits.length >= 3 && phoneDigits.includes(tokDigits);
+        return fieldHit || phoneHit;
+      });
 
     const matchesSearch = !q || (
       shortQuery
