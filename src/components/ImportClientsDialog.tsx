@@ -577,6 +577,9 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
                               {error.errors.map((err, errIdx) => (
                                 <li key={errIdx}>{err}</li>
                               ))}
+                              {error.samples.map((sample, sampleIdx) => (
+                                <li key={`sample-${sampleIdx}`}>{sample}</li>
+                              ))}
                             </ul>
                           </div>
                         ))}
