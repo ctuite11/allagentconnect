@@ -57,13 +57,16 @@ function findHeaderIndex(headers: string[], candidates: string[]): number {
 }
 
 const clientRowSchema = z.object({
-  first_name: z.string().trim().min(1, "First name is required").max(100),
+  first_name: z.string().trim().max(100).optional().or(z.literal("")),
   last_name: z.string().trim().max(100).optional().or(z.literal("")),
   email: z.string().trim().email("Invalid email address").max(255),
   phone: z.string().trim().max(20).optional().or(z.literal("")),
   client_type: z.enum(['buyer', 'seller', 'renter', 'agent', 'lender', 'attorney', 'inspector', 'other']).nullable().optional(),
   office_id: z.string().trim().max(64).nullable().optional(),
-});
+}).refine(
+  (data) => (data.first_name && data.first_name.length > 0) || (data.last_name && data.last_name.length > 0),
+  { message: "At least a first or last name is required", path: ["first_name"] }
+);
 
 interface ImportClientsDialogProps {
   open: boolean;
@@ -182,7 +185,7 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
       
       if (result.success) {
         valid.push({
-          first_name: result.data.first_name,
+          first_name: result.data.first_name ?? '',
           last_name: result.data.last_name ?? '',
           email: result.data.email,
           phone: result.data.phone,
