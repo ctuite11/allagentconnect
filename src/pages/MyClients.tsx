@@ -649,12 +649,20 @@ const MyClients = () => {
 
     // Null-safe search across display name, raw name parts, email (incl. local-part),
     // client_type, and phone digits (when the query looks numeric).
+    const email = norm(client.email);
+    const [local, domain = ""] = email.split("@");
+    const domainRoot = domain.split(".")[0] || "";
+    const emailHit =
+      email.includes(search) ||
+      local.includes(search) ||
+      domain.includes(search) ||
+      domainRoot.includes(search);
+
     const matchesSearch = !search || (
       norm(displayName(client)).includes(search) ||
       norm(client.first_name).includes(search) ||
       norm(client.last_name).includes(search) ||
-      norm(client.email).includes(search) ||
-      norm(client.email).split("@")[0]?.includes(search) ||
+      emailHit ||
       norm(client.client_type).includes(search) ||
       (searchDigits.length >= 3 && digits(client.phone).includes(searchDigits))
     );
