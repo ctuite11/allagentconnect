@@ -217,21 +217,35 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
         lastName = splitName.lastName;
       }
 
-      const email = cleanCell(values[emailIdx]).toLowerCase();
+      const rawEmail = emailIdx !== -1 ? cleanCell(values[emailIdx]).toLowerCase() : '';
+      const email = isValidEmail(rawEmail) ? rawEmail : '';
+
+      // Skip rows with no usable name AND no valid email
       if (!firstName && !lastName && !email) {
         skippedRows++;
         continue;
+      }
+
+      // Email-only fallback: use local-part as first_name so downstream
+      // CRM views always have a display name.
+      if (!firstName && !lastName && email) {
+        firstName = emailLocalPart(email);
       }
 
       const rawClientType = clientTypeIdx !== -1 ? cleanCell(values[clientTypeIdx]) : '';
       const normalizedClientType = rawClientType ? rawClientType.toLowerCase() : null;
       const rawOfficeId = officeIdIdx !== -1 ? cleanCell(values[officeIdIdx]) : '';
 
+      // Sanitize phone — long/garbage phone values should never fail a
+      // row that has a valid name or email.
+      const phoneRaw = phoneIdx !== -1 ? cleanCell(values[phoneIdx]) : '';
+      const phone = sanitizePhone(phoneRaw);
+
       clients.push({
         first_name: firstName,
         last_name: lastName,
         email,
-        phone: phoneIdx !== -1 ? cleanCell(values[phoneIdx]) : '',
+        phone,
         client_type: normalizedClientType,
         office_id: rawOfficeId || null,
         sourceRow,
