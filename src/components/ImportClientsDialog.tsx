@@ -42,8 +42,18 @@ function parseCsvLine(line: string, delimiter: string): string[] {
   return result;
 }
 
+function normalizeHeader(header: string): string {
+  return header
+    .replace(/^\uFEFF/, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim()
+    .replace(/\s+/g, " ");
+}
+
 function findHeaderIndex(headers: string[], candidates: string[]): number {
-  return headers.findIndex((header) => candidates.includes(header));
+  const normCandidates = candidates.map(normalizeHeader);
+  return headers.findIndex((header) => normCandidates.includes(header));
 }
 
 const clientRowSchema = z.object({
@@ -90,21 +100,30 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
     if (lines.length === 0) return [];
 
     const delimiter = detectDelimiter(lines[0]);
-    const header = parseCsvLine(lines[0], delimiter).map(h => h.trim().toLowerCase());
+    const rawHeader = parseCsvLine(lines[0], delimiter);
+    const header = rawHeader.map(normalizeHeader);
 
-    const firstNameIdx = findHeaderIndex(header, ['first name', 'firstname', 'given name']);
-    const lastNameIdx = findHeaderIndex(header, ['last name', 'lastname', 'surname', 'family name']);
-    const emailIdx = findHeaderIndex(header, ['email', 'e-mail']);
-    const phoneIdx = findHeaderIndex(header, ['phone', 'telephone', 'mobile']);
+    const firstNameIdx = findHeaderIndex(header, ['first name', 'firstname', 'first', 'given name', 'given', 'fname', 'f name']);
+    const lastNameIdx = findHeaderIndex(header, ['last name', 'lastname', 'last', 'surname', 'family name', 'family', 'lname', 'l name']);
+    const emailIdx = findHeaderIndex(header, ['email', 'e mail', 'email address']);
+    const phoneIdx = findHeaderIndex(header, ['phone', 'telephone', 'mobile', 'phone number', 'mobile number', 'cell', 'cell phone']);
     const clientTypeIdx = header.findIndex(h => h.includes('client') && h.includes('type'));
-    const officeIdIdx = findHeaderIndex(header, ['office id', 'office_id', 'office', 'mls office id', 'mls office']);
+    const officeIdIdx = findHeaderIndex(header, ['office id', 'office', 'mls office id', 'mls office']);
     const fullNameIdx = findHeaderIndex(header, ['name', 'full name', 'fullname', 'contact name', 'client name']);
 
-    // Allow full-name fallback if first/last not found
-    const useFullName = firstNameIdx === -1 && lastNameIdx === -1 && fullNameIdx !== -1;
+    // Allow full-name fallback only if neither first nor last is present.
+    const hasAnyName = firstNameIdx !== -1 || lastNameIdx !== -1;
+    const useFullName = !hasAnyName && fullNameIdx !== -1;
 
-    if (!useFullName && (firstNameIdx === -1 || lastNameIdx === -1) || emailIdx === -1) {
-      throw new Error("CSV must include either a 'Name' (or 'Full Name') column, or both 'First Name' and 'Last Name' columns, plus 'Email'");
+    if (!useFullName && !hasAnyName) {
+      throw new Error(
+        `CSV must include 'First Name' (and/or 'Last Name') or a 'Full Name' column. Detected headers: ${rawHeader.join(', ') || '(none)'}`
+      );
+    }
+    if (emailIdx === -1) {
+      throw new Error(
+        `CSV must include an 'Email' column. Detected headers: ${rawHeader.join(', ') || '(none)'}`
+      );
     }
 
     const clients: ParsedClient[] = [];
@@ -124,8 +143,8 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
         firstName = parts[0] || '';
         lastName = parts.slice(1).join(' ');
       } else {
-        firstName = values[firstNameIdx] || '';
-        lastName = values[lastNameIdx] || '';
+        firstName = firstNameIdx !== -1 ? (values[firstNameIdx] || '') : '';
+        lastName = lastNameIdx !== -1 ? (values[lastNameIdx] || '') : '';
       }
 
       const rawClientType = clientTypeIdx !== -1 ? values[clientTypeIdx] : '';
