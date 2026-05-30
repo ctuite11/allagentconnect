@@ -124,16 +124,18 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
       delimitersToGuess: [",", "\t", ";"],
       quoteChar: '"',
       escapeChar: '"',
-      skipEmptyLines: "greedy",
+      skipEmptyLines: false,
       worker: false,
     });
 
-    const rows = parsed.data.filter((row) => Array.isArray(row) && !isBlankRow(row));
+    const rows = parsed.data
+      .map((row, index) => ({ row, sourceRow: index + 1 }))
+      .filter((entry) => Array.isArray(entry.row) && !isBlankRow(entry.row));
     if (rows.length === 0) {
       return { clients: [], detectedHeaders: [], skippedRows: 0, totalRows: 0, parseWarnings: [] };
     }
 
-    const rawHeader = rows[0].map(cleanCell);
+    const rawHeader = rows[0].row.map(cleanCell);
     const header = rawHeader.map(normalizeHeader);
 
     const firstNameIdx = findHeaderIndex(header, ['first name', 'firstname', 'first', 'given name', 'given', 'fname', 'f name']);
@@ -162,8 +164,8 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
     let skippedRows = 0;
 
     for (let i = 1; i < rows.length; i++) {
-      const values = rows[i].map(cleanCell);
-      const sourceRow = i + 1;
+      const values = rows[i].row.map(cleanCell);
+      const sourceRow = rows[i].sourceRow;
 
       let firstName = firstNameIdx !== -1 ? cleanCell(values[firstNameIdx]) : '';
       let lastName = lastNameIdx !== -1 ? cleanCell(values[lastNameIdx]) : '';
