@@ -48,6 +48,16 @@ const toTitleCase = (str: string) => {
 const norm = (v: unknown) => String(v ?? "").toLowerCase().trim();
 const digits = (v: unknown) => String(v ?? "").replace(/\D+/g, "");
 
+// Tokenize a value into lowercase word parts split on whitespace and common
+// separators found in names/emails (".", "_", "@", "-", "+", "/").
+const words = (v: unknown) =>
+  norm(v)
+    .split(/[\s._@\-+/]+/)
+    .filter(Boolean);
+
+const wordStartsWith = (v: unknown, q: string) =>
+  words(v).some((word) => word.startsWith(q));
+
 const clientSchema = z.object({
   first_name: z.string().trim().min(2, "First name must be at least 2 characters").max(100),
   last_name: z.string().trim().min(2, "Last name must be at least 2 characters").max(100),
@@ -647,24 +657,42 @@ const MyClients = () => {
     const search = norm(searchRaw);
     const searchDigits = digits(searchRaw);
 
-    // Null-safe search across display name, raw name parts, email (incl. local-part),
-    // client_type, and phone digits (when the query looks numeric).
+    // Short queries (1–2 chars) use prefix / word-boundary matching to avoid
+    // matching every contact that happens to contain the letter anywhere.
+    // Queries of 3+ characters fall back to broader substring matching across
+    // display name, name parts, email, client_type, and phone digits.
+    const q = search;
     const email = norm(client.email);
     const [local, domain = ""] = email.split("@");
     const domainRoot = domain.split(".")[0] || "";
-    const emailHit =
-      email.includes(search) ||
-      local.includes(search) ||
-      domain.includes(search) ||
-      domainRoot.includes(search);
 
-    const matchesSearch = !search || (
-      norm(displayName(client)).includes(search) ||
-      norm(client.first_name).includes(search) ||
-      norm(client.last_name).includes(search) ||
-      emailHit ||
-      norm(client.client_type).includes(search) ||
-      (searchDigits.length >= 3 && digits(client.phone).includes(searchDigits))
+    const shortQuery = q.length > 0 && q.length < 3;
+
+    const namePrefixHit =
+      wordStartsWith(displayName(client), q) ||
+      wordStartsWith(client.first_name, q) ||
+      wordStartsWith(client.last_name, q);
+
+    const emailPrefixHit =
+      local.startsWith(q) ||
+      wordStartsWith(local, q) ||
+      domainRoot.startsWith(q);
+
+    const broadHit =
+      norm(displayName(client)).includes(q) ||
+      norm(client.first_name).includes(q) ||
+      norm(client.last_name).includes(q) ||
+      email.includes(q) ||
+      local.includes(q) ||
+      domain.includes(q) ||
+      domainRoot.includes(q) ||
+      norm(client.client_type).includes(q) ||
+      (searchDigits.length >= 3 && digits(client.phone).includes(searchDigits));
+
+    const matchesSearch = !q || (
+      shortQuery
+        ? namePrefixHit || emailPrefixHit
+        : broadHit
     );
 
     // Apply client type filter
