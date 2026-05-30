@@ -111,11 +111,10 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
     const officeIdIdx = findHeaderIndex(header, ['office id', 'office', 'mls office id', 'mls office']);
     const fullNameIdx = findHeaderIndex(header, ['name', 'full name', 'fullname', 'contact name', 'client name']);
 
-    // Allow full-name fallback only if neither first nor last is present.
     const hasAnyName = firstNameIdx !== -1 || lastNameIdx !== -1;
-    const useFullName = !hasAnyName && fullNameIdx !== -1;
+    const hasFullName = fullNameIdx !== -1;
 
-    if (!useFullName && !hasAnyName) {
+    if (!hasAnyName && !hasFullName) {
       throw new Error(
         `CSV must include 'First Name' (and/or 'Last Name') or a 'Full Name' column. Detected headers: ${rawHeader.join(', ') || '(none)'}`
       );
@@ -136,16 +135,22 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
       let firstName = '';
       let lastName = '';
 
-      if (useFullName) {
+      firstName = firstNameIdx !== -1 ? (values[firstNameIdx] || '').trim() : '';
+      lastName = lastNameIdx !== -1 ? (values[lastNameIdx] || '').trim() : '';
+
+      // Per-row fallback: if first/last empty (or columns missing) but a full-name
+      // column has a value, split it. Handles mixed CSVs where some rows only fill Name.
+      if (!firstName && !lastName && hasFullName) {
         const fullName = (values[fullNameIdx] || '').trim().replace(/\s+/g, ' ');
-        if (!fullName) continue;
-        const parts = fullName.split(/\s+/);
-        firstName = parts[0] || '';
-        lastName = parts.slice(1).join(' ');
-      } else {
-        firstName = firstNameIdx !== -1 ? (values[firstNameIdx] || '') : '';
-        lastName = lastNameIdx !== -1 ? (values[lastNameIdx] || '') : '';
+        if (fullName) {
+          const parts = fullName.split(/\s+/);
+          firstName = parts[0] || '';
+          lastName = parts.slice(1).join(' ');
+        }
       }
+
+      // Skip blank rows entirely (no name and no email).
+      if (!firstName && !lastName && !(values[emailIdx] || '').trim()) continue;
 
       const rawClientType = clientTypeIdx !== -1 ? values[clientTypeIdx] : '';
       const normalizedClientType = rawClientType?.trim()
