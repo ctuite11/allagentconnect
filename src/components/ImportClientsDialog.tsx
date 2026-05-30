@@ -221,9 +221,13 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
           sourceRow: client.sourceRow,
         });
       } else {
+        const rowData = [client.first_name, client.last_name, client.email].filter(Boolean).join(" / ");
         errors.push({
           row: client.sourceRow,
-          errors: result.error.errors.map(e => `${e.path.join('.')}: ${e.message}`),
+          errors: [
+            ...result.error.errors.map(e => `${e.path.join('.') || 'row'}: ${e.message}`),
+            ...(rowData ? [`Data: ${rowData}`] : []),
+          ],
         });
       }
     });
