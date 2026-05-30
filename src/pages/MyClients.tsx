@@ -225,7 +225,26 @@ const MyClients = () => {
         if (error) throw error;
         toast.success("Client updated successfully");
       } else {
-        // Add new client
+        // Add new client — check for existing duplicate first
+        const normalizedEmail = validatedData.email.trim().toLowerCase();
+
+        const { data: existing, error: lookupError } = await supabase
+          .from("clients")
+          .select("id, first_name, last_name")
+          .eq("agent_id", user.id)
+          .ilike("email", normalizedEmail)
+          .maybeSingle();
+
+        if (lookupError) throw lookupError;
+
+        if (existing) {
+          toast.error(
+            `A contact with this email already exists: ${existing.first_name} ${existing.last_name}.`
+          );
+          setSaving(false);
+          return;
+        }
+
         const { error } = await supabase
           .from("clients")
           .insert({
@@ -233,7 +252,7 @@ const MyClients = () => {
             agent_user_id: user.id,
             first_name: validatedData.first_name,
             last_name: validatedData.last_name,
-            email: validatedData.email,
+            email: normalizedEmail,
             phone: validatedData.phone || null,
             client_type: validatedData.client_type || null,
           });
