@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Upload, FileSpreadsheet, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
-import Papa from "papaparse";
+import { parse as parsePapa } from "papaparse";
 
 function cleanCell(value: unknown): string {
   return String(value ?? "")
@@ -122,7 +122,7 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
   const [importProgress, setImportProgress] = useState<string | null>(null);
 
   const parseCSV = (text: string): ParsedCsvResult => {
-    const parsed = Papa.parse<string[]>(text.replace(/^\uFEFF/, ""), {
+    const parsed = parsePapa<string[]>(text.replace(/^\uFEFF/, ""), {
       delimiter: "",
       delimitersToGuess: [",", "\t", ";"],
       quoteChar: '"',
