@@ -44,6 +44,10 @@ const toTitleCase = (str: string) => {
     .join(' ');
 };
 
+// Null-safe helpers used by contact search/sort/autocomplete on /my-clients.
+const norm = (v: unknown) => String(v ?? "").toLowerCase().trim();
+const digits = (v: unknown) => String(v ?? "").replace(/\D+/g, "");
+
 const clientSchema = z.object({
   first_name: z.string().trim().min(2, "First name must be at least 2 characters").max(100),
   last_name: z.string().trim().min(2, "Last name must be at least 2 characters").max(100),
