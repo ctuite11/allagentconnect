@@ -97,15 +97,18 @@ interface ParsedCsvResult {
 }
 
 function condenseValidationErrors(errors: ValidationResult["errors"]) {
-  const grouped = new Map<string, { rows: number[]; errors: string[] }>();
+  const grouped = new Map<string, { rows: number[]; errors: string[]; samples: string[] }>();
 
   errors.forEach((error) => {
-    const key = error.errors.join("|");
+    const messages = error.errors.filter((message) => !message.startsWith("Data:"));
+    const sample = error.errors.find((message) => message.startsWith("Data:"));
+    const key = messages.join("|");
     const existing = grouped.get(key);
     if (existing) {
       existing.rows.push(error.row);
+      if (sample && existing.samples.length < 3) existing.samples.push(sample);
     } else {
-      grouped.set(key, { rows: [error.row], errors: error.errors });
+      grouped.set(key, { rows: [error.row], errors: messages, samples: sample ? [sample] : [] });
     }
   });
 
