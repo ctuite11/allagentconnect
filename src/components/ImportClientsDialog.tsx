@@ -106,10 +106,10 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
     const parsed = Papa.parse<string[]>(text.replace(/^\uFEFF/, ""), {
       delimiter: "",
       delimitersToGuess: [",", "\t", ";"],
-      newline: "",
       quoteChar: '"',
       escapeChar: '"',
       skipEmptyLines: "greedy",
+      worker: false,
     });
 
     const rows = parsed.data.filter((row) => Array.isArray(row) && !isBlankRow(row));
