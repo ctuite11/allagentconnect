@@ -635,17 +635,20 @@ const MyClients = () => {
   };
 
   const filteredClients = clients.filter((client) => {
-    const fullName = `${client.first_name} ${client.last_name}`.toLowerCase();
-    const email = client.email.toLowerCase();
-    const phone = client.phone?.toLowerCase() || "";
-    const search = searchTerm.toLowerCase();
-    
-    // Apply search filter
-    const matchesSearch = (
-      fullName.includes(search) ||
-      email.includes(search) ||
-      phone.includes(search) ||
-      client.client_type?.toLowerCase().includes(search)
+    const searchRaw = searchTerm.trim();
+    const search = norm(searchRaw);
+    const searchDigits = digits(searchRaw);
+
+    // Null-safe search across display name, raw name parts, email (incl. local-part),
+    // client_type, and phone digits (when the query looks numeric).
+    const matchesSearch = !search || (
+      norm(displayName(client)).includes(search) ||
+      norm(client.first_name).includes(search) ||
+      norm(client.last_name).includes(search) ||
+      norm(client.email).includes(search) ||
+      norm(client.email).split("@")[0]?.includes(search) ||
+      norm(client.client_type).includes(search) ||
+      (searchDigits.length >= 3 && digits(client.phone).includes(searchDigits))
     );
 
     // Apply client type filter
@@ -663,9 +666,7 @@ const MyClients = () => {
   const sortedClients = [...filteredClients].sort((a, b) => {
     switch (sortBy) {
       case "name":
-        const nameA = `${a.first_name} ${a.last_name}`.toLowerCase();
-        const nameB = `${b.first_name} ${b.last_name}`.toLowerCase();
-        return nameA.localeCompare(nameB);
+        return displayName(a).localeCompare(displayName(b));
       case "created_at":
         return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
       case "updated_at":
