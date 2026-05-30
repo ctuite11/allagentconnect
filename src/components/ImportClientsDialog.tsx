@@ -50,16 +50,54 @@ function splitFullName(fullName: string): { firstName: string; lastName: string 
   };
 }
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function isValidEmail(value: string): boolean {
+  return EMAIL_RE.test(value);
+}
+
+/**
+ * Best-effort phone sanitization. Strips labels/extensions/extra text and
+ * returns a value <=20 chars. Returns "" if nothing salvageable.
+ */
+function sanitizePhone(raw: string): string {
+  const cleaned = cleanCell(raw);
+  if (!cleaned) return "";
+  // Strip extensions and trailing labels like "x123", "ext. 4", "(work)", etc.
+  let stripped = cleaned
+    .replace(/\b(ext\.?|extension|x)\s*\d+/gi, "")
+    .replace(/\([^)]*[a-zA-Z][^)]*\)/g, "") // (work), (mobile)
+    .replace(/\b(work|home|mobile|cell|fax|office|main|direct)\b/gi, "")
+    .trim();
+  // If multiple phone numbers separated by , ; / | -> keep the first
+  const firstChunk = stripped.split(/[,;|/]/)[0]?.trim() ?? "";
+  if (firstChunk) stripped = firstChunk;
+  // Keep only phone-relevant chars
+  const compact = stripped.replace(/[^\d+()\-.\s]/g, "").trim();
+  if (!compact) return "";
+  const digitCount = compact.replace(/\D/g, "").length;
+  if (digitCount < 7) return "";
+  return compact.length <= 20 ? compact : "";
+}
+
+function emailLocalPart(email: string): string {
+  const at = email.indexOf("@");
+  return at > 0 ? email.slice(0, at) : email;
+}
+
 const clientRowSchema = z.object({
   first_name: z.string().trim().max(100).optional().or(z.literal("")),
   last_name: z.string().trim().max(100).optional().or(z.literal("")),
-  email: z.string().trim().email("Invalid email address").max(255),
+  email: z.string().trim().email("Invalid email address").max(255).optional().or(z.literal("")),
   phone: z.string().trim().max(20).optional().or(z.literal("")),
   client_type: z.enum(['buyer', 'seller', 'renter', 'agent', 'lender', 'attorney', 'inspector', 'other']).nullable().optional(),
   office_id: z.string().trim().max(64).nullable().optional(),
 }).refine(
-  (data) => (data.first_name && data.first_name.length > 0) || (data.last_name && data.last_name.length > 0),
-  { message: "At least a first or last name is required", path: ["first_name"] }
+  (data) =>
+    (data.first_name && data.first_name.length > 0) ||
+    (data.last_name && data.last_name.length > 0) ||
+    (data.email && data.email.length > 0),
+  { message: "Row needs at least a name or a valid email", path: ["first_name"] }
 );
 
 interface ImportClientsDialogProps {
