@@ -44,6 +44,10 @@ const toTitleCase = (str: string) => {
     .join(' ');
 };
 
+// Null-safe helpers used by contact search/sort/autocomplete on /my-clients.
+const norm = (v: unknown) => String(v ?? "").toLowerCase().trim();
+const digits = (v: unknown) => String(v ?? "").replace(/\D+/g, "");
+
 const clientSchema = z.object({
   first_name: z.string().trim().min(2, "First name must be at least 2 characters").max(100),
   last_name: z.string().trim().min(2, "Last name must be at least 2 characters").max(100),
@@ -69,6 +73,17 @@ interface Client {
   relationship_created_at?: string | null;
   relationship_user_id?: string | null;
 }
+
+// Resolve a non-empty display label for a contact. Falls back to the email local-part
+// so email-only imports never produce "null null" / "undefined undefined" strings.
+const displayName = (c: Client) => {
+  const f = (c.first_name ?? "").trim();
+  const l = (c.last_name ?? "").trim();
+  const full = `${f} ${l}`.trim();
+  if (full) return full;
+  const email = (c.email ?? "").trim();
+  return email ? email.split("@")[0] : "";
+};
 
 const MyClients = () => {
   const navigate = useNavigate();
@@ -620,17 +635,20 @@ const MyClients = () => {
   };
 
   const filteredClients = clients.filter((client) => {
-    const fullName = `${client.first_name} ${client.last_name}`.toLowerCase();
-    const email = client.email.toLowerCase();
-    const phone = client.phone?.toLowerCase() || "";
-    const search = searchTerm.toLowerCase();
-    
-    // Apply search filter
-    const matchesSearch = (
-      fullName.includes(search) ||
-      email.includes(search) ||
-      phone.includes(search) ||
-      client.client_type?.toLowerCase().includes(search)
+    const searchRaw = searchTerm.trim();
+    const search = norm(searchRaw);
+    const searchDigits = digits(searchRaw);
+
+    // Null-safe search across display name, raw name parts, email (incl. local-part),
+    // client_type, and phone digits (when the query looks numeric).
+    const matchesSearch = !search || (
+      norm(displayName(client)).includes(search) ||
+      norm(client.first_name).includes(search) ||
+      norm(client.last_name).includes(search) ||
+      norm(client.email).includes(search) ||
+      norm(client.email).split("@")[0]?.includes(search) ||
+      norm(client.client_type).includes(search) ||
+      (searchDigits.length >= 3 && digits(client.phone).includes(searchDigits))
     );
 
     // Apply client type filter
@@ -648,9 +666,7 @@ const MyClients = () => {
   const sortedClients = [...filteredClients].sort((a, b) => {
     switch (sortBy) {
       case "name":
-        const nameA = `${a.first_name} ${a.last_name}`.toLowerCase();
-        const nameB = `${b.first_name} ${b.last_name}`.toLowerCase();
-        return nameA.localeCompare(nameB);
+        return displayName(a).localeCompare(displayName(b));
       case "created_at":
         return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
       case "updated_at":
@@ -980,9 +996,9 @@ const MyClients = () => {
                                 {filteredClients.slice(0, 8).map((client) => (
                                   <CommandItem
                                     key={client.id}
-                                    value={`${client.first_name} ${client.last_name}`}
+                                    value={displayName(client)}
                                     onSelect={() => {
-                                      setSearchTerm(`${client.first_name} ${client.last_name}`);
+                                      setSearchTerm(displayName(client));
                                       setSelectedClients(new Set([client.id]));
                                       setShowAutocomplete(false);
                                     }}
@@ -990,7 +1006,7 @@ const MyClients = () => {
                                   >
                                     <div className="flex flex-col">
                                       <span className="font-medium text-zinc-900">
-                                        {toTitleCase(`${client.first_name} ${client.last_name}`)}
+                                        {toTitleCase(displayName(client))}
                                       </span>
                                       <span className="text-sm text-zinc-500">{client.email}</span>
                                     </div>
