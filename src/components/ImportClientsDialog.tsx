@@ -550,7 +550,7 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
                 <p><span className="font-medium text-foreground">Detected headers:</span> {validationResult.detectedHeaders.join(', ') || '(none)'}</p>
                 <p>
                   Parsed {validationResult.totalRows} data row(s)
-                  {validationResult.skippedRows > 0 ? `, skipped ${validationResult.skippedRows} blank row(s)` : ''}.
+                  {validationResult.skippedRows > 0 ? `, skipped ${validationResult.skippedRows} row(s) with no name or email` : ''}.
                 </p>
                 {validationResult.parseWarnings.length > 0 && (
                   <p><span className="font-medium text-foreground">Parser warnings:</span> {validationResult.parseWarnings.join(' · ')}</p>
