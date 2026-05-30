@@ -266,8 +266,8 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
       if (file.name.endsWith('.csv') || file.type === 'text/csv') {
         // Parse CSV directly
         const text = await file.text();
-        const clients = parseCSV(text);
-        const result = validateClients(clients);
+        const parsedCsv = parseCSV(text);
+        const result = validateClients(parsedCsv);
         setValidationResult(result);
         
         if (result.valid.length === 0) {
