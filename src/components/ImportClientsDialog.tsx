@@ -470,6 +470,8 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
     onOpenChange(false);
   };
 
+  const condensedErrors = validationResult ? condenseValidationErrors(validationResult.errors) : [];
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
