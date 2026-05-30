@@ -996,9 +996,9 @@ const MyClients = () => {
                                 {filteredClients.slice(0, 8).map((client) => (
                                   <CommandItem
                                     key={client.id}
-                                    value={`${client.first_name} ${client.last_name}`}
+                                    value={displayName(client)}
                                     onSelect={() => {
-                                      setSearchTerm(`${client.first_name} ${client.last_name}`);
+                                      setSearchTerm(displayName(client));
                                       setSelectedClients(new Set([client.id]));
                                       setShowAutocomplete(false);
                                     }}
@@ -1006,7 +1006,7 @@ const MyClients = () => {
                                   >
                                     <div className="flex flex-col">
                                       <span className="font-medium text-zinc-900">
-                                        {toTitleCase(`${client.first_name} ${client.last_name}`)}
+                                        {toTitleCase(displayName(client))}
                                       </span>
                                       <span className="text-sm text-zinc-500">{client.email}</span>
                                     </div>
