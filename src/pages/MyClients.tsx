@@ -48,6 +48,16 @@ const toTitleCase = (str: string) => {
 const norm = (v: unknown) => String(v ?? "").toLowerCase().trim();
 const digits = (v: unknown) => String(v ?? "").replace(/\D+/g, "");
 
+// Tokenize a value into lowercase word parts split on whitespace and common
+// separators found in names/emails (".", "_", "@", "-", "+", "/").
+const words = (v: unknown) =>
+  norm(v)
+    .split(/[\s._@\-+/]+/)
+    .filter(Boolean);
+
+const wordStartsWith = (v: unknown, q: string) =>
+  words(v).some((word) => word.startsWith(q));
+
 const clientSchema = z.object({
   first_name: z.string().trim().min(2, "First name must be at least 2 characters").max(100),
   last_name: z.string().trim().min(2, "Last name must be at least 2 characters").max(100),
