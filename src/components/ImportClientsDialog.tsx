@@ -7,44 +7,18 @@ import { supabase } from "@/integrations/supabase/client";
 import { Upload, FileSpreadsheet, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
+import { parse as parsePapa } from "papaparse";
 
-function detectDelimiter(headerLine: string): string {
-  if (headerLine.includes("\t")) return "\t";
-  if (headerLine.includes(";") && !headerLine.includes(",")) return ";";
-  return ",";
-}
-
-function parseCsvLine(line: string, delimiter: string): string[] {
-  const result: string[] = [];
-  let current = "";
-  let inQuotes = false;
-
-  for (let i = 0; i < line.length; i++) {
-    const char = line[i];
-    const next = line[i + 1];
-
-    if (char === '"') {
-      if (inQuotes && next === '"') {
-        current += '"';
-        i++;
-      } else {
-        inQuotes = !inQuotes;
-      }
-    } else if (char === delimiter && !inQuotes) {
-      result.push(current.trim());
-      current = "";
-    } else {
-      current += char;
-    }
-  }
-
-  result.push(current.trim());
-  return result;
+function cleanCell(value: unknown): string {
+  return String(value ?? "")
+    .replace(/^\uFEFF/, "")
+    .replace(/\u00A0/g, " ")
+    .trim()
+    .replace(/\s+/g, " ");
 }
 
 function normalizeHeader(header: string): string {
-  return header
-    .replace(/^\uFEFF/, "")
+  return cleanCell(header)
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, " ")
     .trim()
@@ -54,6 +28,26 @@ function normalizeHeader(header: string): string {
 function findHeaderIndex(headers: string[], candidates: string[]): number {
   const normCandidates = candidates.map(normalizeHeader);
   return headers.findIndex((header) => normCandidates.includes(header));
+}
+
+function isBlankRow(row: unknown[]): boolean {
+  return row.every((value) => !cleanCell(value));
+}
+
+function splitFullName(fullName: string): { firstName: string; lastName: string } {
+  const normalized = cleanCell(fullName);
+  if (!normalized) return { firstName: "", lastName: "" };
+
+  if (normalized.includes(",")) {
+    const [last, ...rest] = normalized.split(",").map(cleanCell).filter(Boolean);
+    return { firstName: rest.join(" "), lastName: last || "" };
+  }
+
+  const parts = normalized.split(/\s+/);
+  return {
+    firstName: parts[0] || "",
+    lastName: parts.slice(1).join(" "),
+  };
 }
 
 const clientRowSchema = z.object({
@@ -82,11 +76,43 @@ interface ParsedClient {
   phone?: string;
   client_type?: string;
   office_id?: string | null;
+  sourceRow: number;
 }
 
 interface ValidationResult {
   valid: ParsedClient[];
   errors: Array<{ row: number; errors: string[] }>;
+  detectedHeaders: string[];
+  skippedRows: number;
+  totalRows: number;
+  parseWarnings: string[];
+}
+
+interface ParsedCsvResult {
+  clients: ParsedClient[];
+  detectedHeaders: string[];
+  skippedRows: number;
+  totalRows: number;
+  parseWarnings: string[];
+}
+
+function condenseValidationErrors(errors: ValidationResult["errors"]) {
+  const grouped = new Map<string, { rows: number[]; errors: string[]; samples: string[] }>();
+
+  errors.forEach((error) => {
+    const messages = error.errors.filter((message) => !message.startsWith("Data:"));
+    const sample = error.errors.find((message) => message.startsWith("Data:"));
+    const key = messages.join("|");
+    const existing = grouped.get(key);
+    if (existing) {
+      existing.rows.push(error.row);
+      if (sample && existing.samples.length < 3) existing.samples.push(sample);
+    } else {
+      grouped.set(key, { rows: [error.row], errors: messages, samples: sample ? [sample] : [] });
+    }
+  });
+
+  return Array.from(grouped.values());
 }
 
 export function ImportClientsDialog({ open, onOpenChange, agentId, onImportComplete }: ImportClientsDialogProps) {
@@ -95,15 +121,24 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
   const [importing, setImporting] = useState(false);
   const [importProgress, setImportProgress] = useState<string | null>(null);
 
-  const parseCSV = (text: string): ParsedClient[] => {
-    // Strip UTF-8 BOM
-    text = text.replace(/^\uFEFF/, "");
+  const parseCSV = (text: string): ParsedCsvResult => {
+    const parsed = parsePapa<string[]>(text.replace(/^\uFEFF/, ""), {
+      delimiter: "",
+      delimitersToGuess: [",", "\t", ";"],
+      quoteChar: '"',
+      escapeChar: '"',
+      skipEmptyLines: false,
+      worker: false,
+    });
 
-    const lines = text.split('\n').filter(line => line.trim());
-    if (lines.length === 0) return [];
+    const rows = parsed.data
+      .map((row, index) => ({ row, sourceRow: index + 1 }))
+      .filter((entry) => Array.isArray(entry.row) && !isBlankRow(entry.row));
+    if (rows.length === 0) {
+      return { clients: [], detectedHeaders: [], skippedRows: 0, totalRows: 0, parseWarnings: [] };
+    }
 
-    const delimiter = detectDelimiter(lines[0]);
-    const rawHeader = parseCsvLine(lines[0], delimiter);
+    const rawHeader = rows[0].row.map(cleanCell);
     const header = rawHeader.map(normalizeHeader);
 
     const firstNameIdx = findHeaderIndex(header, ['first name', 'firstname', 'first', 'given name', 'given', 'fname', 'f name']);
@@ -129,58 +164,55 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
     }
 
     const clients: ParsedClient[] = [];
-    
-    for (let i = 1; i < lines.length; i++) {
-      const values = parseCsvLine(lines[i], delimiter);
-      
-      if (values.length < 2) continue;
+    let skippedRows = 0;
 
-      let firstName = '';
-      let lastName = '';
+    for (let i = 1; i < rows.length; i++) {
+      const values = rows[i].row.map(cleanCell);
+      const sourceRow = rows[i].sourceRow;
 
-      firstName = firstNameIdx !== -1 ? (values[firstNameIdx] || '').trim() : '';
-      lastName = lastNameIdx !== -1 ? (values[lastNameIdx] || '').trim() : '';
+      let firstName = firstNameIdx !== -1 ? cleanCell(values[firstNameIdx]) : '';
+      let lastName = lastNameIdx !== -1 ? cleanCell(values[lastNameIdx]) : '';
 
-      // Per-row fallback: if first/last empty (or columns missing) but a full-name
-      // column has a value, split it. Handles mixed CSVs where some rows only fill Name.
       if (!firstName && !lastName && hasFullName) {
-        const fullName = (values[fullNameIdx] || '').trim().replace(/\s+/g, ' ');
-        if (fullName) {
-          const parts = fullName.split(/\s+/);
-          firstName = parts[0] || '';
-          lastName = parts.slice(1).join(' ');
-        }
+        const splitName = splitFullName(values[fullNameIdx]);
+        firstName = splitName.firstName;
+        lastName = splitName.lastName;
       }
 
-      // Skip blank rows entirely (no name and no email).
-      if (!firstName && !lastName && !(values[emailIdx] || '').trim()) continue;
+      const email = cleanCell(values[emailIdx]).toLowerCase();
+      if (!firstName && !lastName && !email) {
+        skippedRows++;
+        continue;
+      }
 
-      const rawClientType = clientTypeIdx !== -1 ? values[clientTypeIdx] : '';
-      const normalizedClientType = rawClientType?.trim()
-        ? rawClientType.trim().toLowerCase()
-        : null;
-
-      const rawOfficeId = officeIdIdx !== -1 ? values[officeIdIdx] : '';
-      const normalizedOfficeId = rawOfficeId?.trim() ? rawOfficeId.trim() : null;
+      const rawClientType = clientTypeIdx !== -1 ? cleanCell(values[clientTypeIdx]) : '';
+      const normalizedClientType = rawClientType ? rawClientType.toLowerCase() : null;
+      const rawOfficeId = officeIdIdx !== -1 ? cleanCell(values[officeIdIdx]) : '';
 
       clients.push({
         first_name: firstName,
         last_name: lastName,
-        email: (values[emailIdx] || '').trim().toLowerCase(),
-        phone: phoneIdx !== -1 ? values[phoneIdx] : '',
+        email,
+        phone: phoneIdx !== -1 ? cleanCell(values[phoneIdx]) : '',
         client_type: normalizedClientType,
-        office_id: normalizedOfficeId,
+        office_id: rawOfficeId || null,
+        sourceRow,
       });
     }
 
-    return clients;
+    const parseWarnings = parsed.errors
+      .filter((error) => error.code !== "UndetectableDelimiter")
+      .slice(0, 5)
+      .map((error) => `Row ${(error.row ?? 0) + 1}: ${error.message}`);
+
+    return { clients, detectedHeaders: rawHeader, skippedRows, totalRows: Math.max(rows.length - 1, 0), parseWarnings };
   };
 
-  const validateClients = (clients: ParsedClient[]): ValidationResult => {
+  const validateClients = (parsedCsv: ParsedCsvResult): ValidationResult => {
     const valid: ParsedClient[] = [];
     const errors: Array<{ row: number; errors: string[] }> = [];
 
-    clients.forEach((client, index) => {
+    parsedCsv.clients.forEach((client) => {
       const result = clientRowSchema.safeParse(client);
       
       if (result.success) {
@@ -191,16 +223,28 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
           phone: result.data.phone,
           client_type: result.data.client_type,
           office_id: result.data.office_id ?? null,
+          sourceRow: client.sourceRow,
         });
       } else {
+        const rowData = [client.first_name, client.last_name, client.email].filter(Boolean).join(" / ");
         errors.push({
-          row: index + 2, // +2 because index 0 is row 2 (after header)
-          errors: result.error.errors.map(e => `${e.path.join('.')}: ${e.message}`),
+          row: client.sourceRow,
+          errors: [
+            ...result.error.errors.map(e => `${e.path.join('.') || 'row'}: ${e.message}`),
+            ...(rowData ? [`Data: ${rowData}`] : []),
+          ],
         });
       }
     });
 
-    return { valid, errors };
+    return {
+      valid,
+      errors,
+      detectedHeaders: parsedCsv.detectedHeaders,
+      skippedRows: parsedCsv.skippedRows,
+      totalRows: parsedCsv.totalRows,
+      parseWarnings: parsedCsv.parseWarnings,
+    };
   };
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -231,8 +275,8 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
       if (file.name.endsWith('.csv') || file.type === 'text/csv') {
         // Parse CSV directly
         const text = await file.text();
-        const clients = parseCSV(text);
-        const result = validateClients(clients);
+        const parsedCsv = parseCSV(text);
+        const result = validateClients(parsedCsv);
         setValidationResult(result);
         
         if (result.valid.length === 0) {
@@ -435,6 +479,8 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
     onOpenChange(false);
   };
 
+  const condensedErrors = validationResult ? condenseValidationErrors(validationResult.errors) : [];
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
@@ -503,6 +549,17 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
                 </AlertDescription>
               </Alert>
 
+              <div className="rounded-md border border-border bg-muted/30 p-3 text-xs text-muted-foreground space-y-1">
+                <p><span className="font-medium text-foreground">Detected headers:</span> {validationResult.detectedHeaders.join(', ') || '(none)'}</p>
+                <p>
+                  Parsed {validationResult.totalRows} data row(s)
+                  {validationResult.skippedRows > 0 ? `, skipped ${validationResult.skippedRows} row(s) with no name or email` : ''}.
+                </p>
+                {validationResult.parseWarnings.length > 0 && (
+                  <p><span className="font-medium text-foreground">Parser warnings:</span> {validationResult.parseWarnings.join(' · ')}</p>
+                )}
+              </div>
+
               {/* Errors */}
               {validationResult.errors.length > 0 && (
                 <Alert variant="destructive">
@@ -511,19 +568,24 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
                     <div className="space-y-2">
                       <p className="font-semibold">{validationResult.errors.length} row(s) with errors (will be skipped):</p>
                       <div className="max-h-40 overflow-y-auto space-y-2 text-sm">
-                        {validationResult.errors.slice(0, 10).map((error, idx) => (
+                        {condensedErrors.slice(0, 10).map((error, idx) => (
                           <div key={idx} className="border-l-2 border-destructive pl-2">
-                            <p className="font-medium">Row {error.row}:</p>
+                            <p className="font-medium">
+                              Row{error.rows.length > 1 ? 's' : ''} {error.rows.slice(0, 8).join(', ')}{error.rows.length > 8 ? `, +${error.rows.length - 8} more` : ''}:
+                            </p>
                             <ul className="list-disc list-inside ml-2">
                               {error.errors.map((err, errIdx) => (
                                 <li key={errIdx}>{err}</li>
                               ))}
+                              {error.samples.map((sample, sampleIdx) => (
+                                <li key={`sample-${sampleIdx}`}>{sample}</li>
+                              ))}
                             </ul>
                           </div>
                         ))}
-                        {validationResult.errors.length > 10 && (
+                        {condensedErrors.length > 10 && (
                           <p className="text-xs text-muted-foreground">
-                            ...and {validationResult.errors.length - 10} more error(s)
+                            ...and {condensedErrors.length - 10} more error type(s)
                           </p>
                         )}
                       </div>
