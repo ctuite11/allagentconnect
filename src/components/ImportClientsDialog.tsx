@@ -76,11 +76,24 @@ interface ParsedClient {
   phone?: string;
   client_type?: string;
   office_id?: string | null;
+  sourceRow: number;
 }
 
 interface ValidationResult {
   valid: ParsedClient[];
   errors: Array<{ row: number; errors: string[] }>;
+  detectedHeaders: string[];
+  skippedRows: number;
+  totalRows: number;
+  parseWarnings: string[];
+}
+
+interface ParsedCsvResult {
+  clients: ParsedClient[];
+  detectedHeaders: string[];
+  skippedRows: number;
+  totalRows: number;
+  parseWarnings: string[];
 }
 
 export function ImportClientsDialog({ open, onOpenChange, agentId, onImportComplete }: ImportClientsDialogProps) {
