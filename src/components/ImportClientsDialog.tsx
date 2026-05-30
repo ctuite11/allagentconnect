@@ -7,44 +7,18 @@ import { supabase } from "@/integrations/supabase/client";
 import { Upload, FileSpreadsheet, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
+import Papa from "papaparse";
 
-function detectDelimiter(headerLine: string): string {
-  if (headerLine.includes("\t")) return "\t";
-  if (headerLine.includes(";") && !headerLine.includes(",")) return ";";
-  return ",";
-}
-
-function parseCsvLine(line: string, delimiter: string): string[] {
-  const result: string[] = [];
-  let current = "";
-  let inQuotes = false;
-
-  for (let i = 0; i < line.length; i++) {
-    const char = line[i];
-    const next = line[i + 1];
-
-    if (char === '"') {
-      if (inQuotes && next === '"') {
-        current += '"';
-        i++;
-      } else {
-        inQuotes = !inQuotes;
-      }
-    } else if (char === delimiter && !inQuotes) {
-      result.push(current.trim());
-      current = "";
-    } else {
-      current += char;
-    }
-  }
-
-  result.push(current.trim());
-  return result;
+function cleanCell(value: unknown): string {
+  return String(value ?? "")
+    .replace(/^\uFEFF/, "")
+    .replace(/\u00A0/g, " ")
+    .trim()
+    .replace(/\s+/g, " ");
 }
 
 function normalizeHeader(header: string): string {
-  return header
-    .replace(/^\uFEFF/, "")
+  return cleanCell(header)
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, " ")
     .trim()
@@ -54,6 +28,26 @@ function normalizeHeader(header: string): string {
 function findHeaderIndex(headers: string[], candidates: string[]): number {
   const normCandidates = candidates.map(normalizeHeader);
   return headers.findIndex((header) => normCandidates.includes(header));
+}
+
+function isBlankRow(row: unknown[]): boolean {
+  return row.every((value) => !cleanCell(value));
+}
+
+function splitFullName(fullName: string): { firstName: string; lastName: string } {
+  const normalized = cleanCell(fullName);
+  if (!normalized) return { firstName: "", lastName: "" };
+
+  if (normalized.includes(",")) {
+    const [last, ...rest] = normalized.split(",").map(cleanCell).filter(Boolean);
+    return { firstName: rest.join(" "), lastName: last || "" };
+  }
+
+  const parts = normalized.split(/\s+/);
+  return {
+    firstName: parts[0] || "",
+    lastName: parts.slice(1).join(" "),
+  };
 }
 
 const clientRowSchema = z.object({
