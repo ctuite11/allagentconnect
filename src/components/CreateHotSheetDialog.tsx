@@ -36,6 +36,7 @@ import { useTownsPicker } from "@/hooks/useTownsPicker";
 import { TownsPicker } from "@/components/TownsPicker";
 import { getAreasForCity, hasNeighborhoodData } from "@/data/usNeighborhoodsData";
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
+import { searchClientContacts } from "@/lib/contactSearch";
 import {
   DEFAULT_HOT_SHEET_CRITERIA,
   fromCriteriaPayload,
@@ -275,18 +276,14 @@ export function CreateHotSheetDialog({
       }
       
       try {
-        const { data, error } = await supabase
-          .from("clients")
-          .select("*")
-          .eq("agent_id", userId)
-          .or(`first_name.ilike.%${clientSearchQuery}%,last_name.ilike.%${clientSearchQuery}%,email.ilike.%${clientSearchQuery}%`)
-          .order("first_name")
-          .limit(10);
-        
-        if (error) throw error;
-        
-        setClientSearchResults(data || []);
-        setShowClientDropdown((data || []).length > 0);
+        const data = await searchClientContacts({
+          agentId: userId,
+          query: clientSearchQuery,
+          select: "*",
+          limit: 10,
+        });
+        setClientSearchResults(data);
+        setShowClientDropdown(data.length > 0);
       } catch (error: any) {
         console.error("Error searching clients:", error);
         setClientSearchResults([]);

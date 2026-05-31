@@ -1,32 +1,52 @@
+# Consistent contact search across share & hot-sheet dialogs
+
 ## Goal
-Ensure CSV imports work when the file uses separate `First Name` and `Last Name` columns (in addition to the existing `Full Name` support).
+Make contact search in the share / hot-sheet dialogs behave identically to the fixed `/my-clients` search, so multi-token queries like `ethan goodrich` work everywhere (Ethan's last name is empty; "goodrich" lives only in his email domain).
 
-## Problem
-`src/components/ImportClientsDialog.tsx` already lists `'first name'` and `'last name'` as accepted headers, but matching is brittle:
-- Uses exact equality after `trim().toLowerCase()` — fails on punctuation (`First Name:`), extra spaces (`First  Name`), BOM on first header, or quoted headers with stray characters.
-- Doesn't accept common variants like `First`, `Last`, `Fname`, `Lname`, `Given`, `Family`.
-- When detection fails, it silently falls through to the "Name / Full Name" requirement and throws the generic format error.
+## Files
 
-## Plan
+**New**
+- `src/lib/contactSearch.ts` — single shared helper.
 
-Edit `src/components/ImportClientsDialog.tsx` only:
+**Edit (only these four)**
+- `src/components/BulkShareListingsDialog.tsx`
+- `src/components/share/PersonalHotSheetShareEmailDialog.tsx`
+- `src/components/SaveToHotSheetDialog.tsx`
+- `src/components/CreateHotSheetDialog.tsx`
 
-1. **Normalize headers more aggressively** before matching: lowercase, strip BOM, strip non-alphanumeric characters, collapse spaces. (`"First Name:"` → `"first name"`; `"First_Name"` → `"first name"`.)
+## Helper API (`src/lib/contactSearch.ts`)
 
-2. **Expand accepted aliases**:
-   - First name: `first name`, `firstname`, `first`, `given name`, `given`, `fname`, `f name`
-   - Last name: `last name`, `lastname`, `last`, `surname`, `family name`, `family`, `lname`, `l name`
-   - Email: add `email address`, `e mail`
-   - Phone: add `phone number`, `mobile number`, `cell`, `cell phone`
+```ts
+matchesContactQuery(client, rawQuery): boolean
+searchClientContacts({ agentId, query, select?, limit? }): Promise<ContactRow[]>
+```
 
-3. **Allow First Name without Last Name** (and vice versa) — if only one is present, use it and leave the other blank. The Zod schema already makes `last_name` optional.
+Matcher rules — copied verbatim from `MyClients.tsx`:
+- 1–2 char query → prefix / word-boundary match on first/last/display name, email local-part, email domain root.
+- 3+ char query → split on whitespace; every token must match at least one of:
+  first name, last name, display name, email, email local-part, email domain, email domain root, `client_type`, or (for digit tokens) phone digits.
 
-4. **Improve the error message** when no usable name column is found to list the headers we actually detected, so users can see why detection failed.
+DB strategy (keeps Supabase query short):
+1. Take the **first token** only.
+2. `from("clients").select(select).eq("agent_id", agentId).or("first_name.ilike.%tok%,last_name.ilike.%tok%,email.ilike.%tok%").order("first_name").limit(max(50, limit*5))`.
+3. Run `matchesContactQuery` client-side on the candidates.
+4. Return the first `limit` (default 10) results.
 
-5. **No schema, RLS, or insert-flow changes.** Validation and dedupe logic stays the same.
+Empty / <2-char queries return `[]`.
 
-## Verification
-- CSV with headers `First Name,Last Name,Email` → parses and imports.
-- CSV with headers `First,Last,Email Address` → parses and imports.
-- CSV with header `Full Name,Email` → still works (existing behavior).
-- CSV missing both name columns → friendly error listing detected headers.
+## Dialog wiring
+
+In each of the four dialogs, replace the inline `useEffect` that does the `.or(...)` query with a call to `searchClientContacts({ agentId: user.id, query: clientSearch, select: <existing select>, limit: <existing limit> })`. Preserve each dialog's existing post-processing (e.g. `SaveToHotSheetDialog` filters out already-selected clients). Keep the 300 ms debounce and the existing dropdown open/close logic.
+
+## Out of scope (do not touch)
+- `/my-clients` (already fixed)
+- DB / RLS / importer / autocomplete UI / sort / unrelated contact flows
+- Any other dialog that doesn't currently search the `clients` table by free text
+
+## Verification (run in each of the four dialogs)
+- `ethan` → returns Ethan
+- `goodrich` → returns all 3 Goodrich contacts
+- `ethan goodrich` → returns Ethan
+- `j` → narrow prefix-only results
+- empty / 1-char → no results
+- No React key warnings or console errors
