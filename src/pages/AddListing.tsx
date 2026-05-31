@@ -3461,30 +3461,7 @@ const AddListing = () => {
 
                 {/* Address Section */}
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <Label className={agentSectionTitle}>Property location</Label>
-                    {/* Manual ATTOM lookup button - always available */}
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={handleManualAttomLookup}
-                      disabled={!ATTOM_ENABLED || autoFillLoading || !formData.address || !formData.city || !formData.state}
-                      className="gap-2"
-                    >
-                      {autoFillLoading ? (
-                        <>
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                          Looking up...
-                        </>
-                      ) : (
-                        <>
-                          <Cloud className="h-4 w-4" />
-                          {hasConfirmedAttomAddress ? "Re-verify with ATTOM" : "Verify with ATTOM"}
-                        </>
-                      )}
-                    </Button>
-                  </div>
+                  <Label className={agentSectionTitle}>Property location</Label>
                   
                   {/* ATTOM Verification Status - context-aware */}
                   {/* Show green success ONLY if: verified, not stale, AND not a condo missing unit */}
