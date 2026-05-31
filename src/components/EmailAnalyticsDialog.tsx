@@ -22,6 +22,7 @@ interface Campaign {
   clicks: number;
   unique_opens: number;
   unique_clicks: number;
+  recipients?: string[];
 }
 
 export function EmailAnalyticsDialog({ open, onOpenChange }: EmailAnalyticsDialogProps) {
@@ -55,10 +56,13 @@ export function EmailAnalyticsDialog({ open, onOpenChange }: EmailAnalyticsDialo
           // Get email sends for this campaign
           const { data: sends } = await supabase
             .from("email_sends")
-            .select("id")
+            .select("id, recipient_email")
             .eq("campaign_id", campaign.id);
 
           const sendIds = sends?.map(s => s.id) || [];
+          const recipientEmails = (sends ?? [])
+            .map((s: any) => s.recipient_email)
+            .filter((e: any): e is string => !!e);
 
           if (sendIds.length === 0) {
             return {
@@ -67,6 +71,7 @@ export function EmailAnalyticsDialog({ open, onOpenChange }: EmailAnalyticsDialo
               clicks: 0,
               unique_opens: 0,
               unique_clicks: 0,
+              recipients: [],
             };
           }
 
@@ -92,6 +97,7 @@ export function EmailAnalyticsDialog({ open, onOpenChange }: EmailAnalyticsDialo
             clicks: clicks?.length || 0,
             unique_opens: uniqueOpens,
             unique_clicks: uniqueClicks,
+            recipients: campaign.recipient_count <= 5 ? recipientEmails : [],
           };
         })
       );
@@ -211,8 +217,10 @@ export function EmailAnalyticsDialog({ open, onOpenChange }: EmailAnalyticsDialo
                       <TableCell className="text-sm text-muted-foreground">
                         {format(new Date(campaign.sent_at), "MMM d, yyyy")}
                       </TableCell>
-                      <TableCell className="text-right">
-                        {campaign.recipient_count}
+                      <TableCell className="text-right max-w-[220px] truncate" title={campaign.recipients?.join(", ")}>
+                        {campaign.recipients && campaign.recipients.length > 0
+                          ? campaign.recipients.join(", ")
+                          : campaign.recipient_count}
                       </TableCell>
                       <TableCell className="text-right">
                         {campaign.unique_opens}
