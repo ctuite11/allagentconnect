@@ -13,15 +13,14 @@ import { supabase } from "@/integrations/supabase/client";
  * client-side and cap to `limit` results.
  */
 
-export type ContactRow = {
+export interface ContactRow {
   id: string;
   first_name?: string | null;
   last_name?: string | null;
   email?: string | null;
   phone?: string | null;
   client_type?: string | null;
-  [key: string]: unknown;
-};
+}
 
 const norm = (v: unknown) => String(v ?? "").toLowerCase().trim();
 const digits = (v: unknown) => String(v ?? "").replace(/\D+/g, "");
