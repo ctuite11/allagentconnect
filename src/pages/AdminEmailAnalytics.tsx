@@ -128,7 +128,10 @@ export default function AdminEmailAnalytics() {
   const recipientFor = (j: JobRow): string => {
     const to = j.payload?.to;
     if (typeof to === "string") return to;
-    if (Array.isArray(to)) return to.join(", ");
+    if (Array.isArray(to)) {
+      if (to.length > 5) return `${to.length} recipients (bulk)`;
+      return to.join(", ");
+    }
     return j.payload?.recipient ?? "—";
   };
 
