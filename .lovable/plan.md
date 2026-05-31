@@ -1,23 +1,17 @@
-## Label cleanup: remove "New" from Add Listing dropdowns
+## Show recipient email in analytics, hide for bulk >5
 
-### Files
-- `src/constants/status.ts`
-- `src/pages/AddListing.tsx`
+### File
+`src/pages/AdminEmailAnalytics.tsx`
 
-### Changes
+### Change
+Update `recipientFor(j)` so the Recipient cell shows the actual address(es) for individual sends but collapses to a count for bulk sends:
 
-**`src/constants/status.ts`**
-- `ADD_LISTING_CREATE_STATUSES`: remove the `NEW` entry; replace with `{ value: LISTING_STATUS.ACTIVE, label: "On MLS" }`. Final order: Off Market, Coming Soon, On MLS.
-- `ADD_LISTING_EDIT_STATUSES`: remove the `NEW` entry entirely. `ACTIVE` (labeled "On MLS") remains.
+- `payload.to` is a string → show the string
+- `payload.to` is an array of length ≤ 5 → show comma-joined addresses
+- `payload.to` is an array of length > 5 → show `"<n> recipients (bulk)"` (no addresses)
+- Else fall back to `payload.recipient ?? "—"`
 
-**`src/pages/AddListing.tsx`** (line ~3444)
-- Helper text: "…automatically change the status from Coming Soon to **Active**." → "…to **On MLS**."
+No other UI, query, or column changes. Tooltip/styling unchanged (existing `truncate max-w-[260px]` still applies).
 
 ### Out of scope
-DB values, schema, RLS, cron/edge functions (`update-listing-statuses`, `auto_activate_on`, `go_live_date`), business logic, non-listing "active" labels. `active` remains the stored backend value.
-
-### Verify
-- Create dropdown shows: Off Market, Coming Soon, On MLS
-- Edit dropdown shows On MLS, no New
-- Helper text reads "to On MLS"
-- Existing `active` listings render as "On MLS"
+DB, RLS, edge functions, exports, stats cards, By template card.
