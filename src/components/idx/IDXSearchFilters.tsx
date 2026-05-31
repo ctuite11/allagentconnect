@@ -49,7 +49,7 @@ const BATH_OPTIONS = [
 
 const STATUS_OPTIONS = [
   { value: ANY_VALUE, label: "Any Status" },
-  { value: "active", label: "Active" },
+  { value: "active", label: "On MLS" },
   { value: "pending", label: "Pending" },
   { value: "sold", label: "Sold" },
 ];

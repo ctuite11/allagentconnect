@@ -88,7 +88,7 @@ export const LISTING_STATUS = {
 export type ListingStatus = (typeof LISTING_STATUS)[keyof typeof LISTING_STATUS];
 
 export const LISTING_STATUS_LABELS: Record<string, string> = {
-  [LISTING_STATUS.ACTIVE]: "Active",
+  [LISTING_STATUS.ACTIVE]: "On MLS",
   [LISTING_STATUS.NEW]: "New",
   [LISTING_STATUS.COMING_SOON]: "Coming Soon",
   [LISTING_STATUS.BACK_ON_MARKET]: "Back on Market",
@@ -133,7 +133,7 @@ export const LISTING_STATUS_MLSPIN: Record<string, string> = {
 };
 
 export const LISTING_STATUS_CONFIG: Record<string, { bg: string; text: string; label: string }> = {
-  [LISTING_STATUS.ACTIVE]: { bg: "bg-emerald-50", text: "text-emerald-700", label: "Active" },
+  [LISTING_STATUS.ACTIVE]: { bg: "bg-emerald-50", text: "text-emerald-700", label: "On MLS" },
   [LISTING_STATUS.NEW]: { bg: "bg-emerald-50", text: "text-emerald-700", label: "New" },
   [LISTING_STATUS.COMING_SOON]: { bg: "bg-amber-50", text: "text-amber-700", label: "Coming Soon" },
   [LISTING_STATUS.BACK_ON_MARKET]: { bg: "bg-orange-50", text: "text-orange-700", label: "Back on Market" },
@@ -330,7 +330,7 @@ export const AGENT_STATUS_OPTIONS = [
  */
 export const HOT_SHEET_FILTER_STATUSES = [
   { value: LISTING_STATUS.NEW, label: `New (${LISTING_STATUS_MLSPIN[LISTING_STATUS.NEW]})` },
-  { value: LISTING_STATUS.ACTIVE, label: `Active (${LISTING_STATUS_MLSPIN[LISTING_STATUS.ACTIVE]})` },
+  { value: LISTING_STATUS.ACTIVE, label: `On MLS (${LISTING_STATUS_MLSPIN[LISTING_STATUS.ACTIVE]})` },
   { value: LISTING_STATUS.PRICE_CHANGED, label: `Price Changed (${LISTING_STATUS_MLSPIN[LISTING_STATUS.PRICE_CHANGED]})` },
   { value: LISTING_STATUS.BACK_ON_MARKET, label: `Back on Market (${LISTING_STATUS_MLSPIN[LISTING_STATUS.BACK_ON_MARKET]})` },
   { value: LISTING_STATUS.EXTENDED, label: `Extended (${LISTING_STATUS_MLSPIN[LISTING_STATUS.EXTENDED]})` },
@@ -412,7 +412,7 @@ export const AGENT_LISTINGS_TAB_STATUSES = [
 export const ADD_LISTING_CREATE_STATUSES = [
   { value: LISTING_STATUS.OFF_MARKET, label: "Off Market" },
   { value: LISTING_STATUS.COMING_SOON, label: LISTING_STATUS_LABELS[LISTING_STATUS.COMING_SOON] },
-  { value: LISTING_STATUS.NEW, label: "New (Active)" },
+  { value: LISTING_STATUS.NEW, label: "New (On MLS)" },
 ];
 
 /**

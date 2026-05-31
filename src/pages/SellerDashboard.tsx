@@ -184,7 +184,7 @@ export default function SellerDashboard() {
                   Your Listing
                 </CardTitle>
                 <Badge className={isExpired ? "bg-red-100 text-red-800" : "bg-emerald-100 text-emerald-800"}>
-                  {isExpired ? "Expired" : "Active"}
+                  {isExpired ? "Expired" : "On MLS"}
                 </Badge>
               </div>
             </CardHeader>

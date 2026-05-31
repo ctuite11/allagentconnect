@@ -1188,7 +1188,7 @@ export default function BuyerMapSearch() {
                       <div className="mt-2 space-y-2">
                         {[
                           { value: "coming_soon", label: "Coming Soon" },
-                          { value: "active", label: "Active" },
+                          { value: "active", label: "On MLS" },
                           { value: "off_market", label: "Private" },
                           { value: "back_on_market", label: "Back on Market" },
                         ].map((status) => {
