@@ -7,6 +7,7 @@ import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { ShareListingsDialog, Recipient } from "@/components/share/ShareListingsDialog";
 import { useSenderProfilePrefill } from "@/lib/currentSenderProfile";
 import { cn } from "@/lib/utils";
+import { searchClientContacts } from "@/lib/contactSearch";
 
 interface BulkShareListingsDialogProps {
   listingIds: string[];
@@ -142,16 +143,12 @@ export function BulkShareListingsDialog({
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
 
-        const { data, error } = await supabase
-          .from("clients")
-          .select("*")
-          .eq("agent_id", user.id)
-          .or(`first_name.ilike.%${clientSearch}%,last_name.ilike.%${clientSearch}%,email.ilike.%${clientSearch}%`)
-          .order("first_name")
-          .limit(5);
-
-        if (error) throw error;
-        const results = data || [];
+        const results = await searchClientContacts<Client>({
+          agentId: user.id,
+          query: clientSearch,
+          select: "*",
+          limit: 5,
+        });
         setClientResults(results);
         setShowClientDropdown(results.length > 0);
       } catch (error) {
