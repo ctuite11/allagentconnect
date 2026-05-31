@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { formatCriteriaDisplayLabel, formatCriteriaDisplayLabels } from "@/lib/formatCriteriaDisplay";
 import { getCurrentSenderProfile } from "@/lib/currentSenderProfile";
+import { searchClientContacts } from "@/lib/contactSearch";
 
 interface Client {
   id: string;
@@ -134,16 +135,13 @@ const SaveToHotSheetDialog = ({ open, onOpenChange, selectedListingIds, currentS
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
 
-        const { data, error } = await supabase
-          .from("clients")
-          .select("id, first_name, last_name, email, phone")
-          .eq("agent_id", user.id)
-          .or(`first_name.ilike.%${clientSearchQuery}%,last_name.ilike.%${clientSearchQuery}%,email.ilike.%${clientSearchQuery}%`)
-          .order("first_name")
-          .limit(10);
-        
-        if (error) throw error;
-        
+        const data = await searchClientContacts<Client>({
+          agentId: user.id,
+          query: clientSearchQuery,
+          select: "id, first_name, last_name, email, phone",
+          limit: 10,
+        });
+
         // Filter out already selected clients
         const filtered = (data || []).filter(
           client => !selectedClients.some(sc => sc.id === client.id)
