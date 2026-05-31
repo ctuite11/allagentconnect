@@ -179,7 +179,7 @@ const HotSheets = ({
   const heroStatusItems = [
     "Coming Soon",
     "New Listings",
-    "Active",
+    "On MLS",
     "Price Drops",
     "Back on Market",
     "Under Agreement",
