@@ -3441,7 +3441,7 @@ const AddListing = () => {
                         required
                       />
                       <p className="text-xs text-muted-foreground">
-                        On this date, the system will automatically change the status from Coming Soon to Active.
+                        On this date, the system will automatically change the status from Coming Soon to On MLS.
                       </p>
                     </div>
                   )}
