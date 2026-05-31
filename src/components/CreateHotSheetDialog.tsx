@@ -36,6 +36,7 @@ import { useTownsPicker } from "@/hooks/useTownsPicker";
 import { TownsPicker } from "@/components/TownsPicker";
 import { getAreasForCity, hasNeighborhoodData } from "@/data/usNeighborhoodsData";
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
+import { searchClientContacts } from "@/lib/contactSearch";
 import {
   DEFAULT_HOT_SHEET_CRITERIA,
   fromCriteriaPayload,
