@@ -329,7 +329,7 @@ async function sendEmail(job: EmailJob, resendApiKey: string): Promise<void> {
   const { payload } = job;
 
   // Stabilization: enforce single canonical sender identity.
-  const FROM_EMAIL = "hello@mail.allagentconnect.com";
+  const FROM_EMAIL = process.env.TRANSACTIONAL_FROM_EMAIL || "hello@mail.allagentconnect.com";
   const FROM_NAME = "All Agent Connect";
   
   // Normalize recipients: handle string, array, or comma-separated string

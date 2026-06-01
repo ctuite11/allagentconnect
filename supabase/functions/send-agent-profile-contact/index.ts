@@ -141,7 +141,7 @@ const handler = async (req: Request): Promise<Response> => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "All Agent Connect <hello@mail.allagentconnect.com>",
+        from: (Deno.env.get("TRANSACTIONAL_FROM") || "All Agent Connect <hello@mail.allagentconnect.com>"),
         to: [agentEmail],
         reply_to: senderEmail,
         subject: subject || `${senderName} sent you a message on All Agent Connect`,
