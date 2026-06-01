@@ -186,7 +186,7 @@ const handler = async (req: Request): Promise<Response> => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "All Agent Connect <noreply@mail.allagentconnect.com>",
+        from: "All Agent Connect <hello@mail.allagentconnect.com>",
         to: [agentEmail],
         reply_to: requesterEmail,
         subject: `New showing request for ${listingAddress}`,

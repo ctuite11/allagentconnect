@@ -37,7 +37,7 @@ const handler: Handler = async (event) => {
     }
 
     const cleanEmail = email.trim().toLowerCase();
-    const from = process.env.EMAIL_FROM || "AllAgentConnect <onboarding@resend.dev>";
+    const from = "All Agent Connect <hello@mail.allagentconnect.com>";
     const supportEmail = "support@allagentconnect.com";
     const currentTime = new Date().toLocaleString("en-US", {
       weekday: "long",

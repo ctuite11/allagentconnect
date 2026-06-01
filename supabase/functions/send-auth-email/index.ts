@@ -154,7 +154,6 @@ Deno.serve(async (req: Request) => {
   try {
     const hookSecret = mustGetEnv("SEND_EMAIL_HOOK_SECRET");
     const resendApiKey = mustGetEnv("RESEND_API_KEY");
-    const resendFromEmail = mustGetEnv("RESEND_FROM_EMAIL");
     const resendReplyTo = mustGetEnv("RESEND_REPLY_TO");
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY") || Deno.env.get("SUPABASE_PUBLISHABLE_KEY");
@@ -211,7 +210,7 @@ Deno.serve(async (req: Request) => {
 
     const { subject, html, text } = buildEmailForType({ type, email, actionUrl, otp });
 
-    const from = `All Agent Connect <${resendFromEmail}>`;
+    const from = "All Agent Connect <hello@mail.allagentconnect.com>";
 
     const sendRes = await resend.emails.send({
       from,

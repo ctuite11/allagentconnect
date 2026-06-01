@@ -328,9 +328,9 @@ function renderEmailTemplate(template: string, variables: Record<string, any>): 
 async function sendEmail(job: EmailJob, resendApiKey: string): Promise<void> {
   const { payload } = job;
 
-  // Sender: fully env-driven for branding flexibility across environments.
-  const FROM_EMAIL = process.env.RESEND_FROM || "hello@allagentconnect.com";
-  const FROM_NAME = process.env.RESEND_FROM_NAME || "All Agent Connect";
+  // Stabilization: enforce single canonical sender identity.
+  const FROM_EMAIL = "hello@mail.allagentconnect.com";
+  const FROM_NAME = "All Agent Connect";
   
   // Normalize recipients: handle string, array, or comma-separated string
   const toList: string[] = Array.isArray(payload.to)

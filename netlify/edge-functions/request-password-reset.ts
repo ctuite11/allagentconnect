@@ -237,7 +237,7 @@ export default async function handler(request: Request, context: any) {
         "Authorization": `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "AllAgentConnect <hello@mail.allagentconnect.com>",
+        from: "All Agent Connect <hello@mail.allagentconnect.com>",
         reply_to: "hello@allagentconnect.com",
         to: [cleanEmail],
         subject: "Reset your password",

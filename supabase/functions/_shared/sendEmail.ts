@@ -59,8 +59,8 @@ export async function sendEmail(
   job: EmailJob,
   resendApiKey: string,
 ): Promise<{ providerMessageId: string | null }> {
-  const FROM_EMAIL = Deno.env.get("RESEND_FROM") || "hello@mail.allagentconnect.com";
-  const FROM_NAME = Deno.env.get("RESEND_FROM_NAME") || "All Agent Connect";
+  const FROM_EMAIL = "hello@mail.allagentconnect.com";
+  const FROM_NAME = "All Agent Connect";
 
   const toList: string[] = Array.isArray(job.payload.to)
     ? job.payload.to

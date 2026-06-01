@@ -71,6 +71,7 @@ const IMG_VERSION_V2 = "v9";
 const AAC_LOGO_URL = `${supabaseUrl}/storage/v1/object/public/brand-assets/aac-logo-green-black-v4.png`;
 
 const FUNCTIONS_HOST = supabaseUrl.replace(/^https?:\/\//, "").replace(/\/+$/, "");
+const BULK_OUTREACH_PAUSED = true;
 
 /**
  * Wrap external http(s) hrefs in the html through the click redirector,
@@ -416,6 +417,18 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    if (BULK_OUTREACH_PAUSED) {
+      return new Response(
+        JSON.stringify({
+          error: "Bulk outreach is temporarily paused while deliverability stabilization is in progress.",
+        }),
+        {
+          status: 503,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
+    }
+
     const { recipients, subject, message, agentId, agentEmail, sendAsGroup = false, template }: BulkEmailRequest = await req.json();
 
     const isTemplated =
