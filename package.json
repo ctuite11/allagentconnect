@@ -9,6 +9,7 @@
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
+    "deploy": "bash scripts/deploy.sh",
     "db:snapshot": "pg_dump --schema-only --schema=public > docs/database/schema_snapshot.sql",
     "db:check": "bash scripts/check-schema-drift.sh"
   },
