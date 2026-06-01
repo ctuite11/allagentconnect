@@ -71,7 +71,9 @@ const IMG_VERSION_V2 = "v9";
 const AAC_LOGO_URL = `${supabaseUrl}/storage/v1/object/public/brand-assets/aac-logo-green-black-v4.png`;
 
 const FUNCTIONS_HOST = supabaseUrl.replace(/^https?:\/\//, "").replace(/\/+$/, "");
-const BULK_OUTREACH_PAUSED = true;
+// Hard pause gate: bulk outreach is paused unless BULK_EMAIL_PAUSED is explicitly "false".
+// Default (unset or any other value) = PAUSED. To unpause, set BULK_EMAIL_PAUSED=false.
+const BULK_OUTREACH_PAUSED = (Deno.env.get("BULK_EMAIL_PAUSED") ?? "true").toLowerCase() !== "false";
 
 /**
  * Wrap external http(s) hrefs in the html through the click redirector,
@@ -420,7 +422,7 @@ const handler = async (req: Request): Promise<Response> => {
     if (BULK_OUTREACH_PAUSED) {
       return new Response(
         JSON.stringify({
-          error: "Bulk outreach is temporarily paused while deliverability stabilization is in progress.",
+          error: "Bulk outreach is temporarily paused to protect email deliverability.",
         }),
         {
           status: 503,
