@@ -234,46 +234,36 @@ function buildEarlyAccessUpdateV2Body(): string {
 }
 
 function buildFoundingPartnerBody(): string {
-  const heroImg = `${STORAGE_BASE_V2}/01-home.png?v=${IMG_VERSION_V2}`;
-  const buyerDashImg = `${STORAGE_BASE_V2}/08-buyer-dashboard.png?v=${IMG_VERSION_V2}`;
-
-  const benefits: Array<{ img: string; title: string; desc: string }> = [
+  const benefits: Array<{ title: string; desc: string }> = [
     {
-      img: `${STORAGE_BASE_V2}/03-results.png?v=${IMG_VERSION_V2}`,
       title: "Pre-market & off-market inventory",
       desc: "Discover pre-market and off-market opportunities before they reach the public market.",
     },
     {
-      img: `${STORAGE_BASE_V2}/04-comms.png?v=${IMG_VERSION_V2}`,
       title: "Buyer need broadcasting",
       desc: "Put your buyer needs in front of listing agents before inventory reaches the market.",
     },
     {
-      img: `${STORAGE_BASE_V2}/02-success-hub.png?v=${IMG_VERSION_V2}`,
       title: "Success Hub command center",
       desc: "Buyers, listings, hot sheets, referrals, and live market activity in one command center.",
     },
     {
-      img: `${STORAGE_BASE_V2}/06-hot-sheets.png?v=${IMG_VERSION_V2}`,
       title: "Hot Sheets & saved searches",
       desc: "Real-time alerts for new listings, price drops, status changes, and back-on-market — shareable with buyers in one tap.",
     },
     {
-      img: buyerDashImg,
       title: "Branded buyer dashboard",
       desc: "Your clients get a dedicated portal under your name: favorites, new matches, messaging, and hot sheet alerts.",
     },
     {
-      img: `${STORAGE_BASE_V2}/05-network.png?v=${IMG_VERSION_V2}`,
       title: "Verified agent referral network",
       desc: "Build trusted relationships with vetted agents across Massachusetts before public launch. Send referrals, share opportunities, and grow your network with agents who are helping shape the platform.",
     },
   ];
 
   const benefitHtml = benefits.map((b) => `
-    <tr><td style="padding:32px 0 0;">
-      <img src="${b.img}" alt="${b.title}" width="600" style="display:block;width:100%;max-width:600px;height:auto;border-radius:10px;border:1px solid #94a3b8;" />
-      <h2 style="margin:16px 0 10px;font-size:16px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:#0f172a;line-height:1.3;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${b.title}</h2>
+    <tr><td style="padding:24px 0 0;">
+      <h2 style="margin:0 0 10px;font-size:15px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:#0f172a;line-height:1.3;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${b.title}</h2>
       <div style="width:32px;height:2px;background:#22C55E;margin:0 0 12px;border-radius:1px;"></div>
       <p style="margin:0;font-size:13px;line-height:1.6;color:#475569;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${b.desc}</p>
     </td></tr>`).join("");
@@ -304,9 +294,6 @@ function buildFoundingPartnerBody(): string {
             </td>
           </tr>
         </table>
-      </td></tr>
-      <tr><td style="padding:36px 0 0;">
-        <img src="${heroImg}" alt="All Agent Connect" width="600" style="display:block;width:100%;max-width:600px;height:auto;border-radius:12px;border:1px solid #94a3b8;" />
       </td></tr>
       ${benefitHtml}
       <tr><td align="center" style="padding:28px 0 0;">
