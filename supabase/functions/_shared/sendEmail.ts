@@ -9,6 +9,52 @@ import {
 } from "./tracking.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
+/**
+ * Derive a plaintext version of an HTML email body.
+ * Sending multipart/alternative (html + text) significantly improves
+ * deliverability — html-only messages are penalized by Outlook /
+ * SpamAssassin-based filters.
+ */
+function htmlToPlainText(html: string): string {
+  if (!html) return "";
+  let out = html;
+  // Strip script/style blocks entirely
+  out = out.replace(/<script[\s\S]*?<\/script>/gi, "");
+  out = out.replace(/<style[\s\S]*?<\/style>/gi, "");
+  // Preserve link URLs: "<a href="X">label</a>" -> "label (X)"
+  out = out.replace(
+    /<a\s+[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi,
+    (_m, href, label) => {
+      const text = String(label).replace(/<[^>]+>/g, "").trim();
+      if (!text) return href;
+      if (text === href) return href;
+      return `${text} (${href})`;
+    },
+  );
+  // Block-level tags -> newlines
+  out = out.replace(/<\/(p|div|tr|h[1-6]|li|blockquote)>/gi, "\n");
+  out = out.replace(/<br\s*\/?>(?!\n)/gi, "\n");
+  // Drop remaining tags
+  out = out.replace(/<[^>]+>/g, "");
+  // Decode the most common HTML entities
+  out = out
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'")
+    .replace(/&mdash;/gi, "—")
+    .replace(/&ndash;/gi, "–")
+    .replace(/&hellip;/gi, "…")
+    .replace(/&#(\d+);/g, (_m, code) => String.fromCharCode(Number(code)));
+  // Collapse whitespace
+  out = out.replace(/[ \t]+/g, " ");
+  out = out.replace(/\n[ \t]+/g, "\n");
+  out = out.replace(/\n{3,}/g, "\n\n");
+  return out.trim();
+}
+
 export async function sendEmail(
   job: EmailJob,
   resendApiKey: string,
@@ -81,6 +127,7 @@ export async function sendEmail(
       to: toList,
       subject: job.payload.subject,
       html,
+      text: htmlToPlainText(html),
       reply_to: job.payload.reply_to,
       headers: Object.keys(extraHeaders).length ? extraHeaders : undefined,
     }),
