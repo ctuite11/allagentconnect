@@ -88,7 +88,7 @@ export const handler: Handler = async (event) => {
       return { statusCode: 500, headers, body: JSON.stringify({ ok: false, error: "Missing RESEND_API_KEY" }) };
     }
 
-    const from = (process.env.TRANSACTIONAL_FROM || "All Agent Connect <hello@mail.allagentconnect.com>");
+    const from = (process.env.TRANSACTIONAL_FROM || "All Agent Connect <hello@notify.allagentconnect.com>");
 
     const { email, firstName, lastName } = JSON.parse(event.body || "{}");
     if (!email) {
@@ -109,7 +109,7 @@ You'll receive an email as soon as you're approved.
 In the meantime, you can reply to this email if you have questions.
 
 — AllAgentConnect
-mail.allagentconnect.com`;
+allagentconnect.com`;
 
     const resp = await fetch("https://api.resend.com/emails", {
       method: "POST",

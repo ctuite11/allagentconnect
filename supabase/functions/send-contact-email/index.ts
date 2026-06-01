@@ -150,7 +150,7 @@ const handler = async (req: Request): Promise<Response> => {
     });
 
     const { data, error: emailError } = await resend.emails.send({
-      from: (Deno.env.get("TRANSACTIONAL_FROM") || "All Agent Connect <hello@mail.allagentconnect.com>"),
+      from: (Deno.env.get("TRANSACTIONAL_FROM") || "All Agent Connect <hello@notify.allagentconnect.com>"),
       to: [agentEmail],
       replyTo: senderEmail,
       subject: `New inquiry about ${listingAddress}`,
