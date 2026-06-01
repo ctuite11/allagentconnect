@@ -474,29 +474,25 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("[send-bulk-email] Created campaign:", campaign.id);
 
-    // Send on behalf of the logged-in agent.
-    // Use the established `hello@mail.allagentconnect.com` mailbox (good reputation)
-    // and put the agent's name in the display name. Reply-To routes replies to
-    // the agent's real inbox. Brand-new per-agent local-parts were being
-    // flagged as spam due to zero sender reputation.
-    let senderFrom = "All Agent Connect <hello@mail.allagentconnect.com>";
+    // Deliverability decision (locked):
+    // Always send bulk/outreach emails as the brand identity to avoid
+    // display-name spoofing heuristics in Gmail/Outlook. Agent's real
+    // email is preserved as Reply-To so replies route correctly.
+    // DO NOT reintroduce dynamic display-name overrides on this shared
+    // mailbox — it damaged sender reputation. Per-agent identity for
+    // outreach should move to a dedicated `outreach.allagentconnect.com`
+    // sender, not be spoofed on the transactional mailbox.
+    const senderFrom = "All Agent Connect <hello@mail.allagentconnect.com>";
     let senderReplyTo = agentEmail || "hello@allagentconnect.com";
     try {
       const { data: sender } = await supabase
         .from("agent_profiles")
-        .select("first_name, last_name, email")
+        .select("email")
         .eq("id", agentId)
         .maybeSingle();
-
-      if (sender) {
-        const first = (sender.first_name || "").trim();
-        const last = (sender.last_name || "").trim();
-        const displayName = [first, last].filter(Boolean).join(" ") || "All Agent Connect";
-        senderFrom = `${displayName} <hello@mail.allagentconnect.com>`;
-        senderReplyTo = sender.email || agentEmail || senderReplyTo;
-      }
+      if (sender?.email) senderReplyTo = sender.email;
     } catch (e) {
-      console.error("[send-bulk-email] Sender lookup failed, using default:", e);
+      console.error("[send-bulk-email] Sender lookup failed, using default Reply-To:", e);
     }
     console.log("[send-bulk-email] Sender:", senderFrom, "Reply-To:", senderReplyTo);
 
