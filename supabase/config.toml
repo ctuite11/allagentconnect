@@ -130,3 +130,6 @@ verify_jwt = false
 
 [functions.email-unsubscribe]
 verify_jwt = false
+
+[functions._admin-resend-domain]
+verify_jwt = false
