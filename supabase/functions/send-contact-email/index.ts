@@ -170,7 +170,7 @@ const handler = async (req: Request): Promise<Response> => {
       from: (Deno.env.get("TRANSACTIONAL_FROM") || "All Agent Connect <hello@notify.allagentconnect.com>"),
       to: [agentEmail],
       replyTo: senderEmail,
-      subject: `New inquiry about ${listingAddress}`,
+      subject: `Message about ${listingAddress}`,
       html,
       text,
     });
