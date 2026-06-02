@@ -134,6 +134,22 @@ const handler = async (req: Request): Promise<Response> => {
       preheader: `${senderName} sent you a message on All Agent Connect`,
     });
 
+    const text = [
+      `Hi ${firstName},`,
+      ``,
+      `You received a new message through your All Agent Connect profile.`,
+      ``,
+      `Contact Details`,
+      `Name:  ${senderName}`,
+      `Email: ${senderEmail}`,
+      ...(senderPhone ? [`Phone: ${senderPhone}`] : []),
+      ``,
+      `Message`,
+      message || "",
+      ``,
+      `You can reply directly to this email.`,
+    ].join("\n");
+
     const emailResponse = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -146,6 +162,7 @@ const handler = async (req: Request): Promise<Response> => {
         reply_to: senderEmail,
         subject: subject || `${senderName} sent you a message on All Agent Connect`,
         html,
+        text,
       }),
     });
 
