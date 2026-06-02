@@ -146,7 +146,7 @@ const handler = async (req: Request): Promise<Response> => {
     const html = buildAacEmail({
       headline: "New message on your listing",
       body: bodyHtml,
-      preheader: `New message about ${listingAddress}`,
+      preheader: `Message about ${listingAddress}`,
     });
 
     const text = [
