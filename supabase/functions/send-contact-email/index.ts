@@ -149,12 +149,30 @@ const handler = async (req: Request): Promise<Response> => {
       preheader: `New message about ${listingAddress}`,
     });
 
+    const text = [
+      `Hi ${agentName},`,
+      ``,
+      `You received a new inquiry on your listing:`,
+      listingAddress,
+      ``,
+      `Contact Details`,
+      `Name:  ${senderName}`,
+      `Email: ${senderEmail}`,
+      ...(senderPhone ? [`Phone: ${senderPhone}`] : []),
+      ``,
+      `Message`,
+      message,
+      ``,
+      `You can reply directly to this email.`,
+    ].join("\n");
+
     const { data, error: emailError } = await resend.emails.send({
       from: (Deno.env.get("TRANSACTIONAL_FROM") || "All Agent Connect <hello@notify.allagentconnect.com>"),
       to: [agentEmail],
       replyTo: senderEmail,
       subject: `New inquiry about ${listingAddress}`,
       html,
+      text,
     });
 
     if (emailError) {
