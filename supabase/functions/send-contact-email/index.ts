@@ -1,8 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { Resend } from "https://esm.sh/resend@4.0.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.0";
-
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -139,23 +136,58 @@ ${senderPhone ? `<p><strong>Phone:</strong> ${escapeHtml(senderPhone)}</p>` : ""
       `You can reply directly to this email.`,
     ].join("\n");
 
-    const { data, error: emailError } = await resend.emails.send({
-      from: (Deno.env.get("TRANSACTIONAL_FROM") || "All Agent Connect <hello@notify.allagentconnect.com>"),
-      to: [agentEmail],
-      replyTo: senderEmail,
-      subject: `Message about ${listingAddress}`,
-      html: htmlOut,
-      text,
-    });
-
-    if (emailError) {
-      console.error("Resend API error:", emailError);
-      throw emailError;
+    // DELIVERABILITY TEST: route Listing → Message Agent through the same
+    // queued email_jobs + worker path that delivers AAC Messages notifications
+    // (which are reliably inboxing from the same notify.allagentconnect.com
+    // sender). Content/sender/recipient/reply-to/subject are unchanged — only
+    // the delivery path differs from the previous direct Resend SDK call.
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    if (!supabaseUrl || !supabaseServiceKey) {
+      throw new Error("Server misconfigured: missing Supabase service credentials");
     }
 
-    console.log("Email sent successfully:", data);
+    const admin = createClient(supabaseUrl, supabaseServiceKey);
 
-    return new Response(JSON.stringify(data), {
+    const { data: jobRow, error: enqueueError } = await admin
+      .from("email_jobs")
+      .insert({
+        payload: {
+          provider: "resend",
+          template: "listing-contact-inquiry",
+          to: agentEmail,
+          subject: `Message about ${listingAddress}`,
+          html: htmlOut,
+          reply_to: senderEmail,
+        },
+      })
+      .select("id")
+      .single();
+
+    if (enqueueError) {
+      console.error("[send-contact-email] enqueue failed:", enqueueError);
+      throw enqueueError;
+    }
+
+    // Kick the queue so the worker dispatches immediately instead of waiting
+    // for the next cron tick.
+    void fetch(`${supabaseUrl}/functions/v1/kick-email-queue`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${supabaseServiceKey}`,
+        "Content-Type": "application/json",
+      },
+      body: "{}",
+    }).catch((err) => {
+      console.warn("[send-contact-email] kick-email-queue failed (will run on schedule):", err);
+    });
+
+    // Keep `text` in scope to avoid TS unused warnings; not used on queued path
+    // because the worker derives plaintext from html.
+    void text;
+
+    console.log("Listing contact email enqueued:", jobRow?.id);
+
+    return new Response(JSON.stringify({ enqueued: true, jobId: jobRow?.id }), {
       status: 200,
       headers: { "Content-Type": "application/json", ...corsHeaders },
     });
