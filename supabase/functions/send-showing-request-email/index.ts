@@ -108,28 +108,6 @@ function formatPreferredDate(dateInput: string): string {
   return trimmed;
 }
 
-function resolvePublicPhotoUrl(photoUrl: unknown): string {
-  let raw = "";
-  if (typeof photoUrl === "string") {
-    raw = photoUrl.trim();
-  } else if (photoUrl && typeof photoUrl === "object") {
-    const candidate = photoUrl as { url?: unknown; publicUrl?: unknown; src?: unknown; image_url?: unknown };
-    const value = candidate.url ?? candidate.publicUrl ?? candidate.src ?? candidate.image_url;
-    if (typeof value === "string") raw = value.trim();
-  }
-
-  if (!raw || raw.startsWith("/")) return "";
-
-  try {
-    const url = new URL(raw);
-    if (url.protocol !== "http:" && url.protocol !== "https:") return "";
-    if (!url.hostname) return "";
-    return url.href;
-  } catch {
-    return "";
-  }
-}
-
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -172,12 +150,32 @@ const handler = async (req: Request): Promise<Response> => {
 
     const formattedDate = formatPreferredDate(preferredDate);
     const safeListingAddress = escapeHtml(listingAddress);
-    const listingPhotoUrl = resolvePublicPhotoUrl(photoUrl);
-    const photoBlock = listingPhotoUrl
-      ? `<div style="margin: 20px 0;">
-              <img src="${escapeHtml(listingPhotoUrl)}" alt="${safeListingAddress}" style="display:block;max-width:100%;height:auto;border-radius:8px;max-height:400px;object-fit:cover;border:0;outline:none;text-decoration:none;" />
-            </div>`
-      : "";
+    void photoUrl;
+
+    const htmlOut = `<!DOCTYPE html>
+<html><body>
+<h2>Showing request: ${safeListingAddress}</h2>
+<p><strong>Requester:</strong> ${escapeHtml(requesterName)}</p>
+<p><strong>Email:</strong> ${escapeHtml(requesterEmail)}</p>
+${requesterPhone ? `<p><strong>Phone:</strong> ${escapeHtml(requesterPhone)}</p>` : ""}
+<p><strong>Preferred date:</strong> ${escapeHtml(formattedDate)}</p>
+<p><strong>Preferred time:</strong> ${escapeHtml(preferredTime)}</p>
+${message ? `<p><strong>Message:</strong></p><p>${escapeHtml(message)}</p>` : ""}
+<p>You can reply directly to this email.</p>
+</body></html>`;
+
+    const text = [
+      `Showing request: ${listingAddress}`,
+      ``,
+      `Requester: ${requesterName}`,
+      `Email: ${requesterEmail}`,
+      ...(requesterPhone ? [`Phone: ${requesterPhone}`] : []),
+      `Preferred date: ${formattedDate}`,
+      `Preferred time: ${preferredTime}`,
+      ...(message ? [``, `Message:`, message] : []),
+      ``,
+      `You can reply directly to this email.`,
+    ].join("\n");
 
     const emailResponse = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -189,33 +187,9 @@ const handler = async (req: Request): Promise<Response> => {
         from: (Deno.env.get("TRANSACTIONAL_FROM") || "All Agent Connect <hello@notify.allagentconnect.com>"),
         to: [agentEmail],
         reply_to: requesterEmail,
-        subject: `New showing request for ${listingAddress}`,
-        html: `
-          <h2>New Showing Request</h2>
-          <p>Hi ${agentName},</p>
-          <p>You have received a new showing request for your listing at <strong>${safeListingAddress}</strong>.</p>
-          
-          ${photoBlock}
-          
-          <h3>Requester Details:</h3>
-          <ul>
-            <li><strong>Name:</strong> ${requesterName}</li>
-            <li><strong>Email:</strong> ${requesterEmail}</li>
-            ${requesterPhone ? `<li><strong>Phone:</strong> ${requesterPhone}</li>` : ""}
-          </ul>
-          
-          <h3>Showing Details:</h3>
-          <ul>
-            <li><strong>Preferred Date:</strong> ${formattedDate}</li>
-            <li><strong>Preferred Time:</strong> ${preferredTime}</li>
-          </ul>
-          
-          ${message ? `<h3>Additional Message:</h3><p>${message}</p>` : ""}
-          
-          <p>Please respond to confirm or suggest alternative times by replying to this email or contacting them directly.</p>
-          
-          <p>Best regards,<br>AAC Worldwide</p>
-        `,
+        subject: `Showing request: ${listingAddress}`,
+        html: htmlOut,
+        text,
       }),
     });
 
