@@ -1,8 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { Resend } from "https://esm.sh/resend@4.0.0";
 
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
@@ -130,11 +128,8 @@ serve(async (req) => {
         .join("");
 
       try {
-        await resend.emails.send({
-          from: (Deno.env.get("TRANSACTIONAL_FROM") || "All Agent Connect <hello@notify.allagentconnect.com>"),
-          to: [data.email],
-          subject: `Price Alert: ${data.changes.length} saved ${data.changes.length === 1 ? 'home has' : 'homes have'} changed price`,
-          html: `
+        const subject = `Price Alert: ${data.changes.length} saved ${data.changes.length === 1 ? 'home has' : 'homes have'} changed price`;
+        const html = `
             <!DOCTYPE html>
             <html>
               <head>
@@ -159,14 +154,27 @@ serve(async (req) => {
                 </div>
               </body>
             </html>
-          `,
-        });
+          `;
+
+        const { error: enqueueError } = await supabase
+          .from("email_jobs")
+          .insert({
+            payload: {
+              provider: "resend",
+              template: "price-change-notification",
+              to: data.email,
+              subject,
+              html,
+            },
+          });
+
+        if (enqueueError) throw enqueueError;
 
         emailsSent++;
         notificationIds.push(...data.changes.map((c: PriceChange) => c.id));
-        console.log(`Sent price change notification to ${data.email}`);
+        console.log(`Enqueued price change notification to ${data.email}`);
       } catch (emailError) {
-        console.error(`Failed to send email to ${data.email}:`, emailError);
+        console.error(`Failed to enqueue email to ${data.email}:`, emailError);
       }
     }
 
@@ -183,6 +191,19 @@ serve(async (req) => {
       if (updateError) {
         console.error("Error updating notification status:", updateError);
       }
+    }
+
+    if (emailsSent > 0) {
+      void fetch(`${supabaseUrl}/functions/v1/kick-email-queue`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${supabaseServiceKey}`,
+          "Content-Type": "application/json",
+        },
+        body: "{}",
+      }).catch((err) => {
+        console.warn("[send-price-change-notification] kick-email-queue failed:", err);
+      });
     }
 
     return new Response(
