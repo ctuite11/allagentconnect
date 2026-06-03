@@ -1,7 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.0";
 import { buildAacEmail } from "../_shared/aacEmailTemplate.ts";
-
-const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -42,23 +41,47 @@ const handler = async (req: Request): Promise<Response> => {
       ctaUrl: `${frontendUrl}/browse`,
     });
 
-    const emailResponse = await fetch("https://api.resend.com/emails", {
+    // Route through queued email_jobs + email-worker (proven-inboxing pattern).
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    if (!supabaseUrl || !supabaseServiceKey) {
+      throw new Error("Server misconfigured: missing Supabase service credentials");
+    }
+    const admin = createClient(supabaseUrl, supabaseServiceKey);
+
+    const { data: jobRow, error: enqueueError } = await admin
+      .from("email_jobs")
+      .insert({
+        payload: {
+          provider: "resend",
+          template: "welcome-email",
+          to: email,
+          subject: "Welcome to All Agent Connect",
+          html,
+        },
+      })
+      .select("id")
+      .single();
+
+    if (enqueueError) {
+      console.error("[send-welcome-email] enqueue failed:", enqueueError);
+      throw enqueueError;
+    }
+
+    void fetch(`${supabaseUrl}/functions/v1/kick-email-queue`, {
       method: "POST",
       headers: {
+        Authorization: `Bearer ${supabaseServiceKey}`,
         "Content-Type": "application/json",
-        Authorization: `Bearer ${RESEND_API_KEY}`,
       },
-      body: JSON.stringify({
-        from: (Deno.env.get("TRANSACTIONAL_FROM") || "All Agent Connect <hello@notify.allagentconnect.com>"),
-        to: [email],
-        subject: "Welcome to All Agent Connect",
-        html,
-      }),
+      body: "{}",
+    }).catch((err) => {
+      console.warn("[send-welcome-email] kick-email-queue failed (will run on schedule):", err);
     });
 
-    console.log("Welcome email sent successfully:", emailResponse);
+    console.log("Welcome email enqueued:", jobRow?.id);
 
-    return new Response(JSON.stringify({ success: true, emailResponse }), {
+    return new Response(JSON.stringify({ enqueued: true, jobId: jobRow?.id }), {
       status: 200,
       headers: { "Content-Type": "application/json", ...corsHeaders },
     });
