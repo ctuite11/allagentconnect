@@ -10,7 +10,7 @@ import {
 } from "@/lib/listingAgentContact";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Send, MapPin, ChevronDown, Pencil, Heart } from "lucide-react";
+import { Send, MapPin, ChevronDown, Pencil, Heart, UserPlus } from "lucide-react";
 import { AacBackButton } from "@/components/layout/AacBackLink";
 import { AacPageIntro } from "@/components/layout/AacPageIntro";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -67,6 +67,7 @@ import { buildListingsQuery } from "@/lib/buildListingsQuery";
 import type { ListedByAgentProfile } from "@/lib/listingListedBy";
 import { formatHotSheetRef } from "@/lib/formatHotSheetRef";
 import { formatCriteriaDisplayLabels } from "@/lib/formatCriteriaDisplay";
+import { AddHotSheetRecipientDialog } from "@/components/hot-sheets/AddHotSheetRecipientDialog";
 
 /** One row per `hot_sheet_clients` recipient for compact review strip. */
 interface ReviewRecipient {
@@ -161,6 +162,7 @@ const HotSheetReview = () => {
   const [sending, setSending] = useState(false);
   const [hotSheet, setHotSheet] = useState<HotSheet | null>(null);
   const [editCriteriaOpen, setEditCriteriaOpen] = useState(false);
+  const [addRecipientOpen, setAddRecipientOpen] = useState(false);
   const [agentUserId, setAgentUserId] = useState<string | null>(null);
   const [agentDisplayName, setAgentDisplayName] = useState("Your agent");
   const [listings, setListings] = useState<Listing[]>([]);
@@ -1258,15 +1260,28 @@ const HotSheetReview = () => {
                   </div>
                 </div>
               </div>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setEditCriteriaOpen(true)}
-                className="h-8 shrink-0 self-start rounded-md border-neutral-200 bg-white px-3 text-[12px] font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-200 ease-out hover:border-neutral-300 hover:bg-neutral-50/80 sm:self-center"
-              >
-                <Pencil className="mr-1.5 h-3.5 w-3.5" aria-hidden />
-                Edit criteria
-              </Button>
+              <div className="flex shrink-0 flex-wrap items-center gap-2 self-start sm:self-center">
+                {!isSharedWorkspace && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setAddRecipientOpen(true)}
+                    className="h-8 rounded-md border-neutral-200 bg-white px-3 text-[12px] font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-200 ease-out hover:border-neutral-300 hover:bg-neutral-50/80"
+                  >
+                    <UserPlus className="mr-1.5 h-3.5 w-3.5" aria-hidden />
+                    Add contact
+                  </Button>
+                )}
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setEditCriteriaOpen(true)}
+                  className="h-8 rounded-md border-neutral-200 bg-white px-3 text-[12px] font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-200 ease-out hover:border-neutral-300 hover:bg-neutral-50/80"
+                >
+                  <Pencil className="mr-1.5 h-3.5 w-3.5" aria-hidden />
+                  Edit criteria
+                </Button>
+              </div>
             </div>
           </div>
 
@@ -1544,6 +1559,17 @@ const HotSheetReview = () => {
           hotSheetId={hotSheet.id}
           initialCriteria={hotSheet.criteria}
           onUpdate={fetchHotSheetAndListings}
+        />
+      )}
+
+      {hotSheet && !isSharedWorkspace && (
+        <AddHotSheetRecipientDialog
+          open={addRecipientOpen}
+          onOpenChange={setAddRecipientOpen}
+          hotSheetId={hotSheet.id}
+          agentUserId={agentUserId}
+          existingRecipientClientIds={reviewRecipients.map((r) => r.clientId)}
+          onAdded={fetchHotSheetAndListings}
         />
       )}
 
