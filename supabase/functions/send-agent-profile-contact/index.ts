@@ -147,7 +147,7 @@ const handler = async (req: Request): Promise<Response> => {
       `Message`,
       message || "",
       ``,
-      `You can reply directly to this email.`,
+      `Reply directly to ${senderEmail} to respond.`,
     ].join("\n");
 
     const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
@@ -174,7 +174,6 @@ const handler = async (req: Request): Promise<Response> => {
           subject: finalSubject,
           html,
           text,
-          reply_to: senderEmail,
         },
       })
       .select("id")
