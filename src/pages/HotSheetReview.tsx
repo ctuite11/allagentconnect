@@ -1562,6 +1562,17 @@ const HotSheetReview = () => {
         />
       )}
 
+      {hotSheet && !isSharedWorkspace && (
+        <AddHotSheetRecipientDialog
+          open={addRecipientOpen}
+          onOpenChange={setAddRecipientOpen}
+          hotSheetId={hotSheet.id}
+          agentUserId={agentUserId}
+          existingRecipientClientIds={reviewRecipients.map((r) => r.clientId)}
+          onAdded={fetchHotSheetAndListings}
+        />
+      )}
+
       <AlertDialog
         open={inviteBuyerDialogOpen}
         onOpenChange={(open) => {
