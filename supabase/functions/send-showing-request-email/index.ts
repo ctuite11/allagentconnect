@@ -177,26 +177,55 @@ ${message ? `<p><strong>Message:</strong></p><p>${escapeHtml(message)}</p>` : ""
       `You can reply directly to this email.`,
     ].join("\n");
 
-    const emailResponse = await fetch("https://api.resend.com/emails", {
+    // DELIVERABILITY: route Schedule a Showing through the same queued
+    // email_jobs + worker path as AAC Messages and the Listing → Message
+    // Agent route (both reliably inboxing). Drop direct Resend SDK call
+    // and Reply-To to mirror the proven-inboxing pattern.
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    if (!supabaseUrl || !supabaseServiceKey) {
+      throw new Error("Server misconfigured: missing Supabase service credentials");
+    }
+
+    const admin = createClient(supabaseUrl, supabaseServiceKey);
+
+    const { data: jobRow, error: enqueueError } = await admin
+      .from("email_jobs")
+      .insert({
+        payload: {
+          provider: "resend",
+          template: "showing-request",
+          to: agentEmail,
+          subject: `Showing request: ${listingAddress}`,
+          html: htmlOut,
+        },
+      })
+      .select("id")
+      .single();
+
+    if (enqueueError) {
+      console.error("[send-showing-request-email] enqueue failed:", enqueueError);
+      throw enqueueError;
+    }
+
+    void fetch(`${supabaseUrl}/functions/v1/kick-email-queue`, {
       method: "POST",
       headers: {
+        Authorization: `Bearer ${supabaseServiceKey}`,
         "Content-Type": "application/json",
-        Authorization: `Bearer ${RESEND_API_KEY}`,
       },
-      body: JSON.stringify({
-        from: (Deno.env.get("TRANSACTIONAL_FROM") || "All Agent Connect <hello@notify.allagentconnect.com>"),
-        to: [agentEmail],
-        reply_to: requesterEmail,
-        subject: `Showing request: ${listingAddress}`,
-        html: htmlOut,
-        text,
-      }),
+      body: "{}",
+    }).catch((err) => {
+      console.warn("[send-showing-request-email] kick-email-queue failed (will run on schedule):", err);
     });
 
-    const data = await emailResponse.json();
-    console.log("Email sent successfully:", data);
+    // Keep references to avoid TS unused warnings (worker derives text from html).
+    void text;
+    void RESEND_API_KEY;
+    void agentName;
 
-    return new Response(JSON.stringify(data), {
+    console.log("Showing request email enqueued:", jobRow?.id);
+
+    return new Response(JSON.stringify({ enqueued: true, jobId: jobRow?.id }), {
       status: 200,
       headers: { "Content-Type": "application/json", ...corsHeaders },
     });
