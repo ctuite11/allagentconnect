@@ -1260,15 +1260,28 @@ const HotSheetReview = () => {
                   </div>
                 </div>
               </div>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setEditCriteriaOpen(true)}
-                className="h-8 shrink-0 self-start rounded-md border-neutral-200 bg-white px-3 text-[12px] font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-200 ease-out hover:border-neutral-300 hover:bg-neutral-50/80 sm:self-center"
-              >
-                <Pencil className="mr-1.5 h-3.5 w-3.5" aria-hidden />
-                Edit criteria
-              </Button>
+              <div className="flex shrink-0 flex-wrap items-center gap-2 self-start sm:self-center">
+                {!isSharedWorkspace && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setAddRecipientOpen(true)}
+                    className="h-8 rounded-md border-neutral-200 bg-white px-3 text-[12px] font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-200 ease-out hover:border-neutral-300 hover:bg-neutral-50/80"
+                  >
+                    <UserPlus className="mr-1.5 h-3.5 w-3.5" aria-hidden />
+                    Add contact
+                  </Button>
+                )}
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setEditCriteriaOpen(true)}
+                  className="h-8 rounded-md border-neutral-200 bg-white px-3 text-[12px] font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-200 ease-out hover:border-neutral-300 hover:bg-neutral-50/80"
+                >
+                  <Pencil className="mr-1.5 h-3.5 w-3.5" aria-hidden />
+                  Edit criteria
+                </Button>
+              </div>
             </div>
           </div>
 
