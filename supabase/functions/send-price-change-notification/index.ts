@@ -44,10 +44,7 @@ serve(async (req) => {
       .select(`
         *,
         listing:listings(address, city, state, photos),
-        favorite:favorites(
-          user_id,
-          user:profiles(email)
-        )
+        favorite:favorites(user_id)
       `)
       .eq("notification_sent", false)
       .order("changed_at", { ascending: false });
@@ -67,12 +64,32 @@ serve(async (req) => {
 
     console.log(`Found ${priceChanges.length} price changes to notify`);
 
+    // Resolve emails via profiles (no FK relationship to favorites)
+    const userIds = Array.from(
+      new Set(
+        (priceChanges as any[])
+          .map((c) => c.favorite?.user_id)
+          .filter((v) => !!v)
+      )
+    );
+    const emailByUserId = new Map<string, string>();
+    if (userIds.length > 0) {
+      const { data: profs } = await supabase
+        .from("profiles")
+        .select("id, email")
+        .in("id", userIds);
+      for (const p of profs ?? []) {
+        if (p?.id && p?.email) emailByUserId.set(p.id, p.email);
+      }
+    }
+
     // Group by user to send one email per user
     const changesByUser = priceChanges.reduce((acc: any, change: any) => {
-      const userId = change.favorite.user_id;
+      const userId = change.favorite?.user_id;
+      if (!userId) return acc;
       if (!acc[userId]) {
         acc[userId] = {
-          email: change.favorite.user?.email,
+          email: emailByUserId.get(userId),
           changes: [],
         };
       }
@@ -156,9 +173,15 @@ serve(async (req) => {
             </html>
           `;
 
+        const changeIds = data.changes
+          .map((c: PriceChange) => c.id)
+          .sort();
+        const idempotencyKey = `price-change:${userId}:${changeIds.join(",")}`;
+
         const { error: enqueueError } = await supabase
           .from("email_jobs")
           .insert({
+            idempotency_key: idempotencyKey,
             payload: {
               provider: "resend",
               template: "price-change-notification",
