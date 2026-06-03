@@ -149,6 +149,13 @@ const handler = async (req: Request): Promise<Response> => {
       preheader: `Message about ${listingAddress}`,
     });
 
+    // Transactional-only: strip the "Remove my account" mailto link from the shared
+    // dark footer for this email path. The shared template is intentionally not modified.
+    const htmlOut = html.replace(
+      /<a\s+href="mailto:hello@allagentconnect\.com\?subject=Remove%20My%20Account[^"]*"[^>]*>[\s\S]*?<\/a>/i,
+      ""
+    );
+
     const text = [
       `Hi ${agentName},`,
       ``,
@@ -171,7 +178,7 @@ const handler = async (req: Request): Promise<Response> => {
       to: [agentEmail],
       replyTo: senderEmail,
       subject: `Message about ${listingAddress}`,
-      html,
+      html: htmlOut,
       text,
     });
 
