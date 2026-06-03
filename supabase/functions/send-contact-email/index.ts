@@ -1,7 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "https://esm.sh/resend@4.0.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.0";
-import { buildAacEmail } from "../_shared/aacEmailTemplate.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -111,50 +110,17 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Sending contact email to agent:", agentEmail);
 
-    const bodyHtml = `
-      <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#334155;">
-        Hi ${escapeHtml(agentName)},
-      </p>
-      <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#334155;">
-        You received a new message about:
-      </p>
-      <p style="margin:0 0 20px;font-size:16px;font-weight:600;color:#0f172a;">
-        ${escapeHtml(listingAddress)}
-      </p>
-
-      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 20px;">
-        <tr><td style="background-color:#ffffff;border:1px solid #e5e7eb;border-radius:8px;padding:16px 20px;">
-          <p style="margin:0 0 4px;font-size:13px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;">Contact Details</p>
-          <p style="margin:0 0 4px;font-size:15px;color:#334155;"><strong>Name:</strong> ${escapeHtml(senderName)}</p>
-          <p style="margin:0 0 0;font-size:15px;color:#334155;"><strong>Email:</strong> ${escapeHtml(senderEmail)}</p>
-          ${senderPhone ? `<p style="margin:4px 0 0;font-size:15px;color:#334155;"><strong>Phone:</strong> ${escapeHtml(senderPhone)}</p>` : ""}
-        </td></tr>
-      </table>
-
-      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 20px;">
-        <tr><td style="background-color:#ffffff;border:1px solid #e5e7eb;border-radius:8px;padding:16px 20px;">
-          <p style="margin:0 0 4px;font-size:13px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;">Message</p>
-          <p style="margin:0;font-size:15px;line-height:1.6;color:#334155;">${escapeHtml(message)}</p>
-        </td></tr>
-      </table>
-
-      <p style="margin:0;font-size:14px;line-height:1.6;color:#64748b;">
-        You can reply directly to this email to respond.
-      </p>
-    `;
-
-    const html = buildAacEmail({
-      headline: "New message on your listing",
-      body: bodyHtml,
-      preheader: `Message about ${listingAddress}`,
-    });
-
-    // Transactional-only: strip the "Remove my account" mailto link from the shared
-    // dark footer for this email path. The shared template is intentionally not modified.
-    const htmlOut = html.replace(
-      /<a\s+href="mailto:hello@allagentconnect\.com\?subject=Remove%20My%20Account[^"]*"[^>]*>[\s\S]*?<\/a>/i,
-      ""
-    );
+    // Minimal plain HTML — no AAC header, logo, footer, tracking, or marketing layout.
+    const htmlOut = `<!DOCTYPE html>
+<html><body>
+<h2>Message about ${escapeHtml(listingAddress)}</h2>
+<p><strong>From:</strong> ${escapeHtml(senderName)}</p>
+<p><strong>Email:</strong> ${escapeHtml(senderEmail)}</p>
+${senderPhone ? `<p><strong>Phone:</strong> ${escapeHtml(senderPhone)}</p>` : ""}
+<p><strong>Message:</strong></p>
+<p>${escapeHtml(message)}</p>
+<p>You can reply directly to this email.</p>
+</body></html>`;
 
     const text = [
       `Hi ${agentName},`,
