@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.0";
 import { buildAacEmail } from "../_shared/aacEmailTemplate.ts";
 
-const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 const PUBLIC_SITE_URL = Deno.env.get("PUBLIC_SITE_URL") || "https://allagentconnect.lovable.app";
 
 const corsHeaders = {
@@ -41,36 +41,52 @@ const handler = async (req: Request): Promise<Response> => {
       ctaUrl: registerUrl,
     });
 
-    const results = [];
-    
-    for (const email of inviteeEmails) {
-      const emailResponse = await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${RESEND_API_KEY}`,
-        },
-        body: JSON.stringify({
-          from: (Deno.env.get("TRANSACTIONAL_FROM") || "All Agent Connect <hello@notify.allagentconnect.com>"),
-          to: [email],
-          reply_to: inviterEmail,
-          subject: `${inviterName} invited you to All Agent Connect`,
-          html,
-        }),
-      });
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    if (!supabaseUrl || !supabaseServiceKey) {
+      throw new Error("Server misconfigured: missing Supabase service credentials");
+    }
+    const admin = createClient(supabaseUrl, supabaseServiceKey);
 
-      if (emailResponse.ok) {
-        console.log(`Successfully sent invite to ${email}`);
-        results.push({ email, success: true });
+    const results = [];
+
+    for (const email of inviteeEmails) {
+      const { error: enqueueError } = await admin
+        .from("email_jobs")
+        .insert({
+          payload: {
+            provider: "resend",
+            template: "agent-invite",
+            to: email,
+            subject: `${inviterName} invited you to All Agent Connect`,
+            html,
+          },
+        });
+
+      if (enqueueError) {
+        console.error(`[send-agent-invite] enqueue failed for ${email}:`, enqueueError);
+        results.push({ email, success: false, error: enqueueError.message });
       } else {
-        const errorData = await emailResponse.text();
-        console.error(`Failed to send to ${email}:`, errorData);
-        results.push({ email, success: false, error: errorData });
+        console.log(`[send-agent-invite] enqueued invite to ${email}`);
+        results.push({ email, success: true });
       }
     }
 
     const successCount = results.filter(r => r.success).length;
-    console.log(`Completed: ${successCount}/${inviteeEmails.length} invites sent successfully`);
+    console.log(`Completed: ${successCount}/${inviteeEmails.length} invites enqueued successfully`);
+
+    if (successCount > 0) {
+      void fetch(`${supabaseUrl}/functions/v1/kick-email-queue`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${supabaseServiceKey}`,
+          "Content-Type": "application/json",
+        },
+        body: "{}",
+      }).catch((err) => {
+        console.warn("[send-agent-invite] kick-email-queue failed (will run on schedule):", err);
+      });
+    }
 
     return new Response(JSON.stringify({ results, successCount }), {
       status: 200,
