@@ -173,9 +173,15 @@ serve(async (req) => {
             </html>
           `;
 
+        const changeIds = data.changes
+          .map((c: PriceChange) => c.id)
+          .sort();
+        const idempotencyKey = `price-change:${userId}:${changeIds.join(",")}`;
+
         const { error: enqueueError } = await supabase
           .from("email_jobs")
           .insert({
+            idempotency_key: idempotencyKey,
             payload: {
               provider: "resend",
               template: "price-change-notification",
