@@ -5,6 +5,7 @@
 
 import { buildAacEmail } from "./aacEmailTemplate.ts";
 import { formatListingShareEmailStreetLine } from "./listingShareEmailAddress.ts";
+import { renderListingEmailCard } from "./listingEmailCard.ts";
 
 /* ------------------------------------------------------------------ */
 /*  Shared helpers for Share Listings emails                           */
@@ -24,30 +25,8 @@ function resolvePhotoUrl(photos: unknown): string {
   return "";
 }
 
-function renderListingShareCard(listing: any): string {
-  const photoUrl = listing.photoUrl || resolvePhotoUrl(listing.photos);
-  const streetLine = formatListingShareEmailStreetLine(listing);
-  const cityLine = [listing.city, listing.state].filter(Boolean).join(", ") +
-    (listing.zipCode || listing.zip_code ? ` ${listing.zipCode || listing.zip_code}` : "");
-  const addressLine = streetLine || listing.address || cityLine.trim();
-  const meta: string[] = [];
-  if (listing.bedrooms) meta.push(`${listing.bedrooms} bd`);
-  if (listing.bathrooms) meta.push(`${listing.bathrooms} ba`);
-  const sqft = listing.squareFeet ?? listing.square_feet;
-  if (sqft) meta.push(`${Number(sqft).toLocaleString()} sq ft`);
-  const propertyType = (listing.propertyType ?? listing.property_type ?? "").toString().replace(/_/g, " ");
-
-  return `
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 20px;border:1px solid #e5e7eb;border-radius:10px;overflow:hidden;background:#ffffff;">
-      ${photoUrl ? `<tr><td><img src="${photoUrl}" alt="${addressLine}" style="display:block;width:100%;max-height:280px;object-fit:cover;border:0;outline:none;text-decoration:none;" /></td></tr>` : ""}
-      <tr><td style="padding:16px 18px;">
-        <p style="margin:0 0 6px;font-size:20px;font-weight:700;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${fmtPrice(listing.price)}</p>
-        <p style="margin:0 0 4px;font-size:15px;font-weight:600;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${addressLine || "Address available on request"}</p>
-        ${streetLine && cityLine.trim() ? `<p style="margin:0 0 10px;font-size:14px;color:#475569;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${cityLine}</p>` : !streetLine && cityLine.trim() ? `<p style="margin:0 0 10px;font-size:14px;color:#475569;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${cityLine}</p>` : ""}
-        ${meta.length ? `<p style="margin:0;font-size:13px;color:#475569;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${meta.join("&nbsp;&nbsp;·&nbsp;&nbsp;")}</p>` : ""}
-        ${propertyType ? `<p style="margin:6px 0 0;font-size:12px;color:#64748b;text-transform:capitalize;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${propertyType}</p>` : ""}
-      </td></tr>
-    </table>`;
+function renderListingShareCard(listing: any, opts?: { baseUrl?: string }): string {
+  return renderListingEmailCard(listing, { baseUrl: opts?.baseUrl });
 }
 
 function renderAgentContactBlock(opts: { agentName: string; agentEmail: string; agentPhone?: string }): string {
