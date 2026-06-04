@@ -127,13 +127,13 @@ const handler = async (req: Request): Promise<Response> => {
       if (listingIds.length > 0) {
         const { data: listings } = await supabase
           .from("listings")
-          .select("address, price, city, state, bedrooms, bathrooms, photos")
+          .select("address, price, city, state, zip_code, unit_number, condo_details, bedrooms, bathrooms, photos")
           .in("id", listingIds);
 
         teasers = (listings || []).slice(0, 3).map((listing: any) => ({
           photoUrl: listing?.photos?.[0]?.url || "",
           price: listing?.price ? `$${Number(listing.price).toLocaleString()}` : "Price unavailable",
-          address: listing?.address || "",
+          address: formatListingShareEmailStreetLine(listing || {}) || listing?.address || "",
           cityState: [listing?.city, listing?.state].filter(Boolean).join(", "),
           bedsBaths: [
             listing?.bedrooms ? `${listing.bedrooms} bd` : null,
