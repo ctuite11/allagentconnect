@@ -20,6 +20,15 @@ interface BulkEmailRequest {
   agentEmail?: string;
   sendAsGroup?: boolean;
   template?: string;
+  /**
+   * Diagnostic mode — bypasses the BULK_OUTREACH_PAUSED gate for a single
+   * stripped-down one-recipient test. Sends minimal HTML (plain copy + a
+   * single direct AAC link + visible unsubscribe). Used to isolate whether
+   * Gmail spam placement is driven by template content or by stream
+   * reputation. Never expose to clients without server-side checks: we
+   * still enforce recipients.length === 1 and ignore the `template` field.
+   */
+  diagnostic?: boolean;
 }
 
 interface RateLimitResult {
@@ -420,7 +429,10 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    if (BULK_OUTREACH_PAUSED) {
+    const body: BulkEmailRequest = await req.json();
+    const isDiagnostic = body.diagnostic === true && Array.isArray(body.recipients) && body.recipients.length === 1;
+
+    if (BULK_OUTREACH_PAUSED && !isDiagnostic) {
       return new Response(
         JSON.stringify({
           error: "Bulk outreach is temporarily paused to protect email deliverability.",
@@ -432,13 +444,14 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    const { recipients, subject, message, agentId, agentEmail, sendAsGroup = false, template }: BulkEmailRequest = await req.json();
+    const { recipients, subject, message, agentId, agentEmail, sendAsGroup = false, template } = body;
 
     const isTemplated =
+      !isDiagnostic && (
       template === "early-access-update-v1" ||
       template === "early-access-update-v2" ||
       template === "founding-partner-invitation" ||
-      template === "private-listing-network";
+      template === "private-listing-network");
 
     console.log(`[send-bulk-email] Enqueuing bulk email to ${recipients.length} recipients`);
 
@@ -527,7 +540,19 @@ const handler = async (req: Request): Promise<Response> => {
             ? buildEarlyAccessUpdateBody()
             : (/<[a-z][\s\S]*>/i.test(message) ? message : escapeHtml(message).replace(/\n/g, "<br>"));
 
-    // Build email HTML template
+    // Diagnostic: absolute minimum HTML — no <style>, no wrapper class, no images,
+    // single direct AAC link, visible unsubscribe appended later.
+    const diagnosticHtml = (recipientName: string, unsubUrl: string) => `<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>${escapeHtml(subject)}</title></head>
+<body style="font-family:Arial,sans-serif;font-size:14px;line-height:1.5;color:#222;">
+<p>Hi ${escapeHtml(recipientName)},</p>
+<p>${escapeHtml(message || "This is a diagnostic message from All Agent Connect.")}</p>
+<p>Visit <a href="https://allagentconnect.com">https://allagentconnect.com</a>.</p>
+<p>Chris</p>
+<p style="font-size:11px;color:#666;margin-top:24px;">Don't want these emails? <a href="${unsubUrl}" style="color:#666;">Unsubscribe</a></p>
+</body></html>`;
+
+    // Standard bulk template
     const htmlTemplate = `
       <!DOCTYPE html>
       <html>
@@ -647,9 +672,11 @@ const handler = async (req: Request): Promise<Response> => {
             Don't want these emails?
             <a href="${unsubUrl}" style="color:#64748b;text-decoration:underline;">Unsubscribe</a>
           </p>`;
-        const personalizedHtml = htmlTemplate
-          .replace("{{GREETING}}", isTemplated ? "" : `<p>Hello ${recipient.name},</p>`)
-          .replace("</body>", `${unsubFooter}</body>`);
+        const personalizedHtml = isDiagnostic
+          ? diagnosticHtml(recipient.name, unsubUrl)
+          : htmlTemplate
+              .replace("{{GREETING}}", isTemplated ? "" : `<p>Hello ${recipient.name},</p>`)
+              .replace("</body>", `${unsubFooter}</body>`);
 
         return {
           payload: {
