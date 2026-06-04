@@ -540,7 +540,19 @@ const handler = async (req: Request): Promise<Response> => {
             ? buildEarlyAccessUpdateBody()
             : (/<[a-z][\s\S]*>/i.test(message) ? message : escapeHtml(message).replace(/\n/g, "<br>"));
 
-    // Build email HTML template
+    // Diagnostic: absolute minimum HTML — no <style>, no wrapper class, no images,
+    // single direct AAC link, visible unsubscribe appended later.
+    const diagnosticHtml = (recipientName: string, unsubUrl: string) => `<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>${escapeHtml(subject)}</title></head>
+<body style="font-family:Arial,sans-serif;font-size:14px;line-height:1.5;color:#222;">
+<p>Hi ${escapeHtml(recipientName)},</p>
+<p>${escapeHtml(message || "This is a diagnostic message from All Agent Connect.")}</p>
+<p>Visit <a href="https://allagentconnect.com">https://allagentconnect.com</a>.</p>
+<p>Chris</p>
+<p style="font-size:11px;color:#666;margin-top:24px;">Don't want these emails? <a href="${unsubUrl}" style="color:#666;">Unsubscribe</a></p>
+</body></html>`;
+
+    // Standard bulk template
     const htmlTemplate = `
       <!DOCTYPE html>
       <html>
