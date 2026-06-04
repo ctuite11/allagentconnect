@@ -698,7 +698,6 @@ const ConsumerPropertyDetail = () => {
                 daysOnMarket={daysOnMarket}
                 containerClassName="!mt-9"
                 className="!mt-0 border-b-0 pb-0"
-                iconClassName="!text-neutral-600"
               />
             </div>
 
