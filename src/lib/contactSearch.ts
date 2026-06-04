@@ -16,6 +16,8 @@ export interface ContactRow {
   created_at?: string | null;
   updated_at?: string | null;
   relationship_status?: string | null;
+  relationship_user_id?: string | null;
+  relationship_ended_at?: string | null;
   office_id?: string | null;
   source?: string | null;
 }
@@ -182,4 +184,43 @@ export async function searchClientContacts<T extends ContactRow = ContactRow>(
 
   const all = await fetchAllAgentContacts<T>(agentId, { force: forceRefresh });
   return all.filter((row) => matchesContactQuery(row, raw)).slice(0, limit);
+}
+
+export interface MessageableClientRecipient {
+  id: string;
+  name: string;
+  email: string;
+}
+
+/**
+ * CRM contacts the agent can DM — same list as /my-clients, filtered to onboarded buyers.
+ */
+export async function fetchMessageableClientRecipients(
+  agentId: string,
+): Promise<MessageableClientRecipient[]> {
+  if (!agentId) return [];
+
+  const contacts = await fetchAllAgentContacts(agentId, {
+    select:
+      "id, first_name, last_name, email, relationship_user_id, relationship_status, relationship_ended_at",
+  });
+
+  const seen = new Set<string>();
+  const results: MessageableClientRecipient[] = [];
+
+  for (const c of contacts) {
+    if (c.relationship_status === "ended" || c.relationship_ended_at) continue;
+
+    const authUserId = String(c.relationship_user_id ?? "").trim();
+    if (!authUserId || seen.has(authUserId)) continue;
+    seen.add(authUserId);
+
+    results.push({
+      id: authUserId,
+      name: displayName(c) || authUserId,
+      email: String(c.email ?? "").trim(),
+    });
+  }
+
+  return results;
 }

@@ -16,6 +16,8 @@ import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 import { supabase } from "@/integrations/supabase/client";
 import { findOrCreateConversation } from "@/lib/startConversation";
 import { showMessageSentToast } from "@/lib/messageSentFeedback";
+import { fetchMessageableClientRecipients } from "@/lib/contactSearch";
+import { fetchBuyerMessageRecipients } from "@/lib/fetchBuyerMessageRecipients";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import AACMonogram from "@/components/ui/AACMonogram";
@@ -24,7 +26,7 @@ interface Recipient {
   id: string;
   name: string;
   email: string;
-  group: "agent" | "client";
+  group: "agent" | "client" | "shared";
 }
 
 interface NewConversationDialogProps {
@@ -72,29 +74,8 @@ export function NewConversationDialog({
       const results: Recipient[] = [];
 
       if (composeVariant === "buyer") {
-        const { data: rels } = await supabase
-          .from("client_agent_relationships")
-          .select("agent_id")
-          .eq("client_id", user.id)
-          .eq("status", "active");
-
-        const agentIds = [...new Set((rels ?? []).map((r) => r.agent_id).filter(Boolean))];
-        if (agentIds.length > 0) {
-          const { data: profiles } = await supabase
-            .from("agent_profiles")
-            .select("id, first_name, last_name, email")
-            .in("id", agentIds);
-
-          (profiles || []).forEach((a) => {
-            results.push({
-              id: a.id,
-              name: `${a.first_name ?? ""} ${a.last_name ?? ""}`.trim() || a.email || "Unknown",
-              email: a.email,
-              group: "agent",
-            });
-          });
-        }
-        setRecipients(results);
+        const buyerRecipients = await fetchBuyerMessageRecipients(user.id, user.email);
+        setRecipients(buyerRecipients);
         return;
       }
 
@@ -114,27 +95,13 @@ export function NewConversationDialog({
         });
       });
 
-      // Fetch my clients (active relationships)
-      const { data: relationships } = await supabase
-        .from("client_agent_relationships")
-        .select("client_id")
-        .eq("agent_id", user.id)
-        .eq("status", "active");
-
-      if (relationships && relationships.length > 0) {
-        const clientIds = relationships.map((r) => r.client_id);
-        const { data: clients } = await supabase
-          .from("profiles")
-          .select("id, first_name, last_name, email")
-          .in("id", clientIds);
-
-        (clients || []).forEach((c) => {
-          results.push({
-            id: c.id,
-            name: `${c.first_name ?? ""} ${c.last_name ?? ""}`.trim() || c.email || "Unknown",
-            email: c.email || "",
-            group: "client",
-          });
+      const clients = await fetchMessageableClientRecipients(user.id);
+      for (const c of clients) {
+        results.push({
+          id: c.id,
+          name: c.name,
+          email: c.email,
+          group: "client",
         });
       }
 
@@ -254,6 +221,7 @@ export function NewConversationDialog({
 
   const agentRecipients = filteredRecipients.filter((r) => r.group === "agent");
   const buyerRecipients = filteredRecipients.filter((r) => r.group === "client");
+  const sharedRecipients = filteredRecipients.filter((r) => r.group === "shared");
 
   const handleSend = async () => {
     if (!selectedRecipient) {
@@ -417,8 +385,12 @@ export function NewConversationDialog({
                       )}
                       {agentRecipients.length > 0 && (
                         <>
-                          <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider px-2 pt-3">
-                            Agents
+                          <p
+                            className={`text-xs font-semibold text-zinc-400 uppercase tracking-wider px-2 ${
+                              buyerRecipients.length > 0 ? "pt-3" : "pt-2"
+                            }`}
+                          >
+                            {composeVariant === "buyer" ? "Your agent" : "Agents"}
                           </p>
                           {agentRecipients.map((r) => (
                             <button
@@ -438,10 +410,35 @@ export function NewConversationDialog({
                           ))}
                         </>
                       )}
-                      {agentRecipients.length === 0 && buyerRecipients.length === 0 && (
+                      {sharedRecipients.length > 0 && (
+                        <>
+                          <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider px-2 pt-3">
+                            Shared group
+                          </p>
+                          {sharedRecipients.map((r) => (
+                            <button
+                              type="button"
+                              key={r.id}
+                              onClick={() => setSelectedRecipient(r)}
+                              className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg hover:bg-zinc-50 transition-colors text-left"
+                            >
+                              <div className="w-8 h-8 rounded-full bg-neutral-100 flex items-center justify-center flex-shrink-0">
+                                <User className="w-4 h-4 text-neutral-500" />
+                              </div>
+                              <div className="min-w-0">
+                                <p className="text-sm font-medium text-zinc-900 truncate">{r.name}</p>
+                                <p className="text-xs text-zinc-400 truncate">{r.email}</p>
+                              </div>
+                            </button>
+                          ))}
+                        </>
+                      )}
+                      {agentRecipients.length === 0 &&
+                        buyerRecipients.length === 0 &&
+                        sharedRecipients.length === 0 && (
                         <p className="text-sm text-zinc-400 text-center px-2 py-6">
                           {composeVariant === "buyer"
-                            ? "No agent linked yet. Accept your invitation or finish setup with your agent to message them here."
+                            ? "No one to message yet. Finish setup with your agent or invite someone to your shared hot sheet group."
                             : "No results found"}
                         </p>
                       )}

@@ -45,3 +45,69 @@ export async function resolveActiveBuyerAgentId(
 
   return getPrimaryAgentId();
 }
+
+export type BuyerConnectedAgent = {
+  id: string;
+  first_name: string | null;
+  last_name: string | null;
+  email: string | null;
+};
+
+/**
+ * All agents a buyer can message — direct auth-linked and CRM email–linked relationships.
+ * Mirrors resolveActiveBuyerAgentId lookups but returns every connected agent, not just one.
+ */
+export async function fetchBuyerConnectedAgents(
+  userId: string,
+  userEmail?: string | null,
+): Promise<BuyerConnectedAgent[]> {
+  const agentIds = new Set<string>();
+
+  const { data: directRows, error: directErr } = await supabase
+    .from("client_agent_relationships")
+    .select("agent_id")
+    .eq("client_id", userId)
+    .in("status", ["active", "pending"])
+    .is("ended_at", null);
+
+  if (directErr) {
+    console.warn("[fetchBuyerConnectedAgents] direct lookup failed:", directErr.message);
+  } else {
+    for (const row of directRows ?? []) {
+      if (row.agent_id) agentIds.add(row.agent_id);
+    }
+  }
+
+  const email = (userEmail ?? "").trim();
+  if (email) {
+    // RLS policy "Clients can view CRM-linked relationships by email" scopes rows to this buyer.
+    const { data: crmRows, error: crmErr } = await supabase
+      .from("client_agent_relationships")
+      .select("agent_id")
+      .is("client_id", null)
+      .in("status", ["active", "pending"])
+      .is("ended_at", null);
+
+    if (crmErr) {
+      console.warn("[fetchBuyerConnectedAgents] CRM-linked lookup failed:", crmErr.message);
+    } else {
+      for (const row of crmRows ?? []) {
+        if (row.agent_id) agentIds.add(row.agent_id);
+      }
+    }
+  }
+
+  if (agentIds.size === 0) return [];
+
+  const { data: profiles, error: profileErr } = await supabase
+    .from("agent_profiles")
+    .select("id, first_name, last_name, email")
+    .in("id", [...agentIds]);
+
+  if (profileErr) {
+    console.warn("[fetchBuyerConnectedAgents] agent profiles failed:", profileErr.message);
+    return [];
+  }
+
+  return profiles ?? [];
+}
