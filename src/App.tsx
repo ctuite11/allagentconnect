@@ -232,7 +232,13 @@ function MessagesEntry() {
   const location = useLocation();
   if (loading) return null;
   if (role === "agent" || role === "admin") {
-    return <Navigate to={`/agent/messages${id ? `/${id}` : ""}${location.search}`} replace />;
+    return (
+      <Navigate
+        to={`/agent/messages${id ? `/${id}` : ""}${location.search}`}
+        replace
+        state={location.state}
+      />
+    );
   }
   if (role === "buyer") return <BuyerMessagingWorkspace />;
   return <Navigate to="/auth" replace />;

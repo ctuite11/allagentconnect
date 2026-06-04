@@ -48,6 +48,7 @@ import PhotoGalleryDialog from "@/components/PhotoGalleryDialog";
 import SocialShareMenu from "@/components/SocialShareMenu";
 import { getListingPublicUrl, getListingShareUrl } from "@/lib/getPublicUrl";
 import { useAuthRole } from "@/hooks/useAuthRole";
+import { agentMessagesPath, buildMessageReturnState } from "@/lib/messageNavigation";
 import { findOrCreateConversation } from "@/lib/startConversation";
 import { PropertyHistoryPanel } from "@/components/PropertyHistoryPanel";
 
@@ -183,7 +184,9 @@ const AgentListingDetail = () => {
         listingId: listing?.id ?? null,
       });
       if (convoId) {
-        navigate(`/messages/${convoId}`);
+        navigate(agentMessagesPath(convoId), {
+          state: buildMessageReturnState(location.pathname, location.search),
+        });
       } else {
         toast.error("Couldn't start message. Please try again.");
       }

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { resolveAgentDisplayProfile } from "@/lib/resolveAgentDisplayProfile";
 
 // ─── Public Types ─────────────────────────────────────────────────────────────
 
@@ -204,11 +205,23 @@ export function useSuccessHubData(): UseSuccessHubDataResult {
       if (userErr || !user) throw new Error(userErr?.message ?? "Not authenticated");
       const agentId = user.id;
 
+      const { profile: resolvedProfile, source: profileSource } =
+        await resolveAgentDisplayProfile(agentId, user);
+      if (!resolvedProfile) {
+        console.warn(
+          "[SuccessHubData] No agent_profiles, profiles, or auth metadata for authenticated user",
+          { agentId, email: user.email },
+        );
+      } else if (profileSource !== "agent_profiles") {
+        console.warn("[SuccessHubData] Profile loaded from fallback source:", profileSource, {
+          agentId,
+        });
+      }
+
       const since30d = daysAgoISO(30);
 
       // ── Wave 1 (parallel) ────────────────────────────────────────────────────
       const [
-        profileRes,
         unacceptedTokensRes,
         hotSheetsPreviewRes,
         hotSheetsCountRes,
@@ -222,13 +235,6 @@ export function useSuccessHubData(): UseSuccessHubDataResult {
         clients30dRes,
         messages30dRes,
       ] = await Promise.all([
-        // Agent profile
-        supabase
-          .from("agent_profiles")
-          .select("first_name,last_name,email,headshot_url,company,title")
-          .eq("id", agentId)
-          .maybeSingle(),
-
         // Unaccepted tokens — NO top-level type/client_id/client_email columns on share_tokens
         // Those fields only exist inside payload JSONB. Filter type in JS.
         supabase
@@ -327,7 +333,6 @@ export function useSuccessHubData(): UseSuccessHubDataResult {
       if (!mountedRef.current || loadIdRef.current !== myLoadId) return;
 
       // Log non-fatal query errors; do not throw
-      logQueryError("agent_profiles", profileRes?.error ?? null);
       logQueryError("share_tokens(unaccepted)", unacceptedTokensRes?.error ?? null);
       logQueryError("hot_sheets(preview)", hotSheetsPreviewRes?.error ?? null);
       logQueryError("hot_sheets(count)", hotSheetsCountRes?.error ?? null);
@@ -343,20 +348,7 @@ export function useSuccessHubData(): UseSuccessHubDataResult {
 
       // ── Derive Wave 1 values ─────────────────────────────────────────────────
 
-      const profileData = profileRes?.data;
-      const profile = profileData
-        ? {
-            first_name: (profileData as any).first_name ?? "",
-            last_name: (profileData as any).last_name ?? "",
-            email:
-              typeof (profileData as any).email === "string"
-                ? (profileData as any).email.trim() || null
-                : null,
-            headshot_url: (profileData as any).headshot_url ?? null,
-            company: (profileData as any).company ?? null,
-            title: (profileData as any).title ?? null,
-          }
-        : null;
+      const profile = resolvedProfile;
 
       // Pending invite tokens: filter by payload.type in JS (no top-level type column)
       const unacceptedTokens = (unacceptedTokensRes?.data ?? []) as any[];

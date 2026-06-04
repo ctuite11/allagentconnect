@@ -26,6 +26,7 @@ import { toast } from "sonner";
 import { BuyerAgentShowcase } from "./BuyerAgentShowcase";
 import { BuyerCompensationInfoModal } from "./BuyerCompensationInfoModal";
 import { useAuthRole } from "@/hooks/useAuthRole";
+import { buildMessageReturnState, messagesPathForRole } from "@/lib/messageNavigation";
 import { findOrCreateConversation } from "@/lib/startConversation";
 import { syncStickyFromDB } from "@/utils/agentTracking";
 import { supabase } from "@/integrations/supabase/client";
@@ -63,7 +64,9 @@ export const PropertyDetailRightColumn = ({ listing, agent, isAgentView, stats }
         listingId: listing?.id ?? null,
       });
       if (convoId) {
-        navigate(`/messages/${convoId}`);
+        navigate(messagesPathForRole(convoId, role), {
+          state: buildMessageReturnState(location.pathname, location.search),
+        });
       } else {
         toast.error("Couldn't start message. Please try again.");
       }
@@ -403,7 +406,9 @@ export const PropertyDetailRightColumn = ({ listing, agent, isAgentView, stats }
         listingId: listing?.id ?? null,
       });
       if (!convId) throw new Error("No conversation id returned");
-      navigate(`/messages/${convId}`);
+      navigate(messagesPathForRole(convId, role), {
+        state: buildMessageReturnState(location.pathname, location.search),
+      });
     } catch {
       toast.error("Couldn't start a message. Please try again.");
     } finally {

@@ -17,14 +17,15 @@ export const RouteGuard: React.FC<Props> = ({
   children,
   requireAuth = true,
   requireRole,
-  requireVerified = false,
+  /** Agent routes require verified license status unless explicitly disabled. */
+  requireVerified = true,
 }) => {
   const { user, role, loading, isAdmin, isVerifiedAgent } = useAuthRole();
   const location = useLocation();
   const navigate = useNavigate();
 
   // Admins bypass all agent verification checks
-  const shouldVerify = requireRole === "agent" && !isAdmin ? (requireVerified !== false) : false;
+  const shouldVerify = requireRole === "agent" && !isAdmin && requireVerified;
 
   const [verificationChecked, setVerificationChecked] = useState(!shouldVerify);
   const [isVerified, setIsVerified] = useState(false);

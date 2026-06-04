@@ -123,6 +123,17 @@ function useAuthRoleStore(): AuthRoleState {
     };
   }, [loadRoleForUser]);
 
+  // Re-resolve role after admin approval while the tab stays open (e.g. pending → verified).
+  useEffect(() => {
+    const onFocus = () => {
+      if (user?.id && role === "agent" && !isVerifiedAgent) {
+        void loadRoleForUser(user.id);
+      }
+    };
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
+  }, [user?.id, role, isVerifiedAgent, loadRoleForUser]);
+
   return useMemo(
     () => ({ user, role, loading, isAdmin, isVerifiedAgent }),
     [user, role, loading, isAdmin, isVerifiedAgent],

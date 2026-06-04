@@ -104,6 +104,9 @@ verify_jwt = false
 [functions.accept-buyer-workspace-invite]
 verify_jwt = false
 
+[functions.accept-client-hot-sheet-invite]
+verify_jwt = false
+
 [functions.resend-buyer-workspace-invite]
 verify_jwt = false
 

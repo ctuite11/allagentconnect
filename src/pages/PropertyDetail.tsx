@@ -78,6 +78,7 @@ import FavoriteButton from "@/components/FavoriteButton";
 import PropertyMap from "@/components/PropertyMap";
 import { getListingPublicUrl, getListingShareUrl } from "@/lib/getPublicUrl";
 import { parseDisclosures, cleanBrokerComments, isEmptyValue } from "@/lib/listingFieldParsers";
+import { buildMessageReturnState, messagesPathForRole } from "@/lib/messageNavigation";
 import { findOrCreateConversation } from "@/lib/startConversation";
 import {
   DropdownMenu,
@@ -332,7 +333,9 @@ const PropertyDetail = () => {
         listingId: listing?.id ?? null,
       });
       if (convoId) {
-        navigate(`/messages/${convoId}`);
+        navigate(messagesPathForRole(convoId, role), {
+          state: buildMessageReturnState(location.pathname, location.search),
+        });
       } else {
         toast.error("Couldn't start message. Please try again.");
       }

@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { useAgentPresence } from "@/hooks/useAgentPresence";
 import { useConversationThreads } from "@/hooks/useConversationThreads";
@@ -64,7 +64,9 @@ function MessagingWorkspaceContent({
   isBuyerMode = false,
 }: MessagingWorkspaceProps) {
   const navigate = useNavigate();
+  const location = useLocation();
   const { id: routeConversationId } = useParams<{ id: string }>();
+  const messageReturnPath = (location.state as { from?: string } | null)?.from;
   const selectedConversationId =
     typeof routeConversationId === "string"
       ? routeConversationId.trim() || undefined
@@ -119,7 +121,7 @@ function MessagingWorkspaceContent({
             {!buyerMode ? (
               <AgentPageHeader
                 withTopPadding
-                backTo="/agent-dashboard"
+                backTo={messageReturnPath ?? "/agent-dashboard"}
                 title="Messages"
                 subtitle="Conversation threads with clients and colleagues — same rhythm as inbox cards on Success Hub."
                 className="shrink-0"
