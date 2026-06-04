@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -118,19 +119,45 @@ export function NewConversationDialog({
     void fetchRecipients();
   }, [open, fetchRecipients]);
 
-  // Buyer inbox: fixed roster — default to agent when available.
+  // Buyer favorites — preload on open so we know whether listing context is available.
   useEffect(() => {
-    if (composeVariant !== "buyer" || !open || loading) return;
+    if (!open || composeVariant !== "buyer") return;
 
-    const agent = recipients.find((r) => r.group === "agent");
-    if (agent) {
-      setSelectedRecipient(agent);
-      return;
-    }
-    if (recipients.length === 1) {
-      setSelectedRecipient(recipients[0]);
-    }
-  }, [composeVariant, open, loading, recipients]);
+    let cancelled = false;
+    void (async () => {
+      setLoadingRecentListings(true);
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (!user || cancelled) return;
+
+        const { data: favs } = await supabase
+          .from("favorites")
+          .select("listing_id")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false })
+          .limit(12);
+        const ids = [...new Set((favs ?? []).map((f: { listing_id: string }) => f.listing_id).filter(Boolean))];
+        if (ids.length === 0) {
+          if (!cancelled) setRecentListings([]);
+          return;
+        }
+        const { data: rows } = await supabase
+          .from("listings")
+          .select("id, address, city, state")
+          .in("id", ids)
+          .limit(12);
+        if (!cancelled) setRecentListings(rows ?? []);
+      } finally {
+        if (!cancelled) setLoadingRecentListings(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [open, composeVariant]);
 
   // Search listings
   useEffect(() => {
@@ -159,9 +186,10 @@ export function NewConversationDialog({
     return () => clearTimeout(timer);
   }, [listingSearch, listingContext]);
 
-  // Recent listings for "About a listing" (seller's inventory or buyer favorites)
+  // Recent listings for agent compose, or buyer "About a listing" picker.
   useEffect(() => {
     if (!open || listingContext !== "listing") return;
+    if (composeVariant === "buyer") return;
 
     let cancelled = false;
     void (async () => {
@@ -171,27 +199,6 @@ export function NewConversationDialog({
           data: { user },
         } = await supabase.auth.getUser();
         if (!user || cancelled) return;
-
-        if (composeVariant === "buyer") {
-          const { data: favs } = await supabase
-            .from("favorites")
-            .select("listing_id")
-            .eq("user_id", user.id)
-            .order("created_at", { ascending: false })
-            .limit(12);
-          const ids = [...new Set((favs ?? []).map((f: { listing_id: string }) => f.listing_id).filter(Boolean))];
-          if (ids.length === 0) {
-            if (!cancelled) setRecentListings([]);
-            return;
-          }
-          const { data: rows } = await supabase
-            .from("listings")
-            .select("id, address, city, state")
-            .in("id", ids)
-            .limit(12);
-          if (!cancelled) setRecentListings(rows ?? []);
-          return;
-        }
 
         const { data: rows } = await supabase
           .from("listings")
@@ -237,10 +244,18 @@ export function NewConversationDialog({
   const agentRecipients = filteredRecipients.filter((r) => r.group === "agent");
   const buyerRecipients = filteredRecipients.filter((r) => r.group === "client");
   const sharedRecipients = filteredRecipients.filter((r) => r.group === "shared");
+  const buyerAgent = agentRecipients[0] ?? null;
+  const buyerHasConnectedGroup = sharedRecipients.length > 0;
+  const buyerCanLinkListing = recentListings.length > 0;
 
   const handleSend = async () => {
-    if (!selectedRecipient) {
-      toast.error("Please select a recipient");
+    const sendRecipient = composeVariant === "buyer" ? buyerAgent : selectedRecipient;
+    if (!sendRecipient) {
+      toast.error(
+        composeVariant === "buyer"
+          ? "Your agent is not linked yet. Finish setup with your agent to send messages."
+          : "Please select a recipient",
+      );
       return;
     }
     if (!message.trim()) {
@@ -260,7 +275,7 @@ export function NewConversationDialog({
       const listingId = listingContext === "listing" ? selectedListing?.id : null;
       const conversationId = await findOrCreateConversation(
         user.id,
-        selectedRecipient.id,
+        sendRecipient.id,
         { listingId: listingId ?? null }
       );
 
@@ -269,7 +284,7 @@ export function NewConversationDialog({
       const { error } = await supabase.from("conversation_messages").insert({
         conversation_id: conversationId,
         sender_agent_id: user.id,
-        recipient_agent_id: selectedRecipient.id,
+        recipient_agent_id: sendRecipient.id,
         body: message.trim(),
       });
 
@@ -313,10 +328,15 @@ export function NewConversationDialog({
   };
 
   const canSend =
-    Boolean(selectedRecipient) &&
-    message.trim().length > 0 &&
-    !(listingContext === "listing" && !selectedListing) &&
-    !sending;
+    composeVariant === "buyer"
+      ? Boolean(buyerAgent) &&
+        message.trim().length > 0 &&
+        !(listingContext === "listing" && !selectedListing) &&
+        !sending
+      : Boolean(selectedRecipient) &&
+        message.trim().length > 0 &&
+        !(listingContext === "listing" && !selectedListing) &&
+        !sending;
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -355,51 +375,187 @@ export function NewConversationDialog({
       <DialogContent className="max-w-lg max-h-[85vh] overflow-hidden p-0 bg-white">
         <div className="p-6 pb-0">
           <DialogHeader>
-            <DialogTitle className="text-xl font-semibold text-zinc-900 flex items-center gap-2.5">
-              <AACMonogram className="h-8 w-8 shrink-0 text-[#50C878]" size={32} />
-              <span>New Chat</span>
-            </DialogTitle>
+            {composeVariant === "buyer" ? (
+              <>
+                <DialogTitle className="text-xl font-semibold text-zinc-900">New message</DialogTitle>
+                <DialogDescription className="text-sm text-zinc-500">
+                  Send a message to your agent.
+                </DialogDescription>
+              </>
+            ) : (
+              <DialogTitle className="flex items-center gap-2.5 text-xl font-semibold text-zinc-900">
+                <AACMonogram className="h-8 w-8 shrink-0 text-[#50C878]" size={32} />
+                <span>New Chat</span>
+              </DialogTitle>
+            )}
           </DialogHeader>
         </div>
 
-        <div className="p-6 pt-4 space-y-4 overflow-y-auto max-h-[calc(85vh-80px)]">
+        <div className="max-h-[calc(85vh-80px)] space-y-4 overflow-y-auto p-6 pt-4">
+          {composeVariant === "buyer" ? (
+            <>
+              <div className="space-y-1 border-b border-zinc-100 pb-4">
+                {loading ? (
+                  <div className="flex items-center justify-center py-4">
+                    <AacMonogramLoader variant="inline" hideMessage className="min-h-0 gap-0 py-0" />
+                  </div>
+                ) : buyerAgent ? (
+                  <>
+                    <p className="text-sm text-zinc-700">
+                      <span className="font-medium text-zinc-500">To: </span>
+                      {buyerAgent.name}
+                    </p>
+                    <p className="text-xs font-medium uppercase tracking-wide text-zinc-400">AAC Agent</p>
+                    {buyerAgent.email ? (
+                      <p className="text-xs text-zinc-400">{buyerAgent.email}</p>
+                    ) : null}
+                    {buyerHasConnectedGroup ? (
+                      <p className="pt-2 text-xs leading-relaxed text-zinc-500">
+                        Messages are shared with your agent and connected search group.
+                      </p>
+                    ) : null}
+                  </>
+                ) : (
+                  <p className="text-sm text-zinc-500">
+                    Your agent is not linked yet. Finish setup with your agent to send messages.
+                  </p>
+                )}
+              </div>
+
+              {buyerCanLinkListing ? (
+                <>
+                  <div className="space-y-3">
+                    <Label className="text-sm font-medium text-zinc-700">Context</Label>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setListingContext("general");
+                          setSelectedListing(null);
+                        }}
+                        className={cn(
+                          "flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-colors bg-white hover:border-neutral-300 hover:bg-neutral-50",
+                          listingContext === "general"
+                            ? "border-[#0E56F5] text-[#0E56F5]"
+                            : "border-neutral-200 text-neutral-600",
+                        )}
+                      >
+                        <MessageSquare
+                          className={cn(
+                            "h-4 w-4 shrink-0",
+                            listingContext === "general" ? "text-[#0E56F5]" : "text-neutral-500",
+                          )}
+                        />
+                        General
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setListingContext("listing")}
+                        className={cn(
+                          "flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-colors bg-white hover:border-neutral-300 hover:bg-neutral-50",
+                          listingContext === "listing"
+                            ? "border-[#0E56F5] text-[#0E56F5]"
+                            : "border-neutral-200 text-neutral-600",
+                        )}
+                      >
+                        <Building2
+                          className={cn(
+                            "h-4 w-4 shrink-0",
+                            listingContext === "listing" ? "text-[#0E56F5]" : "text-neutral-500",
+                          )}
+                        />
+                        About a listing
+                      </button>
+                    </div>
+                  </div>
+
+                  {listingContext === "listing" ? (
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-zinc-700">Listing</Label>
+                      {selectedListing ? (
+                        <div className="flex w-full items-center gap-2 rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2">
+                          <Building2 className="h-4 w-4 shrink-0 text-zinc-500" />
+                          <span className="min-w-0 flex-1 truncate text-sm text-zinc-700">
+                            {selectedListing.address}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setSelectedListing(null)}
+                            className="shrink-0 text-zinc-400 hover:text-zinc-600"
+                            aria-label="Clear listing"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="space-y-1">
+                          <p className="px-1 text-xs text-zinc-500">Your favorites</p>
+                          <div className="max-h-[140px] overflow-y-auto rounded-lg border border-zinc-200">
+                            {recentListings.map((l) => (
+                              <button
+                                type="button"
+                                key={l.id}
+                                onClick={() =>
+                                  setSelectedListing({
+                                    id: l.id,
+                                    address: [l.address, l.city, l.state].filter(Boolean).join(", "),
+                                  })
+                                }
+                                className="flex w-full items-center gap-2 border-b border-zinc-100 px-3 py-2 text-left text-sm last:border-b-0 hover:bg-zinc-50"
+                              >
+                                <Building2 className="h-4 w-4 shrink-0 text-zinc-400" />
+                                <span className="truncate text-zinc-700">
+                                  {l.address}, {l.city}, {l.state}
+                                </span>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : null}
+                </>
+              ) : null}
+
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-zinc-700">Message</Label>
+                <Textarea
+                  ref={messageRef}
+                  value={message}
+                  onChange={(e) => {
+                    setMessage(e.target.value);
+                    requestAnimationFrame(() => resizeMessageArea());
+                  }}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Type your message..."
+                  rows={3}
+                  autoFocus
+                  className="min-h-[5rem] max-h-[10rem] w-full resize-none overflow-y-auto"
+                />
+              </div>
+
+              <div className="flex justify-end pt-2">
+                <Button
+                  type="button"
+                  onClick={() => void handleSend()}
+                  disabled={!canSend}
+                  className="bg-[#0E56F5] text-white hover:bg-[#0C4ED1] disabled:pointer-events-auto disabled:cursor-not-allowed disabled:bg-neutral-200 disabled:text-neutral-500 disabled:opacity-100 disabled:hover:bg-neutral-200"
+                >
+                  {sending ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Send className="mr-2 h-4 w-4" />
+                  )}
+                  Send Message
+                </Button>
+              </div>
+            </>
+          ) : (
+            <>
           {/* Recipient */}
           <div className="space-y-3">
             <Label className="text-sm font-medium text-zinc-700">To</Label>
-            {composeVariant === "buyer" ? (
-              loading ? (
-                <div className="flex items-center justify-center py-6">
-                  <AacMonogramLoader variant="inline" hideMessage className="min-h-0 gap-0 py-0" />
-                </div>
-              ) : (
-                <ScrollArea className="max-h-[220px]">
-                  <div className="space-y-1">
-                    {agentRecipients.length > 0 && (
-                      <>
-                        <p className="px-2 pt-2 text-xs font-semibold uppercase tracking-wider text-zinc-400">
-                          Your agent
-                        </p>
-                        {agentRecipients.map(renderRecipientRow)}
-                      </>
-                    )}
-                    {sharedRecipients.length > 0 && (
-                      <>
-                        <p className="px-2 pt-3 text-xs font-semibold uppercase tracking-wider text-zinc-400">
-                          People you added
-                        </p>
-                        {sharedRecipients.map(renderRecipientRow)}
-                      </>
-                    )}
-                    {agentRecipients.length === 0 && sharedRecipients.length === 0 && (
-                      <p className="px-2 py-6 text-center text-sm text-zinc-400">
-                        No one to message yet. Finish setup with your agent or use Add a friend on your
-                        dashboard to invite someone to your search.
-                      </p>
-                    )}
-                  </div>
-                </ScrollArea>
-              )
-            ) : selectedRecipient ? (
+            {selectedRecipient ? (
               <div className="flex items-center gap-2">
                 <div className="inline-flex items-center gap-2 bg-zinc-100 rounded-full px-3 py-1.5 max-w-full">
                   <User className="w-3.5 h-3.5 text-zinc-500 shrink-0" />
@@ -632,6 +788,8 @@ export function NewConversationDialog({
               Send Message
             </Button>
           </div>
+            </>
+          )}
         </div>
       </DialogContent>
     </Dialog>
