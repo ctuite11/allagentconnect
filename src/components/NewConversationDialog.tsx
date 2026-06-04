@@ -412,8 +412,11 @@ export function NewConversationDialog({
           <DialogHeader>
             {composeVariant === "buyer" ? (
               <>
-                <DialogTitle className="text-xl font-semibold text-zinc-900">New message</DialogTitle>
-                <DialogDescription className="text-sm text-zinc-500">
+                <DialogTitle className="flex items-center gap-2.5 text-xl font-semibold text-zinc-900">
+                  <AACMonogram className="h-8 w-8 shrink-0 text-[#22C55E]" size={32} />
+                  <span>New Message</span>
+                </DialogTitle>
+                <DialogDescription className="pl-[42px] text-sm text-zinc-500">
                   Send a message to your agent.
                 </DialogDescription>
               </>
