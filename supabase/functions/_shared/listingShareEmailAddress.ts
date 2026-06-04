@@ -93,6 +93,11 @@ function buildDisplayAddress(listing: ListingEmailAddressSource): string {
   return toTitleCase(base);
 }
 
+/** Full formatted address (street + unit + city/state/zip) for compact listing cards. */
+export function formatListingShareEmailFullAddress(listing: ListingEmailAddressSource): string {
+  return buildDisplayAddress(listing);
+}
+
 /** Street + unit only (no city/state/zip) for email card address lines. */
 export function formatListingShareEmailStreetLine(listing: ListingEmailAddressSource): string {
   const full = buildDisplayAddress(listing);

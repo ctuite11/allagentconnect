@@ -1,6 +1,6 @@
 import type { Handler, HandlerEvent, HandlerContext } from "@netlify/functions";
 import { createClient } from "@supabase/supabase-js";
-import { renderListingEmailCard } from "./listingEmailCard";
+import { renderCompactListingEmailCard } from "./listingEmailCard";
 
 interface EmailJob {
   id: string;
@@ -204,7 +204,7 @@ function renderEmailTemplate(template: string, variables: Record<string, any>): 
         const listingHref = listingPath.startsWith("http")
           ? listingPath
           : `${appUrl}${listingPath.startsWith("/") ? listingPath : `/${listingPath}`}`;
-        listingCardHtml = renderListingEmailCard(listing, {
+        listingCardHtml = renderCompactListingEmailCard(listing, {
           baseUrl: appUrl,
           listingUrl: listingHref,
           ctaLabel: "View listing",

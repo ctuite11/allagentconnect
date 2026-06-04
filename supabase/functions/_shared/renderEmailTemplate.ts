@@ -5,7 +5,7 @@
 
 import { buildAacEmail } from "./aacEmailTemplate.ts";
 import { formatListingShareEmailStreetLine } from "./listingShareEmailAddress.ts";
-import { renderListingEmailCard } from "./listingEmailCard.ts";
+import { renderCompactListingEmailCard, renderListingEmailCard } from "./listingEmailCard.ts";
 
 /* ------------------------------------------------------------------ */
 /*  Shared helpers for Share Listings emails                           */
@@ -308,7 +308,7 @@ export function renderEmailTemplate(
         const listingHref = listingPath.startsWith("http")
           ? listingPath
           : `${appUrl}${listingPath.startsWith("/") ? listingPath : `/${listingPath}`}`;
-        listingCardHtml = renderListingEmailCard(listing, {
+        listingCardHtml = renderCompactListingEmailCard(listing, {
           baseUrl: appUrl,
           listingUrl: listingHref,
           ctaLabel: "View listing",
