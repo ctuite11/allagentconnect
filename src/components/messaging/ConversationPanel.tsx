@@ -11,6 +11,7 @@ import { MessageComposer } from "./MessageComposer";
 import { UserAvatar } from "./UserAvatar";
 import { isSameDay, formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
+import { showMessageSentToast } from "@/lib/messageSentFeedback";
 
 interface ConversationPanelProps {
   conversationId: string | undefined;
@@ -213,7 +214,10 @@ export function ConversationPanel({
     <MessageComposer
       onSend={async (body) => {
         const ok = await sendMessage(body);
-        if (ok) onInboxInvalidate?.();
+        if (ok) {
+          onInboxInvalidate?.();
+          showMessageSentToast();
+        }
         return ok;
       }}
       sending={sending}

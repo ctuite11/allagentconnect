@@ -5,6 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Send } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { sendListingConversationMessage } from "@/lib/sendListingConversationMessage";
+import { showMessageSentToast } from "@/lib/messageSentFeedback";
 import { syncHotSheetCommentPreview } from "@/lib/syncHotSheetCommentPreview";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -109,6 +110,8 @@ const ListingChatDrawer = ({
           toast.error(("message" in sent && sent.message) || "Failed to send message");
           return;
         }
+
+        showMessageSentToast();
 
         const sheetAgentId = (
           hotSheetAgentUserId?.trim() ||

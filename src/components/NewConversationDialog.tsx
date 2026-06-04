@@ -15,6 +15,7 @@ import { Send, Search, User, Loader2, Building2, MessageSquare } from "lucide-re
 import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 import { supabase } from "@/integrations/supabase/client";
 import { findOrCreateConversation } from "@/lib/startConversation";
+import { showMessageSentToast } from "@/lib/messageSentFeedback";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import AACMonogram from "@/components/ui/AACMonogram";
@@ -294,7 +295,7 @@ export function NewConversationDialog({
       supabase.functions.invoke("kick-email-queue").catch(() => {});
 
       onConversationCreated?.();
-      toast.success("Message sent!");
+      showMessageSentToast();
       handleClose();
       const base = messagesRouteBase.replace(/\/$/, "");
       navigate(`${base}/${conversationId}`);
