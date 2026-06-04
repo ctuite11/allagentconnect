@@ -22,6 +22,8 @@ import { fetchBuyerMessageRecipients } from "@/lib/fetchBuyerMessageRecipients";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import AACMonogram from "@/components/ui/AACMonogram";
+import { useAgentLastSeen } from "@/hooks/useAgentLastSeen";
+import { formatDistanceToNow } from "date-fns";
 
 interface Recipient {
   id: string;
@@ -65,6 +67,11 @@ export function NewConversationDialog({
   >([]);
   const [loadingRecentListings, setLoadingRecentListings] = useState(false);
   const messageRef = useRef<HTMLTextAreaElement | null>(null);
+  const [buyerAgentProfile, setBuyerAgentProfile] = useState<{
+    headshot_url: string | null;
+    company: string | null;
+    office_city: string | null;
+  } | null>(null);
 
   const fetchRecipients = useCallback(async () => {
     setLoading(true);
@@ -247,6 +254,34 @@ export function NewConversationDialog({
   const buyerAgent = agentRecipients[0] ?? null;
   const buyerHasConnectedGroup = sharedRecipients.length > 0;
   const buyerCanLinkListing = recentListings.length > 0;
+  const buyerAgentPresence = useAgentLastSeen(
+    composeVariant === "buyer" ? buyerAgent?.id : undefined,
+  );
+
+  // Pull richer profile fields (headshot, brokerage, city) for the buyer's agent card.
+  useEffect(() => {
+    if (composeVariant !== "buyer" || !open || !buyerAgent?.id) {
+      setBuyerAgentProfile(null);
+      return;
+    }
+    let cancelled = false;
+    void (async () => {
+      const { data } = await supabase
+        .from("agent_profiles")
+        .select("headshot_url, company, office_city")
+        .eq("id", buyerAgent.id)
+        .maybeSingle();
+      if (cancelled) return;
+      setBuyerAgentProfile({
+        headshot_url: data?.headshot_url ?? null,
+        company: data?.company ?? null,
+        office_city: data?.office_city ?? null,
+      });
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [composeVariant, open, buyerAgent?.id]);
 
   const handleSend = async () => {
     const sendRecipient = composeVariant === "buyer" ? buyerAgent : selectedRecipient;
