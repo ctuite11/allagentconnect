@@ -154,12 +154,13 @@ serve(async (req) => {
         continue;
       }
 
+      const appBaseUrl = Deno.env.get("APP_BASE_URL") || Deno.env.get("SITE_URL") || "http://localhost:5173";
+
       // Build listings HTML
       const listingsHtml = listings
         .map((listing: any) => renderListingEmailCard(listing, { baseUrl: appBaseUrl }))
         .join("");
 
-      const appBaseUrl = Deno.env.get("APP_BASE_URL") || Deno.env.get("SITE_URL") || "http://localhost:5173";
       let queuedForHotSheet = 0;
 
       for (const recipient of acceptedRecipients) {
