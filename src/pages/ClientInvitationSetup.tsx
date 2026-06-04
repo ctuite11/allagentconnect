@@ -6,12 +6,12 @@ import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { CheckCircle2, Loader2, Check, ShieldCheck, Heart, Flame, MessageSquare, Eye } from "lucide-react";
+import { Loader2, Check, ShieldCheck, Heart, Flame, MessageSquare, Eye } from "lucide-react";
 import { setPrimaryAgentId } from "@/utils/agentTracking";
 import { validatePassword } from "@/lib/passwordPolicy";
 import AACMonogram from "@/components/ui/AACMonogram";
 import { AacMonogramLoader } from "@/components/AacMonogramLoader";
-import { upsertBuyerProfile } from "@/lib/buyerProfile";
+import { acceptClientHotSheetInvite } from "@/lib/acceptClientHotSheetInvite";
 
 /** Authoritative invite context from `share_tokens` (token string alone is not enough — query params can be tampered). */
 type InviteAnchor = {
@@ -34,7 +34,7 @@ const ClientInvitationSetup = () => {
   const initialFirstName = searchParams.get("first_name") || "";
   const initialLastName = searchParams.get("last_name") || "";
 
-  const [phase, setPhase] = useState<"form" | "signin" | "success">("form");
+  const [phase, setPhase] = useState<"form" | "signin" | "confirmation_required">("form");
   const [email, setEmail] = useState(initialEmail);
   const [firstName, setFirstName] = useState(initialFirstName);
   const [lastName, setLastName] = useState(initialLastName);
@@ -51,88 +51,66 @@ const ClientInvitationSetup = () => {
     Boolean(initialEmail.trim()) || Boolean(inviteAnchor?.clientEmail?.trim());
   const postAcceptPath = "/client/dashboard";
 
-  const effectiveAgentId = inviteAnchor?.agentId || agentId;
-  const effectiveCrmClientId = (inviteAnchor?.crmClientId || clientId || "").trim() || undefined;
-
   const markInviteHandoff = () => {
     if (typeof window === "undefined") return;
     sessionStorage.setItem("aac_invite_acceptance_handoff", String(Date.now()));
   };
 
-  const ensureBuyerSession = async (normalizedEmail: string, plainPassword: string, expectedUserId?: string) => {
-    let { data: { session } } = await supabase.auth.getSession();
-
-    if (!session?.user) {
-      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-        email: normalizedEmail,
-        password: plainPassword,
-      });
-      if (signInError || !signInData.user) {
-        throw new Error("Your account was created, but we could not sign you in automatically. Please sign in to complete invite acceptance.");
-      }
-      session = signInData.session;
+  const finalizeInviteAndSignIn = async (
+    plainPassword: string,
+    opts: { existingAccount: boolean },
+  ) => {
+    const normalizedEmail = email.trim().toLowerCase();
+    if (inviteAnchor?.clientEmail && normalizedEmail !== inviteAnchor.clientEmail) {
+      throw new Error("Use the same email address your agent sent this invitation to.");
+    }
+    if (!invitationToken) {
+      throw new Error("Invitation token is missing. Open the link from your invitation email.");
+    }
+    if (!firstName.trim() || !lastName.trim()) {
+      throw new Error("Please enter your first and last name.");
     }
 
-    if (!session?.user) {
-      throw new Error("We could not establish your buyer session. Please try again.");
-    }
+    await supabase.auth.signOut();
 
-    if (expectedUserId && session.user.id !== expectedUserId) {
-      throw new Error("Session mismatch detected. Please sign out and retry your invitation link.");
-    }
-
-    return session.user.id;
-  };
-
-  const ensureActiveRelationship = async (userId: string, invitingAgentId: string, crmClientId?: string) => {
-    const { data: rpcResult, error: relationshipError } = await supabase.rpc("activate_agent_relationship", {
-      _agent_id: invitingAgentId,
-      _crm_client_id: crmClientId || null,
+    const result = await acceptClientHotSheetInvite({
+      token: invitationToken,
+      email: normalizedEmail,
+      firstName: firstName.trim(),
+      lastName: lastName.trim(),
+      password: plainPassword,
+      existingAccount: opts.existingAccount,
     });
-    if (relationshipError) {
-      console.error("Relationship activation error:", relationshipError);
-      const backendError = [
-        relationshipError.code,
-        relationshipError.message,
-        relationshipError.details,
-        relationshipError.hint,
-      ]
-        .filter(Boolean)
-        .join(" | ");
-      if (import.meta.env.DEV && backendError) {
-        throw new Error(`We could not attach your inviting agent to this account. (${backendError})`);
+
+    if (!result.ok) {
+      if (result.code === "existing_account") {
+        setPhase("signin");
+        return;
       }
-      throw new Error("We could not attach your inviting agent to this account. Please try again.");
+      throw new Error(result.error);
     }
 
-    const { data: relationshipCheck, error: relationshipCheckError } = await supabase
-      .from("client_agent_relationships")
-      .select("id")
-      .eq("client_id", userId)
-      .eq("agent_id", invitingAgentId)
-      .eq("status", "active")
-      .maybeSingle();
+    if (result.agentId) setPrimaryAgentId(result.agentId);
 
-    if (relationshipCheckError) {
-      console.error("Relationship verification error:", relationshipCheckError);
-      const verificationError = [
-        relationshipCheckError.code,
-        relationshipCheckError.message,
-        relationshipCheckError.details,
-        relationshipCheckError.hint,
-      ]
-        .filter(Boolean)
-        .join(" | ");
-      if (import.meta.env.DEV && verificationError) {
-        throw new Error(`Invite accepted, but we could not verify your agent relationship. (${verificationError})`);
+    const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+      email: normalizedEmail,
+      password: plainPassword,
+    });
+
+    if (signInError || !signInData.user) {
+      const msg = signInError?.message?.toLowerCase() ?? "";
+      if (msg.includes("email not confirmed") || msg.includes("confirm")) {
+        setPhase("confirmation_required");
+        return;
       }
-      throw new Error("Invite accepted, but we could not verify your agent relationship. Please retry this invite link.");
+      throw new Error(
+        signInError?.message ||
+          "Your account is ready, but we could not sign you in automatically. Try signing in from the login page.",
+      );
     }
-    if (!relationshipCheck) {
-      if (!rpcResult) {
-        throw new Error("Invite accepted, but your agent relationship was not activated. Please retry this invite link.");
-      }
-    }
+
+    markInviteHandoff();
+    navigate(postAcceptPath, { replace: true });
   };
 
   useEffect(() => {
@@ -271,77 +249,7 @@ const ClientInvitationSetup = () => {
 
     setIsSubmitting(true);
     try {
-      // Always clear any existing session before buyer sign-up.
-      // This prevents an agent/admin session from contaminating the buyer activation flow.
-      await supabase.auth.signOut();
-
-      const normalizedEmail = email.trim().toLowerCase();
-      if (inviteAnchor?.clientEmail && normalizedEmail !== inviteAnchor.clientEmail) {
-        toast.error("Use the same email address your agent sent this invitation to.");
-        return;
-      }
-
-      const { data: authData, error: signUpError } = await supabase.auth.signUp({
-        email: normalizedEmail,
-        password,
-        options: {
-          emailRedirectTo: `${window.location.origin}${postAcceptPath}`,
-        },
-      });
-
-      if (signUpError) {
-        if (signUpError.message.toLowerCase().includes("already")) {
-          // Account exists — stay on buyer-branded page, switch to sign-in phase
-          setPhase("signin");
-          return;
-        }
-        throw signUpError;
-      }
-
-      // Supabase returns a user with empty identities when email already exists.
-      if (authData?.user && authData.user.identities?.length === 0) {
-        // Account exists — stay on buyer-branded page, switch to sign-in phase
-        setPhase("signin");
-        return;
-      }
-
-      if (!authData.user) throw new Error("Account creation failed");
-
-      const userId = await ensureBuyerSession(normalizedEmail, password, authData.user.id);
-
-      const { error: profileError } = await upsertBuyerProfile({
-        userId,
-        email: normalizedEmail,
-        firstName: firstName.trim() || inviteAnchor?.seedFirstName,
-        lastName: lastName.trim() || inviteAnchor?.seedLastName,
-        phone: inviteAnchor?.seedPhone,
-      });
-      if (profileError) throw profileError;
-
-      const { error: roleError } = await supabase
-        .from("user_roles")
-        .insert({ user_id: userId, role: "buyer" });
-      if (roleError) console.error("Error assigning buyer role:", roleError);
-
-      if (!effectiveAgentId) {
-        throw new Error("Invitation is missing agent context. Please request a new invitation link.");
-      }
-      await ensureActiveRelationship(userId, effectiveAgentId, effectiveCrmClientId);
-
-      const { error: tokenUpdateError } = await supabase
-        .from("share_tokens")
-        .update({
-          accepted_at: new Date().toISOString(),
-          accepted_by_user_id: userId,
-        })
-        .eq("token", invitationToken);
-      if (tokenUpdateError) {
-        throw new Error("Your account is ready, but we could not finalize the invite token. Please retry from your invitation email.");
-      }
-
-      if (effectiveAgentId) setPrimaryAgentId(effectiveAgentId);
-
-      setPhase("success");
+      await finalizeInviteAndSignIn(password, { existingAccount: false });
     } catch (error: any) {
       console.error("Activation error:", error);
       toast.error(error.message || "Failed to activate account. Please try again.");
@@ -358,52 +266,7 @@ const ClientInvitationSetup = () => {
     }
     setIsSubmitting(true);
     try {
-      // Ensure clean slate — clear any admin/agent session
-      await supabase.auth.signOut();
-
-      const normalizedEmail = email.trim().toLowerCase();
-      if (inviteAnchor?.clientEmail && normalizedEmail !== inviteAnchor.clientEmail) {
-        toast.error("Sign in with the email address your invitation was sent to.");
-        return;
-      }
-
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: normalizedEmail,
-        password: signinPassword,
-      });
-      if (error) throw error;
-      if (!data.user) throw new Error("Sign in failed — please try again.");
-
-      const userId = data.user.id;
-
-      const { error: profileError } = await upsertBuyerProfile({
-        userId,
-        email: normalizedEmail,
-        firstName: firstName.trim() || inviteAnchor?.seedFirstName,
-        lastName: lastName.trim() || inviteAnchor?.seedLastName,
-        phone: inviteAnchor?.seedPhone,
-      });
-      if (profileError) throw profileError;
-
-      if (!effectiveAgentId) {
-        throw new Error("Invitation is missing agent context. Please request a new invitation link.");
-      }
-      await ensureActiveRelationship(userId, effectiveAgentId, effectiveCrmClientId);
-
-      const { error: tokenErr } = await supabase
-        .from("share_tokens")
-        .update({
-          accepted_at: new Date().toISOString(),
-          accepted_by_user_id: userId,
-        })
-        .eq("token", invitationToken);
-      if (tokenErr) {
-        throw new Error("Signed in, but we could not finalize the invite token. Please retry from your invitation email.");
-      }
-
-      if (effectiveAgentId) setPrimaryAgentId(effectiveAgentId);
-
-      setPhase("success");
+      await finalizeInviteAndSignIn(signinPassword, { existingAccount: true });
     } catch (error: any) {
       console.error("Sign-in error:", error);
       toast.error(error.message || "Sign in failed. Please check your password and try again.");
@@ -513,29 +376,22 @@ const ClientInvitationSetup = () => {
     );
   }
 
-  if (phase === "success") {
+  if (phase === "confirmation_required") {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white px-4">
         <div className="max-w-md w-full text-center space-y-6">
-          <div className="flex justify-center">
-            <div className="rounded-full bg-emerald-50 p-4">
-              <CheckCircle2 className="h-10 w-10 text-emerald-600" />
-            </div>
-          </div>
+          <AACMonogram className="w-10 h-10 mx-auto text-[#0E56F5]" />
           <div className="space-y-2">
-            <h1 className="text-3xl font-semibold tracking-tight text-zinc-900">You're In</h1>
-            <p className="text-sm text-zinc-500 max-w-sm mx-auto">
-              Your All Agent Connect account is active and connected to your inviting agent.
+            <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">
+              Confirm Your Email
+            </h1>
+            <p className="text-sm text-zinc-500">
+              Your buyer account was created, but email confirmation is still required before you can sign in.
+              Check <strong className="text-zinc-700">{email}</strong> for a confirmation link, then return here to sign in.
             </p>
           </div>
-          <Button
-            onClick={() => {
-              markInviteHandoff();
-              navigate(postAcceptPath, { replace: true });
-            }}
-            className="h-11 px-6 rounded-xl bg-[#0E56F5] hover:bg-[#0B47CC]"
-          >
-            Go to My Workspace
+          <Button onClick={() => navigate("/auth")} variant="outline" className="rounded-xl">
+            Go to Sign In
           </Button>
         </div>
       </div>

@@ -98,6 +98,17 @@ export default function BuyersList() {
 
       const relRows = (relationships ?? []) as any[];
 
+      const activeLinkedCrmIds = new Set<string>();
+      for (const r of relRows) {
+        const linked =
+          String(r.status) === "active" &&
+          r.client_id != null &&
+          String(r.client_id).trim() !== "";
+        if (!linked) continue;
+        const crmId = r.crm_client_id != null ? String(r.crm_client_id).trim() : "";
+        if (crmId) activeLinkedCrmIds.add(crmId);
+      }
+
       // Also include any buyer who is a member of one of this agent's hot sheets
       // (parity with Success Hub which unions relationships ∪ hot_sheet_clients).
       const { data: agentSheets, error: sheetsErr } = await (supabase as any)
@@ -142,7 +153,7 @@ export default function BuyersList() {
         if ((t as any).accepted_at) continue;
         if ((t as any).revoked_at) continue;
         const cid = p.client_id != null ? String(p.client_id).trim() : "";
-        if (cid) pendingInviteClientIds.add(cid);
+        if (cid && !activeLinkedCrmIds.has(cid)) pendingInviteClientIds.add(cid);
       }
 
       if (relRows.length === 0 && hscClientIds.length === 0 && pendingInviteClientIds.size === 0) {
@@ -190,12 +201,21 @@ export default function BuyersList() {
         const name = formatBuyerListName(c);
         const buyerWorkspaceLinked =
           String(r.status) === "active" && r.client_id != null && String(r.client_id).trim() !== "";
+        const crmKey = c.id;
+        const hasOutstandingInvite = pendingInviteClientIds.has(crmKey);
+        const displayStatus = buyerWorkspaceLinked
+          ? "active"
+          : hasOutstandingInvite
+            ? "pending"
+            : String(r.status) === "active"
+              ? "active"
+              : "pending";
         rows.push({
           clientId: c.id,
           name,
           email: c?.email ?? "",
           phone: c?.phone ?? null,
-          status: r.status,
+          status: displayStatus,
           buyerWorkspaceLinked,
         });
       }
