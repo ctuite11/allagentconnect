@@ -4257,6 +4257,10 @@ export type Database = {
           listing_id: string
         }[]
       }
+      cleanup_blocking_auth_identity: {
+        Args: { _email: string }
+        Returns: number
+      }
       cleanup_expired_share_tokens: { Args: never; Returns: undefined }
       cleanup_orphan_auth_identity: {
         Args: { _email: string }
