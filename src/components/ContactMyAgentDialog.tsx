@@ -73,8 +73,11 @@ export function ContactMyAgentDialog({
 
     setSending(true);
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const accessToken = sessionData.session?.access_token;
+      // Refresh so the access token is valid for edge-function auth.getUser(jwt).
+      const { data: refreshed } = await supabase.auth.refreshSession();
+      const accessToken =
+        refreshed.session?.access_token ??
+        (await supabase.auth.getSession()).data.session?.access_token;
 
       if (!accessToken) {
         toast({

@@ -92,12 +92,16 @@ serve(async (req) => {
   const authHeader = req.headers.get("Authorization") ?? "";
   if (!authHeader.startsWith("Bearer ")) return json({ success: false, error: "Missing auth token" }, 401);
 
+  const jwt = authHeader.replace("Bearer ", "").trim();
   const supabaseUser = createClient(supabaseUrl, anonKey, {
     global: { headers: { Authorization: authHeader } },
   });
 
-  const { data: userData, error: userErr } = await supabaseUser.auth.getUser();
-  if (userErr || !userData?.user) return json({ success: false, error: "Unauthorized" }, 401);
+  const { data: userData, error: userErr } = await supabaseUser.auth.getUser(jwt);
+  if (userErr || !userData?.user) {
+    console.error("[send-buyer-agent-email] auth.getUser failed:", userErr?.message ?? "no user");
+    return json({ success: false, error: "Unauthorized" }, 401);
+  }
 
   const userId = userData.user.id;
   const buyerEmail = (userData.user.email ?? "").trim();
