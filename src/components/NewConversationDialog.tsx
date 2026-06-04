@@ -22,6 +22,8 @@ import { fetchBuyerMessageRecipients } from "@/lib/fetchBuyerMessageRecipients";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import AACMonogram from "@/components/ui/AACMonogram";
+import { useAgentLastSeen } from "@/hooks/useAgentLastSeen";
+import { formatDistanceToNow } from "date-fns";
 
 interface Recipient {
   id: string;
@@ -65,6 +67,11 @@ export function NewConversationDialog({
   >([]);
   const [loadingRecentListings, setLoadingRecentListings] = useState(false);
   const messageRef = useRef<HTMLTextAreaElement | null>(null);
+  const [buyerAgentProfile, setBuyerAgentProfile] = useState<{
+    headshot_url: string | null;
+    company: string | null;
+    office_city: string | null;
+  } | null>(null);
 
   const fetchRecipients = useCallback(async () => {
     setLoading(true);
@@ -221,9 +228,9 @@ export function NewConversationDialog({
     const el = messageRef.current;
     if (!el) return;
     el.style.height = "auto";
-    const maxPx = 160;
+    const maxPx = composeVariant === "buyer" ? 240 : 160;
     el.style.height = `${Math.min(el.scrollHeight, maxPx)}px`;
-  }, []);
+  }, [composeVariant]);
 
   useEffect(() => {
     if (!open) return;
@@ -247,6 +254,34 @@ export function NewConversationDialog({
   const buyerAgent = agentRecipients[0] ?? null;
   const buyerHasConnectedGroup = sharedRecipients.length > 0;
   const buyerCanLinkListing = recentListings.length > 0;
+  const buyerAgentPresence = useAgentLastSeen(
+    composeVariant === "buyer" ? buyerAgent?.id : undefined,
+  );
+
+  // Pull richer profile fields (headshot, brokerage, city) for the buyer's agent card.
+  useEffect(() => {
+    if (composeVariant !== "buyer" || !open || !buyerAgent?.id) {
+      setBuyerAgentProfile(null);
+      return;
+    }
+    let cancelled = false;
+    void (async () => {
+      const { data } = await supabase
+        .from("agent_profiles")
+        .select("headshot_url, company, office_city")
+        .eq("id", buyerAgent.id)
+        .maybeSingle();
+      if (cancelled) return;
+      setBuyerAgentProfile({
+        headshot_url: data?.headshot_url ?? null,
+        company: data?.company ?? null,
+        office_city: data?.office_city ?? null,
+      });
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [composeVariant, open, buyerAgent?.id]);
 
   const handleSend = async () => {
     const sendRecipient = composeVariant === "buyer" ? buyerAgent : selectedRecipient;
@@ -377,8 +412,11 @@ export function NewConversationDialog({
           <DialogHeader>
             {composeVariant === "buyer" ? (
               <>
-                <DialogTitle className="text-xl font-semibold text-zinc-900">New message</DialogTitle>
-                <DialogDescription className="text-sm text-zinc-500">
+                <DialogTitle className="flex items-center gap-2.5 text-xl font-semibold text-zinc-900">
+                  <AACMonogram className="h-8 w-8 shrink-0 text-[#22C55E]" size={32} />
+                  <span>New Message</span>
+                </DialogTitle>
+                <DialogDescription className="pl-[42px] text-sm text-zinc-500">
                   Send a message to your agent.
                 </DialogDescription>
               </>
@@ -394,128 +432,71 @@ export function NewConversationDialog({
         <div className="max-h-[calc(85vh-80px)] space-y-4 overflow-y-auto p-6 pt-4">
           {composeVariant === "buyer" ? (
             <>
-              <div className="space-y-1 border-b border-zinc-100 pb-4">
+              <div className="rounded-2xl border border-zinc-100 bg-zinc-50/60 p-4">
                 {loading ? (
                   <div className="flex items-center justify-center py-4">
                     <AacMonogramLoader variant="inline" hideMessage className="min-h-0 gap-0 py-0" />
                   </div>
                 ) : buyerAgent ? (
-                  <>
-                    <p className="text-sm text-zinc-700">
-                      <span className="font-medium text-zinc-500">To: </span>
-                      {buyerAgent.name}
-                    </p>
-                    <p className="text-xs font-medium uppercase tracking-wide text-zinc-400">AAC Agent</p>
-                    {buyerAgent.email ? (
-                      <p className="text-xs text-zinc-400">{buyerAgent.email}</p>
-                    ) : null}
-                    {buyerHasConnectedGroup ? (
-                      <p className="pt-2 text-xs leading-relaxed text-zinc-500">
-                        Messages are shared with your agent and connected search group.
+                  <div className="flex items-start gap-3">
+                    {buyerAgentProfile?.headshot_url ? (
+                      <img
+                        src={buyerAgentProfile.headshot_url}
+                        alt={buyerAgent.name}
+                        className="h-14 w-14 shrink-0 rounded-full object-cover ring-1 ring-zinc-200"
+                      />
+                    ) : (
+                      <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-white ring-1 ring-zinc-200">
+                        <span className="text-base font-semibold text-zinc-500">
+                          {buyerAgent.name
+                            .split(/\s+/)
+                            .slice(0, 2)
+                            .map((p) => p[0]?.toUpperCase() ?? "")
+                            .join("") || "A"}
+                        </span>
+                      </div>
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400">
+                        My Agent
                       </p>
-                    ) : null}
-                  </>
+                      <p className="truncate text-base font-semibold text-zinc-900">
+                        {buyerAgent.name}
+                      </p>
+                      {(buyerAgentProfile?.company || buyerAgentProfile?.office_city) ? (
+                        <p className="truncate text-sm text-zinc-500">
+                          {[buyerAgentProfile?.company, buyerAgentProfile?.office_city]
+                            .filter(Boolean)
+                            .join(" · ")}
+                        </p>
+                      ) : null}
+                      <div className="mt-1.5 flex items-center gap-1.5">
+                        <span
+                          className={cn(
+                            "inline-block h-1.5 w-1.5 rounded-full",
+                            buyerAgentPresence.isOnline ? "bg-[#22C55E]" : "bg-zinc-300",
+                          )}
+                          aria-hidden
+                        />
+                        <span className="text-xs text-zinc-500">
+                          {buyerAgentPresence.isOnline
+                            ? "Online"
+                            : buyerAgentPresence.lastSeenAt
+                              ? `Last active ${formatDistanceToNow(
+                                  new Date(buyerAgentPresence.lastSeenAt),
+                                  { addSuffix: true },
+                                )}`
+                              : "Offline"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
                 ) : (
                   <p className="text-sm text-zinc-500">
                     Your agent is not linked yet. Finish setup with your agent to send messages.
                   </p>
                 )}
               </div>
-
-              {buyerCanLinkListing ? (
-                <>
-                  <div className="space-y-3">
-                    <Label className="text-sm font-medium text-zinc-700">Context</Label>
-                    <div className="flex flex-wrap gap-2">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setListingContext("general");
-                          setSelectedListing(null);
-                        }}
-                        className={cn(
-                          "flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-colors bg-white hover:border-neutral-300 hover:bg-neutral-50",
-                          listingContext === "general"
-                            ? "border-[#0E56F5] text-[#0E56F5]"
-                            : "border-neutral-200 text-neutral-600",
-                        )}
-                      >
-                        <MessageSquare
-                          className={cn(
-                            "h-4 w-4 shrink-0",
-                            listingContext === "general" ? "text-[#0E56F5]" : "text-neutral-500",
-                          )}
-                        />
-                        General
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setListingContext("listing")}
-                        className={cn(
-                          "flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-colors bg-white hover:border-neutral-300 hover:bg-neutral-50",
-                          listingContext === "listing"
-                            ? "border-[#0E56F5] text-[#0E56F5]"
-                            : "border-neutral-200 text-neutral-600",
-                        )}
-                      >
-                        <Building2
-                          className={cn(
-                            "h-4 w-4 shrink-0",
-                            listingContext === "listing" ? "text-[#0E56F5]" : "text-neutral-500",
-                          )}
-                        />
-                        About a listing
-                      </button>
-                    </div>
-                  </div>
-
-                  {listingContext === "listing" ? (
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium text-zinc-700">Listing</Label>
-                      {selectedListing ? (
-                        <div className="flex w-full items-center gap-2 rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2">
-                          <Building2 className="h-4 w-4 shrink-0 text-zinc-500" />
-                          <span className="min-w-0 flex-1 truncate text-sm text-zinc-700">
-                            {selectedListing.address}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => setSelectedListing(null)}
-                            className="shrink-0 text-zinc-400 hover:text-zinc-600"
-                            aria-label="Clear listing"
-                          >
-                            ×
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="space-y-1">
-                          <p className="px-1 text-xs text-zinc-500">Your favorites</p>
-                          <div className="max-h-[140px] overflow-y-auto rounded-lg border border-zinc-200">
-                            {recentListings.map((l) => (
-                              <button
-                                type="button"
-                                key={l.id}
-                                onClick={() =>
-                                  setSelectedListing({
-                                    id: l.id,
-                                    address: [l.address, l.city, l.state].filter(Boolean).join(", "),
-                                  })
-                                }
-                                className="flex w-full items-center gap-2 border-b border-zinc-100 px-3 py-2 text-left text-sm last:border-b-0 hover:bg-zinc-50"
-                              >
-                                <Building2 className="h-4 w-4 shrink-0 text-zinc-400" />
-                                <span className="truncate text-zinc-700">
-                                  {l.address}, {l.city}, {l.state}
-                                </span>
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  ) : null}
-                </>
-              ) : null}
 
               <div className="space-y-2">
                 <Label className="text-sm font-medium text-zinc-700">Message</Label>
@@ -528,9 +509,9 @@ export function NewConversationDialog({
                   }}
                   onKeyDown={handleKeyDown}
                   placeholder="Type your message..."
-                  rows={3}
+                  rows={6}
                   autoFocus
-                  className="min-h-[5rem] max-h-[10rem] w-full resize-none overflow-y-auto"
+                  className="min-h-[8.75rem] max-h-[15rem] w-full resize-none overflow-y-auto"
                 />
               </div>
 
