@@ -531,6 +531,15 @@ function BuyerCard({
           `&client_id=${encodeURIComponent(buyer.clientId)}` +
           (firstName ? `&first_name=${encodeURIComponent(firstName)}` : "") +
           (lastName ? `&last_name=${encodeURIComponent(lastName)}` : "");
+        const { data: sessionData } = await supabase.auth.getSession();
+        const accessToken = sessionData.session?.access_token;
+        if (!accessToken) {
+          toast.error("Please sign in again", {
+            description:
+              "Your session expired. Sign in again before resending this invite.",
+          });
+          return;
+        }
         const { error: fnError } = await supabase.functions.invoke("send-hot-sheet-invite", {
           body: {
             invitedEmail: buyer.email,
@@ -541,6 +550,9 @@ function BuyerCard({
             tokenId: String(hotSheetToken.id),
             clientId: buyer.clientId,
             mode: "resend",
+          },
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
           },
         });
         if (fnError) {
