@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { formatListingShareEmailStreetLine } from "../_shared/listingShareEmailAddress.ts";
+import { renderListingEmailCard } from "../_shared/listingEmailCard.ts";
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -154,17 +155,9 @@ serve(async (req) => {
       }
 
       // Build listings HTML
-      const listingsHtml = listings.map((listing: any) => `
-        <div style="margin-bottom: 24px; padding: 16px; border: 1px solid #e5e7eb; border-radius: 8px;">
-          <h3 style="margin: 0 0 8px;">$${listing.price.toLocaleString()}</h3>
-          <p style="margin: 0 0 12px; color: #6b7280;">${formatListingShareEmailStreetLine(listing) || listing.address}, ${listing.city}, ${listing.state}</p>
-          <div style="display: flex; gap: 16px;">
-            ${listing.bedrooms ? `<span>${listing.bedrooms} beds</span>` : ""}
-            ${listing.bathrooms ? `<span>${listing.bathrooms} baths</span>` : ""}
-            ${listing.square_feet ? `<span>${listing.square_feet.toLocaleString()} sqft</span>` : ""}
-          </div>
-        </div>
-      `).join("");
+      const listingsHtml = listings
+        .map((listing: any) => renderListingEmailCard(listing, { baseUrl: appBaseUrl }))
+        .join("");
 
       const appBaseUrl = Deno.env.get("APP_BASE_URL") || Deno.env.get("SITE_URL") || "http://localhost:5173";
       let queuedForHotSheet = 0;
@@ -188,17 +181,9 @@ serve(async (req) => {
           continue;
         }
 
-        const recipientListingsHtml = recipientListings.map((listing: any) => `
-          <div style="margin-bottom: 24px; padding: 16px; border: 1px solid #e5e7eb; border-radius: 8px;">
-            <h3 style="margin: 0 0 8px;">$${listing.price.toLocaleString()}</h3>
-            <p style="margin: 0 0 12px; color: #6b7280;">${formatListingShareEmailStreetLine(listing) || listing.address}, ${listing.city}, ${listing.state}</p>
-            <div style="display: flex; gap: 16px;">
-              ${listing.bedrooms ? `<span>${listing.bedrooms} beds</span>` : ""}
-              ${listing.bathrooms ? `<span>${listing.bathrooms} baths</span>` : ""}
-              ${listing.square_feet ? `<span>${listing.square_feet.toLocaleString()} sqft</span>` : ""}
-            </div>
-          </div>
-        `).join("");
+        const recipientListingsHtml = recipientListings
+          .map((listing: any) => renderListingEmailCard(listing, { baseUrl: appBaseUrl }))
+          .join("");
 
         const { error: insertError } = await supabase.from("email_jobs").insert({
           payload: {
