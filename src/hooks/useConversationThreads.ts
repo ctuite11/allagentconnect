@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthRole } from "@/hooks/useAuthRole";
 import { resolveDisplayProfiles } from "@/lib/resolveDisplayProfiles";
@@ -24,6 +24,33 @@ export function useConversationThreads() {
   const [threads, setThreads] = useState<ConversationThread[]>([]);
   const [loading, setLoading] = useState(true);
   const [inboxFetchError, setInboxFetchError] = useState<string | null>(null);
+  // Conversation IDs the caller just deleted/archived locally. We hide these
+  // from any refetch/realtime response for a short grace window so a racing
+  // server response can't make them flash back into the inbox before the
+  // archive UPDATE round-trips.
+  const archivedIdsRef = useRef<Map<string, number>>(new Map());
+
+  const isLocallyArchived = useCallback((id: string) => {
+    const expires = archivedIdsRef.current.get(id);
+    if (!expires) return false;
+    if (Date.now() > expires) {
+      archivedIdsRef.current.delete(id);
+      return false;
+    }
+    return true;
+  }, []);
+
+  const markArchivedLocally = useCallback((ids: string[]) => {
+    const expiry = Date.now() + 10_000;
+    ids.forEach((id) => {
+      if (id) archivedIdsRef.current.set(id, expiry);
+    });
+    setThreads((prev) => prev.filter((t) => !ids.includes(t.id)));
+  }, []);
+
+  const clearLocalArchive = useCallback((ids: string[]) => {
+    ids.forEach((id) => archivedIdsRef.current.delete(id));
+  }, []);
 
   const fetchThreads = useCallback(async () => {
     if (!user) {
@@ -55,10 +82,13 @@ export function useConversationThreads() {
         return;
       }
 
-      const otherUserIds = inboxData.map((row: any) => row.other_user_id);
+      const filteredInbox = inboxData.filter(
+        (row: any) => !isLocallyArchived(row.conversation_id)
+      );
+      const otherUserIds = filteredInbox.map((row: any) => row.other_user_id);
       const profileMap = await resolveDisplayProfiles(otherUserIds);
 
-      const formattedThreads: ConversationThread[] = inboxData.map((row: any) => {
+      const formattedThreads: ConversationThread[] = filteredInbox.map((row: any) => {
         const profile = profileMap.get(row.other_user_id);
         return {
           id: row.conversation_id,
@@ -127,5 +157,12 @@ export function useConversationThreads() {
     };
   }, [user, fetchThreads]);
 
-  return { threads, loading, refetch: fetchThreads, inboxFetchError };
+  return {
+    threads,
+    loading,
+    refetch: fetchThreads,
+    inboxFetchError,
+    markArchivedLocally,
+    clearLocalArchive,
+  };
 }
