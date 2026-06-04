@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import {
   Dialog,
   DialogContent,
@@ -14,6 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { EmailComposerToolbar } from "@/components/email/EmailComposerToolbar";
 import { supabase } from "@/integrations/supabase/client";
+import { useSenderProfilePrefill } from "@/lib/currentSenderProfile";
 import { toast } from "sonner";
 import { Loader2, Mail, Users, ChevronLeft, ChevronRight, Plus, X } from "lucide-react";
 
@@ -43,7 +44,16 @@ export function EmailAgentDialog({
   const [manualRecipients, setManualRecipients] = useState<Array<{ id: string; email: string; name: string }>>([]);
   const [manualName, setManualName] = useState("");
   const [manualEmail, setManualEmail] = useState("");
+  const [senderName, setSenderName] = useState("");
+  const [senderEmail, setSenderEmail] = useState("");
   const messageRef = useRef<HTMLTextAreaElement>(null);
+
+  const applySender = useCallback((sender: { name: string; email: string }) => {
+    setSenderName((prev) => sender.name || prev);
+    setSenderEmail((prev) => sender.email || prev);
+  }, []);
+
+  useSenderProfilePrefill(open, applySender, "agent");
 
   useEffect(() => {
     if (open && defaultSubject?.trim()) {
@@ -105,9 +115,14 @@ export function EmailAgentDialog({
 
     setSending(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        toast.error("You must be logged in to send emails");
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+      const user = sessionData.session?.user;
+
+      if (!accessToken || !user) {
+        toast.error("Please sign in again", {
+          description: "Your session expired. Sign in again before sending this email.",
+        });
         return;
       }
 
@@ -117,8 +132,12 @@ export function EmailAgentDialog({
           subject: subject.trim(),
           message: isTemplated ? "" : message.trim(),
           agentId: user.id,
+          agentEmail: senderEmail.trim() || undefined,
           sendAsGroup: false,
           template: isTemplated ? template : undefined,
+        },
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
         },
       });
 
@@ -356,6 +375,42 @@ export function EmailAgentDialog({
                   Pre-built email featuring product screenshots and short captions. Custom message below is ignored.
                 </p>
               )}
+            </div>
+          ) : null}
+
+          {!showTemplatePicker ? (
+            <div className="space-y-3 rounded-xl border border-slate-200 bg-[#FAFAF8] p-3">
+              <Label className="text-muted-foreground text-sm">Sender</Label>
+              <div className="space-y-2">
+                <Label htmlFor="email-sender-name" className="text-xs text-muted-foreground">
+                  Your name
+                </Label>
+                <Input
+                  id="email-sender-name"
+                  value={senderName}
+                  onChange={(e) => setSenderName(e.target.value)}
+                  placeholder="Your full name"
+                  className="border-slate-200"
+                  maxLength={100}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="email-sender-email" className="text-xs text-muted-foreground">
+                  Your email
+                </Label>
+                <Input
+                  id="email-sender-email"
+                  type="email"
+                  value={senderEmail}
+                  onChange={(e) => setSenderEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  className="border-slate-200"
+                  maxLength={255}
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Used as the reply-to address on this email.
+              </p>
             </div>
           ) : null}
 
