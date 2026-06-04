@@ -42,6 +42,21 @@ function normalizeEmail(raw: string): string {
 
 async function findAuthUserByEmail(admin: SupabaseClient, email: string) {
   const target = normalizeEmail(email);
+  // Authoritative lookup via service role SQL on auth.users
+  try {
+    const { data, error } = await admin
+      .schema("auth" as never)
+      .from("users" as never)
+      .select("id, email")
+      .ilike("email", target)
+      .limit(1)
+      .maybeSingle();
+    if (!error && data && (data as { id: string }).id) {
+      return { id: (data as { id: string }).id, email: (data as { email: string }).email } as { id: string; email: string };
+    }
+  } catch (_e) {
+    // fall through to pagination
+  }
   let page = 1;
   while (page <= 20) {
     const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 200 });
