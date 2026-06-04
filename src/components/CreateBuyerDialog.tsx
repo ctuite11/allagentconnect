@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import {
   Dialog,
   DialogContent,
@@ -28,6 +28,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2, Check, ChevronsUpDown, X, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { fetchAllAgentContacts, searchClientContacts, invalidateAgentContactsCache, type ContactRow } from "@/lib/contactSearch";
 
 interface CreatedBuyerPayload {
   id: string;
@@ -42,7 +43,7 @@ interface CreateBuyerDialogProps {
   onSuccess: (created?: CreatedBuyerPayload) => void;
 }
 
-interface AgentContact {
+interface AgentContact extends ContactRow {
   id: string;
   first_name: string | null;
   last_name: string | null;
@@ -59,31 +60,69 @@ export function CreateBuyerDialog({ open, onOpenChange, onSuccess }: CreateBuyer
   const [saving, setSaving] = useState(false);
   const [contacts, setContacts] = useState<AgentContact[]>([]);
   const [contactsLoading, setContactsLoading] = useState(false);
+  const [contactSearch, setContactSearch] = useState("");
+  const [agentUserId, setAgentUserId] = useState<string | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [selectedContact, setSelectedContact] = useState<AgentContact | null>(null);
 
-  // Load this agent's CRM contacts when the dialog opens
   useEffect(() => {
     if (!open) return;
     let cancelled = false;
     (async () => {
-      setContactsLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { setContactsLoading(false); return; }
-      const { data, error } = await supabase
-        .from("clients")
-        .select("id, first_name, last_name, email, phone, client_type")
-        .eq("agent_id", user.id)
-        .order("first_name", { ascending: true })
-        .limit(500);
-      if (!cancelled) {
-        if (error) console.error("[CreateBuyerDialog] load contacts failed", error);
-        setContacts(data ?? []);
-        setContactsLoading(false);
-      }
+      if (!cancelled) setAgentUserId(user?.id ?? null);
     })();
     return () => { cancelled = true; };
   }, [open]);
+
+  useEffect(() => {
+    if (!open || !pickerOpen || !agentUserId) return;
+    void fetchAllAgentContacts(agentUserId).catch((error) => {
+      console.error("[CreateBuyerDialog] contact preload failed", error);
+    });
+  }, [open, pickerOpen, agentUserId]);
+
+  // Search contacts the same way as /my-clients and hot-sheet share pickers.
+  useEffect(() => {
+    if (!open || !pickerOpen || !agentUserId) return;
+
+    const query = contactSearch.trim();
+    if (query.length < 2) {
+      setContacts([]);
+      setContactsLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setContactsLoading(true);
+
+    const timer = setTimeout(async () => {
+      try {
+        const results = await searchClientContacts<AgentContact>({
+          agentId: agentUserId,
+          query,
+          select: "id, first_name, last_name, email, phone, client_type",
+          limit: 25,
+        });
+        if (!cancelled) setContacts(results);
+      } catch (error) {
+        console.error("[CreateBuyerDialog] contact search failed", error);
+        if (!cancelled) setContacts([]);
+      } finally {
+        if (!cancelled) setContactsLoading(false);
+      }
+    }, 250);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [open, pickerOpen, agentUserId, contactSearch]);
+
+  const resetPickerSearch = useCallback(() => {
+    setContactSearch("");
+    setContacts([]);
+  }, []);
 
   const resetForm = () => {
     setFirstName("");
@@ -91,6 +130,7 @@ export function CreateBuyerDialog({ open, onOpenChange, onSuccess }: CreateBuyer
     setEmail("");
     setPhone("");
     setSelectedContact(null);
+    resetPickerSearch();
   };
 
   const applyContact = (c: AgentContact) => {
@@ -237,6 +277,7 @@ export function CreateBuyerDialog({ open, onOpenChange, onSuccess }: CreateBuyer
             ? "Contact added as a buyer."
             : "Buyer reactivated."
         );
+        invalidateAgentContactsCache();
         const reactivatedPayload: CreatedBuyerPayload = {
           id: existing.id,
           firstName: existing.first_name || firstName.trim(),
@@ -282,6 +323,7 @@ export function CreateBuyerDialog({ open, onOpenChange, onSuccess }: CreateBuyer
       if (relErr) failWithStep("insert client_agent_relationships", relErr);
 
       toast.success("Buyer created successfully.");
+      invalidateAgentContactsCache();
       const createdPayload: CreatedBuyerPayload = {
         id: client.id,
         firstName: firstName.trim(),
@@ -348,7 +390,10 @@ export function CreateBuyerDialog({ open, onOpenChange, onSuccess }: CreateBuyer
                 </Button>
               </div>
             ) : (
-              <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
+              <Popover open={pickerOpen} onOpenChange={(next) => {
+                setPickerOpen(next);
+                if (!next) resetPickerSearch();
+              }}>
                 <PopoverTrigger asChild>
                   <Button
                     type="button"
@@ -356,50 +401,57 @@ export function CreateBuyerDialog({ open, onOpenChange, onSuccess }: CreateBuyer
                     role="combobox"
                     className="w-full justify-between font-normal"
                   >
-                    {contactsLoading ? "Loading contacts…" : "Search existing contacts…"}
+                    Search existing contacts…
                     <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
-                  <Command
-                    filter={(value, search) => {
-                      if (!search) return 1;
-                      return value.toLowerCase().includes(search.toLowerCase()) ? 1 : 0;
-                    }}
-                  >
-                    <CommandInput placeholder="Search by name or email…" />
+                  <Command shouldFilter={false}>
+                    <CommandInput
+                      placeholder="Search by name or email…"
+                      value={contactSearch}
+                      onValueChange={setContactSearch}
+                    />
                     <CommandList>
-                      <CommandEmpty>No contacts found.</CommandEmpty>
-                      <CommandGroup>
-                        {contacts.map((c) => {
-                          const name = `${c.first_name ?? ""} ${c.last_name ?? ""}`.trim() || c.email || "Unnamed";
-                          const searchValue = [c.first_name, c.last_name, c.email]
-                            .filter(Boolean)
-                            .join(" ")
-                            .toLowerCase();
-                          return (
-                            <CommandItem
-                              key={c.id}
-                              value={searchValue || name.toLowerCase()}
-                              onSelect={() => applyContact(c)}
-                              className="data-[selected=true]:bg-muted data-[selected=true]:text-foreground aria-selected:bg-muted aria-selected:text-foreground"
-                            >
-                              <Check className={cn("mr-2 h-4 w-4 opacity-0")} />
-                              <div className="flex flex-col min-w-0">
-                                <span className="truncate text-sm">{name}</span>
-                                <span className="truncate text-xs text-muted-foreground">
-                                  {c.email}
-                                  {c.client_type && (
-                                    <span className="ml-2 uppercase tracking-wide text-[10px]">
-                                      · {c.client_type}
-                                    </span>
-                                  )}
-                                </span>
-                              </div>
-                            </CommandItem>
-                          );
-                        })}
-                      </CommandGroup>
+                      {contactSearch.trim().length < 2 ? (
+                        <div className="px-3 py-6 text-center text-xs text-muted-foreground">
+                          Type at least 2 characters to search your contacts.
+                        </div>
+                      ) : contactsLoading ? (
+                        <div className="flex items-center justify-center gap-2 px-3 py-6 text-xs text-muted-foreground">
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          Searching…
+                        </div>
+                      ) : contacts.length === 0 ? (
+                        <CommandEmpty>No contacts found.</CommandEmpty>
+                      ) : (
+                        <CommandGroup>
+                          {contacts.map((c) => {
+                            const name = `${c.first_name ?? ""} ${c.last_name ?? ""}`.trim() || c.email || "Unnamed";
+                            return (
+                              <CommandItem
+                                key={c.id}
+                                value={c.id}
+                                onSelect={() => applyContact(c)}
+                                className="data-[selected=true]:bg-muted data-[selected=true]:text-foreground aria-selected:bg-muted aria-selected:text-foreground"
+                              >
+                                <Check className={cn("mr-2 h-4 w-4 opacity-0")} />
+                                <div className="flex flex-col min-w-0">
+                                  <span className="truncate text-sm">{name}</span>
+                                  <span className="truncate text-xs text-muted-foreground">
+                                    {c.email}
+                                    {c.client_type && (
+                                      <span className="ml-2 uppercase tracking-wide text-[10px]">
+                                        · {c.client_type}
+                                      </span>
+                                    )}
+                                  </span>
+                                </div>
+                              </CommandItem>
+                            );
+                          })}
+                        </CommandGroup>
+                      )}
                     </CommandList>
                   </Command>
                 </PopoverContent>

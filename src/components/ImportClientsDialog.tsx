@@ -8,6 +8,7 @@ import { Upload, FileSpreadsheet, CheckCircle2, AlertCircle, Loader2 } from "luc
 import { toast } from "sonner";
 import { z } from "zod";
 import { parse as parsePapa } from "papaparse";
+import { invalidateAgentContactsCache } from "@/lib/contactSearch";
 
 function cleanCell(value: unknown): string {
   return String(value ?? "")
@@ -512,6 +513,7 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
         );
       }
       
+      invalidateAgentContactsCache();
       onImportComplete();
       onOpenChange(false);
       setValidationResult(null);

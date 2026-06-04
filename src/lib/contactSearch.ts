@@ -1,16 +1,9 @@
 import { supabase } from "@/integrations/supabase/client";
 
 /**
- * Shared token-aware contact search used by share / hot-sheet dialogs.
- * Mirrors the matching behavior on /my-clients (MyClients.tsx):
- *   - 1–2 char query  → narrow prefix / word-boundary match
- *   - 3+ char query   → split on whitespace; every token must hit at least
- *                       one of: first/last/display name, email, email local,
- *                       email domain, email domain root, client_type, phone
- *
- * DB fetch stays cheap: we send a single .or(...) using ONLY the first token
- * so Supabase returns a small candidate set, then we apply the token matcher
- * client-side and cap to `limit` results.
+ * Single source of truth for agent CRM contacts — same table/view and pagination
+ * strategy as /my-clients (MyClients.tsx). All contact pickers (hot sheet, new
+ * buyer, share dialogs) must use these helpers instead of ad-hoc `clients` queries.
  */
 
 export interface ContactRow {
@@ -20,6 +13,30 @@ export interface ContactRow {
   email?: string | null;
   phone?: string | null;
   client_type?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+  relationship_status?: string | null;
+  office_id?: string | null;
+  source?: string | null;
+}
+
+/** View used by the main Contacts page — includes relationship metadata. */
+export const AGENT_CONTACTS_SOURCE = "clients_with_relationship_status" as const;
+
+const PAGE_SIZE = 1000;
+const CACHE_TTL_MS = 5 * 60 * 1000;
+
+type ContactsCache = {
+  agentId: string;
+  rows: ContactRow[];
+  fetchedAt: number;
+};
+
+let contactsCache: ContactsCache | null = null;
+
+/** Drop cached contacts after import, create, update, or delete. */
+export function invalidateAgentContactsCache(): void {
+  contactsCache = null;
 }
 
 const norm = (v: unknown) => String(v ?? "").toLowerCase().trim();
@@ -81,50 +98,88 @@ export function matchesContactQuery(client: ContactRow, rawQuery: string): boole
   });
 }
 
-export interface SearchClientContactsOptions {
-  agentId: string;
-  query: string;
-  /** Columns to select. Default `"*"`. */
+export interface FetchAllAgentContactsOptions {
+  /** Bypass in-memory cache and re-fetch from Supabase. */
+  force?: boolean;
+  /** PostgREST select clause. Default `"*"`. */
   select?: string;
-  /** Max results returned after client-side filtering. Default 10. */
-  limit?: number;
 }
 
 /**
- * Run a token-aware search against `public.clients` for a given agent.
- * Returns an empty array for empty / <2-char queries (callers may relax this).
+ * Load every CRM contact for an agent — paginated identically to MyClients.
+ */
+export async function fetchAllAgentContacts<T extends ContactRow = ContactRow>(
+  agentId: string,
+  opts: FetchAllAgentContactsOptions = {},
+): Promise<T[]> {
+  if (!agentId) return [];
+
+  const { force = false, select = "*" } = opts;
+
+  if (
+    !force &&
+    contactsCache?.agentId === agentId &&
+    Date.now() - contactsCache.fetchedAt < CACHE_TTL_MS
+  ) {
+    return contactsCache.rows as T[];
+  }
+
+  const all: T[] = [];
+  for (let from = 0; ; from += PAGE_SIZE) {
+    const { data, error } = await supabase
+      .from(AGENT_CONTACTS_SOURCE)
+      .select(select)
+      .eq("agent_id", agentId)
+      .order("created_at", { ascending: false })
+      .order("id", { ascending: false })
+      .range(from, from + PAGE_SIZE - 1);
+
+    if (error) throw error;
+
+    const batch = (data ?? []) as T[];
+    all.push(...batch);
+    if (batch.length < PAGE_SIZE) break;
+  }
+
+  const seen = new Set<string>();
+  const unique = all.filter((row) => {
+    const id = String(row.id ?? "");
+    if (!id || seen.has(id)) return false;
+    seen.add(id);
+    return true;
+  });
+
+  contactsCache = {
+    agentId,
+    rows: unique as ContactRow[],
+    fetchedAt: Date.now(),
+  };
+
+  return unique;
+}
+
+export interface SearchClientContactsOptions {
+  agentId: string;
+  query: string;
+  /** Ignored — kept for call-site compatibility. All contact fields are loaded. */
+  select?: string;
+  /** Max results returned after client-side filtering. Default 10. */
+  limit?: number;
+  /** Force-refresh the backing contact list before searching. */
+  forceRefresh?: boolean;
+}
+
+/**
+ * Token-aware search against the same contact list as /my-clients.
+ * Returns an empty array for empty / <2-char queries.
  */
 export async function searchClientContacts<T extends ContactRow = ContactRow>(
   opts: SearchClientContactsOptions,
 ): Promise<T[]> {
-  const { agentId, query, select = "*", limit = 10 } = opts;
+  const { agentId, query, limit = 10, forceRefresh = false } = opts;
   const raw = (query ?? "").trim();
   if (!raw || raw.length < 2 || !agentId) return [];
 
-  // Use the FIRST token only for the DB candidate fetch. This keeps the URL
-  // short and avoids requiring any single field to contain the full phrase
-  // (e.g. "ethan goodrich" should match Ethan whose email domain is goodrich).
-  const firstToken = norm(raw).split(/\s+/).filter(Boolean)[0] ?? raw;
-  const safe = firstToken.replace(/[,()*]/g, " ").trim();
-  if (!safe) return [];
-
-  const candidateCap = Math.max(50, limit * 5);
-
-  const { data, error } = await supabase
-    .from("clients")
-    .select(select)
-    .eq("agent_id", agentId)
-    .or(
-      `first_name.ilike.%${safe}%,last_name.ilike.%${safe}%,email.ilike.%${safe}%`,
-    )
-    .order("first_name")
-    .limit(candidateCap);
-
-  if (error) throw error;
-
-  const rows = ((data ?? []) as unknown as T[]).filter((row) =>
-    matchesContactQuery(row, raw),
-  );
-
-  return rows.slice(0, limit);
+  const all = await fetchAllAgentContacts<T>(agentId, { force: forceRefresh });
+  return all.filter((row) => matchesContactQuery(row, raw)).slice(0, limit);
 }

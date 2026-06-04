@@ -25,6 +25,7 @@ import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
 import { BulkEmailDialog } from "@/components/BulkEmailDialog";
 import { EmailAnalyticsDialog } from "@/components/EmailAnalyticsDialog";
 import { ImportClientsDialog } from "@/components/ImportClientsDialog";
+import { fetchAllAgentContacts } from "@/lib/contactSearch";
 import ContactDetailDrawer from "@/components/ContactDetailDrawer";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -180,28 +181,8 @@ const MyClients = () => {
     try {
       setLoading(true);
       setClientsLoadError(false);
-      // Page through all rows — PostgREST caps each response at 1000 rows.
-      const PAGE_SIZE = 1000;
-      const all: any[] = [];
-      for (let from = 0; ; from += PAGE_SIZE) {
-        const { data, error } = await supabase
-          .from("clients_with_relationship_status" as any)
-          .select("*")
-          .eq("agent_id", userId)
-          .order("created_at", { ascending: false })
-          .order("id", { ascending: false })
-          .range(from, from + PAGE_SIZE - 1);
-        if (error) throw error;
-        const batch = data || [];
-        all.push(...batch);
-        if (batch.length < PAGE_SIZE) break;
-      }
-      // Dedupe by id as a safety net against any paginated overlap.
-      const seen = new Set<string>();
-      const unique = all.filter((r) =>
-        seen.has(r.id) ? false : (seen.add(r.id), true)
-      );
-      setClients(unique as unknown as Client[]);
+      const unique = await fetchAllAgentContacts<Client>(userId, { force: true });
+      setClients(unique);
     } catch (error: any) {
       console.error("Error fetching clients:", error);
       toast.error("Failed to load clients");

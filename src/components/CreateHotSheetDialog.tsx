@@ -36,7 +36,7 @@ import { useTownsPicker } from "@/hooks/useTownsPicker";
 import { TownsPicker } from "@/components/TownsPicker";
 import { getAreasForCity, hasNeighborhoodData } from "@/data/usNeighborhoodsData";
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
-import { searchClientContacts } from "@/lib/contactSearch";
+import { fetchAllAgentContacts, searchClientContacts, invalidateAgentContactsCache } from "@/lib/contactSearch";
 import {
   DEFAULT_HOT_SHEET_CRITERIA,
   fromCriteriaPayload,
@@ -265,6 +265,14 @@ export function CreateHotSheetDialog({
     
     fetchClient();
   }, [clientId, open]);
+
+  useEffect(() => {
+    if (showClientPicker && userId) {
+      void fetchAllAgentContacts(userId).catch((error) => {
+        console.error("Error preloading contacts for hot sheet picker:", error);
+      });
+    }
+  }, [showClientPicker, userId]);
 
   // Search clients as user types
   useEffect(() => {
@@ -843,6 +851,7 @@ export function CreateHotSheetDialog({
         setClientSearchQuery("");
       }
       setShowCreateClientDialog(false);
+      invalidateAgentContactsCache();
       toast.success("Contact saved and added to this hot sheet");
       
       // Clear the form
