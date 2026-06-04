@@ -36,7 +36,8 @@ export function PropertyFactsRow({
   containerClassName,
   iconClassName,
 }: PropertyFactsRowProps) {
-  const iconCls = cn(propertyFactIcon, iconClassName);
+  // Force AAC blue on all facts-row icons regardless of caller overrides.
+  const iconCls = cn(propertyFactIcon, iconClassName, "text-[#0E56F5]");
   const pricePerSqft =
     price && squareFeet && squareFeet > 0
       ? Math.round(price / squareFeet)
@@ -47,7 +48,7 @@ export function PropertyFactsRow({
       <div className={cn(propertyFactsRow, className)}>
         {bedrooms != null && bedrooms > 0 && (
           <div className={propertyFactItem}>
-            <Bed className={propertyFactIcon} />
+            <Bed className={iconCls} />
             <span className={propertyFactValue}>{bedrooms}</span>
             <span className={propertyFactLabel}>Beds</span>
           </div>
