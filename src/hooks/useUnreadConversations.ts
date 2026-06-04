@@ -57,6 +57,19 @@ export function useUnreadConversations() {
           fetchUnreadCount();
         }
       )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "conversation_participants",
+          filter: `user_id=eq.${user.id}`,
+        },
+        () => {
+          // last_read_at or is_archived changed → recompute badge.
+          fetchUnreadCount();
+        }
+      )
       .subscribe();
 
     return () => {
