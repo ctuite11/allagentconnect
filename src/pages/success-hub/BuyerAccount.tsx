@@ -187,6 +187,8 @@ export default function BuyerAccount() {
         navigate={navigate}
         crmBuyerId={buyerId ?? null}
         buyerDisplayName={capitalizedName}
+        buyerFirstName={client.first_name}
+        buyerLastName={client.last_name}
         buyerEmail={client.email}
         buyerPhoneFmt={buyerPhoneFmt}
         agent={mirror.agent}

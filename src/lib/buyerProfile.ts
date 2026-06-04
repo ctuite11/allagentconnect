@@ -89,6 +89,14 @@ export function profileInitials(
   if (first && first.length >= 2) return first.slice(0, 2).toUpperCase();
   if (first) return first[0]!.toUpperCase();
   const email = emailFallback?.trim();
-  if (email) return email[0]!.toUpperCase();
+  if (email) {
+    const local = (email.split("@")[0] ?? "").trim();
+    const parts = local.split(/[._+\-]+/).filter(Boolean);
+    if (parts.length >= 2) {
+      return `${parts[0]![0] ?? ""}${parts[parts.length - 1]![0] ?? ""}`.toUpperCase();
+    }
+    if (local.length >= 2) return local.slice(0, 2).toUpperCase();
+    if (local.length === 1) return local[0]!.toUpperCase();
+  }
   return "?";
 }
