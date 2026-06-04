@@ -672,9 +672,11 @@ const handler = async (req: Request): Promise<Response> => {
             Don't want these emails?
             <a href="${unsubUrl}" style="color:#64748b;text-decoration:underline;">Unsubscribe</a>
           </p>`;
-        const personalizedHtml = htmlTemplate
-          .replace("{{GREETING}}", isTemplated ? "" : `<p>Hello ${recipient.name},</p>`)
-          .replace("</body>", `${unsubFooter}</body>`);
+        const personalizedHtml = isDiagnostic
+          ? diagnosticHtml(recipient.name, unsubUrl)
+          : htmlTemplate
+              .replace("{{GREETING}}", isTemplated ? "" : `<p>Hello ${recipient.name},</p>`)
+              .replace("</body>", `${unsubFooter}</body>`);
 
         return {
           payload: {
