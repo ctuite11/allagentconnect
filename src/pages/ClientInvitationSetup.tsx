@@ -60,25 +60,49 @@ const ClientInvitationSetup = () => {
     sessionStorage.setItem("aac_invite_acceptance_handoff", String(Date.now()));
   };
 
-  /** Calls the single trusted backend RPC that finalizes invite acceptance atomically. */
-  const finalizeAcceptance = async (): Promise<void> => {
-    const { error } = await supabase.rpc("accept_client_hot_sheet_invite", {
-      _token: invitationToken,
+  /**
+   * Calls the trusted backend Edge Function that atomically finalizes invite acceptance:
+   * creates/updates the auth user with the chosen password, sets profile + buyer role,
+   * activates the agent relationship, and marks the share token accepted.
+   *
+   * Returns the normalized buyer email (from the invite token) so we can sign in cleanly.
+   */
+  const finalizeAcceptanceOnBackend = async (
+    passwordToSet: string,
+  ): Promise<{ email: string }> => {
+    const { data, error } = await supabase.functions.invoke("accept-client-hot-sheet-invite", {
+      body: {
+        token: invitationToken,
+        password: passwordToSet,
+        first_name: firstName?.trim() || null,
+        last_name: lastName?.trim() || null,
+      },
     });
-    if (error) {
-      const msg = (error.message || "").toLowerCase();
-      if (msg.includes("email_mismatch")) {
-        throw new Error("Sign in with the email address your invitation was sent to.");
+
+    // Surface backend error messages even when the SDK reports a generic FunctionsError.
+    if (error || !data?.success) {
+      const context = (error as { context?: Response } | null)?.context;
+      let backendError: string | null = null;
+      if (context) {
+        try {
+          const parsed = await context.clone().json();
+          if (typeof parsed?.error === "string") backendError = parsed.error;
+        } catch {
+          /* ignore */
+        }
       }
-      if (msg.includes("token_already_accepted")) {
-        throw new Error("This invitation has already been accepted by another account.");
-      }
-      if (msg.includes("token_revoked") || msg.includes("token_not_found") || msg.includes("wrong_token_type")) {
-        throw new Error("This invitation link is no longer available. Please contact your agent.");
-      }
-      console.error("[client-invite] finalize error:", error);
-      throw new Error("We could not finalize your invitation. Please try again.");
+      const message =
+        (typeof data?.error === "string" && data.error) ||
+        backendError ||
+        error?.message ||
+        "We could not finalize your invitation. Please try again.";
+      console.error("[client-invite] finalize error:", error ?? data);
+      throw new Error(message);
     }
+
+    return {
+      email: String(data.email ?? email).trim().toLowerCase(),
+    };
   };
 
   useEffect(() => {
@@ -223,8 +247,7 @@ const ClientInvitationSetup = () => {
 
     setIsSubmitting(true);
     try {
-      // Always clear any existing session before buyer sign-up.
-      // This prevents an agent/admin session from contaminating the buyer activation flow.
+      // Clear any existing agent/admin session before buyer activation to avoid contamination.
       await supabase.auth.signOut();
 
       const normalizedEmail = email.trim().toLowerCase();
@@ -233,49 +256,22 @@ const ClientInvitationSetup = () => {
         return;
       }
 
-      const { data: authData, error: signUpError } = await supabase.auth.signUp({
-        email: normalizedEmail,
+      // 1. Atomically create/update the auth user + profile + role + relationship + token on the backend.
+      const { email: activatedEmail } = await finalizeAcceptanceOnBackend(password);
+
+      // 2. Sign the buyer in with the password they just set. The backend auto-confirms the email,
+      //    so this should succeed; if not, surface a clear confirmation-required message instead of
+      //    bouncing them to /auth with "Invalid credentials".
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+        email: activatedEmail,
         password,
-        options: {
-          emailRedirectTo: `${window.location.origin}${postAcceptPath}`,
-        },
       });
 
-      if (signUpError) {
-        if (signUpError.message.toLowerCase().includes("already")) {
-          // Account exists — stay on buyer-branded page, switch to sign-in phase
-          setPhase("signin");
-          return;
-        }
-        throw signUpError;
-      }
-
-      // Supabase returns a user with empty identities when email already exists.
-      if (authData?.user && authData.user.identities?.length === 0) {
-        // Account exists — stay on buyer-branded page, switch to sign-in phase
-        setPhase("signin");
-        return;
-      }
-
-      if (!authData.user) throw new Error("Account creation failed");
-
-      // If signup did not auto-confirm/return a session, try password sign-in; if that
-      // still has no session, the project requires email confirmation — surface clearly.
-      let session = authData.session;
-      if (!session) {
-        const { data: signInData } = await supabase.auth.signInWithPassword({
-          email: normalizedEmail,
-          password,
-        });
-        session = signInData.session ?? null;
-      }
-
-      if (!session?.user) {
+      if (signInError || !signInData?.session) {
+        console.error("[client-invite] post-activation sign-in failed", signInError);
         setPhase("confirm_email");
         return;
       }
-
-      await finalizeAcceptance();
 
       if (effectiveAgentId) setPrimaryAgentId(effectiveAgentId);
       setPhase("success");
@@ -295,7 +291,7 @@ const ClientInvitationSetup = () => {
     }
     setIsSubmitting(true);
     try {
-      // Ensure clean slate — clear any admin/agent session
+      // Ensure clean slate — clear any admin/agent session.
       await supabase.auth.signOut();
 
       const normalizedEmail = email.trim().toLowerCase();
@@ -304,14 +300,18 @@ const ClientInvitationSetup = () => {
         return;
       }
 
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: normalizedEmail,
+      // Use the existing-account password the buyer just typed to finalize acceptance
+      // through the same trusted backend (it will validate the password by re-setting it,
+      // upsert the profile/role, and activate the relationship).
+      const { email: activatedEmail } = await finalizeAcceptanceOnBackend(signinPassword);
+
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+        email: activatedEmail,
         password: signinPassword,
       });
-      if (error) throw error;
-      if (!data.user) throw new Error("Sign in failed — please try again.");
-
-      await finalizeAcceptance();
+      if (signInError || !signInData?.session) {
+        throw signInError ?? new Error("Sign in failed — please try again.");
+      }
 
       if (effectiveAgentId) setPrimaryAgentId(effectiveAgentId);
       setPhase("success");
