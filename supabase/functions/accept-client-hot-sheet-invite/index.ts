@@ -308,37 +308,54 @@ serve(async (req) => {
           msg.toLowerCase().includes("already");
 
         if (isExists) {
-          // Try cleaning up orphan auth.identities rows (user deleted but identity row left behind),
-          // then retry createUser once before falling back to "existing_account".
+          // Try cleaning up stale auth.identities rows that block account creation:
+          // 1) orphan identity rows with no auth.users row, and
+          // 2) identity rows whose email matches this buyer invite but are attached to a different auth user email.
           try {
-            const { data: cleanedCount } = await supabaseAdmin.rpc(
+            const { data: orphanCleanedCount, error: orphanCleanupError } = await supabaseAdmin.rpc(
               "cleanup_orphan_auth_identity",
               { _email: email },
             );
-            if (typeof cleanedCount === "number" && cleanedCount > 0) {
-              const retry = await supabaseAdmin.auth.admin.createUser({
-                email,
-                password,
-                email_confirm: true,
-                user_metadata: {
-                  first_name: firstName,
-                  last_name: lastName,
-                  phone: payload.client_phone ?? null,
-                  intended_role: "buyer",
-                },
-              });
-              if (!retry.error && retry.data?.user) {
-                userId = retry.data.user.id;
-              } else {
-                console.error("[accept-client-hot-sheet-invite] retry after orphan cleanup failed", retry.error);
-                return json({ success: false, error: "Account already exists", code: "existing_account" }, 409);
-              }
+            if (orphanCleanupError) {
+              console.error("[accept-client-hot-sheet-invite] orphan cleanup RPC failed", orphanCleanupError);
+            }
+
+            const { data: blockingCleanedCount, error: blockingCleanupError } = await supabaseAdmin.rpc(
+              "cleanup_blocking_auth_identity",
+              { _email: email },
+            );
+            if (blockingCleanupError) {
+              console.error("[accept-client-hot-sheet-invite] blocking identity cleanup RPC failed", blockingCleanupError);
+            }
+
+            const cleanedCount =
+              (typeof orphanCleanedCount === "number" ? orphanCleanedCount : 0) +
+              (typeof blockingCleanedCount === "number" ? blockingCleanedCount : 0);
+
+            if (cleanedCount <= 0) {
+              // No stale identity was removed — a real live account exists for this email.
+              return json({ success: false, error: "Account already exists", code: "existing_account" }, 409);
+            }
+
+            const retry = await supabaseAdmin.auth.admin.createUser({
+              email,
+              password,
+              email_confirm: true,
+              user_metadata: {
+                first_name: firstName,
+                last_name: lastName,
+                phone: payload.client_phone ?? null,
+                intended_role: "buyer",
+              },
+            });
+            if (!retry.error && retry.data?.user) {
+              userId = retry.data.user.id;
             } else {
-              // No orphan identity — a real live account exists for this email.
+              console.error("[accept-client-hot-sheet-invite] retry after identity cleanup failed", retry.error);
               return json({ success: false, error: "Account already exists", code: "existing_account" }, 409);
             }
           } catch (cleanupErr) {
-            console.error("[accept-client-hot-sheet-invite] orphan cleanup error", cleanupErr);
+            console.error("[accept-client-hot-sheet-invite] identity cleanup error", cleanupErr);
             return json({ success: false, error: "Account already exists", code: "existing_account" }, 409);
           }
         } else {
