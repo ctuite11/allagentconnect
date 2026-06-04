@@ -1,8 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { Resend } from "https://esm.sh/resend@4.0.0";
 
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
@@ -46,10 +44,7 @@ serve(async (req) => {
       .select(`
         *,
         listing:listings(address, city, state, photos),
-        favorite:favorites(
-          user_id,
-          user:profiles(email)
-        )
+        favorite:favorites(user_id)
       `)
       .eq("notification_sent", false)
       .order("changed_at", { ascending: false });
@@ -69,12 +64,32 @@ serve(async (req) => {
 
     console.log(`Found ${priceChanges.length} price changes to notify`);
 
+    // Resolve emails via profiles (no FK relationship to favorites)
+    const userIds = Array.from(
+      new Set(
+        (priceChanges as any[])
+          .map((c) => c.favorite?.user_id)
+          .filter((v) => !!v)
+      )
+    );
+    const emailByUserId = new Map<string, string>();
+    if (userIds.length > 0) {
+      const { data: profs } = await supabase
+        .from("profiles")
+        .select("id, email")
+        .in("id", userIds);
+      for (const p of profs ?? []) {
+        if (p?.id && p?.email) emailByUserId.set(p.id, p.email);
+      }
+    }
+
     // Group by user to send one email per user
     const changesByUser = priceChanges.reduce((acc: any, change: any) => {
-      const userId = change.favorite.user_id;
+      const userId = change.favorite?.user_id;
+      if (!userId) return acc;
       if (!acc[userId]) {
         acc[userId] = {
-          email: change.favorite.user?.email,
+          email: emailByUserId.get(userId),
           changes: [],
         };
       }
@@ -130,11 +145,8 @@ serve(async (req) => {
         .join("");
 
       try {
-        await resend.emails.send({
-          from: "All Agent Connect <hello@mail.allagentconnect.com>",
-          to: [data.email],
-          subject: `Price Alert: ${data.changes.length} saved ${data.changes.length === 1 ? 'home has' : 'homes have'} changed price`,
-          html: `
+        const subject = `Price Alert: ${data.changes.length} saved ${data.changes.length === 1 ? 'home has' : 'homes have'} changed price`;
+        const html = `
             <!DOCTYPE html>
             <html>
               <head>
@@ -159,14 +171,33 @@ serve(async (req) => {
                 </div>
               </body>
             </html>
-          `,
-        });
+          `;
+
+        const changeIds = data.changes
+          .map((c: PriceChange) => c.id)
+          .sort();
+        const idempotencyKey = `price-change:${userId}:${changeIds.join(",")}`;
+
+        const { error: enqueueError } = await supabase
+          .from("email_jobs")
+          .insert({
+            idempotency_key: idempotencyKey,
+            payload: {
+              provider: "resend",
+              template: "price-change-notification",
+              to: data.email,
+              subject,
+              html,
+            },
+          });
+
+        if (enqueueError) throw enqueueError;
 
         emailsSent++;
         notificationIds.push(...data.changes.map((c: PriceChange) => c.id));
-        console.log(`Sent price change notification to ${data.email}`);
+        console.log(`Enqueued price change notification to ${data.email}`);
       } catch (emailError) {
-        console.error(`Failed to send email to ${data.email}:`, emailError);
+        console.error(`Failed to enqueue email to ${data.email}:`, emailError);
       }
     }
 
@@ -183,6 +214,19 @@ serve(async (req) => {
       if (updateError) {
         console.error("Error updating notification status:", updateError);
       }
+    }
+
+    if (emailsSent > 0) {
+      void fetch(`${supabaseUrl}/functions/v1/kick-email-queue`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${supabaseServiceKey}`,
+          "Content-Type": "application/json",
+        },
+        body: "{}",
+      }).catch((err) => {
+        console.warn("[send-price-change-notification] kick-email-queue failed:", err);
+      });
     }
 
     return new Response(

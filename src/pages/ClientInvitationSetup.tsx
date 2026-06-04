@@ -11,7 +11,10 @@ import { setPrimaryAgentId } from "@/utils/agentTracking";
 import { validatePassword } from "@/lib/passwordPolicy";
 import AACMonogram from "@/components/ui/AACMonogram";
 import { AacMonogramLoader } from "@/components/AacMonogramLoader";
+<<<<<<< HEAD
 import { acceptClientHotSheetInvite } from "@/lib/acceptClientHotSheetInvite";
+=======
+>>>>>>> 0abdcb6c480db6cd0a6a7b29d361af9a0e6f7195
 
 /** Authoritative invite context from `share_tokens` (token string alone is not enough — query params can be tampered). */
 type InviteAnchor = {
@@ -34,7 +37,13 @@ const ClientInvitationSetup = () => {
   const initialFirstName = searchParams.get("first_name") || "";
   const initialLastName = searchParams.get("last_name") || "";
 
+<<<<<<< HEAD
   const [phase, setPhase] = useState<"form" | "signin" | "confirmation_required">("form");
+=======
+  const [phase, setPhase] = useState<
+    "form" | "signin" | "success" | "confirm_email"
+  >("form");
+>>>>>>> 0abdcb6c480db6cd0a6a7b29d361af9a0e6f7195
   const [email, setEmail] = useState(initialEmail);
   const [firstName, setFirstName] = useState(initialFirstName);
   const [lastName, setLastName] = useState(initialLastName);
@@ -56,6 +65,7 @@ const ClientInvitationSetup = () => {
     sessionStorage.setItem("aac_invite_acceptance_handoff", String(Date.now()));
   };
 
+<<<<<<< HEAD
   const finalizeInviteAndSignIn = async (
     plainPassword: string,
     opts: { existingAccount: boolean },
@@ -111,6 +121,51 @@ const ClientInvitationSetup = () => {
 
     markInviteHandoff();
     navigate(postAcceptPath, { replace: true });
+=======
+  /**
+   * Calls the trusted backend Edge Function that atomically finalizes invite acceptance:
+   * creates/updates the auth user with the chosen password, sets profile + buyer role,
+   * activates the agent relationship, and marks the share token accepted.
+   *
+   * Returns the normalized buyer email (from the invite token) so we can sign in cleanly.
+   */
+  const finalizeAcceptanceOnBackend = async (
+    passwordToSet: string,
+  ): Promise<{ email: string }> => {
+    const { data, error } = await supabase.functions.invoke("accept-client-hot-sheet-invite", {
+      body: {
+        token: invitationToken,
+        password: passwordToSet,
+        first_name: firstName?.trim() || null,
+        last_name: lastName?.trim() || null,
+      },
+    });
+
+    // Surface backend error messages even when the SDK reports a generic FunctionsError.
+    if (error || !data?.success) {
+      const context = (error as { context?: Response } | null)?.context;
+      let backendError: string | null = null;
+      if (context) {
+        try {
+          const parsed = await context.clone().json();
+          if (typeof parsed?.error === "string") backendError = parsed.error;
+        } catch {
+          /* ignore */
+        }
+      }
+      const message =
+        (typeof data?.error === "string" && data.error) ||
+        backendError ||
+        error?.message ||
+        "We could not finalize your invitation. Please try again.";
+      console.error("[client-invite] finalize error:", error ?? data);
+      throw new Error(message);
+    }
+
+    return {
+      email: String(data.email ?? email).trim().toLowerCase(),
+    };
+>>>>>>> 0abdcb6c480db6cd0a6a7b29d361af9a0e6f7195
   };
 
   useEffect(() => {
@@ -135,6 +190,12 @@ const ClientInvitationSetup = () => {
           toast.error("This link is no longer available. Please contact your agent.");
           setTokenValid(false);
         } else if (data.accepted_at) {
+          // Idempotent: if the current signed-in user is the one who accepted it, route them home.
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user && (data as any).accepted_by_user_id === user.id) {
+            navigate(postAcceptPath, { replace: true });
+            return;
+          }
           toast.info("This invitation has already been used");
           setTokenValid(false);
         } else {
@@ -249,7 +310,38 @@ const ClientInvitationSetup = () => {
 
     setIsSubmitting(true);
     try {
+<<<<<<< HEAD
       await finalizeInviteAndSignIn(password, { existingAccount: false });
+=======
+      // Clear any existing agent/admin session before buyer activation to avoid contamination.
+      await supabase.auth.signOut();
+
+      const normalizedEmail = email.trim().toLowerCase();
+      if (inviteAnchor?.clientEmail && normalizedEmail !== inviteAnchor.clientEmail) {
+        toast.error("Use the same email address your agent sent this invitation to.");
+        return;
+      }
+
+      // 1. Atomically create/update the auth user + profile + role + relationship + token on the backend.
+      const { email: activatedEmail } = await finalizeAcceptanceOnBackend(password);
+
+      // 2. Sign the buyer in with the password they just set. The backend auto-confirms the email,
+      //    so this should succeed; if not, surface a clear confirmation-required message instead of
+      //    bouncing them to /auth with "Invalid credentials".
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+        email: activatedEmail,
+        password,
+      });
+
+      if (signInError || !signInData?.session) {
+        console.error("[client-invite] post-activation sign-in failed", signInError);
+        setPhase("confirm_email");
+        return;
+      }
+
+      if (effectiveAgentId) setPrimaryAgentId(effectiveAgentId);
+      setPhase("success");
+>>>>>>> 0abdcb6c480db6cd0a6a7b29d361af9a0e6f7195
     } catch (error: any) {
       console.error("Activation error:", error);
       toast.error(error.message || "Failed to activate account. Please try again.");
@@ -266,7 +358,34 @@ const ClientInvitationSetup = () => {
     }
     setIsSubmitting(true);
     try {
+<<<<<<< HEAD
       await finalizeInviteAndSignIn(signinPassword, { existingAccount: true });
+=======
+      // Ensure clean slate — clear any admin/agent session.
+      await supabase.auth.signOut();
+
+      const normalizedEmail = email.trim().toLowerCase();
+      if (inviteAnchor?.clientEmail && normalizedEmail !== inviteAnchor.clientEmail) {
+        toast.error("Sign in with the email address your invitation was sent to.");
+        return;
+      }
+
+      // Use the existing-account password the buyer just typed to finalize acceptance
+      // through the same trusted backend (it will validate the password by re-setting it,
+      // upsert the profile/role, and activate the relationship).
+      const { email: activatedEmail } = await finalizeAcceptanceOnBackend(signinPassword);
+
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+        email: activatedEmail,
+        password: signinPassword,
+      });
+      if (signInError || !signInData?.session) {
+        throw signInError ?? new Error("Sign in failed — please try again.");
+      }
+
+      if (effectiveAgentId) setPrimaryAgentId(effectiveAgentId);
+      setPhase("success");
+>>>>>>> 0abdcb6c480db6cd0a6a7b29d361af9a0e6f7195
     } catch (error: any) {
       console.error("Sign-in error:", error);
       toast.error(error.message || "Sign in failed. Please check your password and try again.");
@@ -393,6 +512,30 @@ const ClientInvitationSetup = () => {
           <Button onClick={() => navigate("/auth")} variant="outline" className="rounded-xl">
             Go to Sign In
           </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (phase === "confirm_email") {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white px-4">
+        <div className="max-w-md w-full text-center space-y-6">
+          <div className="flex justify-center">
+            <div className="rounded-full bg-amber-50 p-4">
+              <ShieldCheck className="h-10 w-10 text-amber-600" />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">
+              Confirm your email to continue
+            </h1>
+            <p className="text-sm text-zinc-500 max-w-sm mx-auto">
+              We sent a confirmation link to <strong className="text-zinc-700">{email}</strong>.
+              Open it to verify your email, then return to your invitation link to finish activating
+              your account.
+            </p>
+          </div>
         </div>
       </div>
     );

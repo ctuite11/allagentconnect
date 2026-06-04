@@ -1,9 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { Resend } from "https://esm.sh/resend@4.0.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.0";
-import { buildAacEmail } from "../_shared/aacEmailTemplate.ts";
-
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -111,60 +107,85 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Sending contact email to agent:", agentEmail);
 
-    const bodyHtml = `
-      <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#334155;">
-        Hi ${escapeHtml(agentName)},
-      </p>
-      <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#334155;">
-        You received a new message about:
-      </p>
-      <p style="margin:0 0 20px;font-size:16px;font-weight:600;color:#0f172a;">
-        ${escapeHtml(listingAddress)}
-      </p>
+    // Minimal plain HTML — no AAC header, logo, footer, tracking, or marketing layout.
+    const htmlOut = `<!DOCTYPE html>
+<html><body>
+<h2>Message about ${escapeHtml(listingAddress)}</h2>
+<p><strong>From:</strong> ${escapeHtml(senderName)}</p>
+<p><strong>Email:</strong> ${escapeHtml(senderEmail)}</p>
+${senderPhone ? `<p><strong>Phone:</strong> ${escapeHtml(senderPhone)}</p>` : ""}
+<p><strong>Message:</strong></p>
+<p>${escapeHtml(message)}</p>
+<p>You can reply directly to this email.</p>
+</body></html>`;
 
-      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 20px;">
-        <tr><td style="background-color:#ffffff;border:1px solid #e5e7eb;border-radius:8px;padding:16px 20px;">
-          <p style="margin:0 0 4px;font-size:13px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;">Contact Details</p>
-          <p style="margin:0 0 4px;font-size:15px;color:#334155;"><strong>Name:</strong> ${escapeHtml(senderName)}</p>
-          <p style="margin:0 0 0;font-size:15px;color:#334155;"><strong>Email:</strong> ${escapeHtml(senderEmail)}</p>
-          ${senderPhone ? `<p style="margin:4px 0 0;font-size:15px;color:#334155;"><strong>Phone:</strong> ${escapeHtml(senderPhone)}</p>` : ""}
-        </td></tr>
-      </table>
+    const text = [
+      `Hi ${agentName},`,
+      ``,
+      `You received a new message on your listing:`,
+      listingAddress,
+      ``,
+      `Contact Details`,
+      `Name:  ${senderName}`,
+      `Email: ${senderEmail}`,
+      ...(senderPhone ? [`Phone: ${senderPhone}`] : []),
+      ``,
+      `Message`,
+      message,
+      ``,
+      `You can reply directly to this email.`,
+    ].join("\n");
 
-      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 20px;">
-        <tr><td style="background-color:#ffffff;border:1px solid #e5e7eb;border-radius:8px;padding:16px 20px;">
-          <p style="margin:0 0 4px;font-size:13px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;">Message</p>
-          <p style="margin:0;font-size:15px;line-height:1.6;color:#334155;">${escapeHtml(message)}</p>
-        </td></tr>
-      </table>
-
-      <p style="margin:0;font-size:14px;line-height:1.6;color:#64748b;">
-        You can reply directly to this email to respond.
-      </p>
-    `;
-
-    const html = buildAacEmail({
-      headline: "New inquiry on your listing",
-      body: bodyHtml,
-      preheader: `New message about ${listingAddress}`,
-    });
-
-    const { data, error: emailError } = await resend.emails.send({
-      from: "All Agent Connect <hello@mail.allagentconnect.com>",
-      to: [agentEmail],
-      replyTo: senderEmail,
-      subject: `New inquiry about ${listingAddress}`,
-      html,
-    });
-
-    if (emailError) {
-      console.error("Resend API error:", emailError);
-      throw emailError;
+    // DELIVERABILITY TEST: route Listing → Message Agent through the same
+    // queued email_jobs + worker path that delivers AAC Messages notifications
+    // (which are reliably inboxing from the same notify.allagentconnect.com
+    // sender). Next isolated test: omit Reply-To to mirror AAC Messages.
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    if (!supabaseUrl || !supabaseServiceKey) {
+      throw new Error("Server misconfigured: missing Supabase service credentials");
     }
 
-    console.log("Email sent successfully:", data);
+    const admin = createClient(supabaseUrl, supabaseServiceKey);
 
-    return new Response(JSON.stringify(data), {
+    const { data: jobRow, error: enqueueError } = await admin
+      .from("email_jobs")
+      .insert({
+        payload: {
+          provider: "resend",
+          template: "listing-contact-inquiry",
+          to: agentEmail,
+          subject: `Message about ${listingAddress}`,
+          html: htmlOut,
+        },
+      })
+      .select("id")
+      .single();
+
+    if (enqueueError) {
+      console.error("[send-contact-email] enqueue failed:", enqueueError);
+      throw enqueueError;
+    }
+
+    // Kick the queue so the worker dispatches immediately instead of waiting
+    // for the next cron tick.
+    void fetch(`${supabaseUrl}/functions/v1/kick-email-queue`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${supabaseServiceKey}`,
+        "Content-Type": "application/json",
+      },
+      body: "{}",
+    }).catch((err) => {
+      console.warn("[send-contact-email] kick-email-queue failed (will run on schedule):", err);
+    });
+
+    // Keep `text` in scope to avoid TS unused warnings; not used on queued path
+    // because the worker derives plaintext from html.
+    void text;
+
+    console.log("Listing contact email enqueued:", jobRow?.id);
+
+    return new Response(JSON.stringify({ enqueued: true, jobId: jobRow?.id }), {
       status: 200,
       headers: { "Content-Type": "application/json", ...corsHeaders },
     });

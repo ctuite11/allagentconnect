@@ -192,6 +192,18 @@ export default function BuyersList() {
       const rows: BuyerRow[] = [];
       const seenClientIds = new Set<string>();
 
+      // Track CRM ids that already have an ACTIVE relationship — these must never be
+       // displayed as "Pending Invite" even if an unaccepted invite token still exists
+       // (legacy/leftover token from a prior attempt).
+      const activeCrmIds = new Set<string>();
+      for (const r of relRows) {
+        if (String(r.status) === "active") {
+          const crmId = r.crm_client_id || r.client_id;
+          if (crmId) activeCrmIds.add(String(crmId));
+          if (r.client_id) activeCrmIds.add(String(r.client_id));
+        }
+      }
+
       for (const r of relRows) {
         const crmId = r.crm_client_id || r.client_id;
         const c = clientMap.get(crmId) || clientMap.get(r.client_id);
@@ -227,7 +239,7 @@ export default function BuyersList() {
         if (!c) continue;
         seenClientIds.add(cid);
         const name = formatBuyerListName(c);
-        const pending = pendingInviteClientIds.has(cid);
+        const pending = pendingInviteClientIds.has(cid) && !activeCrmIds.has(cid);
         rows.push({
           clientId: c.id,
           name,
@@ -241,6 +253,8 @@ export default function BuyersList() {
       // Union: buyers with only an outstanding invite token (not yet on a sheet).
       for (const cid of pendingInviteClientIds) {
         if (seenClientIds.has(cid)) continue;
+        // Don't surface as pending if there is already an active relationship for this CRM id.
+        if (activeCrmIds.has(cid)) continue;
         const c = clientMap.get(cid);
         if (!c) continue;
         seenClientIds.add(cid);

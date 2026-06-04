@@ -134,25 +134,76 @@ const handler = async (req: Request): Promise<Response> => {
       preheader: `${senderName} sent you a message on All Agent Connect`,
     });
 
-    const emailResponse = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${RESEND_API_KEY}`,
-      },
-      body: JSON.stringify({
-        from: "All Agent Connect <hello@mail.allagentconnect.com>",
-        to: [agentEmail],
-        reply_to: senderEmail,
-        subject: subject || `${senderName} sent you a message on All Agent Connect`,
-        html,
-      }),
-    });
+    const text = [
+      `Hi ${firstName},`,
+      ``,
+      `You received a new message through your All Agent Connect profile.`,
+      ``,
+      `Contact Details`,
+      `Name:  ${senderName}`,
+      `Email: ${senderEmail}`,
+      ...(senderPhone ? [`Phone: ${senderPhone}`] : []),
+      ``,
+      `Message`,
+      message || "",
+      ``,
+      `Reply directly to ${senderEmail} to respond.`,
+    ].join("\n");
 
-    const data = await emailResponse.json();
-    console.log("Profile contact email sent successfully:", data);
+    const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    if (!supabaseUrl || !SERVICE_KEY) {
+      console.error("[send-agent-profile-contact] Missing Supabase env");
+      return new Response(JSON.stringify({ error: "config" }), {
+        status: 500,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
 
-    return new Response(JSON.stringify(data), {
+    const admin = createClient(supabaseUrl, SERVICE_KEY);
+    const finalSubject = subject || `${senderName} sent you a message on All Agent Connect`;
+    const fromAddress = Deno.env.get("TRANSACTIONAL_FROM") || "All Agent Connect <hello@notify.allagentconnect.com>";
+
+    const { data: job, error: insertErr } = await admin
+      .from("email_jobs")
+      .insert({
+        payload: {
+          provider: "resend",
+          template: "agent-profile-contact",
+          to: agentEmail,
+          from: fromAddress,
+          subject: finalSubject,
+          html,
+          text,
+        },
+      })
+      .select("id")
+      .single();
+
+    if (insertErr || !job) {
+      console.error("[send-agent-profile-contact] enqueue failed:", insertErr);
+      return new Response(JSON.stringify({ error: "enqueue_failed" }), {
+        status: 500,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+
+    // Kick the queue (best-effort)
+    try {
+      await fetch(`${supabaseUrl}/functions/v1/kick-email-queue`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${SERVICE_KEY}`,
+        },
+        body: JSON.stringify({}),
+      });
+    } catch (kickErr) {
+      console.warn("[send-agent-profile-contact] kick-email-queue failed (non-fatal):", kickErr);
+    }
+
+    console.log("Profile contact email enqueued:", job.id);
+
+    return new Response(JSON.stringify({ enqueued: true, jobId: job.id }), {
       status: 200,
       headers: { "Content-Type": "application/json", ...corsHeaders },
     });
