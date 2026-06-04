@@ -4208,6 +4208,10 @@ export type Database = {
       }
     }
     Functions: {
+      accept_client_hot_sheet_invite: {
+        Args: { _token: string }
+        Returns: Json
+      }
       activate_agent_relationship:
         | { Args: { _agent_id: string }; Returns: string }
         | {

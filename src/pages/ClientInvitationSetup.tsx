@@ -11,7 +11,6 @@ import { setPrimaryAgentId } from "@/utils/agentTracking";
 import { validatePassword } from "@/lib/passwordPolicy";
 import AACMonogram from "@/components/ui/AACMonogram";
 import { AacMonogramLoader } from "@/components/AacMonogramLoader";
-import { upsertBuyerProfile } from "@/lib/buyerProfile";
 
 /** Authoritative invite context from `share_tokens` (token string alone is not enough — query params can be tampered). */
 type InviteAnchor = {
@@ -34,7 +33,9 @@ const ClientInvitationSetup = () => {
   const initialFirstName = searchParams.get("first_name") || "";
   const initialLastName = searchParams.get("last_name") || "";
 
-  const [phase, setPhase] = useState<"form" | "signin" | "success">("form");
+  const [phase, setPhase] = useState<
+    "form" | "signin" | "success" | "confirm_email"
+  >("form");
   const [email, setEmail] = useState(initialEmail);
   const [firstName, setFirstName] = useState(initialFirstName);
   const [lastName, setLastName] = useState(initialLastName);
@@ -59,79 +60,24 @@ const ClientInvitationSetup = () => {
     sessionStorage.setItem("aac_invite_acceptance_handoff", String(Date.now()));
   };
 
-  const ensureBuyerSession = async (normalizedEmail: string, plainPassword: string, expectedUserId?: string) => {
-    let { data: { session } } = await supabase.auth.getSession();
-
-    if (!session?.user) {
-      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-        email: normalizedEmail,
-        password: plainPassword,
-      });
-      if (signInError || !signInData.user) {
-        throw new Error("Your account was created, but we could not sign you in automatically. Please sign in to complete invite acceptance.");
-      }
-      session = signInData.session;
-    }
-
-    if (!session?.user) {
-      throw new Error("We could not establish your buyer session. Please try again.");
-    }
-
-    if (expectedUserId && session.user.id !== expectedUserId) {
-      throw new Error("Session mismatch detected. Please sign out and retry your invitation link.");
-    }
-
-    return session.user.id;
-  };
-
-  const ensureActiveRelationship = async (userId: string, invitingAgentId: string, crmClientId?: string) => {
-    const { data: rpcResult, error: relationshipError } = await supabase.rpc("activate_agent_relationship", {
-      _agent_id: invitingAgentId,
-      _crm_client_id: crmClientId || null,
+  /** Calls the single trusted backend RPC that finalizes invite acceptance atomically. */
+  const finalizeAcceptance = async (): Promise<void> => {
+    const { error } = await supabase.rpc("accept_client_hot_sheet_invite", {
+      _token: invitationToken,
     });
-    if (relationshipError) {
-      console.error("Relationship activation error:", relationshipError);
-      const backendError = [
-        relationshipError.code,
-        relationshipError.message,
-        relationshipError.details,
-        relationshipError.hint,
-      ]
-        .filter(Boolean)
-        .join(" | ");
-      if (import.meta.env.DEV && backendError) {
-        throw new Error(`We could not attach your inviting agent to this account. (${backendError})`);
+    if (error) {
+      const msg = (error.message || "").toLowerCase();
+      if (msg.includes("email_mismatch")) {
+        throw new Error("Sign in with the email address your invitation was sent to.");
       }
-      throw new Error("We could not attach your inviting agent to this account. Please try again.");
-    }
-
-    const { data: relationshipCheck, error: relationshipCheckError } = await supabase
-      .from("client_agent_relationships")
-      .select("id")
-      .eq("client_id", userId)
-      .eq("agent_id", invitingAgentId)
-      .eq("status", "active")
-      .maybeSingle();
-
-    if (relationshipCheckError) {
-      console.error("Relationship verification error:", relationshipCheckError);
-      const verificationError = [
-        relationshipCheckError.code,
-        relationshipCheckError.message,
-        relationshipCheckError.details,
-        relationshipCheckError.hint,
-      ]
-        .filter(Boolean)
-        .join(" | ");
-      if (import.meta.env.DEV && verificationError) {
-        throw new Error(`Invite accepted, but we could not verify your agent relationship. (${verificationError})`);
+      if (msg.includes("token_already_accepted")) {
+        throw new Error("This invitation has already been accepted by another account.");
       }
-      throw new Error("Invite accepted, but we could not verify your agent relationship. Please retry this invite link.");
-    }
-    if (!relationshipCheck) {
-      if (!rpcResult) {
-        throw new Error("Invite accepted, but your agent relationship was not activated. Please retry this invite link.");
+      if (msg.includes("token_revoked") || msg.includes("token_not_found") || msg.includes("wrong_token_type")) {
+        throw new Error("This invitation link is no longer available. Please contact your agent.");
       }
+      console.error("[client-invite] finalize error:", error);
+      throw new Error("We could not finalize your invitation. Please try again.");
     }
   };
 
@@ -157,6 +103,12 @@ const ClientInvitationSetup = () => {
           toast.error("This link is no longer available. Please contact your agent.");
           setTokenValid(false);
         } else if (data.accepted_at) {
+          // Idempotent: if the current signed-in user is the one who accepted it, route them home.
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user && (data as any).accepted_by_user_id === user.id) {
+            navigate(postAcceptPath, { replace: true });
+            return;
+          }
           toast.info("This invitation has already been used");
           setTokenValid(false);
         } else {
@@ -307,40 +259,25 @@ const ClientInvitationSetup = () => {
 
       if (!authData.user) throw new Error("Account creation failed");
 
-      const userId = await ensureBuyerSession(normalizedEmail, password, authData.user.id);
-
-      const { error: profileError } = await upsertBuyerProfile({
-        userId,
-        email: normalizedEmail,
-        firstName: firstName.trim() || inviteAnchor?.seedFirstName,
-        lastName: lastName.trim() || inviteAnchor?.seedLastName,
-        phone: inviteAnchor?.seedPhone,
-      });
-      if (profileError) throw profileError;
-
-      const { error: roleError } = await supabase
-        .from("user_roles")
-        .insert({ user_id: userId, role: "buyer" });
-      if (roleError) console.error("Error assigning buyer role:", roleError);
-
-      if (!effectiveAgentId) {
-        throw new Error("Invitation is missing agent context. Please request a new invitation link.");
+      // If signup did not auto-confirm/return a session, try password sign-in; if that
+      // still has no session, the project requires email confirmation — surface clearly.
+      let session = authData.session;
+      if (!session) {
+        const { data: signInData } = await supabase.auth.signInWithPassword({
+          email: normalizedEmail,
+          password,
+        });
+        session = signInData.session ?? null;
       }
-      await ensureActiveRelationship(userId, effectiveAgentId, effectiveCrmClientId);
 
-      const { error: tokenUpdateError } = await supabase
-        .from("share_tokens")
-        .update({
-          accepted_at: new Date().toISOString(),
-          accepted_by_user_id: userId,
-        })
-        .eq("token", invitationToken);
-      if (tokenUpdateError) {
-        throw new Error("Your account is ready, but we could not finalize the invite token. Please retry from your invitation email.");
+      if (!session?.user) {
+        setPhase("confirm_email");
+        return;
       }
+
+      await finalizeAcceptance();
 
       if (effectiveAgentId) setPrimaryAgentId(effectiveAgentId);
-
       setPhase("success");
     } catch (error: any) {
       console.error("Activation error:", error);
@@ -374,35 +311,9 @@ const ClientInvitationSetup = () => {
       if (error) throw error;
       if (!data.user) throw new Error("Sign in failed — please try again.");
 
-      const userId = data.user.id;
-
-      const { error: profileError } = await upsertBuyerProfile({
-        userId,
-        email: normalizedEmail,
-        firstName: firstName.trim() || inviteAnchor?.seedFirstName,
-        lastName: lastName.trim() || inviteAnchor?.seedLastName,
-        phone: inviteAnchor?.seedPhone,
-      });
-      if (profileError) throw profileError;
-
-      if (!effectiveAgentId) {
-        throw new Error("Invitation is missing agent context. Please request a new invitation link.");
-      }
-      await ensureActiveRelationship(userId, effectiveAgentId, effectiveCrmClientId);
-
-      const { error: tokenErr } = await supabase
-        .from("share_tokens")
-        .update({
-          accepted_at: new Date().toISOString(),
-          accepted_by_user_id: userId,
-        })
-        .eq("token", invitationToken);
-      if (tokenErr) {
-        throw new Error("Signed in, but we could not finalize the invite token. Please retry from your invitation email.");
-      }
+      await finalizeAcceptance();
 
       if (effectiveAgentId) setPrimaryAgentId(effectiveAgentId);
-
       setPhase("success");
     } catch (error: any) {
       console.error("Sign-in error:", error);
@@ -537,6 +448,30 @@ const ClientInvitationSetup = () => {
           >
             Go to My Workspace
           </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (phase === "confirm_email") {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white px-4">
+        <div className="max-w-md w-full text-center space-y-6">
+          <div className="flex justify-center">
+            <div className="rounded-full bg-amber-50 p-4">
+              <ShieldCheck className="h-10 w-10 text-amber-600" />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">
+              Confirm your email to continue
+            </h1>
+            <p className="text-sm text-zinc-500 max-w-sm mx-auto">
+              We sent a confirmation link to <strong className="text-zinc-700">{email}</strong>.
+              Open it to verify your email, then return to your invitation link to finish activating
+              your account.
+            </p>
+          </div>
         </div>
       </div>
     );
