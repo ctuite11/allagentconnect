@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.0";
+import { buildUnsubUrl } from "../_shared/tracking.ts";
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -497,7 +498,9 @@ const handler = async (req: Request): Promise<Response> => {
     // mailbox — it damaged sender reputation. Per-agent identity for
     // outreach should move to a dedicated `outreach.allagentconnect.com`
     // sender, not be spoofed on the transactional mailbox.
-    const senderFrom = "All Agent Connect <hello@mail.allagentconnect.com>";
+    // Deliverability fix: send bulk from the same subdomain that is
+    // currently inboxing on transactional streams.
+    const senderFrom = "All Agent Connect <hello@notify.allagentconnect.com>";
     let senderReplyTo = agentEmail || "hello@allagentconnect.com";
     try {
       const { data: sender } = await supabase
@@ -568,13 +571,16 @@ const handler = async (req: Request): Promise<Response> => {
         .select()
         .single();
 
-      const trackingPixelUrl = emailSend 
-        ? `${supabaseUrl}/functions/v1/track-email-open?id=${emailSend.id}`
-        : "";
-
-      const groupBase = htmlTemplate.replace("{{GREETING}}", "");
-      const groupHtml = (emailSend ? wrapClickTracking(groupBase, emailSend.id) : groupBase) +
-        (trackingPixelUrl ? `<img src="${trackingPixelUrl}" width="1" height="1" style="display:none;" alt="" />` : "");
+      // Deliverability pass: no open pixel, no click wrappers. Direct URLs only.
+      const groupUnsubUrl = await buildUnsubUrl(recipients[0].email, "marketing");
+      const unsubFooter = `
+        <p style="margin:24px 0 0;font-size:12px;color:#64748b;text-align:center;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
+          Don't want these emails?
+          <a href="${groupUnsubUrl}" style="color:#64748b;text-decoration:underline;">Unsubscribe</a>
+        </p>`;
+      const groupHtml = htmlTemplate
+        .replace("{{GREETING}}", "")
+        .replace("</body>", `${unsubFooter}</body>`);
 
       // Enqueue single group job
       const { error: insertError } = await supabase
@@ -588,6 +594,7 @@ const handler = async (req: Request): Promise<Response> => {
             html: groupHtml,
             from: senderFrom,
             reply_to: senderReplyTo,
+            category: "marketing",
             variables: {
               campaignId: campaign.id,
               isGroup: true,
@@ -633,10 +640,16 @@ const handler = async (req: Request): Promise<Response> => {
           ? `${supabaseUrl}/functions/v1/track-email-open?id=${emailSend.id}`
           : "";
 
-        const personalizedBase = htmlTemplate
-          .replace("{{GREETING}}", isTemplated ? "" : `<p>Hello ${recipient.name},</p>`);
-        const personalizedHtml = (emailSend ? wrapClickTracking(personalizedBase, emailSend.id) : personalizedBase) +
-          (trackingPixelUrl ? `<img src="${trackingPixelUrl}" width="1" height="1" style="display:none;" alt="" />` : "");
+        // Deliverability pass: no open pixel, no click wrappers. Direct URLs only.
+        const unsubUrl = await buildUnsubUrl(recipient.email, "marketing");
+        const unsubFooter = `
+          <p style="margin:24px 0 0;font-size:12px;color:#64748b;text-align:center;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
+            Don't want these emails?
+            <a href="${unsubUrl}" style="color:#64748b;text-decoration:underline;">Unsubscribe</a>
+          </p>`;
+        const personalizedHtml = htmlTemplate
+          .replace("{{GREETING}}", isTemplated ? "" : `<p>Hello ${recipient.name},</p>`)
+          .replace("</body>", `${unsubFooter}</body>`);
 
         return {
           payload: {
@@ -647,6 +660,7 @@ const handler = async (req: Request): Promise<Response> => {
             html: personalizedHtml,
             from: senderFrom,
             reply_to: senderReplyTo,
+            category: "marketing",
             variables: {
               recipientName: recipient.name,
               campaignId: campaign.id,

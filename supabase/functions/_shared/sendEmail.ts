@@ -75,14 +75,17 @@ export async function sendEmail(
 
   // Marketing emails (single recipient) get tracking + unsubscribe injected.
   const category = (job.payload as { category?: string }).category;
-  const trackingEnabled =
-    isMarketingCategory(category) && toList.length === 1 && !job.payload.html;
+  const isSingleMarketing =
+    isMarketingCategory(category) && toList.length === 1;
+  // Pixel + click-wrapping only runs when we render the template ourselves.
+  const trackingEnabled = isSingleMarketing && !job.payload.html;
 
   let html: string;
   let extraHeaders: Record<string, string> = {};
 
-  if (trackingEnabled) {
-    // Suppression check
+  if (isSingleMarketing) {
+    // Suppression check — applies for any single-recipient marketing send,
+    // including pre-rendered HTML (bulk outreach).
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supa = createClient(SUPABASE_URL, SERVICE_KEY);
@@ -91,29 +94,36 @@ export async function sendEmail(
       _category: category!,
     });
     if (suppressed === true) {
-      // Mark as suppressed (return a synthetic id so the queue records success).
       console.log(`[sendEmail] Suppressed ${toList[0]} for ${category}`);
       return { providerMessageId: `suppressed:${category}` };
     }
-
-    const ctx: TrackingContext = {
-      jobId: job.id,
-      recipientEmail: toList[0],
-      category: category!,
-    };
-
-    const rawHtml = renderEmailTemplate(job.payload.template, job.payload.variables || {});
-    html = await injectTracking(rawHtml, ctx);
 
     const unsubUrl = await buildUnsubUrl(toList[0], category!);
     extraHeaders = {
       "List-Unsubscribe": `<${unsubUrl}>, <mailto:hello@allagentconnect.com?subject=unsubscribe>`,
       "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
     };
+  }
+
+  if (trackingEnabled) {
+    const ctx: TrackingContext = {
+      jobId: job.id,
+      recipientEmail: toList[0],
+      category: category!,
+    };
+    const rawHtml = renderEmailTemplate(job.payload.template, job.payload.variables || {});
+    html = await injectTracking(rawHtml, ctx);
   } else {
     html =
       job.payload.html ||
       renderEmailTemplate(job.payload.template, job.payload.variables || {});
+  }
+
+  // Allow the enqueuing function to pass additional headers (merged after
+  // List-Unsubscribe so callers cannot accidentally drop compliance headers).
+  const payloadHeaders = (job.payload as { headers?: Record<string, string> }).headers;
+  if (payloadHeaders && typeof payloadHeaders === "object") {
+    extraHeaders = { ...payloadHeaders, ...extraHeaders };
   }
 
   const res = await fetch("https://api.resend.com/emails", {
