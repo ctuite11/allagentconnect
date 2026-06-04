@@ -4,12 +4,14 @@ import { AgentAacPage } from "@/components/layout/AgentAacPage";
 import { AacPageIntro } from "@/components/layout/AacPageIntro";
 import { AgentSectionCard } from "@/components/layout/AgentSectionCard";
 import { Button } from "@/components/ui/button";
-import { ChevronRight, UserPlus } from "lucide-react";
+import { ChevronRight, RefreshCw, UserPlus } from "lucide-react";
 import { AacBackLink } from "@/components/layout/AacBackLink";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AgentBuyerActivityHeaderCard } from "@/components/agent/AgentBuyerActivityHeaderCard";
 import { BuyerRowStatusPill } from "@/components/agent/BuyerRowStatusPill";
 import { supabase } from "@/integrations/supabase/client";
+import { enqueueBuyerWorkspaceInvite } from "@/lib/enqueueBuyerWorkspaceInvite";
+import { toast } from "sonner";
 import { CreateBuyerDialog } from "@/components/CreateBuyerDialog";
 import { BuyerCreatedNextStepDialog, type CreatedBuyer } from "@/components/success-hub/BuyerCreatedNextStepDialog";
 import { Seo } from "@/components/Seo";
@@ -473,6 +475,58 @@ function BuyerCard({
   /** Absolute path to buyer workspace (`/agent/buyers/:crmClientId`). */
   to: string;
 }) {
+  const [resending, setResending] = useState(false);
+  const handleResend = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (resending) return;
+    setResending(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error("Please sign in again.");
+        return;
+      }
+      const parts = buyer.name.trim().split(/\s+/);
+      const firstName = parts[0] ?? "";
+      const lastName = parts.slice(1).join(" ");
+      const result = await enqueueBuyerWorkspaceInvite({
+        supabase,
+        agentUserId: user.id,
+        buyer: { id: buyer.clientId, email: buyer.email, firstName, lastName },
+      });
+      if (!result.ok) {
+        toast.error(result.error || "Failed to resend invite");
+        return;
+      }
+      void supabase.functions.invoke("kick-email-queue", { body: {} });
+      toast.success(`Invite resent to ${buyer.email}`);
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to resend invite");
+    } finally {
+      setResending(false);
+    }
+  };
+
+  const trailing = (
+    <div className="flex items-center gap-2">
+      <BuyerRowStatusPill buyer={buyer} />
+      {buyer.status === "pending" ? (
+        <button
+          type="button"
+          onClick={handleResend}
+          disabled={resending}
+          className="inline-flex items-center gap-1 rounded-full border border-neutral-200 bg-white px-2.5 py-0.5 text-[11px] font-medium text-neutral-700 transition-colors hover:border-neutral-300 hover:bg-neutral-50 disabled:opacity-60"
+          title="Resend invite email"
+          aria-label={`Resend invite to ${buyer.email}`}
+        >
+          <RefreshCw className={cn("h-3 w-3", resending && "animate-spin")} aria-hidden strokeWidth={2} />
+          {resending ? "Sending…" : "Resend"}
+        </button>
+      ) : null}
+    </div>
+  );
+
   return (
     <Link
       to={to}
@@ -500,7 +554,7 @@ function BuyerCard({
           metricsToolbarNewMatchesSparklePlus={true}
           avatarClassName="bg-neutral-200 text-neutral-800"
           className="rounded-none border-0 bg-transparent px-0 py-0 shadow-none"
-          trailing={<BuyerRowStatusPill buyer={buyer} />}
+          trailing={trailing}
         />
       </div>
       <div className="flex shrink-0 items-center justify-center self-center">
