@@ -11,6 +11,7 @@ import { AgentBuyerActivityHeaderCard } from "@/components/agent/AgentBuyerActiv
 import { BuyerRowStatusPill } from "@/components/agent/BuyerRowStatusPill";
 import { supabase } from "@/integrations/supabase/client";
 import { enqueueBuyerWorkspaceInvite } from "@/lib/enqueueBuyerWorkspaceInvite";
+import { enqueueHotSheetClientInvites } from "@/lib/enqueueHotSheetClientInvites";
 import { toast } from "sonner";
 import { CreateBuyerDialog } from "@/components/CreateBuyerDialog";
 import { BuyerCreatedNextStepDialog, type CreatedBuyer } from "@/components/success-hub/BuyerCreatedNextStepDialog";
@@ -487,18 +488,60 @@ function BuyerCard({
         toast.error("Please sign in again.");
         return;
       }
-      const parts = buyer.name.trim().split(/\s+/);
-      const firstName = parts[0] ?? "";
-      const lastName = parts.slice(1).join(" ");
-      const result = await enqueueBuyerWorkspaceInvite({
-        supabase,
-        agentUserId: user.id,
-        buyer: { id: buyer.clientId, email: buyer.email, firstName, lastName },
-      });
-      if (!result.ok) {
-        toast.error(result.error || "Failed to resend invite");
-        return;
+
+      // Find the most recent unaccepted client_hotsheet_invite token for this buyer,
+      // so a hot-sheet-originated invite resends as the hot sheet invite (not a generic workspace invite).
+      const { data: tokens } = await supabase
+        .from("share_tokens")
+        .select("id, payload, accepted_at, revoked_at, created_at")
+        .eq("agent_id", user.id)
+        .order("created_at", { ascending: false });
+
+      const emailKey = buyer.email.trim().toLowerCase();
+      const hotSheetToken = (tokens ?? []).find((t: any) => {
+        const p = t?.payload ?? {};
+        if (p?.type !== "client_hotsheet_invite") return null;
+        if (t.accepted_at || t.revoked_at) return false;
+        if (p.invite_only) return false;
+        if (!p.hot_sheet_id) return false;
+        const cid = String(p.client_id ?? "");
+        const em = String(p.client_email ?? "").toLowerCase();
+        return cid === buyer.clientId || em === emailKey;
+      }) as any;
+
+      if (hotSheetToken?.payload?.hot_sheet_id) {
+        const hotSheetId = String(hotSheetToken.payload.hot_sheet_id);
+        const { data: hs } = await supabase
+          .from("hot_sheets")
+          .select("name")
+          .eq("id", hotSheetId)
+          .maybeSingle();
+        const result = await enqueueHotSheetClientInvites({
+          supabase,
+          hotSheetId,
+          hotSheetName: hs?.name || "Your hot sheet",
+          agentUserId: user.id,
+          clientIds: [buyer.clientId],
+        });
+        if (!result.ok || result.enqueued === 0) {
+          toast.error(result.errors?.[0] || "Failed to resend invite");
+          return;
+        }
+      } else {
+        const parts = buyer.name.trim().split(/\s+/);
+        const firstName = parts[0] ?? "";
+        const lastName = parts.slice(1).join(" ");
+        const result = await enqueueBuyerWorkspaceInvite({
+          supabase,
+          agentUserId: user.id,
+          buyer: { id: buyer.clientId, email: buyer.email, firstName, lastName },
+        });
+        if (!result.ok) {
+          toast.error(result.error || "Failed to resend invite");
+          return;
+        }
       }
+
       void supabase.functions.invoke("kick-email-queue", { body: {} });
       toast.success(`Invite resent to ${buyer.email}`);
     } catch (err: any) {
