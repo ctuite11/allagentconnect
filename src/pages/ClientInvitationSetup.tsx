@@ -11,7 +11,6 @@ import { setPrimaryAgentId } from "@/utils/agentTracking";
 import { validatePassword } from "@/lib/passwordPolicy";
 import AACMonogram from "@/components/ui/AACMonogram";
 import { AacMonogramLoader } from "@/components/AacMonogramLoader";
-import { upsertBuyerProfile } from "@/lib/buyerProfile";
 
 /** Authoritative invite context from `share_tokens` (token string alone is not enough — query params can be tampered). */
 type InviteAnchor = {
