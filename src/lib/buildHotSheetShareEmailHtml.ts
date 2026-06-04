@@ -2,6 +2,7 @@ import { getPrimaryPhotoUrl } from "@/components/buyer/buyerListingDisplay";
 import { getListingPublicUrl, getPublicOrigin } from "@/lib/getPublicUrl";
 import { buildPersonalListingShareEmailSubject } from "@/lib/listingEmailSubject";
 import { listingCardStreetHeading, type ListingAddressUnitSource } from "@/lib/utils";
+import { renderEmailListingCard, type EmailListingCardListing } from "@/lib/renderEmailListingCard";
 
 export { buildPersonalListingShareEmailSubject } from "@/lib/listingEmailSubject";
 
@@ -19,6 +20,18 @@ export type ListingShareEmailListing = {
   square_feet?: number | null;
   property_type?: string | null;
   photos?: unknown;
+  status?: string | null;
+  listing_number?: string | null;
+  year_built?: number | null;
+  garage_spaces?: number | null;
+  lot_size?: number | null;
+  property_styles?: unknown;
+  list_office?: string | null;
+  brokerage_name?: string | null;
+  listing_brokerage?: string | null;
+  agent_name?: string | null;
+  listing_agent_name?: string | null;
+  description?: string | null;
 };
 
 /** Street + unit for email card address lines (keeps unit injection in sync with in-app cards). */
@@ -57,54 +70,11 @@ function formatPrice(price?: number | null): string {
 }
 
 function buildListingShareEmailCard(listing: ListingShareEmailListing): string {
-  const listingUrl = getListingPublicUrl(listing.id);
-  const safeUrl = escapeHtml(listingUrl);
-  const price = escapeHtml(formatPrice(listing.price));
-  const address = escapeHtml(formatListingShareEmailStreetLine(listing));
-  const cityStateZip = escapeHtml(
-    `${listing.city || ""}, ${listing.state || ""} ${listing.zip_code || ""}`.trim().replace(/^,\s*|,\s*$/g, ""),
+  const photoUrl = getPrimaryPhotoUrl(listing.photos ?? []) || "";
+  return renderEmailListingCard(
+    { ...(listing as EmailListingCardListing), photoUrl },
+    { listingUrl: getListingPublicUrl(listing.id) },
   );
-  const photoUrl = getPrimaryPhotoUrl(listing.photos ?? []);
-  const safePhoto = photoUrl ? escapeHtml(photoUrl) : "";
-
-  const meta: string[] = [];
-  if (listing.bedrooms != null) meta.push(`${listing.bedrooms} bd`);
-  if (listing.bathrooms != null) meta.push(`${listing.bathrooms} ba`);
-  if (listing.square_feet != null) meta.push(`${Number(listing.square_feet).toLocaleString()} sf`);
-  const propertyType = (listing.property_type ?? "")
-    .toString()
-    .replace(/_/g, " ")
-    .trim();
-  const metaLine = meta.length
-    ? `<div style="margin-top:8px;font-size:13px;color:#6b7280;line-height:1.35;">${escapeHtml(meta.join(" · "))}${propertyType ? ` · ${escapeHtml(propertyType)}` : ""}</div>`
-    : propertyType
-      ? `<div style="margin-top:8px;font-size:13px;color:#6b7280;line-height:1.35;">${escapeHtml(propertyType)}</div>`
-      : "";
-
-  const aacPrimaryCta = "#0E56F5";
-  const sharePhotoH = 150;
-  const shareImgColW = 240;
-
-  return [
-    `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;margin:14px 0;background:#ffffff;box-shadow:0 1px 6px rgba(17,24,39,0.06);">`,
-    `<tr>`,
-    `<td width="${shareImgColW}" style="width:${shareImgColW}px;vertical-align:top;background:#f3f4f6;padding:0;">`,
-    safePhoto
-      ? `<a href="${safeUrl}" style="text-decoration:none;"><img src="${safePhoto}" alt="${address}" width="${shareImgColW}" height="${sharePhotoH}" style="display:block;width:${shareImgColW}px;max-width:100%;height:${sharePhotoH}px;object-fit:cover;object-position:center;border:0;line-height:0;font-size:0;" /></a>`
-      : `<div style="box-sizing:border-box;width:${shareImgColW}px;height:${sharePhotoH}px;line-height:${sharePhotoH}px;text-align:center;background:#f3f4f6;color:#6b7280;font-size:12px;overflow:hidden;">Photo unavailable</div>`,
-    `</td>`,
-    `<td style="padding:16px 18px;vertical-align:top;">`,
-    `<div style="font-size:22px;font-weight:700;color:#111827;line-height:1.2;">${price}</div>`,
-    `<div style="margin-top:8px;font-size:15px;font-weight:600;color:#111827;line-height:1.35;">${address}</div>`,
-    cityStateZip
-      ? `<div style="margin-top:4px;font-size:13px;color:#6b7280;line-height:1.35;">${cityStateZip}</div>`
-      : "",
-    metaLine,
-    `<div style="margin-top:16px;"><a href="${safeUrl}" style="display:inline-block;background-color:${aacPrimaryCta};color:#ffffff;text-decoration:none;font-size:13px;font-weight:600;padding:8px 14px;border-radius:8px;">View listing</a></div>`,
-    `</td>`,
-    `</tr>`,
-    `</table>`,
-  ].join("");
 }
 
 function buildPersonalMessageBlock(userMessage: string): string {
