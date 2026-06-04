@@ -21,44 +21,9 @@ function formatDisplayName(
   return "Unknown";
 }
 
-/** Hot sheets this buyer can access — same union as ClientDashboard / HotSheets. */
-async function loadBuyerHotSheetIds(userId: string, userEmail?: string | null): Promise<string[]> {
-  const ids = new Set<string>();
-  const emailNorm = (userEmail ?? "").trim().toLowerCase();
-
-  const { data: hscRows } = await supabase.from("hot_sheet_clients").select("hot_sheet_id");
-  for (const row of hscRows ?? []) {
-    const hid = (row as { hot_sheet_id?: string }).hot_sheet_id;
-    if (hid) ids.add(hid);
-  }
-
-  const { data: tokenRows } = await supabase
-    .from("share_tokens")
-    .select("payload, accepted_at, accepted_by_user_id")
-    .not("accepted_at", "is", null);
-
-  for (const row of tokenRows ?? []) {
-    const payload =
-      row.payload && typeof row.payload === "object"
-        ? (row.payload as Record<string, unknown>)
-        : {};
-    if (payload.type !== "client_hotsheet_invite") continue;
-
-    const hotSheetId = String(payload.hot_sheet_id ?? "");
-    if (!hotSheetId) continue;
-
-    const matchByUserId = row.accepted_by_user_id === userId;
-    const tokenEmail = String(payload.client_email ?? "").toLowerCase().trim();
-    const matchByEmail = Boolean(emailNorm && tokenEmail === emailNorm);
-    if (matchByUserId || matchByEmail) ids.add(hotSheetId);
-  }
-
-  return [...ids];
-}
-
 /**
- * People a buyer can start a DM with: their agent(s) plus shared hot-sheet / workspace group.
- * Does not include general CRM contacts.
+ * People a buyer can start a DM with: their agent plus friends they invited (workspace).
+ * Does not include general CRM contacts or agent-added hot sheet recipients.
  */
 export async function fetchBuyerMessageRecipients(
   userId: string,
@@ -133,23 +98,6 @@ export async function fetchBuyerMessageRecipients(
     }
   }
 
-  const hotSheetIds = await loadBuyerHotSheetIds(userId, userEmail);
-  if (hotSheetIds.length > 0) {
-    const { data: tokenRows } = await supabase
-      .from("share_tokens")
-      .select("accepted_by_user_id, payload")
-      .eq("payload->>type", "client_hotsheet_invite")
-      .in("payload->>hot_sheet_id", hotSheetIds)
-      .not("accepted_at", "is", null)
-      .not("accepted_by_user_id", "is", null)
-      .is("revoked_at", null);
-
-    for (const row of tokenRows ?? []) {
-      const authId = row.accepted_by_user_id;
-      if (authId && authId !== userId) peerIds.add(authId);
-    }
-  }
-
   for (const agent of agents) {
     peerIds.delete(agent.id);
   }
@@ -181,7 +129,7 @@ export async function fetchBuyerMessageRecipients(
       name:
         formatDisplayName(profile?.first_name, profile?.last_name, profile?.email ?? inviteMeta?.email) ||
         inviteMeta?.name ||
-        "Shared contact",
+        "Contact",
       email: (profile?.email ?? inviteMeta?.email ?? "").trim(),
       group: "shared",
     });
