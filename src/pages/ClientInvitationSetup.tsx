@@ -454,6 +454,30 @@ const ClientInvitationSetup = () => {
     );
   }
 
+  if (phase === "confirm_email") {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white px-4">
+        <div className="max-w-md w-full text-center space-y-6">
+          <div className="flex justify-center">
+            <div className="rounded-full bg-amber-50 p-4">
+              <ShieldCheck className="h-10 w-10 text-amber-600" />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">
+              Confirm your email to continue
+            </h1>
+            <p className="text-sm text-zinc-500 max-w-sm mx-auto">
+              We sent a confirmation link to <strong className="text-zinc-700">{email}</strong>.
+              Open it to verify your email, then return to your invitation link to finish activating
+              your account.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const benefits: { icon: typeof Eye; label: string; iconClass: string }[] = [
     { icon: Eye, label: "View curated listings", iconClass: "text-violet-600" },
     { icon: Heart, label: "Save favorite homes", iconClass: "text-rose-600" },
