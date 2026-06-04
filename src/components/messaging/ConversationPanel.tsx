@@ -83,6 +83,12 @@ export function ConversationPanel({
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // Thread may have been unarchived on load — refresh inbox lists (e.g. left sidebar).
+  useEffect(() => {
+    if (!conversationId || loading || notFound || fetchError) return;
+    onInboxInvalidate?.();
+  }, [conversationId, loading, notFound, fetchError, onInboxInvalidate]);
+
   if (!conversationId) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center bg-white px-6 py-10 text-center md:py-14">

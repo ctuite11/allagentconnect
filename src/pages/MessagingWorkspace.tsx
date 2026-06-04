@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { useAgentPresence } from "@/hooks/useAgentPresence";
@@ -80,6 +80,12 @@ function MessagingWorkspaceContent({
   } = useConversationThreads();
 
   useAgentPresence();
+
+  useEffect(() => {
+    if (selectedConversationId) {
+      void refetchThreads();
+    }
+  }, [selectedConversationId, refetchThreads]);
 
   const buyerMode = isBuyerMode;
   const agentMode = isAgentMode || !buyerMode;

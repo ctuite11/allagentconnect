@@ -29,7 +29,22 @@ export async function archiveConversationsForUser(
   return { error: error?.message ?? null };
 }
 
-/** Restore a thread in the caller's inbox when they open or resume it. */
+/** Restore one participant row (inbox visibility) for a conversation. */
+export async function unarchiveConversationParticipant(
+  supabase: SupabaseClient,
+  conversationId: string,
+  userId: string,
+): Promise<void> {
+  if (!conversationId || !userId) return;
+
+  await supabase
+    .from("conversation_participants")
+    .update({ is_archived: false })
+    .eq("user_id", userId)
+    .eq("conversation_id", conversationId);
+}
+
+/** Restore a thread in the caller's inbox when they open, resume, or send into it. */
 export async function unarchiveConversationForUser(
   supabase: SupabaseClient,
   conversationId: string,
@@ -39,9 +54,5 @@ export async function unarchiveConversationForUser(
   } = await supabase.auth.getUser();
   if (!user?.id || !conversationId) return;
 
-  await supabase
-    .from("conversation_participants")
-    .update({ is_archived: false })
-    .eq("user_id", user.id)
-    .eq("conversation_id", conversationId);
+  await unarchiveConversationParticipant(supabase, conversationId, user.id);
 }

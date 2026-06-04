@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 import { ConversationPanel } from "@/components/messaging/ConversationPanel";
+import { unarchiveConversationForUser } from "@/lib/archiveConversationsForUser";
 import { findOrCreateConversation } from "@/lib/startConversation";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -75,6 +76,9 @@ export function ListingConversationSheet({
         return;
       }
 
+      await unarchiveConversationForUser(supabase, convId);
+      onInboxInvalidate?.();
+
       setConversationId(convId);
       setResolving(false);
     })();
@@ -82,7 +86,7 @@ export function ListingConversationSheet({
     return () => {
       cancelled = true;
     };
-  }, [open, listingId, otherUserId, onOpenChange]);
+  }, [open, listingId, otherUserId, onOpenChange, onInboxInvalidate]);
 
   const handleClose = useCallback(() => {
     onOpenChange(false);

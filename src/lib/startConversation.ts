@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { unarchiveConversationForUser } from "@/lib/archiveConversationsForUser";
 
 interface ConversationOptions {
   listingId?: string | null;
@@ -72,6 +73,8 @@ export async function findOrCreateConversation(
 
     if (!bothArchived) {
       await ensureParticipants(existing.id);
+      // Caller hid this thread — reopen it when they message again from a listing, etc.
+      await unarchiveConversationForUser(supabase, existing.id);
       return existing.id;
     }
     // fall through and try to insert a new row
@@ -94,11 +97,7 @@ export async function findOrCreateConversation(
     // participant row is unarchived so they can see their new message.
     if (createError?.code === "23505" && existing) {
       await ensureParticipants(existing.id);
-      await supabase
-        .from("conversation_participants")
-        .update({ is_archived: false })
-        .eq("conversation_id", existing.id)
-        .eq("user_id", currentUserId);
+      await unarchiveConversationForUser(supabase, existing.id);
       return existing.id;
     }
     console.error("[findOrCreateConversation] insert failed", {

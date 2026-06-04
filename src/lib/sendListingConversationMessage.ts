@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { unarchiveConversationForUser } from "@/lib/archiveConversationsForUser";
 import { findOrCreateConversation } from "@/lib/startConversation";
 
 export type SendListingConversationMessageInput = {
@@ -39,6 +40,8 @@ export async function sendListingConversationMessage(
   if (!conversationId) {
     return { ok: false, message: "Could not create or load the conversation thread." };
   }
+
+  await unarchiveConversationForUser(supabase, conversationId);
 
   const { error } = await supabase.from("conversation_messages").insert({
     conversation_id: conversationId,

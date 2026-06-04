@@ -247,6 +247,8 @@ export function useConversation(
 
       setSending(true);
       try {
+        await unarchiveConversationForUser(supabase, normalizedId);
+
         const { error } = await supabase.from("conversation_messages").insert({
           conversation_id: normalizedId,
           sender_agent_id: user.id,
