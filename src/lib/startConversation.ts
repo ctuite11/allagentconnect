@@ -21,24 +21,6 @@ async function isConversationArchivedForUser(
   return data.is_archived === true;
 }
 
-/** True when both users archived the thread (e.g. after agent removed buyer). */
-async function isConversationArchivedForBothUsers(
-  conversationId: string,
-  userA: string,
-  userB: string,
-): Promise<boolean> {
-  const { data, error } = await supabase
-    .from("conversation_participants")
-    .select("user_id, is_archived")
-    .eq("conversation_id", conversationId)
-    .in("user_id", [userA, userB]);
-
-  if (error || !data?.length) return false;
-
-  const byUser = new Map(data.map((row) => [row.user_id, row.is_archived === true]));
-  return byUser.get(userA) === true && byUser.get(userB) === true;
-}
-
 /**
  * Find or create a 1:1 conversation between two agents.
  * Optionally scoped to a specific listing.
