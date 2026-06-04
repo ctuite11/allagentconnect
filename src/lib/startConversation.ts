@@ -5,22 +5,20 @@ interface ConversationOptions {
   listingId?: string | null;
 }
 
-/** True when both users archived the thread (e.g. after agent removed buyer). */
-async function isConversationArchivedForBothUsers(
+/** True when the given user's participant row is archived for this conversation. */
+async function isConversationArchivedForUser(
   conversationId: string,
-  userA: string,
-  userB: string,
+  userId: string,
 ): Promise<boolean> {
   const { data, error } = await supabase
     .from("conversation_participants")
-    .select("user_id, is_archived")
+    .select("is_archived")
     .eq("conversation_id", conversationId)
-    .in("user_id", [userA, userB]);
+    .eq("user_id", userId)
+    .maybeSingle();
 
-  if (error || !data?.length) return false;
-
-  const byUser = new Map(data.map((row) => [row.user_id, row.is_archived === true]));
-  return byUser.get(userA) === true && byUser.get(userB) === true;
+  if (error || !data) return false;
+  return data.is_archived === true;
 }
 
 /**
@@ -35,22 +33,27 @@ export async function findOrCreateConversation(
 ): Promise<string | null> {
   const listingId = opts?.listingId ?? null;
 
-  // Build query for existing conversation between the two users
+  // Build query for existing conversation between the two users.
+  // For generic (no listing) we may have multiple historical rows (some
+  // archived by the current user). Order by most recent so we evaluate the
+  // newest first.
   let query = supabase
     .from("conversations")
-    .select("id")
+    .select("id, last_message_at")
     .or(
       `and(agent_a_id.eq.${currentUserId},agent_b_id.eq.${otherUserId}),and(agent_a_id.eq.${otherUserId},agent_b_id.eq.${currentUserId})`
-    );
+    )
+    .order("last_message_at", { ascending: false });
 
   // Scope to listing if provided, otherwise find generic conversation
   if (listingId) {
-    query = query.eq("listing_id", listingId);
+    query = query.eq("listing_id", listingId).limit(1);
   } else {
-    query = query.is("listing_id", null);
+    query = query.is("listing_id", null).limit(1);
   }
 
-  const { data: existing, error: searchError } = await query.maybeSingle();
+  const { data: existingRows, error: searchError } = await query;
+  const existing = existingRows?.[0] ?? null;
 
   if (searchError) {
     console.error("[findOrCreateConversation] search failed", {
@@ -62,22 +65,27 @@ export async function findOrCreateConversation(
   }
 
   if (existing) {
-    // If both participants archived this thread (e.g. after a removed
-    // relationship), do NOT auto-unarchive. Force a fresh conversation row
-    // so the new relationship starts with an empty inbox thread.
-    const bothArchived = await isConversationArchivedForBothUsers(
-      existing.id,
-      currentUserId,
-      otherUserId,
-    );
-
-    if (!bothArchived) {
+    if (listingId) {
+      // Listing-scoped: keep reusing the listing thread (unique by listing).
       await ensureParticipants(existing.id);
-      // Caller hid this thread — reopen it when they message again from a listing, etc.
       await unarchiveConversationForUser(supabase, existing.id);
       return existing.id;
     }
-    // fall through and try to insert a new row
+
+    // Generic conversation: if the current user archived/deleted this thread
+    // from their inbox, do NOT reuse or unarchive it. Start a fresh row so
+    // their new message lands in a clean thread. The other participant's
+    // visibility is unchanged (still archived/visible per their own row).
+    const archivedForCaller = await isConversationArchivedForUser(
+      existing.id,
+      currentUserId,
+    );
+
+    if (!archivedForCaller) {
+      await ensureParticipants(existing.id);
+      return existing.id;
+    }
+    // fall through and create a new generic conversation
   }
 
   // Create new conversation
@@ -92,10 +100,9 @@ export async function findOrCreateConversation(
     .single();
 
   if (createError || !newConvo) {
-    // Unique-constraint conflict (listing-scoped 1:1 already exists, both
-    // archived). Fall back to the existing row and ensure the caller's
-    // participant row is unarchived so they can see their new message.
-    if (createError?.code === "23505" && existing) {
+    // Unique-constraint conflict (listing-scoped 1:1 already exists).
+    // Generic rows allow NULL duplicates so this branch is listing-only.
+    if (createError?.code === "23505" && existing && listingId) {
       await ensureParticipants(existing.id);
       await unarchiveConversationForUser(supabase, existing.id);
       return existing.id;
