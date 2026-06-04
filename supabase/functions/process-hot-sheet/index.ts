@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { formatListingShareEmailStreetLine } from "../_shared/listingShareEmailAddress.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -416,12 +417,12 @@ const handler = async (req: Request): Promise<Response> => {
           const photos = listing.photos || [];
           const photoUrl = photos[0]?.url || '';
           const listingUrl = `${baseUrl}/property/${listing.id}`;
-          
+          const streetLine = formatListingShareEmailStreetLine(listing) || listing.address;
           return `
           <li style="margin-bottom: 20px; padding: 0; background-color: #f9f9f9; border-radius: 5px; overflow: hidden;">
-            ${photoUrl ? `<img src="${photoUrl}" alt="${listing.address}" style="width: 100%; height: 200px; object-fit: cover;" />` : ''}
+            ${photoUrl ? `<img src="${photoUrl}" alt="${streetLine}" style="width: 100%; height: 200px; object-fit: cover;" />` : ''}
             <div style="padding: 15px;">
-              <strong style="font-size: 16px;">${listing.address}</strong><br>
+              <strong style="font-size: 16px;">${streetLine}</strong><br>
               <span style="color: #6b7280;">${listing.city}, ${listing.state} ${listing.zip_code}</span><br>
               <span style="color: #2754C5; font-size: 18px; font-weight: bold;">$${listing.price?.toLocaleString()}</span><br>
               ${listing.bedrooms ? `${listing.bedrooms} bed` : ''} 
