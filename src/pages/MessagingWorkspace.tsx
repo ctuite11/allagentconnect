@@ -77,6 +77,8 @@ function MessagingWorkspaceContent({
     loading: threadsLoading,
     refetch: refetchThreads,
     inboxFetchError,
+    markArchivedLocally,
+    clearLocalArchive,
   } = useConversationThreads();
 
   useAgentPresence();
@@ -98,18 +100,31 @@ function MessagingWorkspaceContent({
 
   const handleArchiveThreads = useCallback(
     async (conversationIds: string[]): Promise<boolean> => {
+      // Optimistically hide from the inbox so a racing refetch or realtime
+      // event can't make the row flash back in.
+      markArchivedLocally(conversationIds);
+      if (selectedConversationId && conversationIds.includes(selectedConversationId)) {
+        navigate(messagesRouteBase);
+      }
       const { error } = await archiveConversationsForUser(supabase, conversationIds);
       if (error) {
+        // Roll back the local guard so the row reappears if the server failed.
+        clearLocalArchive(conversationIds);
+        await refetchThreads();
         toast.error("Could not delete conversation", { description: error });
         return false;
       }
       await refetchThreads();
-      if (selectedConversationId && conversationIds.includes(selectedConversationId)) {
-        navigate(messagesRouteBase);
-      }
       return true;
     },
-    [messagesRouteBase, navigate, refetchThreads, selectedConversationId],
+    [
+      clearLocalArchive,
+      markArchivedLocally,
+      messagesRouteBase,
+      navigate,
+      refetchThreads,
+      selectedConversationId,
+    ],
   );
 
   return (

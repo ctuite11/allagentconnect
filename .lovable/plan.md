@@ -1,12 +1,30 @@
-## Issue
-On the Consumer Property Detail page (the only surface using `PropertyFactsRow`), all five icons (Bed, Bath, Sq Ft, $/sf, DOM) now render in neutral-600 ("black/gray") instead of AAC blue.
+## Plan
 
-## Root cause
-`src/pages/ConsumerPropertyDetail.tsx` passes `iconClassName="!text-neutral-600"` to `PropertyFactsRow`. The `!important` prefix forces neutral-600 and overrides the AAC blue set inside `PropertyFactsRow`, so all icons render gray.
+1. **Stop opening a deleted thread from restoring it**
+   - Remove the automatic unarchive that currently runs when a conversation is merely opened.
+   - Keep unarchive behavior only for actual new messages, where the backend trigger already restores both participants.
 
-## Fix (one-line change, single file)
-Remove the `iconClassName="!text-neutral-600"` prop from the `PropertyFactsRow` usage in `src/pages/ConsumerPropertyDetail.tsx` (line 701). With that prop gone, every icon (Bed, Bath, Sq Ft, $/sf, DOM) inherits AAC blue (`#0E56F5`) from `PropertyFactsRow`.
+2. **Make delete/archive sticky in the UI**
+   - Add a local “just deleted” guard in the conversation thread hook.
+   - When a thread is deleted, remove it immediately and filter it out from any near-term refetch/realtime refresh so it does not flash back in.
+   - If the deleted thread is currently open, navigate back to the messages root.
 
-## Out of scope
-- No changes to `PropertyFactsRow.tsx` or `propertyTokens.ts`.
-- No other callers, no styling tweaks, no layout changes.
+3. **Fix stale unread count badge**
+   - Update the unread-count hook to refresh not only when a message arrives, but also when the user’s participant row changes, such as `last_read_at` updates or archive changes.
+   - Ensure the messages header badge drops to zero after the open conversation is marked read.
+
+4. **Fix blank selected state after inbox is empty**
+   - If the selected conversation is no longer present in the inbox after delete/archive, show the normal “Select a conversation” state instead of leaving the page looking blank or mismatched.
+
+5. **Verify with the current reported conversation**
+   - Check that deleting the thread removes it from the visible list and it stays gone after refetch.
+   - Check that the buyer Messages nav unread badge clears when the conversation is read.
+
+## Technical notes
+
+- Frontend files likely affected:
+  - `src/hooks/useConversationThreads.ts`
+  - `src/hooks/useConversation.ts`
+  - `src/hooks/useUnreadConversations.ts`
+  - `src/pages/MessagingWorkspace.tsx`
+- No database migration is planned unless implementation reveals the unread cursor update is blocked by access rules.

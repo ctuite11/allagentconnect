@@ -79,7 +79,9 @@ export function useConversation(
       await supabase.rpc("ensure_conversation_participants_for_caller", {
         p_conversation_id: normalizedId,
       });
-      await unarchiveConversationForUser(supabase, normalizedId);
+      // NOTE: Do NOT auto-unarchive on open. Opening a deleted thread should
+      // not restore it to the inbox. The DB trigger on new messages handles
+      // unarchiving when either party actually sends/receives a message.
 
       const otherUserId = convo.agent_a_id === user.id ? convo.agent_b_id : convo.agent_a_id;
 
@@ -247,6 +249,7 @@ export function useConversation(
 
       setSending(true);
       try {
+        // Sending a message intentionally restores the thread for the sender.
         await unarchiveConversationForUser(supabase, normalizedId);
 
         const { error } = await supabase.from("conversation_messages").insert({
