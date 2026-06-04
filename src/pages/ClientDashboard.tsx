@@ -756,6 +756,7 @@ export default function ClientDashboard() {
         <ContactMyAgentDialog
           open={contactAgentEmailOpen}
           onOpenChange={setContactAgentEmailOpen}
+          agentUserId={agent.id}
           agentDisplayName={`${agent.first_name} ${agent.last_name}`.trim()}
         />
       ) : null}

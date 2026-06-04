@@ -8,9 +8,12 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { toast } from "sonner";
-import { invokeEdgeFunction } from "@/lib/invokeEdgeFunction";
+import { toast as sonnerToast } from "sonner";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useSenderProfilePrefill } from "@/lib/currentSenderProfile";
 
 type Props = {
   open: boolean;
@@ -26,16 +29,26 @@ type Props = {
 export function ContactMyAgentDialog({
   open,
   onOpenChange,
-  crmClientId,
+  crmClientId: _crmClientId,
   agentUserId,
   agentDisplayName,
   defaultSubject,
 }: Props) {
+  const { toast } = useToast();
   const [subject, setSubject] = React.useState(
-    "Message from your client via AllAgentConnect"
+    "Message from your client via AllAgentConnect",
   );
   const [message, setMessage] = React.useState("");
+  const [senderName, setSenderName] = React.useState("");
+  const [senderEmail, setSenderEmail] = React.useState("");
   const [sending, setSending] = React.useState(false);
+
+  const applySender = React.useCallback((sender: { name: string; email: string }) => {
+    setSenderName((prev) => sender.name || prev);
+    setSenderEmail((prev) => sender.email || prev);
+  }, []);
+
+  useSenderProfilePrefill(open, applySender, "buyer");
 
   const canSend = message.trim().length > 0;
 
@@ -48,23 +61,62 @@ export function ContactMyAgentDialog({
 
   async function handleSend() {
     if (!canSend) {
-      toast.error("Please enter a message.");
+      sonnerToast.error("Please enter a message.");
       return;
     }
 
+    console.log("[ContactMyAgentDialog] buyer dashboard email submit", {
+      component: "ContactMyAgentDialog",
+      path: "buyer-dashboard-contact-my-agent",
+      agentUserId: agentUserId ?? null,
+    });
+
     setSending(true);
     try {
-      await invokeEdgeFunction("send-buyer-agent-email", {
-        subject: subject.trim(),
-        message: message.trim(),
-        ...(agentUserId ? { agentId: agentUserId } : {}),
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+
+      if (!accessToken) {
+        toast({
+          title: "Please sign in again",
+          description: "Your session expired. Sign in again before sending this email.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke("send-buyer-agent-email", {
+        body: {
+          subject: subject.trim(),
+          message: message.trim(),
+          ...(agentUserId ? { agentId: agentUserId } : {}),
+        },
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
       });
 
-      toast.success("Message sent to your agent");
+      if (error || !data?.success) {
+        const context = (error as { context?: Response } | null)?.context;
+        const backendError = context
+          ? await context
+              .clone()
+              .json()
+              .then((body) => (typeof body?.error === "string" ? body.error : null))
+              .catch(() => null)
+          : null;
+
+        sonnerToast.error(
+          data?.error || backendError || error?.message || "Failed to send message",
+        );
+        return;
+      }
+
+      sonnerToast.success("Message sent to your agent");
       onOpenChange(false);
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Failed to send message";
-      toast.error(msg);
+      sonnerToast.error(msg);
     } finally {
       setSending(false);
     }
@@ -81,8 +133,40 @@ export function ContactMyAgentDialog({
         </DialogHeader>
 
         <div className="space-y-4">
+          <div className="space-y-3 rounded-lg border border-neutral-200 bg-neutral-50/80 p-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">Sender</p>
+            <div className="space-y-1.5">
+              <Label htmlFor="buyer-email-sender-name" className="text-xs text-neutral-600">
+                Your name
+              </Label>
+              <Input
+                id="buyer-email-sender-name"
+                value={senderName}
+                onChange={(e) => setSenderName(e.target.value)}
+                placeholder="Your full name"
+                maxLength={100}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="buyer-email-sender-email" className="text-xs text-neutral-600">
+                Your email
+              </Label>
+              <Input
+                id="buyer-email-sender-email"
+                type="email"
+                value={senderEmail}
+                onChange={(e) => setSenderEmail(e.target.value)}
+                placeholder="you@example.com"
+                maxLength={255}
+              />
+            </div>
+            <p className="text-[11px] text-neutral-500">
+              Replies from your agent will go to this address.
+            </p>
+          </div>
+
           <div>
-            <label className="text-sm font-medium mb-1 block">Subject</label>
+            <label className="mb-1 block text-sm font-medium">Subject</label>
             <Input
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
@@ -90,7 +174,7 @@ export function ContactMyAgentDialog({
           </div>
 
           <div>
-            <label className="text-sm font-medium mb-1 block">Message</label>
+            <label className="mb-1 block text-sm font-medium">Message</label>
             <Textarea
               value={message}
               onChange={(e) => setMessage(e.target.value)}
