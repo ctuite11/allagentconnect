@@ -165,12 +165,22 @@ async function activateRelationshipForBuyer(
 }
 
 serve(async (req) => {
+  try {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return json({ success: false, error: "Method not allowed" }, 405);
 
-  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-  const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+
+  if (!supabaseUrl || !anonKey || !serviceRoleKey) {
+    console.error("[accept-client-hot-sheet-invite] missing required environment variables", {
+      hasSupabaseUrl: Boolean(supabaseUrl),
+      hasAnonKey: Boolean(anonKey),
+      hasServiceRoleKey: Boolean(serviceRoleKey),
+    });
+    return json({ success: false, error: "Invite acceptance is temporarily unavailable" }, 500);
+  }
 
   let body: RequestBody;
   try {
@@ -441,4 +451,8 @@ serve(async (req) => {
     crmClientId,
     alreadyAccepted,
   });
+  } catch (error) {
+    console.error("[accept-client-hot-sheet-invite] unhandled runtime error", error);
+    return json({ success: false, error: "Invite acceptance failed. Please try again." }, 500);
+  }
 });
