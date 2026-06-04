@@ -64,13 +64,8 @@ export const PropertyDetailRightColumn = ({ listing, agent, isAgentView, stats }
         listingId: listing?.id ?? null,
       });
       if (convoId) {
-<<<<<<< HEAD
         navigate(messagesPathForRole(convoId, role), {
           state: buildMessageReturnState(location.pathname, location.search),
-=======
-        navigate(`/messages/${convoId}`, {
-          state: { from: location.pathname + location.search, fromLabel: "Back to listing" },
->>>>>>> 0abdcb6c480db6cd0a6a7b29d361af9a0e6f7195
         });
       } else {
         toast.error("Couldn't start message. Please try again.");
@@ -411,13 +406,8 @@ export const PropertyDetailRightColumn = ({ listing, agent, isAgentView, stats }
         listingId: listing?.id ?? null,
       });
       if (!convId) throw new Error("No conversation id returned");
-<<<<<<< HEAD
       navigate(messagesPathForRole(convId, role), {
         state: buildMessageReturnState(location.pathname, location.search),
-=======
-      navigate(`/messages/${convId}`, {
-        state: { from: location.pathname + location.search, fromLabel: "Back to listing" },
->>>>>>> 0abdcb6c480db6cd0a6a7b29d361af9a0e6f7195
       });
     } catch {
       toast.error("Couldn't start a message. Please try again.");
