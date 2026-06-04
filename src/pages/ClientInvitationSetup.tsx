@@ -81,11 +81,12 @@ const ClientInvitationSetup = () => {
     });
 
     if (!result.ok) {
-      if (result.code === "existing_account") {
+      const failure = result as { ok: false; error: string; code?: string };
+      if (failure.code === "existing_account") {
         setPhase("signin");
         return;
       }
-      throw new Error(result.error);
+      throw new Error(failure.error);
     }
 
     if (result.agentId) setPrimaryAgentId(result.agentId);

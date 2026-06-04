@@ -42,6 +42,21 @@ function normalizeEmail(raw: string): string {
 
 async function findAuthUserByEmail(admin: SupabaseClient, email: string) {
   const target = normalizeEmail(email);
+  // Authoritative lookup via service role SQL on auth.users
+  try {
+    const { data, error } = await admin
+      .schema("auth" as never)
+      .from("users" as never)
+      .select("id, email")
+      .ilike("email", target)
+      .limit(1)
+      .maybeSingle();
+    if (!error && data && (data as { id: string }).id) {
+      return { id: (data as { id: string }).id, email: (data as { email: string }).email } as { id: string; email: string };
+    }
+  } catch (_e) {
+    // fall through to pagination
+  }
   let page = 1;
   while (page <= 20) {
     const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 200 });
@@ -287,14 +302,52 @@ serve(async (req) => {
       });
 
       if (createError || !created?.user) {
-        console.error("Auth user creation failed:", createError);
         const msg = createError?.message ?? "Failed to create account";
-        if (msg.toLowerCase().includes("already")) {
-          return json({ success: false, error: "Account already exists", code: "existing_account" }, 409);
+        const isExists =
+          (createError as { code?: string } | null)?.code === "email_exists" ||
+          msg.toLowerCase().includes("already");
+
+        if (isExists) {
+          // Try cleaning up orphan auth.identities rows (user deleted but identity row left behind),
+          // then retry createUser once before falling back to "existing_account".
+          try {
+            const { data: cleanedCount } = await supabaseAdmin.rpc(
+              "cleanup_orphan_auth_identity",
+              { _email: email },
+            );
+            if (typeof cleanedCount === "number" && cleanedCount > 0) {
+              const retry = await supabaseAdmin.auth.admin.createUser({
+                email,
+                password,
+                email_confirm: true,
+                user_metadata: {
+                  first_name: firstName,
+                  last_name: lastName,
+                  phone: payload.client_phone ?? null,
+                  intended_role: "buyer",
+                },
+              });
+              if (!retry.error && retry.data?.user) {
+                userId = retry.data.user.id;
+              } else {
+                console.error("[accept-client-hot-sheet-invite] retry after orphan cleanup failed", retry.error);
+                return json({ success: false, error: "Account already exists", code: "existing_account" }, 409);
+              }
+            } else {
+              // No orphan identity — a real live account exists for this email.
+              return json({ success: false, error: "Account already exists", code: "existing_account" }, 409);
+            }
+          } catch (cleanupErr) {
+            console.error("[accept-client-hot-sheet-invite] orphan cleanup error", cleanupErr);
+            return json({ success: false, error: "Account already exists", code: "existing_account" }, 409);
+          }
+        } else {
+          console.error("Auth user creation failed:", createError);
+          return json({ success: false, error: msg }, 500);
         }
-        return json({ success: false, error: msg }, 500);
+      } else {
+        userId = created.user.id;
       }
-      userId = created.user.id;
     }
   }
 

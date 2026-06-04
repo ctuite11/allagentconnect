@@ -4258,6 +4258,10 @@ export type Database = {
         }[]
       }
       cleanup_expired_share_tokens: { Args: never; Returns: undefined }
+      cleanup_orphan_auth_identity: {
+        Args: { _email: string }
+        Returns: number
+      }
       count_matching_agents: {
         Args: {
           p_bathrooms: number

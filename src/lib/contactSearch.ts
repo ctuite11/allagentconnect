@@ -136,7 +136,7 @@ export async function fetchAllAgentContacts<T extends ContactRow = ContactRow>(
 
     if (error) throw error;
 
-    const batch = (data ?? []) as T[];
+    const batch = (data ?? []) as unknown as T[];
     all.push(...batch);
     if (batch.length < PAGE_SIZE) break;
   }
