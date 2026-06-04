@@ -284,8 +284,6 @@ export function renderEmailTemplate(
       const senderName = String(v.sender_name || "Someone");
       const messageBodyRaw = String(v.message_body || "");
       const ctaUrl = String(v.cta_url || "/messages");
-      const listingAddress = v.listing_address ? String(v.listing_address) : "";
-      const listingId = v.listing_id ? String(v.listing_id) : "";
 
       const esc = (s: string) =>
         s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#x27;");
@@ -296,20 +294,41 @@ export function renderEmailTemplate(
       const ctaHref = ctaUrl.startsWith("http")
         ? ctaUrl
         : `${appUrl}${ctaUrl.startsWith("/") ? "" : "/"}${ctaUrl}`;
-      const contextLine = listingAddress
-        ? `About: ${esc(listingAddress)}`
-        : listingId
-          ? `About listing #${esc(listingId)}`
-          : "";
+
+      const listing =
+        v.listing && typeof v.listing === "object" && v.listing.id ? v.listing : null;
+      let listingCardHtml = "";
+      if (listing) {
+        const listingPath =
+          typeof v.listing_url === "string" && v.listing_url.trim()
+            ? v.listing_url.trim()
+            : v.recipient_role === "buyer"
+              ? `/consumer-property/${listing.id}`
+              : `/property/${listing.id}`;
+        const listingHref = listingPath.startsWith("http")
+          ? listingPath
+          : `${appUrl}${listingPath.startsWith("/") ? listingPath : `/${listingPath}`}`;
+        listingCardHtml = renderListingEmailCard(listing, {
+          baseUrl: appUrl,
+          listingUrl: listingHref,
+          ctaLabel: "View listing",
+          greenCta: true,
+        });
+      }
+
+      const messageBlock = `
+          <div style="background:#ffffff;padding:16px;border-radius:8px;border:1px solid #e5e7eb;margin:0 0 4px;">
+            <p style="margin:0;color:#334155;line-height:1.6;">${safeBody || esc("You have a new message.")}</p>
+          </div>`;
 
       return buildAacEmail({
         headline: `New message from ${safeSender}`,
         preheader: (messageBodyRaw || "You have a new message.").replace(/\s+/g, " ").trim().slice(0, 90),
-        body: `
-          ${contextLine ? `<p style="margin:0 0 12px;font-size:13px;color:#64748b;">${contextLine}</p>` : ""}
-          <div style="background:#ffffff;padding:16px;border-radius:8px;border:1px solid #e5e7eb;margin:0 0 4px;">
-            <p style="margin:0;color:#334155;line-height:1.6;">${safeBody || esc("You have a new message.")}</p>
-          </div>`,
+        body: listing
+          ? `${listingCardHtml}
+          <p style="margin:16px 0 8px;font-size:13px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.04em;">Message</p>
+          ${messageBlock}`
+          : messageBlock,
         ctaLabel: "View Conversation",
         ctaUrl: ctaHref,
       });

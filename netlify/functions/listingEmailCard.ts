@@ -10,7 +10,7 @@
  * Pure email-safe HTML: nested <table>s, inline styles, no flex/grid.
  */
 
-import { formatListingShareEmailStreetLine } from "./listingShareEmailAddress.ts";
+import { formatListingShareEmailStreetLine } from "./listingShareEmailAddress";
 
 const AAC_PRIMARY_BLUE = "#0E56F5";
 

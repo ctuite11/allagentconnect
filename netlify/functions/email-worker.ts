@@ -1,5 +1,6 @@
 import type { Handler, HandlerEvent, HandlerContext } from "@netlify/functions";
 import { createClient } from "@supabase/supabase-js";
+import { renderListingEmailCard } from "./listingEmailCard";
 
 interface EmailJob {
   id: string;
@@ -167,8 +168,6 @@ function renderEmailTemplate(template: string, variables: Record<string, any>): 
       const senderName = String(variables.sender_name || "Someone");
       const messageBodyRaw = String(variables.message_body || "");
       const ctaUrl = String(variables.cta_url || "/messages");
-      const listingAddress = variables.listing_address ? String(variables.listing_address) : "";
-      const listingId = variables.listing_id ? String(variables.listing_id) : "";
       const preview = (messageBodyRaw || "").replace(/\s+/g, " ").trim().slice(0, 90);
 
       const escapeHtml = (s: string) =>
@@ -185,13 +184,43 @@ function renderEmailTemplate(template: string, variables: Record<string, any>): 
         .join("") || "?";
 
       const appUrl = process.env.APP_URL || "https://allagentconnect.com";
-      const ctaHref = `${appUrl}${ctaUrl.startsWith("/") ? "" : "/"}${ctaUrl}`;
+      const ctaHref = ctaUrl.startsWith("http")
+        ? ctaUrl
+        : `${appUrl}${ctaUrl.startsWith("/") ? "" : "/"}${ctaUrl}`;
       const preheader = escapeHtml(preview || "You have a new message.");
-      const contextLine = listingAddress
-        ? `About: ${escapeHtml(listingAddress)}`
-        : listingId
-          ? `About listing #${escapeHtml(listingId)}`
-          : "";
+
+      const listing =
+        variables.listing && typeof variables.listing === "object" && variables.listing.id
+          ? variables.listing
+          : null;
+      let listingCardHtml = "";
+      if (listing) {
+        const listingPath =
+          typeof variables.listing_url === "string" && variables.listing_url.trim()
+            ? variables.listing_url.trim()
+            : variables.recipient_role === "buyer"
+              ? `/consumer-property/${listing.id}`
+              : `/property/${listing.id}`;
+        const listingHref = listingPath.startsWith("http")
+          ? listingPath
+          : `${appUrl}${listingPath.startsWith("/") ? listingPath : `/${listingPath}`}`;
+        listingCardHtml = renderListingEmailCard(listing, {
+          baseUrl: appUrl,
+          listingUrl: listingHref,
+          ctaLabel: "View listing",
+          greenCta: true,
+        });
+      }
+
+      const messageSection = `
+                <tr>
+                  <td style="padding:0 24px 20px;">
+                    ${listingCardHtml ? `<p style="margin:0 0 10px;font-size:13px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.04em;">Message</p>` : ""}
+                    <div class="quote" style="background:#f8fafc; border-left:4px solid #0E56F5; border-radius:0 8px 8px 0; padding:16px; font-size:15px; line-height:1.6; color:#334155;">
+                      ${safeBody || escapeHtml("You have a new message.")}
+                    </div>
+                  </td>
+                </tr>`;
 
       return `<!DOCTYPE html>
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
@@ -254,27 +283,21 @@ function renderEmailTemplate(template: string, variables: Record<string, any>): 
                           <div class="text" style="font-size:16px; font-weight:700; color:#0f172a; line-height:1.3;">
                             New message from ${safeSender}
                           </div>
-                          ${contextLine ? `<div class="muted" style="font-size:13px; color:#64748b; margin-top:2px;">${contextLine}</div>` : ``}
                         </td>
                       </tr>
                     </table>
                   </td>
                 </tr>
 
-                <!-- Message body -->
-                <tr>
-                  <td style="padding:0 24px 20px;">
-                    <div class="quote" style="background:#f8fafc; border-left:4px solid #0E56F5; border-radius:0 8px 8px 0; padding:16px; font-size:15px; line-height:1.6; color:#334155;">
-                      ${safeBody || escapeHtml("You have a new message.")}
-                    </div>
-                  </td>
-                </tr>
+                ${listingCardHtml ? `<tr><td style="padding:0 24px 8px;">${listingCardHtml}</td></tr>` : ""}
+
+                ${messageSection}
 
                 <!-- CTA -->
                 <tr>
                   <td style="padding:0 24px 28px; text-align:center;">
-                    <a href="${ctaHref}" target="_blank" style="display:inline-block; background:#0F172A; color:#ffffff; font-size:15px; font-weight:600; padding:14px 32px; border-radius:10px; text-decoration:none; letter-spacing:0.01em;">
-                      <span style="color:#10B981; font-size:10px; vertical-align:middle;">&#9679;</span>&nbsp;&nbsp;View Conversation&nbsp;&nbsp;&rarr;
+                    <a href="${ctaHref}" target="_blank" style="display:inline-block; background:#50c878; color:#ffffff; font-size:15px; font-weight:600; padding:14px 32px; border-radius:10px; text-decoration:none; letter-spacing:0.01em;">
+                      View Conversation&nbsp;&nbsp;&rarr;
                     </a>
                     <div class="muted" style="font-size:11px; color:#94a3b8; margin-top:10px; word-break:break-all;">
                       If the button doesn&rsquo;t work, open: ${escapeHtml(ctaHref)}
