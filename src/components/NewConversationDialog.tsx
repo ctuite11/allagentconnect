@@ -228,9 +228,9 @@ export function NewConversationDialog({
     const el = messageRef.current;
     if (!el) return;
     el.style.height = "auto";
-    const maxPx = 160;
+    const maxPx = composeVariant === "buyer" ? 240 : 160;
     el.style.height = `${Math.min(el.scrollHeight, maxPx)}px`;
-  }, []);
+  }, [composeVariant]);
 
   useEffect(() => {
     if (!open) return;
