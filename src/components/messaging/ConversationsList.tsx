@@ -165,11 +165,11 @@ export function ConversationsList({
             <button
               type="button"
               onClick={onNewMessage}
-              className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-neutral-200 bg-white px-2.5 py-1.5 text-[13px] font-semibold text-zinc-700 shadow-none transition-colors hover:border-neutral-300 hover:bg-zinc-50/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-300 focus-visible:ring-offset-2"
-              title="New chat"
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-[#0E56F5] px-3 py-1.5 text-[13px] font-semibold text-white shadow-none transition-colors hover:bg-[#0B47CC] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0E56F5]/40 focus-visible:ring-offset-2"
+              title="New message"
             >
               <SquarePen className="h-3.5 w-3.5" strokeWidth={2} aria-hidden />
-              <span className="hidden sm:inline">New</span>
+              <span className="hidden sm:inline">New Message</span>
             </button>
           )}
         </div>
