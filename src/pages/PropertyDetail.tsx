@@ -21,21 +21,15 @@ import {
 } from "@/components/ui/dialog";
 import { 
   MapPin, 
-  Bed, 
-  Bath, 
-  Square, 
   Phone,
   Mail,
   Share2,
   Eye,
   EyeOff,
-  Images,
   FileText,
   ChevronLeft,
   ChevronRight,
-  Video,
   Globe,
-  Maximize2,
   Expand,
   Edit2,
   Send,
@@ -57,8 +51,6 @@ import { buildDisplayAddress, cn } from "@/lib/utils";
 
 const listingDetailPrimaryCtaClass =
   "bg-[#0E56F5] text-white hover:bg-[#0B46CC] focus-visible:ring-[#0E56F5]/35";
-const listingDetailActiveMediaTabClass =
-  "border-[#0E56F5] bg-[#0E56F5] text-white hover:bg-[#0B46CC] hover:text-white";
 const listingDetailOutlineCtaClass =
   "border-[#0E56F5]/30 text-[#0E56F5] hover:bg-[#0E56F5]/5 hover:text-[#0B46CC]";
 import { useListingView } from "@/hooks/useListingView";
@@ -68,6 +60,15 @@ import { PropertyMetaTags } from "@/components/PropertyMetaTags";
 import { Seo } from "@/components/Seo";
 import { getPublicOrigin } from "@/lib/getPublicUrl";
 import { ListingDetailSections } from "@/components/ListingDetailSections";
+import { PropertyHeader } from "@/components/property/PropertyHeader";
+import { PropertyFactsRow, propertyPhotoContentInset } from "@/components/property/PropertyFactsRow";
+import { MediaTabBar, type MediaTab } from "@/components/property/MediaTabBar";
+import { SectionWrapper } from "@/components/property/SectionWrapper";
+import {
+  propertyPageContainer,
+  propertyHeroMedia,
+  propertyRailStack,
+} from "@/components/property/propertyTokens";
 import { BuyerAgentShowcase } from "@/components/BuyerAgentShowcase";
 import { BuyerCompensationInfoModal } from "@/components/BuyerCompensationInfoModal";
 import ContactAgentDialog from "@/components/ContactAgentDialog";
@@ -135,6 +136,8 @@ interface Listing {
   tax_assessment_value?: number | null;
   neighborhood?: string | null;
   walk_score_data?: any;
+  garage_spaces?: number | null;
+  total_parking_spaces?: number | null;
 }
 
 interface AgentProfile {
@@ -644,9 +647,21 @@ const PropertyDetail = () => {
   const compensationDisplay = getCompensationDisplay();
   const agentLogo = agentProfile?.logo_url || DEFAULT_BROKERAGE_LOGO_URL;
 
+  const listDate = listing.active_date || listing.created_at;
+  const daysOnMarket = listDate
+    ? Math.ceil((new Date().getTime() - new Date(listDate).getTime()) / (1000 * 60 * 60 * 24))
+    : null;
+
+  const neighborhoodLabel =
+    typeof listing.neighborhood === "string" && listing.neighborhood.trim()
+      ? listing.neighborhood.trim()
+      : null;
+
   /** Premium neutral section shell (matches listing search results). */
   const detailSurface =
     "rounded-xl border border-neutral-200 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)]";
+  const consumerSectionCard =
+    "rounded-2xl border border-neutral-200 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)]";
   const detailTitle =
     "flex items-center gap-2 text-base font-semibold tracking-tight text-neutral-900";
   const detailTitleIcon = "h-5 w-5 shrink-0 text-neutral-600";
@@ -696,306 +711,277 @@ const PropertyDetail = () => {
         </div>
 
         {/* Full-page two-column layout; rail pinned on desktop via anchor + fixed panel */}
-        <div ref={layoutRef} className="mx-auto max-w-6xl overflow-visible px-4">
-          <div className="grid grid-cols-1 gap-6 overflow-visible lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-x-6 lg:gap-y-2">
-            
-            {/* Address + price — left column only; sidebar starts on row 2 with photo */}
-            <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 lg:col-start-1 lg:row-start-1">
-              <h1 className="flex min-w-0 items-baseline gap-1.5 text-lg font-semibold tracking-tight text-neutral-900">
-                <MapPin className="relative top-px h-4 w-4 shrink-0 text-neutral-500" />
-                {buildDisplayAddress(listing as any)}
-              </h1>
-              <p className="shrink-0 text-lg font-bold tracking-tight text-neutral-900">
-                ${listing?.price?.toLocaleString() ?? "—"}
-              </p>
+        <div ref={layoutRef} className={cn(propertyPageContainer, "overflow-visible pb-8")}>
+          <div
+            className={cn(
+              "grid grid-cols-1 gap-y-6 overflow-visible",
+              "lg:grid-cols-[68%_32%] lg:items-start lg:gap-x-6 lg:gap-y-0",
+            )}
+          >
+            {/* Row 1 — address + price */}
+            <PropertyHeader
+              embedded
+              address={buildDisplayAddress(listing as any)}
+              price={listing?.price ?? null}
+              priceSuffix={listing.listing_type === "for_rent" ? "/ mo" : undefined}
+              className="order-1 mb-2 min-w-0 lg:col-start-1 lg:row-start-1 lg:mb-3"
+            />
+
+            {/* Row 2 — photo */}
+            <div className="order-2 min-w-0 lg:col-start-1 lg:row-start-2">
+              <div
+                className={cn(
+                  propertyHeroMedia,
+                  "h-[280px] shadow-md ring-1 ring-neutral-200/90 sm:h-[360px] lg:h-[440px]",
+                )}
+              >
+                <div className="absolute inset-0 bg-neutral-950">
+                  {activeMediaTab === "photos" && (
+                    <img
+                      src={mainPhoto}
+                      alt={listing.address}
+                      className="h-full w-full cursor-pointer object-cover"
+                      onClick={handleExpandGallery}
+                    />
+                  )}
+                  {activeMediaTab === "video" && listing.video_url && (
+                    <iframe
+                      src={listing.video_url}
+                      className="h-full w-full"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                  )}
+                  {activeMediaTab === "tour" && listing.virtual_tour_url && (
+                    <iframe
+                      src={listing.virtual_tour_url}
+                      className="h-full w-full"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                  )}
+                  {activeMediaTab === "website" && listing.property_website_url && (
+                    <iframe src={listing.property_website_url} className="h-full w-full" />
+                  )}
+
+                  {/* Status Badge & AAC ID - Top Left Overlay */}
+                  <div className="absolute left-4 top-4 flex items-center gap-2">
+                    {isAgentView && listing.listing_number && (
+                      <Badge variant="outline" className="bg-white/90 font-mono text-xs backdrop-blur-sm">
+                        #{listing.listing_number}
+                      </Badge>
+                    )}
+                    <Badge className={`${getStatusColor(listing.status ?? "")} bg-white/90 backdrop-blur-sm`}>
+                      {listing.status
+                        ? listing.status.charAt(0).toUpperCase() + listing.status.slice(1)
+                        : "—"}
+                    </Badge>
+                  </div>
+
+                  {!isAgentView && (
+                    <div
+                      className="absolute right-3 top-3 z-20"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <FavoriteButton listingId={listing.id} size="icon" photoIcon />
+                    </div>
+                  )}
+
+                  {activeMediaTab === "photos" && listing.photos && listing.photos.length > 1 && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={handlePrevPhoto}
+                        className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full bg-black/50 p-3 text-white backdrop-blur-sm transition-all hover:bg-black/70"
+                        aria-label="Previous photo"
+                      >
+                        <ChevronLeft className="h-6 w-6" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleNextPhoto}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full bg-black/50 p-3 text-white backdrop-blur-sm transition-all hover:bg-black/70"
+                        aria-label="Next photo"
+                      >
+                        <ChevronRight className="h-6 w-6" />
+                      </button>
+                    </>
+                  )}
+
+                  {activeMediaTab === "photos" && neighborhoodLabel && (
+                    <div className="absolute bottom-4 left-4 z-10 max-w-[min(100%,20rem)]">
+                      <span className="inline-flex max-w-full rounded-full border border-white/70 bg-black/85 px-3.5 py-2 text-[13px] font-semibold text-white shadow-[0_2px_12px_rgba(0,0,0,0.5)] backdrop-blur-md">
+                        {neighborhoodLabel}
+                      </span>
+                    </div>
+                  )}
+
+                  {activeMediaTab === "photos" && (
+                    <button
+                      type="button"
+                      onClick={handleExpandGallery}
+                      className="absolute bottom-4 right-4 z-20 rounded-full bg-black/50 p-2 text-white backdrop-blur-sm transition-all hover:bg-black/70"
+                      aria-label="Expand gallery"
+                    >
+                      <Expand className="h-5 w-5" />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div className={cn(propertyPhotoContentInset, "flex flex-col gap-3 pt-3")}>
+                <div className="flex w-full items-center justify-between gap-4">
+                  <MediaTabBar
+                    active={activeMediaTab as MediaTab}
+                    onChange={(tab) => handleMediaTabChange(tab)}
+                    hasVideo={!!listing.video_url}
+                    hasTour={!!listing.virtual_tour_url}
+                    hasWebsite={!!listing.property_website_url}
+                    neutralTone
+                    className="!mt-0 min-w-0 !px-0"
+                    trailing={
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="rounded-full border-neutral-200 bg-white text-[13px] font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:bg-neutral-50"
+                            aria-label="Share property"
+                          >
+                            <Share2 className="mr-2 h-4 w-4" />
+                            Share
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48">
+                          <DropdownMenuItem
+                            onClick={() =>
+                              window.open(
+                                `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(getListingShareUrl(id!))}`,
+                                "_blank",
+                              )
+                            }
+                            className="cursor-pointer gap-2"
+                          >
+                            Facebook
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() =>
+                              window.open(
+                                `https://twitter.com/intent/tweet?url=${encodeURIComponent(getListingShareUrl(id!))}`,
+                                "_blank",
+                              )
+                            }
+                            className="cursor-pointer gap-2"
+                          >
+                            Twitter
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() =>
+                              window.open(
+                                `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(getListingShareUrl(id!))}`,
+                                "_blank",
+                              )
+                            }
+                            className="cursor-pointer gap-2"
+                          >
+                            LinkedIn
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() =>
+                              window.open(
+                                `https://wa.me/?text=${encodeURIComponent(listing.address)}%20${encodeURIComponent(getListingShareUrl(id!))}`,
+                                "_blank",
+                              )
+                            }
+                            className="cursor-pointer gap-2"
+                          >
+                            WhatsApp
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() =>
+                              window.open(
+                                `mailto:?subject=${encodeURIComponent(listing.address)}&body=${encodeURIComponent(getListingShareUrl(id!))}`,
+                                "_blank",
+                              )
+                            }
+                            className="cursor-pointer gap-2"
+                          >
+                            Email
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={handleCopyLink} className="cursor-pointer gap-2">
+                            Copy Link
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    }
+                  />
+                  {daysOnMarket != null && daysOnMarket >= 0 ? (
+                    <p className="shrink-0 text-right text-sm leading-none text-neutral-900">
+                      <span className="text-[11px] font-medium uppercase tracking-wide text-neutral-500">DOM</span>
+                      <span className="ml-1.5 font-semibold tabular-nums">{daysOnMarket}</span>
+                    </p>
+                  ) : null}
+                </div>
+
+                <PropertyFactsRow
+                  bedrooms={listing.bedrooms}
+                  bathrooms={listing.bathrooms}
+                  squareFeet={listing.square_feet}
+                  totalParkingSpaces={
+                    listing.total_parking_spaces ?? listing.garage_spaces ?? null
+                  }
+                />
+              </div>
             </div>
 
-            {/* Primary column — hero + detail + agent tools */}
-            <div className="min-w-0 overflow-visible lg:col-start-1 lg:row-start-2">
-              <div className="relative pb-6">
-                <div className="relative h-[380px] overflow-hidden rounded-xl border border-neutral-200 shadow-[0_4px_24px_rgba(0,0,0,0.07)] sm:h-[480px] sm:rounded-2xl lg:h-[560px]">
-                  <div className="absolute inset-0 bg-neutral-950">
-                  {/* Media Content */}
-                    {activeMediaTab === 'photos' && (
-                      <img
-                        src={mainPhoto}
-                        alt={listing.address}
-                        className="w-full h-full object-cover cursor-pointer"
-                        onClick={handleExpandGallery}
-                      />
-                    )}
-                    {activeMediaTab === 'video' && listing.video_url && (
-                      <iframe
-                        src={listing.video_url}
-                        className="w-full h-full"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                      />
-                    )}
-                    {activeMediaTab === 'tour' && listing.virtual_tour_url && (
-                      <iframe
-                        src={listing.virtual_tour_url}
-                        className="w-full h-full"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                      />
-                    )}
-                    {activeMediaTab === 'website' && listing.property_website_url && (
-                      <iframe
-                        src={listing.property_website_url}
-                        className="w-full h-full"
-                      />
-                    )}
-                    
-                    {/* Status Badge & AAC ID - Top Left Overlay */}
-                    <div className="absolute top-4 left-4 flex items-center gap-2">
-                      {isAgentView && listing.listing_number && (
-                        <Badge variant="outline" className="font-mono text-xs bg-white/90 backdrop-blur-sm">
-                          #{listing.listing_number}
-                        </Badge>
-                      )}
-                      <Badge className={`${getStatusColor(listing.status ?? "")} bg-white/90 backdrop-blur-sm`}>
-                        {listing.status
-                          ? listing.status.charAt(0).toUpperCase() + listing.status.slice(1)
-                          : "—"}
-                      </Badge>
-                    </div>
-
-                    {/* Heart Control - Top Right Overlay (buyers/guests only) */}
-                    {!isAgentView && (
-                      <div
-                        className="absolute top-3 right-3 z-20"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <FavoriteButton listingId={listing.id} size="icon" photoIcon />
-                      </div>
-                    )}
-                    
-                    {/* Carousel Arrow Controls - Only for Photos */}
-                    {activeMediaTab === 'photos' && listing.photos && listing.photos.length > 1 && (
-                      <>
-                        <button
-                          onClick={handlePrevPhoto}
-                          className="absolute left-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/45 text-white backdrop-blur-[2px] transition-colors hover:bg-black/65 sm:left-4 sm:h-11 sm:w-11"
-                          aria-label="Previous photo"
-                        >
-                          <ChevronLeft className="h-5 w-5 sm:h-6 sm:w-6" />
-                        </button>
-                        <button
-                          onClick={handleNextPhoto}
-                          className="absolute right-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/45 text-white backdrop-blur-[2px] transition-colors hover:bg-black/65 sm:right-4 sm:h-11 sm:w-11"
-                          aria-label="Next photo"
-                        >
-                          <ChevronRight className="h-5 w-5 sm:h-6 sm:w-6" />
-                        </button>
-                      </>
-                    )}
-                    
-                    {/* Photo Counter - Bottom Left Overlay */}
-                    {activeMediaTab === 'photos' && listing.photos && listing.photos.length > 0 && (
-                      <div className="absolute bottom-4 left-4 bg-black/70 text-white px-3 py-1 rounded-full text-sm backdrop-blur-sm">
-                        {currentPhotoIndex + 1} / {listing.photos.length}
-                      </div>
-                    )}
-
-
-                    {/* Expand Button - Top of Bottom Right (above price) */}
-                    {activeMediaTab === 'photos' && (
-                      <button
-                        onClick={handleExpandGallery}
-                        className="absolute bottom-[4.75rem] right-3 flex h-9 w-9 items-center justify-center rounded-full bg-black/45 text-white backdrop-blur-[2px] transition-colors hover:bg-black/65 sm:bottom-[5rem] sm:right-4 sm:h-10 sm:w-10"
-                        aria-label="Expand gallery"
-                      >
-                        <Expand className="h-4 w-4 sm:h-5 sm:w-5" />
-                      </button>
-                    )}
-                  </div>
-                </div>
-                <div className="absolute -bottom-1 right-4 z-30">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button
-                        className="flex h-10 w-10 items-center justify-center rounded-full bg-black/45 text-white backdrop-blur-[2px] transition-colors hover:bg-black/65 sm:h-11 sm:w-11"
-                        aria-label="Share property"
-                      >
-                        <Share2 className="h-5 w-5 sm:h-5 sm:w-5" />
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-48 border-neutral-200 shadow-[0_4px_14px_rgba(0,0,0,0.08)]">
-                      <DropdownMenuItem onClick={() => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(getListingShareUrl(id!))}`, "_blank")} className="gap-2 cursor-pointer">
-                        Facebook
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(getListingShareUrl(id!))}`, "_blank")} className="gap-2 cursor-pointer">
-                        Twitter
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(getListingShareUrl(id!))}`, "_blank")} className="gap-2 cursor-pointer">
-                        LinkedIn
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(listing.address)}%20${encodeURIComponent(getListingShareUrl(id!))}`, "_blank")} className="gap-2 cursor-pointer">
-                        WhatsApp
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => window.open(`mailto:?subject=${encodeURIComponent(listing.address)}&body=${encodeURIComponent(getListingShareUrl(id!))}`, "_blank")} className="gap-2 cursor-pointer">
-                        Email
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={handleCopyLink} className="gap-2 cursor-pointer">
-                        Copy Link
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              </div>
-
-              {/* Media Type Tabs - Below Photo with more spacing to clear shadow */}
-              <div className="mt-5 flex flex-wrap items-center justify-between gap-2 sm:mt-6">
-                <div className="flex flex-wrap items-center gap-1.5">
-                <Button
-                  variant={activeMediaTab === 'photos' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => handleMediaTabChange('photos')}
-                  className={cn(
-                    "h-8 rounded-lg px-3 text-[13px] font-medium shadow-none",
-                    activeMediaTab === 'photos'
-                      ? listingDetailActiveMediaTabClass
-                      : "border-neutral-200 bg-white text-neutral-800 hover:bg-neutral-50",
-                  )}
-                >
-                  <Images className="mr-1.5 h-3.5 w-3.5" />
-                  Photos
-                </Button>
-                {listing.video_url && (
-                  <Button
-                    variant={activeMediaTab === 'video' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => handleMediaTabChange('video')}
-                    className={cn(
-                      "h-8 rounded-lg px-3 text-[13px] font-medium shadow-none",
-                      activeMediaTab === 'video'
-                        ? listingDetailActiveMediaTabClass
-                        : "border-neutral-200 bg-white text-neutral-800 hover:bg-neutral-50",
-                    )}
-                  >
-                    <Video className="mr-1.5 h-3.5 w-3.5" />
-                    Video
-                  </Button>
-                )}
-                {listing.virtual_tour_url && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => window.open(listing.virtual_tour_url!, '_blank', 'noopener,noreferrer')}
-                    className="h-8 rounded-lg border-neutral-200 bg-white px-3 text-[13px] font-medium text-neutral-800 shadow-none hover:bg-neutral-50"
-                  >
-                    <Maximize2 className="mr-1.5 h-3.5 w-3.5" />
-                    3D Tour
-                  </Button>
-                )}
-                {listing.property_website_url && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => window.open(listing.property_website_url!, '_blank', 'noopener,noreferrer')}
-                    className="h-8 rounded-lg border-neutral-200 bg-white px-3 text-[13px] font-medium text-neutral-800 shadow-none hover:bg-neutral-50"
-                  >
-                    <Globe className="mr-1.5 h-3.5 w-3.5" />
-                    Website
-                  </Button>
-                )}
-                </div>
-                
-              </div>
-
-              {/* ========== STATS ROW ========== */}
-              <div className="mt-4">
-                {/* Stats - first content block below media */}
-                <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 border-b border-neutral-100 pb-2">
-                  {listing.bedrooms && (
-                    <div className="flex items-center gap-1">
-                      <Bed className="h-4 w-4 text-neutral-500" />
-                      <span className="font-semibold text-neutral-900">{listing.bedrooms}</span>
-                      <span className="text-xs text-neutral-600">Beds</span>
-                    </div>
-                  )}
-                  {listing.bathrooms && (
-                    <div className="flex items-center gap-1">
-                      <Bath className="h-4 w-4 text-neutral-500" />
-                      <span className="font-semibold text-neutral-900">{listing.bathrooms}</span>
-                      <span className="text-xs text-neutral-600">Baths</span>
-                    </div>
-                  )}
-                  {listing.square_feet && (
-                    <div className="flex items-center gap-1">
-                      <Square className="h-4 w-4 text-neutral-500" />
-                      <span className="font-semibold text-neutral-900">{listing.square_feet.toLocaleString()}</span>
-                      <span className="text-xs text-neutral-600">Sq Ft</span>
-                    </div>
-                  )}
-                  {listing?.square_feet && listing.square_feet > 0 && (
-                    <div className="flex items-center gap-1">
-                      <DollarSign className="h-4 w-4 text-neutral-500" />
-                      <span className="font-semibold text-neutral-900">
-                        ${Math.round(listing.price / listing.square_feet).toLocaleString()}
-                      </span>
-                      <span className="text-xs text-neutral-600">/sf</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* ========== MAIN CONTENT BELOW HERO ========== */}
-              <div className="pt-2 pb-8">
-                <div
-                  className={cn(
-                    isAgentView ? "space-y-4" : "grid grid-cols-1 gap-4 lg:grid-cols-3",
-                  )}
-                >
-                  <div className={cn(isAgentView ? "space-y-4" : "space-y-4 lg:col-span-2")}>
-              {/* Overview/Description with Read More */}
+            {/* Row 3 — overview, details, map, agent tools */}
+            <div
+              className={cn(
+                propertyPhotoContentInset,
+                "order-3 flex min-w-0 flex-col gap-4 pt-5 lg:col-start-1 lg:row-start-3",
+              )}
+            >
               {listing.description && (() => {
                 const MAX_CHARS = 650;
-                const full = listing.description || '';
+                const full = listing.description || "";
                 const isLong = full.length > MAX_CHARS;
                 const visibleText = !isLong || descriptionExpanded ? full : `${full.slice(0, MAX_CHARS)}…`;
-                
+
                 return (
-                  <Card className={detailSurface}>
-                    <CardHeader className="pb-2">
-                      <CardTitle className={detailTitle}>
-                        <FileText className={detailTitleIcon} />
-                        About this home
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4 text-sm leading-relaxed text-neutral-800">
-                      <p className="whitespace-pre-wrap">{visibleText}</p>
-                      {isLong && (
-                        <button
-                          type="button"
-                          onClick={() => setDescriptionExpanded(v => !v)}
-                          className="text-sm font-medium text-neutral-700 underline-offset-2 transition-colors hover:text-neutral-900 hover:underline focus-visible:outline-none focus-visible:ring-0"
-                        >
-                          {descriptionExpanded ? 'Read less' : 'Read more'}
-                        </button>
-                      )}
-                      
-                      {/* Agent-Only: Broker Remarks (cleaned & deduplicated) */}
-                      {isAgentView && (() => {
-                        const cleaned = cleanBrokerComments(listing.broker_comments);
-                        if (!cleaned) return null;
-                        return (
-                          <div className="mt-4 rounded-lg border border-amber-200/90 bg-white p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
-                            <div className="mb-1.5 flex items-center gap-2">
-                              <span className="text-xs font-semibold uppercase tracking-wide text-amber-900">
-                                Broker Remarks
-                              </span>
-                              <Badge variant="outline" className="border-neutral-200 text-xs">Agent Only</Badge>
-                            </div>
-                            <p className="whitespace-pre-wrap text-sm text-neutral-700">
-                              {cleaned}
-                            </p>
+                  <SectionWrapper
+                    title="Overview"
+                    icon={<FileText className="h-5 w-5 text-neutral-600" />}
+                    contentClassName="space-y-4"
+                    className={consumerSectionCard}
+                  >
+                    <p className="whitespace-pre-wrap text-neutral-800">{visibleText}</p>
+                    {isLong && (
+                      <button
+                        type="button"
+                        onClick={() => setDescriptionExpanded((v) => !v)}
+                        className="text-sm font-medium text-neutral-900 underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300/50"
+                      >
+                        {descriptionExpanded ? "Read less" : "Read more"}
+                      </button>
+                    )}
+                    {isAgentView && (() => {
+                      const cleaned = cleanBrokerComments(listing.broker_comments);
+                      if (!cleaned) return null;
+                      return (
+                        <div className="mt-4 rounded-lg border border-amber-200/90 bg-white p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+                          <div className="mb-1.5 flex items-center gap-2">
+                            <span className="text-xs font-semibold uppercase tracking-wide text-amber-900">
+                              Broker Remarks
+                            </span>
+                            <Badge variant="outline" className="border-neutral-200 text-xs">
+                              Agent Only
+                            </Badge>
                           </div>
-                        );
-                      })()}
-                    </CardContent>
-                  </Card>
+                          <p className="whitespace-pre-wrap text-sm text-neutral-700">{cleaned}</p>
+                        </div>
+                      );
+                    })()}
+                  </SectionWrapper>
                 );
               })()}
 
@@ -1107,115 +1093,74 @@ const PropertyDetail = () => {
                 </CardContent>
               </Card>
 
-              {/* Location / Neighborhood */}
-              {(listing.latitude || listing.longitude || listing.neighborhood || (attomData && attomData.neighborhood) || listing.walk_score_data) && (
-                <Card className={detailSurface}>
-                  <CardHeader className="pb-2">
-                    <CardTitle className={detailTitle}>
-                      <MapPin className={detailTitleIcon} />
-                      Location & Neighborhood
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {(listing.neighborhood || attomData?.neighborhood) && (
-                      <div className="text-sm">
-                        <span className="text-muted-foreground">Neighborhood: </span>
-                        <span className="font-semibold">{listing.neighborhood || attomData?.neighborhood}</span>
-                      </div>
-                    )}
-
-                    {listing.walk_score_data && typeof listing.walk_score_data === "object" && (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-                        {(listing.walk_score_data as any).walkscore && (
-                          <div className="flex justify-between gap-3">
-                            <span className="text-muted-foreground">Walk Score</span>
-                            <span className="font-semibold">{(listing.walk_score_data as any).walkscore}</span>
-                          </div>
-                        )}
-                        {(listing.walk_score_data as any).transit?.score && (
-                          <div className="flex justify-between gap-3">
-                            <span className="text-muted-foreground">Transit Score</span>
-                            <span className="font-semibold">{(listing.walk_score_data as any).transit.score}</span>
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {(listing.latitude || listing.longitude) && (
-                      <PropertyMap
-                        address={`${listing.address}, ${listing.city}, ${listing.state} ${listing.zip_code}`}
-                        latitude={listing.latitude}
-                        longitude={listing.longitude}
-                      />
-                    )}
-                  </CardContent>
-                </Card>
+              {(listing.latitude || listing.longitude) && (
+                <SectionWrapper
+                  title="Location"
+                  icon={<MapPin className="h-5 w-5 text-neutral-600" />}
+                  className={consumerSectionCard}
+                >
+                  <PropertyMap
+                    address={`${listing.address}, ${listing.city}, ${listing.state} ${listing.zip_code}`}
+                    latitude={listing.latitude}
+                    longitude={listing.longitude}
+                  />
+                </SectionWrapper>
               )}
 
-                  </div>
-
-                  {!isAgentView && (
-                    <div className="space-y-6">
-              {/* Buyer Agent Compensation - Client View Only (single line with info popup) */}
-              {compensationDisplay && (
-                <Card className="rounded-xl border border-emerald-200/90 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
-                  <CardContent className="px-4 py-3">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <DollarSign className="h-4 w-4 shrink-0 text-emerald-700" />
-                      <span className="text-sm font-medium text-neutral-900">
-                        Buyer Agent Compensation: {compensationDisplay} (paid by seller)
-                      </span>
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <button
-                            type="button"
-                            className="ml-auto rounded-md p-1 text-emerald-800 transition-colors hover:bg-emerald-50/80 hover:text-emerald-950 focus-visible:outline-none focus-visible:ring-0"
-                          >
-                            <HelpCircle className="h-4 w-4" />
-                          </button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-md border-neutral-200">
-                          <DialogHeader>
-                            <DialogTitle className="flex items-center gap-2 text-neutral-900">
-                              <DollarSign className="h-5 w-5 text-emerald-700" />
-                              Buyer Agent Compensation
-                            </DialogTitle>
-                          </DialogHeader>
-                          <div className="space-y-3 py-4 text-sm text-neutral-600">
-                            <p>
-                              This compensation is <strong className="text-neutral-900">paid by the seller</strong> and 
-                              offered to buyer agents who bring qualified buyers.
-                            </p>
-                            <p>
-                              <strong className="text-neutral-900">Is this negotiable?</strong><br />
-                              Yes, compensation terms may be negotiable. Discuss with the listing agent for details.
-                            </p>
-                            <p>
-                              <strong className="text-neutral-900">Note:</strong> Actual compensation may vary based on 
-                              your buyer representation agreement. Ask your agent about their fee structure.
-                            </p>
-                          </div>
-                        </DialogContent>
-                      </Dialog>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              <BuyerAgentShowcase 
-                listingZip={listing.zip_code} 
-                listingId={listing.id} 
-              />
-
-              {/* ATTRIBUTION MASKING: No "Contact listing agent" fallback.
-                  Buyers redirect to /consumer-property/:id; non-agents early-return above. */}
-                    </div>
+              {!isAgentView && (
+                <div className="space-y-6">
+                  {compensationDisplay && (
+                    <Card className="rounded-xl border border-emerald-200/90 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
+                      <CardContent className="px-4 py-3">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <DollarSign className="h-4 w-4 shrink-0 text-emerald-700" />
+                          <span className="text-sm font-medium text-neutral-900">
+                            Buyer Agent Compensation: {compensationDisplay} (paid by seller)
+                          </span>
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <button
+                                type="button"
+                                className="ml-auto rounded-md p-1 text-emerald-800 transition-colors hover:bg-emerald-50/80 hover:text-emerald-950 focus-visible:outline-none focus-visible:ring-0"
+                              >
+                                <HelpCircle className="h-4 w-4" />
+                              </button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-md border-neutral-200">
+                              <DialogHeader>
+                                <DialogTitle className="flex items-center gap-2 text-neutral-900">
+                                  <DollarSign className="h-5 w-5 text-emerald-700" />
+                                  Buyer Agent Compensation
+                                </DialogTitle>
+                              </DialogHeader>
+                              <div className="space-y-3 py-4 text-sm text-neutral-600">
+                                <p>
+                                  This compensation is <strong className="text-neutral-900">paid by the seller</strong> and
+                                  offered to buyer agents who bring qualified buyers.
+                                </p>
+                                <p>
+                                  <strong className="text-neutral-900">Is this negotiable?</strong>
+                                  <br />
+                                  Yes, compensation terms may be negotiable. Discuss with the listing agent for details.
+                                </p>
+                                <p>
+                                  <strong className="text-neutral-900">Note:</strong> Actual compensation may vary based on
+                                  your buyer representation agreement. Ask your agent about their fee structure.
+                                </p>
+                              </div>
+                            </DialogContent>
+                          </Dialog>
+                        </div>
+                      </CardContent>
+                    </Card>
                   )}
+
+                  <BuyerAgentShowcase listingZip={listing.zip_code} listingId={listing.id} />
                 </div>
-              </div>
+              )}
 
               {isAgentView && (
-                <div id="agent-tools-section" className="border-t pt-6 mt-4 pb-8">
+                <div id="agent-tools-section" className="mt-4 border-t pt-6 pb-8">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="flex items-center gap-2 text-lg font-semibold text-neutral-900">
                   <Activity className="h-5 w-5 text-neutral-500" />
@@ -1415,9 +1360,9 @@ const PropertyDetail = () => {
             {/* Right rail — row 2; fixed pin tracks in-flow anchor on lg+ */}
             <div
               ref={anchorRef}
-              className="w-full lg:col-start-2 lg:row-start-2 lg:w-[360px] lg:shrink-0"
+              className="order-4 min-w-0 w-full lg:col-start-2 lg:row-start-2 lg:self-start"
             >
-              <div ref={panelRef} className="space-y-3" style={panelStyle}>
+              <div ref={panelRef} className={propertyRailStack} style={panelStyle}>
               {!isAgentView && (
                 <Card className="rounded-xl border border-neutral-200 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
                   <CardContent className="space-y-2.5 p-4">
@@ -1476,19 +1421,19 @@ const PropertyDetail = () => {
               )}
 
               {agentProfile && (
-                <Card className="rounded-xl border border-neutral-200 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
-                  <CardContent className="space-y-4 p-4">
+                <Card className={cn(consumerSectionCard, "shadow-sm")}>
+                  <CardContent className="space-y-4 p-5">
                     <div className="flex items-center gap-4">
                       <AgentAvatar
                         name={`${agentProfile.first_name} ${agentProfile.last_name}`}
                         headshotUrl={agentProfile.headshot_url ?? null}
                         userId={agentProfile.id}
                         size="xl"
-                        avatarClassName="h-16 w-16 border border-neutral-200"
-                        fallbackClassName="bg-neutral-800 text-white"
+                        avatarClassName="h-16 w-16 border-2 border-neutral-200"
+                        fallbackClassName="bg-neutral-100"
                       />
                       <div className="flex-1 min-w-0">
-                        <p className="text-[11px] font-medium uppercase tracking-wide text-neutral-500">Listing Agent</p>
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-500">Listing agent</p>
                         <p className="text-lg font-bold leading-tight text-neutral-900">
                           {agentProfile.first_name} {agentProfile.last_name}
                         </p>
@@ -1596,7 +1541,7 @@ const PropertyDetail = () => {
               )}
 
               {isAgentView && (
-                <Card className="rounded-xl border border-neutral-200 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
+                <Card className={cn(consumerSectionCard, "shadow-sm")}>
                   <CardContent className="space-y-2.5 p-4">
                     <h3 className="text-sm font-semibold text-neutral-900">Listing inquiry</h3>
 
@@ -1627,7 +1572,7 @@ const PropertyDetail = () => {
                 </Card>
               )}
 
-              <Card className="rounded-xl border border-neutral-200 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+              <Card className={cn(consumerSectionCard, "shadow-sm")}>
                 <CardContent className="p-3">
                   <div className="flex items-center gap-3">
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-neutral-200 bg-white">
@@ -1651,7 +1596,7 @@ const PropertyDetail = () => {
               </Card>
 
               {isAgentView && (
-                <Card className="rounded-xl border border-neutral-200 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
+                <Card className={cn(consumerSectionCard, "shadow-sm")}>
                   <CardContent className="space-y-1.5 px-3 py-3">
                     {isListingOwner && (
                       <Button
