@@ -1362,7 +1362,7 @@ const MyListings = () => {
           <button
             type="button"
             onClick={() => handleNewListing("new")}
-            className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-[#16A34A]/25 bg-[#16A34A]/[0.06] shadow-sm transition-colors hover:border-[#16A34A]/35 hover:bg-[#16A34A]/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16A34A]/25 focus-visible:ring-offset-2"
+            className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-[#16A34A]/25 bg-white shadow-sm transition-colors hover:border-[#16A34A]/35 hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16A34A]/25 focus-visible:ring-offset-2"
             aria-label="Create listing"
           >
             <Home className="h-8 w-8 text-[#16A34A]" strokeWidth={1.5} aria-hidden />
