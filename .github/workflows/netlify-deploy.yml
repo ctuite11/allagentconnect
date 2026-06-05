@@ -21,20 +21,25 @@ jobs:
           node-version: 20
           cache: npm
 
-      - name: Verify Netlify secrets
+      - name: Check Netlify secrets
+        id: netlify
         run: |
-          if [ -z "$NETLIFY_AUTH_TOKEN" ] || [ -z "$NETLIFY_SITE_ID" ]; then
-            echo "::error::Add NETLIFY_AUTH_TOKEN and NETLIFY_SITE_ID under GitHub repo Settings → Secrets and variables → Actions."
-            exit 1
+          if [ -n "$NETLIFY_AUTH_TOKEN" ] && [ -n "$NETLIFY_SITE_ID" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "::warning title=Netlify deploy skipped::Add NETLIFY_AUTH_TOKEN and NETLIFY_SITE_ID under GitHub → Settings → Secrets and variables → Actions, then re-run this workflow."
           fi
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
 
       - name: Install dependencies
+        if: steps.netlify.outputs.ready == 'true'
         run: npm ci
 
       - name: Build
+        if: steps.netlify.outputs.ready == 'true'
         run: npm run build
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
@@ -46,6 +51,7 @@ jobs:
           VITE_PUBLIC_URL: ${{ secrets.VITE_PUBLIC_URL }}
 
       - name: Deploy to Netlify
+        if: steps.netlify.outputs.ready == 'true'
         run: npx netlify-cli deploy --prod --dir=dist
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
