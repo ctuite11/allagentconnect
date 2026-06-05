@@ -86,8 +86,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-const DEFAULT_BROKERAGE_LOGO_URL = "/placeholder.svg";
-
 interface Listing {
   id: string;
   agent_id: string;
@@ -532,7 +530,6 @@ const PropertyDetail = () => {
   const canonicalUrl = getListingPublicUrl(id!);
 
   const compensationDisplay = getCompensationDisplay();
-  const agentLogo = agentProfile?.logo_url || DEFAULT_BROKERAGE_LOGO_URL;
 
   const listDate = listing.active_date || listing.created_at;
   const daysOnMarket = listDate
@@ -1337,29 +1334,6 @@ const PropertyDetail = () => {
                   </CardContent>
                 </Card>
               )}
-
-              <Card className={cn(consumerSectionCard, "shadow-sm")}>
-                <CardContent className="p-3">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-neutral-200 bg-white">
-                      <img
-                        src={agentLogo}
-                        alt={`${agentProfile?.company || "Brokerage"} logo`}
-                        className="h-full w-full object-contain"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = DEFAULT_BROKERAGE_LOGO_URL;
-                        }}
-                      />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-[10px] font-medium uppercase tracking-wide text-neutral-500">Listing courtesy of</p>
-                      <p className="truncate text-sm font-medium text-neutral-900">
-                        {agentProfile?.company || "Brokerage"}
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
 
               {buyerCompensationCard}
 
