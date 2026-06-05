@@ -45,6 +45,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
+import { formatListingPropertyTypeLabel } from "@/lib/format";
 import { formatListingEmailSubjectLocation } from "@/lib/listingEmailSubject";
 import { buildDisplayAddress, cn } from "@/lib/utils";
 
@@ -870,6 +871,7 @@ const PropertyDetail = () => {
                 </div>
 
                 <PropertyFactsRow
+                  propertyTypeLabel={formatListingPropertyTypeLabel(listing.property_type)}
                   bedrooms={listing.bedrooms}
                   bathrooms={listing.bathrooms}
                   squareFeet={listing.square_feet}

@@ -15,6 +15,8 @@ interface PropertyFactsRowProps {
   bathrooms?: number | null;
   squareFeet?: number | null;
   totalParkingSpaces?: number | null;
+  /** Renders before bed/bath/etc. stats on the same row */
+  propertyTypeLabel?: string | null;
   /** Merges into the row container (border-b, flex, etc.) */
   className?: string;
   /** Spacing / wrapper above the stats row */
@@ -29,6 +31,7 @@ export function PropertyFactsRow({
   bathrooms,
   squareFeet,
   totalParkingSpaces,
+  propertyTypeLabel,
   className,
   containerClassName,
 }: PropertyFactsRowProps) {
@@ -37,6 +40,9 @@ export function PropertyFactsRow({
   return (
     <div className={cn(containerClassName)}>
       <div className={cn(propertyFactsRow, "mt-0 min-w-0 gap-x-6 gap-y-2 border-b-0 pb-0", className)}>
+        {propertyTypeLabel ? (
+          <span className={cn(propertyFactValue, "text-sm text-neutral-900")}>{propertyTypeLabel}</span>
+        ) : null}
         {bedrooms != null && bedrooms > 0 && (
           <div className={propertyFactItem}>
             <Bed className={iconCls} aria-hidden />
