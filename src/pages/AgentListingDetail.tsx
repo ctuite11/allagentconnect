@@ -48,8 +48,11 @@ import PhotoGalleryDialog from "@/components/PhotoGalleryDialog";
 import SocialShareMenu from "@/components/SocialShareMenu";
 import { getListingPublicUrl, getListingShareUrl } from "@/lib/getPublicUrl";
 import { useAuthRole } from "@/hooks/useAuthRole";
-import { agentMessagesPath, buildMessageReturnState } from "@/lib/messageNavigation";
-import { findOrCreateConversation } from "@/lib/startConversation";
+import { buildMessageReturnState } from "@/lib/messageNavigation";
+import {
+  ListingMessageDialog,
+  listingMessageRecipientFromProfile,
+} from "@/components/ListingMessageDialog";
 import { PropertyHistoryPanel } from "@/components/PropertyHistoryPanel";
 
 interface Listing {
@@ -159,7 +162,7 @@ const AgentListingDetail = () => {
   const [stats, setStats] = useState({ matches: 0, views: 0 });
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [priceHistory, setPriceHistory] = useState<any[]>([]);
-  const [isStartingChat, setIsStartingChat] = useState(false);
+  const [listingMessageOpen, setListingMessageOpen] = useState(false);
   
   // Agent vs Client view toggle - agents default to agent view
   const [viewAsClient, setViewAsClient] = useState(false);
@@ -175,27 +178,16 @@ const AgentListingDetail = () => {
     !!listingAgentId &&
     viewerId !== listingAgentId;
 
-  const handleMessageListingAgent = async () => {
-    if (!viewerId || !listingAgentId || isStartingChat) return;
-    
-    setIsStartingChat(true);
-    try {
-      const convoId = await findOrCreateConversation(viewerId, listingAgentId, {
-        listingId: listing?.id ?? null,
-      });
-      if (convoId) {
-        navigate(agentMessagesPath(convoId), {
-          state: buildMessageReturnState(location.pathname, location.search),
-        });
-      } else {
-        toast.error("Couldn't start message. Please try again.");
-      }
-    } catch (err) {
-      console.error(err);
-      toast.error("Couldn't start message. Please try again.");
-    } finally {
-      setIsStartingChat(false);
+  const openListingMessage = () => {
+    if (!viewerId) {
+      navigate("/auth");
+      return;
     }
+    if (!listingAgentId) {
+      toast.error("No listing agent is available to message.");
+      return;
+    }
+    setListingMessageOpen(true);
   };
 
   useListingView(id);
@@ -1023,17 +1015,11 @@ const AgentListingDetail = () => {
                   {canMessageListingAgent && (
                     <Button
                       variant="outline"
-                      className="w-full mt-4 gap-2 disabled:opacity-60 disabled:pointer-events-none"
-                      onClick={handleMessageListingAgent}
-                      disabled={isStartingChat}
-                      aria-busy={isStartingChat}
+                      className="w-full mt-4 gap-2"
+                      onClick={openListingMessage}
                     >
                       <MessageSquare className="w-4 h-4" />
-                      {isStartingChat 
-                        ? "Opening…" 
-                        : listing?.id 
-                          ? "Message about this listing" 
-                          : "Message"}
+                      {listing?.id ? "Message about this listing" : "Message"}
                     </Button>
                   )}
                 </CardContent>
@@ -1266,6 +1252,18 @@ const AgentListingDetail = () => {
         virtualTours={listing.virtual_tour_url ? [listing.virtual_tour_url] : []}
         initialIndex={currentPhotoIndex}
       />
+
+      {listing?.id && agentProfile && (
+        <ListingMessageDialog
+          open={listingMessageOpen}
+          onOpenChange={setListingMessageOpen}
+          listingId={listing.id}
+          variant="agent"
+          recipient={listingMessageRecipientFromProfile(agentProfile)}
+          role={role}
+          returnState={buildMessageReturnState(location.pathname, location.search)}
+        />
+      )}
     </div>
   );
 };

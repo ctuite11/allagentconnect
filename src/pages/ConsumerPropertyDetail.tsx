@@ -66,7 +66,11 @@ import { getListingPublicUrl, getListingShareUrl } from "@/lib/getPublicUrl";
 import { formatListingPriceDisplay } from "@/lib/formatListingPriceDisplay";
 import { getStatusConfig } from "@/constants/status";
 import { syncStickyFromDB } from "@/utils/agentTracking";
-import { findOrCreateConversation } from "@/lib/startConversation";
+import { buildMessageReturnState } from "@/lib/messageNavigation";
+import {
+  ListingMessageDialog,
+  listingMessageRecipientFromProfile,
+} from "@/components/ListingMessageDialog";
 import { useAuthRole } from "@/hooks/useAuthRole";
 import ContactAgentDialog from "@/components/ContactAgentDialog";
 
@@ -160,53 +164,31 @@ const ConsumerPropertyDetail = () => {
   const [stickyAgentId, setStickyAgentId] = useState<string | null>(null);
   const [stickyAgentProfile, setStickyAgentProfile] = useState<AgentProfile | null>(null);
   const [listingContactDialogOpen, setListingContactDialogOpen] = useState(false);
+  const [listingMessageOpen, setListingMessageOpen] = useState(false);
   const { role } = useAuthRole();
   const isAgentView = role === "agent" || role === "admin";
 
-  const handleMessageAgent = async (targetAgentId: string | null | undefined) => {
-    const resolvedAgentId =
-      targetAgentId ?? stickyAgentProfile?.id ?? stickyAgentId ?? agentProfile?.id ?? null;
+  const openListingMessage = () => {
+    if (!listing?.id) return;
 
-    try {
-      if (!resolvedAgentId || !listing?.id) {
-        toast.error("No agent is available to message for this listing.");
-        return;
-      }
-
+    void (async () => {
       const { data, error } = await supabase.auth.getUser();
       if (error) {
         console.error("auth.getUser error:", error);
         toast.error("Could not verify your session. Please sign in again.");
         return;
       }
-
-      const userId = data?.user?.id;
-      if (!userId) {
+      if (!data?.user?.id) {
         navigate("/auth");
         return;
       }
-
-      const conversationId = await findOrCreateConversation(
-        userId,
-        resolvedAgentId,
-        { listingId: listing.id }
-      );
-
-      if (!conversationId) {
-        toast.error("Could not start a message thread. Please try again.");
-        return;
-      }
-
-      navigate(`/messages/${conversationId}`, {
-        state: { from: location.pathname + location.search, fromLabel: "Back to listing" },
-      });
-    } catch (err) {
-      console.error("Failed to start conversation:", err);
-      const msg =
-        err instanceof Error ? err.message : "Could not start a message thread. Please try again.";
-      toast.error(msg);
-    }
+      setListingMessageOpen(true);
+    })();
   };
+
+  const buyerMessageRecipient = stickyAgentProfile
+    ? listingMessageRecipientFromProfile(stickyAgentProfile)
+    : null;
 
   // Resolve sticky agent for buyer masking
   useEffect(() => {
@@ -795,7 +777,7 @@ const ConsumerPropertyDetail = () => {
                       <Button
                         size="lg"
                         className="w-full gap-2 bg-neutral-900 text-white shadow-sm hover:bg-neutral-800"
-                        onClick={() => handleMessageAgent(stickyAgentId)}
+                        onClick={openListingMessage}
                       >
                         <MessageSquare className="h-5 w-5" />
                         Message your agent
@@ -858,13 +840,6 @@ const ConsumerPropertyDetail = () => {
                           <span className="font-medium">Website</span>
                         </a>
                       )}
-                    </div>
-
-                    <div className="grid gap-2">
-                      <Button size="lg" className="w-full gap-2" onClick={() => handleMessageAgent(agentProfile.id)}>
-                        <MessageSquare className="h-5 w-5" />
-                        Message listing agent
-                      </Button>
                     </div>
                   </CardContent>
                 </Card>
@@ -1025,6 +1000,18 @@ const ConsumerPropertyDetail = () => {
           photos={listing.photos}
           floorPlans={listing.floor_plans || []}
           initialIndex={currentPhotoIndex}
+        />
+      )}
+
+      {listing && (
+        <ListingMessageDialog
+          open={listingMessageOpen}
+          onOpenChange={setListingMessageOpen}
+          listingId={listing.id}
+          variant="buyer"
+          recipient={buyerMessageRecipient}
+          role={role}
+          returnState={buildMessageReturnState(location.pathname, location.search)}
         />
       )}
     </div>

@@ -26,8 +26,11 @@ import { toast } from "sonner";
 import { BuyerAgentShowcase } from "./BuyerAgentShowcase";
 import { BuyerCompensationInfoModal } from "./BuyerCompensationInfoModal";
 import { useAuthRole } from "@/hooks/useAuthRole";
-import { buildMessageReturnState, messagesPathForRole } from "@/lib/messageNavigation";
-import { findOrCreateConversation } from "@/lib/startConversation";
+import { buildMessageReturnState } from "@/lib/messageNavigation";
+import {
+  ListingMessageDialog,
+  listingMessageRecipientFromProfile,
+} from "@/components/ListingMessageDialog";
 import { syncStickyFromDB } from "@/utils/agentTracking";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -44,7 +47,8 @@ export const PropertyDetailRightColumn = ({ listing, agent, isAgentView, stats }
   const navigate = useNavigate();
   const location = useLocation();
   const { user, role } = useAuthRole();
-  const [isStartingChat, setIsStartingChat] = useState(false);
+  const [listingMessageOpen, setListingMessageOpen] = useState(false);
+  const [listingMessageVariant, setListingMessageVariant] = useState<"agent" | "buyer">("agent");
   
   // Can current user message the listing agent?
   const viewerId = user?.id;
@@ -55,27 +59,17 @@ export const PropertyDetailRightColumn = ({ listing, agent, isAgentView, stats }
     !!listingAgentId &&
     viewerId !== listingAgentId;
 
-  const handleMessageListingAgent = async () => {
-    if (!viewerId || !listingAgentId || isStartingChat) return;
-    
-    setIsStartingChat(true);
-    try {
-      const convoId = await findOrCreateConversation(viewerId, listingAgentId, {
-        listingId: listing?.id ?? null,
-      });
-      if (convoId) {
-        navigate(messagesPathForRole(convoId, role), {
-          state: buildMessageReturnState(location.pathname, location.search),
-        });
-      } else {
-        toast.error("Couldn't start message. Please try again.");
-      }
-    } catch (err) {
-      console.error(err);
-      toast.error("Couldn't start message. Please try again.");
-    } finally {
-      setIsStartingChat(false);
+  const openAgentListingMessage = () => {
+    if (!viewerId) {
+      navigate("/auth");
+      return;
     }
+    if (!listingAgentId) {
+      toast.error("No listing agent is available to message.");
+      return;
+    }
+    setListingMessageVariant("agent");
+    setListingMessageOpen(true);
   };
 
   const DetailRow = ({ label, value }: { label: string; value: any }) => {
@@ -123,6 +117,25 @@ export const PropertyDetailRightColumn = ({ listing, agent, isAgentView, stats }
   const [stickyAgent, setStickyAgent] = useState<{ id: string; first_name: string; last_name: string; headshot_url: string | null; company: string | null; email: string; phone: string | null; cell_phone: string | null } | null>(null);
   const [stickyLoaded, setStickyLoaded] = useState(false);
   const isBuyer = role === "buyer" && !isAgentView;
+
+  const listingMessageRecipient =
+    listingMessageVariant === "agent" && agent
+      ? listingMessageRecipientFromProfile(agent)
+      : listingMessageVariant === "buyer" && stickyAgent
+        ? listingMessageRecipientFromProfile(stickyAgent)
+        : null;
+
+  const listingMessageDialog = listing?.id ? (
+    <ListingMessageDialog
+      open={listingMessageOpen}
+      onOpenChange={setListingMessageOpen}
+      listingId={listing.id}
+      variant={listingMessageVariant}
+      recipient={listingMessageRecipient}
+      role={role}
+      returnState={buildMessageReturnState(location.pathname, location.search)}
+    />
+  ) : null;
 
   useEffect(() => {
     if (!isBuyer || isAgentView) {
@@ -193,11 +206,10 @@ export const PropertyDetailRightColumn = ({ listing, agent, isAgentView, stats }
                 <Button
                   variant="outline"
                   className="w-full gap-2"
-                  onClick={handleMessageListingAgent}
-                  disabled={isStartingChat}
+                  onClick={openAgentListingMessage}
                 >
                   <MessageSquare className="w-4 h-4" />
-                  {isStartingChat ? "Opening…" : "Contact Agent"}
+                  Message about this listing
                 </Button>
               )}
             </CardContent>
@@ -262,11 +274,10 @@ export const PropertyDetailRightColumn = ({ listing, agent, isAgentView, stats }
                 variant="outline"
                 size="sm"
                 className="w-full gap-2 mt-2"
-                onClick={handleMessageListingAgent}
-                disabled={isStartingChat}
+                onClick={openAgentListingMessage}
               >
                 <Phone className="w-3.5 h-3.5" />
-                {isStartingChat ? "Opening…" : "Contact Listing Agent"}
+                Contact Listing Agent
               </Button>
             )}
           </CardContent>
@@ -366,6 +377,7 @@ export const PropertyDetailRightColumn = ({ listing, agent, isAgentView, stats }
             </CardContent>
           </Card>
         )}
+        {listingMessageDialog}
       </div>
     );
   }
@@ -387,33 +399,13 @@ export const PropertyDetailRightColumn = ({ listing, agent, isAgentView, stats }
     );
   }
 
-  const handleContactAgent = async () => {
-    if (isStartingChat) return;
+  const openBuyerListingMessage = () => {
     if (!viewerId) {
       navigate("/auth");
       return;
     }
-    setIsStartingChat(true);
-    try {
-      const supportUserId = import.meta.env.VITE_SUPPORT_USER_ID as string | undefined;
-      const recipientId = stickyAgent?.id ?? supportUserId;
-      if (!recipientId) {
-        toast.error("Support is not configured yet.");
-        navigate("/client/dashboard");
-        return;
-      }
-      const convId = await findOrCreateConversation(viewerId, recipientId, {
-        listingId: listing?.id ?? null,
-      });
-      if (!convId) throw new Error("No conversation id returned");
-      navigate(messagesPathForRole(convId, role), {
-        state: buildMessageReturnState(location.pathname, location.search),
-      });
-    } catch {
-      toast.error("Couldn't start a message. Please try again.");
-    } finally {
-      setIsStartingChat(false);
-    }
+    setListingMessageVariant("buyer");
+    setListingMessageOpen(true);
   };
 
   return (
@@ -464,12 +456,8 @@ export const PropertyDetailRightColumn = ({ listing, agent, isAgentView, stats }
             </div>
 
             <div className="grid grid-cols-1 gap-2 pt-2">
-              <Button
-                className="w-full"
-                onClick={handleContactAgent}
-                disabled={isStartingChat}
-              >
-                {isStartingChat ? "Opening…" : `Message ${stickyAgent.first_name}`}
+              <Button className="w-full" onClick={openBuyerListingMessage}>
+                {`Message ${stickyAgent.first_name}`}
               </Button>
             </div>
           </CardContent>
@@ -490,8 +478,8 @@ export const PropertyDetailRightColumn = ({ listing, agent, isAgentView, stats }
             <p className="text-sm text-muted-foreground">
               Message your agent through the platform for details or to schedule a showing.
             </p>
-            <Button className="w-full" onClick={handleContactAgent} disabled={isStartingChat}>
-              {isStartingChat ? "Opening…" : "Message Your Agent"}
+            <Button className="w-full" onClick={openBuyerListingMessage}>
+              Message Your Agent
             </Button>
           </CardContent>
         </Card>
@@ -576,40 +564,22 @@ export const PropertyDetailRightColumn = ({ listing, agent, isAgentView, stats }
             </div>
 
             <div className="grid grid-cols-2 gap-2 pt-2">
-              <Button
-                className="w-full"
-                onClick={handleMessageListingAgent}
-                disabled={isStartingChat}
-                aria-busy={isStartingChat}
-              >
-                {isStartingChat ? "Opening…" : "Request a Tour"}
+              <Button className="w-full" onClick={openAgentListingMessage}>
+                Request a Tour
               </Button>
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={handleMessageListingAgent}
-                disabled={isStartingChat}
-                aria-busy={isStartingChat}
-              >
-                {isStartingChat ? "Opening…" : "Contact Agent"}
+              <Button variant="outline" className="w-full" onClick={openAgentListingMessage}>
+                Contact Agent
               </Button>
             </div>
-            
-            {/* Message about this listing button - agents/admins only */}
+
             {canMessageListingAgent && (
               <Button
                 variant="outline"
-                className="w-full mt-2 gap-2 disabled:opacity-60 disabled:pointer-events-none"
-                onClick={handleMessageListingAgent}
-                disabled={isStartingChat}
-                aria-busy={isStartingChat}
+                className="w-full mt-2 gap-2"
+                onClick={openAgentListingMessage}
               >
                 <MessageSquare className="w-4 h-4" />
-                {isStartingChat 
-                  ? "Opening…" 
-                  : listing?.id 
-                    ? "Message about this listing" 
-                    : "Message"}
+                {listing?.id ? "Message about this listing" : "Message"}
               </Button>
             )}
           </CardContent>
@@ -647,6 +617,7 @@ export const PropertyDetailRightColumn = ({ listing, agent, isAgentView, stats }
 
       {/* ATTRIBUTION MASKING: No "Contact listing agent" fallback.
           Buyers redirect to /consumer-property/:id; non-agents see agent-only UI. */}
+      {listingMessageDialog}
     </div>
   );
 };

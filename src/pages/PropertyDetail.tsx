@@ -71,8 +71,11 @@ import PropertyMap from "@/components/PropertyMap";
 import { getListingPublicUrl, getListingShareUrl } from "@/lib/getPublicUrl";
 import { formatListingPriceDisplay, listingEffectiveNumericPrice } from "@/lib/formatListingPriceDisplay";
 import { parseDisclosures, cleanBrokerComments, isEmptyValue } from "@/lib/listingFieldParsers";
-import { buildMessageReturnState, messagesPathForRole } from "@/lib/messageNavigation";
-import { findOrCreateConversation } from "@/lib/startConversation";
+import { buildMessageReturnState } from "@/lib/messageNavigation";
+import {
+  ListingMessageDialog,
+  listingMessageRecipientFromProfile,
+} from "@/components/ListingMessageDialog";
 import SocialShareMenu from "@/components/SocialShareMenu";
 
 interface Listing {
@@ -168,7 +171,7 @@ const PropertyDetail = () => {
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [activeMediaTab, setActiveMediaTab] = useState<'photos' | 'video' | 'tour' | 'website'>('photos');
   const [descriptionExpanded, setDescriptionExpanded] = useState(false);
-  const [isStartingChat, setIsStartingChat] = useState(false);
+  const [listingMessageOpen, setListingMessageOpen] = useState(false);
   const [contactDialogOpen, setContactDialogOpen] = useState(false);
   const [priceHistory, setPriceHistory] = useState<ListingPriceHistoryItem[]>([]);
 
@@ -247,27 +250,16 @@ const PropertyDetail = () => {
     navigate("/browse");
   };
 
-  const handleMessageListingAgent = async () => {
-    if (!viewerId || !listingAgentId || isStartingChat) return;
-    
-    setIsStartingChat(true);
-    try {
-      const convoId = await findOrCreateConversation(viewerId, listingAgentId, {
-        listingId: listing?.id ?? null,
-      });
-      if (convoId) {
-        navigate(messagesPathForRole(convoId, role), {
-          state: buildMessageReturnState(location.pathname, location.search),
-        });
-      } else {
-        toast.error("Couldn't start message. Please try again.");
-      }
-    } catch (err) {
-      console.error(err);
-      toast.error("Couldn't start message. Please try again.");
-    } finally {
-      setIsStartingChat(false);
+  const openListingMessage = () => {
+    if (!viewerId) {
+      navigate("/auth");
+      return;
     }
+    if (!listingAgentId) {
+      toast.error("No listing agent is available to message.");
+      return;
+    }
+    setListingMessageOpen(true);
   };
 
   // Track listing view
@@ -1099,17 +1091,11 @@ const PropertyDetail = () => {
                     {canMessageListingAgent && (
                       <Button
                         size="lg"
-                        className="w-full gap-2 bg-neutral-900 text-white shadow-sm hover:bg-neutral-800 disabled:pointer-events-none disabled:opacity-60"
-                        onClick={handleMessageListingAgent}
-                        disabled={isStartingChat}
-                        aria-busy={isStartingChat}
+                        className="w-full gap-2 bg-neutral-900 text-white shadow-sm hover:bg-neutral-800"
+                        onClick={openListingMessage}
                       >
                         <MessageSquare className="h-5 w-5" />
-                        {isStartingChat
-                          ? "Opening…"
-                          : listing?.id
-                            ? "Message about this listing"
-                            : "Message"}
+                        {listing?.id ? "Message about this listing" : "Message"}
                       </Button>
                     )}
 
@@ -1197,6 +1183,18 @@ const PropertyDetail = () => {
           photos={listing.photos}
           floorPlans={[]}
           initialIndex={currentPhotoIndex}
+        />
+      )}
+
+      {listing?.id && agentProfile && (
+        <ListingMessageDialog
+          open={listingMessageOpen}
+          onOpenChange={setListingMessageOpen}
+          listingId={listing.id}
+          variant="agent"
+          recipient={listingMessageRecipientFromProfile(agentProfile)}
+          role={role}
+          returnState={buildMessageReturnState(location.pathname, location.search)}
         />
       )}
     </div>
