@@ -4,6 +4,7 @@ import {
   propertyFactsRow,
   propertyFactItem,
   propertyFactValue,
+  propertyFactLabel,
   propertyFactIcon,
 } from "./propertyTokens";
 
@@ -41,7 +42,10 @@ export function PropertyFactsRow({
     <div className={cn(containerClassName)}>
       <div className={cn(propertyFactsRow, "mt-0 min-w-0 gap-x-6 gap-y-2 border-b-0 pb-0", className)}>
         {propertyTypeLabel ? (
-          <span className={cn(propertyFactValue, "text-sm text-neutral-900")}>{propertyTypeLabel}</span>
+          <div className={propertyFactItem}>
+            <span className={cn(propertyFactLabel, "text-neutral-600")}>Property Type:</span>
+            <span className={propertyFactValue}>{propertyTypeLabel}</span>
+          </div>
         ) : null}
         {bedrooms != null && bedrooms > 0 && (
           <div className={propertyFactItem}>
