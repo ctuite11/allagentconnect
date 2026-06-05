@@ -4239,6 +4239,10 @@ export type Database = {
         Returns: undefined
       }
       auto_activate_listings: { Args: never; Returns: undefined }
+      build_message_email_payload: {
+        Args: { p_message_id: string }
+        Returns: Json
+      }
       can_authenticated_buyer_view_hot_sheet_client: {
         Args: { p_crm_client_id: string; p_hot_sheet_id: string }
         Returns: boolean
