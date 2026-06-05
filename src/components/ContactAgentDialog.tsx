@@ -12,7 +12,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { FormattedInput } from "@/components/ui/formatted-input";
 import { Mail } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -25,7 +24,6 @@ import { cn } from "@/lib/utils";
 const contactMessageSchema = z.object({
   sender_name: z.string().trim().min(1, "Please enter your name").max(100),
   sender_email: z.string().trim().email("Invalid email address").max(255),
-  sender_phone: z.string().trim().max(20).optional(),
   message: z.string().trim().max(1000).optional(),
 });
 
@@ -62,7 +60,6 @@ const ContactAgentDialog = ({
   const [formData, setFormData] = useState({
     sender_name: "",
     sender_email: "",
-    sender_phone: "",
     message: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -95,7 +92,6 @@ const ContactAgentDialog = ({
     setFormData({
       sender_name: "",
       sender_email: "",
-      sender_phone: "",
       message: "",
     });
     setErrors({});
@@ -122,7 +118,7 @@ const ContactAgentDialog = ({
         agent_id: agentId,
         sender_name: validatedData.sender_name,
         sender_email: validatedData.sender_email,
-        sender_phone: validatedData.sender_phone || null,
+        sender_phone: null,
         message: validatedData.message,
       }] as any);
 
@@ -142,7 +138,6 @@ const ContactAgentDialog = ({
               agentName: `${agentData.first_name} ${agentData.last_name}`,
               senderName: validatedData.sender_name,
               senderEmail: validatedData.sender_email,
-              senderPhone: validatedData.sender_phone,
               message: validatedData.message,
               listingAddress: listingAddress,
             },
@@ -241,17 +236,6 @@ const ContactAgentDialog = ({
                 </div>
               </>
             ) : null}
-
-            <div className="space-y-1">
-              <div className="text-xs font-medium text-neutral-700">Phone</div>
-              <FormattedInput
-                id="sender_phone"
-                format="phone"
-                value={formData.sender_phone}
-                onChange={(value) => setFormData({ ...formData, sender_phone: value })}
-                placeholder="1234567890"
-              />
-            </div>
 
             <div className="space-y-1">
               <div className="text-xs font-medium text-neutral-700">Message</div>

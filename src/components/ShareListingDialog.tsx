@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Share2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { ShareListingsDialog, Recipient, ListingPreview } from "@/components/share/ShareListingsDialog";
 import { getCurrentSenderProfile } from "@/lib/currentSenderProfile";
 import { fetchListingPreview } from "@/lib/fetchListingPreview";
@@ -47,7 +46,6 @@ export const ShareListingDialog = ({
   const [recipientEmail, setRecipientEmail] = useState("");
   const [agentName, setAgentName] = useState("");
   const [agentEmail, setAgentEmail] = useState("");
-  const [agentPhone, setAgentPhone] = useState("");
   const [message, setMessage] = useState("");
   const [clientSearch, setClientSearch] = useState("");
   const [clientResults, setClientResults] = useState<Client[]>([]);
@@ -78,7 +76,6 @@ export const ShareListingDialog = ({
       } else {
         setAgentName("");
         setAgentEmail("");
-        setAgentPhone("");
       }
     })();
   }, [open, senderProfileSource]);
@@ -92,7 +89,6 @@ export const ShareListingDialog = ({
       setRecipientEmail("");
       setAgentName("");
       setAgentEmail("");
-      setAgentPhone("");
       setMessage("");
       setClientSearch("");
       setClientResults([]);
@@ -197,7 +193,6 @@ export const ShareListingDialog = ({
 
     setSending(true);
     try {
-      const formattedPhone = agentPhone ? formatPhoneNumber(agentPhone) : "";
       const { trackShare } = await import("@/lib/trackShare");
 
       for (const recipient of allRecipients) {
@@ -208,7 +203,6 @@ export const ShareListingDialog = ({
             recipientEmail: recipient.email,
             agentName,
             agentEmail,
-            agentPhone: formattedPhone,
             message,
           },
         });
@@ -267,8 +261,6 @@ export const ShareListingDialog = ({
         setSenderName={setAgentName}
         senderEmail={agentEmail}
         setSenderEmail={setAgentEmail}
-        senderPhone={agentPhone}
-        setSenderPhone={setAgentPhone}
         message={message}
         setMessage={setMessage}
         canSubmit={canSubmit}

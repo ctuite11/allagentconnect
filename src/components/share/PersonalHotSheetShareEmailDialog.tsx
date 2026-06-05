@@ -51,7 +51,6 @@ export function PersonalHotSheetShareEmailDialog({
   const [agentName, setAgentName] = useState("");
   const [agentFirstName, setAgentFirstName] = useState("");
   const [agentEmail, setAgentEmail] = useState("");
-  const [agentPhone, setAgentPhone] = useState("");
   const [message, setMessage] = useState("");
   const [clientSearch, setClientSearch] = useState("");
   const [clientResults, setClientResults] = useState<Client[]>([]);
@@ -81,7 +80,6 @@ export function PersonalHotSheetShareEmailDialog({
         setAgentFirstName("");
         setAgentName("");
         setAgentEmail("");
-        setAgentPhone("");
       }
     })();
   }, [open]);
@@ -115,7 +113,6 @@ export function PersonalHotSheetShareEmailDialog({
       setAgentName("");
       setAgentFirstName("");
       setAgentEmail("");
-      setAgentPhone("");
       setMessage("");
       setClientSearch("");
       setClientResults([]);
@@ -275,8 +272,6 @@ export function PersonalHotSheetShareEmailDialog({
         setSenderName={setAgentName}
         senderEmail={agentEmail}
         setSenderEmail={setAgentEmail}
-        senderPhone={agentPhone}
-        setSenderPhone={setAgentPhone}
         message={message}
         setMessage={setMessage}
         canSubmit={canSubmit}

@@ -4,7 +4,7 @@
  * Used by: ListingSearchResults, HotSheetReview, PropertyDetail, MyListings, etc.
  */
 import * as React from "react";
-import { Check, Home, Mail, Phone, Search, Send, User, Layers, Plus, X } from "lucide-react";
+import { Check, Home, Mail, Search, Send, User, Layers, Plus, X } from "lucide-react";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 
 import {
@@ -76,8 +76,6 @@ export type ShareListingsDialogProps = {
   setSenderName: (v: string) => void;
   senderEmail: string;
   setSenderEmail: (v: string) => void;
-  senderPhone: string;
-  setSenderPhone: (v: string) => void;
 
   // Message
   message: string;
@@ -154,8 +152,6 @@ export function ShareListingsDialog({
   setSenderName,
   senderEmail,
   setSenderEmail,
-  senderPhone,
-  setSenderPhone,
 
   message,
   setMessage,
@@ -670,27 +666,6 @@ export function ShareListingsDialog({
                       type="email"
                       autoComplete="email"
                       aria-required
-                      className={cn("h-9 rounded-lg pl-9 text-[13px] text-neutral-900", INPUT_CLASS)}
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <div className="text-xs font-medium text-neutral-700">
-                    Your phone <span className="font-normal text-neutral-500">(optional)</span>
-                  </div>
-                  <div className={FIELD_ICON_WRAP}>
-                    <Phone className={ICON_SLOT} />
-                    <Input
-                      value={senderPhone}
-                      onChange={(e) => setSenderPhone(e.target.value)}
-                      onBlur={() => {
-                        const formatted = formatPhoneNumber(senderPhone);
-                        if (formatted && formatted !== "—") {
-                          setSenderPhone(formatted);
-                        }
-                      }}
-                      placeholder="(617) 555-0123"
                       className={cn("h-9 rounded-lg pl-9 text-[13px] text-neutral-900", INPUT_CLASS)}
                     />
                   </div>

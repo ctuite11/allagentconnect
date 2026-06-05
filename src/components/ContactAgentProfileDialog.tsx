@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { FormattedInput } from "@/components/ui/formatted-input";
 import { Mail } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -18,7 +17,6 @@ import {
 const contactMessageSchema = z.object({
   sender_name: z.string().trim().min(1, "Please enter your name").max(100),
   sender_email: z.string().trim().email("Invalid email address").max(255),
-  sender_phone: z.string().trim().max(20).optional(),
   message: z.string().trim().max(1000).optional(),
   subject: z.string().trim().min(1, "Please enter a subject").max(200),
 });
@@ -26,7 +24,6 @@ const contactMessageSchema = z.object({
 const EMPTY_FORM = {
   sender_name: "",
   sender_email: "",
-  sender_phone: "",
   subject: "",
   message: "",
 };
@@ -97,7 +94,6 @@ const ContactAgentProfileDialog = ({
             agentName: agentName,
             senderName: validatedData.sender_name,
             senderEmail: validatedData.sender_email,
-            senderPhone: validatedData.sender_phone,
             message: validatedData.message,
             subject: validatedData.subject,
           },
@@ -173,17 +169,6 @@ const ContactAgentProfileDialog = ({
               maxLength={255}
             />
             {errors.sender_email && <p className="text-sm text-destructive">{errors.sender_email}</p>}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="sender_phone">Phone</Label>
-            <FormattedInput
-              id="sender_phone"
-              format="phone"
-              value={formData.sender_phone}
-              onChange={(value) => setFormData({ ...formData, sender_phone: value })}
-              placeholder="1234567890"
-            />
           </div>
 
           <div className="space-y-2">

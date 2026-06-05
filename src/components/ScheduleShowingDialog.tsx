@@ -12,7 +12,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { FormattedInput } from "@/components/ui/formatted-input";
 import { Calendar } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -28,7 +27,6 @@ import { cn } from "@/lib/utils";
 const showingRequestSchema = z.object({
   requester_name: z.string().trim().min(1, "Please enter your name").max(100),
   requester_email: z.string().trim().email("Invalid email address").max(255),
-  requester_phone: z.string().trim().max(20).optional(),
   preferred_date: z.string().min(1, "Please select a date"),
   preferred_time: z.string().min(1, "Please select a time"),
   message: z.string().trim().max(1000).optional(),
@@ -65,7 +63,6 @@ const ScheduleShowingDialog = ({
   const [formData, setFormData] = useState({
     requester_name: "",
     requester_email: "",
-    requester_phone: "",
     preferred_date: "",
     preferred_time: "",
     message: "",
@@ -100,7 +97,6 @@ const ScheduleShowingDialog = ({
     setFormData({
       requester_name: "",
       requester_email: "",
-      requester_phone: "",
       preferred_date: "",
       preferred_time: "",
       message: "",
@@ -128,7 +124,7 @@ const ScheduleShowingDialog = ({
         listing_id: listingId,
         requester_name: validatedData.requester_name,
         requester_email: validatedData.requester_email,
-        requester_phone: validatedData.requester_phone || null,
+        requester_phone: null,
         preferred_date: validatedData.preferred_date,
         preferred_time: validatedData.preferred_time,
         message: validatedData.message || null,
@@ -160,7 +156,6 @@ const ScheduleShowingDialog = ({
                 agentName: `${agentData.first_name} ${agentData.last_name}`,
                 requesterName: validatedData.requester_name,
                 requesterEmail: validatedData.requester_email,
-                requesterPhone: validatedData.requester_phone,
                 listingAddress: fullAddress,
                 preferredDate: validatedData.preferred_date,
                 preferredTime: validatedData.preferred_time,
@@ -256,17 +251,6 @@ const ScheduleShowingDialog = ({
                 </div>
               </>
             ) : null}
-
-            <div className="space-y-1">
-              <div className="text-xs font-medium text-neutral-700">Phone</div>
-              <FormattedInput
-                id="requester_phone"
-                format="phone"
-                value={formData.requester_phone}
-                onChange={(value) => setFormData({ ...formData, requester_phone: value })}
-                placeholder="1234567890"
-              />
-            </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
