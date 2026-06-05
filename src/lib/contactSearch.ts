@@ -190,6 +190,13 @@ export interface MessageableClientRecipient {
   id: string;
   name: string;
   email: string;
+  subtitle: string;
+}
+
+function formatClientTypeLabel(clientType: string | null | undefined): string {
+  const raw = String(clientType ?? "").trim().toLowerCase();
+  if (!raw || raw === "buyer") return "Buyer";
+  return raw.charAt(0).toUpperCase() + raw.slice(1);
 }
 
 /**
@@ -202,7 +209,7 @@ export async function fetchMessageableClientRecipients(
 
   const contacts = await fetchAllAgentContacts(agentId, {
     select:
-      "id, first_name, last_name, email, relationship_user_id, relationship_status, relationship_ended_at",
+      "id, first_name, last_name, email, client_type, relationship_user_id, relationship_status, relationship_ended_at",
   });
 
   const seen = new Set<string>();
@@ -219,6 +226,7 @@ export async function fetchMessageableClientRecipients(
       id: authUserId,
       name: displayName(c) || authUserId,
       email: String(c.email ?? "").trim(),
+      subtitle: formatClientTypeLabel(c.client_type),
     });
   }
 

@@ -24,12 +24,15 @@ import { cn } from "@/lib/utils";
 import AACMonogram from "@/components/ui/AACMonogram";
 import { useAgentLastSeen } from "@/hooks/useAgentLastSeen";
 import { formatDistanceToNow } from "date-fns";
+import { initialsFromDisplayName } from "@/lib/initials";
 
 interface Recipient {
   id: string;
   name: string;
   email: string;
   group: "agent" | "client" | "shared";
+  subtitle?: string;
+  headshotUrl?: string | null;
 }
 
 interface NewConversationDialogProps {
@@ -90,16 +93,19 @@ export function NewConversationDialog({
       // Fetch agents (agent compose)
       const { data: agents } = await supabase
         .from("agent_profiles")
-        .select("id, first_name, last_name, email")
+        .select("id, first_name, last_name, email, company, headshot_url")
         .neq("id", user.id)
         .order("last_name");
 
       (agents || []).forEach((a) => {
+        const name = `${a.first_name ?? ""} ${a.last_name ?? ""}`.trim();
         results.push({
           id: a.id,
-          name: `${a.first_name ?? ""} ${a.last_name ?? ""}`.trim() || a.email,
-          email: a.email,
+          name: name || a.email || "",
+          email: a.email ?? "",
           group: "agent",
+          subtitle: (a.company ?? "").trim() || "AAC Agent",
+          headshotUrl: a.headshot_url ?? null,
         });
       });
 
@@ -110,6 +116,7 @@ export function NewConversationDialog({
           name: c.name,
           email: c.email,
           group: "client",
+          subtitle: c.subtitle,
         });
       }
 
@@ -244,12 +251,21 @@ export function NewConversationDialog({
     return recipients.filter(
       (r) =>
         r.name.toLowerCase().includes(q) ||
-        r.email.toLowerCase().includes(q)
+        r.email.toLowerCase().includes(q) ||
+        (r.subtitle ?? "").toLowerCase().includes(q),
     );
   }, [recipients, search, composeVariant]);
 
+  const agentSearchResults = useMemo(() => {
+    if (composeVariant === "buyer") return [];
+    return [...filteredRecipients].sort((a, b) => {
+      const aKey = (a.name.trim() || a.email).toLowerCase();
+      const bKey = (b.name.trim() || b.email).toLowerCase();
+      return aKey.localeCompare(bKey);
+    });
+  }, [filteredRecipients, composeVariant]);
+
   const agentRecipients = filteredRecipients.filter((r) => r.group === "agent");
-  const buyerRecipients = filteredRecipients.filter((r) => r.group === "client");
   const sharedRecipients = filteredRecipients.filter((r) => r.group === "shared");
   const buyerAgent = agentRecipients[0] ?? null;
   const buyerHasConnectedGroup = sharedRecipients.length > 0;
@@ -380,26 +396,35 @@ export function NewConversationDialog({
     }
   };
 
-  const renderRecipientRow = (r: Recipient) => {
+  const renderAgentSearchRow = (r: Recipient) => {
     const selected = selectedRecipient?.id === r.id;
+    const hasName = Boolean(r.name.trim());
+    const primaryLabel = hasName ? r.name.trim() : r.email;
+    const secondaryLabel = hasName ? (r.subtitle?.trim() || "") : "";
+
     return (
       <button
         type="button"
         key={r.id}
         onClick={() => setSelectedRecipient(r)}
         className={cn(
-          "flex w-full items-center gap-3 rounded-lg border px-3 py-2.5 text-left transition-colors",
-          selected
-            ? "border-[#0E56F5] bg-blue-50/40"
-            : "border-transparent hover:bg-zinc-50",
+          "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors",
+          selected ? "bg-blue-50/60 ring-1 ring-[#0E56F5]/30" : "hover:bg-zinc-50",
         )}
       >
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-neutral-100">
-          <User className="h-4 w-4 text-neutral-500" />
+        <div
+          className={cn(
+            "flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-semibold",
+            r.group === "client" ? "bg-neutral-200 text-neutral-700" : "bg-zinc-100 text-zinc-600",
+          )}
+        >
+          {initialsFromDisplayName(primaryLabel)}
         </div>
         <div className="min-w-0">
-          <p className="truncate text-sm font-medium text-zinc-900">{r.name}</p>
-          {r.email ? <p className="truncate text-xs text-zinc-400">{r.email}</p> : null}
+          <p className="truncate text-sm font-medium text-zinc-900">{primaryLabel}</p>
+          {secondaryLabel ? (
+            <p className="truncate text-xs text-zinc-500">{secondaryLabel}</p>
+          ) : null}
         </div>
       </button>
     );
@@ -423,7 +448,7 @@ export function NewConversationDialog({
             ) : (
               <DialogTitle className="flex items-center gap-2.5 text-xl font-semibold text-zinc-900">
                 <AACMonogram className="h-8 w-8 shrink-0 text-[#50C878]" size={32} />
-                <span>New Chat</span>
+                <span>New Message</span>
               </DialogTitle>
             )}
           </DialogHeader>
@@ -558,7 +583,7 @@ export function NewConversationDialog({
                   <Input
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Search by name or email..."
+                    placeholder="Search buyers and agents..."
                     className="pl-9 w-full bg-white border-neutral-200 text-neutral-900 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:shadow-none focus:border-[#0E56F5] focus-visible:border-[#0E56F5]"
                     autoFocus
                   />
@@ -568,30 +593,14 @@ export function NewConversationDialog({
                     <AacMonogramLoader variant="inline" hideMessage className="min-h-0 gap-0 py-0" />
                   </div>
                 ) : (
-                  <ScrollArea className="max-h-[220px]">
-                    <div className="space-y-1">
-                      {buyerRecipients.length > 0 && (
-                        <>
-                          <p className="px-2 pt-2 text-xs font-semibold uppercase tracking-wider text-zinc-400">
-                            My Buyers
-                          </p>
-                          {buyerRecipients.map(renderRecipientRow)}
-                        </>
-                      )}
-                      {agentRecipients.length > 0 && (
-                        <>
-                          <p
-                            className={`px-2 text-xs font-semibold uppercase tracking-wider text-zinc-400 ${
-                              buyerRecipients.length > 0 ? "pt-3" : "pt-2"
-                            }`}
-                          >
-                            Agents
-                          </p>
-                          {agentRecipients.map(renderRecipientRow)}
-                        </>
-                      )}
-                      {agentRecipients.length === 0 && buyerRecipients.length === 0 && (
-                        <p className="px-2 py-6 text-center text-sm text-zinc-400">No results found</p>
+                  <ScrollArea className="max-h-[240px]">
+                    <div className="space-y-0.5 py-1">
+                      {agentSearchResults.length > 0 ? (
+                        agentSearchResults.map(renderAgentSearchRow)
+                      ) : (
+                        <p className="px-2 py-6 text-center text-sm text-zinc-400">
+                          {search.trim() ? "No matches found" : "No contacts available"}
+                        </p>
                       )}
                     </div>
                   </ScrollArea>
