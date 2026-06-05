@@ -701,13 +701,8 @@ const PropertyDetail = () => {
                     <iframe src={listing.property_website_url} className="h-full w-full" />
                   )}
 
-                  {/* Status Badge & AAC ID - Top Left Overlay */}
+                  {/* Status Badge - Top Left Overlay */}
                   <div className="absolute left-4 top-4 flex items-center gap-2">
-                    {isAgentView && listing.listing_number && (
-                      <Badge variant="outline" className="bg-white/90 font-mono text-xs backdrop-blur-sm">
-                        #{listing.listing_number}
-                      </Badge>
-                    )}
                     <Badge className={`${getStatusColor(listing.status ?? "")} bg-white/90 backdrop-blur-sm`}>
                       {listing.status
                         ? listing.status.charAt(0).toUpperCase() + listing.status.slice(1)
@@ -852,11 +847,28 @@ const PropertyDetail = () => {
                       </DropdownMenu>
                     }
                   />
-                  {daysOnMarket != null && daysOnMarket >= 0 ? (
-                    <p className="shrink-0 text-right text-sm leading-none text-neutral-900">
-                      <span className="text-[11px] font-medium uppercase tracking-wide text-neutral-500">DOM</span>
-                      <span className="ml-1.5 font-semibold tabular-nums">{daysOnMarket}</span>
-                    </p>
+                  {(isAgentView && listing.listing_number) ||
+                  (daysOnMarket != null && daysOnMarket >= 0) ? (
+                    <div className="flex shrink-0 items-center gap-4 text-right text-sm leading-none text-neutral-900">
+                      {isAgentView && listing.listing_number ? (
+                        <p>
+                          <span className="text-[11px] font-medium uppercase tracking-wide text-neutral-500">
+                            ID
+                          </span>
+                          <span className="ml-1.5 font-mono font-semibold tabular-nums text-[#0E56F5]">
+                            #{listing.listing_number}
+                          </span>
+                        </p>
+                      ) : null}
+                      {daysOnMarket != null && daysOnMarket >= 0 ? (
+                        <p>
+                          <span className="text-[11px] font-medium uppercase tracking-wide text-neutral-500">
+                            DOM
+                          </span>
+                          <span className="ml-1.5 font-semibold tabular-nums">{daysOnMarket}</span>
+                        </p>
+                      ) : null}
+                    </div>
                   ) : null}
                 </div>
 
@@ -875,7 +887,7 @@ const PropertyDetail = () => {
             <div
               className={cn(
                 propertyPhotoContentInset,
-                "order-3 flex min-w-0 flex-col gap-4 pt-5 lg:col-start-1 lg:row-start-3",
+                "order-3 flex min-w-0 flex-col gap-4 pt-2 lg:col-start-1 lg:row-start-3",
               )}
             >
               {listing.description && (() => {
@@ -1278,17 +1290,13 @@ const PropertyDetail = () => {
 
                     {canMessageListingAgent && (
                       <Button
-                        variant="outline"
-                        size="sm"
-                        className={cn(
-                          "h-9 w-full gap-2 rounded-lg text-[13px] font-medium shadow-none disabled:pointer-events-none disabled:opacity-60",
-                          listingDetailOutlineCtaClass,
-                        )}
+                        size="lg"
+                        className="w-full gap-2 bg-neutral-900 text-white shadow-sm hover:bg-neutral-800 disabled:pointer-events-none disabled:opacity-60"
                         onClick={handleMessageListingAgent}
                         disabled={isStartingChat}
                         aria-busy={isStartingChat}
                       >
-                        <MessageSquare className="h-4 w-4" />
+                        <MessageSquare className="h-5 w-5" />
                         {isStartingChat
                           ? "Opening…"
                           : listing?.id
