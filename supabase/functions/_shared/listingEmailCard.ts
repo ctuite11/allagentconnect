@@ -1,8 +1,13 @@
 /**
  * Shared email-safe listing card renderers.
  *
- * - renderListingEmailCard — MLS / search-table layout (listing-share emails)
- * - renderCompactListingEmailCard — AAC grid listing card (message notifications)
+ * Single canonical email card mirroring the in-app SearchListingCard:
+ *   status banner · full-width photo · price + ID · property type ·
+ *   green-pin address · beds/baths/sqft · brokerage + agent footer.
+ *
+ * `renderListingEmailCard` and `renderCompactListingEmailCard` are kept as
+ * deprecated aliases that forward to the new renderer so every listing email
+ * uses the same card.
  *
  * Pure email-safe HTML: nested <table>s, inline styles, no flex/grid.
  */
@@ -13,6 +18,7 @@ import {
 } from "./listingShareEmailAddress.ts";
 
 const AAC_PRIMARY_BLUE = "#0E56F5";
+const AAC_EMERALD = "#22C55E";
 
 function escapeHtml(value: unknown): string {
   return String(value ?? "")
