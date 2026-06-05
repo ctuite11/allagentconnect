@@ -13,13 +13,6 @@ import { AgentAvatar } from "@/components/ui/AgentAvatar";
 import { ListingStatusBadge } from "@/components/ui/status-badge";
 import { getStatusConfig } from "@/constants/status";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { 
   MapPin, 
   Phone,
   Mail,
@@ -33,14 +26,12 @@ import {
   Expand,
   Edit2,
   Send,
-  DollarSign,
   KeyRound,
   ClipboardList,
   Activity,
   Copy,
   Building2,
   Users,
-  HelpCircle,
   MessageSquare,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -61,6 +52,7 @@ import { Seo } from "@/components/Seo";
 import { getPublicOrigin } from "@/lib/getPublicUrl";
 import { ListingDetailSections } from "@/components/ListingDetailSections";
 import { PropertyHeader } from "@/components/property/PropertyHeader";
+import { BuyerAgentFeeDetail, formatBuyerAgentFeeDisplay } from "@/components/property/BuyerAgentFeeDetail";
 import { PropertyFactsRow, propertyPhotoContentInset } from "@/components/property/PropertyFactsRow";
 import { MediaTabBar, type MediaTab } from "@/components/property/MediaTabBar";
 import { SectionWrapper } from "@/components/property/SectionWrapper";
@@ -455,13 +447,7 @@ const PropertyDetail = () => {
     }).join(', ');
   };
 
-  const getCompensationDisplay = () => {
-    if (!listing?.commission_rate) return null;
-    if (listing.commission_type === 'percentage') {
-      return `${listing.commission_rate}%`;
-    }
-    return `$${listing.commission_rate.toLocaleString()}`;
-  };
+  const getCompensationDisplay = () => formatBuyerAgentFeeDisplay(listing ?? {});
 
   if (roleLoading || shouldUseConsumerDetail) {
     return <LoadingScreen />;
@@ -553,56 +539,10 @@ const PropertyDetail = () => {
 
   const buyerCompensationCard =
     compensationDisplay && (
-      <Card className="rounded-2xl border border-neutral-200 bg-white shadow-sm">
-        <CardContent className="px-3.5 py-2.5">
-          <div className="flex items-start gap-2">
-            <span className="min-w-0 flex-1 text-sm font-medium leading-snug text-neutral-800">
-              Buyer agent compensation: {compensationDisplay} (paid by seller)
-            </span>
-            <Dialog>
-              <DialogTrigger asChild>
-                <button
-                  type="button"
-                  className="shrink-0 rounded-md text-neutral-500 transition-colors hover:bg-neutral-50 hover:text-neutral-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300/50"
-                >
-                  <HelpCircle className="h-4 w-4" />
-                </button>
-              </DialogTrigger>
-              <DialogContent className="max-w-md border-neutral-200 bg-white">
-                <DialogHeader>
-                  <DialogTitle className="flex items-center gap-2 text-neutral-900">
-                    <DollarSign className="h-5 w-5 text-neutral-600" />
-                    Buyer agent compensation
-                  </DialogTitle>
-                </DialogHeader>
-                <div className="space-y-3 py-4 text-sm text-neutral-600">
-                  <p>
-                    This compensation is{" "}
-                    <strong className="text-neutral-900">paid by the seller</strong> and offered to
-                    buyer agents who bring qualified buyers.
-                  </p>
-                  <p>
-                    <strong className="text-neutral-900">Is this negotiable?</strong>
-                    <br />
-                    Yes, compensation terms may be negotiable. Discuss with the listing agent for
-                    details.
-                  </p>
-                  <p>
-                    <strong className="text-neutral-900">Note:</strong> Actual compensation may
-                    vary based on your buyer representation agreement. Ask your agent about their fee
-                    structure.
-                  </p>
-                  {listing.commission_notes && (
-                    <p className="rounded-md border border-neutral-200 bg-neutral-50 p-2 text-neutral-800">
-                      <strong className="text-neutral-900">Notes:</strong> {listing.commission_notes}
-                    </p>
-                  )}
-                </div>
-              </DialogContent>
-            </Dialog>
-          </div>
-        </CardContent>
-      </Card>
+      <BuyerAgentFeeDetail
+        feeDisplay={compensationDisplay}
+        commissionNotes={listing.commission_notes}
+      />
     );
   return (
     <div className="min-h-screen overflow-visible bg-white pt-0">
@@ -943,52 +883,6 @@ const PropertyDetail = () => {
 
               {!isAgentView && (
                 <div className="space-y-6">
-                  {compensationDisplay && (
-                    <Card className="rounded-xl border border-emerald-200/90 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
-                      <CardContent className="px-4 py-3">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <DollarSign className="h-4 w-4 shrink-0 text-emerald-700" />
-                          <span className="text-sm font-medium text-neutral-900">
-                            Buyer Agent Compensation: {compensationDisplay} (paid by seller)
-                          </span>
-                          <Dialog>
-                            <DialogTrigger asChild>
-                              <button
-                                type="button"
-                                className="ml-auto rounded-md p-1 text-emerald-800 transition-colors hover:bg-emerald-50/80 hover:text-emerald-950 focus-visible:outline-none focus-visible:ring-0"
-                              >
-                                <HelpCircle className="h-4 w-4" />
-                              </button>
-                            </DialogTrigger>
-                            <DialogContent className="max-w-md border-neutral-200">
-                              <DialogHeader>
-                                <DialogTitle className="flex items-center gap-2 text-neutral-900">
-                                  <DollarSign className="h-5 w-5 text-emerald-700" />
-                                  Buyer Agent Compensation
-                                </DialogTitle>
-                              </DialogHeader>
-                              <div className="space-y-3 py-4 text-sm text-neutral-600">
-                                <p>
-                                  This compensation is <strong className="text-neutral-900">paid by the seller</strong> and
-                                  offered to buyer agents who bring qualified buyers.
-                                </p>
-                                <p>
-                                  <strong className="text-neutral-900">Is this negotiable?</strong>
-                                  <br />
-                                  Yes, compensation terms may be negotiable. Discuss with the listing agent for details.
-                                </p>
-                                <p>
-                                  <strong className="text-neutral-900">Note:</strong> Actual compensation may vary based on
-                                  your buyer representation agreement. Ask your agent about their fee structure.
-                                </p>
-                              </div>
-                            </DialogContent>
-                          </Dialog>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  )}
-
                   <BuyerAgentShowcase listingZip={listing.zip_code} listingId={listing.id} />
                 </div>
               )}

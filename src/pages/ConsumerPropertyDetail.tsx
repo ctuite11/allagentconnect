@@ -9,13 +9,6 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AgentAvatar } from "@/components/ui/AgentAvatar";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -36,7 +29,6 @@ import {
   Video,
   Globe,
   Expand,
-  DollarSign,
   Building2,
   GraduationCap,
   Footprints,
@@ -52,6 +44,7 @@ import { useListingView } from "@/hooks/useListingView";
 import { PropertyMetaTags } from "@/components/PropertyMetaTags";
 import { ListingDetailSections } from "@/components/ListingDetailSections";
 import { PropertyHeader } from "@/components/property/PropertyHeader";
+import { BuyerAgentFeeDetail, formatBuyerAgentFeeDisplay } from "@/components/property/BuyerAgentFeeDetail";
 import { PropertyFactsRow, propertyPhotoContentInset } from "@/components/property/PropertyFactsRow";
 import { BrokerageStrip } from "@/components/property/BrokerageStrip";
 import { MediaTabBar, type MediaTab } from "@/components/property/MediaTabBar";
@@ -323,11 +316,7 @@ const ConsumerPropertyDetail = () => {
     return `${config.bg} ${config.text}`;
   };
 
-  const getCompensationDisplay = () => {
-    if (!listing?.commission_rate) return null;
-    if (listing.commission_type === 'percentage') return `${listing.commission_rate}%`;
-    return `$${listing.commission_rate.toLocaleString()}`;
-  };
+  const getCompensationDisplay = () => formatBuyerAgentFeeDisplay(listing ?? {});
 
   if (loading) {
     return <ConsumerPropertyDetailSkeleton />;
@@ -398,51 +387,7 @@ const ConsumerPropertyDetail = () => {
 
   const buyerCompensationCard =
     compensationDisplay && (
-      <Card className="rounded-2xl border border-neutral-200 bg-white shadow-sm">
-        <CardContent className="px-3.5 py-2.5">
-          <div className="flex items-start gap-2">
-            <span className="min-w-0 flex-1 text-sm font-medium leading-snug text-neutral-800">
-              Buyer agent compensation: {compensationDisplay} (paid by seller)
-            </span>
-            <Dialog>
-              <DialogTrigger asChild>
-                <button
-                  type="button"
-                  className="shrink-0 rounded-md text-neutral-500 transition-colors hover:bg-neutral-50 hover:text-neutral-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300/50"
-                >
-                  <HelpCircle className="h-4 w-4" />
-                </button>
-              </DialogTrigger>
-              <DialogContent className="max-w-md border-neutral-200 bg-white">
-                <DialogHeader>
-                  <DialogTitle className="flex items-center gap-2 text-neutral-900">
-                    <DollarSign className="h-5 w-5 text-neutral-600" />
-                    Buyer agent compensation
-                  </DialogTitle>
-                </DialogHeader>
-                <div className="space-y-3 py-4 text-sm text-neutral-600">
-                  <p>
-                    This compensation is{" "}
-                    <strong className="text-neutral-900">paid by the seller</strong> and offered to
-                    buyer agents who bring qualified buyers.
-                  </p>
-                  <p>
-                    <strong className="text-neutral-900">Is this negotiable?</strong>
-                    <br />
-                    Yes, compensation terms may be negotiable. Discuss with the listing agent for
-                    details.
-                  </p>
-                  <p>
-                    <strong className="text-neutral-900">Note:</strong> Actual compensation may
-                    vary based on your buyer representation agreement. Ask your agent about their fee
-                    structure.
-                  </p>
-                </div>
-              </DialogContent>
-            </Dialog>
-          </div>
-        </CardContent>
-      </Card>
+      <BuyerAgentFeeDetail feeDisplay={compensationDisplay} commissionNotes={listing.commission_notes} />
     );
 
   return (
