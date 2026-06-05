@@ -35,7 +35,7 @@ export function PropertyFactsRow({
 
   return (
     <div className={cn(containerClassName)}>
-      <div className={cn(propertyFactsRow, "gap-x-5 gap-y-2 border-b-0 pb-0", className)}>
+      <div className={cn(propertyFactsRow, "mt-0 gap-x-6 gap-y-2 border-b-0 pb-0", className)}>
         {bedrooms != null && bedrooms > 0 && (
           <div className={propertyFactItem}>
             <Bed className={iconCls} aria-hidden />

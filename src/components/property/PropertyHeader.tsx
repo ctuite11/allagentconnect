@@ -15,6 +15,31 @@ interface PropertyHeaderProps {
   /** e.g. "/ mo" for rentals; appended after price */
   priceSuffix?: React.ReactNode;
   className?: string;
+  /** Render only the inner row — parent column controls width (buyer listing page). */
+  embedded?: boolean;
+}
+
+function PropertyHeaderRow({
+  address,
+  price,
+  priceSuffix,
+}: Pick<PropertyHeaderProps, "address" | "price" | "priceSuffix">) {
+  return (
+    <div className={cn(propertyHeaderRow, "w-full")}>
+      <h1 className={cn(propertyAddressH1, "min-w-0 flex-1")}>
+        <MapPin className={cn(LISTING_CARD_MAP_PIN_CLASS, "relative top-[1px]")} aria-hidden strokeWidth={2} />
+        {address}
+      </h1>
+      <p className={cn(propertyPriceText, "shrink-0 text-right tabular-nums")}>
+        ${price?.toLocaleString() ?? "—"}
+        {priceSuffix && (
+          <span className="ml-1 text-sm font-normal text-muted-foreground">
+            {priceSuffix}
+          </span>
+        )}
+      </p>
+    </div>
+  );
 }
 
 /**
@@ -25,24 +50,20 @@ export function PropertyHeader({
   price,
   priceSuffix,
   className,
+  embedded = false,
 }: PropertyHeaderProps) {
+  if (embedded) {
+    return (
+      <div className={className}>
+        <PropertyHeaderRow address={address} price={price} priceSuffix={priceSuffix} />
+      </div>
+    );
+  }
+
   return (
     <div className={cn(propertyPageContainer, "pb-2", className)}>
-      <div className={propertyMediaCol}>
-        <div className={propertyHeaderRow}>
-          <h1 className={propertyAddressH1}>
-            <MapPin className={cn(LISTING_CARD_MAP_PIN_CLASS, "relative top-[1px]")} aria-hidden strokeWidth={2} />
-            {address}
-          </h1>
-          <p className={cn(propertyPriceText, "shrink-0 text-right")}>
-            ${price?.toLocaleString() ?? "—"}
-            {priceSuffix && (
-              <span className="ml-1 text-sm font-normal text-muted-foreground">
-                {priceSuffix}
-              </span>
-            )}
-          </p>
-        </div>
+      <div className={cn(propertyMediaCol, "w-full")}>
+        <PropertyHeaderRow address={address} price={price} priceSuffix={priceSuffix} />
       </div>
     </div>
   );

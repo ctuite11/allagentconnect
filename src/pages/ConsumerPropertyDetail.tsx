@@ -485,19 +485,19 @@ const ConsumerPropertyDetail = () => {
       </div>
 
       <div className="flex-1">
-        {/* ========== LISTING HEADER — shared primitive ========== */}
-        <PropertyHeader
-          address={buildDisplayAddress(listing as any)}
-          price={listing?.price ?? null}
-          priceSuffix={listing.listing_type === 'for_rent' ? '/ mo' : undefined}
-        />
+        {/* ========== TWO-COLUMN LAYOUT (68% / 32%) ========== */}
+        <div className={cn(propertyPageContainer, "pb-8")}>
+          <div className={cn("flex flex-col items-start lg:flex-row", propertyHeroGap)}>
 
-        {/* ========== HERO SECTION: TWO-COLUMN GRID ========== */}
-        <div className={propertyPageContainer}>
-          <div className={`flex flex-col lg:flex-row ${propertyHeroGap}`}>
-
-            {/* LEFT COLUMN - Floating Photo Carousel (~68%) */}
-            <div className={propertyMediaCol}>
+            {/* LEFT COLUMN — header, gallery, stats, overview, details */}
+            <div className={cn(propertyMediaCol, "w-full min-w-0")}>
+              <div className="space-y-3">
+                <PropertyHeader
+                  embedded
+                  address={buildDisplayAddress(listing as any)}
+                  price={listing?.price ?? null}
+                  priceSuffix={listing.listing_type === 'for_rent' ? '/ mo' : undefined}
+                />
               <div
                 className={cn(
                   propertyHeroMedia,
@@ -603,6 +603,7 @@ const ConsumerPropertyDetail = () => {
                 hasTour={!!listing.virtual_tour_url}
                 hasWebsite={!!listing.property_website_url}
                 neutralTone
+                className="!mt-0"
                 trailing={
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -686,12 +687,68 @@ const ConsumerPropertyDetail = () => {
                 squareFeet={listing.square_feet}
                 totalParkingSpaces={listing.total_parking_spaces}
                 daysOnMarket={daysOnMarket}
-                containerClassName="mt-4"
               />
+              </div>
+
+              <div className="space-y-4 pt-5">
+              {/* Overview/Description with Read More */}
+              {listing.description && (() => {
+                const MAX_CHARS = 650;
+                const full = listing.description || '';
+                const isLong = full.length > MAX_CHARS;
+                const visibleText = !isLong || descriptionExpanded ? full : `${full.slice(0, MAX_CHARS)}…`;
+
+                return (
+                  <SectionWrapper
+                    title="Overview"
+                    icon={<FileText className="h-5 w-5 text-neutral-600" />}
+                    contentClassName="space-y-4"
+                    className={consumerSectionCard}
+                  >
+                    <p className="whitespace-pre-wrap text-neutral-800">{visibleText}</p>
+                    {isLong && (
+                      <button
+                        type="button"
+                        onClick={() => setDescriptionExpanded(v => !v)}
+                        className="text-sm font-medium text-neutral-900 underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300/50"
+                      >
+                        {descriptionExpanded ? 'Read less' : 'Read more'}
+                      </button>
+                    )}
+                  </SectionWrapper>
+                );
+              })()}
+
+              <ListingDetailSections
+                listing={listing}
+                agent={agentProfile}
+                isAgentView={false}
+                premiumNeutralSurfaces
+              />
+
+              {stickyAgentProfile && agentProfile && agentProfile.id !== stickyAgentProfile.id && (
+                <p className="px-1 text-xs text-neutral-500">
+                  Listing courtesy of {agentProfile.first_name} {agentProfile.last_name}
+                  {agentProfile.company ? ` • ${agentProfile.company}` : ""}
+                </p>
+              )}
+
+              <SectionWrapper
+                title="Location"
+                icon={<MapPin className="h-5 w-5 text-neutral-600" />}
+                className={consumerSectionCard}
+              >
+                <PropertyMap
+                  address={`${listing.address}, ${listing.city}, ${listing.state} ${listing.zip_code}`}
+                  latitude={listing.latitude}
+                  longitude={listing.longitude}
+                />
+              </SectionWrapper>
+              </div>
             </div>
 
-            {/* RIGHT COLUMN - Hero Sidebar (~32%) */}
-            <div className={`${propertyRailCol} ${propertyRailStack} ${propertyRailSticky}`}>
+            {/* RIGHT COLUMN — agent contact + sidebar */}
+            <div className={cn(propertyRailCol, propertyRailStack, propertyRailSticky, "w-full min-w-0")}>
 
               {/* Agent/admin: listing agent contact via AAC email (no buyer CTAs) */}
               {isAgentView && agentProfile ? (
@@ -937,79 +994,8 @@ const ConsumerPropertyDetail = () => {
               )}
 
               {buyerCompensationCard}
-            </div>
-          </div>
-        </div>
-        {/* END HERO GRID */}
 
-
-        {/* ========== MAIN CONTENT BELOW ========== */}
-        <div className="mx-auto max-w-6xl px-4 pt-2 pb-8">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            {/* LEFT COLUMN - Main Content */}
-            <div className="lg:col-span-2 space-y-4">
-              {/* Overview/Description with Read More */}
-              {listing.description && (() => {
-                const MAX_CHARS = 650;
-                const full = listing.description || '';
-                const isLong = full.length > MAX_CHARS;
-                const visibleText = !isLong || descriptionExpanded ? full : `${full.slice(0, MAX_CHARS)}…`;
-
-                return (
-                  <SectionWrapper
-                    title="Overview"
-                    icon={<FileText className="h-5 w-5 text-neutral-600" />}
-                    contentClassName="space-y-4"
-                    className={consumerSectionCard}
-                  >
-                    <p className="whitespace-pre-wrap text-neutral-800">{visibleText}</p>
-                    {isLong && (
-                      <button
-                        type="button"
-                        onClick={() => setDescriptionExpanded(v => !v)}
-                        className="text-sm font-medium text-neutral-900 underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300/50"
-                      >
-                        {descriptionExpanded ? 'Read less' : 'Read more'}
-                      </button>
-                    )}
-                  </SectionWrapper>
-                );
-              })()}
-
-              {/* MLS-Style Detail Sections (shared component) */}
-              <ListingDetailSections
-                listing={listing}
-                agent={agentProfile}
-                isAgentView={false}
-                premiumNeutralSurfaces
-              />
-
-              {/* Listing agent attribution — represented buyers only.
-                  Sticky agent is the primary contact; this is muted,
-                  no link, no contact details, no hover. */}
-              {stickyAgentProfile && agentProfile && agentProfile.id !== stickyAgentProfile.id && (
-                <p className="px-1 text-xs text-neutral-500">
-                  Listing courtesy of {agentProfile.first_name} {agentProfile.last_name}
-                  {agentProfile.company ? ` • ${agentProfile.company}` : ""}
-                </p>
-              )}
-
-              {/* Map */}
-              <SectionWrapper
-                title="Location"
-                icon={<MapPin className="h-5 w-5 text-neutral-600" />}
-                className={consumerSectionCard}
-              >
-                <PropertyMap
-                  address={`${listing.address}, ${listing.city}, ${listing.state} ${listing.zip_code}`}
-                  latitude={listing.latitude}
-                  longitude={listing.longitude}
-                />
-              </SectionWrapper>
-            </div>
-
-            {/* RIGHT COLUMN - Consumer content */}
-            <div className="space-y-6">
+              <div className="space-y-6 pt-2">
               {/* Buyer Agent Showcase — only when buyer is unrepresented.
                   Represented buyers already have a sticky agent. */}
               {!stickyAgentProfile && (
@@ -1114,6 +1100,7 @@ const ConsumerPropertyDetail = () => {
 
               {/* Ad Banner */}
               <AdBanner placementZone="listing_sidebar" className="mt-4" />
+              </div>
             </div>
           </div>
         </div>
