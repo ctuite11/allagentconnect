@@ -36,6 +36,7 @@ interface Recipient {
 
 /** Agent compose: minimum query length before showing recipient matches. */
 const AGENT_RECIPIENT_SEARCH_MIN = 2;
+const AGENT_RECIPIENT_SEARCH_DEBOUNCE_MS = 275;
 
 interface NewConversationDialogProps {
   open: boolean;
@@ -57,7 +58,10 @@ export function NewConversationDialog({
 }: NewConversationDialogProps) {
   const navigate = useNavigate();
   const [recipients, setRecipients] = useState<Recipient[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [buyerComposeLoading, setBuyerComposeLoading] = useState(false);
+  const [agentSearchLoading, setAgentSearchLoading] = useState(false);
+  const [debouncedAgentSearch, setDebouncedAgentSearch] = useState("");
+  const agentDirectoryLoadedRef = useRef(false);
   const [search, setSearch] = useState("");
   const [selectedRecipient, setSelectedRecipient] = useState<Recipient | null>(null);
   const [message, setMessage] = useState("");
@@ -78,60 +82,106 @@ export function NewConversationDialog({
     office_city: string | null;
   } | null>(null);
 
-  const fetchRecipients = useCallback(async () => {
-    setLoading(true);
+  const fetchBuyerComposeRecipients = useCallback(async () => {
+    setBuyerComposeLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const results: Recipient[] = [];
-
-      if (composeVariant === "buyer") {
-        const buyerRecipients = await fetchBuyerMessageRecipients(user.id, user.email);
-        setRecipients(buyerRecipients);
-        return;
-      }
-
-      // Fetch agents (agent compose)
-      const { data: agents } = await supabase
-        .from("agent_profiles")
-        .select("id, first_name, last_name, email, company, headshot_url")
-        .neq("id", user.id)
-        .order("last_name");
-
-      (agents || []).forEach((a) => {
-        const name = `${a.first_name ?? ""} ${a.last_name ?? ""}`.trim();
-        results.push({
-          id: a.id,
-          name: name || "",
-          email: a.email ?? "",
-          group: "agent",
-          headshotUrl: a.headshot_url ?? null,
-        });
-      });
-
-      const clients = await fetchMessageableClientRecipients(user.id);
-      for (const c of clients) {
-        results.push({
-          id: c.id,
-          name: c.name,
-          email: c.email,
-          group: "client",
-        });
-      }
-
-      setRecipients(results);
+      const buyerRecipients = await fetchBuyerMessageRecipients(user.id, user.email);
+      setRecipients(buyerRecipients);
     } catch (err) {
-      console.error("Error fetching recipients:", err);
+      console.error("Error fetching buyer compose recipients:", err);
     } finally {
-      setLoading(false);
+      setBuyerComposeLoading(false);
     }
-  }, [composeVariant]);
+  }, []);
+
+  const loadAgentRecipientDirectory = useCallback(async () => {
+    if (agentDirectoryLoadedRef.current) return;
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const results: Recipient[] = [];
+
+    const { data: agents } = await supabase
+      .from("agent_profiles")
+      .select("id, first_name, last_name, email, company, headshot_url")
+      .neq("id", user.id)
+      .order("last_name");
+
+    (agents || []).forEach((a) => {
+      const name = `${a.first_name ?? ""} ${a.last_name ?? ""}`.trim();
+      results.push({
+        id: a.id,
+        name: name || "",
+        email: a.email ?? "",
+        group: "agent",
+        headshotUrl: a.headshot_url ?? null,
+      });
+    });
+
+    const clients = await fetchMessageableClientRecipients(user.id);
+    for (const c of clients) {
+      results.push({
+        id: c.id,
+        name: c.name,
+        email: c.email,
+        group: "client",
+      });
+    }
+
+    setRecipients(results);
+    agentDirectoryLoadedRef.current = true;
+  }, []);
 
   useEffect(() => {
     if (!open) return;
-    void fetchRecipients();
-  }, [open, fetchRecipients]);
+    if (composeVariant === "buyer") {
+      void fetchBuyerComposeRecipients();
+    }
+  }, [open, composeVariant, fetchBuyerComposeRecipients]);
+
+  // Agent compose: debounce search input before querying the directory.
+  useEffect(() => {
+    if (!open || composeVariant !== "agent") return;
+
+    const q = search.trim();
+    if (q.length < AGENT_RECIPIENT_SEARCH_MIN) {
+      setAgentSearchLoading(false);
+      setDebouncedAgentSearch("");
+      return;
+    }
+
+    setAgentSearchLoading(true);
+    const timer = setTimeout(() => {
+      setDebouncedAgentSearch(q);
+    }, AGENT_RECIPIENT_SEARCH_DEBOUNCE_MS);
+
+    return () => clearTimeout(timer);
+  }, [search, open, composeVariant]);
+
+  // Agent compose: load directory lazily once the debounced query is ready.
+  useEffect(() => {
+    if (!open || composeVariant !== "agent") return;
+    if (debouncedAgentSearch.length < AGENT_RECIPIENT_SEARCH_MIN) return;
+
+    let cancelled = false;
+    void (async () => {
+      try {
+        await loadAgentRecipientDirectory();
+      } catch (err) {
+        console.error("Error loading agent recipient directory:", err);
+      } finally {
+        if (!cancelled) setAgentSearchLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [debouncedAgentSearch, open, composeVariant, loadAgentRecipientDirectory]);
 
   // Buyer favorites — preload on open so we know whether listing context is available.
   useEffect(() => {
@@ -246,7 +296,7 @@ export function NewConversationDialog({
 
   const filteredRecipients = useMemo(() => {
     if (composeVariant === "buyer") return recipients;
-    const q = search.trim();
+    const q = debouncedAgentSearch.trim();
     if (q.length < AGENT_RECIPIENT_SEARCH_MIN) return [];
     const ql = q.toLowerCase();
     return recipients.filter(
@@ -254,21 +304,25 @@ export function NewConversationDialog({
         r.name.toLowerCase().includes(ql) ||
         r.email.toLowerCase().includes(ql),
     );
-  }, [recipients, search, composeVariant]);
+  }, [recipients, debouncedAgentSearch, composeVariant]);
 
   const agentSearchResults = useMemo(() => {
     if (composeVariant === "buyer") return [];
     return [...filteredRecipients]
-      .filter((r) => r.name.trim().length > 0)
-      .sort((a, b) => a.name.trim().localeCompare(b.name.trim(), undefined, { sensitivity: "base" }));
+      .filter((r) => r.name.trim().length > 0 || r.email.trim().length > 0)
+      .sort((a, b) => {
+        const aKey = (a.name.trim() || a.email).toLowerCase();
+        const bKey = (b.name.trim() || b.email).toLowerCase();
+        return aKey.localeCompare(bKey, undefined, { sensitivity: "base" });
+      });
   }, [filteredRecipients, composeVariant]);
 
   const agentSearchQuery = search.trim();
   const agentSearchReady = agentSearchQuery.length >= AGENT_RECIPIENT_SEARCH_MIN;
 
-  const agentRecipients = filteredRecipients.filter((r) => r.group === "agent");
-  const sharedRecipients = filteredRecipients.filter((r) => r.group === "shared");
-  const buyerAgent = agentRecipients[0] ?? null;
+  const buyerAgent = composeVariant === "buyer" ? recipients.find((r) => r.group === "agent") ?? null : null;
+  const sharedRecipients =
+    composeVariant === "buyer" ? recipients.filter((r) => r.group === "shared") : [];
   const buyerHasConnectedGroup = sharedRecipients.length > 0;
   const buyerCanLinkListing = recentListings.length > 0;
   const buyerAgentPresence = useAgentLastSeen(
@@ -359,6 +413,8 @@ export function NewConversationDialog({
 
   const resetComposeState = () => {
     setSearch("");
+    setDebouncedAgentSearch("");
+    setAgentSearchLoading(false);
     setSelectedRecipient(null);
     setMessage("");
     setListingContext("general");
@@ -366,6 +422,8 @@ export function NewConversationDialog({
     setSelectedListing(null);
     setListings([]);
     setRecentListings([]);
+    setRecipients([]);
+    agentDirectoryLoadedRef.current = false;
     setSending(false);
   };
 
@@ -400,6 +458,7 @@ export function NewConversationDialog({
   const renderAgentSearchRow = (r: Recipient) => {
     const selected = selectedRecipient?.id === r.id;
     const name = r.name.trim();
+    const primaryLabel = name || r.email.trim();
     const statusLabel = r.group === "client" ? "Buyer" : "Agent";
 
     return (
@@ -418,11 +477,11 @@ export function NewConversationDialog({
             r.group === "client" ? "bg-neutral-200 text-neutral-700" : "bg-zinc-100 text-zinc-600",
           )}
         >
-          {initialsFromDisplayName(name)}
+          {initialsFromDisplayName(primaryLabel)}
         </div>
         <div className="min-w-0">
-          <p className="truncate text-sm font-medium text-zinc-900">{name}</p>
-          <p className="truncate text-xs text-zinc-500">{statusLabel}</p>
+          <p className="truncate text-sm font-medium text-zinc-900">{primaryLabel}</p>
+          {name ? <p className="truncate text-xs text-zinc-500">{statusLabel}</p> : null}
         </div>
       </button>
     );
@@ -456,7 +515,7 @@ export function NewConversationDialog({
           {composeVariant === "buyer" ? (
             <>
               <div className="rounded-2xl border border-zinc-100 bg-zinc-50/60 p-4">
-                {loading ? (
+                {buyerComposeLoading ? (
                   <div className="flex items-center justify-center py-4">
                     <AacMonogramLoader variant="inline" hideMessage className="min-h-0 gap-0 py-0" />
                   </div>
@@ -585,25 +644,29 @@ export function NewConversationDialog({
                     className="pl-9 w-full bg-white border-neutral-200 text-neutral-900 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:shadow-none focus:border-[#0E56F5] focus-visible:border-[#0E56F5]"
                     autoFocus
                   />
+                  {agentSearchLoading && agentSearchReady ? (
+                    <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-zinc-400" />
+                  ) : null}
                 </div>
-                {loading ? (
-                  <div className="flex items-center justify-center py-6">
-                    <AacMonogramLoader variant="inline" hideMessage className="min-h-0 gap-0 py-0" />
-                  </div>
-                ) : !agentSearchReady ? (
+                {!agentSearchReady ? (
                   <p className="px-2 py-6 text-center text-sm text-zinc-400">
-                    Start typing a name to search buyers and agents
+                    Start typing to search buyers and agents.
                   </p>
-                ) : (
+                ) : agentSearchLoading ? (
+                  <p className="flex items-center justify-center gap-2 px-2 py-6 text-sm text-zinc-400">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Searching…
+                  </p>
+                ) : agentSearchResults.length > 0 ? (
                   <ScrollArea className="max-h-[240px]">
                     <div className="space-y-0.5 py-1">
-                      {agentSearchResults.length > 0 ? (
-                        agentSearchResults.map(renderAgentSearchRow)
-                      ) : (
-                        <p className="px-2 py-6 text-center text-sm text-zinc-400">No matches found</p>
-                      )}
+                      {agentSearchResults.map(renderAgentSearchRow)}
                     </div>
                   </ScrollArea>
+                ) : (
+                  <p className="px-2 py-6 text-center text-sm text-zinc-400">
+                    No matching buyers or agents found.
+                  </p>
                 )}
               </>
             )}
