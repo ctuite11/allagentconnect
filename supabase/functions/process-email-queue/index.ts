@@ -141,9 +141,14 @@ Deno.serve(async (req) => {
     let sent = 0;
     let failed = 0;
     let retried = 0;
+    let skipped = 0;
+    // Respect Resend's 5 req/sec limit: process up to 5 concurrently per batch,
+    // then wait until at least 1000ms has elapsed since the batch started.
     const CONCURRENCY = 5;
+    const BATCH_WINDOW_MS = 1000;
 
     for (let i = 0; i < jobs.length; i += CONCURRENCY) {
+      const batchStartedAt = Date.now();
       const batch = (jobs as EmailJob[]).slice(i, i + CONCURRENCY);
 
       await Promise.all(
@@ -183,6 +188,42 @@ Deno.serve(async (req) => {
 
             failed++;
             return;
+          }
+
+          // Skip new-message notifications whose underlying message has
+          // already been read by the recipient. The DB trigger enqueues
+          // these with a 60-second delay specifically so an in-app read
+          // suppresses the email.
+          if (template === "new-message-notification") {
+            const messageId =
+              (job.payload?.variables as { message_id?: string } | undefined)?.message_id;
+            if (messageId) {
+              const { data: msgRow } = await supabase
+                .from("conversation_messages")
+                .select("read_at")
+                .eq("id", messageId)
+                .maybeSingle();
+              if (msgRow?.read_at) {
+                await safeUpdateJob(
+                  job.id,
+                  {
+                    status: "sent",
+                    provider_message_id: "skipped:read",
+                    delivery_status: "skipped_read",
+                    delivery_status_at: new Date().toISOString(),
+                  },
+                  { stage: "skip_already_read" },
+                );
+                await logEvent(job.id, "skipped_already_read", {
+                  template,
+                  to,
+                  message_id: messageId,
+                  duration_ms: Date.now() - startedAt,
+                });
+                skipped++;
+                return;
+              }
+            }
           }
 
           try {
@@ -267,16 +308,19 @@ Deno.serve(async (req) => {
         }),
       );
 
+      // Throttle: ensure at most 5 sends per second across batches.
       if (i + CONCURRENCY < jobs.length) {
-        await new Promise((r) => setTimeout(r, 200));
+        const elapsed = Date.now() - batchStartedAt;
+        const wait = Math.max(0, BATCH_WINDOW_MS - elapsed);
+        if (wait > 0) await new Promise((r) => setTimeout(r, wait));
       }
     }
 
     console.log(
-      `[process-email-queue] Done: ${sent} sent, ${failed} failed, ${retried} retried`,
+      `[process-email-queue] Done: ${sent} sent, ${failed} failed, ${retried} retried, ${skipped} skipped`,
     );
 
-    return json({ processed: jobs.length, sent, failed, retried });
+    return json({ processed: jobs.length, sent, failed, retried, skipped });
   } catch (err) {
     console.error("[process-email-queue] Error:", err);
     return json({ error: toErrorMessage(err) }, { status: 500 });
