@@ -382,6 +382,11 @@ const ConsumerPropertyDetail = () => {
     ? getPhotoUrl(listing.photos[currentPhotoIndex])
     : '/placeholder.svg';
 
+  const listDate = listing.active_date || listing.created_at;
+  const daysOnMarket = listDate
+    ? Math.ceil((new Date().getTime() - new Date(listDate).getTime()) / (1000 * 60 * 60 * 24))
+    : null;
+
   const compensationDisplay = getCompensationDisplay();
   const neighborhoodLabel =
     typeof listing.neighborhood === "string" && listing.neighborhood.trim()
@@ -568,19 +573,12 @@ const ConsumerPropertyDetail = () => {
                     </>
                   )}
 
-                  {/* Neighborhood + photo counter — bottom left */}
-                  {activeMediaTab === "photos" && (
-                    <div className="absolute bottom-4 left-4 z-10 flex max-w-[min(100%,18rem)] flex-col items-start gap-2">
-                      {neighborhoodLabel && (
-                        <span className="inline-flex max-w-full rounded-full border border-white/50 bg-black/75 px-3 py-1.5 text-xs font-semibold text-white shadow-[0_2px_8px_rgba(0,0,0,0.35)] backdrop-blur-md">
-                          {neighborhoodLabel}
-                        </span>
-                      )}
-                      {listing.photos && listing.photos.length > 0 && (
-                        <div className="shrink-0 bg-black/70 px-3 py-1 text-sm text-white rounded-full backdrop-blur-sm">
-                          {currentPhotoIndex + 1} / {listing.photos.length}
-                        </div>
-                      )}
+                  {/* Neighborhood — bottom left */}
+                  {activeMediaTab === "photos" && neighborhoodLabel && (
+                    <div className="absolute bottom-4 left-4 z-10 max-w-[min(100%,20rem)]">
+                      <span className="inline-flex max-w-full rounded-full border border-white/70 bg-black/85 px-3.5 py-2 text-[13px] font-semibold text-white shadow-[0_2px_12px_rgba(0,0,0,0.5)] backdrop-blur-md">
+                        {neighborhoodLabel}
+                      </span>
                     </div>
                   )}
 
@@ -682,6 +680,14 @@ const ConsumerPropertyDetail = () => {
                 }
               />
 
+              <PropertyFactsRow
+                bedrooms={listing.bedrooms}
+                bathrooms={listing.bathrooms}
+                squareFeet={listing.square_feet}
+                totalParkingSpaces={listing.total_parking_spaces}
+                daysOnMarket={daysOnMarket}
+                containerClassName="mt-4"
+              />
             </div>
 
             {/* RIGHT COLUMN - Hero Sidebar (~32%) */}
@@ -942,14 +948,6 @@ const ConsumerPropertyDetail = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             {/* LEFT COLUMN - Main Content */}
             <div className="lg:col-span-2 space-y-4">
-              <PropertyFactsRow
-                bedrooms={listing.bedrooms}
-                bathrooms={listing.bathrooms}
-                squareFeet={listing.square_feet}
-                garageSpaces={listing.garage_spaces}
-                containerClassName="pt-1"
-              />
-
               {/* Overview/Description with Read More */}
               {listing.description && (() => {
                 const MAX_CHARS = 650;

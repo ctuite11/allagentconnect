@@ -4,6 +4,7 @@ import { LISTING_CARD_MAP_PIN_CLASS } from "@/components/listing/ListingCardAddr
 import {
   propertyPageContainer,
   propertyMediaCol,
+  propertyHeaderRow,
   propertyAddressH1,
   propertyPriceText,
 } from "./propertyTokens";
@@ -17,7 +18,7 @@ interface PropertyHeaderProps {
 }
 
 /**
- * Address + price above the buyer listing hero, left-aligned with the photo column.
+ * Address (left) + price (right), spanning the photo column above the gallery.
  */
 export function PropertyHeader({
   address,
@@ -28,12 +29,12 @@ export function PropertyHeader({
   return (
     <div className={cn(propertyPageContainer, "pb-2", className)}>
       <div className={propertyMediaCol}>
-        <div className="space-y-1">
+        <div className={propertyHeaderRow}>
           <h1 className={propertyAddressH1}>
             <MapPin className={cn(LISTING_CARD_MAP_PIN_CLASS, "relative top-[1px]")} aria-hidden strokeWidth={2} />
             {address}
           </h1>
-          <p className={propertyPriceText}>
+          <p className={cn(propertyPriceText, "shrink-0 text-right")}>
             ${price?.toLocaleString() ?? "—"}
             {priceSuffix && (
               <span className="ml-1 text-sm font-normal text-muted-foreground">

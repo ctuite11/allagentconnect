@@ -1,4 +1,4 @@
-import { Bed, Bath, Square, Car } from "lucide-react";
+import { Bed, Bath, Square, CircleParking, Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   propertyFactsRow,
@@ -11,10 +11,11 @@ interface PropertyFactsRowProps {
   bedrooms?: number | null;
   bathrooms?: number | null;
   squareFeet?: number | null;
-  garageSpaces?: number | null;
+  totalParkingSpaces?: number | null;
+  daysOnMarket?: number | null;
   /** Merges into the row container (border-b, flex, etc.) */
   className?: string;
-  /** Spacing / wrapper above the stats row (default mt-4) */
+  /** Spacing / wrapper above the stats row */
   containerClassName?: string;
 }
 
@@ -25,7 +26,8 @@ export function PropertyFactsRow({
   bedrooms,
   bathrooms,
   squareFeet,
-  garageSpaces,
+  totalParkingSpaces,
+  daysOnMarket,
   className,
   containerClassName,
 }: PropertyFactsRowProps) {
@@ -52,10 +54,16 @@ export function PropertyFactsRow({
             <span className={propertyFactValue}>{squareFeet.toLocaleString()}</span>
           </div>
         )}
-        {garageSpaces != null && garageSpaces > 0 && (
+        {totalParkingSpaces != null && totalParkingSpaces > 0 && (
           <div className={propertyFactItem}>
-            <Car className={iconCls} aria-hidden />
-            <span className={propertyFactValue}>{garageSpaces}</span>
+            <CircleParking className={iconCls} aria-hidden />
+            <span className={propertyFactValue}>{totalParkingSpaces}</span>
+          </div>
+        )}
+        {daysOnMarket != null && daysOnMarket >= 0 && (
+          <div className={propertyFactItem}>
+            <Calendar className={iconCls} aria-hidden />
+            <span className={propertyFactValue}>{daysOnMarket}</span>
           </div>
         )}
       </div>
