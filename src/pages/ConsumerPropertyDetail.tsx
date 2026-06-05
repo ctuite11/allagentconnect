@@ -52,7 +52,7 @@ import { useListingView } from "@/hooks/useListingView";
 import { PropertyMetaTags } from "@/components/PropertyMetaTags";
 import { ListingDetailSections } from "@/components/ListingDetailSections";
 import { PropertyHeader } from "@/components/property/PropertyHeader";
-import { PropertyFactsRow } from "@/components/property/PropertyFactsRow";
+import { PropertyFactsRow, propertyPhotoContentInset } from "@/components/property/PropertyFactsRow";
 import { BrokerageStrip } from "@/components/property/BrokerageStrip";
 import { MediaTabBar, type MediaTab } from "@/components/property/MediaTabBar";
 import { SectionWrapper } from "@/components/property/SectionWrapper";
@@ -601,104 +601,120 @@ const ConsumerPropertyDetail = () => {
                   )}
                 </div>
               </div>
+
+              {/* Anchored under photo — inset matches neighborhood pill (left-4) */}
+              <div className={cn(propertyPhotoContentInset, "flex flex-col gap-3 pt-3")}>
+                <div className="flex w-full items-center justify-between gap-4">
+                  <MediaTabBar
+                    active={activeMediaTab as MediaTab}
+                    onChange={(tab) => handleMediaTabChange(tab)}
+                    hasVideo={!!listing.video_url}
+                    hasTour={!!listing.virtual_tour_url}
+                    hasWebsite={!!listing.property_website_url}
+                    neutralTone
+                    className="!mt-0 min-w-0 !px-0"
+                    trailing={
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="rounded-full border-neutral-200 bg-white text-[13px] font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:bg-neutral-50"
+                            aria-label="Share property"
+                          >
+                            <Share2 className="mr-2 h-4 w-4" />
+                            Share
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48">
+                          <DropdownMenuItem
+                            onClick={() =>
+                              window.open(
+                                `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(getListingShareUrl(id!))}`,
+                                "_blank"
+                              )
+                            }
+                            className="gap-2 cursor-pointer"
+                          >
+                            Facebook
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() =>
+                              window.open(
+                                `https://twitter.com/intent/tweet?url=${encodeURIComponent(getListingShareUrl(id!))}`,
+                                "_blank"
+                              )
+                            }
+                            className="gap-2 cursor-pointer"
+                          >
+                            Twitter
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() =>
+                              window.open(
+                                `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(getListingShareUrl(id!))}`,
+                                "_blank"
+                              )
+                            }
+                            className="gap-2 cursor-pointer"
+                          >
+                            LinkedIn
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() =>
+                              window.open(
+                                `https://wa.me/?text=${encodeURIComponent(listing.address)}%20${encodeURIComponent(getListingShareUrl(id!))}`,
+                                "_blank"
+                              )
+                            }
+                            className="gap-2 cursor-pointer"
+                          >
+                            WhatsApp
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() =>
+                              window.open(
+                                `mailto:?subject=${encodeURIComponent(listing.address)}&body=${encodeURIComponent(getListingShareUrl(id!))}`,
+                                "_blank"
+                              )
+                            }
+                            className="gap-2 cursor-pointer"
+                          >
+                            Email
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={handleCopyLink} className="gap-2 cursor-pointer">
+                            Copy Link
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    }
+                  />
+                  {daysOnMarket != null && daysOnMarket >= 0 ? (
+                    <p className="shrink-0 text-right text-sm leading-none text-neutral-900">
+                      <span className="text-[11px] font-medium uppercase tracking-wide text-neutral-500">DOM</span>
+                      <span className="ml-1.5 font-semibold tabular-nums">{daysOnMarket}</span>
+                    </p>
+                  ) : null}
+                </div>
+
+                <PropertyFactsRow
+                  bedrooms={listing.bedrooms}
+                  bathrooms={listing.bathrooms}
+                  squareFeet={listing.square_feet}
+                  totalParkingSpaces={
+                    listing.total_parking_spaces ?? listing.garage_spaces ?? null
+                  }
+                />
+              </div>
             </div>
 
-            {/* Row 3 — pills, stats, overview (left column) */}
-            <div className="order-3 flex min-w-0 flex-col gap-5 pt-5 lg:col-start-1 lg:row-start-3 lg:pt-6">
-              <MediaTabBar
-                active={activeMediaTab as MediaTab}
-                onChange={(tab) => handleMediaTabChange(tab)}
-                hasVideo={!!listing.video_url}
-                hasTour={!!listing.virtual_tour_url}
-                hasWebsite={!!listing.property_website_url}
-                neutralTone
-                className="!mt-0 !px-0"
-                trailing={
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="rounded-full border-neutral-200 bg-white text-[13px] font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:bg-neutral-50"
-                        aria-label="Share property"
-                      >
-                        <Share2 className="mr-2 h-4 w-4" />
-                        Share
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-48">
-                      <DropdownMenuItem
-                        onClick={() =>
-                          window.open(
-                            `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(getListingShareUrl(id!))}`,
-                            "_blank"
-                          )
-                        }
-                        className="gap-2 cursor-pointer"
-                      >
-                        Facebook
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() =>
-                          window.open(
-                            `https://twitter.com/intent/tweet?url=${encodeURIComponent(getListingShareUrl(id!))}`,
-                            "_blank"
-                          )
-                        }
-                        className="gap-2 cursor-pointer"
-                      >
-                        Twitter
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() =>
-                          window.open(
-                            `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(getListingShareUrl(id!))}`,
-                            "_blank"
-                          )
-                        }
-                        className="gap-2 cursor-pointer"
-                      >
-                        LinkedIn
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() =>
-                          window.open(
-                            `https://wa.me/?text=${encodeURIComponent(listing.address)}%20${encodeURIComponent(getListingShareUrl(id!))}`,
-                            "_blank"
-                          )
-                        }
-                        className="gap-2 cursor-pointer"
-                      >
-                        WhatsApp
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() =>
-                          window.open(
-                            `mailto:?subject=${encodeURIComponent(listing.address)}&body=${encodeURIComponent(getListingShareUrl(id!))}`,
-                            "_blank"
-                          )
-                        }
-                        className="gap-2 cursor-pointer"
-                      >
-                        Email
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={handleCopyLink} className="gap-2 cursor-pointer">
-                        Copy Link
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                }
-              />
-
-              <PropertyFactsRow
-                bedrooms={listing.bedrooms}
-                bathrooms={listing.bathrooms}
-                squareFeet={listing.square_feet}
-                totalParkingSpaces={listing.total_parking_spaces}
-                daysOnMarket={daysOnMarket}
-              />
-
-              <div className="flex flex-col gap-4 pt-2">
+            {/* Row 3 — overview, details (left column) */}
+            <div
+              className={cn(
+                propertyPhotoContentInset,
+                "order-3 flex min-w-0 flex-col gap-4 pt-5 lg:col-start-1 lg:row-start-3",
+              )}
+            >
               {/* Overview/Description with Read More */}
               {listing.description && (() => {
                 const MAX_CHARS = 650;
@@ -752,7 +768,6 @@ const ConsumerPropertyDetail = () => {
                   longitude={listing.longitude}
                 />
               </SectionWrapper>
-              </div>
             </div>
 
             {/* Row 2+ — agent rail (right column, top aligned with photo) */}

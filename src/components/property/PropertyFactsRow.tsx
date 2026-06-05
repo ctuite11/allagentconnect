@@ -1,4 +1,4 @@
-import { Bed, Bath, Square, CircleParking, Calendar } from "lucide-react";
+import { Bed, Bath, Square, CircleParking } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   propertyFactsRow,
@@ -7,12 +7,14 @@ import {
   propertyFactIcon,
 } from "./propertyTokens";
 
+/** Matches neighborhood pill / expand control inset inside the photo (`left-4` / `right-4`). */
+export const propertyPhotoContentInset = "px-4";
+
 interface PropertyFactsRowProps {
   bedrooms?: number | null;
   bathrooms?: number | null;
   squareFeet?: number | null;
   totalParkingSpaces?: number | null;
-  daysOnMarket?: number | null;
   /** Merges into the row container (border-b, flex, etc.) */
   className?: string;
   /** Spacing / wrapper above the stats row */
@@ -20,14 +22,13 @@ interface PropertyFactsRowProps {
 }
 
 /**
- * Buyer listing detail stats: icon + value only (no text labels).
+ * Buyer listing detail stats: icon + value only (left group under photo).
  */
 export function PropertyFactsRow({
   bedrooms,
   bathrooms,
   squareFeet,
   totalParkingSpaces,
-  daysOnMarket,
   className,
   containerClassName,
 }: PropertyFactsRowProps) {
@@ -35,7 +36,7 @@ export function PropertyFactsRow({
 
   return (
     <div className={cn(containerClassName)}>
-      <div className={cn(propertyFactsRow, "mt-0 gap-x-6 gap-y-2 border-b-0 pb-0", className)}>
+      <div className={cn(propertyFactsRow, "mt-0 min-w-0 gap-x-6 gap-y-2 border-b-0 pb-0", className)}>
         {bedrooms != null && bedrooms > 0 && (
           <div className={propertyFactItem}>
             <Bed className={iconCls} aria-hidden />
@@ -58,12 +59,6 @@ export function PropertyFactsRow({
           <div className={propertyFactItem}>
             <CircleParking className={iconCls} aria-hidden />
             <span className={propertyFactValue}>{totalParkingSpaces}</span>
-          </div>
-        )}
-        {daysOnMarket != null && daysOnMarket >= 0 && (
-          <div className={propertyFactItem}>
-            <Calendar className={iconCls} aria-hidden />
-            <span className={propertyFactValue}>{daysOnMarket}</span>
           </div>
         )}
       </div>
