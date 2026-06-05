@@ -14,6 +14,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import AACMonogram from "@/components/ui/AACMonogram";
 import { useUnreadConversations } from "@/hooks/useUnreadConversations";
+import { MessagesUnreadBadge } from "@/components/messaging/MessagesUnreadBadge";
 import { buyerPageShell } from "@/lib/buyerUi";
 import { isBuyerHotSheetsNavActive } from "@/lib/sidebarNavActive";
 
@@ -95,11 +96,7 @@ export function BuyerShell() {
                             isActive ? "text-[#0E56F5]" : "text-zinc-500"
                           }`}
                         />
-                        {unreadCount > 0 ? (
-                          <span className="pointer-events-none absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-semibold leading-none text-white">
-                            {unreadCount > 99 ? "99+" : unreadCount}
-                          </span>
-                        ) : null}
+                        <MessagesUnreadBadge count={unreadCount} />
                       </span>
                       {label}
                     </>
@@ -167,11 +164,9 @@ export function BuyerShell() {
                       }`}
                     />
                     {label}
-                    {to === "/messages" && unreadCount > 0 && (
-                      <span className="ml-auto bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1 leading-none">
-                        {unreadCount > 99 ? "99+" : unreadCount}
-                      </span>
-                    )}
+                    {to === "/messages" ? (
+                      <MessagesUnreadBadge count={unreadCount} variant="inline" className="ml-auto" />
+                    ) : null}
                   </>
                 )}
               </NavLink>

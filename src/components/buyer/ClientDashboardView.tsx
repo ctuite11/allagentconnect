@@ -50,6 +50,7 @@ import FavoriteButton from "@/components/FavoriteButton";
 import { cn, resolveListingUnitNumber, type ListingAddressUnitSource } from "@/lib/utils";
 import { listingSelectionCheckboxClass } from "@/lib/listingSelectionStyles";
 import { profileInitials } from "@/lib/buyerProfile";
+import { hasUnreadMessages, MessagesUnreadBadge } from "@/components/messaging/MessagesUnreadBadge";
 
 export interface ClientDashboardAgentInfo {
   id: string;
@@ -151,7 +152,7 @@ export interface ClientDashboardViewProps {
     marketSearch: string;
     favoritesEmptySearch: string;
   };
-  /** Buyer auth user presence — green dot beside name (e.g. agent mirror). */
+  /** Buyer auth user presence (e.g. agent mirror). */
   buyerPresenceOnline?: boolean;
   /** Extra outline actions in the header row (e.g. Edit / Remove buyer on agent mirror). */
   mirrorManagementActions?: ReactNode;
@@ -362,31 +363,16 @@ export function ClientDashboardView({
                           {buyerInitials}
                         </AvatarFallback>
                       </Avatar>
-                      {buyerPresenceOnline ? (
-                        <span
-                          className="absolute bottom-0.5 right-0.5 h-3.5 w-3.5 rounded-full border-2 border-white bg-emerald-500 shadow-sm"
-                          title="Online"
-                          aria-label="You are online"
-                        />
-                      ) : null}
                     </div>
                     <div className="min-w-0 flex-1 space-y-2 sm:space-y-2.5">
                       <div className="space-y-0.5">
-                        <p className="flex flex-wrap items-center gap-2 text-[13px] font-semibold text-neutral-900 sm:text-sm">
-                          <span>{buyerDisplayName.trim()}</span>
-                          {buyerPresenceOnline ? (
-                            <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-1.5 py-0.5">
-                              <span
-                                className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500 ring-2 ring-emerald-100"
-                                title="Searching"
-                              />
-                              <span className="text-[10px] font-medium uppercase tracking-wide text-emerald-700">
-                                SEARCHING
-                              </span>
-                            </span>
-                          ) : null}
+                        <p className="text-[13px] font-semibold text-neutral-900 sm:text-sm">
+                          {buyerDisplayName.trim()}
                         </p>
                         <p className="text-[11px] text-neutral-500 sm:text-xs">Buyer</p>
+                        {buyerPresenceOnline ? (
+                          <p className="text-[11px] text-neutral-500 sm:text-xs">Status: Searching</p>
+                        ) : null}
                           {buyerPhoneFmt ? (
                             <a
                               href={buyerPhoneFmt.telHref}
@@ -542,23 +528,13 @@ export function ClientDashboardView({
                         </AvatarFallback>
                       </Avatar>
                       <div className="min-w-0 flex-1 space-y-0.5">
-                        <p className="flex flex-wrap items-center gap-2 text-[13px] font-semibold text-neutral-900 sm:text-sm">
-                          <span>
-                            {agent.first_name} {agent.last_name}
-                          </span>
-                          {agentPresenceOnline ? (
-                            <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-1.5 py-0.5">
-                              <span
-                                className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500 ring-2 ring-emerald-100"
-                                title="Online"
-                              />
-                              <span className="text-[10px] font-medium uppercase tracking-wide text-emerald-700">
-                                Online
-                              </span>
-                            </span>
-                          ) : null}
+                        <p className="text-[13px] font-semibold text-neutral-900 sm:text-sm">
+                          {agent.first_name} {agent.last_name}
                         </p>
                         {agent.company ? <p className="text-[11px] text-neutral-500 sm:text-xs">{agent.company}</p> : null}
+                        {agentPresenceOnline ? (
+                          <p className="text-[11px] text-neutral-500 sm:text-xs">Status: Online</p>
+                        ) : null}
                         {agentPhoneFmt ? (
                           <a href={agentPhoneFmt.telHref} className="block text-[13px] text-neutral-800 hover:underline">
                             {agentPhoneFmt.display}
@@ -599,16 +575,12 @@ export function ClientDashboardView({
                         variant="outline"
                         size="sm"
                         className="h-8 shrink-0 whitespace-nowrap rounded-full border-neutral-200 bg-white pl-2.5 pr-3 text-[12px] font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-200 hover:border-neutral-300 hover:bg-neutral-50/90 sm:h-9 sm:px-3.5 sm:text-[13px]"
-                        aria-label={unreadCount > 0 ? `Open messages, ${unreadCount} unread` : "Open messages"}
+                        aria-label={hasUnreadMessages(unreadCount) ? `Open messages, ${unreadCount} unread` : "Open messages"}
                         onClick={goMessagesIcon}
                       >
                         <span className="relative mr-1.5 inline-flex shrink-0 sm:mr-2">
                           <MessageSquare className="h-4 w-4 text-[#0E56F5]" aria-hidden />
-                          {unreadCount > 0 ? (
-                            <span className="pointer-events-none absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full border border-white bg-neutral-900 px-1 text-[10px] font-semibold leading-none text-white shadow-sm">
-                              {unreadCount > 9 ? "9+" : unreadCount}
-                            </span>
-                          ) : null}
+                          <MessagesUnreadBadge count={unreadCount} />
                         </span>
                         Message
                       </Button>

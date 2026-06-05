@@ -15,17 +15,19 @@ export function useUnreadConversations() {
     }
 
     try {
-      // Query the conversation_inbox view for unread count
-      const { count, error } = await supabase
+      const { data, error } = await supabase
         .from("conversation_inbox")
-        .select("*", { count: "exact", head: true })
-        .eq("is_unread", true);
+        .select("unread_count");
 
       if (error) {
         console.error("Error fetching unread count:", error);
         setUnreadCount(0);
       } else {
-        setUnreadCount(count || 0);
+        const total = (data ?? []).reduce((sum, row) => {
+          const n = typeof row.unread_count === "number" ? row.unread_count : 0;
+          return sum + Math.max(0, n);
+        }, 0);
+        setUnreadCount(total);
       }
     } catch (error) {
       console.error("Error calculating unread count:", error);

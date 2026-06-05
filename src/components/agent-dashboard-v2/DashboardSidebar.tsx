@@ -22,6 +22,7 @@ import { cn } from "@/lib/utils";
 import { isAgentHotSheetsNavActive } from "@/lib/sidebarNavActive";
 import { supabase } from "@/integrations/supabase/client";
 import { useUnreadConversations } from "@/hooks/useUnreadConversations";
+import { formatMessagesUnreadCount, hasUnreadMessages } from "@/components/messaging/MessagesUnreadBadge";
 import AACMonogram from "@/components/ui/AACMonogram";
 import {
   Tooltip,
@@ -88,8 +89,8 @@ function SidebarRow({
   onClick?: () => void;
 }) {
   const disabled = !item.route;
-  const hasBadge = item.badge != null && item.badge > 0;
-  const badgeText = hasBadge ? (item.badge! > 99 ? "99+" : String(item.badge)) : null;
+  const hasBadge = hasUnreadMessages(item.badge);
+  const badgeText = hasBadge ? formatMessagesUnreadCount(item.badge!) : null;
 
   const button = (
     <button

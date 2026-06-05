@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useUnreadConversations } from "@/hooks/useUnreadConversations";
+import { hasUnreadMessages, MessagesUnreadBadge } from "@/components/messaging/MessagesUnreadBadge";
 import { Logo } from "@/components/brand";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -104,11 +105,9 @@ function SidebarGroupSection({ label, items, currentPath, collapsed, onNavigate,
                   {!collapsed && (
                     <>
                       <span className="flex-1 truncate">{item.title}</span>
-                      {badge != null && badge > 0 && (
-                        <span className="ml-auto inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-medium text-primary-foreground">
-                          {badge}
-                        </span>
-                      )}
+                      {hasUnreadMessages(badge) ? (
+                        <MessagesUnreadBadge count={badge} variant="inline" className="ml-auto" />
+                      ) : null}
                     </>
                   )}
                 </SidebarMenuButton>
