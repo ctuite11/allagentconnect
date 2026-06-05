@@ -31,9 +31,11 @@ interface Recipient {
   name: string;
   email: string;
   group: "agent" | "client" | "shared";
-  subtitle?: string;
   headshotUrl?: string | null;
 }
+
+/** Agent compose: minimum query length before showing recipient matches. */
+const AGENT_RECIPIENT_SEARCH_MIN = 2;
 
 interface NewConversationDialogProps {
   open: boolean;
@@ -101,10 +103,9 @@ export function NewConversationDialog({
         const name = `${a.first_name ?? ""} ${a.last_name ?? ""}`.trim();
         results.push({
           id: a.id,
-          name: name || a.email || "",
+          name: name || "",
           email: a.email ?? "",
           group: "agent",
-          subtitle: (a.company ?? "").trim() || "AAC Agent",
           headshotUrl: a.headshot_url ?? null,
         });
       });
@@ -116,7 +117,6 @@ export function NewConversationDialog({
           name: c.name,
           email: c.email,
           group: "client",
-          subtitle: c.subtitle,
         });
       }
 
@@ -246,24 +246,25 @@ export function NewConversationDialog({
 
   const filteredRecipients = useMemo(() => {
     if (composeVariant === "buyer") return recipients;
-    if (!search.trim()) return recipients;
-    const q = search.toLowerCase();
+    const q = search.trim();
+    if (q.length < AGENT_RECIPIENT_SEARCH_MIN) return [];
+    const ql = q.toLowerCase();
     return recipients.filter(
       (r) =>
-        r.name.toLowerCase().includes(q) ||
-        r.email.toLowerCase().includes(q) ||
-        (r.subtitle ?? "").toLowerCase().includes(q),
+        r.name.toLowerCase().includes(ql) ||
+        r.email.toLowerCase().includes(ql),
     );
   }, [recipients, search, composeVariant]);
 
   const agentSearchResults = useMemo(() => {
     if (composeVariant === "buyer") return [];
-    return [...filteredRecipients].sort((a, b) => {
-      const aKey = (a.name.trim() || a.email).toLowerCase();
-      const bKey = (b.name.trim() || b.email).toLowerCase();
-      return aKey.localeCompare(bKey);
-    });
+    return [...filteredRecipients]
+      .filter((r) => r.name.trim().length > 0)
+      .sort((a, b) => a.name.trim().localeCompare(b.name.trim(), undefined, { sensitivity: "base" }));
   }, [filteredRecipients, composeVariant]);
+
+  const agentSearchQuery = search.trim();
+  const agentSearchReady = agentSearchQuery.length >= AGENT_RECIPIENT_SEARCH_MIN;
 
   const agentRecipients = filteredRecipients.filter((r) => r.group === "agent");
   const sharedRecipients = filteredRecipients.filter((r) => r.group === "shared");
@@ -398,9 +399,8 @@ export function NewConversationDialog({
 
   const renderAgentSearchRow = (r: Recipient) => {
     const selected = selectedRecipient?.id === r.id;
-    const hasName = Boolean(r.name.trim());
-    const primaryLabel = hasName ? r.name.trim() : r.email;
-    const secondaryLabel = hasName ? (r.subtitle?.trim() || "") : "";
+    const name = r.name.trim();
+    const statusLabel = r.group === "client" ? "Buyer" : "Agent";
 
     return (
       <button
@@ -418,13 +418,11 @@ export function NewConversationDialog({
             r.group === "client" ? "bg-neutral-200 text-neutral-700" : "bg-zinc-100 text-zinc-600",
           )}
         >
-          {initialsFromDisplayName(primaryLabel)}
+          {initialsFromDisplayName(name)}
         </div>
         <div className="min-w-0">
-          <p className="truncate text-sm font-medium text-zinc-900">{primaryLabel}</p>
-          {secondaryLabel ? (
-            <p className="truncate text-xs text-zinc-500">{secondaryLabel}</p>
-          ) : null}
+          <p className="truncate text-sm font-medium text-zinc-900">{name}</p>
+          <p className="truncate text-xs text-zinc-500">{statusLabel}</p>
         </div>
       </button>
     );
@@ -592,15 +590,17 @@ export function NewConversationDialog({
                   <div className="flex items-center justify-center py-6">
                     <AacMonogramLoader variant="inline" hideMessage className="min-h-0 gap-0 py-0" />
                   </div>
+                ) : !agentSearchReady ? (
+                  <p className="px-2 py-6 text-center text-sm text-zinc-400">
+                    Start typing a name to search buyers and agents
+                  </p>
                 ) : (
                   <ScrollArea className="max-h-[240px]">
                     <div className="space-y-0.5 py-1">
                       {agentSearchResults.length > 0 ? (
                         agentSearchResults.map(renderAgentSearchRow)
                       ) : (
-                        <p className="px-2 py-6 text-center text-sm text-zinc-400">
-                          {search.trim() ? "No matches found" : "No contacts available"}
-                        </p>
+                        <p className="px-2 py-6 text-center text-sm text-zinc-400">No matches found</p>
                       )}
                     </div>
                   </ScrollArea>
