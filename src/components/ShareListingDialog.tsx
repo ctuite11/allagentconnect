@@ -11,6 +11,7 @@ import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { ShareListingsDialog, Recipient, ListingPreview } from "@/components/share/ShareListingsDialog";
 import { useSenderProfilePrefill } from "@/lib/currentSenderProfile";
 import { searchClientContacts } from "@/lib/contactSearch";
+import { resolveFirstListingPhotoUrl } from "@/lib/resolveListingPhotoUrl";
 
 interface ShareListingDialogProps {
   listingId: string;
@@ -125,7 +126,7 @@ export const ShareListingDialog = ({
     try {
       const { data } = await supabase
         .from("listings")
-        .select("address, city, state, zip_code, price, bedrooms, bathrooms, square_feet")
+        .select("address, city, state, zip_code, price, bedrooms, bathrooms, square_feet, photos")
         .eq("id", listingId)
         .single();
 
@@ -137,6 +138,7 @@ export const ShareListingDialog = ({
           beds: data.bedrooms ?? undefined,
           baths: data.bathrooms ?? undefined,
           sqft: data.square_feet ?? undefined,
+          photoUrl: resolveFirstListingPhotoUrl(data.photos),
         });
       }
     } catch (error) {

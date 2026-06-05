@@ -4,7 +4,7 @@
  * Used by: ListingSearchResults, HotSheetReview, PropertyDetail, MyListings, etc.
  */
 import * as React from "react";
-import { Check, Home, Mail, Phone, Search, Send, User, PencilLine, Layers, Plus, X, UserPlus } from "lucide-react";
+import { Check, Home, Mail, Phone, Search, Send, User, Layers, Plus, X } from "lucide-react";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 
 import {
@@ -19,7 +19,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 
 export type ListingPreview = {
@@ -29,6 +28,7 @@ export type ListingPreview = {
   beds?: number;
   baths?: number;
   sqft?: number;
+  photoUrl?: string;
 };
 
 export type Recipient = {
@@ -176,6 +176,7 @@ export function ShareListingsDialog({
   const [lastSavedEmail, setLastSavedEmail] = React.useState<string>("");
   const [contactAddFeedback, setContactAddFeedback] = React.useState<ContactAddFeedback>(null);
   const [highlightedRecipientEmail, setHighlightedRecipientEmail] = React.useState<string | null>(null);
+  const [senderExpanded, setSenderExpanded] = React.useState(false);
   const contactSearchRef = React.useRef<HTMLDivElement>(null);
 
   const contactDisplayName = (contact: ContactSearchResult) =>
@@ -269,6 +270,7 @@ export function ShareListingsDialog({
     if (!open) {
       setContactAddFeedback(null);
       setHighlightedRecipientEmail(null);
+      setSenderExpanded(false);
     }
   }, [open]);
 
@@ -314,12 +316,12 @@ export function ShareListingsDialog({
         onKeyDown={handleKeyDown}
       >
         {/* Header */}
-        <div className="shrink-0 border-b border-neutral-200 bg-white px-4 py-4 sm:px-5 sm:py-4">
-          <DialogHeader className="space-y-1 pr-8">
+        <div className="shrink-0 border-b border-neutral-200 bg-white px-4 py-3 sm:px-5">
+          <DialogHeader className="space-y-0.5 pr-8">
             <DialogTitle className="text-base font-semibold tracking-tight text-neutral-900 sm:text-[17px]">
               {shareTitle ?? `Share Listing${selectedCount === 1 ? "" : "s"}`}
             </DialogTitle>
-            <DialogDescription className="text-sm leading-snug text-neutral-600">
+            <DialogDescription className="text-[13px] leading-snug text-neutral-600">
               {shareDescription ??
                 `Send ${selectedCount === 1 ? "this listing" : `${selectedCount} listings`} to a contact via email.`}
             </DialogDescription>
@@ -329,58 +331,71 @@ export function ShareListingsDialog({
         {/* Body - scrollable */}
         <div
           className={cn(
-            "min-h-0 flex-1 space-y-5 overflow-y-auto bg-white px-4 py-4 sm:px-5 sm:py-5",
+            "min-h-0 flex-1 space-y-3 overflow-y-auto bg-white px-4 py-3 sm:px-5",
             submitting && "pointer-events-none opacity-[0.88]",
           )}
         >
           {/* Listing preview / bulk summary */}
           {selectedCount === 1 && listingPreview ? (
-            <div className="flex items-start gap-3 rounded-lg border border-neutral-200 bg-white p-3 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
-              <div className={cn("mt-0.5 shrink-0 rounded-md border border-neutral-200 bg-white p-2 shadow-[0_1px_2px_rgba(0,0,0,0.04)]", ICON_NEUTRAL)}>
-                {previewVariant === "hot-sheet" ? (
-                  <Layers className="h-4 w-4" />
-                ) : (
-                  <Home className="h-4 w-4" />
-                )}
-              </div>
+            <div className="flex items-center gap-2.5 rounded-lg border border-neutral-200 bg-white p-2.5 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+              {listingPreview.photoUrl ? (
+                <img
+                  src={listingPreview.photoUrl}
+                  alt=""
+                  className="h-16 w-[4.5rem] shrink-0 rounded-md border border-neutral-100 object-cover"
+                />
+              ) : (
+                <div
+                  className={cn(
+                    "flex h-16 w-[4.5rem] shrink-0 items-center justify-center rounded-md border border-neutral-200 bg-neutral-50",
+                    ICON_NEUTRAL,
+                  )}
+                >
+                  {previewVariant === "hot-sheet" ? (
+                    <Layers className="h-4 w-4" />
+                  ) : (
+                    <Home className="h-4 w-4" />
+                  )}
+                </div>
+              )}
               <div className="min-w-0 flex-1">
-                <div className="truncate text-sm font-medium text-neutral-900">{listingPreview.address}</div>
-                {listingPreview.cityStateZip && (
-                  <div className="truncate text-xs text-neutral-600">
-                    {listingPreview.cityStateZip}
-                  </div>
-                )}
+                <div className="truncate text-[13px] font-semibold text-neutral-900">{listingPreview.address}</div>
                 {previewVariant === "listing" ? (
-                  <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-xs text-neutral-600">
-                    {listingPreview.price && <span className="font-semibold text-neutral-900">{listingPreview.price}</span>}
-                    {typeof listingPreview.beds === "number" && <span>{listingPreview.beds} bd</span>}
-                    {typeof listingPreview.baths === "number" && <span>{listingPreview.baths} ba</span>}
-                    {typeof listingPreview.sqft === "number" && (
+                  <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[12px] text-neutral-600">
+                    {listingPreview.price ? (
+                      <span className="font-semibold text-neutral-900">{listingPreview.price}</span>
+                    ) : null}
+                    {typeof listingPreview.beds === "number" ? <span>{listingPreview.beds} bd</span> : null}
+                    {typeof listingPreview.baths === "number" ? <span>{listingPreview.baths} ba</span> : null}
+                    {typeof listingPreview.sqft === "number" ? (
                       <span>{listingPreview.sqft.toLocaleString()} sf</span>
-                    )}
+                    ) : null}
                   </div>
                 ) : listingPreview.price ? (
-                  <div className="mt-1.5 text-xs font-medium text-neutral-600">{listingPreview.price}</div>
+                  <div className="mt-1 text-[12px] font-medium text-neutral-600">{listingPreview.price}</div>
                 ) : null}
               </div>
             </div>
           ) : selectedCount > 1 ? (
-            <div className="flex items-start gap-3 rounded-lg border border-neutral-200 bg-white p-3 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
-              <div className={cn("mt-0.5 shrink-0 rounded-md border border-neutral-200 bg-white p-2 shadow-[0_1px_2px_rgba(0,0,0,0.04)]", ICON_NEUTRAL)}>
+            <div className="flex items-center gap-2.5 rounded-lg border border-neutral-200 bg-white p-2.5 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+              <div
+                className={cn(
+                  "flex h-16 w-[4.5rem] shrink-0 items-center justify-center rounded-md border border-neutral-200 bg-neutral-50",
+                  ICON_NEUTRAL,
+                )}
+              >
                 <Layers className="h-4 w-4" />
               </div>
               <div className="min-w-0 flex-1">
-                <div className="text-sm font-medium text-neutral-900">Sharing {selectedCount} listings</div>
-                <div className="text-xs text-neutral-600">
-                  From your current selection
-                </div>
+                <div className="text-[13px] font-semibold text-neutral-900">Sharing {selectedCount} listings</div>
+                <div className="text-[12px] text-neutral-600">From your current selection</div>
               </div>
             </div>
           ) : null}
 
           {/* Contact Search */}
-          <section className="space-y-3">
-            <div className="text-xs font-medium uppercase tracking-wide text-neutral-500">
+          <section className="space-y-2">
+            <div className="text-[11px] font-medium uppercase tracking-wide text-neutral-500">
               {recipients.length > 0 ? "Add another contact" : "Search contact"}
             </div>
 
@@ -394,7 +409,7 @@ export function ShareListingsDialog({
                 autoFocus
               />
               {showContactDropdown && contactResults.length > 0 && (
-                <div className="absolute z-30 mt-1.5 max-h-52 w-full overflow-y-auto rounded-lg border border-neutral-200 bg-white py-1 shadow-[0_4px_14px_rgba(0,0,0,0.08)]">
+                <div className="absolute z-30 mt-1 max-h-48 w-full overflow-y-auto rounded-lg border border-neutral-200 bg-white py-1 shadow-[0_4px_14px_rgba(0,0,0,0.08)]">
                   {contactResults.map((contact) => {
                     const fullName = contactDisplayName(contact);
                     return (
@@ -420,8 +435,18 @@ export function ShareListingsDialog({
               )}
             </div>
 
+            {!manualMode ? (
+              <button
+                type="button"
+                onClick={() => setManualMode(true)}
+                className="text-[13px] font-medium text-[#0E56F5] transition-colors hover:text-[#0B46CC]"
+              >
+                + Enter recipient manually
+              </button>
+            ) : null}
+
             {(contactAddFeedback || recipients.length > 0) && (
-              <div className="space-y-2.5 rounded-lg border border-neutral-100 bg-neutral-50/40 px-3 py-2.5">
+              <div className="space-y-2 rounded-lg border border-neutral-100 bg-neutral-50/50 px-2.5 py-2">
                 {contactAddFeedback && (
                   <div
                     role="status"
@@ -447,11 +472,11 @@ export function ShareListingsDialog({
                 )}
 
                 {recipients.length > 0 && (
-                  <div className="space-y-2">
+                  <div className="space-y-1.5">
                     <div className="text-[11px] font-medium uppercase tracking-wide text-neutral-500">
                       Recipients ({recipients.length})
                     </div>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-1.5">
                       {recipients.map((r, idx) => {
                         const isHighlighted =
                           highlightedRecipientEmail != null &&
@@ -460,21 +485,19 @@ export function ShareListingsDialog({
                           <div
                             key={idx}
                             className={cn(
-                              "flex items-center gap-2 rounded-full border px-2.5 py-1 text-[13px] shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-colors duration-300",
+                              "flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[12px] shadow-[0_1px_2px_rgba(0,0,0,0.03)] transition-colors duration-300",
                               isHighlighted
                                 ? "border-emerald-300/90 bg-emerald-50/90 ring-1 ring-emerald-200/70"
                                 : "border-neutral-200 bg-white",
                             )}
                           >
                             <span className="truncate text-neutral-900">{r.name}</span>
-                            <span className="max-w-[10rem] truncate text-xs text-neutral-500">
-                              ({r.email})
-                            </span>
+                            <span className="max-w-[9rem] truncate text-[11px] text-neutral-500">({r.email})</span>
                             {onRemoveRecipient && (
                               <button
                                 type="button"
                                 onClick={() => onRemoveRecipient(idx)}
-                                className="-mr-0.5 ml-0.5 rounded-full p-1 text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-500"
+                                className="-mr-0.5 rounded-full p-0.5 text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-500"
                                 aria-label={`Remove ${r.name}`}
                               >
                                 <X className="h-3 w-3" />
@@ -489,27 +512,10 @@ export function ShareListingsDialog({
               </div>
             )}
 
-            <div className="flex items-center gap-3 py-0.5">
-              <Separator className="flex-1 bg-neutral-100" />
-              <span className="text-[10px] font-medium uppercase tracking-wider text-neutral-400">or</span>
-              <Separator className="flex-1 bg-neutral-100" />
-            </div>
-
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="h-9 w-full rounded-lg border-neutral-200 text-[13px] font-medium text-neutral-900 shadow-[0_1px_2px_rgba(0,0,0,0.03)] hover:border-neutral-300 hover:bg-neutral-50 [&_svg]:text-neutral-400"
-              onClick={() => setManualMode(!manualMode)}
-            >
-              <PencilLine className="mr-2 h-3.5 w-3.5" />
-              Enter manually
-            </Button>
-
             {manualMode && (
-              <div className="space-y-3 pt-1">
-                <div className="grid gap-3">
-                  <div className="space-y-1.5">
+              <div className="space-y-2 rounded-lg border border-neutral-200 bg-neutral-50/30 p-2.5">
+                <div className="grid gap-2">
+                  <div className="space-y-1">
                     <div className="text-xs font-medium text-neutral-700">Recipient name</div>
                     <div className="relative">
                       <User className={cn("pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2", ICON_NEUTRAL)} />
@@ -522,7 +528,7 @@ export function ShareListingsDialog({
                     </div>
                   </div>
 
-                  <div className="space-y-1.5">
+                  <div className="space-y-1">
                     <div className="text-xs font-medium text-neutral-700">Recipient email</div>
                     <div className={FIELD_ICON_WRAP}>
                       <Mail className={ICON_SLOT} />
@@ -538,23 +544,12 @@ export function ShareListingsDialog({
                   </div>
                 </div>
 
-                {/* Save to Contacts Prompt */}
                 {recipientName.trim() && recipientEmail.trim() && onSaveContact && !showSavePrompt && (
-                  <div className="space-y-3 rounded-lg border border-neutral-200 bg-white p-3 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
-                    <div className="flex items-start gap-3">
-                      <div className={cn("rounded-md border border-neutral-200 bg-white p-2 shadow-[0_1px_2px_rgba(0,0,0,0.04)]", ICON_NEUTRAL)}>
-                        <UserPlus className="h-4 w-4" />
-                      </div>
-                      <div className="min-w-0">
-                        <div className="text-[13px] font-medium leading-snug text-neutral-900">
-                          Save &quot;{recipientName.trim()}&quot; to My Contacts?
-                        </div>
-                        <div className="mt-0.5 truncate text-xs text-neutral-600">
-                          {recipientEmail.trim()}
-                        </div>
-                      </div>
+                  <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-neutral-200 bg-white px-2.5 py-2">
+                    <div className="min-w-0 text-[12px] text-neutral-700">
+                      Save <span className="font-medium text-neutral-900">{recipientName.trim()}</span> to contacts?
                     </div>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex gap-1.5">
                       <Button
                         type="button"
                         size="sm"
@@ -563,9 +558,9 @@ export function ShareListingsDialog({
                           setLastSavedEmail(recipientEmail.trim());
                           setShowSavePrompt(true);
                         }}
-                        className="h-8 rounded-md px-3 text-[13px] font-medium"
+                        className="h-7 rounded-md px-2.5 text-[12px] font-medium"
                       >
-                        Save to My Contacts
+                        Save
                       </Button>
                       <Button
                         type="button"
@@ -575,98 +570,47 @@ export function ShareListingsDialog({
                           setLastSavedEmail(recipientEmail.trim());
                           setShowSavePrompt(true);
                         }}
-                        className="h-8 rounded-md text-[13px] text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900"
+                        className="h-7 rounded-md px-2 text-[12px] text-neutral-600 hover:bg-neutral-100"
                       >
-                        No thanks
+                        Skip
                       </Button>
                     </div>
                   </div>
                 )}
 
-                {/* Add Another Contact Button with tooltip */}
                 {onAddRecipient && recipientName.trim() && recipientEmail.trim() && (
-                  <div className="group relative">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={handleManualAddRecipient}
-                      className="h-8 rounded-lg border-neutral-200 text-[13px] font-medium text-neutral-900 shadow-[0_1px_2px_rgba(0,0,0,0.03)] hover:border-neutral-300 hover:bg-neutral-50"
-                    >
-                      <Plus className={cn("mr-2 h-3.5 w-3.5", ICON_NEUTRAL)} />
-                      Add another contact
-                    </Button>
-                    <div className="pointer-events-none absolute bottom-full left-0 z-20 mb-2 hidden rounded-md border border-neutral-200 bg-neutral-900 px-2.5 py-1.5 text-xs text-white shadow-[0_4px_14px_rgba(0,0,0,0.12)] group-hover:block">
-                      Multiple recipients receive the same message
-                    </div>
-                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleManualAddRecipient}
+                    className="h-8 rounded-lg border-neutral-200 text-[12px] font-medium text-neutral-900 hover:bg-neutral-50"
+                  >
+                    <Plus className={cn("mr-1.5 h-3.5 w-3.5", ICON_NEUTRAL)} />
+                    Add to recipients
+                  </Button>
                 )}
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setManualMode(false);
+                    setRecipientName("");
+                    setRecipientEmail("");
+                    setShowSavePrompt(false);
+                  }}
+                  className="text-[12px] text-neutral-500 transition-colors hover:text-neutral-800"
+                >
+                  Back to contact search
+                </button>
               </div>
             )}
           </section>
 
-          {/* Sender Info */}
-          <section className="space-y-3 rounded-lg border border-neutral-200 bg-white p-3 shadow-[0_1px_3px_rgba(0,0,0,0.05)] sm:p-4">
-            <div className="text-xs font-semibold uppercase tracking-wide text-neutral-500">Sender</div>
-
-            <div className="space-y-1.5">
-              <div className="text-xs font-medium text-neutral-700">Your name <span className="text-neutral-400">*</span></div>
-              <div className={FIELD_ICON_WRAP}>
-                <User className={ICON_SLOT} />
-                <Input
-                  value={senderName}
-                  onChange={(e) => setSenderName(e.target.value)}
-                  aria-required
-                  className={cn("h-9 rounded-lg pl-9 text-[13px] text-neutral-900", INPUT_CLASS)}
-                />
-              </div>
-            </div>
-
-            <div className="space-y-1.5">
-              <div className="text-xs font-medium text-neutral-700">Your email <span className="text-neutral-400">*</span></div>
-              <div className={FIELD_ICON_WRAP}>
-                <Mail className={ICON_SLOT} />
-                <Input
-                  value={senderEmail}
-                  onChange={(e) => setSenderEmail(e.target.value)}
-                  type="email"
-                  autoComplete="email"
-                  aria-required
-                  className={cn("h-9 rounded-lg pl-9 text-[13px] text-neutral-900", INPUT_CLASS)}
-                />
-              </div>
-            </div>
-
-            <div className="space-y-1.5">
-              <div className="text-xs font-medium text-neutral-700">
-                Your phone <span className="font-normal text-neutral-500">(optional)</span>
-              </div>
-              <div className={FIELD_ICON_WRAP}>
-                <Phone className={ICON_SLOT} />
-                <Input
-                  value={senderPhone}
-                  onChange={(e) => setSenderPhone(e.target.value)}
-                  onBlur={() => {
-                    const formatted = formatPhoneNumber(senderPhone);
-                    if (formatted && formatted !== "—") {
-                      setSenderPhone(formatted);
-                    }
-                  }}
-                  placeholder="(617) 555-0123"
-                  className={cn("h-9 rounded-lg pl-9 text-[13px] text-neutral-900", INPUT_CLASS)}
-                />
-              </div>
-            </div>
-
-            <p className="text-[11px] leading-relaxed text-neutral-500">
-              Shown in the email signature your contact receives.
-            </p>
-          </section>
-
           {/* Message */}
-          <section className="space-y-3 rounded-lg border border-neutral-200 bg-white p-3 shadow-[0_1px_3px_rgba(0,0,0,0.05)] sm:p-4">
+          <section className="space-y-2 rounded-lg border border-neutral-200/80 bg-white p-2.5">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <div className="text-xs font-semibold uppercase tracking-wide text-neutral-500">Personal message</div>
+              <div className="text-[11px] font-medium uppercase tracking-wide text-neutral-500">Personal message</div>
               <div className="text-[11px] text-neutral-400">⌘ / Ctrl + Enter to send</div>
             </div>
 
@@ -697,8 +641,102 @@ export function ShareListingsDialog({
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Add a short note…"
-              className={cn("min-h-[100px] resize-y rounded-lg text-[13px] text-neutral-900 placeholder:text-neutral-400", INPUT_CLASS)}
+              className={cn("min-h-[84px] resize-y rounded-lg text-[13px] text-neutral-900 placeholder:text-neutral-400", INPUT_CLASS)}
             />
+          </section>
+
+          {/* Sharing as — collapsed by default */}
+          <section className="rounded-lg border border-neutral-200/80 bg-neutral-50/40 px-3 py-2.5">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0 space-y-0.5">
+                <div className="text-[11px] font-medium uppercase tracking-wide text-neutral-500">Sharing as</div>
+                {!senderExpanded ? (
+                  <p className="text-[13px] leading-snug text-neutral-800">
+                    <span className="font-medium text-neutral-900">{senderName.trim() || "Your name"}</span>
+                    {senderEmail.trim() ? (
+                      <>
+                        <span className="text-neutral-400"> · </span>
+                        <span className="text-neutral-600">{senderEmail.trim()}</span>
+                      </>
+                    ) : null}
+                  </p>
+                ) : null}
+              </div>
+              {!senderExpanded ? (
+                <button
+                  type="button"
+                  onClick={() => setSenderExpanded(true)}
+                  className="shrink-0 text-[13px] font-medium text-[#0E56F5] transition-colors hover:text-[#0B46CC]"
+                >
+                  Edit
+                </button>
+              ) : null}
+            </div>
+
+            {senderExpanded ? (
+              <div className="mt-2.5 space-y-2 border-t border-neutral-200/80 pt-2.5">
+                <div className="space-y-1">
+                  <div className="text-xs font-medium text-neutral-700">
+                    Your name <span className="text-neutral-400">*</span>
+                  </div>
+                  <div className={FIELD_ICON_WRAP}>
+                    <User className={ICON_SLOT} />
+                    <Input
+                      value={senderName}
+                      onChange={(e) => setSenderName(e.target.value)}
+                      aria-required
+                      className={cn("h-9 rounded-lg pl-9 text-[13px] text-neutral-900", INPUT_CLASS)}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <div className="text-xs font-medium text-neutral-700">
+                    Your email <span className="text-neutral-400">*</span>
+                  </div>
+                  <div className={FIELD_ICON_WRAP}>
+                    <Mail className={ICON_SLOT} />
+                    <Input
+                      value={senderEmail}
+                      onChange={(e) => setSenderEmail(e.target.value)}
+                      type="email"
+                      autoComplete="email"
+                      aria-required
+                      className={cn("h-9 rounded-lg pl-9 text-[13px] text-neutral-900", INPUT_CLASS)}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <div className="text-xs font-medium text-neutral-700">
+                    Your phone <span className="font-normal text-neutral-500">(optional)</span>
+                  </div>
+                  <div className={FIELD_ICON_WRAP}>
+                    <Phone className={ICON_SLOT} />
+                    <Input
+                      value={senderPhone}
+                      onChange={(e) => setSenderPhone(e.target.value)}
+                      onBlur={() => {
+                        const formatted = formatPhoneNumber(senderPhone);
+                        if (formatted && formatted !== "—") {
+                          setSenderPhone(formatted);
+                        }
+                      }}
+                      placeholder="(617) 555-0123"
+                      className={cn("h-9 rounded-lg pl-9 text-[13px] text-neutral-900", INPUT_CLASS)}
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setSenderExpanded(false)}
+                  className="text-[12px] font-medium text-[#0E56F5] transition-colors hover:text-[#0B46CC]"
+                >
+                  Done
+                </button>
+              </div>
+            ) : null}
           </section>
         </div>
 

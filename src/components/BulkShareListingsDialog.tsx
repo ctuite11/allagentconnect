@@ -8,6 +8,7 @@ import { ShareListingsDialog, Recipient } from "@/components/share/ShareListings
 import { useSenderProfilePrefill } from "@/lib/currentSenderProfile";
 import { cn } from "@/lib/utils";
 import { searchClientContacts } from "@/lib/contactSearch";
+import { resolveFirstListingPhotoUrl } from "@/lib/resolveListingPhotoUrl";
 
 interface BulkShareListingsDialogProps {
   listingIds: string[];
@@ -166,7 +167,7 @@ export function BulkShareListingsDialog({
     try {
       const { data } = await supabase
         .from("listings")
-        .select("address, city, state, zip_code, price, bedrooms, bathrooms, square_feet")
+        .select("address, city, state, zip_code, price, bedrooms, bathrooms, square_feet, photos")
         .eq("id", listingIds[0])
         .single();
 
@@ -178,6 +179,7 @@ export function BulkShareListingsDialog({
           beds: data.bedrooms ?? undefined,
           baths: data.bathrooms ?? undefined,
           sqft: data.square_feet ?? undefined,
+          photoUrl: resolveFirstListingPhotoUrl(data.photos),
         });
       }
     } catch (error) {
