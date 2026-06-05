@@ -685,6 +685,7 @@ export function ShareListingsDialog({
                       value={senderName}
                       onChange={(e) => setSenderName(e.target.value)}
                       aria-required
+                      autoComplete="off"
                       className={cn("h-9 rounded-lg pl-9 text-[13px] text-neutral-900", INPUT_CLASS)}
                     />
                   </div>

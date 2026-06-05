@@ -57,7 +57,6 @@ export const ShareListingDialog = ({
   const [recipients, setRecipients] = useState<Recipient[]>([]);
 
   const applySender = useCallback((sender: { name: string; email: string; phone: string }) => {
-    setAgentName(sender.name);
     setAgentEmail(sender.email);
     setAgentPhone(sender.phone);
   }, []);
@@ -75,6 +74,7 @@ export const ShareListingDialog = ({
       // Reset form when closing
       setRecipientName("");
       setRecipientEmail("");
+      setAgentName("");
       setMessage("");
       setClientSearch("");
       setClientResults([]);

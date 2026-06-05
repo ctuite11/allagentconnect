@@ -53,7 +53,6 @@ const ScheduleShowingDialog = ({
   const applySender = useCallback((sender: { name: string; email: string; phone: string }) => {
     setFormData((prev) => ({
       ...prev,
-      requester_name: sender.name || prev.requester_name,
       requester_email: sender.email || prev.requester_email,
       requester_phone: sender.phone || prev.requester_phone,
     }));
@@ -176,6 +175,7 @@ const ScheduleShowingDialog = ({
               onChange={(e) => setFormData({ ...formData, requester_name: e.target.value })}
               placeholder="Your full name"
               maxLength={100}
+              autoComplete="off"
             />
             {errors.requester_name && <p className="text-sm text-destructive">{errors.requester_name}</p>}
           </div>

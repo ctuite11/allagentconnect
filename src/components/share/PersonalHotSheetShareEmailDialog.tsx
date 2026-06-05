@@ -60,8 +60,6 @@ export function PersonalHotSheetShareEmailDialog({
   const [recipients, setRecipients] = useState<Recipient[]>([]);
 
   const applySender = useCallback((sender: { name: string; firstName: string; email: string; phone: string }) => {
-    setAgentFirstName(sender.firstName);
-    setAgentName(sender.name);
     setAgentEmail(sender.email);
     setAgentPhone(sender.phone);
   }, []);
@@ -94,6 +92,8 @@ export function PersonalHotSheetShareEmailDialog({
     if (!open) {
       setRecipientName("");
       setRecipientEmail("");
+      setAgentName("");
+      setAgentFirstName("");
       setMessage("");
       setClientSearch("");
       setClientResults([]);
