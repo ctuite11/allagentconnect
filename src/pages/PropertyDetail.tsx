@@ -33,6 +33,7 @@ import {
   Building2,
   Users,
   MessageSquare,
+  ExternalLink,
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
@@ -1046,6 +1047,20 @@ const PropertyDetail = () => {
                           <span className="ml-auto text-xs text-neutral-500">Office</span>
                         </a>
                       )}
+                      {isAgentView && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            navigate(`/agent/${agentProfile.id}`, {
+                              state: { from: location.pathname + location.search },
+                            })
+                          }
+                          className="flex w-full items-center gap-2.5 text-left transition-colors hover:text-neutral-900"
+                        >
+                          <ExternalLink className="h-4 w-4 shrink-0 text-neutral-500" />
+                          <span className="font-medium">Profile</span>
+                        </button>
+                      )}
                       {agentProfile.email && (
                         isAgentView ? (
                           <button
@@ -1066,7 +1081,7 @@ const PropertyDetail = () => {
                           </a>
                         )
                       )}
-                      {agentProfile.social_links?.website && (
+                      {!isAgentView && agentProfile.social_links?.website && (
                         <a
                           href={agentProfile.social_links.website}
                           target="_blank"

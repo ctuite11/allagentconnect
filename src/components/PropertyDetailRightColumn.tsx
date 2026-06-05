@@ -18,7 +18,8 @@ import {
   Send,
   Calendar,
   Globe,
-  MessageSquare
+  MessageSquare,
+  ExternalLink,
 } from "lucide-react";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -186,17 +187,23 @@ export const PropertyDetailRightColumn = ({ listing, agent, isAgentView, stats }
                     <span>{formatPhoneNumber(agent.cell_phone || agent.phone)}</span>
                   </a>
                 )}
+                <button
+                  type="button"
+                  onClick={() =>
+                    navigate(`/agent/${agent.id}`, {
+                      state: { from: location.pathname + location.search },
+                    })
+                  }
+                  className="flex w-full items-center gap-2 text-sm text-left hover:text-primary transition"
+                >
+                  <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" />
+                  <span>Profile</span>
+                </button>
                 {agent.email && (
                   <div className="flex items-center gap-2 text-sm">
                     <Mail className="w-3.5 h-3.5 text-muted-foreground" />
                     <span className="break-all">{agent.email}</span>
                   </div>
-                )}
-                {agent.social_links?.website && (
-                  <a href={agent.social_links.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-primary hover:underline">
-                    <Globe className="w-3.5 h-3.5" />
-                    <span>Visit Website</span>
-                  </a>
                 )}
               </div>
               {canMessageListingAgent && (

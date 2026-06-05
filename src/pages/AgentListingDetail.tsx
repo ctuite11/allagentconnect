@@ -38,7 +38,8 @@ import {
   Info,
   ThermometerSun,
   MessageSquare,
-  Copy
+  Copy,
+  ExternalLink,
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
@@ -999,6 +1000,18 @@ const AgentListingDetail = () => {
                         <span>{formatPhoneNumber(agentProfile.cell_phone || agentProfile.phone)}</span>
                       </a>
                     )}
+                    <button
+                      type="button"
+                      onClick={() =>
+                        navigate(`/agent/${agentProfile.id}`, {
+                          state: { from: location.pathname + location.search },
+                        })
+                      }
+                      className="flex w-full items-center gap-3 text-sm text-left transition-colors hover:text-primary"
+                    >
+                      <ExternalLink className="w-4 h-4 text-muted-foreground" />
+                      <span>Profile</span>
+                    </button>
                     {agentProfile.email && (
                       <div className="flex items-center gap-3 text-sm">
                         <Mail className="w-4 h-4 text-muted-foreground" />
