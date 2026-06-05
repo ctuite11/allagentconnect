@@ -1354,14 +1354,18 @@ const MyListings = () => {
         <Seo title="My Listings" />
         <AgentAacPage className="pb-12">
         <MyListingsPageIntro subtitle="Publish on AAC — off-market through active." />
-        <AgentSectionCard className="rounded-2xl border border-neutral-200 bg-white p-10 text-center shadow-[0_1px_2px_rgba(0,0,0,0.04)] md:p-14">
+        <AgentSectionCard className="relative overflow-hidden rounded-2xl border border-neutral-200 bg-white p-10 text-center shadow-[0_1px_2px_rgba(0,0,0,0.04)] md:p-14">
+          <div
+            className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-[#16A34A]/40 to-transparent md:inset-x-12"
+            aria-hidden
+          />
           <button
             type="button"
             onClick={() => handleNewListing("new")}
-            className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-neutral-200 bg-white shadow-sm transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-300/50"
+            className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-[#16A34A]/25 bg-[#16A34A]/[0.06] shadow-sm transition-colors hover:border-[#16A34A]/35 hover:bg-[#16A34A]/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16A34A]/25 focus-visible:ring-offset-2"
             aria-label="Create listing"
           >
-            <Home className="h-8 w-8 text-zinc-400" strokeWidth={1.5} aria-hidden />
+            <Home className="h-8 w-8 text-[#16A34A]" strokeWidth={1.5} aria-hidden />
           </button>
           <h3 className="mb-2 text-[17px] font-semibold tracking-tight text-zinc-900 md:text-xl">No listings yet</h3>
           <p className="mb-8 max-w-sm mx-auto text-[13px] leading-snug text-zinc-500">
@@ -1369,9 +1373,8 @@ const MyListings = () => {
           </p>
           <Button
             type="button"
-            variant="outline"
             onClick={() => handleNewListing("new")}
-            className="h-10 rounded-lg border-neutral-200 bg-white px-5 text-[13px] font-semibold text-zinc-900 shadow-none hover:bg-zinc-50 focus-visible:ring-zinc-300"
+            className="h-10 rounded-lg bg-[#0E56F5] px-5 text-[13px] font-semibold text-white shadow-sm hover:bg-[#0B46CC] focus-visible:ring-[#0E56F5]/35"
           >
             <Plus className="mr-2 h-4 w-4" />
             Create listing
