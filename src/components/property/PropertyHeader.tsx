@@ -1,9 +1,9 @@
 import { MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { LISTING_CARD_MAP_PIN_CLASS } from "@/components/listing/ListingCardAddressLine";
 import {
   propertyPageContainer,
   propertyMediaCol,
-  propertyHeaderRow,
   propertyAddressH1,
   propertyPriceText,
 } from "./propertyTokens";
@@ -17,8 +17,7 @@ interface PropertyHeaderProps {
 }
 
 /**
- * Address (left) + Price (right), constrained to the media column width.
- * Shared shell used by both PropertyDetail and ConsumerPropertyDetail.
+ * Address + price above the buyer listing hero, left-aligned with the photo column.
  */
 export function PropertyHeader({
   address,
@@ -28,22 +27,20 @@ export function PropertyHeader({
 }: PropertyHeaderProps) {
   return (
     <div className={cn(propertyPageContainer, "pb-2", className)}>
-      <div className={cn(propertyMediaCol, "pr-2")}>
-        <div className={propertyHeaderRow}>
+      <div className={propertyMediaCol}>
+        <div className="space-y-1">
           <h1 className={propertyAddressH1}>
-            <MapPin className="relative top-[1px] h-4 w-4 shrink-0 text-neutral-500" />
+            <MapPin className={cn(LISTING_CARD_MAP_PIN_CLASS, "relative top-[1px]")} aria-hidden strokeWidth={2} />
             {address}
           </h1>
-          <div className="text-right">
-            <p className={propertyPriceText}>
-              ${price?.toLocaleString() ?? "—"}
-              {priceSuffix && (
-                <span className="text-sm font-normal text-muted-foreground ml-1">
-                  {priceSuffix}
-                </span>
-              )}
-            </p>
-          </div>
+          <p className={propertyPriceText}>
+            ${price?.toLocaleString() ?? "—"}
+            {priceSuffix && (
+              <span className="ml-1 text-sm font-normal text-muted-foreground">
+                {priceSuffix}
+              </span>
+            )}
+          </p>
         </div>
       </div>
     </div>

@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Home, DollarSign, Building2, FileText, Calendar, Info } from "lucide-react";
 import { cleanBrokerComments } from "@/lib/listingFieldParsers";
 import { LISTING_STATUS_LABELS } from "@/constants/status";
+import { formatConsumerPropertyTypeLabel } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 interface ListingDetailSectionsProps {
@@ -159,8 +160,12 @@ export const ListingDetailSections = ({
   const displayedFeatures = showAllFeatures ? features : features.slice(0, FEATURES_LIMIT);
 
   // Build property details rows
+  const propertyTypeValue = premiumNeutralSurfaces
+    ? formatConsumerPropertyTypeLabel(listing.property_type)
+    : listing.property_type;
+
   const propertyDetailRows = [
-    { label: "Property Type", value: listing.property_type },
+    { label: "Property Type", value: propertyTypeValue },
     { label: "Living Area", value: listing.square_feet ? `${listing.square_feet.toLocaleString()} sq ft` : null },
     { label: "Lot Size", value: listing.lot_size ? `${listing.lot_size} acres` : null },
     { label: "Year Built", value: listing.year_built },

@@ -34,3 +34,22 @@ export function formatListingPropertyTypeLabel(raw?: string | null): string {
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
     .join(" ");
 }
+
+const HIDDEN_CONSUMER_PROPERTY_TYPES = new Set([
+  "other",
+  "unknown",
+  "na",
+  "n_a",
+  "unspecified",
+  "none",
+]);
+
+/** Buyer-facing property type — humanized label, or null when unknown/internal. */
+export function formatConsumerPropertyTypeLabel(raw?: string | null): string | null {
+  if (!raw?.trim()) return null;
+  const normalized = raw.trim().toLowerCase().replace(/[\s-]+/g, "_");
+  if (HIDDEN_CONSUMER_PROPERTY_TYPES.has(normalized)) return null;
+  const label = formatListingPropertyTypeLabel(raw);
+  if (!label || label.toLowerCase() === "other") return null;
+  return label;
+}

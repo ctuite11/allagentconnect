@@ -45,6 +45,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
+import { formatConsumerPropertyTypeLabel } from "@/lib/format";
 import { formatListingEmailSubjectLocation } from "@/lib/listingEmailSubject";
 import { buildDisplayAddress } from "@/lib/utils";
 import { useListingView } from "@/hooks/useListingView";
@@ -67,7 +68,6 @@ import {
 import { cn } from "@/lib/utils";
 import { BuyerAgentShowcase } from "@/components/BuyerAgentShowcase";
 // ContactAgentDialog removed — buyer CTA is in-app messaging only
-import { ContactMyAgentDialog } from "@/components/ContactMyAgentDialog";
 import PhotoGalleryDialog from "@/components/PhotoGalleryDialog";
 import FavoriteButton from "@/components/FavoriteButton";
 import ScheduleShowingDialog from "@/components/ScheduleShowingDialog";
@@ -170,7 +170,6 @@ const ConsumerPropertyDetail = () => {
   const [descriptionExpanded, setDescriptionExpanded] = useState(false);
   const [stickyAgentId, setStickyAgentId] = useState<string | null>(null);
   const [stickyAgentProfile, setStickyAgentProfile] = useState<AgentProfile | null>(null);
-  const [emailDialogOpen, setEmailDialogOpen] = useState(false);
   const [listingContactDialogOpen, setListingContactDialogOpen] = useState(false);
   const { role } = useAuthRole();
   const isAgentView = role === "agent" || role === "admin";
@@ -383,11 +382,6 @@ const ConsumerPropertyDetail = () => {
     ? getPhotoUrl(listing.photos[currentPhotoIndex])
     : '/placeholder.svg';
 
-  const listDate = listing.active_date || listing.created_at;
-  const daysOnMarket = listDate
-    ? Math.ceil((new Date().getTime() - new Date(listDate).getTime()) / (1000 * 60 * 60 * 24))
-    : null;
-
   const compensationDisplay = getCompensationDisplay();
   const neighborhoodLabel =
     typeof listing.neighborhood === "string" && listing.neighborhood.trim()
@@ -578,10 +572,8 @@ const ConsumerPropertyDetail = () => {
                   {activeMediaTab === "photos" && (
                     <div className="absolute bottom-4 left-4 z-10 flex max-w-[min(100%,18rem)] flex-col items-start gap-2">
                       {neighborhoodLabel && (
-                        <span className="inline-flex max-w-full rounded-full border border-white/25 bg-black/45 px-2.5 py-1 text-[11px] font-medium text-white/95 shadow-sm backdrop-blur-sm">
-                          <span className="text-white/70">Neighborhood</span>
-                          <span className="mx-1.5 text-white/40">·</span>
-                          <span className="min-w-0 truncate">{neighborhoodLabel}</span>
+                        <span className="inline-flex max-w-full rounded-full border border-white/50 bg-black/75 px-3 py-1.5 text-xs font-semibold text-white shadow-[0_2px_8px_rgba(0,0,0,0.35)] backdrop-blur-md">
+                          {neighborhoodLabel}
                         </span>
                       )}
                       {listing.photos && listing.photos.length > 0 && (
@@ -690,15 +682,6 @@ const ConsumerPropertyDetail = () => {
                 }
               />
 
-              <PropertyFactsRow
-                bedrooms={listing.bedrooms}
-                bathrooms={listing.bathrooms}
-                squareFeet={listing.square_feet}
-                price={listing.price}
-                daysOnMarket={daysOnMarket}
-                containerClassName="!mt-9"
-                className="!mt-0 border-b-0 pb-0"
-              />
             </div>
 
             {/* RIGHT COLUMN - Hero Sidebar (~32%) */}
@@ -815,7 +798,7 @@ const ConsumerPropertyDetail = () => {
                       )}
                       {stickyAgentProfile.email && (
                         <a href={`mailto:${stickyAgentProfile.email}`} className="flex items-center gap-2.5 transition-colors hover:text-neutral-900">
-                          <Mail className="h-4 w-4 shrink-0 text-neutral-500" />
+                          <Mail className="h-4 w-4 shrink-0 text-[#0E56F5]" aria-hidden strokeWidth={2} />
                           <span className="font-medium truncate">{stickyAgentProfile.email}</span>
                         </a>
                       )}
@@ -843,23 +826,6 @@ const ConsumerPropertyDetail = () => {
                         <MessageSquare className="h-5 w-5" />
                         Message your agent
                       </Button>
-                      <Button
-                        variant="outline"
-                        className="w-full gap-2 border-neutral-200 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:bg-neutral-50"
-                        onClick={() => setEmailDialogOpen(true)}
-                      >
-                        <Mail className="h-4 w-4" />
-                        Email your agent
-                      </Button>
-                      <ContactMyAgentDialog
-                        open={emailDialogOpen}
-                        onOpenChange={setEmailDialogOpen}
-                        agentUserId={stickyAgentId ?? stickyAgentProfile.id}
-                        agentDisplayName={
-                          `${stickyAgentProfile.first_name} ${stickyAgentProfile.last_name}`.trim()
-                        }
-                        defaultSubject={`Question about ${formatListingEmailSubjectLocation(listing) || listing.address}`}
-                      />
                     </div>
                   </CardContent>
                 </Card>
@@ -903,7 +869,7 @@ const ConsumerPropertyDetail = () => {
                       )}
                       {agentProfile.email && (
                         <a href={`mailto:${agentProfile.email}`} className="flex items-center gap-2.5 transition-colors hover:text-neutral-900">
-                          <Mail className="h-4 w-4 shrink-0 text-neutral-500" />
+                          <Mail className="h-4 w-4 shrink-0 text-[#0E56F5]" aria-hidden strokeWidth={2} />
                           <span className="font-medium truncate">{agentProfile.email}</span>
                         </a>
                       )}
@@ -976,6 +942,14 @@ const ConsumerPropertyDetail = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             {/* LEFT COLUMN - Main Content */}
             <div className="lg:col-span-2 space-y-4">
+              <PropertyFactsRow
+                bedrooms={listing.bedrooms}
+                bathrooms={listing.bathrooms}
+                squareFeet={listing.square_feet}
+                garageSpaces={listing.garage_spaces}
+                containerClassName="pt-1"
+              />
+
               {/* Overview/Description with Read More */}
               {listing.description && (() => {
                 const MAX_CHARS = 650;
@@ -1048,12 +1022,14 @@ const ConsumerPropertyDetail = () => {
               )}
 
               {/* ATTOM Property Data */}
-              {listing.attom_data && Object.keys(listing.attom_data).length > 0 && (
+              {listing.attom_data && Object.keys(listing.attom_data).length > 0 && (() => {
+                const attomPropertyType = formatConsumerPropertyTypeLabel(listing.attom_data.property_type);
+                return (
                 <SectionWrapper title="Property Data" contentClassName="space-y-2" className={consumerSectionCard}>
-                  {listing.attom_data.property_type && (
+                  {attomPropertyType && (
                     <div className="flex justify-between text-sm">
                       <span className="text-neutral-600">Property Type:</span>
-                      <span className="font-semibold">{listing.attom_data.property_type}</span>
+                      <span className="font-semibold">{attomPropertyType}</span>
                     </div>
                   )}
                   {listing.attom_data.stories && (
@@ -1075,7 +1051,8 @@ const ConsumerPropertyDetail = () => {
                     </div>
                   )}
                 </SectionWrapper>
-              )}
+                );
+              })()}
 
               {/* Schools */}
               {listing.schools_data && listing.schools_data.schools && listing.schools_data.schools.length > 0 && (
