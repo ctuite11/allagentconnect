@@ -1,13 +1,15 @@
 /**
  * Shared email-safe listing card renderers.
  *
- * Single canonical email card mirroring the in-app SearchListingCard:
- *   status banner · full-width photo · price + ID · property type ·
- *   green-pin address · beds/baths/sqft · brokerage + agent footer.
+ * Two canonical email cards, both mirroring the in-app SearchListingCard DNA
+ * (status banner · hero photo · price + ID · property type · green-pin
+ * address · beds/baths/sqft · brokerage + agent footer):
  *
- * `renderListingEmailCard` and `renderCompactListingEmailCard` are kept as
- * deprecated aliases that forward to the new renderer so every listing email
- * uses the same card.
+ *   renderSearchStyleListingEmailCard — full-size card used by listing
+ *     shares, price-change alerts, inquiry emails.
+ *   renderCompactListingEmailCard — condensed AAC card (shorter hero,
+ *     tighter padding) used by Hot Sheet match emails and message
+ *     notification emails where multiple listings stack.
  *
  * Pure email-safe HTML: nested <table>s, inline styles, no flex/grid.
  */
@@ -320,10 +322,95 @@ export function renderListingEmailCard(
   return renderSearchStyleListingEmailCard(listing, opts);
 }
 
-/** @deprecated Use renderSearchStyleListingEmailCard. Kept as an alias so all listing emails share one card. */
+/**
+ * Compact AAC listing card for Hot Sheet match emails and message
+ * notification emails. Shares the same brand DNA as the full card
+ * (status banner, green pin, AAC tokens) but uses a shorter hero
+ * (170px), tighter padding, and a single-line stats row so multiple
+ * listings stack cleanly in one email.
+ */
 export function renderCompactListingEmailCard(
   listing: any,
   opts: RenderListingEmailCardOptions = {},
 ): string {
-  return renderSearchStyleListingEmailCard(listing, opts);
+  const baseUrl = (opts.baseUrl || "https://allagentconnect.com").replace(/\/$/, "");
+  const listingUrl = opts.listingUrl || (listing?.id ? `${baseUrl}/property/${listing.id}` : "");
+  const safeUrl = escapeHtml(listingUrl);
+
+  const photoUrl = listing.photoUrl || resolvePhotoUrl(listing.photos);
+  const price = formatPrice(listing.price);
+  const propertyType = formatPropertyTypeLabel(listing.property_type);
+  const fullAddress =
+    formatListingShareEmailFullAddress(listing) ||
+    formatListingShareEmailStreetLine(listing) ||
+    String(listing.address || "");
+  const brokerage = pickBrokerageLabel(listing);
+  const agentName = listing.listing_agent_name || listing.agent_name || "";
+  const idLabel = pickListingIdLabel(listing);
+  const statusBanner = renderStatusBanner(listing.status);
+  const statsHtml = renderStatsRow(listing);
+
+  const photoHeight = 170;
+  const safeAlt = escapeHtml(fullAddress || "Listing photo");
+
+  const photoCellInner = photoUrl
+    ? `<a href="${safeUrl}" style="text-decoration:none;display:block;line-height:0;font-size:0;">
+         <img src="${escapeHtml(photoUrl)}" alt="${safeAlt}" width="600" height="${photoHeight}" style="display:block;width:100%;max-width:600px;height:${photoHeight}px;object-fit:cover;object-position:center;border:0;outline:none;text-decoration:none;" />
+       </a>`
+    : `<div style="width:100%;height:${photoHeight}px;line-height:${photoHeight}px;text-align:center;color:#9ca3af;font-size:12px;font-family:system-ui,-apple-system,sans-serif;background:#f3f4f6;">Photo unavailable</div>`;
+
+  const headerRow = `
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
+      <tr>
+        <td valign="top" style="padding-right:8px;">
+          <div style="font-size:18px;font-weight:700;color:#0f172a;line-height:1.1;">${escapeHtml(price)}</div>
+        </td>
+        ${idLabel ? `<td valign="top" align="right" style="white-space:nowrap;font-size:12px;font-weight:600;color:${AAC_PRIMARY_BLUE};letter-spacing:0.02em;">ID ${escapeHtml(idLabel)}</td>` : ""}
+      </tr>
+    </table>`;
+
+  const propertyTypeRow = propertyType
+    ? `<div style="margin-top:2px;font-size:12px;font-weight:600;color:#404040;line-height:1.3;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${escapeHtml(propertyType)}</div>`
+    : "";
+
+  const addressRow = fullAddress
+    ? `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:8px 0 0;">
+         <tr>
+           <td width="18" valign="top" style="padding:2px 6px 0 0;line-height:0;">
+             <img src="data:image/svg+xml;utf8,${encodeURIComponent(
+               `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="${AAC_EMERALD}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>`,
+             )}" width="12" height="12" alt="" style="display:block;width:12px;height:12px;border:0;outline:none;" />
+           </td>
+           <td valign="top" style="font-size:13px;line-height:1.4;color:#171717;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${escapeHtml(fullAddress)}</td>
+         </tr>
+       </table>`
+    : "";
+
+  const footerRow = (brokerage || agentName)
+    ? `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:10px 0 0;border-top:1px solid #f1f5f9;padding-top:8px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
+         <tr>
+           <td align="left" style="font-size:11px;color:#737373;line-height:1.3;">${escapeHtml(brokerage)}</td>
+           <td align="right" style="font-size:11px;color:#171717;font-weight:600;line-height:1.3;white-space:nowrap;">${escapeHtml(agentName)}</td>
+         </tr>
+       </table>`
+    : "";
+
+  return `
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 12px;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;background:#ffffff;box-shadow:0 1px 3px rgba(17,24,39,0.06);">
+      ${statusBanner}
+      <tr>
+        <td style="padding:0;line-height:0;font-size:0;background:#f3f4f6;">
+          ${photoCellInner}
+        </td>
+      </tr>
+      <tr>
+        <td valign="top" style="padding:10px 14px 12px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
+          ${headerRow}
+          ${propertyTypeRow}
+          ${addressRow}
+          ${statsHtml}
+          ${footerRow}
+        </td>
+      </tr>
+    </table>`;
 }
