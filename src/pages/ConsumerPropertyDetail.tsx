@@ -71,6 +71,7 @@ import {
   ListingMessageDialog,
   listingMessageRecipientFromProfile,
 } from "@/components/ListingMessageDialog";
+import { canMessageListingAgent as viewerCanMessageListingAgent } from "@/lib/canMessageListingAgent";
 import { useAuthRole } from "@/hooks/useAuthRole";
 import ContactAgentDialog from "@/components/ContactAgentDialog";
 
@@ -165,30 +166,51 @@ const ConsumerPropertyDetail = () => {
   const [stickyAgentProfile, setStickyAgentProfile] = useState<AgentProfile | null>(null);
   const [listingContactDialogOpen, setListingContactDialogOpen] = useState(false);
   const [listingMessageOpen, setListingMessageOpen] = useState(false);
-  const { role } = useAuthRole();
+  const [listingMessageVariant, setListingMessageVariant] = useState<"agent" | "buyer">("buyer");
+  const { user, role } = useAuthRole();
   const isAgentView = role === "agent" || role === "admin";
+  const viewerId = user?.id;
+  const listingAgentId = listing?.agent_id ?? agentProfile?.id ?? null;
+  const canMessageListingAgent = viewerCanMessageListingAgent(viewerId, listingAgentId);
 
-  const openListingMessage = () => {
-    if (!listing?.id) return;
+  const ensureSignedInForMessage = async (): Promise<boolean> => {
+    if (!listing?.id) return false;
 
+    const { data, error } = await supabase.auth.getUser();
+    if (error) {
+      console.error("auth.getUser error:", error);
+      toast.error("Could not verify your session. Please sign in again.");
+      return false;
+    }
+    if (!data?.user?.id) {
+      navigate("/auth");
+      return false;
+    }
+    return true;
+  };
+
+  const openBuyerAgentMessage = () => {
     void (async () => {
-      const { data, error } = await supabase.auth.getUser();
-      if (error) {
-        console.error("auth.getUser error:", error);
-        toast.error("Could not verify your session. Please sign in again.");
-        return;
-      }
-      if (!data?.user?.id) {
-        navigate("/auth");
-        return;
-      }
+      if (!(await ensureSignedInForMessage())) return;
+      setListingMessageVariant("buyer");
       setListingMessageOpen(true);
     })();
   };
 
-  const buyerMessageRecipient = stickyAgentProfile
-    ? listingMessageRecipientFromProfile(stickyAgentProfile)
-    : null;
+  const openListingAgentMessage = () => {
+    void (async () => {
+      if (!(await ensureSignedInForMessage())) return;
+      setListingMessageVariant("agent");
+      setListingMessageOpen(true);
+    })();
+  };
+
+  const listingMessageRecipient =
+    listingMessageVariant === "buyer" && stickyAgentProfile
+      ? listingMessageRecipientFromProfile(stickyAgentProfile)
+      : listingMessageVariant === "agent" && agentProfile
+        ? listingMessageRecipientFromProfile(agentProfile)
+        : null;
 
   // Resolve sticky agent for buyer masking
   useEffect(() => {
@@ -274,6 +296,12 @@ const ConsumerPropertyDetail = () => {
   };
 
   const handleMediaTabChange = (tab: 'photos' | 'video' | 'tour' | 'website') => {
+    if (tab === 'website') {
+      if (listing?.property_website_url) {
+        window.open(listing.property_website_url, '_blank', 'noopener,noreferrer');
+      }
+      return;
+    }
     setActiveMediaTab(tab);
     if (tab === 'photos') setCurrentPhotoIndex(0);
   };
@@ -453,9 +481,6 @@ const ConsumerPropertyDetail = () => {
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                       allowFullScreen
                     />
-                  )}
-                  {activeMediaTab === "website" && listing.property_website_url && (
-                    <iframe src={listing.property_website_url} className="w-full h-full" />
                   )}
 
                   {/* Status Badge - Top Left (NO AAC# for consumer view) */}
@@ -704,6 +729,17 @@ const ConsumerPropertyDetail = () => {
                       Email listing agent
                     </Button>
 
+                    {canMessageListingAgent && (
+                      <Button
+                        size="lg"
+                        className="w-full gap-2 bg-neutral-900 text-white shadow-sm hover:bg-neutral-800"
+                        onClick={openListingAgentMessage}
+                      >
+                        <MessageSquare className="h-5 w-5" />
+                        {listing?.id ? "Message about this listing" : "Message"}
+                      </Button>
+                    )}
+
                     <ContactAgentDialog
                       listingId={listing.id}
                       agentId={listing.agent_id}
@@ -777,7 +813,7 @@ const ConsumerPropertyDetail = () => {
                       <Button
                         size="lg"
                         className="w-full gap-2 bg-neutral-900 text-white shadow-sm hover:bg-neutral-800"
-                        onClick={openListingMessage}
+                        onClick={openBuyerAgentMessage}
                       >
                         <MessageSquare className="h-5 w-5" />
                         Message your agent
@@ -839,6 +875,19 @@ const ConsumerPropertyDetail = () => {
                           <Globe className="h-4 w-4 shrink-0 text-neutral-600" />
                           <span className="font-medium">Website</span>
                         </a>
+                      )}
+                    </div>
+
+                    <div className="grid gap-2">
+                      {canMessageListingAgent && (
+                        <Button
+                          size="lg"
+                          className="w-full gap-2 bg-neutral-900 text-white shadow-sm hover:bg-neutral-800"
+                          onClick={openListingAgentMessage}
+                        >
+                          <MessageSquare className="h-5 w-5" />
+                          Message listing agent
+                        </Button>
                       )}
                     </div>
                   </CardContent>
@@ -1008,8 +1057,8 @@ const ConsumerPropertyDetail = () => {
           open={listingMessageOpen}
           onOpenChange={setListingMessageOpen}
           listingId={listing.id}
-          variant="buyer"
-          recipient={buyerMessageRecipient}
+          variant={listingMessageVariant}
+          recipient={listingMessageRecipient}
           role={role}
           returnState={buildMessageReturnState(location.pathname, location.search)}
         />

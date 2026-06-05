@@ -53,7 +53,7 @@ import {
   ListingMessageDialog,
   listingMessageRecipientFromProfile,
 } from "@/components/ListingMessageDialog";
-import { PropertyHistoryPanel } from "@/components/PropertyHistoryPanel";
+import { canMessageListingAgent as viewerCanMessageListingAgent } from "@/lib/canMessageListingAgent";
 
 interface Listing {
   id: string;
@@ -172,11 +172,7 @@ const AgentListingDetail = () => {
   const { user, role } = useAuthRole();
   const viewerId = user?.id;
   const listingAgentId = agentProfile?.id;
-  const canMessageListingAgent =
-    !!viewerId &&
-    (role === "agent" || role === "admin") &&
-    !!listingAgentId &&
-    viewerId !== listingAgentId;
+  const canMessageListingAgent = viewerCanMessageListingAgent(viewerId, listingAgentId);
 
   const openListingMessage = () => {
     if (!viewerId) {

@@ -31,6 +31,7 @@ import {
   ListingMessageDialog,
   listingMessageRecipientFromProfile,
 } from "@/components/ListingMessageDialog";
+import { canMessageListingAgent as viewerCanMessageListingAgent } from "@/lib/canMessageListingAgent";
 import { syncStickyFromDB } from "@/utils/agentTracking";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -53,11 +54,7 @@ export const PropertyDetailRightColumn = ({ listing, agent, isAgentView, stats }
   // Can current user message the listing agent?
   const viewerId = user?.id;
   const listingAgentId = agent?.id;
-  const canMessageListingAgent =
-    !!viewerId &&
-    (role === "agent" || role === "admin") &&
-    !!listingAgentId &&
-    viewerId !== listingAgentId;
+  const canMessageListingAgent = viewerCanMessageListingAgent(viewerId, listingAgentId);
 
   const openAgentListingMessage = () => {
     if (!viewerId) {

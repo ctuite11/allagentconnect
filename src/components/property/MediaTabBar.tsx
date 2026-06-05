@@ -13,8 +13,7 @@ export interface MediaTabBarProps {
   hasTour?: boolean;
   hasWebsite?: boolean;
   /**
-   * If true, "3D Tour" and "Website" act as outbound links via onChange
-   * (parent decides). If false, they only become tabs when active.
+   * "Website" opens in a new tab (handled by parent onChange). Video/tour embed in hero when active.
    */
   className?: string;
   /** Renders after Photos / Video / 3D Tour / Website (e.g. share control) */

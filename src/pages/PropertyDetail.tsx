@@ -76,6 +76,7 @@ import {
   ListingMessageDialog,
   listingMessageRecipientFromProfile,
 } from "@/components/ListingMessageDialog";
+import { canMessageListingAgent as viewerCanMessageListingAgent } from "@/lib/canMessageListingAgent";
 import SocialShareMenu from "@/components/SocialShareMenu";
 
 interface Listing {
@@ -199,14 +200,9 @@ const PropertyDetail = () => {
   const isClientMode = searchParams.get('view') === 'client' || location.pathname.endsWith('/client');
   const isAgentView = (isAgent || isAdmin) && !isClientMode;
 
-  // Can current user message the listing agent?
   const viewerId = user?.id;
   const listingAgentId = agentProfile?.id;
-  const canMessageListingAgent =
-    !!viewerId &&
-    (role === "agent" || role === "admin") &&
-    !!listingAgentId &&
-    viewerId !== listingAgentId;
+  const canMessageListingAgent = viewerCanMessageListingAgent(viewerId, listingAgentId);
 
   const isListingOwner =
     isAgentView && !!viewerId && !!listing?.agent_id && viewerId === listing.agent_id;
@@ -367,6 +363,12 @@ const PropertyDetail = () => {
   };
 
   const handleMediaTabChange = (tab: 'photos' | 'video' | 'tour' | 'website') => {
+    if (tab === 'website') {
+      if (listing?.property_website_url) {
+        window.open(listing.property_website_url, '_blank', 'noopener,noreferrer');
+      }
+      return;
+    }
     setActiveMediaTab(tab);
     if (tab === 'photos') {
       setCurrentPhotoIndex(0);
@@ -595,9 +597,6 @@ const PropertyDetail = () => {
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                       allowFullScreen
                     />
-                  )}
-                  {activeMediaTab === "website" && listing.property_website_url && (
-                    <iframe src={listing.property_website_url} className="h-full w-full" />
                   )}
 
                   {/* Status Badge - Top Left Overlay */}
