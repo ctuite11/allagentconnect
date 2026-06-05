@@ -1,8 +1,13 @@
 /**
  * Shared email-safe listing card renderers.
  *
- * - renderListingEmailCard — MLS / search-table layout (listing-share emails)
- * - renderCompactListingEmailCard — AAC grid listing card (message notifications)
+ * Single canonical email card mirroring the in-app SearchListingCard:
+ *   status banner · full-width photo · price + ID · property type ·
+ *   green-pin address · beds/baths/sqft · brokerage + agent footer.
+ *
+ * `renderListingEmailCard` and `renderCompactListingEmailCard` are kept as
+ * deprecated aliases that forward to the new renderer so every listing email
+ * uses the same card.
  *
  * Pure email-safe HTML: nested <table>s, inline styles, no flex/grid.
  */
@@ -13,6 +18,7 @@ import {
 } from "./listingShareEmailAddress.ts";
 
 const AAC_PRIMARY_BLUE = "#0E56F5";
+const AAC_EMERALD = "#22C55E";
 
 function escapeHtml(value: unknown): string {
   return String(value ?? "")
@@ -164,186 +170,156 @@ function neighborhoodPill(neighborhood: unknown): string {
   return `<span style="display:inline-block;background:rgba(255,255,255,0.92);color:#171717;font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px;line-height:1.2;box-shadow:0 1px 3px rgba(0,0,0,0.12);">${escapeHtml(label)}</span>`;
 }
 
-function renderStatsRow(listing: any): string {
-  const parts: string[] = [];
-  if (listing.bedrooms != null) parts.push(escapeHtml(String(listing.bedrooms)));
-  if (listing.bathrooms != null) parts.push(escapeHtml(String(listing.bathrooms)));
-  const sqft = listing.square_feet ?? listing.squareFeet;
-  if (sqft) parts.push(escapeHtml(Number(sqft).toLocaleString()));
-  if (!parts.length) return "";
-  const separator =
-    '<span style="color:#d4d4d4;font-weight:400;padding:0 10px;">&middot;</span>';
-  return `<p style="margin:8px 0 0;font-size:15px;font-weight:600;color:#171717;line-height:1.4;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${parts.join(separator)}</p>`;
+function pickFeaturePill(listing: any): string {
+  const candidates = ["waterfront", "view", "pool", "new construction"];
+  const feats = listing?.features ?? listing?.tags;
+  if (Array.isArray(feats)) {
+    for (const f of feats) {
+      const s = String(f ?? "").trim();
+      if (!s) continue;
+      const lc = s.toLowerCase();
+      if (candidates.some((c) => lc.includes(c))) return humanize(s);
+    }
+    if (feats.length > 0 && typeof feats[0] === "string") return humanize(String(feats[0]));
+  }
+  if (listing?.waterfront) return "Waterfront";
+  return "";
 }
 
-/** Render a compact AAC grid-style listing card for message notification emails. */
-export function renderCompactListingEmailCard(
+function renderStatusBanner(status: unknown): string {
+  const raw = String(status ?? "").toLowerCase().trim();
+  if (!raw) return "";
+  const map: Record<string, { bg: string; label: string }> = {
+    active: { bg: "#22C55E", label: "Active" },
+    coming_soon: { bg: AAC_PRIMARY_BLUE, label: "Coming Soon" },
+    active_under_contract: { bg: "#F59E0B", label: "Under Contract" },
+    under_contract: { bg: "#F59E0B", label: "Under Contract" },
+    pending: { bg: "#F59E0B", label: "Pending" },
+    sold: { bg: "#6B7280", label: "Sold" },
+    closed: { bg: "#6B7280", label: "Closed" },
+    withdrawn: { bg: "#6B7280", label: "Withdrawn" },
+    expired: { bg: "#6B7280", label: "Expired" },
+  };
+  const s = map[raw] || { bg: "#6B7280", label: humanize(raw) };
+  return `<tr><td align="center" style="background:${s.bg};color:#ffffff;font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:10px 12px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${escapeHtml(s.label)}</td></tr>`;
+}
+
+function renderStatsRow(listing: any): string {
+  const parts: string[] = [];
+  if (listing.bedrooms != null) parts.push(`<span style="color:#171717;font-weight:600;">${escapeHtml(String(listing.bedrooms))}</span> <span style="color:#737373;font-weight:400;">bd</span>`);
+  if (listing.bathrooms != null) parts.push(`<span style="color:#171717;font-weight:600;">${escapeHtml(String(listing.bathrooms))}</span> <span style="color:#737373;font-weight:400;">ba</span>`);
+  const sqft = listing.square_feet ?? listing.squareFeet;
+  if (sqft) parts.push(`<span style="color:#171717;font-weight:600;">${escapeHtml(Number(sqft).toLocaleString())}</span> <span style="color:#737373;font-weight:400;">sqft</span>`);
+  if (!parts.length) return "";
+  const separator = '<span style="color:#d4d4d4;padding:0 10px;">&middot;</span>';
+  return `<p style="margin:10px 0 0;font-size:14px;line-height:1.4;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${parts.join(separator)}</p>`;
+}
+
+/** Canonical email listing card mirroring the in-app SearchListingCard. */
+export function renderSearchStyleListingEmailCard(
   listing: any,
   opts: RenderListingEmailCardOptions = {},
 ): string {
   const baseUrl = (opts.baseUrl || "https://allagentconnect.com").replace(/\/$/, "");
   const listingUrl = opts.listingUrl || (listing?.id ? `${baseUrl}/property/${listing.id}` : "");
-  const ctaLabel = opts.ctaLabel || "View listing";
-  const ctaColor = opts.greenCta ? "#50c878" : AAC_PRIMARY_BLUE;
+  const safeUrl = escapeHtml(listingUrl);
 
   const photoUrl = listing.photoUrl || resolvePhotoUrl(listing.photos);
   const price = formatPrice(listing.price);
   const propertyType = formatPropertyTypeLabel(listing.property_type);
-  const fullAddress = formatListingShareEmailFullAddress(listing) || String(listing.address || "");
-  const neighborhood =
-    listing.neighborhood ||
-    (listing.attom_data && typeof listing.attom_data === "object"
-      ? (listing.attom_data as Record<string, unknown>).neighborhood
-      : null);
+  const fullAddress =
+    formatListingShareEmailFullAddress(listing) ||
+    formatListingShareEmailStreetLine(listing) ||
+    String(listing.address || "");
   const brokerage = pickBrokerageLabel(listing);
-  const status = statusPill(listing.status);
+  const agentName = listing.listing_agent_name || listing.agent_name || "";
+  const idLabel = pickListingIdLabel(listing);
+  const featurePill = pickFeaturePill(listing);
+  const statusBanner = renderStatusBanner(listing.status);
   const statsHtml = renderStatsRow(listing);
-  const safeUrl = escapeHtml(listingUrl);
+
+  const photoHeight = 300;
   const safeAlt = escapeHtml(fullAddress || "Listing photo");
-  const photoHeight = 220;
 
-  const photoRow = photoUrl
-    ? `<tr>
-        <td style="padding:0;line-height:0;font-size:0;background:#f3f4f6;">
-          <a href="${safeUrl}" style="text-decoration:none;display:block;">
-            <img src="${escapeHtml(photoUrl)}" alt="${safeAlt}" width="600" height="${photoHeight}" style="display:block;width:100%;max-width:600px;height:${photoHeight}px;object-fit:cover;object-position:center;border:0;outline:none;text-decoration:none;" />
-          </a>
-        </td>
-      </tr>`
-    : `<tr>
-        <td valign="middle" align="center" style="padding:0;height:${photoHeight}px;background:#f3f4f6;color:#9ca3af;font-size:13px;font-family:system-ui,-apple-system,sans-serif;">
-          Photo unavailable
-        </td>
-      </tr>`;
+  const photoCellInner = photoUrl
+    ? `<a href="${safeUrl}" style="text-decoration:none;display:block;line-height:0;font-size:0;">
+         <img src="${escapeHtml(photoUrl)}" alt="${safeAlt}" width="600" height="${photoHeight}" style="display:block;width:100%;max-width:600px;height:${photoHeight}px;object-fit:cover;object-position:center;border:0;outline:none;text-decoration:none;" />
+       </a>`
+    : `<div style="width:100%;height:${photoHeight}px;line-height:${photoHeight}px;text-align:center;color:#9ca3af;font-size:13px;font-family:system-ui,-apple-system,sans-serif;background:#f3f4f6;">Photo unavailable</div>`;
 
-  const cta = listingUrl
-    ? `<div style="margin-top:14px;"><a href="${safeUrl}" style="display:inline-block;background-color:${ctaColor};color:#ffffff;text-decoration:none;font-size:13px;font-weight:600;padding:9px 16px;border-radius:8px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${escapeHtml(ctaLabel)}</a></div>`
+  // Feature pill rendered as a second row, right-aligned, sitting just below the photo.
+  // Positioning over the image is unreliable across email clients; this keeps it visible and on-brand.
+  const featurePillRow = featurePill
+    ? `<tr><td align="right" style="padding:8px 14px 0;background:#ffffff;">
+         <span style="display:inline-block;background:#ffffff;color:#171717;font-size:12px;font-weight:600;padding:6px 12px;border-radius:999px;border:1px solid #e5e7eb;box-shadow:0 1px 3px rgba(0,0,0,0.08);">${escapeHtml(featurePill)}</span>
+       </td></tr>`
+    : "";
+
+  const headerRow = `
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
+      <tr>
+        <td valign="top" style="padding-right:10px;">
+          <div style="font-size:22px;font-weight:700;color:#0f172a;line-height:1.1;">${escapeHtml(price)}</div>
+        </td>
+        ${idLabel ? `<td valign="top" align="right" style="white-space:nowrap;font-size:13px;font-weight:600;color:${AAC_PRIMARY_BLUE};letter-spacing:0.02em;">ID ${escapeHtml(idLabel)}</td>` : ""}
+      </tr>
+    </table>`;
+
+  const propertyTypeRow = propertyType
+    ? `<div style="margin-top:4px;font-size:14px;font-weight:600;color:#404040;line-height:1.3;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${escapeHtml(propertyType)}</div>`
     : "";
 
   const addressRow = fullAddress
-    ? `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:6px 0 0;">
-        <tr>
-          <td width="16" valign="top" style="padding:1px 6px 0 0;font-size:13px;line-height:1.35;color:#50c878;">&#9679;</td>
-          <td valign="top" style="font-size:13px;line-height:1.35;color:#262626;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${escapeHtml(fullAddress)}</td>
-        </tr>
-      </table>`
+    ? `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:14px 0 0;">
+         <tr>
+           <td width="18" valign="top" style="padding:2px 8px 0 0;font-size:14px;line-height:1.35;color:${AAC_EMERALD};">&#9679;</td>
+           <td valign="top" style="font-size:14px;line-height:1.4;color:#171717;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${escapeHtml(fullAddress)}</td>
+         </tr>
+       </table>`
     : "";
 
-  const brokerageRow = brokerage
-    ? `<p style="margin:10px 0 0;font-size:12px;line-height:1.35;color:#737373;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${escapeHtml(brokerage)}</p>`
-    : "";
-
-  const neighborhoodRow = neighborhood
-    ? `<div style="margin-top:6px;">${neighborhoodPill(neighborhood)}</div>`
+  const footerRow = (brokerage || agentName)
+    ? `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:16px 0 0;border-top:1px solid #f1f5f9;padding-top:12px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
+         <tr>
+           <td align="left" style="font-size:12px;color:#737373;line-height:1.3;">${escapeHtml(brokerage)}</td>
+           <td align="right" style="font-size:12px;color:#171717;font-weight:600;line-height:1.3;white-space:nowrap;">${escapeHtml(agentName)}</td>
+         </tr>
+       </table>`
     : "";
 
   return `
-    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 16px;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;background:#ffffff;box-shadow:0 1px 3px rgba(17,24,39,0.04);">
-      ${photoRow}
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 18px;border:1px solid #e5e7eb;border-radius:14px;overflow:hidden;background:#ffffff;box-shadow:0 1px 3px rgba(17,24,39,0.06);">
+      ${statusBanner}
       <tr>
-        <td valign="top" style="padding:12px 14px 16px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
-          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
-            <tr>
-              <td valign="top">
-                <div style="font-size:18px;font-weight:700;color:#171717;line-height:1.2;">${escapeHtml(price)}</div>
-                ${propertyType ? `<div style="margin-top:4px;font-size:13px;font-weight:600;color:#404040;line-height:1.3;">${escapeHtml(propertyType)}</div>` : ""}
-                ${neighborhoodRow}
-              </td>
-              ${status ? `<td valign="top" align="right" style="padding-left:12px;white-space:nowrap;">${status}</td>` : ""}
-            </tr>
-          </table>
+        <td style="padding:0;line-height:0;font-size:0;background:#f3f4f6;">
+          ${photoCellInner}
+        </td>
+      </tr>
+      ${featurePillRow}
+      <tr>
+        <td valign="top" style="padding:14px 16px 16px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
+          ${headerRow}
+          ${propertyTypeRow}
           ${addressRow}
           ${statsHtml}
-          ${brokerageRow}
-          ${cta}
+          ${footerRow}
         </td>
       </tr>
     </table>`;
 }
 
-/** Render one email-safe MLS-style listing card. */
+/** @deprecated Use renderSearchStyleListingEmailCard. Kept as an alias so all listing emails share one card. */
 export function renderListingEmailCard(
   listing: any,
   opts: RenderListingEmailCardOptions = {},
 ): string {
-  const baseUrl = (opts.baseUrl || "https://allagentconnect.com").replace(/\/$/, "");
-  const listingUrl = opts.listingUrl || (listing?.id ? `${baseUrl}/property/${listing.id}` : "");
-  const ctaLabel = opts.ctaLabel || "View Listing";
-  const ctaColor = opts.greenCta ? "#50c878" : AAC_PRIMARY_BLUE;
+  return renderSearchStyleListingEmailCard(listing, opts);
+}
 
-  const photoUrl = listing.photoUrl || resolvePhotoUrl(listing.photos);
-  const price = formatPrice(listing.price);
-  const sqft = listing.square_feet ?? listing.squareFeet;
-  const numericPrice = Number(listing.price);
-  const pricePerSqFt =
-    Number.isFinite(numericPrice) && numericPrice > 0 && sqft && Number(sqft) > 0
-      ? `$${Math.round(numericPrice / Number(sqft)).toLocaleString()}/sqft`
-      : "";
-
-  const idLabel = pickListingIdLabel(listing);
-  const streetLine = formatListingShareEmailStreetLine(listing) || String(listing.address || "");
-  const cityStateZip = [
-    [listing.city, listing.state].filter(Boolean).join(", "),
-    listing.zip_code || listing.zipCode || "",
-  ]
-    .filter(Boolean)
-    .join(" ")
-    .trim();
-
-  const facts = buildFacts(listing);
-  const factsHtml = renderFactsTable(facts);
-  const attribution = renderAttributionFooter(listing);
-  const status = statusPill(listing.status);
-
-  const description = listing.description
-    ? `<p style="margin:12px 0 0;font-size:13px;line-height:1.55;color:#475569;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${escapeHtml(String(listing.description).slice(0, 240))}${String(listing.description).length > 240 ? "…" : ""}</p>`
-    : "";
-
-  const photoCellWidth = 240;
-  const photoCellHeight = 180;
-  const safeUrl = escapeHtml(listingUrl);
-  const safeAlt = escapeHtml(streetLine || "Listing photo");
-
-  const photoCell = `
-    <td width="${photoCellWidth}" valign="top" style="width:${photoCellWidth}px;background:#f3f4f6;padding:0;position:relative;">
-      ${
-        photoUrl
-          ? `<a href="${safeUrl}" style="text-decoration:none;display:block;line-height:0;font-size:0;"><img src="${escapeHtml(photoUrl)}" alt="${safeAlt}" width="${photoCellWidth}" height="${photoCellHeight}" style="display:block;width:${photoCellWidth}px;max-width:100%;height:${photoCellHeight}px;object-fit:cover;object-position:center;border:0;outline:none;text-decoration:none;" /></a>`
-          : `<div style="box-sizing:border-box;width:${photoCellWidth}px;height:${photoCellHeight}px;line-height:${photoCellHeight}px;text-align:center;color:#9ca3af;font-size:12px;font-family:system-ui,-apple-system,sans-serif;">Photo unavailable</div>`
-      }
-    </td>`;
-
-  const headerRow = `
-    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
-      <tr>
-        <td valign="top" style="padding-right:12px;">
-          ${idLabel ? `<div style="font-size:11px;color:#64748b;font-weight:600;letter-spacing:0.04em;">${escapeHtml(idLabel)}</div>` : ""}
-          <div style="margin-top:${idLabel ? "4px" : "0"};font-size:16px;font-weight:700;color:#0f172a;line-height:1.3;">${escapeHtml(streetLine)}</div>
-          ${cityStateZip ? `<div style="margin-top:2px;font-size:13px;color:#64748b;line-height:1.35;">${escapeHtml(cityStateZip)}</div>` : ""}
-        </td>
-        <td valign="top" align="right" style="white-space:nowrap;">
-          ${status ? `<div style="margin-bottom:6px;">${status}</div>` : ""}
-          <div style="font-size:20px;font-weight:700;color:#0f172a;line-height:1.1;">${escapeHtml(price)}</div>
-          ${pricePerSqFt ? `<div style="margin-top:2px;font-size:11px;color:#64748b;">${escapeHtml(pricePerSqFt)}</div>` : ""}
-        </td>
-      </tr>
-    </table>`;
-
-  const cta = listingUrl
-    ? `<div style="margin-top:14px;"><a href="${safeUrl}" style="display:inline-block;background-color:${ctaColor};color:#ffffff;text-decoration:none;font-size:13px;font-weight:600;padding:9px 16px;border-radius:8px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${escapeHtml(ctaLabel)}</a></div>`
-    : "";
-
-  return `
-    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 16px;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;background:#ffffff;box-shadow:0 1px 3px rgba(17,24,39,0.04);">
-      <tr>
-        ${photoCell}
-        <td valign="top" style="padding:16px 18px;">
-          ${headerRow}
-          ${factsHtml}
-          ${description}
-          ${cta}
-          ${attribution}
-        </td>
-      </tr>
-    </table>`;
+/** @deprecated Use renderSearchStyleListingEmailCard. Kept as an alias so all listing emails share one card. */
+export function renderCompactListingEmailCard(
+  listing: any,
+  opts: RenderListingEmailCardOptions = {},
+): string {
+  return renderSearchStyleListingEmailCard(listing, opts);
 }
