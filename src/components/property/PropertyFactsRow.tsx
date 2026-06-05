@@ -44,7 +44,7 @@ export function PropertyFactsRow({
         {propertyTypeLabel ? (
           <div className={propertyFactItem}>
             <span className={cn(propertyFactLabel, "text-neutral-600")}>Property Type:</span>
-            <span className={propertyFactValue}>{propertyTypeLabel}</span>
+            <span className={cn(propertyFactValue, "text-sm text-neutral-900")}>{propertyTypeLabel}</span>
           </div>
         ) : null}
         {bedrooms != null && bedrooms > 0 && (
