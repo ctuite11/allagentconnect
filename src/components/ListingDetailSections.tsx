@@ -1,8 +1,6 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Home, DollarSign, Building2, FileText, Calendar, Info } from "lucide-react";
-import { cleanBrokerComments } from "@/lib/listingFieldParsers";
+import { Home, DollarSign, Building2, Calendar, Info } from "lucide-react";
 import { LISTING_STATUS_LABELS } from "@/constants/status";
 import { formatConsumerPropertyTypeLabel } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -366,45 +364,6 @@ export const ListingDetailSections = ({
         </Card>
       )}
 
-      {/* Agent-Only: Firm Remarks */}
-      {isAgentView && (() => {
-        const cleaned = cleanBrokerComments(listing.broker_comments);
-        if (!cleaned) return null;
-        return (
-          <Card
-            className={
-              premiumNeutralSurfaces
-                ? "rounded-xl border border-amber-200/90 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)]"
-                : "rounded-3xl border-orange-200 bg-orange-50/50 dark:bg-orange-950/20"
-            }
-          >
-            <CardHeader className="pb-2">
-              <CardTitle
-                className={cn(
-                  "flex items-center gap-2 text-base",
-                  premiumNeutralSurfaces ? "text-neutral-900" : "text-orange-900 dark:text-orange-100",
-                )}
-              >
-                <FileText className={cn("h-5 w-5 shrink-0", premiumNeutralSurfaces && "text-amber-700")} />
-                Firm Remarks
-                <Badge variant="outline" className="ml-2 text-xs border-neutral-200">
-                  Agent Only
-                </Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p
-                className={cn(
-                  "whitespace-pre-wrap text-sm",
-                  premiumNeutralSurfaces ? "text-neutral-700" : "text-foreground/90",
-                )}
-              >
-                {cleaned}
-              </p>
-            </CardContent>
-          </Card>
-        );
-      })()}
     </>
   );
 };

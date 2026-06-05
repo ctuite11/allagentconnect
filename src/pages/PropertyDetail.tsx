@@ -39,7 +39,6 @@ import {
   Activity,
   Copy,
   Building2,
-  Info,
   Users,
   HelpCircle,
   MessageSquare,
@@ -70,7 +69,6 @@ import {
   propertyRailStack,
 } from "@/components/property/propertyTokens";
 import { BuyerAgentShowcase } from "@/components/BuyerAgentShowcase";
-import { BuyerCompensationInfoModal } from "@/components/BuyerCompensationInfoModal";
 import ContactAgentDialog from "@/components/ContactAgentDialog";
 import PhotoGalleryDialog from "@/components/PhotoGalleryDialog";
 import SocialShareMenu from "@/components/SocialShareMenu";
@@ -168,69 +166,6 @@ interface ListingPriceHistoryItem {
   note: string | null;
 }
 
-interface AttomEnrichment {
-  attomId: string | null;
-  propertyType: string | null;
-  stories: number | null;
-  yearBuilt: number | null;
-  lotSizeSqft: number | null;
-  taxAmount: number | null;
-  neighborhood: string | null;
-  saleHistory: Array<{ date: string | null; amount: number | null; type: string | null }>;
-  ownerOccupied: boolean | null;
-  lastSaleAmount: number | null;
-  lastSaleDate: string | null;
-  zoning: string | null;
-}
-
-const mapLegacyAttomData = (raw: any): AttomEnrichment | null => {
-  if (!raw || typeof raw !== "object") return null;
-
-  return {
-    attomId: raw.attom_id ? String(raw.attom_id) : raw.attomId ? String(raw.attomId) : null,
-    propertyType: raw.property_type ?? raw.propertyType ?? null,
-    stories: typeof raw.stories === "number" ? raw.stories : null,
-    yearBuilt:
-      typeof raw.year_built === "number"
-        ? raw.year_built
-        : typeof raw.yearBuilt === "number"
-        ? raw.yearBuilt
-        : null,
-    lotSizeSqft:
-      typeof raw.lot_size_sqft === "number"
-        ? raw.lot_size_sqft
-        : typeof raw.lotSizeSqft === "number"
-        ? raw.lotSizeSqft
-        : null,
-    taxAmount:
-      typeof raw.tax_amount === "number"
-        ? raw.tax_amount
-        : typeof raw.taxAmount === "number"
-        ? raw.taxAmount
-        : null,
-    neighborhood: raw.neighborhood ?? raw.location_context ?? null,
-    saleHistory: Array.isArray(raw.sale_history)
-      ? raw.sale_history
-      : Array.isArray(raw.saleHistory)
-      ? raw.saleHistory
-      : [],
-    ownerOccupied:
-      typeof raw.owner_occupied === "boolean"
-        ? raw.owner_occupied
-        : typeof raw.ownerOccupied === "boolean"
-        ? raw.ownerOccupied
-        : null,
-    lastSaleAmount:
-      typeof raw.last_sale_amount === "number"
-        ? raw.last_sale_amount
-        : typeof raw.lastSaleAmount === "number"
-        ? raw.lastSaleAmount
-        : null,
-    lastSaleDate: raw.last_sale_date ?? raw.lastSaleDate ?? null,
-    zoning: raw.zoning ?? null,
-  };
-};
-
 const PropertyDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -248,8 +183,6 @@ const PropertyDetail = () => {
   const [descriptionExpanded, setDescriptionExpanded] = useState(false);
   const [isStartingChat, setIsStartingChat] = useState(false);
   const [contactDialogOpen, setContactDialogOpen] = useState(false);
-  const [attomData, setAttomData] = useState<AttomEnrichment | null>(null);
-  const [attomLoading, setAttomLoading] = useState(false);
   const [priceHistory, setPriceHistory] = useState<ListingPriceHistoryItem[]>([]);
 
   // Role detection + URL-based client mode
@@ -419,52 +352,6 @@ const PropertyDetail = () => {
       setListing(null);
     }
   }, [id]);
-
-  useEffect(() => {
-    if (!listing) return;
-
-    const fallback = mapLegacyAttomData((listing as any).attom_data);
-    setAttomData(fallback);
-
-    let cancelled = false;
-
-    const enrichFromAttom = async () => {
-      setAttomLoading(true);
-      try {
-        const response = await fetch("/api/attom-property-enrichment", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            attomId: (listing as any).attom_id ?? null,
-            address: listing.address,
-            city: listing.city,
-            state: listing.state,
-            zip: listing.zip_code,
-          }),
-        });
-
-        const payload = await response.json().catch(() => null);
-        if (cancelled || !payload?.success) return;
-
-        if (payload?.data) {
-          setAttomData(payload.data as AttomEnrichment);
-        }
-      } catch (error) {
-        // Keep fallback data and avoid noisy UX for optional enrichment.
-        console.warn("[PropertyDetail] ATTOM enrichment unavailable, using fallback data");
-      } finally {
-        if (!cancelled) {
-          setAttomLoading(false);
-        }
-      }
-    };
-
-    void enrichFromAttom();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [listing]);
 
   useEffect(() => {
     if (!listing?.id) return;
@@ -662,10 +549,60 @@ const PropertyDetail = () => {
     "rounded-xl border border-neutral-200 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)]";
   const consumerSectionCard =
     "rounded-2xl border border-neutral-200 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)]";
-  const detailTitle =
-    "flex items-center gap-2 text-base font-semibold tracking-tight text-neutral-900";
-  const detailTitleIcon = "h-5 w-5 shrink-0 text-neutral-600";
 
+  const buyerCompensationCard =
+    compensationDisplay && (
+      <Card className="rounded-2xl border border-neutral-200 bg-white shadow-sm">
+        <CardContent className="px-3.5 py-2.5">
+          <div className="flex items-start gap-2">
+            <span className="min-w-0 flex-1 text-sm font-medium leading-snug text-neutral-800">
+              Buyer agent compensation: {compensationDisplay} (paid by seller)
+            </span>
+            <Dialog>
+              <DialogTrigger asChild>
+                <button
+                  type="button"
+                  className="shrink-0 rounded-md text-neutral-500 transition-colors hover:bg-neutral-50 hover:text-neutral-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300/50"
+                >
+                  <HelpCircle className="h-4 w-4" />
+                </button>
+              </DialogTrigger>
+              <DialogContent className="max-w-md border-neutral-200 bg-white">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2 text-neutral-900">
+                    <DollarSign className="h-5 w-5 text-neutral-600" />
+                    Buyer agent compensation
+                  </DialogTitle>
+                </DialogHeader>
+                <div className="space-y-3 py-4 text-sm text-neutral-600">
+                  <p>
+                    This compensation is{" "}
+                    <strong className="text-neutral-900">paid by the seller</strong> and offered to
+                    buyer agents who bring qualified buyers.
+                  </p>
+                  <p>
+                    <strong className="text-neutral-900">Is this negotiable?</strong>
+                    <br />
+                    Yes, compensation terms may be negotiable. Discuss with the listing agent for
+                    details.
+                  </p>
+                  <p>
+                    <strong className="text-neutral-900">Note:</strong> Actual compensation may
+                    vary based on your buyer representation agreement. Ask your agent about their fee
+                    structure.
+                  </p>
+                  {listing.commission_notes && (
+                    <p className="rounded-md border border-neutral-200 bg-neutral-50 p-2 text-neutral-800">
+                      <strong className="text-neutral-900">Notes:</strong> {listing.commission_notes}
+                    </p>
+                  )}
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+        </CardContent>
+      </Card>
+    );
   return (
     <div className="min-h-screen overflow-visible bg-white pt-0">
       <Seo
@@ -964,23 +901,6 @@ const PropertyDetail = () => {
                         {descriptionExpanded ? "Read less" : "Read more"}
                       </button>
                     )}
-                    {isAgentView && (() => {
-                      const cleaned = cleanBrokerComments(listing.broker_comments);
-                      if (!cleaned) return null;
-                      return (
-                        <div className="mt-4 rounded-lg border border-amber-200/90 bg-white p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
-                          <div className="mb-1.5 flex items-center gap-2">
-                            <span className="text-xs font-semibold uppercase tracking-wide text-amber-900">
-                              Broker Remarks
-                            </span>
-                            <Badge variant="outline" className="border-neutral-200 text-xs">
-                              Agent Only
-                            </Badge>
-                          </div>
-                          <p className="whitespace-pre-wrap text-sm text-neutral-700">{cleaned}</p>
-                        </div>
-                      );
-                    })()}
                   </SectionWrapper>
                 );
               })()}
@@ -992,106 +912,6 @@ const PropertyDetail = () => {
                 isAgentView={isAgentView}
                 premiumNeutralSurfaces
               />
-
-              {/* Public Record Insights (server-side ATTOM enrichment with graceful fallback) */}
-              <Card className={detailSurface}>
-                <CardHeader className="pb-2">
-                  <CardTitle className={detailTitle}>
-                    <Info className={detailTitleIcon} />
-                    Public Record Insights
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {attomLoading && !attomData ? (
-                    <p className="text-sm text-muted-foreground">Loading public record details...</p>
-                  ) : attomData ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-                      {attomData.propertyType && (
-                        <div className="flex justify-between gap-3">
-                          <span className="text-muted-foreground">Property Type</span>
-                          <span className="font-semibold text-right">{attomData.propertyType}</span>
-                        </div>
-                      )}
-                      {typeof attomData.stories === "number" && (
-                        <div className="flex justify-between gap-3">
-                          <span className="text-muted-foreground">Stories</span>
-                          <span className="font-semibold text-right">{attomData.stories}</span>
-                        </div>
-                      )}
-                      {typeof attomData.yearBuilt === "number" && (
-                        <div className="flex justify-between gap-3">
-                          <span className="text-muted-foreground">Year Built</span>
-                          <span className="font-semibold text-right">{attomData.yearBuilt}</span>
-                        </div>
-                      )}
-                      {typeof attomData.lotSizeSqft === "number" && (
-                        <div className="flex justify-between gap-3">
-                          <span className="text-muted-foreground">Lot Size</span>
-                          <span className="font-semibold text-right">{attomData.lotSizeSqft.toLocaleString()} sqft</span>
-                        </div>
-                      )}
-                      {typeof attomData.lastSaleAmount === "number" && (
-                        <div className="flex justify-between gap-3">
-                          <span className="text-muted-foreground">Last Sale</span>
-                          <span className="font-semibold text-right">${attomData.lastSaleAmount.toLocaleString()}</span>
-                        </div>
-                      )}
-                      {attomData.lastSaleDate && (
-                        <div className="flex justify-between gap-3">
-                          <span className="text-muted-foreground">Last Sale Date</span>
-                          <span className="font-semibold text-right">{new Date(attomData.lastSaleDate).toLocaleDateString()}</span>
-                        </div>
-                      )}
-                      {typeof attomData.taxAmount === "number" && (
-                        <div className="flex justify-between gap-3">
-                          <span className="text-muted-foreground">Annual Tax</span>
-                          <span className="font-semibold text-right">${attomData.taxAmount.toLocaleString()}</span>
-                        </div>
-                      )}
-                      {attomData.neighborhood && (
-                        <div className="flex justify-between gap-3">
-                          <span className="text-muted-foreground">Neighborhood</span>
-                          <span className="font-semibold text-right">{attomData.neighborhood}</span>
-                        </div>
-                      )}
-                      {attomData.zoning && (
-                        <div className="flex justify-between gap-3">
-                          <span className="text-muted-foreground">Zoning</span>
-                          <span className="font-semibold text-right">{attomData.zoning}</span>
-                        </div>
-                      )}
-                      {typeof attomData.ownerOccupied === "boolean" && (
-                        <div className="flex justify-between gap-3">
-                          <span className="text-muted-foreground">Owner Occupied</span>
-                          <span className="font-semibold text-right">{attomData.ownerOccupied ? "Yes" : "No"}</span>
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">
-                      Public record details are temporarily unavailable for this home.
-                    </p>
-                  )}
-
-                  {attomData && Array.isArray(attomData.saleHistory) && attomData.saleHistory.length > 0 && (
-                    <div className="mt-4 border-t border-neutral-100 pt-4">
-                      <h4 className="text-sm font-semibold mb-2">Sale History</h4>
-                      <div className="space-y-2">
-                        {attomData.saleHistory.slice(0, 3).map((item, index) => (
-                          <div key={`${item.date || "unknown"}-${index}`} className="flex items-center justify-between text-sm">
-                            <span className="text-muted-foreground">
-                              {item.date ? new Date(item.date).toLocaleDateString() : "Unknown date"}
-                            </span>
-                            <span className="font-semibold">
-                              {typeof item.amount === "number" ? `$${item.amount.toLocaleString()}` : "Amount unavailable"}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
 
               {(listing.latitude || listing.longitude) && (
                 <SectionWrapper
@@ -1193,53 +1013,6 @@ const PropertyDetail = () => {
                 )}
             </div>
 
-            {/* Buyer Agent Compensation - Green Box (moved up) */}
-            {compensationDisplay && (
-              <Card className="mt-4 rounded-xl border border-emerald-200/90 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
-                <CardContent className="px-4 py-3">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <DollarSign className="h-4 w-4 shrink-0 text-emerald-700" />
-                    <span className="text-sm font-medium text-neutral-900">
-                      Buyer Agent Compensation: {compensationDisplay} (paid by seller)
-                    </span>
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <button
-                          type="button"
-                          className="ml-auto rounded-md p-1 text-emerald-800 transition-colors hover:bg-emerald-50/80 hover:text-emerald-950 focus-visible:outline-none focus-visible:ring-0"
-                        >
-                          <HelpCircle className="h-4 w-4" />
-                        </button>
-                      </DialogTrigger>
-                      <DialogContent className="max-w-md border-neutral-200">
-                        <DialogHeader>
-                          <DialogTitle className="flex items-center gap-2 text-neutral-900">
-                            <DollarSign className="h-5 w-5 text-emerald-700" />
-                            Buyer Agent Compensation
-                          </DialogTitle>
-                        </DialogHeader>
-                        <div className="space-y-3 py-4 text-sm text-neutral-600">
-                          <p>
-                            This compensation is <strong className="text-neutral-900">paid by the seller</strong> and 
-                            offered to buyer agents who bring qualified buyers.
-                          </p>
-                          <p>
-                            <strong className="text-neutral-900">Is this negotiable?</strong><br />
-                            Yes, compensation terms may be negotiable. Discuss with the listing agent for details.
-                          </p>
-                          {listing.commission_notes && (
-                            <p className="rounded-md border border-neutral-200 bg-neutral-50 p-2 text-neutral-800">
-                              <strong className="text-neutral-900">Notes:</strong> {listing.commission_notes}
-                            </p>
-                          )}
-                        </div>
-                      </DialogContent>
-                    </Dialog>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-            
             {/* Agent-only: Showing + disclosures (two-column) */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
                 {/* LEFT COLUMN (Blue): Showing Instructions */}
@@ -1288,7 +1061,7 @@ const PropertyDetail = () => {
                   </CardContent>
                 </Card>
 
-                {/* RIGHT COLUMN (Yellow): Disclosures, Exclusions, Listing Agreement, Firm Remarks */}
+                {/* RIGHT COLUMN: Disclosures, Exclusions & Listing Agreement */}
                 <Card className={cn(detailSurface, "h-full")}>
                   <CardHeader className="px-4 pb-2 pt-4">
                     <CardTitle className="flex items-center gap-2 text-sm font-semibold text-neutral-900">
@@ -1334,23 +1107,30 @@ const PropertyDetail = () => {
                         <p className="font-medium text-neutral-800">{listing.documents.length} document(s) available</p>
                       </div>
                     )}
-                    {/* Firm Remarks - cleaned & deduplicated, agent only */}
-                    {(() => {
-                      const cleaned = cleanBrokerComments(listing.broker_comments);
-                      if (!cleaned) return null;
-                      return (
-                        <div className="pt-2 border-t">
-                          <p className="text-xs font-semibold text-muted-foreground mb-1 flex items-center gap-1">
-                            Firm Remarks
-                            <Badge variant="outline" className="text-[10px] ml-1">Agent Only</Badge>
-                          </p>
-                          <p className="whitespace-pre-wrap leading-relaxed">{cleaned}</p>
-                        </div>
-                      );
-                    })()}
                   </CardContent>
                 </Card>
               </div>
+
+              {(() => {
+                const cleaned = cleanBrokerComments(listing.broker_comments);
+                if (!cleaned) return null;
+                return (
+                  <Card className={cn(detailSurface, "mt-4")}>
+                    <CardHeader className="px-4 pb-2 pt-4">
+                      <CardTitle className="flex items-center gap-2 text-sm font-semibold text-neutral-900">
+                        <FileText className="h-4 w-4 text-neutral-600" />
+                        Firm Remarks
+                        <Badge variant="outline" className="ml-1 border-neutral-200 text-xs">
+                          Agent Only
+                        </Badge>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="px-4 pb-4">
+                      <p className="whitespace-pre-wrap text-sm leading-relaxed text-neutral-700">{cleaned}</p>
+                    </CardContent>
+                  </Card>
+                );
+              })()}
 
                 </div>
               )}
@@ -1386,15 +1166,6 @@ const PropertyDetail = () => {
                       triggerVariant="outline"
                       triggerClassName="h-9 w-full rounded-lg border-neutral-200 text-[13px] font-medium shadow-none hover:bg-neutral-50"
                     />
-
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-9 w-full rounded-lg border-neutral-200 text-[13px] font-medium shadow-none hover:bg-neutral-50"
-                      onClick={() => setContactDialogOpen(true)}
-                    >
-                      Ask a Question
-                    </Button>
 
                     <FavoriteButton
                       listingId={listing.id}
@@ -1555,19 +1326,6 @@ const PropertyDetail = () => {
                         listingDetailOutlineCtaClass,
                       )}
                     />
-
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className={cn(
-                        "h-9 w-full gap-2 rounded-lg text-[13px] font-medium shadow-none",
-                        listingDetailOutlineCtaClass,
-                      )}
-                      onClick={() => setContactDialogOpen(true)}
-                    >
-                      <HelpCircle className="h-4 w-4" />
-                      Ask a Question
-                    </Button>
                   </CardContent>
                 </Card>
               )}
@@ -1594,6 +1352,8 @@ const PropertyDetail = () => {
                   </div>
                 </CardContent>
               </Card>
+
+              {buyerCompensationCard}
 
               {isAgentView && (
                 <Card className={cn(consumerSectionCard, "shadow-sm")}>
