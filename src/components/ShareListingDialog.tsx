@@ -2,7 +2,7 @@
  * Single Listing Share Dialog
  * Wrapper around the universal ShareListingsDialog for sharing a single listing.
  */
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Share2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { ShareListingsDialog, Recipient, ListingPreview } from "@/components/share/ShareListingsDialog";
 import { useSenderProfilePrefill } from "@/lib/currentSenderProfile";
+import { searchClientContacts } from "@/lib/contactSearch";
 
 interface ShareListingDialogProps {
   listingId: string;
@@ -48,6 +49,8 @@ export const ShareListingDialog = ({
   const [agentPhone, setAgentPhone] = useState("");
   const [message, setMessage] = useState("");
   const [clientSearch, setClientSearch] = useState("");
+  const [clientResults, setClientResults] = useState<Client[]>([]);
+  const [showClientDropdown, setShowClientDropdown] = useState(false);
   const [showManualEntry, setShowManualEntry] = useState(false);
   const [listingPreview, setListingPreview] = useState<ListingPreview | undefined>();
   const [recipients, setRecipients] = useState<Recipient[]>([]);
@@ -73,11 +76,50 @@ export const ShareListingDialog = ({
       setRecipientEmail("");
       setMessage("");
       setClientSearch("");
+      setClientResults([]);
+      setShowClientDropdown(false);
       setShowManualEntry(false);
       setListingPreview(undefined);
       setRecipients([]);
     }
   }, [open, listingId]);
+
+  useEffect(() => {
+    if (!open || senderProfileSource !== "agent") {
+      setClientResults([]);
+      setShowClientDropdown(false);
+      return;
+    }
+
+    const searchClients = async () => {
+      if (!clientSearch.trim() || clientSearch.length < 2) {
+        setClientResults([]);
+        setShowClientDropdown(false);
+        return;
+      }
+
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const results = await searchClientContacts<Client>({
+          agentId: user.id,
+          query: clientSearch,
+          select: "*",
+          limit: 5,
+        });
+        setClientResults(results);
+        setShowClientDropdown(results.length > 0);
+      } catch (error) {
+        console.error("Error searching clients:", error);
+      }
+    };
+
+    const debounce = setTimeout(searchClients, 300);
+    return () => clearTimeout(debounce);
+  }, [clientSearch, open, senderProfileSource]);
 
   const loadListingPreview = async () => {
     try {
@@ -139,8 +181,20 @@ export const ShareListingDialog = ({
     setRecipients(prev => prev.filter((_, i) => i !== index));
   };
 
+  const collectRecipients = (): Recipient[] => {
+    const all = [...recipients];
+    if (recipientEmail.trim() && recipientName.trim()) {
+      const email = recipientEmail.trim().toLowerCase();
+      if (!all.some((r) => r.email.toLowerCase() === email)) {
+        all.push({ name: recipientName.trim(), email: recipientEmail.trim() });
+      }
+    }
+    return all;
+  };
+
   const handleShare = async () => {
-    if (!recipientName || !recipientEmail || !agentName || !agentEmail) {
+    const allRecipients = collectRecipients();
+    if (allRecipients.length === 0 || !agentName.trim() || !agentEmail.trim()) {
       toast.error("Please fill in all required fields");
       return;
     }
@@ -148,29 +202,34 @@ export const ShareListingDialog = ({
     setSending(true);
     try {
       const formattedPhone = agentPhone ? formatPhoneNumber(agentPhone) : "";
-      
-      const { error } = await supabase.functions.invoke('send-listing-share', {
-        body: {
-          listingId,
-          recipientName,
-          recipientEmail,
-          agentName,
-          agentEmail,
-          agentPhone: formattedPhone,
-          message
-        }
-      });
-
-      if (error) throw error;
-
-      // Track the share
       const { trackShare } = await import("@/lib/trackShare");
-      await trackShare(listingId, 'email_direct', recipientEmail);
 
-      toast.success(`Listing shared with ${recipientName}`);
+      for (const recipient of allRecipients) {
+        const { error } = await supabase.functions.invoke("send-listing-share", {
+          body: {
+            listingId,
+            recipientName: recipient.name,
+            recipientEmail: recipient.email,
+            agentName,
+            agentEmail,
+            agentPhone: formattedPhone,
+            message,
+          },
+        });
+
+        if (error) throw error;
+        await trackShare(listingId, "email_direct", recipient.email);
+      }
+
+      const names = allRecipients.map((r) => r.name).join(", ");
+      toast.success(
+        allRecipients.length === 1
+          ? `Listing shared with ${names}`
+          : `Listing shared with ${allRecipients.length} contacts`,
+      );
       setOpen(false);
     } catch (error) {
-      console.error('Error sharing listing:', error);
+      console.error("Error sharing listing:", error);
       toast.error("Failed to share listing");
     } finally {
       setSending(false);
@@ -199,6 +258,9 @@ export const ShareListingDialog = ({
         listingPreview={listingPreview}
         contactQuery={clientSearch}
         setContactQuery={setClientSearch}
+        contactResults={senderProfileSource === "agent" ? clientResults : []}
+        showContactDropdown={senderProfileSource === "agent" && showClientDropdown}
+        onDismissContactDropdown={() => setShowClientDropdown(false)}
         manualMode={showManualEntry}
         setManualMode={setShowManualEntry}
         recipientName={recipientName}
