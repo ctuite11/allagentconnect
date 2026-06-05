@@ -485,19 +485,25 @@ const ConsumerPropertyDetail = () => {
       </div>
 
       <div className="flex-1">
-        {/* ========== TWO-COLUMN LAYOUT (68% / 32%) ========== */}
+        {/* ========== TWO-COLUMN GRID (68% / 32%) ========== */}
         <div className={cn(propertyPageContainer, "pb-8")}>
-          <div className={cn("flex flex-col items-start lg:flex-row", propertyHeroGap)}>
+          <div
+            className={cn(
+              "grid grid-cols-1 gap-y-6",
+              "lg:grid-cols-[68%_32%] lg:items-start lg:gap-x-6 lg:gap-y-0",
+            )}
+          >
+            {/* Row 1 — address + price (left column only) */}
+            <PropertyHeader
+              embedded
+              address={buildDisplayAddress(listing as any)}
+              price={listing?.price ?? null}
+              priceSuffix={listing.listing_type === 'for_rent' ? '/ mo' : undefined}
+              className="order-1 mb-2 min-w-0 lg:col-start-1 lg:row-start-1 lg:mb-3"
+            />
 
-            {/* LEFT COLUMN — header, gallery, stats, overview, details */}
-            <div className={cn(propertyMediaCol, "w-full min-w-0")}>
-              <div className="space-y-3">
-                <PropertyHeader
-                  embedded
-                  address={buildDisplayAddress(listing as any)}
-                  price={listing?.price ?? null}
-                  priceSuffix={listing.listing_type === 'for_rent' ? '/ mo' : undefined}
-                />
+            {/* Row 2 — photo (left column) */}
+            <div className="order-2 min-w-0 lg:col-start-1 lg:row-start-2">
               <div
                 className={cn(
                   propertyHeroMedia,
@@ -595,7 +601,10 @@ const ConsumerPropertyDetail = () => {
                   )}
                 </div>
               </div>
+            </div>
 
+            {/* Row 3 — pills, stats, overview (left column) */}
+            <div className="order-3 flex min-w-0 flex-col gap-5 pt-5 lg:col-start-1 lg:row-start-3 lg:pt-6">
               <MediaTabBar
                 active={activeMediaTab as MediaTab}
                 onChange={(tab) => handleMediaTabChange(tab)}
@@ -603,7 +612,7 @@ const ConsumerPropertyDetail = () => {
                 hasTour={!!listing.virtual_tour_url}
                 hasWebsite={!!listing.property_website_url}
                 neutralTone
-                className="!mt-0"
+                className="!mt-0 !px-0"
                 trailing={
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -688,9 +697,8 @@ const ConsumerPropertyDetail = () => {
                 totalParkingSpaces={listing.total_parking_spaces}
                 daysOnMarket={daysOnMarket}
               />
-              </div>
 
-              <div className="space-y-4 pt-5">
+              <div className="flex flex-col gap-4 pt-2">
               {/* Overview/Description with Read More */}
               {listing.description && (() => {
                 const MAX_CHARS = 650;
@@ -747,8 +755,14 @@ const ConsumerPropertyDetail = () => {
               </div>
             </div>
 
-            {/* RIGHT COLUMN — agent contact + sidebar */}
-            <div className={cn(propertyRailCol, propertyRailStack, propertyRailSticky, "w-full min-w-0")}>
+            {/* Row 2+ — agent rail (right column, top aligned with photo) */}
+            <div
+              className={cn(
+                propertyRailStack,
+                propertyRailSticky,
+                "order-4 min-w-0 lg:col-start-2 lg:row-start-2 lg:self-start",
+              )}
+            >
 
               {/* Agent/admin: listing agent contact via AAC email (no buyer CTAs) */}
               {isAgentView && agentProfile ? (
