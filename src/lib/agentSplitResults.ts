@@ -2,6 +2,7 @@ import {
   listingEffectiveNumericPrice,
   type ListingPriceFields,
 } from "@/lib/formatListingPriceDisplay";
+import { compareListingsByRecency } from "@/lib/listingRecencySort";
 
 /** Minimal listing row for agent split map/list results surfaces. */
 export type AgentSplitListing = Record<string, unknown> & {
@@ -46,12 +47,10 @@ export function sortAgentSplitListings<T extends AgentSplitListing>(
     });
   }
 
-  if (sortColumn === "list_date") {
-    return rows.sort((a, b) => {
-      const av = String(a.list_date ?? a.created_at ?? "");
-      const bv = String(b.list_date ?? b.created_at ?? "");
-      return av.localeCompare(bv) * dir;
-    });
+  if (sortColumn === "created_at" || sortColumn === "list_date") {
+    return rows.sort((a, b) =>
+      compareListingsByRecency(a, b, sortDirection === "asc" ? "asc" : "desc"),
+    );
   }
 
   return rows.sort((a, b) => {

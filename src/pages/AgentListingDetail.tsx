@@ -399,6 +399,7 @@ const AgentListingDetail = () => {
                     title={`${displayAddress}, ${listing.city}, ${listing.state}`}
                     description={listing.description || ''}
                     listingId={id!}
+                    listingAddress={listing.address}
                   />
                   <Button 
                     size="sm"

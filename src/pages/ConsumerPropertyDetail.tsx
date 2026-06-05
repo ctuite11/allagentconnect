@@ -9,12 +9,6 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AgentAvatar } from "@/components/ui/AgentAvatar";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
   MapPin,
   Bed,
   Bath,
@@ -67,6 +61,7 @@ import ScheduleShowingDialog from "@/components/ScheduleShowingDialog";
 // SaveToHotSheetDialog removed — requires search context props not available on single listing view
 import PropertyMap from "@/components/PropertyMap";
 import AdBanner from "@/components/AdBanner";
+import SocialShareMenu from "@/components/SocialShareMenu";
 import { getListingPublicUrl, getListingShareUrl } from "@/lib/getPublicUrl";
 import { formatListingPriceDisplay } from "@/lib/formatListingPriceDisplay";
 import { getStatusConfig } from "@/constants/status";
@@ -302,14 +297,6 @@ const ConsumerPropertyDetail = () => {
   };
 
   const handleExpandGallery = () => setGalleryOpen(true);
-
-  const handleCopyLink = async () => {
-    const shareUrl = getListingShareUrl(id!);
-    navigator.clipboard.writeText(shareUrl);
-    toast.success("Link copied to clipboard");
-    const { trackShare } = await import("@/lib/trackShare");
-    await trackShare(id!, 'copy_link');
-  };
 
   const getStatusColor = (status: string) => {
     const config = getStatusConfig(status, "listing");
@@ -563,8 +550,14 @@ const ConsumerPropertyDetail = () => {
                     neutralTone
                     className="!mt-0 min-w-0 !px-0"
                     trailing={
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
+                      <SocialShareMenu
+                        url={getListingShareUrl(id!)}
+                        title={listing.address}
+                        description={listing.description || ""}
+                        listingId={id!}
+                        listingAddress={listing.address}
+                        senderProfileSource="buyer"
+                        trigger={
                           <Button
                             variant="outline"
                             size="sm"
@@ -574,68 +567,8 @@ const ConsumerPropertyDetail = () => {
                             <Share2 className="mr-2 h-4 w-4" />
                             Share
                           </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-48">
-                          <DropdownMenuItem
-                            onClick={() =>
-                              window.open(
-                                `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(getListingShareUrl(id!))}`,
-                                "_blank"
-                              )
-                            }
-                            className="gap-2 cursor-pointer"
-                          >
-                            Facebook
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() =>
-                              window.open(
-                                `https://twitter.com/intent/tweet?url=${encodeURIComponent(getListingShareUrl(id!))}`,
-                                "_blank"
-                              )
-                            }
-                            className="gap-2 cursor-pointer"
-                          >
-                            Twitter
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() =>
-                              window.open(
-                                `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(getListingShareUrl(id!))}`,
-                                "_blank"
-                              )
-                            }
-                            className="gap-2 cursor-pointer"
-                          >
-                            LinkedIn
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() =>
-                              window.open(
-                                `https://wa.me/?text=${encodeURIComponent(listing.address)}%20${encodeURIComponent(getListingShareUrl(id!))}`,
-                                "_blank"
-                              )
-                            }
-                            className="gap-2 cursor-pointer"
-                          >
-                            WhatsApp
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() =>
-                              window.open(
-                                `mailto:?subject=${encodeURIComponent(listing.address)}&body=${encodeURIComponent(getListingShareUrl(id!))}`,
-                                "_blank"
-                              )
-                            }
-                            className="gap-2 cursor-pointer"
-                          >
-                            Email
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={handleCopyLink} className="gap-2 cursor-pointer">
-                            Copy Link
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                        }
+                      />
                     }
                   />
                   {daysOnMarket != null && daysOnMarket >= 0 ? (

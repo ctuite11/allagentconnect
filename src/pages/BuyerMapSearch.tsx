@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { SearchCriteria } from "@/components/search/UnifiedPropertySearch";
 import PropertyMap from "@/components/PropertyMap";
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
+import { compareListingsByRecency } from "@/lib/listingRecencySort";
 import { formatListingShareEmailStreetLine } from "@/lib/buildHotSheetShareEmailHtml";
 import { buildNewListingSharedEmailSubject } from "@/lib/listingEmailSubject";
 import { isDcmlsHost } from "@/lib/host";
@@ -204,7 +205,7 @@ export default function BuyerMapSearch() {
       return next;
     }
     if (sortBy === "newest") {
-      next.sort((a, b) => b.id.localeCompare(a.id));
+      next.sort((a, b) => compareListingsByRecency(a, b, "desc"));
       return next;
     }
     return next;

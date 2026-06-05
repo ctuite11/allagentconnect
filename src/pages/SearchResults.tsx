@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MapPin } from "lucide-react";
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
+import { compareListingsByRecency } from "@/lib/listingRecencySort";
 import PropertyMap from "@/components/PropertyMap";
 import { Seo } from "@/components/Seo";
 
@@ -201,9 +202,9 @@ const SearchResults = ({
       case "price-high":
         return sorted.sort((a, b) => b.price - a.price);
       case "newest":
-        return sorted.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        return sorted.sort((a, b) => compareListingsByRecency(a, b, "desc"));
       case "oldest":
-        return sorted.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+        return sorted.sort((a, b) => compareListingsByRecency(a, b, "asc"));
       default:
         return sorted;
     }

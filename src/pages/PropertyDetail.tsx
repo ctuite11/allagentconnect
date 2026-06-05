@@ -73,12 +73,7 @@ import { formatListingPriceDisplay, listingEffectiveNumericPrice } from "@/lib/f
 import { parseDisclosures, cleanBrokerComments, isEmptyValue } from "@/lib/listingFieldParsers";
 import { buildMessageReturnState, messagesPathForRole } from "@/lib/messageNavigation";
 import { findOrCreateConversation } from "@/lib/startConversation";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import SocialShareMenu from "@/components/SocialShareMenu";
 
 interface Listing {
   id: string;
@@ -369,35 +364,6 @@ const PropertyDetail = () => {
       cancelled = true;
     };
   }, [listing?.id]);
-
-  const handleShare = async () => {
-    const shareUrl = getListingShareUrl(id!);
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: listing?.address || 'Property Listing',
-          text: `Check out this property: ${listing?.address}`,
-          url: shareUrl,
-        });
-      } catch (error) {
-        // User cancelled, do nothing
-      }
-    } else {
-      // Fallback to copy if share not available
-      navigator.clipboard.writeText(shareUrl);
-      toast.success("Link copied to clipboard");
-    }
-  };
-
-  const handleCopyLink = async () => {
-    const shareUrl = getListingShareUrl(id!);
-    navigator.clipboard.writeText(shareUrl);
-    toast.success("Link copied to clipboard");
-    
-    // Track the share
-    const { trackShare } = await import("@/lib/trackShare");
-    await trackShare(id!, 'copy_link');
-  };
 
 
   const handlePrint = () => {
@@ -713,8 +679,14 @@ const PropertyDetail = () => {
                     neutralTone
                     className="!mt-0 min-w-0 !px-0"
                     trailing={
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
+                      <SocialShareMenu
+                        url={getListingShareUrl(id!)}
+                        title={listing.address}
+                        description={listing.description || ""}
+                        listingId={id!}
+                        listingAddress={listing.address}
+                        senderProfileSource="agent"
+                        trigger={
                           <Button
                             variant="outline"
                             size="sm"
@@ -724,68 +696,8 @@ const PropertyDetail = () => {
                             <Share2 className="mr-2 h-4 w-4" />
                             Share
                           </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-48">
-                          <DropdownMenuItem
-                            onClick={() =>
-                              window.open(
-                                `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(getListingShareUrl(id!))}`,
-                                "_blank",
-                              )
-                            }
-                            className="cursor-pointer gap-2"
-                          >
-                            Facebook
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() =>
-                              window.open(
-                                `https://twitter.com/intent/tweet?url=${encodeURIComponent(getListingShareUrl(id!))}`,
-                                "_blank",
-                              )
-                            }
-                            className="cursor-pointer gap-2"
-                          >
-                            Twitter
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() =>
-                              window.open(
-                                `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(getListingShareUrl(id!))}`,
-                                "_blank",
-                              )
-                            }
-                            className="cursor-pointer gap-2"
-                          >
-                            LinkedIn
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() =>
-                              window.open(
-                                `https://wa.me/?text=${encodeURIComponent(listing.address)}%20${encodeURIComponent(getListingShareUrl(id!))}`,
-                                "_blank",
-                              )
-                            }
-                            className="cursor-pointer gap-2"
-                          >
-                            WhatsApp
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() =>
-                              window.open(
-                                `mailto:?subject=${encodeURIComponent(listing.address)}&body=${encodeURIComponent(getListingShareUrl(id!))}`,
-                                "_blank",
-                              )
-                            }
-                            className="cursor-pointer gap-2"
-                          >
-                            Email
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={handleCopyLink} className="cursor-pointer gap-2">
-                            Copy Link
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                        }
+                      />
                     }
                   />
                   {(isAgentView && listing.listing_number) ||

@@ -1501,6 +1501,7 @@ const MyListings = () => {
               title={`${socialShareListing.address}, ${socialShareListing.city} - ${formatListingPriceDisplay(socialShareListing) ?? "—"}`}
               description={`Check out this property listing`}
               listingId={socialShareListing.id}
+              listingAddress={socialShareListing.address}
             />
           </div>
         </div>

@@ -20,6 +20,7 @@ import {
   sortAgentSplitListings,
   type AgentSplitListing,
 } from "@/lib/agentSplitResults";
+import { LISTING_DEFAULT_SORT_COLUMN } from "@/lib/listingRecencySort";
 import {
   agentSplitListingAgentContact,
   listingEmailSubjectFromRow,
@@ -106,7 +107,7 @@ export function AgentSplitResultsSurface({
   showAgentEmailContact = false,
 }: AgentSplitResultsSurfaceProps) {
   const navigate = useNavigate();
-  const [sortColumn, setSortColumn] = useState("list_date");
+  const [sortColumn, setSortColumn] = useState(LISTING_DEFAULT_SORT_COLUMN);
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   const [internalSelectedRows, setInternalSelectedRows] = useState<Set<string>>(new Set());
   const [showSelectedOnly, setShowSelectedOnly] = useState(false);
@@ -219,6 +220,8 @@ export function AgentSplitResultsSurface({
 
   const sortSelectValue =
     ({
+      created_at_desc: "date_new",
+      created_at_asc: "date_old",
       list_date_desc: "date_new",
       list_date_asc: "date_old",
       price_desc: "price_high",
@@ -227,12 +230,12 @@ export function AgentSplitResultsSurface({
 
   const handleSortSelect = (value: string) => {
     const colDir: Record<string, [string, "asc" | "desc"]> = {
-      date_new: ["list_date", "desc"],
-      date_old: ["list_date", "asc"],
+      date_new: [LISTING_DEFAULT_SORT_COLUMN, "desc"],
+      date_old: [LISTING_DEFAULT_SORT_COLUMN, "asc"],
       price_high: ["price", "desc"],
       price_low: ["price", "asc"],
     };
-    const [col, dir] = colDir[value] ?? ["list_date", "desc"];
+    const [col, dir] = colDir[value] ?? [LISTING_DEFAULT_SORT_COLUMN, "desc"];
     setSortColumn(col);
     setSortDirection(dir);
   };

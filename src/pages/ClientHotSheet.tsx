@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { formatPhoneNumber } from "@/lib/phoneFormat";
+import { compareListingsByRecency } from "@/lib/listingRecencySort";
 import { useParams, useNavigate } from "react-router-dom";
 import Footer from "@/components/Footer";
 import { User } from "@supabase/supabase-js";
@@ -572,9 +572,9 @@ const ClientHotSheet = () => {
   const sortedListings = [...listings].sort((a, b) => {
     switch (sortBy) {
       case "newest":
-        return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
+        return compareListingsByRecency(a, b, "desc");
       case "oldest":
-        return new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime();
+        return compareListingsByRecency(a, b, "asc");
       case "price-high":
         return b.price - a.price;
       case "price-low":

@@ -8,8 +8,10 @@
  *   renderSearchStyleListingEmailCard — full-size card used by listing
  *     shares, price-change alerts, inquiry emails.
  *   renderCompactListingEmailCard — condensed AAC card (shorter hero,
- *     tighter padding) used by Hot Sheet match emails and message
- *     notification emails where multiple listings stack.
+ *     tighter padding) used by message notification emails where multiple
+ *     listings stack.
+ *   renderHotSheetMatchListingEmailCard — compact card with buyer-facing
+ *     consumer-property links for Hot Sheet match / subscriber emails.
  *
  * Pure email-safe HTML: nested <table>s, inline styles, no flex/grid.
  */
@@ -413,4 +415,19 @@ export function renderCompactListingEmailCard(
         </td>
       </tr>
     </table>`;
+}
+
+/** Compact AAC card for Hot Sheet match / subscriber notification emails (buyer-facing). */
+export function renderHotSheetMatchListingEmailCard(
+  listing: any,
+  opts: { baseUrl: string },
+): string {
+  const baseUrl = opts.baseUrl.replace(/\/$/, "");
+  const id = listing?.id ? String(listing.id) : "";
+  return renderCompactListingEmailCard(listing, {
+    baseUrl,
+    listingUrl: id ? `${baseUrl}/consumer-property/${id}` : "",
+    ctaLabel: "View Listing",
+    greenCta: true,
+  });
 }

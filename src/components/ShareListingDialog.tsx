@@ -14,6 +14,11 @@ import { useSenderProfilePrefill } from "@/lib/currentSenderProfile";
 interface ShareListingDialogProps {
   listingId: string;
   listingAddress: string;
+  /** `buyer` loads `profiles`; default `agent` uses `agent_profiles`. */
+  senderProfileSource?: "agent" | "buyer";
+  /** Controlled mode — omit the built-in trigger button. */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 interface Client {
@@ -24,8 +29,17 @@ interface Client {
   phone?: string | null;
 }
 
-export const ShareListingDialog = ({ listingId, listingAddress }: ShareListingDialogProps) => {
-  const [open, setOpen] = useState(false);
+export const ShareListingDialog = ({
+  listingId,
+  listingAddress: _listingAddress,
+  senderProfileSource = "agent",
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange,
+}: ShareListingDialogProps) => {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isControlled = controlledOpen !== undefined;
+  const open = isControlled ? controlledOpen : internalOpen;
+  const setOpen = isControlled ? (controlledOnOpenChange ?? (() => {})) : setInternalOpen;
   const [sending, setSending] = useState(false);
   const [recipientName, setRecipientName] = useState("");
   const [recipientEmail, setRecipientEmail] = useState("");
@@ -44,7 +58,11 @@ export const ShareListingDialog = ({ listingId, listingAddress }: ShareListingDi
     setAgentPhone(sender.phone);
   }, []);
 
-  useSenderProfilePrefill(open, applySender, "agent");
+  useSenderProfilePrefill(
+    open,
+    applySender,
+    senderProfileSource === "buyer" ? "buyer" : "agent",
+  );
 
   useEffect(() => {
     if (open) {
@@ -84,31 +102,34 @@ export const ShareListingDialog = ({ listingId, listingAddress }: ShareListingDi
     }
   };
 
-  const handleSaveContact = async (name: string, email: string) => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+  const handleSaveContact =
+    senderProfileSource === "agent"
+      ? async (name: string, email: string) => {
+          try {
+            const {
+              data: { user },
+            } = await supabase.auth.getUser();
+            if (!user) return;
 
-      const nameParts = name.trim().split(' ');
-      const firstName = nameParts[0] || '';
-      const lastName = nameParts.slice(1).join(' ') || '';
+            const nameParts = name.trim().split(" ");
+            const firstName = nameParts[0] || "";
+            const lastName = nameParts.slice(1).join(" ") || "";
 
-      const { error } = await supabase
-        .from("clients")
-        .insert({
-          agent_id: user.id,
-          first_name: firstName,
-          last_name: lastName,
-          email: email.trim(),
-        });
+            const { error } = await supabase.from("clients").insert({
+              agent_id: user.id,
+              first_name: firstName,
+              last_name: lastName,
+              email: email.trim(),
+            });
 
-      if (error) throw error;
-      toast.success(`${name} saved to contacts`);
-    } catch (error) {
-      console.error("Error saving contact:", error);
-      toast.error("Failed to save contact");
-    }
-  };
+            if (error) throw error;
+            toast.success(`${name} saved to contacts`);
+          } catch (error) {
+            console.error("Error saving contact:", error);
+            toast.error("Failed to save contact");
+          }
+        }
+      : undefined;
 
   const handleAddRecipient = (recipient: Recipient) => {
     setRecipients(prev => [...prev, recipient]);
@@ -164,10 +185,12 @@ export const ShareListingDialog = ({ listingId, listingAddress }: ShareListingDi
 
   return (
     <>
-      <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
-        <Share2 className="w-4 h-4 mr-2" />
-        Share Listing
-      </Button>
+      {!isControlled ? (
+        <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
+          <Share2 className="w-4 h-4 mr-2" />
+          Share Listing
+        </Button>
+      ) : null}
 
       <ShareListingsDialog
         open={open}

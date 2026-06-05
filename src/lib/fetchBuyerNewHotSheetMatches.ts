@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
 import { filterVisibleListings } from "@/lib/filterVisibleListings";
+import { sortListingsByRecency } from "@/lib/listingRecencySort";
 
 export type BuyerNewHotSheetMatchRow = Record<string, unknown> & {
   id: string;
@@ -122,11 +123,7 @@ export async function fetchBuyerNewHotSheetMatches(
     agentUserId,
   ) as unknown as BuyerNewHotSheetMatchRow[];
 
-  listings = [...listings].sort((a, b) => {
-    const da = a.list_date ?? a.created_at ?? "";
-    const db = b.list_date ?? b.created_at ?? "";
-    return String(db).localeCompare(String(da));
-  });
+  listings = sortListingsByRecency(listings, "desc");
 
   return {
     listings,

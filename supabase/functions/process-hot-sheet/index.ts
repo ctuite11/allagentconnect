@@ -1,7 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
-import { formatListingShareEmailStreetLine } from "../_shared/listingShareEmailAddress.ts";
-import { renderListingEmailCard } from "../_shared/listingEmailCard.ts";
+import { renderHotSheetMatchListingEmailCard } from "../_shared/listingEmailCard.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -413,10 +412,10 @@ const handler = async (req: Request): Promise<Response> => {
         const baseUrl = req.headers.get("origin") || "http://localhost:5173";
         const accessUrl = `${baseUrl}/client-hot-sheet/${token}`;
         
-        // Render unified MLS-style cards that match the AAC search results card
+        // Render compact AAC listing cards (same as message notification emails)
         const listingsHtml = newListings
           .slice(0, 5)
-          .map((listing: any) => renderListingEmailCard(listing, { baseUrl }))
+          .map((listing: any) => renderHotSheetMatchListingEmailCard(listing, { baseUrl }))
           .join('');
 
         // Wrap with overflow note and CTA

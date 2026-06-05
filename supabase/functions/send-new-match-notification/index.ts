@@ -1,7 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { formatListingShareEmailStreetLine } from "../_shared/listingShareEmailAddress.ts";
-import { renderListingEmailCard } from "../_shared/listingEmailCard.ts";
+import { renderHotSheetMatchListingEmailCard } from "../_shared/listingEmailCard.ts";
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -158,7 +157,7 @@ serve(async (req) => {
 
       // Build listings HTML
       const listingsHtml = listings
-        .map((listing: any) => renderListingEmailCard(listing, { baseUrl: appBaseUrl }))
+        .map((listing: any) => renderHotSheetMatchListingEmailCard(listing, { baseUrl: appBaseUrl }))
         .join("");
 
       let queuedForHotSheet = 0;
@@ -183,7 +182,7 @@ serve(async (req) => {
         }
 
         const recipientListingsHtml = recipientListings
-          .map((listing: any) => renderListingEmailCard(listing, { baseUrl: appBaseUrl }))
+          .map((listing: any) => renderHotSheetMatchListingEmailCard(listing, { baseUrl: appBaseUrl }))
           .join("");
 
         const { error: insertError } = await supabase.from("email_jobs").insert({

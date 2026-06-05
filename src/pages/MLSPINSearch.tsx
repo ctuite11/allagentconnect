@@ -6,6 +6,7 @@ import MLSPINResultsTable from "@/components/mlspin-search/MLSPINResultsTable";
 import ListingIntelDrawer from "@/components/mlspin-search/ListingIntelDrawer";
 import { toast } from "sonner";
 import { applyListingPriceOverlapFilter } from "@/lib/applyListingPriceOverlapFilter";
+import { LISTING_DEFAULT_SORT_COLUMN } from "@/lib/listingRecencySort";
 
 interface FilterState {
   propertyTypes: string[];
@@ -67,7 +68,7 @@ const MLSPINSearch = () => {
   const [loading, setLoading] = useState(false);
   const [counties, setCounties] = useState<{ id: string; name: string; state: string }[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [sortColumn, setSortColumn] = useState("list_date");
+  const [sortColumn, setSortColumn] = useState(LISTING_DEFAULT_SORT_COLUMN);
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   const [selectedListing, setSelectedListing] = useState<any | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -114,7 +115,8 @@ const MLSPINSearch = () => {
           description,
           photos,
           year_built,
-          lot_size
+          lot_size,
+          created_at
         `)
         .limit(500);
 

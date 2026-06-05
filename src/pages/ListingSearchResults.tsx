@@ -23,6 +23,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import SaveToHotSheetDialog from "@/components/SaveToHotSheetDialog";
 import { listingEffectiveNumericPrice } from "@/lib/formatListingPriceDisplay";
 import { applyListingPriceOverlapFilter } from "@/lib/applyListingPriceOverlapFilter";
+import { LISTING_DEFAULT_SORT_COLUMN } from "@/lib/listingRecencySort";
 import {
   listingAgentContactFromRow,
   listingEmailSubjectFromRow,
@@ -79,7 +80,7 @@ const ListingSearchResults = () => {
   
   const [listings, setListings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [sortColumn, setSortColumn] = useState("list_date");
+  const [sortColumn, setSortColumn] = useState(LISTING_DEFAULT_SORT_COLUMN);
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
 
   // Command bar state (lifted from ListingResultsTable)
@@ -184,7 +185,8 @@ const ListingSearchResults = () => {
         property_type, agent_id, lot_size, year_built, garage_spaces,
         total_parking_spaces, description, photos, neighborhood, open_houses,
         property_styles, num_fireplaces, virtual_tour_url, video_url,
-        documents, floors, active_date, condo_details, price_range_min, price_range_max
+        documents, floors, active_date, condo_details, price_range_min, price_range_max,
+        created_at
       `)
       .limit(500);
 
@@ -233,7 +235,7 @@ const ListingSearchResults = () => {
       if (sortColumn !== "price") {
         query = query.order(sortColumn, { ascending, nullsFirst: false });
       } else {
-        query = query.order("list_date", { ascending: false, nullsFirst: false });
+        query = query.order(LISTING_DEFAULT_SORT_COLUMN, { ascending: false, nullsFirst: false });
       }
 
       const { data, error } = await query;
@@ -330,6 +332,8 @@ const ListingSearchResults = () => {
 
   const sortSelectValue =
     ({
+      created_at_desc: "date_new",
+      created_at_asc: "date_old",
       list_date_desc: "date_new",
       list_date_asc: "date_old",
       price_desc: "price_high",
@@ -340,14 +344,14 @@ const ListingSearchResults = () => {
 
   const handleSortSelect = (value: string) => {
     const colDir: Record<string, [string, "asc" | "desc"]> = {
-      date_new: ["list_date", "desc"],
-      date_old: ["list_date", "asc"],
+      date_new: [LISTING_DEFAULT_SORT_COLUMN, "desc"],
+      date_old: [LISTING_DEFAULT_SORT_COLUMN, "asc"],
       price_high: ["price", "desc"],
       price_low: ["price", "asc"],
       sqft: ["square_feet", "desc"],
       beds: ["bedrooms", "desc"],
     };
-    const [col, dir] = colDir[value] ?? ["list_date", "desc"];
+    const [col, dir] = colDir[value] ?? [LISTING_DEFAULT_SORT_COLUMN, "desc"];
     setSortColumn(col);
     setSortDirection(dir);
   };
