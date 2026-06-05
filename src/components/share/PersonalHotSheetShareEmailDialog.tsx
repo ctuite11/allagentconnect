@@ -76,7 +76,6 @@ export function PersonalHotSheetShareEmailDialog({
           setAgentFirstName(sender.firstName);
           setAgentName(sender.name);
           setAgentEmail(sender.email);
-          setAgentPhone(sender.phone);
         }
       } else {
         setAgentFirstName("");

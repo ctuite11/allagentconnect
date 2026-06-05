@@ -74,7 +74,6 @@ export const ShareListingDialog = ({
         if (sender) {
           setAgentName(sender.name);
           setAgentEmail(sender.email);
-          setAgentPhone(sender.phone);
         }
       } else {
         setAgentName("");

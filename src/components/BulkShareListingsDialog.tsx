@@ -75,7 +75,6 @@ export function BulkShareListingsDialog({
         if (sender) {
           setAgentName(sender.name);
           setAgentEmail(sender.email);
-          setAgentPhone(sender.phone);
         }
       } else {
         setAgentName("");

@@ -60,7 +60,6 @@ const ContactAgentProfileDialog = ({
         ...prev,
         sender_name: initialSender.name || prev.sender_name,
         sender_email: initialSender.email || prev.sender_email,
-        sender_phone: initialSender.phone ?? prev.sender_phone,
       }));
       return;
     }
@@ -72,7 +71,6 @@ const ContactAgentProfileDialog = ({
       ...prev,
       sender_name: sender.name || prev.sender_name,
       sender_email: sender.email || prev.sender_email,
-      sender_phone: sender.phone || prev.sender_phone,
     }));
   }, [initialSender]);
 

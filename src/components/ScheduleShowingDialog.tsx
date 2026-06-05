@@ -91,7 +91,6 @@ const ScheduleShowingDialog = ({
           ...prev,
           requester_name: sender?.name ?? "",
           requester_email: sender?.email ?? "",
-          requester_phone: sender?.phone ?? prev.requester_phone,
         }));
       }
     })();

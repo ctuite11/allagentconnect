@@ -86,7 +86,6 @@ const ContactAgentDialog = ({
           ...prev,
           sender_name: sender?.name ?? "",
           sender_email: sender?.email ?? "",
-          sender_phone: sender?.phone ?? prev.sender_phone,
         }));
       }
     })();
