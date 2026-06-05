@@ -271,7 +271,11 @@ export function renderEmailListingCard(
   const addressRow = fullAddress
     ? `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:14px 0 0;">
          <tr>
-           <td width="18" valign="top" style="padding:2px 8px 0 0;font-size:14px;line-height:1.35;color:${AAC_EMERALD};">&#9679;</td>
+           <td width="18" valign="top" style="padding:2px 6px 0 0;line-height:0;">
+             <img src="data:image/svg+xml;utf8,${encodeURIComponent(
+               `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${AAC_EMERALD}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>`,
+             )}" width="14" height="14" alt="" style="display:block;width:14px;height:14px;border:0;outline:none;" />
+           </td>
            <td valign="top" style="font-size:14px;line-height:1.4;color:#171717;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${escapeHtml(fullAddress)}</td>
          </tr>
        </table>`
