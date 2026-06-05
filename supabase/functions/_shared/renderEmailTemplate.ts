@@ -68,17 +68,7 @@ export function renderEmailTemplate(
       const agentEmail = variables.agentEmail || "";
       const agentPhone = variables.agentPhone || "";
       const listing = variables.listing || variables;
-      const description = listing.description ? String(listing.description) : "";
-      const yearBuilt = listing.yearBuilt ?? listing.year_built;
       const card = renderListingShareCard(listing);
-      const detailRows: string[] = [];
-      if (yearBuilt) detailRows.push(`<tr><td style="padding:4px 0;color:#64748b;font-size:13px;">Year Built</td><td style="padding:4px 0 4px 12px;font-weight:600;color:#0f172a;font-size:14px;">${yearBuilt}</td></tr>`);
-      const detailsBlock = detailRows.length
-        ? `<table role="presentation" cellspacing="0" cellpadding="0" style="margin:0 0 16px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${detailRows.join("")}</table>`
-        : "";
-      const descBlock = description
-        ? `<p style="margin:0 0 16px;font-size:14px;color:#334155;line-height:1.6;">${description.replace(/\n/g, "<br>")}</p>`
-        : "";
 
       return buildAacEmail({
         headline: "A Property Has Been Shared With You",
@@ -87,8 +77,6 @@ export function renderEmailTemplate(
           <p style="margin:0 0 14px;">Hi ${recipientName},</p>
           <p style="margin:0 0 18px;">${agentName} thought you might be interested in this property:</p>
           ${card}
-          ${detailsBlock}
-          ${descBlock}
           ${renderPersonalMessage(variables.message)}
           ${renderAgentContactBlock({ agentName, agentEmail, agentPhone })}`,
         ctaLabel: variables.listingUrl ? "View Property" : undefined,

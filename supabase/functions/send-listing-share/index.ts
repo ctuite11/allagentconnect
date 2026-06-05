@@ -105,8 +105,6 @@ const handler = async (req: Request): Promise<Response> => {
               listing_brokerage: listing.listing_brokerage,
               list_office: listing.list_office,
               listing_agent_name: listing.listing_agent_name,
-              yearBuilt: listing.year_built,
-              description: listing.description,
               photoUrl: primaryPhoto,
             },
           },
