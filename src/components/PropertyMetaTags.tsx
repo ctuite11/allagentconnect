@@ -5,7 +5,9 @@ interface PropertyMetaTagsProps {
   address: string;
   city: string;
   state: string;
-  price: number;
+  /** Pre-formatted price; falls back to numeric `price` when omitted. */
+  priceDisplay?: string | null;
+  price?: number | null;
   bedrooms: number | null;
   bathrooms: number | null;
   description: string | null;
@@ -18,6 +20,7 @@ export const PropertyMetaTags = ({
   address,
   city,
   state,
+  priceDisplay,
   price,
   bedrooms,
   bathrooms,
@@ -27,9 +30,15 @@ export const PropertyMetaTags = ({
   listingId,
 }: PropertyMetaTagsProps) => {
   const title = `${address}, ${city}, ${state} - All Agent Connect`;
-  const priceText = listingType === 'for_rent' 
-    ? `$${price.toLocaleString()}/month` 
-    : `$${price.toLocaleString()}`;
+  const basePrice =
+    priceDisplay ??
+    (price != null && price > 0 ? `$${price.toLocaleString()}` : null);
+  const priceText =
+    basePrice == null
+      ? "Price on request"
+      : listingType === "for_rent"
+        ? `${basePrice}/month`
+        : basePrice;
   
   const metaDescription = description 
     ? `${priceText} - ${bedrooms} bed, ${bathrooms} bath. ${description.substring(0, 120)}...`

@@ -45,7 +45,7 @@ import {
 import AddressAutocomplete from "@/components/AddressAutocomplete";
 import { normalizeGooglePlace } from "@/lib/google-address";
 import { checkDuplicateListing, isLiveStatus } from "@/lib/checkDuplicateListing";
-import { dcmlsPublishSnapshot } from "@/lib/dcmlsPublishPayload";
+import { dcmlsPublishSnapshot, dcmlsShowOnFromRecord } from "@/lib/dcmlsPublishPayload";
 import { Seo } from "@/components/Seo";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -785,7 +785,7 @@ const AddListing = () => {
           fiscal_year: (data as any).fiscal_year?.toString() || "",
           residential_exemption: (data as any).residential_exemption || "",
           // Preserve existing DB publish state when editing to avoid accidental resets.
-          show_on_dcmls: false,
+          show_on_dcmls: dcmlsShowOnFromRecord(data as { publish_to_dcmls?: boolean; dcmls_status?: string | null }),
         }));
         
         // Load photos from database
@@ -1959,11 +1959,7 @@ const AddListing = () => {
 
   const handleRemoveFile = (id: string, type: 'photos' | 'floorplans' | 'documents') => {
     if (type === 'photos') {
-      setPhotos(prev => {
-        const file = prev.find(f => f.id === id);
-        if (file?.preview) URL.revokeObjectURL(file.preview);
-        return prev.filter(f => f.id !== id);
-      });
+      void handleRemovePhoto(id);
     } else if (type === 'floorplans') {
       setFloorPlans(prev => {
         const file = prev.find(f => f.id === id);
@@ -1976,6 +1972,38 @@ const AddListing = () => {
         if (file?.preview) URL.revokeObjectURL(file.preview);
         return prev.filter((f) => f.id !== id);
       });
+    }
+  };
+
+  const handleRemovePhoto = async (id: string) => {
+    const removed = photos.find((p) => p.id === id);
+    if (removed?.preview && removed.preview.startsWith("blob:")) {
+      URL.revokeObjectURL(removed.preview);
+    }
+
+    const updatedPhotos = photos.filter((p) => p.id !== id);
+    setPhotos(updatedPhotos);
+
+    const targetListingId = listingId || draftId;
+    if (!targetListingId) return;
+
+    const dbPhotos = updatedPhotos
+      .filter((p) => p.uploaded && p.url)
+      .map((photo, index) => ({
+        url: photo.url!,
+        order: index,
+      }));
+
+    try {
+      const { error } = await supabase
+        .from("listings")
+        .update({ photos: dbPhotos })
+        .eq("id", targetListingId);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error("[AddListing] Error removing photo:", { listingId: targetListingId, error });
+      toast.error("Could not remove photo. Please try again.");
     }
   };
 
@@ -3169,7 +3197,14 @@ const AddListing = () => {
                 <div className="min-w-0 flex-1">
                   <div className="mb-1 flex flex-wrap items-center gap-2">
                     <h3 className={agentSectionTitle}>Publish to DCMLS?</h3>
-                    <span className="inline-flex rounded-md border border-zinc-200 bg-zinc-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-500">
+                    <span
+                      className={cn(
+                        "inline-flex rounded-md border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+                        formData.status === LISTING_STATUS.COMING_SOON || formData.show_on_dcmls
+                          ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+                          : "border-zinc-200 bg-zinc-50 text-zinc-500",
+                      )}
+                    >
                       Coming soon
                     </span>
                   </div>
@@ -3372,6 +3407,16 @@ const AddListing = () => {
                         This is a final state. Status and price cannot be changed.
                       </p>
                     )}
+                    {formData.status === LISTING_STATUS.COMING_SOON && (
+                      <div className="mt-2 space-y-1.5 rounded-lg border border-emerald-200/70 bg-emerald-50/40 px-3 py-2">
+                        <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200/90 bg-white px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-800">
+                          Coming Soon
+                        </span>
+                        <p className="text-xs leading-snug text-emerald-900/80">
+                          This status sets when the listing goes public on MLS and DCMLS. Use your On MLS Date below for the go-live timing.
+                        </p>
+                      </div>
+                    )}
                   </div>
 
                   <div className="space-y-2">
@@ -3441,7 +3486,7 @@ const AddListing = () => {
                         required
                       />
                       <p className="text-xs text-muted-foreground">
-                        On this date, the system will automatically change the status from Coming Soon to On MLS.
+                        On this date, the listing goes live on MLS and DCMLS — status changes from Coming Soon to On MLS.
                       </p>
                     </div>
                   )}
@@ -3462,65 +3507,6 @@ const AddListing = () => {
                 {/* Address Section */}
                 <div className="space-y-4">
                   <Label className={agentSectionTitle}>Property location</Label>
-                  
-                  {/* ATTOM Verification Status - context-aware */}
-                  {/* Show green success ONLY if: verified, not stale, AND not a condo missing unit */}
-                  {publicRecordStatus === 'success' && !isAttomVerificationStale && !isCondoMissingUnit && (
-                    <div className="flex items-center gap-2 rounded-lg border border-emerald-200/90 bg-white p-2.5 text-sm text-emerald-900 shadow-[inset_0_1px_0_rgba(0,0,0,0.02)]">
-                      <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" aria-hidden />
-                      <span>Public record data loaded successfully.</span>
-                    </div>
-                  )}
-                  
-                  {/* Condo missing unit number warning - prompt user to enter unit */}
-                  {isCondoMissingUnit && (
-                    <div className="flex items-start gap-2 rounded-lg border border-amber-200/90 bg-white p-3 text-sm text-amber-950 shadow-[inset_0_1px_0_rgba(0,0,0,0.02)]">
-                      <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-700" aria-hidden />
-                      <span>Unit number required to retrieve condo records. Please enter the unit number below.</span>
-                    </div>
-                  )}
-                  
-                  {/* Stale verification warning - Condo switch specific */}
-                  {isAttomVerificationStale && isSwitchedToCondo && !isCondoMissingUnit && (
-                    <div className="flex flex-col gap-3 rounded-lg border border-amber-200/90 bg-white p-3 text-sm text-amber-950 shadow-[inset_0_1px_0_rgba(0,0,0,0.02)] sm:flex-row sm:items-center sm:justify-between">
-                      <div className="flex min-w-0 items-start gap-2">
-                        <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-700" aria-hidden />
-                        <span>Condo selected — please re-verify address to load unit-level data.</span>
-                      </div>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={handleManualAttomLookup}
-                        disabled={!ATTOM_ENABLED || autoFillLoading}
-                        className="shrink-0 border-zinc-200 text-amber-900 hover:bg-zinc-50"
-                      >
-                        <RefreshCw className="h-3 w-3 mr-1" />
-                        Re-verify
-                      </Button>
-                    </div>
-                  )}
-                  
-                  {/* Stale verification warning - General field change */}
-                  {isAttomVerificationStale && !isSwitchedToCondo && !isCondoMissingUnit && (
-                    <div className="flex flex-col gap-3 rounded-lg border border-amber-200/90 bg-white p-3 text-sm text-amber-950 shadow-[inset_0_1px_0_rgba(0,0,0,0.02)] sm:flex-row sm:items-center sm:justify-between">
-                      <div className="flex min-w-0 items-start gap-2">
-                        <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-700" aria-hidden />
-                        <span>Address fields changed — verification data may be outdated.</span>
-                      </div>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={handleManualAttomLookup}
-                        disabled={!ATTOM_ENABLED || autoFillLoading}
-                        className="shrink-0 border-zinc-200 text-amber-900 hover:bg-zinc-50"
-                      >
-                        <RefreshCw className="h-3 w-3 mr-1" />
-                        Re-verify
-                      </Button>
-                    </div>
-                  )}
                   
                   {/* Street Address + Unit # */}
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -5069,8 +5055,8 @@ const AddListing = () => {
                           {photos.length} photo{photos.length !== 1 ? 's' : ''} uploaded
                         </p>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                          {photos.slice(0, 4).map((photo, index) => (
-                            <div key={photo.id} className="relative aspect-video overflow-hidden rounded-lg border border-zinc-200/90 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+                          {photos.map((photo, index) => (
+                            <div key={photo.id} className="group relative aspect-video overflow-hidden rounded-lg border border-zinc-200/90 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
                               <img 
                                 src={photo.preview || photo.url} 
                                 alt={`Photo ${index + 1}`}
@@ -5081,14 +5067,17 @@ const AddListing = () => {
                                   Main
                                 </span>
                               )}
+                              <button
+                                type="button"
+                                aria-label={`Remove photo ${index + 1}`}
+                                onClick={() => handleRemovePhoto(photo.id)}
+                                className="absolute right-1 top-1 z-10 rounded-full bg-black/55 p-1 text-white transition-colors hover:bg-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400"
+                              >
+                                <X className="h-3.5 w-3.5" aria-hidden />
+                              </button>
                             </div>
                           ))}
                         </div>
-                        {photos.length > 4 && (
-                          <p className="text-sm text-muted-foreground">
-                            +{photos.length - 4} more photo{photos.length - 4 !== 1 ? 's' : ''}
-                          </p>
-                        )}
                       </div>
                     ) : (
                       <p className="text-sm text-muted-foreground">

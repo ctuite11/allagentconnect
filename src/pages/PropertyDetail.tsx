@@ -77,6 +77,7 @@ import ScheduleShowingDialog from "@/components/ScheduleShowingDialog";
 import FavoriteButton from "@/components/FavoriteButton";
 import PropertyMap from "@/components/PropertyMap";
 import { getListingPublicUrl, getListingShareUrl } from "@/lib/getPublicUrl";
+import { formatListingPriceDisplay, listingEffectiveNumericPrice } from "@/lib/formatListingPriceDisplay";
 import { parseDisclosures, cleanBrokerComments, isEmptyValue } from "@/lib/listingFieldParsers";
 import { buildMessageReturnState, messagesPathForRole } from "@/lib/messageNavigation";
 import { findOrCreateConversation } from "@/lib/startConversation";
@@ -532,6 +533,8 @@ const PropertyDetail = () => {
 
   const compensationDisplay = getCompensationDisplay();
 
+  const listingPriceDisplay = formatListingPriceDisplay(listing) ?? "—";
+
   const listDate = listing.active_date || listing.created_at;
   const daysOnMarket = listDate
     ? Math.ceil((new Date().getTime() - new Date(listDate).getTime()) / (1000 * 60 * 60 * 24))
@@ -607,8 +610,8 @@ const PropertyDetail = () => {
         title={`${listing.address}, ${listing.city}, ${listing.state}`}
         description={
           listing.description
-            ? `$${listing.price?.toLocaleString() ?? "—"} — ${listing.bedrooms ?? "—"} bed, ${listing.bathrooms ?? "—"} bath. ${listing.description.substring(0, 120)}…`
-            : `$${listing.price?.toLocaleString() ?? "—"} — ${listing.bedrooms ?? "—"} bed, ${listing.bathrooms ?? "—"} bath in ${listing.city}, ${listing.state}`
+            ? `${listingPriceDisplay} — ${listing.bedrooms ?? "—"} bed, ${listing.bathrooms ?? "—"} bath. ${listing.description.substring(0, 120)}…`
+            : `${listingPriceDisplay} — ${listing.bedrooms ?? "—"} bed, ${listing.bathrooms ?? "—"} bath in ${listing.city}, ${listing.state}`
         }
         image={mainPhoto || undefined}
         canonical={`${getPublicOrigin()}/property/${id}`}
@@ -622,7 +625,7 @@ const PropertyDetail = () => {
           ...(mainPhoto ? { image: mainPhoto } : {}),
           offers: {
             "@type": "Offer",
-            price: listing.price,
+            price: listingEffectiveNumericPrice(listing) ?? undefined,
             priceCurrency: "USD",
           },
           address: {
@@ -657,7 +660,7 @@ const PropertyDetail = () => {
             <PropertyHeader
               embedded
               address={buildDisplayAddress(listing as any)}
-              price={listing?.price ?? null}
+              priceDisplay={listingPriceDisplay}
               priceSuffix={listing.listing_type === "for_rent" ? "/ mo" : undefined}
               className="order-1 mb-2 min-w-0 lg:col-start-1 lg:row-start-1 lg:mb-3"
             />

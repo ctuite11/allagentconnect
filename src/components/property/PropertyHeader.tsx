@@ -11,7 +11,8 @@ import {
 
 interface PropertyHeaderProps {
   address: React.ReactNode;
-  price: number | null | undefined;
+  /** Pre-formatted price label, e.g. `$900,000 – $1,050,000` */
+  priceDisplay?: string | null;
   /** e.g. "/ mo" for rentals; appended after price */
   priceSuffix?: React.ReactNode;
   className?: string;
@@ -21,9 +22,9 @@ interface PropertyHeaderProps {
 
 function PropertyHeaderRow({
   address,
-  price,
+  priceDisplay,
   priceSuffix,
-}: Pick<PropertyHeaderProps, "address" | "price" | "priceSuffix">) {
+}: Pick<PropertyHeaderProps, "address" | "priceDisplay" | "priceSuffix">) {
   return (
     <div className={cn(propertyHeaderRow, "w-full")}>
       <h1 className={cn(propertyAddressH1, "min-w-0 flex-1")}>
@@ -31,7 +32,7 @@ function PropertyHeaderRow({
         {address}
       </h1>
       <p className={cn(propertyPriceText, "shrink-0 text-right tabular-nums")}>
-        ${price?.toLocaleString() ?? "—"}
+        {priceDisplay ?? "—"}
         {priceSuffix && (
           <span className="ml-1 text-sm font-normal text-muted-foreground">
             {priceSuffix}
@@ -47,7 +48,7 @@ function PropertyHeaderRow({
  */
 export function PropertyHeader({
   address,
-  price,
+  priceDisplay,
   priceSuffix,
   className,
   embedded = false,
@@ -55,7 +56,7 @@ export function PropertyHeader({
   if (embedded) {
     return (
       <div className={className}>
-        <PropertyHeaderRow address={address} price={price} priceSuffix={priceSuffix} />
+        <PropertyHeaderRow address={address} priceDisplay={priceDisplay} priceSuffix={priceSuffix} />
       </div>
     );
   }
@@ -63,7 +64,7 @@ export function PropertyHeader({
   return (
     <div className={cn(propertyPageContainer, "pb-2", className)}>
       <div className={cn(propertyMediaCol, "w-full")}>
-        <PropertyHeaderRow address={address} price={price} priceSuffix={priceSuffix} />
+        <PropertyHeaderRow address={address} priceDisplay={priceDisplay} priceSuffix={priceSuffix} />
       </div>
     </div>
   );

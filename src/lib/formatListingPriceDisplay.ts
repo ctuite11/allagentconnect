@@ -28,7 +28,7 @@ function positiveOrNull(n: unknown): number | null {
  * Human-readable price or range for cards (no `$0` when empty).
  * - Both range ends → `$350,000 – $425,000`
  * - Else single `price` → one amount
- * - Else one range end only → that amount
+ * - Partial range (only min or max) → omitted
  */
 export function formatListingPriceDisplay(listing: ListingPriceFields): string | null {
   const price = positiveOrNull(listing.price);
@@ -40,8 +40,6 @@ export function formatListingPriceDisplay(listing: ListingPriceFields): string |
     const hi = Math.max(min, max);
     return `${usdWhole(lo)} – ${usdWhole(hi)}`;
   }
-  if (min != null) return usdWhole(min);
-  if (max != null) return usdWhole(max);
   return null;
 }
 

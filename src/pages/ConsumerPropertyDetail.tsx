@@ -75,6 +75,7 @@ import ScheduleShowingDialog from "@/components/ScheduleShowingDialog";
 import PropertyMap from "@/components/PropertyMap";
 import AdBanner from "@/components/AdBanner";
 import { getListingPublicUrl, getListingShareUrl } from "@/lib/getPublicUrl";
+import { formatListingPriceDisplay } from "@/lib/formatListingPriceDisplay";
 import { getStatusConfig } from "@/constants/status";
 import { syncStickyFromDB } from "@/utils/agentTracking";
 import { findOrCreateConversation } from "@/lib/startConversation";
@@ -382,6 +383,8 @@ const ConsumerPropertyDetail = () => {
     ? getPhotoUrl(listing.photos[currentPhotoIndex])
     : '/placeholder.svg';
 
+  const listingPriceDisplay = formatListingPriceDisplay(listing) ?? "—";
+
   const listDate = listing.active_date || listing.created_at;
   const daysOnMarket = listDate
     ? Math.ceil((new Date().getTime() - new Date(listDate).getTime()) / (1000 * 60 * 60 * 24))
@@ -448,6 +451,7 @@ const ConsumerPropertyDetail = () => {
         address={listing.address}
         city={listing.city}
         state={listing.state}
+        priceDisplay={listingPriceDisplay}
         price={listing.price}
         bedrooms={listing.bedrooms}
         bathrooms={listing.bathrooms}
@@ -497,7 +501,7 @@ const ConsumerPropertyDetail = () => {
             <PropertyHeader
               embedded
               address={buildDisplayAddress(listing as any)}
-              price={listing?.price ?? null}
+              priceDisplay={listingPriceDisplay}
               priceSuffix={listing.listing_type === 'for_rent' ? '/ mo' : undefined}
               className="order-1 mb-2 min-w-0 lg:col-start-1 lg:row-start-1 lg:mb-3"
             />
