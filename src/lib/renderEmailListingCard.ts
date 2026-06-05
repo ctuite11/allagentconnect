@@ -6,6 +6,7 @@
 import { listingCardStreetHeading, type ListingAddressUnitSource } from "@/lib/utils";
 
 const AAC_PRIMARY_BLUE = "#0E56F5";
+const AAC_EMERALD = "#22C55E";
 
 export type EmailListingCardListing = ListingAddressUnitSource & {
   id?: string | null;
@@ -28,6 +29,9 @@ export type EmailListingCardListing = ListingAddressUnitSource & {
   description?: string | null;
   photos?: unknown;
   photoUrl?: string | null;
+  features?: unknown;
+  tags?: unknown;
+  waterfront?: unknown;
 };
 
 export interface RenderEmailListingCardOptions {
