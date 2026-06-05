@@ -1,18 +1,29 @@
-import { useCallback, useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { FormattedInput } from "@/components/ui/formatted-input";
-import { Clock, Calendar } from "lucide-react";
+import { Calendar } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useSenderProfilePrefill } from "@/lib/currentSenderProfile";
+import { getCurrentSenderProfile } from "@/lib/currentSenderProfile";
 import { formatListingEmailSubjectLocation } from "@/lib/listingEmailSubject";
 import { getPrimaryPhotoUrl } from "@/components/buyer/buyerListingDisplay";
+import { fetchListingPreview } from "@/lib/fetchListingPreview";
+import { ListingPreviewCard } from "@/components/share/ListingPreviewCard";
+import type { ListingPreview } from "@/components/share/ShareListingsDialog";
+import { cn } from "@/lib/utils";
 
 const showingRequestSchema = z.object({
   requester_name: z.string().trim().min(1, "Please enter your name").max(100),
@@ -23,6 +34,9 @@ const showingRequestSchema = z.object({
   message: z.string().trim().max(1000).optional(),
 });
 
+const INPUT_CLASS =
+  "border-neutral-200/90 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.03)] focus-visible:!border-neutral-300 focus-visible:ring-1 focus-visible:!ring-neutral-200/70 focus-visible:ring-offset-0";
+
 interface ScheduleShowingDialogProps {
   listingId: string;
   listingAddress: string;
@@ -30,6 +44,12 @@ interface ScheduleShowingDialogProps {
   triggerClassName?: string;
   triggerVariant?: "default" | "outline" | "secondary";
 }
+
+const TIME_OPTIONS = [
+  "08:00", "08:30", "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
+  "12:00", "12:30", "13:00", "13:30", "14:00", "14:30", "15:00", "15:30",
+  "16:00", "16:30", "17:00", "17:30", "18:00", "18:30", "19:00",
+];
 
 const ScheduleShowingDialog = ({
   listingId,
@@ -40,6 +60,8 @@ const ScheduleShowingDialog = ({
 }: ScheduleShowingDialogProps) => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [listingPreview, setListingPreview] = useState<ListingPreview | undefined>();
   const [formData, setFormData] = useState({
     requester_name: "",
     requester_email: "",
@@ -50,24 +72,57 @@ const ScheduleShowingDialog = ({
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const applySender = useCallback((sender: { name: string; email: string; phone: string }) => {
-    setFormData((prev) => ({
-      ...prev,
-      requester_email: sender.email || prev.requester_email,
-      requester_phone: sender.phone || prev.requester_phone,
-    }));
-  }, []);
+  useEffect(() => {
+    if (!open) return;
 
-  useSenderProfilePrefill(open, applySender, "auto");
+    void (async () => {
+      const preview = await fetchListingPreview(listingId);
+      setListingPreview(preview);
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      const loggedIn = Boolean(user);
+      setIsLoggedIn(loggedIn);
+
+      if (loggedIn) {
+        const sender = await getCurrentSenderProfile({ source: "auto" });
+        setFormData((prev) => ({
+          ...prev,
+          requester_name: sender?.name ?? "",
+          requester_email: sender?.email ?? "",
+          requester_phone: sender?.phone ?? prev.requester_phone,
+        }));
+      }
+    })();
+  }, [open, listingId]);
+
+  const resetForm = () => {
+    setFormData({
+      requester_name: "",
+      requester_email: "",
+      requester_phone: "",
+      preferred_date: "",
+      preferred_time: "",
+      message: "",
+    });
+    setErrors({});
+    setListingPreview(undefined);
+    setIsLoggedIn(false);
+  };
+
+  const handleOpenChange = (next: boolean) => {
+    if (!next) resetForm();
+    setOpen(next);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrors({});
 
     try {
-      // Validate form data
       const validatedData = showingRequestSchema.parse(formData);
-      
+
       setLoading(true);
 
       const { error } = await supabase.from("showing_requests").insert([{
@@ -82,7 +137,6 @@ const ScheduleShowingDialog = ({
 
       if (error) throw error;
 
-      // Fetch listing details
       const { data: listingData } = await supabase
         .from("listings")
         .select("agent_id, address, city, state, photos, unit_number, condo_details, property_type")
@@ -90,18 +144,16 @@ const ScheduleShowingDialog = ({
         .single();
 
       if (listingData) {
-      // Fetch agent details from agent_profiles (publicly readable)
-      const { data: agentData } = await supabase
-        .from("agent_profiles")
-        .select("email, first_name, last_name")
-        .eq("id", listingData.agent_id)
-        .maybeSingle();
+        const { data: agentData } = await supabase
+          .from("agent_profiles")
+          .select("email, first_name, last_name")
+          .eq("id", listingData.agent_id)
+          .maybeSingle();
 
         if (agentData) {
           const fullAddress = formatListingEmailSubjectLocation(listingData);
           const photoUrl = getPrimaryPhotoUrl(listingData.photos) ?? undefined;
-          
-          // Send email notification to agent
+
           try {
             await supabase.functions.invoke("send-showing-request-email", {
               body: {
@@ -119,22 +171,13 @@ const ScheduleShowingDialog = ({
             });
           } catch (emailError) {
             console.error("Failed to send email notification:", emailError);
-            // Don't block the user experience if email fails
           }
         }
       }
 
       toast.success("Showing request submitted successfully! The agent will contact you soon.");
-      setOpen(false);
-      setFormData({
-        requester_name: "",
-        requester_email: "",
-        requester_phone: "",
-        preferred_date: "",
-        preferred_time: "",
-        message: "",
-      });
-    } catch (error: any) {
+      handleOpenChange(false);
+    } catch (error: unknown) {
       if (error instanceof z.ZodError) {
         const newErrors: Record<string, string> = {};
         error.errors.forEach((err) => {
@@ -152,128 +195,148 @@ const ScheduleShowingDialog = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button size="lg" variant={triggerVariant} className={`gap-2 ${triggerClassName || ""}`}>
           <Calendar className="h-5 w-5" />
           {triggerLabel}
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>Schedule a Showing</DialogTitle>
-          <DialogDescription>
-            Request to schedule a showing for {listingAddress}
-          </DialogDescription>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="requester_name">Name</Label>
-            <Input
-              id="requester_name"
-              value={formData.requester_name}
-              onChange={(e) => setFormData({ ...formData, requester_name: e.target.value })}
-              placeholder="Your full name"
-              maxLength={100}
-              autoComplete="off"
-            />
-            {errors.requester_name && <p className="text-sm text-destructive">{errors.requester_name}</p>}
-          </div>
+      <DialogContent className="flex max-h-[90vh] flex-col gap-0 overflow-hidden rounded-xl border border-neutral-200 bg-white p-0 shadow-[0_4px_24px_rgba(0,0,0,0.08)] sm:max-w-xl">
+        <div className="shrink-0 border-b border-neutral-200 bg-white px-4 py-3 sm:px-5">
+          <DialogHeader className="space-y-0.5 pr-8">
+            <DialogTitle className="text-base font-semibold tracking-tight text-neutral-900 sm:text-[17px]">
+              Schedule a Showing
+            </DialogTitle>
+            <DialogDescription className="text-[13px] leading-snug text-neutral-600">
+              Request a showing for {listingAddress}
+            </DialogDescription>
+          </DialogHeader>
+        </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="requester_email">Email</Label>
-            <Input
-              id="requester_email"
-              type="email"
-              value={formData.requester_email}
-              onChange={(e) => setFormData({ ...formData, requester_email: e.target.value })}
-              placeholder="your@email.com"
-              maxLength={255}
-            />
-            {errors.requester_email && <p className="text-sm text-destructive">{errors.requester_email}</p>}
-          </div>
+        <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
+          <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-3 sm:px-5">
+            {listingPreview ? <ListingPreviewCard preview={listingPreview} /> : null}
 
-          <div className="space-y-2">
-            <Label htmlFor="requester_phone">Phone</Label>
-            <FormattedInput
-              id="requester_phone"
-              format="phone"
-              value={formData.requester_phone}
-              onChange={(value) => setFormData({ ...formData, requester_phone: value })}
-              placeholder="1234567890"
-            />
-          </div>
+            {!isLoggedIn ? (
+              <>
+                <div className="space-y-1">
+                  <div className="text-xs font-medium text-neutral-700">
+                    Your name <span className="text-neutral-400">*</span>
+                  </div>
+                  <Input
+                    id="requester_name"
+                    value={formData.requester_name}
+                    onChange={(e) => setFormData({ ...formData, requester_name: e.target.value })}
+                    placeholder="Your full name"
+                    maxLength={100}
+                    autoComplete="off"
+                    className={cn("h-9 rounded-lg text-[13px] text-neutral-900", INPUT_CLASS)}
+                  />
+                  {errors.requester_name ? (
+                    <p className="text-sm text-destructive">{errors.requester_name}</p>
+                  ) : null}
+                </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="preferred_date">Preferred Date</Label>
-              <Input
-                id="preferred_date"
-                type="date"
-                value={formData.preferred_date}
-                onChange={(e) => setFormData({ ...formData, preferred_date: e.target.value })}
-                min={new Date().toISOString().split('T')[0]}
+                <div className="space-y-1">
+                  <div className="text-xs font-medium text-neutral-700">
+                    Your email <span className="text-neutral-400">*</span>
+                  </div>
+                  <Input
+                    id="requester_email"
+                    type="email"
+                    value={formData.requester_email}
+                    onChange={(e) => setFormData({ ...formData, requester_email: e.target.value })}
+                    placeholder="your@email.com"
+                    maxLength={255}
+                    className={cn("h-9 rounded-lg text-[13px] text-neutral-900", INPUT_CLASS)}
+                  />
+                  {errors.requester_email ? (
+                    <p className="text-sm text-destructive">{errors.requester_email}</p>
+                  ) : null}
+                </div>
+              </>
+            ) : null}
+
+            <div className="space-y-1">
+              <div className="text-xs font-medium text-neutral-700">Phone</div>
+              <FormattedInput
+                id="requester_phone"
+                format="phone"
+                value={formData.requester_phone}
+                onChange={(value) => setFormData({ ...formData, requester_phone: value })}
+                placeholder="1234567890"
               />
-              {errors.preferred_date && <p className="text-sm text-destructive">{errors.preferred_date}</p>}
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="preferred_time">Preferred Time</Label>
-              <Select
-                value={formData.preferred_time}
-                onValueChange={(value) => setFormData({ ...formData, preferred_time: value })}
-              >
-                <SelectTrigger id="preferred_time">
-                  <SelectValue placeholder="Select a time" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="08:00">8:00 AM</SelectItem>
-                  <SelectItem value="08:30">8:30 AM</SelectItem>
-                  <SelectItem value="09:00">9:00 AM</SelectItem>
-                  <SelectItem value="09:30">9:30 AM</SelectItem>
-                  <SelectItem value="10:00">10:00 AM</SelectItem>
-                  <SelectItem value="10:30">10:30 AM</SelectItem>
-                  <SelectItem value="11:00">11:00 AM</SelectItem>
-                  <SelectItem value="11:30">11:30 AM</SelectItem>
-                  <SelectItem value="12:00">12:00 PM</SelectItem>
-                  <SelectItem value="12:30">12:30 PM</SelectItem>
-                  <SelectItem value="13:00">1:00 PM</SelectItem>
-                  <SelectItem value="13:30">1:30 PM</SelectItem>
-                  <SelectItem value="14:00">2:00 PM</SelectItem>
-                  <SelectItem value="14:30">2:30 PM</SelectItem>
-                  <SelectItem value="15:00">3:00 PM</SelectItem>
-                  <SelectItem value="15:30">3:30 PM</SelectItem>
-                  <SelectItem value="16:00">4:00 PM</SelectItem>
-                  <SelectItem value="16:30">4:30 PM</SelectItem>
-                  <SelectItem value="17:00">5:00 PM</SelectItem>
-                  <SelectItem value="17:30">5:30 PM</SelectItem>
-                  <SelectItem value="18:00">6:00 PM</SelectItem>
-                  <SelectItem value="18:30">6:30 PM</SelectItem>
-                  <SelectItem value="19:00">7:00 PM</SelectItem>
-                </SelectContent>
-              </Select>
-              {errors.preferred_time && <p className="text-sm text-destructive">{errors.preferred_time}</p>}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <div className="text-xs font-medium text-neutral-700">
+                  Preferred date <span className="text-neutral-400">*</span>
+                </div>
+                <Input
+                  id="preferred_date"
+                  type="date"
+                  value={formData.preferred_date}
+                  onChange={(e) => setFormData({ ...formData, preferred_date: e.target.value })}
+                  min={new Date().toISOString().split("T")[0]}
+                  className={cn("h-9 rounded-lg text-[13px] text-neutral-900", INPUT_CLASS)}
+                />
+                {errors.preferred_date ? (
+                  <p className="text-sm text-destructive">{errors.preferred_date}</p>
+                ) : null}
+              </div>
+
+              <div className="space-y-1">
+                <div className="text-xs font-medium text-neutral-700">
+                  Preferred time <span className="text-neutral-400">*</span>
+                </div>
+                <Select
+                  value={formData.preferred_time}
+                  onValueChange={(value) => setFormData({ ...formData, preferred_time: value })}
+                >
+                  <SelectTrigger id="preferred_time" className={cn("h-9 rounded-lg text-[13px]", INPUT_CLASS)}>
+                    <SelectValue placeholder="Select a time" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {TIME_OPTIONS.map((time) => (
+                      <SelectItem key={time} value={time}>
+                        {new Date(`1970-01-01T${time}`).toLocaleTimeString([], {
+                          hour: "numeric",
+                          minute: "2-digit",
+                        })}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {errors.preferred_time ? (
+                  <p className="text-sm text-destructive">{errors.preferred_time}</p>
+                ) : null}
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <div className="text-xs font-medium text-neutral-700">Additional notes</div>
+              <Textarea
+                id="message"
+                value={formData.message}
+                onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                placeholder="Any specific requests or questions..."
+                rows={3}
+                maxLength={1000}
+                className={cn("min-h-[84px] resize-y rounded-lg text-[13px] text-neutral-900", INPUT_CLASS)}
+              />
+              {errors.message ? <p className="text-sm text-destructive">{errors.message}</p> : null}
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="message">Additional Notes</Label>
-            <Textarea
-              id="message"
-              value={formData.message}
-              onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-              placeholder="Any specific requests or questions..."
-              rows={3}
-              maxLength={1000}
-            />
-            {errors.message && <p className="text-sm text-destructive">{errors.message}</p>}
-          </div>
-
-          <div className="flex justify-end gap-3">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={loading}>
+          <div className="flex shrink-0 items-center justify-end gap-2 border-t border-neutral-200 bg-white px-4 py-3 sm:px-5">
+            <DialogClose asChild>
+              <Button type="button" variant="ghost" size="sm" disabled={loading} className="h-9 rounded-lg text-[13px]">
+                Cancel
+              </Button>
+            </DialogClose>
+            <Button type="submit" size="sm" disabled={loading} className="h-9 rounded-lg text-[13px]">
               {loading ? "Submitting..." : "Submit Request"}
             </Button>
           </div>

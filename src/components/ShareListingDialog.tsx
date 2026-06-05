@@ -2,16 +2,16 @@
  * Single Listing Share Dialog
  * Wrapper around the universal ShareListingsDialog for sharing a single listing.
  */
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Share2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { ShareListingsDialog, Recipient, ListingPreview } from "@/components/share/ShareListingsDialog";
-import { useSenderProfilePrefill } from "@/lib/currentSenderProfile";
+import { getCurrentSenderProfile } from "@/lib/currentSenderProfile";
+import { fetchListingPreview } from "@/lib/fetchListingPreview";
 import { searchClientContacts } from "@/lib/contactSearch";
-import { resolveFirstListingPhotoUrl } from "@/lib/resolveListingPhotoUrl";
 
 interface ShareListingDialogProps {
   listingId: string;
@@ -55,26 +55,45 @@ export const ShareListingDialog = ({
   const [showManualEntry, setShowManualEntry] = useState(false);
   const [listingPreview, setListingPreview] = useState<ListingPreview | undefined>();
   const [recipients, setRecipients] = useState<Recipient[]>([]);
+  const [senderLocked, setSenderLocked] = useState(false);
 
-  const applySender = useCallback((sender: { name: string; email: string; phone: string }) => {
-    setAgentEmail(sender.email);
-    setAgentPhone(sender.phone);
-  }, []);
+  useEffect(() => {
+    if (!open) return;
 
-  useSenderProfilePrefill(
-    open,
-    applySender,
-    senderProfileSource === "buyer" ? "buyer" : "agent",
-  );
+    void (async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      const loggedIn = Boolean(user);
+      setSenderLocked(loggedIn);
+
+      if (loggedIn) {
+        const sender = await getCurrentSenderProfile({
+          source: senderProfileSource === "buyer" ? "buyer" : "auto",
+        });
+        if (sender) {
+          setAgentName(sender.name);
+          setAgentEmail(sender.email);
+          setAgentPhone(sender.phone);
+        }
+      } else {
+        setAgentName("");
+        setAgentEmail("");
+        setAgentPhone("");
+      }
+    })();
+  }, [open, senderProfileSource]);
 
   useEffect(() => {
     if (open) {
-      loadListingPreview();
+      void fetchListingPreview(listingId).then(setListingPreview);
     } else {
       // Reset form when closing
       setRecipientName("");
       setRecipientEmail("");
       setAgentName("");
+      setAgentEmail("");
+      setAgentPhone("");
       setMessage("");
       setClientSearch("");
       setClientResults([]);
@@ -121,30 +140,6 @@ export const ShareListingDialog = ({
     const debounce = setTimeout(searchClients, 300);
     return () => clearTimeout(debounce);
   }, [clientSearch, open, senderProfileSource]);
-
-  const loadListingPreview = async () => {
-    try {
-      const { data } = await supabase
-        .from("listings")
-        .select("address, city, state, zip_code, price, bedrooms, bathrooms, square_feet, photos")
-        .eq("id", listingId)
-        .single();
-
-      if (data) {
-        setListingPreview({
-          address: data.address,
-          cityStateZip: `${data.city}, ${data.state} ${data.zip_code}`,
-          price: data.price ? `$${data.price.toLocaleString()}` : undefined,
-          beds: data.bedrooms ?? undefined,
-          baths: data.bathrooms ?? undefined,
-          sqft: data.square_feet ?? undefined,
-          photoUrl: resolveFirstListingPhotoUrl(data.photos),
-        });
-      }
-    } catch (error) {
-      console.error("Error loading listing preview:", error);
-    }
-  };
 
   const handleSaveContact =
     senderProfileSource === "agent"
@@ -284,6 +279,7 @@ export const ShareListingDialog = ({
         recipients={recipients}
         onAddRecipient={handleAddRecipient}
         onRemoveRecipient={handleRemoveRecipient}
+        lockSenderIdentity={senderLocked}
       />
     </>
   );

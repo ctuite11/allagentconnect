@@ -1,14 +1,14 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Share2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
-import { ShareListingsDialog, Recipient } from "@/components/share/ShareListingsDialog";
-import { useSenderProfilePrefill } from "@/lib/currentSenderProfile";
+import { ShareListingsDialog, Recipient, type ListingPreview } from "@/components/share/ShareListingsDialog";
+import { getCurrentSenderProfile } from "@/lib/currentSenderProfile";
+import { fetchListingPreview } from "@/lib/fetchListingPreview";
 import { cn } from "@/lib/utils";
 import { searchClientContacts } from "@/lib/contactSearch";
-import { resolveFirstListingPhotoUrl } from "@/lib/resolveListingPhotoUrl";
 
 interface BulkShareListingsDialogProps {
   listingIds: string[];
@@ -33,17 +33,6 @@ interface Client {
   phone?: string | null;
 }
 
-interface ListingPreview {
-  address: string;
-  cityStateZip?: string;
-  price?: string;
-  beds?: number;
-  baths?: number;
-  sqft?: number;
-}
-
-// Recipient type imported from ShareListingsDialog
-
 export function BulkShareListingsDialog({
   listingIds,
   listingCount,
@@ -67,26 +56,45 @@ export function BulkShareListingsDialog({
   const [showManualEntry, setShowManualEntry] = useState(false);
   const [listingPreview, setListingPreview] = useState<ListingPreview | undefined>();
   const [recipients, setRecipients] = useState<Recipient[]>([]);
-
-  const applySender = useCallback((sender: { name: string; email: string; phone: string }) => {
-    setAgentEmail(sender.email);
-    setAgentPhone(sender.phone);
-  }, []);
-
-  useSenderProfilePrefill(
-    open,
-    applySender,
-    senderProfileSource === "buyer" ? "buyer" : "agent",
-  );
+  const [senderLocked, setSenderLocked] = useState(false);
 
   useEffect(() => {
-    if (open) {
-      loadListingPreview();
-    } else {
+    if (!open) return;
+
+    void (async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      const loggedIn = Boolean(user);
+      setSenderLocked(loggedIn);
+
+      if (loggedIn) {
+        const sender = await getCurrentSenderProfile({
+          source: senderProfileSource === "buyer" ? "buyer" : "auto",
+        });
+        if (sender) {
+          setAgentName(sender.name);
+          setAgentEmail(sender.email);
+          setAgentPhone(sender.phone);
+        }
+      } else {
+        setAgentName("");
+        setAgentEmail("");
+        setAgentPhone("");
+      }
+    })();
+  }, [open, senderProfileSource]);
+
+  useEffect(() => {
+    if (open && listingIds[0]) {
+      void fetchListingPreview(listingIds[0]).then(setListingPreview);
+    } else if (!open) {
       // Reset form when closing
       setRecipientName("");
       setRecipientEmail("");
       setAgentName("");
+      setAgentEmail("");
+      setAgentPhone("");
       setMessage("");
       setClientSearch("");
       setClientResults([]);
@@ -160,32 +168,6 @@ export function BulkShareListingsDialog({
     const debounce = setTimeout(searchClients, 300);
     return () => clearTimeout(debounce);
   }, [clientSearch]);
-
-  const loadListingPreview = async () => {
-    if (listingIds.length === 0) return;
-
-    try {
-      const { data } = await supabase
-        .from("listings")
-        .select("address, city, state, zip_code, price, bedrooms, bathrooms, square_feet, photos")
-        .eq("id", listingIds[0])
-        .single();
-
-      if (data) {
-        setListingPreview({
-          address: data.address,
-          cityStateZip: `${data.city}, ${data.state} ${data.zip_code}`,
-          price: data.price ? `$${data.price.toLocaleString()}` : undefined,
-          beds: data.bedrooms ?? undefined,
-          baths: data.bathrooms ?? undefined,
-          sqft: data.square_feet ?? undefined,
-          photoUrl: resolveFirstListingPhotoUrl(data.photos),
-        });
-      }
-    } catch (error) {
-      console.error("Error loading listing preview:", error);
-    }
-  };
 
   const collectRecipients = (): Recipient[] => {
     const all = [...recipients];
@@ -294,6 +276,7 @@ export function BulkShareListingsDialog({
         recipients={recipients}
         onAddRecipient={handleAddRecipient}
         onRemoveRecipient={handleRemoveRecipient}
+        lockSenderIdentity={senderLocked}
       />
     </>
   );

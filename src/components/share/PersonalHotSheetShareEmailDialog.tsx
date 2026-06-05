@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { invokeEdgeFunction } from "@/lib/invokeEdgeFunction";
@@ -13,7 +13,7 @@ import {
   type ListingPreview,
   type Recipient,
 } from "@/components/share/ShareListingsDialog";
-import { useSenderProfilePrefill } from "@/lib/currentSenderProfile";
+import { getCurrentSenderProfile } from "@/lib/currentSenderProfile";
 import { searchClientContacts } from "@/lib/contactSearch";
 
 const HOT_SHEET_MESSAGE_CHIPS = [
@@ -58,13 +58,34 @@ export function PersonalHotSheetShareEmailDialog({
   const [showClientDropdown, setShowClientDropdown] = useState(false);
   const [showManualEntry, setShowManualEntry] = useState(false);
   const [recipients, setRecipients] = useState<Recipient[]>([]);
+  const [senderLocked, setSenderLocked] = useState(false);
 
-  const applySender = useCallback((sender: { name: string; firstName: string; email: string; phone: string }) => {
-    setAgentEmail(sender.email);
-    setAgentPhone(sender.phone);
-  }, []);
+  useEffect(() => {
+    if (!open) return;
 
-  useSenderProfilePrefill(open, applySender, "agent");
+    void (async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      const loggedIn = Boolean(user);
+      setSenderLocked(loggedIn);
+
+      if (loggedIn) {
+        const sender = await getCurrentSenderProfile({ source: "agent" });
+        if (sender) {
+          setAgentFirstName(sender.firstName);
+          setAgentName(sender.name);
+          setAgentEmail(sender.email);
+          setAgentPhone(sender.phone);
+        }
+      } else {
+        setAgentFirstName("");
+        setAgentName("");
+        setAgentEmail("");
+        setAgentPhone("");
+      }
+    })();
+  }, [open]);
 
   const selectedCount = selectedListingIds.length;
   const singleListingPreview =
@@ -94,6 +115,8 @@ export function PersonalHotSheetShareEmailDialog({
       setRecipientEmail("");
       setAgentName("");
       setAgentFirstName("");
+      setAgentEmail("");
+      setAgentPhone("");
       setMessage("");
       setClientSearch("");
       setClientResults([]);
@@ -269,6 +292,7 @@ export function PersonalHotSheetShareEmailDialog({
         messageChips={HOT_SHEET_MESSAGE_CHIPS}
         previewVariant={previewVariant}
         submitButtonLabel="Send email"
+        lockSenderIdentity={senderLocked}
       />
   );
 }

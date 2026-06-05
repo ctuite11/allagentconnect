@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { ListingPreviewCard } from "@/components/share/ListingPreviewCard";
 
 export type ListingPreview = {
   address: string;
@@ -105,6 +106,8 @@ export type ShareListingsDialogProps = {
   previewVariant?: "listing" | "hot-sheet";
   /** Overrides footer primary button label (default: Share / Share (n)). */
   submitButtonLabel?: string;
+  /** Logged-in users: sender identity comes from profile; hide name/email fields. */
+  lockSenderIdentity?: boolean;
 };
 
 const DEFAULT_MESSAGE_CHIPS = [
@@ -170,6 +173,7 @@ export function ShareListingsDialog({
   messageChips = DEFAULT_MESSAGE_CHIPS,
   previewVariant = "listing",
   submitButtonLabel,
+  lockSenderIdentity = false,
 }: ShareListingsDialogProps) {
   const [selectedChips, setSelectedChips] = React.useState<Set<string>>(new Set());
   const [showSavePrompt, setShowSavePrompt] = React.useState(false);
@@ -337,45 +341,7 @@ export function ShareListingsDialog({
         >
           {/* Listing preview / bulk summary */}
           {selectedCount === 1 && listingPreview ? (
-            <div className="flex items-center gap-2.5 rounded-lg border border-neutral-200 bg-white p-2.5 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
-              {listingPreview.photoUrl ? (
-                <img
-                  src={listingPreview.photoUrl}
-                  alt=""
-                  className="h-16 w-[4.5rem] shrink-0 rounded-md border border-neutral-100 object-cover"
-                />
-              ) : (
-                <div
-                  className={cn(
-                    "flex h-16 w-[4.5rem] shrink-0 items-center justify-center rounded-md border border-neutral-200 bg-neutral-50",
-                    ICON_NEUTRAL,
-                  )}
-                >
-                  {previewVariant === "hot-sheet" ? (
-                    <Layers className="h-4 w-4" />
-                  ) : (
-                    <Home className="h-4 w-4" />
-                  )}
-                </div>
-              )}
-              <div className="min-w-0 flex-1">
-                <div className="truncate text-[13px] font-semibold text-neutral-900">{listingPreview.address}</div>
-                {previewVariant === "listing" ? (
-                  <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[12px] text-neutral-600">
-                    {listingPreview.price ? (
-                      <span className="font-semibold text-neutral-900">{listingPreview.price}</span>
-                    ) : null}
-                    {typeof listingPreview.beds === "number" ? <span>{listingPreview.beds} bd</span> : null}
-                    {typeof listingPreview.baths === "number" ? <span>{listingPreview.baths} ba</span> : null}
-                    {typeof listingPreview.sqft === "number" ? (
-                      <span>{listingPreview.sqft.toLocaleString()} sf</span>
-                    ) : null}
-                  </div>
-                ) : listingPreview.price ? (
-                  <div className="mt-1 text-[12px] font-medium text-neutral-600">{listingPreview.price}</div>
-                ) : null}
-              </div>
-            </div>
+            <ListingPreviewCard preview={listingPreview} />
           ) : selectedCount > 1 ? (
             <div className="flex items-center gap-2.5 rounded-lg border border-neutral-200 bg-white p-2.5 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
               <div
@@ -645,7 +611,8 @@ export function ShareListingsDialog({
             />
           </section>
 
-          {/* Sharing as — collapsed by default */}
+          {/* Sharing as — guests only; logged-in users send from their account profile */}
+          {!lockSenderIdentity ? (
           <section className="rounded-lg border border-neutral-200/80 bg-neutral-50/40 px-3 py-2.5">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0 space-y-0.5">
@@ -739,6 +706,7 @@ export function ShareListingsDialog({
               </div>
             ) : null}
           </section>
+          ) : null}
         </div>
 
         {/* Footer */}
