@@ -74,6 +74,7 @@ import AdminMatches from "./pages/AdminMatches";
 import AdminConsumers from "./pages/AdminConsumers";
 import AdminInviteAudit from "./pages/AdminInviteAudit";
 import AdminEmailAnalytics from "./pages/AdminEmailAnalytics";
+import AdminFounderInvite from "./pages/AdminFounderInvite";
 import NetworkIntelligence from "./pages/NetworkIntelligence";
 
 import ClientDashboard from "./pages/ClientDashboard";
