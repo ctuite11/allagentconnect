@@ -251,7 +251,7 @@ const ListingSearch = () => {
                         className={cn(
                           "h-8 px-3 text-xs font-medium rounded-lg transition-colors",
                           active
-                            ? "bg-white text-neutral-900 shadow-sm"
+                            ? "bg-neutral-900 text-white shadow-sm"
                             : "text-neutral-500 hover:text-neutral-800",
                         )}
                       >
