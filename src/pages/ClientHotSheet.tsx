@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { compareListingsByRecency } from "@/lib/listingRecencySort";
+import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { useParams, useNavigate } from "react-router-dom";
 import Footer from "@/components/Footer";
 import { User } from "@supabase/supabase-js";

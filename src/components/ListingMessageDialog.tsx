@@ -101,7 +101,8 @@ export function ListingMessageDialog({
       });
 
       if (!result.ok) {
-        toast.error(result.message || "Failed to send message");
+        const errMsg = "message" in result ? result.message : "Failed to send message";
+        toast.error(errMsg || "Failed to send message");
         return;
       }
 

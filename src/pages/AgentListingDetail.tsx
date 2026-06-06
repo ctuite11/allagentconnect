@@ -48,6 +48,7 @@ import { buildDisplayAddress } from "@/lib/utils";
 import { useListingView } from "@/hooks/useListingView";
 import PhotoGalleryDialog from "@/components/PhotoGalleryDialog";
 import SocialShareMenu from "@/components/SocialShareMenu";
+import { PropertyHistoryPanel } from "@/components/PropertyHistoryPanel";
 import { getListingPublicUrl, getListingShareUrl } from "@/lib/getPublicUrl";
 import { useAuthRole } from "@/hooks/useAuthRole";
 import { buildMessageReturnState } from "@/lib/messageNavigation";
