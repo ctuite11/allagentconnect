@@ -1,4 +1,8 @@
 import type { FilterState } from "@/components/listing-search/ListingSearchFilters";
+import {
+  AGENT_SALE_DEFAULT_PROPERTY_TYPES,
+  defaultPropertyTypesForAgentListingSearch,
+} from "@/lib/agentListingSearchDefaults";
 
 /**
  * Builds URLSearchParams from FilterState. Used by both search page and navigation handlers.
@@ -61,6 +65,17 @@ export function parseAdvancedParams(searchParams: URLSearchParams, f: FilterStat
   // Listing type (sale vs rent)
   const lt = searchParams.get("lt");
   if (lt === "for_rent" || lt === "for_sale") f.listingType = lt;
+
+  // Rent searches use listing_type only unless the user picked specific property types.
+  const propertyTypesParam = searchParams.get("propertyTypes");
+  const saleDefaultPropertyTypes = AGENT_SALE_DEFAULT_PROPERTY_TYPES.join(",");
+  if (f.listingType === "for_rent") {
+    if (!propertyTypesParam || propertyTypesParam === saleDefaultPropertyTypes) {
+      f.propertyTypes = [];
+    }
+  } else if (!propertyTypesParam) {
+    f.propertyTypes = defaultPropertyTypesForAgentListingSearch("for_sale");
+  }
 
   // Radius & location
   if (searchParams.get("radius")) f.radius = searchParams.get("radius") || "";

@@ -19,6 +19,7 @@ import {
   RENT_PRICE_ABS_MIN,
   RENT_PRICE_ABS_MAX,
 } from "@/lib/buyerSearchRentFilters";
+import { defaultPropertyTypesForAgentListingSearch } from "@/lib/agentListingSearchDefaults";
 import { cn } from "@/lib/utils";
 
 const ListingSearch = () => {
@@ -179,7 +180,7 @@ const ListingSearch = () => {
 
   const handleListingTypeChange = (next: "for_sale" | "for_rent") => {
     if (next === filters.listingType) return;
-    // Clamp prices that no longer fit the new bounds; preserve property types.
+    // Clamp prices that no longer fit the new bounds; reset property types for the listing mode.
     const bounds = next === "for_rent"
       ? { min: RENT_PRICE_ABS_MIN, max: RENT_PRICE_ABS_MAX }
       : { min: SALE_PRICE_ABS_MIN, max: SALE_PRICE_ABS_MAX };
@@ -198,6 +199,7 @@ const ListingSearch = () => {
       listingType: next,
       priceMin: nextPriceMin,
       priceMax: nextPriceMax,
+      propertyTypes: defaultPropertyTypesForAgentListingSearch(next),
     };
     setFilters(updated);
     updateUrlParams(updated);
