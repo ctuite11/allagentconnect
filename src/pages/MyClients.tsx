@@ -1355,6 +1355,27 @@ const MyClients = () => {
                             </Tooltip>
                           )}
 
+                          {isAdmin && client.email && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="px-2 group"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setFounderInviteClient(client);
+                                  }}
+                                >
+                                  <Crown className="h-4 w-4 text-neutral-400 transition-colors group-hover:text-[#22C55E]" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent sideOffset={8}>
+                                <p>Send Founder Invite</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          )}
+
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <Button
