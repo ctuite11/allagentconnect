@@ -55,7 +55,7 @@ import {
   ListingMessageDialog,
   listingMessageRecipientFromProfile,
 } from "@/components/ListingMessageDialog";
-import { canMessageListingAgent as viewerCanMessageListingAgent } from "@/lib/canMessageListingAgent";
+import { canMessageListingAgent as viewerCanMessageListingAgent, resolveListingAgentId } from "@/lib/canMessageListingAgent";
 
 interface Listing {
   id: string;
@@ -173,7 +173,7 @@ const AgentListingDetail = () => {
   // Auth for messaging
   const { user, role } = useAuthRole();
   const viewerId = user?.id;
-  const listingAgentId = agentProfile?.id;
+  const listingAgentId = resolveListingAgentId(listing, agentProfile);
   const canMessageListingAgent = viewerCanMessageListingAgent(viewerId, listingAgentId);
 
   const openListingMessage = () => {
@@ -1029,7 +1029,7 @@ const AgentListingDetail = () => {
                       onClick={openListingMessage}
                     >
                       <MessageSquare className="w-4 h-4" />
-                      {listing?.id ? "Message about this listing" : "Message"}
+                      Message Agent
                     </Button>
                   )}
                 </CardContent>
@@ -1241,13 +1241,17 @@ const AgentListingDetail = () => {
         initialIndex={currentPhotoIndex}
       />
 
-      {listing?.id && agentProfile && (
+      {listing?.id && listingAgentId && (
         <ListingMessageDialog
           open={listingMessageOpen}
           onOpenChange={setListingMessageOpen}
           listingId={listing.id}
           variant="agent"
-          recipient={listingMessageRecipientFromProfile(agentProfile)}
+          recipient={
+            agentProfile
+              ? listingMessageRecipientFromProfile(agentProfile)
+              : { id: listingAgentId, name: "Listing Agent", headshotUrl: null }
+          }
           role={role}
           returnState={buildMessageReturnState(location.pathname, location.search)}
         />

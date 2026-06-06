@@ -32,7 +32,7 @@ import {
   ListingMessageDialog,
   listingMessageRecipientFromProfile,
 } from "@/components/ListingMessageDialog";
-import { canMessageListingAgent as viewerCanMessageListingAgent } from "@/lib/canMessageListingAgent";
+import { canMessageListingAgent as viewerCanMessageListingAgent, resolveListingAgentId } from "@/lib/canMessageListingAgent";
 import { syncStickyFromDB } from "@/utils/agentTracking";
 import { supabase } from "@/integrations/supabase/client";
 import { listingAgreementSectionTitle } from "@/lib/listingAgreement";
@@ -55,7 +55,7 @@ export const PropertyDetailRightColumn = ({ listing, agent, isAgentView, stats }
   
   // Can current user message the listing agent?
   const viewerId = user?.id;
-  const listingAgentId = agent?.id;
+  const listingAgentId = resolveListingAgentId(listing, agent);
   const canMessageListingAgent = viewerCanMessageListingAgent(viewerId, listingAgentId);
 
   const openAgentListingMessage = () => {
@@ -214,7 +214,7 @@ export const PropertyDetailRightColumn = ({ listing, agent, isAgentView, stats }
                   onClick={openAgentListingMessage}
                 >
                   <MessageSquare className="w-4 h-4" />
-                  Message about this listing
+                  Message Agent
                 </Button>
               )}
             </CardContent>
@@ -584,7 +584,7 @@ export const PropertyDetailRightColumn = ({ listing, agent, isAgentView, stats }
                 onClick={openAgentListingMessage}
               >
                 <MessageSquare className="w-4 h-4" />
-                {listing?.id ? "Message about this listing" : "Message"}
+                {listing?.id ? "Message Agent" : "Message"}
               </Button>
             )}
           </CardContent>

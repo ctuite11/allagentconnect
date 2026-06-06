@@ -71,7 +71,7 @@ import {
   ListingMessageDialog,
   listingMessageRecipientFromProfile,
 } from "@/components/ListingMessageDialog";
-import { canMessageListingAgent as viewerCanMessageListingAgent } from "@/lib/canMessageListingAgent";
+import { canMessageListingAgent as viewerCanMessageListingAgent, resolveListingAgentId } from "@/lib/canMessageListingAgent";
 import { useAuthRole } from "@/hooks/useAuthRole";
 import ContactAgentDialog from "@/components/ContactAgentDialog";
 
@@ -170,7 +170,7 @@ const ConsumerPropertyDetail = () => {
   const { user, role } = useAuthRole();
   const isAgentView = role === "agent" || role === "admin";
   const viewerId = user?.id;
-  const listingAgentId = listing?.agent_id ?? agentProfile?.id ?? null;
+  const listingAgentId = resolveListingAgentId(listing, agentProfile);
   const canMessageListingAgent = viewerCanMessageListingAgent(viewerId, listingAgentId);
 
   const ensureSignedInForMessage = async (): Promise<boolean> => {
@@ -208,8 +208,10 @@ const ConsumerPropertyDetail = () => {
   const listingMessageRecipient =
     listingMessageVariant === "buyer" && stickyAgentProfile
       ? listingMessageRecipientFromProfile(stickyAgentProfile)
-      : listingMessageVariant === "agent" && agentProfile
-        ? listingMessageRecipientFromProfile(agentProfile)
+      : listingMessageVariant === "agent" && listingAgentId
+        ? agentProfile
+          ? listingMessageRecipientFromProfile(agentProfile)
+          : { id: listingAgentId, name: "Listing Agent", headshotUrl: null }
         : null;
 
   // Resolve sticky agent for buyer masking
@@ -669,14 +671,18 @@ const ConsumerPropertyDetail = () => {
             >
 
               {/* Agent/admin: listing agent contact via AAC email (no buyer CTAs) */}
-              {isAgentView && agentProfile ? (
+              {isAgentView && (agentProfile || listing?.agent_id) ? (
                 <Card className={cn(consumerSectionCard, "shadow-sm")}>
                   <CardContent className="space-y-4 p-5">
                     <div className="flex items-center gap-4">
                       <AgentAvatar
-                        name={`${agentProfile.first_name} ${agentProfile.last_name}`}
-                        headshotUrl={agentProfile.headshot_url ?? null}
-                        userId={agentProfile.id}
+                        name={
+                          agentProfile
+                            ? `${agentProfile.first_name} ${agentProfile.last_name}`
+                            : "Listing Agent"
+                        }
+                        headshotUrl={agentProfile?.headshot_url ?? null}
+                        userId={agentProfile?.id ?? listing.agent_id}
                         size="xl"
                         avatarClassName="h-16 w-16 border-2 border-neutral-200"
                         fallbackClassName="bg-neutral-100"
@@ -684,30 +690,34 @@ const ConsumerPropertyDetail = () => {
                       <div className="flex-1 min-w-0">
                         <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-500">Listing agent</p>
                         <p className="font-bold text-lg leading-tight">
-                          {agentProfile.first_name} {agentProfile.last_name}
+                          {agentProfile
+                            ? `${agentProfile.first_name} ${agentProfile.last_name}`
+                            : "Listing Agent"}
                         </p>
-                        <p className="text-sm text-neutral-600">
-                          {agentProfile.title || "Realtor"} · {agentProfile.company || "Brokerage"}
-                        </p>
+                        {agentProfile && (
+                          <p className="text-sm text-neutral-600">
+                            {agentProfile.title || "Realtor"} · {agentProfile.company || "Brokerage"}
+                          </p>
+                        )}
                       </div>
                     </div>
 
                     <div className="space-y-2.5 text-sm">
-                      {agentProfile.cell_phone && (
+                      {agentProfile?.cell_phone && (
                         <a href={`tel:${agentProfile.cell_phone}`} className="flex items-center gap-2.5 transition-colors hover:text-neutral-900">
                           <Phone className="h-4 w-4 shrink-0 text-neutral-500" />
                           <span className="font-medium">{formatPhoneNumber(agentProfile.cell_phone)}</span>
                           <span className="ml-auto text-xs text-neutral-500">Mobile</span>
                         </a>
                       )}
-                      {agentProfile.phone && agentProfile.phone !== agentProfile.cell_phone && (
+                      {agentProfile?.phone && agentProfile.phone !== agentProfile.cell_phone && (
                         <a href={`tel:${agentProfile.phone}`} className="flex items-center gap-2.5 transition-colors hover:text-neutral-900">
                           <Building2 className="h-4 w-4 shrink-0 text-neutral-500" />
                           <span className="font-medium">{formatPhoneNumber(agentProfile.phone)}</span>
                           <span className="ml-auto text-xs text-neutral-500">Office</span>
                         </a>
                       )}
-                      {agentProfile.email && (
+                      {agentProfile?.email && (
                         <button
                           type="button"
                           onClick={() => setListingContactDialogOpen(true)}
@@ -736,7 +746,7 @@ const ConsumerPropertyDetail = () => {
                         onClick={openListingAgentMessage}
                       >
                         <MessageSquare className="h-5 w-5" />
-                        {listing?.id ? "Message about this listing" : "Message"}
+                        Message Agent
                       </Button>
                     )}
 
@@ -886,7 +896,7 @@ const ConsumerPropertyDetail = () => {
                           onClick={openListingAgentMessage}
                         >
                           <MessageSquare className="h-5 w-5" />
-                          Message listing agent
+                          Message Agent
                         </Button>
                       )}
                     </div>

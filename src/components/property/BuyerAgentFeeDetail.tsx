@@ -44,11 +44,11 @@ export function BuyerAgentFeeDetail({
       <CardContent className="px-3.5 py-3">
         <div className="flex items-start gap-2">
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-medium tracking-wide text-neon-green">Buyer Agent Fee</p>
-            <p className="mt-1 text-lg font-semibold leading-tight tracking-tight text-neutral-900">
-              {feeDisplay}
-            </p>
-            <p className="mt-0.5 text-xs text-neutral-500">Paid by Seller</p>
+            <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+              <p className="text-xs font-medium tracking-wide text-neon-green">Buyer Agent Fee</p>
+              <p className="text-sm font-semibold leading-none text-neutral-900">{feeDisplay}</p>
+            </div>
+            <p className="mt-1 text-xs text-neutral-500">Paid by Seller</p>
           </div>
           <Dialog>
             <DialogTrigger asChild>

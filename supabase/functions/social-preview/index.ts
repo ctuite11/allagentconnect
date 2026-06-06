@@ -1,6 +1,10 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
+import {
+  LISTING_OG_PLACEHOLDER,
+  resolveListingPhotoUrl,
+} from "../_shared/listingPhotoUrl.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -68,24 +72,9 @@ serve(async (req) => {
       return new Response("Listing not found", { status: 404, headers: corsHeaders });
     }
 
-    // OG image — use the listing's direct photo URL when available (most reliable
-    // for Facebook/LinkedIn). Fall back to the branded placeholder.
-    const PLACEHOLDER_OG = "https://allagentconnect.com/og/aac-og-2026-01-22.jpg";
-    let ogImageUrl = PLACEHOLDER_OG;
-    const photos = (listing as any).photos;
-    if (Array.isArray(photos) && photos.length > 0) {
-      const first = photos[0];
-      let raw = "";
-      if (typeof first === "string") raw = first.trim();
-      else if (first && typeof first === "object") {
-        raw = String(first.url || first.publicUrl || "").trim();
-      }
-      if (raw) {
-        ogImageUrl = raw.startsWith("http")
-          ? raw
-          : `${supabaseUrl}/storage/v1/object/public/listing-photos/${raw.replace(/^\/+/, "")}`;
-      }
-    }
+    // OG image — use the listing photo directly (reliable for Facebook crawlers)
+    const directPhotoUrl = resolveListingPhotoUrl(listing.photos, supabaseUrl);
+    const ogImageUrl = directPhotoUrl || LISTING_OG_PLACEHOLDER;
     const ogImageType = ogImageUrl.toLowerCase().includes(".png") ? "image/png" : "image/jpeg";
 
     // Build title/description
@@ -102,6 +91,7 @@ serve(async (req) => {
       ? `${bedsAndBaths}. ${String(listing.description).substring(0, 140)}...`
       : `${bedsAndBaths} in ${listing.city}, ${listing.state} | All Agent Connect`;
 
+
     const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -117,8 +107,6 @@ serve(async (req) => {
   <meta property="og:description" content="${escapeHtml(description)}" />
   <meta property="og:image" content="${ogImageUrl}" />
   <meta property="og:image:secure_url" content="${ogImageUrl}" />
-  <meta property="og:image:width" content="1200" />
-  <meta property="og:image:height" content="630" />
   <meta property="og:image:type" content="${ogImageType}" />
   <meta property="og:image:alt" content="Photo of ${escapeHtml(listing.address)}" />
   <meta property="og:site_name" content="All Agent Connect" />

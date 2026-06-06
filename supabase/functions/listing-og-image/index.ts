@@ -1,32 +1,19 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
+import {
+  LISTING_OG_PLACEHOLDER,
+  resolveListingPhotoUrl,
+} from "../_shared/listingPhotoUrl.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const PLACEHOLDER_URL = "https://allagentconnect.com/og/aac-og-2026-01-22.jpg";
-
-function resolveListingPhotoUrl(photos: unknown, supabaseUrl: string): string {
-  if (!Array.isArray(photos) || photos.length === 0) return "";
-  const first = photos[0] as unknown;
-  let raw = "";
-  if (typeof first === "string") raw = first.trim();
-  else if (first && typeof first === "object") {
-    const row = first as Record<string, unknown>;
-    raw = String(row.url || row.publicUrl || "").trim();
-  }
-  if (!raw) return "";
-  if (raw.startsWith("http://") || raw.startsWith("https://")) return raw;
-  // Treat as storage path under listing-photos bucket
-  return `${supabaseUrl}/storage/v1/object/public/listing-photos/${raw.replace(/^\/+/, "")}`;
-}
-
 async function proxyImage(url: string): Promise<Response> {
   const upstream = await fetch(url, { redirect: "follow" });
   if (!upstream.ok || !upstream.body) {
-    return fetch(PLACEHOLDER_URL).then((r) =>
+    return fetch(LISTING_OG_PLACEHOLDER).then((r) =>
       new Response(r.body, {
         headers: {
           ...corsHeaders,
@@ -47,9 +34,8 @@ async function proxyImage(url: string): Promise<Response> {
 }
 
 /**
- * Listing OG image — simple proxy that returns the listing's first photo as
- * an image response. Falls back to the branded placeholder when no photo
- * exists or the upstream fetch fails. Boot-safe (no native image libs).
+ * Listing OG image — proxy that returns the listing's first photo.
+ * Falls back to the branded placeholder when no photo exists or fetch fails.
  */
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -60,7 +46,7 @@ serve(async (req) => {
   const listingId = url.searchParams.get("id");
 
   if (!listingId) {
-    return proxyImage(PLACEHOLDER_URL);
+    return proxyImage(LISTING_OG_PLACEHOLDER);
   }
 
   try {
@@ -75,13 +61,13 @@ serve(async (req) => {
       .maybeSingle();
 
     if (error || !listing) {
-      return proxyImage(PLACEHOLDER_URL);
+      return proxyImage(LISTING_OG_PLACEHOLDER);
     }
 
     const photoUrl = resolveListingPhotoUrl(listing.photos, supabaseUrl);
-    return proxyImage(photoUrl || PLACEHOLDER_URL);
+    return proxyImage(photoUrl || LISTING_OG_PLACEHOLDER);
   } catch (e) {
     console.error("listing-og-image error", e);
-    return proxyImage(PLACEHOLDER_URL);
+    return proxyImage(LISTING_OG_PLACEHOLDER);
   }
 });

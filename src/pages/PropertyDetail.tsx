@@ -81,8 +81,10 @@ import {
   ListingMessageDialog,
   listingMessageRecipientFromProfile,
 } from "@/components/ListingMessageDialog";
-import { canMessageListingAgent as viewerCanMessageListingAgent } from "@/lib/canMessageListingAgent";
-import SocialShareMenu from "@/components/SocialShareMenu";
+import {
+  canMessageListingAgent as viewerCanMessageListingAgent,
+  resolveListingAgentId,
+} from "@/lib/canMessageListingAgent";
 
 interface Listing {
   id: string;
@@ -206,7 +208,7 @@ const PropertyDetail = () => {
   const isAgentView = (isAgent || isAdmin) && !isClientMode;
 
   const viewerId = user?.id;
-  const listingAgentId = agentProfile?.id;
+  const listingAgentId = resolveListingAgentId(listing, agentProfile);
   const canMessageListingAgent = viewerCanMessageListingAgent(viewerId, listingAgentId);
 
   const isListingOwner =
@@ -1009,14 +1011,18 @@ const PropertyDetail = () => {
                 </Card>
               )}
 
-              {agentProfile && (
+              {(agentProfile || listing?.agent_id) && (
                 <Card className={cn(consumerSectionCard, "shadow-sm")}>
                   <CardContent className="space-y-4 p-5">
                     <div className="flex items-center gap-4">
                       <AgentAvatar
-                        name={`${agentProfile.first_name} ${agentProfile.last_name}`}
-                        headshotUrl={agentProfile.headshot_url ?? null}
-                        userId={agentProfile.id}
+                        name={
+                          agentProfile
+                            ? `${agentProfile.first_name} ${agentProfile.last_name}`
+                            : "Listing Agent"
+                        }
+                        headshotUrl={agentProfile?.headshot_url ?? null}
+                        userId={agentProfile?.id ?? listing.agent_id}
                         size="xl"
                         avatarClassName="h-16 w-16 border-2 border-neutral-200"
                         fallbackClassName="bg-neutral-100"
@@ -1024,16 +1030,20 @@ const PropertyDetail = () => {
                       <div className="flex-1 min-w-0">
                         <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-500">Listing agent</p>
                         <p className="text-lg font-bold leading-tight text-neutral-900">
-                          {agentProfile.first_name} {agentProfile.last_name}
+                          {agentProfile
+                            ? `${agentProfile.first_name} ${agentProfile.last_name}`
+                            : "Listing Agent"}
                         </p>
-                        <p className="text-sm text-neutral-600">
-                          {agentProfile.title || "Realtor"} · {agentProfile.company || "Brokerage"}
-                        </p>
+                        {agentProfile && (
+                          <p className="text-sm text-neutral-600">
+                            {agentProfile.title || "Realtor"} · {agentProfile.company || "Brokerage"}
+                          </p>
+                        )}
                       </div>
                     </div>
 
                     <div className="space-y-2.5 text-sm">
-                      {agentProfile.cell_phone && (
+                      {agentProfile?.cell_phone && (
                         <a
                           href={`tel:${agentProfile.cell_phone}`}
                           className="flex items-center gap-2.5 transition-colors hover:text-neutral-900"
@@ -1043,7 +1053,7 @@ const PropertyDetail = () => {
                           <span className="ml-auto text-xs text-neutral-500">Mobile</span>
                         </a>
                       )}
-                      {agentProfile.phone && agentProfile.phone !== agentProfile.cell_phone && (
+                      {agentProfile?.phone && agentProfile.phone !== agentProfile.cell_phone && (
                         <a
                           href={`tel:${agentProfile.phone}`}
                           className="flex items-center gap-2.5 transition-colors hover:text-neutral-900"
@@ -1053,7 +1063,7 @@ const PropertyDetail = () => {
                           <span className="ml-auto text-xs text-neutral-500">Office</span>
                         </a>
                       )}
-                      {isAgentView && (
+                      {isAgentView && agentProfile && (
                         <button
                           type="button"
                           onClick={() =>
@@ -1067,7 +1077,7 @@ const PropertyDetail = () => {
                           <span className="font-medium">Profile</span>
                         </button>
                       )}
-                      {agentProfile.email && (
+                      {agentProfile?.email && (
                         isAgentView ? (
                           <button
                             type="button"
@@ -1087,7 +1097,7 @@ const PropertyDetail = () => {
                           </a>
                         )
                       )}
-                      {!isAgentView && agentProfile.social_links?.website && (
+                      {!isAgentView && agentProfile?.social_links?.website && (
                         <a
                           href={agentProfile.social_links.website}
                           target="_blank"
@@ -1115,7 +1125,7 @@ const PropertyDetail = () => {
                         onClick={openListingMessage}
                       >
                         <MessageSquare className="h-5 w-5" />
-                        {listing?.id ? "Message about this listing" : "Message"}
+                        Message Agent
                       </Button>
                     )}
 
@@ -1206,13 +1216,17 @@ const PropertyDetail = () => {
         />
       )}
 
-      {listing?.id && agentProfile && (
+      {listing?.id && listingAgentId && (
         <ListingMessageDialog
           open={listingMessageOpen}
           onOpenChange={setListingMessageOpen}
           listingId={listing.id}
           variant="agent"
-          recipient={listingMessageRecipientFromProfile(agentProfile)}
+          recipient={
+            agentProfile
+              ? listingMessageRecipientFromProfile(agentProfile)
+              : { id: listingAgentId, name: "Listing Agent", headshotUrl: null }
+          }
           role={role}
           returnState={buildMessageReturnState(location.pathname, location.search)}
         />
