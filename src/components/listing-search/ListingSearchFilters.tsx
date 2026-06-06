@@ -23,6 +23,7 @@ import {
 import { useTownsPicker } from "@/hooks/useTownsPicker";
 import { TownsPicker } from "@/components/TownsPicker";
 import { LISTING_SEARCH_STATUSES, PROPERTY_TYPES } from "@/constants/status";
+import { syncAgentListingSearchPropertyTypes } from "@/lib/agentListingSearchDefaults";
 
 export interface FilterState {
   listingType: "for_sale" | "for_rent";
@@ -220,11 +221,8 @@ const ListingSearchFilters = ({
   };
 
   const togglePropertyType = (type: string) => {
-    const current = filters.propertyTypes;
-    const updated = current.includes(type)
-      ? current.filter(t => t !== type)
-      : [...current, type];
-    updateFilter("propertyTypes", updated);
+    const selecting = !filters.propertyTypes.includes(type);
+    onFiltersChange(syncAgentListingSearchPropertyTypes(filters, type, selecting));
   };
 
   const toggleAllPropertyTypes = () => {

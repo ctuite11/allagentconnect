@@ -23,6 +23,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import SaveToHotSheetDialog from "@/components/SaveToHotSheetDialog";
 import { listingEffectiveNumericPrice } from "@/lib/formatListingPriceDisplay";
 import { applyListingPriceOverlapFilter } from "@/lib/applyListingPriceOverlapFilter";
+import { propertyTypesForAgentListingQuery } from "@/lib/agentListingSearchDefaults";
 import { LISTING_DEFAULT_SORT_COLUMN } from "@/lib/listingRecencySort";
 import {
   listingAgentContactFromRow,
@@ -198,7 +199,11 @@ const ListingSearchResults = () => {
       if (filters.statuses.length > 0) query = query.in("status", filters.statuses);
       if (filters.internalFilter === "off_market") query = query.eq("status", "off_market");
       else if (filters.internalFilter === "coming_soon") query = query.eq("status", "coming_soon");
-      if (filters.propertyTypes.length > 0) query = query.in("property_type", filters.propertyTypes);
+      const queryPropertyTypes = propertyTypesForAgentListingQuery(
+        filters.listingType,
+        filters.propertyTypes,
+      );
+      if (queryPropertyTypes.length > 0) query = query.in("property_type", queryPropertyTypes);
       if (filters.listingType) query = query.eq("listing_type", filters.listingType);
       {
         const pmin = filters.priceMin ? parseInt(filters.priceMin, 10) : NaN;

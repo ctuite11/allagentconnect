@@ -2,6 +2,7 @@ import type { FilterState } from "@/components/listing-search/ListingSearchFilte
 import {
   AGENT_SALE_DEFAULT_PROPERTY_TYPES,
   defaultPropertyTypesForAgentListingSearch,
+  syncListingTypeFromPropertyTypes,
 } from "@/lib/agentListingSearchDefaults";
 
 /**
@@ -76,6 +77,8 @@ export function parseAdvancedParams(searchParams: URLSearchParams, f: FilterStat
   } else if (!propertyTypesParam) {
     f.propertyTypes = defaultPropertyTypesForAgentListingSearch("for_sale");
   }
+
+  syncListingTypeFromPropertyTypes(f);
 
   // Radius & location
   if (searchParams.get("radius")) f.radius = searchParams.get("radius") || "";

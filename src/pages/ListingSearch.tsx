@@ -14,12 +14,10 @@ import { Button } from "@/components/ui/button";
 import { Seo } from "@/components/Seo";
 import { applyListingPriceOverlapFilter } from "@/lib/applyListingPriceOverlapFilter";
 import {
-  SALE_PRICE_ABS_MIN,
-  SALE_PRICE_ABS_MAX,
-  RENT_PRICE_ABS_MIN,
-  RENT_PRICE_ABS_MAX,
-} from "@/lib/buyerSearchRentFilters";
-import { defaultPropertyTypesForAgentListingSearch } from "@/lib/agentListingSearchDefaults";
+  clampListingSearchPrices,
+  defaultPropertyTypesForAgentListingSearch,
+  propertyTypesForAgentListingQuery,
+} from "@/lib/agentListingSearchDefaults";
 import { cn } from "@/lib/utils";
 
 const ListingSearch = () => {
@@ -103,8 +101,12 @@ const ListingSearch = () => {
       }
 
       if (filters.listingType) query = query.eq("listing_type", filters.listingType);
+      const queryPropertyTypes = propertyTypesForAgentListingQuery(
+        filters.listingType,
+        filters.propertyTypes,
+      );
       if (filters.statuses.length > 0) query = query.in("status", filters.statuses);
-      if (filters.propertyTypes.length > 0) query = query.in("property_type", filters.propertyTypes);
+      if (queryPropertyTypes.length > 0) query = query.in("property_type", queryPropertyTypes);
       {
         const pmin = filters.priceMin ? parseInt(filters.priceMin, 10) : NaN;
         const pmax = filters.priceMax ? parseInt(filters.priceMax, 10) : NaN;
@@ -177,25 +179,10 @@ const ListingSearch = () => {
 
   const handleListingTypeChange = (next: "for_sale" | "for_rent") => {
     if (next === filters.listingType) return;
-    // Clamp prices that no longer fit the new bounds; reset property types for the listing mode.
-    const bounds = next === "for_rent"
-      ? { min: RENT_PRICE_ABS_MIN, max: RENT_PRICE_ABS_MAX }
-      : { min: SALE_PRICE_ABS_MIN, max: SALE_PRICE_ABS_MAX };
-    const pmin = filters.priceMin ? parseInt(filters.priceMin, 10) : NaN;
-    const pmax = filters.priceMax ? parseInt(filters.priceMax, 10) : NaN;
-    const nextPriceMin =
-      Number.isFinite(pmin) && pmin >= bounds.min && pmin <= bounds.max
-        ? filters.priceMin
-        : "";
-    const nextPriceMax =
-      Number.isFinite(pmax) && pmax >= bounds.min && pmax <= bounds.max
-        ? filters.priceMax
-        : "";
     const updated: FilterState = {
       ...filters,
       listingType: next,
-      priceMin: nextPriceMin,
-      priceMax: nextPriceMax,
+      ...clampListingSearchPrices(filters, next),
       propertyTypes: defaultPropertyTypesForAgentListingSearch(next),
     };
     setFilters(updated);
