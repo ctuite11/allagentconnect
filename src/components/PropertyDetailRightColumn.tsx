@@ -35,6 +35,7 @@ import {
 import { canMessageListingAgent as viewerCanMessageListingAgent } from "@/lib/canMessageListingAgent";
 import { syncStickyFromDB } from "@/utils/agentTracking";
 import { supabase } from "@/integrations/supabase/client";
+import { listingAgreementSectionTitle } from "@/lib/listingAgreement";
 
 const DEFAULT_BROKERAGE_LOGO_URL = "/placeholder.svg";
 
@@ -322,7 +323,7 @@ export const PropertyDetailRightColumn = ({ listing, agent, isAgentView, stats }
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2 text-base text-purple-900 dark:text-purple-100">
                 <ClipboardList className="w-5 h-5" />
-                Listing Agreement
+                {listingAgreementSectionTitle(listing.listing_type)}
                 <Badge variant="outline" className="ml-auto text-xs">Agent Only</Badge>
               </CardTitle>
             </CardHeader>

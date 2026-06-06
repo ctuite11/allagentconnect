@@ -39,6 +39,10 @@ import { toast } from "sonner";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { formatListingPropertyTypeLabel } from "@/lib/format";
 import { formatListingEmailSubjectLocation } from "@/lib/listingEmailSubject";
+import {
+  listingAgreementDisclosuresTitle,
+  listingAgreementSectionTitle,
+} from "@/lib/listingAgreement";
 import { buildDisplayAddress, cn } from "@/lib/utils";
 
 const listingDetailPrimaryCtaClass =
@@ -878,7 +882,7 @@ const PropertyDetail = () => {
                   <CardHeader className="px-4 pb-2 pt-4">
                     <CardTitle className="flex items-center gap-2 text-sm font-semibold text-neutral-900">
                       <FileText className="h-4 w-4 text-neutral-600" />
-                      Disclosures, Exclusions & Listing Agreement
+                      {listingAgreementDisclosuresTitle(listing.listing_type)}
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="px-4 pb-4 space-y-3 text-sm">
@@ -909,7 +913,9 @@ const PropertyDetail = () => {
                     )}
                     {listing.listing_agreement_types && formatArray(listing.listing_agreement_types) && (
                       <div className="pt-2 border-t">
-                        <p className="text-xs font-semibold text-muted-foreground mb-1">Listing Agreement:</p>
+                        <p className="text-xs font-semibold text-muted-foreground mb-1">
+                          {listingAgreementSectionTitle(listing.listing_type)}:
+                        </p>
                         <p className="font-medium">{formatArray(listing.listing_agreement_types)}</p>
                       </div>
                     )}

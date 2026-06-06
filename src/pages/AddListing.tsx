@@ -30,6 +30,11 @@ import { getCitiesForCounty, hasCountyCityMapping } from "@/data/countyToCities"
 import { bostonNeighborhoods } from "@/data/bostonNeighborhoods";
 import { getAreasForCity } from "@/data/usNeighborhoodsData";
 import { cn } from "@/lib/utils";
+import {
+  listingAgreementOptions,
+  listingAgreementSectionTitle,
+  listingAgreementTypeLabel,
+} from "@/lib/listingAgreement";
 import { 
   getCitiesForStateAndCounty, 
   getNeighborhoodsForLocation, 
@@ -2382,11 +2387,13 @@ const AddListing = () => {
     parking_comments: formData.parking_comments?.trim() || null,
     garage_comments: formData.garage_comments?.trim() || null,
     
-    // Tax Information
-    annual_property_tax: formData.annual_property_tax ? parseFloat(formData.annual_property_tax) : null,
-    assessed_value: formData.assessed_value ? parseFloat(formData.assessed_value) : null,
-    fiscal_year: formData.fiscal_year ? parseInt(formData.fiscal_year) : null,
-    residential_exemption: formData.residential_exemption || null,
+    // Tax Information (sales only)
+    ...(formData.listing_type === "for_sale" ? {
+      annual_property_tax: formData.annual_property_tax ? parseFloat(formData.annual_property_tax) : null,
+      assessed_value: formData.assessed_value ? parseFloat(formData.assessed_value) : null,
+      fiscal_year: formData.fiscal_year ? parseInt(formData.fiscal_year) : null,
+      residential_exemption: formData.residential_exemption || null,
+    } : {}),
     
     // Disclosures (lead_paint is stored as string, not array)
     lead_paint: leadPaint.length > 0 ? leadPaint.join(', ') : null,
@@ -2394,8 +2401,6 @@ const AddListing = () => {
     
     // Rental-specific (conditionally added in handlers)
     ...(formData.listing_type === "for_rent" ? {
-      rental_fee: formData.rental_fee ? parseFloat(formData.rental_fee) : null,
-      rental_fee_text: formData.rental_fee_text?.trim() || null,
       deposit_requirements: depositRequirements,
       outdoor_space: outdoorSpace,
       storage_options: storageOptions,
@@ -2568,7 +2573,10 @@ const AddListing = () => {
     }
 
     if (!formData.listing_agreement_type.trim()) {
-      errors.push({ field: "listing_agreement_type", label: "Type of Listing Agreement" });
+      errors.push({
+        field: "listing_agreement_type",
+        label: listingAgreementTypeLabel(formData.listing_type),
+      });
     }
 
     if (formData.state === "MA" && (!selectedCounty || selectedCounty === "all")) {
@@ -3421,7 +3429,18 @@ const AddListing = () => {
 
                   <div className="space-y-2">
                     <Label htmlFor="listing_type">Listing Category *</Label>
-                    <Select value={formData.listing_type} onValueChange={(value) => setFormData(prev => ({ ...prev, listing_type: value }))}>
+                    <Select
+                      value={formData.listing_type}
+                      onValueChange={(value) => {
+                        setFormData((prev) => {
+                          const validValues = listingAgreementOptions(value).map((option) => option.value);
+                          const listing_agreement_type = validValues.includes(prev.listing_agreement_type)
+                            ? prev.listing_agreement_type
+                            : "";
+                          return { ...prev, listing_type: value, listing_agreement_type };
+                        });
+                      }}
+                    >
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
@@ -3803,46 +3822,20 @@ const AddListing = () => {
                     </div>
                   ) : (
                     <div className="space-y-4">
-                      {/* Monthly Rent + Rental Fee */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div className={cn("space-y-2", hasFieldError("monthly_rent") && "rounded-lg border border-red-200 ring-1 ring-red-200/80 bg-white p-2 shadow-none")}>
-                          <Label htmlFor="monthly_rent">Monthly Rent *</Label>
-                          <FormattedInput
-                            id="monthly_rent"
-                            format="currency"
-                            placeholder="2000"
-                            value={formData.monthly_rent}
-                            onChange={(value) => {
-                              setFormData(prev => ({ ...prev, monthly_rent: value }));
-                              if (value && String(value).trim() !== "" && Number(value) > 0) clearFieldError("monthly_rent");
-                            }}
-                            decimals={0}
-                            required
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="rental_fee_text">Rental Fee (Commission)</Label>
-                          <Input
-                            id="rental_fee_text"
-                            type="text"
-                            placeholder="e.g. 1 month, 1/2 month, negotiable"
-                            value={formData.rental_fee_text}
-                            onChange={(e) => setFormData(prev => ({ ...prev, rental_fee_text: e.target.value }))}
-                          />
-                          <p className="text-xs text-muted-foreground">Describe the rental fee / commission</p>
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="rental_fee">Rental Fee (Numeric – optional)</Label>
-                          <FormattedInput
-                            id="rental_fee"
-                            format="currency"
-                            placeholder="e.g. 2500"
-                            value={formData.rental_fee}
-                            onChange={(value) => setFormData(prev => ({ ...prev, rental_fee: value }))}
-                            decimals={0}
-                          />
-                          <p className="text-xs text-muted-foreground">For reporting only (leave blank if not needed)</p>
-                        </div>
+                      <div className={cn("space-y-2 max-w-xs", hasFieldError("monthly_rent") && "rounded-lg border border-red-200 ring-1 ring-red-200/80 bg-white p-2 shadow-none")}>
+                        <Label htmlFor="monthly_rent">Monthly Rent *</Label>
+                        <FormattedInput
+                          id="monthly_rent"
+                          format="currency"
+                          placeholder="2000"
+                          value={formData.monthly_rent}
+                          onChange={(value) => {
+                            setFormData(prev => ({ ...prev, monthly_rent: value }));
+                            if (value && String(value).trim() !== "" && Number(value) > 0) clearFieldError("monthly_rent");
+                          }}
+                          decimals={0}
+                          required
+                        />
                       </div>
 
                       {/* Deposit Requirements (multi-select) - Only for rentals */}
@@ -3935,7 +3928,8 @@ const AddListing = () => {
                   </div>
                 </div>
 
-                {/* Tax Information Section */}
+                {/* Tax Information Section — sales only */}
+                {formData.listing_type === "for_sale" && (
                 <div className="space-y-4 border-t border-zinc-100 pt-6">
                   <Label className={agentSectionTitle}>Tax Information</Label>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -3991,6 +3985,7 @@ const AddListing = () => {
                     </div>
                   </div>
                 </div>
+                )}
 
                 {/* Multi-Family FOR SALE Fields */}
                 {formData.listing_type === "for_sale" && formData.property_type === "multi_family" && (
@@ -4713,19 +4708,14 @@ const AddListing = () => {
                   </div>
                 </div>
 
-                {/* Listing Agreement Type */}
+                {/* Listing / Rental Agreement Type */}
                 <div className="space-y-2 border-t border-zinc-100 pt-6">
-                  <Label className={agentSectionTitle}>Listing Agreement</Label>
+                  <Label className={agentSectionTitle}>{listingAgreementSectionTitle(formData.listing_type)}</Label>
                   <div className={cn("space-y-3 max-w-md", hasFieldError("listing_agreement_type") && "rounded-lg border border-red-200 ring-1 ring-red-200/80 bg-white p-3 shadow-none")}>
                     <Label>
-                      Type of Listing Agreement <span className="text-destructive">*</span>
+                      {listingAgreementTypeLabel(formData.listing_type)} <span className="text-destructive">*</span>
                     </Label>
-                    {[
-                      { value: "Exclusive Right to Sell", label: "Exclusive Right to Sell" },
-                      { value: "Exclusive Agency", label: "Exclusive Agency" },
-                      { value: "Open Listing", label: "Open Listing" },
-                      { value: "Net Listing", label: "Net Listing" },
-                    ].map((option) => (
+                    {listingAgreementOptions(formData.listing_type).map((option) => (
                       <label
                         key={option.value}
                         className="flex items-center gap-3 cursor-pointer group"
@@ -4749,7 +4739,9 @@ const AddListing = () => {
                       </label>
                     ))}
                     {!formData.listing_agreement_type && hasFieldError("listing_agreement_type") && (
-                      <p className="text-sm text-destructive">Please select a listing agreement type.</p>
+                      <p className="text-sm text-destructive">
+                        Please select a {listingAgreementTypeLabel(formData.listing_type).toLowerCase()}.
+                      </p>
                     )}
                   </div>
                 </div>

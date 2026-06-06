@@ -3,6 +3,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Home, DollarSign, Building2, Calendar, Info } from "lucide-react";
 import { LISTING_STATUS_LABELS } from "@/constants/status";
 import { formatConsumerPropertyTypeLabel } from "@/lib/format";
+import {
+  isRentalListing,
+  listingCategoryMarketLabel,
+  listingCategoryMarketValue,
+} from "@/lib/listingAgreement";
 import { normalizePropertyFeatureLabel } from "@/lib/propertyFeatures";
 import { cn } from "@/lib/utils";
 
@@ -198,7 +203,7 @@ export const ListingDetailSections = ({
     { label: "Listing Date", value: listDate ? new Date(listDate).toLocaleDateString() : null },
     { label: "Days on Market", value: daysOnMarket },
     { label: "Status", value: listing.status ? LISTING_STATUS_LABELS[listing.status] || listing.status.charAt(0).toUpperCase() + listing.status.slice(1) : null },
-    { label: "Listing Type", value: listing.listing_type === 'for_sale' ? 'For Sale' : listing.listing_type === 'for_rent' ? 'For Rent' : listing.listing_type },
+    { label: listingCategoryMarketLabel(listing.listing_type), value: listingCategoryMarketValue(listing.listing_type) },
     { label: "Listing Number (AAC ID)", value: listing.listing_number },
     { label: "Go Live Date", value: listing.go_live_date ? new Date(listing.go_live_date).toLocaleDateString() : null },
     { label: "Activation Date", value: listing.activation_date ? new Date(listing.activation_date).toLocaleDateString() : null },
@@ -327,8 +332,8 @@ export const ListingDetailSections = ({
         </Card>
       )}
 
-      {/* Tax Information - OPEN BY DEFAULT */}
-      {taxInfoRows.length > 0 && (
+      {/* Tax Information — sales only */}
+      {!isRentalListing(listing.listing_type) && taxInfoRows.length > 0 && (
         <Card className={sectionCard}>
           <CardHeader className="pb-3">
             <CardTitle className={sectionTitle}>
