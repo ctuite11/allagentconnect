@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { useSearchParams, useNavigate, useLocation } from "react-router-dom";
+import { useSearchParams, useNavigate, useLocation, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { filterVisibleListings } from "@/lib/filterVisibleListings";
 import { filterByPricePerSqft } from "@/lib/filterByPricePerSqft";
@@ -361,7 +361,14 @@ const ListingSearchResults = () => {
     <AacPageIntro
       withTopPadding
       back={<AacBackButton type="button" onClick={handleBackToSearch} />}
-      title="Edit search"
+      title={
+        <Link
+          to={`/listing-search${search}`}
+          className="text-inherit no-underline hover:underline underline-offset-2"
+        >
+          Edit search
+        </Link>
+      }
       titleClassName="text-[13px] sm:text-sm"
     />
   );

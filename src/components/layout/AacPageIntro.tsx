@@ -12,7 +12,7 @@ import {
 export type AacPageIntroProps = {
   /** Typically `<AacBackLink />` or `<AacBackButton />`. */
   back?: ReactNode;
-  title?: string;
+  title?: ReactNode;
   subtitle?: ReactNode;
   /** Rendered directly under the subtitle (e.g. primary page CTA). */
   afterSubtitle?: ReactNode;
