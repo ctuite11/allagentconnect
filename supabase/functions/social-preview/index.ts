@@ -68,15 +68,8 @@ serve(async (req) => {
       return new Response("Listing not found", { status: 404, headers: corsHeaders });
     }
 
-    // Dynamic OG image — SVG composed with property photo + price badge
+    // Dynamic OG image — JPEG composed with property photo + price/address overlay
     const ogImageUrl = `${supabaseUrl}/functions/v1/listing-og-image?id=${listingId}`;
-
-    // Fallback raw photo for twitter:image (some platforms prefer raster)
-    let rawPhotoUrl = "https://allagentconnect.com/og-default.png";
-    if (Array.isArray(listing.photos) && listing.photos.length) {
-      const first = listing.photos[0];
-      rawPhotoUrl = typeof first === "string" ? first : first?.url || rawPhotoUrl;
-    }
 
     // Build title/description
     const priceText = listing.listing_type === "for_rent"
@@ -85,7 +78,9 @@ serve(async (req) => {
 
     const title = `${priceText} · ${listing.address}, ${listing.city}, ${listing.state}`;
 
-    const bedsAndBaths = `${listing.bedrooms ?? "?"} bed, ${listing.bathrooms ?? "?"} bath`;
+    const bedsAndBaths = `${listing.bedrooms ?? "?"} bd • ${listing.bathrooms ?? "?"} ba${
+      listing.square_feet ? ` • ${Number(listing.square_feet).toLocaleString("en-US")} sq ft` : ""
+    }`;
     const description = listing.description
       ? `${bedsAndBaths}. ${String(listing.description).substring(0, 140)}...`
       : `${bedsAndBaths} in ${listing.city}, ${listing.state} | All Agent Connect`;
@@ -109,6 +104,7 @@ serve(async (req) => {
   <meta property="og:image:secure_url" content="${ogImageUrl}" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
+  <meta property="og:image:type" content="image/jpeg" />
   <meta property="og:image:alt" content="Photo of ${escapeHtml(listing.address)}" />
   <meta property="og:site_name" content="All Agent Connect" />
   <meta property="og:locale" content="en_US" />
@@ -118,7 +114,7 @@ serve(async (req) => {
   <meta name="twitter:url" content="${pageUrl}" />
   <meta name="twitter:title" content="${escapeHtml(title)}" />
   <meta name="twitter:description" content="${escapeHtml(description)}" />
-  <meta name="twitter:image" content="${rawPhotoUrl}" />
+  <meta name="twitter:image" content="${ogImageUrl}" />
   <meta name="twitter:image:alt" content="Photo of ${escapeHtml(listing.address)}" />
 
   <style>body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;padding:24px;}</style>

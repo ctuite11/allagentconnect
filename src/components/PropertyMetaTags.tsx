@@ -1,5 +1,6 @@
 import { Helmet } from 'react-helmet-async';
 import { getListingPublicUrl } from '@/lib/getPublicUrl';
+import { getListingOgImageUrl } from '@/lib/listingOgImageUrl';
 
 interface PropertyMetaTagsProps {
   address: string;
@@ -25,7 +26,6 @@ export const PropertyMetaTags = ({
   bedrooms,
   bathrooms,
   description,
-  photo,
   listingType,
   listingId,
 }: PropertyMetaTagsProps) => {
@@ -44,7 +44,7 @@ export const PropertyMetaTags = ({
     ? `${priceText} - ${bedrooms} bed, ${bathrooms} bath. ${description.substring(0, 120)}...`
     : `${priceText} - ${bedrooms} bed, ${bathrooms} bath property in ${city}, ${state}`;
 
-  const imageUrl = photo || 'https://allagentconnect.com/og-default.png';
+  const imageUrl = getListingOgImageUrl(listingId);
   const canonicalUrl = getListingPublicUrl(listingId);
 
   return (
@@ -62,6 +62,7 @@ export const PropertyMetaTags = ({
       <meta property="og:image:secure_url" content={imageUrl} />
       <meta property="og:image:width" content="1200" />
       <meta property="og:image:height" content="630" />
+      <meta property="og:image:type" content="image/jpeg" />
       <meta property="og:image:alt" content={`Photo of ${address}`} />
       <meta property="og:site_name" content="All Agent Connect" />
       <meta property="og:locale" content="en_US" />
