@@ -17,7 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Trash2, Edit, ListPlus, Mail, Phone, User, ArrowUpDown, Download, Send, Upload, Check, UserX, UserPlus } from "lucide-react";
+import { Plus, Trash2, Edit, ListPlus, Mail, Phone, User, ArrowUpDown, Download, Send, Upload, Check, UserX, UserPlus, Crown } from "lucide-react";
 import ContactQuickActions from "@/components/ContactQuickActions";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -34,6 +34,7 @@ import { Badge } from "@/components/ui/badge";
 import { Seo } from "@/components/Seo";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { hasRole } from "@/lib/auth/roles";
 
 // Helper function for title case display (safe transform, doesn't modify stored data)
 const toTitleCase = (str: string) => {
@@ -141,6 +142,11 @@ const MyClients = () => {
   // End relationship state
   const [endRelClient, setEndRelClient] = useState<Client | null>(null);
   const [endingRelationship, setEndingRelationship] = useState(false);
+
+  // Admin-only "Send Founder Invite" row action.
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [founderInviteClient, setFounderInviteClient] = useState<Client | null>(null);
+  const [sendingFounderInvite, setSendingFounderInvite] = useState(false);
   
   // Typeahead autocomplete state
   const [showAutocomplete, setShowAutocomplete] = useState(false);
@@ -174,6 +180,12 @@ const MyClients = () => {
       return;
     }
     setUser(user);
+    try {
+      const adminFlag = await hasRole(user.id, "admin");
+      setIsAdmin(adminFlag);
+    } catch {
+      setIsAdmin(false);
+    }
     fetchClients(user.id);
   };
 
@@ -1343,6 +1355,27 @@ const MyClients = () => {
                             </Tooltip>
                           )}
 
+                          {isAdmin && client.email && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="px-2 group"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setFounderInviteClient(client);
+                                  }}
+                                >
+                                  <Crown className="h-4 w-4 text-neutral-400 transition-colors group-hover:text-[#22C55E]" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent sideOffset={8}>
+                                <p>Send Founder Invite</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          )}
+
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <Button
@@ -1552,6 +1585,56 @@ const MyClients = () => {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               {endingRelationship ? "Ending…" : "End Relationship"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Admin: Send Founder Invite Confirmation */}
+      <AlertDialog
+        open={!!founderInviteClient}
+        onOpenChange={(open) => { if (!open) setFounderInviteClient(null); }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Send Founder Invite?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This sends the Founding Partner invitation to{" "}
+              <span className="font-medium text-foreground">
+                {founderInviteClient
+                  ? `${toTitleCase(founderInviteClient.first_name)} ${toTitleCase(founderInviteClient.last_name)}`
+                  : "this contact"}
+              </span>{" "}
+              ({founderInviteClient?.email}). It is delivered as a 1:1 transactional-style send and bypasses the bulk pause gate.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={sendingFounderInvite}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={sendingFounderInvite}
+              onClick={async () => {
+                if (!founderInviteClient?.email) return;
+                setSendingFounderInvite(true);
+                try {
+                  const { data, error } = await supabase.functions.invoke("send-founder-invite", {
+                    body: {
+                      recipientEmail: founderInviteClient.email,
+                      recipientName: `${founderInviteClient.first_name || ""} ${founderInviteClient.last_name || ""}`.trim(),
+                    },
+                  });
+                  if (error || !(data as any)?.success) {
+                    throw new Error((data as any)?.error || error?.message || "Send failed");
+                  }
+                  toast.success(`Founder invite queued for ${founderInviteClient.email}`);
+                  setFounderInviteClient(null);
+                } catch (e: any) {
+                  toast.error(e?.message || "Failed to send founder invite");
+                } finally {
+                  setSendingFounderInvite(false);
+                }
+              }}
+            >
+              {sendingFounderInvite ? "Sending…" : "Send Invite"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

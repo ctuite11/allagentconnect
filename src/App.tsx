@@ -74,6 +74,7 @@ import AdminMatches from "./pages/AdminMatches";
 import AdminConsumers from "./pages/AdminConsumers";
 import AdminInviteAudit from "./pages/AdminInviteAudit";
 import AdminEmailAnalytics from "./pages/AdminEmailAnalytics";
+import AdminFounderInvite from "./pages/AdminFounderInvite";
 import NetworkIntelligence from "./pages/NetworkIntelligence";
 
 import ClientDashboard from "./pages/ClientDashboard";
@@ -397,6 +398,7 @@ const App = () => (
                   <Route path="/admin/consumers" element={<AdminConsumers />} />
                   <Route path="/admin/invites" element={<AdminInviteAudit />} />
                   <Route path="/admin/email-analytics" element={<AdminEmailAnalytics />} />
+                  <Route path="/admin/founder-invite" element={<AdminFounderInvite />} />
                   <Route path="/admin/debug-auth" element={<AdminDebugAuth />} />
                   <Route path="/settings" element={<RouteGuard requireRole="agent"><AgentSettings /></RouteGuard>} />
                 </Route>
