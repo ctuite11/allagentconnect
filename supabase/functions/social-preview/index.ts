@@ -85,8 +85,6 @@ serve(async (req) => {
       ? `${bedsAndBaths}. ${String(listing.description).substring(0, 140)}...`
       : `${bedsAndBaths} in ${listing.city}, ${listing.state} | All Agent Connect`;
 
-    const fbAppId = Deno.env.get("FACEBOOK_APP_ID") || Deno.env.get("FB_APP_ID") || "";
-
     const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -108,7 +106,6 @@ serve(async (req) => {
   <meta property="og:image:alt" content="Photo of ${escapeHtml(listing.address)}" />
   <meta property="og:site_name" content="All Agent Connect" />
   <meta property="og:locale" content="en_US" />
-  ${fbAppId ? `<meta property=\"fb:app_id\" content=\"${escapeHtml(fbAppId)}\" />` : ""}
 
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:url" content="${pageUrl}" />
