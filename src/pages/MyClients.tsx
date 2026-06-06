@@ -142,6 +142,11 @@ const MyClients = () => {
   // End relationship state
   const [endRelClient, setEndRelClient] = useState<Client | null>(null);
   const [endingRelationship, setEndingRelationship] = useState(false);
+
+  // Admin-only "Send Founder Invite" row action.
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [founderInviteClient, setFounderInviteClient] = useState<Client | null>(null);
+  const [sendingFounderInvite, setSendingFounderInvite] = useState(false);
   
   // Typeahead autocomplete state
   const [showAutocomplete, setShowAutocomplete] = useState(false);
@@ -175,6 +180,12 @@ const MyClients = () => {
       return;
     }
     setUser(user);
+    try {
+      const adminFlag = await hasRole(user.id, "admin");
+      setIsAdmin(adminFlag);
+    } catch {
+      setIsAdmin(false);
+    }
     fetchClients(user.id);
   };
 
