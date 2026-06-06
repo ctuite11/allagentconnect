@@ -12,7 +12,7 @@ import { CardSurface } from "@/components/ui/CardSurface";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, ChevronDown, Search, Trash2, MoreHorizontal, Home } from "lucide-react";
 import { ListingStatusBadge } from "@/components/ui/status-badge";
-import { LISTING_STATUS_LABELS, LISTING_TYPE_LABELS, isComingSoon } from "@/constants/status";
+import { LISTING_STATUS_LABELS, LISTING_TYPE, LISTING_TYPE_LABELS, isComingSoon } from "@/constants/status";
 
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -154,13 +154,73 @@ function formatAddressWithUnit(listing: Listing): string {
 
 const SUCCESS_HUB_PATH = "/agent-dashboard";
 
-function MyListingsPageIntro({ subtitle }: { subtitle?: string }) {
+type MyListingsListingType = typeof LISTING_TYPE.FOR_SALE | typeof LISTING_TYPE.FOR_RENT;
+
+function MyListingsNewListingButton({ onClick }: { onClick: () => void }) {
+  return (
+    <Button
+      type="button"
+      variant="outline"
+      onClick={onClick}
+      className="h-9 gap-1.5 rounded-lg border-neutral-200 bg-white px-3.5 text-[13px] font-semibold text-zinc-900 shadow-none hover:bg-zinc-50/90 focus-visible:ring-zinc-300"
+    >
+      <Plus className="h-4 w-4" strokeWidth={2} />
+      Add listing
+    </Button>
+  );
+}
+
+function MyListingsListingTypeToggle({
+  value,
+  onChange,
+}: {
+  value: MyListingsListingType;
+  onChange: (value: MyListingsListingType) => void;
+}) {
+  return (
+    <div
+      role="tablist"
+      aria-label="Listing category"
+      className="inline-flex shrink-0 rounded-xl border border-neutral-200 bg-neutral-50 p-0.5"
+    >
+      {([LISTING_TYPE.FOR_SALE, LISTING_TYPE.FOR_RENT] as const).map((type) => {
+        const active = value === type;
+        return (
+          <button
+            key={type}
+            type="button"
+            role="tab"
+            aria-selected={active}
+            onClick={() => onChange(type)}
+            className={cn(
+              "h-8 rounded-lg px-3 text-xs font-medium transition-colors",
+              active
+                ? "bg-white text-neutral-900 shadow-sm"
+                : "text-neutral-500 hover:text-neutral-800",
+            )}
+          >
+            {type === LISTING_TYPE.FOR_SALE ? "Sale" : "Rental"}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function MyListingsPageIntro({
+  subtitle,
+  afterSubtitle,
+}: {
+  subtitle?: string;
+  afterSubtitle?: React.ReactNode;
+}) {
   return (
     <AacPageIntro
       withTopPadding
       back={<AacBackLink to={SUCCESS_HUB_PATH} title="Return to Success Hub" />}
       title="My Listings"
       subtitle={subtitle}
+      afterSubtitle={afterSubtitle}
     />
   );
 }
@@ -431,6 +491,7 @@ function MyListingsView({
   };
 
   const [sortKey, setSortKey] = useState<MyListingsSortKey>("date");
+  const [listingTypeFilter, setListingTypeFilter] = useState<MyListingsListingType>(LISTING_TYPE.FOR_SALE);
 
   const filteredListings = useMemo(() => {
     // Default (no status pills): show live/pipeline inventory only — never mix drafts in.
@@ -445,6 +506,8 @@ function MyListingsView({
             const statusForFilter = (l.status === "back_on_market" ? "active" : l.status) as ListingStatus;
             return selectedStatuses.has(statusForFilter);
           });
+
+    result = result.filter((l) => (l.listing_type || LISTING_TYPE.FOR_SALE) === listingTypeFilter);
     
     // Apply search query filter
     if (searchQuery.trim()) {
@@ -477,7 +540,7 @@ function MyListingsView({
       }
     });
     return result;
-  }, [listings, selectedStatuses, searchQuery, sortKey, hasOnlyDrafts]);
+  }, [listings, selectedStatuses, searchQuery, sortKey, hasOnlyDrafts, listingTypeFilter]);
 
   const startQuickEdit = (listing: Listing) => {
     setEditingId(listing.id);
@@ -513,6 +576,11 @@ function MyListingsView({
       {/* Compact toolbar: search + status filters + sort (white shell, subtle shadow) */}
       <div className="rounded-xl border border-neutral-200 bg-white px-3 py-2.5 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:gap-3">
+          <MyListingsListingTypeToggle
+            value={listingTypeFilter}
+            onChange={setListingTypeFilter}
+          />
+
           <div className="relative w-full shrink-0 lg:max-w-[240px]">
             <Search
               className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-zinc-400"
@@ -991,7 +1059,7 @@ function MyListingsView({
             <div className="rounded-xl border border-dashed border-neutral-200 bg-white px-6 py-14 text-center shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
               <p className="text-[15px] font-semibold tracking-tight text-zinc-900">No listings match</p>
               <p className="mt-2 max-w-md mx-auto text-[13px] leading-snug text-zinc-500">
-                Adjust status filters or clear your search to see inventory again.
+                Try the other category, adjust status filters, or clear your search to see inventory again.
               </p>
             </div>
           )}
@@ -1394,17 +1462,7 @@ const MyListings = () => {
         back={<AacBackLink to={SUCCESS_HUB_PATH} title="Return to Success Hub" />}
         title="My Listings"
         subtitle="Manage your active, pending, and past listings from one place."
-        actions={
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => handleNewListing("new")}
-            className="h-9 gap-1.5 rounded-lg border-neutral-200 bg-white px-3.5 text-[13px] font-semibold text-zinc-900 shadow-none hover:bg-zinc-50/90 focus-visible:ring-zinc-300"
-          >
-            <Plus className="h-4 w-4" strokeWidth={2} />
-            New listing
-          </Button>
-        }
+        afterSubtitle={<MyListingsNewListingButton onClick={() => handleNewListing("new")} />}
       />
       <MyListingsView
         listings={listings}

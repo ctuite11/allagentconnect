@@ -14,6 +14,8 @@ export type AacPageIntroProps = {
   back?: ReactNode;
   title?: string;
   subtitle?: ReactNode;
+  /** Rendered directly under the subtitle (e.g. primary page CTA). */
+  afterSubtitle?: ReactNode;
   actions?: ReactNode;
   className?: string;
   titleClassName?: string;
@@ -34,6 +36,7 @@ export function AacPageIntro({
   back,
   title,
   subtitle,
+  afterSubtitle,
   actions,
   className,
   titleClassName,
@@ -60,6 +63,7 @@ export function AacPageIntro({
                 <h1 className={cn(agentPageTitleClass, titleClassName)}>{title}</h1>
               ) : null}
               {subtitle ? <p className={agentPageSubtitleClass}>{subtitle}</p> : null}
+              {afterSubtitle ? <div className="pt-3">{afterSubtitle}</div> : null}
             </div>
           ) : (
             <div className="min-w-0 flex-1" />
