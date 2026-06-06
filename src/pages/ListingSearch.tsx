@@ -13,6 +13,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Seo } from "@/components/Seo";
 import { applyListingPriceOverlapFilter } from "@/lib/applyListingPriceOverlapFilter";
+import {
+  SALE_PRICE_ABS_MIN,
+  SALE_PRICE_ABS_MAX,
+  RENT_PRICE_ABS_MIN,
+  RENT_PRICE_ABS_MAX,
+} from "@/lib/buyerSearchRentFilters";
+import { cn } from "@/lib/utils";
 
 const ListingSearch = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -97,6 +104,7 @@ const ListingSearch = () => {
       if (filters.dcmlsOnly) {
         query = query.eq("publish_to_dcmls", true).eq("dcmls_status", "published");
       }
+      if (filters.listingType) query = query.eq("listing_type", filters.listingType);
       if (filters.statuses.length > 0) query = query.in("status", filters.statuses);
       if (filters.propertyTypes.length > 0) query = query.in("property_type", filters.propertyTypes);
       {
@@ -169,6 +177,32 @@ const ListingSearch = () => {
     updateUrlParams(initialFilters);
   };
 
+  const handleListingTypeChange = (next: "for_sale" | "for_rent") => {
+    if (next === filters.listingType) return;
+    // Clamp prices that no longer fit the new bounds; preserve property types.
+    const bounds = next === "for_rent"
+      ? { min: RENT_PRICE_ABS_MIN, max: RENT_PRICE_ABS_MAX }
+      : { min: SALE_PRICE_ABS_MIN, max: SALE_PRICE_ABS_MAX };
+    const pmin = filters.priceMin ? parseInt(filters.priceMin, 10) : NaN;
+    const pmax = filters.priceMax ? parseInt(filters.priceMax, 10) : NaN;
+    const nextPriceMin =
+      Number.isFinite(pmin) && pmin >= bounds.min && pmin <= bounds.max
+        ? filters.priceMin
+        : "";
+    const nextPriceMax =
+      Number.isFinite(pmax) && pmax >= bounds.min && pmax <= bounds.max
+        ? filters.priceMax
+        : "";
+    const updated: FilterState = {
+      ...filters,
+      listingType: next,
+      priceMin: nextPriceMin,
+      priceMax: nextPriceMax,
+    };
+    setFilters(updated);
+    updateUrlParams(updated);
+  };
+
   const handleViewResults = () => {
     navigate(`/listing-results?${buildSearchParams(filters).toString()}`);
   };
@@ -197,6 +231,34 @@ const ListingSearch = () => {
           <div className="sticky top-0 z-30 bg-white rounded-3xl border border-neutral-200 aac-shadow mb-4">
             <div className="px-5 py-3">
               <div className="flex items-center gap-3">
+                {/* Sale / Rent segmented control */}
+                <div
+                  role="tablist"
+                  aria-label="Listing type"
+                  className="inline-flex rounded-xl border border-neutral-200 bg-neutral-50 p-0.5 shrink-0"
+                >
+                  {(["for_sale", "for_rent"] as const).map((value) => {
+                    const active = filters.listingType === value;
+                    return (
+                      <button
+                        key={value}
+                        type="button"
+                        role="tab"
+                        aria-selected={active}
+                        onClick={() => handleListingTypeChange(value)}
+                        className={cn(
+                          "h-8 px-3 text-xs font-medium rounded-lg transition-colors",
+                          active
+                            ? "bg-white text-neutral-900 shadow-sm"
+                            : "text-neutral-500 hover:text-neutral-800",
+                        )}
+                      >
+                        {value === "for_sale" ? "For Sale" : "For Rent"}
+                      </button>
+                    );
+                  })}
+                </div>
+
                 <Button
                   variant="outline"
                   size="sm"
@@ -209,6 +271,16 @@ const ListingSearch = () => {
 
                 {/* Active filter chips */}
                 <div className="flex items-center gap-2 flex-wrap flex-1 min-w-0">
+                  <Badge
+                    variant="secondary"
+                    className={cn(
+                      "text-xs px-2.5 py-0.5 rounded-full whitespace-nowrap",
+                      filters.listingType === "for_rent" &&
+                        "bg-emerald-50 text-emerald-700 hover:bg-emerald-50",
+                    )}
+                  >
+                    {filters.listingType === "for_rent" ? "For Rent" : "For Sale"}
+                  </Badge>
                   {filters.selectedTowns.length > 0 && (
                     <Badge variant="secondary" className="text-xs px-2.5 py-0.5 rounded-full whitespace-nowrap">
                       {filters.selectedTowns.length} {filters.selectedTowns.length === 1 ? 'town' : 'towns'}
