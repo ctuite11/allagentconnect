@@ -20,6 +20,9 @@ export interface ListingRecord {
   photos?: string[] | null;
   list_office?: string | null;
   office_name?: string | null;
+  created_at?: string | null;
+  list_date?: string | null;
+  active_date?: string | null;
 }
 
 export interface AgentOfficeRecord {
