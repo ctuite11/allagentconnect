@@ -160,9 +160,8 @@ function MyListingsNewListingButton({ onClick }: { onClick: () => void }) {
   return (
     <Button
       type="button"
-      variant="outline"
       onClick={onClick}
-      className="h-9 gap-1.5 rounded-lg border-neutral-200 bg-white px-3.5 text-[13px] font-semibold text-zinc-900 shadow-none hover:bg-zinc-50/90 focus-visible:ring-zinc-300"
+      className="h-9 gap-1.5 rounded-lg bg-neutral-900 px-3.5 text-[13px] font-semibold text-white shadow-sm hover:bg-neutral-800 focus-visible:ring-neutral-400"
     >
       <Plus className="h-4 w-4" strokeWidth={2} />
       Add listing
@@ -195,7 +194,7 @@ function MyListingsListingTypeToggle({
             className={cn(
               "h-8 rounded-lg px-3 text-xs font-medium transition-colors",
               active
-                ? "bg-white text-neutral-900 shadow-sm"
+                ? "bg-neutral-900 text-white shadow-sm"
                 : "text-neutral-500 hover:text-neutral-800",
             )}
           >
