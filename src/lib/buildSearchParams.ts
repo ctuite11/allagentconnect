@@ -6,6 +6,7 @@ import type { FilterState } from "@/components/listing-search/ListingSearchFilte
 export function buildSearchParams(f: FilterState): URLSearchParams {
   const params = new URLSearchParams();
 
+  if (f.listingType && f.listingType !== "for_sale") params.set("lt", f.listingType);
   if (f.propertyTypes.length > 0) params.set("propertyTypes", f.propertyTypes.join(","));
   if (f.statuses.length > 0) params.set("statuses", f.statuses.join(","));
   if (f.selectedTowns.length > 0) params.set("towns", f.selectedTowns.join(","));
@@ -57,6 +58,10 @@ export function buildSearchParams(f: FilterState): URLSearchParams {
  * Parses URL search params back into FilterState for advanced/radius/location fields.
  */
 export function parseAdvancedParams(searchParams: URLSearchParams, f: FilterState): void {
+  // Listing type (sale vs rent)
+  const lt = searchParams.get("lt");
+  if (lt === "for_rent" || lt === "for_sale") f.listingType = lt;
+
   // Radius & location
   if (searchParams.get("radius")) f.radius = searchParams.get("radius") || "";
   if (searchParams.get("radiusUnit")) f.radiusUnit = (searchParams.get("radiusUnit") as "miles" | "km") || "miles";

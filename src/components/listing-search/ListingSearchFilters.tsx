@@ -27,6 +27,7 @@ import { LISTING_SEARCH_STATUSES, PROPERTY_TYPES } from "@/constants/status";
 import { isDcmlsHost } from "@/lib/host";
 
 export interface FilterState {
+  listingType: "for_sale" | "for_rent";
   propertyTypes: string[];
   statuses: string[];
   bedsMin: string;
@@ -88,6 +89,7 @@ const parseFormattedNumber = (value: string): string => {
 };
 
 export const initialFilters: FilterState = {
+  listingType: "for_sale",
   propertyTypes: ["single_family", "condo"],
   statuses: ["new", "active", "price_changed", "back_on_market", "extended", "reactivated", "coming_soon", "off_market"],
   bedsMin: "",

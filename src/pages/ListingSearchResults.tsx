@@ -199,6 +199,7 @@ const ListingSearchResults = () => {
       if (filters.internalFilter === "off_market") query = query.eq("status", "off_market");
       else if (filters.internalFilter === "coming_soon") query = query.eq("status", "coming_soon");
       if (filters.propertyTypes.length > 0) query = query.in("property_type", filters.propertyTypes);
+      if (filters.listingType) query = query.eq("listing_type", filters.listingType);
       {
         const pmin = filters.priceMin ? parseInt(filters.priceMin, 10) : NaN;
         const pmax = filters.priceMax ? parseInt(filters.priceMax, 10) : NaN;
