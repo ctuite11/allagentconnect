@@ -172,7 +172,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     console.log(`[send-founder-invite] queued for ${recipientEmail} by ${caller.email}`);
-    return new Response(JSON.stringify({ success: true, queued: 1, recipient: recipientEmail, "AGENT-CHECK": "ok" }),
+    return new Response(JSON.stringify({ success: true, queued: 1, recipient: recipientEmail }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e: any) {
     console.error("[send-founder-invite] error:", e);
