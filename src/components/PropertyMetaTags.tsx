@@ -1,6 +1,8 @@
 import { Helmet } from 'react-helmet-async';
 import { getListingPublicUrl } from '@/lib/getPublicUrl';
-import { getListingOgImageUrl } from '@/lib/listingOgImageUrl';
+import { resolveListingPhotoUrl } from '@/lib/resolveListingPhotoUrl';
+
+const FALLBACK_OG_IMAGE = "https://allagentconnect.com/og/aac-og-2026-01-22.jpg";
 
 interface PropertyMetaTagsProps {
   address: string;
@@ -26,6 +28,7 @@ export const PropertyMetaTags = ({
   bedrooms,
   bathrooms,
   description,
+  photo,
   listingType,
   listingId,
 }: PropertyMetaTagsProps) => {
@@ -44,7 +47,9 @@ export const PropertyMetaTags = ({
     ? `${priceText} - ${bedrooms} bed, ${bathrooms} bath. ${description.substring(0, 120)}...`
     : `${priceText} - ${bedrooms} bed, ${bathrooms} bath property in ${city}, ${state}`;
 
-  const imageUrl = getListingOgImageUrl(listingId);
+  const resolvedPhoto = resolveListingPhotoUrl(photo);
+  const imageUrl = resolvedPhoto ?? FALLBACK_OG_IMAGE;
+  const imageType = imageUrl.toLowerCase().includes(".png") ? "image/png" : "image/jpeg";
   const canonicalUrl = getListingPublicUrl(listingId);
 
   return (
@@ -62,7 +67,7 @@ export const PropertyMetaTags = ({
       <meta property="og:image:secure_url" content={imageUrl} />
       <meta property="og:image:width" content="1200" />
       <meta property="og:image:height" content="630" />
-      <meta property="og:image:type" content="image/jpeg" />
+      <meta property="og:image:type" content={imageType} />
       <meta property="og:image:alt" content={`Photo of ${address}`} />
       <meta property="og:site_name" content="All Agent Connect" />
       <meta property="og:locale" content="en_US" />

@@ -68,8 +68,25 @@ serve(async (req) => {
       return new Response("Listing not found", { status: 404, headers: corsHeaders });
     }
 
-    // Dynamic OG image — JPEG composed with property photo + price/address overlay
-    const ogImageUrl = `${supabaseUrl}/functions/v1/listing-og-image?id=${listingId}`;
+    // OG image — use the listing's direct photo URL when available (most reliable
+    // for Facebook/LinkedIn). Fall back to the branded placeholder.
+    const PLACEHOLDER_OG = "https://allagentconnect.com/og/aac-og-2026-01-22.jpg";
+    let ogImageUrl = PLACEHOLDER_OG;
+    const photos = (listing as any).photos;
+    if (Array.isArray(photos) && photos.length > 0) {
+      const first = photos[0];
+      let raw = "";
+      if (typeof first === "string") raw = first.trim();
+      else if (first && typeof first === "object") {
+        raw = String(first.url || first.publicUrl || "").trim();
+      }
+      if (raw) {
+        ogImageUrl = raw.startsWith("http")
+          ? raw
+          : `${supabaseUrl}/storage/v1/object/public/listing-photos/${raw.replace(/^\/+/, "")}`;
+      }
+    }
+    const ogImageType = ogImageUrl.toLowerCase().includes(".png") ? "image/png" : "image/jpeg";
 
     // Build title/description
     const priceText = listing.listing_type === "for_rent"
@@ -102,7 +119,7 @@ serve(async (req) => {
   <meta property="og:image:secure_url" content="${ogImageUrl}" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
-  <meta property="og:image:type" content="image/jpeg" />
+  <meta property="og:image:type" content="${ogImageType}" />
   <meta property="og:image:alt" content="Photo of ${escapeHtml(listing.address)}" />
   <meta property="og:site_name" content="All Agent Connect" />
   <meta property="og:locale" content="en_US" />
