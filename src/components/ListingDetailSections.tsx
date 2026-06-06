@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Home, DollarSign, Building2, Calendar, Info } from "lucide-react";
 import { LISTING_STATUS_LABELS } from "@/constants/status";
 import { formatConsumerPropertyTypeLabel } from "@/lib/format";
+import { normalizePropertyFeatureLabel } from "@/lib/propertyFeatures";
 import { cn } from "@/lib/utils";
 
 interface ListingDetailSectionsProps {
@@ -106,8 +107,8 @@ export const ListingDetailSections = ({
     const propFeatures = listing.property_features || [];
     const amenities = listing.amenities || [];
     const combined = [...new Set([...propFeatures, ...amenities])];
-    combined.forEach((item: any) => {
-      const name = typeof item === 'string' ? item : item.name || item.label || item.value;
+    combined.forEach((item: unknown) => {
+      const name = normalizePropertyFeatureLabel(item);
       if (name) features.push(name);
     });
     

@@ -43,6 +43,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
+import { formatPropertyFeatureList } from "@/lib/propertyFeatures";
 import { buildDisplayAddress } from "@/lib/utils";
 import { useListingView } from "@/hooks/useListingView";
 import PhotoGalleryDialog from "@/components/PhotoGalleryDialog";
@@ -756,11 +757,11 @@ const AgentListingDetail = () => {
                 {/* Features & Amenities */}
                 {(listing.property_features || listing.amenities || listing.exterior_features_list) && (
                   <div className="mt-6 pt-4 border-t border-border space-y-4">
-                    {formatArray([...(listing.property_features || []), ...(listing.amenities || [])]) && (
+                    {formatPropertyFeatureList([...(listing.property_features || []), ...(listing.amenities || [])]) && (
                       <div>
                         <p className="text-sm font-medium text-muted-foreground mb-2">Interior Features</p>
                         <p className="text-sm text-foreground">
-                          {formatArray([...(listing.property_features || []), ...(listing.amenities || [])])}
+                          {formatPropertyFeatureList([...(listing.property_features || []), ...(listing.amenities || [])])}
                         </p>
                       </div>
                     )}
