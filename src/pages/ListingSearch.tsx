@@ -102,9 +102,6 @@ const ListingSearch = () => {
         query = query.in("id", radiusIds);
       }
 
-      if (filters.dcmlsOnly) {
-        query = query.eq("publish_to_dcmls", true).eq("dcmls_status", "published");
-      }
       if (filters.listingType) query = query.eq("listing_type", filters.listingType);
       if (filters.statuses.length > 0) query = query.in("status", filters.statuses);
       if (filters.propertyTypes.length > 0) query = query.in("property_type", filters.propertyTypes);
