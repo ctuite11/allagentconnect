@@ -9,14 +9,25 @@ export async function invokeEdgeFunction<T = Record<string, unknown>>(
   name: string,
   body: unknown,
 ): Promise<T & { success: true }> {
-  const {
+  // Always force a fresh access token before calling. A stale token causes
+  // edge functions to reject with "Invalid session".
+  let {
     data: { session },
   } = await supabase.auth.getSession();
-  const token = session?.access_token;
 
-  if (!token) {
-    throw new Error("Session expired. Please sign in again.");
+  // Refresh if missing, or expiring within 60s.
+  const expiresAt = session?.expires_at ?? 0;
+  const nowSec = Math.floor(Date.now() / 1000);
+  if (!session?.access_token || expiresAt - nowSec < 60) {
+    const { data: refreshed, error: refreshError } =
+      await supabase.auth.refreshSession();
+    if (refreshError || !refreshed.session?.access_token) {
+      throw new Error("Session expired. Please sign in again.");
+    }
+    session = refreshed.session;
   }
+
+  const token = session!.access_token;
 
   const { data, error } = await supabase.functions.invoke(name, {
     body,
