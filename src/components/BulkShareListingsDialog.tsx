@@ -7,7 +7,7 @@ import { ShareListingsDialog, Recipient, type ListingPreview } from "@/component
 import { getCurrentSenderProfile } from "@/lib/currentSenderProfile";
 import { fetchListingPreview } from "@/lib/fetchListingPreview";
 import { cn } from "@/lib/utils";
-import { searchClientContacts } from "@/lib/contactSearch";
+import { useAgentShareContactSearch } from "@/hooks/useAgentShareContactSearch";
 
 interface BulkShareListingsDialogProps {
   listingIds: string[];
@@ -22,14 +22,6 @@ interface BulkShareListingsDialogProps {
   onSuccessfulShare?: () => void;
   /** Replaces default `Share Selected (n)` button label when set. */
   triggerLabel?: string;
-}
-
-interface Client {
-  id: string;
-  first_name: string;
-  last_name: string;
-  email: string;
-  phone?: string | null;
 }
 
 export function BulkShareListingsDialog({
@@ -48,13 +40,21 @@ export function BulkShareListingsDialog({
   const [agentName, setAgentName] = useState("");
   const [agentEmail, setAgentEmail] = useState("");
   const [message, setMessage] = useState("");
-  const [clientSearch, setClientSearch] = useState("");
-  const [clientResults, setClientResults] = useState<Client[]>([]);
-  const [showClientDropdown, setShowClientDropdown] = useState(false);
   const [showManualEntry, setShowManualEntry] = useState(false);
   const [listingPreview, setListingPreview] = useState<ListingPreview | undefined>();
   const [recipients, setRecipients] = useState<Recipient[]>([]);
   const [senderLocked, setSenderLocked] = useState(false);
+  const contactsEnabled = senderProfileSource === "agent";
+  const {
+    contactQuery: clientSearch,
+    setContactQuery: setClientSearch,
+    contactResults: clientResults,
+    showContactDropdown: showClientDropdown,
+    dismissContactDropdown,
+    handleContactSearchFocus,
+    resetContactSearch,
+    refreshContacts,
+  } = useAgentShareContactSearch(open, contactsEnabled);
 
   useEffect(() => {
     if (!open) return;
@@ -91,14 +91,12 @@ export function BulkShareListingsDialog({
       setAgentName("");
       setAgentEmail("");
       setMessage("");
-      setClientSearch("");
-      setClientResults([]);
-      setShowClientDropdown(false);
+      resetContactSearch();
       setShowManualEntry(false);
       setListingPreview(undefined);
       setRecipients([]);
     }
-  }, [open, listingIds, senderProfileSource]);
+  }, [open, listingIds, resetContactSearch]);
 
   const handleSaveContact = async (name: string, email: string) => {
     try {
@@ -120,6 +118,7 @@ export function BulkShareListingsDialog({
 
       if (error) throw error;
       toast.success(`${name} saved to contacts`);
+      await refreshContacts();
     } catch (error) {
       console.error("Error saving contact:", error);
       toast.error("Failed to save contact");
@@ -133,36 +132,6 @@ export function BulkShareListingsDialog({
   const handleRemoveRecipient = (index: number) => {
     setRecipients(prev => prev.filter((_, i) => i !== index));
   };
-
-  // Search clients
-  useEffect(() => {
-    const searchClients = async () => {
-      if (!clientSearch.trim() || clientSearch.length < 2) {
-        setClientResults([]);
-        setShowClientDropdown(false);
-        return;
-      }
-
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
-
-        const results = await searchClientContacts<Client>({
-          agentId: user.id,
-          query: clientSearch,
-          select: "*",
-          limit: 5,
-        });
-        setClientResults(results);
-        setShowClientDropdown(results.length > 0);
-      } catch (error) {
-        console.error("Error searching clients:", error);
-      }
-    };
-
-    const debounce = setTimeout(searchClients, 300);
-    return () => clearTimeout(debounce);
-  }, [clientSearch]);
 
   const collectRecipients = (): Recipient[] => {
     const all = [...recipients];
@@ -247,7 +216,8 @@ export function BulkShareListingsDialog({
         setContactQuery={setClientSearch}
         contactResults={clientResults}
         showContactDropdown={showClientDropdown}
-        onDismissContactDropdown={() => setShowClientDropdown(false)}
+        onDismissContactDropdown={dismissContactDropdown}
+        onContactSearchFocus={handleContactSearchFocus}
         manualMode={showManualEntry}
         setManualMode={setShowManualEntry}
         recipientName={recipientName}

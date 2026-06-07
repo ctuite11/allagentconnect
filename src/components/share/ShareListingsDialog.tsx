@@ -62,6 +62,8 @@ export type ShareListingsDialogProps = {
   onSelectContact?: (contact: ContactSearchResult) => void;
   /** Closes the contact search dropdown (e.g. click outside the search field). */
   onDismissContactDropdown?: () => void;
+  /** Opens the dropdown when the search field is focused (browse CRM contacts). */
+  onContactSearchFocus?: () => void;
 
   // Manual mode
   manualMode: boolean;
@@ -140,6 +142,7 @@ export function ShareListingsDialog({
   showContactDropdown = false,
   onSelectContact,
   onDismissContactDropdown,
+  onContactSearchFocus,
 
   manualMode,
   setManualMode,
@@ -366,6 +369,7 @@ export function ShareListingsDialog({
               <Input
                 value={contactQuery}
                 onChange={(e) => setContactQuery(e.target.value)}
+                onFocus={onContactSearchFocus}
                 placeholder="Search by name or email…"
                 className={cn("h-9 rounded-lg pl-9 text-[13px] text-neutral-900 placeholder:text-neutral-400", INPUT_CLASS)}
                 autoFocus

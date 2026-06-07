@@ -59,6 +59,9 @@ const displayName = (c: ContactRow) => {
   return email ? email.split("@")[0] : "";
 };
 
+/** Max contacts shown in share/email pickers (full CRM list is searched client-side). */
+export const AGENT_SHARE_CONTACT_RESULT_LIMIT = 25;
+
 /** True when `client` matches `rawQuery` using the /my-clients rules. */
 export function matchesContactQuery(client: ContactRow, rawQuery: string): boolean {
   const q = norm(rawQuery);
@@ -184,6 +187,39 @@ export async function searchClientContacts<T extends ContactRow = ContactRow>(
 
   const all = await fetchAllAgentContacts<T>(agentId, { force: forceRefresh });
   return all.filter((row) => matchesContactQuery(row, raw)).slice(0, limit);
+}
+
+export interface FilterAgentContactsForSharePickerOptions {
+  agentId: string;
+  query?: string;
+  limit?: number;
+  forceRefresh?: boolean;
+}
+
+/**
+ * Share-dialog contact picker — loads the same paginated CRM list as /my-clients,
+ * then filters client-side. Empty query returns the first page alphabetically.
+ */
+export async function filterAgentContactsForSharePicker<T extends ContactRow = ContactRow>(
+  opts: FilterAgentContactsForSharePickerOptions,
+): Promise<T[]> {
+  const {
+    agentId,
+    query = "",
+    limit = AGENT_SHARE_CONTACT_RESULT_LIMIT,
+    forceRefresh = false,
+  } = opts;
+  if (!agentId) return [];
+
+  const all = await fetchAllAgentContacts<T>(agentId, { force: forceRefresh });
+  const withEmail = all.filter((row) => String(row.email ?? "").trim());
+  const sorted = [...withEmail].sort((a, b) =>
+    displayName(a).localeCompare(displayName(b), undefined, { sensitivity: "base" }),
+  );
+
+  const q = query.trim();
+  if (!q) return sorted.slice(0, limit);
+  return sorted.filter((row) => matchesContactQuery(row, q)).slice(0, limit);
 }
 
 export interface MessageableClientRecipient {

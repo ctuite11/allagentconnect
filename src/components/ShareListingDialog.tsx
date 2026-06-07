@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { ShareListingsDialog, Recipient, ListingPreview } from "@/components/share/ShareListingsDialog";
 import { getCurrentSenderProfile } from "@/lib/currentSenderProfile";
 import { fetchListingPreview } from "@/lib/fetchListingPreview";
-import { searchClientContacts } from "@/lib/contactSearch";
+import { useAgentShareContactSearch } from "@/hooks/useAgentShareContactSearch";
 
 interface ShareListingDialogProps {
   listingId: string;
@@ -20,14 +20,6 @@ interface ShareListingDialogProps {
   /** Controlled mode — omit the built-in trigger button. */
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
-}
-
-interface Client {
-  id: string;
-  first_name: string;
-  last_name: string;
-  email: string;
-  phone?: string | null;
 }
 
 export const ShareListingDialog = ({
@@ -47,13 +39,21 @@ export const ShareListingDialog = ({
   const [agentName, setAgentName] = useState("");
   const [agentEmail, setAgentEmail] = useState("");
   const [message, setMessage] = useState("");
-  const [clientSearch, setClientSearch] = useState("");
-  const [clientResults, setClientResults] = useState<Client[]>([]);
-  const [showClientDropdown, setShowClientDropdown] = useState(false);
   const [showManualEntry, setShowManualEntry] = useState(false);
   const [listingPreview, setListingPreview] = useState<ListingPreview | undefined>();
   const [recipients, setRecipients] = useState<Recipient[]>([]);
   const [senderLocked, setSenderLocked] = useState(false);
+  const contactsEnabled = senderProfileSource === "agent";
+  const {
+    contactQuery: clientSearch,
+    setContactQuery: setClientSearch,
+    contactResults: clientResults,
+    showContactDropdown: showClientDropdown,
+    dismissContactDropdown,
+    handleContactSearchFocus,
+    resetContactSearch,
+    refreshContacts,
+  } = useAgentShareContactSearch(open, contactsEnabled);
 
   useEffect(() => {
     if (!open) return;
@@ -90,51 +90,12 @@ export const ShareListingDialog = ({
       setAgentName("");
       setAgentEmail("");
       setMessage("");
-      setClientSearch("");
-      setClientResults([]);
-      setShowClientDropdown(false);
+      resetContactSearch();
       setShowManualEntry(false);
       setListingPreview(undefined);
       setRecipients([]);
     }
-  }, [open, listingId]);
-
-  useEffect(() => {
-    if (!open || senderProfileSource !== "agent") {
-      setClientResults([]);
-      setShowClientDropdown(false);
-      return;
-    }
-
-    const searchClients = async () => {
-      if (!clientSearch.trim() || clientSearch.length < 2) {
-        setClientResults([]);
-        setShowClientDropdown(false);
-        return;
-      }
-
-      try {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-        if (!user) return;
-
-        const results = await searchClientContacts<Client>({
-          agentId: user.id,
-          query: clientSearch,
-          select: "*",
-          limit: 5,
-        });
-        setClientResults(results);
-        setShowClientDropdown(results.length > 0);
-      } catch (error) {
-        console.error("Error searching clients:", error);
-      }
-    };
-
-    const debounce = setTimeout(searchClients, 300);
-    return () => clearTimeout(debounce);
-  }, [clientSearch, open, senderProfileSource]);
+  }, [open, listingId, resetContactSearch]);
 
   const handleSaveContact =
     senderProfileSource === "agent"
@@ -158,6 +119,7 @@ export const ShareListingDialog = ({
 
             if (error) throw error;
             toast.success(`${name} saved to contacts`);
+            await refreshContacts();
           } catch (error) {
             console.error("Error saving contact:", error);
             toast.error("Failed to save contact");
@@ -248,9 +210,10 @@ export const ShareListingDialog = ({
         listingPreview={listingPreview}
         contactQuery={clientSearch}
         setContactQuery={setClientSearch}
-        contactResults={senderProfileSource === "agent" ? clientResults : []}
-        showContactDropdown={senderProfileSource === "agent" && showClientDropdown}
-        onDismissContactDropdown={() => setShowClientDropdown(false)}
+        contactResults={contactsEnabled ? clientResults : []}
+        showContactDropdown={contactsEnabled && showClientDropdown}
+        onDismissContactDropdown={dismissContactDropdown}
+        onContactSearchFocus={handleContactSearchFocus}
         manualMode={showManualEntry}
         setManualMode={setShowManualEntry}
         recipientName={recipientName}
