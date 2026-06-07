@@ -27,6 +27,7 @@ import {
   shareRecipientDisplayName,
   shareRecipientFromParts,
 } from "@/lib/shareRecipientUtils";
+import { AGENT_SHARE_CONTACT_MIN_QUERY_LENGTH } from "@/lib/contactSearch";
 
 export type ListingPreview = {
   address: string;
@@ -114,6 +115,10 @@ export type ShareListingsDialogProps = {
   submitButtonLabel?: string;
   /** Logged-in users: sender identity comes from profile; hide name/email fields. */
   lockSenderIdentity?: boolean;
+  /** When set to 1, only one recipient; search/manual UI hides once selected. */
+  maxRecipients?: number;
+  /** True while debounced CRM search is in flight. */
+  isSearchingContacts?: boolean;
 };
 
 const DEFAULT_MESSAGE_CHIPS = [
@@ -181,13 +186,30 @@ export function ShareListingsDialog({
   previewVariant = "listing",
   submitButtonLabel,
   lockSenderIdentity = false,
+  maxRecipients,
+  isSearchingContacts = false,
 }: ShareListingsDialogProps) {
   const [selectedChips, setSelectedChips] = React.useState<Set<string>>(new Set());
   const [contactAddFeedback, setContactAddFeedback] = React.useState<ContactAddFeedback>(null);
   const [highlightedRecipientEmail, setHighlightedRecipientEmail] = React.useState<string | null>(null);
   const [senderExpanded, setSenderExpanded] = React.useState(false);
   const [addingManualRecipient, setAddingManualRecipient] = React.useState(false);
+  const [contactSearchFocused, setContactSearchFocused] = React.useState(false);
   const contactSearchRef = React.useRef<HTMLDivElement>(null);
+
+  const singleRecipientMode = maxRecipients === 1;
+  const hasActiveRecipient = recipients.length > 0;
+  const showRecipientPicker = !singleRecipientMode || !hasActiveRecipient;
+  const trimmedContactQuery = contactQuery.trim();
+  const contactQueryReady = trimmedContactQuery.length >= AGENT_SHARE_CONTACT_MIN_QUERY_LENGTH;
+  const showContactSearchHint =
+    showRecipientPicker && contactSearchFocused && !contactQueryReady && !manualMode;
+  const showNoContactResults =
+    showRecipientPicker &&
+    contactQueryReady &&
+    showContactDropdown &&
+    !isSearchingContacts &&
+    contactResults.length === 0;
 
   const contactDisplayName = (contact: ContactSearchResult) =>
     `${contact.first_name ?? ""} ${contact.last_name ?? ""}`.trim() || contact.email;
@@ -212,9 +234,8 @@ export function ShareListingsDialog({
 
   const tryAddRecipient = (recipient: ShareRecipient): boolean => {
     if (!onAddRecipient) return false;
-    if (!recipient.firstName.trim() || !recipient.email.trim() || isDuplicateRecipientEmail(recipient.email)) {
-      return false;
-    }
+    if (!recipient.firstName.trim() || !recipient.email.trim()) return false;
+    if (!singleRecipientMode && isDuplicateRecipientEmail(recipient.email)) return false;
     onAddRecipient(recipient);
     return true;
   };
@@ -251,7 +272,7 @@ export function ShareListingsDialog({
       if (tryAddRecipient(recipient)) {
         showContactAddFeedback("added");
         clearPendingRecipientFields();
-      } else if (isDuplicateRecipientEmail(recipient.email)) {
+      } else if (!singleRecipientMode && isDuplicateRecipientEmail(recipient.email)) {
         showContactAddFeedback("already-added", recipient.email);
         setContactQuery("");
         onDismissContactDropdown?.();
@@ -275,19 +296,24 @@ export function ShareListingsDialog({
     );
     if (!recipient || !onAddRecipient) return;
 
-    if (isDuplicateRecipientEmail(recipient.email)) {
+    if (!singleRecipientMode && isDuplicateRecipientEmail(recipient.email)) {
       showContactAddFeedback("already-added", recipient.email);
       return;
     }
 
     setAddingManualRecipient(true);
     try {
-      if (onSaveContact) {
-        await onSaveContact(recipient);
-      }
       onAddRecipient(recipient);
       showContactAddFeedback("added");
       clearPendingRecipientFields();
+
+      if (onSaveContact) {
+        try {
+          await onSaveContact(recipient);
+        } catch (error) {
+          console.warn("[ShareListingsDialog] contact save failed (recipient still selected)", error);
+        }
+      }
     } finally {
       setAddingManualRecipient(false);
     }
@@ -307,6 +333,7 @@ export function ShareListingsDialog({
       setContactAddFeedback(null);
       setHighlightedRecipientEmail(null);
       setSenderExpanded(false);
+      setContactSearchFocused(false);
     }
   }, [open]);
 
@@ -391,61 +418,48 @@ export function ShareListingsDialog({
             </div>
           ) : null}
 
-          {/* Contact Search */}
+          {/* Contact Search / Recipient */}
           <section className="space-y-2">
-            <div className="text-[11px] font-medium uppercase tracking-wide text-neutral-500">
-              {recipients.length > 0 ? "Add another contact" : "Search contact"}
-            </div>
-
-            <div ref={contactSearchRef} className={FIELD_ICON_WRAP}>
-              <Search className={ICON_SLOT} />
-              <Input
-                value={contactQuery}
-                onChange={(e) => setContactQuery(e.target.value)}
-                onFocus={onContactSearchFocus}
-                placeholder="Search by name or email…"
-                className={cn("h-9 rounded-lg pl-9 text-[13px] text-neutral-900 placeholder:text-neutral-400", INPUT_CLASS)}
-                autoFocus
-              />
-              {showContactDropdown && contactResults.length > 0 && (
-                <div className="absolute z-30 mt-1 max-h-48 w-full overflow-y-auto rounded-lg border border-neutral-200 bg-white py-1 shadow-[0_4px_14px_rgba(0,0,0,0.08)]">
-                  {contactResults.map((contact) => {
-                    const fullName = contactDisplayName(contact);
+            {hasActiveRecipient ? (
+              <div className="space-y-2">
+                <div className="text-[11px] font-medium uppercase tracking-wide text-neutral-500">
+                  {singleRecipientMode ? "Recipient" : `Selected recipients (${recipients.length})`}
+                </div>
+                <div className="space-y-2">
+                  {recipients.map((r, idx) => {
+                    const isHighlighted =
+                      highlightedRecipientEmail != null &&
+                      r.email.trim().toLowerCase() === highlightedRecipientEmail;
                     return (
-                      <button
-                        key={contact.id}
-                        type="button"
-                        onClick={() => handleContactSelect(contact)}
-                        className="flex w-full items-center justify-between px-3 py-2 text-left transition-colors hover:bg-neutral-50"
+                      <div
+                        key={`${r.email}-${idx}`}
+                        className={cn(
+                          "flex items-start justify-between gap-2 rounded-lg border px-3 py-2.5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] transition-colors duration-300",
+                          isHighlighted
+                            ? "border-emerald-300/90 bg-emerald-50/90 ring-1 ring-emerald-200/70"
+                            : "border-emerald-200/80 bg-emerald-50/70",
+                        )}
                       >
-                        <div className="min-w-0 pr-2">
-                          <div className="truncate text-[13px] font-medium text-neutral-900">{fullName}</div>
-                          <div className="truncate text-xs text-neutral-600">{contact.email}</div>
-                        </div>
-                        {contact.phone ? (
-                          <div className="shrink-0 text-xs tabular-nums text-neutral-500">
-                            {formatPhoneNumber(contact.phone)}
+                        <div className="min-w-0">
+                          <div className="truncate text-[13px] font-semibold text-neutral-900">
+                            {shareRecipientDisplayName(r)}
                           </div>
-                        ) : null}
-                      </button>
+                          <div className="truncate text-[12px] text-neutral-600">{r.email}</div>
+                        </div>
+                        {onRemoveRecipient && (
+                          <button
+                            type="button"
+                            onClick={() => onRemoveRecipient(idx)}
+                            className="shrink-0 rounded-full p-1 text-neutral-400 transition-colors hover:bg-white/80 hover:text-neutral-600"
+                            aria-label={`Remove ${shareRecipientDisplayName(r)}`}
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </button>
+                        )}
+                      </div>
                     );
                   })}
                 </div>
-              )}
-            </div>
-
-            {!manualMode ? (
-              <button
-                type="button"
-                onClick={() => setManualMode(true)}
-                className="text-[13px] font-medium text-[#0E56F5] transition-colors hover:text-[#0B46CC]"
-              >
-                + Enter recipient manually
-              </button>
-            ) : null}
-
-            {(contactAddFeedback || recipients.length > 0) && (
-              <div className="space-y-2 rounded-lg border border-neutral-100 bg-neutral-50/50 px-2.5 py-2">
                 {contactAddFeedback && (
                   <div
                     role="status"
@@ -469,131 +483,233 @@ export function ShareListingsDialog({
                     </span>
                   </div>
                 )}
+              </div>
+            ) : null}
 
-                {recipients.length > 0 && (
-                  <div className="space-y-2">
-                    <div className="text-[11px] font-medium uppercase tracking-wide text-neutral-500">
-                      Selected recipients ({recipients.length})
-                    </div>
-                    <div className="space-y-2">
-                      {recipients.map((r, idx) => {
-                        const isHighlighted =
-                          highlightedRecipientEmail != null &&
-                          r.email.trim().toLowerCase() === highlightedRecipientEmail;
+            {showRecipientPicker ? (
+              <>
+                <div className="text-[11px] font-medium uppercase tracking-wide text-neutral-500">
+                  {recipients.length > 0 ? "Add another contact" : "Search contact"}
+                </div>
+
+                <div ref={contactSearchRef} className={FIELD_ICON_WRAP}>
+                  <Search className={ICON_SLOT} />
+                  <Input
+                    value={contactQuery}
+                    onChange={(e) => setContactQuery(e.target.value)}
+                    onFocus={() => {
+                      setContactSearchFocused(true);
+                      onContactSearchFocus?.();
+                    }}
+                    onBlur={() => setContactSearchFocused(false)}
+                    placeholder="Search by name or email…"
+                    className={cn(
+                      "h-9 rounded-lg pl-9 text-[13px] text-neutral-900 placeholder:text-neutral-400",
+                      INPUT_CLASS,
+                    )}
+                    autoFocus={!hasActiveRecipient}
+                  />
+                  {showContactSearchHint ? (
+                    <p className="mt-1.5 text-[12px] text-neutral-500">Start typing to search contacts.</p>
+                  ) : null}
+                  {showContactDropdown && contactResults.length > 0 ? (
+                    <div className="absolute z-30 mt-1 max-h-48 w-full overflow-y-auto rounded-lg border border-neutral-200 bg-white py-1 shadow-[0_4px_14px_rgba(0,0,0,0.08)]">
+                      {contactResults.map((contact) => {
+                        const fullName = contactDisplayName(contact);
                         return (
-                          <div
-                            key={`${r.email}-${idx}`}
-                            className={cn(
-                              "flex items-start justify-between gap-2 rounded-lg border px-3 py-2.5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] transition-colors duration-300",
-                              isHighlighted
-                                ? "border-emerald-300/90 bg-emerald-50/90 ring-1 ring-emerald-200/70"
-                                : "border-emerald-200/80 bg-emerald-50/70",
-                            )}
+                          <button
+                            key={contact.id}
+                            type="button"
+                            onMouseDown={(e) => e.preventDefault()}
+                            onClick={() => handleContactSelect(contact)}
+                            className="flex w-full items-center justify-between px-3 py-2 text-left transition-colors hover:bg-neutral-50"
                           >
-                            <div className="min-w-0">
-                              <div className="truncate text-[13px] font-semibold text-neutral-900">
-                                {shareRecipientDisplayName(r)}
-                              </div>
-                              <div className="truncate text-[12px] text-neutral-600">{r.email}</div>
+                            <div className="min-w-0 pr-2">
+                              <div className="truncate text-[13px] font-medium text-neutral-900">{fullName}</div>
+                              <div className="truncate text-xs text-neutral-600">{contact.email}</div>
                             </div>
-                            {onRemoveRecipient && (
-                              <button
-                                type="button"
-                                onClick={() => onRemoveRecipient(idx)}
-                                className="shrink-0 rounded-full p-1 text-neutral-400 transition-colors hover:bg-white/80 hover:text-neutral-600"
-                                aria-label={`Remove ${shareRecipientDisplayName(r)}`}
-                              >
-                                <X className="h-3.5 w-3.5" />
-                              </button>
-                            )}
-                          </div>
+                            {contact.phone ? (
+                              <div className="shrink-0 text-xs tabular-nums text-neutral-500">
+                                {formatPhoneNumber(contact.phone)}
+                              </div>
+                            ) : null}
+                          </button>
                         );
                       })}
                     </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {manualMode && (
-              <div className="space-y-2 rounded-lg border border-neutral-200 bg-neutral-50/30 p-2.5">
-                <div className="grid gap-2 sm:grid-cols-2">
-                  <div className="space-y-1">
-                    <div className="text-xs font-medium text-neutral-700">
-                      First name <span className="text-neutral-400">*</span>
+                  ) : null}
+                  {showNoContactResults ? (
+                    <div className="absolute z-30 mt-1 w-full rounded-lg border border-neutral-200 bg-white px-3 py-2.5 text-[12px] text-neutral-600 shadow-[0_4px_14px_rgba(0,0,0,0.08)]">
+                      No contacts found
                     </div>
-                    <Input
-                      value={recipientFirstName}
-                      onChange={(e) => setRecipientFirstName(e.target.value)}
-                      placeholder="Chris"
-                      autoComplete="given-name"
-                      className={cn("h-9 rounded-lg text-[13px] text-neutral-900", INPUT_CLASS)}
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <div className="text-xs font-medium text-neutral-700">Last name</div>
-                    <Input
-                      value={recipientLastName}
-                      onChange={(e) => setRecipientLastName(e.target.value)}
-                      placeholder="Tuite"
-                      autoComplete="family-name"
-                      className={cn("h-9 rounded-lg text-[13px] text-neutral-900", INPUT_CLASS)}
-                    />
-                  </div>
+                  ) : null}
+                  {isSearchingContacts && contactQueryReady ? (
+                    <p className="mt-1.5 text-[12px] text-neutral-500">Searching contacts…</p>
+                  ) : null}
                 </div>
 
-                <div className="space-y-1">
-                  <div className="text-xs font-medium text-neutral-700">
-                    Email <span className="text-neutral-400">*</span>
-                  </div>
-                  <div className={FIELD_ICON_WRAP}>
-                    <Mail className={ICON_SLOT} />
-                    <Input
-                      value={recipientEmail}
-                      onChange={(e) => setRecipientEmail(e.target.value)}
-                      placeholder="jane@email.com"
-                      type="email"
-                      autoComplete="email"
-                      className={cn("h-9 rounded-lg pl-9 text-[13px] text-neutral-900", INPUT_CLASS)}
-                    />
-                  </div>
-                </div>
-
-                {onAddRecipient && (
-                  <Button
+                {!manualMode ? (
+                  <button
                     type="button"
-                    variant="outline"
-                    size="sm"
-                    disabled={!canAddManualRecipient || addingManualRecipient}
-                    onClick={() => void handleManualAddRecipient()}
-                    className="h-8 rounded-lg border-neutral-200 text-[12px] font-medium text-neutral-900 hover:bg-neutral-50"
+                    onClick={() => setManualMode(true)}
+                    className="text-[13px] font-medium text-[#0E56F5] transition-colors hover:text-[#0B46CC]"
                   >
-                    <Plus className={cn("mr-1.5 h-3.5 w-3.5", ICON_NEUTRAL)} />
-                    {addingManualRecipient ? "Adding…" : "Add to recipients"}
-                  </Button>
-                )}
-
-                {onSaveContact ? (
-                  <p className="text-[11px] leading-snug text-neutral-500">
-                    Adds this person to recipients and saves them to your contacts.
-                  </p>
+                    + Enter recipient manually
+                  </button>
                 ) : null}
 
-                <button
-                  type="button"
-                  onClick={() => {
-                    setManualMode(false);
-                    setRecipientFirstName("");
-                    setRecipientLastName("");
-                    setRecipientEmail("");
-                  }}
-                  className="text-[12px] text-neutral-500 transition-colors hover:text-neutral-800"
-                >
-                  Back to contact search
-                </button>
-              </div>
-            )}
+                {!singleRecipientMode && (contactAddFeedback || recipients.length > 0) ? (
+                  <div className="space-y-2 rounded-lg border border-neutral-100 bg-neutral-50/50 px-2.5 py-2">
+                    {contactAddFeedback ? (
+                      <div
+                        role="status"
+                        aria-live="polite"
+                        className={cn(
+                          "flex items-center gap-2 rounded-md border px-2.5 py-1.5 text-[13px] leading-snug",
+                          contactAddFeedback === "added"
+                            ? "border-emerald-200/90 bg-emerald-50/80 text-emerald-900"
+                            : "border-neutral-200 bg-white text-neutral-700",
+                        )}
+                      >
+                        <Check
+                          className={cn(
+                            "h-3.5 w-3.5 shrink-0",
+                            contactAddFeedback === "added" ? "text-emerald-600" : "text-neutral-500",
+                          )}
+                          aria-hidden
+                        />
+                        <span>
+                          {contactAddFeedback === "added" ? "Recipient added" : "Recipient already added"}
+                        </span>
+                      </div>
+                    ) : null}
+
+                    {recipients.length > 0 ? (
+                      <div className="space-y-2">
+                        <div className="text-[11px] font-medium uppercase tracking-wide text-neutral-500">
+                          Selected recipients ({recipients.length})
+                        </div>
+                        <div className="space-y-2">
+                          {recipients.map((r, idx) => {
+                            const isHighlighted =
+                              highlightedRecipientEmail != null &&
+                              r.email.trim().toLowerCase() === highlightedRecipientEmail;
+                            return (
+                              <div
+                                key={`${r.email}-${idx}`}
+                                className={cn(
+                                  "flex items-start justify-between gap-2 rounded-lg border px-3 py-2.5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] transition-colors duration-300",
+                                  isHighlighted
+                                    ? "border-emerald-300/90 bg-emerald-50/90 ring-1 ring-emerald-200/70"
+                                    : "border-emerald-200/80 bg-emerald-50/70",
+                                )}
+                              >
+                                <div className="min-w-0">
+                                  <div className="truncate text-[13px] font-semibold text-neutral-900">
+                                    {shareRecipientDisplayName(r)}
+                                  </div>
+                                  <div className="truncate text-[12px] text-neutral-600">{r.email}</div>
+                                </div>
+                                {onRemoveRecipient ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => onRemoveRecipient(idx)}
+                                    className="shrink-0 rounded-full p-1 text-neutral-400 transition-colors hover:bg-white/80 hover:text-neutral-600"
+                                    aria-label={`Remove ${shareRecipientDisplayName(r)}`}
+                                  >
+                                    <X className="h-3.5 w-3.5" />
+                                  </button>
+                                ) : null}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ) : null}
+                  </div>
+                ) : null}
+
+                {manualMode ? (
+                  <div className="space-y-2 rounded-lg border border-neutral-200 bg-neutral-50/30 p-2.5">
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      <div className="space-y-1">
+                        <div className="text-xs font-medium text-neutral-700">
+                          First name <span className="text-neutral-400">*</span>
+                        </div>
+                        <Input
+                          value={recipientFirstName}
+                          onChange={(e) => setRecipientFirstName(e.target.value)}
+                          placeholder="Chris"
+                          autoComplete="given-name"
+                          className={cn("h-9 rounded-lg text-[13px] text-neutral-900", INPUT_CLASS)}
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <div className="text-xs font-medium text-neutral-700">Last name</div>
+                        <Input
+                          value={recipientLastName}
+                          onChange={(e) => setRecipientLastName(e.target.value)}
+                          placeholder="Tuite"
+                          autoComplete="family-name"
+                          className={cn("h-9 rounded-lg text-[13px] text-neutral-900", INPUT_CLASS)}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <div className="text-xs font-medium text-neutral-700">
+                        Email <span className="text-neutral-400">*</span>
+                      </div>
+                      <div className={FIELD_ICON_WRAP}>
+                        <Mail className={ICON_SLOT} />
+                        <Input
+                          value={recipientEmail}
+                          onChange={(e) => setRecipientEmail(e.target.value)}
+                          placeholder="jane@email.com"
+                          type="email"
+                          autoComplete="email"
+                          className={cn("h-9 rounded-lg pl-9 text-[13px] text-neutral-900", INPUT_CLASS)}
+                        />
+                      </div>
+                    </div>
+
+                    {onAddRecipient ? (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        disabled={!canAddManualRecipient || addingManualRecipient}
+                        onClick={() => void handleManualAddRecipient()}
+                        className="h-8 rounded-lg border-neutral-200 text-[12px] font-medium text-neutral-900 hover:bg-neutral-50"
+                      >
+                        <Plus className={cn("mr-1.5 h-3.5 w-3.5", ICON_NEUTRAL)} />
+                        {addingManualRecipient ? "Adding…" : "Add to recipients"}
+                      </Button>
+                    ) : null}
+
+                    {onSaveContact ? (
+                      <p className="text-[11px] leading-snug text-neutral-500">
+                        Adds this person as the recipient{onSaveContact ? " and saves them to your contacts" : ""}.
+                      </p>
+                    ) : null}
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setManualMode(false);
+                        setRecipientFirstName("");
+                        setRecipientLastName("");
+                        setRecipientEmail("");
+                      }}
+                      className="text-[12px] text-neutral-500 transition-colors hover:text-neutral-800"
+                    >
+                      Back to contact search
+                    </button>
+                  </div>
+                ) : null}
+              </>
+            ) : null}
           </section>
 
           {/* Message */}

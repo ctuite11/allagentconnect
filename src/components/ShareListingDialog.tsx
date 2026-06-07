@@ -11,6 +11,7 @@ import { ShareListingsDialog, ListingPreview } from "@/components/share/ShareLis
 import { getCurrentSenderProfile } from "@/lib/currentSenderProfile";
 import { fetchListingPreview } from "@/lib/fetchListingPreview";
 import { useAgentShareContactSearch } from "@/hooks/useAgentShareContactSearch";
+import { invokeEdgeFunction } from "@/lib/invokeEdgeFunction";
 import {
   shareRecipientDisplayName,
   shareRecipientGreetingName,
@@ -59,6 +60,7 @@ export const ShareListingDialog = ({
     handleContactSearchFocus,
     resetContactSearch,
     refreshContacts,
+    isSearchingContacts,
   } = useAgentShareContactSearch(open, contactsEnabled);
 
   useEffect(() => {
@@ -120,19 +122,27 @@ export const ShareListingDialog = ({
               email: recipient.email.trim(),
             });
 
-            if (error) throw error;
+            if (error) {
+              if (error.code === "23505") {
+                toast.message(`${shareRecipientDisplayName(recipient)} is already in your contacts`);
+                return;
+              }
+              throw error;
+            }
             toast.success(`${shareRecipientDisplayName(recipient)} saved to contacts`);
             await refreshContacts();
           } catch (error) {
             console.error("Error saving contact:", error);
-            toast.error("Failed to save contact");
+            toast.error(
+              error instanceof Error ? error.message : "Failed to save contact",
+            );
             throw error;
           }
         }
       : undefined;
 
   const handleAddRecipient = (recipient: ShareRecipient) => {
-    setRecipients((prev) => [...prev, recipient]);
+    setRecipients([recipient]);
   };
 
   const handleRemoveRecipient = (index: number) => {
@@ -150,18 +160,15 @@ export const ShareListingDialog = ({
       const { trackShare } = await import("@/lib/trackShare");
 
       for (const recipient of recipients) {
-        const { error } = await supabase.functions.invoke("send-listing-share", {
-          body: {
-            listingId,
-            recipientName: shareRecipientGreetingName(recipient),
-            recipientEmail: recipient.email,
-            agentName,
-            agentEmail,
-            message,
-          },
+        await invokeEdgeFunction("send-listing-share", {
+          listingId,
+          recipientName: shareRecipientGreetingName(recipient),
+          recipientEmail: recipient.email,
+          agentName,
+          agentEmail,
+          message,
         });
 
-        if (error) throw error;
         await trackShare(listingId, "email_direct", recipient.email);
       }
 
@@ -173,8 +180,9 @@ export const ShareListingDialog = ({
       );
       setOpen(false);
     } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to share listing";
       console.error("Error sharing listing:", error);
-      toast.error("Failed to share listing");
+      toast.error(message);
     } finally {
       setSending(false);
     }
@@ -228,6 +236,8 @@ export const ShareListingDialog = ({
         onAddRecipient={handleAddRecipient}
         onRemoveRecipient={handleRemoveRecipient}
         lockSenderIdentity={senderLocked}
+        maxRecipients={1}
+        isSearchingContacts={isSearchingContacts}
       />
     </>
   );

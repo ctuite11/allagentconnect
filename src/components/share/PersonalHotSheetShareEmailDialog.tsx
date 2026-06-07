@@ -69,6 +69,7 @@ export function PersonalHotSheetShareEmailDialog({
     handleContactSearchFocus,
     resetContactSearch,
     refreshContacts,
+    isSearchingContacts,
   } = useAgentShareContactSearch(open, true);
 
   useEffect(() => {
@@ -259,6 +260,7 @@ export function PersonalHotSheetShareEmailDialog({
         previewVariant={previewVariant}
         submitButtonLabel="Send email"
         lockSenderIdentity={senderLocked}
+        isSearchingContacts={isSearchingContacts}
       />
   );
 }

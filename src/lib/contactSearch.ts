@@ -196,9 +196,12 @@ export interface FilterAgentContactsForSharePickerOptions {
   forceRefresh?: boolean;
 }
 
+/** Minimum query length before share-dialog contact search runs (matches searchClientContacts). */
+export const AGENT_SHARE_CONTACT_MIN_QUERY_LENGTH = 2;
+
 /**
- * Share-dialog contact picker — loads the same paginated CRM list as /my-clients,
- * then filters client-side. Empty query returns the first page alphabetically.
+ * Share-dialog contact picker — same paginated CRM list as /my-clients, filtered client-side.
+ * Returns nothing until the user types at least {@link AGENT_SHARE_CONTACT_MIN_QUERY_LENGTH} characters.
  */
 export async function filterAgentContactsForSharePicker<T extends ContactRow = ContactRow>(
   opts: FilterAgentContactsForSharePickerOptions,
@@ -211,14 +214,15 @@ export async function filterAgentContactsForSharePicker<T extends ContactRow = C
   } = opts;
   if (!agentId) return [];
 
+  const q = query.trim();
+  if (!q || q.length < AGENT_SHARE_CONTACT_MIN_QUERY_LENGTH) return [];
+
   const all = await fetchAllAgentContacts<T>(agentId, { force: forceRefresh });
   const withEmail = all.filter((row) => String(row.email ?? "").trim());
   const sorted = [...withEmail].sort((a, b) =>
     displayName(a).localeCompare(displayName(b), undefined, { sensitivity: "base" }),
   );
 
-  const q = query.trim();
-  if (!q) return sorted.slice(0, limit);
   return sorted.filter((row) => matchesContactQuery(row, q)).slice(0, limit);
 }
 

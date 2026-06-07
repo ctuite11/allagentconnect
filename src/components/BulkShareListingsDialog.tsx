@@ -60,6 +60,7 @@ export function BulkShareListingsDialog({
     handleContactSearchFocus,
     resetContactSearch,
     refreshContacts,
+    isSearchingContacts,
   } = useAgentShareContactSearch(open, contactsEnabled);
 
   useEffect(() => {
@@ -231,6 +232,7 @@ export function BulkShareListingsDialog({
         onAddRecipient={handleAddRecipient}
         onRemoveRecipient={handleRemoveRecipient}
         lockSenderIdentity={senderLocked}
+        isSearchingContacts={isSearchingContacts}
       />
     </>
   );
