@@ -1199,7 +1199,97 @@ const MyClients = () => {
               ) : (
                 <>
                 <div className="mx-4 mb-4 overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm sm:mx-6">
-                  <div className="overflow-x-auto">
+                  {/* Mobile card list */}
+                  <ul className="divide-y divide-neutral-100 md:hidden">
+                    {paginatedClients.map((client) => {
+                      const isSelected = selectedClients.has(client.id);
+                      return (
+                        <li key={client.id} className="px-4 py-3">
+                          <div className="flex items-start gap-3">
+                            <div
+                              className="pt-1"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <Checkbox
+                                checked={isSelected}
+                                onCheckedChange={() => toggleSelectClient(client.id)}
+                                aria-label={`Select ${displayName(client)}`}
+                              />
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => openContactDrawer(client)}
+                              className="min-w-0 flex-1 text-left"
+                            >
+                              <div className="flex items-center gap-2">
+                                <p className="truncate text-[14px] font-medium text-neutral-900">
+                                  {toTitleCase(client.first_name)} {toTitleCase(client.last_name) || (!client.first_name && !client.last_name ? displayName(client) : "")}
+                                </p>
+                                {(client as any).source === 'network' && (
+                                  <Badge variant="outline" className="border-neutral-200 bg-neutral-100 text-[10px] text-neutral-700">AAC</Badge>
+                                )}
+                              </div>
+                              <div className="mt-1 flex items-center gap-1.5 text-[12px] text-neutral-600">
+                                <Mail className="h-3 w-3 shrink-0 text-neutral-400" />
+                                <span className="truncate">{client.email}</span>
+                              </div>
+                              {client.phone && (
+                                <div className="mt-0.5 flex items-center gap-1.5 text-[12px] text-neutral-600">
+                                  <Phone className="h-3 w-3 shrink-0 text-neutral-400" />
+                                  <span>{formatPhoneNumber(client.phone)}</span>
+                                </div>
+                              )}
+                              <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                                {client.client_type && (
+                                  <Badge variant="outline" className="border-neutral-200 bg-white text-[10px] capitalize text-neutral-700">
+                                    {client.client_type}
+                                  </Badge>
+                                )}
+                                {client.relationship_status === "active" && (
+                                  <Badge variant="outline" className="border-neutral-200 bg-neutral-100 text-[10px] text-neutral-800">Active</Badge>
+                                )}
+                                {client.relationship_status === "ended" && (
+                                  <Badge variant="outline" className="border-zinc-200 bg-zinc-100 text-[10px] text-zinc-500">Ended</Badge>
+                                )}
+                              </div>
+                            </button>
+                            <div
+                              className="flex shrink-0 items-center"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-9 w-9 px-0"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleEditClient(client);
+                                }}
+                                aria-label="Edit contact"
+                              >
+                                <Edit className="h-4 w-4 text-neutral-500" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-9 w-9 px-0"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteClient(client.id);
+                                }}
+                                aria-label="Remove contact"
+                              >
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
+                            </div>
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+
+                  {/* Desktop table */}
+                  <div className="hidden overflow-x-auto md:block">
                   <Table>
                     <TableHeader className="border-b border-neutral-100 bg-neutral-50/80">
                       <TableRow className="border-b-0 hover:bg-transparent">
