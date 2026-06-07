@@ -1257,6 +1257,20 @@ const MyClients = () => {
                               className="flex shrink-0 items-center"
                               onClick={(e) => e.stopPropagation()}
                             >
+                              {isAdmin && client.email && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-9 w-9 px-0"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setFounderInviteClient(client);
+                                  }}
+                                  aria-label="Send Founder Invite"
+                                >
+                                  <Crown className="h-4 w-4 text-[#22C55E]" />
+                                </Button>
+                              )}
                               <Button
                                 variant="ghost"
                                 size="sm"
