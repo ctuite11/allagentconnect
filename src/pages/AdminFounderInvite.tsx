@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Crown } from "lucide-react";
+import { invokeEdgeFunction } from "@/lib/invokeEdgeFunction";
 
 /**
  * Admin-only tool: send the Founding Partner invitation to a single email
@@ -45,12 +46,10 @@ export default function AdminFounderInvite() {
     setSending(true);
     setLastResult(null);
     try {
-      const { data, error } = await supabase.functions.invoke("send-founder-invite", {
-        body: { recipientEmail: trimmed, recipientName: name.trim() },
+      await invokeEdgeFunction("send-founder-invite", {
+        recipientEmail: trimmed,
+        recipientName: name.trim(),
       });
-      if (error || !(data as any)?.success) {
-        throw new Error((data as any)?.error || error?.message || "Send failed");
-      }
       toast.success(`Founder invite queued for ${trimmed}`);
       setLastResult(`Queued for ${trimmed}`);
       setEmail("");

@@ -35,6 +35,7 @@ import { Seo } from "@/components/Seo";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { hasRole } from "@/lib/auth/roles";
+import { invokeEdgeFunction } from "@/lib/invokeEdgeFunction";
 
 // Helper function for title case display (safe transform, doesn't modify stored data)
 const toTitleCase = (str: string) => {
@@ -1720,15 +1721,10 @@ const MyClients = () => {
                 if (!founderInviteClient?.email) return;
                 setSendingFounderInvite(true);
                 try {
-                  const { data, error } = await supabase.functions.invoke("send-founder-invite", {
-                    body: {
-                      recipientEmail: founderInviteClient.email,
-                      recipientName: `${founderInviteClient.first_name || ""} ${founderInviteClient.last_name || ""}`.trim(),
-                    },
+                  await invokeEdgeFunction("send-founder-invite", {
+                    recipientEmail: founderInviteClient.email,
+                    recipientName: `${founderInviteClient.first_name || ""} ${founderInviteClient.last_name || ""}`.trim(),
                   });
-                  if (error || !(data as any)?.success) {
-                    throw new Error((data as any)?.error || error?.message || "Send failed");
-                  }
                   toast.success(`Founder invite queued for ${founderInviteClient.email}`);
                   setFounderInviteClient(null);
                 } catch (e: any) {
