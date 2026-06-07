@@ -38,13 +38,15 @@ export async function invokeEdgeFunction<T = Record<string, unknown>>(
 
   if (error || !data?.success) {
     const context = (error as { context?: Response } | null)?.context;
-    const backendError = context
-      ? await context
-          .clone()
-          .json()
-          .then((body) => (typeof body?.error === "string" ? body.error : null))
-          .catch(() => null)
-      : null;
+    let backendError: string | null = null;
+    if (context && typeof (context as Response).clone === "function") {
+      try {
+        const body = await (context as Response).clone().json();
+        if (body && typeof body.error === "string") backendError = body.error;
+      } catch {
+        /* ignore */
+      }
+    }
 
     throw new Error(
       data?.error || backendError || error?.message || "Something went wrong. Please try again.",
