@@ -7,10 +7,15 @@ import { Button } from "@/components/ui/button";
 import { Share2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ShareListingsDialog, Recipient, ListingPreview } from "@/components/share/ShareListingsDialog";
+import { ShareListingsDialog, ListingPreview } from "@/components/share/ShareListingsDialog";
 import { getCurrentSenderProfile } from "@/lib/currentSenderProfile";
 import { fetchListingPreview } from "@/lib/fetchListingPreview";
 import { useAgentShareContactSearch } from "@/hooks/useAgentShareContactSearch";
+import {
+  shareRecipientDisplayName,
+  shareRecipientGreetingName,
+  type ShareRecipient,
+} from "@/lib/shareRecipientUtils";
 
 interface ShareListingDialogProps {
   listingId: string;
@@ -34,14 +39,15 @@ export const ShareListingDialog = ({
   const open = isControlled ? controlledOpen : internalOpen;
   const setOpen = isControlled ? (controlledOnOpenChange ?? (() => {})) : setInternalOpen;
   const [sending, setSending] = useState(false);
-  const [recipientName, setRecipientName] = useState("");
+  const [recipientFirstName, setRecipientFirstName] = useState("");
+  const [recipientLastName, setRecipientLastName] = useState("");
   const [recipientEmail, setRecipientEmail] = useState("");
   const [agentName, setAgentName] = useState("");
   const [agentEmail, setAgentEmail] = useState("");
   const [message, setMessage] = useState("");
   const [showManualEntry, setShowManualEntry] = useState(false);
   const [listingPreview, setListingPreview] = useState<ListingPreview | undefined>();
-  const [recipients, setRecipients] = useState<Recipient[]>([]);
+  const [recipients, setRecipients] = useState<ShareRecipient[]>([]);
   const [senderLocked, setSenderLocked] = useState(false);
   const contactsEnabled = senderProfileSource === "agent";
   const {
@@ -85,7 +91,8 @@ export const ShareListingDialog = ({
       void fetchListingPreview(listingId).then(setListingPreview);
     } else {
       // Reset form when closing
-      setRecipientName("");
+      setRecipientFirstName("");
+      setRecipientLastName("");
       setRecipientEmail("");
       setAgentName("");
       setAgentEmail("");
@@ -99,57 +106,42 @@ export const ShareListingDialog = ({
 
   const handleSaveContact =
     senderProfileSource === "agent"
-      ? async (name: string, email: string) => {
+      ? async (recipient: ShareRecipient) => {
           try {
             const {
               data: { user },
             } = await supabase.auth.getUser();
             if (!user) return;
 
-            const nameParts = name.trim().split(" ");
-            const firstName = nameParts[0] || "";
-            const lastName = nameParts.slice(1).join(" ") || "";
-
             const { error } = await supabase.from("clients").insert({
               agent_id: user.id,
-              first_name: firstName,
-              last_name: lastName,
-              email: email.trim(),
+              first_name: recipient.firstName,
+              last_name: recipient.lastName ?? "",
+              email: recipient.email.trim(),
             });
 
             if (error) throw error;
-            toast.success(`${name} saved to contacts`);
+            toast.success(`${shareRecipientDisplayName(recipient)} saved to contacts`);
             await refreshContacts();
           } catch (error) {
             console.error("Error saving contact:", error);
             toast.error("Failed to save contact");
+            throw error;
           }
         }
       : undefined;
 
-  const handleAddRecipient = (recipient: Recipient) => {
-    setRecipients(prev => [...prev, recipient]);
+  const handleAddRecipient = (recipient: ShareRecipient) => {
+    setRecipients((prev) => [...prev, recipient]);
   };
 
   const handleRemoveRecipient = (index: number) => {
     setRecipients(prev => prev.filter((_, i) => i !== index));
   };
 
-  const collectRecipients = (): Recipient[] => {
-    const all = [...recipients];
-    if (recipientEmail.trim() && recipientName.trim()) {
-      const email = recipientEmail.trim().toLowerCase();
-      if (!all.some((r) => r.email.toLowerCase() === email)) {
-        all.push({ name: recipientName.trim(), email: recipientEmail.trim() });
-      }
-    }
-    return all;
-  };
-
   const handleShare = async () => {
-    const allRecipients = collectRecipients();
-    if (allRecipients.length === 0 || !agentName.trim() || !agentEmail.trim()) {
-      toast.error("Please fill in all required fields");
+    if (recipients.length === 0 || !agentName.trim() || !agentEmail.trim()) {
+      toast.error("Please add at least one recipient");
       return;
     }
 
@@ -157,11 +149,11 @@ export const ShareListingDialog = ({
     try {
       const { trackShare } = await import("@/lib/trackShare");
 
-      for (const recipient of allRecipients) {
+      for (const recipient of recipients) {
         const { error } = await supabase.functions.invoke("send-listing-share", {
           body: {
             listingId,
-            recipientName: recipient.name,
+            recipientName: shareRecipientGreetingName(recipient),
             recipientEmail: recipient.email,
             agentName,
             agentEmail,
@@ -173,11 +165,11 @@ export const ShareListingDialog = ({
         await trackShare(listingId, "email_direct", recipient.email);
       }
 
-      const names = allRecipients.map((r) => r.name).join(", ");
+      const names = recipients.map((r) => shareRecipientDisplayName(r)).join(", ");
       toast.success(
-        allRecipients.length === 1
+        recipients.length === 1
           ? `Listing shared with ${names}`
-          : `Listing shared with ${allRecipients.length} contacts`,
+          : `Listing shared with ${recipients.length} contacts`,
       );
       setOpen(false);
     } catch (error) {
@@ -189,9 +181,9 @@ export const ShareListingDialog = ({
   };
 
   const canSubmit = Boolean(
-    agentName.trim() && 
-    agentEmail.trim() && 
-    (recipientEmail.trim() || recipients.length > 0)
+    agentName.trim() &&
+    agentEmail.trim() &&
+    recipients.length > 0,
   );
 
   return (
@@ -216,8 +208,10 @@ export const ShareListingDialog = ({
         onContactSearchFocus={handleContactSearchFocus}
         manualMode={showManualEntry}
         setManualMode={setShowManualEntry}
-        recipientName={recipientName}
-        setRecipientName={setRecipientName}
+        recipientFirstName={recipientFirstName}
+        setRecipientFirstName={setRecipientFirstName}
+        recipientLastName={recipientLastName}
+        setRecipientLastName={setRecipientLastName}
         recipientEmail={recipientEmail}
         setRecipientEmail={setRecipientEmail}
         senderName={agentName}

@@ -3,11 +3,16 @@ import { Button } from "@/components/ui/button";
 import { Share2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ShareListingsDialog, Recipient, type ListingPreview } from "@/components/share/ShareListingsDialog";
+import { ShareListingsDialog, type ListingPreview } from "@/components/share/ShareListingsDialog";
 import { getCurrentSenderProfile } from "@/lib/currentSenderProfile";
 import { fetchListingPreview } from "@/lib/fetchListingPreview";
 import { cn } from "@/lib/utils";
 import { useAgentShareContactSearch } from "@/hooks/useAgentShareContactSearch";
+import {
+  shareRecipientDisplayName,
+  shareRecipientGreetingName,
+  type ShareRecipient,
+} from "@/lib/shareRecipientUtils";
 
 interface BulkShareListingsDialogProps {
   listingIds: string[];
@@ -35,14 +40,15 @@ export function BulkShareListingsDialog({
 }: BulkShareListingsDialogProps) {
   const [open, setOpen] = useState(false);
   const [sending, setSending] = useState(false);
-  const [recipientName, setRecipientName] = useState("");
+  const [recipientFirstName, setRecipientFirstName] = useState("");
+  const [recipientLastName, setRecipientLastName] = useState("");
   const [recipientEmail, setRecipientEmail] = useState("");
   const [agentName, setAgentName] = useState("");
   const [agentEmail, setAgentEmail] = useState("");
   const [message, setMessage] = useState("");
   const [showManualEntry, setShowManualEntry] = useState(false);
   const [listingPreview, setListingPreview] = useState<ListingPreview | undefined>();
-  const [recipients, setRecipients] = useState<Recipient[]>([]);
+  const [recipients, setRecipients] = useState<ShareRecipient[]>([]);
   const [senderLocked, setSenderLocked] = useState(false);
   const contactsEnabled = senderProfileSource === "agent";
   const {
@@ -86,7 +92,8 @@ export function BulkShareListingsDialog({
       void fetchListingPreview(listingIds[0]).then(setListingPreview);
     } else if (!open) {
       // Reset form when closing
-      setRecipientName("");
+      setRecipientFirstName("");
+      setRecipientLastName("");
       setRecipientEmail("");
       setAgentName("");
       setAgentEmail("");
@@ -98,34 +105,31 @@ export function BulkShareListingsDialog({
     }
   }, [open, listingIds, resetContactSearch]);
 
-  const handleSaveContact = async (name: string, email: string) => {
+  const handleSaveContact = async (recipient: ShareRecipient) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
-
-      const nameParts = name.trim().split(' ');
-      const firstName = nameParts[0] || '';
-      const lastName = nameParts.slice(1).join(' ') || '';
 
       const { error } = await supabase
         .from("clients")
         .insert({
           agent_id: user.id,
-          first_name: firstName,
-          last_name: lastName,
-          email: email.trim(),
+          first_name: recipient.firstName,
+          last_name: recipient.lastName ?? "",
+          email: recipient.email.trim(),
         });
 
       if (error) throw error;
-      toast.success(`${name} saved to contacts`);
+      toast.success(`${shareRecipientDisplayName(recipient)} saved to contacts`);
       await refreshContacts();
     } catch (error) {
       console.error("Error saving contact:", error);
       toast.error("Failed to save contact");
+      throw error;
     }
   };
 
-  const handleAddRecipient = (recipient: Recipient) => {
+  const handleAddRecipient = (recipient: ShareRecipient) => {
     setRecipients(prev => [...prev, recipient]);
   };
 
@@ -133,21 +137,9 @@ export function BulkShareListingsDialog({
     setRecipients(prev => prev.filter((_, i) => i !== index));
   };
 
-  const collectRecipients = (): Recipient[] => {
-    const all = [...recipients];
-    if (recipientEmail.trim() && recipientName.trim()) {
-      const email = recipientEmail.trim().toLowerCase();
-      if (!all.some((r) => r.email.toLowerCase() === email)) {
-        all.push({ name: recipientName.trim(), email: recipientEmail.trim() });
-      }
-    }
-    return all;
-  };
-
   const handleShare = async () => {
-    const allRecipients = collectRecipients();
-    if (allRecipients.length === 0 || !agentName.trim() || !agentEmail.trim()) {
-      toast.error("Please fill in all required fields");
+    if (recipients.length === 0 || !agentName.trim() || !agentEmail.trim()) {
+      toast.error("Please add at least one recipient");
       return;
     }
 
@@ -155,11 +147,11 @@ export function BulkShareListingsDialog({
     try {
       const { trackShare } = await import("@/lib/trackShare");
 
-      for (const recipient of allRecipients) {
+      for (const recipient of recipients) {
         const { error } = await supabase.functions.invoke("send-bulk-listing-share", {
           body: {
             listingIds,
-            recipientName: recipient.name,
+            recipientName: shareRecipientGreetingName(recipient),
             recipientEmail: recipient.email,
             agentName,
             agentEmail,
@@ -185,12 +177,11 @@ export function BulkShareListingsDialog({
     }
   };
 
-  // Validation: require sender name + email, recipient email (or at least one recipient), and at least one listing
   const canSubmit = Boolean(
-    agentName.trim() && 
-    agentEmail.trim() && 
-    (recipientEmail.trim() || recipients.length > 0) && 
-    listingIds.length > 0
+    agentName.trim() &&
+    agentEmail.trim() &&
+    recipients.length > 0 &&
+    listingIds.length > 0,
   );
 
   return (
@@ -220,8 +211,10 @@ export function BulkShareListingsDialog({
         onContactSearchFocus={handleContactSearchFocus}
         manualMode={showManualEntry}
         setManualMode={setShowManualEntry}
-        recipientName={recipientName}
-        setRecipientName={setRecipientName}
+        recipientFirstName={recipientFirstName}
+        setRecipientFirstName={setRecipientFirstName}
+        recipientLastName={recipientLastName}
+        setRecipientLastName={setRecipientLastName}
         recipientEmail={recipientEmail}
         setRecipientEmail={setRecipientEmail}
         senderName={agentName}

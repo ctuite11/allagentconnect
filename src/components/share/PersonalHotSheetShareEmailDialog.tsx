@@ -11,10 +11,14 @@ import {
   ShareListingsDialog,
   type ContactSearchResult,
   type ListingPreview,
-  type Recipient,
 } from "@/components/share/ShareListingsDialog";
 import { getCurrentSenderProfile } from "@/lib/currentSenderProfile";
-import { searchClientContacts } from "@/lib/contactSearch";
+import { useAgentShareContactSearch } from "@/hooks/useAgentShareContactSearch";
+import {
+  shareRecipientDisplayName,
+  shareRecipientGreetingName,
+  type ShareRecipient,
+} from "@/lib/shareRecipientUtils";
 
 const HOT_SHEET_MESSAGE_CHIPS = [
   "Here are listings that match your search criteria.",
@@ -46,18 +50,26 @@ export function PersonalHotSheetShareEmailDialog({
   selectedListingPreviews = [],
 }: PersonalHotSheetShareEmailDialogProps) {
   const [sending, setSending] = useState(false);
-  const [recipientName, setRecipientName] = useState("");
+  const [recipientFirstName, setRecipientFirstName] = useState("");
+  const [recipientLastName, setRecipientLastName] = useState("");
   const [recipientEmail, setRecipientEmail] = useState("");
   const [agentName, setAgentName] = useState("");
   const [agentFirstName, setAgentFirstName] = useState("");
   const [agentEmail, setAgentEmail] = useState("");
   const [message, setMessage] = useState("");
-  const [clientSearch, setClientSearch] = useState("");
-  const [clientResults, setClientResults] = useState<Client[]>([]);
-  const [showClientDropdown, setShowClientDropdown] = useState(false);
   const [showManualEntry, setShowManualEntry] = useState(false);
-  const [recipients, setRecipients] = useState<Recipient[]>([]);
+  const [recipients, setRecipients] = useState<ShareRecipient[]>([]);
   const [senderLocked, setSenderLocked] = useState(false);
+  const {
+    contactQuery: clientSearch,
+    setContactQuery: setClientSearch,
+    contactResults: clientResults,
+    showContactDropdown: showClientDropdown,
+    dismissContactDropdown,
+    handleContactSearchFocus,
+    resetContactSearch,
+    refreshContacts,
+  } = useAgentShareContactSearch(open, true);
 
   useEffect(() => {
     if (!open) return;
@@ -108,86 +120,41 @@ export function PersonalHotSheetShareEmailDialog({
 
   useEffect(() => {
     if (!open) {
-      setRecipientName("");
+      setRecipientFirstName("");
+      setRecipientLastName("");
       setRecipientEmail("");
       setAgentName("");
       setAgentFirstName("");
       setAgentEmail("");
       setMessage("");
-      setClientSearch("");
-      setClientResults([]);
-      setShowClientDropdown(false);
+      resetContactSearch();
       setShowManualEntry(false);
       setRecipients([]);
     }
-  }, [open]);
+  }, [open, resetContactSearch]);
 
-  useEffect(() => {
-    const searchClients = async () => {
-      if (!clientSearch.trim() || clientSearch.length < 2) {
-        setClientResults([]);
-        setShowClientDropdown(false);
-        return;
-      }
-
-      try {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-        if (!user) return;
-
-        const results = await searchClientContacts<Client>({
-          agentId: user.id,
-          query: clientSearch,
-          select: "*",
-          limit: 5,
-        });
-        setClientResults(results);
-        setShowClientDropdown(results.length > 0);
-      } catch (error) {
-        console.error("Error searching clients:", error);
-      }
-    };
-
-    const debounce = setTimeout(searchClients, 300);
-    return () => clearTimeout(debounce);
-  }, [clientSearch]);
-
-  const handleSaveContact = async (name: string, email: string) => {
+  const handleSaveContact = async (recipient: ShareRecipient) => {
     try {
       const {
         data: { user },
       } = await supabase.auth.getUser();
       if (!user) return;
 
-      const nameParts = name.trim().split(" ");
-      const firstName = nameParts[0] || "";
-      const lastName = nameParts.slice(1).join(" ") || "";
-
       const { error } = await supabase.from("clients").insert({
         agent_id: user.id,
-        first_name: firstName,
-        last_name: lastName,
-        email: email.trim(),
+        first_name: recipient.firstName,
+        last_name: recipient.lastName ?? "",
+        email: recipient.email.trim(),
       });
 
       if (error) throw error;
-      toast.success(`${name} saved to contacts`);
+      toast.success(`${shareRecipientDisplayName(recipient)} saved to contacts`);
+      await refreshContacts();
     } catch (error) {
       console.error("Error saving contact:", error);
       toast.error("Failed to save contact");
+      throw error;
     }
-  };
-
-  const collectRecipients = (): Recipient[] => {
-    const all = [...recipients];
-    if (recipientEmail.trim() && recipientName.trim()) {
-      const email = recipientEmail.trim().toLowerCase();
-      if (!all.some((r) => r.email.toLowerCase() === email)) {
-        all.push({ name: recipientName.trim(), email: recipientEmail.trim() });
-      }
-    }
-    return all;
   };
 
   const handleShare = async () => {
@@ -196,9 +163,8 @@ export function PersonalHotSheetShareEmailDialog({
       return;
     }
 
-    const allRecipients = collectRecipients();
-    if (allRecipients.length === 0 || !agentName.trim() || !agentEmail.trim()) {
-      toast.error("Please fill in all required fields");
+    if (recipients.length === 0 || !agentName.trim() || !agentEmail.trim()) {
+      toast.error("Please add at least one recipient");
       return;
     }
 
@@ -220,7 +186,10 @@ export function PersonalHotSheetShareEmailDialog({
       });
 
       await invokeEdgeFunction("send-bulk-email", {
-        recipients: allRecipients,
+        recipients: recipients.map((recipient) => ({
+          email: recipient.email,
+          name: shareRecipientGreetingName(recipient),
+        })),
         subject: buildPersonalListingShareEmailSubject(
           agentFirstName || agentName,
           selectedCount,
@@ -232,7 +201,7 @@ export function PersonalHotSheetShareEmailDialog({
         sendAsGroup: false,
       });
 
-      const names = allRecipients.map((r) => r.name).join(", ");
+      const names = recipients.map((r) => shareRecipientDisplayName(r)).join(", ");
       toast.success(`Hot sheet shared with ${names}`);
       onOpenChange(false);
     } catch (error: unknown) {
@@ -248,7 +217,7 @@ export function PersonalHotSheetShareEmailDialog({
     selectedListingIds.length > 0 &&
       agentName.trim() &&
       agentEmail.trim() &&
-      (recipientEmail.trim() || recipients.length > 0),
+      recipients.length > 0,
   );
 
   return (
@@ -261,11 +230,14 @@ export function PersonalHotSheetShareEmailDialog({
         setContactQuery={setClientSearch}
         contactResults={clientResults}
         showContactDropdown={showClientDropdown}
-        onDismissContactDropdown={() => setShowClientDropdown(false)}
+        onDismissContactDropdown={dismissContactDropdown}
+        onContactSearchFocus={handleContactSearchFocus}
         manualMode={showManualEntry}
         setManualMode={setShowManualEntry}
-        recipientName={recipientName}
-        setRecipientName={setRecipientName}
+        recipientFirstName={recipientFirstName}
+        setRecipientFirstName={setRecipientFirstName}
+        recipientLastName={recipientLastName}
+        setRecipientLastName={setRecipientLastName}
         recipientEmail={recipientEmail}
         setRecipientEmail={setRecipientEmail}
         senderName={agentName}

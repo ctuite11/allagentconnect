@@ -21,6 +21,12 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { ListingPreviewCard } from "@/components/share/ListingPreviewCard";
+import {
+  type ShareRecipient,
+  isValidShareRecipientEmail,
+  shareRecipientDisplayName,
+  shareRecipientFromParts,
+} from "@/lib/shareRecipientUtils";
 
 export type ListingPreview = {
   address: string;
@@ -32,10 +38,8 @@ export type ListingPreview = {
   photoUrl?: string;
 };
 
-export type Recipient = {
-  name: string;
-  email: string;
-};
+/** @deprecated Use ShareRecipient from @/lib/shareRecipientUtils */
+export type Recipient = ShareRecipient;
 
 export type ContactSearchResult = {
   id: string;
@@ -68,8 +72,10 @@ export type ShareListingsDialogProps = {
   // Manual mode
   manualMode: boolean;
   setManualMode: (v: boolean) => void;
-  recipientName: string;
-  setRecipientName: (v: string) => void;
+  recipientFirstName: string;
+  setRecipientFirstName: (v: string) => void;
+  recipientLastName: string;
+  setRecipientLastName: (v: string) => void;
   recipientEmail: string;
   setRecipientEmail: (v: string) => void;
 
@@ -88,12 +94,12 @@ export type ShareListingsDialogProps = {
   submitting?: boolean;
   onSubmit: () => void;
 
-  // Optional: Save contact callback
-  onSaveContact?: (name: string, email: string) => void;
+  // Optional: Save contact callback (called when adding a manual recipient)
+  onSaveContact?: (recipient: ShareRecipient) => void | Promise<void>;
 
   // Optional: Multiple recipients
-  recipients?: Recipient[];
-  onAddRecipient?: (recipient: Recipient) => void;
+  recipients?: ShareRecipient[];
+  onAddRecipient?: (recipient: ShareRecipient) => void;
   onRemoveRecipient?: (index: number) => void;
 
   /** Overrides default dialog title (e.g. hot sheet share). */
@@ -146,8 +152,10 @@ export function ShareListingsDialog({
 
   manualMode,
   setManualMode,
-  recipientName,
-  setRecipientName,
+  recipientFirstName,
+  setRecipientFirstName,
+  recipientLastName,
+  setRecipientLastName,
   recipientEmail,
   setRecipientEmail,
 
@@ -175,42 +183,56 @@ export function ShareListingsDialog({
   lockSenderIdentity = false,
 }: ShareListingsDialogProps) {
   const [selectedChips, setSelectedChips] = React.useState<Set<string>>(new Set());
-  const [showSavePrompt, setShowSavePrompt] = React.useState(false);
-  const [lastSavedEmail, setLastSavedEmail] = React.useState<string>("");
   const [contactAddFeedback, setContactAddFeedback] = React.useState<ContactAddFeedback>(null);
   const [highlightedRecipientEmail, setHighlightedRecipientEmail] = React.useState<string | null>(null);
   const [senderExpanded, setSenderExpanded] = React.useState(false);
+  const [addingManualRecipient, setAddingManualRecipient] = React.useState(false);
   const contactSearchRef = React.useRef<HTMLDivElement>(null);
 
   const contactDisplayName = (contact: ContactSearchResult) =>
     `${contact.first_name ?? ""} ${contact.last_name ?? ""}`.trim() || contact.email;
 
+  const recipientFromContact = (contact: ContactSearchResult): ShareRecipient | null => {
+    const email = contact.email?.trim();
+    if (!email) return null;
+    const firstName = (contact.first_name ?? "").trim();
+    const lastName = (contact.last_name ?? "").trim();
+    return {
+      email,
+      firstName: firstName || email.split("@")[0] || "Contact",
+      lastName: lastName || undefined,
+    };
+  };
+
   const isDuplicateRecipientEmail = (email: string) => {
     const normalized = email.trim().toLowerCase();
     if (!normalized) return true;
-    return (
-      recipients.some((r) => r.email.trim().toLowerCase() === normalized) ||
-      recipientEmail.trim().toLowerCase() === normalized
-    );
+    return recipients.some((r) => r.email.trim().toLowerCase() === normalized);
   };
 
-  const tryAddRecipient = (name: string, email: string): boolean => {
+  const tryAddRecipient = (recipient: ShareRecipient): boolean => {
     if (!onAddRecipient) return false;
-    const trimmedName = name.trim();
-    const trimmedEmail = email.trim();
-    if (!trimmedName || !trimmedEmail || isDuplicateRecipientEmail(trimmedEmail)) return false;
-    onAddRecipient({ name: trimmedName, email: trimmedEmail });
+    if (!recipient.firstName.trim() || !recipient.email.trim() || isDuplicateRecipientEmail(recipient.email)) {
+      return false;
+    }
+    onAddRecipient(recipient);
     return true;
   };
 
   const clearPendingRecipientFields = () => {
-    setRecipientName("");
+    setRecipientFirstName("");
+    setRecipientLastName("");
     setRecipientEmail("");
-    setShowSavePrompt(false);
     setContactQuery("");
     setManualMode(false);
     onDismissContactDropdown?.();
   };
+
+  const canAddManualRecipient = Boolean(
+    recipientFirstName.trim() &&
+      recipientEmail.trim() &&
+      isValidShareRecipientEmail(recipientEmail),
+  );
 
   const showContactAddFeedback = (kind: Exclude<ContactAddFeedback, null>, email?: string) => {
     setContactAddFeedback(kind);
@@ -222,17 +244,15 @@ export function ShareListingsDialog({
   };
 
   const handleContactSelect = (contact: ContactSearchResult) => {
-    const email = contact.email?.trim();
-    if (!email) return;
-
-    const name = contactDisplayName(contact);
+    const recipient = recipientFromContact(contact);
+    if (!recipient) return;
 
     if (onAddRecipient) {
-      if (tryAddRecipient(name, email)) {
+      if (tryAddRecipient(recipient)) {
         showContactAddFeedback("added");
         clearPendingRecipientFields();
-      } else if (isDuplicateRecipientEmail(email)) {
-        showContactAddFeedback("already-added", email);
+      } else if (isDuplicateRecipientEmail(recipient.email)) {
+        showContactAddFeedback("already-added", recipient.email);
         setContactQuery("");
         onDismissContactDropdown?.();
       } else {
@@ -247,18 +267,31 @@ export function ShareListingsDialog({
     onDismissContactDropdown?.();
   };
 
-  const handleManualAddRecipient = () => {
-    if (tryAddRecipient(recipientName, recipientEmail)) {
+  const handleManualAddRecipient = async () => {
+    const recipient = shareRecipientFromParts(
+      recipientFirstName,
+      recipientLastName,
+      recipientEmail,
+    );
+    if (!recipient || !onAddRecipient) return;
+
+    if (isDuplicateRecipientEmail(recipient.email)) {
+      showContactAddFeedback("already-added", recipient.email);
+      return;
+    }
+
+    setAddingManualRecipient(true);
+    try {
+      if (onSaveContact) {
+        await onSaveContact(recipient);
+      }
+      onAddRecipient(recipient);
+      showContactAddFeedback("added");
       clearPendingRecipientFields();
+    } finally {
+      setAddingManualRecipient(false);
     }
   };
-
-  // Reset save prompt when recipient changes
-  React.useEffect(() => {
-    if (recipientEmail !== lastSavedEmail) {
-      setShowSavePrompt(false);
-    }
-  }, [recipientEmail, lastSavedEmail]);
 
   React.useEffect(() => {
     if (!contactAddFeedback) return;
@@ -432,41 +465,45 @@ export function ShareListingsDialog({
                       aria-hidden
                     />
                     <span>
-                      {contactAddFeedback === "added" ? "Contact added" : "Contact already added"}
+                      {contactAddFeedback === "added" ? "Recipient added" : "Recipient already added"}
                     </span>
                   </div>
                 )}
 
                 {recipients.length > 0 && (
-                  <div className="space-y-1.5">
+                  <div className="space-y-2">
                     <div className="text-[11px] font-medium uppercase tracking-wide text-neutral-500">
-                      Recipients ({recipients.length})
+                      Selected recipients ({recipients.length})
                     </div>
-                    <div className="flex flex-wrap gap-1.5">
+                    <div className="space-y-2">
                       {recipients.map((r, idx) => {
                         const isHighlighted =
                           highlightedRecipientEmail != null &&
                           r.email.trim().toLowerCase() === highlightedRecipientEmail;
                         return (
                           <div
-                            key={idx}
+                            key={`${r.email}-${idx}`}
                             className={cn(
-                              "flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[12px] shadow-[0_1px_2px_rgba(0,0,0,0.03)] transition-colors duration-300",
+                              "flex items-start justify-between gap-2 rounded-lg border px-3 py-2.5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] transition-colors duration-300",
                               isHighlighted
                                 ? "border-emerald-300/90 bg-emerald-50/90 ring-1 ring-emerald-200/70"
-                                : "border-neutral-200 bg-white",
+                                : "border-emerald-200/80 bg-emerald-50/70",
                             )}
                           >
-                            <span className="truncate text-neutral-900">{r.name}</span>
-                            <span className="max-w-[9rem] truncate text-[11px] text-neutral-500">({r.email})</span>
+                            <div className="min-w-0">
+                              <div className="truncate text-[13px] font-semibold text-neutral-900">
+                                {shareRecipientDisplayName(r)}
+                              </div>
+                              <div className="truncate text-[12px] text-neutral-600">{r.email}</div>
+                            </div>
                             {onRemoveRecipient && (
                               <button
                                 type="button"
                                 onClick={() => onRemoveRecipient(idx)}
-                                className="-mr-0.5 rounded-full p-0.5 text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-500"
-                                aria-label={`Remove ${r.name}`}
+                                className="shrink-0 rounded-full p-1 text-neutral-400 transition-colors hover:bg-white/80 hover:text-neutral-600"
+                                aria-label={`Remove ${shareRecipientDisplayName(r)}`}
                               >
-                                <X className="h-3 w-3" />
+                                <X className="h-3.5 w-3.5" />
                               </button>
                             )}
                           </div>
@@ -480,90 +517,76 @@ export function ShareListingsDialog({
 
             {manualMode && (
               <div className="space-y-2 rounded-lg border border-neutral-200 bg-neutral-50/30 p-2.5">
-                <div className="grid gap-2">
+                <div className="grid gap-2 sm:grid-cols-2">
                   <div className="space-y-1">
-                    <div className="text-xs font-medium text-neutral-700">Recipient name</div>
-                    <div className="relative">
-                      <User className={cn("pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2", ICON_NEUTRAL)} />
-                      <Input
-                        value={recipientName}
-                        onChange={(e) => setRecipientName(e.target.value)}
-                        placeholder="Jane Buyer"
-                        className={cn("h-9 rounded-lg pl-9 text-[13px] text-neutral-900", INPUT_CLASS)}
-                      />
+                    <div className="text-xs font-medium text-neutral-700">
+                      First name <span className="text-neutral-400">*</span>
                     </div>
+                    <Input
+                      value={recipientFirstName}
+                      onChange={(e) => setRecipientFirstName(e.target.value)}
+                      placeholder="Chris"
+                      autoComplete="given-name"
+                      className={cn("h-9 rounded-lg text-[13px] text-neutral-900", INPUT_CLASS)}
+                    />
                   </div>
 
                   <div className="space-y-1">
-                    <div className="text-xs font-medium text-neutral-700">Recipient email</div>
-                    <div className={FIELD_ICON_WRAP}>
-                      <Mail className={ICON_SLOT} />
-                      <Input
-                        value={recipientEmail}
-                        onChange={(e) => setRecipientEmail(e.target.value)}
-                        placeholder="jane@email.com"
-                        type="email"
-                        autoComplete="email"
-                        className={cn("h-9 rounded-lg pl-9 text-[13px] text-neutral-900", INPUT_CLASS)}
-                      />
-                    </div>
+                    <div className="text-xs font-medium text-neutral-700">Last name</div>
+                    <Input
+                      value={recipientLastName}
+                      onChange={(e) => setRecipientLastName(e.target.value)}
+                      placeholder="Tuite"
+                      autoComplete="family-name"
+                      className={cn("h-9 rounded-lg text-[13px] text-neutral-900", INPUT_CLASS)}
+                    />
                   </div>
                 </div>
 
-                {recipientName.trim() && recipientEmail.trim() && onSaveContact && !showSavePrompt && (
-                  <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-neutral-200 bg-white px-2.5 py-2">
-                    <div className="min-w-0 text-[12px] text-neutral-700">
-                      Save <span className="font-medium text-neutral-900">{recipientName.trim()}</span> to contacts?
-                    </div>
-                    <div className="flex gap-1.5">
-                      <Button
-                        type="button"
-                        size="sm"
-                        onClick={() => {
-                          onSaveContact(recipientName.trim(), recipientEmail.trim());
-                          setLastSavedEmail(recipientEmail.trim());
-                          setShowSavePrompt(true);
-                        }}
-                        className="h-7 rounded-md px-2.5 text-[12px] font-medium"
-                      >
-                        Save
-                      </Button>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => {
-                          setLastSavedEmail(recipientEmail.trim());
-                          setShowSavePrompt(true);
-                        }}
-                        className="h-7 rounded-md px-2 text-[12px] text-neutral-600 hover:bg-neutral-100"
-                      >
-                        Skip
-                      </Button>
-                    </div>
+                <div className="space-y-1">
+                  <div className="text-xs font-medium text-neutral-700">
+                    Email <span className="text-neutral-400">*</span>
                   </div>
-                )}
+                  <div className={FIELD_ICON_WRAP}>
+                    <Mail className={ICON_SLOT} />
+                    <Input
+                      value={recipientEmail}
+                      onChange={(e) => setRecipientEmail(e.target.value)}
+                      placeholder="jane@email.com"
+                      type="email"
+                      autoComplete="email"
+                      className={cn("h-9 rounded-lg pl-9 text-[13px] text-neutral-900", INPUT_CLASS)}
+                    />
+                  </div>
+                </div>
 
-                {onAddRecipient && recipientName.trim() && recipientEmail.trim() && (
+                {onAddRecipient && (
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={handleManualAddRecipient}
+                    disabled={!canAddManualRecipient || addingManualRecipient}
+                    onClick={() => void handleManualAddRecipient()}
                     className="h-8 rounded-lg border-neutral-200 text-[12px] font-medium text-neutral-900 hover:bg-neutral-50"
                   >
                     <Plus className={cn("mr-1.5 h-3.5 w-3.5", ICON_NEUTRAL)} />
-                    Add to recipients
+                    {addingManualRecipient ? "Adding…" : "Add to recipients"}
                   </Button>
                 )}
+
+                {onSaveContact ? (
+                  <p className="text-[11px] leading-snug text-neutral-500">
+                    Adds this person to recipients and saves them to your contacts.
+                  </p>
+                ) : null}
 
                 <button
                   type="button"
                   onClick={() => {
                     setManualMode(false);
-                    setRecipientName("");
+                    setRecipientFirstName("");
+                    setRecipientLastName("");
                     setRecipientEmail("");
-                    setShowSavePrompt(false);
                   }}
                   className="text-[12px] text-neutral-500 transition-colors hover:text-neutral-800"
                 >
