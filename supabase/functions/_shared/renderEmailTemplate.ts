@@ -115,6 +115,40 @@ export function renderEmailTemplate(
           ${variables.listingsHtml || ""}`,
       });
 
+    case "founder-invite-1to1": {
+      const recipientName = variables.recipientName || "there";
+      const ctaUrl = "https://allagentconnect.com/auth?mode=register";
+      const benefits: Array<{ title: string; desc: string }> = [
+        { title: "Pre-market & off-market inventory", desc: "Discover pre-market and off-market opportunities before they reach the public market." },
+        { title: "Buyer need broadcasting", desc: "Put your buyer needs in front of listing agents before inventory reaches the market." },
+        { title: "Success Hub command center", desc: "Buyers, listings, hot sheets, referrals, and live market activity in one command center." },
+        { title: "Hot Sheets & saved searches", desc: "Real-time alerts for new listings, price drops, status changes, and back-on-market — shareable with buyers in one tap." },
+        { title: "Branded buyer dashboard", desc: "Your clients get a dedicated portal under your name: favorites, new matches, messaging, and hot sheet alerts." },
+        { title: "Verified agent referral network", desc: "Build trusted relationships with vetted agents across Massachusetts before public launch." },
+      ];
+      const benefitsList = benefits
+        .map(
+          (b) =>
+            `<li style="margin:0 0 10px;"><strong style="color:#0f172a;">${b.title}.</strong> <span style="color:#475569;">${b.desc}</span></li>`,
+        )
+        .join("");
+      return buildAacEmail({
+        headline: "An invitation to become a Founding Partner",
+        preheader: "A personal note from Chris Tuite, Founder of All Agent Connect",
+        body: `
+          <p style="margin:0 0 14px;">Hi ${recipientName},</p>
+          <p style="margin:0 0 14px;">Why pay to join a network when you can help launch one?</p>
+          <p style="margin:0 0 18px;font-style:italic;color:#334155;">"I built AAC to become something special, and I hope you'll join me as a Founding Partner." — Chris Tuite</p>
+          <p style="margin:0 0 10px;">As a Founding Partner, you'll get early access to:</p>
+          <ul style="margin:0 0 18px;padding:0 0 0 20px;line-height:1.6;">${benefitsList}</ul>
+          <p style="margin:0 0 14px;">You'll also get an early look at Direct Connect MLS and Stealth Seller, and a direct line to share where you believe the industry is headed. Most importantly, I'd like your candid feedback — what works, what doesn't, and what you'd like to see next.</p>
+          <p style="margin:0 0 4px;font-weight:600;color:#0f172a;">Chris Tuite</p>
+          <p style="margin:0;color:#64748b;font-size:13px;">Founder, All Agent Connect<br/>617-877-0519 · chris@allagentconnect.com</p>`,
+        ctaLabel: "Become a Founding Partner",
+        ctaUrl,
+      });
+    }
+
     case "hot-sheet-invite": {
       const teasers = Array.isArray(variables.teasers) ? variables.teasers.slice(0, 6) : [];
       const teaserHtml = teasers.map((teaser: any) => `
