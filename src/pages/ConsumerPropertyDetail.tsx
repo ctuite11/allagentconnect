@@ -488,7 +488,7 @@ const ConsumerPropertyDetail = () => {
                   {/* Status Badge - Top Left (NO AAC# for consumer view) */}
                   <div className="absolute top-4 left-4 flex items-center gap-2">
                     <Badge className={`${getStatusColor(listing.status)} bg-white/90 backdrop-blur-sm`}>
-                      {listing.status.charAt(0).toUpperCase() + listing.status.slice(1)}
+                      {getStatusConfig(listing.status, "listing").label}
                     </Badge>
                   </div>
 

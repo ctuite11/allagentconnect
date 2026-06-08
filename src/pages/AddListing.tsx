@@ -3213,11 +3213,11 @@ const AddListing = () => {
                           : "border-zinc-200 bg-zinc-50 text-zinc-500",
                       )}
                     >
-                      Coming soon
+                      Coming Soon
                     </span>
                   </div>
                   <p className="mb-3 text-sm leading-snug text-neutral-500">
-                    Coming soon — DCMLS publishing will be available once AAC listings are live and ready for launch. Until
+                    Coming Soon — DCMLS publishing will be available once AAC listings are live and ready for launch. Until
                     then, saves keep this listing internal to AAC agents only.
                   </p>
                   <div

@@ -610,7 +610,7 @@ const PropertyDetail = () => {
                   <div className="absolute left-4 top-4 flex items-center gap-2">
                     <Badge className={`${getStatusColor(listing.status ?? "")} bg-white/90 backdrop-blur-sm`}>
                       {listing.status
-                        ? listing.status.charAt(0).toUpperCase() + listing.status.slice(1)
+                        ? getStatusConfig(listing.status, "listing").label
                         : "—"}
                     </Badge>
                   </div>
