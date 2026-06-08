@@ -177,6 +177,32 @@ export function CreateBuyerDialog({ open, onOpenChange, onSuccess }: CreateBuyer
 
       const normalizedEmail = email.trim().toLowerCase();
 
+      // 0a. Block if this buyer is already actively represented by a DIFFERENT
+      //     agent. Runs for both manual entries and picked contacts because the
+      //     trigger on client_agent_relationships enforces the same rule.
+      {
+        const { data: otherAgentRel, error: otherAgentErr } = await supabase.rpc(
+          "is_buyer_represented_by_other_agent" as any,
+          {
+            p_email: normalizedEmail,
+            p_self_agent_id: user.id,
+            p_self_crm_client_id: selectedContact?.id ?? null,
+          }
+        );
+        if (otherAgentErr) {
+          failWithStep("check existing buyer representation", otherAgentErr);
+        }
+        const otherAgentRow = Array.isArray(otherAgentRel)
+          ? otherAgentRel[0]
+          : (otherAgentRel as any);
+        if (otherAgentRow && otherAgentRow.agent_id) {
+          toast.error(
+            "This buyer is already represented by another agent on AAC."
+          );
+          return;
+        }
+      }
+
       // 0. Block if this email already belongs to an AAC account (agent or buyer).
       //    Skip when picking from contacts (the contact may already be in AAC and
       //    we still want to flip them to a buyer for this agent).
