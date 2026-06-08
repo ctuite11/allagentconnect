@@ -351,9 +351,10 @@ function renderEmailTemplate(template: string, variables: Record<string, any>): 
 async function sendEmail(job: EmailJob, resendApiKey: string): Promise<void> {
   const { payload } = job;
 
-  // Stabilization: enforce single canonical sender identity.
-  const FROM_EMAIL = process.env.TRANSACTIONAL_FROM_EMAIL || "hello@notify.allagentconnect.com";
-  const FROM_NAME = "All Agent Connect";
+  // Stabilization: single canonical sender (hello@mail.allagentconnect.com).
+  const canonicalFrom =
+    process.env.TRANSACTIONAL_FROM ||
+    `All Agent Connect <${process.env.TRANSACTIONAL_FROM_EMAIL || "hello@mail.allagentconnect.com"}>`;
   
   // Normalize recipients: handle string, array, or comma-separated string
   const toList: string[] = Array.isArray(payload.to)
@@ -376,7 +377,7 @@ async function sendEmail(job: EmailJob, resendApiKey: string): Promise<void> {
       Authorization: `Bearer ${resendApiKey}`,
     },
     body: JSON.stringify({
-      from: (payload as any).from || `${FROM_NAME} <${FROM_EMAIL}>`,
+      from: canonicalFrom,
       to: toList,
       subject: payload.subject,
       html,

@@ -161,7 +161,6 @@ const handler = async (req: Request): Promise<Response> => {
 
     const admin = createClient(supabaseUrl, SERVICE_KEY);
     const finalSubject = subject || `${senderName} sent you a message on All Agent Connect`;
-    const fromAddress = Deno.env.get("TRANSACTIONAL_FROM") || "All Agent Connect <hello@notify.allagentconnect.com>";
 
     const { data: job, error: insertErr } = await admin
       .from("email_jobs")
@@ -170,7 +169,6 @@ const handler = async (req: Request): Promise<Response> => {
           provider: "resend",
           template: "agent-profile-contact",
           to: agentEmail,
-          from: fromAddress,
           subject: finalSubject,
           html,
           text,

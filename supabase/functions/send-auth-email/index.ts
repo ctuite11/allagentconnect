@@ -3,7 +3,7 @@
 // Requirements:
 // - SEND_EMAIL_HOOK_SECRET (from Supabase hook UI)
 // - RESEND_API_KEY
-// - RESEND_FROM_EMAIL (hello@notify.allagentconnect.com)
+// - TRANSACTIONAL_FROM (All Agent Connect <hello@mail.allagentconnect.com>)
 // - RESEND_REPLY_TO (hello@allagentconnect.com)
 
 import { Webhook } from "https://esm.sh/standardwebhooks@1.0.0";
@@ -210,7 +210,7 @@ Deno.serve(async (req: Request) => {
 
     const { subject, html, text } = buildEmailForType({ type, email, actionUrl, otp });
 
-    const from = (Deno.env.get("TRANSACTIONAL_FROM") || "All Agent Connect <hello@notify.allagentconnect.com>");
+    const from = (Deno.env.get("TRANSACTIONAL_FROM") || "All Agent Connect <hello@mail.allagentconnect.com>");
 
     const sendRes = await resend.emails.send({
       from,

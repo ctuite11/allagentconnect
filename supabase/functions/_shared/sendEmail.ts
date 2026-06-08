@@ -1,6 +1,9 @@
 import type { EmailJob } from "./emailTypes.ts";
 import { renderEmailTemplate } from "./renderEmailTemplate.ts";
 import {
+  buildTransactionalFrom,
+} from "./transactionalSender.ts";
+import {
   buildClickUrl,
   buildOpenPixelUrl,
   buildUnsubUrl,
@@ -59,8 +62,7 @@ export async function sendEmail(
   job: EmailJob,
   resendApiKey: string,
 ): Promise<{ providerMessageId: string | null }> {
-  const FROM_EMAIL = Deno.env.get("TRANSACTIONAL_FROM_EMAIL") || "hello@mail.allagentconnect.com";
-  const FROM_NAME = "All Agent Connect";
+  const canonicalFrom = buildTransactionalFrom();
 
   const toList: string[] = Array.isArray(job.payload.to)
     ? job.payload.to
@@ -133,7 +135,9 @@ export async function sendEmail(
       Authorization: `Bearer ${resendApiKey}`,
     },
     body: JSON.stringify({
-      from: job.payload.from || `${FROM_NAME} <${FROM_EMAIL}>`,
+      // Always use canonical From — never honor payload.from (prevents notify/mail drift
+      // and dynamic display-name overrides that damaged reputation).
+      from: canonicalFrom,
       to: toList,
       subject: job.payload.subject,
       html,

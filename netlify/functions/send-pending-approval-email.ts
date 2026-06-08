@@ -88,7 +88,9 @@ export const handler: Handler = async (event) => {
       return { statusCode: 500, headers, body: JSON.stringify({ ok: false, error: "Missing RESEND_API_KEY" }) };
     }
 
-    const from = (process.env.TRANSACTIONAL_FROM || "All Agent Connect <hello@notify.allagentconnect.com>");
+    const from =
+      process.env.TRANSACTIONAL_FROM ||
+      "All Agent Connect <hello@mail.allagentconnect.com>";
 
     const { email, firstName, lastName } = JSON.parse(event.body || "{}");
     if (!email) {
