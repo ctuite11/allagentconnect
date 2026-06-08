@@ -316,7 +316,12 @@ const MyClients = () => {
           hint: error?.hint,
           raw: error,
         });
-        toast.error(error?.message || "Failed to save client");
+        const msg = String(error?.message ?? "");
+        if (msg.includes("BUYER_ALREADY_REPRESENTED")) {
+          toast.error("This buyer is already represented by another agent on AAC.");
+        } else {
+          toast.error(error?.message || "Failed to save client");
+        }
       }
     } finally {
       setSaving(false);
