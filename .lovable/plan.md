@@ -1,46 +1,55 @@
-## Goal
-Make every listing email render the same card as the in-app SearchListingCard (status banner, full-width photo, feature pill, price + ID, type, green-pin address, beds/baths/sqft, brokerage + agent). One renderer, used everywhere, replacing the current MLS and compact variants.
+## Reframed — One Active Agent Per Buyer
 
-## New renderer
-Add `renderSearchStyleListingEmailCard(listing, opts)` in `supabase/functions/_shared/listingEmailCard.ts` and a mirror in `src/lib/renderEmailListingCard.ts` (the share-email path uses the `src/lib` copy). Email-safe: nested `<table>`s, inline styles, no flex/grid/JS/hover.
+You're right. Active = buyer accepted invite + created account, and only **one** agent can hold an active relationship with a buyer at a time. That changes the diagnosis.
 
-Card structure, top to bottom:
-1. **Status banner** — full-width strip, semantic status color (Active emerald, Coming Soon blue, Under Contract amber, Sold/Closed neutral). Centered, uppercase, e.g. "COMING SOON". No sparkle icon.
-2. **Photo** — single full-width hero image, ~280–320px tall, `object-fit: cover`. No arrows, no checkbox. Whole image links to the listing.
-3. **Feature pill** (optional) — small rounded white pill over the bottom-right of the photo (e.g. "Waterfront"). Only when `listing.features`/tags has a notable one; skip otherwise.
-4. **Body padding 16–20px**:
-   - Row 1: Price (left, bold 20px) · ID# L-XXXX (right, AAC primary blue, small).
-   - Row 2: Property type (e.g. "Condo"), medium weight, neutral-700.
-   - Row 3: Address with emerald map-pin glyph (`●` or inline SVG-safe character), single line, neutral-900.
-   - Row 4: Stats row — Beds / Baths / Sqft separated by middots, with small inline glyphs (Unicode safe, not Lucide). No icons via SVG-in-img unless they're tiny inline-safe.
-5. **Footer divider** + brokerage (left, neutral-500) · agent name (right, plain text per decision). No envelope icon, no link.
+### Database reality for `tuite.chris11@gmail.com`
 
-Tokens reused from existing card: `#0E56F5` (price/ID accent), `#22C55E`/`#50c878` (pin + emerald), neutral grays already in file.
+Auth/profile: `cddd17b4-c345-45f3-a3b6-9a3b19a5c5f8` (account exists).
 
-Options: `{ baseUrl?, listingUrl?, ctaLabel? }`. CTA is implicit (whole card linked); we'll keep the existing per-email "Open Hot Sheet" / "View Listing" outer button outside the card unchanged.
+`client_agent_relationships` rows:
 
-## Replacements (all listing emails)
-Swap every call site to the new renderer:
+| Agent | `status` | `client_id` (auth) | `crm_client_id` | Created |
+|---|---|---|---|---|
+| `1fc50da1` (Chris) | `active` | `cddd17b4` ✓ | `958b0d93` | 2026-06-04 — invite accepted, account exists |
+| `ea18faa4` (the one showing "Pending") | `pending` | `NULL` | `aa67f895` | 2026-06-08 02:53 — added tonight, invite NEVER accepted |
 
-- `supabase/functions/_shared/listingEmailCard.ts` — keep file, add new export, mark old `renderListingEmailCard` / `renderCompactListingEmailCard` as deprecated aliases that forward to the new one (so any unmigrated path keeps working).
-- `supabase/functions/process-hot-sheet/index.ts` — Hot Sheet invite + share emails.
-- `supabase/functions/send-new-match-notification/index.ts` — match notifications.
-- `supabase/functions/_shared/renderEmailTemplate.ts` — any listing block.
-- `netlify/functions/email-worker.ts` and `netlify/functions/listingEmailCard.ts` — mirror the new renderer here (Netlify worker bundle).
-- `src/lib/renderEmailListingCard.ts` + `src/lib/buildHotSheetShareEmailHtml.ts` — used by client-triggered listing shares.
-- Anywhere `renderCompactListingEmailCard` is used (message notifications, listing inquiry, price-change alert) — switch to the new renderer.
+So:
 
-## Deploy
-Redeploy: `process-hot-sheet`, `send-new-match-notification`, `send-transactional-email` (if it imports the shared card), and any other edge functions touched. Netlify auto-deploys the worker.
+1. Agent `1fc50da1` — correctly **Active**.
+2. Agent `ea18faa4` — should never have been allowed to add this buyer. The duplicate-registration guard didn't fire. The "Pending" badge is technically truthful for that bad row, but the row itself shouldn't exist.
 
-## Test
-After deploy:
-1. Trigger one Hot Sheet invite to a test recipient → confirm new card.
-2. Trigger one new-match notification → confirm.
-3. Trigger one personal listing share → confirm.
-4. Inspect rendering in Gmail web + iOS Mail (Outlook desktop strips a lot — accept graceful degradation).
+### Why the guard missed it
 
-## Out of scope
-- No change to outer email shell (header, footer, "Open Hot Sheet" CTA, unsubscribe).
-- No change to subjects, recipient logic, queueing, or cron cadence.
-- No interactive carousel, checkbox, or hover states (email clients can't render them).
+The duplicate check almost certainly matches on `clients.email + agent_id` (CRM scope) rather than asking "does this email already have an active relationship with ANY other agent?". `aa67f895` and `958b0d93` are two **different `clients` rows** owned by two different agents, both with email `tuite.chris11@gmail.com`, so a per-agent uniqueness check sees no conflict.
+
+### Plan
+
+#### 1. Enforce one-active-agent at the source
+New migration adds a server-side check (function + trigger on `client_agent_relationships` BEFORE INSERT/UPDATE):
+- When a row would become `status IN ('active','pending')` with `ended_at IS NULL`,
+- AND another `client_agent_relationships` row already exists with `status='active'`, `ended_at IS NULL`, and either matching `client_id` (auth user) OR matching email via `crm_client_id → clients.email`,
+- AND that other row's `agent_id` is different,
+- → raise `RAISE EXCEPTION 'BUYER_ALREADY_REPRESENTED'` with the existing agent id in the message.
+
+Partial unique index as belt-and-suspenders on `(client_id) WHERE status='active' AND ended_at IS NULL` (only enforceable on auth-linked rows; the trigger handles the email-only case).
+
+#### 2. Surface the guard in the UI when adding a contact
+Wherever a CRM contact is created (Add Buyer in `/my-clients`, "Create Hot Sheet" buyer step, invite flows), catch the `BUYER_ALREADY_REPRESENTED` error and show a clear alert: "This buyer is already represented by another agent." Do NOT create the `clients` row or the pending relationship.
+
+The pre-insert lookup should also query existing relationships by email (across all agents), not just the agent's own contacts, so the alert appears before the user submits.
+
+#### 3. Clean up the stale pending row for `tuite.chris11`
+One-off update in a migration: mark relationship `b018f0cf-ac16-403f-9a64-f149a560b1b4` (and its corresponding share_token `d9236042`) as ended/revoked, and either delete the orphan `clients.aa67f895` row or flag it so it stops appearing in My Buyers for agent `ea18faa4`.
+
+#### 4. Backfill scan
+Same migration: find every other `clients` row whose email matches a buyer with an active relationship under a different agent. List them in a new `audit_logs` entry for review, then end any pending duplicate relationships the same way.
+
+#### 5. No change to the badge logic
+With the trigger + cleanup in place, `useSuccessHubData.ts` line 436 stays as-is: it reports "Pending" only when an agent has a legitimate pending invite to a buyer who *doesn't* already belong to another agent. The 1fc50da1 ↔ tuite.chris11 row is already Active and will keep displaying Active.
+
+### Out of scope
+- No UI redesign.
+- No change to invite emails or share-token format.
+- No change to ended-relationship handling, hot-sheet membership, or messaging.
+
+Reply **go** and I'll implement steps 1–4 in one migration plus the matching client-side error handling for Add Buyer / Create Hot Sheet.

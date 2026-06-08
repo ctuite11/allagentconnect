@@ -4368,6 +4368,20 @@ export type Database = {
         Args: { p_hot_sheet_id: string }
         Returns: boolean
       }
+      is_buyer_represented_by_other_agent: {
+        Args: {
+          p_email: string
+          p_self_agent_id: string
+          p_self_crm_client_id?: string
+        }
+        Returns: {
+          agent_id: string
+          client_id: string
+          crm_client_id: string
+          relationship_id: string
+          status: string
+        }[]
+      }
       is_buyer_workspace_member: {
         Args: { p_workspace_id: string }
         Returns: boolean
