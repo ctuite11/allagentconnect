@@ -270,7 +270,6 @@ export function ShareListingsDialog({
 
     if (onAddRecipient) {
       if (tryAddRecipient(recipient)) {
-        showContactAddFeedback("added");
         clearPendingRecipientFields();
       } else if (!singleRecipientMode && isDuplicateRecipientEmail(recipient.email)) {
         showContactAddFeedback("already-added", recipient.email);
@@ -304,7 +303,6 @@ export function ShareListingsDialog({
     setAddingManualRecipient(true);
     try {
       onAddRecipient(recipient);
-      showContactAddFeedback("added");
       clearPendingRecipientFields();
 
       if (onSaveContact) {
