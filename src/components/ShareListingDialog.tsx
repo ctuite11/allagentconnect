@@ -155,6 +155,19 @@ export const ShareListingDialog = ({
       return;
     }
 
+    if (!listingId) {
+      toast.error("Missing listing reference. Please reopen the dialog.");
+      return;
+    }
+
+    const invalid = recipients.find(
+      (r) => !r.email?.trim() || !shareRecipientGreetingName(r).trim(),
+    );
+    if (invalid) {
+      toast.error("Each recipient needs a name and email.");
+      return;
+    }
+
     setSending(true);
     try {
       const { trackShare } = await import("@/lib/trackShare");
@@ -163,9 +176,10 @@ export const ShareListingDialog = ({
         await invokeEdgeFunction("send-listing-share", {
           listingId,
           recipientName: shareRecipientGreetingName(recipient),
-          recipientEmail: recipient.email,
+          recipientEmail: recipient.email.trim(),
           agentName,
           agentEmail,
+          agentPhone: "",
           message,
         });
 
