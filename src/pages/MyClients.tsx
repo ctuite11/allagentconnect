@@ -256,6 +256,30 @@ const MyClients = () => {
           return;
         }
 
+        // Warn before creating a contact for a buyer who is already actively
+        // represented by another AAC agent. The DB trigger blocks downstream
+        // relationship inserts; this surfaces the conflict up front.
+        {
+          const { data: otherAgentRel } = await supabase.rpc(
+            "is_buyer_represented_by_other_agent" as any,
+            {
+              p_email: normalizedEmail,
+              p_self_agent_id: user.id,
+              p_self_crm_client_id: null,
+            }
+          );
+          const otherAgentRow = Array.isArray(otherAgentRel)
+            ? otherAgentRel[0]
+            : (otherAgentRel as any);
+          if (otherAgentRow && otherAgentRow.agent_id) {
+            toast.error(
+              "This buyer is already represented by another agent on AAC."
+            );
+            setSaving(false);
+            return;
+          }
+        }
+
         const { error } = await supabase
           .from("clients")
           .insert({
