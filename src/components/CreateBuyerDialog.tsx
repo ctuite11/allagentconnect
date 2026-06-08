@@ -367,7 +367,12 @@ export function CreateBuyerDialog({ open, onOpenChange, onSuccess }: CreateBuyer
         hint: err?.hint,
         raw: err,
       });
-      toast.error(err?.message || "Can't add buyer. Try again.");
+      const msg = String(err?.message ?? "");
+      if (msg.includes("BUYER_ALREADY_REPRESENTED")) {
+        toast.error("This buyer is already represented by another agent on AAC.");
+      } else {
+        toast.error(err?.message || "Can't add buyer. Try again.");
+      }
     } finally {
       setSaving(false);
     }
