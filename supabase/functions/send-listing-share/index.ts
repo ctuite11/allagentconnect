@@ -13,8 +13,15 @@ interface ShareListingRequest {
   recipientName: string;
   agentName: string;
   agentEmail: string;
-  agentPhone: string;
+  agentPhone?: string;
   message?: string;
+}
+
+function jsonResponse(body: Record<string, unknown>, status: number): Response {
+  return new Response(JSON.stringify(body), {
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    status,
+  });
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -27,15 +34,49 @@ const handler = async (req: Request): Promise<Response> => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
+    let parsed: ShareListingRequest;
+    try {
+      parsed = await req.json();
+    } catch (err) {
+      console.error('[send-listing-share] Invalid JSON body:', err);
+      return jsonResponse({ success: false, error: 'Invalid JSON body' }, 400);
+    }
+
     const {
       listingId,
       recipientEmail,
       recipientName,
       agentName,
       agentEmail,
-      agentPhone,
-      message = ''
-    }: ShareListingRequest = await req.json();
+      agentPhone = '',
+      message = '',
+    } = parsed;
+
+    console.log('[send-listing-share] Received request:', {
+      listingId,
+      recipientEmail,
+      recipientName,
+      agentName,
+      agentEmail,
+      hasMessage: Boolean(message),
+    });
+
+    const required: Record<string, unknown> = {
+      listingId,
+      recipientEmail,
+      recipientName,
+      agentName,
+      agentEmail,
+    };
+    for (const [field, value] of Object.entries(required)) {
+      if (typeof value !== 'string' || value.trim() === '') {
+        console.warn(`[send-listing-share] Missing required field: ${field}`);
+        return jsonResponse(
+          { success: false, error: `Missing required field: ${field}` },
+          400,
+        );
+      }
+    }
 
     // Fetch listing details
     const { data: listing, error: listingError } = await supabase
@@ -45,7 +86,8 @@ const handler = async (req: Request): Promise<Response> => {
       .single();
 
     if (listingError || !listing) {
-      throw new Error('Listing not found');
+      console.error('[send-listing-share] Listing lookup failed:', listingError);
+      return jsonResponse({ success: false, error: 'Listing not found' }, 404);
     }
 
     // Resolve photo URL (same logic as before, just for the variables payload)
@@ -113,22 +155,19 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (insertError) {
       console.error('[send-listing-share] Failed to enqueue job:', insertError);
-      throw new Error('Failed to queue email for sending');
+      return jsonResponse(
+        { success: false, error: `Failed to queue email: ${insertError.message}` },
+        500,
+      );
     }
 
     console.log(`[send-listing-share] Job enqueued for ${recipientEmail}`);
 
-    return new Response(
-      JSON.stringify({ success: true, message: 'Email queued for delivery' }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return jsonResponse({ success: true, message: 'Email queued for delivery' }, 200);
   } catch (error: unknown) {
     console.error('[send-listing-share] Error:', error);
     const message = error instanceof Error ? error.message : String(error);
-    return new Response(
-      JSON.stringify({ error: message }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-    );
+    return jsonResponse({ success: false, error: message }, 500);
   }
 };
 
