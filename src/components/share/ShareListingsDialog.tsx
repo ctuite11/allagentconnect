@@ -492,8 +492,9 @@ export function ShareListingsDialog({
                   {recipients.length > 0 ? "Add another contact" : "Search contact"}
                 </div>
 
-                <div ref={contactSearchRef} className={FIELD_ICON_WRAP}>
-                  <Search className={ICON_SLOT} />
+                <div ref={contactSearchRef} className="relative text-neutral-400">
+                  <div className="relative">
+                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
                   <Input
                     value={contactQuery}
                     onChange={(e) => setContactQuery(e.target.value)}
@@ -509,6 +510,7 @@ export function ShareListingsDialog({
                     )}
                     autoFocus={!hasActiveRecipient}
                   />
+                  </div>
                   {showContactSearchHint ? (
                     <p className="mt-1.5 text-[12px] text-neutral-500">Start typing to search contacts.</p>
                   ) : null}
