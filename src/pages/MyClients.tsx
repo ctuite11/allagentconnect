@@ -25,7 +25,7 @@ import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
 import { BulkEmailDialog } from "@/components/BulkEmailDialog";
 import { EmailAnalyticsDialog } from "@/components/EmailAnalyticsDialog";
 import { ImportClientsDialog } from "@/components/ImportClientsDialog";
-import { fetchAllAgentContacts } from "@/lib/contactSearch";
+import { fetchAllAgentContacts, contactDisplayName, matchesContactQuery, scoreContactSearchMatch } from "@/lib/contactSearch";
 import ContactDetailDrawer from "@/components/ContactDetailDrawer";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -47,19 +47,8 @@ const toTitleCase = (str: string) => {
     .join(' ');
 };
 
-// Null-safe helpers used by contact search/sort/autocomplete on /my-clients.
-const norm = (v: unknown) => String(v ?? "").toLowerCase().trim();
-const digits = (v: unknown) => String(v ?? "").replace(/\D+/g, "");
-
-// Tokenize a value into lowercase word parts split on whitespace and common
-// separators found in names/emails (".", "_", "@", "-", "+", "/").
-const words = (v: unknown) =>
-  norm(v)
-    .split(/[\s._@\-+/]+/)
-    .filter(Boolean);
-
-const wordStartsWith = (v: unknown, q: string) =>
-  words(v).some((word) => word.startsWith(q));
+// Null-safe helpers used by contact sort/autocomplete on /my-clients.
+// Search matching lives in @/lib/contactSearch (shared with share pickers, hot sheets, etc.).
 
 const clientSchema = z.object({
   first_name: z.string().trim().min(2, "First name must be at least 2 characters").max(100),
@@ -86,17 +75,6 @@ interface Client {
   relationship_created_at?: string | null;
   relationship_user_id?: string | null;
 }
-
-// Resolve a non-empty display label for a contact. Falls back to the email local-part
-// so email-only imports never produce "null null" / "undefined undefined" strings.
-const displayName = (c: Client) => {
-  const f = (c.first_name ?? "").trim();
-  const l = (c.last_name ?? "").trim();
-  const full = `${f} ${l}`.trim();
-  if (full) return full;
-  const email = (c.email ?? "").trim();
-  return email ? email.split("@")[0] : "";
-};
 
 const MyClients = () => {
   const navigate = useNavigate();
@@ -654,60 +632,7 @@ const MyClients = () => {
 
   const filteredClients = clients.filter((client) => {
     const searchRaw = searchTerm.trim();
-    const search = norm(searchRaw);
-    const searchDigits = digits(searchRaw);
-
-    // Short queries (1–2 chars) use prefix / word-boundary matching to avoid
-    // matching every contact that happens to contain the letter anywhere.
-    // Queries of 3+ characters fall back to broader substring matching across
-    // display name, name parts, email, client_type, and phone digits.
-    const q = search;
-    const email = norm(client.email);
-    const [local, domain = ""] = email.split("@");
-    const domainRoot = domain.split(".")[0] || "";
-
-    const shortQuery = q.length > 0 && q.length < 3;
-
-    const namePrefixHit =
-      wordStartsWith(displayName(client), q) ||
-      wordStartsWith(client.first_name, q) ||
-      wordStartsWith(client.last_name, q);
-
-    const emailPrefixHit =
-      local.startsWith(q) ||
-      wordStartsWith(local, q) ||
-      domainRoot.startsWith(q);
-
-    // Token-aware matching for 3+ char queries: every typed token must match
-    // at least one searchable field. This lets "ethan goodrich" match a contact
-    // whose name contains "ethan" and whose email domain contains "goodrich".
-    const searchableFields = [
-      norm(displayName(client)),
-      norm(client.first_name),
-      norm(client.last_name),
-      email,
-      local,
-      domain,
-      domainRoot,
-      norm(client.client_type),
-    ];
-    const phoneDigits = digits(client.phone);
-    const tokens = q.split(/\s+/).filter(Boolean);
-    const broadHit =
-      tokens.length > 0 &&
-      tokens.every((tok) => {
-        const tokDigits = digits(tok);
-        const fieldHit = searchableFields.some((f) => f.includes(tok));
-        const phoneHit =
-          tokDigits.length >= 3 && phoneDigits.includes(tokDigits);
-        return fieldHit || phoneHit;
-      });
-
-    const matchesSearch = !q || (
-      shortQuery
-        ? namePrefixHit || emailPrefixHit
-        : broadHit
-    );
+    const matchesSearch = !searchRaw || matchesContactQuery(client, searchRaw);
 
     // Apply client type filter
     const matchesType = clientTypeFilter === "all" || 
@@ -722,9 +647,15 @@ const MyClients = () => {
   });
 
   const sortedClients = [...filteredClients].sort((a, b) => {
+    const q = searchTerm.trim();
+    if (q) {
+      const scoreDiff = scoreContactSearchMatch(b, q) - scoreContactSearchMatch(a, q);
+      if (scoreDiff !== 0) return scoreDiff;
+    }
+
     switch (sortBy) {
       case "name":
-        return displayName(a).localeCompare(displayName(b));
+        return contactDisplayName(a).localeCompare(contactDisplayName(b));
       case "created_at":
         return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
       case "updated_at":
@@ -1046,17 +977,17 @@ const MyClients = () => {
                       <User className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
                       
                       {/* Typeahead Autocomplete Dropdown */}
-                      {showAutocomplete && searchTerm.length >= 2 && filteredClients.length > 0 && (
+                      {showAutocomplete && searchTerm.length >= 2 && sortedClients.length > 0 && (
                         <div className="absolute left-0 right-0 top-full z-50 mt-1 overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-md">
                           <Command className="bg-white">
                             <CommandList>
                               <CommandGroup heading="Quick Jump">
-                                {filteredClients.slice(0, 8).map((client) => (
+                                {sortedClients.slice(0, 8).map((client) => (
                                   <CommandItem
                                     key={client.id}
-                                    value={displayName(client)}
+                                    value={contactDisplayName(client)}
                                     onSelect={() => {
-                                      setSearchTerm(displayName(client));
+                                      setSearchTerm(contactDisplayName(client));
                                       setSelectedClients(new Set([client.id]));
                                       setShowAutocomplete(false);
                                     }}
@@ -1064,7 +995,7 @@ const MyClients = () => {
                                   >
                                     <div className="flex flex-col">
                                       <span className="font-medium text-zinc-900">
-                                        {toTitleCase(displayName(client))}
+                                        {toTitleCase(contactDisplayName(client))}
                                       </span>
                                       <span className="text-sm text-zinc-500">{client.email}</span>
                                     </div>
@@ -1214,7 +1145,7 @@ const MyClients = () => {
                               <Checkbox
                                 checked={isSelected}
                                 onCheckedChange={() => toggleSelectClient(client.id)}
-                                aria-label={`Select ${displayName(client)}`}
+                                aria-label={`Select ${contactDisplayName(client)}`}
                               />
                             </div>
                             <button
@@ -1224,7 +1155,7 @@ const MyClients = () => {
                             >
                               <div className="flex items-center gap-2">
                                 <p className="truncate text-[14px] font-medium text-neutral-900">
-                                  {toTitleCase(client.first_name)} {toTitleCase(client.last_name) || (!client.first_name && !client.last_name ? displayName(client) : "")}
+                                  {toTitleCase(client.first_name)} {toTitleCase(client.last_name) || (!client.first_name && !client.last_name ? contactDisplayName(client) : "")}
                                 </p>
                                 {(client as any).source === 'network' && (
                                   <Badge variant="outline" className="border-neutral-200 bg-neutral-100 text-[10px] text-neutral-700">AAC</Badge>

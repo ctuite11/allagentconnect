@@ -27,7 +27,7 @@ import {
   shareRecipientDisplayName,
   shareRecipientFromParts,
 } from "@/lib/shareRecipientUtils";
-import { AGENT_SHARE_CONTACT_MIN_QUERY_LENGTH } from "@/lib/contactSearch";
+import { AGENT_SHARE_CONTACT_MIN_QUERY_LENGTH, contactDisplayName } from "@/lib/contactSearch";
 
 export type ListingPreview = {
   address: string;
@@ -210,9 +210,6 @@ export function ShareListingsDialog({
     showContactDropdown &&
     !isSearchingContacts &&
     contactResults.length === 0;
-
-  const contactDisplayName = (contact: ContactSearchResult) =>
-    `${contact.first_name ?? ""} ${contact.last_name ?? ""}`.trim() || contact.email;
 
   const recipientFromContact = (contact: ContactSearchResult): ShareRecipient | null => {
     const email = contact.email?.trim();
@@ -526,7 +523,7 @@ export function ShareListingsDialog({
                           >
                             <div className="min-w-0 pr-2">
                               <div className="truncate text-[13px] font-medium text-neutral-900">{fullName}</div>
-                              <div className="truncate text-xs text-neutral-600">{contact.email}</div>
+                              <div className="truncate text-[12px] font-medium text-neutral-700">{contact.email}</div>
                             </div>
                             {contact.phone ? (
                               <div className="shrink-0 text-xs tabular-nums text-neutral-500">

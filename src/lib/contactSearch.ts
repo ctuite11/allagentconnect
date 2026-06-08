@@ -50,14 +50,15 @@ const words = (v: unknown) =>
 const wordStartsWith = (v: unknown, q: string) =>
   words(v).some((w) => w.startsWith(q));
 
-const displayName = (c: ContactRow) => {
+/** Display label for a CRM contact (same rule as /my-clients). */
+export function contactDisplayName(c: ContactRow): string {
   const f = String(c.first_name ?? "").trim();
   const l = String(c.last_name ?? "").trim();
   const full = `${f} ${l}`.trim();
   if (full) return full;
   const email = String(c.email ?? "").trim();
   return email ? email.split("@")[0] : "";
-};
+}
 
 /** Max contacts shown in share/email pickers (full CRM list is searched client-side). */
 export const AGENT_SHARE_CONTACT_RESULT_LIMIT = 25;
@@ -73,7 +74,7 @@ export function matchesContactQuery(client: ContactRow, rawQuery: string): boole
 
   if (q.length < 3) {
     const namePrefixHit =
-      wordStartsWith(displayName(client), q) ||
+      wordStartsWith(contactDisplayName(client), q) ||
       wordStartsWith(client.first_name, q) ||
       wordStartsWith(client.last_name, q);
     const emailPrefixHit =
@@ -82,7 +83,7 @@ export function matchesContactQuery(client: ContactRow, rawQuery: string): boole
   }
 
   const searchableFields = [
-    norm(displayName(client)),
+    norm(contactDisplayName(client)),
     norm(client.first_name),
     norm(client.last_name),
     email,
@@ -98,9 +99,90 @@ export function matchesContactQuery(client: ContactRow, rawQuery: string): boole
   return tokens.every((tok) => {
     const tokDigits = digits(tok);
     const fieldHit = searchableFields.some((f) => f.includes(tok));
+    const nameWordHit =
+      wordStartsWith(contactDisplayName(client), tok) ||
+      wordStartsWith(client.first_name, tok) ||
+      wordStartsWith(client.last_name, tok);
+    const emailWordHit =
+      local.startsWith(tok) ||
+      wordStartsWith(local, tok) ||
+      words(local).some((w) => w.startsWith(tok) || w.includes(tok));
     const phoneHit = tokDigits.length >= 3 && phoneDigits.includes(tokDigits);
-    return fieldHit || phoneHit;
+    return fieldHit || nameWordHit || emailWordHit || phoneHit;
   });
+}
+
+/**
+ * Higher = better match. Used to rank picker results consistently everywhere.
+ * Returns 0 when the contact does not match {@link matchesContactQuery}.
+ */
+export function scoreContactSearchMatch(client: ContactRow, rawQuery: string): number {
+  const q = norm(rawQuery);
+  if (!q || !matchesContactQuery(client, rawQuery)) return 0;
+
+  const email = norm(client.email);
+  const [local = ""] = email.split("@");
+  const last = norm(client.last_name);
+  const first = norm(client.first_name);
+  const full = norm(contactDisplayName(client));
+  const tokens = q.split(/\s+/).filter(Boolean);
+
+  let score = 0;
+
+  for (const tok of tokens) {
+    if (last === tok) score += 200;
+    else if (last.startsWith(tok)) score += 120;
+    if (first === tok) score += 100;
+    else if (first.startsWith(tok)) score += 80;
+    if (local === tok) score += 150;
+    else if (local.startsWith(tok)) score += 110;
+    else if (words(local).some((w) => w === tok)) score += 90;
+    else if (words(local).some((w) => w.startsWith(tok))) score += 75;
+    if (full === tok) score += 95;
+    else if (full.startsWith(tok)) score += 60;
+    else if (full.includes(tok)) score += 35;
+    if (email.includes(tok)) score += 25;
+  }
+
+  if (tokens.length > 1 && tokens.every((tok) => full.includes(tok))) {
+    score += 50;
+  }
+
+  return score;
+}
+
+export interface FilterAndRankAgentContactsOptions {
+  limit?: number;
+  /** Share/email pickers omit contacts without an email address. */
+  requireEmail?: boolean;
+}
+
+/** Shared filter + relevance ranking for all CRM contact search UIs. */
+export function filterAndRankAgentContacts<T extends ContactRow = ContactRow>(
+  contacts: T[],
+  rawQuery: string,
+  opts: FilterAndRankAgentContactsOptions = {},
+): T[] {
+  const { limit, requireEmail = false } = opts;
+  const q = (rawQuery ?? "").trim();
+  if (!q || q.length < AGENT_CONTACT_MIN_QUERY_LENGTH) return [];
+
+  const pool = requireEmail
+    ? contacts.filter((row) => String(row.email ?? "").trim())
+    : contacts;
+
+  const ranked = pool
+    .filter((row) => matchesContactQuery(row, q))
+    .map((row) => ({ row, score: scoreContactSearchMatch(row, q) }))
+    .sort((a, b) => {
+      if (b.score !== a.score) return b.score - a.score;
+      return contactDisplayName(a.row).localeCompare(contactDisplayName(b.row), undefined, {
+        sensitivity: "base",
+      });
+    })
+    .map(({ row }) => row);
+
+  return limit != null ? ranked.slice(0, limit) : ranked;
 }
 
 export interface FetchAllAgentContactsOptions {
@@ -186,7 +268,7 @@ export async function searchClientContacts<T extends ContactRow = ContactRow>(
   if (!raw || raw.length < 2 || !agentId) return [];
 
   const all = await fetchAllAgentContacts<T>(agentId, { force: forceRefresh });
-  return all.filter((row) => matchesContactQuery(row, raw)).slice(0, limit);
+  return filterAndRankAgentContacts(all, raw, { limit });
 }
 
 export interface FilterAgentContactsForSharePickerOptions {
@@ -196,8 +278,11 @@ export interface FilterAgentContactsForSharePickerOptions {
   forceRefresh?: boolean;
 }
 
-/** Minimum query length before share-dialog contact search runs (matches searchClientContacts). */
-export const AGENT_SHARE_CONTACT_MIN_QUERY_LENGTH = 2;
+/** Minimum query length before CRM contact search runs (share pickers, hot sheet, etc.). */
+export const AGENT_CONTACT_MIN_QUERY_LENGTH = 2;
+
+/** @deprecated Use {@link AGENT_CONTACT_MIN_QUERY_LENGTH}. */
+export const AGENT_SHARE_CONTACT_MIN_QUERY_LENGTH = AGENT_CONTACT_MIN_QUERY_LENGTH;
 
 /**
  * Share-dialog contact picker — same paginated CRM list as /my-clients, filtered client-side.
@@ -215,15 +300,10 @@ export async function filterAgentContactsForSharePicker<T extends ContactRow = C
   if (!agentId) return [];
 
   const q = query.trim();
-  if (!q || q.length < AGENT_SHARE_CONTACT_MIN_QUERY_LENGTH) return [];
+  if (!q || q.length < AGENT_CONTACT_MIN_QUERY_LENGTH) return [];
 
   const all = await fetchAllAgentContacts<T>(agentId, { force: forceRefresh });
-  const withEmail = all.filter((row) => String(row.email ?? "").trim());
-  const sorted = [...withEmail].sort((a, b) =>
-    displayName(a).localeCompare(displayName(b), undefined, { sensitivity: "base" }),
-  );
-
-  return sorted.filter((row) => matchesContactQuery(row, q)).slice(0, limit);
+  return filterAndRankAgentContacts(all, q, { limit, requireEmail: true });
 }
 
 export interface MessageableClientRecipient {
@@ -264,7 +344,7 @@ export async function fetchMessageableClientRecipients(
 
     results.push({
       id: authUserId,
-      name: displayName(c) || authUserId,
+      name: contactDisplayName(c) || authUserId,
       email: String(c.email ?? "").trim(),
       subtitle: formatClientTypeLabel(c.client_type),
     });

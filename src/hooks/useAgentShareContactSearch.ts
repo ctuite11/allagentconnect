@@ -30,6 +30,8 @@ export function useAgentShareContactSearch(open: boolean, enabled = true) {
       return;
     }
 
+    invalidateAgentContactsCache();
+
     let cancelled = false;
     void supabase.auth.getUser().then(({ data: { user } }) => {
       if (!cancelled) setAgentId(user?.id ?? null);
