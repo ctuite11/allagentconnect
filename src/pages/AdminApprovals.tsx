@@ -852,6 +852,12 @@ export default function AdminApprovals() {
             active={statusFilter === "restricted"}
             onClick={() => setStatusFilter("restricted")}
           />
+          <Pill
+            label={`Online (${onlineCount})`}
+            variant="success"
+            active={statusFilter === "online"}
+            onClick={() => setStatusFilter("online")}
+          />
         </div>
 
         {/* Agent Cards */}
