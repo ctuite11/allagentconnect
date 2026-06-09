@@ -1,6 +1,6 @@
 /// <reference lib="deno.ns" />
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -30,14 +30,23 @@ serve(async (req) => {
     return json({ success: false, error: "Missing auth token" }, 401);
   }
 
+  const token = authHeader.replace(/^Bearer\s+/i, "").trim();
+  if (!token) {
+    return json({ success: false, error: "Missing auth token" }, 401);
+  }
+
   const supaUser = createClient(supabaseUrl, anonKey, {
     global: { headers: { Authorization: authHeader } },
   });
 
-  const { data: userData, error: userErr } = await supaUser.auth.getUser();
-  if (userErr || !userData?.user) return json({ success: false, error: "Unauthorized" }, 401);
+  const { data: claimsData, error: claimsErr } = await supaUser.auth.getClaims(token);
+  if (claimsErr || !claimsData?.claims?.sub) {
+    console.warn("[send-agent-client-email] auth claims failed", claimsErr);
+    return json({ success: false, error: "Unauthorized: invalid or expired session" }, 401);
+  }
 
-  const agentId = userData.user.id;
+  const agentId = claimsData.claims.sub;
+  const authEmail = typeof claimsData.claims.email === "string" ? claimsData.claims.email : null;
 
   // Parse + validate body
   let body: {
@@ -126,7 +135,7 @@ serve(async (req) => {
       .eq("id", agentId)
       .maybeSingle();
     if (fallback) {
-      agentEmail = fallback.email ?? userData.user.email ?? null;
+      agentEmail = fallback.email ?? authEmail ?? null;
       agentName =
         agentName ||
         [fallback.first_name, fallback.last_name].filter(Boolean).join(" ").trim() ||
@@ -134,7 +143,7 @@ serve(async (req) => {
     }
   }
 
-  agentEmail = agentEmail || userData.user.email || null;
+  agentEmail = agentEmail || authEmail || null;
   if (!agentEmail) return json({ success: false, error: "Agent email not found" }, 400);
 
   // Enqueue exactly one transactional email job
