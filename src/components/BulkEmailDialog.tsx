@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
+import { invokeEdgeFunction, resolveEdgeFunctionErrorMessage } from "@/lib/invokeEdgeFunction";
 import { toast } from "sonner";
 import { Mail, FileText } from "lucide-react";
 import { EmailTemplateManager } from "./EmailTemplateManager";
@@ -16,7 +17,7 @@ import { EmailComposerToolbar } from "./email/EmailComposerToolbar";
 interface BulkEmailDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  recipients: Array<{ email: string; name: string }>;
+  recipients: Array<{ id?: string; email: string; name: string }>;
 }
 
 export function BulkEmailDialog({ open, onOpenChange, recipients }: BulkEmailDialogProps) {
@@ -91,7 +92,8 @@ export function BulkEmailDialog({ open, onOpenChange, recipients }: BulkEmailDia
       }
 
       // Replace variables for each recipient
-      const personalizedRecipients = recipients.map(recipient => ({
+      const personalizedRecipients = recipients.map((recipient) => ({
+        id: recipient.id,
         email: recipient.email,
         name: replaceVariables(recipient.name, recipient.name),
       }));
@@ -104,34 +106,71 @@ export function BulkEmailDialog({ open, onOpenChange, recipients }: BulkEmailDia
       const personalizedSubject = subject;
       const personalizedMessage = message;
 
-      const { data, error } = await supabase.functions.invoke('send-bulk-email', {
-        body: {
-          recipients: finalRecipients,
-          subject: personalizedSubject,
-          message: isTemplated ? "" : personalizedMessage,
-          agentId: user.id,
-          agentEmail: agentInfo?.email, // Pass agent email for replyTo
-          sendAsGroup: false, // Always send individually (privacy protected)
-          template: isTemplated ? template : undefined,
-        },
-      });
+      // Regular contact email → transactional path (not paused).
+      // Marketing templates → send-bulk-email (paused during deliverability recovery).
+      if (template === "custom") {
+        const transactionalRecipients = finalRecipients.filter(
+          (r) => r.email.trim() && r.email !== agentInfo?.email,
+        );
 
-      if (error) throw error;
+        for (const recipient of transactionalRecipients) {
+          await invokeEdgeFunction("send-agent-client-email", {
+            clientId: recipient.id,
+            recipientEmail: recipient.email.trim(),
+            recipientName: recipient.name,
+            subject: personalizedSubject,
+            message: personalizedMessage,
+          });
+        }
 
-      const mode = sendAsGroup && recipients.length < 5 ? "group" : "individual";
-      const modeText = mode === "group" ? " as a group (Reply All enabled)" : " individually (privacy protected)";
-      
-      const copyNote = sendCopyToSelf ? " (copy sent to you)" : "";
-      toast.success(`Email sent to ${recipients.length} recipient${recipients.length > 1 ? 's' : ''}${modeText}${copyNote}. Check analytics to track opens and clicks.`);
+        if (sendCopyToSelf && agentInfo?.email) {
+          await invokeEdgeFunction("send-agent-client-email", {
+            recipientEmail: agentInfo.email,
+            recipientName: agentInfo.name,
+            subject: `[COPY] ${personalizedSubject}`,
+            message: personalizedMessage,
+          });
+        }
+
+        const sentCount = transactionalRecipients.length;
+        toast.success(
+          `Email sent to ${sentCount} recipient${sentCount === 1 ? "" : "s"}${sendCopyToSelf ? " (copy sent to you)" : ""}.`,
+        );
+      } else {
+        const { data, error } = await supabase.functions.invoke("send-bulk-email", {
+          body: {
+            recipients: finalRecipients,
+            subject: personalizedSubject,
+            message: isTemplated ? "" : personalizedMessage,
+            agentId: user.id,
+            agentEmail: agentInfo?.email,
+            sendAsGroup: false,
+            template: isTemplated ? template : undefined,
+          },
+        });
+
+        if (error) {
+          throw new Error(await resolveEdgeFunctionErrorMessage(error, data));
+        }
+
+        toast.success(
+          `Email sent to ${recipients.length} recipient${recipients.length > 1 ? "s" : ""}. Check analytics to track opens and clicks.`,
+        );
+      }
+
       setSubject("");
       setMessage("");
       setSendAsGroup(false);
       setSendCopyToSelf(false);
       setTemplate("custom");
       onOpenChange(false);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error sending bulk email:", error);
-      toast.error("Failed to send email: " + (error.message || "Unknown error"));
+      const detail =
+        error instanceof Error
+          ? error.message
+          : await resolveEdgeFunctionErrorMessage(error);
+      toast.error(detail);
     } finally {
       setSending(false);
     }

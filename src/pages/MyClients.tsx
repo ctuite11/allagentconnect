@@ -600,10 +600,11 @@ const MyClients = () => {
 
   const getSelectedClientsForEmail = () => {
     return sortedClients
-      .filter(client => selectedClients.has(client.id))
-      .map(client => ({
+      .filter((client) => selectedClients.has(client.id))
+      .map((client) => ({
+        id: client.id,
         email: client.email,
-        name: `${client.first_name} ${client.last_name}`
+        name: `${client.first_name} ${client.last_name}`.trim(),
       }));
   };
 
