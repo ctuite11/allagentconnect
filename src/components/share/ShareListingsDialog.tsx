@@ -455,7 +455,7 @@ export function ShareListingsDialog({
                     );
                   })}
                 </div>
-                {contactAddFeedback && (
+                {contactAddFeedback ? (
                   <div
                     role="status"
                     aria-live="polite"
@@ -477,14 +477,14 @@ export function ShareListingsDialog({
                       {contactAddFeedback === "added" ? "Recipient added" : "Recipient already added"}
                     </span>
                   </div>
-                )}
+                ) : null}
               </div>
             ) : null}
 
             {showRecipientPicker ? (
               <>
                 <div className="text-[11px] font-medium uppercase tracking-wide text-neutral-500">
-                  {recipients.length > 0 ? "Add another contact" : "Search contact"}
+                  {hasActiveRecipient ? "Add another contact" : "Search contact"}
                 </div>
 
                 <div ref={contactSearchRef} className="relative text-neutral-400">
@@ -553,77 +553,6 @@ export function ShareListingsDialog({
                   >
                     + Enter recipient manually
                   </button>
-                ) : null}
-
-                {!singleRecipientMode && (contactAddFeedback || recipients.length > 0) ? (
-                  <div className="space-y-2 rounded-lg border border-neutral-100 bg-neutral-50/50 px-2.5 py-2">
-                    {contactAddFeedback ? (
-                      <div
-                        role="status"
-                        aria-live="polite"
-                        className={cn(
-                          "flex items-center gap-2 rounded-md border px-2.5 py-1.5 text-[13px] leading-snug",
-                          contactAddFeedback === "added"
-                            ? "border-emerald-200/90 bg-emerald-50/80 text-emerald-900"
-                            : "border-neutral-200 bg-white text-neutral-700",
-                        )}
-                      >
-                        <Check
-                          className={cn(
-                            "h-3.5 w-3.5 shrink-0",
-                            contactAddFeedback === "added" ? "text-emerald-600" : "text-neutral-500",
-                          )}
-                          aria-hidden
-                        />
-                        <span>
-                          {contactAddFeedback === "added" ? "Recipient added" : "Recipient already added"}
-                        </span>
-                      </div>
-                    ) : null}
-
-                    {recipients.length > 0 ? (
-                      <div className="space-y-2">
-                        <div className="text-[11px] font-medium uppercase tracking-wide text-neutral-500">
-                          Selected recipients ({recipients.length})
-                        </div>
-                        <div className="space-y-2">
-                          {recipients.map((r, idx) => {
-                            const isHighlighted =
-                              highlightedRecipientEmail != null &&
-                              r.email.trim().toLowerCase() === highlightedRecipientEmail;
-                            return (
-                              <div
-                                key={`${r.email}-${idx}`}
-                                className={cn(
-                                  "flex items-start justify-between gap-2 rounded-lg border px-3 py-2.5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] transition-colors duration-300",
-                                  isHighlighted
-                                    ? "border-emerald-300/90 bg-emerald-50/90 ring-1 ring-emerald-200/70"
-                                    : "border-emerald-200/80 bg-emerald-50/70",
-                                )}
-                              >
-                                <div className="min-w-0">
-                                  <div className="truncate text-[13px] font-semibold text-neutral-900">
-                                    {shareRecipientDisplayName(r)}
-                                  </div>
-                                  <div className="truncate text-[12px] text-neutral-600">{r.email}</div>
-                                </div>
-                                {onRemoveRecipient ? (
-                                  <button
-                                    type="button"
-                                    onClick={() => onRemoveRecipient(idx)}
-                                    className="shrink-0 rounded-full p-1 text-neutral-400 transition-colors hover:bg-white/80 hover:text-neutral-600"
-                                    aria-label={`Remove ${shareRecipientDisplayName(r)}`}
-                                  >
-                                    <X className="h-3.5 w-3.5" />
-                                  </button>
-                                ) : null}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    ) : null}
-                  </div>
                 ) : null}
 
                 {manualMode ? (
