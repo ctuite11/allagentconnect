@@ -86,10 +86,10 @@ export function listingEmailSubjectFromRow(row: unknown): string | undefined {
   return location ? `Listing: ${location}` : undefined;
 }
 
-export function buildPropertySharedEmailSubject(listing: ListingEmailSubjectSource): string {
-  const location = formatListingEmailSubjectLocation(listing);
-  return location ? `Property Shared: ${location}` : "Property Shared";
-}
+// NOTE: `buildPropertySharedEmailSubject` ("Property Shared: <address>") was
+// removed in Jun 2026 — Gmail filtered that pattern as promotional. Listing
+// share now uses the plain `<agent> shared a property with you` subject set
+// in supabase/functions/send-listing-share/index.ts.
 
 export function buildAgentSharedPropertyEmailSubject(
   agentName: string,
