@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
-import { buildPropertySharedEmailSubject } from "../_shared/listingEmailSubject.ts";
+import { buildAgentSharedPropertyEmailSubject } from "../_shared/listingEmailSubject.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -112,15 +112,10 @@ const handler = async (req: Request): Promise<Response> => {
           provider: 'resend',
           template: 'listing-share',
           to: recipientEmail,
-          subject: buildPropertySharedEmailSubject({
-            address: listing.address,
-            city: listing.city,
-            state: listing.state,
-            zip_code: listing.zip_code,
-            unit_number: listing.unit_number,
-            condo_details: listing.condo_details,
-            property_type: listing.property_type,
-          }),
+          // Plain, human-style subject mirroring Message Agent (which inboxes).
+          // Example: "Austyn Agent shared a property with you" — no "Property Shared:" prefix,
+          // no address in subject (reduces promotional pattern match in Gmail).
+          subject: `${(agentName || "Your agent").trim()} shared a property with you`,
           reply_to: agentEmail,
           variables: {
             recipientName,
