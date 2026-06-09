@@ -134,17 +134,36 @@ export async function invokeEdgeFunction<T = Record<string, unknown>>(
   }
 
   const token = session!.access_token;
+  const functionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/${name}`;
+  const anonKey =
+    import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-  const { data, error } = await supabase.functions.invoke(name, {
-    body,
+  const response = await fetch(functionUrl, {
+    method: "POST",
     headers: {
+      "Content-Type": "application/json",
+      apikey: anonKey,
       Authorization: `Bearer ${token}`,
     },
+    body: JSON.stringify(body),
   });
 
-  if (error || !data?.success) {
-    const message = await resolveEdgeFunctionErrorMessage(error, data);
-    console.error(`[invokeEdgeFunction:${name}]`, { error, data, message });
+  const text = await response.text();
+  let data: unknown = null;
+  if (text.trim()) {
+    try {
+      data = JSON.parse(text);
+    } catch {
+      data = { error: text };
+    }
+  }
+
+  if (!response.ok || !(data as { success?: boolean } | null)?.success) {
+    const message = await resolveEdgeFunctionErrorMessage(
+      response.ok ? null : { context: response, message: response.statusText },
+      data,
+    );
+    console.error(`[invokeEdgeFunction:${name}]`, { status: response.status, data, message });
     throw new Error(message);
   }
 

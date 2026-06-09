@@ -1,6 +1,6 @@
 /// <reference lib="deno.ns" />
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -30,14 +30,31 @@ serve(async (req) => {
     return json({ success: false, error: "Missing auth token" }, 401);
   }
 
-  const supaUser = createClient(supabaseUrl, anonKey, {
-    global: { headers: { Authorization: authHeader } },
+  const token = authHeader.replace(/^Bearer\s+/i, "").trim();
+  if (!token) {
+    return json({ success: false, error: "Missing auth token" }, 401);
+  }
+
+  const userResponse = await fetch(`${supabaseUrl}/auth/v1/user`, {
+    headers: {
+      apikey: anonKey,
+      Authorization: authHeader,
+    },
   });
+  if (!userResponse.ok) {
+    const detail = await userResponse.text().catch(() => "");
+    console.warn("[send-agent-client-email] auth user lookup failed", {
+      status: userResponse.status,
+      detail,
+    });
+    return json({ success: false, error: "Unauthorized: invalid or expired session" }, 401);
+  }
 
-  const { data: userData, error: userErr } = await supaUser.auth.getUser();
-  if (userErr || !userData?.user) return json({ success: false, error: "Unauthorized" }, 401);
+  const authUser = (await userResponse.json()) as { id?: string; email?: string };
+  if (!authUser.id) return json({ success: false, error: "Unauthorized: invalid session" }, 401);
 
-  const agentId = userData.user.id;
+  const agentId = authUser.id;
+  const authEmail = authUser.email ?? null;
 
   // Parse + validate body
   let body: {
@@ -126,7 +143,7 @@ serve(async (req) => {
       .eq("id", agentId)
       .maybeSingle();
     if (fallback) {
-      agentEmail = fallback.email ?? userData.user.email ?? null;
+      agentEmail = fallback.email ?? authEmail ?? null;
       agentName =
         agentName ||
         [fallback.first_name, fallback.last_name].filter(Boolean).join(" ").trim() ||
@@ -134,7 +151,7 @@ serve(async (req) => {
     }
   }
 
-  agentEmail = agentEmail || userData.user.email || null;
+  agentEmail = agentEmail || authEmail || null;
   if (!agentEmail) return json({ success: false, error: "Agent email not found" }, 400);
 
   // Enqueue exactly one transactional email job
