@@ -138,7 +138,6 @@ const handler = async (req: Request): Promise<Response> => {
         payload: {
           provider: "resend",
           template: "bulk-listing-share",
-          category: "listing_shares",
           to: recipientEmail,
           subject: buildBulkListingShareEmailSubject(
             agentName,

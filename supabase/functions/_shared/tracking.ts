@@ -8,7 +8,7 @@ const FUNCTIONS_BASE = (() => {
 })();
 
 export const MARKETING_CATEGORIES = new Set([
-  "listing_shares",
+  // Automated/broadcast streams only — NOT agent-initiated 1:1 shares or contact email.
   "hot_sheet_alerts",
   "marketing",
 ]);

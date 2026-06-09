@@ -27,6 +27,37 @@ interface ProcessResult {
   error?: string;
 }
 
+/** Multipart text part — html-only hurts deliverability (SpamAssassin / Outlook). */
+function htmlToPlainText(html: string): string {
+  if (!html) return "";
+  let out = html;
+  out = out.replace(/<script[\s\S]*?<\/script>/gi, "");
+  out = out.replace(/<style[\s\S]*?<\/style>/gi, "");
+  out = out.replace(
+    /<a\s+[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi,
+    (_m, href, label) => {
+      const text = String(label).replace(/<[^>]+>/g, "").trim();
+      if (!text) return href;
+      if (text === href) return href;
+      return `${text} (${href})`;
+    },
+  );
+  out = out.replace(/<\/(p|div|tr|h[1-6]|li|blockquote)>/gi, "\n");
+  out = out.replace(/<br\s*\/?>(?!\n)/gi, "\n");
+  out = out.replace(/<[^>]+>/g, "");
+  out = out
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'");
+  out = out.replace(/[ \t]+/g, " ");
+  out = out.replace(/\n[ \t]+/g, "\n");
+  out = out.replace(/\n{3,}/g, "\n\n");
+  return out.trim();
+}
+
 // Email template renderer - builds HTML from template name and variables
 function renderEmailTemplate(template: string, variables: Record<string, any>): string {
   // For templates that include pre-rendered HTML, use it directly
@@ -381,6 +412,7 @@ async function sendEmail(job: EmailJob, resendApiKey: string): Promise<void> {
       to: toList,
       subject: payload.subject,
       html,
+      text: htmlToPlainText(html),
       reply_to: payload.reply_to,
     }),
   });
