@@ -199,6 +199,16 @@ export default function AdminApprovals() {
   );
   const presenceMap = useAgentPresenceBatch(realAgentIds);
 
+  // How many real agents are currently online (used for header counter + filter pill)
+  const onlineCount = useMemo(
+    () =>
+      realAgentIds.reduce(
+        (n, id) => (presenceMap.get(id)?.isOnline ? n + 1 : n),
+        0
+      ),
+    [presenceMap, realAgentIds]
+  );
+
   // Fetch all agents via edge function (bypasses RLS issues)
   const fetchAgents = async () => {
     if (!isAdmin) return;
@@ -461,7 +471,13 @@ export default function AdminApprovals() {
 
     // Status filter
     if (statusFilter !== "all") {
-      result = result.filter((a) => a.agent_status === statusFilter);
+      if (statusFilter === "online") {
+        result = result.filter(
+          (a) => !a.is_early_access && presenceMap.get(a.id)?.isOnline
+        );
+      } else {
+        result = result.filter((a) => a.agent_status === statusFilter);
+      }
     }
 
     // Search
@@ -499,7 +515,7 @@ export default function AdminApprovals() {
     });
 
     return result;
-  }, [agents, statusFilter, searchQuery, sortField, sortDirection]);
+  }, [agents, statusFilter, searchQuery, sortField, sortDirection, presenceMap]);
 
   // Selection handlers
   const toggleSelectAll = () => {
@@ -835,6 +851,12 @@ export default function AdminApprovals() {
             variant="danger"
             active={statusFilter === "restricted"}
             onClick={() => setStatusFilter("restricted")}
+          />
+          <Pill
+            label={`Online (${onlineCount})`}
+            variant="success"
+            active={statusFilter === "online"}
+            onClick={() => setStatusFilter("online")}
           />
         </div>
 
