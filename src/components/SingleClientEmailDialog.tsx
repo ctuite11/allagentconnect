@@ -48,25 +48,33 @@ export function SingleClientEmailDialog({
   const handleSend = async () => {
     const s = subject.trim();
     const m = message.trim();
+    const email = recipientEmail?.trim();
+
+    if (!email) {
+      toast.error("Recipient email is missing.");
+      return;
+    }
     if (!s || !m) {
       toast.error("Please fill in both subject and message");
       return;
     }
+
     setSending(true);
     try {
       await invokeEdgeFunction("send-agent-client-email", {
         clientId,
-        recipientEmail,
+        recipientEmail: email,
         recipientName,
         subject: s,
         message: m,
       });
-      toast.success(`Email sent to ${recipientName?.trim() || recipientEmail}`);
+      toast.success(`Email sent to ${recipientName?.trim() || email}`);
       reset();
       onOpenChange(false);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Error sending client email:", err);
-      toast.error("Failed to send email: " + (err?.message || "Unknown error"));
+      const detail = err instanceof Error ? err.message : "Something went wrong. Please try again.";
+      toast.error(detail);
     } finally {
       setSending(false);
     }
