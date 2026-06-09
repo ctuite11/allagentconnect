@@ -109,7 +109,7 @@ export function BulkEmailDialog({ open, onOpenChange, recipients }: BulkEmailDia
       // Regular contact email → transactional path (not paused).
       // Marketing templates → send-bulk-email (paused during deliverability recovery).
       if (template === "custom") {
-        const transactionalRecipients = finalRecipients.filter(
+        const transactionalRecipients = personalizedRecipients.filter(
           (r) => r.email.trim() && r.email !== agentInfo?.email,
         );
 
