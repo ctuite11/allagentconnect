@@ -39,14 +39,14 @@ serve(async (req) => {
     global: { headers: { Authorization: authHeader } },
   });
 
-  const { data: claimsData, error: claimsErr } = await supaUser.auth.getClaims(token);
-  if (claimsErr || !claimsData?.claims?.sub) {
-    console.warn("[send-agent-client-email] auth claims failed", claimsErr);
+  const { data: userData, error: userErr } = await supaUser.auth.getUser(token);
+  if (userErr || !userData?.user?.id) {
+    console.warn("[send-agent-client-email] auth user lookup failed", userErr);
     return json({ success: false, error: "Unauthorized: invalid or expired session" }, 401);
   }
 
-  const agentId = claimsData.claims.sub;
-  const authEmail = typeof claimsData.claims.email === "string" ? claimsData.claims.email : null;
+  const agentId = userData.user.id;
+  const authEmail = userData.user.email ?? null;
 
   // Parse + validate body
   let body: {
