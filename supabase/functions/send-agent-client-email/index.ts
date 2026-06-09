@@ -35,18 +35,26 @@ serve(async (req) => {
     return json({ success: false, error: "Missing auth token" }, 401);
   }
 
-  const supaUser = createClient(supabaseUrl, anonKey, {
-    global: { headers: { Authorization: authHeader } },
+  const userResponse = await fetch(`${supabaseUrl}/auth/v1/user`, {
+    headers: {
+      apikey: anonKey,
+      Authorization: authHeader,
+    },
   });
-
-  const { data: userData, error: userErr } = await supaUser.auth.getUser(token);
-  if (userErr || !userData?.user?.id) {
-    console.warn("[send-agent-client-email] auth user lookup failed", userErr);
+  if (!userResponse.ok) {
+    const detail = await userResponse.text().catch(() => "");
+    console.warn("[send-agent-client-email] auth user lookup failed", {
+      status: userResponse.status,
+      detail,
+    });
     return json({ success: false, error: "Unauthorized: invalid or expired session" }, 401);
   }
 
-  const agentId = userData.user.id;
-  const authEmail = userData.user.email ?? null;
+  const authUser = (await userResponse.json()) as { id?: string; email?: string };
+  if (!authUser.id) return json({ success: false, error: "Unauthorized: invalid session" }, 401);
+
+  const agentId = authUser.id;
+  const authEmail = authUser.email ?? null;
 
   // Parse + validate body
   let body: {
