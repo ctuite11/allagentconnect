@@ -73,9 +73,10 @@
 [functions]
   node_bundler = "esbuild"
 
-# Scheduled email worker - runs every minute to drain email queue
-[functions."email-worker"]
-  schedule = "* * * * *"
+# Email queue is drained solely by Supabase process-email-queue (+ kick-email-queue).
+# Netlify email-worker duplicated stale templates and raced the Supabase worker.
+# [functions."email-worker"]
+#   schedule = "* * * * *"
 
 [[redirects]]
   from = "/api/showing-requests"

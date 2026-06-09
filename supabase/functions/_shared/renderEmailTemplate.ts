@@ -402,23 +402,16 @@ export function renderEmailTemplate(
       const msgSubject = variables.subject || "Message from your agent";
       const msgBody = String(variables.message || "").replace(/\n/g, "<br>");
 
-      // Personal one-to-one email — render WITHOUT the branded marketing shell.
-      // Heavy AAC chrome (logo banner, "Remove my account" footer, tracking pixel
-      // language) makes Gmail/Outlook classify these as Promotions/Spam.
-      // This lean template mirrors how a person would compose an email and
-      // dramatically improves inbox placement.
-      return `<!DOCTYPE html>
-<html lang="en"><head><meta charset="utf-8"><title>${msgSubject}</title></head>
-<body style="margin:0;padding:0;background:#ffffff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#1f2937;font-size:15px;line-height:1.55;">
-<div style="max-width:600px;margin:0;padding:16px 20px;">
-<p style="margin:0 0 14px;">Hi ${clientName},</p>
-<div style="margin:0 0 18px;">${msgBody}</div>
-<p style="margin:18px 0 2px;">Best,</p>
-<p style="margin:0;"><strong>${agentName}</strong></p>
-${agentPhone ? `<p style="margin:0;color:#4b5563;">${agentPhone}</p>` : ""}
-${agentEmail ? `<p style="margin:0;color:#4b5563;">${agentEmail}</p>` : ""}
-</div>
-</body></html>`;
+      return buildAacEmail({
+        headline: msgSubject,
+        body: `
+          <p style="margin:0 0 12px;">Hi ${clientName},</p>
+          <div style="margin:0 0 16px;color:#334155;">${msgBody}</div>
+          <p style="margin:24px 0 4px;color:#0f172a;font-weight:600;">${agentName}</p>
+          ${agentEmail ? `<p style="margin:0;color:#475569;font-size:13px;">${agentEmail}</p>` : ""}
+          ${agentPhone ? `<p style="margin:0;color:#475569;font-size:13px;">${agentPhone}</p>` : ""}
+          <p style="margin:24px 0 0;font-size:12px;color:#94a3b8;">You can reply directly to this email to respond.</p>`,
+      });
     }
 
     default:

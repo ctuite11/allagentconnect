@@ -154,6 +154,13 @@ serve(async (req) => {
   agentEmail = agentEmail || authEmail || null;
   if (!agentEmail) return json({ success: false, error: "Agent email not found" }, 400);
 
+  // Deliverability (locked):
+  // - From: canonical brand only via sendEmail/transactionalSender — NEVER
+  //   `${agentName} <hello@mail…>` (rotating display names damaged reputation).
+  // - Reply-To: agent's real inbox so replies route correctly.
+  // - Agent identity: subject/body/signature only — not in From.
+  // - No category, no List-Unsubscribe, no tracking — same as hot-sheet-alert jobs.
+
   // Enqueue exactly one transactional email job
   const { data: jobRow, error: jobErr } = await supaAdmin
     .from("email_jobs")

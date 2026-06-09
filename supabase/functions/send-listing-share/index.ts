@@ -29,6 +29,8 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const authHeader = req.headers.get('Authorization') ?? '';
+
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -101,6 +103,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log(`[send-listing-share] Enqueuing job for ${recipientEmail}`);
 
+    // Transactional 1:1 — canonical From via sendEmail, Reply-To = agent, no category.
     // Enqueue job — rendered server-side via the AAC unified template (renderEmailTemplate)
     const { error: insertError } = await supabase
       .from('email_jobs')
@@ -161,6 +164,24 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     console.log(`[send-listing-share] Job enqueued for ${recipientEmail}`);
+
+    // Best-effort kick so Supabase worker sends immediately (not Netlify email-worker).
+    if (authHeader.startsWith('Bearer ')) {
+      try {
+        await fetch(`${supabaseUrl}/functions/v1/kick-email-queue`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: authHeader,
+          },
+          body: '{}',
+        });
+      } catch (e) {
+        console.warn('[send-listing-share] kick-email-queue failed (non-fatal):', e);
+      }
+    } else {
+      console.warn('[send-listing-share] No auth header — queue will drain on schedule');
+    }
 
     return jsonResponse({ success: true, message: 'Email queued for delivery' }, 200);
   } catch (error: unknown) {
