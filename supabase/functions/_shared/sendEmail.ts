@@ -147,6 +147,8 @@ export async function sendEmail(
     }),
   });
 
+  console.log(`[sendEmail] job=${job.id} template=${job.payload.template} from=${canonicalFrom} reply_to=${job.payload.reply_to ?? "(none)"}`);
+
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     throw new Error(

@@ -382,10 +382,8 @@ function renderEmailTemplate(template: string, variables: Record<string, any>): 
 async function sendEmail(job: EmailJob, resendApiKey: string): Promise<void> {
   const { payload } = job;
 
-  // Stabilization: single canonical sender (hello@mail.allagentconnect.com).
-  const canonicalFrom =
-    process.env.TRANSACTIONAL_FROM ||
-    `All Agent Connect <${process.env.TRANSACTIONAL_FROM_EMAIL || "hello@mail.allagentconnect.com"}>`;
+  // Hard-lock — never read notify/mail from Netlify env (proven drift vector).
+  const canonicalFrom = "All Agent Connect <hello@mail.allagentconnect.com>";
   
   // Normalize recipients: handle string, array, or comma-separated string
   const toList: string[] = Array.isArray(payload.to)
@@ -428,7 +426,15 @@ function calculateBackoff(attempts: number): number {
   return Math.min(3600, 30 * Math.pow(2, attempts));
 }
 
-const handler: Handler = async (event: HandlerEvent, context: HandlerContext) => {
+const handler: Handler = async (_event: HandlerEvent, _context: HandlerContext) => {
+  // Queue drained by Supabase process-email-queue only (netlify.toml schedule disabled).
+  console.log("[email-worker] Disabled — use Supabase process-email-queue");
+  return {
+    statusCode: 200,
+    body: JSON.stringify({ processed: 0, disabled: true }),
+  };
+
+  /* eslint-disable no-unreachable -- legacy worker body kept for reference */
   console.log("[email-worker] Starting email queue processing");
 
   const RESEND_API_KEY = process.env.RESEND_API_KEY;

@@ -17,42 +17,68 @@
 export const DEFAULT_TRANSACTIONAL_FROM_EMAIL = "hello@mail.allagentconnect.com";
 export const DEFAULT_TRANSACTIONAL_FROM_NAME = "All Agent Connect";
 
+/** Immutable Resend From — env cannot override to notify or other subdomains. */
+export const CANONICAL_TRANSACTIONAL_FROM = `${DEFAULT_TRANSACTIONAL_FROM_NAME} <${DEFAULT_TRANSACTIONAL_FROM_EMAIL}>`;
+
+function envUsesNotifySubdomain(value: string): boolean {
+  return /@notify\.allagentconnect\.com/i.test(value);
+}
+
 /** Resend-ready From header, e.g. `All Agent Connect <hello@mail.allagentconnect.com>`. */
 export function buildTransactionalFrom(): string {
   const envFull = Deno.env.get("TRANSACTIONAL_FROM")?.trim();
-  if (envFull) return envFull;
+  if (envFull) {
+    if (envUsesNotifySubdomain(envFull)) {
+      console.warn(
+        "[transactionalSender] TRANSACTIONAL_FROM uses hello@notify — ignored; using hello@mail",
+      );
+    } else if (envFull.includes(DEFAULT_TRANSACTIONAL_FROM_EMAIL)) {
+      return envFull;
+    } else {
+      console.warn(
+        `[transactionalSender] TRANSACTIONAL_FROM is not hello@mail — ignored: ${envFull}`,
+      );
+    }
+  }
 
-  const email =
-    Deno.env.get("TRANSACTIONAL_FROM_EMAIL")?.trim() ||
-    Deno.env.get("RESEND_FROM_EMAIL")?.trim() ||
-    DEFAULT_TRANSACTIONAL_FROM_EMAIL;
+  const envEmail = Deno.env.get("TRANSACTIONAL_FROM_EMAIL")?.trim();
+  if (envEmail) {
+    if (envUsesNotifySubdomain(envEmail)) {
+      console.warn(
+        "[transactionalSender] TRANSACTIONAL_FROM_EMAIL uses hello@notify — ignored; using hello@mail",
+      );
+    } else if (envEmail === DEFAULT_TRANSACTIONAL_FROM_EMAIL) {
+      const name =
+        Deno.env.get("TRANSACTIONAL_FROM_NAME")?.trim() ||
+        DEFAULT_TRANSACTIONAL_FROM_NAME;
+      return `${name} <${envEmail}>`;
+    }
+  }
 
-  const name =
-    Deno.env.get("TRANSACTIONAL_FROM_NAME")?.trim() ||
-    Deno.env.get("RESEND_FROM_NAME")?.trim() ||
-    DEFAULT_TRANSACTIONAL_FROM_NAME;
-
-  return `${name} <${email}>`;
+  return CANONICAL_TRANSACTIONAL_FROM;
 }
 
 export function transactionalFromEmail(): string {
   const envFull = Deno.env.get("TRANSACTIONAL_FROM")?.trim();
-  if (envFull) {
+  if (envFull && !envUsesNotifySubdomain(envFull)) {
     const match = envFull.match(/<([^>]+)>/);
-    if (match?.[1]) return match[1].trim();
-    if (envFull.includes("@")) return envFull;
+    if (match?.[1] && match[1].trim() === DEFAULT_TRANSACTIONAL_FROM_EMAIL) {
+      return match[1].trim();
+    }
+    if (envFull.includes("@") && envFull === DEFAULT_TRANSACTIONAL_FROM_EMAIL) {
+      return envFull;
+    }
   }
-  return (
-    Deno.env.get("TRANSACTIONAL_FROM_EMAIL")?.trim() ||
-    Deno.env.get("RESEND_FROM_EMAIL")?.trim() ||
-    DEFAULT_TRANSACTIONAL_FROM_EMAIL
-  );
+  const envEmail = Deno.env.get("TRANSACTIONAL_FROM_EMAIL")?.trim();
+  if (envEmail && !envUsesNotifySubdomain(envEmail) && envEmail === DEFAULT_TRANSACTIONAL_FROM_EMAIL) {
+    return envEmail;
+  }
+  return DEFAULT_TRANSACTIONAL_FROM_EMAIL;
 }
 
 export function transactionalFromName(): string {
   return (
     Deno.env.get("TRANSACTIONAL_FROM_NAME")?.trim() ||
-    Deno.env.get("RESEND_FROM_NAME")?.trim() ||
     DEFAULT_TRANSACTIONAL_FROM_NAME
   );
 }
