@@ -98,18 +98,10 @@ function renderEmailTemplate(template: string, variables: Record<string, any>): 
   `;
 
   switch (template) {
-    case "listing-share":
-      return wrapHtml(`
-        <h2>Property Shared With You</h2>
-        ${variables.photoUrl ? `<img src="${variables.photoUrl}" alt="Property" style="width: 100%; max-height: 300px; object-fit: cover; border-radius: 8px;" />` : ""}
-        <p><strong>Address:</strong> ${variables.address}</p>
-        <p><strong>Price:</strong> ${variables.price}</p>
-        ${variables.bedrooms ? `<p><strong>Bedrooms:</strong> ${variables.bedrooms}</p>` : ""}
-        ${variables.bathrooms ? `<p><strong>Bathrooms:</strong> ${variables.bathrooms}</p>` : ""}
-        ${variables.message ? `<p><strong>Message:</strong> ${variables.message}</p>` : ""}
-        <p>Contact ${variables.agentName} at ${variables.agentEmail} for more information.</p>
-      `);
-
+    // listing-share template removed (Jun 2026) — Supabase renderEmailTemplate
+    // is the only source of truth for listing share HTML. This worker is
+    // disabled at the handler level; the case is gone so a future re-enable
+    // can never resurrect the old "Property Shared With You" body.
     case "hot-sheet-alert":
       return wrapHtml(`
         <h2>New Properties Match Your Hot Sheet!</h2>

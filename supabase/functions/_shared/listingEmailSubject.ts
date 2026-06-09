@@ -90,10 +90,10 @@ export function formatListingEmailSubjectLocation(listing: ListingEmailSubjectSo
   return `${street}, ${locality}`;
 }
 
-export function buildPropertySharedEmailSubject(listing: ListingEmailSubjectSource): string {
-  const location = formatListingEmailSubjectLocation(listing);
-  return location ? `Property Shared: ${location}` : "Property Shared";
-}
+// NOTE: `buildPropertySharedEmailSubject` ("Property Shared: <address>") was
+// removed in Jun 2026 — Gmail was filtering it as promotional. All listing
+// share paths now use the plain `<agent> shared a property with you` subject
+// set directly in send-listing-share/index.ts.
 
 export function buildAgentSharedPropertyEmailSubject(
   agentName: string,
