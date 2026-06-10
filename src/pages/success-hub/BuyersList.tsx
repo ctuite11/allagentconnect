@@ -216,17 +216,13 @@ export default function BuyersList() {
         if (seenClientIds.has(c.id)) continue;
         seenClientIds.add(c.id);
         const name = formatBuyerListName(c);
+        const isActiveRel = String(r.status) === "active" && !r.ended_at;
         const buyerWorkspaceLinked =
-          String(r.status) === "active" && r.client_id != null && String(r.client_id).trim() !== "";
-        const crmKey = c.id;
-        const hasOutstandingInvite = pendingInviteClientIds.has(crmKey);
-        const displayStatus = buyerWorkspaceLinked
-          ? "active"
-          : hasOutstandingInvite
-            ? "pending"
-            : String(r.status) === "active"
-              ? "active"
-              : "pending";
+          isActiveRel && r.client_id != null && String(r.client_id).trim() !== "";
+        // Priority: active relationship > accepted invite > pending invite.
+        // An active relationship row ALWAYS shows Active — a stale unaccepted
+        // invite token must never override it.
+        const displayStatus = isActiveRel ? "active" : "pending";
         rows.push({
           clientId: c.id,
           name,
