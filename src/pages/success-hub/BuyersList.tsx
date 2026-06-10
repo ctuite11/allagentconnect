@@ -87,7 +87,7 @@ export default function BuyersList() {
 
       const { data: relationships, error: relErr } = await supabase
         .from("client_agent_relationships")
-        .select("client_id,crm_client_id,status,created_at")
+        .select("client_id,crm_client_id,status,ended_at,created_at")
         .eq("agent_id", user.id)
         .in("status", ["active", "pending"])
         .order("created_at", { ascending: false });
@@ -102,13 +102,16 @@ export default function BuyersList() {
 
       const activeLinkedCrmIds = new Set<string>();
       for (const r of relRows) {
-        const linked =
-          String(r.status) === "active" &&
-          r.client_id != null &&
-          String(r.client_id).trim() !== "";
-        if (!linked) continue;
+        // Authoritative "Active" rule (priority order):
+        //   1. active relationship (status='active' AND not ended) ALWAYS wins,
+        //      regardless of whether an auth user is linked yet.
+        //   2. ...else accepted invite (handled below).
+        //   3. ...else pending invite.
+        const isActiveRel = String(r.status) === "active" && !r.ended_at;
+        if (!isActiveRel) continue;
         const crmId = r.crm_client_id != null ? String(r.crm_client_id).trim() : "";
         if (crmId) activeLinkedCrmIds.add(crmId);
+        if (r.client_id) activeLinkedCrmIds.add(String(r.client_id));
       }
 
       // Also include any buyer who is a member of one of this agent's hot sheets
@@ -213,17 +216,13 @@ export default function BuyersList() {
         if (seenClientIds.has(c.id)) continue;
         seenClientIds.add(c.id);
         const name = formatBuyerListName(c);
+        const isActiveRel = String(r.status) === "active" && !r.ended_at;
         const buyerWorkspaceLinked =
-          String(r.status) === "active" && r.client_id != null && String(r.client_id).trim() !== "";
-        const crmKey = c.id;
-        const hasOutstandingInvite = pendingInviteClientIds.has(crmKey);
-        const displayStatus = buyerWorkspaceLinked
-          ? "active"
-          : hasOutstandingInvite
-            ? "pending"
-            : String(r.status) === "active"
-              ? "active"
-              : "pending";
+          isActiveRel && r.client_id != null && String(r.client_id).trim() !== "";
+        // Priority: active relationship > accepted invite > pending invite.
+        // An active relationship row ALWAYS shows Active — a stale unaccepted
+        // invite token must never override it.
+        const displayStatus = isActiveRel ? "active" : "pending";
         rows.push({
           clientId: c.id,
           name,
