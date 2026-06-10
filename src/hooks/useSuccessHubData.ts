@@ -273,7 +273,7 @@ export function useSuccessHubData(): UseSuccessHubDataResult {
         // Buyer relationships (active + pending)
         supabase
           .from("client_agent_relationships")
-          .select("id,client_id,crm_client_id,agent_id,status,created_at")
+          .select("id,client_id,crm_client_id,agent_id,status,ended_at,created_at")
           .eq("agent_id", agentId)
           .in("status", ["active", "pending"])
           .order("created_at", { ascending: false })
@@ -433,7 +433,15 @@ export function useSuccessHubData(): UseSuccessHubDataResult {
       for (const r of buyerRelationshipRows) {
         const cid = resolveRelationshipClientId(r);
         if (!cid || buyersById.has(cid)) continue;
-        const status = r?.status === "pending" ? "pending" : "active";
+        // Priority: active relationship > accepted invite > pending invite.
+        // Any non-ended 'active' row is Active regardless of whether the auth
+        // user has been linked yet. Presence of an auth client_id also implies
+        // the invite was accepted, so treat that as Active even if the row's
+        // status string lags behind.
+        const isActiveRel = r?.status === "active" && !r?.ended_at;
+        const hasAuthUser = r?.client_id != null && String(r.client_id).trim() !== "";
+        const status: "active" | "pending" =
+          isActiveRel || hasAuthUser ? "active" : "pending";
         buyersById.set(cid, {
           id: cid,
           first_name: null,
