@@ -20,6 +20,12 @@ import {
   fetchBuyerActivityMetrics,
   type BuyerActivityMetrics,
 } from "@/lib/fetchBuyerActivityMetrics";
+import {
+  buildBuyerStatusInput,
+  getBuyerListStatus,
+  isActiveBuyerRelationship,
+  isBuyerWorkspaceLinked,
+} from "@/lib/buyerStatus";
 
 interface BuyerRow {
   clientId: string;
@@ -90,6 +96,7 @@ export default function BuyersList() {
         .select("client_id,crm_client_id,status,ended_at,created_at")
         .eq("agent_id", user.id)
         .in("status", ["active", "pending"])
+        .is("ended_at", null)
         .order("created_at", { ascending: false });
 
       if (relErr) {
@@ -100,19 +107,8 @@ export default function BuyersList() {
 
       const relRows = (relationships ?? []) as any[];
 
-      const activeLinkedCrmIds = new Set<string>();
-      for (const r of relRows) {
-        // Authoritative "Active" rule (priority order):
-        //   1. active relationship (status='active' AND not ended) ALWAYS wins,
-        //      regardless of whether an auth user is linked yet.
-        //   2. ...else accepted invite (handled below).
-        //   3. ...else pending invite.
-        const isActiveRel = String(r.status) === "active" && !r.ended_at;
-        if (!isActiveRel) continue;
-        const crmId = r.crm_client_id != null ? String(r.crm_client_id).trim() : "";
-        if (crmId) activeLinkedCrmIds.add(crmId);
-        if (r.client_id) activeLinkedCrmIds.add(String(r.client_id));
-      }
+      const acceptedInviteClientIds = new Set<string>();
+      const pendingInviteClientIds = new Set<string>();
 
       // Also include any buyer who is a member of one of this agent's hot sheets
       // (parity with Success Hub which unions relationships ∪ hot_sheet_clients).
@@ -151,14 +147,36 @@ export default function BuyersList() {
       if (tokenErr) {
         console.error("Error loading invite tokens for buyer union:", tokenErr);
       }
-      const pendingInviteClientIds = new Set<string>();
       for (const t of tokenRows ?? []) {
         const p = (t as any).payload as Record<string, unknown> | null;
         if (!p || String(p.type ?? "") !== "client_hotsheet_invite") continue;
-        if ((t as any).accepted_at) continue;
         if ((t as any).revoked_at) continue;
         const cid = p.client_id != null ? String(p.client_id).trim() : "";
-        if (cid && !activeLinkedCrmIds.has(cid)) pendingInviteClientIds.add(cid);
+        if (!cid) continue;
+        if ((t as any).accepted_at) {
+          acceptedInviteClientIds.add(cid);
+          continue;
+        }
+        pendingInviteClientIds.add(cid);
+      }
+
+      const activeCrmIds = new Set<string>();
+      for (const r of relRows) {
+        const crmId = r.crm_client_id != null ? String(r.crm_client_id).trim() : "";
+        const statusInput = buildBuyerStatusInput(r, {
+          inviteAcceptedForClient: crmId ? acceptedInviteClientIds.has(crmId) : false,
+        });
+        if (!isActiveBuyerRelationship(statusInput)) continue;
+        if (crmId) activeCrmIds.add(crmId);
+        if (r.client_id) activeCrmIds.add(String(r.client_id));
+      }
+
+      for (const cid of acceptedInviteClientIds) {
+        activeCrmIds.add(cid);
+      }
+
+      for (const cid of [...pendingInviteClientIds]) {
+        if (activeCrmIds.has(cid)) pendingInviteClientIds.delete(cid);
       }
 
       if (relRows.length === 0 && hscClientIds.length === 0 && pendingInviteClientIds.size === 0) {
@@ -197,18 +215,6 @@ export default function BuyersList() {
       const rows: BuyerRow[] = [];
       const seenClientIds = new Set<string>();
 
-      // Track CRM ids that already have an ACTIVE relationship — these must never be
-       // displayed as "Pending Invite" even if an unaccepted invite token still exists
-       // (legacy/leftover token from a prior attempt).
-      const activeCrmIds = new Set<string>();
-      for (const r of relRows) {
-        if (String(r.status) === "active") {
-          const crmId = r.crm_client_id || r.client_id;
-          if (crmId) activeCrmIds.add(String(crmId));
-          if (r.client_id) activeCrmIds.add(String(r.client_id));
-        }
-      }
-
       for (const r of relRows) {
         const crmId = r.crm_client_id || r.client_id;
         const c = clientMap.get(crmId) || clientMap.get(r.client_id);
@@ -216,20 +222,16 @@ export default function BuyersList() {
         if (seenClientIds.has(c.id)) continue;
         seenClientIds.add(c.id);
         const name = formatBuyerListName(c);
-        const isActiveRel = String(r.status) === "active" && !r.ended_at;
-        const buyerWorkspaceLinked =
-          isActiveRel && r.client_id != null && String(r.client_id).trim() !== "";
-        // Priority: active relationship > accepted invite > pending invite.
-        // An active relationship row ALWAYS shows Active — a stale unaccepted
-        // invite token must never override it.
-        const displayStatus = isActiveRel ? "active" : "pending";
+        const statusInput = buildBuyerStatusInput(r, {
+          inviteAcceptedForClient: acceptedInviteClientIds.has(c.id),
+        });
         rows.push({
           clientId: c.id,
           name,
           email: c?.email ?? "",
           phone: c?.phone ?? null,
-          status: displayStatus,
-          buyerWorkspaceLinked,
+          status: getBuyerListStatus(statusInput),
+          buyerWorkspaceLinked: isBuyerWorkspaceLinked(statusInput),
         });
       }
 

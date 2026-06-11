@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  buildBuyerStatusInput,
+  getBuyerListStatus,
+  isActiveBuyerRelationship,
+} from "@/lib/buyerStatus";
 import { resolveAgentDisplayProfile } from "@/lib/resolveAgentDisplayProfile";
 
 // ─── Public Types ─────────────────────────────────────────────────────────────
@@ -276,6 +281,7 @@ export function useSuccessHubData(): UseSuccessHubDataResult {
           .select("id,client_id,crm_client_id,agent_id,status,ended_at,created_at")
           .eq("agent_id", agentId)
           .in("status", ["active", "pending"])
+          .is("ended_at", null)
           .order("created_at", { ascending: false })
           .limit(100),
 
@@ -354,9 +360,35 @@ export function useSuccessHubData(): UseSuccessHubDataResult {
       const unacceptedTokens = (unacceptedTokensRes?.data ?? []) as any[];
       unacceptedTokens.forEach((t) => validateTokenPayload(t, "unaccepted tokens"));
 
-      const pendingInviteTokens = unacceptedTokens.filter((t) => {
+      const pendingInviteTokensRaw = unacceptedTokens.filter((t) => {
         const p = t?.payload ?? {};
         return p?.type === "client_hotsheet_invite" && !t?.accepted_at;
+      });
+
+      const buyerRelationshipRows = (relationshipsBuyersPreviewRes?.data ?? []) as any[];
+
+      const acceptedInviteClientIds = new Set<string>();
+      for (const t of (acceptedTokens30dRes?.data ?? []) as any[]) {
+        const p = t?.payload ?? {};
+        if (p?.type !== "client_hotsheet_invite") continue;
+        const cid = p?.client_id != null ? String(p.client_id).trim() : "";
+        if (cid) acceptedInviteClientIds.add(cid);
+      }
+
+      const activeBuyerCrmIds = new Set<string>(acceptedInviteClientIds);
+      for (const r of buyerRelationshipRows) {
+        const crmId = resolveRelationshipClientId(r);
+        const statusInput = buildBuyerStatusInput(r, {
+          inviteAcceptedForClient: crmId ? acceptedInviteClientIds.has(crmId) : false,
+        });
+        if (!isActiveBuyerRelationship(statusInput)) continue;
+        if (crmId) activeBuyerCrmIds.add(crmId);
+      }
+
+      const pendingInviteTokens = pendingInviteTokensRaw.filter((t) => {
+        const p = t?.payload ?? {};
+        const cid = p?.client_id != null ? String(p.client_id).trim() : "";
+        return !cid || !activeBuyerCrmIds.has(cid);
       });
       const pendingInviteCount = pendingInviteTokens.length;
 
@@ -427,21 +459,16 @@ export function useSuccessHubData(): UseSuccessHubDataResult {
       }));
 
       // Buyers: relationships (`client_id` or `crm_client_id`) + anyone on agent hot sheets via hot_sheet_clients
-      const buyerRelationshipRows = (relationshipsBuyersPreviewRes?.data ?? []) as any[];
       const buyersById = new Map<string, SuccessHubSummary["buyers"][0]>();
 
       for (const r of buyerRelationshipRows) {
         const cid = resolveRelationshipClientId(r);
         if (!cid || buyersById.has(cid)) continue;
-        // Priority: active relationship > accepted invite > pending invite.
-        // Any non-ended 'active' row is Active regardless of whether the auth
-        // user has been linked yet. Presence of an auth client_id also implies
-        // the invite was accepted, so treat that as Active even if the row's
-        // status string lags behind.
-        const isActiveRel = r?.status === "active" && !r?.ended_at;
-        const hasAuthUser = r?.client_id != null && String(r.client_id).trim() !== "";
-        const status: "active" | "pending" =
-          isActiveRel || hasAuthUser ? "active" : "pending";
+        const status = getBuyerListStatus(
+          buildBuyerStatusInput(r, {
+            inviteAcceptedForClient: acceptedInviteClientIds.has(cid),
+          }),
+        );
         buyersById.set(cid, {
           id: cid,
           first_name: null,
@@ -712,7 +739,7 @@ export function useSuccessHubData(): UseSuccessHubDataResult {
         let attentionNote: string | null = null;
         if (b.status === "pending") {
           attentionNote = "Needs invite acceptance";
-        } else if (emailLower && pendingInviteEmails.has(emailLower)) {
+        } else if (b.status !== "active" && emailLower && pendingInviteEmails.has(emailLower)) {
           attentionNote = "Hot sheet invite pending";
         }
 

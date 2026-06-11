@@ -4,48 +4,75 @@ export type BuyerStatus = "active" | "pending_invite";
 
 export interface BuyerStatusInput {
   /**
-   * Authoritative: the auth.users.id stored on client_agent_relationships.client_id.
-   * Populated only after the buyer accepts the invite and an auth account is linked.
+   * Auth `users.id` on `client_agent_relationships.client_id` — set after invite acceptance.
    */
   relationship_client_id?: string | null;
-  /** Relationship lifecycle status (active / pending / ended / etc.). */
+  /** Relationship lifecycle (`active` / `pending` / etc.). */
   relationship_status?: string | null;
   /** Set when the relationship has been terminated. */
   relationship_ended_at?: string | null;
+  /**
+   * CRM `clients.id` has at least one accepted `share_tokens` row
+   * (`accepted_at` populated) for this buyer.
+   */
+  invite_accepted_for_client?: boolean;
 
   /**
    * @deprecated Legacy CRM-side flag — kept ONLY so older call sites compile.
-   * Do not rely on this for new code. Real status is driven by relationship_client_id.
    */
   agent_user_id?: string | null;
 }
 
 /**
- * Buyer-client state is system-derived only.
+ * Precedence (highest wins):
+ * 1. Active relationship (`status = active`, not ended)
+ * 2. Auth user linked on relationship (`client_id` populated)
+ * 3. Accepted invite for CRM client (`share_tokens.accepted_at`)
+ * 4. Otherwise → pending invite
  *
- *  - `active`         → relationship row has a real auth user bound
- *                       (relationship_client_id IS NOT NULL),
- *                       status is live ("active"), and not ended.
- *  - `pending_invite` → no auth account linked yet, regardless of whether
- *                       an invite email has been sent.
- *
- * NOTE: `clients.agent_user_id` (the CRM-side flag) is NOT authoritative and
- * must not be used to mark a buyer Active. A buyer is Active only when the
- * relationship row carries a real auth user id.
+ * Stale unaccepted invite tokens must never override 1–3.
  */
-export function getBuyerStatus(input: BuyerStatusInput): BuyerStatus {
-  const hasAuthUser = !!input.relationship_client_id;
+export function isActiveBuyerRelationship(input: BuyerStatusInput): boolean {
+  if (input.relationship_ended_at) return false;
+
   const status = (input.relationship_status ?? "").toLowerCase();
-  const ended = !!input.relationship_ended_at;
+  if (status === "active") return true;
+  if (input.relationship_client_id) return true;
+  if (input.invite_accepted_for_client) return true;
 
-  if (hasAuthUser && !ended && (status === "" || status === "active")) {
-    return "active";
-  }
+  return false;
+}
 
-  // Legacy fallback: some older call sites still pass only agent_user_id.
-  // Treat presence of agent_user_id WITHOUT relationship context as pending —
-  // the CRM flag alone is no longer sufficient to mark Active.
+/** AAC buyer workspace linked — auth account bound on the relationship row. */
+export function isBuyerWorkspaceLinked(input: BuyerStatusInput): boolean {
+  if (input.relationship_ended_at) return false;
+  return !!input.relationship_client_id;
+}
+
+export function getBuyerStatus(input: BuyerStatusInput): BuyerStatus {
+  if (isActiveBuyerRelationship(input)) return "active";
   return "pending_invite";
+}
+
+/** `BuyersList` / Success Hub row status. */
+export function getBuyerListStatus(input: BuyerStatusInput): "active" | "pending" {
+  return getBuyerStatus(input) === "active" ? "active" : "pending";
+}
+
+export function buildBuyerStatusInput(
+  relationship: {
+    client_id?: string | null;
+    status?: string | null;
+    ended_at?: string | null;
+  },
+  opts?: { inviteAcceptedForClient?: boolean },
+): BuyerStatusInput {
+  return {
+    relationship_client_id: relationship.client_id,
+    relationship_status: relationship.status,
+    relationship_ended_at: relationship.ended_at,
+    invite_accepted_for_client: opts?.inviteAcceptedForClient ?? false,
+  };
 }
 
 export const BUYER_STATUS_CONFIG: Record<
