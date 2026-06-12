@@ -73,16 +73,21 @@ export function ChannelPreviewCard({
           {items.slice(0, 3).map((item) => (
             <li key={item.id} className="py-2.5 first:pt-0 last:pb-0">
               <div className="flex items-start justify-between gap-2">
-                <p className="line-clamp-1 text-[13px] font-semibold leading-snug text-neutral-900">
-                  {item.title}
-                </p>
+                {item.subtitle ? (
+                  <p className="line-clamp-2 text-[13px] leading-snug text-neutral-800">
+                    {item.subtitle}
+                  </p>
+                ) : item.title && item.title !== title ? (
+                  <p className="line-clamp-1 text-[13px] font-semibold leading-snug text-neutral-900">
+                    {item.title}
+                  </p>
+                ) : (
+                  <span className="text-[13px] text-neutral-500">New message</span>
+                )}
                 <span className="shrink-0 text-[11px] font-medium text-neutral-400">
                   {item.timestamp}
                 </span>
               </div>
-              {item.subtitle ? (
-                <p className="mt-0.5 line-clamp-1 text-xs text-neutral-600">{item.subtitle}</p>
-              ) : null}
               {item.agent ? (
                 <ActivityAgentContact
                   agentId={item.agent.id}
