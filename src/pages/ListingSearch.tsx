@@ -215,8 +215,8 @@ const ListingSearch = () => {
           />
           
           <div className="sticky top-0 z-30 bg-white rounded-3xl border border-neutral-200 aac-shadow mb-4">
-            <div className="px-5 py-3">
-              <div className="flex items-center gap-3">
+            <div className="px-4 sm:px-5 py-3">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                 {/* Sale / Rent segmented control */}
                 <div
                   role="tablist"
@@ -256,7 +256,7 @@ const ListingSearch = () => {
                 </Button>
 
                 {/* Active filter chips */}
-                <div className="flex items-center gap-2 flex-wrap flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap min-w-0 w-full order-last sm:order-none sm:flex-1 sm:w-auto">
                   <Badge
                     variant="secondary"
                     className={cn(
@@ -285,7 +285,7 @@ const ListingSearch = () => {
                 </div>
 
                 {/* Results + View Results */}
-                <div className="flex items-center gap-3 shrink-0">
+                <div className="flex items-center gap-3 shrink-0 ml-auto">
                   <button
                     onClick={handleViewResults}
                     disabled={countLoading || resultCount === 0}
