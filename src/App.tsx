@@ -355,6 +355,7 @@ const App = () => (
                   <Route path="/success-hub/listings" element={<RouteGuard requireRole="agent"><ListingsList /></RouteGuard>} />
                   <Route path="/success-hub/listings/:listingId" element={<RouteGuard requireRole="agent"><ListingPerformance /></RouteGuard>} />
                   <Route path="/communications" element={<RouteGuard requireRole="agent"><ClientNeedsDashboard /></RouteGuard>} />
+                  <Route path="/communications/feed" element={<RouteGuard requireRole="agent"><CommunicationsFeed /></RouteGuard>} />
 
                   <Route path="/agent/listings" element={<RouteGuard requireRole="agent"><MyListings /></RouteGuard>} />
                   <Route path="/agent/listings/drafts" element={<RouteGuard requireRole="agent"><DraftListings /></RouteGuard>} />
