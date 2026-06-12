@@ -1,58 +1,56 @@
-# Fix — Buyer Needs preview must source from Communications Center
+# Comms Center — Send button + success toast
 
-## What's wrong now
+Two small fixes in `src/components/communication-center/SendEmailDialog.tsx` and one wording fix in the edge function.
 
-`useChannelPreviews.ts` reads `client_needs` for Buyer Needs / Renter Needs, `listings` for Sales Intel, and `agent_messages` for General Discussions. **None of those are the Comms Center.** Comms Center broadcasts (Buyer Need / Sales Intel / Renter Need / General Discussion) are sent by the `send-client-need-notification` edge function, which today only enqueues `email_jobs` rows and **never persists the broadcast itself**. So there is no DB feed for Network Activity to mirror.
+## 1. Send button → AAC blue
 
-## Fix — persist Comms Center broadcasts, then read them
+Currently the primary Send button is styled neutral-900/black:
 
-### 1. New table `comms_broadcasts`
-
-Migration `YYYYMMDDHHMM_create_comms_broadcasts.sql`:
-
-```sql
-CREATE TABLE public.comms_broadcasts (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  sender_id uuid NOT NULL REFERENCES public.agent_profiles(id) ON DELETE CASCADE,
-  category text NOT NULL CHECK (category IN ('buyer_need','sales_intel','renter_need','general_discussion')),
-  subject text NOT NULL,
-  message text NOT NULL,
-  criteria jsonb,
-  recipient_count integer NOT NULL DEFAULT 0,
-  created_at timestamptz NOT NULL DEFAULT now()
-);
-CREATE INDEX idx_comms_broadcasts_cat_created ON public.comms_broadcasts(category, created_at DESC);
-
-GRANT SELECT, INSERT ON public.comms_broadcasts TO authenticated;
-GRANT ALL ON public.comms_broadcasts TO service_role;
-
-ALTER TABLE public.comms_broadcasts ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Authenticated agents can read broadcasts"
-  ON public.comms_broadcasts FOR SELECT TO authenticated USING (true);
-CREATE POLICY "Senders insert their own broadcasts"
-  ON public.comms_broadcasts FOR INSERT TO authenticated WITH CHECK (sender_id = auth.uid());
+```
+className={`${commsOutlineButton} bg-neutral-900 text-white hover:bg-neutral-800 hover:text-white`}
 ```
 
-Read-by-all is intentional — Comms Center broadcasts go to the network.
+Change to the AAC primary token so it matches the rest of the app:
 
-### 2. Edge function `send-client-need-notification`
+```
+className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg shadow-sm"
+```
 
-After enqueuing `email_jobs`, insert one row into `comms_broadcasts` with `{sender_id: user.id, category, subject, message, criteria, recipient_count: agentProfiles.length}`. Skip on `previewOnly`. No other behavior change.
+(`--primary` is already AAC Blue `#0E56F5` per the brand tokens — no hardcoded hex.)
 
-### 3. Rewrite `useChannelPreviews.ts`
+## 2. Success toast wording
 
-All four hooks query the same source — `comms_broadcasts` filtered by `category`, ordered by `created_at desc`, `limit 3`, joined with `agent_profiles` for the sender. Drop the `client_needs` / `listings` / `agent_messages` queries entirely.
+Today the toast reads:
 
-Item shape stays the same (`title` = subject, `subtitle` = message preview, `timestamp`, `agent` = sender contact), so `ChannelPreviewCard` and `NetworkActivitySection` do not change.
+```
+Email sent to 0 recipients
+```
 
-## Out of scope
+…because the edge function actually returns `{ success, message: "Queued N emails", queued: N }`, and the client reads `data?.sent || data?.recipientCount` which are both undefined. That's why it looks like the "queued" copy is leaking through / the count is wrong.
 
-- No changes to `MarketActivityRow` (still the listings feed), `NotificationPreferenceCards`, `SendMessageDialog`, or page ordering — those are already correct.
-- No backfill of historical broadcasts (none persisted).
-- Communications Center page itself is unchanged.
+Replace lines 255–256 with a clean AAC-style success:
 
-## Files
+```ts
+const count = data?.sent ?? data?.queued ?? data?.recipientCount ?? 0;
+const copyMsg = sendCopyToSelf ? " A copy was sent to you." : "";
+toast.success("Message sent", {
+  description: `Delivered to ${count} agent${count === 1 ? "" : "s"}.${copyMsg}`,
+});
+```
 
-- `supabase/migrations/<ts>_create_comms_broadcasts.sql` (new)
-- `supabase/functions/send-client-need-notification/index.ts` (edit — insert broadcast row)
-- `src/components/success-hub/networkActivity/useChannelPreviews.ts` (rewrite all four hooks against `comms_broadcasts`)
+## 3. Edge function response (wording only)
+
+In `supabase/functions/send-client-need-notification/index.ts`, change the final success payload so any future readers don't see "Queued…":
+
+```ts
+return new Response(
+  JSON.stringify({
+    success: true,
+    message: `Message sent to ${agentProfiles.length} agents`,
+    sent: agentProfiles.length,
+  }),
+  ...
+);
+```
+
+No other behavior, queries, or layouts change. Out of scope: SendEmail dialog layout, Network Activity feed, channel cards.

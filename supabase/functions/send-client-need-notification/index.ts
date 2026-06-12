@@ -243,8 +243,8 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(
       JSON.stringify({
         success: true,
-        message: `Queued ${agentProfiles.length} emails`,
-        queued: agentProfiles.length,
+        message: `Message sent to ${agentProfiles.length} agents`,
+        sent: agentProfiles.length,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );

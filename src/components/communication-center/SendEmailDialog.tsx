@@ -252,8 +252,11 @@ export function SendEmailDialog({ open, onOpenChange, onSuccess }: SendEmailDial
 
       if (error) throw error;
 
-      const copyMsg = sendCopyToSelf ? " (copy sent to you)" : "";
-      toast.success(`Email sent to ${data?.sent || data?.recipientCount || 0} recipients${copyMsg}`);
+      const count = data?.sent ?? data?.queued ?? data?.recipientCount ?? 0;
+      const copyMsg = sendCopyToSelf ? " A copy was sent to you." : "";
+      toast.success("Message sent", {
+        description: `Delivered to ${count} agent${count === 1 ? "" : "s"}.${copyMsg}`,
+      });
       handleClose();
       onSuccess?.();
     } catch (error: any) {
@@ -583,7 +586,7 @@ export function SendEmailDialog({ open, onOpenChange, onSuccess }: SendEmailDial
               type="button"
               onClick={handleSend}
               disabled={sending || !subject.trim() || !message.trim() || !state}
-              className={`${commsOutlineButton} bg-neutral-900 text-white hover:bg-neutral-800 hover:text-white`}
+              className="rounded-lg bg-primary text-primary-foreground shadow-sm hover:bg-primary/90"
             >
               {sending ? (
                 <>
