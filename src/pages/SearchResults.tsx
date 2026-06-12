@@ -67,7 +67,7 @@ const SearchResults = ({
     const getBool = (k: string) => params.get(k) === "true";
 
     return {
-      listingType: get("lt"),
+      listingType: get("lt") || "for_sale",
       statuses: getList("status"),
       types: getList("type"),
       minPrice: get("minPrice"),
