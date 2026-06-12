@@ -285,17 +285,7 @@ const ListingSearch = () => {
                 </div>
 
                 {/* Results + View Results */}
-                <div className="flex items-center gap-3 shrink-0 ml-auto">
-                  <Button
-                    onClick={handleViewResults}
-                    disabled={countLoading || resultCount === 0}
-                    size="sm"
-                    className="h-9 gap-1.5 text-sm bg-primary hover:bg-primary/90 text-white rounded-2xl px-4"
-                  >
-                    <Search className="h-3.5 w-3.5" />
-                    View Results
-                  </Button>
-
+                <div className="flex items-center gap-3 w-full sm:w-auto sm:ml-auto">
                   <button
                     onClick={handleViewResults}
                     disabled={countLoading || resultCount === 0}
@@ -307,6 +297,16 @@ const ListingSearch = () => {
                     </span>
                     <span>results</span>
                   </button>
+
+                  <Button
+                    onClick={handleViewResults}
+                    disabled={countLoading || resultCount === 0}
+                    size="sm"
+                    className="h-9 gap-1.5 text-sm bg-primary hover:bg-primary/90 text-white rounded-2xl px-4 ml-auto sm:ml-0"
+                  >
+                    <Search className="h-3.5 w-3.5" />
+                    View Results
+                  </Button>
                 </div>
               </div>
             </div>
