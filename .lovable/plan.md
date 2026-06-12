@@ -1,64 +1,57 @@
-# Network Activity — Agent Contact Wiring
+# Success Hub — Reorder + Network Activity mirrors Comms Channels
 
-Goal: every Active Buyer Demand entry shows the originating agent (name, phone, email) with in-place actions, and the contact block is reusable across other Network Activity feeds.
+## New Success Hub page order
 
-## 1. New component: `ActivityAgentContact`
+1. **Hero + Stat row** (unchanged)
+2. **Network Activity** — compact 4-channel preview grid (see below)
+3. **Newest Verified Agents** — pulled out as its own row under Network Activity
+4. **Listing Activity** — renamed from "Market activity" (`MarketActivityRow`); keeps Sale/Rental toggle
+5. **My Buyers** — `DashboardBuyersTable`, full-width
+6. **Messages** — `DashboardCommunications`, full-width; rows stay clickable
+7. **My Listings** — unchanged
+8. **Communications Center channel cards** — `NotificationPreferenceCards` at the bottom (Buyer Needs, Sales Intel, Renter Needs, General Discussions)
 
-Path: `src/components/success-hub/networkActivity/ActivityAgentContact.tsx`
+## Network Activity — 4 channel previews
 
-Props:
-```ts
-type ActivityAgentContactProps = {
-  agentId: string;
-  agentName: string;
-  agentEmail: string | null;
-  agentPhone: string | null;
-};
-```
+Replace the current Active Buyer Demand / Recent Listing / Broadcasts / Showing Pulse mix with a strict mirror of the four Communications Center channels. Rendered in a `lg:grid-cols-2` grid so nothing runs endlessly down the page.
 
-Renders three controls only — no brokerage, city, state, or other metadata:
+Each preview card shows:
 
-- **Name** — button styled as link. Opens `AgentIntelDrawer` (already used in agent search) controlled by local `open` state. No router navigation.
-- **Phone** — `<a href="tel:...">` with `Phone` icon, formatted via `formatPhoneNumber`. Hidden when missing.
-- **Email** — button with `Mail` icon. Opens `ContactAgentProfileDialog` (existing listing-agnostic agent email dialog) in controlled mode. Falls back to `mailto:` only if the dialog can't be used (no email). Hidden when email missing.
+- **Header**: channel name + icon + "View all →" link to `/communications` filtered to that channel (`?channel=buyer_needs` etc.)
+- **Body**: **latest 3 items only**, each item showing:
+  - Title / short summary (one line, truncated)
+  - Timestamp (relative)
+  - `ActivityAgentContact` row: agent name (opens `AgentIntelDrawer`), phone (`tel:`), email (`ContactAgentProfileDialog`)
+- **Empty state**: short "No recent activity" line
 
-All handlers call `event.stopPropagation()` so the host card doesn't react and scroll stays put.
+### Channel → data mapping
 
-Styling: compact row (`text-[11px] text-neutral-600`), name in `font-medium text-neutral-900 hover:text-[#0E56F5]`. Sits below the existing buyer-need metadata; card spacing/layout in `NetworkActivitySection` unchanged.
+| Channel | Source table | Title field |
+|---|---|---|
+| Buyer Needs | `client_needs` where buyer-side (existing `useActiveBuyerDemand` query, limit 3) | description / city fallback |
+| Sales Intel | `listings` newest non-draft, `listing_type = 'for_sale'`, limit 3 | address + city |
+| Renter Needs | `client_needs` where `property_types` contains a rental type OR `agent_match_submissions` rental rows, limit 3 | description / city fallback |
+| General Discussions | `agent_messages` newest, limit 3 (broadcast/discussion posts) | preview text |
 
-## 2. Wire Active Buyer Demand to real data
+Agent contact comes from the joined `agent_profiles` row via `submitted_by` / `agent_id` / `author_id`.
 
-Source: `client_needs` table. `client_needs.submitted_by` → `agent_profiles.id`.
+## Renames / terminology
 
-New hook: `src/components/success-hub/networkActivity/useActiveBuyerDemand.ts`
+- `NotificationPreferenceCards`: rename the **"Discussion"** card to **"General Discussions"** (title + any matching label). Keep its key/id unchanged.
+- `MarketActivityRow`: header text **"Market activity" → "Listing Activity"** (loaded + loading states); update helper copy to "Newest and pre-market listings across AAC." No data/logic changes.
 
-- Selects newest ~6 `client_needs` ordered by `created_at desc`.
-- Batched `in` query on `agent_profiles` for `id, first_name, last_name, email, phone`.
-- Maps each row to:
-  ```ts
-  {
-    id, buyerLabel, location, priceRange, propertyType, timestamp, isNew,
-    agent: { id, name, email, phone } | null
-  }
-  ```
-- `buyerLabel` from `description` (truncated) or `Buyer need · {city}`.
-- `location` from `city, state`. `priceRange` from `max_price`. `propertyType` from `property_types[]` or `property_type`. `timestamp` relative. `isNew` if within 24h.
+## Files to change
 
-`ActiveBuyerDemandCard` swaps `MOCK_BUYER_DEMAND` for the hook. Skeleton (3 rows) while loading. Empty state: single muted line "No active buyer needs yet." inside existing card. Each item renders `<ActivityAgentContact />` below the price/property type line when `agent` is present.
+- `src/pages/success-hub/SuccessHubDashboard.tsx` — reorder JSX; split Buyers/Communications grid into two stacked sections; render `<NewestVerifiedAgentsRow />` and `<NotificationPreferenceCards />` at the bottom inside `AgentSectionCard`.
+- `src/components/success-hub/networkActivity/NetworkActivitySection.tsx` — replace inner grid with four `ChannelPreviewCard`s (Buyer Needs, Sales Intel, Renter Needs, General Discussions). Drop `RecentListingActivityCard`, `NetworkBroadcastsCard`, `ShowingMarketActivityCard` from the grid. Export `NewestVerifiedAgentsRow` for standalone use.
+- `src/components/success-hub/networkActivity/ChannelPreviewCard.tsx` (new) — generic shell: title + icon + "View all →" + capped 3-item list rendering `ActivityAgentContact` per item.
+- `src/components/success-hub/networkActivity/useChannelPreviews.ts` (new) — four hooks (`useBuyerNeedsPreview`, `useSalesIntelPreview`, `useRenterNeedsPreview`, `useGeneralDiscussionsPreview`), each returning `{ items: ChannelPreviewItem[], loading }` with `limit: 3`. Reuses the existing `useActiveBuyerDemand` mapping pattern.
+- `src/components/success-hub/MarketActivityRow.tsx` — header rename only.
+- `src/components/NotificationPreferenceCards.tsx` — change "Discussion" → "General Discussions".
 
-## 3. Other feeds — reuse the component (mock-side adapter)
+## Out of scope
 
-Per spec the component must be reusable in Recent Listing Activity and Network Broadcasts. We do not rewire those feeds to live data in this pass, but we drop the component into their renderers so the contract is real:
-
-- Extend `ListingActivityItem` and `NetworkBroadcastItem` mocks with optional `agentId/agentEmail/agentPhone`.
-- Replace the existing `"{agentName} · {brokerage}"` and inline author lines with `<ActivityAgentContact />`. Brokerage removed per spec ("Do not display brokerage…").
-- Mock entries without a real agent id still render — the drawer simply shows an empty intel state until those feeds are wired live.
-
-## 4. Files touched
-
-- add `src/components/success-hub/networkActivity/ActivityAgentContact.tsx`
-- add `src/components/success-hub/networkActivity/useActiveBuyerDemand.ts`
-- edit `src/components/success-hub/networkActivity/NetworkActivitySection.tsx`
-- edit `src/components/success-hub/networkActivity/mockData.ts` (optional agent fields on listing + broadcast items)
-
-No DB migrations, no RLS changes, no route changes. All actions are in-place (drawer, dialog, `tel:`) so Success Hub scroll position is preserved.
+- No DB schema, RLS, or route changes.
+- No edits to `ChannelPanel`, `ActivityAgentContact`, `AgentIntelDrawer`, or `ContactAgentProfileDialog`.
+- Messages row click behavior preserved as-is.
+- Communications Center page itself unchanged (the "View all" links rely on its existing channel filter; if a channel param isn't yet supported it will land on the default view — wiring the filter parser is a separate task).
