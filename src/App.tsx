@@ -24,6 +24,7 @@ import ListingSearchResults from "./pages/ListingSearchResults";
 
 import SubmitClientNeed from "./pages/SubmitClientNeed";
 import ClientNeedsDashboard from "./pages/ClientNeedsDashboard";
+import CommunicationsFeed from "./pages/CommunicationsFeed";
 // CommunicationCenter deleted - consolidated into ClientNeedsDashboard as "Communications Center"
 import ListingIntel from "./pages/ListingIntel";
 import AddListing from "./pages/AddListing";
