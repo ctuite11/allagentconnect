@@ -406,6 +406,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
   };
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className={commsDialogContent}>
         <div className={commsDialogHeaderPad}>
