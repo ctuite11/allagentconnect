@@ -10,6 +10,8 @@ import { DashboardCommunications } from "@/components/success-hub/DashboardCommu
 import { DashboardBuyersTable } from "@/components/success-hub/DashboardBuyersTable";
 import { SuccessHubHero } from "@/components/success-hub/SuccessHubHero";
 import { NetworkActivitySection } from "@/components/success-hub/networkActivity/NetworkActivitySection";
+import { NewestVerifiedAgentsRow } from "@/components/success-hub/networkActivity/NetworkActivitySection";
+import { NotificationPreferenceCards } from "@/components/NotificationPreferenceCards";
 import { SuccessHubStatRow } from "@/components/success-hub/SuccessHubStatRow";
 import { SuccessHubListingCard } from "@/components/success-hub/SuccessHubListingCard";
 import { SUCCESS_HUB_LISTINGS_GRID } from "@/components/success-hub/successHubListingLayout";
@@ -202,6 +204,8 @@ function SuccessHubDashboardBody() {
 
       {!loading ? <NetworkActivitySection /> : null}
 
+      {!loading ? <NewestVerifiedAgentsRow /> : null}
+
       {!loading ? (
         <AgentSectionCard className="border-neutral-200 p-5 shadow-sm hover:border-neutral-200 hover:shadow-sm">
           <MarketActivityRow />
@@ -209,15 +213,15 @@ function SuccessHubDashboardBody() {
       ) : null}
 
       {!loading ? (
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[60%_40%] lg:items-stretch">
-          <AgentSectionCard className="flex min-h-0 flex-col border-neutral-200 p-5 shadow-sm hover:border-neutral-200 hover:shadow-sm">
-            <DashboardBuyersTable buyers={safeBuyers} />
-          </AgentSectionCard>
+        <AgentSectionCard className="flex min-h-0 flex-col border-neutral-200 p-5 shadow-sm hover:border-neutral-200 hover:shadow-sm">
+          <DashboardBuyersTable buyers={safeBuyers} />
+        </AgentSectionCard>
+      ) : null}
 
-          <AgentSectionCard className="flex min-h-0 flex-col border-neutral-200 p-5 shadow-sm hover:border-neutral-200 hover:shadow-sm">
-            <DashboardCommunications conversations={safeCommunications} compact inboxPreview />
-          </AgentSectionCard>
-        </div>
+      {!loading ? (
+        <AgentSectionCard className="flex min-h-0 flex-col border-neutral-200 p-5 shadow-sm hover:border-neutral-200 hover:shadow-sm">
+          <DashboardCommunications conversations={safeCommunications} compact inboxPreview />
+        </AgentSectionCard>
       ) : null}
 
       {!loading ? (
@@ -279,6 +283,20 @@ function SuccessHubDashboardBody() {
           </>
         )}
       </AgentSectionCard>
+      ) : null}
+
+      {!loading ? (
+        <AgentSectionCard className="border-neutral-200 p-5 shadow-sm hover:border-neutral-200 hover:shadow-sm">
+          <div className="mb-3">
+            <h3 className="text-[15px] font-semibold leading-snug text-neutral-900">
+              Communications Center
+            </h3>
+            <p className="mt-0.5 text-xs leading-snug text-neutral-500">
+              Manage which channels send you alerts and broadcast to the network.
+            </p>
+          </div>
+          <NotificationPreferenceCards />
+        </AgentSectionCard>
       ) : null}
     </AgentAacPage>
   );
