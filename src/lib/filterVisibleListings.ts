@@ -1,14 +1,11 @@
 /**
  * Shared visibility filter for listings.
- * Off-market listings are only visible to their owning agent.
- * This must be applied consistently across search count and results display.
+ * Off-market listings are publicly visible (same as active). This is a
+ * pass-through kept for call-site compatibility.
  */
 export function filterVisibleListings<T extends { status: string; agent_id: string }>(
   listings: T[],
-  currentUserId: string | null
+  _currentUserId: string | null
 ): T[] {
-  return listings.filter(listing => {
-    if (listing.status !== 'off_market') return true;
-    return currentUserId != null && listing.agent_id === currentUserId;
-  });
+  return listings;
 }

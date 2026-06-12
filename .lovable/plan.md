@@ -1,34 +1,20 @@
-## Problem
+## Goal
+Make off-market listings visible to everyone in search results (agents, buyers, and public visitors), same as active listings.
 
-"Please sign in again" toast on My Clients → Send Email (Custom).
+## Current behavior
+`src/lib/filterVisibleListings.ts` enforces: off-market listings are only returned when the viewer is the owning agent. This filter is applied in `ListingSearch.tsx` and `ListingSearchResults.tsx` after the DB query returns.
 
-The user's session is valid (auth `/user` calls return 200). But the `send-agent-client-email` edge function logs only show `booted` — no `[send-agent-client-email] authenticated` line — meaning the request never reached the function body. The Supabase gateway rejected it with 401 first.
+The existing RLS policy (memory: "Listing visibility RLS policy") already permits visibility of all published listings, so removing the client-side filter is sufficient — no migration required.
 
-Why: in `supabase/config.toml`, every email-related function that takes a Bearer token (e.g. `send-buyer-agent-email`) is explicitly declared with `verify_jwt = false` so the function can validate the token itself via `supabase.auth.getUser()`. The newly added `send-agent-client-email` is missing from `config.toml`, so it inherits gateway JWT verification, which fails on the SDK's Authorization header and returns 401 before invoking.
+## Changes
 
-The client (`invokeEdgeFunction` → `friendlyEdgeFunctionMessage`) maps any 401 to "Please sign in again."
+1. **`src/lib/filterVisibleListings.ts`** — Change the filter so it no longer hides off-market from non-owners. Simplest path: make it a pass-through (return listings as-is) and add a comment that off-market is publicly visible. Keep the function signature so existing call sites stay valid.
 
-## Fix
+2. **Verify** no other gate hides off-market:
+   - `ListingSearchResults.tsx` line 200 (`internalFilter === "off_market"`) is an explicit opt-in filter, unrelated — leave it.
+   - RLS already allows public reads of published listings (off-market is a published status).
 
-Add this block to `supabase/config.toml` (next to the other `send-*-email` entries):
-
-```toml
-[functions.send-agent-client-email]
-verify_jwt = false
-```
-
-The function already authenticates the caller in code (`supaUser.auth.getUser()` at line 37), so disabling gateway verification is correct and matches the existing pattern.
-
-## Verification
-
-1. Redeploy `send-agent-client-email` (config changes require it).
-2. User retries Custom message send.
-3. Pull function logs — should now show `[send-agent-client-email] authenticated`.
-4. Confirm new row in `email_jobs` with `template: agent-client-email`.
-
-## Not changing
-
-- No DB / migrations.
-- `BULK_EMAIL_PAUSED=true` stays.
-- `send-bulk-email` config unchanged (it's intentionally paused).
-- No frontend changes.
+## Out of scope
+- No RLS/migration changes.
+- No UI changes to badges, cards, or filter chips.
+- Off-market still excluded from the default status set (`active` + `coming_soon`) unless the user explicitly selects it via the status filter — that's existing behavior and you didn't ask to change defaults. If you also want off-market shown by default, say so and I'll add it to the default `statuses` array in `buildListingsQuery.ts` and the URL-param defaults.
