@@ -256,7 +256,7 @@ const ListingSearch = () => {
                 </Button>
 
                 {/* Active filter chips */}
-                <div className="flex items-center gap-2 flex-wrap min-w-0 w-full order-last sm:order-none sm:flex-1 sm:w-auto">
+                <div className="flex items-center gap-2 flex-wrap min-w-0 w-full sm:flex-1 sm:w-auto">
                   <Badge
                     variant="secondary"
                     className={cn(
