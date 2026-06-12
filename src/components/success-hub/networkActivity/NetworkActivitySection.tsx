@@ -11,7 +11,6 @@ import { AgentAvatar } from "@/components/ui/AgentAvatar";
 import { cn } from "@/lib/utils";
 import { NetworkActivityCard } from "./NetworkActivityCard";
 import {
-  MOCK_BUYER_DEMAND,
   MOCK_LISTING_ACTIVITY,
   MOCK_NETWORK_BROADCASTS,
   MOCK_SHOWING_PULSE,
@@ -19,6 +18,8 @@ import {
   type ListingActivityItem,
   type NetworkBroadcastItem,
 } from "./mockData";
+import { ActivityAgentContact } from "./ActivityAgentContact";
+import { useActiveBuyerDemand } from "./useActiveBuyerDemand";
 
 function FeedTimestamp({ children }: { children: string }) {
   return <span className="shrink-0 text-[11px] font-medium text-neutral-400">{children}</span>;
@@ -50,6 +51,8 @@ function broadcastCategoryClass(category: NetworkBroadcastItem["category"]) {
 }
 
 function ActiveBuyerDemandCard() {
+  const { items, loading } = useActiveBuyerDemand(6);
+  const showFallback = !loading && items.length === 0;
   return (
     <NetworkActivityCard
       title="Active Buyer Demand"
@@ -62,8 +65,24 @@ function ActiveBuyerDemandCard() {
         </span>
       }
     >
-      <ul className="divide-y divide-neutral-100">
-        {MOCK_BUYER_DEMAND.map((item) => (
+      {loading ? (
+        <ul className="divide-y divide-neutral-100">
+          {[0, 1, 2].map((i) => (
+            <li key={i} className="flex gap-3 py-2.5 first:pt-0 last:pb-0">
+              <div className="mt-0.5 h-8 w-1 shrink-0 rounded-full bg-neutral-100" aria-hidden />
+              <div className="min-w-0 flex-1 space-y-1.5">
+                <div className="h-3 w-1/2 rounded bg-neutral-100" />
+                <div className="h-2.5 w-1/3 rounded bg-neutral-100" />
+                <div className="h-2.5 w-2/3 rounded bg-neutral-100" />
+              </div>
+            </li>
+          ))}
+        </ul>
+      ) : showFallback ? (
+        <p className="py-2 text-xs text-neutral-500">No active buyer needs yet.</p>
+      ) : (
+        <ul className="divide-y divide-neutral-100">
+          {items.map((item) => (
           <li key={item.id} className="flex gap-3 py-2.5 first:pt-0 last:pb-0">
             <div
               className={cn(
@@ -85,10 +104,19 @@ function ActiveBuyerDemandCard() {
                 <span className="text-neutral-300">·</span>
                 <span>{item.propertyType}</span>
               </div>
+              {item.agent ? (
+                <ActivityAgentContact
+                  agentId={item.agent.id}
+                  agentName={item.agent.name}
+                  agentEmail={item.agent.email}
+                  agentPhone={item.agent.phone}
+                />
+              ) : null}
             </div>
           </li>
-        ))}
-      </ul>
+          ))}
+        </ul>
+      )}
     </NetworkActivityCard>
   );
 }
@@ -133,9 +161,12 @@ function RecentListingActivityCard() {
               <p className="text-xs text-neutral-500">
                 {item.neighborhood}, {item.city} · ${item.price.toLocaleString()}
               </p>
-              <p className="mt-0.5 text-[11px] text-neutral-500">
-                {item.agentName} · {item.brokerage}
-              </p>
+              <ActivityAgentContact
+                agentId={item.agentId ?? ""}
+                agentName={item.agentName}
+                agentEmail={item.agentEmail ?? null}
+                agentPhone={item.agentPhone ?? null}
+              />
             </div>
           </li>
         ))}
@@ -162,7 +193,6 @@ function NetworkBroadcastsCard() {
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-1.5">
-                <span className="text-[13px] font-semibold text-neutral-900">{item.authorName}</span>
                 <span
                   className={cn(
                     "inline-flex rounded-full border px-1.5 py-0 text-[10px] font-medium",
@@ -176,6 +206,12 @@ function NetworkBroadcastsCard() {
               <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-neutral-600">
                 {item.preview}
               </p>
+              <ActivityAgentContact
+                agentId={item.authorId ?? ""}
+                agentName={item.authorName}
+                agentEmail={item.authorEmail ?? null}
+                agentPhone={item.authorPhone ?? null}
+              />
             </div>
           </li>
         ))}
