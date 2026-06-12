@@ -134,15 +134,13 @@ export default function CommunicationsFeed() {
         </Button>
       </div>
 
-      <PageHeader
-        title={
-          <span className="inline-flex items-center gap-2">
-            {meta.icon}
-            {meta.title}
-          </span>
-        }
-        description={`All ${meta.title.toLowerCase()} broadcasts across the network.`}
-      />
+      <div className="flex items-center gap-2">
+        {meta.icon}
+        <PageHeader
+          title={meta.title}
+          description={`All ${meta.title.toLowerCase()} broadcasts across the network.`}
+        />
+      </div>
 
       <div className="mt-6 mb-4 relative max-w-xl">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" aria-hidden />
