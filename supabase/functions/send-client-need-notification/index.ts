@@ -227,6 +227,19 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("Failed to queue emails");
     }
 
+    // Persist broadcast for Success Hub > Network Activity feed
+    const { error: broadcastError } = await supabase.from("comms_broadcasts").insert({
+      sender_id: user.id,
+      category,
+      subject,
+      message,
+      criteria: criteria ?? null,
+      recipient_count: agentProfiles.length,
+    });
+    if (broadcastError) {
+      console.error("[send-client-need-notification] Failed to persist broadcast:", broadcastError);
+    }
+
     return new Response(
       JSON.stringify({
         success: true,

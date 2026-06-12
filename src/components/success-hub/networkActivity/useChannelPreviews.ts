@@ -16,8 +16,6 @@ export type ChannelPreviewItem = {
   agent: ChannelPreviewAgent | null;
 };
 
-const RENTAL_TYPES = new Set(["residential_rental", "commercial_rental"]);
-
 function relativeTime(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime();
   const mins = Math.floor(diff / 60_000);
@@ -29,13 +27,6 @@ function relativeTime(iso: string): string {
   if (days === 1) return "Yesterday";
   if (days < 7) return `${days}d ago`;
   return new Date(iso).toLocaleDateString();
-}
-
-function formatPrice(n: number | null | undefined): string {
-  if (!n || n <= 0) return "";
-  if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(n % 1_000_000 === 0 ? 0 : 1)}M`;
-  if (n >= 1_000) return `$${Math.round(n / 1_000)}K`;
-  return `$${n.toLocaleString()}`;
 }
 
 function truncate(s: string, n = 70): string {
@@ -58,81 +49,13 @@ async function fetchAgentMap(ids: string[]): Promise<Map<string, ChannelPreviewA
   return map;
 }
 
-function useClientNeedsPreview(kind: "buyer" | "renter", limit: number) {
-  const [items, setItems] = useState<ChannelPreviewItem[]>([]);
-  const [loading, setLoading] = useState(true);
+type BroadcastCategory =
+  | "buyer_need"
+  | "sales_intel"
+  | "renter_need"
+  | "general_discussion";
 
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      setLoading(true);
-      // Over-fetch to allow client-side rental partitioning, then trim.
-      const { data, error } = await supabase
-        .from("client_needs")
-        .select(
-          "id, submitted_by, property_type, property_types, max_price, bedrooms, description, created_at, city, state",
-        )
-        .order("created_at", { ascending: false })
-        .limit(limit * 6);
-
-      if (cancelled) return;
-      if (error || !data) {
-        setItems([]);
-        setLoading(false);
-        return;
-      }
-
-      const filtered = data.filter((n: any) => {
-        const types: string[] = [
-          ...(Array.isArray(n.property_types) ? n.property_types : []),
-          n.property_type,
-        ].filter(Boolean);
-        const isRental = types.some((t) => RENTAL_TYPES.has(String(t)));
-        return kind === "renter" ? isRental : !isRental;
-      }).slice(0, limit);
-
-      const agentIds = Array.from(
-        new Set(filtered.map((n: any) => n.submitted_by).filter(Boolean)),
-      ) as string[];
-      const agentMap = await fetchAgentMap(agentIds);
-
-      const mapped: ChannelPreviewItem[] = filtered.map((n: any) => {
-        const city = (n.city ?? "").trim();
-        const state = (n.state ?? "").trim();
-        const location = [city, state].filter(Boolean).join(", ");
-        const descLabel = n.description ? truncate(String(n.description).split("\n")[0], 70) : null;
-        const title = descLabel || (location ? `${kind === "renter" ? "Renter need" : "Buyer need"} · ${location}` : kind === "renter" ? "New renter need" : "New buyer need");
-        const price = n.max_price ? `Up to ${formatPrice(n.max_price)}` : null;
-        const subtitle = [location || null, price].filter(Boolean).join(" · ") || null;
-        return {
-          id: n.id,
-          title,
-          subtitle,
-          timestamp: relativeTime(n.created_at),
-          agent: n.submitted_by ? agentMap.get(n.submitted_by) ?? null : null,
-        };
-      });
-
-      setItems(mapped);
-      setLoading(false);
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [kind, limit]);
-
-  return { items, loading };
-}
-
-export function useBuyerNeedsPreview(limit = 3) {
-  return useClientNeedsPreview("buyer", limit);
-}
-
-export function useRenterNeedsPreview(limit = 3) {
-  return useClientNeedsPreview("renter", limit);
-}
-
-export function useSalesIntelPreview(limit = 3) {
+function useBroadcastsPreview(category: BroadcastCategory, limit: number) {
   const [items, setItems] = useState<ChannelPreviewItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -141,64 +64,9 @@ export function useSalesIntelPreview(limit = 3) {
     (async () => {
       setLoading(true);
       const { data, error } = await supabase
-        .from("listings")
-        .select(
-          "id, address, city, state, price, agent_id, listing_type, status, created_at, updated_at",
-        )
-        .eq("listing_type", "for_sale")
-        .not("status", "in", "(draft,expired)")
-        .order("updated_at", { ascending: false })
-        .limit(limit);
-
-      if (cancelled) return;
-      if (error || !data) {
-        setItems([]);
-        setLoading(false);
-        return;
-      }
-
-      const agentIds = Array.from(
-        new Set(data.map((l: any) => l.agent_id).filter(Boolean)),
-      ) as string[];
-      const agentMap = await fetchAgentMap(agentIds);
-
-      const mapped: ChannelPreviewItem[] = data.map((l: any) => {
-        const loc = [l.city, l.state].filter(Boolean).join(", ");
-        const subtitle = [loc || null, l.price ? formatPrice(l.price) : null]
-          .filter(Boolean)
-          .join(" · ") || null;
-        return {
-          id: l.id,
-          title: truncate(String(l.address || "New listing"), 70),
-          subtitle,
-          timestamp: relativeTime(l.updated_at ?? l.created_at),
-          agent: l.agent_id ? agentMap.get(l.agent_id) ?? null : null,
-        };
-      });
-
-      setItems(mapped);
-      setLoading(false);
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [limit]);
-
-  return { items, loading };
-}
-
-export function useGeneralDiscussionsPreview(limit = 3) {
-  const [items, setItems] = useState<ChannelPreviewItem[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      setLoading(true);
-      // RLS limits to messages addressed to the current agent — fine for a preview.
-      const { data, error } = await supabase
-        .from("agent_messages")
-        .select("id, agent_id, sender_name, sender_email, sender_phone, message, created_at")
+        .from("comms_broadcasts" as any)
+        .select("id, sender_id, subject, message, created_at")
+        .eq("category", category)
         .order("created_at", { ascending: false })
         .limit(limit);
 
@@ -209,17 +77,17 @@ export function useGeneralDiscussionsPreview(limit = 3) {
         return;
       }
 
-      const mapped: ChannelPreviewItem[] = data.map((m: any) => ({
-        id: m.id,
-        title: truncate(String(m.message || "New discussion"), 80),
-        subtitle: null,
-        timestamp: relativeTime(m.created_at),
-        agent: {
-          id: m.agent_id, // sender is external — link to recipient agent profile
-          name: m.sender_name || "Sender",
-          email: m.sender_email ?? null,
-          phone: m.sender_phone ?? null,
-        },
+      const agentIds = Array.from(
+        new Set((data as any[]).map((b) => b.sender_id).filter(Boolean)),
+      ) as string[];
+      const agentMap = await fetchAgentMap(agentIds);
+
+      const mapped: ChannelPreviewItem[] = (data as any[]).map((b) => ({
+        id: b.id,
+        title: truncate(String(b.subject || "New message"), 80),
+        subtitle: b.message ? truncate(String(b.message).split("\n")[0], 100) : null,
+        timestamp: relativeTime(b.created_at),
+        agent: b.sender_id ? agentMap.get(b.sender_id) ?? null : null,
       }));
 
       setItems(mapped);
@@ -228,7 +96,23 @@ export function useGeneralDiscussionsPreview(limit = 3) {
     return () => {
       cancelled = true;
     };
-  }, [limit]);
+  }, [category, limit]);
 
   return { items, loading };
+}
+
+export function useBuyerNeedsPreview(limit = 3) {
+  return useBroadcastsPreview("buyer_need", limit);
+}
+
+export function useRenterNeedsPreview(limit = 3) {
+  return useBroadcastsPreview("renter_need", limit);
+}
+
+export function useSalesIntelPreview(limit = 3) {
+  return useBroadcastsPreview("sales_intel", limit);
+}
+
+export function useGeneralDiscussionsPreview(limit = 3) {
+  return useBroadcastsPreview("general_discussion", limit);
 }
