@@ -549,7 +549,7 @@ const ConsumerPropertyDetail = () => {
 
               {/* Anchored under photo — inset matches neighborhood pill (left-4) */}
               <div className={cn(propertyPhotoContentInset, "flex flex-col gap-3 pt-3")}>
-                <div className="flex w-full items-center justify-between gap-4">
+                <div className="flex w-full flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
                   <MediaTabBar
                     active={activeMediaTab as MediaTab}
                     onChange={(tab) => handleMediaTabChange(tab)}
@@ -581,7 +581,7 @@ const ConsumerPropertyDetail = () => {
                     }
                   />
                   {daysOnMarket != null && daysOnMarket >= 0 ? (
-                    <p className="shrink-0 text-right text-sm leading-none text-neutral-900">
+                    <p className="shrink-0 self-end text-right text-sm leading-none text-neutral-900 sm:self-auto">
                       <span className="text-[11px] font-medium uppercase tracking-wide text-neutral-500">DOM</span>
                       <span className="ml-1.5 font-semibold tabular-nums">{daysOnMarket}</span>
                     </p>
