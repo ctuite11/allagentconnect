@@ -44,6 +44,7 @@ import { useTownsPicker } from "@/hooks/useTownsPicker";
 import { TownsPicker } from "@/components/TownsPicker";
 import { getAreasForCity, hasNeighborhoodData } from "@/data/usNeighborhoodsData";
 import { formatCriteriaDisplayLabels } from "@/lib/formatCriteriaDisplay";
+import { RecipientListDialog, type RecipientRow } from "@/components/communication-center/RecipientListDialog";
 
 interface SendMessageDialogProps {
   open: boolean;
@@ -60,6 +61,8 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
   const [recipientCount, setRecipientCount] = useState<number | null>(null);
   const [loadingCount, setLoadingCount] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [recipientList, setRecipientList] = useState<RecipientRow[]>([]);
+  const [recipientListOpen, setRecipientListOpen] = useState(false);
   
   // Geographic selection state - EXACTLY like SubmitClientNeed
   const [state, setState] = useState("MA");
@@ -298,9 +301,11 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
 
       if (error) throw error;
       setRecipientCount(data?.recipientCount ?? 0);
+      setRecipientList(Array.isArray(data?.recipients) ? data.recipients : []);
     } catch (error) {
       console.error("Error fetching counts:", error);
       setRecipientCount(0);
+      setRecipientList([]);
     } finally {
       setLoadingCount(false);
     }
@@ -401,6 +406,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
   };
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className={commsDialogContent}>
         <div className={commsDialogHeaderPad}>
@@ -459,7 +465,15 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                     <AACMonogram className="h-3 w-3 text-white" />
                   </div>
                   <span className="text-sm text-neutral-600">
-                    This will be sent to <strong className="font-semibold text-neutral-900">{recipientCount}</strong> {recipientCount === 1 ? "agent" : "agents"}
+                    This will be sent to{" "}
+                    <button
+                      type="button"
+                      onClick={() => setRecipientListOpen(true)}
+                      disabled={recipientCount === 0}
+                      className="font-semibold text-primary underline-offset-2 hover:underline disabled:no-underline disabled:text-neutral-900 disabled:cursor-default"
+                    >
+                      {recipientCount} {recipientCount === 1 ? "agent" : "agents"}
+                    </button>
                   </span>
                 </div>
               </div>
@@ -509,7 +523,15 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                   </span>
                 ) : recipientCount !== null ? (
                   <span className="text-sm text-neutral-700">
-                    Sending to <strong className="text-neutral-900 font-semibold">{recipientCount}</strong> {recipientCount === 1 ? "agent" : "agents"}
+                    Sending to{" "}
+                    <button
+                      type="button"
+                      onClick={() => setRecipientListOpen(true)}
+                      disabled={recipientCount === 0}
+                      className="font-semibold text-primary underline-offset-2 hover:underline disabled:no-underline disabled:text-neutral-900 disabled:cursor-default"
+                    >
+                      {recipientCount} {recipientCount === 1 ? "agent" : "agents"}
+                    </button>
                   </span>
                 ) : (
                   <span className="text-sm text-neutral-500">
@@ -915,5 +937,12 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
         )}
       </DialogContent>
     </Dialog>
+    <RecipientListDialog
+      open={recipientListOpen}
+      onOpenChange={setRecipientListOpen}
+      recipients={recipientList}
+      loading={loadingCount}
+    />
+    </>
   );
 };

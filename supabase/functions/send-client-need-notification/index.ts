@@ -129,19 +129,30 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    if (previewOnly) {
-      return new Response(
-        JSON.stringify({ success: true, recipientCount: recipients.length }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    // Get agent profiles
+    // Get agent profiles (needed for both preview and send)
     const agentIds = recipients.map(r => r.user_id);
     const { data: agentProfiles } = await supabase
       .from("agent_profiles")
-      .select("id, email, first_name, last_name")
+      .select("id, email, first_name, last_name, phone, company")
       .in("id", agentIds);
+
+    if (previewOnly) {
+      const recipientList = (agentProfiles || []).map((a: any) => ({
+        id: a.id,
+        name: `${a.first_name ?? ""} ${a.last_name ?? ""}`.trim() || "AAC Agent",
+        brokerage: a.company ?? null,
+        phone: a.phone ?? null,
+        email: a.email ?? null,
+      }));
+      return new Response(
+        JSON.stringify({
+          success: true,
+          recipientCount: recipientList.length,
+          recipients: recipientList,
+        }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     if (!agentProfiles?.length) {
       throw new Error("Failed to fetch agent profiles");
