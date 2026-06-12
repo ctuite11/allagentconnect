@@ -1,232 +1,84 @@
-import {
-  Activity,
-  CalendarClock,
-  Home,
-  Megaphone,
-  Radio,
-  TrendingUp,
-  UserCheck,
-} from "lucide-react";
+import { Home, MessageSquare, Radio, TrendingUp, UserCheck, Users } from "lucide-react";
 import { AgentAvatar } from "@/components/ui/AgentAvatar";
-import { cn } from "@/lib/utils";
+import { ROUTES } from "@/constants/routes";
 import { NetworkActivityCard } from "./NetworkActivityCard";
+import { ChannelPreviewCard } from "./ChannelPreviewCard";
+import { MOCK_VERIFIED_AGENTS } from "./mockData";
 import {
-  MOCK_LISTING_ACTIVITY,
-  MOCK_NETWORK_BROADCASTS,
-  MOCK_SHOWING_PULSE,
-  MOCK_VERIFIED_AGENTS,
-  type ListingActivityItem,
-  type NetworkBroadcastItem,
-} from "./mockData";
-import { ActivityAgentContact } from "./ActivityAgentContact";
-import { useActiveBuyerDemand } from "./useActiveBuyerDemand";
+  useBuyerNeedsPreview,
+  useGeneralDiscussionsPreview,
+  useRenterNeedsPreview,
+  useSalesIntelPreview,
+} from "./useChannelPreviews";
 
-function FeedTimestamp({ children }: { children: string }) {
-  return <span className="shrink-0 text-[11px] font-medium text-neutral-400">{children}</span>;
-}
+const channelLink = (channel: string) => `${ROUTES.COMMUNICATIONS}?channel=${channel}`;
 
-function statusPillClass(label: ListingActivityItem["statusLabel"]) {
-  if (label === "Pre-market") {
-    return "border-amber-200/90 bg-amber-50 text-amber-900";
-  }
-  if (label === "Shared opportunity") {
-    return "border-[#0E56F5]/20 bg-[#0E56F5]/5 text-[#0B46CC]";
-  }
-  return "border-emerald-200/90 bg-emerald-50 text-emerald-900";
-}
-
-function broadcastCategoryClass(category: NetworkBroadcastItem["category"]) {
-  switch (category) {
-    case "Referral":
-      return "text-indigo-700 bg-indigo-50 border-indigo-200/80";
-    case "Off-market":
-      return "text-amber-900 bg-amber-50 border-amber-200/80";
-    case "Market intel":
-      return "text-neutral-800 bg-neutral-50 border-neutral-200";
-    case "Rental request":
-      return "text-[#0B46CC] bg-[#0E56F5]/5 border-[#0E56F5]/20";
-    default:
-      return "text-neutral-700 bg-neutral-50 border-neutral-200";
-  }
-}
-
-function ActiveBuyerDemandCard() {
-  const { items, loading } = useActiveBuyerDemand(6);
-  const showFallback = !loading && items.length === 0;
+function BuyerNeedsChannel() {
+  const { items, loading } = useBuyerNeedsPreview(3);
   return (
-    <NetworkActivityCard
-      title="Active Buyer Demand"
-      description="Live needs across the private network"
-      icon={<TrendingUp className="h-4 w-4 shrink-0 text-emerald-600" aria-hidden />}
-      action={
-        <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200/80 bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-800">
-          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" aria-hidden />
-          Live
-        </span>
-      }
-    >
-      {loading ? (
-        <ul className="divide-y divide-neutral-100">
-          {[0, 1, 2].map((i) => (
-            <li key={i} className="flex gap-3 py-2.5 first:pt-0 last:pb-0">
-              <div className="mt-0.5 h-8 w-1 shrink-0 rounded-full bg-neutral-100" aria-hidden />
-              <div className="min-w-0 flex-1 space-y-1.5">
-                <div className="h-3 w-1/2 rounded bg-neutral-100" />
-                <div className="h-2.5 w-1/3 rounded bg-neutral-100" />
-                <div className="h-2.5 w-2/3 rounded bg-neutral-100" />
-              </div>
-            </li>
-          ))}
-        </ul>
-      ) : showFallback ? (
-        <p className="py-2 text-xs text-neutral-500">No active buyer needs yet.</p>
-      ) : (
-        <ul className="divide-y divide-neutral-100">
-          {items.map((item) => (
-          <li key={item.id} className="flex gap-3 py-2.5 first:pt-0 last:pb-0">
-            <div
-              className={cn(
-                "mt-0.5 h-8 w-1 shrink-0 rounded-full",
-                item.isNew ? "bg-emerald-500" : "bg-neutral-200",
-              )}
-              aria-hidden
-            />
-            <div className="min-w-0 flex-1">
-              <div className="flex items-start justify-between gap-2">
-                <p className="text-[13px] font-semibold leading-snug text-neutral-900">
-                  {item.buyerLabel}
-                </p>
-                <FeedTimestamp>{item.timestamp}</FeedTimestamp>
-              </div>
-              <p className="mt-0.5 text-xs text-neutral-600">{item.location}</p>
-              <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 text-[11px] text-neutral-500">
-                <span>{item.priceRange}</span>
-                <span className="text-neutral-300">·</span>
-                <span>{item.propertyType}</span>
-              </div>
-              {item.agent ? (
-                <ActivityAgentContact
-                  agentId={item.agent.id}
-                  agentName={item.agent.name}
-                  agentEmail={item.agent.email}
-                  agentPhone={item.agent.phone}
-                />
-              ) : null}
-            </div>
-          </li>
-          ))}
-        </ul>
-      )}
-    </NetworkActivityCard>
+    <ChannelPreviewCard
+      title="Buyer Needs"
+      description="Latest buyer demand on AAC"
+      icon={<Users className="h-4 w-4 shrink-0 text-emerald-600" aria-hidden />}
+      viewAllTo={channelLink("buyer_need")}
+      items={items}
+      loading={loading}
+      emptyLabel="No recent buyer needs"
+    />
   );
 }
 
-function RecentListingActivityCard() {
+function SalesIntelChannel() {
+  const { items, loading } = useSalesIntelPreview(3);
   return (
-    <NetworkActivityCard
-      title="Recent Listing Activity"
-      description="New and pre-market inventory on AAC"
-      icon={<Home className="h-4 w-4 shrink-0 text-emerald-600" aria-hidden />}
-    >
-      <ul className="space-y-2.5">
-        {MOCK_LISTING_ACTIVITY.map((item) => (
-          <li
-            key={item.id}
-            className="flex gap-3 rounded-lg border border-neutral-100 bg-white p-2 shadow-[0_1px_2px_rgba(0,0,0,0.03)] transition-colors hover:border-neutral-200"
-          >
-            <div className="h-14 w-[4.5rem] shrink-0 overflow-hidden rounded-md border border-neutral-100 bg-neutral-100">
-              {item.photoUrl ? (
-                <img src={item.photoUrl} alt="" className="h-full w-full object-cover" />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center">
-                  <Home className="h-4 w-4 text-neutral-300" aria-hidden />
-                </div>
-              )}
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-center gap-1.5">
-                <span
-                  className={cn(
-                    "inline-flex rounded-full border px-1.5 py-0 text-[10px] font-semibold",
-                    statusPillClass(item.statusLabel),
-                  )}
-                >
-                  {item.statusLabel}
-                </span>
-                <FeedTimestamp>{item.timestamp}</FeedTimestamp>
-              </div>
-              <p className="mt-1 text-[13px] font-semibold leading-snug text-neutral-900">
-                {item.address}
-              </p>
-              <p className="text-xs text-neutral-500">
-                {item.neighborhood}, {item.city} · ${item.price.toLocaleString()}
-              </p>
-              <ActivityAgentContact
-                agentId={item.agentId ?? ""}
-                agentName={item.agentName}
-                agentEmail={item.agentEmail ?? null}
-                agentPhone={item.agentPhone ?? null}
-              />
-            </div>
-          </li>
-        ))}
-      </ul>
-    </NetworkActivityCard>
+    <ChannelPreviewCard
+      title="Sales Intel"
+      description="Newest for-sale listings"
+      icon={<TrendingUp className="h-4 w-4 shrink-0 text-[#0E56F5]" aria-hidden />}
+      viewAllTo={channelLink("sales_intel")}
+      items={items}
+      loading={loading}
+      emptyLabel="No recent listings"
+    />
   );
 }
 
-function NetworkBroadcastsCard() {
+function RenterNeedsChannel() {
+  const { items, loading } = useRenterNeedsPreview(3);
   return (
-    <NetworkActivityCard
-      title="Network Broadcasts"
-      description="Agent-to-agent intel and opportunities"
-      icon={<Megaphone className="h-4 w-4 shrink-0 text-[#0E56F5]" aria-hidden />}
-    >
-      <ul className="divide-y divide-neutral-100">
-        {MOCK_NETWORK_BROADCASTS.map((item) => (
-          <li key={item.id} className="flex gap-2.5 py-2.5 first:pt-0 last:pb-0">
-            <div
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-neutral-200 bg-neutral-50 text-[11px] font-semibold text-neutral-700"
-              aria-hidden
-            >
-              {item.authorInitials}
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-center gap-1.5">
-                <span
-                  className={cn(
-                    "inline-flex rounded-full border px-1.5 py-0 text-[10px] font-medium",
-                    broadcastCategoryClass(item.category),
-                  )}
-                >
-                  {item.category}
-                </span>
-                <FeedTimestamp>{item.timestamp}</FeedTimestamp>
-              </div>
-              <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-neutral-600">
-                {item.preview}
-              </p>
-              <ActivityAgentContact
-                agentId={item.authorId ?? ""}
-                agentName={item.authorName}
-                agentEmail={item.authorEmail ?? null}
-                agentPhone={item.authorPhone ?? null}
-              />
-            </div>
-          </li>
-        ))}
-      </ul>
-    </NetworkActivityCard>
+    <ChannelPreviewCard
+      title="Renter Needs"
+      description="Latest rental demand"
+      icon={<Home className="h-4 w-4 shrink-0 text-amber-600" aria-hidden />}
+      viewAllTo={channelLink("renter_need")}
+      items={items}
+      loading={loading}
+      emptyLabel="No recent renter needs"
+    />
   );
 }
 
-function NewestVerifiedAgentsCard() {
+function GeneralDiscussionsChannel() {
+  const { items, loading } = useGeneralDiscussionsPreview(3);
+  return (
+    <ChannelPreviewCard
+      title="General Discussions"
+      description="Referrals & agent conversation"
+      icon={<MessageSquare className="h-4 w-4 shrink-0 text-indigo-600" aria-hidden />}
+      viewAllTo={channelLink("general_discussion")}
+      items={items}
+      loading={loading}
+      emptyLabel="No recent discussions"
+    />
+  );
+}
+
+export function NewestVerifiedAgentsRow() {
   return (
     <NetworkActivityCard
       title="Newest Verified Agents"
       description="Recently active on the network"
       icon={<UserCheck className="h-4 w-4 shrink-0 text-indigo-600" aria-hidden />}
-      className="lg:col-span-2"
     >
       <div className="-mx-1 flex gap-3 overflow-x-auto px-1 pb-1 snap-x snap-mandatory">
         {MOCK_VERIFIED_AGENTS.map((agent) => (
@@ -255,39 +107,6 @@ function NewestVerifiedAgentsCard() {
   );
 }
 
-function ShowingMarketActivityCard() {
-  return (
-    <NetworkActivityCard
-      title="Showing / Market Activity"
-      description="Schedule pulse and network movement"
-      icon={<CalendarClock className="h-4 w-4 shrink-0 text-teal-600" aria-hidden />}
-    >
-      <ul className="divide-y divide-neutral-100">
-        {MOCK_SHOWING_PULSE.map((item) => (
-          <li key={item.id} className="flex gap-2.5 py-2.5 first:pt-0 last:pb-0">
-            <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-neutral-100 bg-neutral-50">
-              {item.kind === "showing" ? (
-                <CalendarClock className="h-3.5 w-3.5 text-teal-600" aria-hidden />
-              ) : item.kind === "open_house" ? (
-                <Home className="h-3.5 w-3.5 text-emerald-600" aria-hidden />
-              ) : (
-                <Activity className="h-3.5 w-3.5 text-[#0E56F5]" aria-hidden />
-              )}
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="flex items-start justify-between gap-2">
-                <p className="text-[13px] font-semibold text-neutral-900">{item.label}</p>
-                <FeedTimestamp>{item.timestamp}</FeedTimestamp>
-              </div>
-              <p className="mt-0.5 text-xs leading-snug text-neutral-600">{item.detail}</p>
-            </div>
-          </li>
-        ))}
-      </ul>
-    </NetworkActivityCard>
-  );
-}
-
 export function NetworkActivitySection() {
   return (
     <section aria-labelledby="network-activity-heading" className="space-y-3">
@@ -306,8 +125,7 @@ export function NetworkActivitySection() {
             </h2>
           </div>
           <p className="mt-1 max-w-2xl text-xs leading-snug text-neutral-500 sm:text-[13px]">
-            Live private-market intelligence across buyer demand, listings, broadcasts, and agent
-            movement on AAC.
+            Live previews of the four Communications Center channels — open one to see all activity.
           </p>
         </div>
         <div className="inline-flex items-center gap-1.5 rounded-full border border-neutral-200 bg-white px-2.5 py-1 text-[11px] font-medium text-neutral-600 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
@@ -317,11 +135,10 @@ export function NetworkActivitySection() {
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:items-start">
-        <ActiveBuyerDemandCard />
-        <RecentListingActivityCard />
-        <NetworkBroadcastsCard />
-        <ShowingMarketActivityCard />
-        <NewestVerifiedAgentsCard />
+        <BuyerNeedsChannel />
+        <SalesIntelChannel />
+        <RenterNeedsChannel />
+        <GeneralDiscussionsChannel />
       </div>
     </section>
   );
