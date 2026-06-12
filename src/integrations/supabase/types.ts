@@ -1455,6 +1455,47 @@ export type Database = {
         }
         Relationships: []
       }
+      comms_broadcasts: {
+        Row: {
+          category: string
+          created_at: string
+          criteria: Json | null
+          id: string
+          message: string
+          recipient_count: number
+          sender_id: string
+          subject: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          criteria?: Json | null
+          id?: string
+          message: string
+          recipient_count?: number
+          sender_id: string
+          subject: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          criteria?: Json | null
+          id?: string
+          message?: string
+          recipient_count?: number
+          sender_id?: string
+          subject?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comms_broadcasts_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "agent_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       conversation_messages: {
         Row: {
           body: string

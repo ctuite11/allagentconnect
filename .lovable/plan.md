@@ -1,57 +1,58 @@
-# Success Hub — Reorder + Network Activity mirrors Comms Channels
+# Fix — Buyer Needs preview must source from Communications Center
 
-## New Success Hub page order
+## What's wrong now
 
-1. **Hero + Stat row** (unchanged)
-2. **Network Activity** — compact 4-channel preview grid (see below)
-3. **Newest Verified Agents** — pulled out as its own row under Network Activity
-4. **Listing Activity** — renamed from "Market activity" (`MarketActivityRow`); keeps Sale/Rental toggle
-5. **My Buyers** — `DashboardBuyersTable`, full-width
-6. **Messages** — `DashboardCommunications`, full-width; rows stay clickable
-7. **My Listings** — unchanged
-8. **Communications Center channel cards** — `NotificationPreferenceCards` at the bottom (Buyer Needs, Sales Intel, Renter Needs, General Discussions)
+`useChannelPreviews.ts` reads `client_needs` for Buyer Needs / Renter Needs, `listings` for Sales Intel, and `agent_messages` for General Discussions. **None of those are the Comms Center.** Comms Center broadcasts (Buyer Need / Sales Intel / Renter Need / General Discussion) are sent by the `send-client-need-notification` edge function, which today only enqueues `email_jobs` rows and **never persists the broadcast itself**. So there is no DB feed for Network Activity to mirror.
 
-## Network Activity — 4 channel previews
+## Fix — persist Comms Center broadcasts, then read them
 
-Replace the current Active Buyer Demand / Recent Listing / Broadcasts / Showing Pulse mix with a strict mirror of the four Communications Center channels. Rendered in a `lg:grid-cols-2` grid so nothing runs endlessly down the page.
+### 1. New table `comms_broadcasts`
 
-Each preview card shows:
+Migration `YYYYMMDDHHMM_create_comms_broadcasts.sql`:
 
-- **Header**: channel name + icon + "View all →" link to `/communications` filtered to that channel (`?channel=buyer_needs` etc.)
-- **Body**: **latest 3 items only**, each item showing:
-  - Title / short summary (one line, truncated)
-  - Timestamp (relative)
-  - `ActivityAgentContact` row: agent name (opens `AgentIntelDrawer`), phone (`tel:`), email (`ContactAgentProfileDialog`)
-- **Empty state**: short "No recent activity" line
+```sql
+CREATE TABLE public.comms_broadcasts (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  sender_id uuid NOT NULL REFERENCES public.agent_profiles(id) ON DELETE CASCADE,
+  category text NOT NULL CHECK (category IN ('buyer_need','sales_intel','renter_need','general_discussion')),
+  subject text NOT NULL,
+  message text NOT NULL,
+  criteria jsonb,
+  recipient_count integer NOT NULL DEFAULT 0,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX idx_comms_broadcasts_cat_created ON public.comms_broadcasts(category, created_at DESC);
 
-### Channel → data mapping
+GRANT SELECT, INSERT ON public.comms_broadcasts TO authenticated;
+GRANT ALL ON public.comms_broadcasts TO service_role;
 
-| Channel | Source table | Title field |
-|---|---|---|
-| Buyer Needs | `client_needs` where buyer-side (existing `useActiveBuyerDemand` query, limit 3) | description / city fallback |
-| Sales Intel | `listings` newest non-draft, `listing_type = 'for_sale'`, limit 3 | address + city |
-| Renter Needs | `client_needs` where `property_types` contains a rental type OR `agent_match_submissions` rental rows, limit 3 | description / city fallback |
-| General Discussions | `agent_messages` newest, limit 3 (broadcast/discussion posts) | preview text |
+ALTER TABLE public.comms_broadcasts ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Authenticated agents can read broadcasts"
+  ON public.comms_broadcasts FOR SELECT TO authenticated USING (true);
+CREATE POLICY "Senders insert their own broadcasts"
+  ON public.comms_broadcasts FOR INSERT TO authenticated WITH CHECK (sender_id = auth.uid());
+```
 
-Agent contact comes from the joined `agent_profiles` row via `submitted_by` / `agent_id` / `author_id`.
+Read-by-all is intentional — Comms Center broadcasts go to the network.
 
-## Renames / terminology
+### 2. Edge function `send-client-need-notification`
 
-- `NotificationPreferenceCards`: rename the **"Discussion"** card to **"General Discussions"** (title + any matching label). Keep its key/id unchanged.
-- `MarketActivityRow`: header text **"Market activity" → "Listing Activity"** (loaded + loading states); update helper copy to "Newest and pre-market listings across AAC." No data/logic changes.
+After enqueuing `email_jobs`, insert one row into `comms_broadcasts` with `{sender_id: user.id, category, subject, message, criteria, recipient_count: agentProfiles.length}`. Skip on `previewOnly`. No other behavior change.
 
-## Files to change
+### 3. Rewrite `useChannelPreviews.ts`
 
-- `src/pages/success-hub/SuccessHubDashboard.tsx` — reorder JSX; split Buyers/Communications grid into two stacked sections; render `<NewestVerifiedAgentsRow />` and `<NotificationPreferenceCards />` at the bottom inside `AgentSectionCard`.
-- `src/components/success-hub/networkActivity/NetworkActivitySection.tsx` — replace inner grid with four `ChannelPreviewCard`s (Buyer Needs, Sales Intel, Renter Needs, General Discussions). Drop `RecentListingActivityCard`, `NetworkBroadcastsCard`, `ShowingMarketActivityCard` from the grid. Export `NewestVerifiedAgentsRow` for standalone use.
-- `src/components/success-hub/networkActivity/ChannelPreviewCard.tsx` (new) — generic shell: title + icon + "View all →" + capped 3-item list rendering `ActivityAgentContact` per item.
-- `src/components/success-hub/networkActivity/useChannelPreviews.ts` (new) — four hooks (`useBuyerNeedsPreview`, `useSalesIntelPreview`, `useRenterNeedsPreview`, `useGeneralDiscussionsPreview`), each returning `{ items: ChannelPreviewItem[], loading }` with `limit: 3`. Reuses the existing `useActiveBuyerDemand` mapping pattern.
-- `src/components/success-hub/MarketActivityRow.tsx` — header rename only.
-- `src/components/NotificationPreferenceCards.tsx` — change "Discussion" → "General Discussions".
+All four hooks query the same source — `comms_broadcasts` filtered by `category`, ordered by `created_at desc`, `limit 3`, joined with `agent_profiles` for the sender. Drop the `client_needs` / `listings` / `agent_messages` queries entirely.
+
+Item shape stays the same (`title` = subject, `subtitle` = message preview, `timestamp`, `agent` = sender contact), so `ChannelPreviewCard` and `NetworkActivitySection` do not change.
 
 ## Out of scope
 
-- No DB schema, RLS, or route changes.
-- No edits to `ChannelPanel`, `ActivityAgentContact`, `AgentIntelDrawer`, or `ContactAgentProfileDialog`.
-- Messages row click behavior preserved as-is.
-- Communications Center page itself unchanged (the "View all" links rely on its existing channel filter; if a channel param isn't yet supported it will land on the default view — wiring the filter parser is a separate task).
+- No changes to `MarketActivityRow` (still the listings feed), `NotificationPreferenceCards`, `SendMessageDialog`, or page ordering — those are already correct.
+- No backfill of historical broadcasts (none persisted).
+- Communications Center page itself is unchanged.
+
+## Files
+
+- `supabase/migrations/<ts>_create_comms_broadcasts.sql` (new)
+- `supabase/functions/send-client-need-notification/index.ts` (edit — insert broadcast row)
+- `src/components/success-hub/networkActivity/useChannelPreviews.ts` (rewrite all four hooks against `comms_broadcasts`)
