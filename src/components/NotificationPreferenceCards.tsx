@@ -146,7 +146,7 @@ export const NotificationPreferenceCards = () => {
     },
     {
       key: "general_discussion" as keyof NotificationPreferences,
-      title: "Discussion",
+      title: "General Discussions",
       description: "Referrals & agent conversation",
       active: preferences.general_discussion,
       icon: MessageSquare,
