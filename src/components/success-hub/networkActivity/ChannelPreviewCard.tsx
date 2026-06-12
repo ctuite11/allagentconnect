@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
+import { Plus } from "lucide-react";
 import { NetworkActivityCard } from "./NetworkActivityCard";
 import { ActivityAgentContact } from "./ActivityAgentContact";
 import type { ChannelPreviewItem } from "./useChannelPreviews";
@@ -12,6 +13,7 @@ type ChannelPreviewCardProps = {
   items: ChannelPreviewItem[];
   loading: boolean;
   emptyLabel?: string;
+  onCreate?: () => void;
 };
 
 /**
@@ -26,6 +28,7 @@ export function ChannelPreviewCard({
   items,
   loading,
   emptyLabel = "No recent activity",
+  onCreate,
 }: ChannelPreviewCardProps) {
   return (
     <NetworkActivityCard
@@ -33,12 +36,24 @@ export function ChannelPreviewCard({
       description={description}
       icon={icon}
       action={
-        <Link
-          to={viewAllTo}
-          className="shrink-0 rounded-sm text-[12px] font-medium text-neutral-700 underline-offset-2 transition-colors hover:text-neutral-900 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40 focus-visible:ring-offset-2"
-        >
-          View all →
-        </Link>
+        <div className="flex shrink-0 items-center gap-3">
+          {onCreate ? (
+            <button
+              type="button"
+              onClick={onCreate}
+              className="inline-flex items-center gap-1 rounded-md bg-primary px-2.5 py-1 text-[11px] font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2"
+            >
+              <Plus className="h-3 w-3" />
+              Create new
+            </button>
+          ) : null}
+          <Link
+            to={viewAllTo}
+            className="rounded-sm text-[12px] font-medium text-neutral-700 underline-offset-2 transition-colors hover:text-neutral-900 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40 focus-visible:ring-offset-2"
+          >
+            View all →
+          </Link>
+        </div>
       }
     >
       {loading ? (
