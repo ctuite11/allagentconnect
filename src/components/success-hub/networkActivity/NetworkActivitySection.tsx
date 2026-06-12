@@ -11,7 +11,6 @@ import { AgentAvatar } from "@/components/ui/AgentAvatar";
 import { cn } from "@/lib/utils";
 import { NetworkActivityCard } from "./NetworkActivityCard";
 import {
-  MOCK_BUYER_DEMAND,
   MOCK_LISTING_ACTIVITY,
   MOCK_NETWORK_BROADCASTS,
   MOCK_SHOWING_PULSE,
@@ -54,7 +53,6 @@ function broadcastCategoryClass(category: NetworkBroadcastItem["category"]) {
 function ActiveBuyerDemandCard() {
   const { items, loading } = useActiveBuyerDemand(6);
   const showFallback = !loading && items.length === 0;
-  const display = items.length > 0 ? items : showFallback ? [] : [];
   return (
     <NetworkActivityCard
       title="Active Buyer Demand"
@@ -84,7 +82,7 @@ function ActiveBuyerDemandCard() {
         <p className="py-2 text-xs text-neutral-500">No active buyer needs yet.</p>
       ) : (
         <ul className="divide-y divide-neutral-100">
-          {display.map((item) => (
+          {items.map((item) => (
           <li key={item.id} className="flex gap-3 py-2.5 first:pt-0 last:pb-0">
             <div
               className={cn(
@@ -119,8 +117,6 @@ function ActiveBuyerDemandCard() {
           ))}
         </ul>
       )}
-      {/* Keep mock fallback reference to avoid unused-import lint when feed is empty */}
-      {false && MOCK_BUYER_DEMAND.length}
     </NetworkActivityCard>
   );
 }
