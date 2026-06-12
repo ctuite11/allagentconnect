@@ -44,6 +44,7 @@ import { useTownsPicker } from "@/hooks/useTownsPicker";
 import { TownsPicker } from "@/components/TownsPicker";
 import { getAreasForCity, hasNeighborhoodData } from "@/data/usNeighborhoodsData";
 import { formatCriteriaDisplayLabels } from "@/lib/formatCriteriaDisplay";
+import { RecipientListDialog, type RecipientRow } from "@/components/communication-center/RecipientListDialog";
 
 interface SendMessageDialogProps {
   open: boolean;
@@ -60,6 +61,8 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
   const [recipientCount, setRecipientCount] = useState<number | null>(null);
   const [loadingCount, setLoadingCount] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [recipientList, setRecipientList] = useState<RecipientRow[]>([]);
+  const [recipientListOpen, setRecipientListOpen] = useState(false);
   
   // Geographic selection state - EXACTLY like SubmitClientNeed
   const [state, setState] = useState("MA");
@@ -298,9 +301,11 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
 
       if (error) throw error;
       setRecipientCount(data?.recipientCount ?? 0);
+      setRecipientList(Array.isArray(data?.recipients) ? data.recipients : []);
     } catch (error) {
       console.error("Error fetching counts:", error);
       setRecipientCount(0);
+      setRecipientList([]);
     } finally {
       setLoadingCount(false);
     }
