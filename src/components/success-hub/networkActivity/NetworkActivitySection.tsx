@@ -1,9 +1,11 @@
+import { useState } from "react";
 import { Home, MessageSquare, Radio, TrendingUp, UserCheck, Users } from "lucide-react";
 import { AgentAvatar } from "@/components/ui/AgentAvatar";
 import { ROUTES } from "@/constants/routes";
 import { NetworkActivityCard } from "./NetworkActivityCard";
 import { ChannelPreviewCard } from "./ChannelPreviewCard";
 import { MOCK_VERIFIED_AGENTS } from "./mockData";
+import { SendMessageDialog } from "@/components/SendMessageDialog";
 import {
   useBuyerNeedsPreview,
   useGeneralDiscussionsPreview,
@@ -11,9 +13,11 @@ import {
   useSalesIntelPreview,
 } from "./useChannelPreviews";
 
-const channelLink = (channel: string) => `${ROUTES.COMMUNICATIONS}?channel=${channel}`;
+const channelLink = (channel: string) => `${ROUTES.COMMUNICATIONS}/feed?channel=${channel}`;
 
-function BuyerNeedsChannel() {
+type ComposeCategory = "buyer_need" | "sales_intel" | "renter_need" | "general_discussion";
+
+function BuyerNeedsChannel({ onCreate }: { onCreate: () => void }) {
   const { items, loading } = useBuyerNeedsPreview(3);
   return (
     <ChannelPreviewCard
@@ -24,11 +28,12 @@ function BuyerNeedsChannel() {
       items={items}
       loading={loading}
       emptyLabel="No recent buyer needs"
+      onCreate={onCreate}
     />
   );
 }
 
-function SalesIntelChannel() {
+function SalesIntelChannel({ onCreate }: { onCreate: () => void }) {
   const { items, loading } = useSalesIntelPreview(3);
   return (
     <ChannelPreviewCard
@@ -39,11 +44,12 @@ function SalesIntelChannel() {
       items={items}
       loading={loading}
       emptyLabel="No recent listings"
+      onCreate={onCreate}
     />
   );
 }
 
-function RenterNeedsChannel() {
+function RenterNeedsChannel({ onCreate }: { onCreate: () => void }) {
   const { items, loading } = useRenterNeedsPreview(3);
   return (
     <ChannelPreviewCard
@@ -54,11 +60,12 @@ function RenterNeedsChannel() {
       items={items}
       loading={loading}
       emptyLabel="No recent renter needs"
+      onCreate={onCreate}
     />
   );
 }
 
-function GeneralDiscussionsChannel() {
+function GeneralDiscussionsChannel({ onCreate }: { onCreate: () => void }) {
   const { items, loading } = useGeneralDiscussionsPreview(3);
   return (
     <ChannelPreviewCard
@@ -69,6 +76,7 @@ function GeneralDiscussionsChannel() {
       items={items}
       loading={loading}
       emptyLabel="No recent discussions"
+      onCreate={onCreate}
     />
   );
 }
@@ -108,6 +116,14 @@ export function NewestVerifiedAgentsRow() {
 }
 
 export function NetworkActivitySection() {
+  const [compose, setCompose] = useState<{ open: boolean; category: ComposeCategory; title: string }>({
+    open: false,
+    category: "buyer_need",
+    title: "Buyer Needs",
+  });
+  const openCompose = (category: ComposeCategory, title: string) =>
+    setCompose({ open: true, category, title });
+
   return (
     <section aria-labelledby="network-activity-heading" className="space-y-3">
       <div className="flex flex-wrap items-end justify-between gap-2">
@@ -135,11 +151,18 @@ export function NetworkActivitySection() {
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:items-start">
-        <BuyerNeedsChannel />
-        <SalesIntelChannel />
-        <RenterNeedsChannel />
-        <GeneralDiscussionsChannel />
+        <BuyerNeedsChannel onCreate={() => openCompose("buyer_need", "Buyer Needs")} />
+        <SalesIntelChannel onCreate={() => openCompose("sales_intel", "Sales Intel")} />
+        <RenterNeedsChannel onCreate={() => openCompose("renter_need", "Renter Needs")} />
+        <GeneralDiscussionsChannel onCreate={() => openCompose("general_discussion", "General Discussions")} />
       </div>
+
+      <SendMessageDialog
+        open={compose.open}
+        onOpenChange={(open) => setCompose((c) => ({ ...c, open }))}
+        category={compose.category}
+        categoryTitle={compose.title}
+      />
     </section>
   );
 }
