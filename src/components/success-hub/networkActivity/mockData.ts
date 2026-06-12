@@ -21,6 +21,9 @@ export type ListingActivityItem = {
   neighborhood: string;
   timestamp: string;
   photoUrl?: string;
+  agentId?: string;
+  agentEmail?: string | null;
+  agentPhone?: string | null;
 };
 
 export type NetworkBroadcastItem = {
@@ -30,6 +33,9 @@ export type NetworkBroadcastItem = {
   category: "Referral" | "Off-market" | "Market intel" | "Rental request";
   preview: string;
   timestamp: string;
+  authorId?: string;
+  authorEmail?: string | null;
+  authorPhone?: string | null;
 };
 
 export type VerifiedAgentItem = {
