@@ -464,7 +464,15 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                     <AACMonogram className="h-3 w-3 text-white" />
                   </div>
                   <span className="text-sm text-neutral-600">
-                    This will be sent to <strong className="font-semibold text-neutral-900">{recipientCount}</strong> {recipientCount === 1 ? "agent" : "agents"}
+                    This will be sent to{" "}
+                    <button
+                      type="button"
+                      onClick={() => setRecipientListOpen(true)}
+                      disabled={recipientCount === 0}
+                      className="font-semibold text-primary underline-offset-2 hover:underline disabled:no-underline disabled:text-neutral-900 disabled:cursor-default"
+                    >
+                      {recipientCount} {recipientCount === 1 ? "agent" : "agents"}
+                    </button>
                   </span>
                 </div>
               </div>
@@ -514,7 +522,15 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                   </span>
                 ) : recipientCount !== null ? (
                   <span className="text-sm text-neutral-700">
-                    Sending to <strong className="text-neutral-900 font-semibold">{recipientCount}</strong> {recipientCount === 1 ? "agent" : "agents"}
+                    Sending to{" "}
+                    <button
+                      type="button"
+                      onClick={() => setRecipientListOpen(true)}
+                      disabled={recipientCount === 0}
+                      className="font-semibold text-primary underline-offset-2 hover:underline disabled:no-underline disabled:text-neutral-900 disabled:cursor-default"
+                    >
+                      {recipientCount} {recipientCount === 1 ? "agent" : "agents"}
+                    </button>
                   </span>
                 ) : (
                   <span className="text-sm text-neutral-500">
@@ -920,5 +936,12 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
         )}
       </DialogContent>
     </Dialog>
+    <RecipientListDialog
+      open={recipientListOpen}
+      onOpenChange={setRecipientListOpen}
+      recipients={recipientList}
+      loading={loadingCount}
+    />
+    </>
   );
 };
