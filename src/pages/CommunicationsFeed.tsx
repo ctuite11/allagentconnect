@@ -9,12 +9,22 @@ import { Button } from "@/components/ui/button";
 import { Seo } from "@/components/Seo";
 
 type Category = "buyer_need" | "sales_intel" | "renter_need" | "general_discussion";
+type Filter = "all" | Category;
 
 const CATEGORY_META: Record<Category, { title: string; icon: JSX.Element }> = {
-  buyer_need: { title: "Buyer Needs", icon: <Users className="h-4 w-4 text-emerald-600" /> },
-  sales_intel: { title: "Sales Intel", icon: <TrendingUp className="h-4 w-4 text-[#0E56F5]" /> },
-  renter_need: { title: "Renter Needs", icon: <Home className="h-4 w-4 text-amber-600" /> },
-  general_discussion: { title: "General Discussions", icon: <MessageSquare className="h-4 w-4 text-indigo-600" /> },
+  buyer_need: { title: "Buyer Needs", icon: <Users className="h-3.5 w-3.5 text-emerald-600" /> },
+  sales_intel: { title: "Sales Intel", icon: <TrendingUp className="h-3.5 w-3.5 text-[#0E56F5]" /> },
+  renter_need: { title: "Renter Needs", icon: <Home className="h-3.5 w-3.5 text-amber-600" /> },
+  general_discussion: { title: "General Discussions", icon: <MessageSquare className="h-3.5 w-3.5 text-indigo-600" /> },
+};
+
+const FILTER_ORDER: Filter[] = ["all", "buyer_need", "sales_intel", "renter_need", "general_discussion"];
+const FILTER_LABEL: Record<Filter, string> = {
+  all: "All",
+  buyer_need: "Buyer Needs",
+  sales_intel: "Sales Intel",
+  renter_need: "Renter Needs",
+  general_discussion: "General Discussions",
 };
 
 interface BroadcastRow {
@@ -40,18 +50,18 @@ function relativeTime(iso: string) {
   return new Date(iso).toLocaleDateString();
 }
 
-/** Communications Center > Feed — searchable list of broadcasts for a single channel. */
+/** Communications Center > Feed — single searchable list of all broadcasts, filterable by message type. */
 export default function CommunicationsFeed() {
   const [params] = useSearchParams();
-  const channelParam = (params.get("channel") as Category) || "buyer_need";
-  const category: Category = ["buyer_need", "sales_intel", "renter_need", "general_discussion"].includes(channelParam)
-    ? channelParam
-    : "buyer_need";
+  const channelParam = params.get("channel");
+  const initialFilter: Filter = (FILTER_ORDER as string[]).includes(channelParam ?? "")
+    ? (channelParam as Filter)
+    : "all";
 
-  const meta = CATEGORY_META[category];
   const [rows, setRows] = useState<BroadcastRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
+  const [filter, setFilter] = useState<Filter>(initialFilter);
 
   useEffect(() => {
     let cancelled = false;
@@ -60,7 +70,6 @@ export default function CommunicationsFeed() {
       const { data, error } = await supabase
         .from("comms_broadcasts" as any)
         .select("id, category, subject, message, recipient_count, created_at, sender_id")
-        .eq("category", category)
         .order("created_at", { ascending: false })
         .limit(500);
 
@@ -105,12 +114,13 @@ export default function CommunicationsFeed() {
     return () => {
       cancelled = true;
     };
-  }, [category]);
+  }, []);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return rows;
-    return rows.filter((r) => {
+    const base = filter === "all" ? rows : rows.filter((r) => r.category === filter);
+    if (!q) return base;
+    return base.filter((r) => {
       const senderName = r.sender?.name?.toLowerCase() ?? "";
       const senderEmail = r.sender?.email?.toLowerCase() ?? "";
       return (
@@ -120,11 +130,11 @@ export default function CommunicationsFeed() {
         r.message.toLowerCase().includes(q)
       );
     });
-  }, [rows, query]);
+  }, [rows, query, filter]);
 
   return (
     <PageShell className="pb-12">
-      <Seo title={`${meta.title} · Communications Center`} description={`All ${meta.title} activity on AAC`} noindex />
+      <Seo title="Communications · All Messages" description="All Communications Center activity on AAC" noindex />
       <div className="mb-4">
         <Button asChild variant="ghost" size="sm" className="h-8 -ml-2 text-neutral-600">
           <Link to="/agent-dashboard">
@@ -134,22 +144,40 @@ export default function CommunicationsFeed() {
         </Button>
       </div>
 
-      <div className="flex items-center gap-2">
-        {meta.icon}
-        <PageHeader title={meta.title} />
-      </div>
+      <PageHeader title="Communications" />
       <p className="-mt-3 mb-4 text-sm text-neutral-500">
-        All {meta.title.toLowerCase()} broadcasts across the network.
+        All Communications Center broadcasts across the network.
       </p>
 
-      <div className="mt-6 mb-4 relative max-w-xl">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" aria-hidden />
-        <Input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search by name, email, or keyword"
-          className="pl-9 h-10 rounded-lg border-neutral-300"
-        />
+      <div className="mt-6 mb-4 flex flex-wrap items-center gap-2">
+        <div className="relative flex-1 min-w-[240px] max-w-xl">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" aria-hidden />
+          <Input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search by name, email, or keyword"
+            className="pl-9 h-10 rounded-full border-neutral-300"
+          />
+        </div>
+        <div className="flex flex-wrap items-center gap-1.5">
+          {FILTER_ORDER.map((f) => {
+            const active = filter === f;
+            return (
+              <button
+                key={f}
+                type="button"
+                onClick={() => setFilter(f)}
+                className={
+                  active
+                    ? "h-8 rounded-full bg-neutral-900 px-3 text-[12px] font-medium text-white"
+                    : "h-8 rounded-full border border-neutral-200 bg-white px-3 text-[12px] font-medium text-neutral-700 hover:border-neutral-300"
+                }
+              >
+                {FILTER_LABEL[f]}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       <div className="rounded-2xl border border-neutral-200 bg-white">
@@ -158,12 +186,16 @@ export default function CommunicationsFeed() {
             <div className="px-6 py-10 text-center text-sm text-neutral-500">Loading…</div>
           ) : filtered.length === 0 ? (
             <div className="px-6 py-10 text-center text-sm text-neutral-500">
-              {rows.length === 0 ? "No activity yet on this channel." : "No matches for your search."}
+              {rows.length === 0 ? "No activity yet." : "No matches for your search."}
             </div>
           ) : (
             <ul className="divide-y divide-neutral-100">
               {filtered.map((r) => (
                 <li key={r.id} className="px-6 py-4">
+                  <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-medium text-neutral-500">
+                    {CATEGORY_META[r.category].icon}
+                    <span>{CATEGORY_META[r.category].title}</span>
+                  </div>
                   <div className="flex items-start justify-between gap-3">
                     <p className="text-sm font-semibold text-neutral-900 line-clamp-1">{r.subject || "(no subject)"}</p>
                     <span className="shrink-0 text-[11px] font-medium text-neutral-400">{relativeTime(r.created_at)}</span>
