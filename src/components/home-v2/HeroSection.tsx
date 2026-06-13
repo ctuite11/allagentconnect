@@ -36,7 +36,7 @@ const HeroSection = () => {
           <span className="font-['Manrope'] font-semibold text-white text-base sm:text-xl tracking-[-0.4px] whitespace-nowrap">
             All Agent Connect
           </span>
-          <span className="hidden sm:inline font-['Manrope'] font-light text-[11px] tracking-[0.2em] text-neutral-400 whitespace-nowrap">
+          <span className="font-['Manrope'] font-light text-[10px] sm:text-[11px] tracking-[0.2em] text-neutral-400 whitespace-nowrap">
             Massachusetts
           </span>
         </div>
