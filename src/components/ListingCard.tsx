@@ -4,7 +4,7 @@ import { ListingCardShell } from "@/components/ListingCardShell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ListingStatusBadge } from "@/components/ui/status-badge";
-import { Bed, Bath, Home, Edit, Trash2, Eye, Calendar, Users, Mail, Heart, Star, BarChart3, Sparkles, TrendingDown, RefreshCw, Maximize, ChevronLeft, ChevronRight, Phone, User, MessageSquare } from "lucide-react";
+import { Bed, Bath, Home, Edit, Trash2, Eye, Calendar, Users, Mail, Heart, Star, BarChart3, Sparkles, TrendingDown, RefreshCw, Maximize, ChevronLeft, ChevronRight, Phone, User, MessageSquare, CircleParking } from "lucide-react";
 import { ListingInterestSignals } from "./ListingInterestSignals";
 import type { ListingSignals } from "@/hooks/useListingInterestSignals";
 import { useNavigate } from "react-router-dom";
@@ -81,6 +81,8 @@ interface ListingCardProps {
     bedrooms: number | null;
     bathrooms: number | null;
     square_feet: number | null;
+    total_parking_spaces?: number | null;
+    garage_spaces?: number | null;
     status: string;
     photos?: any;
     open_houses?: any;
@@ -1010,20 +1012,30 @@ const ListingCard = ({
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs tabular-nums text-neutral-900">
             {listing.bedrooms ? (
               <div className="flex items-center gap-1">
-                <Bed className="h-3.5 w-3.5 shrink-0 text-neutral-600" aria-hidden />
+                <Bed className="h-3.5 w-3.5 shrink-0 text-[#0E56F5]" aria-hidden />
                 <span className="font-medium">{listing.bedrooms}</span>
               </div>
             ) : null}
             {listing.bathrooms ? (
               <div className="flex items-center gap-1">
-                <Bath className="h-3.5 w-3.5 shrink-0 text-neutral-600" aria-hidden />
+                <Bath className="h-3.5 w-3.5 shrink-0 text-[#0E56F5]" aria-hidden />
                 <span className="font-medium">{listing.bathrooms}</span>
               </div>
             ) : null}
             {listing.square_feet ? (
               <div className="flex items-center gap-1">
-                <Maximize className="h-3.5 w-3.5 shrink-0 text-neutral-600" aria-hidden />
+                <Maximize className="h-3.5 w-3.5 shrink-0 text-[#0E56F5]" aria-hidden />
                 <span className="font-medium">{listing.square_feet.toLocaleString()}</span>
+              </div>
+            ) : null}
+            <div className="flex items-center gap-1">
+              <CircleParking className="h-3.5 w-3.5 shrink-0 text-[#0E56F5]" aria-hidden />
+              <span className="font-medium">{listing.total_parking_spaces ?? listing.garage_spaces ?? 0}</span>
+            </div>
+            {daysOnMarket >= 0 ? (
+              <div className="flex items-center gap-1">
+                <span className="text-[10px] font-medium uppercase tracking-wide text-neutral-500">DOM</span>
+                <span className="font-medium">{daysOnMarket}</span>
               </div>
             ) : null}
           </div>
