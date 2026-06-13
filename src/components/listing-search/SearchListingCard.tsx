@@ -11,7 +11,7 @@ import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { ListingStatusBadge } from "@/components/ui/status-badge";
 import {
-  Bed, Bath, Home, Calendar,
+  Bed, Bath, Home, Calendar, CircleParking,
   Check, Mail, ExternalLink,
   Phone, Camera, FileText, Video,
   ChevronLeft, ChevronRight,
@@ -561,14 +561,23 @@ export const SearchListingCard = ({
           <div className="mt-3 border-t border-neutral-100 pt-2.5">
             <div className="flex flex-wrap items-center gap-3">
               <span className="flex items-center gap-1 text-sm text-neutral-600">
-                <Bed className="h-3.5 w-3.5" /> {listing.bedrooms ?? "-"}
+                <Bed className="h-3.5 w-3.5 text-[#0E56F5]" /> {listing.bedrooms ?? "-"}
               </span>
               <span className="flex items-center gap-1 text-sm text-neutral-600">
-                <Bath className="h-3.5 w-3.5" /> {listing.bathrooms ?? "-"}
+                <Bath className="h-3.5 w-3.5 text-[#0E56F5]" /> {listing.bathrooms ?? "-"}
               </span>
               <span className="flex items-center gap-1 text-sm text-neutral-600">
-                <Home className="h-3.5 w-3.5" /> {listing.square_feet?.toLocaleString() ?? "-"} sqft
+                <Home className="h-3.5 w-3.5 text-[#0E56F5]" /> {listing.square_feet?.toLocaleString() ?? "-"} sqft
               </span>
+              <span className="flex items-center gap-1 text-sm text-neutral-600">
+                <CircleParking className="h-3.5 w-3.5 text-[#0E56F5]" /> {listing.total_parking_spaces ?? 0}
+              </span>
+              {listing.list_date && (
+                <span className="flex items-center gap-1 text-sm text-neutral-600">
+                  <span className="text-[10px] font-medium uppercase tracking-wide text-neutral-500">DOM</span>
+                  {Math.max(0, Math.floor((Date.now() - new Date(listing.list_date).getTime()) / 86400000))}
+                </span>
+              )}
             </div>
           </div>
 
