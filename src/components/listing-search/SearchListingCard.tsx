@@ -11,7 +11,7 @@ import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { ListingStatusBadge } from "@/components/ui/status-badge";
 import {
-  Bed, Bath, Home, Calendar,
+  Bed, Bath, Home, Calendar, CircleParking,
   Check, Mail, ExternalLink,
   Phone, Camera, FileText, Video,
   ChevronLeft, ChevronRight,
