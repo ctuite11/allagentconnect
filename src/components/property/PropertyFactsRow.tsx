@@ -16,6 +16,7 @@ interface PropertyFactsRowProps {
   bathrooms?: number | null;
   squareFeet?: number | null;
   totalParkingSpaces?: number | null;
+  daysOnMarket?: number | null;
   /** Renders before bed/bath/etc. stats on the same row */
   propertyTypeLabel?: string | null;
   /** Merges into the row container (border-b, flex, etc.) */
@@ -32,6 +33,7 @@ export function PropertyFactsRow({
   bathrooms,
   squareFeet,
   totalParkingSpaces,
+  daysOnMarket,
   propertyTypeLabel,
   className,
   containerClassName,
@@ -66,10 +68,14 @@ export function PropertyFactsRow({
               <span className={propertyFactValue}>{squareFeet.toLocaleString()}</span>
             </div>
           )}
-          {totalParkingSpaces != null && totalParkingSpaces > 0 && (
+          <div className={propertyFactItem}>
+            <CircleParking className={iconCls} aria-hidden />
+            <span className={propertyFactValue}>{totalParkingSpaces ?? 0}</span>
+          </div>
+          {daysOnMarket != null && daysOnMarket >= 0 && (
             <div className={propertyFactItem}>
-              <CircleParking className={iconCls} aria-hidden />
-              <span className={propertyFactValue}>{totalParkingSpaces}</span>
+              <span className={cn(propertyFactLabel, "text-neutral-500")}>DOM</span>
+              <span className={propertyFactValue}>{daysOnMarket}</span>
             </div>
           )}
         </div>
