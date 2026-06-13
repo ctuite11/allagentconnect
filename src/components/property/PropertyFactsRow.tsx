@@ -40,37 +40,39 @@ export function PropertyFactsRow({
 
   return (
     <div className={cn(containerClassName)}>
-      <div className={cn(propertyFactsRow, "mt-0 min-w-0 gap-x-6 gap-y-2 border-b-0 pb-0", className)}>
+      <div className={cn("mt-0 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-6 sm:gap-y-2", className)}>
         {propertyTypeLabel ? (
           <div className={propertyFactItem}>
             <span className={cn(propertyFactLabel, "text-neutral-600")}>Property Type:</span>
             <span className={cn(propertyFactValue, "text-sm text-neutral-900")}>{propertyTypeLabel}</span>
           </div>
         ) : null}
-        {bedrooms != null && bedrooms > 0 && (
-          <div className={propertyFactItem}>
-            <Bed className={iconCls} aria-hidden />
-            <span className={propertyFactValue}>{bedrooms}</span>
-          </div>
-        )}
-        {bathrooms != null && bathrooms > 0 && (
-          <div className={propertyFactItem}>
-            <Bath className={iconCls} aria-hidden />
-            <span className={propertyFactValue}>{bathrooms}</span>
-          </div>
-        )}
-        {squareFeet != null && squareFeet > 0 && (
-          <div className={propertyFactItem}>
-            <Square className={iconCls} aria-hidden />
-            <span className={propertyFactValue}>{squareFeet.toLocaleString()}</span>
-          </div>
-        )}
-        {totalParkingSpaces != null && totalParkingSpaces > 0 && (
-          <div className={propertyFactItem}>
-            <CircleParking className={iconCls} aria-hidden />
-            <span className={propertyFactValue}>{totalParkingSpaces}</span>
-          </div>
-        )}
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+          {bedrooms != null && bedrooms > 0 && (
+            <div className={propertyFactItem}>
+              <Bed className={iconCls} aria-hidden />
+              <span className={propertyFactValue}>{bedrooms}</span>
+            </div>
+          )}
+          {bathrooms != null && bathrooms > 0 && (
+            <div className={propertyFactItem}>
+              <Bath className={iconCls} aria-hidden />
+              <span className={propertyFactValue}>{bathrooms}</span>
+            </div>
+          )}
+          {squareFeet != null && squareFeet > 0 && (
+            <div className={propertyFactItem}>
+              <Square className={iconCls} aria-hidden />
+              <span className={propertyFactValue}>{squareFeet.toLocaleString()}</span>
+            </div>
+          )}
+          {totalParkingSpaces != null && totalParkingSpaces > 0 && (
+            <div className={propertyFactItem}>
+              <CircleParking className={iconCls} aria-hidden />
+              <span className={propertyFactValue}>{totalParkingSpaces}</span>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
