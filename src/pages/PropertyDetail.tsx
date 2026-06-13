@@ -376,6 +376,18 @@ const PropertyDetail = () => {
       }
       return;
     }
+    if (tab === 'video') {
+      if (listing?.video_url) {
+        window.open(listing.video_url, '_blank', 'noopener,noreferrer');
+      }
+      return;
+    }
+    if (tab === 'tour') {
+      if (listing?.virtual_tour_url) {
+        window.open(listing.virtual_tour_url, '_blank', 'noopener,noreferrer');
+      }
+      return;
+    }
     setActiveMediaTab(tab);
     if (tab === 'photos') {
       setCurrentPhotoIndex(0);
