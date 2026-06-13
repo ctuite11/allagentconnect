@@ -1,4 +1,4 @@
-import { User, Phone, Mail, Building2, Globe, CheckCircle, Shield, Star, Gift, TrendingUp, X } from "lucide-react";
+import { User, Phone, Mail, Building2, Globe, CheckCircle, Shield, Star, Gift, TrendingUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -76,12 +76,7 @@ const MobilePreviewModal = ({
     <Sheet open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
       <SheetContent side="bottom" className="h-[85vh] rounded-t-xl overflow-y-auto">
         <SheetHeader className="pb-4">
-          <SheetTitle className="flex items-center justify-between">
-            <span>Profile Preview</span>
-            <Button variant="ghost" size="icon" onClick={onClose}>
-              <X className="h-4 w-4" />
-            </Button>
-          </SheetTitle>
+          <SheetTitle>Profile Preview</SheetTitle>
         </SheetHeader>
 
         <div className="space-y-5 pb-8">
