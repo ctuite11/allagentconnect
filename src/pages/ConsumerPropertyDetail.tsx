@@ -580,12 +580,6 @@ const ConsumerPropertyDetail = () => {
                       />
                     }
                   />
-                  {daysOnMarket != null && daysOnMarket >= 0 ? (
-                    <p className="shrink-0 self-end text-right text-sm leading-none text-neutral-900 sm:self-auto">
-                      <span className="text-[11px] font-medium uppercase tracking-wide text-neutral-500">DOM</span>
-                      <span className="ml-1.5 font-semibold tabular-nums">{daysOnMarket}</span>
-                    </p>
-                  ) : null}
                 </div>
 
                 <PropertyFactsRow
@@ -595,6 +589,7 @@ const ConsumerPropertyDetail = () => {
                   totalParkingSpaces={
                     listing.total_parking_spaces ?? listing.garage_spaces ?? null
                   }
+                  daysOnMarket={daysOnMarket}
                 />
               </div>
             </div>

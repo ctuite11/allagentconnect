@@ -667,7 +667,7 @@ const PropertyDetail = () => {
               </div>
 
               <div className={cn(propertyPhotoContentInset, "flex flex-col gap-3 pt-3")}>
-                <div className="flex w-full flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                <div className="flex w-full flex-row items-start justify-between gap-3 sm:items-center sm:gap-4">
                   <MediaTabBar
                     active={activeMediaTab as MediaTab}
                     onChange={(tab) => handleMediaTabChange(tab)}
@@ -698,28 +698,15 @@ const PropertyDetail = () => {
                       />
                     }
                   />
-                  {(isAgentView && listing.listing_number) ||
-                  (daysOnMarket != null && daysOnMarket >= 0) ? (
-                    <div className="flex shrink-0 items-center justify-end gap-4 text-right text-sm leading-none text-neutral-900">
-                      {isAgentView && listing.listing_number ? (
-                        <p>
-                          <span className="text-[11px] font-medium uppercase tracking-wide text-neutral-500">
-                            ID
-                          </span>
-                          <span className="ml-1.5 font-mono font-semibold tabular-nums text-[#0E56F5]">
-                            #{listing.listing_number}
-                          </span>
-                        </p>
-                      ) : null}
-                      {daysOnMarket != null && daysOnMarket >= 0 ? (
-                        <p>
-                          <span className="text-[11px] font-medium uppercase tracking-wide text-neutral-500">
-                            DOM
-                          </span>
-                          <span className="ml-1.5 font-semibold tabular-nums">{daysOnMarket}</span>
-                        </p>
-                      ) : null}
-                    </div>
+                  {isAgentView && listing.listing_number ? (
+                    <p className="shrink-0 self-start text-right text-sm leading-none text-neutral-900 sm:self-auto">
+                      <span className="text-[11px] font-medium uppercase tracking-wide text-neutral-500">
+                        ID
+                      </span>
+                      <span className="ml-1.5 font-mono font-semibold tabular-nums text-[#0E56F5]">
+                        #{listing.listing_number}
+                      </span>
+                    </p>
                   ) : null}
                 </div>
 
@@ -731,6 +718,7 @@ const PropertyDetail = () => {
                   totalParkingSpaces={
                     listing.total_parking_spaces ?? listing.garage_spaces ?? null
                   }
+                  daysOnMarket={daysOnMarket}
                 />
               </div>
             </div>
