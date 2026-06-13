@@ -4,7 +4,7 @@ import { ListingCardShell } from "@/components/ListingCardShell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ListingStatusBadge } from "@/components/ui/status-badge";
-import { Bed, Bath, Home, Edit, Trash2, Eye, Calendar, Users, Mail, Heart, Star, BarChart3, Sparkles, TrendingDown, RefreshCw, Maximize, ChevronLeft, ChevronRight, Phone, User, MessageSquare } from "lucide-react";
+import { Bed, Bath, Home, Edit, Trash2, Eye, Calendar, Users, Mail, Heart, Star, BarChart3, Sparkles, TrendingDown, RefreshCw, Maximize, ChevronLeft, ChevronRight, Phone, User, MessageSquare, CircleParking } from "lucide-react";
 import { ListingInterestSignals } from "./ListingInterestSignals";
 import type { ListingSignals } from "@/hooks/useListingInterestSignals";
 import { useNavigate } from "react-router-dom";
@@ -81,6 +81,8 @@ interface ListingCardProps {
     bedrooms: number | null;
     bathrooms: number | null;
     square_feet: number | null;
+    total_parking_spaces?: number | null;
+    garage_spaces?: number | null;
     status: string;
     photos?: any;
     open_houses?: any;
