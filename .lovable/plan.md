@@ -1,34 +1,22 @@
-## Goal
-Replace the mock "Newest Verified Agents" row on the Success Hub dashboard with live data so each card shows the real agent's headshot, name, brokerage, and market.
+## Fix: Only show verified agents in "Newest Verified Agents" row
 
-## Where
-- `src/components/success-hub/networkActivity/NetworkActivitySection.tsx` — `NewestVerifiedAgentsRow` component (currently maps over `MOCK_VERIFIED_AGENTS` and passes `headshotUrl={null}`).
+Currently the hook queries `agent_profiles` ordered by created_at — that includes the 56 pending agents alongside the 8 verified ones.
 
-## Changes
+### Change
+**`src/components/success-hub/networkActivity/useNewestVerifiedAgents.ts`**
 
-1. **New hook** `src/components/success-hub/networkActivity/useNewestVerifiedAgents.ts`
-   - Query `agent_profiles` joined with `user_roles` where `role = 'agent'` (verified agent), ordered by `created_at desc`, limit 12.
-   - Select: `id, first_name, last_name, company, headshot_url, office_city, office_state`.
-   - Return `{ agents, loading }` where each agent is normalized to:
-     ```ts
-     { id, name: "First Last", brokerage: company ?? "", market: "City, ST" | "", headshotUrl }
-     ```
+Join to `agent_settings` and filter `agent_status = 'verified'`, order by `verified_at desc` (fallback `created_at desc`).
 
-2. **Update `NewestVerifiedAgentsRow`**
-   - Use the new hook instead of `MOCK_VERIFIED_AGENTS`.
-   - Pass `headshotUrl={agent.headshotUrl}` into `AgentAvatar` (it already handles fallback initials).
-   - Keep current card layout, sizes, snap scroll, and styling untouched.
-   - While loading, render 6 skeleton cards matching existing card width/height to avoid layout shift.
-   - If no agents returned, render the existing mock fallback so the row never looks empty (optional safety; keep behavior unchanged otherwise).
+```ts
+supabase
+  .from("agent_profiles")
+  .select("id, first_name, last_name, company, headshot_url, office_city, office_state, agent_settings!inner(agent_status, verified_at)")
+  .eq("agent_settings.agent_status", "verified")
+  .order("verified_at", { foreignTable: "agent_settings", ascending: false })
+  .limit(limit);
+```
 
-3. **Make each card clickable** → navigate to that agent's profile (`/agent/{id}`) using existing routing convention. (Small additive change; preserves visual shell.)
+No UI/layout changes. Skeletons and click-through behavior remain.
 
-## Out of scope
-- No changes to mock data file (kept for fallback / other consumers).
-- No layout, color, or copy changes.
-- No changes to the four channel cards below the agents row.
-
-## Verification
-- Open `/agent-dashboard` on desktop and mobile — confirm row shows real headshots from `agent-headshots` storage bucket.
-- Hard refresh: skeletons appear briefly then real avatars.
-- Cards with no `headshot_url` fall back to initials via `AgentAvatar`.
+### Verification
+Confirm the row shows only the 8 verified agents, most recently verified first.
