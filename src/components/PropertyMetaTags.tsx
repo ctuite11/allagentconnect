@@ -4,6 +4,23 @@ import { resolveListingPhotoUrl } from '@/lib/resolveListingPhotoUrl';
 
 const FALLBACK_OG_IMAGE = "https://allagentconnect.com/og/aac-og-2026-01-22.jpg";
 
+/**
+ * Convert a public listing-photos URL into a Supabase Storage
+ * Image Transformation URL sized for Open Graph crawlers (1200x630 JPEG,
+ * quality 80). Falls back to the input URL when it does not look like a
+ * Supabase public-object URL.
+ */
+function toOgImageUrl(publicUrl: string): string {
+  if (!publicUrl) return publicUrl;
+  const marker = "/storage/v1/object/public/";
+  const idx = publicUrl.indexOf(marker);
+  if (idx === -1) return publicUrl;
+  const base = publicUrl.slice(0, idx);
+  const rest = publicUrl.slice(idx + marker.length);
+  const params = "width=1200&height=630&resize=cover&quality=80&format=origin";
+  return `${base}/storage/v1/render/image/public/${rest}?${params}`;
+}
+
 interface PropertyMetaTagsProps {
   address: string;
   city: string;
@@ -48,8 +65,8 @@ export const PropertyMetaTags = ({
     : `${priceText} - ${bedrooms} bed, ${bathrooms} bath property in ${city}, ${state}`;
 
   const resolvedPhoto = resolveListingPhotoUrl(photo);
-  const imageUrl = resolvedPhoto ?? FALLBACK_OG_IMAGE;
-  const imageType = imageUrl.toLowerCase().includes(".png") ? "image/png" : "image/jpeg";
+  const imageUrl = resolvedPhoto ? toOgImageUrl(resolvedPhoto) : FALLBACK_OG_IMAGE;
+  const imageType = "image/jpeg";
   const canonicalUrl = getListingPublicUrl(listingId);
 
   return (
@@ -66,6 +83,8 @@ export const PropertyMetaTags = ({
       <meta property="og:image" content={imageUrl} />
       <meta property="og:image:secure_url" content={imageUrl} />
       <meta property="og:image:type" content={imageType} />
+      <meta property="og:image:width" content="1200" />
+      <meta property="og:image:height" content="630" />
       <meta property="og:image:alt" content={`Photo of ${address}`} />
       <meta property="og:site_name" content="All Agent Connect" />
       <meta property="og:locale" content="en_US" />
