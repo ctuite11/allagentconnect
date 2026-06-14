@@ -4391,6 +4391,19 @@ export type Database = {
           saves_count: number
         }[]
       }
+      get_newest_verified_agents: {
+        Args: { _limit?: number }
+        Returns: {
+          company: string
+          first_name: string
+          headshot_url: string
+          id: string
+          last_name: string
+          office_city: string
+          office_state: string
+          verified_at: string
+        }[]
+      }
       get_verified_agent_ids: {
         Args: never
         Returns: {

@@ -17,19 +17,14 @@ export function useNewestVerifiedAgents(limit = 12) {
     let cancelled = false;
     (async () => {
       setLoading(true);
-      const { data, error } = await supabase
-        .from("agent_profiles")
-        .select("id, first_name, last_name, company, headshot_url, office_city, office_state, created_at, agent_settings!inner(agent_status, verified_at)")
-        .eq("agent_settings.agent_status", "verified")
-        .order("verified_at", { foreignTable: "agent_settings", ascending: false })
-        .limit(limit);
+      const { data, error } = await supabase.rpc("get_newest_verified_agents", { _limit: limit });
       if (cancelled) return;
       if (error || !data) {
         setAgents([]);
         setLoading(false);
         return;
       }
-      const mapped: NewestVerifiedAgent[] = data.map((a: any) => {
+      const mapped: NewestVerifiedAgent[] = (data as any[]).map((a) => {
         const name = [a.first_name, a.last_name].filter(Boolean).join(" ").trim() || "Agent";
         const market = [a.office_city, a.office_state].filter(Boolean).join(", ");
         return {

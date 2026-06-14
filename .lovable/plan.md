@@ -1,22 +1,17 @@
-## Fix: Only show verified agents in "Newest Verified Agents" row
+## Plan
 
-Currently the hook queries `agent_profiles` ordered by created_at — that includes the 56 pending agents alongside the 8 verified ones.
+1. **Fix the query relationship**
+   - Update `src/components/success-hub/networkActivity/useNewestVerifiedAgents.ts` so it queries verified rows from `agent_settings` and joins each row to `agent_profiles` through `agent_settings.user_id = agent_profiles.id`.
+   - The current query starts from `agent_profiles` and assumes an embedded relationship that does not exist, so it returns no visible agents.
 
-### Change
-**`src/components/success-hub/networkActivity/useNewestVerifiedAgents.ts`**
+2. **Keep only verified agents**
+   - Filter by `agent_status = 'verified'`.
+   - Sort by `verified_at` newest first, with profile `created_at` as fallback ordering.
 
-Join to `agent_settings` and filter `agent_status = 'verified'`, order by `verified_at desc` (fallback `created_at desc`).
+3. **Keep the UI unchanged**
+   - Preserve the existing “Newest Verified Agents” row, cards, avatar rendering, and click-through behavior.
+   - Map the joined profile data into the same shape the UI already expects.
 
-```ts
-supabase
-  .from("agent_profiles")
-  .select("id, first_name, last_name, company, headshot_url, office_city, office_state, agent_settings!inner(agent_status, verified_at)")
-  .eq("agent_settings.agent_status", "verified")
-  .order("verified_at", { foreignTable: "agent_settings", ascending: false })
-  .limit(limit);
-```
+## Technical detail
 
-No UI/layout changes. Skeletons and click-through behavior remain.
-
-### Verification
-Confirm the row shows only the 8 verified agents, most recently verified first.
+The database has `agent_settings.user_id`, not `agent_settings.agent_id`, and no foreign key/embed relationship is exposed for the current `agent_profiles -> agent_settings` query. A direct SQL check shows 8 verified agents exist when joined manually on `agent_settings.user_id = agent_profiles.id`, so the frontend query needs to be rewritten to match that actual relationship.
