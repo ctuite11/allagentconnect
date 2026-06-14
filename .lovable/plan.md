@@ -1,17 +1,21 @@
-## Plan
+## Goal
 
-1. **Fix the query relationship**
-   - Update `src/components/success-hub/networkActivity/useNewestVerifiedAgents.ts` so it queries verified rows from `agent_settings` and joins each row to `agent_profiles` through `agent_settings.user_id = agent_profiles.id`.
-   - The current query starts from `agent_profiles` and assumes an embedded relationship that does not exist, so it returns no visible agents.
+On the in-app Agent Profile page, the email row currently opens the OS mail client via `mailto:`. Switch it to the AAC in-app email composer (same flow as the "Email {First}" button), and change the email icon color to AAC primary blue.
 
-2. **Keep only verified agents**
-   - Filter by `agent_status = 'verified'`.
-   - Sort by `verified_at` newest first, with profile `created_at` as fallback ordering.
+## Changes
 
-3. **Keep the UI unchanged**
-   - Preserve the existing “Newest Verified Agents” row, cards, avatar rendering, and click-through behavior.
-   - Map the joined profile data into the same shape the UI already expects.
+**File: `src/pages/AgentProfile.tsx`**
 
-## Technical detail
+1. In the `profileContactRows` array, replace the email row's `href: mailto:` with an `onClick` action that opens the existing `ContactAgentProfileDialog` (the AAC email system). The phone rows continue to use `tel:` links unchanged.
 
-The database has `agent_settings.user_id`, not `agent_settings.agent_id`, and no foreign key/embed relationship is exposed for the current `agent_profiles -> agent_settings` query. A direct SQL check shows 8 verified agents exist when joined manually on `agent_settings.user_id = agent_profiles.id`, so the frontend query needs to be rewritten to match that actual relationship.
+2. Render the contact list to support either an `<a href>` (phone) or a `<button onClick>` (email), so the email row triggers the AAC dialog with `agent`, `viewerSender`, and prefilled subject — same props already used by the "Email {First}" button below.
+
+3. Color the email row's `Mail` icon with `text-aac` (AAC primary blue token) instead of `text-neutral-400`. Phone/website icons keep their neutral color.
+
+Public mode (`/agent/:code`) is unaffected — `showListingAgentEmail` already gates that, and the public view will simply not show the email row when not authenticated. The "Email {First}" CTA button below is unchanged.
+
+## Out of scope
+
+- No backend / email-system changes (ContactAgentProfileDialog already routes through the AAC email queue).
+- No changes to AgentProfileHeader or PublicAgentProfile.
+- No layout, copy, or other styling changes.
