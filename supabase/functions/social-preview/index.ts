@@ -4,6 +4,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 import {
   LISTING_OG_PLACEHOLDER,
   resolveListingPhotoUrl,
+  toOgImageUrl,
 } from "../_shared/listingPhotoUrl.ts";
 
 const corsHeaders = {
@@ -72,10 +73,33 @@ serve(async (req) => {
       return new Response("Listing not found", { status: 404, headers: corsHeaders });
     }
 
-    // OG image — use the listing photo directly (reliable for Facebook crawlers)
+    // OG image — always serve through Supabase Image Transformations so the
+    // payload stays under Facebook's 8MB cap and at the recommended 1200x630.
     const directPhotoUrl = resolveListingPhotoUrl(listing.photos, supabaseUrl);
-    const ogImageUrl = directPhotoUrl || LISTING_OG_PLACEHOLDER;
-    const ogImageType = ogImageUrl.toLowerCase().includes(".png") ? "image/png" : "image/jpeg";
+    const transformedUrl = directPhotoUrl ? toOgImageUrl(directPhotoUrl) : "";
+    let ogImageUrl = transformedUrl || LISTING_OG_PLACEHOLDER;
+
+    // HEAD-validate the chosen OG image; fall back to the placeholder if it
+    // isn't an image, is too large (>7.5MB), or is unreachable.
+    try {
+      const head = await fetch(ogImageUrl, { method: "HEAD" });
+      const ct = head.headers.get("content-type") || "";
+      const clRaw = head.headers.get("content-length");
+      const cl = clRaw ? parseInt(clRaw, 10) : 0;
+      const ok =
+        head.ok &&
+        ct.toLowerCase().startsWith("image/") &&
+        (!cl || cl <= 7_500_000);
+      if (!ok) {
+        console.warn("og:image HEAD failed", { ogImageUrl, status: head.status, ct, cl });
+        ogImageUrl = LISTING_OG_PLACEHOLDER;
+      }
+    } catch (headErr) {
+      console.warn("og:image HEAD threw", headErr);
+      ogImageUrl = LISTING_OG_PLACEHOLDER;
+    }
+
+    const ogImageType = "image/jpeg";
 
     // Build title/description
     const priceText = listing.listing_type === "for_rent"
@@ -108,6 +132,8 @@ serve(async (req) => {
   <meta property="og:image" content="${ogImageUrl}" />
   <meta property="og:image:secure_url" content="${ogImageUrl}" />
   <meta property="og:image:type" content="${ogImageType}" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
   <meta property="og:image:alt" content="Photo of ${escapeHtml(listing.address)}" />
   <meta property="og:site_name" content="All Agent Connect" />
   <meta property="og:locale" content="en_US" />
