@@ -394,31 +394,6 @@ export function EmailAgentDialog({
             </div>
           ) : null}
 
-          {!showTemplatePicker ? (
-            <div className="space-y-2 rounded-lg border border-slate-200 bg-[#FAFAF8] px-3 py-2">
-              <Label className="text-muted-foreground text-xs">Sender</Label>
-              <div className="grid grid-cols-2 gap-2">
-                <Input
-                  id="email-sender-name"
-                  value={senderName}
-                  onChange={(e) => setSenderName(e.target.value)}
-                  placeholder="Your name"
-                  className="h-8 border-slate-200 text-sm"
-                  maxLength={100}
-                />
-                <Input
-                  id="email-sender-email"
-                  type="email"
-                  value={senderEmail}
-                  onChange={(e) => setSenderEmail(e.target.value)}
-                  placeholder="reply-to email"
-                  className="h-8 border-slate-200 text-sm"
-                  maxLength={255}
-                />
-              </div>
-            </div>
-          ) : null}
-
           <div className="space-y-2">
             <Label htmlFor="email-subject">Subject *</Label>
             <Input
