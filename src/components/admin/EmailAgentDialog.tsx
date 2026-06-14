@@ -126,22 +126,37 @@ export function EmailAgentDialog({
         return;
       }
 
-      const { error } = await supabase.functions.invoke("send-bulk-email", {
-        body: {
-          recipients: currentBatch.map((r) => ({ email: r.email, name: r.name })),
-          subject: subject.trim(),
-          message: isTemplated ? "" : message.trim(),
-          agentId: user.id,
-          agentEmail: senderEmail.trim() || undefined,
-          sendAsGroup: false,
-          template: isTemplated ? template : undefined,
-        },
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
-
-      if (error) throw error;
+      // Single-agent listing inquiry path (non-template) uses the dedicated
+      // agent-contact function so it isn't blocked by the bulk-outreach pause.
+      if (!showTemplatePicker && currentBatch.length === 1) {
+        const recipient = currentBatch[0];
+        const { error } = await supabase.functions.invoke("send-agent-profile-contact", {
+          body: {
+            agentEmail: recipient.email,
+            agentName: recipient.name,
+            senderName: senderName.trim() || user.email?.split("@")[0] || "All Agent Connect",
+            senderEmail: senderEmail.trim() || user.email || "",
+            message: message.trim(),
+            subject: subject.trim(),
+          },
+          headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.functions.invoke("send-bulk-email", {
+          body: {
+            recipients: currentBatch.map((r) => ({ email: r.email, name: r.name })),
+            subject: subject.trim(),
+            message: isTemplated ? "" : message.trim(),
+            agentId: user.id,
+            agentEmail: senderEmail.trim() || undefined,
+            sendAsGroup: false,
+            template: isTemplated ? template : undefined,
+          },
+          headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        if (error) throw error;
+      }
 
       const sentCount = currentBatch.length;
       const hasNext = safeBatchIndex + 1 < totalBatches;
@@ -444,7 +459,7 @@ export function EmailAgentDialog({
           <Button
             onClick={handleSend}
             disabled={sending || !subject.trim() || (template === "custom" && !message.trim()) || allRecipients.length === 0}
-            className="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white"
+            className="rounded-xl bg-[#0E56F5] hover:bg-[#0E56F5]/90 text-white"
           >
             {sending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {isBatched
