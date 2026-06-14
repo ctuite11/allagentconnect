@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Home, MessageSquare, Radio, TrendingUp, UserCheck, Users } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { AgentAvatar } from "@/components/ui/AgentAvatar";
 import { ROUTES } from "@/constants/routes";
 import { NetworkActivityCard } from "./NetworkActivityCard";

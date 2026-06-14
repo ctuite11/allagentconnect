@@ -175,7 +175,7 @@ const PropertyCard = ({ image, title, price, address, beds, baths, sqft, unitNum
               size="sm"
               onClick={(e) => {
                 e.stopPropagation();
-                navigate(`/agent/${clientPrimaryAgent.id}`);
+                navigate(`/agent/${clientPrimaryAgent.id}`, { state: { from: location.pathname + location.search } });
               }}
             >
               Ask {clientPrimaryAgent.first_name} about this home
@@ -188,7 +188,7 @@ const PropertyCard = ({ image, title, price, address, beds, baths, sqft, unitNum
                     className="flex items-center gap-2 flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
                     onClick={(e) => {
                       e.stopPropagation();
-                      if (agentId) navigate(`/agent/${agentId}`);
+                      if (agentId) navigate(`/agent/${agentId}`, { state: { from: location.pathname + location.search } });
                     }}
                   >
                     <Avatar className="w-16 h-16">

@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AgentAvatar } from "@/components/ui/AgentAvatar";
 import { AacMonogramLoader } from "@/components/AacMonogramLoader";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 interface Agent {
   id: string;

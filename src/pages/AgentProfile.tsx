@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import ListingCard from "@/components/ListingCard";
@@ -168,6 +168,10 @@ interface AgentProfileProps {
 const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
   const { id: idOrCode } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const backTo =
+    ((location.state as any)?.from as string | undefined) ??
+    (publicMode ? "/our-agents" : "/our-members");
   const { user, role } = useAuthRole();
   const [agent, setAgent] = useState<AgentProfileData | null>(null);
   const [listings, setListings] = useState<any[]>([]);
@@ -229,7 +233,7 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
       if (agentError) throw agentError;
       if (!agentData) {
         toast.error("Agent not found");
-        navigate(publicMode ? "/our-agents" : "/our-members");
+        navigate(backTo);
         return;
       }
 
@@ -369,7 +373,7 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
           back={
             <AacBackButton
               type="button"
-              onClick={() => navigate(publicMode ? "/our-agents" : "/our-members")}
+              onClick={() => navigate(backTo)}
             />
           }
         />

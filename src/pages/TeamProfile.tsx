@@ -354,7 +354,7 @@ const TeamProfile = () => {
                   <Card 
                     key={member.id} 
                     className="hover:shadow-lg transition-shadow cursor-pointer"
-                    onClick={() => navigate(`/agent/${member.agent_profiles.id}`)}
+                    onClick={() => navigate(`/agent/${member.agent_profiles.id}`, { state: { from: location.pathname + location.search } })}
                   >
                     <div className="p-6">
                       <div className="flex items-start gap-4 mb-4">
