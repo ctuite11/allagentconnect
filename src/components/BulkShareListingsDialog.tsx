@@ -147,8 +147,6 @@ export function BulkShareListingsDialog({
 
     setSending(true);
     try {
-      const { trackShare } = await import("@/lib/trackShare");
-
       for (const recipient of recipients) {
         const { error } = await supabase.functions.invoke("send-bulk-listing-share", {
           body: {

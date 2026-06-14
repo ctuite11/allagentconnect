@@ -1259,7 +1259,7 @@ const MyListings = () => {
     toast.success("Link copied to clipboard!");
     
     // Track the share
-    const { trackShare } = await import("@/lib/trackShare");
+    const { trackShare } = await import("@/lib/trackShare").catch(() => ({ trackShare: async () => {} }));
     await trackShare(id, 'copy_link');
   };
 

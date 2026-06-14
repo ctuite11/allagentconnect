@@ -171,8 +171,6 @@ export const ShareListingDialog = ({
 
     setSending(true);
     try {
-      const { trackShare } = await import("@/lib/trackShare");
-
       for (const recipient of recipients) {
         await invokeEdgeFunction("send-listing-share", {
           listingId,

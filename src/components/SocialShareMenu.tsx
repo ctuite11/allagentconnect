@@ -52,7 +52,6 @@ const SocialShareMenu = ({
     toast.success("Link copied to clipboard");
 
     if (listingId) {
-      const { trackShare } = await import("@/lib/trackShare");
       await trackShare(listingId, "copy_link");
     }
   };
@@ -61,7 +60,6 @@ const SocialShareMenu = ({
     window.open(shareLinks[platform], "_blank", "noopener,noreferrer,width=600,height=400");
 
     if (listingId) {
-      const { trackShare } = await import("@/lib/trackShare");
       await trackShare(listingId, platform);
     }
   };
