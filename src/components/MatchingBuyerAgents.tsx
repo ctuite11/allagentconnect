@@ -23,6 +23,7 @@ const MatchingBuyerAgents = ({ listingCity, listingState, listingZipCode, listin
   const [agents, setAgents] = useState<Agent[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     fetchMatchingAgents();
@@ -154,7 +155,7 @@ const MatchingBuyerAgents = ({ listingCity, listingState, listingZipCode, listin
           {agents.map((agent) => (
             <button
               key={agent.id}
-              onClick={() => navigate(`/agent/${agent.id}`)}
+              onClick={() => navigate(`/agent/${agent.id}`, { state: { from: location.pathname + location.search } })}
               className="flex flex-col items-center gap-2 p-2 rounded-lg hover:bg-accent transition-colors cursor-pointer"
             >
               <AgentAvatar

@@ -35,6 +35,7 @@ interface BuyerAgentShowcaseProps {
 
 export const BuyerAgentShowcase = ({ listingZip, listingId }: BuyerAgentShowcaseProps) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [agents, setAgents] = useState<BuyerAgent[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -162,7 +163,7 @@ export const BuyerAgentShowcase = ({ listingZip, listingId }: BuyerAgentShowcase
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => navigate(`/agent/${agent.aac_id || agent.id}`)}
+                  onClick={() => navigate(`/agent/${agent.aac_id || agent.id}`, { state: { from: location.pathname + location.search } })}
                   className="text-xs"
                 >
                   <ExternalLink className="w-3 h-3 mr-1" />

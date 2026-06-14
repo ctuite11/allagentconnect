@@ -32,6 +32,7 @@ interface PropertyCardProps {
 
 const PropertyCard = ({ image, title, price, address, beds, baths, sqft, unitNumber, listingId, onFavoriteChange, agentId, agentName, agentCompany, agentPhoto, agentPhone, agentEmail }: PropertyCardProps) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [isFavorited, setIsFavorited] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);

@@ -65,6 +65,7 @@ const OurAgents = ({
   isBuyerMode = false,
 }: OurAgentsProps) => {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [agents, setAgents] = useState<EnrichedAgent[]>([]);
   const [counties, setCounties] = useState<County[]>([]);
@@ -371,7 +372,7 @@ function AgentPhotoTileGrid({
   const handleViewProfile = (agentId: string) => {
     // Find agent to use aac_id for friendly URL
     const agent = agents.find(a => a.id === agentId);
-    navigate(`/agent/${agent?.aac_id || agentId}`);
+    navigate(`/agent/${agent?.aac_id || agentId}`, { state: { from: location.pathname + location.search } });
   };
 
   return (

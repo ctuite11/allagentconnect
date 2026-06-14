@@ -85,6 +85,7 @@ function GeneralDiscussionsChannel({ onCreate }: { onCreate: () => void }) {
 export function NewestVerifiedAgentsRow() {
   const { agents, loading } = useNewestVerifiedAgents(12);
   const navigate = useNavigate();
+  const location = useLocation();
   return (
     <NetworkActivityCard
       title="Newest Verified Agents"
@@ -108,7 +109,7 @@ export function NewestVerifiedAgentsRow() {
               <button
                 key={agent.id}
                 type="button"
-                onClick={() => navigate(`/agent/${agent.id}`)}
+                onClick={() => navigate(`/agent/${agent.id}`, { state: { from: location.pathname + location.search } })}
                 className="flex w-[9.5rem] shrink-0 snap-start flex-col items-center rounded-lg border border-neutral-100 bg-white px-3 py-3 text-center shadow-[0_1px_2px_rgba(0,0,0,0.03)] transition hover:border-neutral-200 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0E56F5]/40"
               >
                 <AgentAvatar

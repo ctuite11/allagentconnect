@@ -70,6 +70,7 @@ interface TeamMember {
 const TeamProfile = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [team, setTeam] = useState<any>(null);
   const [members, setMembers] = useState<TeamMember[]>([]);
   const [listings, setListings] = useState<any[]>([]);
