@@ -495,7 +495,7 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
                       setIsStartingChat(true);
                       try {
                         const convoId = await findOrCreateConversation(user.id, agent.id);
-                        if (convoId) navigate(`/messages/${convoId}`);
+                        if (convoId) navigate(messagesPathForRole(convoId, role));
                       } catch (e) {
                         toast.error("Could not start conversation");
                       } finally {
