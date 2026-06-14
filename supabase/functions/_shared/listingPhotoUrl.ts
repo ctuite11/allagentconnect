@@ -47,3 +47,20 @@ function extractFirstPhoto(photos: unknown): unknown {
 
 export const LISTING_OG_PLACEHOLDER =
   "https://allagentconnect.com/og/aac-og-2026-01-22.jpg";
+
+/**
+ * Convert a public listing-photos URL into a Supabase Storage
+ * Image Transformation URL sized for Open Graph crawlers (1200x630,
+ * ~80 quality JPEG). Falls back to the input URL when it does not look
+ * like a listing-photos public URL.
+ */
+export function toOgImageUrl(publicUrl: string): string {
+  if (!publicUrl) return publicUrl;
+  const marker = "/storage/v1/object/public/";
+  const idx = publicUrl.indexOf(marker);
+  if (idx === -1) return publicUrl;
+  const base = publicUrl.slice(0, idx);
+  const rest = publicUrl.slice(idx + marker.length); // "<bucket>/<path>"
+  const params = "width=1200&height=630&resize=cover&quality=80&format=origin";
+  return `${base}/storage/v1/render/image/public/${rest}?${params}`;
+}
