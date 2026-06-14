@@ -452,7 +452,6 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
                           >
                             <Mail className="h-3.5 w-3.5 shrink-0 text-aac" aria-hidden />
                             <span>
-                              <span className="text-neutral-400">Email </span>
                               {agent.email}
                             </span>
                           </button>
@@ -481,19 +480,10 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
               <div className="mt-4 border-t border-neutral-100 pt-4">
                 <div className="flex w-full flex-col items-center gap-2 lg:w-auto lg:items-start">
                 <div className="flex flex-wrap items-center justify-center gap-2 lg:justify-start">
-                  <ContactAgentProfileDialog
-                    agentId={agent.id}
-                    agentName={`${agent.first_name} ${agent.last_name}`}
-                    agentEmail={agent.email}
-                    buttonText={`Email ${agent.first_name}`}
-                    triggerClassName="h-[34px] min-w-[7.75rem] rounded-md border border-neutral-800 bg-neutral-900 px-5 text-[13px] font-medium tracking-wide text-white hover:bg-neutral-800"
-                    initialSender={viewerSender}
-                  />
-
                   <Button
                     size="sm"
                     variant="outline"
-                    className="h-[34px] min-w-[7.75rem] rounded-md border-neutral-200 bg-white px-5 text-[13px] font-medium tracking-wide text-neutral-800 hover:bg-neutral-50/80"
+                    className="h-[34px] min-w-[7.75rem] rounded-md border border-neutral-900 bg-neutral-900 px-5 text-[13px] font-medium tracking-wide text-white hover:bg-neutral-800"
                     disabled={isStartingChat}
                     onClick={async () => {
                       if (!user?.id) {
@@ -512,7 +502,7 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
                       }
                     }}
                   >
-                    <MessageSquare className="mr-1.5 h-3.5 w-3.5 text-neutral-500" aria-hidden />
+                    <MessageSquare className="mr-1.5 h-3.5 w-3.5 text-white" aria-hidden />
                     Message
                   </Button>
                 </div>
