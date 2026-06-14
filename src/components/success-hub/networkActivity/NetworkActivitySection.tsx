@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { Home, MessageSquare, Radio, TrendingUp, UserCheck, Users } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { AgentAvatar } from "@/components/ui/AgentAvatar";
 import { ROUTES } from "@/constants/routes";
 import { NetworkActivityCard } from "./NetworkActivityCard";
 import { ChannelPreviewCard } from "./ChannelPreviewCard";
-import { MOCK_VERIFIED_AGENTS } from "./mockData";
+import { useNewestVerifiedAgents } from "./useNewestVerifiedAgents";
 import { SendMessageDialog } from "@/components/SendMessageDialog";
 import {
   useBuyerNeedsPreview,
@@ -82,6 +83,8 @@ function GeneralDiscussionsChannel({ onCreate }: { onCreate: () => void }) {
 }
 
 export function NewestVerifiedAgentsRow() {
+  const { agents, loading } = useNewestVerifiedAgents(12);
+  const navigate = useNavigate();
   return (
     <NetworkActivityCard
       title="Newest Verified Agents"
@@ -89,27 +92,41 @@ export function NewestVerifiedAgentsRow() {
       icon={<UserCheck className="h-4 w-4 shrink-0 text-indigo-600" aria-hidden />}
     >
       <div className="-mx-1 flex gap-3 overflow-x-auto px-1 pb-1 snap-x snap-mandatory">
-        {MOCK_VERIFIED_AGENTS.map((agent) => (
-          <div
-            key={agent.id}
-            className="flex w-[9.5rem] shrink-0 snap-start flex-col items-center rounded-lg border border-neutral-100 bg-white px-3 py-3 text-center shadow-[0_1px_2px_rgba(0,0,0,0.03)]"
-          >
-            <AgentAvatar
-              name={agent.name}
-              headshotUrl={null}
-              size="lg"
-              avatarClassName="h-12 w-12 border border-neutral-200"
-              fallbackClassName="bg-neutral-100 text-neutral-600 text-sm"
-            />
-            <p className="mt-2 w-full truncate text-[13px] font-semibold text-neutral-900">
-              {agent.name}
-            </p>
-            <p className="mt-0.5 w-full truncate text-[11px] text-neutral-500">{agent.brokerage}</p>
-            <p className="mt-1 w-full truncate text-[10px] font-medium text-neutral-400">
-              {agent.market}
-            </p>
-          </div>
-        ))}
+        {loading
+          ? Array.from({ length: 6 }).map((_, i) => (
+              <div
+                key={`sk-${i}`}
+                className="flex w-[9.5rem] shrink-0 snap-start flex-col items-center rounded-lg border border-neutral-100 bg-white px-3 py-3 text-center shadow-[0_1px_2px_rgba(0,0,0,0.03)]"
+              >
+                <div className="h-12 w-12 animate-pulse rounded-full bg-neutral-100" />
+                <div className="mt-2 h-3 w-20 animate-pulse rounded bg-neutral-100" />
+                <div className="mt-1.5 h-2.5 w-16 animate-pulse rounded bg-neutral-100" />
+                <div className="mt-1.5 h-2 w-14 animate-pulse rounded bg-neutral-100" />
+              </div>
+            ))
+          : agents.map((agent) => (
+              <button
+                key={agent.id}
+                type="button"
+                onClick={() => navigate(`/agent/${agent.id}`)}
+                className="flex w-[9.5rem] shrink-0 snap-start flex-col items-center rounded-lg border border-neutral-100 bg-white px-3 py-3 text-center shadow-[0_1px_2px_rgba(0,0,0,0.03)] transition hover:border-neutral-200 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0E56F5]/40"
+              >
+                <AgentAvatar
+                  name={agent.name}
+                  headshotUrl={agent.headshotUrl}
+                  size="lg"
+                  avatarClassName="h-12 w-12 border border-neutral-200"
+                  fallbackClassName="bg-neutral-100 text-neutral-600 text-sm"
+                />
+                <p className="mt-2 w-full truncate text-[13px] font-semibold text-neutral-900">
+                  {agent.name}
+                </p>
+                <p className="mt-0.5 w-full truncate text-[11px] text-neutral-500">{agent.brokerage}</p>
+                <p className="mt-1 w-full truncate text-[10px] font-medium text-neutral-400">
+                  {agent.market}
+                </p>
+              </button>
+            ))}
       </div>
     </NetworkActivityCard>
   );

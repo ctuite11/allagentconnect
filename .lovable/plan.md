@@ -1,19 +1,34 @@
-## Fix sticky search toolbar overlap on mobile
+## Goal
+Replace the mock "Newest Verified Agents" row on the Success Hub dashboard with live data so each card shows the real agent's headshot, name, brokerage, and market.
 
-The Listing Search toolbar (For Sale/Rent toggle, Reset, filter chips, results count, View Results) lays out as a single non-wrapping flex row. On narrow phone widths the trailing chips ("For Sale", "8 statuses", "6 results") collide with the controls on the right.
+## Where
+- `src/components/success-hub/networkActivity/NetworkActivitySection.tsx` — `NewestVerifiedAgentsRow` component (currently maps over `MOCK_VERIFIED_AGENTS` and passes `headshotUrl={null}`).
 
-### Change
+## Changes
 
-In `src/pages/ListingSearch.tsx` (sticky toolbar block around lines 217–311):
+1. **New hook** `src/components/success-hub/networkActivity/useNewestVerifiedAgents.ts`
+   - Query `agent_profiles` joined with `user_roles` where `role = 'agent'` (verified agent), ordered by `created_at desc`, limit 12.
+   - Select: `id, first_name, last_name, company, headshot_url, office_city, office_state`.
+   - Return `{ agents, loading }` where each agent is normalized to:
+     ```ts
+     { id, name: "First Last", brokerage: company ?? "", market: "City, ST" | "", headshotUrl }
+     ```
 
-1. Allow the row to wrap:
-   - `flex items-center gap-3` → `flex flex-wrap items-center gap-2 sm:gap-3`
-   - Tighten horizontal padding on mobile: `px-5 py-3` → `px-4 sm:px-5 py-3`
+2. **Update `NewestVerifiedAgentsRow`**
+   - Use the new hook instead of `MOCK_VERIFIED_AGENTS`.
+   - Pass `headshotUrl={agent.headshotUrl}` into `AgentAvatar` (it already handles fallback initials).
+   - Keep current card layout, sizes, snap scroll, and styling untouched.
+   - While loading, render 6 skeleton cards matching existing card width/height to avoid layout shift.
+   - If no agents returned, render the existing mock fallback so the row never looks empty (optional safety; keep behavior unchanged otherwise).
 
-2. Push the active filter chips onto their own line on mobile, keep inline on ≥sm:
-   - Chips container: `flex items-center gap-2 flex-wrap flex-1 min-w-0` → `flex items-center gap-2 flex-wrap min-w-0 w-full order-last sm:order-none sm:flex-1 sm:w-auto`
+3. **Make each card clickable** → navigate to that agent's profile (`/agent/{id}`) using existing routing convention. (Small additive change; preserves visual shell.)
 
-3. Keep the results count + View Results pinned right on the first row:
-   - Add `ml-auto` to the results/CTA group so it stays flush right when wrapping.
+## Out of scope
+- No changes to mock data file (kept for fallback / other consumers).
+- No layout, color, or copy changes.
+- No changes to the four channel cards below the agents row.
 
-No behavior, data, or component-structure changes — purely responsive layout tokens.
+## Verification
+- Open `/agent-dashboard` on desktop and mobile — confirm row shows real headshots from `agent-headshots` storage bucket.
+- Hard refresh: skeletons appear briefly then real avatars.
+- Cards with no `headshot_url` fall back to initials via `AgentAvatar`.
