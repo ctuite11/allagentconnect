@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AgentAvatar } from "@/components/ui/AgentAvatar";
 import { AacMonogramLoader } from "@/components/AacMonogramLoader";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 interface Agent {
   id: string;
@@ -23,6 +23,7 @@ const MatchingBuyerAgents = ({ listingCity, listingState, listingZipCode, listin
   const [agents, setAgents] = useState<Agent[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     fetchMatchingAgents();
@@ -154,7 +155,7 @@ const MatchingBuyerAgents = ({ listingCity, listingState, listingZipCode, listin
           {agents.map((agent) => (
             <button
               key={agent.id}
-              onClick={() => navigate(`/agent/${agent.id}`)}
+              onClick={() => navigate(`/agent/${agent.id}`, { state: { from: location.pathname + location.search } })}
               className="flex flex-col items-center gap-2 p-2 rounded-lg hover:bg-accent transition-colors cursor-pointer"
             >
               <AgentAvatar

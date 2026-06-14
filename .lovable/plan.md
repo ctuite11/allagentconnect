@@ -1,21 +1,44 @@
-## Goal
+# Fix Agent Profile Back Navigation
 
-On the in-app Agent Profile page, the email row currently opens the OS mail client via `mailto:`. Switch it to the AAC in-app email composer (same flow as the "Email {First}" button), and change the email icon color to AAC primary blue.
+## Goal
+When the Agent Profile (`/agent/:idOrCode`) is opened from anywhere — Listing Detail, listing cards, Network Activity, Messages, Comms Center, Agent Network — the Back button must return to that origin, not always to Agent Network.
+
+## Approach
+Standard React Router pattern: pass `state.from` on navigation, and have Agent Profile prefer `location.state.from` when rendering its Back button. Falls back to the current default (`/our-agents` public, `/our-members` in‑app) when no origin is supplied (direct links, refresh, etc.).
 
 ## Changes
 
-**File: `src/pages/AgentProfile.tsx`**
+### 1. `src/pages/AgentProfile.tsx` — Back button reads origin
+- Add `useLocation()`.
+- Compute `backTo = (location.state as any)?.from ?? (publicMode ? "/our-agents" : "/our-members")`.
+- Update the `AacBackButton` onClick (line 372) to `navigate(backTo)`.
+- Also update the "Agent not found" fallback (line 232) to use the same `backTo`.
 
-1. In the `profileContactRows` array, replace the email row's `href: mailto:` with an `onClick` action that opens the existing `ContactAgentProfileDialog` (the AAC email system). The phone rows continue to use `tel:` links unchanged.
+### 2. Add `state: { from: location.pathname + location.search }` at every call site that navigates to `/agent/:id` and does not already pass it
 
-2. Render the contact list to support either an `<a href>` (phone) or a `<button onClick>` (email), so the email row triggers the AAC dialog with `agent`, `viewerSender`, and prefilled subject — same props already used by the "Email {First}" button below.
+Already correct (leave as‑is):
+- `src/pages/PropertyDetail.tsx` L1070
+- `src/pages/AgentListingDetail.tsx` L1008
+- `src/components/PropertyDetailRightColumn.tsx` L194
+- `src/pages/AgentProfileEditor.tsx` L338
 
-3. Color the email row's `Mail` icon with `text-aac` (AAC primary blue token) instead of `text-neutral-400`. Phone/website icons keep their neutral color.
-
-Public mode (`/agent/:code`) is unaffected — `showListingAgentEmail` already gates that, and the public view will simply not show the email row when not authenticated. The "Email {First}" CTA button below is unchanged.
+Needs `state.from` added (add `useLocation` where missing):
+- `src/pages/TeamProfile.tsx` L357
+- `src/pages/OurAgents.tsx` L374
+- `src/pages/Conversation.tsx` L138 (Messages)
+- `src/components/BuyerAgentShowcase.tsx` L165
+- `src/components/PropertyCard.tsx` L178 and L191
+- `src/components/MatchingBuyerAgents.tsx` L157
+- `src/components/success-hub/networkActivity/NetworkActivitySection.tsx` L111
+- `src/components/communication-center/RecipientListDialog.tsx` L55 — convert `<Link to={...}>` to `<Link to={...} state={{ from: location.pathname + location.search }}>` (add `useLocation`).
 
 ## Out of scope
+- No changes to `backTargets.ts` (its `/agents/:id` rule is unused — Agent Profile renders its own Back button).
+- No scroll‑restoration work; React Router's default behavior preserves history scroll on browser back, but `navigate(path)` is a push so exact scroll restoration on the origin page is not guaranteed. Will only be achieved when the browser/back‑forward cache restores it; no new infra added.
+- No changes to upload, DB, or RLS.
 
-- No backend / email-system changes (ContactAgentProfileDialog already routes through the AAC email queue).
-- No changes to AgentProfileHeader or PublicAgentProfile.
-- No layout, copy, or other styling changes.
+## Verification
+1. Listing Detail → click agent → Agent Profile → Back returns to that listing.
+2. Network Activity row → Agent Profile → Back returns to Success Hub.
+3. Messages thread header avatar → Agent Profile → Back returns to that conversation.
+4. Direct visit to `/agent/<id>` (no state) → Back goes to `/our-members` (in‑app) or `/our-agents` (public) — unchanged.

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -70,6 +70,7 @@ interface TeamMember {
 const TeamProfile = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [team, setTeam] = useState<any>(null);
   const [members, setMembers] = useState<TeamMember[]>([]);
   const [listings, setListings] = useState<any[]>([]);
@@ -354,7 +355,7 @@ const TeamProfile = () => {
                   <Card 
                     key={member.id} 
                     className="hover:shadow-lg transition-shadow cursor-pointer"
-                    onClick={() => navigate(`/agent/${member.agent_profiles.id}`)}
+                    onClick={() => navigate(`/agent/${member.agent_profiles.id}`, { state: { from: location.pathname + location.search } })}
                   >
                     <div className="p-6">
                       <div className="flex items-start gap-4 mb-4">

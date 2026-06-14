@@ -135,7 +135,7 @@ export default function Conversation() {
                 "flex items-center gap-3",
                 details?.otherUserIsAgent && "cursor-pointer hover:opacity-80"
               )}
-              onClick={() => details?.otherUserIsAgent && navigate(`/agent/${details.otherUserId}`)}
+              onClick={() => details?.otherUserIsAgent && navigate(`/agent/${details.otherUserId}`, { state: { from: location.pathname + location.search } })}
             >
               <div className="w-10 h-10 rounded-full bg-zinc-100 flex items-center justify-center">
                 <User className="w-5 h-5 text-zinc-400" />

@@ -1,6 +1,6 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Mail, Phone } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 export interface RecipientRow {
   id: string;
@@ -25,6 +25,7 @@ export function RecipientListDialog({
   loading,
 }: RecipientListDialogProps) {
   const count = recipients.length;
+  const location = useLocation();
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -53,6 +54,7 @@ export function RecipientListDialog({
                 <li key={r.id} className="px-6 py-4">
                   <Link
                     to={`/agent/${r.id}`}
+                    state={{ from: location.pathname + location.search }}
                     onClick={() => onOpenChange(false)}
                     className="text-sm font-semibold text-neutral-900 hover:text-primary hover:underline"
                   >
