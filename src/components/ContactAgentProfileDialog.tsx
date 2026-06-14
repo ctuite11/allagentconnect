@@ -36,6 +36,8 @@ interface ContactAgentProfileDialogProps {
   triggerClassName?: string;
   /** Logged-in viewer sender — skips fetch when provided. */
   initialSender?: SenderProfile | null;
+  /** Optional custom trigger element. When provided, replaces the default button. */
+  trigger?: React.ReactNode;
 }
 
 const ContactAgentProfileDialog = ({
@@ -45,6 +47,7 @@ const ContactAgentProfileDialog = ({
   buttonText = "Contact Agent",
   triggerClassName,
   initialSender = null,
+  trigger,
 }: ContactAgentProfileDialogProps) => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -127,10 +130,12 @@ const ContactAgentProfileDialog = ({
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button size="sm" className={cn("gap-2 rounded-lg", triggerClassName)}>
-          <Mail className="h-4 w-4" />
-          {buttonText}
-        </Button>
+        {trigger ?? (
+          <Button size="sm" className={cn("gap-2 rounded-lg", triggerClassName)}>
+            <Mail className="h-4 w-4" />
+            {buttonText}
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent
         className={cn(

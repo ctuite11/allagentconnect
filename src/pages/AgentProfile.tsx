@@ -326,12 +326,6 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
       sublabel: "Office",
       href: `tel:${agent.office_phone}`,
     },
-    agent.email && {
-      icon: Mail,
-      label: agent.email,
-      sublabel: "Email",
-      href: `mailto:${agent.email}`,
-    },
   ].filter(Boolean) as {
     icon: typeof Phone;
     label: string;
@@ -424,7 +418,7 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
                 </p>
               ) : null}
 
-              {(profileContactRows.length > 0 || websiteUrl) ? (
+              {(profileContactRows.length > 0 || websiteUrl || agent.email) ? (
                 <ul className="mt-4 space-y-1 text-[14px]">
                   {profileContactRows.map((item, i) => (
                     <li key={i}>
@@ -440,6 +434,28 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
                       </a>
                     </li>
                   ))}
+                  {agent.email ? (
+                    <li>
+                      <ContactAgentProfileDialog
+                        agentId={agent.id}
+                        agentName={`${agent.first_name} ${agent.last_name}`}
+                        agentEmail={agent.email}
+                        initialSender={viewerSender}
+                        trigger={
+                          <button
+                            type="button"
+                            className="inline-flex max-w-full items-center gap-2.5 leading-tight text-neutral-800 transition-colors hover:text-neutral-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 focus-visible:ring-offset-2"
+                          >
+                            <Mail className="h-3.5 w-3.5 shrink-0 text-aac" aria-hidden />
+                            <span>
+                              <span className="text-neutral-400">Email </span>
+                              {agent.email}
+                            </span>
+                          </button>
+                        }
+                      />
+                    </li>
+                  ) : null}
                   {websiteUrl ? (
                     <li>
                       <a
