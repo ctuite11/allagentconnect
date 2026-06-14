@@ -19,8 +19,9 @@ export function useNewestVerifiedAgents(limit = 12) {
       setLoading(true);
       const { data, error } = await supabase
         .from("agent_profiles")
-        .select("id, first_name, last_name, company, headshot_url, office_city, office_state, created_at")
-        .order("created_at", { ascending: false })
+        .select("id, first_name, last_name, company, headshot_url, office_city, office_state, created_at, agent_settings!inner(agent_status, verified_at)")
+        .eq("agent_settings.agent_status", "verified")
+        .order("verified_at", { foreignTable: "agent_settings", ascending: false })
         .limit(limit);
       if (cancelled) return;
       if (error || !data) {
