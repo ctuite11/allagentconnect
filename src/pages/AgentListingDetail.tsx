@@ -265,7 +265,7 @@ const AgentListingDetail = () => {
     navigator.clipboard.writeText(shareUrl);
     toast.success("Link copied to clipboard");
     
-    const { trackShare } = await import("@/lib/trackShare");
+    const { trackShare } = await import("@/lib/trackShare").catch(() => ({ trackShare: async () => {} }));
     await trackShare(id!, 'copy_link');
   };
 

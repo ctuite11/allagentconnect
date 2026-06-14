@@ -8,6 +8,7 @@ import { getCurrentSenderProfile } from "@/lib/currentSenderProfile";
 import { fetchListingPreview } from "@/lib/fetchListingPreview";
 import { cn } from "@/lib/utils";
 import { useAgentShareContactSearch } from "@/hooks/useAgentShareContactSearch";
+import { trackShare } from "@/lib/trackShare";
 import {
   shareRecipientDisplayName,
   shareRecipientGreetingName,
@@ -146,8 +147,6 @@ export function BulkShareListingsDialog({
 
     setSending(true);
     try {
-      const { trackShare } = await import("@/lib/trackShare");
-
       for (const recipient of recipients) {
         const { error } = await supabase.functions.invoke("send-bulk-listing-share", {
           body: {

@@ -12,6 +12,7 @@ import { getCurrentSenderProfile } from "@/lib/currentSenderProfile";
 import { fetchListingPreview } from "@/lib/fetchListingPreview";
 import { useAgentShareContactSearch } from "@/hooks/useAgentShareContactSearch";
 import { invokeEdgeFunction } from "@/lib/invokeEdgeFunction";
+import { trackShare } from "@/lib/trackShare";
 import {
   shareRecipientDisplayName,
   shareRecipientGreetingName,
@@ -170,8 +171,6 @@ export const ShareListingDialog = ({
 
     setSending(true);
     try {
-      const { trackShare } = await import("@/lib/trackShare");
-
       for (const recipient of recipients) {
         await invokeEdgeFunction("send-listing-share", {
           listingId,
