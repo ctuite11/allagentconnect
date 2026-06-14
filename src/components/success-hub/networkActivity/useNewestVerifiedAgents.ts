@@ -17,29 +17,44 @@ export function useNewestVerifiedAgents(limit = 12) {
     let cancelled = false;
     (async () => {
       setLoading(true);
-      const { data, error } = await supabase
-        .from("agent_profiles")
-        .select("id, first_name, last_name, company, headshot_url, office_city, office_state, created_at, agent_settings!inner(agent_status, verified_at)")
-        .eq("agent_settings.agent_status", "verified")
-        .order("verified_at", { foreignTable: "agent_settings", ascending: false })
+      const { data: settings, error: settingsError } = await supabase
+        .from("agent_settings")
+        .select("user_id, verified_at")
+        .eq("agent_status", "verified")
+        .order("verified_at", { ascending: false, nullsFirst: false })
         .limit(limit);
       if (cancelled) return;
-      if (error || !data) {
+      if (settingsError || !settings || settings.length === 0) {
         setAgents([]);
         setLoading(false);
         return;
       }
-      const mapped: NewestVerifiedAgent[] = data.map((a: any) => {
-        const name = [a.first_name, a.last_name].filter(Boolean).join(" ").trim() || "Agent";
-        const market = [a.office_city, a.office_state].filter(Boolean).join(", ");
-        return {
-          id: a.id,
-          name,
-          brokerage: a.company ?? "",
-          market,
-          headshotUrl: a.headshot_url ?? null,
-        };
-      });
+      const ids = settings.map((s: any) => s.user_id).filter(Boolean);
+      const { data: profiles, error: profilesError } = await supabase
+        .from("agent_profiles")
+        .select("id, first_name, last_name, company, headshot_url, office_city, office_state")
+        .in("id", ids);
+      if (cancelled) return;
+      if (profilesError || !profiles) {
+        setAgents([]);
+        setLoading(false);
+        return;
+      }
+      const byId = new Map<string, any>(profiles.map((p: any) => [p.id, p]));
+      const mapped: NewestVerifiedAgent[] = ids
+        .map((id: string) => byId.get(id))
+        .filter(Boolean)
+        .map((a: any) => {
+          const name = [a.first_name, a.last_name].filter(Boolean).join(" ").trim() || "Agent";
+          const market = [a.office_city, a.office_state].filter(Boolean).join(", ");
+          return {
+            id: a.id,
+            name,
+            brokerage: a.company ?? "",
+            market,
+            headshotUrl: a.headshot_url ?? null,
+          };
+        });
       setAgents(mapped);
       setLoading(false);
     })();
