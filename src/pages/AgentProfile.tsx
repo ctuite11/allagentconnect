@@ -503,7 +503,7 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
                     }}
                   >
                     <MessageSquare className="mr-1.5 h-3.5 w-3.5 text-white" aria-hidden />
-                    Message
+                    Message {agent.first_name}
                   </Button>
                 </div>
 
