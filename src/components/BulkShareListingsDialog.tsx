@@ -8,6 +8,7 @@ import { getCurrentSenderProfile } from "@/lib/currentSenderProfile";
 import { fetchListingPreview } from "@/lib/fetchListingPreview";
 import { cn } from "@/lib/utils";
 import { useAgentShareContactSearch } from "@/hooks/useAgentShareContactSearch";
+import { trackShare } from "@/lib/trackShare";
 import {
   shareRecipientDisplayName,
   shareRecipientGreetingName,

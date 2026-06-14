@@ -12,6 +12,7 @@ import { getCurrentSenderProfile } from "@/lib/currentSenderProfile";
 import { fetchListingPreview } from "@/lib/fetchListingPreview";
 import { useAgentShareContactSearch } from "@/hooks/useAgentShareContactSearch";
 import { invokeEdgeFunction } from "@/lib/invokeEdgeFunction";
+import { trackShare } from "@/lib/trackShare";
 import {
   shareRecipientDisplayName,
   shareRecipientGreetingName,

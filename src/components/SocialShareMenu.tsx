@@ -9,6 +9,7 @@ import {
 import { Share2, Facebook, Twitter, Linkedin, Mail, MessageCircle, Link2 } from "lucide-react";
 import { toast } from "sonner";
 import { ShareListingDialog } from "@/components/ShareListingDialog";
+import { trackShare } from "@/lib/trackShare";
 
 interface SocialShareMenuProps {
   url: string;
