@@ -199,7 +199,7 @@ export function EmailAgentDialog({
 
         <div className="space-y-4 py-4">
           {/* Batch Controls */}
-          {isBulk && (
+          {isBulk && showTemplatePicker && (
             <div className="space-y-2">
               <Label className="text-muted-foreground text-sm">Batch</Label>
               <div className="flex items-center gap-2">
@@ -253,6 +253,7 @@ export function EmailAgentDialog({
           )}
 
           {/* Recipients Preview */}
+          {showTemplatePicker ? (
           <div className="space-y-2">
             <Label className="text-muted-foreground text-sm">
               Recipients {isBatched ? `(${currentBatch.length} in this batch)` : `(${allRecipients.length})`}
@@ -326,6 +327,21 @@ export function EmailAgentDialog({
               </Button>
             </div>
           </div>
+          ) : (
+            <div className="space-y-1.5">
+              <Label className="text-muted-foreground text-xs">To</Label>
+              <div className="rounded-lg border border-slate-200 bg-[#FAFAF8] px-3 py-2 text-sm">
+                {allRecipients[0] ? (
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-slate-900">{allRecipients[0].name}</span>
+                    <span className="text-muted-foreground">&lt;{allRecipients[0].email}&gt;</span>
+                  </div>
+                ) : (
+                  <span className="text-muted-foreground">No recipient</span>
+                )}
+              </div>
+            </div>
+          )}
 
           {showTemplatePicker ? (
             <div className="space-y-2">
@@ -379,38 +395,27 @@ export function EmailAgentDialog({
           ) : null}
 
           {!showTemplatePicker ? (
-            <div className="space-y-3 rounded-xl border border-slate-200 bg-[#FAFAF8] p-3">
-              <Label className="text-muted-foreground text-sm">Sender</Label>
-              <div className="space-y-2">
-                <Label htmlFor="email-sender-name" className="text-xs text-muted-foreground">
-                  Your name
-                </Label>
+            <div className="space-y-2 rounded-lg border border-slate-200 bg-[#FAFAF8] px-3 py-2">
+              <Label className="text-muted-foreground text-xs">Sender</Label>
+              <div className="grid grid-cols-2 gap-2">
                 <Input
                   id="email-sender-name"
                   value={senderName}
                   onChange={(e) => setSenderName(e.target.value)}
-                  placeholder="Your full name"
-                  className="border-slate-200"
+                  placeholder="Your name"
+                  className="h-8 border-slate-200 text-sm"
                   maxLength={100}
                 />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="email-sender-email" className="text-xs text-muted-foreground">
-                  Your email
-                </Label>
                 <Input
                   id="email-sender-email"
                   type="email"
                   value={senderEmail}
                   onChange={(e) => setSenderEmail(e.target.value)}
-                  placeholder="you@example.com"
-                  className="border-slate-200"
+                  placeholder="reply-to email"
+                  className="h-8 border-slate-200 text-sm"
                   maxLength={255}
                 />
               </div>
-              <p className="text-xs text-muted-foreground">
-                Used as the reply-to address on this email.
-              </p>
             </div>
           ) : null}
 
@@ -430,24 +435,26 @@ export function EmailAgentDialog({
             <Label htmlFor="email-message">
               Message {template === "custom" ? "*" : "(ignored for this template)"}
             </Label>
-            <EmailComposerToolbar
-              textareaRef={messageRef}
-              value={message}
-              onChange={setMessage}
-              uploadFolder="bulk"
-            />
             <Textarea
               id="email-message"
               ref={messageRef}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Your message..."
-              rows={6}
+              rows={showTemplatePicker ? 6 : 8}
               className="border-slate-200 resize-none"
               maxLength={5000}
               disabled={template !== "custom"}
             />
-            <p className="text-xs text-muted-foreground text-right">{message.length}/5000</p>
+            <div className="flex items-center justify-between gap-2">
+              <EmailComposerToolbar
+                textareaRef={messageRef}
+                value={message}
+                onChange={setMessage}
+                uploadFolder="bulk"
+              />
+              <p className="text-xs text-muted-foreground">{message.length}/5000</p>
+            </div>
           </div>
         </div>
 
