@@ -25,6 +25,7 @@ import ContactAgentProfileDialog from "@/components/ContactAgentProfileDialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAgentLastSeen } from "@/hooks/useAgentLastSeen";
 import { findOrCreateConversation } from "@/lib/startConversation";
+import { messagesPathForRole } from "@/lib/messageNavigation";
 import { useAuthRole } from "@/hooks/useAuthRole";
 import { Seo } from "@/components/Seo";
 import { getPublicOrigin } from "@/lib/getPublicUrl";
