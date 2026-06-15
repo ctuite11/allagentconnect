@@ -1,6 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
-import { formatListingShareEmailStreetLine } from "../_shared/listingShareEmailAddress.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -21,14 +20,12 @@ interface HotSheetInviteRequest {
   clientId?: string;
   /** 'initial' | 'resend' — controls audit event type */
   mode?: "initial" | "resend" | "invite_only";
-}
-
-interface ListingTeaser {
-  photoUrl: string;
-  price: string;
-  address: string;
-  cityState: string;
-  bedsBaths: string;
+  /** Optional recipient first/full name for personalization */
+  recipientName?: string;
+  /** Optional inviter contact info — looked up server-side if omitted */
+  inviterEmail?: string;
+  inviterPhone?: string;
+  inviterBrokerage?: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -51,7 +48,11 @@ const handler = async (req: Request): Promise<Response> => {
       tokenId,
       clientId,
       mode = "invite_only",
+      recipientName,
     } = body;
+    let inviterEmail = (body.inviterEmail || "").trim();
+    let inviterPhone = (body.inviterPhone || "").trim();
+    let inviterBrokerage = (body.inviterBrokerage || "").trim();
 
     const inviteOnly = mode === "invite_only";
 
@@ -117,31 +118,25 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
-    // --- Fetch listing teasers ---
-    let teasers: ListingTeaser[] = [];
+    // --- Lookup inviter contact info if not provided by caller ---
+    // Single best-effort lookup against agent_profiles using the verified JWT
+    // actor. Keeps the email aligned with listing-share (sender shown in body).
+    if (verifiedActorUserId && (!inviterEmail || !inviterPhone || !inviterBrokerage)) {
+      const { data: agentProfile } = await supabase
+        .from("agent_profiles")
+        .select("email, phone, cell_phone, company")
+        .eq("user_id", verifiedActorUserId)
+        .maybeSingle();
 
-    if (!inviteOnly && hotSheetId) {
-      const { data: matchingListings } = await supabase
-        .rpc("check_hot_sheet_matches", { p_hot_sheet_id: hotSheetId });
-
-      const listingIds = (matchingListings || []).slice(0, 3).map((m: any) => m.listing_id);
-
-      if (listingIds.length > 0) {
-        const { data: listings } = await supabase
-          .from("listings")
-          .select("address, price, city, state, zip_code, unit_number, condo_details, bedrooms, bathrooms, photos")
-          .in("id", listingIds);
-
-        teasers = (listings || []).slice(0, 3).map((listing: any) => ({
-          photoUrl: listing?.photos?.[0]?.url || "",
-          price: listing?.price ? `$${Number(listing.price).toLocaleString()}` : "Price unavailable",
-          address: formatListingShareEmailStreetLine(listing || {}) || listing?.address || "",
-          cityState: [listing?.city, listing?.state].filter(Boolean).join(", "),
-          bedsBaths: [
-            listing?.bedrooms ? `${listing.bedrooms} bd` : null,
-            listing?.bathrooms ? `${listing.bathrooms} ba` : null,
-          ].filter(Boolean).join(" • "),
-        }));
+      if (agentProfile) {
+        if (!inviterEmail) inviterEmail = (agentProfile.email as string | null) || "";
+        if (!inviterPhone) {
+          inviterPhone =
+            (agentProfile.cell_phone as string | null)?.trim() ||
+            (agentProfile.phone as string | null)?.trim() ||
+            "";
+        }
+        if (!inviterBrokerage) inviterBrokerage = (agentProfile.company as string | null) || "";
       }
     }
 
@@ -171,14 +166,23 @@ const handler = async (req: Request): Promise<Response> => {
 
     const subject = inviteOnly
       ? `${inviterName} invited you to All Agent Connect`
-      : `${inviterName} shared a Hot Sheet with you`;
+      : `${inviterName} invited you to view a hot sheet`;
 
     const jobPayload = {
       provider: "resend",
       template: "hot-sheet-invite",
       to: invitedEmail,
       subject,
-      variables: { inviterName, hotSheetName, hotSheetLink, teasers, inviteOnly },
+      variables: {
+        inviterName,
+        inviterEmail,
+        inviterPhone,
+        inviterBrokerage,
+        recipientName: recipientName || "",
+        hotSheetName,
+        hotSheetLink,
+        inviteOnly,
+      },
     };
 
     // Build insert row — include idempotency_key if we have one
