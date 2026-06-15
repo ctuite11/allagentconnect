@@ -78,14 +78,8 @@ export async function enqueueBuyerWorkspaceInvite({
       ? window.location.origin
       : "https://allagentconnect.com";
 
-  const hotSheetLink =
-    `${origin}/client-invite` +
-    `?invitation_token=${encodeURIComponent(tokenRow.token)}` +
-    `&email=${encodeURIComponent(normalizedEmail)}` +
-    `&agent_id=${encodeURIComponent(agentUserId)}` +
-    `&client_id=${encodeURIComponent(buyer.id)}` +
-    (buyer.firstName ? `&first_name=${encodeURIComponent(buyer.firstName)}` : "") +
-    (buyer.lastName ? `&last_name=${encodeURIComponent(buyer.lastName)}` : "");
+  // Clean opaque-token URL — no query parameters, no PII, no internal IDs.
+  const hotSheetLink = `${origin}/invite/${tokenRow.token}`;
 
   const { error: fnError } = await supabase.functions.invoke("send-hot-sheet-invite", {
     body: {

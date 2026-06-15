@@ -435,6 +435,8 @@ const App = () => (
                 <Route path="/find-agent" element={<PublicOurAgents />} />
                 <Route path="/agent/:id" element={<PublicAgentProfile />} />
                 <Route path="/client-invite" element={<ClientInvitationSetup />} />
+                {/* Clean opaque-token invite URL — used by hot sheet / buyer workspace invitation emails */}
+                <Route path="/invite/:token" element={<ClientInvitationSetup />} />
                 <Route path="/client-hot-sheet/:token" element={<LegacyClientHotSheetRedirect />} />
                 <Route path="/client/hotsheet/:token" element={<ClientHotsheetPage />} />
                 {/* Legacy consumer routes */}
