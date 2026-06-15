@@ -565,7 +565,7 @@ export function ShareListingsDialog({
                         <Input
                           value={recipientFirstName}
                           onChange={(e) => setRecipientFirstName(e.target.value)}
-                          placeholder="Chris"
+                          placeholder="First name"
                           autoComplete="given-name"
                           className={cn("h-9 rounded-lg text-[13px] text-neutral-900", INPUT_CLASS)}
                         />
@@ -576,7 +576,7 @@ export function ShareListingsDialog({
                         <Input
                           value={recipientLastName}
                           onChange={(e) => setRecipientLastName(e.target.value)}
-                          placeholder="Tuite"
+                          placeholder="Last name"
                           autoComplete="family-name"
                           className={cn("h-9 rounded-lg text-[13px] text-neutral-900", INPUT_CLASS)}
                         />
