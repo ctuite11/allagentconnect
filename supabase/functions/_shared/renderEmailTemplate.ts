@@ -44,6 +44,31 @@ function renderAgentContactBlock(opts: { agentName: string; agentEmail: string; 
     </div>`;
 }
 
+function renderSharedByBlock(opts: {
+  agentName: string;
+  agentBrokerage?: string;
+  agentEmail: string;
+  agentPhone?: string;
+}): string {
+  const { agentName, agentBrokerage, agentEmail, agentPhone } = opts;
+  const lines: string[] = [];
+  lines.push(`<p style="margin:0;font-size:14px;font-weight:600;color:#0f172a;">${agentName}</p>`);
+  if (agentBrokerage) {
+    lines.push(`<p style="margin:2px 0 0;font-size:13px;color:#64748b;">${agentBrokerage}</p>`);
+  }
+  if (agentEmail) {
+    lines.push(`<p style="margin:2px 0 0;font-size:13px;color:#64748b;"><a href="mailto:${agentEmail}" style="color:#64748b;text-decoration:none;">${agentEmail}</a></p>`);
+  }
+  if (agentPhone) {
+    lines.push(`<p style="margin:2px 0 0;font-size:13px;color:#64748b;">${agentPhone}</p>`);
+  }
+  return `
+    <div style="margin:28px 0 0;padding-top:16px;border-top:1px solid #e5e7eb;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
+      <p style="margin:0 0 8px;font-size:12px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.04em;">Shared by</p>
+      ${lines.join("")}
+    </div>`;
+}
+
 function renderPersonalMessage(message?: string): string {
   if (!message) return "";
   const safe = String(message).replace(/\n/g, "<br>");
@@ -63,27 +88,27 @@ export function renderEmailTemplate(
   switch (template) {
     case "listing-share":
     {
-      // Restored to the standard AAC unified template (Jun 2026) to match every
-      // other transactional email's branding/construction. Reply-To is now the
-      // monitored AAC inbox (set by the caller); recipients use the "View
-      // Listing" CTA and the in-app Contact Agent button to reach the agent.
-      const recipientName = variables.recipientName || "there";
+      // Minimal personal notification (Jun 2026). The email's only job is to
+      // drive the recipient back to the listing page on AAC — no property
+      // brochure, no listing card, no price/beds/baths. Brokerage is included
+      // only when the caller passes it (no DB lookup added).
+      const recipientFullName = String(variables.recipientName || "there").trim();
+      const firstName = recipientFullName.split(/\s+/)[0] || "there";
       const agentName = variables.agentName || "Your agent";
       const agentEmail = variables.agentEmail || "";
       const agentPhone = variables.agentPhone || "";
-      const listing = variables.listing || variables;
+      const agentBrokerage = variables.agentBrokerage || "";
       const listingUrl = String(variables.listingUrl || "");
-      const cardHtml = renderListingShareCard(listing);
 
       return buildAacEmail({
-        headline: "A Property Has Been Shared With You",
-        preheader: `${agentName} shared a property with you`,
+        headline: "A listing has been shared with you",
+        preheader: `${agentName} sent you a listing`,
         body: `
-          <p style="margin:0 0 14px;">Hi ${recipientName},</p>
-          <p style="margin:0 0 18px;">${agentName} shared a property with you that may interest you:</p>
+          <p style="margin:0 0 14px;">Hi ${firstName},</p>
+          <p style="margin:0 0 18px;">${agentName} wanted to share a listing with you.</p>
           ${renderPersonalMessage(variables.message)}
-          ${cardHtml}
-          ${agentEmail ? renderAgentContactBlock({ agentName, agentEmail, agentPhone }) : ""}`,
+          <p style="margin:0 0 18px;">Click below to view the listing and contact the agent directly through All Agent Connect.</p>
+          ${renderSharedByBlock({ agentName, agentBrokerage, agentEmail, agentPhone })}`,
         ctaLabel: "View Listing",
         ctaUrl: listingUrl,
       });
