@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,8 +26,11 @@ type InviteAnchor = {
 const ClientInvitationSetup = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { token: pathToken } = useParams<{ token?: string }>();
 
-  const invitationToken = searchParams.get("invitation_token") || "";
+  // Prefer clean path-based token (`/invite/:token`). Fall back to legacy
+  // `/client-invite?invitation_token=...` for older email links.
+  const invitationToken = (pathToken || searchParams.get("invitation_token") || "").trim();
   const initialEmail = searchParams.get("email") || "";
   const initialFirstName = searchParams.get("first_name") || "";
   const initialLastName = searchParams.get("last_name") || "";

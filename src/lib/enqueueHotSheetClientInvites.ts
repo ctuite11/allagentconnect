@@ -209,14 +209,11 @@ export async function enqueueHotSheetClientInvites({
       });
     }
 
-    const hotSheetLink =
-      `${origin}/client-invite` +
-      `?invitation_token=${encodeURIComponent(finalToken)}` +
-      `&email=${encodeURIComponent(clientData.email)}` +
-      `&agent_id=${encodeURIComponent(agentUserId)}` +
-      `&client_id=${encodeURIComponent(clientId)}` +
-      (clientData.first_name ? `&first_name=${encodeURIComponent(clientData.first_name)}` : "") +
-      (clientData.last_name ? `&last_name=${encodeURIComponent(clientData.last_name)}` : "");
+    // Clean opaque-token URL — no query parameters, no PII, no internal IDs.
+    // The token alone resolves server-side (email/agent/client come from
+    // share_tokens.payload), so the email link looks like a normal AAC URL
+    // instead of a tracking/phishing-style link.
+    const hotSheetLink = `${origin}/invite/${finalToken}`;
 
     const { error: fnError } = await supabase.functions.invoke("send-hot-sheet-invite", {
       body: {
