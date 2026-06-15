@@ -99,7 +99,7 @@ const handler = async (req: Request): Promise<Response> => {
       : '';
 
     const appUrl = Deno.env.get('APP_URL') || 'https://allagentconnect.com';
-    const listingUrl = `${appUrl}/listings/${listingId}`;
+    const listingUrl = `${appUrl}/property/${listingId}`;
 
     console.log(`[send-listing-share] Enqueuing job for ${recipientEmail}`);
 
