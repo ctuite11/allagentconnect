@@ -116,7 +116,9 @@ const handler = async (req: Request): Promise<Response> => {
           // Example: "Austyn Agent shared a property with you" — no "Property Shared:" prefix,
           // no address in subject (reduces promotional pattern match in Gmail).
           subject: `${(agentName || "Your agent").trim()} shared a property with you`,
-          reply_to: agentEmail,
+          // Reply-To is the monitored AAC inbox — recipients reach the listing
+          // agent via the in-app "Contact Agent" button on the listing page.
+          reply_to: 'hello@allagentconnect.com',
           variables: {
             recipientName,
             agentName,

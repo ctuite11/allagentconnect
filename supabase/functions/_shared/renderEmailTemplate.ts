@@ -63,71 +63,27 @@ export function renderEmailTemplate(
   switch (template) {
     case "listing-share":
     {
-      // Deliverability test (Jun 2026): the rich AAC card + CTA template was
-      // landing in Gmail spam while the plain-text Message Agent template
-      // inboxed with the same auth/From. This case renders a minimal,
-      // human-style email — no header band, no image, no listing card, no CTA
-      // button, no agent block — just a few short lines + one plain link.
-      // Mirrors the Message Agent shape that Gmail trusts.
-      const esc = (s: string) =>
-        String(s ?? "")
-          .replace(/&/g, "&amp;")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;")
-          .replace(/"/g, "&quot;")
-          .replace(/'/g, "&#39;");
-
-      const recipientName = esc(variables.recipientName || "there");
-      const agentName = esc(variables.agentName || "Your agent");
-      const agentEmail = esc(variables.agentEmail || "");
-      const agentPhone = esc(variables.agentPhone || "");
+      // Restored to the standard AAC unified template (Jun 2026) to match every
+      // other transactional email's branding/construction. Reply-To is now the
+      // monitored AAC inbox (set by the caller); recipients use the "View
+      // Listing" CTA and the in-app Contact Agent button to reach the agent.
+      const recipientName = variables.recipientName || "there";
+      const agentName = variables.agentName || "Your agent";
       const listing = variables.listing || variables;
-
-      const street = esc(listing.address || "");
-      const cityStateZip = esc(
-        [listing.city, listing.state].filter(Boolean).join(", ") +
-          (listing.zipCode || listing.zip_code ? ` ${listing.zipCode || listing.zip_code}` : ""),
-      ).trim();
-      const unit = listing.unit_number ? esc(`Unit ${listing.unit_number}`) : "";
-
-      const priceNum =
-        typeof listing.price === "number" ? listing.price : Number(listing.price);
-      const priceLine = Number.isFinite(priceNum) && priceNum > 0
-        ? `Price: $${Math.round(priceNum).toLocaleString()}`
-        : "";
-
-      const bedsBaths: string[] = [];
-      if (listing.bedrooms) bedsBaths.push(`${listing.bedrooms} bed`);
-      if (listing.bathrooms) bedsBaths.push(`${listing.bathrooms} bath`);
-      const bedsBathsLine = esc(bedsBaths.join(" · "));
-
       const listingUrl = String(variables.listingUrl || "");
-      const userMsg = variables.message
-        ? esc(String(variables.message)).replace(/\n/g, "<br>")
-        : "";
+      const cardHtml = renderListingShareCard(listing);
 
-      const addressBlock = [street, unit, cityStateZip].filter(Boolean).join("<br>");
-
-      const signoff =
-        `${agentName}` +
-        (agentEmail ? `<br>${agentEmail}` : "") +
-        (agentPhone ? `<br>${agentPhone}` : "");
-
-      // Bare HTML — no template wrapper, no header band, no dark footer.
-      // sendEmail.ts already derives a text/plain alternative from this.
-      return `<!doctype html><html><head><meta charset="utf-8"></head><body style="margin:0;padding:0;background:#ffffff;color:#111;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.55;">
-<div style="max-width:560px;margin:0 auto;padding:20px 16px;">
-<p style="margin:0 0 14px;">Hi ${recipientName},</p>
-<p style="margin:0 0 14px;">I thought you might be interested in this property:</p>
-<p style="margin:0 0 14px;">${addressBlock}</p>
-${priceLine ? `<p style="margin:0 0 6px;">${esc(priceLine)}</p>` : ""}
-${bedsBathsLine ? `<p style="margin:0 0 14px;">${bedsBathsLine}</p>` : ""}
-${listingUrl ? `<p style="margin:0 0 14px;">View property: <a href="${esc(listingUrl)}" style="color:#0E56F5;">${esc(listingUrl)}</a></p>` : ""}
-${userMsg ? `<p style="margin:0 0 14px;">${userMsg}</p>` : ""}
-<p style="margin:0 0 14px;">Questions? Just reply directly to this email.</p>
-<p style="margin:0;">${signoff}</p>
-</div>
-</body></html>`;
+      return buildAacEmail({
+        headline: "A Property Has Been Shared With You",
+        preheader: `${agentName} shared a property with you`,
+        body: `
+          <p style="margin:0 0 14px;">Hi ${recipientName},</p>
+          <p style="margin:0 0 18px;">${agentName} shared a property with you that may interest you:</p>
+          ${renderPersonalMessage(variables.message)}
+          ${cardHtml}`,
+        ctaLabel: "View Listing",
+        ctaUrl: listingUrl,
+      });
     }
 
     case "bulk-listing-share":
