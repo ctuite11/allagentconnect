@@ -180,45 +180,43 @@ export function renderEmailTemplate(
     }
 
     case "hot-sheet-invite": {
-      const teasers = Array.isArray(variables.teasers) ? variables.teasers.slice(0, 6) : [];
-      const teaserHtml = teasers.map((teaser: any) => `
-        <div style="margin:0 0 16px;border:1px solid #e5e7eb;border-radius:10px;overflow:hidden;">
-          ${teaser.photoUrl ? `<img src="${teaser.photoUrl}" alt="Listing preview" style="display:block;width:100%;height:160px;object-fit:cover;" />` : ""}
-          <div style="padding:12px 14px;">
-            <p style="margin:0 0 4px;font-size:16px;font-weight:600;color:#111827;">${teaser.price || "Price unavailable"}</p>
-            ${teaser.address ? `<p style="margin:0 0 4px;font-size:14px;font-weight:600;color:#0f172a;">${teaser.address}</p>` : ""}
-            <p style="margin:0;color:#4b5563;">${teaser.cityState || "Location unavailable"}${teaser.bedsBaths ? ` • ${teaser.bedsBaths}` : ""}</p>
-          </div>
-        </div>
-      `).join("");
-
+      // Minimal personal notification (Jun 2026). Aligned with listing-share:
+      // no listing teasers, no property detail blocks, simple CTA back to AAC,
+      // sender contact in body. Goal: behave like an AAC platform notification,
+      // not a property marketing email.
+      const recipientFullName = String(variables.recipientName || "there").trim();
+      const firstName = recipientFullName.split(/\s+/)[0] || "there";
+      const inviterName = variables.inviterName || "Your agent";
+      const inviterEmail = variables.inviterEmail || "";
+      const inviterPhone = variables.inviterPhone || "";
+      const inviterBrokerage = variables.inviterBrokerage || "";
+      const hotSheetLink = String(variables.hotSheetLink || "");
       const isInviteOnly = variables.inviteOnly === true || !variables.hotSheetName;
 
       if (isInviteOnly) {
         return buildAacEmail({
-          headline: "You've Been Invited to Join All Agent Connect",
+          headline: "You've been invited to All Agent Connect",
+          preheader: `${inviterName} invited you to All Agent Connect`,
           body: `
-            <p style="margin:0 0 12px;">${variables.inviterName} has invited you to <strong>All Agent Connect</strong> — a private buyer workspace where you can:</p>
-            <ul style="margin:0 0 16px;padding:0 0 0 20px;color:#334155;line-height:1.7;">
-              <li>Receive personalized Hot Sheets</li>
-              <li>Save favorite homes</li>
-              <li>Track listings and updates</li>
-              <li>Communicate directly with your agent</li>
-              <li>Stay organized during your home search</li>
-            </ul>
-            <p style="margin:16px 0 0;color:#475569;font-size:14px;">Once you join, any Hot Sheets and listings your agent shares will be waiting for you.</p>`,
-          ctaLabel: "Join All Agent Connect",
-          ctaUrl: variables.hotSheetLink,
+            <p style="margin:0 0 14px;">Hi ${firstName},</p>
+            <p style="margin:0 0 18px;">${inviterName} invited you to join them on All Agent Connect.</p>
+            <p style="margin:0 0 18px;">Click below to accept the invitation and connect with your agent through AAC.</p>
+            ${renderSharedByBlock({ agentName: inviterName, agentBrokerage: inviterBrokerage, agentEmail: inviterEmail, agentPhone: inviterPhone })}`,
+          ctaLabel: "Accept Invitation",
+          ctaUrl: hotSheetLink,
         });
       }
 
       return buildAacEmail({
-        headline: "You've Been Invited to View a Hot Sheet",
+        headline: "A hot sheet has been shared with you",
+        preheader: `${inviterName} invited you to view a hot sheet`,
         body: `
-          <p style="margin:0 0 12px;">${variables.inviterName} has shared their Hot Sheet "${variables.hotSheetName}" with you.</p>
-          ${teaserHtml ? `<p style="margin:0 0 12px;">Here are a few matching homes to preview:</p>${teaserHtml}` : ""}`,
-        ctaLabel: "Accept Invite & View Matches",
-        ctaUrl: variables.hotSheetLink,
+          <p style="margin:0 0 14px;">Hi ${firstName},</p>
+          <p style="margin:0 0 18px;">${inviterName} invited you to view a private hot sheet on All Agent Connect.</p>
+          <p style="margin:0 0 18px;">Click below to review the listings and contact your agent through AAC.</p>
+          ${renderSharedByBlock({ agentName: inviterName, agentBrokerage: inviterBrokerage, agentEmail: inviterEmail, agentPhone: inviterPhone })}`,
+        ctaLabel: "View Hot Sheet",
+        ctaUrl: hotSheetLink,
       });
     }
 
