@@ -69,6 +69,8 @@ export function renderEmailTemplate(
       // Listing" CTA and the in-app Contact Agent button to reach the agent.
       const recipientName = variables.recipientName || "there";
       const agentName = variables.agentName || "Your agent";
+      const agentEmail = variables.agentEmail || "";
+      const agentPhone = variables.agentPhone || "";
       const listing = variables.listing || variables;
       const listingUrl = String(variables.listingUrl || "");
       const cardHtml = renderListingShareCard(listing);
@@ -80,7 +82,8 @@ export function renderEmailTemplate(
           <p style="margin:0 0 14px;">Hi ${recipientName},</p>
           <p style="margin:0 0 18px;">${agentName} shared a property with you that may interest you:</p>
           ${renderPersonalMessage(variables.message)}
-          ${cardHtml}`,
+          ${cardHtml}
+          ${agentEmail ? renderAgentContactBlock({ agentName, agentEmail, agentPhone }) : ""}`,
         ctaLabel: "View Listing",
         ctaUrl: listingUrl,
       });
