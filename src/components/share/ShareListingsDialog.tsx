@@ -603,13 +603,17 @@ export function ShareListingsDialog({
                     {onAddRecipient ? (
                       <Button
                         type="button"
-                        variant="outline"
                         size="sm"
                         disabled={!canAddManualRecipient || addingManualRecipient}
                         onClick={() => void handleManualAddRecipient()}
-                        className="h-8 rounded-lg border-neutral-200 text-[12px] font-medium text-neutral-900 hover:bg-neutral-50"
+                        className={cn(
+                          "h-8 rounded-lg text-[12px] font-medium transition-all",
+                          canAddManualRecipient && !addingManualRecipient
+                            ? "bg-primary text-primary-foreground shadow-sm ring-2 ring-primary/30 hover:bg-primary/90"
+                            : "border border-neutral-200 bg-white text-neutral-400"
+                        )}
                       >
-                        <Plus className={cn("mr-1.5 h-3.5 w-3.5", ICON_NEUTRAL)} />
+                        <Plus className="mr-1.5 h-3.5 w-3.5" />
                         {addingManualRecipient ? "Adding…" : "Add to recipients"}
                       </Button>
                     ) : null}
