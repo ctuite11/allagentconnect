@@ -18,6 +18,8 @@ export type SenderProfile = {
   firstName: string;
   email: string;
   phone: string;
+  /** Agent brokerage/company. Empty string when unavailable (e.g. buyer sender). */
+  brokerage: string;
 };
 
 export type SenderProfileSource = "auto" | "agent" | "buyer";
@@ -42,6 +44,7 @@ function buildSenderProfile(params: {
   lastName?: string | null;
   email?: string | null;
   phone?: string | null;
+  brokerage?: string | null;
   authEmail?: string | null;
   metadataDisplayName?: string;
 }): SenderProfile {
@@ -59,6 +62,7 @@ function buildSenderProfile(params: {
     firstName,
     email: (typeof params.email === "string" ? params.email.trim() : "") || params.authEmail || "",
     phone: (typeof params.phone === "string" ? params.phone.trim() : "") || "",
+    brokerage: (typeof params.brokerage === "string" ? params.brokerage.trim() : "") || "",
   };
 }
 
@@ -69,7 +73,7 @@ async function senderFromAgentProfiles(
 ): Promise<SenderProfile> {
   const { data: profile } = await supabase
     .from("agent_profiles")
-    .select("first_name, last_name, email, phone, cell_phone")
+    .select("first_name, last_name, email, phone, cell_phone, company")
     .eq("id", userId)
     .maybeSingle();
 
@@ -83,6 +87,7 @@ async function senderFromAgentProfiles(
     lastName: profile?.last_name,
     email: profile?.email,
     phone,
+    brokerage: profile?.company,
     authEmail,
     metadataDisplayName,
   });

@@ -46,6 +46,8 @@ export const ShareListingDialog = ({
   const [recipientEmail, setRecipientEmail] = useState("");
   const [agentName, setAgentName] = useState("");
   const [agentEmail, setAgentEmail] = useState("");
+  const [agentPhone, setAgentPhone] = useState("");
+  const [agentBrokerage, setAgentBrokerage] = useState("");
   const [message, setMessage] = useState("");
   const [showManualEntry, setShowManualEntry] = useState(false);
   const [listingPreview, setListingPreview] = useState<ListingPreview | undefined>();
@@ -81,10 +83,14 @@ export const ShareListingDialog = ({
         if (sender) {
           setAgentName(sender.name);
           setAgentEmail(sender.email);
+          setAgentPhone(sender.phone || "");
+          setAgentBrokerage(sender.brokerage || "");
         }
       } else {
         setAgentName("");
         setAgentEmail("");
+        setAgentPhone("");
+        setAgentBrokerage("");
       }
     })();
   }, [open, senderProfileSource]);
@@ -99,6 +105,8 @@ export const ShareListingDialog = ({
       setRecipientEmail("");
       setAgentName("");
       setAgentEmail("");
+      setAgentPhone("");
+      setAgentBrokerage("");
       setMessage("");
       resetContactSearch();
       setShowManualEntry(false);
@@ -178,7 +186,8 @@ export const ShareListingDialog = ({
           recipientEmail: recipient.email.trim(),
           agentName,
           agentEmail,
-          agentPhone: "",
+          agentPhone,
+          agentBrokerage,
           message,
         });
 

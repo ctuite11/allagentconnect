@@ -14,6 +14,7 @@ interface ShareListingRequest {
   agentName: string;
   agentEmail: string;
   agentPhone?: string;
+  agentBrokerage?: string;
   message?: string;
 }
 
@@ -51,6 +52,7 @@ const handler = async (req: Request): Promise<Response> => {
       agentName,
       agentEmail,
       agentPhone = '',
+      agentBrokerage = '',
       message = '',
     } = parsed;
 
@@ -92,12 +94,6 @@ const handler = async (req: Request): Promise<Response> => {
       return jsonResponse({ success: false, error: 'Listing not found' }, 404);
     }
 
-    // Resolve photo URL (same logic as before, just for the variables payload)
-    const photos = listing.photos || [];
-    const primaryPhoto = Array.isArray(photos) && photos.length > 0
-      ? (typeof photos[0] === 'string' ? photos[0] : (photos[0] as any)?.url || '')
-      : '';
-
     const appUrl = Deno.env.get('APP_URL') || 'https://allagentconnect.com';
     const listingUrl = `${appUrl}/property/${listingId}`;
 
@@ -112,10 +108,8 @@ const handler = async (req: Request): Promise<Response> => {
           provider: 'resend',
           template: 'listing-share',
           to: recipientEmail,
-          // Plain, human-style subject mirroring Message Agent (which inboxes).
-          // Example: "Austyn Agent shared a property with you" — no "Property Shared:" prefix,
-          // no address in subject (reduces promotional pattern match in Gmail).
-          subject: `${(agentName || "Your agent").trim()} shared a property with you`,
+          // Personal, 1:1 subject. No address, no price, no "Property Shared:" prefix.
+          subject: `${(agentName || "Your agent").trim()} sent you a listing`,
           // Reply-To is the monitored AAC inbox — recipients reach the listing
           // agent via the in-app "Contact Agent" button on the listing page.
           reply_to: 'hello@allagentconnect.com',
@@ -124,30 +118,9 @@ const handler = async (req: Request): Promise<Response> => {
             agentName,
             agentEmail,
             agentPhone,
+            agentBrokerage,
             message,
             listingUrl,
-            listing: {
-              address: listing.address,
-              city: listing.city,
-              state: listing.state,
-              zipCode: listing.zip_code,
-              unit_number: listing.unit_number,
-              condo_details: listing.condo_details,
-              price: listing.price,
-              bedrooms: listing.bedrooms,
-              bathrooms: listing.bathrooms,
-              squareFeet: listing.square_feet,
-              propertyType: listing.property_type,
-              property_type: listing.property_type,
-              status: listing.status,
-              listing_number: listing.listing_number,
-              mls_number: listing.mls_number,
-              brokerage_name: listing.brokerage_name,
-              listing_brokerage: listing.listing_brokerage,
-              list_office: listing.list_office,
-              listing_agent_name: listing.listing_agent_name,
-              photoUrl: primaryPhoto,
-            },
           },
         },
       });
