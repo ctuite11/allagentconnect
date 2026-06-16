@@ -291,17 +291,49 @@ const AuthCallback = () => {
         return;
       }
 
-      // Single RPC resolves role with enforced priority: admin > agent > buyer > unknown
-      const resolved = await resolveUserRole(userId);
+      // Re-validate session against the auth server so we route on the
+      // server-confirmed user id, not a stale localStorage cache.
+      const { data: userData } = await supabase.auth.getUser();
+      const verifiedUserId = userData?.user?.id ?? userId;
+      const verifiedEmail = userData?.user?.email ?? session?.user?.email ?? null;
+
+      // First attempt
+      let resolved = await resolveUserRole(verifiedUserId);
+      if (import.meta.env.DEV) {
+        console.info("[POST_LOGIN] resolveUserRole #1", {
+          userId: verifiedUserId,
+          email: verifiedEmail,
+          role: resolved.role,
+          is_verified_agent: resolved.is_verified_agent,
+        });
+      }
+
+      // Retry once if RPC returned unknown (covers JWT propagation race on
+      // a freshly issued token). Never treat unknown/null/error as pending.
+      if (resolved.role === "unknown") {
+        await new Promise((r) => setTimeout(r, 250));
+        resolved = await resolveUserRole(verifiedUserId);
+        if (import.meta.env.DEV) {
+          console.info("[POST_LOGIN] resolveUserRole #2 (retry)", {
+            userId: verifiedUserId,
+            role: resolved.role,
+            is_verified_agent: resolved.is_verified_agent,
+          });
+        }
+      }
+
       const target = getRouteForRole(resolved);
 
       authDebug("routeUser resolved", {
-        email: session?.user?.email ?? null,
-        userId,
+        email: verifiedEmail,
+        userId: verifiedUserId,
         role: resolved.role,
         is_verified_agent: resolved.is_verified_agent,
         target,
       });
+      if (import.meta.env.DEV) {
+        console.info("[POST_LOGIN] redirect", { target, role: resolved.role });
+      }
 
       didNavigate.current = true;
       navigate(target, { replace: true });
