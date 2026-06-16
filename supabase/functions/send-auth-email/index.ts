@@ -210,7 +210,7 @@ Deno.serve(async (req: Request) => {
 
     const { subject, html, text } = buildEmailForType({ type, email, actionUrl, otp });
 
-    const from = (Deno.env.get("TRANSACTIONAL_FROM") || "All Agent Connect <hello@mail.allagentconnect.com>");
+    const from = (Deno.env.get("TRANSACTIONAL_FROM") || "All Agent Connect <hello@notify.allagentconnect.com>");
 
     const sendRes = await resend.emails.send({
       from,

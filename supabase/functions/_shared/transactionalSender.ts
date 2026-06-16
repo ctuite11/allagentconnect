@@ -13,7 +13,7 @@
  * Bulk/outreach: keep BULK_EMAIL_PAUSED=true until a dedicated outreach subdomain exists.
  */
 
-export const DEFAULT_TRANSACTIONAL_FROM_EMAIL = "hello@mail.allagentconnect.com";
+export const DEFAULT_TRANSACTIONAL_FROM_EMAIL = "hello@notify.allagentconnect.com";
 export const DEFAULT_TRANSACTIONAL_FROM_NAME = "All Agent Connect";
 
 /** Resend From, hard-locked to the currently-verified sender. */
