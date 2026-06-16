@@ -1,11 +1,10 @@
 /**
  * Canonical transactional sender for all AAC email.
  *
- * TEMP REVERT (Jun 2026): visible From is back on the verified
- * `mail.allagentconnect.com` subdomain so invites and hot-sheet emails
- * keep sending. Resend's root `allagentconnect.com` domain is not yet
- * verified — once DKIM/SPF at the root are published and verified, flip
- * `DEFAULT_TRANSACTIONAL_FROM_EMAIL` back to `hello@notify.allagentconnect.com`.
+ * Jun 2026: root domain `allagentconnect.com` is verified in Resend.
+ * Visible From is on the root domain for deliverability (subdomains
+ * `notify.` / `mail.` showed degraded inbox placement). To revert,
+ * set `DEFAULT_TRANSACTIONAL_FROM_EMAIL` back to a verified subdomain.
  *
  * No other knobs changed: transport, DKIM/SPF/DMARC on the subdomain,
  * Resend account, templates, links, and Reply-To are unchanged.
@@ -13,7 +12,7 @@
  * Bulk/outreach: keep BULK_EMAIL_PAUSED=true until a dedicated outreach subdomain exists.
  */
 
-export const DEFAULT_TRANSACTIONAL_FROM_EMAIL = "hello@notify.allagentconnect.com";
+export const DEFAULT_TRANSACTIONAL_FROM_EMAIL = "hello@allagentconnect.com";
 export const DEFAULT_TRANSACTIONAL_FROM_NAME = "All Agent Connect";
 
 /** Resend From, hard-locked to the currently-verified sender. */
