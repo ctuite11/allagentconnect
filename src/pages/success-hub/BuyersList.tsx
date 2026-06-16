@@ -83,6 +83,22 @@ export default function BuyersList() {
   const [loadError, setLoadError] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const [createdBuyer, setCreatedBuyer] = useState<CreatedBuyer | null>(null);
+
+  // Wizard continuity: if returning from BuyerAccount where the agent backed out
+  // of the Hot Sheet step, re-open the "Buyer Added" next-step dialog so they
+  // can pick "Invite Client Now" (without Hot Sheet) instead of losing the flow.
+  const reopenHandledRef = useRef(false);
+  useEffect(() => {
+    if (reopenHandledRef.current) return;
+    const state = (location.state ?? null) as { reopenCreatedBuyer?: CreatedBuyer } | null;
+    const reopen = state?.reopenCreatedBuyer;
+    if (reopen && reopen.id) {
+      reopenHandledRef.current = true;
+      setCreatedBuyer(reopen);
+      // Clear the state so refresh/back doesn't re-trigger.
+      navigate(location.pathname + location.search, { replace: true, state: null });
+    }
+  }, [location, navigate]);
   const [filter, setFilter] = useState<FilterKey>("all");
 
   const loadBuyers = async (opts?: { silent?: boolean }) => {
