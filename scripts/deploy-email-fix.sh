@@ -11,8 +11,8 @@ cd "$ROOT"
 # Production project (matches .env VITE_SUPABASE_PROJECT_ID)
 PROJECT_REF="${SUPABASE_PROJECT_REF:-qocduqtfbsevnhlgsfka}"
 
-CANONICAL_FROM='All Agent Connect <hello@mail.allagentconnect.com>'
-CANONICAL_EMAIL='hello@mail.allagentconnect.com'
+CANONICAL_FROM='All Agent Connect <hello@allagentconnect.com>'
+CANONICAL_EMAIL='hello@allagentconnect.com'
 
 echo "==> 1. Supabase secrets (project: ${PROJECT_REF})"
 npx supabase secrets set \
