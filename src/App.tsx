@@ -296,6 +296,7 @@ const App = () => (
             <>
               <ActiveAgentBanner />
               <NewMessageToastListener />
+              <CrossTabSessionGuard />
               <Routes>
                 <Route path="/" element={<HomepageV2 />} />
                 <Route path="/register" element={<Register />} />
