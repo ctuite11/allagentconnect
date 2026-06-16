@@ -250,7 +250,7 @@ export function ShareListingsDialog({
   };
 
   const canAddManualRecipient = Boolean(
-    recipientFirstName.trim() &&
+    (hideContactSearch || recipientFirstName.trim()) &&
       recipientEmail.trim() &&
       isValidShareRecipientEmail(recipientEmail),
   );
@@ -288,8 +288,11 @@ export function ShareListingsDialog({
   };
 
   const handleManualAddRecipient = async () => {
+    const effectiveFirstName = hideContactSearch
+      ? (recipientFirstName.trim() || recipientEmail.trim().split("@")[0] || "Contact")
+      : recipientFirstName;
     const recipient = shareRecipientFromParts(
-      recipientFirstName,
+      effectiveFirstName,
       recipientLastName,
       recipientEmail,
     );
