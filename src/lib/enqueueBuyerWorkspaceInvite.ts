@@ -33,9 +33,17 @@ export async function enqueueBuyerWorkspaceInvite({
     const { data: ap } = await supabase
       .from("agent_profiles")
       .select("first_name, last_name")
-      .eq("id", agentUserId)
+      .eq("user_id", agentUserId)
       .maybeSingle();
-    inviterName = `${ap?.first_name ?? ""} ${ap?.last_name ?? ""}`.trim() || "Your agent";
+    inviterName = `${ap?.first_name ?? ""} ${ap?.last_name ?? ""}`.trim();
+    if (!inviterName) {
+      const { data: p } = await supabase
+        .from("profiles")
+        .select("first_name, last_name")
+        .eq("id", agentUserId)
+        .maybeSingle();
+      inviterName = `${p?.first_name ?? ""} ${p?.last_name ?? ""}`.trim() || "Your agent";
+    }
   }
 
   const token = crypto.randomUUID();

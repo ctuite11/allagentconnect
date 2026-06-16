@@ -83,7 +83,7 @@ export function buildAacEmail(opts: AacEmailOptions): string {
           <table role="presentation" cellspacing="0" cellpadding="0"><tr><td align="center">
             <!--[if mso]><v:rect xmlns:v="urn:schemas-microsoft-com:vml" style="width:40px;height:40px;" fill="false" stroke="false"><v:textbox inset="0,0,0,0" style="mso-fit-shape-to-text:false;"><center style="font-size:16px;font-weight:700;color:#50c878;font-family:Arial,sans-serif;">✦</center></v:textbox></v:rect><![endif]-->
             <!--[if !mso]><!-->
-            <img src="https://qocduqtfbsevnhlgsfka.supabase.co/storage/v1/object/public/brand-assets/aac-monogram-green-128.png" width="40" height="40" alt="All Agent Connect" style="display:block;border:0;outline:none;text-decoration:none;" />
+            <img src="https://allagentconnect.com/email/aac-monogram-green-128.png" width="40" height="40" alt="All Agent Connect" style="display:block;border:0;outline:none;text-decoration:none;" />
             <!--<![endif]-->
           </td></tr></table>
           <p style="margin:12px 0 0;font-size:18px;font-weight:600;letter-spacing:-0.02em;color:#ffffff;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">All Agent Connect</p>
@@ -108,13 +108,13 @@ export function buildAacEmail(opts: AacEmailOptions): string {
 
         <!-- Dark footer -->
         <tr><td align="center" style="background-color:#111317;border-top:2px solid #50c878;border-radius:0 0 12px 12px;padding:24px 40px 20px;text-align:center;">
-          <img src="https://qocduqtfbsevnhlgsfka.supabase.co/storage/v1/object/public/brand-assets/aac-monogram-green-128.png" width="24" height="24" alt="" style="display:block;margin:0 auto 12px;border:0;outline:none;text-decoration:none;" />
+          <img src="https://allagentconnect.com/email/aac-monogram-green-128.png" width="24" height="24" alt="" style="display:block;margin:0 auto 12px;border:0;outline:none;text-decoration:none;" />
           <p style="margin:0 0 4px;font-size:12px;color:rgba(255,255,255,0.6);font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">All Agent Connect</p>
           <p style="margin:0 0 6px;font-size:12px;color:rgba(255,255,255,0.45);font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
-            <a href="mailto:hello@allagentconnect.com" style="color:rgba(255,255,255,0.45);text-decoration:none;">hello@allagentconnect.com</a>
+            <a href="mailto:hello@notify.allagentconnect.com" style="color:rgba(255,255,255,0.45);text-decoration:none;">hello@notify.allagentconnect.com</a>
           </p>
           <p style="margin:0;font-size:11px;color:rgba(255,255,255,0.35);font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
-            <a href="mailto:hello@allagentconnect.com?subject=Remove%20My%20Account&body=Please%20remove%20my%20account." style="color:rgba(255,255,255,0.35);text-decoration:underline;">Remove my account</a>
+            <a href="mailto:hello@notify.allagentconnect.com?subject=Remove%20My%20Account&body=Please%20remove%20my%20account." style="color:rgba(255,255,255,0.35);text-decoration:underline;">Remove my account</a>
           </p>
           ${unsubHtml}
         </td></tr>

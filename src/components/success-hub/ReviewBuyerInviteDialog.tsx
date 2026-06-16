@@ -61,16 +61,22 @@ export function ReviewBuyerInviteDialog({
       const user = data.user;
       if (!user) return;
 
-      const { data: profile } = await supabase
-        .from("profiles")
+      const { data: ap } = await (supabase as any)
+        .from("agent_profiles")
         .select("first_name, last_name")
-        .eq("id", user.id)
+        .eq("user_id", user.id)
         .maybeSingle();
 
-      const name =
-        [profile?.first_name, profile?.last_name].filter(Boolean).join(" ") ||
-        user.email ||
-        "Your agent";
+      let name = [ap?.first_name, ap?.last_name].filter(Boolean).join(" ").trim();
+      if (!name) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("first_name, last_name")
+          .eq("id", user.id)
+          .maybeSingle();
+        name = [profile?.first_name, profile?.last_name].filter(Boolean).join(" ").trim();
+      }
+      if (!name) name = "Your agent";
 
       if (!cancelled) setAgentName(name);
     })();
