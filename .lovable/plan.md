@@ -1,44 +1,64 @@
-# Fix Agent Profile Back Navigation
+# Canonical sender confirmation + consistency sweep
 
-## Goal
-When the Agent Profile (`/agent/:idOrCode`) is opened from anywhere — Listing Detail, listing cards, Network Activity, Messages, Comms Center, Agent Network — the Back button must return to that origin, not always to Agent Network.
+## Audit result
 
-## Approach
-Standard React Router pattern: pass `state.from` on navigation, and have Agent Profile prefer `location.state.from` when rendering its Back button. Falls back to the current default (`/our-agents` public, `/our-members` in‑app) when no origin is supplied (direct links, refresh, etc.).
+Grepped every email sender. The **From header is already `All Agent Connect <hello@notify.allagentconnect.com>` everywhere** that sends mail:
 
-## Changes
+- `supabase/functions/_shared/transactionalSender.ts` (`DEFAULT_TRANSACTIONAL_FROM_EMAIL`)
+- `supabase/functions/send-auth-email` (invites + hot-sheets via queue)
+- `supabase/functions/send-password-reset`
+- `supabase/functions/send-agent-approval-email`
+- `supabase/functions/send-verification-submitted`
+- `supabase/functions/send-license-upload-notification`
+- `supabase/functions/submit-early-access` (both sends)
+- `supabase/functions/convert-early-access-to-account`
+- `supabase/functions/send-bulk-email`
+- `netlify/functions/email-worker.ts` (`canonicalFrom`)
+- `netlify/functions/send-pending-approval-email.ts`
+- `netlify/functions/send-password-changed-email.ts`
+- `netlify/edge-functions/request-password-reset.ts`
 
-### 1. `src/pages/AgentProfile.tsx` — Back button reads origin
-- Add `useLocation()`.
-- Compute `backTo = (location.state as any)?.from ?? (publicMode ? "/our-agents" : "/our-members")`.
-- Update the `AacBackButton` onClick (line 372) to `navigate(backTo)`.
-- Also update the "Agent not found" fallback (line 232) to use the same `backTo`.
+Shared template footer (`_shared/aacEmailTemplate.ts`) is already `notify`.
 
-### 2. Add `state: { from: location.pathname + location.search }` at every call site that navigates to `/agent/:id` and does not already pass it
+## Sweep targets (replace `hello@allagentconnect.com` → `hello@notify.allagentconnect.com`)
 
-Already correct (leave as‑is):
-- `src/pages/PropertyDetail.tsx` L1070
-- `src/pages/AgentListingDetail.tsx` L1008
-- `src/components/PropertyDetailRightColumn.tsx` L194
-- `src/pages/AgentProfileEditor.tsx` L338
+**Inline HTML footers / "Questions?" / remove-my-account mailtos** (functions that don't use the shared template):
+- `supabase/functions/submit-early-access/index.ts` (lines 215, 218)
+- `supabase/functions/convert-early-access-to-account/index.ts` (lines 145, 154, 157)
+- `netlify/edge-functions/request-password-reset.ts` (lines 91, 93)
+- `netlify/functions/send-pending-approval-email.ts` (lines 59, 61)
+- `netlify/functions/email-worker.ts` (lines 336, 339)
+- `supabase/functions/email-unsubscribe/index.ts` (lines 50, 81)
 
-Needs `state.from` added (add `useLocation` where missing):
-- `src/pages/TeamProfile.tsx` L357
-- `src/pages/OurAgents.tsx` L374
-- `src/pages/Conversation.tsx` L138 (Messages)
-- `src/components/BuyerAgentShowcase.tsx` L165
-- `src/components/PropertyCard.tsx` L178 and L191
-- `src/components/MatchingBuyerAgents.tsx` L157
-- `src/components/success-hub/networkActivity/NetworkActivitySection.tsx` L111
-- `src/components/communication-center/RecipientListDialog.tsx` L55 — convert `<Link to={...}>` to `<Link to={...} state={{ from: location.pathname + location.search }}>` (add `useLocation`).
+**Generic / fallback Reply-To values** (system-level AAC, not a specific agent):
+- `supabase/functions/send-auth-email` line 213-ish
+- `supabase/functions/send-password-reset`
+- `supabase/functions/send-agent-approval-email`
+- `supabase/functions/send-verification-submitted`
+- `supabase/functions/send-license-upload-notification`
+- `supabase/functions/submit-early-access` (both)
+- `supabase/functions/convert-early-access-to-account`
+- `supabase/functions/send-bulk-email` (the `|| "hello@allagentconnect.com"` fallback only — preserve `agentEmail` primary)
+- `netlify/edge-functions/request-password-reset.ts`
+
+**List-Unsubscribe mailto**:
+- `supabase/functions/_shared/sendEmail.ts` line 105
+
+**Stale comment**:
+- `supabase/functions/send-auth-email/index.ts` lines 6–7
+
+## Explicitly NOT touched (intentional agent Reply-To)
+
+- `supabase/functions/send-listing-share/index.ts` line 115 — Reply-To routes back to the sharing agent's flow; keep as-is per "don't overwrite intentional agent Reply-To" rule.
+- `supabase/functions/send-bulk-email` `senderReplyTo = agentEmail || …` — only the fallback string changes; `agentEmail` continues to take priority.
+- Any per-message Reply-To set to an inviting/sending agent's address at call time.
+- `supabase/functions/request-showing.ts` and `send-contact-email` `to:` inboxing addresses (not sender identity).
 
 ## Out of scope
-- No changes to `backTargets.ts` (its `/agents/:id` rule is unused — Agent Profile renders its own Back button).
-- No scroll‑restoration work; React Router's default behavior preserves history scroll on browser back, but `navigate(path)` is a push so exact scroll restoration on the origin page is not guaranteed. Will only be achieved when the browser/back‑forward cache restores it; no new infra added.
-- No changes to upload, DB, or RLS.
+DNS, Resend config, queue/cron, invite logic, template structure, idempotency, sender separation strategy.
 
-## Verification
-1. Listing Detail → click agent → Agent Profile → Back returns to that listing.
-2. Network Activity row → Agent Profile → Back returns to Success Hub.
-3. Messages thread header avatar → Agent Profile → Back returns to that conversation.
-4. Direct visit to `/agent/<id>` (no state) → Back goes to `/our-members` (in‑app) or `/our-agents` (public) — unchanged.
+## After file edits
+Redeploy the affected Supabase Edge Functions:
+`send-auth-email`, `send-password-reset`, `send-agent-approval-email`, `send-verification-submitted`, `send-license-upload-notification`, `send-bulk-email`, `submit-early-access`, `convert-early-access-to-account`, `email-unsubscribe`.
+
+(Netlify functions redeploy on push automatically.)
