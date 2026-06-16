@@ -88,7 +88,26 @@ export function renderEmailTemplate(
   switch (template) {
     case "listing-share":
     {
-      return `<!doctype html><html><body><p>hi, see you inside the group</p></body></html>`;
+      const recipientName = variables.recipientName || "there";
+      const agentName = variables.agentName || "Your agent";
+      const agentEmail = variables.agentEmail || "";
+      const agentPhone = variables.agentPhone || "";
+      const listing = variables.listing || null;
+      const listingUrl = variables.listingUrl || "";
+      const cardHtml = listing ? renderListingShareCard(listing) : "";
+
+      return buildAacEmail({
+        headline: "A Property Has Been Shared With You",
+        preheader: `${agentName} shared a property with you`,
+        body: `
+          <p style="margin:0 0 14px;">Hi ${recipientName},</p>
+          <p style="margin:0 0 18px;">${agentName} wants to share a property with you that may interest you:</p>
+          ${renderPersonalMessage(variables.message)}
+          ${cardHtml}
+          ${renderAgentContactBlock({ agentName, agentEmail, agentPhone })}`,
+        ctaLabel: listingUrl ? "View Property" : undefined,
+        ctaUrl: listingUrl || undefined,
+      });
     }
 
     case "bulk-listing-share":
