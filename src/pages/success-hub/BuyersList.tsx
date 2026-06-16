@@ -530,10 +530,16 @@ function BuyerCard({
 
       if (hotSheetToken?.payload?.hot_sheet_id) {
         const hotSheetId = String(hotSheetToken.payload.hot_sheet_id);
-        const [{ data: hs }, { data: ap }] = await Promise.all([
-          supabase.from("hot_sheets").select("name").eq("id", hotSheetId).maybeSingle(),
-          supabase.from("agent_profiles").select("first_name, last_name").eq("user_id", user.id).maybeSingle(),
-        ]);
+        const { data: hs } = await supabase
+          .from("hot_sheets")
+          .select("name")
+          .eq("id", hotSheetId)
+          .maybeSingle();
+        const { data: ap } = await supabase
+          .from("agent_profiles")
+          .select("first_name, last_name")
+          .eq("user_id", user.id)
+          .maybeSingle();
         let inviterName = `${ap?.first_name ?? ""} ${ap?.last_name ?? ""}`.trim();
         if (!inviterName) {
           const { data: pr } = await supabase
