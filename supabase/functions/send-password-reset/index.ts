@@ -139,7 +139,7 @@ const handler = async (req: Request): Promise<Response> => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: (Deno.env.get("TRANSACTIONAL_FROM") || "All Agent Connect <hello@mail.allagentconnect.com>"),
+        from: (Deno.env.get("TRANSACTIONAL_FROM") || "All Agent Connect <hello@allagentconnect.com>"),
         reply_to: "hello@allagentconnect.com",
         to: [email],
         subject: "Reset your password",

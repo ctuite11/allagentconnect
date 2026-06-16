@@ -375,7 +375,7 @@ async function sendEmail(job: EmailJob, resendApiKey: string): Promise<void> {
   const { payload } = job;
 
   // Hard-lock — never read notify/mail from Netlify env (proven drift vector).
-  const canonicalFrom = "All Agent Connect <hello@mail.allagentconnect.com>";
+  const canonicalFrom = "All Agent Connect <hello@allagentconnect.com>";
   
   // Normalize recipients: handle string, array, or comma-separated string
   const toList: string[] = Array.isArray(payload.to)

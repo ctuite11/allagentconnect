@@ -239,7 +239,7 @@ export default async function handler(request: Request, context: any) {
       body: JSON.stringify({
         from:
           process.env.TRANSACTIONAL_FROM ||
-          "All Agent Connect <hello@mail.allagentconnect.com>",
+          "All Agent Connect <hello@allagentconnect.com>",
         reply_to: "hello@allagentconnect.com",
         to: [cleanEmail],
         subject: "Reset your password",
