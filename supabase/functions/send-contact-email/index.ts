@@ -138,7 +138,7 @@ ${senderPhone ? `<p><strong>Phone:</strong> ${escapeHtml(senderPhone)}</p>` : ""
 
     // DELIVERABILITY TEST: route Listing → Message Agent through the same
     // queued email_jobs + worker path that delivers AAC Messages notifications
-    // (inboxing from hello@allagentconnect.com).
+    // (inboxing from chris@allagentconnect.com).
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     if (!supabaseUrl || !supabaseServiceKey) {
       throw new Error("Server misconfigured: missing Supabase service credentials");

@@ -47,7 +47,7 @@ Deno.serve(async (req) => {
   const t = url.searchParams.get("t") || "";
 
   if (!e || !c || !t || !VALID_CATEGORIES.has(c)) {
-    return htmlPage("Invalid link", "<h1>Invalid unsubscribe link</h1><p>This link is malformed or expired. Please contact hello@notify.allagentconnect.com.</p>", 400);
+    return htmlPage("Invalid link", "<h1>Invalid unsubscribe link</h1><p>This link is malformed or expired. Please contact chris@allagentconnect.com.</p>", 400);
   }
 
   let email = "";
@@ -78,7 +78,7 @@ Deno.serve(async (req) => {
     "all marketing emails from All Agent Connect";
 
   if (!success) {
-    return htmlPage("Error", "<h1>Something went wrong</h1><p>We couldn't process your request. Please email hello@notify.allagentconnect.com.</p>", 500);
+    return htmlPage("Error", "<h1>Something went wrong</h1><p>We couldn't process your request. Please email chris@allagentconnect.com.</p>", 500);
   }
 
   return htmlPage(

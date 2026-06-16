@@ -112,7 +112,7 @@ const handler = async (req: Request): Promise<Response> => {
           subject: `${(agentName || "Your agent").trim()} sent you a listing`,
           // Reply-To is the monitored AAC inbox — recipients reach the listing
           // agent via the in-app "Contact Agent" button on the listing page.
-          reply_to: 'hello@allagentconnect.com',
+          reply_to: 'chris@allagentconnect.com',
           variables: {
             recipientName,
             agentName,

@@ -212,10 +212,10 @@ Deno.serve(async (req) => {
         <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 40px 0 24px 0;">
         
               <p style="color: #6b7280; font-size: 12px; margin: 0 0 8px 0;">
-                All Agent Connect · hello@notify.allagentconnect.com
+                All Agent Connect · chris@allagentconnect.com
               </p>
               <p style="color: #9ca3af; font-size: 11px; margin: 0;">
-                <a href="mailto:hello@notify.allagentconnect.com?subject=Remove%20My%20Account&body=Please%20remove%20my%20account%20from%20AllAgentConnect." style="color: #9ca3af; text-decoration: underline;">Click here</a> to request account removal.
+                <a href="mailto:chris@allagentconnect.com?subject=Remove%20My%20Account&body=Please%20remove%20my%20account%20from%20AllAgentConnect." style="color: #9ca3af; text-decoration: underline;">Click here</a> to request account removal.
               </p>
       </body>
       </html>
@@ -229,8 +229,8 @@ Deno.serve(async (req) => {
           Authorization: `Bearer ${RESEND_API_KEY}`,
         },
         body: JSON.stringify({
-          from: (Deno.env.get("TRANSACTIONAL_FROM") || "All Agent Connect <hello@allagentconnect.com>"),
-          reply_to: "hello@allagentconnect.com",
+          from: (Deno.env.get("TRANSACTIONAL_FROM") || "All Agent Connect <chris@allagentconnect.com>"),
+          reply_to: "chris@allagentconnect.com",
           to: [normalizedEmail],
           subject: "Welcome to All Agent Connect Early Access",
           html: welcomeEmailHtml,
@@ -328,8 +328,8 @@ Deno.serve(async (req) => {
           Authorization: `Bearer ${RESEND_API_KEY}`,
         },
         body: JSON.stringify({
-          from: (Deno.env.get("TRANSACTIONAL_FROM") || "All Agent Connect <hello@allagentconnect.com>"),
-          reply_to: "hello@allagentconnect.com",
+          from: (Deno.env.get("TRANSACTIONAL_FROM") || "All Agent Connect <chris@allagentconnect.com>"),
+          reply_to: "chris@allagentconnect.com",
           to: [ADMIN_EMAIL],
           subject: `🚀 Early Access Request — ${body.first_name} ${body.last_name}`,
           html: adminEmailHtml,
