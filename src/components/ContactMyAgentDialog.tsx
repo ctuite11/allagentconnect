@@ -115,7 +115,7 @@ export function ContactMyAgentDialog({
         return;
       }
 
-      sonnerToast.success("Message sent to your agent");
+      sonnerToast.success("Email sent to your agent");
       onOpenChange(false);
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Failed to send message";
