@@ -165,7 +165,7 @@ const handler = async (req: Request): Promise<Response> => {
     console.log("[send-hot-sheet-invite] Enqueuing job for:", invitedEmail, "mode:", mode);
 
     const subject = inviteOnly
-      ? `${inviterName} invited you to All Agent Connect`
+      ? `AAC`
       : `${inviterName} invited you to view a hot sheet`;
 
     const jobPayload = {
