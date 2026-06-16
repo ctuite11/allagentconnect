@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AgentAacPage } from "@/components/layout/AgentAacPage";
 import { AacPageIntro } from "@/components/layout/AacPageIntro";
 import { AgentSectionCard } from "@/components/layout/AgentSectionCard";
@@ -76,12 +76,29 @@ function BuyersRowsSkeleton({ count = 6 }: { count?: number }) {
 
 export default function BuyersList() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [buyers, setBuyers] = useState<BuyerRow[]>([]);
   const [loading, setLoading] = useState(true);
   /** Last fetch failed with no buyer rows to show (avoid empty-state masking errors). */
   const [loadError, setLoadError] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const [createdBuyer, setCreatedBuyer] = useState<CreatedBuyer | null>(null);
+
+  // Wizard continuity: if returning from BuyerAccount where the agent backed out
+  // of the Hot Sheet step, re-open the "Buyer Added" next-step dialog so they
+  // can pick "Invite Client Now" (without Hot Sheet) instead of losing the flow.
+  const reopenHandledRef = useRef(false);
+  useEffect(() => {
+    if (reopenHandledRef.current) return;
+    const state = (location.state ?? null) as { reopenCreatedBuyer?: CreatedBuyer } | null;
+    const reopen = state?.reopenCreatedBuyer;
+    if (reopen && reopen.id) {
+      reopenHandledRef.current = true;
+      setCreatedBuyer(reopen);
+      // Clear the state so refresh/back doesn't re-trigger.
+      navigate(location.pathname + location.search, { replace: true, state: null });
+    }
+  }, [location, navigate]);
   const [filter, setFilter] = useState<FilterKey>("all");
 
   const loadBuyers = async (opts?: { silent?: boolean }) => {
@@ -457,7 +474,9 @@ export default function BuyersList() {
         buyer={createdBuyer}
         onClose={() => setCreatedBuyer(null)}
         onCreateHotSheet={(b) =>
-          navigate(`${agentBuyerAccountPath(b.id)}?createHotSheet=1`)
+          navigate(`${agentBuyerAccountPath(b.id)}?createHotSheet=1`, {
+            state: { fromBuyerCreate: true, createdBuyer: b },
+          })
         }
       />
     </>
