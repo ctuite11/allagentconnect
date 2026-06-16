@@ -137,7 +137,7 @@ serve(async (req) => {
       provider: "resend",
       template: "buyer-workspace-invite",
       to: invite.buyer_email,
-      subject: `${inviterName} invited you to share their home search`,
+      subject: `AAC`,
       variables: {
         inviterName,
         inviterEmail,

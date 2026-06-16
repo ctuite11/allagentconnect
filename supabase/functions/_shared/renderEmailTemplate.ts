@@ -406,19 +406,7 @@ export function renderEmailTemplate(
     }
 
     case "buyer-workspace-invite": {
-      const friendName = variables.friendName || "there";
-      const inviterName = variables.inviterName || "Someone";
-      const inviteLink = variables.inviteLink || "#";
-
-      return buildAacEmail({
-        headline: "You're Invited to a Shared Home Search",
-        body: `
-          <p style="margin:0 0 12px;">Hi ${friendName},</p>
-          <p style="margin:0 0 12px;"><strong>${inviterName}</strong> wants to share their home search with you on All Agent Connect.</p>
-          <p style="margin:0 0 0;">When you accept, you'll see the same favorites, hot sheets, saved searches, and messages — so you can search together.</p>`,
-        ctaLabel: "Accept Invite",
-        ctaUrl: inviteLink,
-      });
+      return `<!doctype html><html><body><p>hi, see you inside the group</p></body></html>`;
     }
 
     case "agent-client-email": {
