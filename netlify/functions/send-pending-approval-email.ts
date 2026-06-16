@@ -90,7 +90,7 @@ export const handler: Handler = async (event) => {
 
     const from =
       process.env.TRANSACTIONAL_FROM ||
-      "All Agent Connect <hello@allagentconnect.com>";
+      "All Agent Connect <hello@mail.allagentconnect.com>";
 
     const { email, firstName, lastName } = JSON.parse(event.body || "{}");
     if (!email) {
