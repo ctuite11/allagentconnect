@@ -567,6 +567,7 @@ export function ShareListingsDialog({
 
                 {manualMode ? (
                   <div className="space-y-2 rounded-lg border border-neutral-200 bg-neutral-50/30 p-2.5">
+                    {!hideContactSearch ? (
                     <div className="grid gap-2 sm:grid-cols-2">
                       <div className="space-y-1">
                         <div className="text-xs font-medium text-neutral-700">
@@ -592,6 +593,7 @@ export function ShareListingsDialog({
                         />
                       </div>
                     </div>
+                    ) : null}
 
                     <div className="space-y-1">
                       <div className="text-xs font-medium text-neutral-700">
