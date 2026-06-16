@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { syncStickyFromDB } from "@/utils/agentTracking";
 
@@ -10,13 +9,6 @@ interface AgentBannerProfile {
 
 export function ActiveAgentBanner() {
   const [agent, setAgent] = useState<AgentBannerProfile | null>(null);
-  const location = useLocation();
-
-  const isBuyerShellRoute =
-    location.pathname.startsWith("/client/") ||
-    location.pathname === "/favorites" ||
-    location.pathname.startsWith("/hot-sheets") ||
-    location.pathname.startsWith("/messages");
 
   useEffect(() => {
     const load = async () => {
@@ -57,7 +49,7 @@ export function ActiveAgentBanner() {
     load();
   }, []);
 
-  if (!isBuyerShellRoute || !agent) return null;
+  if (!agent) return null;
 
   return (
     <div className="bg-[#0E56F5] text-white" style={{ backgroundColor: "#0E56F5" }}>
