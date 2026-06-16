@@ -76,6 +76,7 @@ function BuyersRowsSkeleton({ count = 6 }: { count?: number }) {
 
 export default function BuyersList() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [buyers, setBuyers] = useState<BuyerRow[]>([]);
   const [loading, setLoading] = useState(true);
   /** Last fetch failed with no buyer rows to show (avoid empty-state masking errors). */
