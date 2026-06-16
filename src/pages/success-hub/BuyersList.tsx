@@ -474,7 +474,9 @@ export default function BuyersList() {
         buyer={createdBuyer}
         onClose={() => setCreatedBuyer(null)}
         onCreateHotSheet={(b) =>
-          navigate(`${agentBuyerAccountPath(b.id)}?createHotSheet=1`)
+          navigate(`${agentBuyerAccountPath(b.id)}?createHotSheet=1`, {
+            state: { fromBuyerCreate: true, createdBuyer: b },
+          })
         }
       />
     </>
