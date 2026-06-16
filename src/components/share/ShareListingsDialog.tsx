@@ -119,6 +119,8 @@ export type ShareListingsDialogProps = {
   maxRecipients?: number;
   /** True while debounced CRM search is in flight. */
   isSearchingContacts?: boolean;
+  /** Hide the CRM contact search entirely; recipients are entered manually only. */
+  hideContactSearch?: boolean;
 };
 
 const DEFAULT_MESSAGE_CHIPS = [
@@ -188,6 +190,7 @@ export function ShareListingsDialog({
   lockSenderIdentity = false,
   maxRecipients,
   isSearchingContacts = false,
+  hideContactSearch = false,
 }: ShareListingsDialogProps) {
   const [selectedChips, setSelectedChips] = React.useState<Set<string>>(new Set());
   const [contactAddFeedback, setContactAddFeedback] = React.useState<ContactAddFeedback>(null);
