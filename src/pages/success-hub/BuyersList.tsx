@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AgentAacPage } from "@/components/layout/AgentAacPage";
 import { AacPageIntro } from "@/components/layout/AacPageIntro";
 import { AgentSectionCard } from "@/components/layout/AgentSectionCard";
