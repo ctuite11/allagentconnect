@@ -374,7 +374,7 @@ serve(async (req: Request): Promise<Response> => {
       },
       body: JSON.stringify({
         from: (Deno.env.get("TRANSACTIONAL_FROM") || "All Agent Connect <hello@allagentconnect.com>"),
-        reply_to: "chris@allagentconnect.com",
+        reply_to: "hello@allagentconnect.com",
         to: [email],
         subject: "Welcome to AllAgentConnect - Set Your Password",
         html: emailHtml,

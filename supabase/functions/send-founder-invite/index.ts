@@ -69,7 +69,7 @@ const handler = async (req: Request): Promise<Response> => {
           template: "founder-invite-1to1",
           to: recipientEmail,
           subject: "An invitation to become an All Agent Connect Founding Partner",
-          reply_to: "chris@allagentconnect.com",
+          reply_to: "hello@allagentconnect.com",
           variables: {
             recipientName,
             sentBy: caller.email,
