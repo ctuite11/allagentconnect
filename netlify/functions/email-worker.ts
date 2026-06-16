@@ -374,8 +374,10 @@ function renderEmailTemplate(template: string, variables: Record<string, any>): 
 async function sendEmail(job: EmailJob, resendApiKey: string): Promise<void> {
   const { payload } = job;
 
-  // Hard-lock — never read notify/mail from Netlify env (proven drift vector).
-  const canonicalFrom = "All Agent Connect <hello@allagentconnect.com>";
+  // Hard-lock — never read From from Netlify env (proven drift vector).
+  // TEMP REVERT (Jun 2026): back on the verified `mail.allagentconnect.com`
+  // subdomain until the root `allagentconnect.com` domain is verified in Resend.
+  const canonicalFrom = "All Agent Connect <hello@mail.allagentconnect.com>";
   
   // Normalize recipients: handle string, array, or comma-separated string
   const toList: string[] = Array.isArray(payload.to)
