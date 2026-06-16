@@ -133,7 +133,7 @@ serve(async (req: Request): Promise<Response> => {
       },
       body: JSON.stringify({
         from: (Deno.env.get("TRANSACTIONAL_FROM") || "All Agent Connect <hello@notify.allagentconnect.com>"),
-        reply_to: "hello@allagentconnect.com",
+        reply_to: "hello@notify.allagentconnect.com",
         to: [recipientEmail],
         subject: approved 
           ? "You've Been Accepted — Sign In to Your Account"

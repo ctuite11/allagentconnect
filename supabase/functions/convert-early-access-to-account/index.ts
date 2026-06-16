@@ -142,7 +142,7 @@ function buildPasswordSetupEmailHtml(firstName: string, resetLink: string): stri
               </div>
               
               <p style="font-size: 15px; color: #64748b; line-height: 1.7; margin: 0;">
-                Questions? <a href="mailto:hello@allagentconnect.com" style="color: #334155; text-decoration: none;">hello@allagentconnect.com</a>
+                Questions? <a href="mailto:hello@notify.allagentconnect.com" style="color: #334155; text-decoration: none;">hello@notify.allagentconnect.com</a>
               </p>
             </td>
           </tr>
@@ -151,10 +151,10 @@ function buildPasswordSetupEmailHtml(firstName: string, resetLink: string): stri
           <tr>
             <td style="padding: 20px 40px; border-top: 1px solid #e5e5e5;">
               <p style="font-size: 13px; color: #94a3b8; margin: 0 0 8px 0; text-align: center;">
-                AllAgentConnect &nbsp;•&nbsp; hello@allagentconnect.com
+                AllAgentConnect &nbsp;•&nbsp; hello@notify.allagentconnect.com
               </p>
               <p style="font-size: 11px; color: #94a3b8; margin: 0; text-align: center;">
-                <a href="mailto:hello@allagentconnect.com?subject=Remove%20My%20Account&body=Please%20remove%20my%20account%20from%20AllAgentConnect." style="color: #94a3b8; text-decoration: underline;">Click here</a> to request account removal.
+                <a href="mailto:hello@notify.allagentconnect.com?subject=Remove%20My%20Account&body=Please%20remove%20my%20account%20from%20AllAgentConnect." style="color: #94a3b8; text-decoration: underline;">Click here</a> to request account removal.
               </p>
             </td>
           </tr>
@@ -374,7 +374,7 @@ serve(async (req: Request): Promise<Response> => {
       },
       body: JSON.stringify({
         from: (Deno.env.get("TRANSACTIONAL_FROM") || "All Agent Connect <hello@notify.allagentconnect.com>"),
-        reply_to: "hello@allagentconnect.com",
+        reply_to: "hello@notify.allagentconnect.com",
         to: [email],
         subject: "Welcome to AllAgentConnect - Set Your Password",
         html: emailHtml,

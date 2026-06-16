@@ -88,9 +88,9 @@ function buildLockedEmailHtml(resetLink: string): string {
           <tr>
             <td style="padding:24px 40px;border-top:1px solid #e2e8f0;text-align:center;">
               <p style="margin:0 0 4px;font-size:13px;line-height:1.5;color:#64748B;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">AllAgentConnect</p>
-              <p style="margin:0 0 8px;font-size:13px;line-height:1.5;color:#64748B;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">hello@allagentconnect.com</p>
+              <p style="margin:0 0 8px;font-size:13px;line-height:1.5;color:#64748B;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">hello@notify.allagentconnect.com</p>
               <p style="margin:0;font-size:11px;line-height:1.5;color:#94a3b8;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
-                <a href="mailto:hello@allagentconnect.com?subject=Remove%20My%20Account&body=Please%20remove%20my%20account%20from%20AllAgentConnect." style="color:#94a3b8;text-decoration:underline;">Click here</a> to request account removal.
+                <a href="mailto:hello@notify.allagentconnect.com?subject=Remove%20My%20Account&body=Please%20remove%20my%20account%20from%20AllAgentConnect." style="color:#94a3b8;text-decoration:underline;">Click here</a> to request account removal.
               </p>
             </td>
           </tr>
@@ -240,7 +240,7 @@ export default async function handler(request: Request, context: any) {
         from:
           process.env.TRANSACTIONAL_FROM ||
           "All Agent Connect <hello@notify.allagentconnect.com>",
-        reply_to: "hello@allagentconnect.com",
+        reply_to: "hello@notify.allagentconnect.com",
         to: [cleanEmail],
         subject: "Reset your password",
         html: buildLockedEmailHtml(resetLink),

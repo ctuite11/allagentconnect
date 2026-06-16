@@ -514,7 +514,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Deliverability fix: send bulk from the same subdomain that is
     // currently inboxing on transactional streams.
     const senderFrom = "All Agent Connect <hello@notify.allagentconnect.com>";
-    let senderReplyTo = agentEmail || "hello@allagentconnect.com";
+    let senderReplyTo = agentEmail || "hello@notify.allagentconnect.com";
     try {
       const { data: sender } = await supabase
         .from("agent_profiles")

@@ -102,7 +102,7 @@ export async function sendEmail(
 
     const unsubUrl = await buildUnsubUrl(toList[0], category!);
     extraHeaders = {
-      "List-Unsubscribe": `<${unsubUrl}>, <mailto:hello@allagentconnect.com?subject=unsubscribe>`,
+      "List-Unsubscribe": `<${unsubUrl}>, <mailto:hello@notify.allagentconnect.com?subject=unsubscribe>`,
       "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
     };
   }

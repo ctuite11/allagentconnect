@@ -5,7 +5,7 @@
  * `mail.allagentconnect.com` subdomain so invites and hot-sheet emails
  * keep sending. Resend's root `allagentconnect.com` domain is not yet
  * verified — once DKIM/SPF at the root are published and verified, flip
- * `DEFAULT_TRANSACTIONAL_FROM_EMAIL` back to `hello@allagentconnect.com`.
+ * `DEFAULT_TRANSACTIONAL_FROM_EMAIL` back to `hello@notify.allagentconnect.com`.
  *
  * No other knobs changed: transport, DKIM/SPF/DMARC on the subdomain,
  * Resend account, templates, links, and Reply-To are unchanged.
