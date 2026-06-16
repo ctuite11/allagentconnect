@@ -229,8 +229,8 @@ Deno.serve(async (req) => {
           Authorization: `Bearer ${RESEND_API_KEY}`,
         },
         body: JSON.stringify({
-          from: (Deno.env.get("TRANSACTIONAL_FROM") || "All Agent Connect <hello@notify.allagentconnect.com>"),
-          reply_to: "hello@notify.allagentconnect.com",
+          from: (Deno.env.get("TRANSACTIONAL_FROM") || "All Agent Connect <hello@allagentconnect.com>"),
+          reply_to: "hello@allagentconnect.com",
           to: [normalizedEmail],
           subject: "Welcome to All Agent Connect Early Access",
           html: welcomeEmailHtml,
@@ -328,8 +328,8 @@ Deno.serve(async (req) => {
           Authorization: `Bearer ${RESEND_API_KEY}`,
         },
         body: JSON.stringify({
-          from: (Deno.env.get("TRANSACTIONAL_FROM") || "All Agent Connect <hello@notify.allagentconnect.com>"),
-          reply_to: "hello@notify.allagentconnect.com",
+          from: (Deno.env.get("TRANSACTIONAL_FROM") || "All Agent Connect <hello@allagentconnect.com>"),
+          reply_to: "hello@allagentconnect.com",
           to: [ADMIN_EMAIL],
           subject: `🚀 Early Access Request — ${body.first_name} ${body.last_name}`,
           html: adminEmailHtml,
