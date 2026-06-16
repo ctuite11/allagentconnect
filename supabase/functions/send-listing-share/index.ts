@@ -108,7 +108,7 @@ const handler = async (req: Request): Promise<Response> => {
           provider: 'resend',
           template: 'listing-share',
           to: recipientEmail,
-          subject: `AAC`,
+          subject: buildAgentSharedPropertyEmailSubject(agentName, listing),
           // Branded dynamic Reply-To: From is AAC, replies route directly to the
           // sharing agent so recipients can respond to the person who shared it.
           reply_to: agentEmail,
@@ -120,6 +120,7 @@ const handler = async (req: Request): Promise<Response> => {
             agentBrokerage,
             message,
             listingUrl,
+            listing,
           },
         },
       });
