@@ -636,6 +636,7 @@ export function ShareListingsDialog({
                       </p>
                     ) : null}
 
+                    {!hideContactSearch ? (
                     <button
                       type="button"
                       onClick={() => {
@@ -648,6 +649,7 @@ export function ShareListingsDialog({
                     >
                       Back to contact search
                     </button>
+                    ) : null}
                   </div>
                 ) : null}
               </>
