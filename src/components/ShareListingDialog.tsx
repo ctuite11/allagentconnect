@@ -54,6 +54,7 @@ export const ShareListingDialog = ({
   const [recipients, setRecipients] = useState<ShareRecipient[]>([]);
   const [senderLocked, setSenderLocked] = useState(false);
   const contactsEnabled = senderProfileSource === "agent";
+  const hideContactSearch = senderProfileSource === "buyer";
   const {
     contactQuery: clientSearch,
     setContactQuery: setClientSearch,
@@ -270,7 +271,7 @@ export const ShareListingDialog = ({
         showContactDropdown={contactsEnabled && showClientDropdown}
         onDismissContactDropdown={dismissContactDropdown}
         onContactSearchFocus={handleContactSearchFocus}
-        manualMode={showManualEntry}
+        manualMode={hideContactSearch ? true : showManualEntry}
         setManualMode={setShowManualEntry}
         recipientFirstName={recipientFirstName}
         setRecipientFirstName={setRecipientFirstName}
@@ -294,6 +295,7 @@ export const ShareListingDialog = ({
         lockSenderIdentity={senderLocked}
         maxRecipients={1}
         isSearchingContacts={isSearchingContacts}
+        hideContactSearch={hideContactSearch}
       />
     </>
   );

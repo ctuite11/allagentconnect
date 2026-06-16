@@ -1,38 +1,23 @@
 ## Goal
-Strip the "invite to new buyer" (buyer workspace invite) email to the absolute minimum for a deliverability test. No logos, no banners, no footer, no buttons, no links.
 
-- **Subject:** `AAC`
-- **Body:** `hi, see you inside the group`
+On the buyer side of Share Listing (when `senderProfileSource="buyer"`), remove the "Search Contact" field entirely. Buyers add recipients via manual entry only.
 
-## Files to change
+The agent-side flow is untouched.
 
-### 1. `supabase/functions/send-buyer-workspace-invite/index.ts`
-- Change enqueued `subject` from `` `${inviterName} invited you to share their home search` `` to `"AAC"`.
-- Leave the invite token row creation untouched (so the workspace logic stays intact — only the email content is stripped).
+## Change
 
-### 2. `supabase/functions/resend-buyer-workspace-invite/index.ts`
-- Same subject change to `"AAC"` wherever it enqueues the email.
+`src/components/share/ShareListingsDialog.tsx`
+- Add a new optional prop `hideContactSearch?: boolean`.
+- When `hideContactSearch` is true:
+  - Do not render the SEARCH CONTACT label, input, or dropdown.
+  - Default `manualMode` UI to visible (skip the "+ Enter recipient manually" toggle — manual entry fields are the only path).
+  - Keep the selected-recipient chip + remove behavior.
 
-### 3. `supabase/functions/_shared/renderEmailTemplate.ts`
-- Replace the `buyer-workspace-invite` case body. Instead of calling `buildAacEmail(...)` (which wraps in the AAC shell with header logo, hero, CTA button, and footer), return a minimal raw HTML document:
-
-```html
-<!doctype html>
-<html><body><p>hi, see you inside the group</p></body></html>
-```
-
-No `inviterName`, no `friendName`, no `inviteLink`, no CTA, no footer markup.
+`src/components/ShareListingDialog.tsx`
+- Pass `hideContactSearch={senderProfileSource === "buyer"}` to `ShareListingsDialog`.
+- Skip mounting `useAgentShareContactSearch` for buyers (already gated by `contactsEnabled`; no functional change).
 
 ## Out of scope
-- All other templates (auth, password reset, listing share, message notification, agent invite, hot sheet invite, etc.) are untouched.
-- Sender identity (`hello@allagentconnect.com`) is untouched.
-- DB row / token / RLS logic untouched — recipient just won't have a usable link in this test email.
 
-## Deploy
-After edits, deploy:
-- `send-buyer-workspace-invite`
-- `resend-buyer-workspace-invite`
-- `process-email-queue` (picks up the updated `renderEmailTemplate.ts`)
-
-## Note
-Because the link is removed entirely, any buyer who receives this test email will NOT be able to accept the invite. Revert this template before going live.
+- No changes to agent share flow, copy, styling, send logic, or success toasts.
+- No DB or edge function changes.
