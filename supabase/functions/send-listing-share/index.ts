@@ -109,9 +109,9 @@ const handler = async (req: Request): Promise<Response> => {
           template: 'listing-share',
           to: recipientEmail,
           subject: `AAC`,
-          // Reply-To is the monitored AAC inbox — recipients reach the listing
-          // agent via the in-app "Contact Agent" button on the listing page.
-          reply_to: "hello@allagentconnect.com",
+          // Branded dynamic Reply-To: From is AAC, replies route directly to the
+          // sharing agent so recipients can respond to the person who shared it.
+          reply_to: agentEmail,
           variables: {
             recipientName,
             agentName,
