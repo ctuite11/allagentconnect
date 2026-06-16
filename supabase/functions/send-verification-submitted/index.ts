@@ -80,8 +80,8 @@ serve(async (req: Request): Promise<Response> => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: (Deno.env.get("TRANSACTIONAL_FROM") || "All Agent Connect <hello@allagentconnect.com>"),
-        reply_to: "hello@allagentconnect.com",
+        from: (Deno.env.get("TRANSACTIONAL_FROM") || "All Agent Connect <chris@allagentconnect.com>"),
+        reply_to: "chris@allagentconnect.com",
         to: [ADMIN_EMAIL],
         subject: `New License Verification — ${firstName} ${lastName}`,
         html: adminEmailHtml,
