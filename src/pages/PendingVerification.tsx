@@ -267,6 +267,11 @@ const PendingVerification = () => {
     navigate("/auth", { replace: true });
   };
 
+  const handleSignOutSwitch = async () => {
+    await supabase.auth.signOut();
+    navigate("/auth", { replace: true });
+  };
+
   if (loading) {
     return <AacMonogramLoader variant="fullscreen" message="Loading…" />;
   }
@@ -403,6 +408,16 @@ const PendingVerification = () => {
               hello@allagentconnect.com
             </a>
           </p>
+
+          <div className="mt-6">
+            <Button
+              variant="outline"
+              onClick={handleSignOutSwitch}
+              className="h-10 px-5 border-zinc-300 text-zinc-700 hover:bg-zinc-50"
+            >
+              Sign out / Use a different account
+            </Button>
+          </div>
         </div>
       </div>
     );
@@ -445,19 +460,18 @@ const PendingVerification = () => {
           </a>
         </p>
 
-        <p className="mt-6 text-xs text-muted-foreground/70">
-          Not you?{" "}
-          <button
-            type="button"
-            onClick={async () => {
-              await supabase.auth.signOut();
-              navigate("/auth", { replace: true });
-            }}
-            className="font-medium text-foreground underline-offset-4 hover:underline hover:text-aac transition-colors"
+        <div className="mt-8">
+          <Button
+            variant="outline"
+            onClick={handleSignOutSwitch}
+            className="h-10 px-5 border-border bg-white text-foreground hover:bg-muted"
           >
-            Sign out
-          </button>
-        </p>
+            Sign out / Use a different account
+          </Button>
+          <p className="mt-2 text-xs text-muted-foreground/70">
+            Not you, or want to log in with a different account?
+          </p>
+        </div>
       </div>
     </PendingShell>
   );
