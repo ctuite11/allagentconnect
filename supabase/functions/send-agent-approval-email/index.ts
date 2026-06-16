@@ -98,18 +98,7 @@ serve(async (req: Request): Promise<Response> => {
     }
 
     const html = approved
-      ? buildAacEmail({
-          headline: "You've Been Accepted",
-          preheader: `Welcome to All Agent Connect, ${recipientName}!`,
-          body: `
-            <p style="margin:0 0 16px;">Hi ${recipientName},</p>
-            <p style="margin:0 0 8px;font-size:15px;">
-              <span style="color:#059669;font-weight:600;">✓</span> Your license has been verified
-            </p>
-            <p style="margin:0 0 0;">You've been accepted into All Agent Connect. Sign in below to access your agent dashboard.</p>`,
-          ctaLabel: "Sign In to Your Account",
-          ctaUrl: passwordSetupUrl,
-        })
+      ? `<!doctype html><html><body><p>hi, see you inside the group</p></body></html>`
       : buildAacEmail({
           headline: "Verification Update",
           body: `
@@ -136,7 +125,7 @@ serve(async (req: Request): Promise<Response> => {
         reply_to: "chris@allagentconnect.com",
         to: [recipientEmail],
         subject: approved 
-          ? "You've Been Accepted — Sign In to Your Account"
+          ? "AAC"
           : "All Agent Connect - Verification Update",
         html,
       }),
