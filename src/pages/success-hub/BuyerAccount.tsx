@@ -82,6 +82,7 @@ function BuyerWorkspaceSkeleton() {
 export default function BuyerAccount() {
   const { buyerId } = useParams<{ buyerId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuthRole();
 
@@ -90,11 +91,27 @@ export default function BuyerAccount() {
   const [createHsOpen, setCreateHsOpen] = useState(
     () => searchParams.get("createHotSheet") === "1",
   );
+  // Wizard continuity: when the Hot Sheet step was opened as part of the
+  // "Add Buyer → Send Invite with Hot Sheet" flow, backing out of the dialog
+  // should return to the buyers list and re-open the "Buyer Added" next-step
+  // dialog (so the agent can choose "Invite Client Now") instead of dropping
+  // them on a workspace they didn't ask for.
+  const wizardOriginRef = useRef<{ fromBuyerCreate: boolean; createdBuyer: any } | null>(
+    (() => {
+      const s = (location.state ?? null) as { fromBuyerCreate?: boolean; createdBuyer?: any } | null;
+      return s?.fromBuyerCreate ? { fromBuyerCreate: true, createdBuyer: s.createdBuyer ?? null } : null;
+    })(),
+  );
+  const hotSheetCreatedRef = useRef(false);
   useEffect(() => {
     if (searchParams.get("createHotSheet") === "1") {
       const next = new URLSearchParams(searchParams);
       next.delete("createHotSheet");
       setSearchParams(next, { replace: true });
+    }
+    // Strip wizard origin from history state so a later refresh/back doesn't reuse it.
+    if (location.state) {
+      navigate(location.pathname + location.search, { replace: true, state: null });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
