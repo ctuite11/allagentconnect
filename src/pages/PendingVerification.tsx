@@ -444,6 +444,20 @@ const PendingVerification = () => {
             hello@allagentconnect.com
           </a>
         </p>
+
+        <p className="mt-6 text-xs text-muted-foreground/70">
+          Not you?{" "}
+          <button
+            type="button"
+            onClick={async () => {
+              await supabase.auth.signOut();
+              navigate("/auth", { replace: true });
+            }}
+            className="font-medium text-foreground underline-offset-4 hover:underline hover:text-aac transition-colors"
+          >
+            Sign out
+          </button>
+        </p>
       </div>
     </PendingShell>
   );

@@ -9,6 +9,7 @@ import { ThemeProvider } from "next-themes";
 import { HelmetProvider } from "react-helmet-async";
 import { AppShell } from "@/components/layout/AppShell";
 import { BuyerShell } from "@/components/layout/BuyerShell";
+import { CrossTabSessionGuard } from "@/components/CrossTabSessionGuard";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import AuthCallback from "./pages/AuthCallback";
@@ -295,6 +296,7 @@ const App = () => (
             <>
               <ActiveAgentBanner />
               <NewMessageToastListener />
+              <CrossTabSessionGuard />
               <Routes>
                 <Route path="/" element={<HomepageV2 />} />
                 <Route path="/register" element={<Register />} />
