@@ -199,8 +199,7 @@ export function renderEmailTemplate(
           preheader: `${inviterName} invited you to All Agent Connect`,
           body: `
             <p style="margin:0 0 14px;">Hi ${firstName},</p>
-            <p style="margin:0 0 18px;">${inviterName} invited you to join them on All Agent Connect.</p>
-            <p style="margin:0 0 18px;">Click below to accept the invitation and connect with your agent through AAC.</p>
+            <p style="margin:0 0 18px;">${inviterName} has invited you to access your private All Agent Connect buyer workspace, where you'll receive listings, hot sheets, and updates from your agent.</p>
             ${renderSharedByBlock({ agentName: inviterName, agentBrokerage: inviterBrokerage, agentEmail: inviterEmail, agentPhone: inviterPhone })}`,
           ctaLabel: "Accept Invitation",
           ctaUrl: hotSheetLink,

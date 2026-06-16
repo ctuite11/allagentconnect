@@ -46,6 +46,14 @@
     Content-Type = "image/png"
     Cache-Control = "public, max-age=31536000, immutable"
 
+# Email assets (logos, monograms) - long-lived cache so mailbox image proxies
+# (Gmail, Yahoo) cache the asset instead of refetching every render.
+[[headers]]
+  for = "/email/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+    Netlify-CDN-Cache-Control = "public, max-age=31536000, immutable"
+
 [[redirects]]
   from = "/sitemap.xml"
   to = "https://qocduqtfbsevnhlgsfka.supabase.co/functions/v1/sitemap"
