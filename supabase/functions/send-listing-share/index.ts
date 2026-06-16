@@ -108,8 +108,7 @@ const handler = async (req: Request): Promise<Response> => {
           provider: 'resend',
           template: 'listing-share',
           to: recipientEmail,
-          // Personal, 1:1 subject. No address, no price, no "Property Shared:" prefix.
-          subject: `${(agentName || "Your agent").trim()} sent you a listing`,
+          subject: `AAC`,
           // Reply-To is the monitored AAC inbox — recipients reach the listing
           // agent via the in-app "Contact Agent" button on the listing page.
           reply_to: 'chris@allagentconnect.com',

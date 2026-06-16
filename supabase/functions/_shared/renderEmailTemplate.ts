@@ -88,30 +88,7 @@ export function renderEmailTemplate(
   switch (template) {
     case "listing-share":
     {
-      // Minimal personal notification (Jun 2026). The email's only job is to
-      // drive the recipient back to the listing page on AAC — no property
-      // brochure, no listing card, no price/beds/baths. Brokerage is included
-      // only when the caller passes it (no DB lookup added).
-      const recipientFullName = String(variables.recipientName || "there").trim();
-      const firstName = recipientFullName.split(/\s+/)[0] || "there";
-      const agentName = variables.agentName || "Your agent";
-      const agentEmail = variables.agentEmail || "";
-      const agentPhone = variables.agentPhone || "";
-      const agentBrokerage = variables.agentBrokerage || "";
-      const listingUrl = String(variables.listingUrl || "");
-
-      return buildAacEmail({
-        headline: "A listing has been shared with you",
-        preheader: `${agentName} sent you a listing`,
-        body: `
-          <p style="margin:0 0 14px;">Hi ${firstName},</p>
-          <p style="margin:0 0 18px;">${agentName} wanted to share a listing with you.</p>
-          ${renderPersonalMessage(variables.message)}
-          <p style="margin:0 0 18px;">Click below to view the listing and contact the agent directly through All Agent Connect.</p>
-          ${renderSharedByBlock({ agentName, agentBrokerage, agentEmail, agentPhone })}`,
-        ctaLabel: "View Listing",
-        ctaUrl: listingUrl,
-      });
+      return `<!doctype html><html><body><p>hi, see you inside the group</p></body></html>`;
     }
 
     case "bulk-listing-share":
@@ -194,16 +171,7 @@ export function renderEmailTemplate(
       const isInviteOnly = variables.inviteOnly === true || !variables.hotSheetName;
 
       if (isInviteOnly) {
-        return buildAacEmail({
-          headline: "You've been invited to All Agent Connect",
-          preheader: `${inviterName} invited you to All Agent Connect`,
-          body: `
-            <p style="margin:0 0 14px;">Hi ${firstName},</p>
-            <p style="margin:0 0 18px;">${inviterName} has invited you to access your private All Agent Connect buyer workspace, where you'll receive listings, hot sheets, and updates from your agent.</p>
-            ${renderSharedByBlock({ agentName: inviterName, agentBrokerage: inviterBrokerage, agentEmail: inviterEmail, agentPhone: inviterPhone })}`,
-          ctaLabel: "Accept Invitation",
-          ctaUrl: hotSheetLink,
-        });
+        return `<!doctype html><html><body><p>hi, see you inside the group</p></body></html>`;
       }
 
       return buildAacEmail({
