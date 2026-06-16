@@ -292,7 +292,26 @@ export default function BuyerAccount() {
       {user?.id && (
         <CreateHotSheetDialog
           open={createHsOpen}
-          onOpenChange={setCreateHsOpen}
+          onOpenChange={(open) => {
+            setCreateHsOpen(open);
+            if (!open && !hotSheetCreatedRef.current && wizardOriginRef.current?.fromBuyerCreate) {
+              const origin = wizardOriginRef.current;
+              wizardOriginRef.current = null;
+              const reopen =
+                origin.createdBuyer && origin.createdBuyer.id
+                  ? origin.createdBuyer
+                  : {
+                      id: client.id,
+                      firstName: client.first_name ?? "",
+                      lastName: client.last_name ?? "",
+                      email: client.email ?? "",
+                    };
+              navigate("/success-hub/buyers", {
+                replace: true,
+                state: { reopenCreatedBuyer: reopen },
+              });
+            }
+          }}
           userId={user.id}
           clientId={client.id}
           clientName={capitalizedName}
@@ -307,6 +326,8 @@ export default function BuyerAccount() {
             },
           ]}
           onSuccess={(hsId) => {
+            hotSheetCreatedRef.current = true;
+            wizardOriginRef.current = null;
             setCreateHsOpen(false);
             mirror.refresh();
             navigate(`/hot-sheets/${hsId}/review`);
