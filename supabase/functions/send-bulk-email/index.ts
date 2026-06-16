@@ -78,7 +78,7 @@ function build429Response(resetAt: string): Response {
 const STORAGE_BASE = `${supabaseUrl}/storage/v1/object/public/email-attachments/early-access-v1`;
 const STORAGE_BASE_V2 = `${supabaseUrl}/storage/v1/object/public/email-attachments/early-access-v2`;
 const IMG_VERSION_V2 = "v9";
-const AAC_LOGO_URL = `${supabaseUrl}/storage/v1/object/public/brand-assets/aac-logo-green-black-v4.png`;
+const AAC_LOGO_URL = `https://allagentconnect.com/email/aac-monogram-green-128.png`;
 
 const FUNCTIONS_HOST = supabaseUrl.replace(/^https?:\/\//, "").replace(/\/+$/, "");
 // Hard pause gate: bulk outreach is paused unless BULK_EMAIL_PAUSED is explicitly "false".
@@ -287,7 +287,7 @@ function buildFoundingPartnerBody(): string {
         <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="border-collapse:collapse;margin:0 auto;">
           <tr>
             <td valign="middle" style="padding-right:12px;">
-              <img src="${supabaseUrl}/storage/v1/object/public/brand-assets/aac-monogram-green.svg" width="36" height="36" alt="" style="display:block;border:0;outline:none;" />
+              <img src="https://allagentconnect.com/email/aac-monogram-green-128.png" width="36" height="36" alt="All Agent Connect" style="display:block;border:0;outline:none;text-decoration:none;" />
             </td>
             <td valign="middle" style="line-height:1.1;">
               <p style="margin:0;font-size:18px;font-weight:600;letter-spacing:-0.01em;color:#ffffff;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">All Agent Connect</p>
@@ -320,7 +320,7 @@ function buildFoundingPartnerBody(): string {
       </td></tr>
       <tr><td style="padding:56px 0 0;">
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0"><tr><td align="center" style="background-color:#0B0D12;padding:32px 32px 30px;">
-          <img src="${supabaseUrl}/storage/v1/object/public/brand-assets/aac-monogram-green.svg" width="32" height="32" alt="" style="display:block;margin:0 auto 10px;border:0;outline:none;" />
+          <img src="https://allagentconnect.com/email/aac-monogram-green-128.png" width="32" height="32" alt="All Agent Connect" style="display:block;margin:0 auto 10px;border:0;outline:none;text-decoration:none;" />
           <p style="margin:0;font-size:15px;font-weight:600;letter-spacing:-0.01em;color:#ffffff;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">All Agent Connect</p>
           <div style="width:36px;height:2px;background-color:#22C55E;margin:10px auto 12px;border-radius:1px;"></div>
         </td></tr></table>
