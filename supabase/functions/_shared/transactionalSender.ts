@@ -32,7 +32,7 @@ function envUsesDisallowedSubdomain(value: string): boolean {
   return /@([a-z0-9-]+)\.allagentconnect\.com/i.test(value);
 }
 
-/** Resend-ready From header, e.g. `All Agent Connect <hello@mail.allagentconnect.com>`. */
+/** Resend-ready From header, e.g. `All Agent Connect <hello@allagentconnect.com>`. */
 export function buildTransactionalFrom(): string {
   const envFull = Deno.env.get("TRANSACTIONAL_FROM")?.trim();
   if (envFull) {
