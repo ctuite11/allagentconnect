@@ -487,9 +487,12 @@ export function ShareListingsDialog({
             {showRecipientPicker ? (
               <>
                 <div className="text-[11px] font-medium uppercase tracking-wide text-neutral-500">
-                  {hasActiveRecipient ? "Add another contact" : "Search contact"}
+                  {hideContactSearch
+                    ? hasActiveRecipient ? "Add another recipient" : "Recipient"
+                    : hasActiveRecipient ? "Add another contact" : "Search contact"}
                 </div>
 
+                {!hideContactSearch ? (
                 <div ref={contactSearchRef} className="relative text-neutral-400">
                   <div className="relative">
                   <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
@@ -547,8 +550,9 @@ export function ShareListingsDialog({
                     <p className="mt-1.5 text-[12px] text-neutral-500">Searching contacts…</p>
                   ) : null}
                 </div>
+                ) : null}
 
-                {!manualMode ? (
+                {!manualMode && !hideContactSearch ? (
                   <button
                     type="button"
                     onClick={() => setManualMode(true)}
