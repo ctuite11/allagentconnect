@@ -513,7 +513,7 @@ const handler = async (req: Request): Promise<Response> => {
     // sender, not be spoofed on the transactional mailbox.
     // Deliverability fix: send bulk from the same subdomain that is
     // currently inboxing on transactional streams.
-    const senderFrom = "All Agent Connect <chris@allagentconnect.com>";
+    const senderFrom = "All Agent Connect <hello@allagentconnect.com>";
     let senderReplyTo = agentEmail || "chris@allagentconnect.com";
     try {
       const { data: sender } = await supabase
