@@ -80,9 +80,31 @@ export const RouteGuard: React.FC<Props> = ({
         return;
       }
 
+      // Only act on a CONFIRMED resolved role. If role is null/unknown
+      // (resolver still loading or returned unknown), do NOT redirect to
+      // /pending-verification — show the loading screen instead.
+      if (role !== "agent") {
+        if (import.meta.env.DEV) {
+          console.info("[ROUTE_GUARD] waiting for role", {
+            pathname: location.pathname,
+            userId: user.id,
+            role,
+            isAdmin,
+            isVerifiedAgent,
+          });
+        }
+        return;
+      }
+
       if (isVerifiedAgent) {
         setIsVerified(true);
       } else {
+        if (import.meta.env.DEV) {
+          console.info("[ROUTE_GUARD] agent not verified → /pending-verification", {
+            pathname: location.pathname,
+            userId: user.id,
+          });
+        }
         navigate("/pending-verification", { replace: true });
         return;
       }
