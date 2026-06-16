@@ -333,10 +333,10 @@ function renderEmailTemplate(template: string, variables: Record<string, any>): 
                   <td class="border" style="border-top:1px solid #e5e7eb; padding:20px 24px;">
                     <div class="muted" style="font-size:12px; color:#94a3b8; text-align:center; line-height:1.6;">
                       All Agent Connect &mdash; Private Agent Network<br>
-                      Questions? <a href="mailto:hello@allagentconnect.com" style="color:#0E56F5; font-weight:700;">hello@allagentconnect.com</a>
+                      Questions? <a href="mailto:hello@notify.allagentconnect.com" style="color:#0E56F5; font-weight:700;">hello@notify.allagentconnect.com</a>
                     </div>
                     <div style="text-align:center; margin-top:10px;">
-                      <a href="mailto:hello@allagentconnect.com?subject=Remove%20my%20account" style="font-size:11px; color:#94a3b8; text-decoration:underline;">
+                      <a href="mailto:hello@notify.allagentconnect.com?subject=Remove%20my%20account" style="font-size:11px; color:#94a3b8; text-decoration:underline;">
                         Remove my account
                       </a>
                     </div>
