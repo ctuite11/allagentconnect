@@ -535,7 +535,7 @@ function BuyerCard({
           .select("name")
           .eq("id", hotSheetId)
           .maybeSingle();
-        const { data: ap } = await supabase
+        const { data: ap } = await (supabase as any)
           .from("agent_profiles")
           .select("first_name, last_name")
           .eq("user_id", user.id)

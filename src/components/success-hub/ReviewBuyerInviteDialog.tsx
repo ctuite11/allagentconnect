@@ -61,7 +61,7 @@ export function ReviewBuyerInviteDialog({
       const user = data.user;
       if (!user) return;
 
-      const { data: ap } = await supabase
+      const { data: ap } = await (supabase as any)
         .from("agent_profiles")
         .select("first_name, last_name")
         .eq("user_id", user.id)
