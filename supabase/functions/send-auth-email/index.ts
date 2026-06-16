@@ -4,7 +4,7 @@
 // - SEND_EMAIL_HOOK_SECRET (from Supabase hook UI)
 // - RESEND_API_KEY
 // - TRANSACTIONAL_FROM (All Agent Connect <hello@allagentconnect.com>)
-// - RESEND_REPLY_TO (chris@allagentconnect.com)
+// - RESEND_REPLY_TO (defaults to hello@allagentconnect.com)
 
 import { Webhook } from "https://esm.sh/standardwebhooks@1.0.0";
 import { Resend } from "https://esm.sh/resend@2.0.0";
@@ -154,7 +154,7 @@ Deno.serve(async (req: Request) => {
   try {
     const hookSecret = mustGetEnv("SEND_EMAIL_HOOK_SECRET");
     const resendApiKey = mustGetEnv("RESEND_API_KEY");
-    const resendReplyTo = mustGetEnv("RESEND_REPLY_TO");
+    const resendReplyTo = Deno.env.get("RESEND_REPLY_TO") || "hello@allagentconnect.com";
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY") || Deno.env.get("SUPABASE_PUBLISHABLE_KEY");
 
