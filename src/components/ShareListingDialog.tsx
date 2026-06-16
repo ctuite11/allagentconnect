@@ -177,6 +177,40 @@ export const ShareListingDialog = ({
       return;
     }
 
+    // Guard against obvious typos of common email domains (e.g. allagentconet.com)
+    const KNOWN_DOMAINS = [
+      "allagentconnect.com",
+      "gmail.com",
+      "yahoo.com",
+      "outlook.com",
+      "hotmail.com",
+      "icloud.com",
+    ];
+    const levenshtein = (a: string, b: string) => {
+      const m = a.length, n = b.length;
+      const dp = Array.from({ length: m + 1 }, (_, i) => [i, ...Array(n).fill(0)]);
+      for (let j = 0; j <= n; j++) dp[0][j] = j;
+      for (let i = 1; i <= m; i++) for (let j = 1; j <= n; j++) {
+        dp[i][j] = a[i - 1] === b[j - 1]
+          ? dp[i - 1][j - 1]
+          : 1 + Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]);
+      }
+      return dp[m][n];
+    };
+    for (const r of recipients) {
+      const domain = r.email.trim().toLowerCase().split("@")[1];
+      if (!domain) continue;
+      if (KNOWN_DOMAINS.includes(domain)) continue;
+      const suggestion = KNOWN_DOMAINS.find((d) => {
+        const dist = levenshtein(domain, d);
+        return dist > 0 && dist <= 2;
+      });
+      if (suggestion) {
+        toast.error(`"${domain}" looks like a typo. Did you mean ${suggestion}?`);
+        return;
+      }
+    }
+
     setSending(true);
     try {
       for (const recipient of recipients) {
