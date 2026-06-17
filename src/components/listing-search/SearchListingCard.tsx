@@ -345,6 +345,14 @@ export const SearchListingCard = ({
                   {priceChangeBanner.text}
                 </div>
               )}
+              {/* Open House Banner (stacks below status/price) */}
+              {openHouseBanner && (
+                <div
+                  className={`absolute ${statusBanner && priceChangeBanner ? 'top-6' : statusBanner || priceChangeBanner ? 'top-5' : 'top-0'} left-0 right-0 z-20 ${openHouseBanner.color} text-white text-xs font-bold px-2 py-1 text-center`}
+                >
+                  {openHouseBanner.isBroker ? '🚙' : '🎈'} {openHouseBanner.text} • {openHouseBanner.date} • {openHouseBanner.time}
+                </div>
+              )}
               {onSelect && (
                 <button
                   onClick={(e) => { e.stopPropagation(); onSelect(listing.id, e); }}
