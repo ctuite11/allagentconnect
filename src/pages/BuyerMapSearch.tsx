@@ -81,11 +81,6 @@ function parseCriteriaFromUrl(search: string): Partial<SearchCriteria> {
   if (params.has("neighborhoods")) urlCriteria.neighborhoods = params.get("neighborhoods")!.split("|");
   if (params.has("showAreas")) urlCriteria.showAreas = params.get("showAreas") === "yes";
 
-  // Rental URLs always resolve to residential rentals only (purpose-built rental search).
-  if (urlCriteria.listingType === "for_rent") {
-    urlCriteria.propertyTypes = ["residential_rental"];
-  }
-
   return urlCriteria;
 }
 
@@ -785,7 +780,7 @@ export default function BuyerMapSearch() {
                     setCriteria((prev) => ({
                       ...prev,
                       listingType: "for_rent",
-                      propertyTypes: ["residential_rental"],
+                      propertyTypes: [],
                       minPrice: "",
                       maxPrice: "",
                     }))
