@@ -201,7 +201,7 @@ export function useListingBanners(listing: UseListingBannersInput): UseListingBa
     if (!nextOH) return null;
     const isBrokerOnly = nextOH.event_type === "broker_tour";
     return {
-      text: isBrokerOnly ? "BROKER OPEN HOUSE" : "OPEN HOUSE",
+      text: isBrokerOnly ? "BROKER TOUR" : "OPEN HOUSE",
       date: format(new Date(nextOH.date), "MMM d"),
       time: `${formatTime(nextOH.start_time)} - ${formatTime(nextOH.end_time)}`,
       color: isBrokerOnly ? "bg-purple-600" : "bg-green-600",
