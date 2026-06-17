@@ -1,51 +1,39 @@
-# Fix Google Maps via configuration only
+## Findings
 
-No file changes. Keep the single existing key path `VITE_GOOGLE_MAPS_API_KEY`. Both agent and buyer maps already read from it — confirmed in:
+- `VITE_GOOGLE_MAPS_API_KEY` is set in the active environment.
+- The buyer rental page does return rental data: `/client/search?lt=for_rent` currently shows `Results: 1` for the one rental listing that is `coming_soon`.
+- The map/address issue is confirmed as configuration, not buyer-page code: Google returns `RefererNotAllowedMapError` for `https://95492335-3a75-4285-8d44-828003cae42a.lovableproject.com/client/search`.
+- The database currently has only one rental eligible for default buyer search (`coming_soon`). Other rentals are `expired` or `cancelled`, so they are intentionally filtered out by the active/coming-soon search.
 
-- `src/components/PropertyMap.tsx`
-- `src/components/AddressAutocomplete.tsx`
-- `src/pages/BuyerMapSearch.tsx`
-- `supabase/functions/auto-fetch-property-data/index.ts` (server-side)
+## Plan
 
-## What I verified
+1. **No code changes for Google Maps**
+   - Keep the app using the existing single key path: `VITE_GOOGLE_MAPS_API_KEY`.
+   - Do not add fallback connector code.
+   - Fix in Google Cloud by adding this exact preview origin to the key’s HTTP referrer allowlist:
+     - `https://95492335-3a75-4285-8d44-828003cae42a.lovableproject.com/*`
+   - Also keep/include:
+     - `https://allagentconnect.com/*`
+     - `https://www.allagentconnect.com/*`
+     - `https://directconnectmls.com/*`
+     - `https://www.directconnectmls.com/*`
+     - `https://*.lovable.app/*`
+     - `https://*.lovableproject.com/*`
+     - any Netlify/custom preview domains in use
 
-- `VITE_GOOGLE_MAPS_API_KEY` is **present in the sandbox environment** (injected at build).
-- It is **not written into `.env`** in the repo (which is correct — it's managed as a project env var).
-- Same key path is used everywhere; no buyer-specific code is involved.
+2. **Verify Google API restrictions**
+   - Confirm the same key allows at least:
+     - Maps JavaScript API
+     - Places API
+     - Geocoding API if address geocoding is used by existing flows
+   - Confirm billing is enabled on the Google Cloud project.
 
-Conclusion: this is a Google Cloud configuration issue (referrer allowlist on the key), not an app bug.
+3. **Clarify rental inventory expectation**
+   - Since only one rental is currently active/coming soon, no code fix is needed if seeing one rental is correct.
+   - If you expected more rentals to appear, the fix is data/status-related: those listings need to be changed from `expired`/`cancelled` to a visible status, or the buyer search rules need to intentionally include those statuses.
 
-## Action items for you in Google Cloud Console
-
-Open the API key currently set as `VITE_GOOGLE_MAPS_API_KEY` and update **Application restrictions → HTTP referrers** to include all of:
-
-```text
-https://allagentconnect.com/*
-https://www.allagentconnect.com/*
-https://directconnectmls.com/*
-https://www.directconnectmls.com/*
-https://*.lovable.app/*
-https://*.lovableproject.com/*
-```
-
-Add any Netlify preview domains you use as well (e.g. `https://*.netlify.app/*` or your specific `https://<site>--<branch>.netlify.app/*`).
-
-Also confirm **API restrictions** on the key include, at minimum:
-- Maps JavaScript API
-- Places API (and/or Places API New, matching what the app loads)
-- Geocoding API
-
-Billing must be enabled on the Google Cloud project.
-
-## Validation after you save the changes
-
-1. Hard refresh `/client/search?lt=for_rent` on `id-preview--…lovable.app`.
-2. Check the browser console — there should be **no** `RefererNotAllowedMapError` / `REQUEST_DENIED`.
-3. Repeat on `https://allagentconnect.com` once published.
-
-If errors persist, paste the exact console error and I'll diagnose next.
-
-## Out of scope (per your instruction)
-
-- No fallback to `VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_BROWSER_KEY`.
-- No code edits to `PropertyMap.tsx` or `AddressAutocomplete.tsx`.
+4. **Validation after config/data updates**
+   - Hard refresh `/client/search?lt=for_rent`.
+   - Confirm the map no longer shows the Google Maps error.
+   - Confirm address autocomplete suggestions appear.
+   - Confirm the expected rental count appears based on listing status rules.
