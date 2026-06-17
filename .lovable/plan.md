@@ -1,39 +1,26 @@
-## Audit result
+## Findings
+- The rental result itself is now loading: `/client/search?lt=for_rent` returns **1 result** for `300 Commercial St #434`.
+- The map area is failing with Google’s message: **“This page didn’t load Google Maps correctly.”**
+- Database confirms the current visible rental has coordinates, `listing_type = for_rent`, `status = coming_soon`, and `property_type = condo`, so the remaining issue is map rendering/API configuration, not the rental filter.
 
-The buyer "For Rent" search returns 0 listings, so the results list is empty and the map shows the empty state. Verified in the database:
+## Plan
+1. **Keep the rental filter fix as-is**
+   - Do not re-add `residential_rental`.
+   - Do not change sale search behavior.
 
-- Existing rentals (`listing_type = 'for_rent'`) have `property_type` values `condo` and `apartment`.
-- Buyer rental search hard-codes `propertyTypes = ["residential_rental"]` and passes it to `buildListingsQuery`, which executes `listings.property_type IN ('residential_rental')`.
-- No row matches → 0 results → map renders the "No homes match your filters" empty state. The map itself works; it just has nothing to plot.
+2. **Audit the map failure path**
+   - Inspect `PropertyMap` for how it resolves the Google Maps API key and map ID.
+   - Confirm whether the failure is caused by a missing/invalid/restricted key, missing map ID, or Advanced Marker setup.
 
-`AddRentalListing` only writes real property types (`Single Family`, `Condo`, `Apartment`, etc.). The phantom `residential_rental` value is never written, so it can never match.
+3. **Make the buyer map degrade safely**
+   - If Google Maps cannot initialize, show the rental list normally and replace the broken Google error surface with a clean non-blocking fallback.
+   - Keep the map/pin behavior unchanged when the Maps key works.
 
-## Fix
+4. **Verify both buyer routes**
+   - `/client/search?lt=for_rent` for authenticated buyer search.
+   - `/browse?lt=for_rent` for public/non-buyer browse.
 
-Stop constraining buyer rental searches by the phantom `residential_rental` property type. The `listing_type = 'for_rent'` filter is the correct and sufficient gate for rentals.
-
-### Changes
-
-1. **`src/lib/buyerSearchRentFilters.ts`**
-   - In `defaultRentToolbarCriteria()`, set `propertyTypes: []` instead of `["residential_rental"]`.
-   - Keep `DEFAULT_RENTAL_PROPERTY_TYPES` export as `[]` (or remove if unreferenced) so nothing else re-introduces the bad filter.
-
-2. **`src/pages/BuyerMapSearch.tsx`**
-   - In `parseCriteriaFromUrl`, remove the block that overrides `urlCriteria.propertyTypes = ["residential_rental"]` when `listingType === "for_rent"`.
-   - In the "For Rent" toggle button handler, set `propertyTypes: []` instead of `["residential_rental"]`.
-
-3. **`src/pages/BrowsePropertiesNew.tsx`**
-   - Same two edits: remove the rental URL override to `["residential_rental"]`, and the rental toolbar guard effect that re-sets `propertyTypes` to `["residential_rental"]` (lines ~180–185). Replace with a no-op or simply clear `propertyTypes` for rentals.
-   - In the "For Rent" toggle handler, set `propertyTypes: []`.
-
-### Out of scope (intentionally unchanged)
-
-- No change to `buildListingsQuery`, the property-type map, or sale search.
-- No change to the rental toolbar UI (it already hides the property-type filter on rentals).
-- No change to map rendering, Maps API key handling, or status defaults — the map will populate as soon as listings come back.
-- No DB migrations; existing rental rows are already correctly typed.
-
-### Verification
-
-- Reload `/buyer-search?lt=for_rent` (and the browse equivalent): the Coming Soon Boston rental at 300 Commercial Street should appear in the list and as a pin on the map.
-- Sale search behavior is unchanged (the override only affected `listingType === "for_rent"`).
+## Technical notes
+- No database migration is planned.
+- No RLS changes are planned because the public listing policy already allows the coming-soon rental to be read.
+- No changes to listing status banners, sale filters, agent listing flows, or reminders.
