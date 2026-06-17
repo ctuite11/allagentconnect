@@ -355,6 +355,7 @@ export function renderCompactListingEmailCard(
   const idLabel = pickListingIdLabel(listing);
   const statusBanner = renderStatusBanner(listing.status);
   const statsHtml = renderStatsRow(listing);
+  const hoodPill = neighborhoodPill(listing.neighborhood);
 
   const photoHeight = 170;
   const safeAlt = escapeHtml(fullAddress || "Listing photo");
@@ -404,6 +405,7 @@ export function renderCompactListingEmailCard(
           ${photoCellInner}
         </td>
       </tr>
+      ${hoodPill ? `<tr><td align="left" style="padding:8px 14px 0;background:#ffffff;">${hoodPill}</td></tr>` : ""}
       <tr>
         <td valign="top" style="padding:10px 14px 12px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
           ${headerRow}
