@@ -107,6 +107,7 @@ interface SearchListing {
   lot_size?: number | null;
   publish_to_dcmls?: boolean;
   dcmls_status?: string;
+  is_relisting?: boolean | null;
 }
 
 interface SearchListingCardProps {
