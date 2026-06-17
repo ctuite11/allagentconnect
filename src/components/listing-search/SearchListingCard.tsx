@@ -15,6 +15,7 @@ import {
   Check, Mail, ExternalLink,
   Phone, Camera, FileText, Video,
   ChevronLeft, ChevronRight,
+  Sparkles, RefreshCw, TrendingDown,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
@@ -41,6 +42,22 @@ import {
   listingSelectionSearchCardSelected,
 } from "@/lib/listingSelectionStyles";
 import { formatListingPriceDisplay, listingEffectiveNumericPrice } from "@/lib/formatListingPriceDisplay";
+import { useListingBanners } from "@/hooks/useListingBanners";
+import type { BannerData } from "@/components/ListingCardShell";
+
+// ── Banner icon (mirrors ListingCardShell) ──────────────────────────────────
+function BannerIcon({ type }: { type: BannerData["iconType"] }) {
+  switch (type) {
+    case "sparkles":
+      return <Sparkles className="w-3 h-3" />;
+    case "refresh":
+      return <RefreshCw className="w-3 h-3" />;
+    case "trendingDown":
+      return <TrendingDown className="w-3 h-3" />;
+    default:
+      return null;
+  }
+}
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -90,6 +107,7 @@ interface SearchListing {
   lot_size?: number | null;
   publish_to_dcmls?: boolean;
   dcmls_status?: string;
+  is_relisting?: boolean | null;
 }
 
 interface SearchListingCardProps {
@@ -187,6 +205,12 @@ export const SearchListingCard = ({
   const photoUrl = getFirstPhoto(listing);
   const allPhotos = getAllPhotos(listing);
   const nextOpenHouse = getNextOpenHouse(listing.open_houses);
+  const { statusBanner, priceChangeBanner } = useListingBanners({
+    id: listing.id,
+    status: listing.status,
+    is_relisting: listing.is_relisting ?? null,
+    open_houses: listing.open_houses,
+  });
   const photoCount = Array.isArray(listing.photos) ? listing.photos.length : 0;
   const docCount = getDocCount(listing.documents);
   const propertyStyle = getPropertyStyle(listing);
@@ -307,6 +331,20 @@ export const SearchListingCard = ({
             {/* A. Photo */}
             <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-neutral-100">
               <DcmlsBadge listing={listing} />
+              {/* Status Change Banner (top priority) */}
+              {statusBanner && (
+                <div className={`absolute top-0 left-0 right-0 z-20 ${statusBanner.color} text-white text-xs font-bold px-2 py-1 text-center flex items-center justify-center gap-1`}>
+                  <BannerIcon type={statusBanner.iconType} />
+                  {statusBanner.text}
+                </div>
+              )}
+              {/* Price Change Banner (second priority) */}
+              {priceChangeBanner && !statusBanner && (
+                <div className={`absolute top-0 left-0 right-0 z-20 ${priceChangeBanner.color} text-white text-xs font-bold px-2 py-1 text-center flex items-center justify-center gap-1`}>
+                  <BannerIcon type={priceChangeBanner.iconType} />
+                  {priceChangeBanner.text}
+                </div>
+              )}
               {onSelect && (
                 <button
                   onClick={(e) => { e.stopPropagation(); onSelect(listing.id, e); }}
@@ -517,6 +555,18 @@ export const SearchListingCard = ({
               )}
               <div className="relative h-[75px] w-[100px] overflow-hidden rounded-md bg-neutral-100">
                 <DcmlsBadge listing={listing} />
+                {statusBanner && (
+                  <div className={`absolute top-0 left-0 right-0 z-20 ${statusBanner.color} text-white text-[9px] font-bold px-1 py-0.5 text-center flex items-center justify-center gap-0.5`}>
+                    <BannerIcon type={statusBanner.iconType} />
+                    <span className="truncate">{statusBanner.text}</span>
+                  </div>
+                )}
+                {priceChangeBanner && !statusBanner && (
+                  <div className={`absolute top-0 left-0 right-0 z-20 ${priceChangeBanner.color} text-white text-[9px] font-bold px-1 py-0.5 text-center flex items-center justify-center gap-0.5`}>
+                    <BannerIcon type={priceChangeBanner.iconType} />
+                    <span className="truncate">{priceChangeBanner.text}</span>
+                  </div>
+                )}
                 {photoUrl ? (
                   <img src={photoUrl} alt="" className="h-full w-full object-cover" />
                 ) : (
