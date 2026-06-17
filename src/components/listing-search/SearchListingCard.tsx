@@ -575,6 +575,13 @@ export const SearchListingCard = ({
                     <span className="truncate">{priceChangeBanner.text}</span>
                   </div>
                 )}
+                {openHouseBanner && (
+                  <div
+                    className={`absolute ${statusBanner || priceChangeBanner ? 'top-4' : 'top-0'} left-0 right-0 z-20 ${openHouseBanner.color} text-white text-[9px] font-bold px-1 py-0.5 text-center truncate`}
+                  >
+                    {openHouseBanner.isBroker ? '🚙' : '🎈'} {openHouseBanner.text}
+                  </div>
+                )}
                 {photoUrl ? (
                   <img src={photoUrl} alt="" className="h-full w-full object-cover" />
                 ) : (
