@@ -1,39 +1,31 @@
-## Buyer/agent listing banner parity
+## Fix Open House / Broker Tour icons
 
-Bring buyer-side `SearchListingCard` to behavioral parity with agent `ListingCard` for lifecycle photo banners. Parity only — no redesign.
+### Reference (from screenshot)
+- Open House → 🎈 balloon
+- Broker Tour → 🚙 car
 
-### Banners covered
-- Coming Soon (purple, sparkles)
-- New Listing (black, sparkles)
-- Back on Market (orange, refresh)
-- Price Reduced (red, trending-down)
-- Off Market (rose, refresh)
-- Open House / Broker Open (with stacking behavior under status/price banners)
+### Current state
+- Agent `ListingCardShell` photo overlay uses `🏢` (broker) and `🎈` (public).
+- Agent `ListingCard` inline overlay uses the same emojis.
+- Buyer `SearchListingCard` does not yet render an open-house photo overlay.
 
-### Steps
+### Change
+1. **`ListingCardShell.tsx`** — open-house photo overlay: replace `🏢` with `🚙` for broker tour. Keep `🎈` for public.
+2. **`ListingCard.tsx`** — inline open-house photo overlay: same swap (`🏢` → `🚙`).
+3. **`SearchListingCard.tsx`** — add the open-house photo overlay on both desktop and mobile photo areas:
+   - `🚙 BROKER TOUR • MMM d • h:mm AM – h:mm PM` (purple) when `event_type = broker_tour`
+   - `🎈 OPEN HOUSE • …` (green) otherwise
+   - Stacks below the status/price banner (uses `top-5` / `top-6` like the shell)
+4. **`useListingBanners.ts`** — change broker text from `"BROKER OPEN HOUSE"` to `"BROKER TOUR"` to match the screenshot label.
 
-1. **Create `src/hooks/useListingBanners.ts`** — extracts the existing agent-side logic verbatim:
-   - Fetches `listing_status_history` (last 5, ordered by `changed_at` desc) keyed by `listing.id`.
-   - Fetches `favorite_price_history` (last 1, ordered by `changed_at` desc) keyed by `listing.id`.
-   - Applies the same 48-hour timing windows, status priority, `is_relisting` guard, off-market previous-status set, and open-house derivation.
-   - Returns `{ statusBanner, priceChangeBanner, openHouseBanner }` matching the existing `BannerData` / `OpenHouseBannerData` shapes from `ListingCardShell`.
-
-2. **Refactor `src/components/ListingCard.tsx`** to consume the hook. Pure extraction — no visual or behavioral change.
-
-3. **Update `src/components/listing-search/SearchListingCard.tsx`** to consume the same hook and render the three overlays on the photo area using the same classes, priority (status > priceChange), and open-house stacking as `ListingCardShell`. Keep the existing `ListingStatusBadge` placement.
-
-### Do not change
-Banner text, colors, icons, timing windows, status rules, cron logic, DB schema, listing card layout, or `ListingCardShell` API (unless strictly required).
-
-### Accepted inherited limitations (not fixed in this pass)
-- Price reduction uses `favorite_price_history` (only lights up if at least one user favorited the listing).
-- Status/price history fetch remains per-card (not batched).
-
-### Verification
-- Agent cards look and behave unchanged.
-- Buyer cards now show Coming Soon, New Listing, Back on Market, Price Reduced, Off Market, and Open House/Broker Open with the same rules as agent cards.
+### Out of scope
+- No change to colors (purple broker / green public stays).
+- No change to status, price, or other lifecycle banners.
+- No change to the existing green info pill below the photo on the buyer card.
+- No change to icons used in other surfaces (utility strips, footers, etc.).
 
 ### Files touched
-- `src/hooks/useListingBanners.ts` (new)
-- `src/components/ListingCard.tsx` (extraction only)
-- `src/components/listing-search/SearchListingCard.tsx` (consume hook + render overlays)
+- `src/components/ListingCardShell.tsx`
+- `src/components/ListingCard.tsx`
+- `src/components/listing-search/SearchListingCard.tsx`
+- `src/hooks/useListingBanners.ts`
