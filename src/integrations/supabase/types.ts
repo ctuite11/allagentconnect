@@ -2737,6 +2737,38 @@ export type Database = {
           },
         ]
       }
+      listing_reminder_log: {
+        Row: {
+          created_at: string
+          kind: string
+          last_sent_at: string
+          listing_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          kind?: string
+          last_sent_at?: string
+          listing_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          kind?: string
+          last_sent_at?: string
+          listing_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_reminder_log_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: true
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       listing_shares: {
         Row: {
           created_at: string
