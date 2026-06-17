@@ -9,6 +9,7 @@ interface SectionWrapperProps {
   action?: React.ReactNode;
   children: React.ReactNode;
   className?: string;
+  headerClassName?: string;
   contentClassName?: string;
 }
 
@@ -22,12 +23,13 @@ export function SectionWrapper({
   action,
   children,
   className,
+  headerClassName,
   contentClassName,
 }: SectionWrapperProps) {
   return (
     <Card className={cn(propertySectionCard, className)}>
       {title && (
-        <CardHeader className="flex-row items-center justify-between space-y-0">
+        <CardHeader className={cn("flex-row items-center justify-between space-y-0 pb-2", headerClassName)}>
           <CardTitle className="flex items-center gap-2 text-lg">
             {icon}
             {title}

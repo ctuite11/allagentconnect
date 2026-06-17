@@ -51,6 +51,8 @@ import {
   propertyRailSticky,
   propertyRailStack,
   propertyHeroMedia,
+  propertyDetailPairedCtaBase,
+  propertyDetailMessageCta,
 } from "@/components/property/propertyTokens";
 import { cn } from "@/lib/utils";
 import { BuyerAgentShowcase } from "@/components/BuyerAgentShowcase";
@@ -459,7 +461,7 @@ const ConsumerPropertyDetail = () => {
               address={buildDisplayAddress(listing as any)}
               priceDisplay={listingPriceDisplay}
               priceSuffix={listing.listing_type === 'for_rent' ? '/ mo' : undefined}
-              className="order-1 mb-2 min-w-0 lg:col-start-1 lg:row-start-1 lg:mb-3"
+              className="order-1 mb-6 min-w-0 lg:col-start-1 lg:row-start-1 lg:mb-8"
             />
 
             {/* Row 2 — photo (left column) */}
@@ -560,7 +562,7 @@ const ConsumerPropertyDetail = () => {
               </div>
 
               {/* Anchored under photo — inset matches neighborhood pill (left-4) */}
-              <div className={cn(propertyPhotoContentInset, "flex flex-col gap-3 pt-3")}>
+              <div className={cn(propertyPhotoContentInset, "flex flex-col gap-3 pt-1")}>
                 <div className="flex w-full flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
                   <MediaTabBar
                     active={activeMediaTab as MediaTab}
@@ -610,7 +612,7 @@ const ConsumerPropertyDetail = () => {
             <div
               className={cn(
                 propertyPhotoContentInset,
-                "order-3 flex min-w-0 flex-col gap-4 pt-5 lg:col-start-1 lg:row-start-3",
+                "order-3 flex min-w-0 flex-col gap-5 pt-5 lg:col-start-1 lg:row-start-3",
               )}
             >
               {/* Overview/Description with Read More */}
@@ -624,6 +626,7 @@ const ConsumerPropertyDetail = () => {
                   <SectionWrapper
                     title="Overview"
                     icon={<FileText className="h-5 w-5 text-neutral-600" />}
+                    headerClassName="!pt-7"
                     contentClassName="space-y-4"
                     className={consumerSectionCard}
                   >
@@ -680,7 +683,7 @@ const ConsumerPropertyDetail = () => {
               {/* Agent/admin: listing agent contact via AAC email (no buyer CTAs) */}
               {isAgentView && (agentProfile || listing?.agent_id) ? (
                 <Card className={cn(consumerSectionCard, "shadow-sm")}>
-                  <CardContent className="space-y-4 p-5">
+                  <CardContent className="space-y-5 p-5">
                     <div className="flex items-center gap-4">
                       <AgentAvatar
                         name={
@@ -694,7 +697,7 @@ const ConsumerPropertyDetail = () => {
                         avatarClassName="h-16 w-16 border-2 border-neutral-200"
                         fallbackClassName="bg-neutral-100"
                       />
-                      <div className="flex-1 min-w-0">
+                      <div className="flex-1 min-w-0 space-y-1.5">
                         <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-500">Listing agent</p>
                         <p className="font-bold text-lg leading-tight">
                           {agentProfile
@@ -709,7 +712,7 @@ const ConsumerPropertyDetail = () => {
                       </div>
                     </div>
 
-                    <div className="space-y-2.5 text-sm">
+                    <div className="space-y-3.5 text-sm">
                       {agentProfile?.cell_phone && (
                         <a href={`tel:${agentProfile.cell_phone}`} className="flex items-center gap-2.5 transition-colors hover:text-neutral-900">
                           <Phone className="h-4 w-4 shrink-0 text-neutral-500" />
@@ -748,8 +751,7 @@ const ConsumerPropertyDetail = () => {
 
                     {canMessageListingAgent && (
                       <Button
-                        size="lg"
-                        className="w-full gap-2 bg-neutral-900 text-white shadow-sm hover:bg-neutral-800"
+                        className={cn(propertyDetailPairedCtaBase, propertyDetailMessageCta)}
                         onClick={openListingAgentMessage}
                       >
                         <MessageSquare className="h-5 w-5" />
@@ -769,7 +771,7 @@ const ConsumerPropertyDetail = () => {
                 </Card>
               ) : stickyAgentProfile ? (
                 <Card className={cn(consumerSectionCard, "shadow-sm")}>
-                  <CardContent className="space-y-4 p-5">
+                  <CardContent className="space-y-5 p-5">
                     <div className="flex items-center gap-4">
                       <AgentAvatar
                         name={`${stickyAgentProfile.first_name} ${stickyAgentProfile.last_name}`}
@@ -779,7 +781,7 @@ const ConsumerPropertyDetail = () => {
                         avatarClassName="h-16 w-16 border-2 border-neutral-200"
                         fallbackClassName="bg-neutral-100"
                       />
-                      <div className="flex-1 min-w-0">
+                      <div className="flex-1 min-w-0 space-y-1.5">
                         <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-500">Your agent</p>
                         <p className="font-bold text-lg leading-tight">
                           {stickyAgentProfile.first_name} {stickyAgentProfile.last_name}
@@ -790,7 +792,7 @@ const ConsumerPropertyDetail = () => {
                       </div>
                     </div>
 
-                    <div className="space-y-2.5 text-sm">
+                    <div className="space-y-3.5 text-sm">
                       {stickyAgentProfile.cell_phone && (
                         <a href={`tel:${stickyAgentProfile.cell_phone}`} className="flex items-center gap-2.5 transition-colors hover:text-neutral-900">
                           <Phone className="h-4 w-4 shrink-0 text-neutral-500" />
@@ -828,8 +830,7 @@ const ConsumerPropertyDetail = () => {
                         Do not re-add email form (ContactAgentDialog) as buyer CTA. */}
                     <div className="grid gap-2">
                       <Button
-                        size="lg"
-                        className="w-full gap-2 bg-neutral-900 text-white shadow-sm hover:bg-neutral-800"
+                        className={cn(propertyDetailPairedCtaBase, propertyDetailMessageCta)}
                         onClick={openBuyerAgentMessage}
                       >
                         <MessageSquare className="h-5 w-5" />
@@ -840,7 +841,7 @@ const ConsumerPropertyDetail = () => {
                 </Card>
               ) : agentProfile ? (
                 <Card className={cn(consumerSectionCard, "shadow-sm")}>
-                  <CardContent className="space-y-4 p-5">
+                  <CardContent className="space-y-5 p-5">
                     <div className="flex items-center gap-4">
                       <AgentAvatar
                         name={`${agentProfile.first_name} ${agentProfile.last_name}`}
@@ -850,7 +851,7 @@ const ConsumerPropertyDetail = () => {
                         avatarClassName="h-16 w-16 border-2 border-neutral-200"
                         fallbackClassName="bg-neutral-100"
                       />
-                      <div className="flex-1 min-w-0">
+                      <div className="flex-1 min-w-0 space-y-1.5">
                         <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-500">Listing agent</p>
                         <p className="font-bold text-lg leading-tight">
                           {agentProfile.first_name} {agentProfile.last_name}
@@ -861,7 +862,7 @@ const ConsumerPropertyDetail = () => {
                       </div>
                     </div>
 
-                    <div className="space-y-2.5 text-sm">
+                    <div className="space-y-3.5 text-sm">
                       {agentProfile.cell_phone && (
                         <a href={`tel:${agentProfile.cell_phone}`} className="flex items-center gap-2.5 transition-colors hover:text-neutral-900">
                           <Phone className="h-4 w-4 shrink-0 text-neutral-500" />
@@ -898,8 +899,7 @@ const ConsumerPropertyDetail = () => {
                     <div className="grid gap-2">
                       {canMessageListingAgent && (
                         <Button
-                          size="lg"
-                          className="w-full gap-2 bg-neutral-900 text-white shadow-sm hover:bg-neutral-800"
+                          className={cn(propertyDetailPairedCtaBase, propertyDetailMessageCta)}
                           onClick={openListingAgentMessage}
                         >
                           <MessageSquare className="h-5 w-5" />
@@ -911,12 +911,12 @@ const ConsumerPropertyDetail = () => {
                 </Card>
               ) : (
                 <Card className={cn(consumerSectionCard, "shadow-sm")}>
-                  <CardContent className="space-y-4 p-5">
+                  <CardContent className="space-y-5 p-5">
                     <div className="flex items-center gap-4">
                       <div className="flex h-16 w-16 items-center justify-center rounded-full border border-neutral-200 bg-white shadow-sm">
                         <HelpCircle className="h-8 w-8 text-neutral-400" />
                       </div>
-                      <div className="min-w-0 flex-1">
+                      <div className="min-w-0 flex-1 space-y-1.5">
                         <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-500">Need help?</p>
                         <p className="text-lg font-bold leading-tight text-neutral-900">Contact support</p>
                       </div>
@@ -939,10 +939,13 @@ const ConsumerPropertyDetail = () => {
               })()}
 
               {!isAgentView && (
-                <ScheduleShowingDialog
-                  listingId={listing.id}
-                  listingAddress={formatListingEmailSubjectLocation(listing) || `${listing.address}, ${listing.city}, ${listing.state}`}
-                />
+                <div className="pt-3">
+                  <ScheduleShowingDialog
+                    listingId={listing.id}
+                    listingAddress={formatListingEmailSubjectLocation(listing) || `${listing.address}, ${listing.city}, ${listing.state}`}
+                    triggerClassName={propertyDetailPairedCtaBase}
+                  />
+                </div>
               )}
 
               {buyerCompensationCard}

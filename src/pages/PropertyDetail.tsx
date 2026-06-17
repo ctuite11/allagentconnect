@@ -65,6 +65,8 @@ import {
   propertyPageContainer,
   propertyHeroMedia,
   propertyRailStack,
+  propertyDetailPairedCtaBase,
+  propertyDetailMessageCta,
 } from "@/components/property/propertyTokens";
 import { BuyerAgentShowcase } from "@/components/BuyerAgentShowcase";
 import ContactAgentDialog from "@/components/ContactAgentDialog";
@@ -581,7 +583,7 @@ const PropertyDetail = () => {
               address={buildDisplayAddress(listing as any)}
               priceDisplay={listingPriceDisplay}
               priceSuffix={listing.listing_type === "for_rent" ? "/ mo" : undefined}
-              className="order-1 mb-2 min-w-0 lg:col-start-1 lg:row-start-1 lg:mb-3"
+              className="order-1 mb-6 min-w-0 lg:col-start-1 lg:row-start-1 lg:mb-8"
             />
 
             {/* Row 2 — photo */}
@@ -678,7 +680,7 @@ const PropertyDetail = () => {
                 </div>
               </div>
 
-              <div className={cn(propertyPhotoContentInset, "flex flex-col gap-3 pt-3")}>
+              <div className={cn(propertyPhotoContentInset, "flex flex-col gap-3 pt-1")}>
                 <div className="flex w-full flex-row items-start justify-between gap-3 sm:items-center sm:gap-4">
                   <MediaTabBar
                     active={activeMediaTab as MediaTab}
@@ -739,7 +741,7 @@ const PropertyDetail = () => {
             <div
               className={cn(
                 propertyPhotoContentInset,
-                "order-3 flex min-w-0 flex-col gap-4 pt-2 lg:col-start-1 lg:row-start-3",
+                "order-3 flex min-w-0 flex-col gap-5 pt-4 lg:col-start-1 lg:row-start-3",
               )}
             >
               {listing.description && (() => {
@@ -752,6 +754,7 @@ const PropertyDetail = () => {
                   <SectionWrapper
                     title="Overview"
                     icon={<FileText className="h-5 w-5 text-neutral-600" />}
+                    headerClassName="!pt-7"
                     contentClassName="space-y-4"
                     className={consumerSectionCard}
                   >
@@ -984,7 +987,7 @@ const PropertyDetail = () => {
                       listingAddress={formatListingEmailSubjectLocation(listing)}
                       triggerLabel="Request a Showing"
                       triggerVariant="outline"
-                      triggerClassName="h-9 w-full rounded-lg border-neutral-200 text-[13px] font-medium shadow-none hover:bg-neutral-50"
+                      triggerClassName="h-10 w-full rounded-lg border-neutral-200 text-[13px] font-medium shadow-none hover:bg-neutral-50"
                     />
 
                     <FavoriteButton
@@ -1013,7 +1016,7 @@ const PropertyDetail = () => {
 
               {(agentProfile || listing?.agent_id) && (
                 <Card className={cn(consumerSectionCard, "shadow-sm")}>
-                  <CardContent className="space-y-4 p-5">
+                  <CardContent className="space-y-5 p-5">
                     <div className="flex items-center gap-4">
                       <AgentAvatar
                         name={
@@ -1027,7 +1030,7 @@ const PropertyDetail = () => {
                         avatarClassName="h-16 w-16 border-2 border-neutral-200"
                         fallbackClassName="bg-neutral-100"
                       />
-                      <div className="flex-1 min-w-0">
+                      <div className="flex-1 min-w-0 space-y-1.5">
                         <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-500">Listing agent</p>
                         <p className="text-lg font-bold leading-tight text-neutral-900">
                           {agentProfile
@@ -1042,7 +1045,7 @@ const PropertyDetail = () => {
                       </div>
                     </div>
 
-                    <div className="space-y-2.5 text-sm">
+                    <div className="space-y-3.5 text-sm">
                       {agentProfile?.cell_phone && (
                         <a
                           href={`tel:${agentProfile.cell_phone}`}
@@ -1120,8 +1123,7 @@ const PropertyDetail = () => {
 
                     {canMessageListingAgent && (
                       <Button
-                        size="lg"
-                        className="w-full gap-2 bg-neutral-900 text-white shadow-sm hover:bg-neutral-800"
+                        className={cn(propertyDetailPairedCtaBase, propertyDetailMessageCta)}
                         onClick={openListingMessage}
                       >
                         <MessageSquare className="h-5 w-5" />
@@ -1144,8 +1146,8 @@ const PropertyDetail = () => {
               )}
 
               {isAgentView && (
-                <Card className={cn(consumerSectionCard, "shadow-sm")}>
-                  <CardContent className="space-y-2.5 p-4">
+                <Card className={cn(consumerSectionCard, "mt-1 shadow-sm")}>
+                  <CardContent className="space-y-2.5 p-4 pt-5">
                     <h3 className="text-sm font-semibold text-neutral-900">Listing inquiry</h3>
 
                     <ScheduleShowingDialog
@@ -1154,8 +1156,9 @@ const PropertyDetail = () => {
                       triggerLabel="Request a Showing"
                       triggerVariant="outline"
                       triggerClassName={cn(
-                        "h-9 w-full rounded-lg text-[13px] font-medium shadow-none",
+                        propertyDetailPairedCtaBase,
                         listingDetailOutlineCtaClass,
+                        "shadow-none",
                       )}
                     />
                   </CardContent>

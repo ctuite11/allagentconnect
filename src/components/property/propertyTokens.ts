@@ -19,11 +19,11 @@ export const propertyRailCol = "lg:w-[32%]";
 
 // Right rail (sticky behavior + spacing rhythm)
 export const propertyRailSticky = "lg:sticky lg:top-24 lg:self-start";
-export const propertyRailStack = "space-y-3";
+export const propertyRailStack = "space-y-6";
 
 // Card surfaces
 export const propertyHeroMedia =
-  "relative rounded-3xl overflow-hidden shadow-2xl ring-1 ring-black/5 h-[380px] sm:h-[480px] lg:h-[560px]";
+  "relative rounded-[20px] overflow-hidden shadow-2xl ring-1 ring-black/5 h-[380px] sm:h-[480px] lg:h-[560px]";
 export const propertyAgentCard = "rounded-3xl shadow-md border-2";
 export const propertyStripCard = "rounded-2xl shadow-sm border";
 export const propertySectionCard = "rounded-3xl";
@@ -44,15 +44,21 @@ export const propertyFactLabel = "text-xs text-muted-foreground";
 export const propertyFactIcon = "h-4 w-4 text-primary";
 
 // Media tab bar
-export const propertyMediaTabsRow = "flex items-center gap-2 mt-2 flex-wrap";
+export const propertyMediaTabsRow = "flex items-center gap-2 mt-0 flex-wrap";
 
 // Header row (address + price above hero, constrained to media column)
 export const propertyHeaderRow =
   "flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1";
 
 // Section spacing rhythm below hero
-export const propertyMainGridGap = "gap-4";
-export const propertyMainSectionStack = "space-y-4";
+export const propertyMainGridGap = "gap-5";
+export const propertyMainSectionStack = "space-y-5";
+
+/** Matched rail CTAs (Message Agent + Schedule Showing) — same height & radius, different colors */
+export const propertyDetailPairedCtaBase =
+  "h-12 w-full gap-2 rounded-lg text-[15px] font-medium shadow-sm";
+export const propertyDetailMessageCta =
+  "bg-neutral-900 text-white hover:bg-neutral-800 focus-visible:ring-neutral-400/30";
 
 export const propertyTokens = {
   propertyPageContainer,
@@ -78,6 +84,8 @@ export const propertyTokens = {
   propertyHeaderRow,
   propertyMainGridGap,
   propertyMainSectionStack,
+  propertyDetailPairedCtaBase,
+  propertyDetailMessageCta,
 } as const;
 
 export default propertyTokens;

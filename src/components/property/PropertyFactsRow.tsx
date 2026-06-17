@@ -1,7 +1,7 @@
 import { Bed, Bath, Square, CircleParking } from "lucide-react";
+import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import {
-  propertyFactsRow,
   propertyFactItem,
   propertyFactValue,
   propertyFactLabel,
@@ -40,45 +40,64 @@ export function PropertyFactsRow({
 }: PropertyFactsRowProps) {
   const iconCls = cn(propertyFactIcon, "text-[#0E56F5]");
 
+  const groups: ReactNode[] = [];
+
+  if (propertyTypeLabel) {
+    groups.push(
+      <div key="type" className={propertyFactItem}>
+        <span className={cn(propertyFactLabel, "text-neutral-600")}>Property Type:</span>
+        <span className={cn(propertyFactValue, "text-sm text-neutral-900")}>{propertyTypeLabel}</span>
+      </div>,
+    );
+  }
+  if (bedrooms != null && bedrooms > 0) {
+    groups.push(
+      <div key="beds" className={propertyFactItem}>
+        <Bed className={iconCls} aria-hidden />
+        <span className={propertyFactValue}>{bedrooms}</span>
+      </div>,
+    );
+  }
+  if (bathrooms != null && bathrooms > 0) {
+    groups.push(
+      <div key="baths" className={propertyFactItem}>
+        <Bath className={iconCls} aria-hidden />
+        <span className={propertyFactValue}>{bathrooms}</span>
+      </div>,
+    );
+  }
+  if (squareFeet != null && squareFeet > 0) {
+    groups.push(
+      <div key="sqft" className={propertyFactItem}>
+        <Square className={iconCls} aria-hidden />
+        <span className={propertyFactValue}>{squareFeet.toLocaleString()}</span>
+      </div>,
+    );
+  }
+  groups.push(
+    <div key="parking" className={propertyFactItem}>
+      <CircleParking className={iconCls} aria-hidden />
+      <span className={propertyFactValue}>{totalParkingSpaces ?? 0}</span>
+    </div>,
+  );
+  if (daysOnMarket != null && daysOnMarket >= 0) {
+    groups.push(
+      <div key="dom" className={propertyFactItem}>
+        <span className={cn(propertyFactLabel, "text-neutral-500")}>DOM</span>
+        <span className={propertyFactValue}>{daysOnMarket}</span>
+      </div>,
+    );
+  }
+
   return (
     <div className={cn(containerClassName)}>
-      <div className={cn("mt-0 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-6 sm:gap-y-2", className)}>
-        {propertyTypeLabel ? (
-          <div className={propertyFactItem}>
-            <span className={cn(propertyFactLabel, "text-neutral-600")}>Property Type:</span>
-            <span className={cn(propertyFactValue, "text-sm text-neutral-900")}>{propertyTypeLabel}</span>
-          </div>
-        ) : null}
-        <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
-          {bedrooms != null && bedrooms > 0 && (
-            <div className={propertyFactItem}>
-              <Bed className={iconCls} aria-hidden />
-              <span className={propertyFactValue}>{bedrooms}</span>
-            </div>
-          )}
-          {bathrooms != null && bathrooms > 0 && (
-            <div className={propertyFactItem}>
-              <Bath className={iconCls} aria-hidden />
-              <span className={propertyFactValue}>{bathrooms}</span>
-            </div>
-          )}
-          {squareFeet != null && squareFeet > 0 && (
-            <div className={propertyFactItem}>
-              <Square className={iconCls} aria-hidden />
-              <span className={propertyFactValue}>{squareFeet.toLocaleString()}</span>
-            </div>
-          )}
-          <div className={propertyFactItem}>
-            <CircleParking className={iconCls} aria-hidden />
-            <span className={propertyFactValue}>{totalParkingSpaces ?? 0}</span>
-          </div>
-          {daysOnMarket != null && daysOnMarket >= 0 && (
-            <div className={propertyFactItem}>
-              <span className={cn(propertyFactLabel, "text-neutral-500")}>DOM</span>
-              <span className={propertyFactValue}>{daysOnMarket}</span>
-            </div>
-          )}
-        </div>
+      <div
+        className={cn(
+          "mt-0 flex min-w-0 flex-wrap items-center gap-x-9 gap-y-2.5 border-b-0 pb-0",
+          className,
+        )}
+      >
+        {groups}
       </div>
     </div>
   );
