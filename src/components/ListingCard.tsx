@@ -833,7 +833,7 @@ const ListingCard = ({
           
           {/* Open House Banner (third priority) */}
           {!compactAgentOwned && openHouseBanner && !statusBanner && !priceChangeBanner && <div className={`absolute top-0 left-0 right-0 ${openHouseBanner.color} text-white text-xs font-bold px-2 py-1 text-center`}>
-              {openHouseBanner.isBroker ? '🏢' : '🎈'} {openHouseBanner.text}
+              {openHouseBanner.isBroker ? '🚙' : '🎈'} {openHouseBanner.text}
             </div>}
         </div>
         <CardContent className="flex flex-1 flex-col gap-1.5 px-4 pb-3 pt-3">
