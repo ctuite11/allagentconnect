@@ -53,7 +53,7 @@ export function formatListingShareEmailStreetLine(
 }
 
 const AAC_MONOGRAM_LOGO_URL =
-  "https://qocduqtfbsevnhlgsfka.supabase.co/storage/v1/object/public/brand-assets/aac-monogram-green.svg";
+  "https://allagentconnect.com/email/aac-monogram-green-128.png";
 
 function escapeHtml(value: string): string {
   return value

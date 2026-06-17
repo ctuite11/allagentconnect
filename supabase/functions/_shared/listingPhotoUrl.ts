@@ -1,4 +1,13 @@
 const LISTING_PHOTOS_BUCKET = "listing-photos";
+const CDN_HOST = "https://cdn.allagentconnect.com";
+
+/** Rewrite Supabase storage public/render URLs onto the cdn.allagentconnect.com CNAME. */
+function rewriteToCdn(url: string): string {
+  if (!url) return url;
+  const m = url.match(/^https?:\/\/[^/]+(\/storage\/v1\/(?:object|render\/image)\/public\/.*)$/i);
+  if (!m) return url;
+  return `${CDN_HOST}${m[1]}`;
+}
 
 /** Resolve the first listing photo to a public HTTPS URL (handles storage paths). */
 export function resolveListingPhotoUrl(photos: unknown, supabaseUrl: string): string {
@@ -14,11 +23,10 @@ export function resolveListingPhotoUrl(photos: unknown, supabaseUrl: string): st
   }
 
   if (!raw) return "";
-  if (/^https?:\/\//i.test(raw)) return raw;
+  if (/^https?:\/\//i.test(raw)) return rewriteToCdn(raw);
 
-  const base = supabaseUrl.replace(/\/$/, "");
   const path = raw.replace(/^\//, "");
-  return `${base}/storage/v1/object/public/${LISTING_PHOTOS_BUCKET}/${path}`;
+  return `${CDN_HOST}/storage/v1/object/public/${LISTING_PHOTOS_BUCKET}/${path}`;
 }
 
 function extractFirstPhoto(photos: unknown): unknown {
@@ -59,8 +67,7 @@ export function toOgImageUrl(publicUrl: string): string {
   const marker = "/storage/v1/object/public/";
   const idx = publicUrl.indexOf(marker);
   if (idx === -1) return publicUrl;
-  const base = publicUrl.slice(0, idx);
   const rest = publicUrl.slice(idx + marker.length); // "<bucket>/<path>"
   const params = "width=1200&height=630&resize=cover&quality=80&format=origin";
-  return `${base}/storage/v1/render/image/public/${rest}?${params}`;
+  return `${CDN_HOST}/storage/v1/render/image/public/${rest}?${params}`;
 }
