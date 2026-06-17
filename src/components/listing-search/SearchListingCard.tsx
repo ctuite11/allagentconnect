@@ -331,6 +331,20 @@ export const SearchListingCard = ({
             {/* A. Photo */}
             <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-neutral-100">
               <DcmlsBadge listing={listing} />
+              {/* Status Change Banner (top priority) */}
+              {statusBanner && (
+                <div className={`absolute top-0 left-0 right-0 z-20 ${statusBanner.color} text-white text-xs font-bold px-2 py-1 text-center flex items-center justify-center gap-1`}>
+                  <BannerIcon type={statusBanner.iconType} />
+                  {statusBanner.text}
+                </div>
+              )}
+              {/* Price Change Banner (second priority) */}
+              {priceChangeBanner && !statusBanner && (
+                <div className={`absolute top-0 left-0 right-0 z-20 ${priceChangeBanner.color} text-white text-xs font-bold px-2 py-1 text-center flex items-center justify-center gap-1`}>
+                  <BannerIcon type={priceChangeBanner.iconType} />
+                  {priceChangeBanner.text}
+                </div>
+              )}
               {onSelect && (
                 <button
                   onClick={(e) => { e.stopPropagation(); onSelect(listing.id, e); }}
