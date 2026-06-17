@@ -1051,9 +1051,9 @@ const PropertyDetail = () => {
                             <p className="text-sm text-neutral-600">
                               {agentProfile.title || "Realtor"}
                             </p>
-                            {(agentProfile.company || agentProfile.office_name) && (
+                            {agentProfile.company && (
                               <p className="text-sm text-muted-foreground">
-                                {agentProfile.company || agentProfile.office_name}
+                                {agentProfile.company}
                               </p>
                             )}
                           </div>
