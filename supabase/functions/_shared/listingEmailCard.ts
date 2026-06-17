@@ -171,7 +171,7 @@ function pickBrokerageLabel(listing: any): string {
 function neighborhoodPill(neighborhood: unknown): string {
   const label = String(neighborhood ?? "").trim();
   if (!label) return "";
-  return `<span style="display:inline-block;background:rgba(255,255,255,0.92);color:#171717;font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px;line-height:1.2;box-shadow:0 1px 3px rgba(0,0,0,0.12);">${escapeHtml(label)}</span>`;
+  return `<span style="display:inline-block;background:#0f172a;color:#ffffff;font-size:12px;font-weight:600;padding:5px 12px;border-radius:999px;line-height:1.2;letter-spacing:0.01em;">${escapeHtml(label)}</span>`;
 }
 
 function pickFeaturePill(listing: any): string {
@@ -210,10 +210,13 @@ function renderStatusBanner(status: unknown): string {
 
 function renderStatsRow(listing: any): string {
   const parts: string[] = [];
-  if (listing.bedrooms != null) parts.push(`<span style="color:#171717;font-weight:600;">${escapeHtml(String(listing.bedrooms))}</span> <span style="color:#737373;font-weight:400;">bd</span>`);
-  if (listing.bathrooms != null) parts.push(`<span style="color:#171717;font-weight:600;">${escapeHtml(String(listing.bathrooms))}</span> <span style="color:#737373;font-weight:400;">ba</span>`);
+  const bedIcon = `<span style="color:${AAC_PRIMARY_BLUE};font-weight:700;font-size:13px;margin-right:4px;">&#9670;</span>`;
+  const bathIcon = `<span style="color:${AAC_PRIMARY_BLUE};font-weight:700;font-size:13px;margin-right:4px;">&#9670;</span>`;
+  const sqftIcon = `<span style="color:${AAC_PRIMARY_BLUE};font-weight:700;font-size:13px;margin-right:4px;">&#9670;</span>`;
+  if (listing.bedrooms != null) parts.push(`${bedIcon}<span style="color:#171717;font-weight:600;">${escapeHtml(String(listing.bedrooms))}</span> <span style="color:${AAC_PRIMARY_BLUE};font-weight:600;">bd</span>`);
+  if (listing.bathrooms != null) parts.push(`${bathIcon}<span style="color:#171717;font-weight:600;">${escapeHtml(String(listing.bathrooms))}</span> <span style="color:${AAC_PRIMARY_BLUE};font-weight:600;">ba</span>`);
   const sqft = listing.square_feet ?? listing.squareFeet;
-  if (sqft) parts.push(`<span style="color:#171717;font-weight:600;">${escapeHtml(Number(sqft).toLocaleString())}</span> <span style="color:#737373;font-weight:400;">sqft</span>`);
+  if (sqft) parts.push(`${sqftIcon}<span style="color:#171717;font-weight:600;">${escapeHtml(Number(sqft).toLocaleString())}</span> <span style="color:${AAC_PRIMARY_BLUE};font-weight:600;">sqft</span>`);
   if (!parts.length) return "";
   const separator = '<span style="color:#d4d4d4;padding:0 10px;">&middot;</span>';
   return `<p style="margin:10px 0 0;font-size:14px;line-height:1.4;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${parts.join(separator)}</p>`;
@@ -241,6 +244,7 @@ export function renderSearchStyleListingEmailCard(
   const featurePill = pickFeaturePill(listing);
   const statusBanner = renderStatusBanner(listing.status);
   const statsHtml = renderStatsRow(listing);
+  const hoodPill = neighborhoodPill(listing.neighborhood);
 
   const photoHeight = 300;
   const safeAlt = escapeHtml(fullAddress || "Listing photo");
@@ -257,6 +261,10 @@ export function renderSearchStyleListingEmailCard(
     ? `<tr><td align="right" style="padding:8px 14px 0;background:#ffffff;">
          <span style="display:inline-block;background:#ffffff;color:#171717;font-size:12px;font-weight:600;padding:6px 12px;border-radius:999px;border:1px solid #e5e7eb;box-shadow:0 1px 3px rgba(0,0,0,0.08);">${escapeHtml(featurePill)}</span>
        </td></tr>`
+    : "";
+
+  const hoodPillRow = hoodPill
+    ? `<tr><td align="left" style="padding:10px 14px 0;background:#ffffff;">${hoodPill}</td></tr>`
     : "";
 
   const headerRow = `
@@ -299,6 +307,7 @@ export function renderSearchStyleListingEmailCard(
         </td>
       </tr>
       ${featurePillRow}
+      ${hoodPillRow}
       <tr>
         <td valign="top" style="padding:14px 16px 16px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
           ${headerRow}
@@ -346,6 +355,7 @@ export function renderCompactListingEmailCard(
   const idLabel = pickListingIdLabel(listing);
   const statusBanner = renderStatusBanner(listing.status);
   const statsHtml = renderStatsRow(listing);
+  const hoodPill = neighborhoodPill(listing.neighborhood);
 
   const photoHeight = 170;
   const safeAlt = escapeHtml(fullAddress || "Listing photo");
@@ -395,6 +405,7 @@ export function renderCompactListingEmailCard(
           ${photoCellInner}
         </td>
       </tr>
+      ${hoodPill ? `<tr><td align="left" style="padding:8px 14px 0;background:#ffffff;">${hoodPill}</td></tr>` : ""}
       <tr>
         <td valign="top" style="padding:10px 14px 12px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
           ${headerRow}
