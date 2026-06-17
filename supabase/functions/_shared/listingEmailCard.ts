@@ -244,6 +244,7 @@ export function renderSearchStyleListingEmailCard(
   const featurePill = pickFeaturePill(listing);
   const statusBanner = renderStatusBanner(listing.status);
   const statsHtml = renderStatsRow(listing);
+  const hoodPill = neighborhoodPill(listing.neighborhood);
 
   const photoHeight = 300;
   const safeAlt = escapeHtml(fullAddress || "Listing photo");
@@ -260,6 +261,10 @@ export function renderSearchStyleListingEmailCard(
     ? `<tr><td align="right" style="padding:8px 14px 0;background:#ffffff;">
          <span style="display:inline-block;background:#ffffff;color:#171717;font-size:12px;font-weight:600;padding:6px 12px;border-radius:999px;border:1px solid #e5e7eb;box-shadow:0 1px 3px rgba(0,0,0,0.08);">${escapeHtml(featurePill)}</span>
        </td></tr>`
+    : "";
+
+  const hoodPillRow = hoodPill
+    ? `<tr><td align="left" style="padding:10px 14px 0;background:#ffffff;">${hoodPill}</td></tr>`
     : "";
 
   const headerRow = `
@@ -302,6 +307,7 @@ export function renderSearchStyleListingEmailCard(
         </td>
       </tr>
       ${featurePillRow}
+      ${hoodPillRow}
       <tr>
         <td valign="top" style="padding:14px 16px 16px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
           ${headerRow}
