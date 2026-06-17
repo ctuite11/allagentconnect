@@ -224,6 +224,7 @@ export const ShareListingDialog = ({
           agentPhone,
           agentBrokerage,
           message,
+          senderRole: senderProfileSource,
         });
 
         await trackShare(listingId, "email_direct", recipient.email);
