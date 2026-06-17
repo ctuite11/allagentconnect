@@ -40,7 +40,6 @@ import { ListingDetailSections } from "@/components/ListingDetailSections";
 import { PropertyHeader } from "@/components/property/PropertyHeader";
 import { BuyerAgentFeeDetail, formatBuyerAgentFeeDisplay } from "@/components/property/BuyerAgentFeeDetail";
 import { PropertyFactsRow, propertyPhotoContentInset } from "@/components/property/PropertyFactsRow";
-import { BrokerageStrip } from "@/components/property/BrokerageStrip";
 import { MediaTabBar, type MediaTab } from "@/components/property/MediaTabBar";
 import { SectionWrapper } from "@/components/property/SectionWrapper";
 import {
@@ -604,6 +603,7 @@ const ConsumerPropertyDetail = () => {
                     listing.total_parking_spaces ?? listing.garage_spaces ?? null
                   }
                   daysOnMarket={daysOnMarket}
+                  containerClassName="mt-4"
                 />
               </div>
             </div>
@@ -612,7 +612,7 @@ const ConsumerPropertyDetail = () => {
             <div
               className={cn(
                 propertyPhotoContentInset,
-                "order-3 flex min-w-0 flex-col gap-5 pt-5 lg:col-start-1 lg:row-start-3",
+                "order-3 flex min-w-0 flex-col gap-5 pt-8 lg:col-start-1 lg:row-start-3",
               )}
             >
               {/* Overview/Description with Read More */}
@@ -705,9 +705,16 @@ const ConsumerPropertyDetail = () => {
                             : "Listing Agent"}
                         </p>
                         {agentProfile && (
-                          <p className="text-sm text-neutral-600">
-                            {agentProfile.title || "Realtor"} · {agentProfile.company || "Brokerage"}
-                          </p>
+                          <>
+                            <p className="text-sm text-neutral-600">
+                              {agentProfile.title || "Realtor"}
+                            </p>
+                            {(agentProfile.company || agentProfile.office_name) && (
+                              <p className="text-sm text-muted-foreground">
+                                {agentProfile.company || agentProfile.office_name}
+                              </p>
+                            )}
+                          </>
                         )}
                       </div>
                     </div>
@@ -787,8 +794,13 @@ const ConsumerPropertyDetail = () => {
                           {stickyAgentProfile.first_name} {stickyAgentProfile.last_name}
                         </p>
                         <p className="text-sm text-neutral-600">
-                          {stickyAgentProfile.title || 'Realtor'} · {stickyAgentProfile.company || "Brokerage"}
+                          {stickyAgentProfile.title || "Realtor"}
                         </p>
+                        {(stickyAgentProfile.company || stickyAgentProfile.office_name) && (
+                          <p className="text-sm text-muted-foreground">
+                            {stickyAgentProfile.company || stickyAgentProfile.office_name}
+                          </p>
+                        )}
                       </div>
                     </div>
 
@@ -857,8 +869,13 @@ const ConsumerPropertyDetail = () => {
                           {agentProfile.first_name} {agentProfile.last_name}
                         </p>
                         <p className="text-sm text-neutral-600">
-                          {agentProfile.title || 'Realtor'} · {agentProfile.company || "Brokerage"}
+                          {agentProfile.title || "Realtor"}
                         </p>
+                        {(agentProfile.company || agentProfile.office_name) && (
+                          <p className="text-sm text-muted-foreground">
+                            {agentProfile.company || agentProfile.office_name}
+                          </p>
+                        )}
                       </div>
                     </div>
 
@@ -925,27 +942,12 @@ const ConsumerPropertyDetail = () => {
                 </Card>
               )}
 
-              {/* Brokerage Strip — shared primitive */}
-              {(() => {
-                const displayAgent = stickyAgentProfile || agentProfile;
-                if (!displayAgent) return null;
-                return (
-                  <BrokerageStrip
-                    label={stickyAgentProfile ? 'Represented by' : 'Listing courtesy of'}
-                    brokerageName={displayAgent.company || displayAgent.office_name}
-                    logoUrl={displayAgent.logo_url}
-                  />
-                );
-              })()}
-
               {!isAgentView && (
-                <div className="pt-3">
-                  <ScheduleShowingDialog
-                    listingId={listing.id}
-                    listingAddress={formatListingEmailSubjectLocation(listing) || `${listing.address}, ${listing.city}, ${listing.state}`}
-                    triggerClassName={propertyDetailPairedCtaBase}
-                  />
-                </div>
+                <ScheduleShowingDialog
+                  listingId={listing.id}
+                  listingAddress={formatListingEmailSubjectLocation(listing) || `${listing.address}, ${listing.city}, ${listing.state}`}
+                  triggerClassName={propertyDetailPairedCtaBase}
+                />
               )}
 
               {buyerCompensationCard}

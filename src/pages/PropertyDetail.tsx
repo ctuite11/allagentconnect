@@ -733,6 +733,7 @@ const PropertyDetail = () => {
                     listing.total_parking_spaces ?? listing.garage_spaces ?? null
                   }
                   daysOnMarket={daysOnMarket}
+                  containerClassName="mt-4"
                 />
               </div>
             </div>
@@ -741,7 +742,7 @@ const PropertyDetail = () => {
             <div
               className={cn(
                 propertyPhotoContentInset,
-                "order-3 flex min-w-0 flex-col gap-5 pt-4 lg:col-start-1 lg:row-start-3",
+                "order-3 flex min-w-0 flex-col gap-5 pt-7 lg:col-start-1 lg:row-start-3",
               )}
             >
               {listing.description && (() => {
@@ -1038,9 +1039,16 @@ const PropertyDetail = () => {
                             : "Listing Agent"}
                         </p>
                         {agentProfile && (
-                          <p className="text-sm text-neutral-600">
-                            {agentProfile.title || "Realtor"} · {agentProfile.company || "Brokerage"}
-                          </p>
+                          <>
+                            <p className="text-sm text-neutral-600">
+                              {agentProfile.title || "Realtor"}
+                            </p>
+                            {(agentProfile.company || agentProfile.office_name) && (
+                              <p className="text-sm text-muted-foreground">
+                                {agentProfile.company || agentProfile.office_name}
+                              </p>
+                            )}
+                          </>
                         )}
                       </div>
                     </div>
