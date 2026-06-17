@@ -16,6 +16,7 @@ interface ShareListingRequest {
   agentPhone?: string;
   agentBrokerage?: string;
   message?: string;
+  senderRole?: 'agent' | 'buyer';
 }
 
 function jsonResponse(body: Record<string, unknown>, status: number): Response {
@@ -54,6 +55,7 @@ const handler = async (req: Request): Promise<Response> => {
       agentPhone = '',
       agentBrokerage = '',
       message = '',
+      senderRole = 'agent',
     } = parsed;
 
     console.log('[send-listing-share] Received request:', {
@@ -121,6 +123,7 @@ const handler = async (req: Request): Promise<Response> => {
             message,
             listingUrl,
             listing,
+            senderRole,
           },
         },
       });
