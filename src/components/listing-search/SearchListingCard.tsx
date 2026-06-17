@@ -205,7 +205,7 @@ export const SearchListingCard = ({
   const photoUrl = getFirstPhoto(listing);
   const allPhotos = getAllPhotos(listing);
   const nextOpenHouse = getNextOpenHouse(listing.open_houses);
-  const { statusBanner, priceChangeBanner } = useListingBanners({
+  const { statusBanner, priceChangeBanner, openHouseBanner } = useListingBanners({
     id: listing.id,
     status: listing.status,
     is_relisting: listing.is_relisting ?? null,
