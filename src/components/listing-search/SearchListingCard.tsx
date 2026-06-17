@@ -15,6 +15,7 @@ import {
   Check, Mail, ExternalLink,
   Phone, Camera, FileText, Video,
   ChevronLeft, ChevronRight,
+  Sparkles, RefreshCw, TrendingDown,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
@@ -41,6 +42,22 @@ import {
   listingSelectionSearchCardSelected,
 } from "@/lib/listingSelectionStyles";
 import { formatListingPriceDisplay, listingEffectiveNumericPrice } from "@/lib/formatListingPriceDisplay";
+import { useListingBanners } from "@/hooks/useListingBanners";
+import type { BannerData } from "@/components/ListingCardShell";
+
+// ── Banner icon (mirrors ListingCardShell) ──────────────────────────────────
+function BannerIcon({ type }: { type: BannerData["iconType"] }) {
+  switch (type) {
+    case "sparkles":
+      return <Sparkles className="w-3 h-3" />;
+    case "refresh":
+      return <RefreshCw className="w-3 h-3" />;
+    case "trendingDown":
+      return <TrendingDown className="w-3 h-3" />;
+    default:
+      return null;
+  }
+}
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
