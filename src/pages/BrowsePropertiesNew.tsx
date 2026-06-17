@@ -161,10 +161,6 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
     if (params.has("neighborhoods")) urlCriteria.neighborhoods = params.get("neighborhoods")!.split("|");
     if (params.has("showAreas")) urlCriteria.showAreas = params.get("showAreas") === "yes";
 
-    if (urlCriteria.listingType === "for_rent") {
-      urlCriteria.propertyTypes = ["residential_rental"];
-    }
-
     if (Object.keys(urlCriteria).length > 0) {
       setCriteria({ ...criteria, ...urlCriteria });
     }
@@ -176,14 +172,6 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
     const searchUrl = `/browse?${params.toString()}`;
     sessionStorage.setItem("buyer_last_search_url", searchUrl);
   }, [criteria]);
-
-  // Rental toolbar is residential-rentals only (ignore property type changes from embedded advanced search).
-  useEffect(() => {
-    if (criteria.listingType !== "for_rent") return;
-    const pts = criteria.propertyTypes || [];
-    if (pts.length === 1 && pts[0] === "residential_rental") return;
-    setCriteria((prev) => ({ ...prev, propertyTypes: ["residential_rental"] }));
-  }, [criteria.listingType, criteria.propertyTypes]);
 
   const fetchListings = useCallback(async () => {
     try {
@@ -450,7 +438,7 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
                     setCriteria((prev) => ({
                       ...prev,
                       listingType: "for_rent",
-                      propertyTypes: ["residential_rental"],
+                      propertyTypes: [],
                       minPrice: "",
                       maxPrice: "",
                     }))

@@ -13,7 +13,7 @@ export const RENT_PRICE_STEP_VALUES = [
   500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 5000, 7500, 10_000,
 ] as const;
 
-export const DEFAULT_RENTAL_PROPERTY_TYPES = ["residential_rental"] as const;
+export const DEFAULT_RENTAL_PROPERTY_TYPES = [] as const;
 
 export function salePriceStepValues(): number[] {
   const values: number[] = [];
@@ -53,7 +53,7 @@ export function defaultRentToolbarCriteria(): SearchCriteria {
     county: "all",
     towns: [],
     showAreas: true,
-    propertyTypes: [...DEFAULT_RENTAL_PROPERTY_TYPES],
+    propertyTypes: [],
     statuses: ["coming_soon", "active", "off_market", "back_on_market"],
     minPrice: "",
     maxPrice: "",
