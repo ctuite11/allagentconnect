@@ -205,7 +205,7 @@ export const SearchListingCard = ({
   const photoUrl = getFirstPhoto(listing);
   const allPhotos = getAllPhotos(listing);
   const nextOpenHouse = getNextOpenHouse(listing.open_houses);
-  const { statusBanner, priceChangeBanner } = useListingBanners({
+  const { statusBanner, priceChangeBanner, openHouseBanner } = useListingBanners({
     id: listing.id,
     status: listing.status,
     is_relisting: listing.is_relisting ?? null,
@@ -343,6 +343,14 @@ export const SearchListingCard = ({
                 <div className={`absolute top-0 left-0 right-0 z-20 ${priceChangeBanner.color} text-white text-xs font-bold px-2 py-1 text-center flex items-center justify-center gap-1`}>
                   <BannerIcon type={priceChangeBanner.iconType} />
                   {priceChangeBanner.text}
+                </div>
+              )}
+              {/* Open House Banner (stacks below status/price) */}
+              {openHouseBanner && (
+                <div
+                  className={`absolute ${statusBanner && priceChangeBanner ? 'top-6' : statusBanner || priceChangeBanner ? 'top-5' : 'top-0'} left-0 right-0 z-20 ${openHouseBanner.color} text-white text-xs font-bold px-2 py-1 text-center`}
+                >
+                  {openHouseBanner.isBroker ? '🚙' : '🎈'} {openHouseBanner.text} • {openHouseBanner.date} • {openHouseBanner.time}
                 </div>
               )}
               {onSelect && (
@@ -565,6 +573,13 @@ export const SearchListingCard = ({
                   <div className={`absolute top-0 left-0 right-0 z-20 ${priceChangeBanner.color} text-white text-[9px] font-bold px-1 py-0.5 text-center flex items-center justify-center gap-0.5`}>
                     <BannerIcon type={priceChangeBanner.iconType} />
                     <span className="truncate">{priceChangeBanner.text}</span>
+                  </div>
+                )}
+                {openHouseBanner && (
+                  <div
+                    className={`absolute ${statusBanner || priceChangeBanner ? 'top-4' : 'top-0'} left-0 right-0 z-20 ${openHouseBanner.color} text-white text-[9px] font-bold px-1 py-0.5 text-center truncate`}
+                  >
+                    {openHouseBanner.isBroker ? '🚙' : '🎈'} {openHouseBanner.text}
                   </div>
                 )}
                 {photoUrl ? (
