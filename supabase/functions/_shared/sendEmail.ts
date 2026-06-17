@@ -83,7 +83,11 @@ export async function sendEmail(
   const trackingEnabled = isSingleMarketing && !job.payload.html;
 
   let html: string;
-  let extraHeaders: Record<string, string> = {};
+  // Baseline List-Unsubscribe (mailto fallback) on every send.
+  // Marketing single-recipient path below overrides with the richer one-click URL header.
+  let extraHeaders: Record<string, string> = {
+    "List-Unsubscribe": "<mailto:unsubscribe@allagentconnect.com>",
+  };
 
   if (isSingleMarketing) {
     // Suppression check — applies for any single-recipient marketing send,
