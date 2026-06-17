@@ -55,8 +55,11 @@ import {
   propertyDetailAgentEyebrow,
   propertyDetailAgentTitleBlock,
   propertyDetailAgentContactRows,
-  propertyDetailPairedCtaBase,
+  propertyDetailMessageCtaBase,
   propertyDetailMessageCta,
+  propertyDetailScheduleCtaBase,
+  propertyDetailScheduleCta,
+  propertyDetailAgentAvatar,
 } from "@/components/property/propertyTokens";
 import { cn } from "@/lib/utils";
 import { BuyerAgentShowcase } from "@/components/BuyerAgentShowcase";
@@ -700,7 +703,7 @@ const ConsumerPropertyDetail = () => {
                         headshotUrl={agentProfile?.headshot_url ?? null}
                         userId={agentProfile?.id ?? listing.agent_id}
                         size="xl"
-                        avatarClassName="h-16 w-16 border-2 border-neutral-200"
+                        avatarClassName={propertyDetailAgentAvatar}
                         fallbackClassName="bg-neutral-100"
                       />
                       <div className="flex-1 min-w-0">
@@ -764,10 +767,10 @@ const ConsumerPropertyDetail = () => {
 
                     {canMessageListingAgent && (
                       <Button
-                        className={cn(propertyDetailPairedCtaBase, propertyDetailMessageCta)}
+                        className={cn(propertyDetailMessageCtaBase, propertyDetailMessageCta)}
                         onClick={openListingAgentMessage}
                       >
-                        <MessageSquare className="h-4 w-4" />
+                        <MessageSquare />
                         Message Agent
                       </Button>
                     )}
@@ -791,7 +794,7 @@ const ConsumerPropertyDetail = () => {
                         headshotUrl={stickyAgentProfile.headshot_url ?? null}
                         userId={stickyAgentProfile.id}
                         size="xl"
-                        avatarClassName="h-16 w-16 border-2 border-neutral-200"
+                        avatarClassName={propertyDetailAgentAvatar}
                         fallbackClassName="bg-neutral-100"
                       />
                       <div className="flex-1 min-w-0">
@@ -849,10 +852,10 @@ const ConsumerPropertyDetail = () => {
                     {/* ATTRIBUTION MASKING: Primary contact action is in-app messaging only.
                         Do not re-add email form (ContactAgentDialog) as buyer CTA. */}
                     <Button
-                      className={cn(propertyDetailPairedCtaBase, propertyDetailMessageCta)}
+                      className={cn(propertyDetailMessageCtaBase, propertyDetailMessageCta)}
                       onClick={openBuyerAgentMessage}
                     >
-                      <MessageSquare className="h-4 w-4" />
+                      <MessageSquare />
                       Message your agent
                     </Button>
                   </CardContent>
@@ -866,7 +869,7 @@ const ConsumerPropertyDetail = () => {
                         headshotUrl={agentProfile.headshot_url ?? null}
                         userId={agentProfile.id}
                         size="xl"
-                        avatarClassName="h-16 w-16 border-2 border-neutral-200"
+                        avatarClassName={propertyDetailAgentAvatar}
                         fallbackClassName="bg-neutral-100"
                       />
                       <div className="flex-1 min-w-0">
@@ -923,10 +926,10 @@ const ConsumerPropertyDetail = () => {
 
                     {canMessageListingAgent && (
                       <Button
-                        className={cn(propertyDetailPairedCtaBase, propertyDetailMessageCta)}
+                        className={cn(propertyDetailMessageCtaBase, propertyDetailMessageCta)}
                         onClick={openListingAgentMessage}
                       >
-                        <MessageSquare className="h-4 w-4" />
+                        <MessageSquare />
                         Message Agent
                       </Button>
                     )}
@@ -949,11 +952,14 @@ const ConsumerPropertyDetail = () => {
               )}
 
               {!isAgentView && (
-                <ScheduleShowingDialog
-                  listingId={listing.id}
-                  listingAddress={formatListingEmailSubjectLocation(listing) || `${listing.address}, ${listing.city}, ${listing.state}`}
-                  triggerClassName={propertyDetailPairedCtaBase}
-                />
+                <div className="px-6">
+                  <ScheduleShowingDialog
+                    listingId={listing.id}
+                    listingAddress={formatListingEmailSubjectLocation(listing) || `${listing.address}, ${listing.city}, ${listing.state}`}
+                    triggerVariant="outline"
+                    triggerClassName={cn(propertyDetailScheduleCtaBase, propertyDetailScheduleCta)}
+                  />
+                </div>
               )}
               </div>
 

@@ -70,8 +70,11 @@ import {
   propertyDetailAgentEyebrow,
   propertyDetailAgentTitleBlock,
   propertyDetailAgentContactRows,
-  propertyDetailPairedCtaBase,
+  propertyDetailMessageCtaBase,
   propertyDetailMessageCta,
+  propertyDetailScheduleCtaBase,
+  propertyDetailScheduleCta,
+  propertyDetailAgentAvatar,
 } from "@/components/property/propertyTokens";
 import { BuyerAgentShowcase } from "@/components/BuyerAgentShowcase";
 import ContactAgentDialog from "@/components/ContactAgentDialog";
@@ -1033,7 +1036,7 @@ const PropertyDetail = () => {
                         headshotUrl={agentProfile?.headshot_url ?? null}
                         userId={agentProfile?.id ?? listing.agent_id}
                         size="xl"
-                        avatarClassName="h-16 w-16 border-2 border-neutral-200"
+                        avatarClassName={propertyDetailAgentAvatar}
                         fallbackClassName="bg-neutral-100"
                       />
                       <div className="flex-1 min-w-0">
@@ -1136,10 +1139,10 @@ const PropertyDetail = () => {
 
                     {canMessageListingAgent && (
                       <Button
-                        className={cn(propertyDetailPairedCtaBase, propertyDetailMessageCta)}
+                        className={cn(propertyDetailMessageCtaBase, propertyDetailMessageCta)}
                         onClick={openListingMessage}
                       >
-                        <MessageSquare className="h-4 w-4" />
+                        <MessageSquare />
                         Message Agent
                       </Button>
                     )}
@@ -1169,9 +1172,8 @@ const PropertyDetail = () => {
                       triggerLabel="Request a Showing"
                       triggerVariant="outline"
                       triggerClassName={cn(
-                        propertyDetailPairedCtaBase,
-                        listingDetailOutlineCtaClass,
-                        "shadow-none",
+                        propertyDetailScheduleCtaBase,
+                        propertyDetailScheduleCta,
                       )}
                     />
                   </CardContent>

@@ -25,11 +25,27 @@ export const propertyRailStack = "space-y-6";
 export const propertyDetailRailActionGroup = "space-y-3";
 
 /** Right-rail agent card interior rhythm */
-export const propertyDetailAgentCardContent = "space-y-3 px-5 pt-5 pb-4";
+export const propertyDetailAgentCardContent = "space-y-2 px-6 pt-5 pb-2";
+export const propertyDetailAgentAvatar =
+  "h-20 w-20 border-2 border-neutral-200";
 export const propertyDetailAgentEyebrow =
-  "text-[9px] font-medium uppercase tracking-[0.08em] text-neutral-400";
+  "text-[8px] font-normal uppercase tracking-[0.1em] text-neutral-400";
 export const propertyDetailAgentTitleBlock = "space-y-0.5";
-export const propertyDetailAgentContactRows = "space-y-2 text-sm";
+export const propertyDetailAgentContactRows = "space-y-1.5 text-sm";
+
+/** Primary rail CTA — Message Agent (restrained, not app-like) */
+export const propertyDetailMessageCtaBase =
+  "h-11 w-full gap-1.5 rounded-[10px] px-4 text-[15px] font-semibold shadow-none [&_svg]:size-3.5";
+export const propertyDetailMessageCta =
+  "bg-neutral-900 text-white hover:bg-neutral-800 focus-visible:ring-neutral-400/30";
+
+/** Secondary rail CTA — Schedule Showing (same footprint, lighter fill) */
+export const propertyDetailScheduleCtaBase = propertyDetailMessageCtaBase;
+export const propertyDetailScheduleCta =
+  "border border-neutral-300 bg-white text-neutral-800 hover:border-neutral-400 hover:bg-neutral-50 shadow-none";
+
+/** @deprecated Use propertyDetailMessageCtaBase */
+export const propertyDetailPairedCtaBase = propertyDetailMessageCtaBase;
 
 // Card surfaces
 export const propertyHeroMedia =
@@ -64,11 +80,7 @@ export const propertyHeaderRow =
 export const propertyMainGridGap = "gap-5";
 export const propertyMainSectionStack = "space-y-5";
 
-/** Matched rail CTAs (Message Agent + Schedule Showing) — 48px, 12px radius */
-export const propertyDetailPairedCtaBase =
-  "h-12 w-full gap-2 rounded-xl text-base font-semibold shadow-sm [&_svg]:size-4";
-export const propertyDetailMessageCta =
-  "bg-neutral-900 text-white hover:bg-neutral-800 focus-visible:ring-neutral-400/30";
+/** Matched rail CTAs — see propertyDetailMessageCtaBase / propertyDetailScheduleCtaBase */
 
 export const propertyTokens = {
   propertyPageContainer,
@@ -80,6 +92,7 @@ export const propertyTokens = {
   propertyRailStack,
   propertyDetailRailActionGroup,
   propertyDetailAgentCardContent,
+  propertyDetailAgentAvatar,
   propertyDetailAgentEyebrow,
   propertyDetailAgentTitleBlock,
   propertyDetailAgentContactRows,
@@ -99,8 +112,11 @@ export const propertyTokens = {
   propertyHeaderRow,
   propertyMainGridGap,
   propertyMainSectionStack,
-  propertyDetailPairedCtaBase,
+  propertyDetailMessageCtaBase,
   propertyDetailMessageCta,
+  propertyDetailScheduleCtaBase,
+  propertyDetailScheduleCta,
+  propertyDetailPairedCtaBase,
 } as const;
 
 export default propertyTokens;
