@@ -555,6 +555,18 @@ export const SearchListingCard = ({
               )}
               <div className="relative h-[75px] w-[100px] overflow-hidden rounded-md bg-neutral-100">
                 <DcmlsBadge listing={listing} />
+                {statusBanner && (
+                  <div className={`absolute top-0 left-0 right-0 z-20 ${statusBanner.color} text-white text-[9px] font-bold px-1 py-0.5 text-center flex items-center justify-center gap-0.5`}>
+                    <BannerIcon type={statusBanner.iconType} />
+                    <span className="truncate">{statusBanner.text}</span>
+                  </div>
+                )}
+                {priceChangeBanner && !statusBanner && (
+                  <div className={`absolute top-0 left-0 right-0 z-20 ${priceChangeBanner.color} text-white text-[9px] font-bold px-1 py-0.5 text-center flex items-center justify-center gap-0.5`}>
+                    <BannerIcon type={priceChangeBanner.iconType} />
+                    <span className="truncate">{priceChangeBanner.text}</span>
+                  </div>
+                )}
                 {photoUrl ? (
                   <img src={photoUrl} alt="" className="h-full w-full object-cover" />
                 ) : (
