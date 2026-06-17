@@ -293,7 +293,7 @@ export const ShareListingDialog = ({
         onAddRecipient={handleAddRecipient}
         onRemoveRecipient={handleRemoveRecipient}
         lockSenderIdentity={senderLocked}
-        maxRecipients={1}
+        maxRecipients={hideContactSearch ? undefined : 1}
         isSearchingContacts={isSearchingContacts}
         hideContactSearch={hideContactSearch}
       />
