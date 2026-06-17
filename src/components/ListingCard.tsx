@@ -556,120 +556,14 @@ const ListingCard = ({
     }).sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime());
     return upcoming[0] || null;
   };
-  const getStatusChangeBanner = () => {
-    // Check current listing status directly (not just from history)
-    const currentStatus = listing.status;
-
-    // Check for Coming Soon status using helper
-    if (isComingSoon(currentStatus)) {
-      return {
-        text: "COMING SOON",
-        color: "bg-purple-600",
-        iconType: "sparkles" as const
-      };
-    }
-
-    // Check if listing is "new" status OR recently became active (not a relisting)
-    const isNewStatus = currentStatus === LISTING_STATUS.NEW;
-    const isActiveStatus = currentStatus === LISTING_STATUS.ACTIVE;
-    
-    if ((isNewStatus || isActiveStatus) && !listing.is_relisting) {
-      // For 'new' status, always show the banner
-      if (isNewStatus) {
-        return {
-          text: "NEW LISTING",
-          color: "bg-neutral-900",
-          iconType: "sparkles" as const
-        };
-      }
-      
-      // For 'active' status, check if it became active recently (within 48 hours)
-      if (isActiveStatus && statusHistory.length > 0) {
-        const allActiveStatuses = statusHistory.filter(h => h.new_status === LISTING_STATUS.ACTIVE);
-        if (allActiveStatuses.length >= 1) {
-          const mostRecentActiveDate = new Date(allActiveStatuses[0].changed_at);
-          const hoursSinceActive = (Date.now() - mostRecentActiveDate.getTime()) / (1000 * 60 * 60);
-          if (hoursSinceActive <= 48) {
-            return {
-              text: "NEW LISTING",
-              color: "bg-neutral-900",
-              iconType: "sparkles" as const
-            };
-          }
-        }
-      }
-    }
-
-    // Check if back on market (was pending, under_contract, withdrawn, or cancelled and now active again)
-    if (statusHistory.length >= 2 && isActiveStatus) {
-      const previousStatus = statusHistory[1]?.new_status;
-      const changeDate = new Date(statusHistory[0].changed_at);
-      const hoursSinceChange = (Date.now() - changeDate.getTime()) / (1000 * 60 * 60);
-
-      // Use status constants for comparison
-      const offMarketStatuses = [
-        LISTING_STATUS.PENDING,
-        LISTING_STATUS.UNDER_AGREEMENT,
-        LISTING_STATUS.WITHDRAWN,
-        LISTING_STATUS.CANCELLED,
-        LISTING_STATUS.TEMPORARILY_WITHDRAWN,
-      ];
-      if (offMarketStatuses.includes(previousStatus) && hoursSinceChange <= 48) {
-        return {
-          text: "BACK ON MARKET",
-          color: "bg-orange-600",
-          iconType: "refresh" as const
-        };
-      }
-    }
-
-    // Off Market banner — persists for as long as the listing is off_market
-    if (currentStatus === LISTING_STATUS.OFF_MARKET) {
-      return {
-        text: "OFF MARKET",
-        color: "bg-rose-600",
-        iconType: "refresh" as const,
-      };
-    }
-
-    return null;
-  };
-
-  const getPriceChangeBanner = () => {
-    if (priceHistory.length === 0) return null;
-    
-    const recentPriceChange = priceHistory[0];
-    const changeDate = new Date(recentPriceChange.changed_at);
-    const hoursSinceChange = (Date.now() - changeDate.getTime()) / (1000 * 60 * 60);
-
-    // Show PRICE REDUCED banner for 48 hours; only for decreases
-    if (hoursSinceChange <= 48 && recentPriceChange.new_price < recentPriceChange.old_price) {
-      return {
-        text: "PRICE REDUCED",
-        color: "bg-red-600",
-        iconType: "trendingDown" as const
-      };
-    }
-    
-    return null;
-  };
-  const getOpenHouseBanner = () => {
-    const nextOH = getNextOpenHouse();
-    if (!nextOH) return null;
-    const isBrokerOnly = nextOH.event_type === 'broker_tour';
-    return {
-      text: isBrokerOnly ? "BROKER OPEN HOUSE" : "OPEN HOUSE",
-      date: format(new Date(nextOH.date), "MMM d"),
-      time: `${formatTime(nextOH.start_time)} - ${formatTime(nextOH.end_time)}`,
-      color: isBrokerOnly ? "bg-purple-600" : "bg-green-600",
-      isBroker: isBrokerOnly
-    };
-  };
   const photoUrl = getFirstPhoto();
   const nextOpenHouse = getNextOpenHouse();
-  const statusBanner = getStatusChangeBanner();
-  const priceChangeBanner = getPriceChangeBanner();
-  const openHouseBanner = getOpenHouseBanner();
+  const { statusBanner, priceChangeBanner, openHouseBanner } = useListingBanners({
+    id: listing.id,
+    status: listing.status,
+    is_relisting: listing.is_relisting,
+    open_houses: listing.open_houses,
+  });
 
   // Color coding for match count (based on buyer count)
   const totalMatchCount = buyerCount;
