@@ -242,7 +242,7 @@ export function ListingCardShell({
             <div
               className={`absolute ${statusBanner && priceChangeBanner ? 'top-6' : statusBanner || priceChangeBanner ? 'top-5' : 'top-0'} left-0 right-0 ${openHouseBanner.color} text-white text-xs font-bold px-2 py-1 text-center`}
             >
-              {openHouseBanner.isBroker ? '🏢' : '🎈'} {openHouseBanner.date} • {openHouseBanner.time}
+              {openHouseBanner.isBroker ? '🚙' : '🎈'} {openHouseBanner.date} • {openHouseBanner.time}
             </div>
           )}
 
