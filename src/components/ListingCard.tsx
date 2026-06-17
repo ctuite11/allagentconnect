@@ -288,8 +288,6 @@ const ListingCard = ({
 
   useEffect(() => {
     loadMatchCount();
-    loadStatusHistory();
-    loadPriceHistory();
   }, [listing.id]);
 
   useEffect(() => {
@@ -318,38 +316,6 @@ const ListingCard = ({
 
     fetchAgentProfile();
   }, [listing.agent_id, viewMode]);
-  const loadStatusHistory = async () => {
-    try {
-      const {
-        data
-      } = await supabase.from("listing_status_history").select("*").eq("listing_id", listing.id).order("changed_at", {
-        ascending: false
-      }).limit(5);
-      if (data) {
-        setStatusHistory(data);
-      }
-    } catch (error) {
-      console.error("Error loading status history:", error);
-    }
-  };
-
-  const loadPriceHistory = async () => {
-    try {
-      // Check if there are any favorites for this listing with price history
-      const { data } = await supabase
-        .from("favorite_price_history")
-        .select("*")
-        .eq("listing_id", listing.id)
-        .order("changed_at", { ascending: false })
-        .limit(1);
-      
-      if (data) {
-        setPriceHistory(data);
-      }
-    } catch (error) {
-      console.error("Error loading price history:", error);
-    }
-  };
   const loadMatchCount = async () => {
     try {
       setLoadingMatches(true);
