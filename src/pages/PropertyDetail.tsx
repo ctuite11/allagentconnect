@@ -65,6 +65,11 @@ import {
   propertyPageContainer,
   propertyHeroMedia,
   propertyRailStack,
+  propertyDetailRailActionGroup,
+  propertyDetailAgentCardContent,
+  propertyDetailAgentEyebrow,
+  propertyDetailAgentTitleBlock,
+  propertyDetailAgentContactRows,
   propertyDetailPairedCtaBase,
   propertyDetailMessageCta,
 } from "@/components/property/propertyTokens";
@@ -1017,7 +1022,7 @@ const PropertyDetail = () => {
 
               {(agentProfile || listing?.agent_id) && (
                 <Card className={cn(consumerSectionCard, "shadow-sm")}>
-                  <CardContent className="space-y-5 p-5">
+                  <CardContent className={propertyDetailAgentCardContent}>
                     <div className="flex items-center gap-4">
                       <AgentAvatar
                         name={
@@ -1031,15 +1036,15 @@ const PropertyDetail = () => {
                         avatarClassName="h-16 w-16 border-2 border-neutral-200"
                         fallbackClassName="bg-neutral-100"
                       />
-                      <div className="flex-1 min-w-0 space-y-1.5">
-                        <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-500">Listing agent</p>
-                        <p className="text-lg font-bold leading-tight text-neutral-900">
+                      <div className="flex-1 min-w-0">
+                        <p className={propertyDetailAgentEyebrow}>Listing agent</p>
+                        <p className="mt-1 text-lg font-bold leading-tight text-neutral-900">
                           {agentProfile
                             ? `${agentProfile.first_name} ${agentProfile.last_name}`
                             : "Listing Agent"}
                         </p>
                         {agentProfile && (
-                          <>
+                          <div className={cn(propertyDetailAgentTitleBlock, "mt-0.5")}>
                             <p className="text-sm text-neutral-600">
                               {agentProfile.title || "Realtor"}
                             </p>
@@ -1048,12 +1053,12 @@ const PropertyDetail = () => {
                                 {agentProfile.company || agentProfile.office_name}
                               </p>
                             )}
-                          </>
+                          </div>
                         )}
                       </div>
                     </div>
 
-                    <div className="space-y-3.5 text-sm">
+                    <div className={propertyDetailAgentContactRows}>
                       {agentProfile?.cell_phone && (
                         <a
                           href={`tel:${agentProfile.cell_phone}`}
@@ -1134,7 +1139,7 @@ const PropertyDetail = () => {
                         className={cn(propertyDetailPairedCtaBase, propertyDetailMessageCta)}
                         onClick={openListingMessage}
                       >
-                        <MessageSquare className="h-5 w-5" />
+                        <MessageSquare className="h-4 w-4" />
                         Message Agent
                       </Button>
                     )}

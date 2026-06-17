@@ -21,6 +21,16 @@ export const propertyRailCol = "lg:w-[32%]";
 export const propertyRailSticky = "lg:sticky lg:top-24 lg:self-start";
 export const propertyRailStack = "space-y-6";
 
+/** Agent card + Schedule Showing — unified action area (~12px between) */
+export const propertyDetailRailActionGroup = "space-y-3";
+
+/** Right-rail agent card interior rhythm */
+export const propertyDetailAgentCardContent = "space-y-3 px-5 pt-5 pb-4";
+export const propertyDetailAgentEyebrow =
+  "text-[9px] font-medium uppercase tracking-[0.08em] text-neutral-400";
+export const propertyDetailAgentTitleBlock = "space-y-0.5";
+export const propertyDetailAgentContactRows = "space-y-2 text-sm";
+
 // Card surfaces
 export const propertyHeroMedia =
   "relative rounded-[20px] overflow-hidden shadow-2xl ring-1 ring-black/5 h-[380px] sm:h-[480px] lg:h-[560px]";
@@ -54,9 +64,9 @@ export const propertyHeaderRow =
 export const propertyMainGridGap = "gap-5";
 export const propertyMainSectionStack = "space-y-5";
 
-/** Matched rail CTAs (Message Agent + Schedule Showing) — same height & radius, different colors */
+/** Matched rail CTAs (Message Agent + Schedule Showing) — 48px, 12px radius */
 export const propertyDetailPairedCtaBase =
-  "h-12 w-full gap-2 rounded-lg text-[15px] font-medium shadow-sm";
+  "h-12 w-full gap-2 rounded-xl text-base font-semibold shadow-sm [&_svg]:size-4";
 export const propertyDetailMessageCta =
   "bg-neutral-900 text-white hover:bg-neutral-800 focus-visible:ring-neutral-400/30";
 
@@ -68,6 +78,11 @@ export const propertyTokens = {
   propertyRailCol,
   propertyRailSticky,
   propertyRailStack,
+  propertyDetailRailActionGroup,
+  propertyDetailAgentCardContent,
+  propertyDetailAgentEyebrow,
+  propertyDetailAgentTitleBlock,
+  propertyDetailAgentContactRows,
   propertyHeroMedia,
   propertyAgentCard,
   propertyStripCard,

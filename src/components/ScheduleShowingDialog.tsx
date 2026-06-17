@@ -191,8 +191,12 @@ const ScheduleShowingDialog = ({
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button size="lg" variant={triggerVariant} className={`gap-2 ${triggerClassName || ""}`}>
-          <Calendar className="h-5 w-5" />
+        <Button
+          size={triggerClassName ? "default" : "lg"}
+          variant={triggerVariant}
+          className={cn("gap-2", triggerClassName)}
+        >
+          <Calendar className={triggerClassName ? "h-4 w-4" : "h-5 w-5"} />
           {triggerLabel}
         </Button>
       </DialogTrigger>

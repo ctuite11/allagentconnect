@@ -50,6 +50,11 @@ import {
   propertyRailSticky,
   propertyRailStack,
   propertyHeroMedia,
+  propertyDetailRailActionGroup,
+  propertyDetailAgentCardContent,
+  propertyDetailAgentEyebrow,
+  propertyDetailAgentTitleBlock,
+  propertyDetailAgentContactRows,
   propertyDetailPairedCtaBase,
   propertyDetailMessageCta,
 } from "@/components/property/propertyTokens";
@@ -680,10 +685,11 @@ const ConsumerPropertyDetail = () => {
               )}
             >
 
+              <div className={propertyDetailRailActionGroup}>
               {/* Agent/admin: listing agent contact via AAC email (no buyer CTAs) */}
               {isAgentView && (agentProfile || listing?.agent_id) ? (
                 <Card className={cn(consumerSectionCard, "shadow-sm")}>
-                  <CardContent className="space-y-5 p-5">
+                  <CardContent className={propertyDetailAgentCardContent}>
                     <div className="flex items-center gap-4">
                       <AgentAvatar
                         name={
@@ -697,15 +703,15 @@ const ConsumerPropertyDetail = () => {
                         avatarClassName="h-16 w-16 border-2 border-neutral-200"
                         fallbackClassName="bg-neutral-100"
                       />
-                      <div className="flex-1 min-w-0 space-y-1.5">
-                        <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-500">Listing agent</p>
-                        <p className="font-bold text-lg leading-tight">
+                      <div className="flex-1 min-w-0">
+                        <p className={propertyDetailAgentEyebrow}>Listing agent</p>
+                        <p className="mt-1 font-bold text-lg leading-tight">
                           {agentProfile
                             ? `${agentProfile.first_name} ${agentProfile.last_name}`
                             : "Listing Agent"}
                         </p>
                         {agentProfile && (
-                          <>
+                          <div className={cn(propertyDetailAgentTitleBlock, "mt-0.5")}>
                             <p className="text-sm text-neutral-600">
                               {agentProfile.title || "Realtor"}
                             </p>
@@ -714,12 +720,12 @@ const ConsumerPropertyDetail = () => {
                                 {agentProfile.company || agentProfile.office_name}
                               </p>
                             )}
-                          </>
+                          </div>
                         )}
                       </div>
                     </div>
 
-                    <div className="space-y-3.5 text-sm">
+                    <div className={propertyDetailAgentContactRows}>
                       {agentProfile?.cell_phone && (
                         <a href={`tel:${agentProfile.cell_phone}`} className="flex items-center gap-2.5 transition-colors hover:text-neutral-900">
                           <Phone className="h-4 w-4 shrink-0 text-neutral-500" />
@@ -761,7 +767,7 @@ const ConsumerPropertyDetail = () => {
                         className={cn(propertyDetailPairedCtaBase, propertyDetailMessageCta)}
                         onClick={openListingAgentMessage}
                       >
-                        <MessageSquare className="h-5 w-5" />
+                        <MessageSquare className="h-4 w-4" />
                         Message Agent
                       </Button>
                     )}
@@ -778,7 +784,7 @@ const ConsumerPropertyDetail = () => {
                 </Card>
               ) : stickyAgentProfile ? (
                 <Card className={cn(consumerSectionCard, "shadow-sm")}>
-                  <CardContent className="space-y-5 p-5">
+                  <CardContent className={propertyDetailAgentCardContent}>
                     <div className="flex items-center gap-4">
                       <AgentAvatar
                         name={`${stickyAgentProfile.first_name} ${stickyAgentProfile.last_name}`}
@@ -788,23 +794,25 @@ const ConsumerPropertyDetail = () => {
                         avatarClassName="h-16 w-16 border-2 border-neutral-200"
                         fallbackClassName="bg-neutral-100"
                       />
-                      <div className="flex-1 min-w-0 space-y-1.5">
-                        <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-500">Your agent</p>
-                        <p className="font-bold text-lg leading-tight">
+                      <div className="flex-1 min-w-0">
+                        <p className={propertyDetailAgentEyebrow}>Your agent</p>
+                        <p className="mt-1 font-bold text-lg leading-tight">
                           {stickyAgentProfile.first_name} {stickyAgentProfile.last_name}
                         </p>
-                        <p className="text-sm text-neutral-600">
-                          {stickyAgentProfile.title || "Realtor"}
-                        </p>
-                        {(stickyAgentProfile.company || stickyAgentProfile.office_name) && (
-                          <p className="text-sm text-muted-foreground">
-                            {stickyAgentProfile.company || stickyAgentProfile.office_name}
+                        <div className={cn(propertyDetailAgentTitleBlock, "mt-0.5")}>
+                          <p className="text-sm text-neutral-600">
+                            {stickyAgentProfile.title || "Realtor"}
                           </p>
-                        )}
+                          {(stickyAgentProfile.company || stickyAgentProfile.office_name) && (
+                            <p className="text-sm text-muted-foreground">
+                              {stickyAgentProfile.company || stickyAgentProfile.office_name}
+                            </p>
+                          )}
+                        </div>
                       </div>
                     </div>
 
-                    <div className="space-y-3.5 text-sm">
+                    <div className={propertyDetailAgentContactRows}>
                       {stickyAgentProfile.cell_phone && (
                         <a href={`tel:${stickyAgentProfile.cell_phone}`} className="flex items-center gap-2.5 transition-colors hover:text-neutral-900">
                           <Phone className="h-4 w-4 shrink-0 text-neutral-500" />
@@ -840,20 +848,18 @@ const ConsumerPropertyDetail = () => {
 
                     {/* ATTRIBUTION MASKING: Primary contact action is in-app messaging only.
                         Do not re-add email form (ContactAgentDialog) as buyer CTA. */}
-                    <div className="grid gap-2">
-                      <Button
-                        className={cn(propertyDetailPairedCtaBase, propertyDetailMessageCta)}
-                        onClick={openBuyerAgentMessage}
-                      >
-                        <MessageSquare className="h-5 w-5" />
-                        Message your agent
-                      </Button>
-                    </div>
+                    <Button
+                      className={cn(propertyDetailPairedCtaBase, propertyDetailMessageCta)}
+                      onClick={openBuyerAgentMessage}
+                    >
+                      <MessageSquare className="h-4 w-4" />
+                      Message your agent
+                    </Button>
                   </CardContent>
                 </Card>
               ) : agentProfile ? (
                 <Card className={cn(consumerSectionCard, "shadow-sm")}>
-                  <CardContent className="space-y-5 p-5">
+                  <CardContent className={propertyDetailAgentCardContent}>
                     <div className="flex items-center gap-4">
                       <AgentAvatar
                         name={`${agentProfile.first_name} ${agentProfile.last_name}`}
@@ -863,23 +869,25 @@ const ConsumerPropertyDetail = () => {
                         avatarClassName="h-16 w-16 border-2 border-neutral-200"
                         fallbackClassName="bg-neutral-100"
                       />
-                      <div className="flex-1 min-w-0 space-y-1.5">
-                        <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-500">Listing agent</p>
-                        <p className="font-bold text-lg leading-tight">
+                      <div className="flex-1 min-w-0">
+                        <p className={propertyDetailAgentEyebrow}>Listing agent</p>
+                        <p className="mt-1 font-bold text-lg leading-tight">
                           {agentProfile.first_name} {agentProfile.last_name}
                         </p>
-                        <p className="text-sm text-neutral-600">
-                          {agentProfile.title || "Realtor"}
-                        </p>
-                        {(agentProfile.company || agentProfile.office_name) && (
-                          <p className="text-sm text-muted-foreground">
-                            {agentProfile.company || agentProfile.office_name}
+                        <div className={cn(propertyDetailAgentTitleBlock, "mt-0.5")}>
+                          <p className="text-sm text-neutral-600">
+                            {agentProfile.title || "Realtor"}
                           </p>
-                        )}
+                          {(agentProfile.company || agentProfile.office_name) && (
+                            <p className="text-sm text-muted-foreground">
+                              {agentProfile.company || agentProfile.office_name}
+                            </p>
+                          )}
+                        </div>
                       </div>
                     </div>
 
-                    <div className="space-y-3.5 text-sm">
+                    <div className={propertyDetailAgentContactRows}>
                       {agentProfile.cell_phone && (
                         <a href={`tel:${agentProfile.cell_phone}`} className="flex items-center gap-2.5 transition-colors hover:text-neutral-900">
                           <Phone className="h-4 w-4 shrink-0 text-neutral-500" />
@@ -913,22 +921,20 @@ const ConsumerPropertyDetail = () => {
                       )}
                     </div>
 
-                    <div className="grid gap-2">
-                      {canMessageListingAgent && (
-                        <Button
-                          className={cn(propertyDetailPairedCtaBase, propertyDetailMessageCta)}
-                          onClick={openListingAgentMessage}
-                        >
-                          <MessageSquare className="h-5 w-5" />
-                          Message Agent
-                        </Button>
-                      )}
-                    </div>
+                    {canMessageListingAgent && (
+                      <Button
+                        className={cn(propertyDetailPairedCtaBase, propertyDetailMessageCta)}
+                        onClick={openListingAgentMessage}
+                      >
+                        <MessageSquare className="h-4 w-4" />
+                        Message Agent
+                      </Button>
+                    )}
                   </CardContent>
                 </Card>
               ) : (
                 <Card className={cn(consumerSectionCard, "shadow-sm")}>
-                  <CardContent className="space-y-5 p-5">
+                  <CardContent className={propertyDetailAgentCardContent}>
                     <div className="flex items-center gap-4">
                       <div className="flex h-16 w-16 items-center justify-center rounded-full border border-neutral-200 bg-white shadow-sm">
                         <HelpCircle className="h-8 w-8 text-neutral-400" />
@@ -949,6 +955,7 @@ const ConsumerPropertyDetail = () => {
                   triggerClassName={propertyDetailPairedCtaBase}
                 />
               )}
+              </div>
 
               {buyerCompensationCard}
 
