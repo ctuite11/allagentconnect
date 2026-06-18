@@ -212,7 +212,7 @@ function renderStatsRow(listing: any): string {
   const sqft = listing.square_feet ?? listing.squareFeet;
   if (sqft) parts.push(`${sqftIcon}<span style="color:#171717;font-weight:600;">${escapeHtml(Number(sqft).toLocaleString())}</span> <span style="color:${AAC_PRIMARY_BLUE};font-weight:600;">sqft</span>`);
   if (!parts.length) return "";
-  const separator = '<span style="color:#d4d4d4;padding:0 10px;">&middot;</span>';
+  const separator = '<span style="color:#d4d4d4;padding:0 10px;">\u00b7</span>';
   return `<p style="margin:10px 0 0;font-size:14px;line-height:1.4;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${parts.join(separator)}</p>`;
 }
 
