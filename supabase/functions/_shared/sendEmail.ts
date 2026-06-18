@@ -21,9 +21,14 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 function htmlToPlainText(html: string): string {
   if (!html) return "";
   let out = html;
-  // Strip script/style blocks entirely
+  // Strip script/style/head blocks entirely so CSS/JS never leaks into the
+  // plain-text alternative (huge spam-filter red flag in Yahoo/Gmail).
   out = out.replace(/<script[\s\S]*?<\/script>/gi, "");
   out = out.replace(/<style[\s\S]*?<\/style>/gi, "");
+  out = out.replace(/<head[\s\S]*?<\/head>/gi, "");
+  // HTML comments — including the "<!-- plain-text-fallback: ... -->" markers
+  // some templates embed for debugging.
+  out = out.replace(/<!--[\s\S]*?-->/g, "");
   // Preserve link URLs: "<a href="X">label</a>" -> "label (X)"
   out = out.replace(
     /<a\s+[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi,
@@ -34,23 +39,36 @@ function htmlToPlainText(html: string): string {
       return `${text} (${href})`;
     },
   );
+  // Table cell / inline-block boundaries -> space, so adjacent <td>Name</td>
+  // <td>Value</td> doesn't collapse to "NameValue" in the plain-text part.
+  out = out.replace(/<\/(td|th|span)>/gi, " ");
   // Block-level tags -> newlines
-  out = out.replace(/<\/(p|div|tr|h[1-6]|li|blockquote)>/gi, "\n");
+  out = out.replace(/<\/(p|div|tr|h[1-6]|li|blockquote|table)>/gi, "\n");
   out = out.replace(/<br\s*\/?>(?!\n)/gi, "\n");
   // Drop remaining tags
   out = out.replace(/<[^>]+>/g, "");
   // Decode the most common HTML entities
   out = out
     .replace(/&nbsp;/gi, " ")
-    .replace(/&amp;/gi, "&")
-    .replace(/&lt;/gi, "<")
-    .replace(/&gt;/gi, ">")
+    .replace(/&middot;/gi, "\u00b7")
+    .replace(/&bull;/gi, "\u2022")
+    .replace(/&rarr;/gi, "\u2192")
+    .replace(/&larr;/gi, "\u2190")
+    .replace(/&mdash;/gi, "\u2014")
+    .replace(/&ndash;/gi, "\u2013")
+    .replace(/&hellip;/gi, "\u2026")
     .replace(/&quot;/gi, '"')
     .replace(/&#39;/gi, "'")
-    .replace(/&mdash;/gi, "—")
-    .replace(/&ndash;/gi, "–")
-    .replace(/&hellip;/gi, "…")
-    .replace(/&#(\d+);/g, (_m, code) => String.fromCharCode(Number(code)));
+    .replace(/&apos;/gi, "'")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/&#x([0-9a-f]+);/gi, (_m, hex) => {
+      const code = parseInt(hex, 16);
+      return Number.isFinite(code) ? String.fromCodePoint(code) : "";
+    })
+    .replace(/&#(\d+);/g, (_m, code) => String.fromCodePoint(Number(code)))
+    // Decode &amp; last so we don't double-decode entities that start with &amp;
+    .replace(/&amp;/gi, "&");
   // Collapse whitespace
   out = out.replace(/[ \t]+/g, " ");
   out = out.replace(/\n[ \t]+/g, "\n");
