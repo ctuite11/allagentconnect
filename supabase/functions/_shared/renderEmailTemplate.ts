@@ -397,6 +397,41 @@ export function renderEmailTemplate(
       return `<!doctype html><html><body><p>hi, see you inside the group</p></body></html>`;
     }
 
+    case "agent-approval-accepted": {
+      const recipientName = variables.recipientName || "Agent";
+      const passwordSetupUrl = variables.passwordSetupUrl || "https://allagentconnect.com/auth";
+      return buildAacEmail({
+        headline: "You've Been Accepted",
+        preheader: `Welcome to All Agent Connect, ${recipientName}!`,
+        body: `
+          <p style="margin:0 0 16px;">Hi ${recipientName},</p>
+          <p style="margin:0 0 8px;font-size:15px;">
+            <span style="color:#059669;font-weight:600;">✓</span> Your license has been verified
+          </p>
+          <p style="margin:0 0 0;">You've been accepted into All Agent Connect. Sign in below to access your agent dashboard.</p>`,
+        ctaLabel: "Sign In to Your Account",
+        ctaUrl: passwordSetupUrl,
+      });
+    }
+
+    case "agent-approval-rejected": {
+      const recipientName = variables.recipientName || "Agent";
+      return buildAacEmail({
+        headline: "Verification Update",
+        body: `
+          <p style="margin:0 0 16px;">Hi ${recipientName},</p>
+          <p style="margin:0 0 16px;">Thank you for your interest in All Agent Connect. Unfortunately, we were unable to verify your real estate license with the information provided. This could be due to:</p>
+          <ul style="margin:0 0 16px 20px;padding:0;color:#64748b;font-size:14px;line-height:2;">
+            <li>License number not found in state database</li>
+            <li>Name mismatch with license records</li>
+            <li>License may be expired or inactive</li>
+          </ul>
+          <p style="margin:0;">You can upload a photo or PDF of your license and we'll review it manually.</p>`,
+        ctaLabel: "Upload Your License",
+        ctaUrl: "https://allagentconnect.com/pending-verification",
+      });
+    }
+
     case "agent-client-email": {
       const clientName = variables.clientName || "there";
       const agentName = variables.agentName || "Your agent";

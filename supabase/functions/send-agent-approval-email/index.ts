@@ -1,8 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { buildAacEmail } from "../_shared/aacEmailTemplate.ts";
-
-const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -97,60 +94,43 @@ serve(async (req: Request): Promise<Response> => {
       }
     }
 
-    const html = approved
-      ? buildAacEmail({
-          headline: "You've Been Accepted",
-          preheader: `Welcome to All Agent Connect, ${recipientName}!`,
-          body: `
-            <p style="margin:0 0 16px;">Hi ${recipientName},</p>
-            <p style="margin:0 0 8px;font-size:15px;">
-              <span style="color:#059669;font-weight:600;">✓</span> Your license has been verified
-            </p>
-            <p style="margin:0 0 0;">You've been accepted into All Agent Connect. Sign in below to access your agent dashboard.</p>`,
-          ctaLabel: "Sign In to Your Account",
-          ctaUrl: passwordSetupUrl,
-        })
-      : buildAacEmail({
-          headline: "Verification Update",
-          body: `
-            <p style="margin:0 0 16px;">Hi ${recipientName},</p>
-            <p style="margin:0 0 16px;">Thank you for your interest in All Agent Connect. Unfortunately, we were unable to verify your real estate license with the information provided. This could be due to:</p>
-            <ul style="margin:0 0 16px 20px;padding:0;color:#64748b;font-size:14px;line-height:2;">
-              <li>License number not found in state database</li>
-              <li>Name mismatch with license records</li>
-              <li>License may be expired or inactive</li>
-            </ul>
-            <p style="margin:0;">You can upload a photo or PDF of your license and we'll review it manually.</p>`,
-          ctaLabel: "Upload Your License",
-          ctaUrl: "https://allagentconnect.com/pending-verification",
-        });
+    // Unified pipeline: enqueue into email_jobs and let process-email-queue
+    // handle From/Reply-To/plain-text/suppression/idempotency/retry — same as
+    // every other AAC transactional email (listing-share, hot-sheet, etc).
+    const template = approved ? "agent-approval-accepted" : "agent-approval-rejected";
+    const subject = approved
+      ? "You've Been Accepted — Sign In to Your Account"
+      : "All Agent Connect - Verification Update";
+    const variables = approved
+      ? { recipientName, passwordSetupUrl }
+      : { recipientName };
 
-    const emailRes = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${RESEND_API_KEY}`,
-      },
-      body: JSON.stringify({
-        from: (Deno.env.get("TRANSACTIONAL_FROM") || "All Agent Connect <hello@allagentconnect.com>"),
-        reply_to: "hello@allagentconnect.com",
-        to: [recipientEmail],
-        subject: approved 
-          ? "You've Been Accepted — Sign In to Your Account"
-          : "All Agent Connect - Verification Update",
-        html,
-      }),
-    });
+    const idempotencyKey = `agent-approval:${approved ? "accept" : "reject"}:${userId ?? recipientEmail}`;
 
-    const emailData = await emailRes.json();
+    const { error: insertError } = await supabaseAdmin
+      .from("email_jobs")
+      .insert({
+        payload: {
+          provider: "resend",
+          template,
+          to: recipientEmail,
+          subject,
+          variables,
+          idempotency_key: idempotencyKey,
+        },
+      });
 
-    if (!emailRes.ok) {
-      console.error("Resend API error:", emailData);
-      throw new Error(emailData.message || "Failed to send email");
+    if (insertError) {
+      console.error("[send-agent-approval-email] Failed to enqueue job:", insertError);
+      return new Response(
+        JSON.stringify({ error: `Failed to queue email: ${insertError.message}` }),
+        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } },
+      );
     }
 
-    console.log("Email sent successfully:", emailData);
+    console.log(`[send-agent-approval-email] Job enqueued for ${recipientEmail}`);
 
+    // Only mark approval_email_sent after a successful enqueue.
     if (approved && userId && !isEarlyAccess) {
       const { error: updateError } = await supabaseAdmin
         .from("agent_settings")
@@ -162,9 +142,23 @@ serve(async (req: Request): Promise<Response> => {
       }
     }
 
+    // Best-effort: kick the queue so the send runs immediately.
+    try {
+      await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/kick-email-queue`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""}`,
+        },
+        body: "{}",
+      });
+    } catch (e) {
+      console.warn("[send-agent-approval-email] kick-email-queue failed (non-fatal):", e);
+    }
+
     return new Response(
-      JSON.stringify({ success: true, emailId: emailData.id }),
-      { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      JSON.stringify({ success: true, message: "Email queued for delivery" }),
+      { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } },
     );
 
   } catch (error: any) {
