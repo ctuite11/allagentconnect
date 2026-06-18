@@ -337,7 +337,7 @@ export function renderCompactListingEmailCard(
   const listingUrl = opts.listingUrl || (listing?.id ? `${baseUrl}/property/${listing.id}` : "");
   const safeUrl = escapeHtml(listingUrl);
 
-  const photoUrl = listing.photoUrl || resolvePhotoUrl(listing.photos);
+  const photoUrl = rewriteEmailImageUrl(listing.photoUrl) || resolvePhotoUrl(listing.photos);
   const price = formatPrice(listing.price);
   const propertyType = formatPropertyTypeLabel(listing.property_type);
   const fullAddress =
