@@ -4,6 +4,7 @@
  */
 
 import { listingCardStreetHeading, type ListingAddressUnitSource } from "@/lib/utils";
+import { rewriteEmailImageUrl, resolveEmailPhotoUrl } from "@/lib/emailImageUrl";
 
 const AAC_PRIMARY_BLUE = "#0E56F5";
 const AAC_EMERALD = "#22C55E";
@@ -56,14 +57,7 @@ function formatPrice(price: unknown): string {
 }
 
 function resolvePhotoUrl(photos: unknown): string {
-  if (!Array.isArray(photos) || photos.length === 0) return "";
-  const first = photos[0] as unknown;
-  if (typeof first === "string") return first;
-  if (first && typeof first === "object") {
-    const f = first as Record<string, unknown>;
-    return String(f.url || f.publicUrl || "");
-  }
-  return "";
+  return resolveEmailPhotoUrl(photos);
 }
 
 function humanize(s: unknown): string {
