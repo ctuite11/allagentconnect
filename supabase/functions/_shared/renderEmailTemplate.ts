@@ -6,6 +6,7 @@
 import { buildAacEmail } from "./aacEmailTemplate.ts";
 import { formatListingShareEmailStreetLine } from "./listingShareEmailAddress.ts";
 import { renderCompactListingEmailCard, renderListingEmailCard } from "./listingEmailCard.ts";
+import { resolveEmailPhotoUrl } from "./listingPhotoUrl.ts";
 
 /* ------------------------------------------------------------------ */
 /*  Shared helpers for Share Listings emails                           */
@@ -18,11 +19,7 @@ function fmtPrice(n: unknown): string {
 }
 
 function resolvePhotoUrl(photos: unknown): string {
-  if (!Array.isArray(photos) || photos.length === 0) return "";
-  const first = photos[0] as any;
-  if (typeof first === "string") return first;
-  if (first && typeof first === "object") return first.url || first.publicUrl || "";
-  return "";
+  return resolveEmailPhotoUrl(photos);
 }
 
 function renderListingShareCard(listing: any, opts?: { baseUrl?: string }): string {

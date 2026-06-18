@@ -4,6 +4,7 @@
  */
 
 import { listingCardStreetHeading, type ListingAddressUnitSource } from "@/lib/utils";
+import { rewriteEmailImageUrl, resolveEmailPhotoUrl } from "@/lib/emailImageUrl";
 
 const AAC_PRIMARY_BLUE = "#0E56F5";
 const AAC_EMERALD = "#22C55E";
@@ -56,14 +57,7 @@ function formatPrice(price: unknown): string {
 }
 
 function resolvePhotoUrl(photos: unknown): string {
-  if (!Array.isArray(photos) || photos.length === 0) return "";
-  const first = photos[0] as unknown;
-  if (typeof first === "string") return first;
-  if (first && typeof first === "object") {
-    const f = first as Record<string, unknown>;
-    return String(f.url || f.publicUrl || "");
-  }
-  return "";
+  return resolveEmailPhotoUrl(photos);
 }
 
 function humanize(s: unknown): string {
@@ -208,7 +202,7 @@ function renderStatsRow(listing: EmailListingCardListing): string {
   if (listing.bathrooms != null) parts.push(`<span style="color:#171717;font-weight:600;">${escapeHtml(String(listing.bathrooms))}</span> <span style="color:#737373;font-weight:400;">ba</span>`);
   if (listing.square_feet) parts.push(`<span style="color:#171717;font-weight:600;">${escapeHtml(Number(listing.square_feet).toLocaleString())}</span> <span style="color:#737373;font-weight:400;">sqft</span>`);
   if (!parts.length) return "";
-  const separator = '<span style="color:#d4d4d4;padding:0 10px;">&middot;</span>';
+  const separator = '<span style="color:#d4d4d4;padding:0 10px;">·</span>';
   return `<p style="margin:10px 0 0;font-size:14px;line-height:1.4;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${parts.join(separator)}</p>`;
 }
 
@@ -221,7 +215,7 @@ export function renderEmailListingCard(
   const listingUrl = opts.listingUrl || (listing?.id ? `${baseUrl}/property/${listing.id}` : "");
   const safeUrl = escapeHtml(listingUrl);
 
-  const photoUrl = listing.photoUrl || resolvePhotoUrl(listing.photos);
+  const photoUrl = rewriteEmailImageUrl(listing.photoUrl) || resolvePhotoUrl(listing.photos);
   const price = formatPrice(listing.price);
   const propertyType = formatPropertyTypeLabel(listing.property_type);
   const streetLine =
