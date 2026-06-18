@@ -108,7 +108,6 @@ import IDXListingDetailBeta from "./pages/IDXListingDetailBeta";
 import SellerDashboard from "./pages/SellerDashboard";
 import ScrollToTop from "./components/ScrollToTop";
 import ScrollRestoration from "./components/ScrollRestoration";
-import { ActiveAgentBanner } from "./components/ActiveAgentBanner";
 import VersionStamp from "./components/VersionStamp";
 import { NewMessageToastListener } from "./components/NewMessageToastListener";
 import CookieConsent from "./components/CookieConsent";
@@ -294,7 +293,6 @@ const App = () => (
             <ScrollToTop />
             <ScrollRestoration />
             <>
-              <ActiveAgentBanner />
               <NewMessageToastListener />
               <CrossTabSessionGuard />
               <Routes>

@@ -4,7 +4,6 @@ import { useLocation, useNavigate } from "react-router-dom";
 // Navigation removed - rendered globally in App.tsx
 import Footer from "@/components/Footer";
 import ListingCard from "@/components/ListingCard";
-import { ActiveAgentBanner } from "@/components/ActiveAgentBanner";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
@@ -272,7 +271,6 @@ const SearchResults = ({
     <>
       <Seo title={publicMode || buyerMode ? "Homes" : "Search Results"} />
       <div className="min-h-screen flex flex-col pt-20">
-      {!publicMode && !buyerMode && <ActiveAgentBanner />}
       <main className="flex-1 bg-white">
         <div className="max-w-[1800px] mx-auto w-full px-4 md:px-7 py-8">
           <div className="mb-6">

@@ -4,7 +4,6 @@ import { useLocation, useNavigate } from "react-router-dom";
 // Navigation removed - rendered globally in App.tsx
 import Footer from "@/components/Footer";
 import ListingCard from "@/components/ListingCard";
-import { ActiveAgentBanner } from "@/components/ActiveAgentBanner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -370,7 +369,7 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
 
   return (
     <div className={cn("flex flex-col bg-white", forceBuyer ? buyerPageShell : "min-h-screen", !dcmls && "pt-20")}>
-      {dcmls ? <DcmlsConsumerHeader /> : <ActiveAgentBanner />}
+      {dcmls ? <DcmlsConsumerHeader /> : null}
 
       <main className="flex-1 bg-white">
         <div className={forceBuyer ? buyerPageMain : "container mx-auto max-w-[1800px] px-4 py-6 md:px-6 md:py-8"}>

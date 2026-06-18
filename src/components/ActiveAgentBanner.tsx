@@ -11,18 +11,21 @@ export function ActiveAgentBanner() {
   const [agent, setAgent] = useState<AgentBannerProfile | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
+
     const load = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.access_token) {
-        setAgent(null);
+        if (!cancelled) setAgent(null);
         return;
       }
 
-      // DB is the source of truth — sync sticky first
       const agentId = await syncStickyFromDB();
-      if (!agentId) return;
+      if (!agentId) {
+        if (!cancelled) setAgent(null);
+        return;
+      }
 
-      // Check if current user is an agent (agents don't see the banner)
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         const { data: agentProfile } = await supabase
@@ -31,22 +34,38 @@ export function ActiveAgentBanner() {
           .eq("id", user.id)
           .maybeSingle();
 
-        if (agentProfile) return;
+        if (agentProfile) {
+          if (!cancelled) setAgent(null);
+          return;
+        }
       }
 
-      // Fetch the sticky agent's display info
       const { data, error } = await supabase
         .from("agent_profiles")
         .select("first_name, last_name")
         .eq("id", agentId)
         .maybeSingle();
 
-      if (!error && data) {
-        setAgent(data);
+      if (!cancelled) {
+        if (!error && data) setAgent(data);
+        else setAgent(null);
       }
     };
 
-    load();
+    void load();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session) {
+        setAgent(null);
+        return;
+      }
+      void load();
+    });
+
+    return () => {
+      cancelled = true;
+      subscription.unsubscribe();
+    };
   }, []);
 
   if (!agent) return null;

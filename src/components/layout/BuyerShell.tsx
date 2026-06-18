@@ -17,6 +17,7 @@ import { useUnreadConversations } from "@/hooks/useUnreadConversations";
 import { MessagesUnreadBadge } from "@/components/messaging/MessagesUnreadBadge";
 import { buyerPageShell } from "@/lib/buyerUi";
 import { isBuyerHotSheetsNavActive } from "@/lib/sidebarNavActive";
+import { ActiveAgentBanner } from "@/components/ActiveAgentBanner";
 
 const NAV_ITEMS = [
   { to: "/client/search", label: "Search", icon: Search },
@@ -51,6 +52,7 @@ export function BuyerShell() {
 
   return (
     <div className={`flex flex-col ${buyerPageShell}`}>
+      <ActiveAgentBanner />
       {/* ── Top navigation bar ─────────────────────────────────────────── */}
       <header className="sticky top-0 z-50 w-full overflow-visible border-b border-neutral-100 bg-white shadow-none">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 overflow-visible px-4 pr-6 sm:px-6">
