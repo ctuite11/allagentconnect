@@ -1,39 +1,22 @@
-## Findings
+## Goal
 
-- `VITE_GOOGLE_MAPS_API_KEY` is set in the active environment.
-- The buyer rental page does return rental data: `/client/search?lt=for_rent` currently shows `Results: 1` for the one rental listing that is `coming_soon`.
-- The map/address issue is confirmed as configuration, not buyer-page code: Google returns `RefererNotAllowedMapError` for `https://95492335-3a75-4285-8d44-828003cae42a.lovableproject.com/client/search`.
-- The database currently has only one rental eligible for default buyer search (`coming_soon`). Other rentals are `expired` or `cancelled`, so they are intentionally filtered out by the active/coming-soon search.
+Revert the agent verification success email from the current stripped-down version (`<p>hi, see you inside the group</p>`) back to the original branded AAC template.
 
-## Plan
+## Scope
 
-1. **No code changes for Google Maps**
-   - Keep the app using the existing single key path: `VITE_GOOGLE_MAPS_API_KEY`.
-   - Do not add fallback connector code.
-   - Fix in Google Cloud by adding this exact preview origin to the key’s HTTP referrer allowlist:
-     - `https://95492335-3a75-4285-8d44-828003cae42a.lovableproject.com/*`
-   - Also keep/include:
-     - `https://allagentconnect.com/*`
-     - `https://www.allagentconnect.com/*`
-     - `https://directconnectmls.com/*`
-     - `https://www.directconnectmls.com/*`
-     - `https://*.lovable.app/*`
-     - `https://*.lovableproject.com/*`
-     - any Netlify/custom preview domains in use
+Single file: `supabase/functions/send-agent-approval-email/index.ts` — only the `approved === true` branch.
 
-2. **Verify Google API restrictions**
-   - Confirm the same key allows at least:
-     - Maps JavaScript API
-     - Places API
-     - Geocoding API if address geocoding is used by existing flows
-   - Confirm billing is enabled on the Google Cloud project.
+## Changes
 
-3. **Clarify rental inventory expectation**
-   - Since only one rental is currently active/coming soon, no code fix is needed if seeing one rental is correct.
-   - If you expected more rentals to appear, the fix is data/status-related: those listings need to be changed from `expired`/`cancelled` to a visible status, or the buyer search rules need to intentionally include those statuses.
+1. Replace the approved-branch HTML with the original `buildAacEmail(...)` call:
+   - Headline: "You've Been Accepted"
+   - Preheader: `Welcome to All Agent Connect, {firstName}!`
+   - Body: greeting + green checkmark "Your license has been verified" + "Sign in below to access your agent dashboard"
+   - CTA: "Sign In to Your Account" → `passwordSetupUrl` (the generated magic link)
+2. Restore the approved subject line to: `"You've Been Accepted — Sign In to Your Account"` (currently just `"AAC"`).
+3. Keep the rejection branch and the apex-domain `TRANSACTIONAL_FROM` / `reply_to: hello@allagentconnect.com` exactly as they are now.
+4. Deploy the `send-agent-approval-email` edge function.
 
-4. **Validation after config/data updates**
-   - Hard refresh `/client/search?lt=for_rent`.
-   - Confirm the map no longer shows the Google Maps error.
-   - Confirm address autocomplete suggestions appear.
-   - Confirm the expected rental count appears based on listing status rules.
+## Verification
+
+After deploy, trigger a test approval (or re-approve a test agent) and confirm the inbound email shows the branded layout, green check, and Sign In CTA — sent from `hello@allagentconnect.com`.
