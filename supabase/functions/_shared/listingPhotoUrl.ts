@@ -9,6 +9,41 @@ function rewriteToCdn(url: string): string {
   return `${CDN_HOST}${m[1]}`;
 }
 
+/**
+ * Public helper: rewrite any single image URL to the AAC CDN host when it
+ * resolves to a Supabase storage public/render path. Safe to call with
+ * absolute URLs, relative paths (leading slash optional), or empty strings.
+ */
+export function rewriteEmailImageUrl(url: string | null | undefined): string {
+  if (!url) return "";
+  const raw = String(url).trim();
+  if (!raw) return "";
+  if (/^https?:\/\//i.test(raw)) return rewriteToCdn(raw);
+  // Relative storage path → absolute CDN URL. Tolerate leading slash and
+  // already-prefixed "/storage/v1/..." inputs.
+  const path = raw.replace(/^\/+/, "");
+  if (/^storage\/v1\//i.test(path)) return `${CDN_HOST}/${path}`;
+  return `${CDN_HOST}/storage/v1/object/public/${LISTING_PHOTOS_BUCKET}/${path}`;
+}
+
+/**
+ * Public helper: resolve the first photo from a JSON/array/string `photos`
+ * field to a CDN-hosted public URL suitable for an email <img src>.
+ * Returns "" when no photo is available.
+ */
+export function resolveEmailPhotoUrl(photos: unknown): string {
+  const first = extractFirstPhoto(photos);
+  if (!first) return "";
+  let raw = "";
+  if (typeof first === "string") {
+    raw = first.trim();
+  } else if (first && typeof first === "object") {
+    const row = first as Record<string, unknown>;
+    raw = String(row.url || row.publicUrl || row.src || row.image_url || "").trim();
+  }
+  return rewriteEmailImageUrl(raw);
+}
+
 /** Resolve the first listing photo to a public HTTPS URL (handles storage paths). */
 export function resolveListingPhotoUrl(photos: unknown, supabaseUrl: string): string {
   const first = extractFirstPhoto(photos);
