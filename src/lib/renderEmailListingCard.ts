@@ -202,7 +202,7 @@ function renderStatsRow(listing: EmailListingCardListing): string {
   if (listing.bathrooms != null) parts.push(`<span style="color:#171717;font-weight:600;">${escapeHtml(String(listing.bathrooms))}</span> <span style="color:#737373;font-weight:400;">ba</span>`);
   if (listing.square_feet) parts.push(`<span style="color:#171717;font-weight:600;">${escapeHtml(Number(listing.square_feet).toLocaleString())}</span> <span style="color:#737373;font-weight:400;">sqft</span>`);
   if (!parts.length) return "";
-  const separator = '<span style="color:#d4d4d4;padding:0 10px;">&middot;</span>';
+  const separator = '<span style="color:#d4d4d4;padding:0 10px;">·</span>';
   return `<p style="margin:10px 0 0;font-size:14px;line-height:1.4;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${parts.join(separator)}</p>`;
 }
 
