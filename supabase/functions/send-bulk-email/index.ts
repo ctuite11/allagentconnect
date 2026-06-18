@@ -316,7 +316,7 @@ function buildFoundingPartnerBody(): string {
         <p style="margin:0 0 16px;font-size:14px;color:#0f172a;line-height:1.6;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">As a Founding Partner, you&rsquo;ll get an early look at what we&rsquo;ve built with All Agent Connect, a preview of the upcoming launch of Direct Connect MLS and Stealth Seller, and a direct line to share where you believe the industry is headed. Most importantly, I&rsquo;d like your candid feedback&mdash;what works, what doesn&rsquo;t, and what you&rsquo;d like to see next.</p>
         <p style="margin:0 0 16px;font-size:14px;color:#0f172a;line-height:1.6;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">The agents helping shape AAC today will have a unique opportunity to help guide its growth tomorrow.</p>
         <p style="margin:0 0 4px;font-size:14px;color:#0f172a;font-weight:600;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Chris Tuite</p>
-        <p style="margin:0;font-size:13px;color:#64748b;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Founder, All Agent Connect<br/>617-877-0519 &middot; chris@allagentconnect.com</p>
+        <p style="margin:0;font-size:13px;color:#64748b;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Founder, All Agent Connect<br/>617-877-0519 · chris@allagentconnect.com</p>
       </td></tr>
       <tr><td style="padding:56px 0 0;">
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0"><tr><td align="center" style="background-color:#0B0D12;padding:32px 32px 30px;">
@@ -415,7 +415,7 @@ function buildPrivateListingNetworkBody(): string {
       <tr><td style="padding:36px 0 0;border-top:1px solid #e2e8f0;">
         <p style="margin:24px 0 4px;font-size:14px;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">See you inside.</p>
         <p style="margin:0 0 4px;font-size:14px;color:#0f172a;font-weight:600;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Chris Tuite</p>
-        <p style="margin:0;font-size:13px;color:#64748b;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Founder, All Agent Connect<br/>617-877-0519 &middot; chris@allagentconnect.com</p>
+        <p style="margin:0;font-size:13px;color:#64748b;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Founder, All Agent Connect<br/>617-877-0519 · chris@allagentconnect.com</p>
       </td></tr>
       <tr><td style="padding:24px 0 0;">
         <p style="margin:0;font-size:11px;color:#94a3b8;text-align:center;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">You&rsquo;re receiving this because you&rsquo;re a verified agent in the All Agent Connect network.</p>
