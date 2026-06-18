@@ -86,8 +86,14 @@ serve(async (req: Request): Promise<Response> => {
         if (linkError) {
           console.error("Error generating recovery link:", linkError);
         } else if (linkData?.properties?.action_link) {
-          passwordSetupUrl = linkData.properties.action_link;
-          console.log("Generated password setup link for", recipientEmail);
+          // Wrap the third-party Supabase verify URL behind our own brand domain
+          // so the visible CTA host is allagentconnect.com (not *.supabase.co).
+          // Yahoo and Gmail down-score third-party auth-token URLs in transactional
+          // mail; do NOT log the decoded action link or token.
+          const actionLink = linkData.properties.action_link as string;
+          const nextParam = base64UrlEncode(actionLink);
+          passwordSetupUrl = `https://allagentconnect.com/auth/setup?next=${nextParam}`;
+          console.log("Generated branded setup link for", recipientEmail);
         }
       } catch (linkErr) {
         console.error("Failed to generate recovery link:", linkErr);
@@ -98,9 +104,12 @@ serve(async (req: Request): Promise<Response> => {
     // handle From/Reply-To/plain-text/suppression/idempotency/retry — same as
     // every other AAC transactional email (listing-share, hot-sheet, etc).
     const template = approved ? "agent-approval-accepted" : "agent-approval-rejected";
+    // Pure ASCII subjects only — apostrophes and em-dashes force RFC-2047
+    // encoded-word wrapping (=?UTF-8?Q?...?=), which Yahoo down-scores on
+    // transactional mail.
     const subject = approved
-      ? "You've Been Accepted — Sign In to Your Account"
-      : "All Agent Connect - Verification Update";
+      ? "Your All Agent Connect account is ready"
+      : "All Agent Connect account verification update";
     const variables = approved
       ? { recipientName, passwordSetupUrl }
       : { recipientName };
@@ -115,6 +124,7 @@ serve(async (req: Request): Promise<Response> => {
           template,
           to: recipientEmail,
           subject,
+          reply_to: "hello@allagentconnect.com",
           variables,
           idempotency_key: idempotencyKey,
         },
@@ -169,3 +179,9 @@ serve(async (req: Request): Promise<Response> => {
     );
   }
 });
+
+/** RFC 4648 base64url, no padding. */
+function base64UrlEncode(input: string): string {
+  const b64 = btoa(unescape(encodeURIComponent(input)));
+  return b64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+}

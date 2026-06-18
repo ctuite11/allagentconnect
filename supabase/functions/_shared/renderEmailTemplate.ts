@@ -401,15 +401,14 @@ export function renderEmailTemplate(
       const recipientName = variables.recipientName || "Agent";
       const passwordSetupUrl = variables.passwordSetupUrl || "https://allagentconnect.com/auth";
       return buildAacEmail({
-        headline: "You've Been Accepted",
-        preheader: `Welcome to All Agent Connect, ${recipientName}!`,
+        headline: "Your account is ready",
+        preheader: "Your All Agent Connect account is ready to sign in.",
         body: `
-          <p style="margin:0 0 16px;">Hi ${recipientName},</p>
-          <p style="margin:0 0 8px;font-size:15px;">
-            <span style="color:#059669;font-weight:600;">✓</span> Your license has been verified
-          </p>
-          <p style="margin:0 0 0;">You've been accepted into All Agent Connect. Sign in below to access your agent dashboard.</p>`,
-        ctaLabel: "Sign In to Your Account",
+          <p style="margin:0 0 14px;">Hi ${recipientName},</p>
+          <p style="margin:0 0 14px;">Your real estate license has been verified and your All Agent Connect account is active.</p>
+          <p style="margin:0 0 14px;">All Agent Connect is a private network where agents share listings, send buyer needs, and run their pipeline in one place. Your dashboard is ready when you are.</p>
+          <p style="margin:0 0 0;">Sign in below to set your password and finish setup.</p>`,
+        ctaLabel: "Sign in to your account",
         ctaUrl: passwordSetupUrl,
       });
     }
