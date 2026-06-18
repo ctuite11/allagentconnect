@@ -1,8 +1,8 @@
-import { getPrimaryPhotoUrl } from "@/components/buyer/buyerListingDisplay";
 import { getListingPublicUrl, getPublicOrigin } from "@/lib/getPublicUrl";
 import { buildPersonalListingShareEmailSubject } from "@/lib/listingEmailSubject";
 import { listingCardStreetHeading, type ListingAddressUnitSource } from "@/lib/utils";
 import { renderEmailListingCard, type EmailListingCardListing } from "@/lib/renderEmailListingCard";
+import { resolveEmailPhotoUrl } from "@/lib/emailImageUrl";
 
 export { buildPersonalListingShareEmailSubject } from "@/lib/listingEmailSubject";
 
@@ -70,7 +70,7 @@ function formatPrice(price?: number | null): string {
 }
 
 function buildListingShareEmailCard(listing: ListingShareEmailListing): string {
-  const photoUrl = getPrimaryPhotoUrl(listing.photos ?? []) || "";
+  const photoUrl = resolveEmailPhotoUrl(listing.photos ?? []);
   return renderEmailListingCard(
     { ...(listing as EmailListingCardListing), photoUrl },
     { listingUrl: getListingPublicUrl(listing.id) },
