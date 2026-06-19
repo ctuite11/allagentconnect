@@ -76,6 +76,22 @@ function renderPersonalMessage(message?: string): string {
     </div>`;
 }
 
+function renderAccountReadyCard(): string {
+  const rows: Array<{ label: string; value: string }> = [
+    { label: "Hot Sheets", value: "Create targeted buyer and listing matches" },
+    { label: "Buyer Needs", value: "Surface active demand from verified agents" },
+    { label: "Pipeline", value: "Manage listing opportunities in one place" },
+  ];
+  const rowsHtml = rows.map((r) =>
+    `<tr><td style="padding:4px 0;color:#64748b;font-size:13px;white-space:nowrap;">${r.label}</td><td style="padding:4px 0 4px 12px;font-weight:600;color:#0f172a;font-size:14px;">${r.value}</td></tr>`
+  ).join("");
+  return `
+    <div style="margin:24px 0 0;padding:16px 18px;background:#f8fafc;border:1px solid #e5e7eb;border-radius:10px;">
+      <p style="margin:0 0 10px;font-size:13px;font-weight:600;color:#0f172a;text-transform:uppercase;letter-spacing:0.04em;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Your account is ready</p>
+      <table role="presentation" cellspacing="0" cellpadding="0" style="font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${rowsHtml}</table>
+    </div>`;
+}
+
 export function renderEmailTemplate(
   template: string,
   variables: Record<string, any>,
@@ -401,13 +417,13 @@ export function renderEmailTemplate(
       const recipientName = variables.recipientName || "Agent";
       const passwordSetupUrl = variables.passwordSetupUrl || "https://allagentconnect.com/auth";
       return buildAacEmail({
-        headline: "Your account is ready",
+        headline: "Your All Agent Connect account is ready",
         preheader: "Your All Agent Connect account is ready to sign in.",
         body: `
           <p style="margin:0 0 14px;">Hi ${recipientName},</p>
-          <p style="margin:0 0 14px;">Your real estate license has been verified and your All Agent Connect account is active.</p>
-          <p style="margin:0 0 14px;">All Agent Connect is a private network where agents share listings, send buyer needs, and run their pipeline in one place. Your dashboard is ready when you are.</p>
-          <p style="margin:0 0 0;">Sign in below to set your password and finish setup.</p>`,
+          <p style="margin:0 0 18px;">Your real estate license has been verified and your All Agent Connect account is active.</p>
+          ${renderAccountReadyCard()}
+          <p style="margin:24px 0 0;">Sign in below to set your password and finish setup.</p>`,
         ctaLabel: "Sign in to your account",
         ctaUrl: passwordSetupUrl,
       });
