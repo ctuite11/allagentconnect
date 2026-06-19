@@ -517,10 +517,17 @@ export function NewConversationDialog({
         >
           {initialsFromDisplayName(primaryLabel)}
         </div>
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-medium text-zinc-900">{primaryLabel}</p>
-          {name ? <p className="truncate text-xs text-zinc-500">{statusLabel}</p> : null}
+          {r.email.trim() ? (
+            <p className="truncate text-xs text-zinc-600">{r.email.trim()}</p>
+          ) : (
+            <p className="truncate text-xs text-zinc-500">{statusLabel}</p>
+          )}
         </div>
+        {r.email.trim() ? (
+          <span className="shrink-0 text-[11px] font-medium text-zinc-400">{statusLabel}</span>
+        ) : null}
       </button>
     );
   };
