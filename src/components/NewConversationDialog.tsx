@@ -10,14 +10,19 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { Send, Search, User, Loader2, Building2, MessageSquare } from "lucide-react";
 import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 import { supabase } from "@/integrations/supabase/client";
 import { findOrCreateConversation } from "@/lib/startConversation";
 import { showMessageSentToast } from "@/lib/messageSentFeedback";
-import { fetchMessageableClientRecipients } from "@/lib/contactSearch";
+import {
+  AGENT_CONTACT_MIN_QUERY_LENGTH,
+  contactDisplayName,
+  fetchAllAgentContacts,
+  filterAndRankAgentContacts,
+  type ContactRow,
+} from "@/lib/contactSearch";
 import { fetchBuyerMessageRecipients } from "@/lib/fetchBuyerMessageRecipients";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -34,8 +39,6 @@ interface Recipient {
   headshotUrl?: string | null;
 }
 
-/** Agent compose: minimum query length before showing recipient matches. */
-const AGENT_RECIPIENT_SEARCH_MIN = 2;
 const AGENT_RECIPIENT_SEARCH_DEBOUNCE_MS = 275;
 
 interface NewConversationDialogProps {
@@ -58,6 +61,8 @@ export function NewConversationDialog({
 }: NewConversationDialogProps) {
   const navigate = useNavigate();
   const [recipients, setRecipients] = useState<Recipient[]>([]);
+  const [agentPeers, setAgentPeers] = useState<Recipient[]>([]);
+  const [crmContacts, setCrmContacts] = useState<ContactRow[]>([]);
   const [buyerComposeLoading, setBuyerComposeLoading] = useState(false);
   const [agentSearchLoading, setAgentSearchLoading] = useState(false);
   const [debouncedAgentSearch, setDebouncedAgentSearch] = useState("");
@@ -103,36 +108,30 @@ export function NewConversationDialog({
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    const results: Recipient[] = [];
-
     const { data: agents } = await supabase
       .from("agent_profiles")
       .select("id, first_name, last_name, email, company, headshot_url")
       .neq("id", user.id)
       .order("last_name");
 
-    (agents || []).forEach((a) => {
-      const name = `${a.first_name ?? ""} ${a.last_name ?? ""}`.trim();
-      results.push({
-        id: a.id,
-        name: name || "",
-        email: a.email ?? "",
-        group: "agent",
-        headshotUrl: a.headshot_url ?? null,
-      });
+    setAgentPeers(
+      (agents || []).map((a) => {
+        const name = `${a.first_name ?? ""} ${a.last_name ?? ""}`.trim();
+        return {
+          id: a.id,
+          name: name || "",
+          email: a.email ?? "",
+          group: "agent" as const,
+          headshotUrl: a.headshot_url ?? null,
+        };
+      }),
+    );
+
+    const contacts = await fetchAllAgentContacts(user.id, {
+      select:
+        "id, first_name, last_name, email, client_type, relationship_user_id, relationship_status, relationship_ended_at",
     });
-
-    const clients = await fetchMessageableClientRecipients(user.id);
-    for (const c of clients) {
-      results.push({
-        id: c.id,
-        name: c.name,
-        email: c.email,
-        group: "client",
-      });
-    }
-
-    setRecipients(results);
+    setCrmContacts(contacts);
     agentDirectoryLoadedRef.current = true;
   }, []);
 
@@ -148,7 +147,7 @@ export function NewConversationDialog({
     if (!open || composeVariant !== "agent") return;
 
     const q = search.trim();
-    if (q.length < AGENT_RECIPIENT_SEARCH_MIN) {
+    if (q.length < AGENT_CONTACT_MIN_QUERY_LENGTH) {
       setAgentSearchLoading(false);
       setDebouncedAgentSearch("");
       return;
@@ -165,7 +164,7 @@ export function NewConversationDialog({
   // Agent compose: load directory lazily once the debounced query is ready.
   useEffect(() => {
     if (!open || composeVariant !== "agent") return;
-    if (debouncedAgentSearch.length < AGENT_RECIPIENT_SEARCH_MIN) return;
+    if (debouncedAgentSearch.length < AGENT_CONTACT_MIN_QUERY_LENGTH) return;
 
     let cancelled = false;
     void (async () => {
@@ -297,14 +296,37 @@ export function NewConversationDialog({
   const filteredRecipients = useMemo(() => {
     if (composeVariant === "buyer") return recipients;
     const q = debouncedAgentSearch.trim();
-    if (q.length < AGENT_RECIPIENT_SEARCH_MIN) return [];
+    if (q.length < AGENT_CONTACT_MIN_QUERY_LENGTH) return [];
+
     const ql = q.toLowerCase();
-    return recipients.filter(
-      (r) =>
-        r.name.toLowerCase().includes(ql) ||
-        r.email.toLowerCase().includes(ql),
+    const matchedAgents = agentPeers.filter(
+      (r) => r.name.toLowerCase().includes(ql) || r.email.toLowerCase().includes(ql),
     );
-  }, [recipients, debouncedAgentSearch, composeVariant]);
+
+    const matchedBuyers: Recipient[] = [];
+    const seenBuyerIds = new Set<string>();
+    for (const c of filterAndRankAgentContacts(crmContacts, q)) {
+      if (c.relationship_status === "ended" || c.relationship_ended_at) continue;
+      const authUserId = String(c.relationship_user_id ?? "").trim();
+      if (!authUserId || seenBuyerIds.has(authUserId)) continue;
+      seenBuyerIds.add(authUserId);
+      matchedBuyers.push({
+        id: authUserId,
+        name: contactDisplayName(c) || authUserId,
+        email: String(c.email ?? "").trim(),
+        group: "client",
+      });
+    }
+
+    const seen = new Set<string>();
+    const combined: Recipient[] = [];
+    for (const r of [...matchedAgents, ...matchedBuyers]) {
+      if (seen.has(r.id)) continue;
+      seen.add(r.id);
+      combined.push(r);
+    }
+    return combined;
+  }, [recipients, debouncedAgentSearch, composeVariant, agentPeers, crmContacts]);
 
   const agentSearchResults = useMemo(() => {
     if (composeVariant === "buyer") return [];
@@ -318,7 +340,14 @@ export function NewConversationDialog({
   }, [filteredRecipients, composeVariant]);
 
   const agentSearchQuery = search.trim();
-  const agentSearchReady = agentSearchQuery.length >= AGENT_RECIPIENT_SEARCH_MIN;
+  const agentSearchReady = agentSearchQuery.length >= AGENT_CONTACT_MIN_QUERY_LENGTH;
+
+  const handleSelectRecipient = useCallback((recipient: Recipient) => {
+    setSelectedRecipient(recipient);
+    setSearch("");
+    setDebouncedAgentSearch("");
+    requestAnimationFrame(() => messageRef.current?.focus());
+  }, []);
 
   const buyerAgent = composeVariant === "buyer" ? recipients.find((r) => r.group === "agent") ?? null : null;
   const sharedRecipients =
@@ -385,7 +414,13 @@ export function NewConversationDialog({
         { listingId: listingId ?? null }
       );
 
-      if (!conversationId) throw new Error("Could not create conversation");
+      if (!conversationId) {
+        throw new Error(
+          composeVariant === "agent" && sendRecipient.group === "client"
+            ? "Could not start this conversation. Make sure the buyer has an active workspace link."
+            : "Could not create conversation",
+        );
+      }
 
       const { error } = await supabase.from("conversation_messages").insert({
         conversation_id: conversationId,
@@ -423,6 +458,8 @@ export function NewConversationDialog({
     setListings([]);
     setRecentListings([]);
     setRecipients([]);
+    setAgentPeers([]);
+    setCrmContacts([]);
     agentDirectoryLoadedRef.current = false;
     setSending(false);
   };
@@ -464,8 +501,9 @@ export function NewConversationDialog({
     return (
       <button
         type="button"
-        key={r.id}
-        onClick={() => setSelectedRecipient(r)}
+        key={`${r.group}-${r.id}`}
+        onMouseDown={(e) => e.preventDefault()}
+        onClick={() => handleSelectRecipient(r)}
         className={cn(
           "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors",
           selected ? "bg-blue-50/60 ring-1 ring-[#0E56F5]/30" : "hover:bg-zinc-50",
@@ -620,13 +658,16 @@ export function NewConversationDialog({
             <Label className="text-sm font-medium text-zinc-700">To</Label>
             {selectedRecipient ? (
               <div className="flex items-center gap-2">
-                <div className="inline-flex items-center gap-2 bg-zinc-100 rounded-full px-3 py-1.5 max-w-full">
-                  <User className="w-3.5 h-3.5 text-zinc-500 shrink-0" />
-                  <span className="text-sm font-medium text-zinc-700 truncate">{selectedRecipient.name}</span>
+                <div className="inline-flex max-w-full items-center gap-2 rounded-full bg-zinc-100 px-3 py-1.5">
+                  <User className="h-3.5 w-3.5 shrink-0 text-zinc-500" />
+                  <span className="truncate text-sm font-medium text-zinc-700">{selectedRecipient.name}</span>
+                  <span className="shrink-0 text-xs text-zinc-500">
+                    {selectedRecipient.group === "client" ? "Buyer" : "Agent"}
+                  </span>
                   <button
                     type="button"
                     onClick={() => setSelectedRecipient(null)}
-                    className="text-zinc-400 hover:text-zinc-600 ml-1 shrink-0"
+                    className="ml-1 shrink-0 text-zinc-400 hover:text-zinc-600"
                     aria-label="Change recipient"
                   >
                     ×
@@ -658,11 +699,11 @@ export function NewConversationDialog({
                     Searching…
                   </p>
                 ) : agentSearchResults.length > 0 ? (
-                  <ScrollArea className="max-h-[240px]">
-                    <div className="space-y-0.5 py-1">
+                  <div className="max-h-[240px] overflow-y-auto rounded-lg border border-zinc-100">
+                    <div className="space-y-0.5 p-1">
                       {agentSearchResults.map(renderAgentSearchRow)}
                     </div>
-                  </ScrollArea>
+                  </div>
                 ) : (
                   <p className="px-2 py-6 text-center text-sm text-zinc-400">
                     No matching buyers or agents found.
