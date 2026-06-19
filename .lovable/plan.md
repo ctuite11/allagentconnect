@@ -1,25 +1,20 @@
-## Goal
-Confirm the agent-approval email is sending from `hello@allagentconnect.com` (apex domain) and lands in the Inbox, not Spam.
+## Freeze
 
-## Steps
+- No file reverts.
+- No deploys.
+- Code stays exactly as it is right now (footer mailto already back to `chris@allagentconnect.com`, `send-listing-share` + `send-bulk-listing-share` already redeployed with that footer).
 
-1. **Trigger one live send** of the `send-agent-approval-email` Edge Function with:
-   - recipient: `doittuite3@yahoo.com`
-   - branch: `approved` (uses the restored branded template + "You've Been Accepted — Sign In to Your Account" subject)
-   - magic-link CTA generated against `PUBLIC_SITE_URL`
+## Rationale
 
-2. **Pull the function logs** for that invocation and confirm:
-   - `from` resolves to `All Agent Connect <hello@allagentconnect.com>` (from `TRANSACTIONAL_FROM` secret)
-   - `reply_to` is `hello@allagentconnect.com`
-   - Resend returned a `message_id` with no error
+The raw 6:27 PM Yahoo Inbox message you uploaded already contains the current listing-card styling (dark neighborhood pill, blue diamond stat glyphs, `alt="All Agent Connect"`, footer `chris@allagentconnect.com`). Those items are therefore not drift vs the known-good — they are the known-good. Reverting the 7 files would move away from the proven Inbox message, not toward it.
 
-3. **You check the Yahoo inbox** and report back:
-   - Inbox vs Spam placement
-   - From line displayed
-   - Branded layout renders (green checkmark, Sign In CTA)
+The only proven mismatch (`hello@` vs `chris@` footer mailto) is already fixed and deployed.
 
-4. **If it lands in Spam**: inspect the raw message headers (DKIM `d=`, SPF, DMARC alignment, `Return-Path`) and decide next action — likely a DNS check on `allagentconnect.com` SPF/DKIM since the apex is now the visible From.
+## Next step
 
-## Notes
-- No code changes in this plan — verification only.
-- I cannot read your inbox; step 3 requires you to look and tell me what you see.
+You run one listing-share test. Then paste back:
+- Yahoo placement (Inbox / Spam)
+- Gmail placement (Inbox / Spam / Promotions)
+- Raw headers from the received message
+
+I will not touch code or deploy anything until you report results.
