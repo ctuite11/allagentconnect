@@ -417,13 +417,13 @@ export function renderEmailTemplate(
       const recipientName = variables.recipientName || "Agent";
       const passwordSetupUrl = variables.passwordSetupUrl || "https://allagentconnect.com/auth";
       return buildAacEmail({
-        headline: "Your account is ready",
+        headline: "Your All Agent Connect account is ready",
         preheader: "Your All Agent Connect account is ready to sign in.",
         body: `
           <p style="margin:0 0 14px;">Hi ${recipientName},</p>
-          <p style="margin:0 0 14px;">Your real estate license has been verified and your All Agent Connect account is active.</p>
-          <p style="margin:0 0 14px;">All Agent Connect is a private network where agents share listings, send buyer needs, and run their pipeline in one place. Your dashboard is ready when you are.</p>
-          <p style="margin:0 0 0;">Sign in below to set your password and finish setup.</p>`,
+          <p style="margin:0 0 18px;">Your real estate license has been verified and your All Agent Connect account is active.</p>
+          ${renderAccountReadyCard()}
+          <p style="margin:24px 0 0;">Sign in below to set your password and finish setup.</p>`,
         ctaLabel: "Sign in to your account",
         ctaUrl: passwordSetupUrl,
       });
