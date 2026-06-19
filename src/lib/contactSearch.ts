@@ -39,6 +39,7 @@ let contactsCache: ContactsCache | null = null;
 /** Drop cached contacts after import, create, update, or delete. */
 export function invalidateAgentContactsCache(): void {
   contactsCache = null;
+  unifiedMessageDirectoryCache = null;
 }
 
 const norm = (v: unknown) => String(v ?? "").toLowerCase().trim();
@@ -351,4 +352,299 @@ export async function fetchMessageableClientRecipients(
   }
 
   return results;
+}
+
+// ── Unified message recipient search (New Message compose) ─────────────────
+
+export type UnifiedMessageRecipientRole = "buyer" | "agent" | "verified_agent";
+
+export interface UnifiedMessageRecipient {
+  /** Stable dedupe key — normalized email when present, else auth user id. */
+  mergeKey: string;
+  displayName: string;
+  email: string;
+  phone: string | null;
+  roles: UnifiedMessageRecipientRole[];
+  /** Auth user id passed to findOrCreateConversation. */
+  messageUserId: string;
+  headshotUrl: string | null;
+  crmContactId: string | null;
+  /** Set when this person matched via My Contacts (for search ranking). */
+  crmContact: ContactRow | null;
+}
+
+interface AgentPeerForMerge {
+  id: string;
+  first_name: string | null;
+  last_name: string | null;
+  email: string | null;
+  headshot_url: string | null;
+  isVerified: boolean;
+}
+
+type UnifiedDirectoryCache = {
+  agentId: string;
+  entries: UnifiedMessageRecipient[];
+  fetchedAt: number;
+};
+
+let unifiedMessageDirectoryCache: UnifiedDirectoryCache | null = null;
+
+function normEmailForMerge(email: unknown): string {
+  return String(email ?? "").trim().toLowerCase();
+}
+
+function agentPeerRole(peer: AgentPeerForMerge): UnifiedMessageRecipientRole {
+  return peer.isVerified ? "verified_agent" : "agent";
+}
+
+function mergeRoleList(
+  existing: UnifiedMessageRecipientRole[],
+  incoming: UnifiedMessageRecipientRole[],
+): UnifiedMessageRecipientRole[] {
+  const merged = new Set([...existing, ...incoming]);
+  if (merged.has("verified_agent")) merged.delete("agent");
+  const order: UnifiedMessageRecipientRole[] = ["buyer", "agent", "verified_agent"];
+  return order.filter((r) => merged.has(r));
+}
+
+/** Human-readable role badges for unified contact rows. */
+export function formatUnifiedMessageRecipientRoles(roles: UnifiedMessageRecipientRole[]): string {
+  const labels: string[] = [];
+  if (roles.includes("buyer")) labels.push("Buyer");
+  if (roles.includes("verified_agent")) labels.push("Verified Agent");
+  else if (roles.includes("agent")) labels.push("Agent");
+  return labels.join(" · ");
+}
+
+/**
+ * Merge My Contacts (CRM) with network agents into one row per person (by email, then user id).
+ * CRM rows take precedence for display name and buyer role.
+ */
+export function mergeUnifiedMessageRecipients(
+  agentId: string,
+  crmContacts: ContactRow[],
+  agentPeers: AgentPeerForMerge[],
+): UnifiedMessageRecipient[] {
+  const byMergeKey = new Map<string, UnifiedMessageRecipient>();
+  const userIdToMergeKey = new Map<string, string>();
+  const agentPeerById = new Map(agentPeers.map((a) => [a.id, a]));
+
+  const upsert = (entry: UnifiedMessageRecipient) => {
+    const existing = byMergeKey.get(entry.mergeKey);
+    if (!existing) {
+      byMergeKey.set(entry.mergeKey, { ...entry, roles: [...entry.roles] });
+    } else {
+      existing.roles = mergeRoleList(existing.roles, entry.roles);
+      if (!existing.displayName.trim() && entry.displayName.trim()) {
+        existing.displayName = entry.displayName;
+      }
+      if (!existing.email && entry.email) existing.email = entry.email;
+      if (!existing.phone && entry.phone) existing.phone = entry.phone;
+      if (!existing.headshotUrl && entry.headshotUrl) existing.headshotUrl = entry.headshotUrl;
+      if (!existing.crmContactId && entry.crmContactId) {
+        existing.crmContactId = entry.crmContactId;
+        existing.crmContact = entry.crmContact;
+      }
+      if (!existing.messageUserId && entry.messageUserId) {
+        existing.messageUserId = entry.messageUserId;
+      }
+    }
+    const row = byMergeKey.get(entry.mergeKey)!;
+    if (row.messageUserId) userIdToMergeKey.set(row.messageUserId, row.mergeKey);
+  };
+
+  for (const c of crmContacts) {
+    if (c.relationship_status === "ended" || c.relationship_ended_at) continue;
+
+    const email = String(c.email ?? "").trim();
+    const emailKey = normEmailForMerge(email);
+    const authUserId = String(c.relationship_user_id ?? "").trim();
+    const mergeKey = emailKey || authUserId || String(c.id);
+    const peer = authUserId ? agentPeerById.get(authUserId) : undefined;
+
+    const roles: UnifiedMessageRecipientRole[] = [];
+    if (authUserId) roles.push("buyer");
+    if (peer) roles.push(agentPeerRole(peer));
+
+    const messageUserId = authUserId || peer?.id || "";
+    if (!messageUserId) continue;
+
+    upsert({
+      mergeKey,
+      displayName: contactDisplayName(c),
+      email,
+      phone: String(c.phone ?? "").trim() || null,
+      roles,
+      messageUserId,
+      headshotUrl: peer?.headshot_url ?? null,
+      crmContactId: c.id,
+      crmContact: c,
+    });
+  }
+
+  for (const peer of agentPeers) {
+    if (peer.id === agentId) continue;
+
+    const linkedKey = userIdToMergeKey.get(peer.id);
+    if (linkedKey) {
+      const existing = byMergeKey.get(linkedKey)!;
+      existing.roles = mergeRoleList(existing.roles, [agentPeerRole(peer)]);
+      existing.headshotUrl = existing.headshotUrl ?? peer.headshot_url ?? null;
+      if (!existing.messageUserId) existing.messageUserId = peer.id;
+      continue;
+    }
+
+    const email = String(peer.email ?? "").trim();
+    const emailKey = normEmailForMerge(email);
+    if (emailKey && byMergeKey.has(emailKey)) {
+      const existing = byMergeKey.get(emailKey)!;
+      existing.roles = mergeRoleList(existing.roles, [agentPeerRole(peer)]);
+      existing.headshotUrl = existing.headshotUrl ?? peer.headshot_url ?? null;
+      if (!existing.messageUserId) existing.messageUserId = peer.id;
+      userIdToMergeKey.set(peer.id, emailKey);
+      continue;
+    }
+
+    const mergeKey = emailKey || peer.id;
+    const name = `${peer.first_name ?? ""} ${peer.last_name ?? ""}`.trim();
+    upsert({
+      mergeKey,
+      displayName: name || email || peer.id,
+      email,
+      phone: null,
+      roles: [agentPeerRole(peer)],
+      messageUserId: peer.id,
+      headshotUrl: peer.headshot_url ?? null,
+      crmContactId: null,
+      crmContact: null,
+    });
+    userIdToMergeKey.set(peer.id, mergeKey);
+  }
+
+  return [...byMergeKey.values()]
+    .filter((e) => Boolean(e.messageUserId))
+    .sort((a, b) =>
+      a.displayName.localeCompare(b.displayName, undefined, { sensitivity: "base" }),
+    );
+}
+
+function scoreUnifiedMessageRecipient(
+  entry: UnifiedMessageRecipient,
+  rawQuery: string,
+): number {
+  if (entry.crmContact) return scoreContactSearchMatch(entry.crmContact, rawQuery);
+
+  const parts = entry.displayName.trim().split(/\s+/);
+  const synthetic: ContactRow = {
+    id: entry.mergeKey,
+    first_name: parts[0] ?? "",
+    last_name: parts.slice(1).join(" "),
+    email: entry.email,
+    phone: entry.phone,
+  };
+  return scoreContactSearchMatch(synthetic, rawQuery);
+}
+
+export function filterUnifiedMessageRecipients(
+  directory: UnifiedMessageRecipient[],
+  rawQuery: string,
+  limit = 25,
+): UnifiedMessageRecipient[] {
+  const q = (rawQuery ?? "").trim();
+  if (!q || q.length < AGENT_CONTACT_MIN_QUERY_LENGTH) return [];
+
+  return directory
+    .map((entry) => ({ entry, score: scoreUnifiedMessageRecipient(entry, q) }))
+    .filter(({ score }) => score > 0)
+    .sort((a, b) => {
+      if (b.score !== a.score) return b.score - a.score;
+      const aCrm = a.entry.crmContactId ? 1 : 0;
+      const bCrm = b.entry.crmContactId ? 1 : 0;
+      if (bCrm !== aCrm) return bCrm - aCrm;
+      return a.entry.displayName.localeCompare(b.entry.displayName, undefined, {
+        sensitivity: "base",
+      });
+    })
+    .map(({ entry }) => entry)
+    .slice(0, limit);
+}
+
+async function fetchAgentPeersForMerge(agentId: string): Promise<AgentPeerForMerge[]> {
+  const { data: agents, error } = await supabase
+    .from("agent_profiles")
+    .select("id, first_name, last_name, email, headshot_url")
+    .neq("id", agentId)
+    .order("last_name");
+
+  if (error) throw error;
+
+  const peers = agents ?? [];
+  if (peers.length === 0) return [];
+
+  const { data: settingsRows } = await supabase
+    .from("agent_settings")
+    .select("user_id, agent_status")
+    .in(
+      "user_id",
+      peers.map((p) => p.id),
+    );
+
+  const verifiedIds = new Set(
+    (settingsRows ?? [])
+      .filter((s) => s.agent_status === "verified")
+      .map((s) => s.user_id),
+  );
+
+  return peers.map((p) => ({
+    id: p.id,
+    first_name: p.first_name,
+    last_name: p.last_name,
+    email: p.email,
+    headshot_url: p.headshot_url,
+    isVerified: verifiedIds.has(p.id),
+  }));
+}
+
+/**
+ * Load the unified New Message directory — My Contacts first, then network agents merged by email.
+ */
+export async function fetchUnifiedMessageRecipientDirectory(
+  agentId: string,
+  opts: { force?: boolean } = {},
+): Promise<UnifiedMessageRecipient[]> {
+  if (!agentId) return [];
+
+  const { force = false } = opts;
+  if (
+    !force &&
+    unifiedMessageDirectoryCache?.agentId === agentId &&
+    Date.now() - unifiedMessageDirectoryCache.fetchedAt < CACHE_TTL_MS
+  ) {
+    return unifiedMessageDirectoryCache.entries;
+  }
+
+  const [crmContacts, agentPeers] = await Promise.all([
+    fetchAllAgentContacts(agentId, {
+      select:
+        "id, first_name, last_name, email, phone, client_type, relationship_user_id, relationship_status, relationship_ended_at",
+    }),
+    fetchAgentPeersForMerge(agentId),
+  ]);
+
+  const entries = mergeUnifiedMessageRecipients(agentId, crmContacts, agentPeers);
+  unifiedMessageDirectoryCache = { agentId, entries, fetchedAt: Date.now() };
+  return entries;
+}
+
+/** Search unified message recipients for the signed-in agent's New Message compose. */
+export async function searchUnifiedMessageRecipients(
+  agentId: string,
+  query: string,
+  opts: { forceRefresh?: boolean; limit?: number } = {},
+): Promise<UnifiedMessageRecipient[]> {
+  const directory = await fetchUnifiedMessageRecipientDirectory(agentId, {
+    force: opts.forceRefresh,
+  });
+  return filterUnifiedMessageRecipients(directory, query, opts.limit ?? 25);
 }

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   Dialog,
   DialogContent,
@@ -18,10 +18,9 @@ import { findOrCreateConversation } from "@/lib/startConversation";
 import { showMessageSentToast } from "@/lib/messageSentFeedback";
 import {
   AGENT_CONTACT_MIN_QUERY_LENGTH,
-  contactDisplayName,
-  fetchAllAgentContacts,
-  filterAndRankAgentContacts,
-  type ContactRow,
+  formatUnifiedMessageRecipientRoles,
+  searchUnifiedMessageRecipients,
+  type UnifiedMessageRecipient,
 } from "@/lib/contactSearch";
 import { fetchBuyerMessageRecipients } from "@/lib/fetchBuyerMessageRecipients";
 import { useNavigate } from "react-router-dom";
@@ -61,14 +60,12 @@ export function NewConversationDialog({
 }: NewConversationDialogProps) {
   const navigate = useNavigate();
   const [recipients, setRecipients] = useState<Recipient[]>([]);
-  const [agentPeers, setAgentPeers] = useState<Recipient[]>([]);
-  const [crmContacts, setCrmContacts] = useState<ContactRow[]>([]);
+  const [unifiedSearchResults, setUnifiedSearchResults] = useState<UnifiedMessageRecipient[]>([]);
   const [buyerComposeLoading, setBuyerComposeLoading] = useState(false);
   const [agentSearchLoading, setAgentSearchLoading] = useState(false);
   const [debouncedAgentSearch, setDebouncedAgentSearch] = useState("");
-  const agentDirectoryLoadedRef = useRef(false);
   const [search, setSearch] = useState("");
-  const [selectedRecipient, setSelectedRecipient] = useState<Recipient | null>(null);
+  const [selectedContact, setSelectedContact] = useState<UnifiedMessageRecipient | null>(null);
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
   const [listingContext, setListingContext] = useState<"general" | "listing">("general");
@@ -102,39 +99,6 @@ export function NewConversationDialog({
     }
   }, []);
 
-  const loadAgentRecipientDirectory = useCallback(async () => {
-    if (agentDirectoryLoadedRef.current) return;
-
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    const { data: agents } = await supabase
-      .from("agent_profiles")
-      .select("id, first_name, last_name, email, company, headshot_url")
-      .neq("id", user.id)
-      .order("last_name");
-
-    setAgentPeers(
-      (agents || []).map((a) => {
-        const name = `${a.first_name ?? ""} ${a.last_name ?? ""}`.trim();
-        return {
-          id: a.id,
-          name: name || "",
-          email: a.email ?? "",
-          group: "agent" as const,
-          headshotUrl: a.headshot_url ?? null,
-        };
-      }),
-    );
-
-    const contacts = await fetchAllAgentContacts(user.id, {
-      select:
-        "id, first_name, last_name, email, client_type, relationship_user_id, relationship_status, relationship_ended_at",
-    });
-    setCrmContacts(contacts);
-    agentDirectoryLoadedRef.current = true;
-  }, []);
-
   useEffect(() => {
     if (!open) return;
     if (composeVariant === "buyer") {
@@ -142,7 +106,7 @@ export function NewConversationDialog({
     }
   }, [open, composeVariant, fetchBuyerComposeRecipients]);
 
-  // Agent compose: debounce search input before querying the directory.
+  // Agent compose: debounce search input before querying the unified directory.
   useEffect(() => {
     if (!open || composeVariant !== "agent") return;
 
@@ -161,17 +125,31 @@ export function NewConversationDialog({
     return () => clearTimeout(timer);
   }, [search, open, composeVariant]);
 
-  // Agent compose: load directory lazily once the debounced query is ready.
+  // Agent compose: unified contact search (My Contacts + network agents, one row per person).
   useEffect(() => {
     if (!open || composeVariant !== "agent") return;
-    if (debouncedAgentSearch.length < AGENT_CONTACT_MIN_QUERY_LENGTH) return;
+
+    const q = debouncedAgentSearch.trim();
+    if (q.length < AGENT_CONTACT_MIN_QUERY_LENGTH) {
+      setUnifiedSearchResults([]);
+      setAgentSearchLoading(false);
+      return;
+    }
 
     let cancelled = false;
     void (async () => {
+      setAgentSearchLoading(true);
       try {
-        await loadAgentRecipientDirectory();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (!user || cancelled) return;
+
+        const results = await searchUnifiedMessageRecipients(user.id, q);
+        if (!cancelled) setUnifiedSearchResults(results);
       } catch (err) {
-        console.error("Error loading agent recipient directory:", err);
+        console.error("Error searching unified message recipients:", err);
+        if (!cancelled) setUnifiedSearchResults([]);
       } finally {
         if (!cancelled) setAgentSearchLoading(false);
       }
@@ -180,7 +158,7 @@ export function NewConversationDialog({
     return () => {
       cancelled = true;
     };
-  }, [debouncedAgentSearch, open, composeVariant, loadAgentRecipientDirectory]);
+  }, [debouncedAgentSearch, open, composeVariant]);
 
   // Buyer favorites — preload on open so we know whether listing context is available.
   useEffect(() => {
@@ -293,59 +271,14 @@ export function NewConversationDialog({
     requestAnimationFrame(() => resizeMessageArea());
   }, [open, resizeMessageArea]);
 
-  const filteredRecipients = useMemo(() => {
-    if (composeVariant === "buyer") return recipients;
-    const q = debouncedAgentSearch.trim();
-    if (q.length < AGENT_CONTACT_MIN_QUERY_LENGTH) return [];
-
-    const ql = q.toLowerCase();
-    const matchedAgents = agentPeers.filter(
-      (r) => r.name.toLowerCase().includes(ql) || r.email.toLowerCase().includes(ql),
-    );
-
-    const matchedBuyers: Recipient[] = [];
-    const seenBuyerIds = new Set<string>();
-    for (const c of filterAndRankAgentContacts(crmContacts, q)) {
-      if (c.relationship_status === "ended" || c.relationship_ended_at) continue;
-      const authUserId = String(c.relationship_user_id ?? "").trim();
-      if (!authUserId || seenBuyerIds.has(authUserId)) continue;
-      seenBuyerIds.add(authUserId);
-      matchedBuyers.push({
-        id: authUserId,
-        name: contactDisplayName(c) || authUserId,
-        email: String(c.email ?? "").trim(),
-        group: "client",
-      });
-    }
-
-    const seen = new Set<string>();
-    const combined: Recipient[] = [];
-    for (const r of [...matchedAgents, ...matchedBuyers]) {
-      if (seen.has(r.id)) continue;
-      seen.add(r.id);
-      combined.push(r);
-    }
-    return combined;
-  }, [recipients, debouncedAgentSearch, composeVariant, agentPeers, crmContacts]);
-
-  const agentSearchResults = useMemo(() => {
-    if (composeVariant === "buyer") return [];
-    return [...filteredRecipients]
-      .filter((r) => r.name.trim().length > 0 || r.email.trim().length > 0)
-      .sort((a, b) => {
-        const aKey = (a.name.trim() || a.email).toLowerCase();
-        const bKey = (b.name.trim() || b.email).toLowerCase();
-        return aKey.localeCompare(bKey, undefined, { sensitivity: "base" });
-      });
-  }, [filteredRecipients, composeVariant]);
-
   const agentSearchQuery = search.trim();
   const agentSearchReady = agentSearchQuery.length >= AGENT_CONTACT_MIN_QUERY_LENGTH;
 
-  const handleSelectRecipient = useCallback((recipient: Recipient) => {
-    setSelectedRecipient(recipient);
+  const handleSelectContact = useCallback((contact: UnifiedMessageRecipient) => {
+    setSelectedContact(contact);
     setSearch("");
     setDebouncedAgentSearch("");
+    setUnifiedSearchResults([]);
     requestAnimationFrame(() => messageRef.current?.focus());
   }, []);
 
@@ -384,7 +317,7 @@ export function NewConversationDialog({
   }, [composeVariant, open, buyerAgent?.id]);
 
   const handleSend = async () => {
-    const sendRecipient = composeVariant === "buyer" ? buyerAgent : selectedRecipient;
+    const sendRecipient = composeVariant === "buyer" ? buyerAgent : selectedContact;
     if (!sendRecipient) {
       toast.error(
         composeVariant === "buyer"
@@ -402,6 +335,11 @@ export function NewConversationDialog({
       return;
     }
 
+    const recipientUserId =
+      composeVariant === "buyer"
+        ? (sendRecipient as Recipient).id
+        : (sendRecipient as UnifiedMessageRecipient).messageUserId;
+
     setSending(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -410,13 +348,14 @@ export function NewConversationDialog({
       const listingId = listingContext === "listing" ? selectedListing?.id : null;
       const conversationId = await findOrCreateConversation(
         user.id,
-        sendRecipient.id,
+        recipientUserId,
         { listingId: listingId ?? null }
       );
 
       if (!conversationId) {
+        const contact = composeVariant === "agent" ? (sendRecipient as UnifiedMessageRecipient) : null;
         throw new Error(
-          composeVariant === "agent" && sendRecipient.group === "client"
+          contact?.roles.includes("buyer")
             ? "Could not start this conversation. Make sure the buyer has an active workspace link."
             : "Could not create conversation",
         );
@@ -425,7 +364,7 @@ export function NewConversationDialog({
       const { error } = await supabase.from("conversation_messages").insert({
         conversation_id: conversationId,
         sender_agent_id: user.id,
-        recipient_agent_id: sendRecipient.id,
+        recipient_agent_id: recipientUserId,
         body: message.trim(),
       });
 
@@ -450,7 +389,8 @@ export function NewConversationDialog({
     setSearch("");
     setDebouncedAgentSearch("");
     setAgentSearchLoading(false);
-    setSelectedRecipient(null);
+    setSelectedContact(null);
+    setUnifiedSearchResults([]);
     setMessage("");
     setListingContext("general");
     setListingSearch("");
@@ -458,9 +398,6 @@ export function NewConversationDialog({
     setListings([]);
     setRecentListings([]);
     setRecipients([]);
-    setAgentPeers([]);
-    setCrmContacts([]);
-    agentDirectoryLoadedRef.current = false;
     setSending(false);
   };
 
@@ -480,7 +417,7 @@ export function NewConversationDialog({
         message.trim().length > 0 &&
         !(listingContext === "listing" && !selectedListing) &&
         !sending
-      : Boolean(selectedRecipient) &&
+      : Boolean(selectedContact) &&
         message.trim().length > 0 &&
         !(listingContext === "listing" && !selectedListing) &&
         !sending;
@@ -492,42 +429,49 @@ export function NewConversationDialog({
     }
   };
 
-  const renderAgentSearchRow = (r: Recipient) => {
-    const selected = selectedRecipient?.id === r.id;
-    const name = r.name.trim();
-    const primaryLabel = name || r.email.trim();
-    const statusLabel = r.group === "client" ? "Buyer" : "Agent";
+  const renderUnifiedSearchRow = (contact: UnifiedMessageRecipient) => {
+    const selected = selectedContact?.mergeKey === contact.mergeKey;
+    const primaryLabel = contact.displayName.trim() || contact.email.trim();
+    const roleLabel = formatUnifiedMessageRecipientRoles(contact.roles);
 
     return (
       <button
         type="button"
-        key={`${r.group}-${r.id}`}
+        key={contact.mergeKey}
         onMouseDown={(e) => e.preventDefault()}
-        onClick={() => handleSelectRecipient(r)}
+        onClick={() => handleSelectContact(contact)}
         className={cn(
           "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors",
           selected ? "bg-blue-50/60 ring-1 ring-[#0E56F5]/30" : "hover:bg-zinc-50",
         )}
       >
-        <div
-          className={cn(
-            "flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-semibold",
-            r.group === "client" ? "bg-neutral-200 text-neutral-700" : "bg-zinc-100 text-zinc-600",
-          )}
-        >
-          {initialsFromDisplayName(primaryLabel)}
-        </div>
+        {contact.headshotUrl ? (
+          <img
+            src={contact.headshotUrl}
+            alt={primaryLabel}
+            className="h-9 w-9 shrink-0 rounded-full object-cover ring-1 ring-zinc-200"
+          />
+        ) : (
+          <div
+            className={cn(
+              "flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-semibold",
+              contact.roles.includes("buyer")
+                ? "bg-neutral-200 text-neutral-700"
+                : "bg-zinc-100 text-zinc-600",
+            )}
+          >
+            {initialsFromDisplayName(primaryLabel)}
+          </div>
+        )}
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-medium text-zinc-900">{primaryLabel}</p>
-          {r.email.trim() ? (
-            <p className="truncate text-xs text-zinc-600">{r.email.trim()}</p>
-          ) : (
-            <p className="truncate text-xs text-zinc-500">{statusLabel}</p>
-          )}
+          {roleLabel ? (
+            <p className="truncate text-xs font-medium text-zinc-500">{roleLabel}</p>
+          ) : null}
+          {contact.email.trim() ? (
+            <p className="truncate text-xs text-zinc-600">{contact.email.trim()}</p>
+          ) : null}
         </div>
-        {r.email.trim() ? (
-          <span className="shrink-0 text-[11px] font-medium text-zinc-400">{statusLabel}</span>
-        ) : null}
       </button>
     );
   };
@@ -663,17 +607,17 @@ export function NewConversationDialog({
           {/* Recipient */}
           <div className="space-y-3">
             <Label className="text-sm font-medium text-zinc-700">To</Label>
-            {selectedRecipient ? (
+            {selectedContact ? (
               <div className="flex items-center gap-2">
                 <div className="inline-flex max-w-full items-center gap-2 rounded-full bg-zinc-100 px-3 py-1.5">
                   <User className="h-3.5 w-3.5 shrink-0 text-zinc-500" />
-                  <span className="truncate text-sm font-medium text-zinc-700">{selectedRecipient.name}</span>
+                  <span className="truncate text-sm font-medium text-zinc-700">{selectedContact.displayName}</span>
                   <span className="shrink-0 text-xs text-zinc-500">
-                    {selectedRecipient.group === "client" ? "Buyer" : "Agent"}
+                    {formatUnifiedMessageRecipientRoles(selectedContact.roles)}
                   </span>
                   <button
                     type="button"
-                    onClick={() => setSelectedRecipient(null)}
+                    onClick={() => setSelectedContact(null)}
                     className="ml-1 shrink-0 text-zinc-400 hover:text-zinc-600"
                     aria-label="Change recipient"
                   >
@@ -705,10 +649,10 @@ export function NewConversationDialog({
                     <Loader2 className="h-4 w-4 animate-spin" />
                     Searching…
                   </p>
-                ) : agentSearchResults.length > 0 ? (
+                ) : unifiedSearchResults.length > 0 ? (
                   <div className="max-h-[240px] overflow-y-auto rounded-lg border border-zinc-100">
                     <div className="space-y-0.5 p-1">
-                      {agentSearchResults.map(renderAgentSearchRow)}
+                      {unifiedSearchResults.map(renderUnifiedSearchRow)}
                     </div>
                   </div>
                 ) : (
