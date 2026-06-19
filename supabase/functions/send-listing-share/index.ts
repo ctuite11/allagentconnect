@@ -1,6 +1,10 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 import { buildAgentSharedPropertyEmailSubject } from "../_shared/listingEmailSubject.ts";
+import { renderEmailTemplate } from "../_shared/renderEmailTemplate.ts";
+import { buildTransactionalFrom } from "../_shared/transactionalSender.ts";
+import { formatListingShareEmailFullAddress } from "../_shared/listingShareEmailAddress.ts";
+import nodemailer from "npm:nodemailer@6.9.16";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -26,16 +30,143 @@ function jsonResponse(body: Record<string, unknown>, status: number): Response {
   });
 }
 
+function humanize(value: unknown): string {
+  return String(value ?? "")
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase())
+    .trim();
+}
+
+function formatPrice(price: unknown): string {
+  const num = typeof price === "number" ? price : Number(price);
+  if (!Number.isFinite(num) || num <= 0) return "Price upon request";
+  return `$${Math.round(num).toLocaleString()}`;
+}
+
+function formatPropertyType(value: unknown): string {
+  const raw = String(value ?? "").trim();
+  if (!raw) return "";
+  return raw.includes("_") ? humanize(raw) : raw.split(/\s+/).filter(Boolean).map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(" ");
+}
+
+function listingIdLabel(listing: Record<string, unknown>): string {
+  const listingNumber = listing.listing_number || listing.mls_number;
+  if (listingNumber) return `#${String(listingNumber).trim()}`;
+  if (listing.id) return `#${String(listing.id).slice(0, 8).toUpperCase()}`;
+  return "";
+}
+
+function buildListingShareText(opts: {
+  recipientName: string;
+  agentName: string;
+  agentEmail: string;
+  agentPhone: string;
+  listingUrl: string;
+  listing: Record<string, unknown>;
+}): string {
+  const { recipientName, agentName, agentEmail, agentPhone, listingUrl, listing } = opts;
+  const firstName = String(recipientName || "there").trim().split(/\s+/)[0] || "there";
+  const status = humanize(listing.status);
+  const neighborhood = String(listing.neighborhood ?? "").trim();
+  const idLabel = listingIdLabel(listing);
+  const propertyType = formatPropertyType(listing.property_type);
+  const address = formatListingShareEmailFullAddress(listing as any);
+  const sqft = listing.square_feet ?? listing.squareFeet;
+  const stats = [
+    listing.bedrooms != null ? `◆ ${listing.bedrooms} bd` : "",
+    listing.bathrooms != null ? `◆ ${listing.bathrooms} ba` : "",
+    sqft ? `◆ ${Number(sqft).toLocaleString()} sqft` : "",
+  ].filter(Boolean).join(" · ");
+
+  return [
+    `${agentName} shared a property with you`,
+    "",
+    "All Agent Connect",
+    "",
+    "A Property Has Been Shared With You",
+    "",
+    `Hi ${firstName},`,
+    "",
+    `${agentName} wants to share a property with you that may interest you:`,
+    "",
+    status ? `${status} ` : "",
+    "",
+    listingUrl,
+    "",
+    neighborhood ? `${neighborhood} ` : "",
+    "",
+    formatPrice(listing.price),
+    "",
+    idLabel ? `ID ${idLabel} ` : "",
+    "",
+    propertyType,
+    "",
+    address ? `${address} ` : "",
+    "",
+    stats ? `${stats} ` : "",
+    "",
+    "Your Agent",
+    "",
+    `Name ${agentName} `,
+    `Email ${agentEmail} (mailto:${agentEmail}) `,
+    agentPhone ? `Phone ${agentPhone} ` : "",
+    "",
+    `View Property (${listingUrl})`,
+    "",
+    "All Agent Connect",
+    "",
+    "chris@allagentconnect.com (mailto:chris@allagentconnect.com)",
+    "",
+    "Remove my account (mailto:chris@allagentconnect.com?subject=Remove%20My%20Account&body=Please%20remove%20my%20account.)",
+  ].join("\n");
+}
+
+async function sendListingShareViaSmtp(opts: {
+  to: string;
+  subject: string;
+  replyTo: string;
+  html: string;
+  text: string;
+  resendApiKey: string;
+}): Promise<string | null> {
+  const transporter = nodemailer.createTransport({
+    host: "smtp.resend.com",
+    port: 465,
+    secure: true,
+    auth: {
+      user: "resend",
+      pass: opts.resendApiKey,
+    },
+  });
+
+  const info = await transporter.sendMail({
+    from: buildTransactionalFrom(),
+    to: opts.to,
+    replyTo: opts.replyTo,
+    subject: opts.subject,
+    text: opts.text,
+    html: opts.html,
+    headers: {
+      "List-Unsubscribe": "<mailto:unsubscribe@allagentconnect.com>",
+    },
+  });
+
+  return typeof info.messageId === "string" ? info.messageId : null;
+}
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const authHeader = req.headers.get('Authorization') ?? '';
-
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const resendApiKey = Deno.env.get('RESEND_API_KEY');
+    if (!resendApiKey) {
+      console.error('[send-listing-share] Missing RESEND_API_KEY');
+      return jsonResponse({ success: false, error: 'Email configuration missing' }, 500);
+    }
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     let parsed: ShareListingRequest;
@@ -99,64 +230,41 @@ const handler = async (req: Request): Promise<Response> => {
     const appUrl = Deno.env.get('APP_URL') || 'https://allagentconnect.com';
     const listingUrl = `${appUrl}/property/${listingId}`;
 
-    console.log(`[send-listing-share] Enqueuing job for ${recipientEmail}`);
+    const subject = buildAgentSharedPropertyEmailSubject(agentName, listing);
+    const variables = {
+      recipientName,
+      agentName,
+      agentEmail,
+      agentPhone,
+      agentBrokerage,
+      message,
+      listingUrl,
+      listing,
+      senderRole,
+    };
+    const html = renderEmailTemplate('listing-share', variables);
+    const text = buildListingShareText({
+      recipientName,
+      agentName,
+      agentEmail,
+      agentPhone,
+      listingUrl,
+      listing,
+    });
 
-    // Transactional 1:1 — canonical From via sendEmail, Reply-To = agent, no category.
-    // Enqueue job — rendered server-side via the AAC unified template (renderEmailTemplate)
-    const { error: insertError } = await supabase
-      .from('email_jobs')
-      .insert({
-        payload: {
-          provider: 'resend',
-          template: 'listing-share',
-          to: recipientEmail,
-          subject: buildAgentSharedPropertyEmailSubject(agentName, listing),
-          // Branded dynamic Reply-To: From is AAC, replies route directly to the
-          // sharing agent so recipients can respond to the person who shared it.
-          reply_to: agentEmail,
-          variables: {
-            recipientName,
-            agentName,
-            agentEmail,
-            agentPhone,
-            agentBrokerage,
-            message,
-            listingUrl,
-            listing,
-            senderRole,
-          },
-        },
-      });
+    console.log(`[send-listing-share] Sending SMTP listing-share to ${recipientEmail}`);
+    const providerMessageId = await sendListingShareViaSmtp({
+      to: recipientEmail,
+      subject,
+      replyTo: agentEmail,
+      html,
+      text,
+      resendApiKey,
+    });
 
-    if (insertError) {
-      console.error('[send-listing-share] Failed to enqueue job:', insertError);
-      return jsonResponse(
-        { success: false, error: `Failed to queue email: ${insertError.message}` },
-        500,
-      );
-    }
+    console.log(`[send-listing-share] SMTP sent to ${recipientEmail} messageId=${providerMessageId ?? '(none)'}`);
 
-    console.log(`[send-listing-share] Job enqueued for ${recipientEmail}`);
-
-    // Best-effort kick so Supabase worker sends immediately (not Netlify email-worker).
-    if (authHeader.startsWith('Bearer ')) {
-      try {
-        await fetch(`${supabaseUrl}/functions/v1/kick-email-queue`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: authHeader,
-          },
-          body: '{}',
-        });
-      } catch (e) {
-        console.warn('[send-listing-share] kick-email-queue failed (non-fatal):', e);
-      }
-    } else {
-      console.warn('[send-listing-share] No auth header — queue will drain on schedule');
-    }
-
-    return jsonResponse({ success: true, message: 'Email queued for delivery' }, 200);
+    return jsonResponse({ success: true, message: 'Email sent', providerMessageId }, 200);
   } catch (error: unknown) {
     console.error('[send-listing-share] Error:', error);
     const message = error instanceof Error ? error.message : String(error);

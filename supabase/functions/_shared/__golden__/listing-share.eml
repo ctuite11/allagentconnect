@@ -1,0 +1,352 @@
+
+Received: from 127.0.0.1
+ by atlas-production.v2-mail-prod1-bf1.omega.yahoo.com pod-id atlas--production-bf1-7465fb66db-gz2nq.bf1.yahoo.com with HTTP; Thu, 18 Jun 2026 18:27:04 +0000
+Return-Path: <0100019edbfc9452-0745d648-5b39-4e50-be97-7dc5ddc82dcc-000000@send.allagentconnect.com>
+X-Originating-Ip: [54.240.14.58]
+Received-SPF: pass (domain of send.allagentconnect.com designates 54.240.14.58 as permitted sender)
+Authentication-Results: mta.yahoo.com;
+ dkim=pass header.i=@allagentconnect.com header.s=resend arc_overridden_status=NOT_OVERRIDDEN;
+ dkim=pass header.i=@amazonses.com header.s=224i4yxa5dv7c2xz3womw6peuasteono arc_overridden_status=NOT_OVERRIDDEN;
+ spf=pass smtp.mailfrom=send.allagentconnect.com arc_overridden_status=NOT_OVERRIDDEN;
+ dmarc=pass(p=QUARANTINE) header.from=allagentconnect.com arc_overridden_status=NOT_OVERRIDDEN;
+X-Apparently-To: doittuite4@yahoo.com; Thu, 18 Jun 2026 18:27:04 +0000
+X-YMailISG: VgLxnscWLDtY3fJKFotX08m9VwGoz.3H6sVkyyqvY6S_Eb_6
+ .wYNiSQr_MXavhliyEsDEd2E1Eyn8cV7PsDNF8Ax4sAxA0w2MH7_kKjQqdgI
+ AYgrxn65LgXybduNm6RUnWiFKt39GXKbu2_6z6E43Ih91xa6JfUdjW1kaVTX
+ fAPpl_A4oGyhkgP8ee3NJOcmJUGclNMPUpOARkF90VdFJ7TDeH7HeTqfGD3j
+ bRK2ugUXRaWYXcwnC4FDHm.L6Z.YlD7lcxVRTD496MtKdt3NNQMjMA3Cfz9D
+ oR9rL7hXU9wKOSjvmM8oQ2aawcxDzRdz_QC.7hZGm6soepTP4eXRig2CoMQb
+ wMFVZFMzM53eWE6l7t30L28zlFrINOjNzNCTp5pHEkDmBFQsXM0ZSqVzy8vU
+ 75GCG9C2txqdv4rK50RDU_ahf5QkoocdyJHCIkI2XhaY_rlIk5p55NmXhOIh
+ YbKi15zNrcEGdiJuf7qVJi9yM0QKwQPnPxibxm3lMas3ERzMCMRAnmO0Gpp5
+ wmCRD2YQTrFl.SKV5I4RFHN14C3fxxgi_hM0dAmvLjt2KfWVE0x7iq2PkmPg
+ _mTmVhf7RqBfROqzYJsfZAUxfwWEf3vj97hP5AsKA9uFc8WH8rdou23Z6ni_
+ 3KpLMqDJ60lpnb4qIbsAcb6Blmrtri8QpuuR1QqC0OYExKv6QngBD9QfG9Gi
+ qTpTiFugayUBFZVTM5uTylabuW6kFQlNgoKw9dWX8t8q4DlDipS6.8Q0tQpb
+ 3VQfRdii4QmBqRgBXCAKWCWggaLbMVVIyWH4DtcMbYANOvgysWUJqKgp0IjE
+ 5DYzRKOfxyxRVhShAdmJMMIa9EENOTiXiCQh8osNPySidtDOpDPCikunRx69
+ I7vuR5hRVzumgE3n6r7PO3VZ9ep7uaXoO5ZkiAwYaRqdG_qgUzNzdN1R5w3d
+ mnH8iLN4SvVfYGrT26Ri97w0mCYqBZfUYpI_t9bUUsCXS_B7zOh4ZdRPn.ZF
+ bDnNUmjOJSMhFoB79UTVPh_okizxUhPNIx0.bbavOp9ul4uKXhtTQMwDWQfD
+ jJQ1HgjuIb0JnzodD0OTrNwSVMlzhNvoxz0smbzK5cGmtsHepnkV6zav_UtI
+ L2OQSI2HNawjQUdJmfm9mh9gqACsR5cxbPEY5KaqZATJ.LspPD2GfTm3CVCb
+ bfnmZyFKlQILhgijdqsZlglwQQGiIixMS5FutdKhd30gOZR2rAV8N4Xr_PFg
+ _7KW4Y2EIiQeQblx96Q3nakn8s9UMmHwS0wsDJkm4JmruU.85rWBu9pei0uc
+ 4Rex7IuxG0RnMYzK6Xjf2LdbxKHT589eb9iLVcgoT0M.yms0170PdlnRFVny
+ mcU94uvsU7DP9MTyeC5jVi63h41rAcKfvv5A.UOvABdtoXMwF86A.s7fd6Od
+ usZpeROBNYyEKEKeHyv5sXziwzgxggv_gk0a7omC_3ZoWGWaiC.BI0I0.FdZ
+ .NSgMTmgXeu1T3D8uF0dU5CWiVVI9BIcltVD0gBoXtVc7YCJIBuxD1BLSigs
+ .QEXyxyVCfAwKPbcbG12JQ--
+Received: from 54.240.14.58 (EHLO a14-58.smtp-out.amazonses.com)
+ by 10.196.218.151 with SMTPs
+ (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256);
+ Thu, 18 Jun 2026 18:27:04 +0000
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple; s=resend;
+	d=allagentconnect.com; t=1781807224;
+	h=List-Unsubscribe:From:To:Reply-To:Subject:Message-ID:Date:MIME-Version:Content-Type;
+	bh=v4K+FjsxH2rgMbtiRWw4IsRr55Z3zqwD+9zpLn+vTxE=;
+	b=qGOEmxpYJP8lZg9X7clmJDpgCQlgGekF4Tp2nvvmvYVknG9PIpjgc3L12VdSAA2L
+	g8s8vZ7I27iJqofPARjhVF7Zmn2A+MI5FjpWrGD0fIrlUFZ0JOTWdIkIKUsjscbHvBj
+	2royAFdzD7WL1xLE6XR3T3YiesNmSSOhHrlWn7s4=
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
+	s=224i4yxa5dv7c2xz3womw6peuasteono; d=amazonses.com; t=1781807224;
+	h=List-Unsubscribe:From:To:Reply-To:Subject:Message-ID:Date:MIME-Version:Content-Type:Feedback-ID;
+	bh=v4K+FjsxH2rgMbtiRWw4IsRr55Z3zqwD+9zpLn+vTxE=;
+	b=SUkKlw9/ZDcMrYF/6Qs2MynWwLFb/0IJwuY2iCUToEFIfz+8MN+p30LOQX3pk/YO
+	ODaCzWSEf9QmcgiSNPxi5GPEuI43dazuuFjRz72bkoX0Md1Nd0OYwWKqCyaReVahL3g
+	Rfr+TuzqAAu5E6pI2vCRWV77zburBAWdpuxJT+Xk=
+List-Unsubscribe: <mailto:unsubscribe@allagentconnect.com>
+From: All Agent Connect <hello@allagentconnect.com>
+To: doittuite4@yahoo.com
+Reply-To: mymassagent11@gmail.com
+Subject: Austyn Smith shared a property: 50 Beacon Street Unit 334, Boston,
+ MA
+Message-ID: <0100019edbfc9452-0745d648-5b39-4e50-be97-7dc5ddc82dcc-000000@email.amazonses.com>
+Date: Thu, 18 Jun 2026 18:27:03 +0000
+MIME-Version: 1.0
+Content-Type: multipart/alternative;
+ boundary="--_NmP-527b13e98283a143-Part_1"
+Feedback-ID: :1.us-east-1.6kucrXfVLg8QFvEYjioWBadL2/OLm0/2O1yRpF8KclPDK4Uim4gyZrArANRjACFTwDZcOIg/Z0UghHzwZbKxlrZxeoQmDL21CK4nen8WwebvOmd1VHYRT50yrTXztUy/ciH7n5bWi8UWOa8KxStzPKZJ+QRMkVQVF1nnEufU9fQ=:1.us-east-1.bUdgMqWxfG2SVsrQjgiKGviqCgupN9bd/NLnQooLs3w=:AmazonSES
+X-SES-Outgoing: 2026.06.18-54.240.14.58
+Content-Length: 11184
+
+----_NmP-527b13e98283a143-Part_1
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+Austyn Smith shared a property with you
+
+All Agent Connect
+
+A Property Has Been Shared With You
+
+Hi natalie,
+
+Austyn Smith wants to =
+share a property with you that may interest you:
+
+Off Market=20
+
+https://allagentconnect.com/property/a294696f-f185-4244-8b8f-1ce0ce540c0d
+
+Back Bay=20
+
+$780,000
+
+ID #L-1209=20
+
+Condo
+
+50 Beacon Street #334, Boston,=
+ Ma 02108=20
+
+=E2=97=86 4 bd =C2=B7 =E2=97=86 3.5 ba =C2=B7 =E2=97=86 4,532=
+ sqft=20
+
+Your Agent
+
+Name Austyn Smith=20
+Email mymassagent11@gmail.com =
+(mailto:mymassagent11@gmail.com)=20
+Phone 3334445555=20
+
+View Property (https://allagentconnect.com/property/a294696f-f185-4244-8b8f=
+-1ce0ce540c0d)
+
+All Agent Connect
+
+chris@allagentconnect.com =
+(mailto:chris@allagentconnect.com)
+
+Remove my account =
+(mailto:chris@allagentconnect.com?subject=3DRemove%20My%20Account&body=3DPl=
+ease%20remove%20my%20account.)
+----_NmP-527b13e98283a143-Part_1
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+<!DOCTYPE html>
+<html lang=3D"en">
+<head>
+  <meta charset=3D"utf-8">
+  <meta name=3D"viewport" content=3D"width=3Ddevice-width,initial-scale=3D1=
+.0">
+  <title>A Property Has Been Shared With You</title>
+</head>
+<body style=3D"margin:0;padding:0;background-color:#ffffff;font-family:syst=
+em-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
+  <div style=3D"display:none;max-height:0;overflow:hidden;mso-hide:all;">Au=
+styn Smith shared a property with you</div>
+  <table role=3D"presentation" =
+width=3D"100%" cellspacing=3D"0" cellpadding=3D"0" style=3D"background-colo=
+r:#ffffff;">
+    <tr><td align=3D"center" style=3D"padding:40px 16px;">
+      <table role=3D"presentation" width=3D"100%" cellspacing=3D"0" =
+cellpadding=3D"0" style=3D"max-width:600px;">
+
+        <!-- Dark navy =
+branded header -->
+        <tr><td align=3D"center" =
+style=3D"background-color:#111317;border-radius:12px 12px 0 0;padding:32px =
+40px 0;">
+          <table role=3D"presentation" cellspacing=3D"0" =
+cellpadding=3D"0"><tr><td align=3D"center">
+            <!--[if =
+mso]><v:rect xmlns:v=3D"urn:schemas-microsoft-com:vml" =
+style=3D"width:40px;height:40px;" fill=3D"false" stroke=3D"false"><v:textbo=
+x inset=3D"0,0,0,0" style=3D"mso-fit-shape-to-text:false;"><center =
+style=3D"font-size:16px;font-weight:700;color:#50c878;font-family:Arial,=
+sans-serif;">=E2=9C=A6</center></v:textbox></v:rect><![endif]-->
+            <!--[if !mso]><!-->
+            <img src=3D"https://allagentcon=
+nect.com/email/aac-monogram-green-128.png" width=3D"40" height=3D"40" =
+alt=3D"All Agent Connect" style=3D"display:block;border:0;outline:none;text=
+-decoration:none;" />
+            <!--<![endif]-->
+          =
+</td></tr></table>
+          <p style=3D"margin:12px 0 =
+0;font-size:18px;font-weight:600;letter-spacing:-0.02em;color:#ffffff;font-=
+family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">All =
+Agent Connect</p>
+          <div style=3D"width:48px;height:2px;background-=
+color:#50c878;margin:16px auto 0;border-radius:1px;"></div>
+          <div style=3D"height:24px;"></div>
+        </td></tr>
+
+        <!-- White content body -->
+        <tr><td =
+style=3D"background-color:#ffffff;border:1px solid #d1d5db;border-top:none;=
+">
+          <table role=3D"presentation" width=3D"100%" cellspacing=3D"0" =
+cellpadding=3D"0">
+            <!-- Content -->
+            <tr><td =
+style=3D"padding:28px 40px 32px;">
+              <h2 style=3D"margin:0 0 =
+16px;font-size:20px;font-weight:700;color:#0f172a;font-family:system-ui,=
+-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">A Property Has Been =
+Shared With You</h2>
+              <div style=3D"font-size:15px;line-height=
+:1.6;color:#334155;font-family:system-ui,-apple-system,'Segoe UI',Roboto,=
+Arial,sans-serif;">
+               =20
+          <p style=3D"margin:0 0 =
+14px;">Hi natalie,</p>
+          <p style=3D"margin:0 0 18px;">Austyn Smith=
+ wants to share a property with you that may interest you:</p>
+         =20
+         =20
+    <table role=3D"presentation" cellpadding=3D"0" =
+cellspacing=3D"0" border=3D"0" width=3D"100%" style=3D"margin:0 0 =
+18px;border:1px solid #e5e7eb;border-radius:14px;overflow:hidden;background=
+:#ffffff;box-shadow:0 1px 3px rgba(17,24,39,0.06);">
+      <tr><td align=3D"center" style=3D"background:#6B7280;color:#ffffff;fo=
+nt-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase=
+;padding:10px 12px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,=
+Arial,sans-serif;">Off Market</td></tr>
+      <tr>
+        <td =
+style=3D"padding:0;line-height:0;font-size:0;background:#f3f4f6;">
+          <a href=3D"https://allagentconnect.com/property/a294696f-f185-424=
+4-8b8f-1ce0ce540c0d" style=3D"text-decoration:none;display:block;line-heigh=
+t:0;font-size:0;">
+         <img src=3D"https://cdn.allagentconnect.=
+com/storage/v1/object/public/listing-photos/a294696f-f185-4244-8b8f-1ce0ce5=
+40c0d/1780686599060_Penthouse-Terrace-2022-2.jpg" alt=3D"50 Beacon Street =
+#334, Boston, Ma 02108" width=3D"600" height=3D"300" =
+style=3D"display:block;width:100%;max-width:600px;height:300px;object-fit:c=
+over;object-position:center;border:0;outline:none;text-decoration:none;" />
+       </a>
+        </td>
+      </tr>
+     =20
+      <tr><td align=3D"left"=
+ style=3D"padding:10px 14px 0;background:#ffffff;"><span =
+style=3D"display:inline-block;background:#0f172a;color:#ffffff;font-size:12=
+px;font-weight:600;padding:5px 12px;border-radius:999px;line-height:1.=
+2;letter-spacing:0.01em;">Back Bay</span></td></tr>
+      <tr>
+        <td valign=3D"top" style=3D"padding:14px 16px =
+16px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,=
+sans-serif;">
+         =20
+    <table role=3D"presentation" =
+cellpadding=3D"0" cellspacing=3D"0" border=3D"0" width=3D"100%" =
+style=3D"font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,=
+sans-serif;">
+      <tr>
+        <td valign=3D"top" =
+style=3D"padding-right:10px;">
+          <div style=3D"font-size:22px;font-=
+weight:700;color:#0f172a;line-height:1.1;">$780,000</div>
+        </td>
+        <td valign=3D"top" align=3D"right" style=3D"white-space:nowrap;font=
+-size:13px;font-weight:600;color:#0E56F5;letter-spacing:0.02em;">ID =
+#L-1209</td>
+      </tr>
+    </table>
+          <div =
+style=3D"margin-top:4px;font-size:14px;font-weight:600;color:#404040;line-h=
+eight:1.3;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,=
+sans-serif;">Condo</div>
+          <table role=3D"presentation" =
+cellpadding=3D"0" cellspacing=3D"0" border=3D"0" width=3D"100%" =
+style=3D"margin:14px 0 0;">
+         <tr>
+           <td valign=3D"top" =
+style=3D"font-size:14px;line-height:1.4;color:#171717;font-family:system-ui=
+,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">50 Beacon Street #334, =
+Boston, Ma 02108</td>
+         </tr>
+       </table>
+          <p style=3D"margin:10px 0 0;font-size:14px;line-height:1.=
+4;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,=
+sans-serif;"><span style=3D"color:#0E56F5;font-weight:700;font-size:13px;ma=
+rgin-right:4px;">&#9670;</span><span style=3D"color:#171717;font-weight:600=
+;">4</span> <span style=3D"color:#0E56F5;font-weight:600;">bd</span><span =
+style=3D"color:#d4d4d4;padding:0 10px;">=C2=B7</span><span =
+style=3D"color:#0E56F5;font-weight:700;font-size:13px;margin-right:4px;">&#=
+9670;</span><span style=3D"color:#171717;font-weight:600;">3.5</span> <span=
+ style=3D"color:#0E56F5;font-weight:600;">ba</span><span =
+style=3D"color:#d4d4d4;padding:0 10px;">=C2=B7</span><span =
+style=3D"color:#0E56F5;font-weight:700;font-size:13px;margin-right:4px;">&#=
+9670;</span><span style=3D"color:#171717;font-weight:600;">4,532</span> =
+<span style=3D"color:#0E56F5;font-weight:600;">sqft</span></p>
+         =20
+        </td>
+      </tr>
+    </table>
+         =20
+    <div style=3D"margin:24px 0 0;padding:16px 18px;background:#f8fafc;bord=
+er:1px solid #e5e7eb;border-radius:10px;">
+      <p style=3D"margin:0 0 =
+10px;font-size:13px;font-weight:600;color:#0f172a;text-transform:uppercase;=
+letter-spacing:0.04em;font-family:system-ui,-apple-system,'Segoe UI',Roboto=
+,Arial,sans-serif;">Your Agent</p>
+      <table role=3D"presentation" =
+cellspacing=3D"0" cellpadding=3D"0" style=3D"font-family:system-ui,=
+-apple-system,'Segoe UI',Roboto,Arial,sans-serif;"><tr><td =
+style=3D"padding:4px 0;color:#64748b;font-size:13px;">Name</td><td =
+style=3D"padding:4px 0 4px 12px;font-weight:600;color:#0f172a;font-size:14p=
+x;">Austyn Smith</td></tr><tr><td style=3D"padding:4px =
+0;color:#64748b;font-size:13px;">Email</td><td style=3D"padding:4px 0 4px =
+12px;color:#0E56F5;font-size:14px;"><a href=3D"mailto:mymassagent11@gmail.=
+com" style=3D"color:#0E56F5;text-decoration:none;">mymassagent11@gmail.=
+com</a></td></tr><tr><td style=3D"padding:4px 0;color:#64748b;font-size:13p=
+x;">Phone</td><td style=3D"padding:4px 0 4px 12px;font-weight:600;color:#0f=
+172a;font-size:14px;">3334445555</td></tr></table>
+    </div>
+              </div>
+              <table role=3D"presentation" =
+width=3D"100%" cellspacing=3D"0" cellpadding=3D"0">
+          <tr><td align=3D"center" style=3D"padding:28px 0 0;">
+            <a href=3D"https://allagentconnect.com/property/a294696f-f185-4=
+244-8b8f-1ce0ce540c0d" target=3D"_blank" style=3D"display:inline-block;padd=
+ing:14px 28px;background-color:#50c878;color:#ffffff;text-decoration:none;f=
+ont-size:15px;font-weight:600;border-radius:8px;font-family:system-ui,=
+-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">View Property</a>
+          </td></tr>
+        </table>
+             =20
+            </td></tr>
+          </table>
+        </td></tr>
+
+        <!-- Dark footer -->
+        <tr><td align=3D"center" =
+style=3D"background-color:#111317;border-top:2px solid =
+#50c878;border-radius:0 0 12px 12px;padding:24px 40px =
+20px;text-align:center;">
+          <img src=3D"https://allagentconnect.=
+com/email/aac-monogram-green-128.png" width=3D"24" height=3D"24" alt=3D"All=
+ Agent Connect" style=3D"display:block;margin:0 auto =
+12px;border:0;outline:none;text-decoration:none;" />
+          <p style=3D"margin:0 0 4px;font-size:12px;color:rgba(255,255,255,=
+0.6);font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,=
+sans-serif;">All Agent Connect</p>
+          <p style=3D"margin:0 0 =
+6px;font-size:12px;color:rgba(255,255,255,0.45);font-family:system-ui,=
+-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
+            <a href=3D"mailto:chris@allagentconnect.com" =
+style=3D"color:rgba(255,255,255,0.45);text-decoration:none;">chris@allagent=
+connect.com</a>
+          </p>
+          <p style=3D"margin:0;font-size:11p=
+x;color:rgba(255,255,255,0.35);font-family:system-ui,-apple-system,'Segoe =
+UI',Roboto,Arial,sans-serif;">
+            <a href=3D"mailto:chris@allagent=
+connect.com?subject=3DRemove%20My%20Account&body=3DPlease%20remove%20my%20a=
+ccount." style=3D"color:rgba(255,255,255,0.35);text-decoration:underline;">=
+Remove my account</a>
+          </p>
+         =20
+        </td></tr>
+
+      </table>
+    </td></tr>
+  </table>
+ =20
+</body>
+</html>
+----_NmP-527b13e98283a143-Part_1--
