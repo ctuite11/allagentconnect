@@ -415,19 +415,6 @@ const PendingVerification = () => {
             hello@allagentconnect.com
           </a>
         </p>
-
-        <div className="mt-8">
-          <Button
-            variant="outline"
-            onClick={handleSignOutSwitch}
-            className="h-10 px-5 border-border bg-white text-foreground hover:bg-muted"
-          >
-            Sign out / Use a different account
-          </Button>
-          <p className="mt-2 text-xs text-muted-foreground/70">
-            Not you, or want to log in with a different account?
-          </p>
-        </div>
       </div>
     </PendingShell>
   );
