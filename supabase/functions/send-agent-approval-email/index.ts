@@ -76,10 +76,10 @@ serve(async (req: Request): Promise<Response> => {
     if (approved && recipientEmail) {
       try {
         const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
-          type: "magiclink",
+          type: "recovery",
           email: recipientEmail,
           options: {
-            redirectTo: "https://allagentconnect.com/auth/callback",
+            redirectTo: "https://allagentconnect.com/auth/callback?flow=approval",
           },
         });
 

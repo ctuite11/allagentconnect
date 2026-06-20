@@ -137,9 +137,24 @@ const AuthCallback = () => {
           if (hasStableTokenKey) sessionStorage.setItem(processedKey, "1");
 
           if (!cancelled && !didNavigate.current) {
+            const isSetupContext =
+              isRecoveryContext ||
+              isApprovalFlow ||
+              sessionStorage.getItem("aac_recovery_flow") === "1" ||
+              sessionStorage.getItem("aac_password_setup_flow") === "1";
             didNavigate.current = true;
             window.history.replaceState(null, "", window.location.pathname);
-            navigate("/password-reset", { replace: true });
+            if (isSetupContext) {
+              navigate("/password-reset", { replace: true });
+            } else {
+              const { data: { session: freshSession } } = await supabase.auth.getSession();
+              if (freshSession?.user) {
+                didNavigate.current = false;
+                await routeUser(freshSession.user.id);
+              } else {
+                navigate("/auth", { replace: true });
+              }
+            }
           }
           return;
         } catch (err) {
@@ -163,9 +178,24 @@ const AuthCallback = () => {
           if (hasStableTokenKey) sessionStorage.setItem(processedKey, "1");
 
           if (!cancelled && !didNavigate.current) {
+            const isSetupContext =
+              isRecoveryContext ||
+              isApprovalFlow ||
+              sessionStorage.getItem("aac_recovery_flow") === "1" ||
+              sessionStorage.getItem("aac_password_setup_flow") === "1";
             didNavigate.current = true;
             window.history.replaceState(null, "", window.location.pathname);
-            navigate("/password-reset", { replace: true });
+            if (isSetupContext) {
+              navigate("/password-reset", { replace: true });
+            } else {
+              const { data: { session: freshSession } } = await supabase.auth.getSession();
+              if (freshSession?.user) {
+                didNavigate.current = false;
+                await routeUser(freshSession.user.id);
+              } else {
+                navigate("/auth", { replace: true });
+              }
+            }
           }
           return;
         } catch (err) {
