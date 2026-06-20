@@ -503,15 +503,18 @@ const ListingSearchResults = () => {
     );
   };
 
+  /** Compact workspace toolbar: count + view/sort on row 1, selection actions on row 2, single divider below. */
+  const renderCompactResultsToolbar = (toolbarVariant: "page" | "column") => (
+    <div className={cn(toolbarVariant === "column" && "px-3 py-1.5 sm:px-5")}>
+      {renderResultsTopStrip(toolbarVariant)}
+      <div className={cn("mt-1", toolbarVariant === "page" && "mt-1.5")}>{renderResultsActionsRow()}</div>
+    </div>
+  );
+
   const renderAgentToolbarFull = () => (
     <>
       {renderToolbarTitleRow()}
-      <div className="border-t border-neutral-100 pt-2">
-        {renderResultsTopStrip("page")}
-      </div>
-      <div className="border-t border-neutral-100 pb-2 pt-2">
-        {renderResultsActionsRow()}
-      </div>
+      <div className="border-t border-neutral-100 pt-1.5 pb-1">{renderCompactResultsToolbar("page")}</div>
     </>
   );
 
@@ -560,14 +563,11 @@ const ListingSearchResults = () => {
                 </section>
 
                 <section className={agentWorkspaceResultsPanel}>
-                  <div className="shrink-0 border-b border-neutral-200/90 bg-white px-3 py-2 sm:px-5 sm:py-2.5">
-                    {renderResultsTopStrip("column")}
-                  </div>
-                  <div className="shrink-0 border-b border-neutral-100 bg-white px-3 py-2 sm:px-5 sm:py-2.5">
-                    {renderResultsActionsRow()}
+                  <div className="shrink-0 border-b border-neutral-200/90 bg-white">
+                    {renderCompactResultsToolbar("column")}
                   </div>
                   <div className="min-h-0 flex-1 overflow-y-auto lg:min-h-0">
-                    <div className="px-3 py-3 sm:px-5 sm:py-4">
+                    <div className="px-3 py-2 sm:px-5 sm:py-3">
                       <div className="grid grid-cols-1 gap-3 sm:gap-4 xl:grid-cols-2">
                         {displayedListings.map((listing) => (
                           <ListingCard
