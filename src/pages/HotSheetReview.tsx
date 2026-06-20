@@ -15,6 +15,7 @@ import { AacBackButton } from "@/components/layout/AacBackLink";
 import { AacPageIntro } from "@/components/layout/AacPageIntro";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
+import { agentWorkspacePageContainer, agentWorkspaceMapResultsGridTall, agentWorkspaceMapPanel, agentWorkspaceResultsPanel } from "@/lib/agentWorkspaceLayout";
 import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 import { EditHotsheetCriteriaDialog } from "@/components/EditHotsheetCriteriaDialog";
 import {
@@ -1174,7 +1175,7 @@ const HotSheetReview = () => {
     !isSharedWorkspace && reviewRecipients.some((r) => r.sendDashboardInvite);
   return (
       <div className="min-h-[50vh] bg-white px-4 pb-10 sm:px-6">
-        <div className="mx-auto w-full max-w-[88rem] min-w-0">
+        <div className={agentWorkspacePageContainer}>
           <AacPageIntro
             withTopPadding
             className="border-b border-neutral-200 pb-4"

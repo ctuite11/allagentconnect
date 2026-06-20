@@ -18,6 +18,7 @@ import {
   defaultPropertyTypesForAgentListingSearch,
   propertyTypesForAgentListingQuery,
 } from "@/lib/agentListingSearchDefaults";
+import { agentWorkspacePageContainer } from "@/lib/agentWorkspaceLayout";
 import { cn } from "@/lib/utils";
 
 const ListingSearch = () => {
@@ -206,7 +207,7 @@ const ListingSearch = () => {
         noindex
       />
       <main>
-        <div className="max-w-[1280px] mx-auto px-6 py-6">
+        <div className={cn(agentWorkspacePageContainer, "py-6")}>
           <PageHeader
             backTo="/agent-dashboard"
             title="Listing Search"

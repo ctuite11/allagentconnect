@@ -63,6 +63,7 @@ import { MediaTabBar, type MediaTab } from "@/components/property/MediaTabBar";
 import { SectionWrapper } from "@/components/property/SectionWrapper";
 import {
   propertyPageContainer,
+  propertyPageContainerAgentWorkspace,
   propertyHeroMedia,
   propertyRailStack,
   propertyDetailRailActionGroup,
@@ -570,7 +571,7 @@ const PropertyDetail = () => {
 
       <main className="flex-1 overflow-visible">
         {/* Back Button Row */}
-        <div className="mx-auto max-w-6xl px-4">
+        <div className={cn(isAgentView ? propertyPageContainerAgentWorkspace : propertyPageContainer)}>
           <AacPageIntro
             withTopPadding
             back={<AacBackButton type="button" onClick={handlePropertyDetailBack} />}
@@ -578,7 +579,13 @@ const PropertyDetail = () => {
         </div>
 
         {/* Full-page two-column layout; rail pinned on desktop via anchor + fixed panel */}
-        <div ref={layoutRef} className={cn(propertyPageContainer, "overflow-visible pb-8")}>
+        <div
+          ref={layoutRef}
+          className={cn(
+            isAgentView ? propertyPageContainerAgentWorkspace : propertyPageContainer,
+            "overflow-visible pb-8",
+          )}
+        >
           <div
             className={cn(
               "grid grid-cols-1 gap-y-6 overflow-visible",

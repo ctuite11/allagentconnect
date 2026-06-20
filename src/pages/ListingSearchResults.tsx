@@ -29,6 +29,12 @@ import {
   listingAgentContactFromRow,
   listingEmailSubjectFromRow,
 } from "@/lib/listingAgentContact";
+import {
+  agentWorkspaceMapPanel,
+  agentWorkspaceMapResultsGrid,
+  agentWorkspacePageContainer,
+  agentWorkspaceResultsPanel,
+} from "@/lib/agentWorkspaceLayout";
 
 /** Drop list-side agent/office fields so compact `ListingCard` has no “Listed by” row (buyer map grid parity). */
 function listingRowForMapCompactGrid(row: any): any {
@@ -512,7 +518,7 @@ const ListingSearchResults = () => {
   return (
     <div className="flex min-h-screen flex-col bg-white">
       <main className="flex-1">
-        <div className="mx-auto max-w-[1400px] px-4 sm:px-5">
+        <div className={agentWorkspacePageContainer}>
           {!showMapSplit && (
             <div
               className="sticky top-0 z-20 border-b border-neutral-200 bg-white px-3 sm:px-4 lg:px-5"
@@ -539,8 +545,8 @@ const ListingSearchResults = () => {
 
           <section className="bg-transparent pb-6 pt-0">
             {showMapSplit ? (
-              <div className="mt-3 flex h-auto min-h-0 flex-col-reverse gap-3 sm:mt-4 sm:gap-4 lg:grid lg:h-[calc(100dvh-7.25rem)] lg:min-h-0 lg:grid-cols-[minmax(0,40%)_minmax(0,60%)] lg:flex-none">
-                <section className="h-[48dvh] min-h-0 overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)] sm:h-[52dvh] lg:sticky lg:top-[5.5rem] lg:h-full lg:min-h-0 lg:self-start">
+              <div className={agentWorkspaceMapResultsGrid}>
+                <section className={agentWorkspaceMapPanel}>
                   <div className="h-full">
                     <PropertyMap
                       listings={displayedListings}
@@ -553,7 +559,7 @@ const ListingSearchResults = () => {
                   </div>
                 </section>
 
-                <section className="flex h-auto min-h-0 max-lg:min-h-[48vh] flex-col overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)] lg:h-full lg:min-h-0">
+                <section className={agentWorkspaceResultsPanel}>
                   <div className="shrink-0 border-b border-neutral-200/90 bg-white px-3 py-2 sm:px-5 sm:py-2.5">
                     {renderResultsTopStrip("column")}
                   </div>

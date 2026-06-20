@@ -21,6 +21,10 @@ import { AacBackButton } from "@/components/layout/AacBackLink";
 import { AacPageIntro } from "@/components/layout/AacPageIntro";
 import type { ListedByAgentProfile } from "@/lib/listingListedBy";
 import { buyerFavoritesSplitPane } from "@/lib/buyerUi";
+import {
+  agentWorkspaceMapResultsGridTall,
+  agentWorkspacePageContainer,
+} from "@/lib/agentWorkspaceLayout";
 
 interface Listing {
   id: string;
@@ -86,7 +90,7 @@ function listingsToMapPins(
 
 const agentHotSheetStickyHeader = (navigate: NavigateFunction) => (
   <header className="sticky top-14 z-40 border-b border-neutral-200/90 bg-white">
-    <div className="mx-auto w-full max-w-[1800px] px-5 md:px-7">
+    <div className={agentWorkspacePageContainer}>
       <AacPageIntro
         withTopPadding
         back={<AacBackButton type="button" onClick={() => navigate("/agent-dashboard")} />}
@@ -101,8 +105,8 @@ function MyFavoritesLoadingShell({ navigate }: { navigate: NavigateFunction }) {
   return (
     <div className="flex min-h-screen flex-col bg-white">
       {agentHotSheetStickyHeader(navigate)}
-      <main className="mx-auto w-full max-w-[1800px] flex-1 px-5 py-3 md:px-7">
-        <div className="flex h-auto min-h-0 flex-col-reverse gap-4 lg:grid lg:h-[calc(100dvh-7.8rem)] lg:min-h-0 lg:grid-cols-[minmax(0,40%)_minmax(0,60%)] lg:flex-none">
+      <main className={cn(agentWorkspacePageContainer, "flex-1 py-3 md:py-3")}>
+        <div className={agentWorkspaceMapResultsGridTall}>
           <section
             className={`${buyerFavoritesSplitPane} h-[50dvh] min-h-0 sm:h-[54dvh] lg:h-full`}
             aria-busy="true"
@@ -405,8 +409,8 @@ const MyFavorites = () => {
           </Card>
         </main>
       ) : (
-        <main className="mx-auto w-full max-w-[1800px] flex-1 px-5 py-3 md:px-7">
-          <div className="flex h-auto min-h-0 flex-col-reverse gap-4 lg:grid lg:h-[calc(100dvh-7.8rem)] lg:min-h-0 lg:grid-cols-[minmax(0,40%)_minmax(0,60%)] lg:flex-none">
+        <main className={cn(agentWorkspacePageContainer, "flex-1 py-3 md:py-3")}>
+          <div className={agentWorkspaceMapResultsGridTall}>
             <section
               className={`${buyerFavoritesSplitPane} h-[50dvh] min-h-0 sm:h-[54dvh] lg:sticky lg:top-[6.05rem] lg:h-full lg:min-h-0`}
             >

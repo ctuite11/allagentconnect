@@ -10,6 +10,9 @@
 
 // Page shell
 export const propertyPageContainer = "mx-auto max-w-6xl px-4";
+
+/** Agent workspace property detail — full AppShell column width (no max-w cap). */
+export const propertyPageContainerAgentWorkspace = "mx-auto w-full min-w-0 max-w-none px-4 lg:px-6";
 export const propertyPagePadTop = "pt-5";
 export const propertyHeroGap = "gap-6";
 

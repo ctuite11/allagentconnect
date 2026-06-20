@@ -20,7 +20,12 @@ import {
   sortAgentSplitListings,
   type AgentSplitListing,
 } from "@/lib/agentSplitResults";
-import { LISTING_DEFAULT_SORT_COLUMN } from "@/lib/listingRecencySort";
+import {
+  agentWorkspaceMapPanel,
+  agentWorkspaceMapResultsGrid,
+  agentWorkspacePageContainer,
+  agentWorkspaceResultsPanel,
+} from "@/lib/agentWorkspaceLayout";
 import {
   agentSplitListingAgentContact,
   listingEmailSubjectFromRow,
@@ -444,8 +449,8 @@ export function AgentSplitResultsSurface({
           <p className="py-16 text-center text-sm text-neutral-500">{emptyMessage}</p>
         )
       ) : showMapSplit ? (
-                <div className="mt-3 flex h-auto min-h-0 flex-col-reverse gap-3 sm:mt-4 sm:gap-4 lg:grid lg:h-[calc(100dvh-7.25rem)] lg:min-h-0 lg:grid-cols-[minmax(0,40%)_minmax(0,60%)] lg:flex-none">
-          <section className="h-[48dvh] min-h-0 overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)] sm:h-[52dvh] lg:sticky lg:top-[5.5rem] lg:h-full lg:min-h-0 lg:self-start">
+                <div className={agentWorkspaceMapResultsGrid}>
+          <section className={agentWorkspaceMapPanel}>
             <div className="h-full">
               <PropertyMap
                 listings={displayedListings as unknown as React.ComponentProps<typeof PropertyMap>["listings"]}
@@ -458,7 +463,7 @@ export function AgentSplitResultsSurface({
             </div>
           </section>
 
-          <section className="flex h-auto min-h-0 max-lg:min-h-[48vh] flex-col overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)] lg:h-full lg:min-h-0">
+          <section className={agentWorkspaceResultsPanel}>
             <div
               className={cn(
                 "shrink-0 bg-white px-3 py-2 sm:px-5 sm:py-2.5",
@@ -510,8 +515,7 @@ export function AgentSplitResultsSurface({
   ) : null;
 
   const containerClass = cn(
-    "mx-auto w-full",
-    containerClassName ?? "max-w-[1400px] px-4 sm:px-5",
+    containerClassName ?? agentWorkspacePageContainer,
   );
 
   if (variant === "embedded") {
