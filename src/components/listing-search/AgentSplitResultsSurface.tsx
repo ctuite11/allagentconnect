@@ -364,33 +364,31 @@ export function AgentSplitResultsSurface({
     );
   };
 
-  /** Single-row workspace toolbar: count + actions left, view/sort right; one divider below. */
+  /** Workspace toolbar: count + view/sort on row 1, selection actions on row 2; one divider below. */
   const renderCompactResultsToolbar = (toolbarVariant: "page" | "column") => {
     const compact = toolbarVariant === "column";
 
     return (
       <div className={cn(compact && "px-3 py-1 sm:px-5")}>
         <div
-          className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1"
+          className="flex items-center justify-between gap-x-2"
           aria-label="Results summary and controls"
         >
-          <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
-            <p
-              className={cn(
-                "shrink-0 font-medium text-neutral-900 tabular-nums",
-                compact ? "text-sm" : "text-[13px]",
-              )}
-            >
-              {loading ? "Results: —" : `Results: ${displayedListings.length.toLocaleString()}`}
-            </p>
-            {hasResultsActionsRow ? (
-              <div aria-label="Result actions" className="flex min-w-0 flex-wrap items-center gap-1.5">
-                {renderResultsActionsContent()}
-              </div>
-            ) : null}
-          </div>
+          <p
+            className={cn(
+              "min-w-0 shrink-0 font-medium text-neutral-900 tabular-nums",
+              compact ? "text-sm" : "text-[13px]",
+            )}
+          >
+            {loading ? "Results: —" : `Results: ${displayedListings.length.toLocaleString()}`}
+          </p>
           {renderViewSortControls(compact)}
         </div>
+        {hasResultsActionsRow ? (
+          <div aria-label="Result actions" className="mt-1 flex flex-wrap items-center gap-1.5">
+            {renderResultsActionsContent()}
+          </div>
+        ) : null}
       </div>
     );
   };
