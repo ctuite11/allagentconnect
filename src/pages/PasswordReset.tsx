@@ -2,16 +2,16 @@ import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-// Navigation removed - rendered globally in App.tsx
-import Footer from "@/components/Footer";
 import { AlertTriangle } from "lucide-react";
 import { validatePassword } from "@/lib/passwordPolicy";
 import { PasswordChecklist } from "@/components/PasswordChecklist";
+import { AuthShell } from "@/components/auth/AuthShell";
+
+const authCardSurface =
+  "rounded-2xl border border-zinc-100 bg-white p-8 shadow-sm";
 
 const PasswordReset = () => {
   const navigate = useNavigate();
@@ -163,31 +163,20 @@ const PasswordReset = () => {
   // Show error state if session is invalid
   if (sessionError) {
     return (
-      <div className="min-h-screen flex flex-col bg-background pt-24">
-        <div className="flex-1 container mx-auto px-4 py-12 flex items-center justify-center">
-          <Card className="w-full max-w-md">
-            <CardHeader>
-              <div className="flex items-center gap-2 text-destructive mb-2">
-                <AlertTriangle className="h-5 w-5" />
-                <CardTitle>Link Expired</CardTitle>
-              </div>
-              <CardDescription>
-                {sessionError}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button 
-                onClick={handleRequestNewLink}
-                className="w-full bg-slate-900 hover:bg-slate-800 text-white"
-              >
-                Request New Reset Link
-              </Button>
-            </CardContent>
-          </Card>
+      <AuthShell>
+        <div className={authCardSurface}>
+          <div className="flex items-center gap-2 text-destructive mb-2">
+            <AlertTriangle className="h-5 w-5" />
+            <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+              Link Expired
+            </h1>
+          </div>
+          <p className="text-sm text-muted-foreground mb-6">{sessionError}</p>
+          <Button onClick={handleRequestNewLink} className="w-full" size="lg">
+            Request New Reset Link
+          </Button>
         </div>
-        
-        <Footer />
-      </div>
+      </AuthShell>
     );
   }
 
@@ -196,101 +185,88 @@ const PasswordReset = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-background pt-24">
-      <div className="flex-1 container mx-auto px-4 py-12 flex items-center justify-center">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle>{isSetupFlow ? "Set Your Password" : "Reset Your Password"}</CardTitle>
-            <CardDescription>
-              {isSetupFlow
-                ? "Choose a password to finish activating your agent account."
-                : "Create a strong new password for your account"}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {/* Same password error state */}
-            {samePasswordError ? (
-              <div className="space-y-4">
-                <div className="p-4 bg-muted rounded-md border">
-                  <p className="text-sm text-foreground font-medium mb-1">
-                    That's already your current password.
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    You set this password during registration. You can sign in directly, or choose a different password below.
-                  </p>
-                </div>
-                <Button
-                  onClick={handleGoToSignIn}
-                  className="w-full bg-slate-900 hover:bg-slate-800 text-white"
-                >
-                  Sign In →
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => { setSamePasswordError(false); setPassword(""); setConfirmPassword(""); }}
-                  className="w-full"
-                >
-                  Choose a Different Password
-                </Button>
-              </div>
-            ) : (
-              <>
-                {/* One-time link warning */}
-                <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-md">
-                  <p className="text-xs text-amber-800 dark:text-amber-200">
-                    <strong>Important:</strong> This link works once. If you've already opened it or refreshed this page, you may need to request a new reset link.
-                  </p>
-                </div>
+    <AuthShell>
+      <div className={authCardSurface}>
+        <div className="mb-6">
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+            {isSetupFlow ? "Set Your Password" : "Reset Your Password"}
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {isSetupFlow
+              ? "Choose a password to finish activating your agent account."
+              : "Create a strong new password for your account"}
+          </p>
+        </div>
 
-                <form onSubmit={handleResetPassword} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="password">New Password</Label>
-                    <PasswordInput
-                      id="password"
-                      placeholder="••••••••"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                      disabled={loading}
-                    />
-                    
-                    {/* Password rules checklist */}
-                    <div className="mt-3">
-                      <PasswordChecklist password={password} />
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="confirmPassword">Confirm New Password</Label>
-                    <PasswordInput
-                      id="confirmPassword"
-                      placeholder="••••••••"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      required
-                      disabled={loading}
-                    />
-                    {confirmPassword.length > 0 && (
-                      <PasswordChecklist password={password} confirmPassword={confirmPassword} showMatch />
-                    )}
-                  </div>
-                  
-                  <Button 
-                    type="submit" 
-                    className="w-full bg-slate-900 hover:bg-slate-800 text-white" 
-                    disabled={!canSubmit}
-                  >
-                    {loading ? "Updating password..." : isSetupFlow ? "Set Password & Activate" : "Update Password"}
-                  </Button>
-                </form>
-              </>
-            )}
-          </CardContent>
-        </Card>
+        {samePasswordError ? (
+          <div className="space-y-4">
+            <div className="p-4 bg-muted rounded-md border">
+              <p className="text-sm text-foreground font-medium mb-1">
+                That's already your current password.
+              </p>
+              <p className="text-xs text-muted-foreground">
+                You set this password during registration. You can sign in directly, or choose a different password below.
+              </p>
+            </div>
+            <Button onClick={handleGoToSignIn} className="w-full" size="lg">
+              Sign In →
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => { setSamePasswordError(false); setPassword(""); setConfirmPassword(""); }}
+              className="w-full"
+              size="lg"
+            >
+              Choose a Different Password
+            </Button>
+          </div>
+        ) : (
+          <>
+            <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-md">
+              <p className="text-xs text-amber-800 dark:text-amber-200">
+                <strong>Important:</strong> This link works once. If you've already opened it or refreshed this page, you may need to request a new reset link.
+              </p>
+            </div>
+
+            <form onSubmit={handleResetPassword} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="password">New Password</Label>
+                <PasswordInput
+                  id="password"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  disabled={loading}
+                />
+                <div className="mt-3">
+                  <PasswordChecklist password={password} />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                <PasswordInput
+                  id="confirmPassword"
+                  placeholder="••••••••"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                  disabled={loading}
+                />
+                {confirmPassword.length > 0 && (
+                  <PasswordChecklist password={password} confirmPassword={confirmPassword} showMatch />
+                )}
+              </div>
+
+              <Button type="submit" className="w-full" size="lg" disabled={!canSubmit}>
+                {loading ? "Updating password..." : isSetupFlow ? "Set Password & Activate" : "Update Password"}
+              </Button>
+            </form>
+          </>
+        )}
       </div>
-      
-      <Footer />
-    </div>
+    </AuthShell>
   );
 };
 
