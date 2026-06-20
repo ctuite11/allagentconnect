@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { isAgentHotSheetsNavActive } from "@/lib/sidebarNavActive";
+import { getSidebarRouteContext } from "@/lib/workspaceSidebarRoutes";
 import { supabase } from "@/integrations/supabase/client";
 import { useUnreadConversations } from "@/hooks/useUnreadConversations";
 import { formatMessagesUnreadCount, hasUnreadMessages } from "@/components/messaging/MessagesUnreadBadge";
@@ -145,10 +146,20 @@ export function DashboardSidebar({
   mobileOpen = false,
   onMobileClose,
 }: DashboardSidebarProps) {
-  const [collapsed, setCollapsed] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { unreadCount } = useUnreadConversations();
+  const routeContext = getSidebarRouteContext(location.pathname);
+  const prevRouteContextRef = useRef(routeContext);
+  const [collapsed, setCollapsed] = useState(() => routeContext === "workspace");
+
+  // Collapse on map/workspace routes; expand on dashboard routes. Manual toggles persist
+  // until the user navigates between workspace ↔ standard (not on every in-category route).
+  useEffect(() => {
+    if (routeContext === prevRouteContextRef.current) return;
+    setCollapsed(routeContext === "workspace");
+    prevRouteContextRef.current = routeContext;
+  }, [routeContext]);
 
   const mainMenu: SidebarItem[] = baseMainMenu.map((item) =>
     item.label === "Messages" ? { ...item, badge: unreadCount } : item
