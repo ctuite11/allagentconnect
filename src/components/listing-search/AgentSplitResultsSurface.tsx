@@ -364,37 +364,42 @@ export function AgentSplitResultsSurface({
     );
   };
 
-  /** Workspace toolbar: count + view/sort on row 1, selection actions on row 2; one divider below. */
-  const renderCompactResultsToolbar = (toolbarVariant: "page" | "column") => {
-    const compact = toolbarVariant === "column";
+  /** Page-level row: results count + view/sort (above workspace divider). */
+  const renderResultsSummaryToolbar = (compact: boolean) => (
+    <div
+      className="flex items-center justify-between gap-x-2"
+      aria-label="Results summary and controls"
+    >
+      <p
+        className={cn(
+          "min-w-0 shrink-0 font-medium text-neutral-900 tabular-nums",
+          compact ? "text-sm" : "text-[13px]",
+        )}
+      >
+        {loading ? "Results: —" : `Results: ${displayedListings.length.toLocaleString()}`}
+      </p>
+      {renderViewSortControls(compact)}
+    </div>
+  );
+
+  /** Card-level row: selection actions that operate on listing cards. */
+  const renderResultsSelectionToolbar = () => {
+    if (!hasResultsActionsRow) return null;
 
     return (
-      <div className={cn(compact && "px-3 py-1 sm:px-5")}>
-        <div
-          className="flex items-center justify-between gap-x-2"
-          aria-label="Results summary and controls"
-        >
-          <p
-            className={cn(
-              "min-w-0 shrink-0 font-medium text-neutral-900 tabular-nums",
-              compact ? "text-sm" : "text-[13px]",
-            )}
-          >
-            {loading ? "Results: —" : `Results: ${displayedListings.length.toLocaleString()}`}
-          </p>
-          {renderViewSortControls(compact)}
-        </div>
-        {hasResultsActionsRow ? (
-          <div aria-label="Result actions" className="mt-1 flex flex-wrap items-center gap-1.5">
-            {renderResultsActionsContent()}
-          </div>
-        ) : null}
+      <div aria-label="Result actions" className="flex flex-wrap items-center gap-1.5">
+        {renderResultsActionsContent()}
       </div>
     );
   };
 
   const renderToolbarStrips = () => (
-    <div className="border-t border-neutral-100 pt-1.5 pb-1">{renderCompactResultsToolbar("page")}</div>
+    <>
+      <div className="border-t border-neutral-100 pt-1.5 pb-1">{renderResultsSummaryToolbar(false)}</div>
+      {hasResultsActionsRow ? (
+        <div className="border-t border-neutral-100 pb-1 pt-1.5">{renderResultsSelectionToolbar()}</div>
+      ) : null}
+    </>
   );
 
   const renderToolbar = () => {
@@ -459,7 +464,13 @@ export function AgentSplitResultsSurface({
           <p className="py-16 text-center text-sm text-neutral-500">{emptyMessage}</p>
         )
       ) : showMapSplit ? (
-                <div className={agentWorkspaceMapResultsGrid}>
+        <>
+          {hidePageIntro && !loadError && (loading || displayedListings.length > 0) ? (
+            <div className="border-b border-neutral-200 bg-white pb-2 pt-1">
+              {renderResultsSummaryToolbar(false)}
+            </div>
+          ) : null}
+          <div className={agentWorkspaceMapResultsGrid}>
           <section className={agentWorkspaceMapPanel}>
             <div className="h-full">
               <PropertyMap
@@ -474,9 +485,11 @@ export function AgentSplitResultsSurface({
           </section>
 
           <section className={agentWorkspaceResultsPanel}>
-            <div className="shrink-0 border-b border-neutral-200/90 bg-white">
-              {renderCompactResultsToolbar("column")}
-            </div>
+            {hasResultsActionsRow ? (
+              <div className="shrink-0 border-b border-neutral-200/90 bg-white px-3 py-1 sm:px-5">
+                {renderResultsSelectionToolbar()}
+              </div>
+            ) : null}
             <div className="min-h-0 flex-1 overflow-y-auto lg:min-h-0">
               <div className="px-3 py-1.5 sm:px-5 sm:py-2">
                 <div className="grid grid-cols-1 gap-3 sm:gap-4 xl:grid-cols-2">
@@ -488,6 +501,7 @@ export function AgentSplitResultsSurface({
             </div>
           </section>
         </div>
+        </>
       ) : (
         <ListingResultsTable
           listings={displayedListings as unknown as React.ComponentProps<typeof ListingResultsTable>["listings"]}
@@ -560,6 +574,9 @@ export function AgentSplitResultsSurface({
                   subtitle={subtitle}
                   titleClassName={titleClassName}
                 />
+                {!loadError && (loading || displayedListings.length > 0) ? (
+                  <div className="pb-2 pt-1">{renderResultsSummaryToolbar(false)}</div>
+                ) : null}
               </div>
             ) : null}
 

@@ -489,37 +489,36 @@ const ListingSearchResults = () => {
     );
   };
 
-  /** Workspace toolbar: count + view/sort on row 1, selection actions on row 2; one divider below. */
-  const renderCompactResultsToolbar = (toolbarVariant: "page" | "column") => {
-    const compact = toolbarVariant === "column";
+  /** Page-level row: results count + view/sort (above workspace divider). */
+  const renderResultsSummaryToolbar = (compact: boolean) => (
+    <div
+      className="flex items-center justify-between gap-x-2"
+      aria-label="Results summary and controls"
+    >
+      <p
+        className={cn(
+          "min-w-0 shrink-0 font-medium text-neutral-900 tabular-nums",
+          compact ? "text-sm" : "text-[13px]",
+        )}
+      >
+        {loading ? "Results: —" : `Results: ${displayedListings.length.toLocaleString()}`}
+      </p>
+      {renderViewSortControls(compact)}
+    </div>
+  );
 
-    return (
-      <div className={cn(compact && "px-3 py-1 sm:px-5")}>
-        <div
-          className="flex items-center justify-between gap-x-2"
-          aria-label="Results summary and controls"
-        >
-          <p
-            className={cn(
-              "min-w-0 shrink-0 font-medium text-neutral-900 tabular-nums",
-              compact ? "text-sm" : "text-[13px]",
-            )}
-          >
-            {loading ? "Results: —" : `Results: ${displayedListings.length.toLocaleString()}`}
-          </p>
-          {renderViewSortControls(compact)}
-        </div>
-        <div aria-label="Result actions" className="mt-1 flex flex-wrap items-center gap-1.5">
-          {renderResultsActionsContent()}
-        </div>
-      </div>
-    );
-  };
+  /** Card-level row: selection actions that operate on listing cards. */
+  const renderResultsSelectionToolbar = () => (
+    <div aria-label="Result actions" className="flex flex-wrap items-center gap-1.5">
+      {renderResultsActionsContent()}
+    </div>
+  );
 
   const renderAgentToolbarFull = () => (
     <>
       {renderToolbarTitleRow()}
-      <div className="border-t border-neutral-100 pt-1.5 pb-1">{renderCompactResultsToolbar("page")}</div>
+      <div className="border-t border-neutral-100 pt-1.5 pb-1">{renderResultsSummaryToolbar(false)}</div>
+      <div className="border-t border-neutral-100 pb-1 pt-1.5">{renderResultsSelectionToolbar()}</div>
     </>
   );
 
@@ -541,6 +540,9 @@ const ListingSearchResults = () => {
               aria-label="Agent listing search header"
             >
               {renderToolbarTitleRow()}
+              {!loading && displayedListings.length > 0 ? (
+                <div className="pb-2 pt-1">{renderResultsSummaryToolbar(false)}</div>
+              ) : null}
             </div>
           )}
 
@@ -568,8 +570,8 @@ const ListingSearchResults = () => {
                 </section>
 
                 <section className={agentWorkspaceResultsPanel}>
-                  <div className="shrink-0 border-b border-neutral-200/90 bg-white">
-                    {renderCompactResultsToolbar("column")}
+                  <div className="shrink-0 border-b border-neutral-200/90 bg-white px-3 py-1 sm:px-5">
+                    {renderResultsSelectionToolbar()}
                   </div>
                   <div className="min-h-0 flex-1 overflow-y-auto lg:min-h-0">
                     <div className="px-3 py-1.5 sm:px-5 sm:py-2">
