@@ -418,12 +418,12 @@ export function renderEmailTemplate(
       const signInUrl = variables.signInUrl || variables.passwordSetupUrl || "https://allagentconnect.com/auth";
       return buildAacEmail({
         headline: "Your All Agent Connect account is ready",
-        preheader: "Your All Agent Connect account is ready to sign in.",
+        preheader: "Your All Agent Connect account has been approved and is ready to use.",
         body: `
           <p style="margin:0 0 14px;">Hi ${recipientName},</p>
-          <p style="margin:0 0 18px;">Your real estate license has been verified and your All Agent Connect account is now active.</p>
+          <p style="margin:0 0 18px;">Your All Agent Connect account has been approved and is ready to use.</p>
           ${renderAccountReadyCard()}
-          <p style="margin:24px 0 0;">Sign in with the password you created when you requested access.</p>`,
+          <p style="margin:24px 0 0;">Sign in using the email address and password you created when you requested access.</p>`,
         ctaLabel: "Sign In to All Agent Connect",
         ctaUrl: signInUrl,
       });
