@@ -245,8 +245,10 @@ export function AgentSplitResultsSurface({
     setSortDirection(dir);
   };
 
-  const renderResultsTopStrip = (variant: "page" | "column") => {
-    const compact = variant === "column";
+  const hasResultsActionsRow =
+    selectionEnabled || Boolean(toolbarActionsExtra) || showSaveToHotSheet;
+
+  const renderViewSortControls = (compact: boolean) => {
     const labelClass = compact ? "text-[11px] font-medium text-neutral-500" : "text-[13px] text-neutral-500";
     const toggleBtnClass = compact
       ? "h-[22px] min-w-[2.25rem] rounded-[4px] px-1.5 text-[11px] font-medium whitespace-nowrap leading-none transition-colors duration-200 ease-out"
@@ -258,80 +260,62 @@ export function AgentSplitResultsSurface({
       allowListView && !loading && !loadError && displayedListings.length > 0;
 
     return (
-      <div className="w-full">
-        <div
-          className="flex w-full items-center justify-between gap-3"
-          aria-label="Results summary and controls"
-        >
-          <p
-            className={cn(
-              "min-w-0 truncate font-medium text-neutral-900 tabular-nums",
-              compact ? "text-sm" : "text-[13px]",
-            )}
-          >
-            {loading ? "Results: —" : `Results: ${displayedListings.length.toLocaleString()}`}
-          </p>
-          <div className="flex min-w-0 shrink-0 items-center justify-end gap-2">
-            {showViewToggle ? (
-              <div className="flex min-w-0 items-center gap-1.5">
-                <span className={cn(labelClass, "whitespace-nowrap")}>View</span>
-                <div className={toggleWrapClass}>
-                  <button
-                    type="button"
-                    onClick={() => setResultsView("map")}
-                    className={cn(
-                      toggleBtnClass,
-                      effectiveResultsView === "map"
-                        ? "bg-neutral-900 text-white shadow-[0_1px_2px_rgba(0,0,0,0.12)]"
-                        : "text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900",
-                    )}
-                  >
-                    Map
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setResultsView("list")}
-                    className={cn(
-                      toggleBtnClass,
-                      effectiveResultsView === "list"
-                        ? "bg-neutral-900 text-white shadow-[0_1px_2px_rgba(0,0,0,0.12)]"
-                        : "text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900",
-                    )}
-                  >
-                    List
-                  </button>
-                </div>
-              </div>
-            ) : null}
-            <div className={cn("min-w-0", compact ? "max-w-[7.5rem]" : "w-full max-w-[8.5rem] min-[520px]:max-w-[11rem]")}>
-              <Select value={sortSelectValue} onValueChange={handleSortSelect}>
-                <SelectTrigger
-                  className={cn(
-                    compact
-                      ? "h-7 rounded-md border-neutral-200/90 bg-white px-2 text-[11px] font-medium text-neutral-900 shadow-none focus-visible:ring-2 focus-visible:ring-neutral-300/50 focus-visible:ring-offset-2"
-                      : "h-8 rounded-md border-neutral-200/90 bg-white text-xs font-medium text-neutral-900 shadow-none focus-visible:ring-2 focus-visible:ring-neutral-300/50 focus-visible:ring-offset-2",
-                  )}
-                >
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="rounded-lg border border-neutral-200 bg-white shadow-[0_4px_20px_rgba(0,0,0,0.08)]">
-                  <SelectItem value="date_new">Date (New)</SelectItem>
-                  <SelectItem value="date_old">Date (Old)</SelectItem>
-                  <SelectItem value="price_high">Price (High)</SelectItem>
-                  <SelectItem value="price_low">Price (Low)</SelectItem>
-                </SelectContent>
-              </Select>
+      <div className="flex min-w-0 shrink-0 items-center justify-end gap-2">
+        {showViewToggle ? (
+          <div className="flex min-w-0 items-center gap-1.5">
+            <span className={cn(labelClass, "whitespace-nowrap")}>View</span>
+            <div className={toggleWrapClass}>
+              <button
+                type="button"
+                onClick={() => setResultsView("map")}
+                className={cn(
+                  toggleBtnClass,
+                  effectiveResultsView === "map"
+                    ? "bg-neutral-900 text-white shadow-[0_1px_2px_rgba(0,0,0,0.12)]"
+                    : "text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900",
+                )}
+              >
+                Map
+              </button>
+              <button
+                type="button"
+                onClick={() => setResultsView("list")}
+                className={cn(
+                  toggleBtnClass,
+                  effectiveResultsView === "list"
+                    ? "bg-neutral-900 text-white shadow-[0_1px_2px_rgba(0,0,0,0.12)]"
+                    : "text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900",
+                )}
+              >
+                List
+              </button>
             </div>
           </div>
+        ) : null}
+        <div className={cn("min-w-0", compact ? "max-w-[7.5rem]" : "w-full max-w-[8.5rem] min-[520px]:max-w-[11rem]")}>
+          <Select value={sortSelectValue} onValueChange={handleSortSelect}>
+            <SelectTrigger
+              className={cn(
+                compact
+                  ? "h-7 rounded-md border-neutral-200/90 bg-white px-2 text-[11px] font-medium text-neutral-900 shadow-none focus-visible:ring-2 focus-visible:ring-neutral-300/50 focus-visible:ring-offset-2"
+                  : "h-8 rounded-md border-neutral-200/90 bg-white text-xs font-medium text-neutral-900 shadow-none focus-visible:ring-2 focus-visible:ring-neutral-300/50 focus-visible:ring-offset-2",
+              )}
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="rounded-lg border border-neutral-200 bg-white shadow-[0_4px_20px_rgba(0,0,0,0.08)]">
+              <SelectItem value="date_new">Date (New)</SelectItem>
+              <SelectItem value="date_old">Date (Old)</SelectItem>
+              <SelectItem value="price_high">Price (High)</SelectItem>
+              <SelectItem value="price_low">Price (Low)</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
     );
   };
 
-  const hasResultsActionsRow =
-    selectionEnabled || Boolean(toolbarActionsExtra) || showSaveToHotSheet;
-
-  const renderResultsActionsRow = () => {
+  const renderResultsActionsContent = () => {
     const saveHotSheetBtn =
       showSaveToHotSheet ? (
         <Button
@@ -353,44 +337,63 @@ export function AgentSplitResultsSurface({
         </Button>
       ) : null;
 
+    if (selectionEnabled) {
+      return (
+        <AgentSplitResultsSelectionActions
+          displayedListingIds={displayedListingIds}
+          selectedRows={safeSelectedRows}
+          showSelectedOnly={showSelectedOnly && !onKeepSelected}
+          onAddAllVisible={handleAddAllVisible}
+          onUnselectAllVisible={handleUnselectAllVisible}
+          onKeepSelectedOnly={() => setShowSelectedOnly(true)}
+          onShowAll={() => setShowSelectedOnly(false)}
+          onKeepSelectedCustom={onKeepSelected}
+          onSuccessfulShare={clearShareSelection}
+        >
+          {toolbarActionsExtra}
+          {saveHotSheetBtn}
+        </AgentSplitResultsSelectionActions>
+      );
+    }
+
     return (
-      <div className="w-full" aria-label="Result actions">
-        {selectionEnabled ? (
-          <AgentSplitResultsSelectionActions
-            displayedListingIds={displayedListingIds}
-            selectedRows={safeSelectedRows}
-            showSelectedOnly={showSelectedOnly && !onKeepSelected}
-            onAddAllVisible={handleAddAllVisible}
-            onUnselectAllVisible={handleUnselectAllVisible}
-            onKeepSelectedOnly={() => setShowSelectedOnly(true)}
-            onShowAll={() => setShowSelectedOnly(false)}
-            onKeepSelectedCustom={onKeepSelected}
-            onSuccessfulShare={clearShareSelection}
-          >
-            {toolbarActionsExtra}
-            {saveHotSheetBtn}
-          </AgentSplitResultsSelectionActions>
-        ) : (
-          <div className="flex flex-wrap items-center gap-2">
-            {toolbarActionsExtra}
-            {saveHotSheetBtn}
-          </div>
-        )}
-      </div>
+      <>
+        {toolbarActionsExtra}
+        {saveHotSheetBtn}
+      </>
     );
   };
 
-  /** Compact workspace toolbar: count + view/sort on row 1, selection actions on row 2, single divider below. */
-  const renderCompactResultsToolbar = (toolbarVariant: "page" | "column") => (
-    <div className={cn(toolbarVariant === "column" && "px-3 py-1.5 sm:px-5")}>
-      {renderResultsTopStrip(toolbarVariant)}
-      {hasResultsActionsRow ? (
-        <div className={cn("mt-1", toolbarVariant === "page" && "mt-1.5")}>
-          {renderResultsActionsRow()}
+  /** Single-row workspace toolbar: count + actions left, view/sort right; one divider below. */
+  const renderCompactResultsToolbar = (toolbarVariant: "page" | "column") => {
+    const compact = toolbarVariant === "column";
+
+    return (
+      <div className={cn(compact && "px-3 py-1 sm:px-5")}>
+        <div
+          className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1"
+          aria-label="Results summary and controls"
+        >
+          <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+            <p
+              className={cn(
+                "shrink-0 font-medium text-neutral-900 tabular-nums",
+                compact ? "text-sm" : "text-[13px]",
+              )}
+            >
+              {loading ? "Results: —" : `Results: ${displayedListings.length.toLocaleString()}`}
+            </p>
+            {hasResultsActionsRow ? (
+              <div aria-label="Result actions" className="flex min-w-0 flex-wrap items-center gap-1.5">
+                {renderResultsActionsContent()}
+              </div>
+            ) : null}
+          </div>
+          {renderViewSortControls(compact)}
         </div>
-      ) : null}
-    </div>
-  );
+      </div>
+    );
+  };
 
   const renderToolbarStrips = () => (
     <div className="border-t border-neutral-100 pt-1.5 pb-1">{renderCompactResultsToolbar("page")}</div>
@@ -477,7 +480,7 @@ export function AgentSplitResultsSurface({
               {renderCompactResultsToolbar("column")}
             </div>
             <div className="min-h-0 flex-1 overflow-y-auto lg:min-h-0">
-              <div className="px-3 py-2 sm:px-5 sm:py-3">
+              <div className="px-3 py-1.5 sm:px-5 sm:py-2">
                 <div className="grid grid-cols-1 gap-3 sm:gap-4 xl:grid-cols-2">
                   {displayedListings.map((listing) => (
                                         <div key={listing.id}>{renderListingNode(listing)}</div>
