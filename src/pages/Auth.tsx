@@ -212,6 +212,14 @@ const Auth = () => {
     // Don't reset to signin on empty param - let manual switching work
   }, [searchParams]);
 
+  // Prefill email from ?email= query param (e.g. from approval email CTA)
+  useEffect(() => {
+    const emailParam = searchParams.get("email");
+    if (emailParam) {
+      setEmail(emailParam);
+    }
+  }, [searchParams]);
+
   // Check for logout param, reset success, or existing session
   useEffect(() => {
     let mounted = true;
