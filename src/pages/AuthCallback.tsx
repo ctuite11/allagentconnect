@@ -21,30 +21,22 @@ const AuthCallback = () => {
     const typeFromHash = hashParams.get("type");
     const typeFromQuery = searchParams.get("type");
     const isRecovery = typeFromHash === "recovery" || typeFromQuery === "recovery";
-    const flowParam = searchParams.get("flow");
-    const isApproval = flowParam === "approval";
-    return { isRecovery, isApproval };
+    return { isRecovery };
   }, [searchParams]);
 
   const isRecoveryContext = recoveryInfo.isRecovery;
-  const isApprovalFlow = recoveryInfo.isApproval;
 
   // Set sessionStorage markers in useLayoutEffect (before paint, but not in render)
   useLayoutEffect(() => {
     if (!recoveryInfo.isRecovery || typeof window === "undefined") return;
 
-    if (recoveryInfo.isApproval) {
-      sessionStorage.setItem("aac_password_setup_flow", "1");
-      sessionStorage.removeItem("aac_recovery_flow");
-    } else {
-      sessionStorage.setItem("aac_recovery_flow", "1");
-      sessionStorage.removeItem("aac_password_setup_flow");
-    }
+    sessionStorage.setItem("aac_recovery_flow", "1");
+    sessionStorage.removeItem("aac_password_setup_flow");
 
     if (import.meta.env.DEV) {
-      console.log("[AuthCallback] Recovery context captured, flow:", recoveryInfo.isApproval ? "approval" : "reset");
+      console.log("[AuthCallback] Recovery context captured, flow: reset");
     }
-  }, [recoveryInfo.isRecovery, recoveryInfo.isApproval]);
+  }, [recoveryInfo.isRecovery]);
   // ═══════════════════════════════════════════════════════════════════════════
 
   useEffect(() => {
@@ -73,7 +65,6 @@ const AuthCallback = () => {
         hasAccessToken: !!accessToken,
         hasRefreshToken: !!refreshToken,
         isRecoveryContext,
-        isApprovalFlow,
         typeFromHash,
         typeFromQuery,
         tokenKey: hasStableTokenKey ? tokenKey.substring(0, 8) + "..." : "unknown",
@@ -139,7 +130,6 @@ const AuthCallback = () => {
           if (!cancelled && !didNavigate.current) {
             const isSetupContext =
               isRecoveryContext ||
-              isApprovalFlow ||
               sessionStorage.getItem("aac_recovery_flow") === "1" ||
               sessionStorage.getItem("aac_password_setup_flow") === "1";
             didNavigate.current = true;
@@ -180,7 +170,6 @@ const AuthCallback = () => {
           if (!cancelled && !didNavigate.current) {
             const isSetupContext =
               isRecoveryContext ||
-              isApprovalFlow ||
               sessionStorage.getItem("aac_recovery_flow") === "1" ||
               sessionStorage.getItem("aac_password_setup_flow") === "1";
             didNavigate.current = true;
