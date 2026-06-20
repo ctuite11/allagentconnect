@@ -157,9 +157,3 @@ serve(async (req: Request): Promise<Response> => {
     );
   }
 });
-
-/** RFC 4648 base64url, no padding. */
-function base64UrlEncode(input: string): string {
-  const b64 = btoa(unescape(encodeURIComponent(input)));
-  return b64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
-}
