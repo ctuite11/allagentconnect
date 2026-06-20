@@ -8,55 +8,11 @@ import { authDebug, getAgentStatus } from "@/lib/authDebug";
 import { AGENT_STATUS } from "@/constants/status";
 import { toast } from "sonner";
 import AACMonogram from "@/components/ui/AACMonogram";
+import { AuthShell as PendingShell } from "@/components/auth/AuthShell";
 
 const POLL_INTERVAL_MS = 5000;
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const ACCEPTED_TYPES = ["image/jpeg", "image/png", "application/pdf"];
-
-/** Dark masthead lockup — matches AAC unified email template. */
-function PendingBrandMasthead() {
-  return (
-    <div className="w-full bg-[#0B0B0F] px-6 py-10 sm:py-12">
-      <div className="flex flex-col items-center gap-4">
-        <AACMonogram className="h-10 w-10 text-[#22C55E]" />
-        <div
-          className="text-[22px] font-semibold leading-none tracking-tight text-white sm:text-[26px]"
-          style={{ fontFamily: "Manrope, system-ui, sans-serif" }}
-        >
-          All Agent Connect
-        </div>
-        <div className="h-[2px] w-16 bg-[#22C55E]" />
-      </div>
-    </div>
-  );
-}
-
-/** Dark footer band — matches AAC unified email template. */
-function PendingBrandFooter() {
-  return (
-    <div className="w-full bg-[#0B0B0F] px-6 py-6 mt-auto">
-      <div className="flex flex-col items-center gap-2">
-        <div className="h-[2px] w-full max-w-[640px] bg-[#22C55E] -mt-6 mb-4" />
-        <AACMonogram className="h-7 w-7 text-[#22C55E]" />
-        <div className="text-sm text-white/80" style={{ fontFamily: "Manrope, system-ui, sans-serif" }}>
-          All Agent Connect
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function PendingShell({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="min-h-screen flex flex-col bg-white">
-      <PendingBrandMasthead />
-      <main className="flex-1 flex items-start justify-center px-4 py-10 sm:py-14 bg-white">
-        <div className="w-full max-w-[560px]">{children}</div>
-      </main>
-      <PendingBrandFooter />
-    </div>
-  );
-}
 
 const PendingVerification = () => {
   const navigate = useNavigate();
