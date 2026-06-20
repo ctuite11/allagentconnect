@@ -183,7 +183,7 @@ export function DashboardSidebar({
     if (prefix) return prefix.label;
 
     // Search-related routes that should always highlight "Search"
-    const searchPrefixes = ["/listing-results", "/idx-search", "/listing-search"];
+    const searchPrefixes = ["/listing-results", "/listing-search", "/agent-search", "/property/"];
     if (searchPrefixes.some((p) => path.startsWith(p))) return "Search";
 
     // Hot sheet list, review, and buyer-detail routes (not under /agent/hot-sheets prefix)

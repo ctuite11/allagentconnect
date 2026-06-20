@@ -273,6 +273,28 @@ function PublicLayout() {
   );
 }
 
+/**
+ * Property detail is public, but signed-in agents/admins get AppShell so the
+ * collapsed icon rail appears on listing workspace pages.
+ */
+function PropertyDetailShell() {
+  const { role, loading, user } = useAuthRole();
+
+  if (loading && user) {
+    return <LoadingScreen message="Loading..." />;
+  }
+
+  if (role === "agent" || role === "admin") {
+    return (
+      <AppShell>
+        <Outlet />
+      </AppShell>
+    );
+  }
+
+  return <Outlet />;
+}
+
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -427,7 +449,9 @@ const App = () => (
                 <Route path="/buyer/auth" element={<Navigate to="/auth" replace />} />
                 <Route path="/submit-client-need" element={<SubmitClientNeed />} />
                 <Route path="/communication-center" element={<Navigate to="/communications" replace />} />
-                <Route path="/property/:id" element={<PropertyDetail />} />
+                <Route element={<PropertyDetailShell />}>
+                  <Route path="/property/:id" element={<PropertyDetail />} />
+                </Route>
                 <Route path="/team/:id" element={<TeamProfile />} />
                 <Route path="/browse" element={<BrowseEntry />} />
                 <Route path="/dashboard" element={<LegacyDashboardRedirect />} />
