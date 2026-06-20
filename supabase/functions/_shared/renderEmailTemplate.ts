@@ -415,17 +415,17 @@ export function renderEmailTemplate(
 
     case "agent-approval-accepted": {
       const recipientName = variables.recipientName || "Agent";
-      const passwordSetupUrl = variables.passwordSetupUrl || "https://allagentconnect.com/auth";
+      const signInUrl = variables.signInUrl || variables.passwordSetupUrl || "https://allagentconnect.com/auth";
       return buildAacEmail({
         headline: "Your All Agent Connect account is ready",
         preheader: "Your All Agent Connect account is ready to sign in.",
         body: `
           <p style="margin:0 0 14px;">Hi ${recipientName},</p>
-          <p style="margin:0 0 18px;">Your real estate license has been verified and your All Agent Connect account is active.</p>
+          <p style="margin:0 0 18px;">Your real estate license has been verified and your All Agent Connect account is now active.</p>
           ${renderAccountReadyCard()}
-          <p style="margin:24px 0 0;">Sign in below to set your password and finish setup.</p>`,
-        ctaLabel: "Sign in to your account",
-        ctaUrl: passwordSetupUrl,
+          <p style="margin:24px 0 0;">Sign in with the password you created when you requested access.</p>`,
+        ctaLabel: "Sign In to All Agent Connect",
+        ctaUrl: signInUrl,
       });
     }
 

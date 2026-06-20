@@ -71,34 +71,12 @@ serve(async (req: Request): Promise<Response> => {
 
     console.log(`Sending ${approved ? 'approval' : 'rejection'} email to ${recipientEmail} (${recipientName})`);
 
-    let passwordSetupUrl = "https://allagentconnect.com/auth";
-
-    if (approved && recipientEmail) {
-      try {
-        const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
-          type: "recovery",
-          email: recipientEmail,
-          options: {
-            redirectTo: "https://allagentconnect.com/auth/callback?flow=approval",
-          },
-        });
-
-        if (linkError) {
-          console.error("Error generating recovery link:", linkError);
-        } else if (linkData?.properties?.action_link) {
-          // Wrap the third-party Supabase verify URL behind our own brand domain
-          // so the visible CTA host is allagentconnect.com (not *.supabase.co).
-          // Yahoo and Gmail down-score third-party auth-token URLs in transactional
-          // mail; do NOT log the decoded action link or token.
-          const actionLink = linkData.properties.action_link as string;
-          const nextParam = base64UrlEncode(actionLink);
-          passwordSetupUrl = `https://allagentconnect.com/auth/setup?next=${nextParam}`;
-          console.log("Generated branded setup link for", recipientEmail);
-        }
-      } catch (linkErr) {
-        console.error("Failed to generate recovery link:", linkErr);
-      }
-    }
+    // Approval does NOT create the account — the agent already set a password
+    // when requesting access. The CTA simply sends them to /auth to sign in,
+    // with their email prefilled when available.
+    const signInUrl = approved && recipientEmail
+      ? `https://allagentconnect.com/auth?email=${encodeURIComponent(recipientEmail)}`
+      : "https://allagentconnect.com/auth";
 
     // Unified pipeline: enqueue into email_jobs and let process-email-queue
     // handle From/Reply-To/plain-text/suppression/idempotency/retry — same as
@@ -111,7 +89,7 @@ serve(async (req: Request): Promise<Response> => {
       ? "Your All Agent Connect account is ready"
       : "All Agent Connect account verification update";
     const variables = approved
-      ? { recipientName, passwordSetupUrl }
+      ? { recipientName, signInUrl }
       : { recipientName };
 
     const idempotencyKey = `agent-approval:${approved ? "accept" : "reject"}:${userId ?? recipientEmail}`;
@@ -179,9 +157,3 @@ serve(async (req: Request): Promise<Response> => {
     );
   }
 });
-
-/** RFC 4648 base64url, no padding. */
-function base64UrlEncode(input: string): string {
-  const b64 = btoa(unescape(encodeURIComponent(input)));
-  return b64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
-}
