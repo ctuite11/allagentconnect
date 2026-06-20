@@ -383,7 +383,7 @@ const PendingVerification = () => {
   // DEFAULT — Pending / Unverified (polling)
   // ═══════════════════════════════════════════════════════════════════
   return (
-    <PendingShell>
+    <PendingShell maxWidth="560px">
       <div className="flex flex-col items-center text-center">
         <h1 className="mt-4 text-[34px] font-semibold leading-tight tracking-normal text-foreground sm:text-[42px]">
           Almost there.
