@@ -874,7 +874,7 @@ const ListingCard = ({
             onClick={openListingDetail}
           />
 
-          <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs tabular-nums text-neutral-900">
+          <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs tabular-nums text-neutral-900">
             {listing.bedrooms ? (
               <div className="flex items-center gap-1">
                 <Bed className="h-3.5 w-3.5 shrink-0 text-[#0E56F5]" aria-hidden />
