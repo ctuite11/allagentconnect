@@ -35,13 +35,6 @@ interface HotSheet {
   user_id?: string | null;
 }
 
-interface ShareTokenRow {
-  token: string;
-  payload: unknown;
-  accepted_at: string | null;
-  accepted_by_user_id: string | null;
-}
-
 interface MarketListing {
   id: string;
   address: string;
@@ -167,7 +160,7 @@ export function useBuyerWorkspaceMirror(buyerClientId: string | undefined, agent
           displayLine || (typeof client.email === "string" ? client.email : ""),
         );
 
-        const agentProfileId = String(client.agent_id);
+        const agentProfileId = agentUserId;
         const { data: agentProf } = await supabase
           .from("agent_profiles")
           .select("id,first_name,last_name,email,phone,company,headshot_url")
@@ -187,19 +180,14 @@ export function useBuyerWorkspaceMirror(buyerClientId: string | undefined, agent
           setResolvedBuyerUserId(buyerUserId);
         }
 
-        const buyerEmailNorm = (client.email || "").toLowerCase().trim();
-
-        /** Same union as buyer `/client/dashboard`: hot_sheet_clients + accepted share_tokens. */
-        async function collectMirrorHotSheetIds(
-          userId: string | null,
-          emailNorm: string,
-        ): Promise<string[]> {
+        /** Agent mirror: sheets linked via hot_sheet_clients or legacy hot_sheets.client_id. */
+        async function collectAgentBuyerHotSheetIds(crmClientId: string): Promise<string[]> {
           const allHotSheetIds = new Set<string>();
 
           const { data: hscRows, error: hscErr } = await supabase
             .from("hot_sheet_clients")
             .select("hot_sheet_id")
-            .eq("client_id", buyerClientId);
+            .eq("client_id", crmClientId);
 
           if (hscErr) {
             console.warn("[BuyerWorkspaceMirror] hot_sheet_clients:", hscErr.message);
@@ -210,30 +198,18 @@ export function useBuyerWorkspaceMirror(buyerClientId: string | undefined, agent
             if (hid) allHotSheetIds.add(hid);
           }
 
-          if (userId) {
-            const { data: acceptedTokenRows } = await supabase
-              .from("share_tokens")
-              .select("token, payload, accepted_at, accepted_by_user_id")
-              .not("accepted_at", "is", null);
+          const { data: directLinked, error: directErr } = await supabase
+            .from("hot_sheets")
+            .select("id")
+            .eq("user_id", agentUserId)
+            .eq("client_id", crmClientId);
 
-            for (const tokenRow of (acceptedTokenRows || []) as ShareTokenRow[]) {
-              const payload =
-                tokenRow.payload && typeof tokenRow.payload === "object"
-                  ? (tokenRow.payload as Record<string, unknown>)
-                  : {};
-              if (payload.type !== "client_hotsheet_invite") continue;
+          if (directErr) {
+            console.warn("[BuyerWorkspaceMirror] hot_sheets(client_id):", directErr.message);
+          }
 
-              const hotSheetId = String(payload.hot_sheet_id || "");
-              if (!hotSheetId) continue;
-
-              const matchByUserId = tokenRow.accepted_by_user_id === userId;
-              const tokenEmail = String(payload.client_email || "").toLowerCase().trim();
-              const matchByEmail = Boolean(emailNorm && tokenEmail === emailNorm);
-
-              if (matchByUserId || matchByEmail) {
-                allHotSheetIds.add(hotSheetId);
-              }
-            }
+          for (const row of directLinked || []) {
+            if (row.id) allHotSheetIds.add(row.id);
           }
 
           return [...allHotSheetIds];
@@ -247,13 +223,12 @@ export function useBuyerWorkspaceMirror(buyerClientId: string | undefined, agent
             return;
           }
 
-          const { data: hotSheetRowsRaw, error: sheetErr } = await supabase
-            .rpc("list_hot_sheets_for_member" as any, { _hot_sheet_ids: hotSheetIds } as any);
-          const hotSheetRows = ((hotSheetRowsRaw as any[]) || [])
-            .slice()
-            .sort((a: any, b: any) =>
-              (b?.created_at ?? "").localeCompare(a?.created_at ?? "")
-            );
+          const { data: hotSheetRows, error: sheetErr } = await supabase
+            .from("hot_sheets")
+            .select("id, name, criteria, created_at, last_sent_at, is_active, user_id")
+            .in("id", hotSheetIds)
+            .eq("user_id", agentUserId)
+            .order("created_at", { ascending: false });
 
           if (sheetErr || !hotSheetRows) {
             if (sheetErr) console.warn("[BuyerWorkspaceMirror] hot_sheets:", sheetErr.message);
@@ -354,7 +329,7 @@ export function useBuyerWorkspaceMirror(buyerClientId: string | undefined, agent
           );
         }
 
-        const hotSheetIdList = await collectMirrorHotSheetIds(buyerUserId, buyerEmailNorm);
+        const hotSheetIdList = await collectAgentBuyerHotSheetIds(buyerClientId);
 
         await Promise.all([
           loadMirrorHotSheetsFromIds(hotSheetIdList),

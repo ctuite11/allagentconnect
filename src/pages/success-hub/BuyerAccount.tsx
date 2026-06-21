@@ -257,7 +257,6 @@ export default function BuyerAccount() {
         }}
         dashboardPaths={{
           hotSheetsViewAll: `/hot-sheets/buyer/${buyerId}`,
-          hotSheetsViewAllLabel: "Manage buyer's hot sheets",
           favoritesViewAll: `/agent/buyers/${buyerId}/favorites`,
           marketSearch: "/search",
           favoritesEmptySearch: "/search",

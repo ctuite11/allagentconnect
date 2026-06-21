@@ -305,8 +305,7 @@ export function ClientDashboardView({
     favoritesEmptySearch: dashboardPaths?.favoritesEmptySearch ?? "/client/search",
   };
 
-  const hotSheetsViewAllLabel =
-    paths.hotSheetsViewAllLabel ?? (variant === "agent" && crmBuyerId ? "Manage buyer's hot sheets" : "View all");
+  const hotSheetsViewAllLabel = paths.hotSheetsViewAllLabel ?? "View all";
   const isBuyerWorkspace = variant === "agent" && Boolean(crmBuyerId);
 
   const favoritesPreviewRows = favorites.filter(
@@ -509,17 +508,6 @@ export function ClientDashboardView({
                         </div>
                       ) : null}
                       <div className="flex flex-wrap gap-1.5 sm:gap-2">
-                        {onCreateHotSheet ? (
-                          <Button
-                            size="sm"
-                            type="button"
-                            className="h-8 gap-1.5 px-3 text-[13px] font-medium sm:h-9"
-                            onClick={onCreateHotSheet}
-                          >
-                            <Plus className="h-3.5 w-3.5 shrink-0" strokeWidth={2} aria-hidden />
-                            New Hot Sheet
-                          </Button>
-                        ) : null}
                         <Button
                           variant="outline"
                           size="sm"
@@ -692,7 +680,7 @@ export function ClientDashboardView({
                             onClick={onCreateHotSheet}
                           >
                             <Plus className="h-3.5 w-3.5 shrink-0" strokeWidth={2} aria-hidden />
-                            New Hot Sheet
+                            + New Hot Sheet
                           </Button>
                         ) : null}
                         <button
@@ -743,23 +731,12 @@ export function ClientDashboardView({
                         })}
                       </div>
                     ) : (
-                      <div className="mx-auto flex max-w-md flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-neutral-200 bg-white px-4 py-8 text-center">
+                      <div className="mx-auto flex max-w-md flex-col items-center justify-center rounded-xl border border-dashed border-neutral-200 bg-white px-4 py-8 text-center">
                         <p className={`${dashSectionDescClass}`}>
                           {isBuyerWorkspace
                             ? "No hot sheets yet for this buyer."
                             : "No hot sheets yet. Create one from Hot Sheets for alerts, or ask your agent to share one."}
                         </p>
-                        {onCreateHotSheet ? (
-                          <Button
-                            type="button"
-                            size="sm"
-                            className="h-8 gap-1.5 px-3 text-xs font-medium"
-                            onClick={onCreateHotSheet}
-                          >
-                            <Plus className="h-3.5 w-3.5 shrink-0" strokeWidth={2} aria-hidden />
-                            New Hot Sheet
-                          </Button>
-                        ) : null}
                       </div>
                     )}
                   </CardContent>
