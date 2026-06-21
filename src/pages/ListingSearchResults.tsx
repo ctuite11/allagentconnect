@@ -384,8 +384,7 @@ const ListingSearchResults = () => {
     />
   );
 
-  /** View + sort controls for the results toolbar. */
-  const renderViewSortControls = (compact: boolean) => {
+  const renderViewResultsControls = (compact: boolean) => {
     const labelClass = compact ? "text-[11px] font-medium text-neutral-500" : "text-[13px] text-neutral-500";
     const toggleBtnClass = compact
       ? "h-[22px] min-w-[2.25rem] rounded-[4px] px-1.5 text-[11px] font-medium whitespace-nowrap leading-none transition-colors duration-200 ease-out"
@@ -393,14 +392,19 @@ const ListingSearchResults = () => {
     const toggleWrapClass = compact
       ? "inline-flex rounded-md border border-neutral-200 bg-white p-[2px] shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
       : "inline-flex rounded-lg border border-neutral-200 bg-white p-[2px] shadow-[0_1px_2px_rgba(0,0,0,0.04)]";
-
+    const countClass = cn(
+      "shrink-0 font-medium text-neutral-900 tabular-nums whitespace-nowrap",
+      compact ? "text-sm" : "text-[13px]",
+    );
     const showViewToggle = !loading && displayedListings.length > 0;
+    const resultsLabel = loading ? "Results: —" : `Results: ${displayedListings.length.toLocaleString()}`;
 
     return (
-      <div className="flex min-w-0 shrink-0 items-center justify-end gap-2">
-        {showViewToggle && (
-          <div className="flex min-w-0 items-center gap-1.5">
+      <div className="flex min-w-0 shrink-0 items-center gap-2">
+        {showViewToggle ? (
+          <>
             <span className={cn(labelClass, "whitespace-nowrap")}>View</span>
+            <p className={countClass}>{resultsLabel}</p>
             <div className={toggleWrapClass}>
               <button
                 type="button"
@@ -427,30 +431,35 @@ const ListingSearchResults = () => {
                 List
               </button>
             </div>
-          </div>
+          </>
+        ) : (
+          <p className={countClass}>{resultsLabel}</p>
         )}
-        <div className={cn("min-w-0", compact ? "max-w-[7.5rem]" : "w-full max-w-[8.5rem] min-[520px]:max-w-[11rem]")}>
-          <Select value={sortSelectValue} onValueChange={handleSortSelect}>
-            <SelectTrigger
-              className={cn(
-                compact
-                  ? "h-7 rounded-md border-neutral-200/90 bg-white px-2 text-[11px] font-medium text-neutral-900 shadow-none focus-visible:ring-2 focus-visible:ring-neutral-300/50 focus-visible:ring-offset-2"
-                  : "h-8 rounded-md border-neutral-200/90 bg-white text-xs font-medium text-neutral-900 shadow-none focus-visible:ring-2 focus-visible:ring-neutral-300/50 focus-visible:ring-offset-2",
-              )}
-            >
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="rounded-lg border border-neutral-200 bg-white shadow-[0_4px_20px_rgba(0,0,0,0.08)]">
-              <SelectItem value="date_new">Date (New)</SelectItem>
-              <SelectItem value="date_old">Date (Old)</SelectItem>
-              <SelectItem value="price_high">Price (High)</SelectItem>
-              <SelectItem value="price_low">Price (Low)</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
       </div>
     );
   };
+
+  const renderSortControl = (compact: boolean) => (
+    <div className={cn("min-w-0 shrink-0", compact ? "max-w-[7.5rem]" : "max-w-[8.5rem] min-[520px]:max-w-[11rem]")}>
+      <Select value={sortSelectValue} onValueChange={handleSortSelect}>
+        <SelectTrigger
+          className={cn(
+            compact
+              ? "h-7 rounded-md border-neutral-200/90 bg-white px-2 text-[11px] font-medium text-neutral-900 shadow-none focus-visible:ring-2 focus-visible:ring-neutral-300/50 focus-visible:ring-offset-2"
+              : "h-8 rounded-md border-neutral-200/90 bg-white text-xs font-medium text-neutral-900 shadow-none focus-visible:ring-2 focus-visible:ring-neutral-300/50 focus-visible:ring-offset-2",
+          )}
+        >
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent className="rounded-lg border border-neutral-200 bg-white shadow-[0_4px_20px_rgba(0,0,0,0.08)]">
+          <SelectItem value="date_new">Date (New)</SelectItem>
+          <SelectItem value="date_old">Date (Old)</SelectItem>
+          <SelectItem value="price_high">Price (High)</SelectItem>
+          <SelectItem value="price_low">Price (Low)</SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
+  );
 
   const renderResultsActionsContent = () => {
     const saveHotSheetBtn = (
@@ -489,28 +498,21 @@ const ListingSearchResults = () => {
     );
   };
 
-  /** Page-level row: results count + view/sort (above workspace divider). */
+  /** Page-level row: View + results count + map/list (above workspace divider). */
   const renderResultsSummaryToolbar = (compact: boolean) => (
-    <div
-      className="flex items-center justify-between gap-x-2"
-      aria-label="Results summary and controls"
-    >
-      <p
-        className={cn(
-          "min-w-0 shrink-0 font-medium text-neutral-900 tabular-nums",
-          compact ? "text-sm" : "text-[13px]",
-        )}
-      >
-        {loading ? "Results: —" : `Results: ${displayedListings.length.toLocaleString()}`}
-      </p>
-      {renderViewSortControls(compact)}
+    <div className="flex justify-end" aria-label="Results summary and controls">
+      {renderViewResultsControls(compact)}
     </div>
   );
 
-  /** Card-level row: selection actions that operate on listing cards. */
-  const renderResultsSelectionToolbar = () => (
-    <div aria-label="Result actions" className="flex flex-wrap items-center gap-1.5">
-      {renderResultsActionsContent()}
+  /** Card-level row: selection actions left, sort right. */
+  const renderResultsSelectionToolbar = (compact: boolean) => (
+    <div
+      className="flex items-center justify-between gap-x-2 gap-y-1"
+      aria-label="Result actions"
+    >
+      <div className="flex min-w-0 flex-wrap items-center gap-1.5">{renderResultsActionsContent()}</div>
+      {renderSortControl(compact)}
     </div>
   );
 
@@ -518,7 +520,7 @@ const ListingSearchResults = () => {
     <>
       {renderToolbarTitleRow()}
       <div className="border-t border-neutral-100 pt-1.5 pb-1">{renderResultsSummaryToolbar(false)}</div>
-      <div className="border-t border-neutral-100 pb-1 pt-1.5">{renderResultsSelectionToolbar()}</div>
+      <div className="border-t border-neutral-100 pb-1 pt-1.5">{renderResultsSelectionToolbar(false)}</div>
     </>
   );
 
@@ -571,7 +573,7 @@ const ListingSearchResults = () => {
 
                 <section className={agentWorkspaceResultsPanel}>
                   <div className="shrink-0 border-b border-neutral-200/90 bg-white px-3 py-1 sm:px-5">
-                    {renderResultsSelectionToolbar()}
+                    {renderResultsSelectionToolbar(true)}
                   </div>
                   <div className="min-h-0 flex-1 overflow-y-auto lg:min-h-0">
                     <div className="px-3 py-1.5 sm:px-5 sm:py-2">
