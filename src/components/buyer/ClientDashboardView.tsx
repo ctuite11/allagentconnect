@@ -8,7 +8,7 @@ import type { LucideIcon } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { MessageSquare, UserPlus, Mail, MapPin, Bed, Bath, Maximize, UserX, Phone, Flame, Heart, LineChart } from "lucide-react";
+import { MessageSquare, UserPlus, Mail, MapPin, Bed, Bath, Maximize, UserX, Phone, Flame, Heart, LineChart, Plus } from "lucide-react";
 import { isDcmlsHost } from "@/lib/host";
 import { PendingInvitesCard } from "@/components/PendingInvitesCard";
 import { BulkShareListingsDialog } from "@/components/BulkShareListingsDialog";
@@ -148,6 +148,8 @@ export interface ClientDashboardViewProps {
   /** Override “View all” / section links while keeping the same UI. */
   dashboardPaths?: {
     hotSheetsViewAll: string;
+    /** Agent buyer workspace — e.g. "Manage buyer's hot sheets" */
+    hotSheetsViewAllLabel?: string;
     favoritesViewAll: string;
     marketSearch: string;
     favoritesEmptySearch: string;
@@ -160,6 +162,8 @@ export interface ClientDashboardViewProps {
   crmBuyerId?: string | null;
   /** Buyer self-service — opens parent delete confirmation (ignored for agent variant). */
   onRequestDeleteHotSheet?: (sheetId: string) => void;
+  /** Agent buyer workspace — opens create hot sheet with buyer pre-selected. */
+  onCreateHotSheet?: () => void;
   /** Buyer dashboard — refresh favorites preview after market activity heart toggle. */
   onBuyerMarketFavoriteToggle?: () => void;
 }
@@ -281,6 +285,7 @@ export function ClientDashboardView({
   mirrorManagementActions,
   crmBuyerId = null,
   onRequestDeleteHotSheet,
+  onCreateHotSheet,
   onBuyerMarketFavoriteToggle,
 }: ClientDashboardViewProps) {
   const goMessages = onMessagesPrimary ?? (() => navigate("/messages"));
@@ -294,10 +299,15 @@ export function ClientDashboardView({
 
   const paths = {
     hotSheetsViewAll: dashboardPaths?.hotSheetsViewAll ?? "/hot-sheets",
+    hotSheetsViewAllLabel: dashboardPaths?.hotSheetsViewAllLabel,
     favoritesViewAll: dashboardPaths?.favoritesViewAll ?? "/favorites",
     marketSearch: dashboardPaths?.marketSearch ?? "/client/search",
     favoritesEmptySearch: dashboardPaths?.favoritesEmptySearch ?? "/client/search",
   };
+
+  const hotSheetsViewAllLabel =
+    paths.hotSheetsViewAllLabel ?? (variant === "agent" && crmBuyerId ? "Manage buyer's hot sheets" : "View all");
+  const isBuyerWorkspace = variant === "agent" && Boolean(crmBuyerId);
 
   const favoritesPreviewRows = favorites.filter(
     (fav) =>
@@ -499,6 +509,17 @@ export function ClientDashboardView({
                         </div>
                       ) : null}
                       <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                        {onCreateHotSheet ? (
+                          <Button
+                            size="sm"
+                            type="button"
+                            className="h-8 gap-1.5 px-3 text-[13px] font-medium sm:h-9"
+                            onClick={onCreateHotSheet}
+                          >
+                            <Plus className="h-3.5 w-3.5 shrink-0" strokeWidth={2} aria-hidden />
+                            New Hot Sheet
+                          </Button>
+                        ) : null}
                         <Button
                           variant="outline"
                           size="sm"
@@ -656,17 +677,39 @@ export function ClientDashboardView({
                           Hot Sheets
                         </CardTitle>
                         <CardDescription className={`${dashSectionDescClass} mt-0 p-0`}>
-                          Alerts for saved searches.
+                          {isBuyerWorkspace
+                            ? "Saved searches and alerts for this buyer."
+                            : "Alerts for saved searches."}
                         </CardDescription>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => navigate(paths.hotSheetsViewAll)}
-                        className={dashboardPreviewViewAllCtaClass}
-                        title={variant === "agent" ? "View all hot sheets" : undefined}
-                      >
-                        View all →
-                      </button>
+                      <div className="flex shrink-0 flex-col items-end gap-2 sm:flex-row sm:items-center">
+                        {onCreateHotSheet ? (
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            className="h-8 shrink-0 gap-1.5 px-3 text-xs font-medium"
+                            onClick={onCreateHotSheet}
+                          >
+                            <Plus className="h-3.5 w-3.5 shrink-0" strokeWidth={2} aria-hidden />
+                            New Hot Sheet
+                          </Button>
+                        ) : null}
+                        <button
+                          type="button"
+                          onClick={() => navigate(paths.hotSheetsViewAll)}
+                          className={dashboardPreviewViewAllCtaClass}
+                          title={
+                            variant === "agent"
+                              ? isBuyerWorkspace
+                                ? "View and manage this buyer's hot sheets"
+                                : "View all hot sheets"
+                              : undefined
+                          }
+                        >
+                          {hotSheetsViewAllLabel} →
+                        </button>
+                      </div>
                     </div>
                   </CardHeader>
                   <CardContent className={previewSectionContentClass}>
@@ -700,10 +743,23 @@ export function ClientDashboardView({
                         })}
                       </div>
                     ) : (
-                      <div className="mx-auto flex max-w-md flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-neutral-200 bg-white px-4 py-8 text-center">
+                      <div className="mx-auto flex max-w-md flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-neutral-200 bg-white px-4 py-8 text-center">
                         <p className={`${dashSectionDescClass}`}>
-                          No hot sheets yet. Create one from Hot Sheets for alerts, or ask your agent to share one.
+                          {isBuyerWorkspace
+                            ? "No hot sheets yet for this buyer."
+                            : "No hot sheets yet. Create one from Hot Sheets for alerts, or ask your agent to share one."}
                         </p>
+                        {onCreateHotSheet ? (
+                          <Button
+                            type="button"
+                            size="sm"
+                            className="h-8 gap-1.5 px-3 text-xs font-medium"
+                            onClick={onCreateHotSheet}
+                          >
+                            <Plus className="h-3.5 w-3.5 shrink-0" strokeWidth={2} aria-hidden />
+                            New Hot Sheet
+                          </Button>
+                        ) : null}
                       </div>
                     )}
                   </CardContent>

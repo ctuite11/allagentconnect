@@ -256,11 +256,13 @@ export default function BuyerAccount() {
           if (label === "Hot Sheets") navigate(`/hot-sheets/buyer/${buyerId}`);
         }}
         dashboardPaths={{
-          hotSheetsViewAll: "/agent/hot-sheets",
+          hotSheetsViewAll: `/hot-sheets/buyer/${buyerId}`,
+          hotSheetsViewAllLabel: "Manage buyer's hot sheets",
           favoritesViewAll: `/agent/buyers/${buyerId}/favorites`,
           marketSearch: "/search",
           favoritesEmptySearch: "/search",
         }}
+        onCreateHotSheet={() => setCreateHsOpen(true)}
         topBanner={
           <div className="bg-white px-6 md:px-8">
             <div className="mx-auto max-w-7xl">
