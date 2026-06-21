@@ -265,11 +265,11 @@ export function AgentSplitResultsSurface({
     const resultsLabel = loading ? "Results: —" : `Results: ${displayedListings.length.toLocaleString()}`;
 
     return (
-      <div className="flex min-w-0 shrink-0 items-center gap-2">
+      <div className="flex min-w-0 shrink-0 items-center gap-3">
+        <p className={countClass}>{resultsLabel}</p>
         {showViewToggle ? (
-          <>
+          <div className="flex min-w-0 items-center gap-1.5">
             <span className={cn(labelClass, "whitespace-nowrap")}>View</span>
-            <p className={countClass}>{resultsLabel}</p>
             <div className={toggleWrapClass}>
               <button
                 type="button"
@@ -296,10 +296,8 @@ export function AgentSplitResultsSurface({
                 List
               </button>
             </div>
-          </>
-        ) : (
-          <p className={countClass}>{resultsLabel}</p>
-        )}
+          </div>
+        ) : null}
       </div>
     );
   };
