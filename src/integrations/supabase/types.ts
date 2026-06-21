@@ -4418,6 +4418,11 @@ export type Database = {
           zip_code: string
         }[]
       }
+      get_hot_sheet_by_token: { Args: { _token: string }; Returns: Json }
+      get_hot_sheet_for_member: {
+        Args: { _hot_sheet_id: string }
+        Returns: Json
+      }
       get_listing_interest_signals: {
         Args: { p_agent_id: string; p_listing_ids: string[] }
         Returns: {
@@ -4494,6 +4499,23 @@ export type Database = {
         Returns: boolean
       }
       is_verified_agent: { Args: never; Returns: boolean }
+      list_hot_sheets_for_member: {
+        Args: { _hot_sheet_ids: string[] }
+        Returns: {
+          client_id: string
+          created_at: string
+          criteria: Json
+          id: string
+          is_active: boolean
+          last_sent_at: string
+          name: string
+          notification_schedule: string
+          notify_agent_email: boolean
+          notify_client_email: boolean
+          updated_at: string
+          user_id: string
+        }[]
+      }
       list_my_accepted_hot_sheet_tokens: {
         Args: never
         Returns: {
