@@ -69,6 +69,11 @@ import type { ListedByAgentProfile } from "@/lib/listingListedBy";
 import { formatHotSheetRef } from "@/lib/formatHotSheetRef";
 import { formatCriteriaDisplayLabels } from "@/lib/formatCriteriaDisplay";
 import { AddHotSheetRecipientDialog } from "@/components/hot-sheets/AddHotSheetRecipientDialog";
+import {
+  buildBuyerStatusInput,
+  isActiveBuyerRelationship,
+  isBuyerWorkspaceLinked,
+} from "@/lib/buyerStatus";
 
 /** One row per `hot_sheet_clients` recipient for compact review strip. */
 interface ReviewRecipient {
@@ -76,7 +81,10 @@ interface ReviewRecipient {
   displayName: string;
   email: string;
   phone: string | null;
+  /** Buyer already connected (agent-wide accepted invite, workspace invite, or active relationship). */
   inviteAccepted: boolean;
+  /** Accepted invite token scoped to this hot sheet only — drives shared workspace mode. */
+  inviteAcceptedForSheet: boolean;
   /** Present when invite pending and a share token exists (for Resend). */
   resendTokenId?: string;
   resendToken?: string;
@@ -89,6 +97,18 @@ interface ReviewRecipient {
   buyerLinked: boolean;
   /** Linked auth user id (when buyer has accepted) — drives presence dot. */
   authUserId?: string;
+}
+
+function hotSheetReviewSendLabel(
+  recipients: ReviewRecipient[],
+  selectedCount: number,
+): string {
+  const pendingRecipients = recipients.filter((r) => !r.inviteAccepted && !r.buyerLinked);
+  if (pendingRecipients.length === 0) {
+    return selectedCount > 0 ? "Send Selected Listings" : "Send Listings";
+  }
+  const allAlreadyInvited = pendingRecipients.every((r) => !!r.resendTokenId);
+  return allAlreadyInvited ? "Resend Invite" : "Send Listings with Invite";
 }
 
 function getCriteriaSummaryLine(criteria: any): { scope: string; state: string; statuses: string } {
@@ -203,7 +223,7 @@ const HotSheetReview = () => {
   const isSharedWorkspace = useMemo(
     () =>
       reviewRecipients.length > 0 &&
-      reviewRecipients.every((r) => r.inviteAccepted || r.buyerLinked),
+      reviewRecipients.every((r) => r.inviteAcceptedForSheet || r.buyerLinked),
     [reviewRecipients],
   );
 
@@ -425,6 +445,14 @@ const HotSheetReview = () => {
 
             const relationshipRows = await fetchActiveRelationshipsForCrmClients(user.id, clientIds);
 
+            const relationshipByCrmId = new Map<
+              string,
+              { crm_client_id: string | null; client_id: string | null; status: string }
+            >();
+            for (const r of relationshipRows) {
+              if (r.crm_client_id) relationshipByCrmId.set(String(r.crm_client_id), r);
+            }
+
             const buyerLinkedCrmIds = new Set(
               relationshipRows
                 .filter((r) => r.status === "active" && r.client_id != null && r.crm_client_id != null)
@@ -435,6 +463,32 @@ const HotSheetReview = () => {
               if (r.status === "active" && r.crm_client_id && r.client_id) {
                 authUserIdByCrmClientId.set(String(r.crm_client_id), String(r.client_id));
               }
+            }
+
+            for (const t of allInviteForAgent) {
+              if (!(t as any)?.accepted_at) continue;
+              const cid = (t as any)?.payload?.client_id ?? null;
+              const acceptedAuthId = (t as any)?.accepted_by_user_id ?? null;
+              if (cid && acceptedAuthId) {
+                authUserIdByCrmClientId.set(String(cid), String(acceptedAuthId));
+              }
+            }
+
+            const eligibleEmails = [...emailByClientId.values()];
+            let workspaceAcceptedEmails = new Set<string>();
+            if (eligibleEmails.length > 0) {
+              const { data: wsRows } = await supabase
+                .from("buyer_workspace_invites")
+                .select("buyer_email")
+                .in("buyer_email", eligibleEmails)
+                .not("accepted_at", "is", null);
+              workspaceAcceptedEmails = new Set(
+                (wsRows ?? [])
+                  .map((r: { buyer_email?: string | null }) =>
+                    typeof r.buyer_email === "string" ? r.buyer_email.trim().toLowerCase() : "",
+                  )
+                  .filter(Boolean),
+              );
             }
 
             const tokensByClientId = new Map<string, any[]>();
@@ -460,27 +514,6 @@ const HotSheetReview = () => {
                 tokensByEmail.set(key, arr);
               }
             }
-
-            let accepted = 0;
-            let unaccepted = 0;
-
-            for (const hscRow of hscRows) {
-              const clientId = (hscRow as any)?.client_id ?? null;
-              const clientEmail =
-                (clientId && emailByClientId.get(String(clientId))) ||
-                ((hscRow as any)?.client_email ? String((hscRow as any).client_email).toLowerCase() : null);
-
-              const byId = clientId ? (tokensByClientId.get(String(clientId)) ?? []) : [];
-              const byEmail = clientEmail ? (tokensByEmail.get(clientEmail) ?? []) : [];
-              const tokens = [...byId, ...byEmail];
-              const hasAccepted = tokens.some((t) => Boolean(t?.accepted_at));
-
-              if (hasAccepted) accepted += 1;
-              else unaccepted += 1;
-            }
-
-            setAcceptedCount(accepted);
-            setUnacceptedCount(unaccepted);
 
             const clientById = new Map((clientsRows ?? []).map((c: any) => [String(c.id), c]));
 
@@ -511,26 +544,46 @@ const HotSheetReview = () => {
                 `${cRow.first_name ?? ""} ${cRow.last_name ?? ""}`.trim() || email || "Contact";
               const phone = cRow.phone != null && String(cRow.phone).trim() ? String(cRow.phone) : null;
               const emailKey = email ? email.toLowerCase() : null;
-              const merged = mergeTokensForClient(cid, emailKey);
-              const hasAccepted = merged.some((t: any) => Boolean(t?.accepted_at));
-              const pick = pickPendingTokenRow(merged);
+              const sheetMerged = mergeTokensForClient(cid, emailKey);
               const globalMerged = mergeGlobalInviteTokens(cid, emailKey);
-              const sendDashboardInvite =
-                !buyerLinkedCrmIds.has(cid) && globalMerged.length === 0;
+              const inviteAcceptedForSheet = sheetMerged.some((t: any) => Boolean(t?.accepted_at));
+              const inviteAcceptedGlobally =
+                globalMerged.some((t: any) => Boolean(t?.accepted_at)) ||
+                (emailKey ? workspaceAcceptedEmails.has(emailKey) : false);
+              const rel = relationshipByCrmId.get(cid);
+              const statusInput = buildBuyerStatusInput(
+                {
+                  client_id: rel?.client_id ?? null,
+                  status: rel?.status ?? null,
+                  ended_at: null,
+                },
+                { inviteAcceptedForClient: inviteAcceptedGlobally },
+              );
+              const buyerConnected = isActiveBuyerRelationship(statusInput);
+              const buyerLinked =
+                isBuyerWorkspaceLinked(statusInput) || buyerLinkedCrmIds.has(cid);
+              const pick = pickPendingTokenRow(
+                sheetMerged.length > 0 ? sheetMerged : globalMerged,
+              );
+              const sendDashboardInvite = !buyerConnected && globalMerged.length === 0;
 
               built.push({
                 clientId: cid,
                 displayName,
                 email,
                 phone,
-                inviteAccepted: hasAccepted,
-                resendTokenId: !hasAccepted && pick ? pick.id : undefined,
-                resendToken: !hasAccepted && pick ? pick.token : undefined,
+                inviteAccepted: buyerConnected,
+                inviteAcceptedForSheet,
+                resendTokenId: !buyerConnected && pick ? pick.id : undefined,
+                resendToken: !buyerConnected && pick ? pick.token : undefined,
                 sendDashboardInvite,
-                buyerLinked: buyerLinkedCrmIds.has(cid),
+                buyerLinked,
                 authUserId: undefined,
               });
             }
+
+            setAcceptedCount(built.filter((r) => r.inviteAccepted).length);
+            setUnacceptedCount(built.filter((r) => !r.inviteAccepted).length);
 
             const orderedRecipients = [
               ...built.filter((r) => r.clientId === primaryCrmClientId),
@@ -568,7 +621,8 @@ const HotSheetReview = () => {
             );
 
             workspaceIsShared =
-              built.length > 0 && built.every((r) => r.inviteAccepted || r.buyerLinked);
+              built.length > 0 &&
+              built.every((r) => r.inviteAcceptedForSheet || r.buyerLinked);
             setReviewRecipients(built);
           } catch (e) {
             console.warn("Token count computation failed:", e);
@@ -1329,14 +1383,7 @@ const HotSheetReview = () => {
                     <Send className="h-3.5 w-3.5" />
                     {sending
                       ? "Sending…"
-                      : (() => {
-                          const pendingRecipients = reviewRecipients.filter(
-                            (r) => !r.inviteAccepted && !r.buyerLinked,
-                          );
-                          if (pendingRecipients.length === 0) return "Send Listings";
-                          const allAlreadyInvited = pendingRecipients.every((r) => !!r.resendTokenId);
-                          return allAlreadyInvited ? "Resend Invite" : "Send Listings with Invite";
-                        })()}
+                      : hotSheetReviewSendLabel(reviewRecipients, selectedListings.size)}
                   </Button>
                 ) : !invitesSent && acceptedCount > 0 ? (
                   <DropdownMenu>
