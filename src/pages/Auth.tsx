@@ -626,14 +626,7 @@ const Auth = () => {
       setRegisterStep("finishing");
       
       const roleResult = await withTimeout(
-        supabase
-          .from('user_roles')
-          .upsert({
-            user_id: userId,
-            role: 'agent'
-          }, {
-            onConflict: 'user_id,role'
-          }),
+        supabase.rpc('assign_self_role', { _role: 'agent' }),
         20000,
         "Assign role"
       );
