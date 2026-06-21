@@ -9,10 +9,15 @@ import PropertyMap from "@/components/PropertyMap";
 import ListingCard from "@/components/ListingCard";
 import ListingResultsTable from "@/components/listing-search/ListingResultsTable";
 import { AgentSplitResultsSelectionActions } from "@/components/listing-search/AgentSplitResultsSelectionActions";
+import {
+  AgentListingSortSelect,
+  selectValueFromSortColumnDirection,
+  sortColumnDirectionFromSelectValue,
+  type AgentListingSortValue,
+} from "@/components/listing-search/AgentListingSortSelect";
 import { BulkShareListingsDialog } from "@/components/BulkShareListingsDialog";
 import SaveToHotSheetDialog from "@/components/SaveToHotSheetDialog";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ListChecks, Check, FileSpreadsheet } from "lucide-react";
 import { Seo } from "@/components/Seo";
 import {
@@ -86,6 +91,8 @@ export type AgentSplitResultsSurfaceProps = {
   sortTriggerClassName?: string;
   /** Override map/results grid height token. */
   mapResultsGridClassName?: string;
+  /** Full-width toolbar rows above map grid (hot sheet review workspace). */
+  workspaceToolbarLayout?: "default" | "hotSheetReview";
 };
 
 /**
@@ -127,6 +134,7 @@ export function AgentSplitResultsSurface({
   selectionPillClassName,
   sortTriggerClassName,
   mapResultsGridClassName,
+  workspaceToolbarLayout = "default",
 }: AgentSplitResultsSurfaceProps) {
   const navigate = useNavigate();
   const [sortColumn, setSortColumn] = useState(LISTING_DEFAULT_SORT_COLUMN);
@@ -242,27 +250,15 @@ export function AgentSplitResultsSurface({
     });
   };
 
-  const sortSelectValue =
-    ({
-      created_at_desc: "date_new",
-      created_at_asc: "date_old",
-      list_date_desc: "date_new",
-      list_date_asc: "date_old",
-      price_desc: "price_high",
-      price_asc: "price_low",
-    } as Record<string, string>)[`${sortColumn}_${sortDirection}`] ?? "date_new";
+  const sortSelectValue = selectValueFromSortColumnDirection(sortColumn, sortDirection);
 
-  const handleSortSelect = (value: string) => {
-    const colDir: Record<string, [string, "asc" | "desc"]> = {
-      date_new: [LISTING_DEFAULT_SORT_COLUMN, "desc"],
-      date_old: [LISTING_DEFAULT_SORT_COLUMN, "asc"],
-      price_high: ["price", "desc"],
-      price_low: ["price", "asc"],
-    };
-    const [col, dir] = colDir[value] ?? [LISTING_DEFAULT_SORT_COLUMN, "desc"];
+  const handleSortSelect = (value: AgentListingSortValue) => {
+    const [col, dir] = sortColumnDirectionFromSelectValue(value);
     setSortColumn(col);
     setSortDirection(dir);
   };
+
+  const isHotSheetReviewToolbar = workspaceToolbarLayout === "hotSheetReview";
 
   const hasResultsActionsRow =
     selectionEnabled || Boolean(toolbarActionsExtra) || showSaveToHotSheet;
@@ -322,27 +318,29 @@ export function AgentSplitResultsSurface({
   };
 
   const renderSortControl = (compact: boolean) => (
-    <div className={cn("min-w-0 shrink-0", compact ? "max-w-[7.5rem]" : "max-w-[8.5rem] min-[520px]:max-w-[11rem]")}>
-      <Select value={sortSelectValue} onValueChange={handleSortSelect}>
-        <SelectTrigger
-          className={
-            sortTriggerClassName ??
-            cn(
-              compact
-                ? "h-7 rounded-md border-neutral-200/90 bg-white px-2 text-[11px] font-medium text-neutral-900 shadow-none focus-visible:ring-2 focus-visible:ring-neutral-300/50 focus-visible:ring-offset-2"
-                : "h-8 rounded-md border-neutral-200/90 bg-white text-xs font-medium text-neutral-900 shadow-none focus-visible:ring-2 focus-visible:ring-neutral-300/50 focus-visible:ring-offset-2",
-            )
-          }
-        >
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent className="rounded-lg border border-neutral-200 bg-white shadow-[0_4px_20px_rgba(0,0,0,0.08)]">
-          <SelectItem value="date_new">Date (New)</SelectItem>
-          <SelectItem value="date_old">Date (Old)</SelectItem>
-          <SelectItem value="price_high">Price (High)</SelectItem>
-          <SelectItem value="price_low">Price (Low)</SelectItem>
-        </SelectContent>
-      </Select>
+    <AgentListingSortSelect
+      value={sortSelectValue}
+      onValueChange={handleSortSelect}
+      triggerClassName={
+        sortTriggerClassName ??
+        (compact
+          ? "h-7 rounded-md border-neutral-200/90 bg-white px-2 text-[11px] font-medium text-neutral-900 shadow-none focus-visible:ring-2 focus-visible:ring-neutral-300/50 focus-visible:ring-offset-2"
+          : "h-8 rounded-md border-neutral-200/90 bg-white text-xs font-medium text-neutral-900 shadow-none focus-visible:ring-2 focus-visible:ring-neutral-300/50 focus-visible:ring-offset-2")
+      }
+    />
+  );
+
+  const renderHotSheetReviewWorkspaceToolbar = () => (
+    <div className="border-b border-neutral-200 pb-2 pt-1" aria-label="Hot sheet workspace controls">
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 pb-2">
+        {renderViewResultsControls(false)}
+        {renderSortControl(false)}
+      </div>
+      {hasResultsActionsRow ? (
+        <div className="flex flex-wrap items-center gap-2 border-t border-neutral-100 pt-2">
+          {renderResultsActionsContent()}
+        </div>
+      ) : null}
     </div>
   );
 
@@ -500,11 +498,17 @@ export function AgentSplitResultsSurface({
         )
       ) : showMapSplit ? (
         <>
-          {hideResultsSummaryToolbar ? null : hidePageIntro && !loadError && (loading || displayedListings.length > 0) ? (
-            <div className="border-b border-neutral-200 bg-white pb-2 pt-1">
-              {renderResultsSummaryToolbar(false)}
-            </div>
-          ) : null}
+          {isHotSheetReviewToolbar
+            ? renderHotSheetReviewWorkspaceToolbar()
+            : hideResultsSummaryToolbar
+              ? null
+              : hidePageIntro && !loadError && (loading || displayedListings.length > 0)
+                ? (
+                  <div className="border-b border-neutral-200 bg-white pb-2 pt-1">
+                    {renderResultsSummaryToolbar(false)}
+                  </div>
+                )
+                : null}
           <div className={mapResultsGridClass}>
           <section className={agentWorkspaceMapPanel}>
             <div className="h-full">
@@ -520,9 +524,11 @@ export function AgentSplitResultsSurface({
           </section>
 
           <section className={agentWorkspaceResultsPanel}>
-            <div className="shrink-0 border-b border-neutral-200/90 bg-white px-3 py-2 sm:px-5">
-              {renderResultsSelectionToolbar(true)}
-            </div>
+            {!isHotSheetReviewToolbar ? (
+              <div className="shrink-0 border-b border-neutral-200/90 bg-white px-3 py-2 sm:px-5">
+                {renderResultsSelectionToolbar(true)}
+              </div>
+            ) : null}
             <div className="min-h-0 flex-1 overflow-y-auto lg:min-h-0">
               <div className="px-3 py-1.5 sm:px-5 sm:py-2">
                 <div className="grid grid-cols-1 gap-3 sm:gap-4 xl:grid-cols-2">
@@ -536,18 +542,21 @@ export function AgentSplitResultsSurface({
         </div>
         </>
       ) : (
-        <ListingResultsTable
-          listings={displayedListings as unknown as React.ComponentProps<typeof ListingResultsTable>["listings"]}
-          loading={false}
-          sortColumn={sortColumn}
-          sortDirection={sortDirection}
-          onSort={handleSort}
-          onRowClick={handleRowClick as unknown as React.ComponentProps<typeof ListingResultsTable>["onRowClick"]}
-          selectedRows={selectionEnabled ? safeSelectedRows : new Set()}
-          onToggleSelect={selectionEnabled ? toggleRowSelection : () => {}}
-          fromPath={resultsFromPath}
-          showAgentEmailContact={showAgentEmailContact}
-        />
+        <>
+          {isHotSheetReviewToolbar ? renderHotSheetReviewWorkspaceToolbar() : null}
+          <ListingResultsTable
+            listings={displayedListings as unknown as React.ComponentProps<typeof ListingResultsTable>["listings"]}
+            loading={false}
+            sortColumn={sortColumn}
+            sortDirection={sortDirection}
+            onSort={handleSort}
+            onRowClick={handleRowClick as unknown as React.ComponentProps<typeof ListingResultsTable>["onRowClick"]}
+            selectedRows={selectionEnabled ? safeSelectedRows : new Set()}
+            onToggleSelect={selectionEnabled ? toggleRowSelection : () => {}}
+            fromPath={resultsFromPath}
+            showAgentEmailContact={showAgentEmailContact}
+          />
+        </>
       )}
     </section>
   );
@@ -569,7 +578,7 @@ export function AgentSplitResultsSurface({
     return (
       <>
         {saveDialog}
-        {!showMapSplit && !loading && !loadError && displayedListings.length > 0 ? (
+        {!showMapSplit && !loading && !loadError && displayedListings.length > 0 && !isHotSheetReviewToolbar ? (
           <div
             className="sticky top-0 z-20 -mx-1 border-b border-neutral-200 bg-white px-1 sm:-mx-0 sm:px-0"
             aria-label={toolbarAriaLabel}

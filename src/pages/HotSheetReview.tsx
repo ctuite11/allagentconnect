@@ -12,10 +12,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Send, MapPin, ChevronDown, Pencil, Heart, UserPlus } from "lucide-react";
 import { AacBackButton } from "@/components/layout/AacBackLink";
-import { AgentResultsSummaryControls } from "@/components/listing-search/AgentResultsSummaryControls";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
-import { agentWorkspacePageContainer, agentWorkspaceMapResultsGridTallFlush } from "@/lib/agentWorkspaceLayout";
+import { agentWorkspacePageContainer, agentWorkspaceMapResultsGridCompact } from "@/lib/agentWorkspaceLayout";
 import {
   AGENT_WORKSPACE_BTN_PRIMARY,
   AGENT_WORKSPACE_BTN_SECONDARY,
@@ -72,7 +71,6 @@ import {
 
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
 import type { ListedByAgentProfile } from "@/lib/listingListedBy";
-import { formatHotSheetRef } from "@/lib/formatHotSheetRef";
 import { formatCriteriaDisplayLabels } from "@/lib/formatCriteriaDisplay";
 import { AddHotSheetRecipientDialog } from "@/components/hot-sheets/AddHotSheetRecipientDialog";
 import {
@@ -226,6 +224,7 @@ const HotSheetReview = () => {
   const [commentBuyerTarget, setCommentBuyerTarget] = useState<InviteBuyerTarget | null>(null);
   const [inviteBuyerSending, setInviteBuyerSending] = useState(false);
   const [resultsView, setResultsView] = useState<"map" | "list">("map");
+  const [criteriaOpen, setCriteriaOpen] = useState(false);
 
   const isSharedWorkspace = useMemo(
     () =>
@@ -1232,135 +1231,124 @@ const HotSheetReview = () => {
   }
 
   const criteriaSummary = getCriteriaSummaryLine(hotSheet.criteria);
+  const primaryBuyer = reviewRecipients[0] ?? null;
   const maySendDashboardInviteToSomeRecipients =
     !isSharedWorkspace && reviewRecipients.some((r) => r.sendDashboardInvite);
   return (
       <div className="min-h-[50vh] bg-white px-4 pb-10 sm:px-6">
         <div className={agentWorkspacePageContainer}>
-          {/* Page context: title + hot sheet */}
-          <header className="border-b border-neutral-200 pb-4 pt-8">
-            <div className="mb-3">
-              <AacBackButton type="button" onClick={handleAgentHotSheetReviewBack} />
-            </div>
-            <div className="space-y-1">
-              <h1 className="text-lg font-semibold tracking-tight text-neutral-900 sm:text-xl">
-                {isSharedWorkspace ? "Buyer activity" : "Review matches"}
-              </h1>
-              <p className="text-[13px] font-medium text-neutral-900">{hotSheet.name}</p>
-              {id ? (
-                <p className="text-[11px] font-medium tabular-nums text-neutral-400">
-                  {formatHotSheetRef(id)}
+          {/* Compact review header */}
+          <header className="border-b border-neutral-200 pb-3 pt-4">
+            <AacBackButton type="button" onClick={handleAgentHotSheetReviewBack} />
+            <div className="mt-2 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+              <div className="min-w-0 space-y-1">
+                <h1 className="text-base font-semibold tracking-tight text-neutral-900 sm:text-lg">
+                  {isSharedWorkspace ? "Buyer activity" : "Review matches"}
+                </h1>
+                <p
+                  className="text-[13px] text-neutral-700"
+                  title={id ? `Hot sheet ID: ${id}` : undefined}
+                >
+                  <span className="text-neutral-500">Hot Sheet: </span>
+                  <span className="font-medium text-neutral-900">{hotSheet.name}</span>
                 </p>
-              ) : null}
+                {primaryBuyer ? (
+                  <div className="flex flex-wrap items-center gap-2 pt-0.5">
+                    <span className="text-[12px] text-neutral-500">Buyer:</span>
+                    <BuyerInitialsAvatar displayName={primaryBuyer.displayName} userId={primaryBuyer.authUserId} />
+                    <span className="text-[13px] font-medium text-neutral-900">{primaryBuyer.displayName}</span>
+                    <BuyerRowStatusPill
+                      buyer={{
+                        status: !primaryBuyer.inviteAccepted && !primaryBuyer.buyerLinked ? "pending" : "active",
+                        buyerWorkspaceLinked: primaryBuyer.buyerLinked,
+                      }}
+                    />
+                  </div>
+                ) : null}
+                {!isSharedWorkspace && reviewRecipients.length > 1 ? (
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    {reviewRecipients.slice(1).map((r) => {
+                      const pending = !r.inviteAccepted && !r.buyerLinked;
+                      return (
+                        <span
+                          key={r.clientId}
+                          className="inline-flex items-center gap-1.5 rounded-full border border-neutral-200 bg-neutral-50/80 py-0.5 pl-0.5 pr-2 text-[11px]"
+                        >
+                          <BuyerInitialsAvatar displayName={r.displayName} userId={r.authUserId} />
+                          <span className="font-medium text-neutral-800">{r.displayName}</span>
+                          <BuyerRowStatusPill
+                            buyer={{
+                              status: pending ? "pending" : "active",
+                              buyerWorkspaceLinked: r.buyerLinked,
+                            }}
+                          />
+                        </span>
+                      );
+                    })}
+                  </div>
+                ) : null}
+                <Collapsible open={criteriaOpen} onOpenChange={setCriteriaOpen} className="pt-1">
+                  <CollapsibleTrigger className="inline-flex items-center gap-1.5 rounded-md px-0 py-0.5 text-[12px] font-medium text-neutral-600 transition-colors hover:text-neutral-900">
+                    <ChevronDown
+                      className={cn(
+                        "h-3.5 w-3.5 shrink-0 transition-transform",
+                        criteriaOpen && "rotate-180",
+                      )}
+                    />
+                    Search criteria
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="mt-1.5 space-y-0.5 text-[12px] leading-snug text-neutral-600">
+                    <p>
+                      <span className="font-medium text-neutral-800">Scope</span> {criteriaSummary.scope}
+                    </p>
+                    <p>
+                      <span className="font-medium text-neutral-800">State</span> {criteriaSummary.state}
+                    </p>
+                    <p>
+                      <span className="font-medium text-neutral-800">Status</span> {criteriaSummary.statuses}
+                    </p>
+                  </CollapsibleContent>
+                </Collapsible>
+              </div>
+              <div className="flex shrink-0 flex-wrap items-center gap-2">
+                {buyerContextClientId ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className={AGENT_WORKSPACE_BTN_SECONDARY}
+                    onClick={() => navigate(`/agent/buyers/${buyerContextClientId}/favorites`)}
+                  >
+                    <Heart
+                      className="h-3.5 w-3.5 shrink-0 fill-[#FF2D55] text-[#FF2D55] stroke-[#FF2D55]"
+                      strokeWidth={2}
+                      aria-hidden
+                    />
+                    Favorites
+                  </Button>
+                ) : null}
+                {!isSharedWorkspace ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setAddRecipientOpen(true)}
+                    className={AGENT_WORKSPACE_BTN_SECONDARY}
+                  >
+                    <UserPlus className="h-3.5 w-3.5" aria-hidden />
+                    Add a Friend
+                  </Button>
+                ) : null}
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setEditCriteriaOpen(true)}
+                  className={AGENT_WORKSPACE_BTN_SECONDARY}
+                >
+                  <Pencil className="h-3.5 w-3.5" aria-hidden />
+                  Edit Criteria
+                </Button>
+              </div>
             </div>
           </header>
-
-          {/* Buyer card + buyer actions */}
-          <div className="space-y-3 border-b border-neutral-200 py-4">
-            {!isSharedWorkspace && reviewRecipients.length > 0 ? (
-              <div className="flex flex-wrap items-center gap-2">
-                {reviewRecipients.map((r) => {
-                  const pending = !r.inviteAccepted && !r.buyerLinked;
-                  return (
-                    <span
-                      key={r.clientId}
-                      className="inline-flex items-center gap-2 rounded-full border border-neutral-200 bg-neutral-50/80 py-1 pl-1 pr-2.5"
-                    >
-                      <BuyerInitialsAvatar displayName={r.displayName} userId={r.authUserId} />
-                      <span className="text-[12px] font-medium text-neutral-800">{r.displayName}</span>
-                      <BuyerRowStatusPill
-                        buyer={{
-                          status: pending ? "pending" : "active",
-                          buyerWorkspaceLinked: r.buyerLinked,
-                        }}
-                      />
-                    </span>
-                  );
-                })}
-              </div>
-            ) : null}
-            <div className="flex flex-wrap items-center gap-2">
-              {buyerContextClientId ? (
-                <Button
-                  type="button"
-                  variant="outline"
-                  className={AGENT_WORKSPACE_BTN_SECONDARY}
-                  onClick={() => navigate(`/agent/buyers/${buyerContextClientId}/favorites`)}
-                >
-                  <Heart
-                    className="h-3.5 w-3.5 shrink-0 fill-[#FF2D55] text-[#FF2D55] stroke-[#FF2D55]"
-                    strokeWidth={2}
-                    aria-hidden
-                  />
-                  Favorites
-                </Button>
-              ) : null}
-              {!isSharedWorkspace ? (
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setAddRecipientOpen(true)}
-                  className={AGENT_WORKSPACE_BTN_SECONDARY}
-                >
-                  <UserPlus className="h-3.5 w-3.5" aria-hidden />
-                  Add a Friend
-                </Button>
-              ) : null}
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setEditCriteriaOpen(true)}
-                className={AGENT_WORKSPACE_BTN_SECONDARY}
-              >
-                <Pencil className="h-3.5 w-3.5" aria-hidden />
-                Edit Criteria
-              </Button>
-            </div>
-          </div>
-
-          {/* Search criteria + results/view — balanced workspace header */}
-          <div className="border-b border-neutral-200 py-4">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
-              <div className="min-w-0 flex-1">
-                <div className="flex items-start justify-between gap-4 sm:block">
-                  <div className="flex items-center gap-2">
-                    <MapPin className="h-3.5 w-3.5 shrink-0 text-neutral-400" aria-hidden />
-                    <p className="text-[10px] font-medium uppercase tracking-wider text-neutral-500">
-                      Search criteria
-                    </p>
-                  </div>
-                  <AgentResultsSummaryControls
-                    resultsCount={splitListings.length}
-                    resultsView={resultsView}
-                    onResultsViewChange={setResultsView}
-                    showViewToggle={splitListings.length > 0}
-                    className="sm:hidden"
-                  />
-                </div>
-                <div className="mt-2 space-y-0.5 pl-5 text-[13px] leading-snug text-neutral-700">
-                  <p>
-                    <span className="font-medium text-neutral-800">Scope</span>{" "}
-                    <span className="text-neutral-600">{criteriaSummary.scope}</span>
-                  </p>
-                  <p>
-                    <span className="font-medium text-neutral-800">State</span>{" "}
-                    <span className="tabular-nums text-neutral-600">{criteriaSummary.state}</span>
-                  </p>
-                  <p>
-                    <span className="font-medium text-neutral-800">Status</span>{" "}
-                    <span className="text-neutral-600">{criteriaSummary.statuses}</span>
-                  </p>
-                </div>
-              </div>
-              <AgentResultsSummaryControls
-                resultsCount={splitListings.length}
-                resultsView={resultsView}
-                onResultsViewChange={setResultsView}
-                showViewToggle={splitListings.length > 0}
-                className="hidden shrink-0 sm:flex sm:pt-0.5"
-              />
-            </div>
-          </div>
 
           <AgentSplitResultsSurface
             variant="embedded"
@@ -1384,10 +1372,10 @@ const HotSheetReview = () => {
             toolbarAriaLabel="Hot sheet results"
             resultsView={resultsView}
             onResultsViewChange={setResultsView}
-            hideResultsSummaryToolbar
+            workspaceToolbarLayout="hotSheetReview"
             selectionPillClassName={AGENT_WORKSPACE_SELECT_PILL}
             sortTriggerClassName={AGENT_WORKSPACE_SORT_TRIGGER}
-            mapResultsGridClassName={agentWorkspaceMapResultsGridTallFlush}
+            mapResultsGridClassName={agentWorkspaceMapResultsGridCompact}
             toolbarActionsExtra={
               !isSharedWorkspace ? (
               <>
