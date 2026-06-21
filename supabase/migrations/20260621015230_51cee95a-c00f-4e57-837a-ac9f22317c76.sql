@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "Anyone can validate tokens" ON public.share_tokens;
