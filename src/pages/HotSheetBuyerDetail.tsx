@@ -298,44 +298,68 @@ const HotSheetBuyerDetail = () => {
       if (!user) return;
       setAgentUserId(user.id);
 
-      const { data: rel } = await supabase
-        .from("client_agent_relationships")
-        .select("status, client_id")
-        .eq("agent_id", user.id)
-        .or(`crm_client_id.eq.${clientId},client_id.eq.${clientId}`)
-        .in("status", ["active", "pending"])
-        .maybeSingle();
+      const [clientRes, relRes, hscRes] = await Promise.all([
+        supabase
+          .from("clients")
+          .select("first_name, last_name, email, phone, agent_id")
+          .eq("id", clientId!)
+          .maybeSingle(),
+        supabase
+          .from("client_agent_relationships")
+          .select("status, client_id, crm_client_id")
+          .eq("agent_id", user.id)
+          .or(`crm_client_id.eq.${clientId},client_id.eq.${clientId}`)
+          .in("status", ["active", "pending"])
+          .maybeSingle(),
+        supabase.from("hot_sheet_clients").select("hot_sheet_id").eq("client_id", clientId!),
+      ]);
 
-      if (!rel) {
-        toast.error("This buyer was removed.");
+      if (!clientRes.data || String(clientRes.data.agent_id) !== user.id) {
+        toast.error("This buyer was not found or you don't have access.");
         navigate(backTo, { replace: true });
         return;
       }
 
-      setRelationshipStatus(rel.status === "pending" ? "pending" : "active");
+      setBuyer({
+        firstName: clientRes.data.first_name || "",
+        lastName: clientRes.data.last_name || "",
+        email: clientRes.data.email || "",
+        phone: clientRes.data.phone ?? null,
+      });
+
+      const rel = relRes.data;
+      if (rel) {
+        setRelationshipStatus(rel.status === "pending" ? "pending" : "active");
+      } else {
+        // CRM buyer owned by this agent — no client_agent_relationships row required.
+        setRelationshipStatus("active");
+      }
       const buyerWorkspaceLinked =
-        rel.status === "active" && rel.client_id != null;
+        rel?.status === "active" && rel.client_id != null;
 
-      const [clientRes, hscRes] = await Promise.all([
-        supabase.from("clients").select("first_name, last_name, email, phone").eq("id", clientId!).maybeSingle(),
-        supabase.from("hot_sheet_clients").select("hot_sheet_id").eq("client_id", clientId!),
-      ]);
-
-      if (clientRes.data) {
-        setBuyer({
-          firstName: clientRes.data.first_name || "",
-          lastName: clientRes.data.last_name || "",
-          email: clientRes.data.email || "",
-          phone: clientRes.data.phone ?? null,
-        });
+      const hsIdSet = new Set<string>();
+      for (const row of hscRes.data || []) {
+        const hid = (row as { hot_sheet_id?: string }).hot_sheet_id;
+        if (hid) hsIdSet.add(hid);
       }
 
-      if (hscRes.data?.length) {
-        const hsIds = hscRes.data.map((r: any) => r.hot_sheet_id);
+      const { data: directLinked } = await supabase
+        .from("hot_sheets")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("client_id", clientId!);
+
+      for (const row of directLinked || []) {
+        if (row.id) hsIdSet.add(row.id);
+      }
+
+      const hsIds = [...hsIdSet];
+      if (hsIds.length) {
         const { data: hsData } = await supabase
           .from("hot_sheets")
           .select("id, name, criteria, created_at")
-          .in("id", hsIds);
+          .in("id", hsIds)
+          .eq("user_id", user.id);
 
         const acceptedHotSheetIdsForClient = new Set<string>();
         if (!buyerWorkspaceLinked) {

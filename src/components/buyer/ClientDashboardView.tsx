@@ -680,12 +680,17 @@ export function ClientDashboardView({
                             onClick={onCreateHotSheet}
                           >
                             <Plus className="h-3.5 w-3.5 shrink-0" strokeWidth={2} aria-hidden />
-                            + New Hot Sheet
+                            New Hot Sheet
                           </Button>
                         ) : null}
                         <button
                           type="button"
-                          onClick={() => navigate(paths.hotSheetsViewAll)}
+                          onClick={() =>
+                            navigate(
+                              paths.hotSheetsViewAll,
+                              crmBuyerId ? { state: { from: `/agent/buyers/${crmBuyerId}` } } : undefined,
+                            )
+                          }
                           className={dashboardPreviewViewAllCtaClass}
                           title={
                             variant === "agent"
