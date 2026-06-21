@@ -188,9 +188,7 @@ const ClientHotSheet = () => {
 
       // Step 3: Load the hot sheet
       const { data: hotSheetDataResult, error: hotSheetError } = await supabase
-        .from("hot_sheets")
-        .select("*")
-        .eq("id", hotSheetId);
+        .rpc("get_hot_sheet_by_token" as any, { _token: token } as any);
 
       if (hotSheetError) {
         console.error("ClientHotSheet error loading hotsheet:", hotSheetError);
@@ -199,7 +197,9 @@ const ClientHotSheet = () => {
 
       console.log("ClientHotSheet data result from hot_sheets:", hotSheetDataResult);
 
-      const hotSheetData = Array.isArray(hotSheetDataResult) ? hotSheetDataResult[0] : hotSheetDataResult;
+      const hotSheetData = (Array.isArray(hotSheetDataResult)
+        ? hotSheetDataResult[0]
+        : hotSheetDataResult) as any;
 
       if (!hotSheetData) {
         throw new Error("Hotsheet not found");

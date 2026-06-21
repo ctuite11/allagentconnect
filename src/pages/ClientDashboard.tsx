@@ -360,11 +360,13 @@ export default function ClientDashboard() {
         return;
       }
 
-      const { data: hotSheetRows, error: sheetErr } = await supabase
-        .from("hot_sheets")
-        .select("id, name, user_id, criteria, created_at, is_active, last_sent_at")
-        .in("id", [...allHotSheetIds])
-        .order("created_at", { ascending: false });
+      const { data: hotSheetRowsRaw, error: sheetErr } = await supabase
+        .rpc("list_hot_sheets_for_member" as any, { _hot_sheet_ids: [...allHotSheetIds] } as any);
+      const hotSheetRows = ((hotSheetRowsRaw as any[]) || [])
+        .slice()
+        .sort((a: any, b: any) =>
+          (b?.created_at ?? "").localeCompare(a?.created_at ?? "")
+        );
 
       if (sheetErr) {
         console.error("Failed to load hot sheets on dashboard", sheetErr);
