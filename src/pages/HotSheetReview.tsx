@@ -1237,50 +1237,54 @@ const HotSheetReview = () => {
   return (
       <div className="min-h-[50vh] bg-white px-4 pb-10 sm:px-6">
         <div className={agentWorkspacePageContainer}>
-          {/* Page context: title, buyer, hot sheet */}
+          {/* Page context: title + hot sheet */}
           <header className="border-b border-neutral-200 pb-4 pt-8">
             <div className="mb-3">
               <AacBackButton type="button" onClick={handleAgentHotSheetReviewBack} />
             </div>
-            <div className="space-y-3">
-              <div>
-                <h1 className="text-lg font-semibold tracking-tight text-neutral-900 sm:text-xl">
-                  {isSharedWorkspace ? "Buyer activity" : "Review matches"}
-                </h1>
-                <p className="mt-1 text-[13px] font-medium text-neutral-900">{hotSheet.name}</p>
-                {id ? (
-                  <p className="mt-0.5 text-[11px] font-medium tabular-nums text-neutral-400">
-                    {formatHotSheetRef(id)}
-                  </p>
-                ) : null}
-              </div>
-              {!isSharedWorkspace && reviewRecipients.length > 0 ? (
-                <div className="flex flex-wrap items-center gap-2">
-                  {reviewRecipients.map((r) => {
-                    const pending = !r.inviteAccepted && !r.buyerLinked;
-                    return (
-                      <span
-                        key={r.clientId}
-                        className="inline-flex items-center gap-2 rounded-full border border-neutral-200 bg-neutral-50/80 py-1 pl-1 pr-2.5"
-                      >
-                        <BuyerInitialsAvatar displayName={r.displayName} userId={r.authUserId} />
-                        <span className="text-[12px] font-medium text-neutral-800">{r.displayName}</span>
-                        <BuyerRowStatusPill
-                          buyer={{
-                            status: pending ? "pending" : "active",
-                            buyerWorkspaceLinked: r.buyerLinked,
-                          }}
-                        />
-                      </span>
-                    );
-                  })}
-                </div>
+            <div className="space-y-1">
+              <h1 className="text-lg font-semibold tracking-tight text-neutral-900 sm:text-xl">
+                {isSharedWorkspace ? "Buyer activity" : "Review matches"}
+              </h1>
+              <p className="text-[13px] font-medium text-neutral-900">{hotSheet.name}</p>
+              {id ? (
+                <p className="text-[11px] font-medium tabular-nums text-neutral-400">
+                  {formatHotSheetRef(id)}
+                </p>
               ) : null}
+            </div>
+          </header>
+
+          {/* Buyer card + buyer actions */}
+          <div className="space-y-3 border-b border-neutral-200 py-4">
+            {!isSharedWorkspace && reviewRecipients.length > 0 ? (
+              <div className="flex flex-wrap items-center gap-2">
+                {reviewRecipients.map((r) => {
+                  const pending = !r.inviteAccepted && !r.buyerLinked;
+                  return (
+                    <span
+                      key={r.clientId}
+                      className="inline-flex items-center gap-2 rounded-full border border-neutral-200 bg-neutral-50/80 py-1 pl-1 pr-2.5"
+                    >
+                      <BuyerInitialsAvatar displayName={r.displayName} userId={r.authUserId} />
+                      <span className="text-[12px] font-medium text-neutral-800">{r.displayName}</span>
+                      <BuyerRowStatusPill
+                        buyer={{
+                          status: pending ? "pending" : "active",
+                          buyerWorkspaceLinked: r.buyerLinked,
+                        }}
+                      />
+                    </span>
+                  );
+                })}
+              </div>
+            ) : null}
+            <div className="flex flex-wrap items-center gap-2">
               {buyerContextClientId ? (
                 <Button
                   type="button"
                   variant="outline"
-                  className={cn(AGENT_WORKSPACE_BTN_SECONDARY, "w-fit")}
+                  className={AGENT_WORKSPACE_BTN_SECONDARY}
                   onClick={() => navigate(`/agent/buyers/${buyerContextClientId}/favorites`)}
                 >
                   <Heart
@@ -1291,36 +1295,6 @@ const HotSheetReview = () => {
                   Favorites
                 </Button>
               ) : null}
-            </div>
-          </header>
-
-          {/* Criteria row */}
-          <div className="flex flex-col gap-3 border-b border-neutral-200 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
-            <div className="min-w-0 flex-1">
-              <div className="flex items-start gap-2">
-                <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-neutral-400" aria-hidden />
-                <div className="min-w-0 space-y-1">
-                  <p className="text-[10px] font-medium uppercase tracking-wider text-neutral-500">
-                    Search criteria
-                  </p>
-                  <p className="text-[13px] leading-snug text-neutral-700">
-                    <span className="font-medium text-neutral-800">Scope</span>{" "}
-                    <span className="text-neutral-600">{criteriaSummary.scope}</span>
-                    <span className="mx-2 text-neutral-200" aria-hidden>
-                      ·
-                    </span>
-                    <span className="font-medium text-neutral-800">State</span>{" "}
-                    <span className="tabular-nums text-neutral-600">{criteriaSummary.state}</span>
-                    <span className="mx-2 text-neutral-200" aria-hidden>
-                      ·
-                    </span>
-                    <span className="font-medium text-neutral-800">Status</span>{" "}
-                    <span className="text-neutral-600">{criteriaSummary.statuses}</span>
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div className="flex shrink-0 flex-wrap items-center gap-2">
               {!isSharedWorkspace ? (
                 <Button
                   type="button"
@@ -1344,17 +1318,48 @@ const HotSheetReview = () => {
             </div>
           </div>
 
-          {/* Workspace summary: results count + map/list — directly above the workspace */}
-          <div
-            className="flex justify-end border-b border-neutral-200 py-3"
-            aria-label="Results view controls"
-          >
-            <AgentResultsSummaryControls
-              resultsCount={splitListings.length}
-              resultsView={resultsView}
-              onResultsViewChange={setResultsView}
-              showViewToggle={splitListings.length > 0}
-            />
+          {/* Search criteria + results/view — balanced workspace header */}
+          <div className="border-b border-neutral-200 py-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-start justify-between gap-4 sm:block">
+                  <div className="flex items-center gap-2">
+                    <MapPin className="h-3.5 w-3.5 shrink-0 text-neutral-400" aria-hidden />
+                    <p className="text-[10px] font-medium uppercase tracking-wider text-neutral-500">
+                      Search criteria
+                    </p>
+                  </div>
+                  <AgentResultsSummaryControls
+                    resultsCount={splitListings.length}
+                    resultsView={resultsView}
+                    onResultsViewChange={setResultsView}
+                    showViewToggle={splitListings.length > 0}
+                    className="sm:hidden"
+                  />
+                </div>
+                <div className="mt-2 space-y-0.5 pl-5 text-[13px] leading-snug text-neutral-700">
+                  <p>
+                    <span className="font-medium text-neutral-800">Scope</span>{" "}
+                    <span className="text-neutral-600">{criteriaSummary.scope}</span>
+                  </p>
+                  <p>
+                    <span className="font-medium text-neutral-800">State</span>{" "}
+                    <span className="tabular-nums text-neutral-600">{criteriaSummary.state}</span>
+                  </p>
+                  <p>
+                    <span className="font-medium text-neutral-800">Status</span>{" "}
+                    <span className="text-neutral-600">{criteriaSummary.statuses}</span>
+                  </p>
+                </div>
+              </div>
+              <AgentResultsSummaryControls
+                resultsCount={splitListings.length}
+                resultsView={resultsView}
+                onResultsViewChange={setResultsView}
+                showViewToggle={splitListings.length > 0}
+                className="hidden shrink-0 sm:flex sm:pt-0.5"
+              />
+            </div>
           </div>
 
           <AgentSplitResultsSurface
