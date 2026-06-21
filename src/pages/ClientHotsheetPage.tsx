@@ -354,9 +354,7 @@ const ClientHotsheetPage = () => {
       }
 
       const { data: hotSheetData, error: hotSheetError } = await supabase
-        .from("hot_sheets")
-        .select("*")
-        .eq("id", hotSheetId)
+        .rpc("get_hot_sheet_for_member" as any, { _hot_sheet_id: hotSheetId } as any)
         .single();
 
       if (hotSheetError || !hotSheetData) {
@@ -502,9 +500,7 @@ const ClientHotsheetPage = () => {
 
       // 5) Fetch hot sheet details
       const { data: hotSheetData, error: hotSheetError } = await supabase
-        .from("hot_sheets")
-        .select("*")
-        .eq("id", hotSheetId)
+        .rpc("get_hot_sheet_by_token" as any, { _token: token } as any)
         .single();
 
       if (hotSheetError || !hotSheetData) {
