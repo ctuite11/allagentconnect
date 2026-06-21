@@ -4494,6 +4494,15 @@ export type Database = {
         Returns: boolean
       }
       is_verified_agent: { Args: never; Returns: boolean }
+      list_my_accepted_hot_sheet_tokens: {
+        Args: never
+        Returns: {
+          accepted_at: string
+          accepted_by_user_id: string
+          payload: Json
+          token: string
+        }[]
+      }
       listings_within_radius: {
         Args: { origin_lat: number; origin_lng: number; radius_miles: number }
         Returns: {
@@ -4522,6 +4531,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      resolve_share_token: { Args: { _token: string }; Returns: Json }
       resolve_user_role: { Args: { _user_id: string }; Returns: Json }
     }
     Enums: {
