@@ -124,11 +124,9 @@ const ClientInvitationSetup = () => {
       }
       try {
         setInviteAnchor(null);
-        const { data, error } = await supabase
-          .from("share_tokens")
-          .select("*")
-          .eq("token", invitationToken)
-          .maybeSingle();
+        const { data: rpcData, error } = await supabase
+          .rpc("resolve_share_token", { _token: invitationToken });
+        const data = (rpcData ?? null) as any;
 
         if (error || !data) {
           toast.error("This link is no longer available. Please contact your agent.");
