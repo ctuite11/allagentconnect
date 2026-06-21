@@ -12,10 +12,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Send, MapPin, ChevronDown, Pencil, Heart, UserPlus } from "lucide-react";
 import { AacBackButton } from "@/components/layout/AacBackLink";
-import { AacPageIntro } from "@/components/layout/AacPageIntro";
+import { AgentResultsSummaryControls } from "@/components/listing-search/AgentResultsSummaryControls";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
-import { agentWorkspacePageContainer, agentWorkspaceMapResultsGridTall, agentWorkspaceMapPanel, agentWorkspaceResultsPanel } from "@/lib/agentWorkspaceLayout";
+import { agentWorkspacePageContainer, agentWorkspaceMapResultsGridTall } from "@/lib/agentWorkspaceLayout";
+import {
+  AGENT_WORKSPACE_BTN_PRIMARY,
+  AGENT_WORKSPACE_BTN_SECONDARY,
+  AGENT_WORKSPACE_SELECT_PILL,
+  AGENT_WORKSPACE_SORT_TRIGGER,
+} from "@/lib/agentWorkspaceToolbar";
 import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 import { EditHotsheetCriteriaDialog } from "@/components/EditHotsheetCriteriaDialog";
 import {
@@ -219,6 +225,7 @@ const HotSheetReview = () => {
   const [inviteBuyerTarget, setInviteBuyerTarget] = useState<InviteBuyerTarget | null>(null);
   const [commentBuyerTarget, setCommentBuyerTarget] = useState<InviteBuyerTarget | null>(null);
   const [inviteBuyerSending, setInviteBuyerSending] = useState(false);
+  const [resultsView, setResultsView] = useState<"map" | "list">("map");
 
   const isSharedWorkspace = useMemo(
     () =>
@@ -1230,25 +1237,54 @@ const HotSheetReview = () => {
   return (
       <div className="min-h-[50vh] bg-white px-4 pb-10 sm:px-6">
         <div className={agentWorkspacePageContainer}>
-          <AacPageIntro
-            withTopPadding
-            className="border-b border-neutral-200 pb-4"
-            back={<AacBackButton type="button" onClick={handleAgentHotSheetReviewBack} />}
-            title={isSharedWorkspace ? "Buyer activity" : "Review matches"}
-            titleClassName="text-lg sm:text-xl"
-            subtitle={
-              <>
-                <span className="text-neutral-500">Hot Sheet Name: </span>
-                <span className="font-semibold text-neutral-900">{hotSheet.name}</span>
-              </>
-            }
-            actions={
-              <div className="flex flex-wrap items-center justify-end gap-2">
+          {/* Top row: buyer / hot sheet context + results summary */}
+          <header className="border-b border-neutral-200 pb-4 pt-8">
+            <div className="mb-3">
+              <AacBackButton type="button" onClick={handleAgentHotSheetReviewBack} />
+            </div>
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
+              <div className="min-w-0 flex-1 space-y-2">
+                <div>
+                  <h1 className="text-lg font-semibold tracking-tight text-neutral-900 sm:text-xl">
+                    {isSharedWorkspace ? "Buyer activity" : "Review matches"}
+                  </h1>
+                  <p className="mt-1 text-[13px] leading-snug text-neutral-600">
+                    <span className="text-neutral-500">Hot Sheet · </span>
+                    <span className="font-medium text-neutral-900">{hotSheet.name}</span>
+                    {id ? (
+                      <span className="ml-2 text-[11px] font-medium tabular-nums text-neutral-400">
+                        {formatHotSheetRef(id)}
+                      </span>
+                    ) : null}
+                  </p>
+                </div>
+                {!isSharedWorkspace && reviewRecipients.length > 0 ? (
+                  <div className="flex flex-wrap items-center gap-2">
+                    {reviewRecipients.map((r) => {
+                      const pending = !r.inviteAccepted && !r.buyerLinked;
+                      return (
+                        <span
+                          key={r.clientId}
+                          className="inline-flex items-center gap-2 rounded-full border border-neutral-200 bg-neutral-50/80 py-1 pl-1 pr-2.5"
+                        >
+                          <BuyerInitialsAvatar displayName={r.displayName} userId={r.authUserId} />
+                          <span className="text-[12px] font-medium text-neutral-800">{r.displayName}</span>
+                          <BuyerRowStatusPill
+                            buyer={{
+                              status: pending ? "pending" : "active",
+                              buyerWorkspaceLinked: r.buyerLinked,
+                            }}
+                          />
+                        </span>
+                      );
+                    })}
+                  </div>
+                ) : null}
                 {buyerContextClientId ? (
                   <Button
                     type="button"
                     variant="outline"
-                    className="h-8 gap-1.5 rounded-md border-neutral-200 bg-white px-3 text-[12px] font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-200 ease-out hover:border-neutral-300 hover:bg-neutral-50/80"
+                    className={cn(AGENT_WORKSPACE_BTN_SECONDARY, "w-fit")}
                     onClick={() => navigate(`/agent/buyers/${buyerContextClientId}/favorites`)}
                   >
                     <Heart
@@ -1259,84 +1295,64 @@ const HotSheetReview = () => {
                     Favorites
                   </Button>
                 ) : null}
-                <span className="text-[11px] font-medium tabular-nums text-neutral-400">
-                  {id ? formatHotSheetRef(id) : ""}
-                </span>
               </div>
-            }
-          />
-
-          {/* Buyer recipients strip */}
-          {!isSharedWorkspace && reviewRecipients.length > 0 && (
-            <div className="mb-4 flex flex-wrap items-center gap-2">
-              {reviewRecipients.map((r) => {
-                const pending = !r.inviteAccepted && !r.buyerLinked;
-                return (
-                  <span
-                    key={r.clientId}
-                    className="inline-flex items-center gap-2 rounded-full border border-neutral-200 bg-white py-1 pl-1 pr-2.5 shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
-                  >
-                    <BuyerInitialsAvatar displayName={r.displayName} userId={r.authUserId} />
-                    <span className="text-[12px] font-medium text-neutral-800">{r.displayName}</span>
-                    <BuyerRowStatusPill
-                      buyer={{
-                        status: pending ? "pending" : "active",
-                        buyerWorkspaceLinked: r.buyerLinked,
-                      }}
-                    />
-                  </span>
-                );
-              })}
+              <AgentResultsSummaryControls
+                resultsCount={splitListings.length}
+                resultsView={resultsView}
+                onResultsViewChange={setResultsView}
+                showViewToggle={splitListings.length > 0}
+                className="sm:pt-1"
+              />
             </div>
-          )}
+          </header>
 
-          {/* Search criteria */}
-          <div className="mb-4 rounded-xl border border-neutral-200 bg-white px-3 py-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)] sm:px-4 sm:py-3.5">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
-              <div className="min-w-0 flex-1">
-                <div className="flex items-start gap-2">
-                  <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-neutral-400" aria-hidden />
-                  <div className="min-w-0 space-y-1">
-                    <p className="text-[10px] font-medium uppercase tracking-wider text-neutral-500">Search criteria</p>
-                    <p className="text-[13px] leading-snug text-neutral-700">
-                      <span className="font-medium text-neutral-800">Scope</span>{" "}
-                      <span className="text-neutral-600">{criteriaSummary.scope}</span>
-                      <span className="mx-2 text-neutral-200" aria-hidden>
-                        ·
-                      </span>
-                      <span className="font-medium text-neutral-800">State</span>{" "}
-                      <span className="tabular-nums text-neutral-600">{criteriaSummary.state}</span>
-                      <span className="mx-2 text-neutral-200" aria-hidden>
-                        ·
-                      </span>
-                      <span className="font-medium text-neutral-800">Status</span>{" "}
-                      <span className="text-neutral-600">{criteriaSummary.statuses}</span>
-                    </p>
-                  </div>
+          {/* Criteria row */}
+          <div className="flex flex-col gap-3 border-b border-neutral-200 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
+            <div className="min-w-0 flex-1">
+              <div className="flex items-start gap-2">
+                <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-neutral-400" aria-hidden />
+                <div className="min-w-0 space-y-1">
+                  <p className="text-[10px] font-medium uppercase tracking-wider text-neutral-500">
+                    Search criteria
+                  </p>
+                  <p className="text-[13px] leading-snug text-neutral-700">
+                    <span className="font-medium text-neutral-800">Scope</span>{" "}
+                    <span className="text-neutral-600">{criteriaSummary.scope}</span>
+                    <span className="mx-2 text-neutral-200" aria-hidden>
+                      ·
+                    </span>
+                    <span className="font-medium text-neutral-800">State</span>{" "}
+                    <span className="tabular-nums text-neutral-600">{criteriaSummary.state}</span>
+                    <span className="mx-2 text-neutral-200" aria-hidden>
+                      ·
+                    </span>
+                    <span className="font-medium text-neutral-800">Status</span>{" "}
+                    <span className="text-neutral-600">{criteriaSummary.statuses}</span>
+                  </p>
                 </div>
               </div>
-              <div className="flex shrink-0 flex-wrap items-center gap-2 self-start sm:self-center">
-                {!isSharedWorkspace && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setAddRecipientOpen(true)}
-                    className="h-8 rounded-md border-neutral-200 bg-white px-3 text-[12px] font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-200 ease-out hover:border-neutral-300 hover:bg-neutral-50/80"
-                  >
-                    <UserPlus className="mr-1.5 h-3.5 w-3.5" aria-hidden />
-                    Add contact
-                  </Button>
-                )}
+            </div>
+            <div className="flex shrink-0 flex-wrap items-center gap-2">
+              {!isSharedWorkspace ? (
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => setEditCriteriaOpen(true)}
-                  className="h-8 rounded-md border-neutral-200 bg-white px-3 text-[12px] font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-200 ease-out hover:border-neutral-300 hover:bg-neutral-50/80"
+                  onClick={() => setAddRecipientOpen(true)}
+                  className={AGENT_WORKSPACE_BTN_SECONDARY}
                 >
-                  <Pencil className="mr-1.5 h-3.5 w-3.5" aria-hidden />
-                  Edit criteria
+                  <UserPlus className="h-3.5 w-3.5" aria-hidden />
+                  Add a Friend
                 </Button>
-              </div>
+              ) : null}
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setEditCriteriaOpen(true)}
+                className={AGENT_WORKSPACE_BTN_SECONDARY}
+              >
+                <Pencil className="h-3.5 w-3.5" aria-hidden />
+                Edit Criteria
+              </Button>
             </div>
           </div>
 
@@ -1360,13 +1376,19 @@ const HotSheetReview = () => {
             onKeepSelected={!isSharedWorkspace ? handleKeepSelected : undefined}
             containerClassName="min-w-0 px-0"
             toolbarAriaLabel="Hot sheet results"
+            resultsView={resultsView}
+            onResultsViewChange={setResultsView}
+            hideResultsSummaryToolbar
+            selectionPillClassName={AGENT_WORKSPACE_SELECT_PILL}
+            sortTriggerClassName={AGENT_WORKSPACE_SORT_TRIGGER}
+            mapResultsGridClassName={agentWorkspaceMapResultsGridTall}
             toolbarActionsExtra={
               !isSharedWorkspace ? (
               <>
                 {!invitesSent && (unacceptedCount > 0 || acceptedCount > 0) ? (
                   <Button
                     type="button"
-                    className="h-8 gap-1.5 rounded-md border border-[#0B46CC]/20 bg-[#0E56F5] px-3 text-[12px] font-medium text-white shadow-[0_1px_2px_rgba(0,0,0,0.08)] transition-colors duration-200 hover:bg-[#0B46CC] focus-visible:ring-2 focus-visible:ring-neutral-400/60 focus-visible:ring-offset-2"
+                    className={AGENT_WORKSPACE_BTN_PRIMARY}
                     onClick={() => {
                       if (
                         listings.length > 0 &&
@@ -1392,7 +1414,7 @@ const HotSheetReview = () => {
                         type="button"
                         variant="outline"
                         disabled={sending}
-                        className="h-8 gap-1.5 rounded-md border-neutral-200 bg-white px-3 text-[12px] font-medium shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-200 hover:border-neutral-300 hover:bg-neutral-50/80"
+                        className={AGENT_WORKSPACE_BTN_SECONDARY}
                       >
                         <Send className="h-3.5 w-3.5" />
                         Notify Clients ({acceptedCount})

@@ -22,7 +22,6 @@ import {
 } from "@/lib/agentSplitResults";
 import {
   agentWorkspaceMapPanel,
-  agentWorkspaceMapResultsGrid,
   agentWorkspacePageContainer,
   agentWorkspaceResultsPanel,
 } from "@/lib/agentWorkspaceLayout";
@@ -76,6 +75,17 @@ export type AgentSplitResultsSurfaceProps = {
   allowListView?: boolean;
   /** Agent-only: email listing agent from result cards (internal queue). */
   showAgentEmailContact?: boolean;
+  /** Controlled map/list mode (e.g. hot sheet review page header owns the toggle). */
+  resultsView?: "map" | "list";
+  onResultsViewChange?: (view: "map" | "list") => void;
+  /** Parent renders Results / View row above the workspace. */
+  hideResultsSummaryToolbar?: boolean;
+  /** Override selection pill button class (toolbar density). */
+  selectionPillClassName?: string;
+  /** Override sort trigger class. */
+  sortTriggerClassName?: string;
+  /** Override map/results grid height token. */
+  mapResultsGridClassName?: string;
 };
 
 /**
@@ -111,13 +121,21 @@ export function AgentSplitResultsSurface({
   containerClassName,
   allowListView = true,
   showAgentEmailContact = false,
+  resultsView: resultsViewProp,
+  onResultsViewChange,
+  hideResultsSummaryToolbar = false,
+  selectionPillClassName,
+  sortTriggerClassName,
+  mapResultsGridClassName,
 }: AgentSplitResultsSurfaceProps) {
   const navigate = useNavigate();
   const [sortColumn, setSortColumn] = useState(LISTING_DEFAULT_SORT_COLUMN);
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   const [internalSelectedRows, setInternalSelectedRows] = useState<Set<string>>(new Set());
   const [showSelectedOnly, setShowSelectedOnly] = useState(false);
-  const [resultsView, setResultsView] = useState<"map" | "list">("map");
+  const [internalResultsView, setInternalResultsView] = useState<"map" | "list">("map");
+  const resultsView = resultsViewProp ?? internalResultsView;
+  const setResultsView = onResultsViewChange ?? setInternalResultsView;
 
   const effectiveResultsView = allowListView ? resultsView : "map";
   const [hotSheetDialogOpen, setHotSheetDialogOpen] = useState(false);
@@ -307,11 +325,14 @@ export function AgentSplitResultsSurface({
     <div className={cn("min-w-0 shrink-0", compact ? "max-w-[7.5rem]" : "max-w-[8.5rem] min-[520px]:max-w-[11rem]")}>
       <Select value={sortSelectValue} onValueChange={handleSortSelect}>
         <SelectTrigger
-          className={cn(
-            compact
-              ? "h-7 rounded-md border-neutral-200/90 bg-white px-2 text-[11px] font-medium text-neutral-900 shadow-none focus-visible:ring-2 focus-visible:ring-neutral-300/50 focus-visible:ring-offset-2"
-              : "h-8 rounded-md border-neutral-200/90 bg-white text-xs font-medium text-neutral-900 shadow-none focus-visible:ring-2 focus-visible:ring-neutral-300/50 focus-visible:ring-offset-2",
-          )}
+          className={
+            sortTriggerClassName ??
+            cn(
+              compact
+                ? "h-7 rounded-md border-neutral-200/90 bg-white px-2 text-[11px] font-medium text-neutral-900 shadow-none focus-visible:ring-2 focus-visible:ring-neutral-300/50 focus-visible:ring-offset-2"
+                : "h-8 rounded-md border-neutral-200/90 bg-white text-xs font-medium text-neutral-900 shadow-none focus-visible:ring-2 focus-visible:ring-neutral-300/50 focus-visible:ring-offset-2",
+            )
+          }
         >
           <SelectValue />
         </SelectTrigger>
@@ -359,6 +380,7 @@ export function AgentSplitResultsSurface({
           onShowAll={() => setShowSelectedOnly(false)}
           onKeepSelectedCustom={onKeepSelected}
           onSuccessfulShare={clearShareSelection}
+          pillClassName={selectionPillClassName}
         >
           {toolbarActionsExtra}
           {saveHotSheetBtn}
@@ -375,11 +397,14 @@ export function AgentSplitResultsSurface({
   };
 
   /** Page-level row: View + results count + map/list (above workspace divider). */
-  const renderResultsSummaryToolbar = (compact: boolean) => (
-    <div className="flex justify-end" aria-label="Results summary and controls">
-      {renderViewResultsControls(compact)}
-    </div>
-  );
+  const renderResultsSummaryToolbar = (compact: boolean) => {
+    if (hideResultsSummaryToolbar) return null;
+    return (
+      <div className="flex justify-end" aria-label="Results summary and controls">
+        {renderViewResultsControls(compact)}
+      </div>
+    );
+  };
 
   /** Card-level row: selection actions left, sort right. */
   const renderResultsSelectionToolbar = (compact: boolean) => (
@@ -394,12 +419,23 @@ export function AgentSplitResultsSurface({
     </div>
   );
 
-  const renderToolbarStrips = () => (
-    <>
-      <div className="border-t border-neutral-100 pt-1.5 pb-1">{renderResultsSummaryToolbar(false)}</div>
-      <div className="border-t border-neutral-100 pb-1 pt-1.5">{renderResultsSelectionToolbar(false)}</div>
-    </>
-  );
+  const renderToolbarStrips = () => {
+    if (hideResultsSummaryToolbar) {
+      return (
+        <div className="border-t border-neutral-100 pb-1 pt-1.5">{renderResultsSelectionToolbar(false)}</div>
+      );
+    }
+    return (
+      <>
+        <div className="border-t border-neutral-100 pt-1.5 pb-1">{renderResultsSummaryToolbar(false)}</div>
+        <div className="border-t border-neutral-100 pb-1 pt-1.5">{renderResultsSelectionToolbar(false)}</div>
+      </>
+    );
+  };
+
+  const mapResultsGridClass =
+    mapResultsGridClassName ??
+    "mt-3 flex h-auto min-h-0 flex-col-reverse gap-3 sm:mt-4 sm:gap-4 lg:grid lg:h-[calc(100dvh-7.25rem)] lg:min-h-0 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:flex-none";
 
   const renderToolbar = () => {
     if (hidePageIntro) return renderToolbarStrips();
@@ -464,12 +500,12 @@ export function AgentSplitResultsSurface({
         )
       ) : showMapSplit ? (
         <>
-          {hidePageIntro && !loadError && (loading || displayedListings.length > 0) ? (
+          {hideResultsSummaryToolbar ? null : hidePageIntro && !loadError && (loading || displayedListings.length > 0) ? (
             <div className="border-b border-neutral-200 bg-white pb-2 pt-1">
               {renderResultsSummaryToolbar(false)}
             </div>
           ) : null}
-          <div className={agentWorkspaceMapResultsGrid}>
+          <div className={mapResultsGridClass}>
           <section className={agentWorkspaceMapPanel}>
             <div className="h-full">
               <PropertyMap
@@ -484,7 +520,7 @@ export function AgentSplitResultsSurface({
           </section>
 
           <section className={agentWorkspaceResultsPanel}>
-            <div className="shrink-0 border-b border-neutral-200/90 bg-white px-3 py-1 sm:px-5">
+            <div className="shrink-0 border-b border-neutral-200/90 bg-white px-3 py-2 sm:px-5">
               {renderResultsSelectionToolbar(true)}
             </div>
             <div className="min-h-0 flex-1 overflow-y-auto lg:min-h-0">

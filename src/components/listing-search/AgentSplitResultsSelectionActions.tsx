@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { BulkShareListingsDialog } from "@/components/BulkShareListingsDialog";
 import { cn } from "@/lib/utils";
 
-const PILL_CLASS =
+const DEFAULT_PILL_CLASS =
   "h-7 rounded-md border-neutral-200 bg-white px-2.5 text-xs font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:bg-neutral-50";
 
 const SHARE_TRIGGER_CLASS =
@@ -23,6 +23,8 @@ type AgentSplitResultsSelectionActionsProps = {
   /** Extra pills (e.g. Save as Hot Sheet) rendered after share controls. */
   children?: ReactNode;
   className?: string;
+  /** Override select/keep pill sizing (e.g. hot sheet review toolbar). */
+  pillClassName?: string;
 };
 
 export function AgentSplitResultsSelectionActions({
@@ -37,8 +39,10 @@ export function AgentSplitResultsSelectionActions({
   onSuccessfulShare,
   children,
   className,
+  pillClassName = DEFAULT_PILL_CLASS,
 }: AgentSplitResultsSelectionActionsProps) {
   const safeSelectedRows = selectedRows instanceof Set ? selectedRows : new Set<string>();
+  const PILL_CLASS = pillClassName;
 
   const listingIdsForShare = useMemo(
     () => displayedListingIds.filter((id) => safeSelectedRows.has(id)),
@@ -120,7 +124,7 @@ export function AgentSplitResultsSelectionActions({
         </Button>
       )}
       {showSelectedOnly && (
-        <Button type="button" size="sm" className="h-7 rounded-md px-2.5 text-xs font-medium" onClick={onShowAll}>
+        <Button type="button" size="sm" variant="outline" className={PILL_CLASS} onClick={onShowAll}>
           Show all
         </Button>
       )}
