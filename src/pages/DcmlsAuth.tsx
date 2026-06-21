@@ -83,10 +83,7 @@ const DcmlsAuth = () => {
           first_name: data.firstName,
           last_name: data.lastName,
         });
-        await supabase.from("user_roles").insert({
-          user_id: authData.user.id,
-          role: "buyer",
-        });
+        await supabase.rpc("assign_self_role", { _role: "buyer" });
         toast.success("Welcome to Direct Connect MLS");
       }
     } catch (err: any) {
