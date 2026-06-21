@@ -181,10 +181,7 @@ const BuyerAuth = () => {
         if (profileError) throw profileError;
 
         // Assign buyer role
-        const { error: roleError } = await supabase.from("user_roles").insert({
-          user_id: authData.user.id,
-          role: "buyer",
-        });
+        const { error: roleError } = await supabase.rpc("assign_self_role", { _role: "buyer" });
 
         if (roleError) throw roleError;
 

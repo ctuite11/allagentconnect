@@ -4311,6 +4311,10 @@ export type Database = {
         Args: { p_user_a: string; p_user_b: string }
         Returns: undefined
       }
+      assign_self_role: {
+        Args: { _role: Database["public"]["Enums"]["app_role"] }
+        Returns: undefined
+      }
       auto_activate_listings: { Args: never; Returns: undefined }
       build_message_email_payload: {
         Args: { p_message_id: string }

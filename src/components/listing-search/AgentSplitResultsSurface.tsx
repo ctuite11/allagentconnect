@@ -30,6 +30,7 @@ import {
   agentSplitListingAgentContact,
   listingEmailSubjectFromRow,
 } from "@/lib/listingAgentContact";
+import { LISTING_DEFAULT_SORT_COLUMN } from "@/lib/listingRecencySort";
 
 export type AgentSplitResultsListingRenderHelpers = {
   isSelected: boolean;
