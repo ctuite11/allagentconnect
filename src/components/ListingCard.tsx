@@ -661,7 +661,7 @@ const ListingCard = ({
 
     return <Card
         className={cn(
-          "flex h-full cursor-pointer flex-col overflow-hidden rounded-xl border bg-white shadow-sm transition-[box-shadow,border-color] hover:shadow-md",
+          "flex h-full min-w-0 cursor-pointer flex-col overflow-hidden rounded-xl border bg-white shadow-sm transition-[box-shadow,border-color] hover:shadow-md",
           isSelected ? listingSelectionCardCompactSelected : "border-zinc-200/90 hover:border-zinc-200",
         )}
         onClick={openListingDetail}
@@ -836,64 +836,70 @@ const ListingCard = ({
               {openHouseBanner.isBroker ? '🚙' : '🎈'} {openHouseBanner.text}
             </div>}
         </div>
-        <CardContent className="flex flex-1 flex-col gap-1.5 px-4 pb-3 pt-3">
-          <div className="mb-0 flex items-start justify-between gap-2">
+        <CardContent className="flex min-w-0 flex-1 flex-col gap-1 px-3.5 pb-2.5 pt-2">
+          <div className="mb-0 flex min-w-0 items-start justify-between gap-2">
             <p
               onClick={openListingDetail}
-              className="cursor-pointer text-[15px] font-semibold leading-snug tracking-tight text-neutral-900"
+              className="shrink-0 cursor-pointer text-[14px] font-semibold leading-tight tracking-tight text-neutral-900"
             >
               {displayPrice}
             </p>
             {!hideMlsMeta && compactIdLabel ? (
-              <div className="flex flex-col items-end gap-0.5 text-right">
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    openListingDetail();
-                  }}
-                  className={cn(LISTING_ID_NAV_CLASS, "block w-full text-right text-xs")}
-                >
-                  {compactIdLabel}
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  openListingDetail();
+                }}
+                className={cn(
+                  LISTING_ID_NAV_CLASS,
+                  "block min-w-0 max-w-[45%] truncate text-right text-[10px] leading-none tabular-nums",
+                )}
+                title={compactIdLabel}
+              >
+                {compactIdLabel}
+              </button>
             ) : null}
           </div>
 
-          <ListingCardPropertyTypeLine propertyType={listing.property_type} className="mt-0.5" />
+          <ListingCardPropertyTypeLine
+            propertyType={listing.property_type}
+            className="mt-0 text-[12px] leading-tight"
+          />
 
           <ListingCardAddressLine
             listing={listing}
-            className={listing.property_type ? "mt-1" : undefined}
+            singleLine
+            className={listing.property_type ? "mt-0.5" : undefined}
             onClick={openListingDetail}
           />
 
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs tabular-nums text-neutral-900">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-0 text-[11px] tabular-nums text-neutral-900">
             {listing.bedrooms ? (
-              <div className="flex items-center gap-1">
-                <Bed className="h-3.5 w-3.5 shrink-0 text-[#0E56F5]" aria-hidden />
+              <div className="flex items-center gap-0.5">
+                <Bed className="h-3 w-3 shrink-0 text-[#0E56F5]" aria-hidden />
                 <span className="font-medium">{listing.bedrooms}</span>
               </div>
             ) : null}
             {listing.bathrooms ? (
-              <div className="flex items-center gap-1">
-                <Bath className="h-3.5 w-3.5 shrink-0 text-[#0E56F5]" aria-hidden />
+              <div className="flex items-center gap-0.5">
+                <Bath className="h-3 w-3 shrink-0 text-[#0E56F5]" aria-hidden />
                 <span className="font-medium">{listing.bathrooms}</span>
               </div>
             ) : null}
             {listing.square_feet ? (
-              <div className="flex items-center gap-1">
-                <Maximize className="h-3.5 w-3.5 shrink-0 text-[#0E56F5]" aria-hidden />
+              <div className="flex items-center gap-0.5">
+                <Maximize className="h-3 w-3 shrink-0 text-[#0E56F5]" aria-hidden />
                 <span className="font-medium">{listing.square_feet.toLocaleString()}</span>
               </div>
             ) : null}
-            <div className="flex items-center gap-1">
-              <CircleParking className="h-3.5 w-3.5 shrink-0 text-[#0E56F5]" aria-hidden />
+            <div className="flex items-center gap-0.5">
+              <CircleParking className="h-3 w-3 shrink-0 text-[#0E56F5]" aria-hidden />
               <span className="font-medium">{listing.total_parking_spaces ?? listing.garage_spaces ?? 0}</span>
             </div>
             {daysOnMarket >= 0 ? (
-              <div className="flex items-center gap-1">
-                <span className="text-[10px] font-medium uppercase tracking-wide text-neutral-500">DOM</span>
+              <div className="flex items-center gap-0.5">
+                <span className="text-[9px] font-medium uppercase tracking-wide text-neutral-500">DOM</span>
                 <span className="font-medium">{daysOnMarket}</span>
               </div>
             ) : null}
@@ -901,7 +907,7 @@ const ListingCard = ({
 
           {!showUnifiedAttributionFooter && listedByAttribution ? (
             <p
-              className="mt-1 truncate text-[11px] font-normal leading-snug text-neutral-500"
+              className="mt-0.5 truncate text-[10px] font-normal leading-snug text-neutral-500"
               title={listedByAttribution}
             >
               {listedByAttribution}

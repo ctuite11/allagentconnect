@@ -12,12 +12,17 @@ export const LISTING_CARD_MAP_PIN_CLASS =
 export const LISTING_CARD_ADDRESS_TEXT_CLASS =
   "min-w-0 flex-1 break-words font-sans text-[13px] font-normal leading-[1.35] text-neutral-800";
 
+export const LISTING_CARD_ADDRESS_TEXT_SINGLE_LINE_CLASS =
+  "min-w-0 flex-1 truncate font-sans text-[13px] font-normal leading-tight text-neutral-800";
+
 type ListingCardAddressLineProps = {
   listing: ListingAddressUnitSource;
   className?: string;
   onClick?: (e: MouseEvent) => void;
   /** When set, the address links to Google Maps (e.g. search list). */
   mapsHref?: string;
+  /** Single-line ellipsis — for narrow compact cards in map/results workspaces. */
+  singleLine?: boolean;
 };
 
 export function ListingCardAddressLine({
@@ -25,8 +30,13 @@ export function ListingCardAddressLine({
   className,
   onClick,
   mapsHref,
+  singleLine = false,
 }: ListingCardAddressLineProps) {
   const displayAddress = buildDisplayAddress(listing);
+  const textClass = singleLine ? LISTING_CARD_ADDRESS_TEXT_SINGLE_LINE_CLASS : LISTING_CARD_ADDRESS_TEXT_CLASS;
+  const rowClass = singleLine
+    ? "flex min-w-0 items-center gap-1"
+    : LISTING_CARD_ADDRESS_ROW_CLASS;
 
   const addressText = mapsHref ? (
     <a
@@ -34,17 +44,20 @@ export function ListingCardAddressLine({
       target="_blank"
       rel="noopener noreferrer"
       onClick={(e) => e.stopPropagation()}
-      className={cn(LISTING_CARD_ADDRESS_TEXT_CLASS, "transition-colors hover:text-neutral-900")}
+      title={singleLine ? displayAddress : undefined}
+      className={cn(textClass, "transition-colors hover:text-neutral-900")}
     >
       {displayAddress}
     </a>
   ) : (
-    <p className={LISTING_CARD_ADDRESS_TEXT_CLASS}>{displayAddress}</p>
+    <p className={textClass} title={singleLine ? displayAddress : undefined}>
+      {displayAddress}
+    </p>
   );
 
   return (
     <div
-      className={cn(LISTING_CARD_ADDRESS_ROW_CLASS, onClick && !mapsHref && "cursor-pointer", className)}
+      className={cn(rowClass, onClick && !mapsHref && "cursor-pointer", className)}
       onClick={!mapsHref ? onClick : undefined}
     >
       <MapPin className={LISTING_CARD_MAP_PIN_CLASS} aria-hidden strokeWidth={2} />
