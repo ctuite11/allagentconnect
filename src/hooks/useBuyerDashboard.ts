@@ -97,11 +97,13 @@ export function useBuyerDashboard(buyerId: string | undefined): BuyerDashboardDa
         let hsWithMatches: HotSheetWithMatches[] = [];
 
         if (hsIds.length > 0) {
-          const { data: hsData } = await supabase
-            .from("hot_sheets")
-            .select("id,name,criteria,updated_at")
-            .in("id", hsIds)
-            .order("updated_at", { ascending: false });
+          const { data: hsDataRaw } = await supabase
+            .rpc("list_hot_sheets_for_member" as any, { _hot_sheet_ids: hsIds } as any);
+          const hsData = ((hsDataRaw as any[]) || [])
+            .slice()
+            .sort((a: any, b: any) =>
+              (b?.updated_at ?? "").localeCompare(a?.updated_at ?? "")
+            );
 
           hsWithMatches = await Promise.all(
             (hsData ?? []).map(async (hs: any) => {
@@ -168,11 +170,9 @@ export function useBuyerDashboard(buyerId: string | undefined): BuyerDashboardDa
 
           let hsNameById: Record<string, string> = {};
           if (actHsIds.length > 0) {
-            const { data: hsRows } = await supabase
-              .from("hot_sheets")
-              .select("id,name")
-              .in("id", actHsIds);
-            (hsRows ?? []).forEach((h: { id: string; name: string }) => {
+            const { data: hsRowsRaw } = await supabase
+              .rpc("list_hot_sheets_for_member" as any, { _hot_sheet_ids: actHsIds } as any);
+            ((hsRowsRaw as any[]) ?? []).forEach((h: { id: string; name: string }) => {
               hsNameById[h.id] = h.name;
             });
           }
