@@ -23,7 +23,7 @@ export const agentWorkspaceMapResultsGridTallFlush =
 
 /** Compact header — hot sheet review workspace (minimal chrome above map). */
 export const agentWorkspaceMapResultsGridCompact =
-  "flex h-auto min-h-0 flex-col-reverse gap-3 sm:gap-4 lg:grid lg:h-[calc(100dvh-10.5rem)] lg:min-h-0 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:flex-none";
+  "flex h-auto min-h-0 flex-col-reverse gap-2 sm:gap-3 lg:grid lg:h-[calc(100dvh-8.75rem)] lg:min-h-0 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:flex-none";
 
 export const agentWorkspaceMapPanel =
   "h-[48dvh] min-h-0 overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)] sm:h-[52dvh] lg:sticky lg:top-[5.5rem] lg:h-full lg:min-h-0 lg:self-start";

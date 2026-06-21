@@ -1235,82 +1235,60 @@ const HotSheetReview = () => {
   const maySendDashboardInviteToSomeRecipients =
     !isSharedWorkspace && reviewRecipients.some((r) => r.sendDashboardInvite);
   return (
-      <div className="min-h-[50vh] bg-white px-4 pb-10 sm:px-6">
+      <div className="min-h-[50vh] bg-white pb-6">
         <div className={agentWorkspacePageContainer}>
-          {/* Compact review header */}
-          <header className="border-b border-neutral-200 pb-3 pt-4">
+          {/* Compact review header — metadata only; workspace starts immediately below */}
+          <header className="border-b border-neutral-200 pb-2.5 pt-3">
             <AacBackButton type="button" onClick={handleAgentHotSheetReviewBack} />
-            <div className="mt-2 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-              <div className="min-w-0 space-y-1">
-                <h1 className="text-base font-semibold tracking-tight text-neutral-900 sm:text-lg">
+            <div className="mt-1.5 space-y-2">
+              <div className="space-y-0.5">
+                <h1 className="text-base font-semibold tracking-tight text-neutral-900">
                   {isSharedWorkspace ? "Buyer activity" : "Review matches"}
                 </h1>
                 <p
                   className="text-[13px] text-neutral-700"
-                  title={id ? `Hot sheet ID: ${id}` : undefined}
+                  title={import.meta.env.DEV && id ? `Hot sheet ID: ${id}` : undefined}
                 >
                   <span className="text-neutral-500">Hot Sheet: </span>
                   <span className="font-medium text-neutral-900">{hotSheet.name}</span>
                 </p>
-                {primaryBuyer ? (
-                  <div className="flex flex-wrap items-center gap-2 pt-0.5">
-                    <span className="text-[12px] text-neutral-500">Buyer:</span>
-                    <BuyerInitialsAvatar displayName={primaryBuyer.displayName} userId={primaryBuyer.authUserId} />
-                    <span className="text-[13px] font-medium text-neutral-900">{primaryBuyer.displayName}</span>
-                    <BuyerRowStatusPill
-                      buyer={{
-                        status: !primaryBuyer.inviteAccepted && !primaryBuyer.buyerLinked ? "pending" : "active",
-                        buyerWorkspaceLinked: primaryBuyer.buyerLinked,
-                      }}
-                    />
-                  </div>
-                ) : null}
-                {!isSharedWorkspace && reviewRecipients.length > 1 ? (
-                  <div className="flex flex-wrap gap-1.5 pt-1">
-                    {reviewRecipients.slice(1).map((r) => {
-                      const pending = !r.inviteAccepted && !r.buyerLinked;
-                      return (
-                        <span
-                          key={r.clientId}
-                          className="inline-flex items-center gap-1.5 rounded-full border border-neutral-200 bg-neutral-50/80 py-0.5 pl-0.5 pr-2 text-[11px]"
-                        >
-                          <BuyerInitialsAvatar displayName={r.displayName} userId={r.authUserId} />
-                          <span className="font-medium text-neutral-800">{r.displayName}</span>
-                          <BuyerRowStatusPill
-                            buyer={{
-                              status: pending ? "pending" : "active",
-                              buyerWorkspaceLinked: r.buyerLinked,
-                            }}
-                          />
-                        </span>
-                      );
-                    })}
-                  </div>
-                ) : null}
-                <Collapsible open={criteriaOpen} onOpenChange={setCriteriaOpen} className="pt-1">
-                  <CollapsibleTrigger className="inline-flex items-center gap-1.5 rounded-md px-0 py-0.5 text-[12px] font-medium text-neutral-600 transition-colors hover:text-neutral-900">
-                    <ChevronDown
-                      className={cn(
-                        "h-3.5 w-3.5 shrink-0 transition-transform",
-                        criteriaOpen && "rotate-180",
-                      )}
-                    />
-                    Search criteria
-                  </CollapsibleTrigger>
-                  <CollapsibleContent className="mt-1.5 space-y-0.5 text-[12px] leading-snug text-neutral-600">
-                    <p>
-                      <span className="font-medium text-neutral-800">Scope</span> {criteriaSummary.scope}
-                    </p>
-                    <p>
-                      <span className="font-medium text-neutral-800">State</span> {criteriaSummary.state}
-                    </p>
-                    <p>
-                      <span className="font-medium text-neutral-800">Status</span> {criteriaSummary.statuses}
-                    </p>
-                  </CollapsibleContent>
-                </Collapsible>
               </div>
-              <div className="flex shrink-0 flex-wrap items-center gap-2">
+              {primaryBuyer ? (
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-[12px] text-neutral-500">Buyer:</span>
+                  <BuyerInitialsAvatar displayName={primaryBuyer.displayName} userId={primaryBuyer.authUserId} />
+                  <span className="text-[13px] font-medium text-neutral-900">{primaryBuyer.displayName}</span>
+                  <BuyerRowStatusPill
+                    buyer={{
+                      status: !primaryBuyer.inviteAccepted && !primaryBuyer.buyerLinked ? "pending" : "active",
+                      buyerWorkspaceLinked: primaryBuyer.buyerLinked,
+                    }}
+                  />
+                </div>
+              ) : null}
+              {!isSharedWorkspace && reviewRecipients.length > 1 ? (
+                <div className="flex flex-wrap gap-1.5">
+                  {reviewRecipients.slice(1).map((r) => {
+                    const pending = !r.inviteAccepted && !r.buyerLinked;
+                    return (
+                      <span
+                        key={r.clientId}
+                        className="inline-flex items-center gap-1.5 rounded-full border border-neutral-200 bg-neutral-50/80 py-0.5 pl-0.5 pr-2 text-[11px]"
+                      >
+                        <BuyerInitialsAvatar displayName={r.displayName} userId={r.authUserId} />
+                        <span className="font-medium text-neutral-800">{r.displayName}</span>
+                        <BuyerRowStatusPill
+                          buyer={{
+                            status: pending ? "pending" : "active",
+                            buyerWorkspaceLinked: r.buyerLinked,
+                          }}
+                        />
+                      </span>
+                    );
+                  })}
+                </div>
+              ) : null}
+              <div className="flex flex-wrap items-center gap-2">
                 {buyerContextClientId ? (
                   <Button
                     type="button"
@@ -1347,6 +1325,28 @@ const HotSheetReview = () => {
                   Edit Criteria
                 </Button>
               </div>
+              <Collapsible open={criteriaOpen} onOpenChange={setCriteriaOpen}>
+                <CollapsibleTrigger className="inline-flex items-center gap-1 rounded-md py-0.5 text-[11px] font-medium text-neutral-500 transition-colors hover:text-neutral-800">
+                  <ChevronDown
+                    className={cn(
+                      "h-3 w-3 shrink-0 transition-transform",
+                      criteriaOpen && "rotate-180",
+                    )}
+                  />
+                  Search criteria
+                </CollapsibleTrigger>
+                <CollapsibleContent className="mt-1 space-y-0.5 text-[11px] leading-snug text-neutral-600">
+                  <p>
+                    <span className="font-medium text-neutral-800">Scope</span> {criteriaSummary.scope}
+                  </p>
+                  <p>
+                    <span className="font-medium text-neutral-800">State</span> {criteriaSummary.state}
+                  </p>
+                  <p>
+                    <span className="font-medium text-neutral-800">Status</span> {criteriaSummary.statuses}
+                  </p>
+                </CollapsibleContent>
+              </Collapsible>
             </div>
           </header>
 

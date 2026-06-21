@@ -331,13 +331,13 @@ export function AgentSplitResultsSurface({
   );
 
   const renderHotSheetReviewWorkspaceToolbar = () => (
-    <div className="border-b border-neutral-200 pb-2 pt-1" aria-label="Hot sheet workspace controls">
-      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 pb-2">
+    <div className="border-b border-neutral-200 pb-1.5 pt-0.5" aria-label="Hot sheet workspace controls">
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 pb-1.5">
         {renderViewResultsControls(false)}
         {renderSortControl(false)}
       </div>
       {hasResultsActionsRow ? (
-        <div className="flex flex-wrap items-center gap-2 border-t border-neutral-100 pt-2">
+        <div className="flex flex-wrap items-center gap-2 border-t border-neutral-100 pt-1.5">
           {renderResultsActionsContent()}
         </div>
       ) : null}
