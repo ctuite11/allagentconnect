@@ -353,13 +353,14 @@ const ClientHotsheetPage = () => {
         throw new Error("You do not have access to this hot sheet.");
       }
 
-      const { data: hotSheetData, error: hotSheetError } = await supabase
+      const { data: hotSheetRaw, error: hotSheetError } = await supabase
         .rpc("get_hot_sheet_for_member" as any, { _hot_sheet_id: hotSheetId } as any)
         .single();
 
-      if (hotSheetError || !hotSheetData) {
+      if (hotSheetError || !hotSheetRaw) {
         throw hotSheetError || new Error("Saved search not found");
       }
+      const hotSheetData = hotSheetRaw as any;
 
       if (hotSheetData.user_id) {
         document.cookie = `primary_agent_id=${hotSheetData.user_id}; path=/; max-age=${
@@ -499,13 +500,14 @@ const ClientHotsheetPage = () => {
       }
 
       // 5) Fetch hot sheet details
-      const { data: hotSheetData, error: hotSheetError } = await supabase
+      const { data: hotSheetRaw, error: hotSheetError } = await supabase
         .rpc("get_hot_sheet_by_token" as any, { _token: token } as any)
         .single();
 
-      if (hotSheetError || !hotSheetData) {
+      if (hotSheetError || !hotSheetRaw) {
         throw hotSheetError || new Error("Saved search not found");
       }
+      const hotSheetData = hotSheetRaw as any;
 
       console.log("Client hotsheet hotSheet", hotSheetData);
       setHotSheet(hotSheetData);
