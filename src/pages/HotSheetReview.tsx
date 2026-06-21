@@ -15,7 +15,7 @@ import { AacBackButton } from "@/components/layout/AacBackLink";
 import { AgentResultsSummaryControls } from "@/components/listing-search/AgentResultsSummaryControls";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
-import { agentWorkspacePageContainer, agentWorkspaceMapResultsGridTall } from "@/lib/agentWorkspaceLayout";
+import { agentWorkspacePageContainer, agentWorkspaceMapResultsGridTallFlush } from "@/lib/agentWorkspaceLayout";
 import {
   AGENT_WORKSPACE_BTN_PRIMARY,
   AGENT_WORKSPACE_BTN_SECONDARY,
@@ -1237,72 +1237,60 @@ const HotSheetReview = () => {
   return (
       <div className="min-h-[50vh] bg-white px-4 pb-10 sm:px-6">
         <div className={agentWorkspacePageContainer}>
-          {/* Top row: buyer / hot sheet context + results summary */}
+          {/* Page context: title, buyer, hot sheet */}
           <header className="border-b border-neutral-200 pb-4 pt-8">
             <div className="mb-3">
               <AacBackButton type="button" onClick={handleAgentHotSheetReviewBack} />
             </div>
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
-              <div className="min-w-0 flex-1 space-y-2">
-                <div>
-                  <h1 className="text-lg font-semibold tracking-tight text-neutral-900 sm:text-xl">
-                    {isSharedWorkspace ? "Buyer activity" : "Review matches"}
-                  </h1>
-                  <p className="mt-1 text-[13px] leading-snug text-neutral-600">
-                    <span className="text-neutral-500">Hot Sheet · </span>
-                    <span className="font-medium text-neutral-900">{hotSheet.name}</span>
-                    {id ? (
-                      <span className="ml-2 text-[11px] font-medium tabular-nums text-neutral-400">
-                        {formatHotSheetRef(id)}
-                      </span>
-                    ) : null}
+            <div className="space-y-3">
+              <div>
+                <h1 className="text-lg font-semibold tracking-tight text-neutral-900 sm:text-xl">
+                  {isSharedWorkspace ? "Buyer activity" : "Review matches"}
+                </h1>
+                <p className="mt-1 text-[13px] font-medium text-neutral-900">{hotSheet.name}</p>
+                {id ? (
+                  <p className="mt-0.5 text-[11px] font-medium tabular-nums text-neutral-400">
+                    {formatHotSheetRef(id)}
                   </p>
-                </div>
-                {!isSharedWorkspace && reviewRecipients.length > 0 ? (
-                  <div className="flex flex-wrap items-center gap-2">
-                    {reviewRecipients.map((r) => {
-                      const pending = !r.inviteAccepted && !r.buyerLinked;
-                      return (
-                        <span
-                          key={r.clientId}
-                          className="inline-flex items-center gap-2 rounded-full border border-neutral-200 bg-neutral-50/80 py-1 pl-1 pr-2.5"
-                        >
-                          <BuyerInitialsAvatar displayName={r.displayName} userId={r.authUserId} />
-                          <span className="text-[12px] font-medium text-neutral-800">{r.displayName}</span>
-                          <BuyerRowStatusPill
-                            buyer={{
-                              status: pending ? "pending" : "active",
-                              buyerWorkspaceLinked: r.buyerLinked,
-                            }}
-                          />
-                        </span>
-                      );
-                    })}
-                  </div>
-                ) : null}
-                {buyerContextClientId ? (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className={cn(AGENT_WORKSPACE_BTN_SECONDARY, "w-fit")}
-                    onClick={() => navigate(`/agent/buyers/${buyerContextClientId}/favorites`)}
-                  >
-                    <Heart
-                      className="h-3.5 w-3.5 shrink-0 fill-[#FF2D55] text-[#FF2D55] stroke-[#FF2D55]"
-                      strokeWidth={2}
-                      aria-hidden
-                    />
-                    Favorites
-                  </Button>
                 ) : null}
               </div>
-              <AgentResultsSummaryControls
-                resultsCount={splitListings.length}
-                resultsView={resultsView}
-                onResultsViewChange={setResultsView}
-                showViewToggle={splitListings.length > 0}
-                className="sm:pt-1"
-              />
+              {!isSharedWorkspace && reviewRecipients.length > 0 ? (
+                <div className="flex flex-wrap items-center gap-2">
+                  {reviewRecipients.map((r) => {
+                    const pending = !r.inviteAccepted && !r.buyerLinked;
+                    return (
+                      <span
+                        key={r.clientId}
+                        className="inline-flex items-center gap-2 rounded-full border border-neutral-200 bg-neutral-50/80 py-1 pl-1 pr-2.5"
+                      >
+                        <BuyerInitialsAvatar displayName={r.displayName} userId={r.authUserId} />
+                        <span className="text-[12px] font-medium text-neutral-800">{r.displayName}</span>
+                        <BuyerRowStatusPill
+                          buyer={{
+                            status: pending ? "pending" : "active",
+                            buyerWorkspaceLinked: r.buyerLinked,
+                          }}
+                        />
+                      </span>
+                    );
+                  })}
+                </div>
+              ) : null}
+              {buyerContextClientId ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className={cn(AGENT_WORKSPACE_BTN_SECONDARY, "w-fit")}
+                  onClick={() => navigate(`/agent/buyers/${buyerContextClientId}/favorites`)}
+                >
+                  <Heart
+                    className="h-3.5 w-3.5 shrink-0 fill-[#FF2D55] text-[#FF2D55] stroke-[#FF2D55]"
+                    strokeWidth={2}
+                    aria-hidden
+                  />
+                  Favorites
+                </Button>
+              ) : null}
             </div>
           </header>
 
@@ -1356,6 +1344,19 @@ const HotSheetReview = () => {
             </div>
           </div>
 
+          {/* Workspace summary: results count + map/list — directly above the workspace */}
+          <div
+            className="flex justify-end border-b border-neutral-200 py-3"
+            aria-label="Results view controls"
+          >
+            <AgentResultsSummaryControls
+              resultsCount={splitListings.length}
+              resultsView={resultsView}
+              onResultsViewChange={setResultsView}
+              showViewToggle={splitListings.length > 0}
+            />
+          </div>
+
           <AgentSplitResultsSurface
             variant="embedded"
             hidePageIntro
@@ -1381,7 +1382,7 @@ const HotSheetReview = () => {
             hideResultsSummaryToolbar
             selectionPillClassName={AGENT_WORKSPACE_SELECT_PILL}
             sortTriggerClassName={AGENT_WORKSPACE_SORT_TRIGGER}
-            mapResultsGridClassName={agentWorkspaceMapResultsGridTall}
+            mapResultsGridClassName={agentWorkspaceMapResultsGridTallFlush}
             toolbarActionsExtra={
               !isSharedWorkspace ? (
               <>
