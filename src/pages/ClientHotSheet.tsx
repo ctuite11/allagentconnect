@@ -156,17 +156,15 @@ const ClientHotSheet = () => {
       setLoading(true);
       setError(null);
 
-      // Step 1: Look up the share token
+      // Step 1: Look up the share token (via SECURITY DEFINER RPC)
       const { data: tokenDataResult, error: tokenError } = await supabase
-        .from("share_tokens")
-        .select("*")
-        .eq("token", token);
+        .rpc("resolve_share_token", { _token: token });
 
       if (tokenError) throw tokenError;
 
       console.log("Client hotsheet share token data", tokenDataResult);
 
-      const tokenDataObj = Array.isArray(tokenDataResult) ? tokenDataResult[0] : tokenDataResult;
+      const tokenDataObj = (tokenDataResult ?? null) as any;
 
       if (!tokenDataObj) {
         throw new Error("Share token not found");

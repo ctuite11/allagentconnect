@@ -328,9 +328,7 @@ export default function ClientDashboard() {
       }
 
       const { data: acceptedTokenRows, error: tokenErr } = await supabase
-        .from("share_tokens")
-        .select("token, payload, accepted_at, accepted_by_user_id")
-        .not("accepted_at", "is", null);
+        .rpc("list_my_accepted_hot_sheet_tokens");
 
       if (tokenErr) {
         console.error("Failed to load accepted tokens for dashboard", tokenErr);

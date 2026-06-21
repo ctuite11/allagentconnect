@@ -16,11 +16,15 @@ const ShareLinkHandler = () => {
       }
 
       try {
-        const { data, error: queryError } = await supabase
-          .from('share_tokens')
-          .select('*')
-          .eq('token', token)
-          .maybeSingle();
+        const { data: rpcData, error: queryError } = await supabase
+          .rpc('resolve_share_token', { _token: token });
+        const data = (rpcData ?? null) as
+          | {
+              agent_id?: string | null;
+              expires_at?: string | null;
+              revoked_at?: string | null;
+            }
+          | null;
 
         if (queryError || !data) {
           setError("This link is no longer available. Please contact your agent.");
@@ -28,7 +32,7 @@ const ShareLinkHandler = () => {
         }
 
         // Revoked tokens (e.g. buyer was removed before accepting the invite)
-        if ((data as any).revoked_at) {
+        if (data.revoked_at) {
           setError("This link is no longer available. Please contact your agent.");
           return;
         }
@@ -41,11 +45,12 @@ const ShareLinkHandler = () => {
           return;
         }
 
-        // Set cookie for 90 days (7776000 seconds)
-        document.cookie = `primary_agent_id=${data.agent_id}; path=/; max-age=7776000`;
-        
-        // Also store in localStorage
-        localStorage.setItem("primary_agent_id", data.agent_id);
+        if (data.agent_id) {
+          // Set cookie for 90 days (7776000 seconds)
+          document.cookie = `primary_agent_id=${data.agent_id}; path=/; max-age=7776000`;
+          // Also store in localStorage
+          localStorage.setItem("primary_agent_id", data.agent_id);
+        }
 
         // Redirect to main page
         navigate("/");

@@ -430,12 +430,10 @@ const ClientHotsheetPage = () => {
         throw new Error("Missing token in URL params");
       }
 
-      // 1) Validate token from share_tokens table
-      const { data: tokenData, error: tokenError } = await supabase
-        .from("share_tokens")
-        .select("*")
-        .eq("token", token)
-        .maybeSingle();
+      // 1) Validate token via SECURITY DEFINER RPC
+      const { data: tokenRpc, error: tokenError } = await supabase
+        .rpc("resolve_share_token", { _token: token });
+      const tokenData = (tokenRpc ?? null) as any;
 
       if (tokenError) {
         throw tokenError;
