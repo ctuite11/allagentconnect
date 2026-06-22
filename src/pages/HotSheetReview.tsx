@@ -10,14 +10,14 @@ import {
 } from "@/lib/listingAgentContact";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Send, MapPin, ChevronDown, Pencil, Heart, UserPlus } from "lucide-react";
+import { MapPin, ChevronDown, Pencil, Heart } from "lucide-react";
 import { AacBackButton } from "@/components/layout/AacBackLink";
+import { AacPageIntro } from "@/components/layout/AacPageIntro";
+import { AgentResultsSummaryControls } from "@/components/listing-search/AgentResultsSummaryControls";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
-import { agentWorkspacePageContainer, agentWorkspaceMapResultsGridCompact } from "@/lib/agentWorkspaceLayout";
+import { agentWorkspacePageContainer, agentWorkspaceMapResultsGrid } from "@/lib/agentWorkspaceLayout";
 import {
-  AGENT_WORKSPACE_BTN_PRIMARY,
-  AGENT_WORKSPACE_BTN_SECONDARY,
   AGENT_WORKSPACE_SELECT_PILL,
   AGENT_WORKSPACE_SORT_TRIGGER,
 } from "@/lib/agentWorkspaceToolbar";
@@ -42,37 +42,10 @@ import {
 } from "@/lib/listingConversationThread";
 import { fetchActiveRelationshipsForCrmClients } from "@/lib/resolveHotSheetReviewConversationBuyer";
 import { enqueueBuyerWorkspaceInvite } from "@/lib/enqueueBuyerWorkspaceInvite";
-import { BuyerRowStatusPill } from "@/components/agent/BuyerRowStatusPill";
-import { useAgentLastSeen } from "@/hooks/useAgentLastSeen";
-
-function BuyerInitialsAvatar({ displayName, userId }: { displayName: string; userId?: string | null }) {
-  const { isOnline } = useAgentLastSeen(userId || undefined);
-  const initials = (displayName || "")
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((w) => w.charAt(0).toUpperCase())
-    .join("") || "?";
-  return (
-    <span className="relative inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-violet-100 text-[11px] font-semibold text-violet-700">
-      {initials}
-      {isOnline && (
-        <span className="absolute bottom-0 right-0 h-2 w-2 rounded-full bg-emerald-500 ring-2 ring-white" />
-      )}
-    </span>
-  );
-}
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
 import type { ListedByAgentProfile } from "@/lib/listingListedBy";
 import { formatCriteriaDisplayLabels } from "@/lib/formatCriteriaDisplay";
-import { AddHotSheetRecipientDialog } from "@/components/hot-sheets/AddHotSheetRecipientDialog";
 import {
   buildBuyerStatusInput,
   isActiveBuyerRelationship,
@@ -101,18 +74,6 @@ interface ReviewRecipient {
   buyerLinked: boolean;
   /** Linked auth user id (when buyer has accepted) — drives presence dot. */
   authUserId?: string;
-}
-
-function hotSheetReviewSendLabel(
-  recipients: ReviewRecipient[],
-  selectedCount: number,
-): string {
-  const pendingRecipients = recipients.filter((r) => !r.inviteAccepted && !r.buyerLinked);
-  if (pendingRecipients.length === 0) {
-    return selectedCount > 0 ? "Send Selected Listings" : "Send Listings";
-  }
-  const allAlreadyInvited = pendingRecipients.every((r) => !!r.resendTokenId);
-  return allAlreadyInvited ? "Resend Invite" : "Send Listings with Invite";
 }
 
 function getCriteriaSummaryLine(criteria: any): { scope: string; state: string; statuses: string } {
@@ -187,7 +148,6 @@ const HotSheetReview = () => {
   const [sending, setSending] = useState(false);
   const [hotSheet, setHotSheet] = useState<HotSheet | null>(null);
   const [editCriteriaOpen, setEditCriteriaOpen] = useState(false);
-  const [addRecipientOpen, setAddRecipientOpen] = useState(false);
   const [agentUserId, setAgentUserId] = useState<string | null>(null);
   const [agentDisplayName, setAgentDisplayName] = useState("Your agent");
   const [listings, setListings] = useState<Listing[]>([]);
@@ -196,7 +156,6 @@ const HotSheetReview = () => {
   const [selectedListings, setSelectedListings] = useState<Set<string>>(new Set());
   const [chatDrawerOpen, setChatDrawerOpen] = useState(false);
   const [chatListingId, setChatListingId] = useState<string | null>(null);
-  const [confirmInviteOpen, setConfirmInviteOpen] = useState(false);
   const [clientCount, setClientCount] = useState<number>(0);
   const [invitesSent, setInvitesSent] = useState(false);
   const [unacceptedCount, setUnacceptedCount] = useState(0);
@@ -234,14 +193,14 @@ const HotSheetReview = () => {
   );
 
   const handleAgentHotSheetReviewBack = () => {
-    const preferBuyerFrom =
-      typeof originFrom === "string" && originFrom.includes("/hot-sheets/buyer/")
-        ? originFrom
-        : null;
-    const buyerBack = buyerContextClientId
-      ? `/hot-sheets/buyer/${buyerContextClientId}`
+    const buyerDashboard = buyerContextClientId
+      ? `/agent/buyers/${buyerContextClientId}`
       : null;
-    navigate(preferBuyerFrom || buyerBack || AGENT_HOT_SHEETS_PATH);
+    const preferBuyerDashboard =
+      typeof originFrom === "string" && originFrom.includes("/agent/buyers/")
+        ? originFrom.split("?")[0].replace(/\/(favorites|new-matches)(\/.*)?$/, "")
+        : null;
+    navigate(buyerDashboard || preferBuyerDashboard || AGENT_HOT_SHEETS_PATH);
   };
 
   useEffect(() => {
@@ -1231,134 +1190,95 @@ const HotSheetReview = () => {
   }
 
   const criteriaSummary = getCriteriaSummaryLine(hotSheet.criteria);
-  const primaryBuyer = reviewRecipients[0] ?? null;
-  const maySendDashboardInviteToSomeRecipients =
-    !isSharedWorkspace && reviewRecipients.some((r) => r.sendDashboardInvite);
+  const secondaryActionClassName =
+    "h-7 rounded-md border-neutral-200 bg-white px-2.5 text-xs font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:bg-neutral-50";
   return (
       <div className="min-h-[50vh] bg-white pb-6">
         <div className={agentWorkspacePageContainer}>
-          {/* Compact review header — metadata only; workspace starts immediately below */}
-          <header className="border-b border-neutral-200 pb-2.5 pt-3">
-            <AacBackButton type="button" onClick={handleAgentHotSheetReviewBack} />
-            <div className="mt-1.5 space-y-2">
-              <div className="space-y-0.5">
-                <h1 className="text-base font-semibold tracking-tight text-neutral-900">
-                  {isSharedWorkspace ? "Buyer activity" : "Review matches"}
-                </h1>
-                <p
-                  className="text-[13px] text-neutral-700"
-                  title={import.meta.env.DEV && id ? `Hot sheet ID: ${id}` : undefined}
-                >
-                  <span className="text-neutral-500">Hot Sheet: </span>
-                  <span className="font-medium text-neutral-900">{hotSheet.name}</span>
-                </p>
-              </div>
-              {primaryBuyer ? (
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-[12px] text-neutral-500">Buyer:</span>
-                  <BuyerInitialsAvatar displayName={primaryBuyer.displayName} userId={primaryBuyer.authUserId} />
-                  <span className="text-[13px] font-medium text-neutral-900">{primaryBuyer.displayName}</span>
-                  <BuyerRowStatusPill
-                    buyer={{
-                      status: !primaryBuyer.inviteAccepted && !primaryBuyer.buyerLinked ? "pending" : "active",
-                      buyerWorkspaceLinked: primaryBuyer.buyerLinked,
-                    }}
-                  />
-                </div>
-              ) : null}
-              {!isSharedWorkspace && reviewRecipients.length > 1 ? (
-                <div className="flex flex-wrap gap-1.5">
-                  {reviewRecipients.slice(1).map((r) => {
-                    const pending = !r.inviteAccepted && !r.buyerLinked;
-                    return (
-                      <span
-                        key={r.clientId}
-                        className="inline-flex items-center gap-1.5 rounded-full border border-neutral-200 bg-neutral-50/80 py-0.5 pl-0.5 pr-2 text-[11px]"
-                      >
-                        <BuyerInitialsAvatar displayName={r.displayName} userId={r.authUserId} />
-                        <span className="font-medium text-neutral-800">{r.displayName}</span>
-                        <BuyerRowStatusPill
-                          buyer={{
-                            status: pending ? "pending" : "active",
-                            buyerWorkspaceLinked: r.buyerLinked,
-                          }}
-                        />
-                      </span>
-                    );
-                  })}
-                </div>
-              ) : null}
-              <div className="flex flex-wrap items-center gap-2">
-                {buyerContextClientId ? (
+          <div
+            className="border-b border-neutral-200 bg-white px-3 sm:px-4 lg:px-5"
+            aria-label="Hot sheet review header"
+          >
+            <AacPageIntro
+              withTopPadding
+              back={<AacBackButton type="button" onClick={handleAgentHotSheetReviewBack} />}
+              title="Review matches"
+              actions={
+                <>
+                  {buyerContextClientId ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className={secondaryActionClassName}
+                      onClick={() => navigate(`/agent/buyers/${buyerContextClientId}/favorites`)}
+                    >
+                      <Heart
+                        className="h-3.5 w-3.5 shrink-0 fill-[#FF2D55] text-[#FF2D55] stroke-[#FF2D55]"
+                        strokeWidth={2}
+                        aria-hidden
+                      />
+                      Favorites
+                    </Button>
+                  ) : null}
                   <Button
                     type="button"
                     variant="outline"
-                    className={AGENT_WORKSPACE_BTN_SECONDARY}
-                    onClick={() => navigate(`/agent/buyers/${buyerContextClientId}/favorites`)}
+                    size="sm"
+                    className={secondaryActionClassName}
+                    onClick={() => setEditCriteriaOpen(true)}
                   >
-                    <Heart
-                      className="h-3.5 w-3.5 shrink-0 fill-[#FF2D55] text-[#FF2D55] stroke-[#FF2D55]"
-                      strokeWidth={2}
-                      aria-hidden
+                    <Pencil className="h-3.5 w-3.5" aria-hidden />
+                    Edit Criteria
+                  </Button>
+                </>
+              }
+              afterSubtitle={
+                <Collapsible open={criteriaOpen} onOpenChange={setCriteriaOpen}>
+                  <CollapsibleTrigger className="inline-flex items-center gap-1 rounded-md py-0.5 text-[11px] font-medium text-neutral-500 transition-colors hover:text-neutral-800">
+                    <ChevronDown
+                      className={cn(
+                        "h-3 w-3 shrink-0 transition-transform",
+                        criteriaOpen && "rotate-180",
+                      )}
                     />
-                    Favorites
-                  </Button>
-                ) : null}
-                {!isSharedWorkspace ? (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setAddRecipientOpen(true)}
-                    className={AGENT_WORKSPACE_BTN_SECONDARY}
-                  >
-                    <UserPlus className="h-3.5 w-3.5" aria-hidden />
-                    Add a Friend
-                  </Button>
-                ) : null}
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setEditCriteriaOpen(true)}
-                  className={AGENT_WORKSPACE_BTN_SECONDARY}
-                >
-                  <Pencil className="h-3.5 w-3.5" aria-hidden />
-                  Edit Criteria
-                </Button>
+                    Search criteria
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="mt-1 space-y-0.5 text-[11px] leading-snug text-neutral-600">
+                    <p>
+                      <span className="font-medium text-neutral-800">Scope</span> {criteriaSummary.scope}
+                    </p>
+                    <p>
+                      <span className="font-medium text-neutral-800">State</span> {criteriaSummary.state}
+                    </p>
+                    <p>
+                      <span className="font-medium text-neutral-800">Status</span> {criteriaSummary.statuses}
+                    </p>
+                  </CollapsibleContent>
+                </Collapsible>
+              }
+            />
+            {listings.length > 0 ? (
+              <div className="flex justify-end pb-2 pt-1" aria-label="Results summary and controls">
+                <AgentResultsSummaryControls
+                  resultsCount={listings.length}
+                  resultsView={resultsView}
+                  onResultsViewChange={setResultsView}
+                />
               </div>
-              <Collapsible open={criteriaOpen} onOpenChange={setCriteriaOpen}>
-                <CollapsibleTrigger className="inline-flex items-center gap-1 rounded-md py-0.5 text-[11px] font-medium text-neutral-500 transition-colors hover:text-neutral-800">
-                  <ChevronDown
-                    className={cn(
-                      "h-3 w-3 shrink-0 transition-transform",
-                      criteriaOpen && "rotate-180",
-                    )}
-                  />
-                  Search criteria
-                </CollapsibleTrigger>
-                <CollapsibleContent className="mt-1 space-y-0.5 text-[11px] leading-snug text-neutral-600">
-                  <p>
-                    <span className="font-medium text-neutral-800">Scope</span> {criteriaSummary.scope}
-                  </p>
-                  <p>
-                    <span className="font-medium text-neutral-800">State</span> {criteriaSummary.state}
-                  </p>
-                  <p>
-                    <span className="font-medium text-neutral-800">Status</span> {criteriaSummary.statuses}
-                  </p>
-                </CollapsibleContent>
-              </Collapsible>
-            </div>
-          </header>
+            ) : null}
+          </div>
 
           <AgentSplitResultsSurface
             variant="embedded"
             hidePageIntro
+            hideResultsSummaryToolbar
             showAgentEmailContact
             listings={splitListings}
             loading={false}
             loadError={null}
             emptyMessage="No listings match yet."
-            title="Results"
+            title="Review matches"
             onBack={handleAgentHotSheetReviewBack}
             resultsFromPath={resultsFromPath}
             showSaveToHotSheet={false}
@@ -1372,62 +1292,9 @@ const HotSheetReview = () => {
             toolbarAriaLabel="Hot sheet results"
             resultsView={resultsView}
             onResultsViewChange={setResultsView}
-            workspaceToolbarLayout="hotSheetReview"
             selectionPillClassName={AGENT_WORKSPACE_SELECT_PILL}
             sortTriggerClassName={AGENT_WORKSPACE_SORT_TRIGGER}
-            mapResultsGridClassName={agentWorkspaceMapResultsGridCompact}
-            toolbarActionsExtra={
-              !isSharedWorkspace ? (
-              <>
-                {!invitesSent && (unacceptedCount > 0 || acceptedCount > 0) ? (
-                  <Button
-                    type="button"
-                    className={AGENT_WORKSPACE_BTN_PRIMARY}
-                    onClick={() => {
-                      if (
-                        listings.length > 0 &&
-                        selectedListings.size === 0 &&
-                        (unacceptedCount > 0 || clientCount > 0)
-                      ) {
-                        setConfirmInviteOpen(true);
-                      } else {
-                        handleSendInvites();
-                      }
-                    }}
-                    disabled={sending || clientCount === 0}
-                  >
-                    <Send className="h-3.5 w-3.5" />
-                    {sending
-                      ? "Sending…"
-                      : hotSheetReviewSendLabel(reviewRecipients, selectedListings.size)}
-                  </Button>
-                ) : !invitesSent && acceptedCount > 0 ? (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        disabled={sending}
-                        className={AGENT_WORKSPACE_BTN_SECONDARY}
-                      >
-                        <Send className="h-3.5 w-3.5" />
-                        Notify Clients ({acceptedCount})
-                        <ChevronDown className="h-3.5 w-3.5" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={handleNotifyUpdate}>
-                        Send update (message only)
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={handleNotifyWithMatches}>
-                        Send current matches
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                ) : null}
-              </>
-              ) : undefined
-            }
+            mapResultsGridClassName={agentWorkspaceMapResultsGrid}
             beforeResults={
               !isSharedWorkspace && removedListings.length > 0 ? (
                 <Collapsible
@@ -1495,7 +1362,7 @@ const HotSheetReview = () => {
                       className="h-9 rounded-md border-neutral-200 bg-white px-3 text-[12px] font-medium shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-200 hover:border-neutral-300 hover:bg-neutral-50/90"
                       onClick={handleAgentHotSheetReviewBack}
                     >
-                      All hot sheets
+                      Back to buyer
                     </Button>
                   </div>
                 </div>
@@ -1577,45 +1444,6 @@ const HotSheetReview = () => {
         />
       ) : null}
 
-      {/* Confirm send (invite flow only — not shared workspace) */}
-      {!isSharedWorkspace && (
-        <AlertDialog open={confirmInviteOpen} onOpenChange={setConfirmInviteOpen}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Send without selected listings?</AlertDialogTitle>
-              <AlertDialogDescription>
-                {maySendDashboardInviteToSomeRecipients ? (
-                  <>
-                    You haven&apos;t selected listings yet. Contacts marked{" "}
-                    <span className="font-medium text-foreground">&quot;Needs Invite&quot;</span> may receive a one-time invitation to
-                    join your search when you continue. Invite status for each person is shown on their row above.
-                  </>
-                ) : (
-                  <>
-                    There are matches, but no listings selected. Pick matches first so they&apos;re included in what goes out—or
-                    continue only if that&apos;s intentional.
-                  </>
-                )}
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter className="gap-2 sm:justify-end">
-              <AlertDialogCancel className="h-8 rounded-md px-3 text-xs font-medium mt-0">
-                Go Back and Select Listings
-              </AlertDialogCancel>
-              <AlertDialogAction
-                className="h-8 rounded-md border border-[#0B46CC]/20 bg-[#0E56F5] px-3 text-xs font-medium text-white shadow-[0_1px_2px_rgba(0,0,0,0.08)] transition-colors hover:bg-[#0B46CC]"
-                onClick={() => {
-                  setConfirmInviteOpen(false);
-                  handleSendInvites();
-                }}
-              >
-                Continue
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      )}
-
       {hotSheet && (
         <EditHotsheetCriteriaDialog
           open={editCriteriaOpen}
@@ -1623,17 +1451,6 @@ const HotSheetReview = () => {
           hotSheetId={hotSheet.id}
           initialCriteria={hotSheet.criteria}
           onUpdate={fetchHotSheetAndListings}
-        />
-      )}
-
-      {hotSheet && !isSharedWorkspace && (
-        <AddHotSheetRecipientDialog
-          open={addRecipientOpen}
-          onOpenChange={setAddRecipientOpen}
-          hotSheetId={hotSheet.id}
-          agentUserId={agentUserId}
-          existingRecipientClientIds={reviewRecipients.map((r) => r.clientId)}
-          onAdded={fetchHotSheetAndListings}
         />
       )}
 
