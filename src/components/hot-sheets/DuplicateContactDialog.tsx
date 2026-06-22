@@ -246,7 +246,7 @@ export function DuplicateContactDialog({
             disabled={deleting || adding}
             className="whitespace-nowrap"
           >
-            {adding ? "Adding…" : `Add ${existingClient.first_name ?? "contact"} to sheet`}
+            {adding ? "Sending…" : "Send this hotsheet with invite"}
           </Button>
         </DialogFooter>
       </DialogContent>
