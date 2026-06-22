@@ -140,7 +140,6 @@ export function CreateHotSheetDialog({
   const wasClientPickerOpenRef = useRef(false);
   const dismissedDuplicateEmailRef = useRef<string | null>(null);
   const lastAutoOpenedDuplicateEmailRef = useRef<string | null>(null);
-  const removedDuplicateEmailRef = useRef<string | null>(null);
   
   // Validation errors
   const [errors, setErrors] = useState<{
@@ -256,7 +255,6 @@ export function CreateHotSheetDialog({
     setExistingClient(null);
     dismissedDuplicateEmailRef.current = null;
     lastAutoOpenedDuplicateEmailRef.current = null;
-    removedDuplicateEmailRef.current = null;
     setErrors((prev) => ({
       ...prev,
       clientFirstName: undefined,
@@ -429,12 +427,6 @@ export function CreateHotSheetDialog({
       void fetchAgentClientByEmail(normalizedEmail)
         .then((row) => {
           if (cancelled) return;
-          if (removedDuplicateEmailRef.current === normalizedEmail) {
-            if (!row) removedDuplicateEmailRef.current = null;
-            setExistingClient(null);
-            setDuplicateExistingClient(null);
-            return;
-          }
           setExistingClient(row);
           if (!row) {
             setDuplicateExistingClient(null);
@@ -1591,9 +1583,6 @@ export function CreateHotSheetDialog({
                         if (lastAutoOpenedDuplicateEmailRef.current !== normalizedNextEmail) {
                           lastAutoOpenedDuplicateEmailRef.current = null;
                         }
-                        if (removedDuplicateEmailRef.current !== normalizedNextEmail) {
-                          removedDuplicateEmailRef.current = null;
-                        }
                         if (errors.clientEmail) {
                           setErrors(prev => ({ ...prev, clientEmail: undefined }));
                         }
@@ -2453,12 +2442,10 @@ export function CreateHotSheetDialog({
           await handleSelectClient(client);
         }}
         onDeleted={async () => {
-          const normalizedDeletedEmail = normalizeClientEmail(clientEmail);
           setShowDuplicateDialog(false);
           setDuplicateExistingClient(null);
           dismissedDuplicateEmailRef.current = null;
           lastAutoOpenedDuplicateEmailRef.current = null;
-          removedDuplicateEmailRef.current = normalizedDeletedEmail;
           // Drop any stale "existingClient" hint so the next add doesn't short-circuit.
           setExistingClient(null);
           invalidateAgentContactsCache();
