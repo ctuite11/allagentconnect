@@ -1516,12 +1516,6 @@ export function CreateHotSheetDialog({
                         }}
                         className={errors.clientFirstName ? "border-destructive" : ""}
                       />
-                      {existingClient && (
-                        <p className="text-sm text-emerald-600 flex items-center gap-1">
-                          <Check className="w-4 h-4" />
-                          Existing contact found
-                        </p>
-                      )}
                       {errors.clientFirstName && (
                         <p className="text-sm text-destructive">{errors.clientFirstName}</p>
                       )}
@@ -1562,6 +1556,12 @@ export function CreateHotSheetDialog({
                     />
                     {errors.clientEmail && (
                       <p className="text-sm text-destructive">{errors.clientEmail}</p>
+                    )}
+                    {existingClient && !errors.clientEmail && (
+                      <p className="flex items-center gap-1 text-sm text-amber-600">
+                        <AlertCircle className="h-4 w-4" />
+                        This email is already in your contacts.
+                      </p>
                     )}
                   </div>
                   <div className="space-y-2">
