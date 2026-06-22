@@ -238,7 +238,7 @@ export function ReviewBuyerInviteDialog({
                 </>
               ) : (
                 <>
-                  Send Invite
+                  Send hotsheet with invite
                   <ArrowRight className="w-4 h-4 opacity-90" />
                 </>
               )}
