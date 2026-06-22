@@ -1,27 +1,23 @@
-## Answers
-
-**1. Was `doittuite8@yahoo...` (Debbie) deleted?**
-Yes. I checked the database — there is no `clients` row with that email anymore, and there are zero orphan rows in `client_agent_relationships` referencing a missing CRM contact. The delete flow worked cleanly, which is why re-adding the same email didn't error.
-
-**2. Cancel option on the duplicate-contact confirmation**
-Today the duplicate dialog only has a top-level `Cancel` (closes the dialog and returns to the manual-add form). Once the agent clicks **Delete contact**, the dialog swaps to a "Remove from CRM?" amber confirmation panel with only **Remove from CRM** as the action — there is no way to back out of that confirmation without closing everything, and the top Cancel button is easy to miss in that state.
-
 ## Plan — `src/components/hot-sheets/DuplicateContactDialog.tsx` only
 
-Scope: UI/copy only. No business logic, no schema, no RPC changes.
+Today the primary CTA is always **"Send this hotsheet with invite"**. That copy is only correct when the buyer has never accepted an invite from this agent. If they already accepted (i.e., the buyer has a live, accepted client↔agent relationship with the sending agent), no new invite is being sent — they're just being attached to the hot sheet.
 
-1. **Add a `Back` button inside the confirmation step.**
-   When `confirmingDelete` is true, render a `Back` (ghost) button next to `Remove from CRM` that calls `setConfirmingDelete(false)`. This returns the agent to the duplicate choice screen (Add existing / Delete contact / Cancel) without losing context.
+### Detection rule
 
-2. **Rename the top-level `Cancel` to `Back to form`** so it's obvious the manual-add form (with the values the agent already typed) is preserved when they want to edit the email/name and try again. No behavior change — still calls `onOpenChange(false)`; parent already retains form values per the existing spec.
+The contact is considered "already accepted" if `client_agent_relationships` has a row matching all of:
+- `agent_id` = current user
+- `crm_client_id` = `existingClient.id`
+- `status = 'active'`
+- `client_id IS NOT NULL` (means the buyer signed up + accepted, not just a pending CRM-only row)
 
-3. **Disable the `Back` and `Back to form` buttons while `deleting` or `adding`** is in-flight (same pattern as existing buttons), so the agent can't navigate away mid-request.
+### Behavior
 
-4. No changes to `handleDelete`, `handleAdd`, RPC calls, toast copy, or any other component.
+1. When the dialog opens with an `existingClient`, run a single lightweight query for that row (`select id` + `.maybeSingle()`), guarded by a loading flag. Re-query whenever `existingClient.id` changes.
+2. While loading, disable the primary CTA and show "Checking…".
+3. After load:
+   - **Already accepted →** CTA label: `Add to this hotsheet`. In-progress label: `Adding…`.
+   - **Not accepted (default) →** CTA label: `Send this hotsheet with invite`. In-progress label: `Sending…`.
+4. No change to `onAddToSheet` behavior — the parent already handles attach + invite logic. This is label-only.
+5. On query error, fall back to the invite copy (safer default) and log to `console.warn`.
 
-### Resulting footer states
-
-- Choice screen: `Back to form` · `Delete contact` · `Add <name> to sheet`
-- Confirmation screen: `Back to form` · `Back` · `Remove from CRM`
-
-That's the whole change.
+Scope is strictly this one component; no schema, RPC, or parent-component changes.
