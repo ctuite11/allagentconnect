@@ -17,6 +17,7 @@ import {
   Check,
   CircleDot,
   DollarSign,
+  AlertCircle,
   Home,
   ListFilter,
   Loader2,
