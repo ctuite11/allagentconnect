@@ -10,7 +10,7 @@ import {
 } from "@/lib/listingAgentContact";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { MapPin, ChevronDown, Pencil, Heart } from "lucide-react";
+import { MapPin, ChevronDown, Pencil, Heart, Send, Check } from "lucide-react";
 import { AacBackButton } from "@/components/layout/AacBackLink";
 import { AacPageIntro } from "@/components/layout/AacPageIntro";
 import { AgentResultsSummaryControls } from "@/components/listing-search/AgentResultsSummaryControls";
@@ -18,9 +18,16 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { cn } from "@/lib/utils";
 import { agentWorkspacePageContainer, agentWorkspaceMapResultsGrid } from "@/lib/agentWorkspaceLayout";
 import {
+  AGENT_WORKSPACE_BTN_PRIMARY,
   AGENT_WORKSPACE_SELECT_PILL,
   AGENT_WORKSPACE_SORT_TRIGGER,
 } from "@/lib/agentWorkspaceToolbar";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 import { EditHotsheetCriteriaDialog } from "@/components/EditHotsheetCriteriaDialog";
 import {
@@ -74,6 +81,12 @@ interface ReviewRecipient {
   buyerLinked: boolean;
   /** Linked auth user id (when buyer has accepted) — drives presence dot. */
   authUserId?: string;
+}
+
+function isPendingInviteRecipient(r: ReviewRecipient): boolean {
+  if (r.inviteAccepted || r.buyerLinked) return false;
+  if (!r.email.trim()) return false;
+  return r.sendDashboardInvite || Boolean(r.resendTokenId);
 }
 
 function getCriteriaSummaryLine(criteria: any): { scope: string; state: string; statuses: string } {
@@ -191,6 +204,63 @@ const HotSheetReview = () => {
       reviewRecipients.every((r) => r.inviteAcceptedForSheet || r.buyerLinked),
     [reviewRecipients],
   );
+
+  const pendingInviteRecipients = useMemo(
+    () => reviewRecipients.filter(isPendingInviteRecipient),
+    [reviewRecipients],
+  );
+  const hasPendingInviteRecipients = pendingInviteRecipients.length > 0;
+  const allInviteAccepted = useMemo(
+    () => reviewRecipients.length > 0 && reviewRecipients.every((r) => r.inviteAccepted),
+    [reviewRecipients],
+  );
+  const primaryBuyer = reviewRecipients[0] ?? null;
+  const primaryBuyerMissingEmail = !primaryBuyer?.email?.trim();
+
+  const inviteCta = useMemo(() => {
+    if (allInviteAccepted) {
+      return { label: "Invites Sent", disabled: true, showCheck: true, tooltip: undefined as string | undefined };
+    }
+    if (!hasPendingInviteRecipients && invitesSent) {
+      return { label: "Invites Sent", disabled: true, showCheck: true, tooltip: undefined };
+    }
+    if (!hasPendingInviteRecipients) {
+      return null;
+    }
+    if (primaryBuyerMissingEmail) {
+      return {
+        label: "Send Invite",
+        disabled: true,
+        showCheck: false,
+        tooltip: "Add an email to this buyer first",
+      };
+    }
+    const n = pendingInviteRecipients.length;
+    if (n === 1) {
+      const one = pendingInviteRecipients[0];
+      return {
+        label: one.resendTokenId ? "Resend Invite" : "Send Invite",
+        disabled: false,
+        showCheck: false,
+        tooltip: undefined,
+      };
+    }
+    return {
+      label: `Send Invites (${n})`,
+      disabled: false,
+      showCheck: false,
+      tooltip: undefined,
+    };
+  }, [
+    allInviteAccepted,
+    hasPendingInviteRecipients,
+    invitesSent,
+    pendingInviteRecipients,
+    primaryBuyerMissingEmail,
+  ]);
+
+  const showInviteCta = !isSharedWorkspace && inviteCta !== null;
+  const showPendingInviteBanner = !isSharedWorkspace && hasPendingInviteRecipients && !allInviteAccepted;
 
   const handleAgentHotSheetReviewBack = () => {
     const buyerDashboard = buyerContextClientId
@@ -1005,7 +1075,7 @@ const HotSheetReview = () => {
               clientId,
               mode,
             },
-          }).then((res) => {
+          }).then(async (res) => {
             if (res.error) {
               console.error(
                 `[handleSendInvites] enqueue FAILED for ${clientData.email}:`,
@@ -1015,6 +1085,21 @@ const HotSheetReview = () => {
               console.log(
                 `[handleSendInvites] enqueue OK for ${clientData.email} → jobId=${(res.data as any)?.jobId} skipped=${(res.data as any)?.skipped ?? false}`,
               );
+              const { data: existingRel } = await supabase
+                .from("client_agent_relationships")
+                .select("id")
+                .eq("agent_id", user.id)
+                .eq("crm_client_id", clientId)
+                .in("status", ["active", "pending"])
+                .maybeSingle();
+              if (!existingRel) {
+                await supabase.from("client_agent_relationships").insert({
+                  agent_id: user.id,
+                  client_id: null,
+                  status: "pending",
+                  crm_client_id: clientId,
+                });
+              }
             }
             return res;
           }),
@@ -1192,6 +1277,45 @@ const HotSheetReview = () => {
   const criteriaSummary = getCriteriaSummaryLine(hotSheet.criteria);
   const secondaryActionClassName =
     "h-7 rounded-md border-neutral-200 bg-white px-2.5 text-xs font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:bg-neutral-50";
+
+  const renderInviteCtaButton = () => {
+    if (!inviteCta) return null;
+    const button = (
+      <Button
+        type="button"
+        size="sm"
+        variant={inviteCta.disabled ? "outline" : "default"}
+        className={cn(
+          inviteCta.disabled
+            ? secondaryActionClassName
+            : AGENT_WORKSPACE_BTN_PRIMARY,
+        )}
+        disabled={inviteCta.disabled || sending || clientCount === 0}
+        onClick={() => void handleSendInvites()}
+      >
+        {inviteCta.showCheck ? (
+          <Check className="h-3.5 w-3.5" aria-hidden />
+        ) : (
+          <Send className="h-3.5 w-3.5" aria-hidden />
+        )}
+        {sending ? "Sending…" : inviteCta.label}
+      </Button>
+    );
+    if (inviteCta.tooltip) {
+      return (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="inline-flex">{button}</span>
+            </TooltipTrigger>
+            <TooltipContent>{inviteCta.tooltip}</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      );
+    }
+    return button;
+  };
+
   return (
       <div className="min-h-[50vh] bg-white pb-6">
         <div className={agentWorkspacePageContainer}>
@@ -1205,6 +1329,7 @@ const HotSheetReview = () => {
               title="Review matches"
               actions={
                 <>
+                  {showInviteCta ? renderInviteCtaButton() : null}
                   {buyerContextClientId ? (
                     <Button
                       type="button"
@@ -1296,7 +1421,16 @@ const HotSheetReview = () => {
             sortTriggerClassName={AGENT_WORKSPACE_SORT_TRIGGER}
             mapResultsGridClassName={agentWorkspaceMapResultsGrid}
             beforeResults={
-              !isSharedWorkspace && removedListings.length > 0 ? (
+              <>
+                {showPendingInviteBanner ? (
+                  <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[#0E56F5]/20 bg-[rgba(14,86,245,0.06)] px-4 py-3">
+                    <p className="text-[13px] leading-snug text-neutral-800">
+                      This buyer hasn&apos;t been invited yet. Send the invite to share these matches.
+                    </p>
+                    {renderInviteCtaButton()}
+                  </div>
+                ) : null}
+                {!isSharedWorkspace && removedListings.length > 0 ? (
                 <Collapsible
                   open={removedListingsOpen}
                   onOpenChange={setRemovedListingsOpen}
@@ -1335,7 +1469,8 @@ const HotSheetReview = () => {
                     </ul>
                   </CollapsibleContent>
                 </Collapsible>
-              ) : null
+                ) : null}
+              </>
             }
             emptyState={
               <Card className="rounded-xl border border-neutral-200 bg-white p-8 shadow-[0_1px_2px_rgba(0,0,0,0.04)] sm:p-10">

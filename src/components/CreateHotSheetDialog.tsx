@@ -980,28 +980,6 @@ export function CreateHotSheetDialog({
             );
 
           if (clientError) throw clientError;
-
-          // Ensure each client has a pending/active client_agent_relationships row
-          for (const client of selectedClients) {
-            const { data: existing } = await supabase
-              .from("client_agent_relationships")
-              .select("id")
-              .eq("agent_id", userId)
-              .eq("crm_client_id", client.id)
-              .in("status", ["active", "pending"])
-              .maybeSingle();
-
-            if (!existing) {
-              await supabase
-                .from("client_agent_relationships")
-                .insert({
-                  agent_id: userId,
-                  client_id: null,
-                  status: "pending",
-                  crm_client_id: client.id,
-                });
-            }
-          }
         }
 
         window.localStorage.removeItem(`aac:hotsheet:draft:${userId}:new`);
