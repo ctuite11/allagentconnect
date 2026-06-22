@@ -140,6 +140,7 @@ export function CreateHotSheetDialog({
   const wasClientPickerOpenRef = useRef(false);
   const dismissedDuplicateEmailRef = useRef<string | null>(null);
   const lastAutoOpenedDuplicateEmailRef = useRef<string | null>(null);
+  const removedDuplicateEmailRef = useRef<string | null>(null);
   
   // Validation errors
   const [errors, setErrors] = useState<{
@@ -236,6 +237,8 @@ export function CreateHotSheetDialog({
   
   const resetDialogState = () => {
     setShowCreateClientDialog(false);
+    setShowDuplicateDialog(false);
+    setDuplicateExistingClient(null);
     setShowConfirmDialog(false);
     setShowClientPicker(false);
     setShowManualClientEntry(false);
@@ -251,6 +254,9 @@ export function CreateHotSheetDialog({
     setClientEmail("");
     setClientPhone("");
     setExistingClient(null);
+    dismissedDuplicateEmailRef.current = null;
+    lastAutoOpenedDuplicateEmailRef.current = null;
+    removedDuplicateEmailRef.current = null;
     setErrors((prev) => ({
       ...prev,
       clientFirstName: undefined,
