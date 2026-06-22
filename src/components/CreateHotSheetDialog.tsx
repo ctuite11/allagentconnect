@@ -1252,7 +1252,7 @@ export function CreateHotSheetDialog({
                 </div>
               ) : (
                 <div className="rounded-md border border-dashed border-neutral-300 p-4 text-sm text-muted-foreground">
-                  <p>Add a contact—they’ll receive your hot sheet invitations and match emails when you send from the review screen.</p>
+                  <p>Add your buyer's name and email to invite them to this hot sheet.</p>
                 </div>
               )}
 
