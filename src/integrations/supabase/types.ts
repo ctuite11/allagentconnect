@@ -4555,6 +4555,10 @@ export type Database = {
       }
       resolve_share_token: { Args: { _token: string }; Returns: Json }
       resolve_user_role: { Args: { _user_id: string }; Returns: Json }
+      verify_buyer_contact_row: {
+        Args: { p_crm_client_id: string }
+        Returns: Json
+      }
     }
     Enums: {
       agent_status:
