@@ -195,9 +195,19 @@ export function DuplicateContactDialog({
               onClick={() => onOpenChange(false)}
               disabled={deleting || adding}
             >
-              Cancel
+              Back to form
             </Button>
             {confirmingDelete ? (
+              <>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setConfirmingDelete(false)}
+                disabled={deleting || adding}
+              >
+                Back
+              </Button>
               <Button
                 type="button"
                 variant="destructive"
@@ -215,6 +225,7 @@ export function DuplicateContactDialog({
                   "Remove from CRM"
                 )}
               </Button>
+              </>
             ) : (
               <Button
                 type="button"
