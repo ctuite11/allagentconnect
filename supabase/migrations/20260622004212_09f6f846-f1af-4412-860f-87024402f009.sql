@@ -1,0 +1,1 @@
+DROP POLICY "Anyone can view hot sheets with valid token" ON public.hot_sheets;
