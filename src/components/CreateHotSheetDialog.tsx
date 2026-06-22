@@ -1570,7 +1570,15 @@ export function CreateHotSheetDialog({
                       placeholder="john@example.com"
                       value={clientEmail}
                       onChange={(e) => {
-                        setClientEmail(e.target.value);
+                          const nextEmail = e.target.value;
+                          setClientEmail(nextEmail);
+                          const normalizedNextEmail = normalizeClientEmail(nextEmail);
+                          if (dismissedDuplicateEmailRef.current !== normalizedNextEmail) {
+                            dismissedDuplicateEmailRef.current = null;
+                          }
+                          if (lastAutoOpenedDuplicateEmailRef.current !== normalizedNextEmail) {
+                            lastAutoOpenedDuplicateEmailRef.current = null;
+                          }
                         if (errors.clientEmail) {
                           setErrors(prev => ({ ...prev, clientEmail: undefined }));
                         }
@@ -1581,10 +1589,18 @@ export function CreateHotSheetDialog({
                       <p className="text-sm text-destructive">{errors.clientEmail}</p>
                     )}
                     {existingClient && !errors.clientEmail && (
-                      <p className="flex items-center gap-1 text-sm text-amber-600">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setDuplicateExistingClient(existingClient as DuplicateExistingClient);
+                          setShowDuplicateDialog(true);
+                          lastAutoOpenedDuplicateEmailRef.current = normalizeClientEmail(clientEmail);
+                        }}
+                        className="flex items-center gap-1 text-left text-sm text-amber-600 transition-colors hover:text-amber-700"
+                      >
                         <AlertCircle className="h-4 w-4" />
                         This email is already in your contacts.
-                      </p>
+                      </button>
                     )}
                   </div>
                   <div className="space-y-2">
