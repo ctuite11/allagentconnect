@@ -132,12 +132,28 @@ serve(async (req) => {
     // Safety gate 2: no other active/pending agent relationships.
     // (agent_end_client_relationship already ended this caller's row, so any
     // remaining active/pending row means another agent still owns this buyer.)
+    // Match on auth client_id AND any CRM client row for this email (crm_client_id).
+    const { data: crmClientsByEmail } = await admin
+      .from("clients")
+      .select("id")
+      .ilike("email", buyerEmail);
+
+    const crmClientIdSet = new Set<string>([buyerClientId]);
+    for (const row of crmClientsByEmail ?? []) {
+      if (row?.id) crmClientIdSet.add(String(row.id));
+    }
+
+    const orFilters: string[] = [`client_id.eq.${buyerAuthId}`];
+    for (const crmId of crmClientIdSet) {
+      orFilters.push(`crm_client_id.eq.${crmId}`);
+    }
+
     const { data: activeRels } = await admin
       .from("client_agent_relationships")
-      .select("id, agent_id, status, ended_at")
-      .eq("client_id", buyerAuthId)
+      .select("id, agent_id, status, ended_at, client_id, crm_client_id")
       .is("ended_at", null)
-      .in("status", ["active", "pending"]);
+      .in("status", ["active", "pending"])
+      .or(orFilters.join(","));
     if ((activeRels?.length ?? 0) > 0) {
       return new Response(
         JSON.stringify({
