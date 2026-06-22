@@ -2361,6 +2361,30 @@ export function CreateHotSheetDialog({
         </AlertDialogContent>
       </AlertDialog>
 
+      <DuplicateContactDialog
+        open={showDuplicateDialog}
+        onOpenChange={(next) => {
+          setShowDuplicateDialog(next);
+          if (!next) setDuplicateExistingClient(null);
+        }}
+        existingClient={duplicateExistingClient}
+        typedName={`${clientFirstName} ${clientLastName}`.trim()}
+        onAddToSheet={async (client) => {
+          setShowDuplicateDialog(false);
+          setDuplicateExistingClient(null);
+          setShowCreateClientDialog(false);
+          await handleSelectClient(client);
+        }}
+        onDeleted={async () => {
+          setShowDuplicateDialog(false);
+          setDuplicateExistingClient(null);
+          // Drop any stale "existingClient" hint so the next add doesn't short-circuit.
+          setExistingClient(null);
+          // Keep the manual entry form open with the agent's typed values so they can retry.
+          setShowCreateClientDialog(true);
+        }}
+      />
+
     </Dialog>
   );
 }
