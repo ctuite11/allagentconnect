@@ -2423,12 +2423,16 @@ export function CreateHotSheetDialog({
         open={showDuplicateDialog}
         onOpenChange={(next) => {
           setShowDuplicateDialog(next);
-          if (!next) setDuplicateExistingClient(null);
+          if (!next) {
+            dismissedDuplicateEmailRef.current = normalizeClientEmail(clientEmail);
+            setDuplicateExistingClient(null);
+          }
         }}
         existingClient={duplicateExistingClient}
         typedName={`${clientFirstName} ${clientLastName}`.trim()}
         onAddToSheet={async (client) => {
           setShowDuplicateDialog(false);
+          dismissedDuplicateEmailRef.current = normalizeClientEmail(clientEmail);
           setDuplicateExistingClient(null);
           setShowCreateClientDialog(false);
           await handleSelectClient(client);
@@ -2436,6 +2440,8 @@ export function CreateHotSheetDialog({
         onDeleted={async () => {
           setShowDuplicateDialog(false);
           setDuplicateExistingClient(null);
+          dismissedDuplicateEmailRef.current = null;
+          lastAutoOpenedDuplicateEmailRef.current = null;
           // Drop any stale "existingClient" hint so the next add doesn't short-circuit.
           setExistingClient(null);
           invalidateAgentContactsCache();
