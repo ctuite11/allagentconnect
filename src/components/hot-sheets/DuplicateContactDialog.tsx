@@ -49,14 +49,55 @@ export function DuplicateContactDialog({
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [adding, setAdding] = useState(false);
+  const [checkingAccepted, setCheckingAccepted] = useState(false);
+  const [hasAccepted, setHasAccepted] = useState(false);
 
   useEffect(() => {
     if (!open) {
       setConfirmingDelete(false);
       setDeleting(false);
       setAdding(false);
+      setHasAccepted(false);
+      setCheckingAccepted(false);
     }
   }, [open]);
+
+  useEffect(() => {
+    if (!open || !existingClient?.id) return;
+    let cancelled = false;
+    setCheckingAccepted(true);
+    setHasAccepted(false);
+    (async () => {
+      try {
+        const { data: auth } = await supabase.auth.getUser();
+        const agentId = auth?.user?.id;
+        if (!agentId) {
+          if (!cancelled) setCheckingAccepted(false);
+          return;
+        }
+        const { data, error } = await supabase
+          .from("client_agent_relationships")
+          .select("id")
+          .eq("agent_id", agentId)
+          .eq("crm_client_id", existingClient.id)
+          .eq("status", "active")
+          .not("client_id", "is", null)
+          .maybeSingle();
+        if (cancelled) return;
+        if (error) {
+          console.warn("[DuplicateContactDialog] accepted lookup failed", error);
+          setHasAccepted(false);
+        } else {
+          setHasAccepted(Boolean(data));
+        }
+      } finally {
+        if (!cancelled) setCheckingAccepted(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [open, existingClient?.id]);
 
   if (!existingClient) return null;
 
@@ -243,10 +284,18 @@ export function DuplicateContactDialog({
             type="button"
             size="sm"
             onClick={handleAdd}
-            disabled={deleting || adding}
+            disabled={deleting || adding || checkingAccepted}
             className="whitespace-nowrap"
           >
-            {adding ? "Sending…" : "Send this hotsheet with invite"}
+            {checkingAccepted
+              ? "Checking…"
+              : adding
+                ? hasAccepted
+                  ? "Adding…"
+                  : "Sending…"
+                : hasAccepted
+                  ? "Add to this hotsheet"
+                  : "Send this hotsheet with invite"}
           </Button>
         </DialogFooter>
       </DialogContent>
