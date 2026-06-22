@@ -290,11 +290,9 @@ export function DuplicateContactDialog({
             {checkingAccepted
               ? "Checking…"
               : adding
-                ? hasAccepted
-                  ? "Adding…"
-                  : "Sending…"
+                ? "Sending…"
                 : hasAccepted
-                  ? "Add to this hotsheet"
+                  ? "Send hot sheet"
                   : "Send this hotsheet with invite"}
           </Button>
         </DialogFooter>
