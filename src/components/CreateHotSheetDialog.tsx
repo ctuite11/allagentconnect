@@ -2400,8 +2400,11 @@ export function CreateHotSheetDialog({
           setDuplicateExistingClient(null);
           // Drop any stale "existingClient" hint so the next add doesn't short-circuit.
           setExistingClient(null);
-          // Keep the manual entry form open with the agent's typed values so they can retry.
-          setShowCreateClientDialog(true);
+          invalidateAgentContactsCache();
+          // The old CRM row is gone — keep typed values and immediately retry the manual
+          // add so the agent doesn't have to click "Add This Contact" again.
+          setShowCreateClientDialog(false);
+          await handleAddManualContactClick();
         }}
       />
 
