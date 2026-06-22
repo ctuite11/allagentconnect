@@ -83,6 +83,20 @@ export function DuplicateContactDialog({
         setDeleting(false);
         return;
       }
+      // The RPC ends the relationship + nulls client_type but keeps the CRM row.
+      // Remove this agent's CRM row so the duplicate-email lookup no longer matches.
+      // RLS ("Agents can delete their own clients") scopes this strictly to the caller's
+      // own contact row — it does not touch buyer auth or any other agent's CRM data.
+      const { error: deleteError } = await supabase
+        .from("clients")
+        .delete()
+        .eq("id", existingClient.id);
+      if (deleteError) {
+        console.error("[DuplicateContactDialog] delete CRM row failed", deleteError);
+        toast.error(deleteError.message ?? "Could not fully remove this contact.");
+        setDeleting(false);
+        return;
+      }
       invalidateAgentContactsCache();
       toast.success("Contact removed from your CRM.");
       await onDeleted();
