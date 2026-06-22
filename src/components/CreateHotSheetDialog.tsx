@@ -1282,7 +1282,17 @@ export function CreateHotSheetDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        if (!next) {
+          // Reset contact-entry slice on every dismissal path (X, Esc, backdrop)
+          // so the blue "Or add a new contact manually" link reappears on next open.
+          resetDialogState();
+        }
+        onOpenChange(next);
+      }}
+    >
       <DialogContent className="max-h-[min(92dvh,900px)] w-[calc(100%-1.25rem)] max-w-3xl gap-0 overflow-y-auto border border-neutral-200 bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.07)] sm:w-full sm:max-h-[90vh] sm:rounded-xl sm:p-5 sm:gap-4">
         <DialogHeader className="space-y-2 pb-2 text-left sm:pb-3">
           <DialogTitle className="text-lg font-semibold tracking-tight text-neutral-900">
