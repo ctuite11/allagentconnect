@@ -929,7 +929,8 @@ export function CreateHotSheetDialog({
           : await fetchAgentClientByEmail(validation.normalizedEmail);
 
       if (existing) {
-        await handleSelectClient(existing);
+        setDuplicateExistingClient(existing as DuplicateExistingClient);
+        setShowDuplicateDialog(true);
         return;
       }
 
@@ -966,8 +967,8 @@ export function CreateHotSheetDialog({
 
       if (existingBeforeInsert) {
         setShowCreateClientDialog(false);
-        toast.info("This contact is already in your list — added to the hot sheet.");
-        await handleSelectClient(existingBeforeInsert);
+        setDuplicateExistingClient(existingBeforeInsert as DuplicateExistingClient);
+        setShowDuplicateDialog(true);
         return;
       }
 
@@ -1001,8 +1002,8 @@ export function CreateHotSheetDialog({
           const existing = await fetchAgentClientByEmail(normalizedEmail);
           if (existing) {
             setShowCreateClientDialog(false);
-            toast.info("This contact is already in your list — added to the hot sheet.");
-            await handleSelectClient(existing);
+            setDuplicateExistingClient(existing as DuplicateExistingClient);
+            setShowDuplicateDialog(true);
             return;
           }
           toast.error("A contact with this email already exists in your list.");
@@ -1036,8 +1037,8 @@ export function CreateHotSheetDialog({
           const existing = await fetchAgentClientByEmail(validation.normalizedEmail);
           if (existing) {
             setShowCreateClientDialog(false);
-            toast.info("This contact is already in your list — added to the hot sheet.");
-            await handleSelectClient(existing);
+            setDuplicateExistingClient(existing as DuplicateExistingClient);
+            setShowDuplicateDialog(true);
             return;
           }
         } catch (lookupError) {
