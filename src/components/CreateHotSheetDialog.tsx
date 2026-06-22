@@ -38,6 +38,7 @@ import { getAreasForCity, hasNeighborhoodData } from "@/data/usNeighborhoodsData
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
 import { fetchAllAgentContacts, searchClientContacts, invalidateAgentContactsCache } from "@/lib/contactSearch";
 import { isValidShareRecipientEmail } from "@/lib/shareRecipientUtils";
+import { DuplicateContactDialog, type DuplicateExistingClient } from "@/components/hot-sheets/DuplicateContactDialog";
 import {
   DEFAULT_HOT_SHEET_CRITERIA,
   fromCriteriaPayload,
@@ -128,6 +129,9 @@ export function CreateHotSheetDialog({
   const [showCreateClientDialog, setShowCreateClientDialog] = useState(false);
   const [creatingClient, setCreatingClient] = useState(false);
   const [addingManualContact, setAddingManualContact] = useState(false);
+  const [duplicateExistingClient, setDuplicateExistingClient] =
+    useState<DuplicateExistingClient | null>(null);
+  const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
   const [clientSearchQuery, setClientSearchQuery] = useState("");
   const [clientSearchResults, setClientSearchResults] = useState<any[]>([]);
   const [showClientDropdown, setShowClientDropdown] = useState(false);
