@@ -138,6 +138,8 @@ export function CreateHotSheetDialog({
   const [showClientDropdown, setShowClientDropdown] = useState(false);
   const clientSearchInputRef = useRef<HTMLInputElement>(null);
   const wasClientPickerOpenRef = useRef(false);
+  const dismissedDuplicateEmailRef = useRef<string | null>(null);
+  const lastAutoOpenedDuplicateEmailRef = useRef<string | null>(null);
   
   // Validation errors
   const [errors, setErrors] = useState<{
@@ -410,13 +412,33 @@ export function CreateHotSheetDialog({
     const normalizedEmail = normalizeClientEmail(clientEmail);
     if (!isValidShareRecipientEmail(normalizedEmail)) {
       setExistingClient(null);
+      setDuplicateExistingClient(null);
+      setShowDuplicateDialog(false);
+      dismissedDuplicateEmailRef.current = null;
+      lastAutoOpenedDuplicateEmailRef.current = null;
       return;
     }
     let cancelled = false;
     const timer = setTimeout(() => {
       void fetchAgentClientByEmail(normalizedEmail)
         .then((row) => {
-          if (!cancelled) setExistingClient(row);
+          if (cancelled) return;
+          setExistingClient(row);
+          if (!row) {
+            setDuplicateExistingClient(null);
+            if (lastAutoOpenedDuplicateEmailRef.current === normalizedEmail) {
+              lastAutoOpenedDuplicateEmailRef.current = null;
+            }
+            return;
+          }
+          if (
+            dismissedDuplicateEmailRef.current !== normalizedEmail &&
+            lastAutoOpenedDuplicateEmailRef.current !== normalizedEmail
+          ) {
+            setDuplicateExistingClient(row as DuplicateExistingClient);
+            setShowDuplicateDialog(true);
+            lastAutoOpenedDuplicateEmailRef.current = normalizedEmail;
+          }
         })
         .catch((error) => {
           console.error("Error looking up contact by email:", error);
