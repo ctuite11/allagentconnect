@@ -38,6 +38,7 @@ import { getAreasForCity, hasNeighborhoodData } from "@/data/usNeighborhoodsData
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
 import { fetchAllAgentContacts, searchClientContacts, invalidateAgentContactsCache } from "@/lib/contactSearch";
 import { isValidShareRecipientEmail } from "@/lib/shareRecipientUtils";
+import { DuplicateContactDialog, type DuplicateExistingClient } from "@/components/hot-sheets/DuplicateContactDialog";
 import {
   DEFAULT_HOT_SHEET_CRITERIA,
   fromCriteriaPayload,
@@ -128,6 +129,9 @@ export function CreateHotSheetDialog({
   const [showCreateClientDialog, setShowCreateClientDialog] = useState(false);
   const [creatingClient, setCreatingClient] = useState(false);
   const [addingManualContact, setAddingManualContact] = useState(false);
+  const [duplicateExistingClient, setDuplicateExistingClient] =
+    useState<DuplicateExistingClient | null>(null);
+  const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
   const [clientSearchQuery, setClientSearchQuery] = useState("");
   const [clientSearchResults, setClientSearchResults] = useState<any[]>([]);
   const [showClientDropdown, setShowClientDropdown] = useState(false);
@@ -925,7 +929,8 @@ export function CreateHotSheetDialog({
           : await fetchAgentClientByEmail(validation.normalizedEmail);
 
       if (existing) {
-        await handleSelectClient(existing);
+        setDuplicateExistingClient(existing as DuplicateExistingClient);
+        setShowDuplicateDialog(true);
         return;
       }
 
@@ -962,8 +967,8 @@ export function CreateHotSheetDialog({
 
       if (existingBeforeInsert) {
         setShowCreateClientDialog(false);
-        toast.info("This contact is already in your list — added to the hot sheet.");
-        await handleSelectClient(existingBeforeInsert);
+        setDuplicateExistingClient(existingBeforeInsert as DuplicateExistingClient);
+        setShowDuplicateDialog(true);
         return;
       }
 
@@ -997,8 +1002,8 @@ export function CreateHotSheetDialog({
           const existing = await fetchAgentClientByEmail(normalizedEmail);
           if (existing) {
             setShowCreateClientDialog(false);
-            toast.info("This contact is already in your list — added to the hot sheet.");
-            await handleSelectClient(existing);
+            setDuplicateExistingClient(existing as DuplicateExistingClient);
+            setShowDuplicateDialog(true);
             return;
           }
           toast.error("A contact with this email already exists in your list.");
@@ -1032,8 +1037,8 @@ export function CreateHotSheetDialog({
           const existing = await fetchAgentClientByEmail(validation.normalizedEmail);
           if (existing) {
             setShowCreateClientDialog(false);
-            toast.info("This contact is already in your list — added to the hot sheet.");
-            await handleSelectClient(existing);
+            setDuplicateExistingClient(existing as DuplicateExistingClient);
+            setShowDuplicateDialog(true);
             return;
           }
         } catch (lookupError) {
@@ -2355,6 +2360,30 @@ export function CreateHotSheetDialog({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <DuplicateContactDialog
+        open={showDuplicateDialog}
+        onOpenChange={(next) => {
+          setShowDuplicateDialog(next);
+          if (!next) setDuplicateExistingClient(null);
+        }}
+        existingClient={duplicateExistingClient}
+        typedName={`${clientFirstName} ${clientLastName}`.trim()}
+        onAddToSheet={async (client) => {
+          setShowDuplicateDialog(false);
+          setDuplicateExistingClient(null);
+          setShowCreateClientDialog(false);
+          await handleSelectClient(client);
+        }}
+        onDeleted={async () => {
+          setShowDuplicateDialog(false);
+          setDuplicateExistingClient(null);
+          // Drop any stale "existingClient" hint so the next add doesn't short-circuit.
+          setExistingClient(null);
+          // Keep the manual entry form open with the agent's typed values so they can retry.
+          setShowCreateClientDialog(true);
+        }}
+      />
 
     </Dialog>
   );
