@@ -138,6 +138,8 @@ export function CreateHotSheetDialog({
   const [showClientDropdown, setShowClientDropdown] = useState(false);
   const clientSearchInputRef = useRef<HTMLInputElement>(null);
   const wasClientPickerOpenRef = useRef(false);
+  const dismissedDuplicateEmailRef = useRef<string | null>(null);
+  const lastAutoOpenedDuplicateEmailRef = useRef<string | null>(null);
   
   // Validation errors
   const [errors, setErrors] = useState<{
@@ -234,6 +236,8 @@ export function CreateHotSheetDialog({
   
   const resetDialogState = () => {
     setShowCreateClientDialog(false);
+    setShowDuplicateDialog(false);
+    setDuplicateExistingClient(null);
     setShowConfirmDialog(false);
     setShowClientPicker(false);
     setShowManualClientEntry(false);
@@ -249,6 +253,8 @@ export function CreateHotSheetDialog({
     setClientEmail("");
     setClientPhone("");
     setExistingClient(null);
+    dismissedDuplicateEmailRef.current = null;
+    lastAutoOpenedDuplicateEmailRef.current = null;
     setErrors((prev) => ({
       ...prev,
       clientFirstName: undefined,
@@ -410,13 +416,33 @@ export function CreateHotSheetDialog({
     const normalizedEmail = normalizeClientEmail(clientEmail);
     if (!isValidShareRecipientEmail(normalizedEmail)) {
       setExistingClient(null);
+      setDuplicateExistingClient(null);
+      setShowDuplicateDialog(false);
+      dismissedDuplicateEmailRef.current = null;
+      lastAutoOpenedDuplicateEmailRef.current = null;
       return;
     }
     let cancelled = false;
     const timer = setTimeout(() => {
       void fetchAgentClientByEmail(normalizedEmail)
         .then((row) => {
-          if (!cancelled) setExistingClient(row);
+          if (cancelled) return;
+          setExistingClient(row);
+          if (!row) {
+            setDuplicateExistingClient(null);
+            if (lastAutoOpenedDuplicateEmailRef.current === normalizedEmail) {
+              lastAutoOpenedDuplicateEmailRef.current = null;
+            }
+            return;
+          }
+          if (
+            dismissedDuplicateEmailRef.current !== normalizedEmail &&
+            lastAutoOpenedDuplicateEmailRef.current !== normalizedEmail
+          ) {
+            setDuplicateExistingClient(row as DuplicateExistingClient);
+            setShowDuplicateDialog(true);
+            lastAutoOpenedDuplicateEmailRef.current = normalizedEmail;
+          }
         })
         .catch((error) => {
           console.error("Error looking up contact by email:", error);
@@ -1548,7 +1574,15 @@ export function CreateHotSheetDialog({
                       placeholder="john@example.com"
                       value={clientEmail}
                       onChange={(e) => {
-                        setClientEmail(e.target.value);
+                        const nextEmail = e.target.value;
+                        setClientEmail(nextEmail);
+                        const normalizedNextEmail = normalizeClientEmail(nextEmail);
+                        if (dismissedDuplicateEmailRef.current !== normalizedNextEmail) {
+                          dismissedDuplicateEmailRef.current = null;
+                        }
+                        if (lastAutoOpenedDuplicateEmailRef.current !== normalizedNextEmail) {
+                          lastAutoOpenedDuplicateEmailRef.current = null;
+                        }
                         if (errors.clientEmail) {
                           setErrors(prev => ({ ...prev, clientEmail: undefined }));
                         }
@@ -1559,10 +1593,18 @@ export function CreateHotSheetDialog({
                       <p className="text-sm text-destructive">{errors.clientEmail}</p>
                     )}
                     {existingClient && !errors.clientEmail && (
-                      <p className="flex items-center gap-1 text-sm text-amber-600">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setDuplicateExistingClient(existingClient as DuplicateExistingClient);
+                          setShowDuplicateDialog(true);
+                          lastAutoOpenedDuplicateEmailRef.current = normalizeClientEmail(clientEmail);
+                        }}
+                        className="flex items-center gap-1 text-left text-sm text-amber-600 transition-colors hover:text-amber-700"
+                      >
                         <AlertCircle className="h-4 w-4" />
                         This email is already in your contacts.
-                      </p>
+                      </button>
                     )}
                   </div>
                   <div className="space-y-2">
@@ -2385,12 +2427,16 @@ export function CreateHotSheetDialog({
         open={showDuplicateDialog}
         onOpenChange={(next) => {
           setShowDuplicateDialog(next);
-          if (!next) setDuplicateExistingClient(null);
+          if (!next) {
+            dismissedDuplicateEmailRef.current = normalizeClientEmail(clientEmail);
+            setDuplicateExistingClient(null);
+          }
         }}
         existingClient={duplicateExistingClient}
         typedName={`${clientFirstName} ${clientLastName}`.trim()}
         onAddToSheet={async (client) => {
           setShowDuplicateDialog(false);
+          dismissedDuplicateEmailRef.current = normalizeClientEmail(clientEmail);
           setDuplicateExistingClient(null);
           setShowCreateClientDialog(false);
           await handleSelectClient(client);
@@ -2398,6 +2444,8 @@ export function CreateHotSheetDialog({
         onDeleted={async () => {
           setShowDuplicateDialog(false);
           setDuplicateExistingClient(null);
+          dismissedDuplicateEmailRef.current = null;
+          lastAutoOpenedDuplicateEmailRef.current = null;
           // Drop any stale "existingClient" hint so the next add doesn't short-circuit.
           setExistingClient(null);
           invalidateAgentContactsCache();
