@@ -395,6 +395,15 @@ export function CreateHotSheetDialog({
     }
   }, [showClientPicker]);
 
+  // Falling-edge guard: any time the dialog closes, clear transient contact-entry state
+  // so reopening always starts on the search + blue "Or add a new contact manually" link.
+  useEffect(() => {
+    if (!open) {
+      resetDialogState();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+
   useEffect(() => {
     if (!showManualClientEntry || !userId || !open) return;
     const normalizedEmail = normalizeClientEmail(clientEmail);
