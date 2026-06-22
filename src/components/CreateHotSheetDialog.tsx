@@ -207,6 +207,7 @@ export function CreateHotSheetDialog({
   /** Prevents duplicate submissions from the confirm dialog firing twice in quick succession. */
   const createInFlightRef = useRef(false);
   const [showClientPicker, setShowClientPicker] = useState(false);
+  const [showManualClientEntry, setShowManualClientEntry] = useState(false);
   const [townsOpen, setTownsOpen] = useState(false);
   const [propertyTypeOpen, setPropertyTypeOpen] = useState(false);
   const [statusOpen, setStatusOpen] = useState(false);
@@ -216,6 +217,7 @@ export function CreateHotSheetDialog({
     setShowCreateClientDialog(false);
     setShowConfirmDialog(false);
     setShowClientPicker(false);
+    setShowManualClientEntry(false);
     setShowClientDropdown(false);
     setClientSearchQuery("");
     setClientSearchResults([]);
@@ -308,6 +310,8 @@ export function CreateHotSheetDialog({
       setTimeout(() => {
         clientSearchInputRef.current?.focus();
       }, 0);
+    } else {
+      setShowManualClientEntry(false);
     }
   }, [showClientPicker]);
 
@@ -1318,8 +1322,16 @@ export function CreateHotSheetDialog({
 
                   <Separator />
 
-                  <p className="text-sm text-muted-foreground">Or add a new contact manually:</p>
-
+                  {!showManualClientEntry ? (
+                    <button
+                      type="button"
+                      onClick={() => setShowManualClientEntry(true)}
+                      className="text-left text-[13px] font-medium text-[#0E56F5] transition-colors hover:text-[#0B46CC]"
+                    >
+                      Or add a new contact manually
+                    </button>
+                  ) : (
+                    <>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="client-first-name">First Name *</Label>
@@ -1430,6 +1442,8 @@ export function CreateHotSheetDialog({
                     >
                       Done
                     </Button>
+                  )}
+                    </>
                   )}
                 </>
               )}
