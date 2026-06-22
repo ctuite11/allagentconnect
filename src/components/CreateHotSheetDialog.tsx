@@ -37,6 +37,7 @@ import { TownsPicker } from "@/components/TownsPicker";
 import { getAreasForCity, hasNeighborhoodData } from "@/data/usNeighborhoodsData";
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
 import { fetchAllAgentContacts, searchClientContacts, invalidateAgentContactsCache } from "@/lib/contactSearch";
+import { isValidShareRecipientEmail } from "@/lib/shareRecipientUtils";
 import {
   DEFAULT_HOT_SHEET_CRITERIA,
   fromCriteriaPayload,
@@ -56,6 +57,15 @@ const HS_SECTION_ICON = "h-4 w-4 shrink-0 text-neutral-400";
 
 function HsSectionIcon({ icon: Icon }: { icon: LucideIcon }) {
   return <Icon className={HS_SECTION_ICON} aria-hidden />;
+}
+
+function normalizeClientEmail(email: string): string {
+  return email.trim().toLowerCase();
+}
+
+function isDuplicateClientEmailError(error: unknown): boolean {
+  const e = error as { code?: string; message?: string };
+  return e?.code === "23505" || String(e?.message ?? "").includes("clients_agent_email_unique");
 }
 
 interface CreateHotSheetDialogProps {
@@ -117,10 +127,12 @@ export function CreateHotSheetDialog({
   }>>([]);
   const [showCreateClientDialog, setShowCreateClientDialog] = useState(false);
   const [creatingClient, setCreatingClient] = useState(false);
+  const [addingManualContact, setAddingManualContact] = useState(false);
   const [clientSearchQuery, setClientSearchQuery] = useState("");
   const [clientSearchResults, setClientSearchResults] = useState<any[]>([]);
   const [showClientDropdown, setShowClientDropdown] = useState(false);
   const clientSearchInputRef = useRef<HTMLInputElement>(null);
+  const wasClientPickerOpenRef = useRef(false);
   
   // Validation errors
   const [errors, setErrors] = useState<{
@@ -206,6 +218,8 @@ export function CreateHotSheetDialog({
   const [notificationsOpen, setNotificationsOpen] = useState(true);
   /** Prevents duplicate submissions from the confirm dialog firing twice in quick succession. */
   const createInFlightRef = useRef(false);
+  const creatingClientRef = useRef(false);
+  const addingManualContactRef = useRef(false);
   const [showClientPicker, setShowClientPicker] = useState(false);
   const [showManualClientEntry, setShowManualClientEntry] = useState(false);
   const [townsOpen, setTownsOpen] = useState(false);
@@ -221,6 +235,63 @@ export function CreateHotSheetDialog({
     setShowClientDropdown(false);
     setClientSearchQuery("");
     setClientSearchResults([]);
+    clearManualContactForm();
+  };
+
+  const clearManualContactForm = () => {
+    setClientFirstName("");
+    setClientLastName("");
+    setClientEmail("");
+    setClientPhone("");
+    setExistingClient(null);
+    setErrors((prev) => ({
+      ...prev,
+      clientFirstName: undefined,
+      clientLastName: undefined,
+      clientEmail: undefined,
+      clientPhone: undefined,
+    }));
+  };
+
+  const fetchAgentClientByEmail = async (email: string) => {
+    const normalizedEmail = normalizeClientEmail(email);
+    if (!normalizedEmail || !userId) return null;
+    const { data, error } = await supabase
+      .from("clients")
+      .select("id, first_name, last_name, email, phone")
+      .eq("agent_id", userId)
+      .ilike("email", normalizedEmail)
+      .maybeSingle();
+    if (error && error.code !== "PGRST116") throw error;
+    return data;
+  };
+
+  const validateManualContactForm = () => {
+    const nextErrors: typeof errors = {};
+    const first = clientFirstName.trim();
+    const last = clientLastName.trim();
+    const normalizedEmail = normalizeClientEmail(clientEmail);
+
+    if (!first) nextErrors.clientFirstName = "First name is required";
+    if (!last) nextErrors.clientLastName = "Last name is required";
+    if (!normalizedEmail) {
+      nextErrors.clientEmail = "Email is required";
+    } else if (!isValidShareRecipientEmail(normalizedEmail)) {
+      nextErrors.clientEmail = "Enter a valid email address";
+    }
+
+    return {
+      valid: Object.keys(nextErrors).length === 0,
+      errors: nextErrors,
+      normalizedEmail,
+      firstName: first,
+      lastName: last,
+    };
+  };
+
+  const openClientPicker = () => {
+    clearManualContactForm();
+    setShowClientPicker(true);
   };
 
   // Initialize from preSelectedClients when dialog opens (only once on open)
@@ -307,13 +378,41 @@ export function CreateHotSheetDialog({
 
   useEffect(() => {
     if (showClientPicker) {
+      wasClientPickerOpenRef.current = true;
       setTimeout(() => {
         clientSearchInputRef.current?.focus();
       }, 0);
-    } else {
+      return;
+    }
+    if (wasClientPickerOpenRef.current) {
+      wasClientPickerOpenRef.current = false;
       setShowManualClientEntry(false);
+      clearManualContactForm();
     }
   }, [showClientPicker]);
+
+  useEffect(() => {
+    if (!showManualClientEntry || !userId || !open) return;
+    const normalizedEmail = normalizeClientEmail(clientEmail);
+    if (!isValidShareRecipientEmail(normalizedEmail)) {
+      setExistingClient(null);
+      return;
+    }
+    let cancelled = false;
+    const timer = setTimeout(() => {
+      void fetchAgentClientByEmail(normalizedEmail)
+        .then((row) => {
+          if (!cancelled) setExistingClient(row);
+        })
+        .catch((error) => {
+          console.error("Error looking up contact by email:", error);
+        });
+    }, 350);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [clientEmail, showManualClientEntry, userId, open]);
 
   const handleSelectClient = async (client: any) => {
     // Check if client is already selected
@@ -352,6 +451,7 @@ export function CreateHotSheetDialog({
     setExistingClient(null);
     setShowClientDropdown(false);
     setShowClientPicker(false);
+    setShowManualClientEntry(false);
     
     toast.success(`Added contact: ${client.first_name} ${client.last_name}`);
   };
@@ -781,33 +881,92 @@ export function CreateHotSheetDialog({
   };
 
   const handleAddClientWithoutSaving = () => {
-    // Add client to hot sheet without saving to database
+    const validation = validateManualContactForm();
+    if (!validation.valid) {
+      setErrors((prev) => ({ ...prev, ...validation.errors }));
+      toast.error("Please complete all required contact fields.");
+      return;
+    }
+
     setSelectedClients(prev => [...prev, {
-      id: `temp-${Date.now()}`, // Temporary ID for unsaved clients
-      first_name: clientFirstName.trim(),
-      last_name: clientLastName.trim(),
-      email: clientEmail.toLowerCase().trim(),
+      id: `temp-${Date.now()}`,
+      first_name: validation.firstName,
+      last_name: validation.lastName,
+      email: validation.normalizedEmail,
       phone: clientPhone ? formatPhoneNumber(clientPhone) : null
     }]);
     
     setShowCreateClientDialog(false);
     toast.success("Contact added to this hot sheet (not saved to your contacts list)");
     
-    // Clear the form
-    setClientFirstName("");
-    setClientLastName("");
-    setClientEmail("");
-    setClientPhone("");
-    setExistingClient(null);
+    clearManualContactForm();
     setClientSearchQuery("");
-    
     setShowClientPicker(false);
+    setShowManualClientEntry(false);
+  };
+
+  const handleAddManualContactClick = async () => {
+    if (addingManualContactRef.current || creatingClientRef.current) return;
+
+    const validation = validateManualContactForm();
+    if (!validation.valid) {
+      setErrors((prev) => ({ ...prev, ...validation.errors }));
+      toast.error("Please complete all required contact fields.");
+      return;
+    }
+
+    addingManualContactRef.current = true;
+    setAddingManualContact(true);
+    try {
+      const existing =
+        existingClient?.email &&
+        normalizeClientEmail(existingClient.email) === validation.normalizedEmail
+          ? existingClient
+          : await fetchAgentClientByEmail(validation.normalizedEmail);
+
+      if (existing) {
+        await handleSelectClient(existing);
+        return;
+      }
+
+      setShowCreateClientDialog(true);
+    } catch (error: unknown) {
+      console.error("Error preparing manual contact:", error);
+      toast.error("Could not look up this contact. Please try again.");
+    } finally {
+      addingManualContactRef.current = false;
+      setAddingManualContact(false);
+    }
   };
 
   const handleCreateClient = async () => {
+    if (creatingClientRef.current) return;
+
+    const validation = validateManualContactForm();
+    if (!validation.valid) {
+      setErrors((prev) => ({ ...prev, ...validation.errors }));
+      toast.error("Please complete all required contact fields.");
+      return;
+    }
+
+    creatingClientRef.current = true;
     setCreatingClient(true);
     try {
-      const normalizedEmail = clientEmail.toLowerCase().trim();
+      const normalizedEmail = validation.normalizedEmail;
+
+      const existingBeforeInsert =
+        existingClient?.email &&
+        normalizeClientEmail(existingClient.email) === normalizedEmail
+          ? existingClient
+          : await fetchAgentClientByEmail(normalizedEmail);
+
+      if (existingBeforeInsert) {
+        setShowCreateClientDialog(false);
+        toast.info("This contact is already in your list — added to the hot sheet.");
+        await handleSelectClient(existingBeforeInsert);
+        return;
+      }
+
       // Block if this email already belongs to an AAC account.
       const { data: alreadyRegistered, error: regCheckErr } = await supabase.rpc(
         "is_email_registered_with_aac" as any,
@@ -818,7 +977,6 @@ export function CreateHotSheetDialog({
         toast.error(
           "This email is already registered with AAC. They already have an account — share your AAC profile link instead."
         );
-        setCreatingClient(false);
         return;
       }
 
@@ -826,18 +984,30 @@ export function CreateHotSheetDialog({
         .from("clients")
         .insert({
           agent_id: userId,
-          first_name: clientFirstName.trim(),
-          last_name: clientLastName.trim(),
+          first_name: validation.firstName,
+          last_name: validation.lastName,
           email: normalizedEmail,
           phone: clientPhone ? formatPhoneNumber(clientPhone) : null,
         })
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        if (isDuplicateClientEmailError(error)) {
+          const existing = await fetchAgentClientByEmail(normalizedEmail);
+          if (existing) {
+            setShowCreateClientDialog(false);
+            toast.info("This contact is already in your list — added to the hot sheet.");
+            await handleSelectClient(existing);
+            return;
+          }
+          toast.error("A contact with this email already exists in your list.");
+          return;
+        }
+        throw error;
+      }
 
       if (data) {
-        // Add newly created client to selected clients
         setSelectedClients(prev => [...prev, {
           id: data.id,
           first_name: data.first_name,
@@ -845,32 +1015,36 @@ export function CreateHotSheetDialog({
           email: data.email,
           phone: data.phone
         }]);
-        
-        // Clear the form
-        setClientFirstName("");
-        setClientLastName("");
-        setClientEmail("");
-        setClientPhone("");
-        setExistingClient(null);
-        setClientSearchQuery("");
       }
       setShowCreateClientDialog(false);
       invalidateAgentContactsCache();
       toast.success("Contact saved and added to this hot sheet");
       
-      // Clear the form
-      setClientFirstName("");
-      setClientLastName("");
-      setClientEmail("");
-      setClientPhone("");
-      setExistingClient(null);
+      clearManualContactForm();
       setClientSearchQuery("");
-      
       setShowClientPicker(false);
-    } catch (error: any) {
+      setShowManualClientEntry(false);
+    } catch (error: unknown) {
       console.error("Error creating client:", error);
-      toast.error(error?.message || "Could not save this person to your contacts");
+      const message = error instanceof Error ? error.message : "Could not save this person to your contacts";
+      if (isDuplicateClientEmailError(error)) {
+        try {
+          const existing = await fetchAgentClientByEmail(validation.normalizedEmail);
+          if (existing) {
+            setShowCreateClientDialog(false);
+            toast.info("This contact is already in your list — added to the hot sheet.");
+            await handleSelectClient(existing);
+            return;
+          }
+        } catch (lookupError) {
+          console.error("Error recovering duplicate contact:", lookupError);
+        }
+        toast.error("A contact with this email already exists in your list.");
+        return;
+      }
+      toast.error(message);
     } finally {
+      creatingClientRef.current = false;
       setCreatingClient(false);
     }
   };
@@ -1017,9 +1191,11 @@ export function CreateHotSheetDialog({
     setClientSearchResults([]);
     setShowClientDropdown(false);
     setShowClientPicker(false);
+    setShowManualClientEntry(false);
     setSelectedClients([]);
     setShowCreateClientDialog(false);
     setCreatingClient(false);
+    setAddingManualContact(false);
     setErrors({});
     setShowConfirmDialog(false);
     setShowSuccess(false);
@@ -1197,7 +1373,7 @@ export function CreateHotSheetDialog({
                       variant="outline"
                       size="sm"
                       className="h-8 border-neutral-200 px-2.5 text-[12px] font-medium shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:border-neutral-300 hover:bg-neutral-50/90"
-                      onClick={() => setShowClientPicker(true)}
+                      onClick={openClientPicker}
                     >
                       <UserPlus className="mr-1.5 h-3.5 w-3.5" aria-hidden />
                       Add another
@@ -1291,7 +1467,10 @@ export function CreateHotSheetDialog({
                   {!showManualClientEntry ? (
                     <button
                       type="button"
-                      onClick={() => setShowManualClientEntry(true)}
+                      onClick={() => {
+                        clearManualContactForm();
+                        setShowManualClientEntry(true);
+                      }}
                       className="text-left text-[13px] font-medium text-[#0E56F5] transition-colors hover:text-[#0B46CC]"
                     >
                       Or add a new contact manually
@@ -1385,17 +1564,12 @@ export function CreateHotSheetDialog({
                     <Button
                       type="button"
                       variant="outline"
-                      onClick={() => {
-                        if (!existingClient) {
-                          setShowCreateClientDialog(true);
-                        } else {
-                          handleSelectClient(existingClient);
-                        }
-                      }}
+                      disabled={addingManualContact || creatingClient}
+                      onClick={() => void handleAddManualContactClick()}
                       className="w-full"
                     >
                       <Check className="w-4 h-4 mr-2" />
-                      Add This Contact
+                      {addingManualContact || creatingClient ? "Adding…" : "Add This Contact"}
                     </Button>
                   )}
 
@@ -2141,8 +2315,11 @@ export function CreateHotSheetDialog({
             </AlertDialogCancel>
             <AlertDialogAction
               className="h-9 rounded-md border border-[#0B46CC]/20 bg-[#0E56F5] px-3 text-[13px] font-medium text-white shadow-[0_1px_2px_rgba(0,0,0,0.08)] hover:bg-[#0B46CC] focus-visible:ring-2 focus-visible:ring-neutral-400/55 focus-visible:ring-offset-2"
-              onClick={handleCreateClient}
               disabled={creatingClient}
+              onClick={(e) => {
+                e.preventDefault();
+                void handleCreateClient();
+              }}
             >
               {creatingClient ? (
                 <>
