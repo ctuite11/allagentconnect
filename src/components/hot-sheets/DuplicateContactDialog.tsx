@@ -84,6 +84,21 @@ export function DuplicateContactDialog({
         return;
       }
       // The RPC ends the relationship + nulls client_type but keeps the CRM row.
+      // Before deleting the CRM row, remove any client_agent_relationships rows
+      // that reference it ONLY via crm_client_id (no auth client_id). The FK is
+      // ON DELETE SET NULL, so leaving them in place would null crm_client_id
+      // and violate the `identity_present` check constraint (both ids null).
+      const { error: relCleanupError } = await supabase
+        .from("client_agent_relationships")
+        .delete()
+        .eq("crm_client_id", existingClient.id)
+        .is("client_id", null);
+      if (relCleanupError) {
+        console.error("[DuplicateContactDialog] cleanup relationships failed", relCleanupError);
+        toast.error(relCleanupError.message ?? "Could not fully remove this contact.");
+        setDeleting(false);
+        return;
+      }
       // Remove this agent's CRM row so the duplicate-email lookup no longer matches.
       // RLS ("Agents can delete their own clients") scopes this strictly to the caller's
       // own contact row — it does not touch buyer auth or any other agent's CRM data.
@@ -112,7 +127,7 @@ export function DuplicateContactDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[460px]">
+      <DialogContent className="sm:max-w-[560px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-base">
             <AlertTriangle className="h-4 w-4 text-amber-500" aria-hidden />
@@ -161,8 +176,8 @@ export function DuplicateContactDialog({
           </div>
         ) : null}
 
-        <DialogFooter className="flex-col-reverse gap-2 sm:flex-row sm:justify-between sm:gap-2">
-          <div className="flex gap-2">
+        <DialogFooter className="flex-col-reverse gap-2 sm:flex-row sm:flex-wrap sm:justify-between sm:gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button
               type="button"
               variant="ghost"
@@ -179,6 +194,7 @@ export function DuplicateContactDialog({
                 size="sm"
                 onClick={handleDelete}
                 disabled={deleting || adding}
+                className="whitespace-nowrap"
               >
                 {deleting ? (
                   <>
@@ -186,7 +202,7 @@ export function DuplicateContactDialog({
                     Removing…
                   </>
                 ) : (
-                  "Yes, remove from my CRM"
+                  "Remove from CRM"
                 )}
               </Button>
             ) : (
@@ -196,9 +212,9 @@ export function DuplicateContactDialog({
                 size="sm"
                 onClick={() => setConfirmingDelete(true)}
                 disabled={deleting || adding}
-                className="text-destructive hover:text-destructive"
+                className="whitespace-nowrap text-destructive hover:text-destructive"
               >
-                Delete this contact
+                Delete contact
               </Button>
             )}
           </div>
@@ -207,8 +223,9 @@ export function DuplicateContactDialog({
             size="sm"
             onClick={handleAdd}
             disabled={deleting || adding}
+            className="whitespace-nowrap"
           >
-            {adding ? "Adding…" : `Add ${existingClient.first_name ?? "contact"} to hot sheet`}
+            {adding ? "Adding…" : `Add ${existingClient.first_name ?? "contact"} to sheet`}
           </Button>
         </DialogFooter>
       </DialogContent>
