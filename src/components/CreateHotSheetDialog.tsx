@@ -1191,19 +1191,7 @@ export function CreateHotSheetDialog({
                   </span>
                 </CardTitle>
                 <div className="flex flex-wrap items-center gap-2">
-                  {!lockedToClient && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="h-8 border-neutral-200 px-2.5 text-[12px] font-medium shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:border-neutral-300 hover:bg-neutral-50/90"
-                      onClick={() => setShowClientPicker(true)}
-                    >
-                      <UserPlus className="mr-1.5 h-3.5 w-3.5" aria-hidden />
-                      {selectedClients.length > 0 ? "Change contact" : "Add contact"}
-                    </Button>
-                  )}
-                  {selectedClients.length > 0 && (
+                  {!lockedToClient && selectedClients.length > 0 && (
                     <Button
                       type="button"
                       variant="outline"
@@ -1251,12 +1239,12 @@ export function CreateHotSheetDialog({
                   </div>
                 </div>
               ) : (
-                <div className="rounded-md border border-dashed border-neutral-300 p-4 text-sm text-muted-foreground">
-                  <p>Add your buyer's name and email to invite them to this hot sheet.</p>
-                </div>
+                <p className="text-sm text-muted-foreground">
+                  Add your buyer's name and email to invite them to this hot sheet.
+                </p>
               )}
 
-              {showClientPicker && (
+              {(showClientPicker || selectedClients.length === 0) && !lockedToClient && (
                 <>
                   <div className="space-y-2 relative">
                     <Label htmlFor="client-search">Search Existing Contact</Label>
