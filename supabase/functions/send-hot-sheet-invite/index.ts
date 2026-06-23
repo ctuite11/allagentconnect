@@ -194,6 +194,8 @@ const handler = async (req: Request): Promise<Response> => {
       ? `AAC`
       : buildHotSheetInviteEmailSubject(displayInviterName);
 
+    const preheader = inviteOnly ? "" : subject;
+
     const jobPayload: Record<string, unknown> = {
       provider: "resend",
       template: "hot-sheet-invite",
@@ -208,6 +210,7 @@ const handler = async (req: Request): Promise<Response> => {
         hotSheetName,
         hotSheetLink,
         inviteOnly,
+        preheader,
       },
     };
 
