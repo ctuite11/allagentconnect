@@ -220,14 +220,14 @@ const HotSheetReview = () => {
 
   const inviteCta = useMemo(() => {
     if (allInviteAccepted || (invitesSent && !hasPendingInviteRecipients)) {
-      return { label: "Hotsheet Sent", disabled: true, showCheck: true, tooltip: undefined as string | undefined };
+      return { label: "Hot Sheet Sent", disabled: true, showCheck: true, tooltip: undefined as string | undefined };
     }
     if (!hasPendingInviteRecipients) {
-      return { label: "Send hotsheet", disabled: false, showCheck: false, tooltip: undefined };
+      return { label: "Send Hot Sheet", disabled: false, showCheck: false, tooltip: undefined };
     }
     if (primaryBuyerMissingEmail) {
       return {
-        label: "Send hotsheet with invite",
+        label: "Send Hot Sheet with Invite",
         disabled: true,
         showCheck: false,
         tooltip: "Add an email to this buyer first",
@@ -237,14 +237,14 @@ const HotSheetReview = () => {
     if (n === 1) {
       const one = pendingInviteRecipients[0];
       return {
-        label: one.resendTokenId ? "Resend hotsheet with invite" : "Send hotsheet with invite",
+        label: one.resendTokenId ? "Resend Hot Sheet with Invite" : "Send Hot Sheet with Invite",
         disabled: false,
         showCheck: false,
         tooltip: undefined,
       };
     }
     return {
-      label: `Send hotsheet with invites (${n})`,
+      label: `Send Hot Sheet with Invites (${n})`,
       disabled: false,
       showCheck: false,
       tooltip: undefined,
@@ -1420,11 +1420,10 @@ const HotSheetReview = () => {
             beforeResults={
               <>
                 {showPendingInviteBanner ? (
-                  <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[#0E56F5]/20 bg-[rgba(14,86,245,0.06)] px-4 py-3">
+                  <div className="mb-4 rounded-lg border border-[#0E56F5]/20 bg-[rgba(14,86,245,0.06)] px-4 py-3">
                     <p className="text-[13px] leading-snug text-neutral-800">
                       This buyer hasn&apos;t been invited yet. Send the invite to share these matches.
                     </p>
-                    {renderInviteCtaButton()}
                   </div>
                 ) : null}
                 {!isSharedWorkspace && removedListings.length > 0 ? (
