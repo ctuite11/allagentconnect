@@ -434,6 +434,9 @@ const ClientInvitationSetup = () => {
     ? `${agentFirstName} shared a private home search with you`
     : "Your private home search is ready";
 
+  const agentDirectName = agentFirstName || "your agent";
+  const inviteBody = `Your agent has already selected homes that match your search. Create your free All Agent Connect account to view those homes, save favorites, receive new matching listings automatically, and communicate directly with ${agentDirectName}.`;
+
   return (
     <div className="min-h-screen bg-white">
       <header className="border-b border-zinc-100">
@@ -454,8 +457,7 @@ const ClientInvitationSetup = () => {
                 {inviteHeadline}
               </h1>
               <p className="text-[15px] sm:text-base text-zinc-500 leading-relaxed max-w-md">
-                Create your free All Agent Connect account to view homes selected for you, save
-                favorites, receive new matching listings automatically, and message your agent directly.
+                {inviteBody}
               </p>
             </div>
 
@@ -471,7 +473,7 @@ const ClientInvitationSetup = () => {
             </ul>
           </div>
 
-          <div className="lg:pl-4">
+          <div className="lg:pl-4 lg:-mt-7">
             <div className="max-w-md mx-auto lg:mx-0 lg:ml-auto rounded-3xl border border-zinc-200 bg-white shadow-sm p-7 sm:p-8">
               <form
                 onSubmit={(e) => {
