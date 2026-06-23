@@ -326,55 +326,13 @@ const HotSheets = ({
         .join(" ");
       setBuyerDisplayName(profileName);
 
-      const buyerEmailNorm = (profile?.email || user?.email || "").toLowerCase().trim();
+      const { rows, tokenByHotSheetId } = await loadBuyerHotSheetAccess(
+        supabase,
+        userId,
+        profile?.email || user?.email || null,
+      );
 
-      const allHotSheetIds = new Set<string>();
-      const tokenMap: Record<string, string> = {};
-
-      // 1) Primary: hot_sheet_clients (RLS: buyer’s CRM links). Includes buyer-created sheets; no share token required.
-      const { data: hscRows, error: hscErr } = await supabase
-        .from("hot_sheet_clients")
-        .select("hot_sheet_id");
-
-      if (hscErr) {
-        console.error("Failed to load hot_sheet_clients", hscErr);
-      } else {
-        for (const row of hscRows || []) {
-          const hid = (row as { hot_sheet_id?: string }).hot_sheet_id;
-          if (hid) allHotSheetIds.add(hid);
-        }
-      }
-
-      // 2) Union: accepted share_token invites (optional /client/hotsheet/:token link)
-      const { data: acceptedTokenRows, error: tokenErr } = await supabase
-        .from("share_tokens")
-        .select("token, payload, accepted_at, accepted_by_user_id")
-        .not("accepted_at", "is", null);
-
-      if (tokenErr) {
-        console.error("Failed to load accepted tokens", tokenErr);
-      } else {
-        for (const tokenRow of (acceptedTokenRows || []) as ShareTokenRow[]) {
-          const payload = (tokenRow.payload && typeof tokenRow.payload === "object"
-            ? tokenRow.payload
-            : {}) as Record<string, unknown>;
-          if (payload.type !== "client_hotsheet_invite") continue;
-
-          const hotSheetId = String(payload.hot_sheet_id || "");
-          if (!hotSheetId) continue;
-
-          const matchByUserId = tokenRow.accepted_by_user_id === userId;
-          const tokenEmail = String(payload.client_email || "").toLowerCase().trim();
-          const matchByEmail = buyerEmailNorm && tokenEmail === buyerEmailNorm;
-
-          if (matchByUserId || matchByEmail) {
-            allHotSheetIds.add(hotSheetId);
-            if (tokenRow.token) tokenMap[hotSheetId] = tokenRow.token;
-          }
-        }
-      }
-
-      if (!allHotSheetIds.size) {
+      if (!rows.length) {
         setBuyerHotSheets([]);
         setBuyerTokenByHotSheetId({});
         setBuyerPreviewPhotosById({});
@@ -382,24 +340,8 @@ const HotSheets = ({
         return;
       }
 
-      const { data: hotSheetRows, error: sheetErr } = await supabase
-        .from("hot_sheets")
-        .select("id, name, user_id, criteria, created_at, updated_at, is_active, last_sent_at")
-        .in("id", [...allHotSheetIds])
-        .order("created_at", { ascending: false });
-
-      if (sheetErr) {
-        console.error("Failed to load hot sheets", sheetErr);
-        setBuyerHotSheets([]);
-        setBuyerTokenByHotSheetId({});
-        setBuyerPreviewPhotosById({});
-        setBuyerMatchCountsById({});
-        return;
-      }
-
-      const rows = (hotSheetRows || []) as BuyerHotSheetItem[];
-      setBuyerHotSheets(rows);
-      setBuyerTokenByHotSheetId(tokenMap);
+      setBuyerHotSheets(rows as BuyerHotSheetItem[]);
+      setBuyerTokenByHotSheetId(tokenByHotSheetId);
 
       const { photosById, countsById } = await loadHotSheetPhotosAndCounts(
         supabase,
