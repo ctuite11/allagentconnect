@@ -663,6 +663,15 @@ const ClientHotsheetPage = () => {
         <Dialog open={true} onOpenChange={() => {}}>
           <DialogContent className="sm:max-w-[600px]" hideCloseButton>
             <DialogHeader>
+              {/* Buyer Portal brand lockup */}
+              <div className="flex items-center gap-3 mb-4 pb-4 border-b">
+                <AACMonogram className="h-9 w-9 flex-shrink-0 text-[#16A34A]" />
+                <div className="leading-tight text-left">
+                  <p className="text-[15px] font-semibold tracking-[-0.01em] text-zinc-900">All Agent Connect</p>
+                  <p className="text-[12px] font-medium tracking-[0.02em] text-zinc-500">Buyer Portal</p>
+                </div>
+              </div>
+
               {/* Agent Header Section */}
               <div className="flex items-center gap-3 mb-4 pb-4 border-b">
                 <div className="relative h-12 w-12 rounded-full overflow-hidden border border-neutral-200 bg-white flex items-center justify-center">
@@ -696,19 +705,19 @@ const ClientHotsheetPage = () => {
                   <p className="font-medium text-foreground/90 mb-3">Creating your login ensures you can:</p>
                   <ul className="space-y-2">
                     <li className="flex items-start gap-3">
-                      <span className="text-primary mt-0.5">•</span>
+                      <span className="text-[#16A34A] mt-0.5">•</span>
                       <span className="text-foreground/80">View your homes anytime</span>
                     </li>
                     <li className="flex items-start gap-3">
-                      <span className="text-primary mt-0.5">•</span>
+                      <span className="text-[#16A34A] mt-0.5">•</span>
                       <span className="text-foreground/80">Save and organize your saved homes</span>
                     </li>
                     <li className="flex items-start gap-3">
-                      <span className="text-primary mt-0.5">•</span>
+                      <span className="text-[#16A34A] mt-0.5">•</span>
                       <span className="text-foreground/80">Message {agentProfile.first_name} directly</span>
                     </li>
                     <li className="flex items-start gap-3">
-                      <span className="text-primary mt-0.5">•</span>
+                      <span className="text-[#16A34A] mt-0.5">•</span>
                       <span className="text-foreground/80">Access your search securely from any device</span>
                     </li>
                   </ul>
@@ -718,7 +727,7 @@ const ClientHotsheetPage = () => {
             <div className="pt-4">
               <Button
                 onClick={handleSetupLogin}
-                className="w-full h-11"
+                className="w-full h-11 bg-[#16A34A] hover:bg-[#15803D] text-white font-medium"
                 size="lg"
               >
                 Set Up My Account
