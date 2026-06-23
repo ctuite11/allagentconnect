@@ -1,5 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { buildHotSheetInviteEmailSubject } from "../_shared/hotSheetInviteEmail.ts";
+import { formatPersonDisplayName } from "../_shared/personDisplayName.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -122,17 +124,35 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
-    // --- Lookup inviter contact info if not provided by caller ---
-    // Single best-effort lookup against agent_profiles using the verified JWT
-    // actor. Keeps the email aligned with listing-share (sender shown in body).
-    if (verifiedActorUserId && (!inviterEmail || !inviterPhone || !inviterBrokerage)) {
+    // Resolve actor from JWT, or from share_tokens when enqueueing initial sends.
+    let actorUserIdForProfile = verifiedActorUserId;
+    if (!actorUserIdForProfile && tokenId) {
+      const { data: tokenActorRow } = await supabase
+        .from("share_tokens")
+        .select("agent_id")
+        .eq("id", tokenId)
+        .maybeSingle();
+      actorUserIdForProfile = (tokenActorRow?.agent_id as string | null) ?? null;
+    }
+
+    // --- Lookup inviter name + contact info if not provided by caller ---
+    // Single best-effort lookup against agent_profiles. Keeps the email aligned
+    // with listing-share (sender shown in body) and fixes lowercase DB names.
+    let resolvedInviterName = inviterName;
+    if (actorUserIdForProfile) {
       const { data: agentProfile } = await supabase
         .from("agent_profiles")
-        .select("email, phone, cell_phone, company")
-        .eq("id", verifiedActorUserId)
+        .select("first_name, last_name, email, phone, cell_phone, company")
+        .eq("id", actorUserIdForProfile)
         .maybeSingle();
 
       if (agentProfile) {
+        const profileName = [agentProfile.first_name, agentProfile.last_name]
+          .filter(Boolean)
+          .join(" ")
+          .trim();
+        if (profileName) resolvedInviterName = profileName;
+
         if (!inviterEmail) inviterEmail = (agentProfile.email as string | null) || "";
         if (!inviterPhone) {
           inviterPhone =
@@ -143,6 +163,8 @@ const handler = async (req: Request): Promise<Response> => {
         if (!inviterBrokerage) inviterBrokerage = (agentProfile.company as string | null) || "";
       }
     }
+
+    const displayInviterName = formatPersonDisplayName(resolvedInviterName);
 
     // --- B6 guardrail: client email is required ---
     if (!invitedEmail || !invitedEmail.trim()) {
@@ -170,7 +192,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     const subject = inviteOnly
       ? `AAC`
-      : `${inviterName} invited you to view a hot sheet`;
+      : buildHotSheetInviteEmailSubject(displayInviterName);
 
     const jobPayload: Record<string, unknown> = {
       provider: "resend",
@@ -178,7 +200,7 @@ const handler = async (req: Request): Promise<Response> => {
       to: invitedEmail,
       subject,
       variables: {
-        inviterName,
+        inviterName: displayInviterName,
         inviterEmail,
         inviterPhone,
         inviterBrokerage,
@@ -228,7 +250,7 @@ const handler = async (req: Request): Promise<Response> => {
               event_type: eventType,
               email_job_id: existingJob.id,
               actor_user_id: verifiedActorUserId,
-              meta: { mode, inviterName, hotSheetName, idempotent: true },
+              meta: { mode, inviterName: displayInviterName, hotSheetName, idempotent: true },
             });
           } else {
             console.error("[send-hot-sheet-invite] idempotent but failed to fetch job by key", existingErr);
@@ -256,7 +278,7 @@ const handler = async (req: Request): Promise<Response> => {
         event_type: eventType,
         email_job_id: jobRow.id,
         actor_user_id: verifiedActorUserId,
-        meta: { mode, inviterName, hotSheetName },
+        meta: { mode, inviterName: displayInviterName, hotSheetName },
       });
 
       // Resend only logs invite_resent (no redundant email_enqueued)

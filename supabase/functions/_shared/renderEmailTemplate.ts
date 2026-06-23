@@ -4,9 +4,11 @@
 /* ------------------------------------------------------------------ */
 
 import { buildAacEmail } from "./aacEmailTemplate.ts";
+import { buildHotSheetInvitePreheader } from "./hotSheetInviteEmail.ts";
 import { formatListingShareEmailStreetLine } from "./listingShareEmailAddress.ts";
 import { renderCompactListingEmailCard, renderListingEmailCard } from "./listingEmailCard.ts";
 import { resolveEmailPhotoUrl } from "./listingPhotoUrl.ts";
+import { formatPersonDisplayName } from "./personDisplayName.ts";
 
 /* ------------------------------------------------------------------ */
 /*  Shared helpers for Share Listings emails                           */
@@ -199,7 +201,7 @@ export function renderEmailTemplate(
       // not a property marketing email.
       const recipientFullName = String(variables.recipientName || "there").trim();
       const firstName = recipientFullName.split(/\s+/)[0] || "there";
-      const inviterName = variables.inviterName || "Your agent";
+      const inviterName = formatPersonDisplayName(String(variables.inviterName || "Your agent"));
       const inviterEmail = variables.inviterEmail || "";
       const inviterPhone = variables.inviterPhone || "";
       const inviterBrokerage = variables.inviterBrokerage || "";
@@ -211,12 +213,12 @@ export function renderEmailTemplate(
       }
 
       return buildAacEmail({
-        headline: "A hot sheet has been shared with you",
-        preheader: `${inviterName} invited you to view a hot sheet`,
+        headline: "A Hot Sheet Has Been Shared With You",
+        preheader: buildHotSheetInvitePreheader(inviterName),
         body: `
           <p style="margin:0 0 14px;">Hi ${firstName},</p>
-          <p style="margin:0 0 18px;">${inviterName} invited you to view a private hot sheet on All Agent Connect.</p>
-          <p style="margin:0 0 18px;">Click below to review the listings and contact your agent through AAC.</p>
+          <p style="margin:0 0 18px;">${inviterName} shared your hot sheet on All Agent Connect.</p>
+          <p style="margin:0 0 18px;">Click below to review the listings and contact your agent.</p>
           ${renderSharedByBlock({ agentName: inviterName, agentBrokerage: inviterBrokerage, agentEmail: inviterEmail, agentPhone: inviterPhone })}`,
         ctaLabel: "View Hot Sheet",
         ctaUrl: hotSheetLink,
