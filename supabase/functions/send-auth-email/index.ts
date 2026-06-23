@@ -9,7 +9,7 @@
 import { Webhook } from "https://esm.sh/standardwebhooks@1.0.0";
 import { Resend } from "https://esm.sh/resend@2.0.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.0";
-import { buildAacEmail } from "../_shared/aacEmailTemplate.ts";
+import { buildAacEmail, buildBuyerPortalEmail } from "../_shared/aacEmailTemplate.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -68,13 +68,34 @@ function mustGetEnv(name: string): string {
   return v;
 }
 
+function getIntendedRoleFromPayload(verified: Record<string, unknown> | null | undefined): string {
+  const user = verified?.user as Record<string, unknown> | undefined;
+  const emailData = verified?.email_data as Record<string, unknown> | undefined;
+  const emailDataUser = emailData?.user as Record<string, unknown> | undefined;
+  const candidates = [
+    (user?.user_metadata as Record<string, unknown> | undefined)?.intended_role,
+    (user?.raw_user_meta_data as Record<string, unknown> | undefined)?.intended_role,
+    (verified?.user_metadata as Record<string, unknown> | undefined)?.intended_role,
+    (emailDataUser?.user_metadata as Record<string, unknown> | undefined)?.intended_role,
+  ];
+  for (const value of candidates) {
+    if (value != null && String(value).trim()) return String(value).trim().toLowerCase();
+  }
+  return "";
+}
+
+function isBuyerAuthRecipient(verified: Record<string, unknown> | null | undefined): boolean {
+  return getIntendedRoleFromPayload(verified) === "buyer";
+}
+
 function buildEmailForType(params: {
   type: string;
   email: string;
   actionUrl?: string;
   otp?: string;
+  isBuyer?: boolean;
 }): { subject: string; html: string; text: string } {
-  const { type, actionUrl, otp } = params;
+  const { type, actionUrl, otp, isBuyer = false } = params;
   const t = (type || "").toLowerCase();
 
   if (t.includes("recovery") || t.includes("reset")) {
@@ -92,6 +113,23 @@ function buildEmailForType(params: {
   }
 
   if (t.includes("signup") || t.includes("confirm")) {
+    if (isBuyer) {
+      const headline = "Your private home search is almost ready";
+      const body =
+        "Confirm your email address to finish setting up your free All Agent Connect account. Once verified, you'll be able to view the homes your agent selected for you, save favorites, receive new matching listings automatically, and communicate directly with your agent.";
+      return {
+        subject: headline,
+        html: buildBuyerPortalEmail({
+          headline,
+          body,
+          preheader: body,
+          ctaLabel: "Verify My Email",
+          ctaUrl: actionUrl,
+        }),
+        text: `${headline}\n\n${body}\n\nVerify My Email: ${actionUrl ?? ""}`,
+      };
+    }
+
     return {
       subject: "Confirm your email for All Agent Connect",
       html: buildAacEmail({
@@ -204,11 +242,12 @@ Deno.serve(async (req: Request) => {
       }
     }
 
-    console.log("send-auth-email hook invoked:", { type, email, hasActionUrl: !!actionUrl });
+    const isBuyer = isBuyerAuthRecipient(verified);
+    console.log("send-auth-email hook invoked:", { type, email, hasActionUrl: !!actionUrl, isBuyer });
 
     const resend = new Resend(resendApiKey);
 
-    const { subject, html, text } = buildEmailForType({ type, email, actionUrl, otp });
+    const { subject, html, text } = buildEmailForType({ type, email, actionUrl, otp, isBuyer });
 
     const from = (Deno.env.get("TRANSACTIONAL_FROM") || "All Agent Connect <hello@allagentconnect.com>");
 

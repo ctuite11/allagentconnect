@@ -126,3 +126,98 @@ export function buildAacEmail(opts: AacEmailOptions): string {
 </body>
 </html>`;
 }
+
+const BUYER_PORTAL_BENEFITS = [
+  "View curated listings",
+  "Save favorite homes",
+  "Receive new listings that match your search",
+  "Private communication with your agent",
+] as const;
+
+interface BuyerPortalEmailOptions {
+  headline: string;
+  /** Plain-text body paragraph (escaped and wrapped in a single <p>) */
+  body: string;
+  ctaLabel?: string;
+  ctaUrl?: string;
+  preheader?: string;
+  /** When false, omit the standard buyer benefit bullets */
+  showBenefits?: boolean;
+}
+
+/** Buyer Portal emails — white layout with green (#16A34A) accents, matching invite signup. */
+export function buildBuyerPortalEmail(opts: BuyerPortalEmailOptions): string {
+  const { headline, body, ctaLabel, ctaUrl, preheader, showBenefits = true } = opts;
+
+  const preheaderHtml = preheader
+    ? `<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;">${escapeHtml(preheader)}</div>`
+    : "";
+
+  const benefitsHtml = showBenefits
+    ? `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:24px 0 0;">
+        ${BUYER_PORTAL_BENEFITS.map(
+          (label) => `<tr><td style="padding:0 0 10px;">
+            <table role="presentation" cellspacing="0" cellpadding="0"><tr>
+              <td valign="top" style="padding:0 10px 0 0;font-size:15px;line-height:1.4;color:#16A34A;">&#8226;</td>
+              <td style="font-size:14px;line-height:1.5;color:#3f3f46;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${escapeHtml(label)}</td>
+            </tr></table>
+          </td></tr>`,
+        ).join("")}
+      </table>`
+    : "";
+
+  const ctaHtml =
+    ctaLabel && ctaUrl
+      ? `<table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+          <tr><td align="center" style="padding:28px 0 0;">
+            <a href="${ctaUrl}" target="_blank" style="display:inline-block;padding:14px 28px;background-color:#16A34A;color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;border-radius:12px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${escapeHtml(ctaLabel)}</a>
+          </td></tr>
+        </table>`
+      : "";
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>${escapeHtml(headline)}</title>
+</head>
+<body style="margin:0;padding:0;background-color:#ffffff;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
+  ${preheaderHtml}
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color:#ffffff;">
+    <tr><td align="center" style="padding:40px 16px;">
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:600px;border:1px solid #e4e4e7;border-radius:16px;overflow:hidden;">
+
+        <!-- Buyer Portal header -->
+        <tr><td style="padding:28px 40px 24px;border-bottom:1px solid #f4f4f5;background-color:#ffffff;">
+          <table role="presentation" cellspacing="0" cellpadding="0"><tr>
+            <td valign="middle" style="padding:0 12px 0 0;">
+              <img src="https://allagentconnect.com/email/aac-monogram-green-128.png" width="36" height="36" alt="All Agent Connect" style="display:block;border:0;outline:none;text-decoration:none;" />
+            </td>
+            <td valign="middle">
+              <p style="margin:0;font-size:15px;font-weight:700;letter-spacing:-0.01em;color:#18181b;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">All Agent Connect</p>
+              <p style="margin:2px 0 0;font-size:11px;font-weight:500;letter-spacing:0.02em;color:#71717a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Buyer Portal</p>
+            </td>
+          </tr></table>
+        </td></tr>
+
+        <!-- Content -->
+        <tr><td style="padding:28px 40px 32px;background-color:#ffffff;">
+          <h1 style="margin:0 0 16px;font-size:28px;font-weight:600;letter-spacing:-0.02em;line-height:1.15;color:#18181b;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${escapeHtml(headline)}</h1>
+          <p style="margin:0;font-size:15px;line-height:1.6;color:#71717a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${escapeHtml(body)}</p>
+          ${benefitsHtml}
+          ${ctaHtml}
+        </td></tr>
+
+        <!-- Light footer -->
+        <tr><td align="center" style="padding:20px 40px 24px;border-top:1px solid #f4f4f5;background-color:#fafafa;">
+          <img src="https://allagentconnect.com/email/aac-monogram-green-128.png" width="20" height="20" alt="" style="display:block;margin:0 auto 8px;border:0;outline:none;text-decoration:none;" />
+          <p style="margin:0;font-size:12px;color:#a1a1aa;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">All Agent Connect &middot; Buyer Portal</p>
+        </td></tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+}
