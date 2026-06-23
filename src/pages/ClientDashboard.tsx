@@ -176,18 +176,8 @@ export default function ClientDashboard() {
     return null;
   };
 
-  const consumeInviteHandoffMarker = () => {
-    if (typeof window === "undefined") return false;
-    const raw = sessionStorage.getItem("aac_invite_acceptance_handoff");
-    if (!raw) return false;
-
-    sessionStorage.removeItem("aac_invite_acceptance_handoff");
-
-    const ts = Number(raw);
-    if (!Number.isFinite(ts)) return false;
-
-    const ageMs = Date.now() - ts;
-    return ageMs >= 0 && ageMs <= 10 * 60 * 1000;
+  const consumeInviteHandoffMarker = (): { fresh: boolean; hotSheetId: string | null } => {
+    return consumeInviteAcceptance();
   };
 
   const checkAuth = async () => {
