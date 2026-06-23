@@ -197,6 +197,7 @@ const HotSheetReview = () => {
   const [inviteBuyerSending, setInviteBuyerSending] = useState(false);
   const [resultsView, setResultsView] = useState<"map" | "list">("map");
   const [criteriaOpen, setCriteriaOpen] = useState(false);
+  const [confirmSendAllOpen, setConfirmSendAllOpen] = useState(false);
 
   const isSharedWorkspace = useMemo(
     () =>
@@ -218,18 +219,15 @@ const HotSheetReview = () => {
   const primaryBuyerMissingEmail = !primaryBuyer?.email?.trim();
 
   const inviteCta = useMemo(() => {
-    if (allInviteAccepted) {
-      return { label: "Invites Sent", disabled: true, showCheck: true, tooltip: undefined as string | undefined };
-    }
-    if (!hasPendingInviteRecipients && invitesSent) {
-      return { label: "Invites Sent", disabled: true, showCheck: true, tooltip: undefined };
+    if (allInviteAccepted || (invitesSent && !hasPendingInviteRecipients)) {
+      return { label: "Hotsheet Sent", disabled: true, showCheck: true, tooltip: undefined as string | undefined };
     }
     if (!hasPendingInviteRecipients) {
-      return null;
+      return { label: "Send hotsheet", disabled: false, showCheck: false, tooltip: undefined };
     }
     if (primaryBuyerMissingEmail) {
       return {
-        label: "Send Invite",
+        label: "Send hotsheet with invite",
         disabled: true,
         showCheck: false,
         tooltip: "Add an email to this buyer first",
@@ -239,14 +237,14 @@ const HotSheetReview = () => {
     if (n === 1) {
       const one = pendingInviteRecipients[0];
       return {
-        label: one.resendTokenId ? "Resend Invite" : "Send Invite",
+        label: one.resendTokenId ? "Resend hotsheet with invite" : "Send hotsheet with invite",
         disabled: false,
         showCheck: false,
         tooltip: undefined,
       };
     }
     return {
-      label: `Send Invites (${n})`,
+      label: `Send hotsheet with invites (${n})`,
       disabled: false,
       showCheck: false,
       tooltip: undefined,
@@ -259,7 +257,7 @@ const HotSheetReview = () => {
     primaryBuyerMissingEmail,
   ]);
 
-  const showInviteCta = !isSharedWorkspace && inviteCta !== null;
+  const showInviteCta = inviteCta !== null;
   const showPendingInviteBanner = !isSharedWorkspace && hasPendingInviteRecipients && !allInviteAccepted;
 
   const handleAgentHotSheetReviewBack = () => {
@@ -1284,7 +1282,13 @@ const HotSheetReview = () => {
             : AGENT_WORKSPACE_BTN_PRIMARY,
         )}
         disabled={inviteCta.disabled || sending || clientCount === 0}
-        onClick={() => void handleSendInvites()}
+        onClick={() => {
+          if (selectedListings.size === 0) {
+            setConfirmSendAllOpen(true);
+            return;
+          }
+          void handleSendInvites();
+        }}
       >
         {inviteCta.showCheck ? (
           <Check className="h-3.5 w-3.5" aria-hidden />
@@ -1647,6 +1651,31 @@ const HotSheetReview = () => {
                 : inviteBuyerTarget?.mode === "resend"
                   ? "Resend invite"
                   : "Invite buyer"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={confirmSendAllOpen} onOpenChange={setConfirmSendAllOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>No listings selected</AlertDialogTitle>
+            <AlertDialogDescription>
+              You haven&apos;t selected any listings. Would you like to send all matched listings instead?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2 sm:justify-end">
+            <AlertDialogCancel className="h-8 rounded-md px-3 text-xs font-medium mt-0">
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="h-8 rounded-md border border-[#0B46CC]/20 bg-[#0E56F5] px-3 text-xs font-medium text-white shadow-[0_1px_2px_rgba(0,0,0,0.08)] transition-colors hover:bg-[#0B46CC]"
+              onClick={() => {
+                setConfirmSendAllOpen(false);
+                void handleSendInvites();
+              }}
+            >
+              Send All Listings
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
