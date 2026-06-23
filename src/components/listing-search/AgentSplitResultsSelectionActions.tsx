@@ -20,6 +20,8 @@ type AgentSplitResultsSelectionActionsProps = {
   /** One-shot keep (e.g. prune hot sheet) instead of filter-only keep/show. */
   onKeepSelectedCustom?: () => void;
   onSuccessfulShare?: () => void;
+  /** When false, selection pills remain but bulk Share selected is hidden. */
+  shareSelectedEnabled?: boolean;
   /** Extra pills (e.g. Save as Hot Sheet) rendered after share controls. */
   children?: ReactNode;
   className?: string;
@@ -37,6 +39,7 @@ export function AgentSplitResultsSelectionActions({
   onShowAll,
   onKeepSelectedCustom,
   onSuccessfulShare,
+  shareSelectedEnabled = true,
   children,
   className,
   pillClassName = DEFAULT_PILL_CLASS,
@@ -59,7 +62,7 @@ export function AgentSplitResultsSelectionActions({
   }, [displayedListingIds, safeSelectedRows]);
 
   const shareDialog =
-    listingIdsForShare.length > 0 ? (
+    shareSelectedEnabled && listingIdsForShare.length > 0 ? (
       <BulkShareListingsDialog
         listingIds={listingIdsForShare}
         listingCount={listingIdsForShare.length}

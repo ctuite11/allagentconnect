@@ -265,8 +265,8 @@ const HotSheetReview = () => {
   const pendingInviteNeedsResend = pendingInviteRecipients.some(
     (r) => r.inviteEnqueued && Boolean(r.resendTokenId),
   );
-  /** Listing share/select toolbar — only after invite email was sent or buyer accepted. */
-  const allowListingShareActions =
+  /** Bulk Share selected — only after invite email was sent or buyer accepted. */
+  const allowBulkShareSelected =
     isSharedWorkspace || allInviteAccepted || invitesSent;
 
   const handleAgentHotSheetReviewBack = () => {
@@ -1423,12 +1423,18 @@ const HotSheetReview = () => {
             resultsFromPath={resultsFromPath}
             showSaveToHotSheet={false}
             saveToHotSheetCriteria={hotSheet.criteria ?? {}}
-            selectionEnabled={!isSharedWorkspace && allowListingShareActions}
+            selectionEnabled={!isSharedWorkspace}
+            shareSelectedEnabled={allowBulkShareSelected}
             selectedRows={selectedListings}
             onSelectedRowsChange={setSelectedListings}
             onSelectAll={toggleSelectAll}
-            onKeepSelected={
-              !isSharedWorkspace && allowListingShareActions ? handleKeepSelected : undefined
+            onKeepSelected={!isSharedWorkspace ? handleKeepSelected : undefined}
+            toolbarActionsExtra={
+              !allowBulkShareSelected && selectedListings.size > 0 ? (
+                <span className="text-xs font-medium tabular-nums text-neutral-600">
+                  {selectedListings.size} selected
+                </span>
+              ) : null
             }
             containerClassName="min-w-0 px-0"
             toolbarAriaLabel="Hot sheet results"
@@ -1535,11 +1541,11 @@ const HotSheetReview = () => {
                   showCompactComments
                   compactListedByMessageSeparator
                   onSelect={
-                    allowListingShareActions && helpers.onSelect
+                    !isSharedWorkspace && helpers.onSelect
                       ? () => helpers.onSelect!(row.id)
                       : undefined
                   }
-                  isSelected={allowListingShareActions && helpers.isSelected}
+                  isSelected={!isSharedWorkspace && helpers.isSelected}
                   chatMessages={messagesMap[row.id] || []}
                   onNewMessage={handleNewMessage}
                   onOpenChat={() => {

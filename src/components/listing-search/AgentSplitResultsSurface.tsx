@@ -89,6 +89,8 @@ export type AgentSplitResultsSurfaceProps = {
   selectionPillClassName?: string;
   /** Override sort trigger class. */
   sortTriggerClassName?: string;
+  /** When false, hide bulk Share selected while keeping listing selection pills. */
+  shareSelectedEnabled?: boolean;
   /** Override map/results grid height token. */
   mapResultsGridClassName?: string;
   /** Full-width toolbar rows above map grid (hot sheet review workspace). */
@@ -135,6 +137,7 @@ export function AgentSplitResultsSurface({
   sortTriggerClassName,
   mapResultsGridClassName,
   workspaceToolbarLayout = "default",
+  shareSelectedEnabled = true,
 }: AgentSplitResultsSurfaceProps) {
   const navigate = useNavigate();
   const [sortColumn, setSortColumn] = useState(LISTING_DEFAULT_SORT_COLUMN);
@@ -378,6 +381,7 @@ export function AgentSplitResultsSurface({
           onShowAll={() => setShowSelectedOnly(false)}
           onKeepSelectedCustom={onKeepSelected}
           onSuccessfulShare={clearShareSelection}
+          shareSelectedEnabled={shareSelectedEnabled}
           pillClassName={selectionPillClassName}
         >
           {toolbarActionsExtra}
