@@ -4,7 +4,7 @@ import { AgentAacPage } from "@/components/layout/AgentAacPage";
 import { AacPageIntro } from "@/components/layout/AacPageIntro";
 import { AgentSectionCard } from "@/components/layout/AgentSectionCard";
 import { Button } from "@/components/ui/button";
-import { ChevronRight, RefreshCw, UserPlus } from "lucide-react";
+import { ChevronRight, RefreshCw, Trash2, UserPlus } from "lucide-react";
 import { AacBackLink } from "@/components/layout/AacBackLink";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AgentBuyerActivityHeaderCard } from "@/components/agent/AgentBuyerActivityHeaderCard";
@@ -617,7 +617,7 @@ function BuyerCard({
   };
 
   const trailing = (
-    <div className="flex flex-col items-end gap-1.5">
+    <div className="flex flex-col items-end gap-3">
       <div className="flex items-center gap-2">
         <BuyerRowStatusPill buyer={buyer} />
         {buyer.status === "pending" ? (
@@ -641,8 +641,10 @@ function BuyerCard({
           e.stopPropagation();
           setRemoveOpen(true);
         }}
-        className="text-[11px] font-medium text-neutral-500 transition-colors hover:text-destructive"
+        className="inline-flex items-center gap-1 rounded-full border border-[#EF4444]/30 bg-[#EF4444]/10 px-2.5 py-0.5 text-[11px] font-medium text-[#B91C1C] transition-colors hover:border-[#EF4444]/40 hover:bg-[#EF4444]/15"
+        aria-label={`Delete buyer ${buyer.name}`}
       >
+        <Trash2 className="h-3 w-3 shrink-0 text-[#EF4444]" strokeWidth={2} aria-hidden />
         Delete buyer
       </button>
     </div>
