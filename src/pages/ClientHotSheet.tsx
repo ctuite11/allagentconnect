@@ -3,6 +3,7 @@ import { compareListingsByRecency } from "@/lib/listingRecencySort";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { useParams, useNavigate } from "react-router-dom";
 import Footer from "@/components/Footer";
+import AACMonogram from "@/components/ui/AACMonogram";
 import { User } from "@supabase/supabase-js";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -548,23 +549,20 @@ const ClientHotSheet = () => {
   };
 
   const handleSetupLogin = () => {
-    // Close the login prompt
     setShowLoginPrompt(false);
-    
-    // Extract client email from token payload (NOT from agent profile or hotsheet)
+
+    // Canonical green-branded invite acceptance page (token in the URL path).
     const payload = tokenData?.payload as any;
     const clientEmail = payload?.client_email || payload?.email || "";
     const clientId = payload?.client_id || "";
-    
-    // Build query params
+
     const params = new URLSearchParams();
-    params.set("invitation_token", token);
     if (clientEmail) params.set("email", clientEmail);
     if (agentProfile?.id) params.set("agent_id", agentProfile.id);
     if (clientId) params.set("client_id", clientId);
-    
-    // Navigate to client invitation setup page
-    navigate(`/client-invite?${params.toString()}`);
+
+    const query = params.toString();
+    navigate(`/invite/${token}${query ? `?${query}` : ""}`);
   };
 
   // Sort listings
@@ -623,6 +621,15 @@ const ClientHotSheet = () => {
         <Dialog open={true} onOpenChange={() => {}}>
           <DialogContent className="sm:max-w-[600px]" hideCloseButton>
             <DialogHeader>
+              {/* Buyer Portal brand lockup */}
+              <div className="flex items-center gap-3 mb-4 pb-4 border-b">
+                <AACMonogram className="h-9 w-9 flex-shrink-0 text-[#16A34A]" />
+                <div className="leading-tight text-left">
+                  <p className="text-[15px] font-semibold tracking-[-0.01em] text-zinc-900">All Agent Connect</p>
+                  <p className="text-[12px] font-medium tracking-[0.02em] text-zinc-500">Buyer Portal</p>
+                </div>
+              </div>
+
               {/* Agent Header Section */}
               <div className="flex items-center gap-3 mb-4 pb-4 border-b">
                 <div className="relative h-12 w-12 rounded-full overflow-hidden bg-muted flex items-center justify-center">
@@ -656,19 +663,19 @@ const ClientHotSheet = () => {
                   <p className="font-medium text-foreground/90 mb-3">Creating your login ensures you can:</p>
                   <ul className="space-y-2">
                     <li className="flex items-start gap-3">
-                      <span className="text-primary mt-0.5">•</span>
+                      <span className="text-[#16A34A] mt-0.5">•</span>
                       <span className="text-foreground/80">View your homes anytime</span>
                     </li>
                     <li className="flex items-start gap-3">
-                      <span className="text-primary mt-0.5">•</span>
+                      <span className="text-[#16A34A] mt-0.5">•</span>
                       <span className="text-foreground/80">Save and organize your favorites</span>
                     </li>
                     <li className="flex items-start gap-3">
-                      <span className="text-primary mt-0.5">•</span>
+                      <span className="text-[#16A34A] mt-0.5">•</span>
                       <span className="text-foreground/80">Message {agentProfile.first_name} directly</span>
                     </li>
                     <li className="flex items-start gap-3">
-                      <span className="text-primary mt-0.5">•</span>
+                      <span className="text-[#16A34A] mt-0.5">•</span>
                       <span className="text-foreground/80">Access your search securely from any device</span>
                     </li>
                   </ul>
@@ -678,7 +685,7 @@ const ClientHotSheet = () => {
             <div className="pt-4">
               <Button
                 onClick={handleSetupLogin}
-                className="w-full h-11"
+                className="w-full h-11 bg-[#16A34A] hover:bg-[#15803D] text-white font-medium"
                 size="lg"
               >
                 Set Up My Account

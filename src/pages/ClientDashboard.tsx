@@ -25,6 +25,8 @@ import { Seo } from "@/components/Seo";
 import { useAgentLastSeen } from "@/hooks/useAgentLastSeen";
 import { loadHotSheetPhotosAndCounts } from "@/lib/hotSheetPreviewData";
 import { deleteHotSheetWithClientLinks } from "@/lib/deleteHotSheetBuyerAuthorized";
+import { loadBuyerHotSheetAccess } from "@/lib/loadBuyerHotSheetAccess";
+import { consumeInviteAcceptance } from "@/lib/inviteAcceptanceHandoff";
 import type { ListedByAgentProfile } from "@/lib/listingListedBy";
 import { loadBuyerGenericFavorites } from "@/lib/loadBuyerFavorites";
 import type { ClientDashboardFavoriteRow } from "@/components/buyer/ClientDashboardView";
@@ -176,18 +178,8 @@ export default function ClientDashboard() {
     return null;
   };
 
-  const consumeInviteHandoffMarker = () => {
-    if (typeof window === "undefined") return false;
-    const raw = sessionStorage.getItem("aac_invite_acceptance_handoff");
-    if (!raw) return false;
-
-    sessionStorage.removeItem("aac_invite_acceptance_handoff");
-
-    const ts = Number(raw);
-    if (!Number.isFinite(ts)) return false;
-
-    const ageMs = Date.now() - ts;
-    return ageMs >= 0 && ageMs <= 10 * 60 * 1000;
+  const consumeInviteHandoffMarker = (): { fresh: boolean; hotSheetId: string | null } => {
+    return consumeInviteAcceptance();
   };
 
   const checkAuth = async () => {
@@ -227,7 +219,9 @@ export default function ClientDashboard() {
         setBuyerEmail(user.email ?? null);
         setBuyerPhoneRaw(profileRow?.phone ?? null);
 
-        const cameFromInviteAcceptance = consumeInviteHandoffMarker();
+        const handoff = consumeInviteHandoffMarker();
+        const cameFromInviteAcceptance = handoff.fresh;
+        const expectedHotSheetId = handoff.hotSheetId;
         if (cameFromInviteAcceptance) {
           setRelationshipHydrating(true);
         }
@@ -236,17 +230,27 @@ export default function ClientDashboard() {
         identityReady = true;
 
         try {
-          const activeAgentId = await loadAgentRelationship(user.id);
-          await Promise.all([
+          let activeAgentId = await loadAgentRelationship(user.id);
+          const [initialSheets] = await Promise.all([
             loadBuyerHotSheetsForDashboard(user.id),
             loadFavorites(user.id),
             loadMarketListings(),
           ]);
 
-          if (cameFromInviteAcceptance && !activeAgentId) {
-            await new Promise((resolve) => window.setTimeout(resolve, 1200));
-            await loadAgentRelationship(user.id);
-            await loadBuyerHotSheetsForDashboard(user.id);
+          if (cameFromInviteAcceptance) {
+            const needsRetry = (sheets: HotSheet[], agentId: string | null): boolean => {
+              if (!agentId) return true;
+              if (sheets.length === 0) return true;
+              if (expectedHotSheetId && !sheets.some((s) => s.id === expectedHotSheetId)) return true;
+              return false;
+            };
+
+            let currentSheets = initialSheets;
+            for (let attempt = 0; attempt < 2 && needsRetry(currentSheets, activeAgentId); attempt++) {
+              await new Promise((resolve) => window.setTimeout(resolve, 1200));
+              activeAgentId = await loadAgentRelationship(user.id);
+              currentSheets = await loadBuyerHotSheetsForDashboard(user.id);
+            }
           }
         } finally {
           setRelationshipHydrating(false);
@@ -300,10 +304,10 @@ export default function ClientDashboard() {
   };
 
   /**
-   * Same logic as `loadBuyerHotSheets` in `src/pages/HotSheets.tsx`:
-   * union `hot_sheet_clients` + accepted `share_tokens`, then load `hot_sheets`.
+   * Buyer hot sheets via shared loader (RLS-safe).
+   * Returns the loaded list so the boot path can decide whether to retry.
    */
-  const loadBuyerHotSheetsForDashboard = async (userId: string) => {
+  const loadBuyerHotSheetsForDashboard = async (userId: string): Promise<HotSheet[]> => {
     try {
       const { data: { user: authUser } } = await supabase.auth.getUser();
       const { data: profile } = await supabase
@@ -312,78 +316,27 @@ export default function ClientDashboard() {
         .eq("id", userId)
         .maybeSingle();
 
-      const buyerEmailNorm = (profile?.email || authUser?.email || "").toLowerCase().trim();
+      const { rows } = await loadBuyerHotSheetAccess(
+        supabase,
+        userId,
+        profile?.email || authUser?.email || null,
+      );
 
-      const allHotSheetIds = new Set<string>();
-
-      const { data: hscRows, error: hscErr } = await supabase.from("hot_sheet_clients").select("hot_sheet_id");
-
-      if (hscErr) {
-        console.error("Failed to load hot_sheet_clients for dashboard", hscErr);
-      } else {
-        for (const row of hscRows || []) {
-          const hid = (row as { hot_sheet_id?: string }).hot_sheet_id;
-          if (hid) allHotSheetIds.add(hid);
-        }
-      }
-
-      const { data: acceptedTokenRows, error: tokenErr } = await supabase
-        .rpc("list_my_accepted_hot_sheet_tokens");
-
-      if (tokenErr) {
-        console.error("Failed to load accepted tokens for dashboard", tokenErr);
-      } else {
-        for (const tokenRow of (acceptedTokenRows || []) as ShareTokenRow[]) {
-          const payload =
-            tokenRow.payload && typeof tokenRow.payload === "object"
-              ? (tokenRow.payload as Record<string, unknown>)
-              : {};
-          if (payload.type !== "client_hotsheet_invite") continue;
-
-          const hotSheetId = String(payload.hot_sheet_id || "");
-          if (!hotSheetId) continue;
-
-          const matchByUserId = tokenRow.accepted_by_user_id === userId;
-          const tokenEmail = String(payload.client_email || "").toLowerCase().trim();
-          const matchByEmail = Boolean(buyerEmailNorm && tokenEmail === buyerEmailNorm);
-
-          if (matchByUserId || matchByEmail) {
-            allHotSheetIds.add(hotSheetId);
-          }
-        }
-      }
-
-      if (!allHotSheetIds.size) {
-        setHotSheets([]);
-        setHotSheetPreviewPhotosById({});
-        setHotSheetPreviewMatchCountsById({});
-        return;
-      }
-
-      const { data: hotSheetRowsRaw, error: sheetErr } = await supabase
-        .rpc("list_hot_sheets_for_member" as any, { _hot_sheet_ids: [...allHotSheetIds] } as any);
-      const hotSheetRows = ((hotSheetRowsRaw as any[]) || [])
-        .slice()
-        .sort((a: any, b: any) =>
-          (b?.created_at ?? "").localeCompare(a?.created_at ?? "")
-        );
-
-      if (sheetErr) {
-        console.error("Failed to load hot sheets on dashboard", sheetErr);
-        setHotSheets([]);
-        setHotSheetPreviewPhotosById({});
-        setHotSheetPreviewMatchCountsById({});
-        return;
-      }
-
-      const loadedSheets = (hotSheetRows || []) as HotSheet[];
+      const loadedSheets = rows as HotSheet[];
       setHotSheets(loadedSheets);
-      await loadHotSheetPreviewPhotos(loadedSheets.slice(0, 3));
+      if (loadedSheets.length) {
+        await loadHotSheetPreviewPhotos(loadedSheets.slice(0, 3));
+      } else {
+        setHotSheetPreviewPhotosById({});
+        setHotSheetPreviewMatchCountsById({});
+      }
+      return loadedSheets;
     } catch (e) {
       console.error("loadBuyerHotSheetsForDashboard", e);
       setHotSheets([]);
       setHotSheetPreviewPhotosById({});
       setHotSheetPreviewMatchCountsById({});
+      return [];
     }
   };
 
