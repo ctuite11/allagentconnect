@@ -426,11 +426,17 @@ const ClientInvitationSetup = () => {
   const benefits: { icon: typeof Eye; label: string; iconClass: string }[] = [
     { icon: Eye, label: "View curated listings", iconClass: "text-violet-600" },
     { icon: Heart, label: "Save favorite homes", iconClass: "text-rose-600" },
-    { icon: Flame, label: "Receive Hot Sheets instantly", iconClass: "text-red-600" },
+    { icon: Flame, label: "Receive new listings that match your search", iconClass: "text-red-600" },
     { icon: MessageSquare, label: "Private communication with your agent", iconClass: "text-blue-600" },
   ];
 
   const inviterName = agentFirstName || "Your agent";
+  const inviteHeadline = agentFirstName
+    ? `${agentFirstName} shared a private home search with you`
+    : "Your private home search is ready";
+  const inviteReassurance = agentFirstName
+    ? `You're receiving this invitation because ${agentFirstName} shared a private home search with you.`
+    : "You're receiving this invitation because your agent shared a private home search with you.";
 
   return (
     <div className="min-h-screen bg-white">
@@ -448,16 +454,15 @@ const ClientInvitationSetup = () => {
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-start">
           <div className="space-y-8 lg:pt-4">
             <div className="space-y-4">
-              <span className={BUYER_BADGE_CLASS}>
-                <ShieldCheck className="w-3.5 h-3.5" />
-                Private invitation
-              </span>
               <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight text-zinc-900 leading-[1.15]">
-                You've Been Invited to All Agent Connect
+                {inviteHeadline}
               </h1>
+              <p className="text-[14px] sm:text-[15px] text-zinc-600 leading-relaxed max-w-md">
+                {inviteReassurance}
+              </p>
               <p className="text-[15px] sm:text-base text-zinc-500 leading-relaxed max-w-md">
-                {inviterName} invited you to view listings, save favorites, receive Hot Sheets,
-                and communicate privately. Create a password to activate your account.
+                {inviterName} shared a private home search with you. Create your free All Agent Connect
+                account to view homes, save favorites, receive new matching listings, and message your agent.
               </p>
             </div>
 
@@ -579,7 +584,7 @@ const ClientInvitationSetup = () => {
                       Activating…
                     </>
                   ) : (
-                    "Join All Agent Connect"
+                    "View My Home Search"
                   )}
                 </Button>
 
