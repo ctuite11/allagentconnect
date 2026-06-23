@@ -3,6 +3,7 @@ import { compareListingsByRecency } from "@/lib/listingRecencySort";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { useParams, useNavigate } from "react-router-dom";
 import Footer from "@/components/Footer";
+import AACMonogram from "@/components/ui/AACMonogram";
 import { User } from "@supabase/supabase-js";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
