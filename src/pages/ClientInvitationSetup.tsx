@@ -12,6 +12,7 @@ import { validatePassword } from "@/lib/passwordPolicy";
 import AACMonogram from "@/components/ui/AACMonogram";
 import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 import { acceptClientHotSheetInvite } from "@/lib/acceptClientHotSheetInvite";
+import { markInviteAcceptance } from "@/lib/inviteAcceptanceHandoff";
 import { cn } from "@/lib/utils";
 
 /** Buyer portal brand tokens — match `BuyerShell` / `BuyerPortalHeader`. */
@@ -73,9 +74,8 @@ const ClientInvitationSetup = () => {
     Boolean(initialEmail.trim()) || Boolean(inviteAnchor?.clientEmail?.trim());
   const postAcceptPath = "/client/dashboard";
 
-  const markInviteHandoff = () => {
-    if (typeof window === "undefined") return;
-    sessionStorage.setItem("aac_invite_acceptance_handoff", String(Date.now()));
+  const markInviteHandoff = (hotSheetId?: string | null) => {
+    markInviteAcceptance(hotSheetId ?? inviteAnchor?.hotSheetId ?? null);
   };
 
   const finalizeInviteAndSignIn = async (
@@ -203,6 +203,10 @@ const ClientInvitationSetup = () => {
             agentId: tokenAgentId,
             crmClientId: crmFromPayload,
             clientEmail: emailFromPayload,
+            hotSheetId:
+              typeof payload.hot_sheet_id === "string" && payload.hot_sheet_id.trim()
+                ? String(payload.hot_sheet_id).trim()
+                : null,
             seedFirstName: seedFirstName || null,
             seedLastName: seedLastName || null,
             seedPhone: seedPhone || null,
