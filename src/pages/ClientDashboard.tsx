@@ -219,7 +219,9 @@ export default function ClientDashboard() {
         setBuyerEmail(user.email ?? null);
         setBuyerPhoneRaw(profileRow?.phone ?? null);
 
-        const cameFromInviteAcceptance = consumeInviteHandoffMarker();
+        const handoff = consumeInviteHandoffMarker();
+        const cameFromInviteAcceptance = handoff.fresh;
+        const expectedHotSheetId = handoff.hotSheetId;
         if (cameFromInviteAcceptance) {
           setRelationshipHydrating(true);
         }
@@ -228,17 +230,27 @@ export default function ClientDashboard() {
         identityReady = true;
 
         try {
-          const activeAgentId = await loadAgentRelationship(user.id);
-          await Promise.all([
+          let activeAgentId = await loadAgentRelationship(user.id);
+          const [initialSheets] = await Promise.all([
             loadBuyerHotSheetsForDashboard(user.id),
             loadFavorites(user.id),
             loadMarketListings(),
           ]);
 
-          if (cameFromInviteAcceptance && !activeAgentId) {
-            await new Promise((resolve) => window.setTimeout(resolve, 1200));
-            await loadAgentRelationship(user.id);
-            await loadBuyerHotSheetsForDashboard(user.id);
+          if (cameFromInviteAcceptance) {
+            const needsRetry = (sheets: HotSheet[], agentId: string | null): boolean => {
+              if (!agentId) return true;
+              if (sheets.length === 0) return true;
+              if (expectedHotSheetId && !sheets.some((s) => s.id === expectedHotSheetId)) return true;
+              return false;
+            };
+
+            let currentSheets = initialSheets;
+            for (let attempt = 0; attempt < 2 && needsRetry(currentSheets, activeAgentId); attempt++) {
+              await new Promise((resolve) => window.setTimeout(resolve, 1200));
+              activeAgentId = await loadAgentRelationship(user.id);
+              currentSheets = await loadBuyerHotSheetsForDashboard(user.id);
+            }
           }
         } finally {
           setRelationshipHydrating(false);
