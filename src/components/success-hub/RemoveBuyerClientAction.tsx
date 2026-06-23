@@ -28,7 +28,7 @@ export async function removeBuyerClient(opts: {
 
     if (!user) {
       console.error("removeBuyerClient auth error: no authenticated user");
-      toast.error("Couldn't remove this buyer client. Please sign in and try again.");
+      toast.error("Couldn't delete this buyer client. Please sign in and try again.");
       return false;
     }
 
@@ -54,7 +54,7 @@ export async function removeBuyerClient(opts: {
         buyerId: opts.buyerId,
         agentId: user.id,
       });
-      toast.error("Couldn't remove this buyer client. Please try again.");
+      toast.error("Couldn't delete this buyer client. Please try again.");
       return false;
     }
 
@@ -81,11 +81,11 @@ export async function removeBuyerClient(opts: {
       console.warn("revoke-buyer-auth threw:", e);
     }
 
-    toast.success("Buyer removed. Hot sheets and history cleared. They're still in Contacts.");
+    toast.success("Buyer deleted. Hot sheets and history cleared. They're still in Contacts.");
     return true;
   } catch (err) {
     console.error("removeBuyerClient unexpected error:", err);
-    toast.error("Couldn't remove this buyer client. Please try again.");
+    toast.error("Couldn't delete this buyer client. Please try again.");
     return false;
   }
 }
@@ -128,11 +128,11 @@ export function RemoveBuyerClientDialog({
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>
-            Remove {buyerName ? buyerName : "this buyer"}?
+            Delete {buyerName ? buyerName : "this buyer"}?
           </AlertDialogTitle>
           <AlertDialogDescription>
             They'll be removed from My Buyers and your buyer workflows. Their
-            contact info and history stay in Contacts — nothing is deleted.
+            contact info stays in Contacts.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -146,7 +146,7 @@ export function RemoveBuyerClientDialog({
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
             {busy && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />}
-            Remove
+            Delete
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

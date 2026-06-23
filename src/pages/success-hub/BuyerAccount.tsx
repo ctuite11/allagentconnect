@@ -241,7 +241,7 @@ export default function BuyerAccount() {
               onClick={() => setRemoveOpen(true)}
             >
               <Trash2 className="mr-1.5 h-3.5 w-3.5 shrink-0 text-neutral-600" aria-hidden strokeWidth={2} />
-              Remove buyer
+              Delete buyer
             </Button>
           </>
         }

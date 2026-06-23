@@ -14,6 +14,7 @@ import { enqueueBuyerWorkspaceInvite } from "@/lib/enqueueBuyerWorkspaceInvite";
 import { toast } from "sonner";
 import { CreateBuyerDialog } from "@/components/CreateBuyerDialog";
 import { BuyerCreatedNextStepDialog, type CreatedBuyer } from "@/components/success-hub/BuyerCreatedNextStepDialog";
+import { RemoveBuyerClientDialog } from "@/components/success-hub/RemoveBuyerClientAction";
 import { Seo } from "@/components/Seo";
 import { cn } from "@/lib/utils";
 import {
@@ -100,6 +101,7 @@ export default function BuyersList() {
     }
   }, [location, navigate]);
   const [filter, setFilter] = useState<FilterKey>("all");
+  const [agentUserId, setAgentUserId] = useState<string | null>(null);
 
   const loadBuyers = async (opts?: { silent?: boolean }) => {
     if (!opts?.silent) setLoading(true);
@@ -107,6 +109,7 @@ export default function BuyersList() {
       setLoadError(false);
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
+      setAgentUserId(user.id);
 
       const { data: relationships, error: relErr } = await supabase
         .from("client_agent_relationships")
@@ -452,6 +455,8 @@ export default function BuyersList() {
                     buyerMetricsLoading={buyerMetricsStillLoading}
                     metrics={metricsForBuyer ?? null}
                     to={agentBuyerAccountPath(b.clientId)}
+                    agentId={agentUserId}
+                    onRemoved={() => void loadBuyers({ silent: true })}
                   />
                 );
               })}
@@ -488,14 +493,19 @@ function BuyerCard({
   metrics,
   buyerMetricsLoading,
   to,
+  agentId,
+  onRemoved,
 }: {
   buyer: BuyerRow;
   metrics: BuyerActivityMetrics | null;
   buyerMetricsLoading: boolean;
   /** Absolute path to buyer workspace (`/agent/buyers/:crmClientId`). */
   to: string;
+  agentId: string | null;
+  onRemoved: () => void;
 }) {
   const [resending, setResending] = useState(false);
+  const [removeOpen, setRemoveOpen] = useState(false);
   const handleResend = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -607,26 +617,40 @@ function BuyerCard({
   };
 
   const trailing = (
-    <div className="flex items-center gap-2">
-      <BuyerRowStatusPill buyer={buyer} />
-      {buyer.status === "pending" ? (
-        <button
-          type="button"
-          onClick={handleResend}
-          disabled={resending}
-          className="inline-flex items-center gap-1 rounded-full border border-neutral-200 bg-white px-2.5 py-0.5 text-[11px] font-medium text-neutral-700 transition-colors hover:border-neutral-300 hover:bg-neutral-50 disabled:opacity-60"
-          title="Resend invite email"
-          aria-label={`Resend invite to ${buyer.email}`}
-        >
-          <RefreshCw className={cn("h-3 w-3", resending && "animate-spin")} aria-hidden strokeWidth={2} />
-          {resending ? "Sending…" : "Resend"}
-        </button>
-      ) : null}
+    <div className="flex flex-col items-end gap-1.5">
+      <div className="flex items-center gap-2">
+        <BuyerRowStatusPill buyer={buyer} />
+        {buyer.status === "pending" ? (
+          <button
+            type="button"
+            onClick={handleResend}
+            disabled={resending}
+            className="inline-flex items-center gap-1 rounded-full border border-neutral-200 bg-white px-2.5 py-0.5 text-[11px] font-medium text-neutral-700 transition-colors hover:border-neutral-300 hover:bg-neutral-50 disabled:opacity-60"
+            title="Resend invite email"
+            aria-label={`Resend invite to ${buyer.email}`}
+          >
+            <RefreshCw className={cn("h-3 w-3", resending && "animate-spin")} aria-hidden strokeWidth={2} />
+            {resending ? "Sending…" : "Resend"}
+          </button>
+        ) : null}
+      </div>
+      <button
+        type="button"
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setRemoveOpen(true);
+        }}
+        className="text-[11px] font-medium text-neutral-500 transition-colors hover:text-destructive"
+      >
+        Delete buyer
+      </button>
     </div>
   );
 
   return (
-    <Link
+    <>
+      <Link
       to={to}
       className={cn(
         "group flex cursor-pointer items-stretch gap-3 rounded-xl border border-neutral-200 bg-white p-4 pl-5",
@@ -662,6 +686,16 @@ function BuyerCard({
         />
       </div>
     </Link>
+
+      <RemoveBuyerClientDialog
+        open={removeOpen}
+        onOpenChange={setRemoveOpen}
+        buyerName={buyer.name}
+        agentId={agentId}
+        buyerId={buyer.clientId}
+        onRemoved={onRemoved}
+      />
+    </>
   );
 }
 
