@@ -548,23 +548,20 @@ const ClientHotSheet = () => {
   };
 
   const handleSetupLogin = () => {
-    // Close the login prompt
     setShowLoginPrompt(false);
-    
-    // Extract client email from token payload (NOT from agent profile or hotsheet)
+
+    // Canonical green-branded invite acceptance page (token in the URL path).
     const payload = tokenData?.payload as any;
     const clientEmail = payload?.client_email || payload?.email || "";
     const clientId = payload?.client_id || "";
-    
-    // Build query params
+
     const params = new URLSearchParams();
-    params.set("invitation_token", token);
     if (clientEmail) params.set("email", clientEmail);
     if (agentProfile?.id) params.set("agent_id", agentProfile.id);
     if (clientId) params.set("client_id", clientId);
-    
-    // Navigate to client invitation setup page
-    navigate(`/client-invite?${params.toString()}`);
+
+    const query = params.toString();
+    navigate(`/invite/${token}${query ? `?${query}` : ""}`);
   };
 
   // Sort listings
