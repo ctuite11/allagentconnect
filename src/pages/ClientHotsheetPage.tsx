@@ -14,6 +14,7 @@ import { ListChecks, MapPin, Pencil, Plus, Trash2, UserPlus } from "lucide-react
 import { BulkShareListingsDialog } from "@/components/BulkShareListingsDialog";
 import { cn } from "@/lib/utils";
 import { AacBackButton } from "@/components/layout/AacBackLink";
+import AACMonogram from "@/components/ui/AACMonogram";
 import { enforceClientIdentity } from "@/lib/enforceClientIdentity";
 import { User } from "@supabase/supabase-js";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
