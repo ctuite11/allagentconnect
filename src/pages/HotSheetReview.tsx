@@ -69,7 +69,9 @@ interface ReviewRecipient {
   inviteAccepted: boolean;
   /** Accepted invite token scoped to this hot sheet only — drives shared workspace mode. */
   inviteAcceptedForSheet: boolean;
-  /** Present when invite pending and a share token exists (for Resend). */
+  /** True when `email_enqueued` / `invite_resent` exists for this sheet + client. */
+  inviteEnqueued: boolean;
+  /** Present when invite was enqueued and an unaccepted token exists (for Resend). */
   resendTokenId?: string;
   resendToken?: string;
   /**
@@ -84,9 +86,9 @@ interface ReviewRecipient {
 }
 
 function isPendingInviteRecipient(r: ReviewRecipient): boolean {
-  if (r.inviteAccepted || r.buyerLinked) return false;
+  if (r.inviteAccepted || r.buyerLinked || r.inviteAcceptedForSheet) return false;
   if (!r.email.trim()) return false;
-  return r.sendDashboardInvite || Boolean(r.resendTokenId);
+  return true;
 }
 
 function getCriteriaSummaryLine(criteria: any): { scope: string; state: string; statuses: string } {
@@ -236,8 +238,9 @@ const HotSheetReview = () => {
     const n = pendingInviteRecipients.length;
     if (n === 1) {
       const one = pendingInviteRecipients[0];
+      const isResend = one.inviteEnqueued && Boolean(one.resendTokenId);
       return {
-        label: one.resendTokenId ? "Resend Hot Sheet with Invite" : "Send Hot Sheet with Invite",
+        label: isResend ? "Resend Hot Sheet with Invite" : "Send Hot Sheet with Invite",
         disabled: false,
         showCheck: false,
         tooltip: undefined,
@@ -259,6 +262,12 @@ const HotSheetReview = () => {
 
   const showInviteCta = inviteCta !== null;
   const showPendingInviteBanner = !isSharedWorkspace && hasPendingInviteRecipients && !allInviteAccepted;
+  const pendingInviteNeedsResend = pendingInviteRecipients.some(
+    (r) => r.inviteEnqueued && Boolean(r.resendTokenId),
+  );
+  /** Listing share/select toolbar — only after invite email was sent or buyer accepted. */
+  const allowListingShareActions =
+    isSharedWorkspace || allInviteAccepted || invitesSent;
 
   const handleAgentHotSheetReviewBack = () => {
     const buyerDashboard = buyerContextClientId
@@ -406,6 +415,7 @@ const HotSheetReview = () => {
             .filter((c: any) => !!c.email)
             .map((c: any) => c.id);
 
+          const enqueuedClientIds = new Set<string>();
           if (eligibleClientIds.length === 0) {
             setInvitesSent(false);
           } else {
@@ -417,8 +427,11 @@ const HotSheetReview = () => {
               .in("client_id", eligibleClientIds);
 
             if (!eventErr) {
-              const sentSet = new Set((eventRows ?? []).map((e: any) => e.client_id));
-              setInvitesSent(sentSet.size === eligibleClientIds.length);
+              for (const row of eventRows ?? []) {
+                const cid = (row as { client_id?: string }).client_id;
+                if (cid) enqueuedClientIds.add(String(cid));
+              }
+              setInvitesSent(enqueuedClientIds.size === eligibleClientIds.length);
             }
           }
 
@@ -599,6 +612,8 @@ const HotSheetReview = () => {
                 sheetMerged.length > 0 ? sheetMerged : globalMerged,
               );
               const sendDashboardInvite = !buyerConnected && globalMerged.length === 0;
+              const inviteEnqueued = enqueuedClientIds.has(cid);
+              const canResendInvite = !buyerConnected && inviteEnqueued && Boolean(pick);
 
               built.push({
                 clientId: cid,
@@ -607,8 +622,9 @@ const HotSheetReview = () => {
                 phone,
                 inviteAccepted: buyerConnected,
                 inviteAcceptedForSheet,
-                resendTokenId: !buyerConnected && pick ? pick.id : undefined,
-                resendToken: !buyerConnected && pick ? pick.token : undefined,
+                inviteEnqueued,
+                resendTokenId: canResendInvite ? pick!.id : undefined,
+                resendToken: canResendInvite ? pick!.token : undefined,
                 sendDashboardInvite,
                 buyerLinked,
                 authUserId: undefined,
@@ -648,7 +664,10 @@ const HotSheetReview = () => {
                     firstName: firstContact.displayName.split(/\s+/)[0] ?? "",
                     lastName: firstContact.displayName.split(/\s+/).slice(1).join(" "),
                     displayName: firstContact.displayName || firstContact.email,
-                    mode: firstContact.resendTokenId ? "resend" : "invite",
+                    mode:
+                      firstContact.inviteEnqueued && firstContact.resendTokenId
+                        ? "resend"
+                        : "invite",
                   }
                 : null,
             );
@@ -1326,7 +1345,6 @@ const HotSheetReview = () => {
               title="Review matches"
               actions={
                 <>
-                  {showInviteCta ? renderInviteCtaButton() : null}
                   {buyerContextClientId ? (
                     <Button
                       type="button"
@@ -1405,11 +1423,13 @@ const HotSheetReview = () => {
             resultsFromPath={resultsFromPath}
             showSaveToHotSheet={false}
             saveToHotSheetCriteria={hotSheet.criteria ?? {}}
-            selectionEnabled={!isSharedWorkspace}
+            selectionEnabled={!isSharedWorkspace && allowListingShareActions}
             selectedRows={selectedListings}
             onSelectedRowsChange={setSelectedListings}
             onSelectAll={toggleSelectAll}
-            onKeepSelected={!isSharedWorkspace ? handleKeepSelected : undefined}
+            onKeepSelected={
+              !isSharedWorkspace && allowListingShareActions ? handleKeepSelected : undefined
+            }
             containerClassName="min-w-0 px-0"
             toolbarAriaLabel="Hot sheet results"
             resultsView={resultsView}
@@ -1420,10 +1440,15 @@ const HotSheetReview = () => {
             beforeResults={
               <>
                 {showPendingInviteBanner ? (
-                  <div className="mb-4 rounded-lg border border-[#0E56F5]/20 bg-[rgba(14,86,245,0.06)] px-4 py-3">
+                  <div className="mb-4 flex flex-col gap-3 rounded-lg border border-[#0E56F5]/20 bg-[rgba(14,86,245,0.06)] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
                     <p className="text-[13px] leading-snug text-neutral-800">
-                      This buyer hasn&apos;t been invited yet. Send the invite to share these matches.
+                      {pendingInviteNeedsResend
+                        ? "The invite was sent but not accepted yet. Resend to share these matches with your buyer."
+                        : "This buyer hasn't been invited yet. Send the invite to share these matches."}
                     </p>
+                    {showInviteCta ? (
+                      <div className="shrink-0 sm:pl-4">{renderInviteCtaButton()}</div>
+                    ) : null}
                   </div>
                 ) : null}
                 {!isSharedWorkspace && removedListings.length > 0 ? (
@@ -1510,11 +1535,11 @@ const HotSheetReview = () => {
                   showCompactComments
                   compactListedByMessageSeparator
                   onSelect={
-                    !isSharedWorkspace && helpers.onSelect
+                    allowListingShareActions && helpers.onSelect
                       ? () => helpers.onSelect!(row.id)
                       : undefined
                   }
-                  isSelected={!isSharedWorkspace && helpers.isSelected}
+                  isSelected={allowListingShareActions && helpers.isSelected}
                   chatMessages={messagesMap[row.id] || []}
                   onNewMessage={handleNewMessage}
                   onOpenChat={() => {
