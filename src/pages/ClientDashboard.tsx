@@ -25,6 +25,8 @@ import { Seo } from "@/components/Seo";
 import { useAgentLastSeen } from "@/hooks/useAgentLastSeen";
 import { loadHotSheetPhotosAndCounts } from "@/lib/hotSheetPreviewData";
 import { deleteHotSheetWithClientLinks } from "@/lib/deleteHotSheetBuyerAuthorized";
+import { loadBuyerHotSheetAccess } from "@/lib/loadBuyerHotSheetAccess";
+import { consumeInviteAcceptance } from "@/lib/inviteAcceptanceHandoff";
 import type { ListedByAgentProfile } from "@/lib/listingListedBy";
 import { loadBuyerGenericFavorites } from "@/lib/loadBuyerFavorites";
 import type { ClientDashboardFavoriteRow } from "@/components/buyer/ClientDashboardView";
