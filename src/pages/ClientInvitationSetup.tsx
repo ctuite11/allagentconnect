@@ -12,6 +12,26 @@ import { validatePassword } from "@/lib/passwordPolicy";
 import AACMonogram from "@/components/ui/AACMonogram";
 import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 import { acceptClientHotSheetInvite } from "@/lib/acceptClientHotSheetInvite";
+import { cn } from "@/lib/utils";
+
+/** Buyer portal brand tokens — match `BuyerShell` / `BuyerPortalHeader`. */
+const BUYER_MONOGRAM_CLASS = "text-[#16A34A]";
+const BUYER_BADGE_CLASS =
+  "inline-flex items-center gap-1.5 rounded-full bg-[#16A34A]/10 text-[#16A34A] px-3 py-1 text-[12px] font-medium";
+const BUYER_PRIMARY_BTN_CLASS =
+  "bg-[#16A34A] hover:bg-[#15803D] text-white font-medium";
+
+function InviteSignupBrand({ monogramClassName = "w-7 h-7" }: { monogramClassName?: string }) {
+  return (
+    <div className="flex items-center gap-2.5 text-zinc-900">
+      <AACMonogram className={cn(monogramClassName, BUYER_MONOGRAM_CLASS)} />
+      <div className="min-w-0">
+        <div className="text-[15px] font-bold tracking-tight">All Agent Connect</div>
+        <div className="mt-0.5 text-[11px] font-medium leading-none text-zinc-500">Buyer Portal</div>
+      </div>
+    </div>
+  );
+}
 
 /** Authoritative invite context from `share_tokens` (token string alone is not enough — query params can be tampered). */
 type InviteAnchor = {
@@ -286,7 +306,7 @@ const ClientInvitationSetup = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white px-4">
         <div className="max-w-md w-full text-center space-y-6">
-          <AACMonogram className="w-10 h-10 mx-auto text-[#0E56F5]" />
+          <AACMonogram className={cn("w-10 h-10 mx-auto", BUYER_MONOGRAM_CLASS)} />
           <div className="space-y-2">
             <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">
               Invitation Unavailable
@@ -309,10 +329,7 @@ const ClientInvitationSetup = () => {
       <div className="min-h-screen bg-white">
         <header className="border-b border-zinc-100">
           <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-            <div className="flex items-center gap-2 text-zinc-900">
-              <AACMonogram className="w-7 h-7 text-[#0E56F5]" />
-              <span className="text-[15px] font-semibold tracking-tight">All Agent Connect</span>
-            </div>
+            <InviteSignupBrand />
             <div className="hidden sm:flex items-center gap-1.5 text-[12px] text-zinc-500">
               <ShieldCheck className="w-3.5 h-3.5" />
               <span>Secure invitation</span>
@@ -322,7 +339,7 @@ const ClientInvitationSetup = () => {
         <main className="max-w-md mx-auto px-6 py-20">
           <div className="space-y-6">
             <div className="space-y-2 text-center">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-[#0E56F5]/8 text-[#0E56F5] px-3 py-1 text-[12px] font-medium">
+              <span className={BUYER_BADGE_CLASS}>
                 <ShieldCheck className="w-3.5 h-3.5" />
                 Account found
               </span>
@@ -361,7 +378,7 @@ const ClientInvitationSetup = () => {
               <Button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full h-11 rounded-xl bg-[#0E56F5] hover:bg-[#0B47CC] text-white font-medium"
+                className={cn("w-full h-11 rounded-xl", BUYER_PRIMARY_BTN_CLASS)}
               >
                 {isSubmitting ? (
                   <>
@@ -383,7 +400,7 @@ const ClientInvitationSetup = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white px-4">
         <div className="max-w-md w-full text-center space-y-6">
-          <AACMonogram className="w-10 h-10 mx-auto text-[#0E56F5]" />
+          <AACMonogram className={cn("w-10 h-10 mx-auto", BUYER_MONOGRAM_CLASS)} />
           <div className="space-y-2">
             <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">
               Confirm Your Email
@@ -414,10 +431,7 @@ const ClientInvitationSetup = () => {
     <div className="min-h-screen bg-white">
       <header className="border-b border-zinc-100">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2 text-zinc-900">
-            <AACMonogram className="w-7 h-7 text-[#0E56F5]" />
-            <span className="text-[15px] font-semibold tracking-tight">All Agent Connect</span>
-          </div>
+          <InviteSignupBrand />
           <div className="hidden sm:flex items-center gap-1.5 text-[12px] text-zinc-500">
             <ShieldCheck className="w-3.5 h-3.5" />
             <span>Secure invitation</span>
@@ -429,7 +443,7 @@ const ClientInvitationSetup = () => {
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-start">
           <div className="space-y-8 lg:pt-4">
             <div className="space-y-4">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-[#0E56F5]/8 text-[#0E56F5] px-3 py-1 text-[12px] font-medium">
+              <span className={BUYER_BADGE_CLASS}>
                 <ShieldCheck className="w-3.5 h-3.5" />
                 Private invitation
               </span>
@@ -552,7 +566,7 @@ const ClientInvitationSetup = () => {
                 <Button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full h-11 rounded-xl bg-[#0E56F5] hover:bg-[#0B47CC] text-white font-medium"
+                  className={cn("w-full h-11 rounded-xl", BUYER_PRIMARY_BTN_CLASS)}
                 >
                   {isSubmitting ? (
                     <>

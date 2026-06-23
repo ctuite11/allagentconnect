@@ -428,6 +428,21 @@ serve(async (req) => {
     return json({ success: false, error: "Failed to activate agent relationship" }, 500);
   }
 
+  const hotSheetId = payload.hot_sheet_id ? String(payload.hot_sheet_id).trim() : "";
+  if (hotSheetId && crmClientId) {
+    const { error: hscError } = await supabaseAdmin
+      .from("hot_sheet_clients")
+      .upsert(
+        { hot_sheet_id: hotSheetId, client_id: crmClientId },
+        { onConflict: "hot_sheet_id,client_id", ignoreDuplicates: true },
+      );
+
+    if (hscError) {
+      console.error("[accept-client-hot-sheet-invite] hot_sheet_clients link failed:", hscError);
+      return json({ success: false, error: "Failed to link accepted hot sheet to buyer account" }, 500);
+    }
+  }
+
   if (!tokenRow.accepted_at) {
     const { error: tokenUpdateError } = await supabaseAdmin
       .from("share_tokens")
@@ -449,6 +464,7 @@ serve(async (req) => {
     userId,
     agentId,
     crmClientId,
+    hotSheetId: hotSheetId || null,
     alreadyAccepted,
   });
   } catch (error) {
