@@ -243,14 +243,7 @@ const HotSheetBuyerDetail = () => {
         ? `${agentProfile.first_name ?? ""} ${agentProfile.last_name ?? ""}`.trim() || "Your agent"
         : "Your agent";
 
-      const hotSheetLink =
-        `${window.location.origin}/client-invite` +
-        `?invitation_token=${encodeURIComponent(token)}` +
-        `&email=${encodeURIComponent(buyer.email)}` +
-        `&agent_id=${encodeURIComponent(user.id)}` +
-        `&client_id=${encodeURIComponent(clientId)}` +
-        (buyer.firstName ? `&first_name=${encodeURIComponent(buyer.firstName)}` : "") +
-        (buyer.lastName ? `&last_name=${encodeURIComponent(buyer.lastName)}` : "");
+      const hotSheetLink = `${window.location.origin}/invite/${token}`;
 
       const { error: invokeErr } = await supabase.functions.invoke("send-hot-sheet-invite", {
         body: {

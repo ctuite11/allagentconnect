@@ -28,6 +28,10 @@ interface HotSheetInviteRequest {
   inviterBrokerage?: string;
 }
 
+function isValidEmail(email: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+}
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -168,7 +172,7 @@ const handler = async (req: Request): Promise<Response> => {
       ? `AAC`
       : `${inviterName} invited you to view a hot sheet`;
 
-    const jobPayload = {
+    const jobPayload: Record<string, unknown> = {
       provider: "resend",
       template: "hot-sheet-invite",
       to: invitedEmail,
@@ -184,6 +188,10 @@ const handler = async (req: Request): Promise<Response> => {
         inviteOnly,
       },
     };
+
+    if (inviterEmail && isValidEmail(inviterEmail)) {
+      jobPayload.reply_to = inviterEmail;
+    }
 
     // Build insert row — include idempotency_key if we have one
     const insertRow: Record<string, unknown> = { payload: jobPayload };

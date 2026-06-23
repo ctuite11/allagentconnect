@@ -549,21 +549,11 @@ function BuyerCard({
             .maybeSingle();
           inviterName = `${pr?.first_name ?? ""} ${pr?.last_name ?? ""}`.trim() || "Your agent";
         }
-        const parts = buyer.name.trim().split(/\s+/);
-        const firstName = parts[0] ?? "";
-        const lastName = parts.slice(1).join(" ");
         const origin =
           typeof window !== "undefined" && window.location?.origin
             ? window.location.origin
             : "https://allagentconnect.com";
-        const hotSheetLink =
-          `${origin}/client-invite` +
-          `?invitation_token=${encodeURIComponent(String(hotSheetToken.token))}` +
-          `&email=${encodeURIComponent(buyer.email)}` +
-          `&agent_id=${encodeURIComponent(user.id)}` +
-          `&client_id=${encodeURIComponent(buyer.clientId)}` +
-          (firstName ? `&first_name=${encodeURIComponent(firstName)}` : "") +
-          (lastName ? `&last_name=${encodeURIComponent(lastName)}` : "");
+        const hotSheetLink = `${origin}/invite/${String(hotSheetToken.token)}`;
         const { data: sessionData } = await supabase.auth.getSession();
         const accessToken = sessionData.session?.access_token;
         if (!accessToken) {

@@ -1050,14 +1050,7 @@ const HotSheetReview = () => {
           }).then(() => {});
         }
 
-        const hotSheetLink =
-          `${window.location.origin}/client-invite` +
-          `?invitation_token=${encodeURIComponent(finalToken)}` +
-          `&email=${encodeURIComponent(clientData.email)}` +
-          `&agent_id=${encodeURIComponent(user.id)}` +
-          `&client_id=${encodeURIComponent(clientId)}` +
-          (clientData.first_name ? `&first_name=${encodeURIComponent(clientData.first_name)}` : "") +
-          (clientData.last_name ? `&last_name=${encodeURIComponent(clientData.last_name)}` : "");
+        const hotSheetLink = `${window.location.origin}/invite/${finalToken}`;
 
         console.log(
           `[handleSendInvites] enqueue attempt → ${clientData.email} (mode=${mode}, tokenId=${tokenId})`,
