@@ -430,13 +430,9 @@ const ClientInvitationSetup = () => {
     { icon: MessageSquare, label: "Private communication with your agent", iconClass: "text-blue-600" },
   ];
 
-  const inviterName = agentFirstName || "Your agent";
   const inviteHeadline = agentFirstName
     ? `${agentFirstName} shared a private home search with you`
     : "Your private home search is ready";
-  const inviteReassurance = agentFirstName
-    ? `You're receiving this invitation because ${agentFirstName} shared a private home search with you.`
-    : "You're receiving this invitation because your agent shared a private home search with you.";
 
   return (
     <div className="min-h-screen bg-white">
@@ -457,12 +453,9 @@ const ClientInvitationSetup = () => {
               <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight text-zinc-900 leading-[1.15]">
                 {inviteHeadline}
               </h1>
-              <p className="text-[14px] sm:text-[15px] text-zinc-600 leading-relaxed max-w-md">
-                {inviteReassurance}
-              </p>
               <p className="text-[15px] sm:text-base text-zinc-500 leading-relaxed max-w-md">
-                {inviterName} shared a private home search with you. Create your free All Agent Connect
-                account to view homes, save favorites, receive new matching listings, and message your agent.
+                Create your free All Agent Connect account to view homes selected for you, save
+                favorites, receive new matching listings automatically, and message your agent directly.
               </p>
             </div>
 
