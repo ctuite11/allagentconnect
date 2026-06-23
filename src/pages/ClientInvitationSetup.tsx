@@ -38,6 +38,7 @@ type InviteAnchor = {
   agentId: string;
   crmClientId: string | null;
   clientEmail: string | null;
+  hotSheetId: string | null;
   seedFirstName?: string | null;
   seedLastName?: string | null;
   seedPhone?: string | null;
