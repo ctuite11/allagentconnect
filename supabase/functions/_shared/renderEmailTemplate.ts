@@ -213,12 +213,12 @@ export function renderEmailTemplate(
       }
 
       return buildAacEmail({
-        headline: "A Hot Sheet Has Been Shared With You",
-        preheader: buildHotSheetInvitePreheader(inviterName),
+        headline: "A hot sheet has been shared with you",
+        preheader: String(variables.preheader || buildHotSheetInvitePreheader(inviterName)),
         body: `
           <p style="margin:0 0 14px;">Hi ${firstName},</p>
-          <p style="margin:0 0 18px;">${inviterName} shared your hot sheet on All Agent Connect.</p>
-          <p style="margin:0 0 18px;">Click below to review the listings and contact your agent.</p>
+          <p style="margin:0 0 18px;">${inviterName} invited you to view a private hot sheet of listings curated for you on All Agent Connect.</p>
+          <p style="margin:0 0 18px;">Click below to review the listings and contact your agent through AAC.</p>
           ${renderSharedByBlock({ agentName: inviterName, agentBrokerage: inviterBrokerage, agentEmail: inviterEmail, agentPhone: inviterPhone })}`,
         ctaLabel: "View Hot Sheet",
         ctaUrl: hotSheetLink,
