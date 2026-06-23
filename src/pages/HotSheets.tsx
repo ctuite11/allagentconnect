@@ -25,6 +25,7 @@ import {
 } from "@/lib/buyerUi";
 import { loadHotSheetPhotosAndCounts } from "@/lib/hotSheetPreviewData";
 import { deleteHotSheetWithClientLinks } from "@/lib/deleteHotSheetBuyerAuthorized";
+import { loadBuyerHotSheetAccess } from "@/lib/loadBuyerHotSheetAccess";
 import {
   AlertDialog,
   AlertDialogCancel,
