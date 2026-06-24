@@ -5,6 +5,9 @@ import { ROUTES } from "@/constants/routes";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSuccessHubData } from "@/hooks/useSuccessHubData";
+import { useAuthRole } from "@/hooks/useAuthRole";
+import { useAgentProfileOnboarding } from "@/hooks/useAgentProfileOnboarding";
+import { AgentProfileOnboardingOverlay } from "@/components/success-hub/AgentProfileOnboardingOverlay";
 import { MarketActivityRow } from "@/components/success-hub/MarketActivityRow";
 import { DashboardCommunications } from "@/components/success-hub/DashboardCommunications";
 import { DashboardBuyersTable } from "@/components/success-hub/DashboardBuyersTable";
@@ -163,6 +166,9 @@ class SuccessHubErrorBoundary extends React.Component<
 
 function SuccessHubDashboardBody() {
   const navigate = useNavigate();
+  const { user, isVerifiedAgent } = useAuthRole();
+  const { visible: showProfileOnboarding, handleLater, handleCompleteProfile } =
+    useAgentProfileOnboarding(user, isVerifiedAgent);
   const {
     summary,
     loading,
@@ -181,7 +187,14 @@ function SuccessHubDashboardBody() {
   const safeCommunications = communications ?? [];
 
   return (
-    <AgentAacPage className="space-y-6 pb-10">
+    <>
+      {showProfileOnboarding ? (
+        <AgentProfileOnboardingOverlay
+          onLater={handleLater}
+          onCompleteProfile={handleCompleteProfile}
+        />
+      ) : null}
+      <AgentAacPage className="space-y-6 pb-10">
       {error ? (
         <AgentSectionCard className="border-neutral-200 p-5 shadow-sm hover:border-neutral-200 hover:shadow-sm">
           <p className="text-sm font-medium text-neutral-900">Could not load Success Hub</p>
@@ -298,7 +311,8 @@ function SuccessHubDashboardBody() {
           <NotificationPreferenceCards />
         </AgentSectionCard>
       ) : null}
-    </AgentAacPage>
+      </AgentAacPage>
+    </>
   );
 }
 
