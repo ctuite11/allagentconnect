@@ -11,6 +11,7 @@ import GeographicPreferencesManager, { GeographicData } from "@/components/Geogr
 import PriceRangePreferences, { PriceRangeData } from "@/components/PriceRangePreferences";
 import PropertyTypePreferences from "@/components/PropertyTypePreferences";
 import { toast } from "sonner";
+import { hasNotificationTargetingConfigured } from "@/lib/checkAgentCommunicationPreferences";
 import { Seo } from "@/components/Seo";
 import {
   AlertDialog,
@@ -207,7 +208,9 @@ const ClientNeedsDashboard = () => {
 
       toast.success("Preferences saved successfully");
       setHasUnsavedChanges(false);
-      await supabase.from("agent_settings").update({ preferences_set: true }).eq("user_id", user.id);
+      if (await hasNotificationTargetingConfigured(user.id)) {
+        await supabase.from("agent_settings").update({ preferences_set: true }).eq("user_id", user.id);
+      }
       await checkPreferences();
     } catch (error) {
       console.error("Error saving preferences:", error);
