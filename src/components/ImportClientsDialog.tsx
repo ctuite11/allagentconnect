@@ -541,9 +541,10 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Import Clients from File</DialogTitle>
+          <DialogTitle>Import contact list</DialogTitle>
           <DialogDescription>
-            Upload a CSV file containing your client contacts. File must include a Name (or First Name + Last Name) column and Email.
+            Add contacts as you go, or upload a list anytime. Share listings, market updates, and hot sheets—all from one
+            place.
           </DialogDescription>
         </DialogHeader>
 

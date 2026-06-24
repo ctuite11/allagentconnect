@@ -633,7 +633,7 @@ const MyClients = () => {
           <AgentPageHeader
             withTopPadding
             title="My Contacts"
-            subtitle="Manage your contacts and power personalized Hot Sheets, deal alerts, and off-market intelligence."
+            subtitle="Add contacts as you go, or upload a list anytime. Share listings, market updates, and hot sheets—all from one place."
           />
           <div className="mb-5 flex flex-wrap gap-2">
             <Skeleton className="h-9 w-32 rounded-lg bg-neutral-100" />
@@ -675,7 +675,7 @@ const MyClients = () => {
           <AgentPageHeader
             withTopPadding
             title="My Contacts"
-            subtitle="Manage your contacts and power personalized Hot Sheets, deal alerts, and off-market intelligence."
+            subtitle="Add contacts as you go, or upload a list anytime. Share listings, market updates, and hot sheets—all from one place."
           />
           <AgentSectionCard className="border border-neutral-200 p-8 shadow-sm">
             <div className="space-y-4 text-center">
@@ -710,7 +710,7 @@ const MyClients = () => {
         <AgentPageHeader
           withTopPadding
           title="My Contacts"
-          subtitle="Manage your contacts and power personalized Hot Sheets, deal alerts, and off-market intelligence."
+          subtitle="Add contacts as you go, or upload a list anytime. Share listings, market updates, and hot sheets—all from one place."
         />
 
           {/* Action Buttons - Primary left, utilities right */}
@@ -742,7 +742,9 @@ const MyClients = () => {
                 <DialogHeader className="border-b border-neutral-200 px-6 py-5">
                   <DialogTitle className="text-xl font-semibold text-zinc-900">{editingClient ? "Edit Contact" : "Add New Contact"}</DialogTitle>
                   <DialogDescription className="text-sm text-zinc-500">
-                    {editingClient ? "Update contact information" : "Add a new contact to your roster"}
+                    {editingClient
+                      ? "Update contact information"
+                      : "Add contacts as you go, or upload a list anytime. Share listings, market updates, and hot sheets—all from one place."}
                   </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
@@ -878,7 +880,10 @@ const MyClients = () => {
               <div className="py-4 text-center">
                 <User className="mx-auto mb-3 h-12 w-12 text-neutral-300" />
                 <h3 className="mb-1 text-lg font-semibold text-neutral-900">No contacts yet</h3>
-                <p className="mb-5 text-sm text-neutral-500">Add your first contact to start managing their property search</p>
+                <p className="mb-5 text-sm text-neutral-500">
+                  Add contacts as you go, or upload a list anytime. Share listings, market updates, and hot sheets—all
+                  from one place.
+                </p>
                 <Button
                   size="sm"
                   onClick={handleAddClient}
@@ -1437,7 +1442,8 @@ const MyClients = () => {
               {/* Low-contact helper text */}
               {clients.length > 0 && clients.length <= 3 && (
                 <p className="mt-4 text-center text-sm text-neutral-500">
-                  Add contacts to start sending personalized Hot Sheets and private deal alerts.
+                  Add contacts as you go, or upload a list anytime. Share listings, market updates, and hot sheets—all
+                  from one place.
                 </p>
               )}
               </>
