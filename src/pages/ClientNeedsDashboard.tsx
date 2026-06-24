@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/ui/page-header";
@@ -30,6 +30,7 @@ const emailAlertNoticeDismissedKey = (userId: string) =>
 /** Communications Center — notification channels, filters, and email cadence (agent). */
 const ClientNeedsDashboard = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [user, setUser] = useState<User | null>(null);
   const [showWarningDialog, setShowWarningDialog] = useState(false);
   const [showWarningBanner, setShowWarningBanner] = useState(false);
@@ -49,6 +50,16 @@ const ClientNeedsDashboard = () => {
   useEffect(() => {
     checkAuth();
   }, []);
+
+  useEffect(() => {
+    const state = location.state as { scrollToPreferences?: boolean } | null;
+    if (!state?.scrollToPreferences) return;
+
+    requestAnimationFrame(() => {
+      document.querySelector("[data-preferences-section]")?.scrollIntoView({ behavior: "smooth" });
+    });
+    navigate(location.pathname, { replace: true, state: null });
+  }, [location.pathname, location.state, navigate]);
 
   useEffect(() => {
     if (user?.id) {

@@ -7,6 +7,9 @@ import { NetworkActivityCard } from "./NetworkActivityCard";
 import { ChannelPreviewCard } from "./ChannelPreviewCard";
 import { useNewestVerifiedAgents } from "./useNewestVerifiedAgents";
 import { SendMessageDialog } from "@/components/SendMessageDialog";
+import { NetworkActivityPreferencesPrompt } from "@/components/success-hub/NetworkActivityPreferencesPrompt";
+import { useAuthRole } from "@/hooks/useAuthRole";
+import { useHasAgentCommunicationPreferences } from "@/hooks/useHasAgentCommunicationPreferences";
 import {
   useBuyerNeedsPreview,
   useGeneralDiscussionsPreview,
@@ -142,13 +145,38 @@ export function NewestVerifiedAgentsRow() {
 }
 
 export function NetworkActivitySection() {
+  const { user } = useAuthRole();
+  const { hasPreferences, loading: preferencesLoading } = useHasAgentCommunicationPreferences(user);
   const [compose, setCompose] = useState<{ open: boolean; category: ComposeCategory; title: string }>({
     open: false,
     category: "buyer_need",
     title: "Buyer Needs",
   });
-  const openCompose = (category: ComposeCategory, title: string) =>
+  const [preferencesPromptOpen, setPreferencesPromptOpen] = useState(false);
+  const [pendingCompose, setPendingCompose] = useState<{
+    category: ComposeCategory;
+    title: string;
+  } | null>(null);
+
+  const launchCompose = (category: ComposeCategory, title: string) =>
     setCompose({ open: true, category, title });
+
+  const openCompose = (category: ComposeCategory, title: string) => {
+    if (!preferencesLoading && hasPreferences === false) {
+      setPendingCompose({ category, title });
+      setPreferencesPromptOpen(true);
+      return;
+    }
+    launchCompose(category, title);
+  };
+
+  const handleContinueWithoutPreferences = () => {
+    if (pendingCompose) {
+      launchCompose(pendingCompose.category, pendingCompose.title);
+    }
+    setPendingCompose(null);
+    setPreferencesPromptOpen(false);
+  };
 
   return (
     <section aria-labelledby="network-activity-heading" className="space-y-3">
@@ -188,6 +216,15 @@ export function NetworkActivitySection() {
         onOpenChange={(open) => setCompose((c) => ({ ...c, open }))}
         category={compose.category}
         categoryTitle={compose.title}
+      />
+
+      <NetworkActivityPreferencesPrompt
+        open={preferencesPromptOpen}
+        onSetPreferences={() => {
+          setPreferencesPromptOpen(false);
+          setPendingCompose(null);
+        }}
+        onContinueWithoutPreferences={handleContinueWithoutPreferences}
       />
     </section>
   );
