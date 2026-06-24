@@ -54,6 +54,9 @@ import { dcmlsPublishSnapshot, dcmlsShowOnFromRecord } from "@/lib/dcmlsPublishP
 import { Seo } from "@/components/Seo";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DcmlsPublishingIntroOverlay, DcmlsLaunchingSoonReminder } from "@/components/add-listing/DcmlsPublishingIntroOverlay";
+import { AddListingStatusHelp } from "@/components/add-listing/AddListingStatusHelp";
+import { AddListingStatusIntroOverlay } from "@/components/add-listing/AddListingStatusIntroOverlay";
+import { useAddListingStatusIntro } from "@/hooks/useAddListingStatusIntro";
 import { useAddListingDcmlsIntro } from "@/hooks/useAddListingDcmlsIntro";
 
 // State name to abbreviation mapping
@@ -242,6 +245,8 @@ const AddListing = () => {
   const initialStatus = searchParams.get("status") || "new";
   const [user, setUser] = useState<any>(null);
   const { introVisible, showComingSoonRow, handleGotIt } = useAddListingDcmlsIntro(user);
+  const { introVisible: statusIntroVisible, handleGotIt: handleStatusGotIt } =
+    useAddListingStatusIntro(user);
   const [loading, setLoading] = useState(true);
   const [isLoadingListing, setIsLoadingListing] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -3181,6 +3186,10 @@ const AddListing = () => {
     <>
       <Seo title="Add Listing" />
       <DcmlsPublishingIntroOverlay open={introVisible} onGotIt={handleGotIt} />
+      <AddListingStatusIntroOverlay
+        open={statusIntroVisible && !introVisible}
+        onGotIt={handleStatusGotIt}
+      />
       <div className="min-h-0 bg-white pb-10">
       <div className="container mx-auto px-4 pb-6">
         <div className="max-w-5xl mx-auto">
@@ -3339,7 +3348,10 @@ const AddListing = () => {
                 {/* Status & Type Section */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-b border-zinc-100 pb-6">
                   <div className="space-y-2">
-                    <Label htmlFor="status">Status *</Label>
+                    <div className="flex items-center gap-1.5">
+                      <Label htmlFor="status">Status *</Label>
+                      <AddListingStatusHelp />
+                    </div>
                     <Select 
                       value={formData.status} 
                       onValueChange={handleStatusChange}
@@ -3356,29 +3368,11 @@ const AddListing = () => {
                         ))}
                       </SelectContent>
                     </Select>
-                    {/* Helper text for off-market listings */}
-                    {formData.status === LISTING_STATUS.OFF_MARKET && (
-                      <p className="text-xs text-amber-600 flex items-center gap-1 mt-1">
-                        <Lock className="h-3 w-3" />
-                        Private listing — visible only to AAC agents, not on MLS.
-                      </p>
-                    )}
-                    {/* Warning for final status states */}
                     {(formData.status === LISTING_STATUS.CANCELLED || formData.status === LISTING_STATUS.SOLD) && (
-                      <p className="text-xs text-amber-600 flex items-center gap-1 mt-1">
+                      <p className="mt-1 flex items-center gap-1 text-xs text-amber-600">
                         <AlertCircle className="h-3 w-3" />
-                        This is a final state. Status and price cannot be changed.
+                        Final state — status and price cannot be changed.
                       </p>
-                    )}
-                    {formData.status === LISTING_STATUS.COMING_SOON && (
-                      <div className="mt-2 space-y-1.5 rounded-lg border border-emerald-200/70 bg-emerald-50/40 px-3 py-2">
-                        <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200/90 bg-white px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-800">
-                          Coming Soon
-                        </span>
-                        <p className="text-xs leading-snug text-emerald-900/80">
-                          This status sets when the listing goes public on MLS and DCMLS. Use your On MLS Date below for the go-live timing.
-                        </p>
-                      </div>
                     )}
                   </div>
 
