@@ -2,12 +2,15 @@ import React, { useCallback, useEffect, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { useAgentPresence } from "@/hooks/useAgentPresence";
+import { useAuthRole } from "@/hooks/useAuthRole";
+import { useMessageCenterIntro } from "@/hooks/useMessageCenterIntro";
 import { useConversationThreads } from "@/hooks/useConversationThreads";
 import { archiveConversationsForUser } from "@/lib/archiveConversationsForUser";
 import { supabase } from "@/integrations/supabase/client";
 import { ConversationPanel } from "@/components/messaging/ConversationPanel";
 import { ConversationsList } from "@/components/messaging/ConversationsList";
 import { NewConversationDialog } from "@/components/NewConversationDialog";
+import { MessageCenterIntroOverlay } from "@/components/messaging/MessageCenterIntroOverlay";
 import { Seo } from "@/components/Seo";
 import { Button } from "@/components/ui/button";
 import { AacBackButton } from "@/components/layout/AacBackLink";
@@ -65,6 +68,9 @@ function MessagingWorkspaceContent({
 }: MessagingWorkspaceProps) {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useAuthRole();
+  const { visible: showMessageCenterIntro, handleLater, handleStartMessaging } =
+    useMessageCenterIntro(user);
   const { id: routeConversationId } = useParams<{ id: string }>();
   const messageReturnPath = (location.state as { from?: string } | null)?.from;
   const selectedConversationId =
@@ -129,6 +135,12 @@ function MessagingWorkspaceContent({
 
   return (
     <>
+      <MessageCenterIntroOverlay
+        open={showMessageCenterIntro}
+        variant={buyerMode ? "buyer" : "agent"}
+        onLater={handleLater}
+        onStartMessaging={handleStartMessaging}
+      />
       <Seo title={buyerMode ? "Messages" : "Messaging"} />
       <div
         className={
