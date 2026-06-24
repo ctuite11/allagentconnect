@@ -4394,6 +4394,10 @@ export type Database = {
         }
       }
       end_client_relationship: { Args: never; Returns: number }
+      ensure_agent_role_for_user: {
+        Args: { _user_id: string }
+        Returns: undefined
+      }
       ensure_conversation_participants_for_caller: {
         Args: { p_conversation_id: string }
         Returns: undefined
