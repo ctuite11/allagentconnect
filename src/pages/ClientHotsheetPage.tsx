@@ -148,6 +148,7 @@ const ClientHotsheetPage = () => {
   const [deleteHotSheetOpen, setDeleteHotSheetOpen] = useState(false);
   const [deleteHotSheetBusy, setDeleteHotSheetBusy] = useState(false);
   const [selectedListingIds, setSelectedListingIds] = useState<Set<string>>(new Set());
+  const [showKeptOnly, setShowKeptOnly] = useState(false);
   const hidePublicFooter = isBuyerHotSheetByIdRoute || Boolean(currentUser);
   /** Selection + share toolbar and card checkboxes (signed-in buyer with loaded sheet). */
   const enableBuyerListingSelection = Boolean(
@@ -181,17 +182,42 @@ const ClientHotsheetPage = () => {
     });
   }, []);
 
+  const displayedListings = useMemo(() => {
+    if (!showKeptOnly) return listings;
+    return listings.filter((l) => selectedListingIds.has(l.id));
+  }, [listings, showKeptOnly, selectedListingIds]);
+
   const toggleSelectAllListings = useCallback(() => {
-    if (selectedListingIds.size === listings.length && listings.length > 0) {
-      setSelectedListingIds(new Set());
+    const visibleIds = displayedListings.map((l) => l.id);
+    const allVisibleSelected =
+      visibleIds.length > 0 && visibleIds.every((id) => selectedListingIds.has(id));
+    if (allVisibleSelected) {
+      setSelectedListingIds((prev) => {
+        const next = new Set(prev);
+        visibleIds.forEach((id) => next.delete(id));
+        return next;
+      });
     } else {
-      setSelectedListingIds(new Set(listings.map((l) => l.id)));
+      setSelectedListingIds((prev) => {
+        const next = new Set(prev);
+        visibleIds.forEach((id) => next.add(id));
+        return next;
+      });
     }
-  }, [listings, selectedListingIds.size]);
+  }, [displayedListings, selectedListingIds]);
 
   const clearListingSelection = useCallback(() => {
     setSelectedListingIds(new Set());
+    setShowKeptOnly(false);
   }, []);
+
+  const handleKeepSelectedOnly = useCallback(() => {
+    if (selectedListingIds.size === 0) {
+      toast.error("No listings selected");
+      return;
+    }
+    setShowKeptOnly(true);
+  }, [selectedListingIds.size]);
 
   useEffect(() => {
     const validIds = new Set(listings.map((l) => l.id));
@@ -865,7 +891,13 @@ const ClientHotsheetPage = () => {
             <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
               <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-1 sm:px-0.5">
                 <span className="text-[13px] font-semibold tracking-tight text-neutral-900">
-                  Matches <span className="font-normal tabular-nums text-neutral-500">{listings.length}</span>
+                  Matches{" "}
+                  <span className="font-normal tabular-nums text-neutral-500">
+                    {showKeptOnly ? displayedListings.length : listings.length}
+                    {showKeptOnly && listings.length !== displayedListings.length
+                      ? ` of ${listings.length}`
+                      : ""}
+                  </span>
                 </span>
                 {enableBuyerListingSelection && listings.length > 0 && selectedListingIds.size > 0 ? (
                   <span className="text-[12px] tabular-nums text-neutral-500">
@@ -886,8 +918,33 @@ const ClientHotsheetPage = () => {
                     className={BUYER_HOT_SHEET_ACTION_BTN}
                   >
                     <ListChecks className="mr-1 h-3 w-3 shrink-0 text-neutral-600" aria-hidden />
-                    {selectedListingIds.size === listings.length ? "Deselect all" : "Select all"}
+                    {displayedListings.length > 0 &&
+                    displayedListings.every((l) => selectedListingIds.has(l.id))
+                      ? "Deselect all"
+                      : "Select all"}
                   </Button>
+                  {!showKeptOnly && selectedListingIds.size > 0 ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleKeepSelectedOnly}
+                      className={BUYER_HOT_SHEET_ACTION_BTN}
+                    >
+                      Keep selected only
+                    </Button>
+                  ) : null}
+                  {showKeptOnly ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowKeptOnly(false)}
+                      className={BUYER_HOT_SHEET_ACTION_BTN}
+                    >
+                      Show all
+                    </Button>
+                  ) : null}
                   <Button
                     type="button"
                     variant="outline"
@@ -919,18 +976,35 @@ const ClientHotsheetPage = () => {
             </div>
           </div>
 
-          {listings.length === 0 ? (
+          {displayedListings.length === 0 ? (
             <Card className="rounded-xl border border-neutral-200 bg-white p-8 shadow-[0_1px_2px_rgba(0,0,0,0.04)] sm:p-10">
               <CardContent className="mx-auto max-w-md space-y-2 p-0 text-center">
-                <p className="text-sm font-semibold text-neutral-900">No matching homes on the network right now</p>
-                <p className="text-[13px] leading-relaxed text-neutral-500">
-                  Your hot sheet and criteria are saved. Check back soon — new listings that fit your search will show up here.
+                <p className="text-sm font-semibold text-neutral-900">
+                  {showKeptOnly
+                    ? "No homes match your current selection filter"
+                    : "No matching homes on the network right now"}
                 </p>
+                <p className="text-[13px] leading-relaxed text-neutral-500">
+                  {showKeptOnly
+                    ? "Try showing all matches or adjusting your selection."
+                    : "Your hot sheet and criteria are saved. Check back soon — new listings that fit your search will show up here."}
+                </p>
+                {showKeptOnly ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="mt-3 border-neutral-200"
+                    onClick={() => setShowKeptOnly(false)}
+                  >
+                    Show all homes
+                  </Button>
+                ) : null}
               </CardContent>
             </Card>
           ) : (
             <div className={BUYER_HOT_SHEET_RESULTS_GRID}>
-              {listings.map((listing) => (
+              {displayedListings.map((listing) => (
                 <ListingCard
                   key={listing.id}
                   listing={listing as ComponentProps<typeof ListingCard>["listing"]}
