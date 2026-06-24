@@ -3187,7 +3187,6 @@ const AddListing = () => {
           <AgentPageHeader
             withTopPadding
             title={listingId ? "Edit listing" : "Add listing"}
-            subtitle="Hello — bonjour — hola. Set pricing and location, add media and disclosures, then publish. Use Save Draft if you step away; open Dashboard from the Menu for your account."
             backTo={addListingBackTo}
             actions={
               user?.email ? (
