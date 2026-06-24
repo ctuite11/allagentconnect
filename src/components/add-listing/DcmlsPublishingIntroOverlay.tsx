@@ -23,23 +23,39 @@ function IntroBrand() {
   );
 }
 
-const benefits: { icon: typeof Globe; label: string; iconClass: string }[] = [
+const capabilities: { icon: typeof Globe; label: string; iconClass: string }[] = [
   {
     icon: Globe,
-    label: "Reach consumers directly through Direct Connect MLS",
+    label: "Publish your listings directly to consumers",
     iconClass: "text-emerald-600",
   },
   {
     icon: Layers,
-    label: "Manage both agent and consumer exposure from one listing",
+    label: "Manage both your agent and consumer exposure from one place",
     iconClass: "text-[#0E56F5]",
   },
   {
     icon: MousePointerClick,
-    label: "Publish with a single click when the feature launches",
+    label: "Publish with a single click when Direct Connect MLS launches",
     iconClass: "text-indigo-600",
   },
 ];
+
+/** Compact emerald reminder above Publish — shown after intro dismiss. */
+export function DcmlsLaunchingSoonReminder({ className }: { className?: string }) {
+  return (
+    <p
+      className={cn(
+        "inline-flex max-w-full items-center gap-1.5 rounded-lg border border-emerald-200/90 bg-emerald-50/90 px-2.5 py-1 text-[11px] font-semibold leading-snug tracking-tight text-emerald-900 shadow-[0_1px_2px_rgba(16,185,129,0.08)] sm:text-xs",
+        className,
+      )}
+      aria-label="Direct Connect MLS launching soon"
+    >
+      <span aria-hidden>🚀</span>
+      <span>Direct Connect MLS Launching Soon</span>
+    </p>
+  );
+}
 
 type DcmlsPublishingIntroOverlayProps = {
   open: boolean;
@@ -73,26 +89,31 @@ export function DcmlsPublishingIntroOverlay({ open, onGotIt }: DcmlsPublishingIn
               id="add-listing-dcmls-intro-title"
               className="text-xl font-semibold leading-snug tracking-tight text-zinc-900 sm:text-[1.35rem]"
             >
-              Coming Soon: Publish to Direct Connect MLS
+              <span aria-hidden>🚀 </span>
+              Direct Connect MLS is Launching Soon
             </h1>
-            <p className="text-[13px] leading-relaxed text-zinc-600 sm:text-sm">
-              <span className="font-medium text-zinc-800">Direct Connect MLS</span> is our
-              consumer-facing partner platform. Soon you&apos;ll be able to publish your AAC listings
-              directly to consumers with a single click while continuing to manage everything from
-              All Agent Connect.
+            <p className="text-[13px] font-medium leading-relaxed text-zinc-700 sm:text-sm">
+              Direct Connect MLS is our consumer-facing partner platform. Soon you&apos;ll be able to
+              publish your All Agent Connect listings directly to consumers with a single click while
+              continuing to manage everything from All Agent Connect.
             </p>
           </div>
 
-          <ul className="space-y-2.5">
-            {benefits.map(({ icon: Icon, label, iconClass }) => (
-              <li key={label} className="flex items-start gap-2.5 text-[13px] text-zinc-700">
-                <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-zinc-100 bg-zinc-50">
-                  <Icon className={cn("h-3.5 w-3.5", iconClass)} aria-hidden />
-                </span>
-                <span className="leading-snug">{label}</span>
-              </li>
-            ))}
-          </ul>
+          <div className="space-y-2.5">
+            <h2 className="text-[13px] font-semibold text-zinc-900 sm:text-sm">
+              What you&apos;ll be able to do
+            </h2>
+            <ul className="space-y-2.5">
+              {capabilities.map(({ icon: Icon, label, iconClass }) => (
+                <li key={label} className="flex items-start gap-2.5 text-[13px] text-zinc-700">
+                  <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-zinc-100 bg-zinc-50">
+                    <Icon className={cn("h-3.5 w-3.5", iconClass)} aria-hidden />
+                  </span>
+                  <span className="leading-snug">{label}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
 
           <div className="space-y-2.5 border-t border-zinc-100 pt-5">
             <Button
@@ -100,7 +121,7 @@ export function DcmlsPublishingIntroOverlay({ open, onGotIt }: DcmlsPublishingIn
               onClick={() => onGotIt(dontShowAgain)}
               className={cn("h-10 w-full rounded-xl text-[13px]", AGENT_PRIMARY_BTN_CLASS)}
             >
-              Got it
+              Got It
             </Button>
 
             <div className="flex items-start gap-2.5 pt-0.5">

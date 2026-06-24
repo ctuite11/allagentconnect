@@ -53,7 +53,7 @@ import { checkDuplicateListing, isLiveStatus } from "@/lib/checkDuplicateListing
 import { dcmlsPublishSnapshot, dcmlsShowOnFromRecord } from "@/lib/dcmlsPublishPayload";
 import { Seo } from "@/components/Seo";
 import { Skeleton } from "@/components/ui/skeleton";
-import { DcmlsPublishingIntroOverlay } from "@/components/add-listing/DcmlsPublishingIntroOverlay";
+import { DcmlsPublishingIntroOverlay, DcmlsLaunchingSoonReminder } from "@/components/add-listing/DcmlsPublishingIntroOverlay";
 import { useAddListingDcmlsIntro } from "@/hooks/useAddListingDcmlsIntro";
 
 // State name to abbreviation mapping
@@ -3222,19 +3222,10 @@ const AddListing = () => {
                 )}
               </div>
 
-              <div className="flex flex-wrap items-center gap-2 sm:ml-auto">
-                {showComingSoonRow ? (
-                  <div
-                    className="flex flex-wrap items-center gap-2 pr-1 text-xs text-neutral-500"
-                    aria-label="Direct Connect MLS publishing status"
-                  >
-                    <span>Direct Connect MLS publishing</span>
-                    <span className="inline-flex rounded-md border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-800">
-                      Coming Soon
-                    </span>
-                  </div>
-                ) : null}
+              <div className="flex flex-col items-stretch gap-1.5 sm:ml-auto sm:items-end">
+                {showComingSoonRow ? <DcmlsLaunchingSoonReminder /> : null}
 
+                <div className="flex flex-wrap items-center gap-2">
               {/* Edit mode: Preview + Save Changes only */}
               {listingId ? (
                 <>
@@ -3316,6 +3307,7 @@ const AddListing = () => {
                   </Button>
                 </>
               )}
+                </div>
               </div>
             </div>
           </div>
