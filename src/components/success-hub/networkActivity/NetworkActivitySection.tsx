@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Home, MessageSquare, Radio, TrendingUp, UserCheck, Users } from "lucide-react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { AgentAvatar } from "@/components/ui/AgentAvatar";
 import { ROUTES } from "@/constants/routes";
 import { NetworkActivityCard } from "./NetworkActivityCard";
@@ -91,6 +91,14 @@ export function NewestVerifiedAgentsRow() {
       title="Newest Verified Agents"
       description="Recently active on the network"
       icon={<UserCheck className="h-4 w-4 shrink-0 text-indigo-600" aria-hidden />}
+      action={
+        <Link
+          to="/our-members"
+          className="rounded-sm text-[12px] font-medium text-neutral-700 underline-offset-2 transition-colors hover:text-neutral-900 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40 focus-visible:ring-offset-2"
+        >
+          View Network →
+        </Link>
+      }
     >
       <div className="-mx-1 flex gap-3 overflow-x-auto px-1 pb-1 snap-x snap-mandatory">
         {loading
