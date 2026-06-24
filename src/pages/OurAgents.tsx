@@ -18,6 +18,9 @@ import { z } from "zod";
 import { PageHeader } from "@/components/ui/page-header";
 import { LISTING_STATUS } from "@/constants/status";
 import { Seo } from "@/components/Seo";
+import { AgentNetworkIntroOverlay } from "@/components/agent-directory/AgentNetworkIntroOverlay";
+import { useAuthRole } from "@/hooks/useAuthRole";
+import { useAgentNetworkIntro } from "@/hooks/useAgentNetworkIntro";
 
 interface EnrichedAgent {
   id: string;
@@ -66,6 +69,14 @@ const OurAgents = ({
 }: OurAgentsProps) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useAuthRole();
+  const effectiveAgentMode = isAgentMode || defaultAgentMode;
+  const {
+    visible: showAgentNetworkIntro,
+    handleLater: handleAgentNetworkIntroLater,
+    handleSeeProfile: dismissAgentNetworkIntroForSee,
+    handleUpdateProfile: dismissAgentNetworkIntroForUpdate,
+  } = useAgentNetworkIntro(user, { enabled: effectiveAgentMode });
 
   const [agents, setAgents] = useState<EnrichedAgent[]>([]);
   const [counties, setCounties] = useState<County[]>([]);
@@ -79,7 +90,6 @@ const OurAgents = ({
   const [showListingAgentsOnly, setShowListingAgentsOnly] = useState(false);
   const [sortOrder, setSortOrder] = useState<"a-z" | "z-a">("a-z");
   
-  const effectiveAgentMode = isAgentMode || defaultAgentMode;
   const effectivePublicMode = isPublicMode || !effectiveAgentMode;
   
   // Message dialog
@@ -377,6 +387,20 @@ function AgentPhotoTileGrid({
 
   return (
     <div className="flex min-h-screen flex-col bg-white">
+      <AgentNetworkIntroOverlay
+        open={showAgentNetworkIntro}
+        onLater={handleAgentNetworkIntroLater}
+        onSeeProfile={(dontShowAgain) => {
+          dismissAgentNetworkIntroForSee(dontShowAgain);
+          if (user?.id) {
+            navigate(`/agent/${user.id}`, { state: { from: location.pathname + location.search } });
+          }
+        }}
+        onUpdateProfile={(dontShowAgain) => {
+          dismissAgentNetworkIntroForUpdate(dontShowAgain);
+          navigate("/agent-profile-editor");
+        }}
+      />
       <Seo
         title={effectivePublicMode ? "Find an Agent | All Agent Connect" : "AAC Referral Network | All Agent Connect"}
         description={effectivePublicMode
