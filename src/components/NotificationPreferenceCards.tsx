@@ -22,7 +22,11 @@ interface NotificationPreferences {
   general_discussion: boolean;
 }
 
-export const NotificationPreferenceCards = () => {
+type NotificationPreferenceCardsProps = {
+  onPreferencesChange?: () => void;
+};
+
+export const NotificationPreferenceCards = ({ onPreferencesChange }: NotificationPreferenceCardsProps = {}) => {
   const { requestCompose, promptOpen, checking, closePrompt } = useCommunicationComposeGate();
   const [preferences, setPreferences] = useState<NotificationPreferences>({
     buyer_need: false,
@@ -91,6 +95,7 @@ export const NotificationPreferenceCards = () => {
       if (error) throw error;
 
       setPreferences(newPreferences);
+      onPreferencesChange?.();
     } catch (error) {
       console.error("Error updating preferences:", error);
     }
@@ -120,6 +125,7 @@ export const NotificationPreferenceCards = () => {
       if (error) throw error;
 
       setPreferences(newPreferences);
+      onPreferencesChange?.();
     } catch (error) {
       console.error("Error updating preferences:", error);
     }
