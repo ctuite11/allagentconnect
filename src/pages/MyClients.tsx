@@ -932,7 +932,7 @@ const MyClients = () => {
                 <div className="space-y-4 p-4 sm:p-6">
                   <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
                     <div className="min-w-0 flex-1 space-y-3">
-                    <div className="relative w-full max-w-[480px]" ref={autocompleteRef}>
+                    <div className="relative w-full max-w-[600px]" ref={autocompleteRef}>
                       <Input
                         ref={searchInputRef}
                         placeholder="Search contacts by name, email, phone, or type..."
@@ -1195,6 +1195,7 @@ const MyClients = () => {
                               >
                                 <Edit className="h-4 w-4 text-neutral-500" />
                               </Button>
+                              <Separator orientation="vertical" className="mx-0.5 h-5 bg-neutral-200" />
                               <Button
                                 variant="ghost"
                                 size="sm"
@@ -1295,7 +1296,7 @@ const MyClients = () => {
                           <Badge variant="outline" className="bg-zinc-100 text-zinc-500 border-zinc-200 text-[10px]">Ended</Badge>
                         )}
                         {(!client.relationship_status || client.relationship_status === "none") && (
-                          <Badge variant="outline" className="bg-zinc-50 text-zinc-400 border-zinc-100 text-[10px]">—</Badge>
+                          <span className="text-sm text-neutral-400">No Relationship</span>
                         )}
                       </TableCell>
                        <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
@@ -1391,6 +1392,8 @@ const MyClients = () => {
                               </TooltipContent>
                             </Tooltip>
                           )}
+
+                          <Separator orientation="vertical" className="mx-0.5 h-5 bg-neutral-200" />
 
                           <Tooltip>
                             <TooltipTrigger asChild>

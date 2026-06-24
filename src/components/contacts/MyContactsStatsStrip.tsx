@@ -72,7 +72,7 @@ export function MyContactsStatsStrip({
       key: "total",
       label: "Total Contacts",
       value: String(totalContacts),
-      hint: "In your roster",
+      hint: "In your roster · click to show all",
       icon: Users,
       iconClass: "text-emerald-600",
       active: activeTypeFilter === "all",
@@ -82,7 +82,7 @@ export function MyContactsStatsStrip({
       key: "buyers",
       label: "Buyers",
       value: String(buyerCount),
-      hint: buyerCount === 1 ? "Buyer contact" : "Buyer contacts",
+      hint: buyerCount === 1 ? "Buyer contact · click to filter" : "Buyer contacts · click to filter",
       icon: UserRound,
       iconClass: "text-indigo-600",
       active: activeTypeFilter === "buyer",
@@ -92,7 +92,7 @@ export function MyContactsStatsStrip({
       key: "agents",
       label: "Agents",
       value: String(agentCount),
-      hint: agentCount === 1 ? "Agent contact" : "Agent contacts",
+      hint: agentCount === 1 ? "Agent contact · click to filter" : "Agent contacts · click to filter",
       icon: Briefcase,
       iconClass: "text-sky-600",
       active: activeTypeFilter === "agent",
@@ -116,19 +116,29 @@ export function MyContactsStatsStrip({
     >
       {stats.map(({ key, label, value, hint, icon: Icon, iconClass, active, onClick }) => {
         const interactive = Boolean(onClick);
+        const isPrimary = key === "total";
         const Tag = interactive ? "button" : "div";
         return (
           <Tag
             key={key}
             type={interactive ? "button" : undefined}
             onClick={onClick}
+            aria-pressed={interactive ? active : undefined}
             className={cn(
               STAT_SHELL,
-              interactive && "cursor-pointer text-left outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40 focus-visible:ring-offset-2",
-              active && "border-emerald-200/90 ring-1 ring-emerald-100",
+              isPrimary &&
+                "border-emerald-200/90 bg-emerald-50/80 hover:border-emerald-300/90 hover:shadow-md",
+              !isPrimary && "hover:border-neutral-300 hover:shadow-md",
+              interactive &&
+                "cursor-pointer text-left outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40 focus-visible:ring-offset-2",
+              active && !isPrimary && "border-emerald-200/90 ring-1 ring-emerald-100",
+              active && isPrimary && "ring-2 ring-emerald-200/80",
             )}
           >
-            <Icon className={cn("h-4 w-4", iconClass)} aria-hidden />
+            <Icon
+              className={cn("h-4 w-4", isPrimary ? "text-emerald-600" : iconClass)}
+              aria-hidden
+            />
             <div className="mt-2 text-xl font-semibold tracking-tight text-neutral-900 tabular-nums">{value}</div>
             <div className="mt-0.5 text-sm font-medium text-neutral-500">{label}</div>
             <div className="mt-1 text-xs text-neutral-400">{hint}</div>
