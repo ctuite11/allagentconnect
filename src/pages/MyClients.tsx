@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { AgentAacPage } from "@/components/layout/AgentAacPage";
 import { AgentPageHeader } from "@/components/layout/AgentPageHeader";
@@ -36,6 +36,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { hasRole } from "@/lib/auth/roles";
 import { invokeEdgeFunction } from "@/lib/invokeEdgeFunction";
+import {
+  MyContactsStatsStrip,
+  readLastContactsImport,
+  writeLastContactsImport,
+} from "@/components/contacts/MyContactsStatsStrip";
 import {
   REMOVE_BUYER_BUTTON_LABEL,
   REMOVE_BUYER_DIALOG_BODY,
@@ -114,6 +119,7 @@ const MyClients = () => {
   const [bulkEmailDialogOpen, setBulkEmailDialogOpen] = useState(false);
   const [analyticsDialogOpen, setAnalyticsDialogOpen] = useState(false);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [lastImportAt, setLastImportAt] = useState<string | null>(null);
   const [clientTypeFilter, setClientTypeFilter] = useState<string>("all");
   const [relationshipFilter, setRelationshipFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
@@ -171,6 +177,7 @@ const MyClients = () => {
       return;
     }
     setUser(user);
+    setLastImportAt(readLastContactsImport(user.id));
     try {
       const adminFlag = await hasRole(user.id, "admin");
       setIsAdmin(adminFlag);
@@ -625,6 +632,12 @@ const MyClients = () => {
     setCurrentPage(1);
   }, [searchTerm, clientTypeFilter, relationshipFilter, sortBy]);
 
+  const contactStats = useMemo(() => {
+    const buyerCount = clients.filter((c) => c.client_type === "buyer").length;
+    const agentCount = clients.filter((c) => c.client_type === "agent").length;
+    return { totalContacts: clients.length, buyerCount, agentCount };
+  }, [clients]);
+
   if (loading) {
     return (
       <TooltipProvider>
@@ -907,6 +920,17 @@ const MyClients = () => {
             </AgentSectionCard>
           ) : (
             <>
+              <MyContactsStatsStrip
+                className="mb-4"
+                totalContacts={contactStats.totalContacts}
+                buyerCount={contactStats.buyerCount}
+                agentCount={contactStats.agentCount}
+                lastImportAt={lastImportAt}
+                activeTypeFilter={clientTypeFilter}
+                onFilterAll={() => setClientTypeFilter("all")}
+                onFilterBuyers={() => setClientTypeFilter("buyer")}
+                onFilterAgents={() => setClientTypeFilter("agent")}
+              />
                <AgentSectionCard className="mb-4 overflow-hidden border border-neutral-200 p-0 shadow-sm">
                 <div className="space-y-4 p-4 sm:p-6">
                   <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
@@ -1449,14 +1473,6 @@ const MyClients = () => {
                 </div>
               )}
             </div>
-              
-              {/* Low-contact helper text */}
-              {clients.length > 0 && clients.length <= 3 && (
-                <p className="mt-4 text-center text-sm text-neutral-500">
-                  Add contacts as you go, or upload a list anytime. Share listings, market updates, and hot sheets—all
-                  from one place.
-                </p>
-              )}
               </>
               )}
             </AgentSectionCard>
@@ -1504,7 +1520,12 @@ const MyClients = () => {
         onOpenChange={setImportDialogOpen}
         agentId={user?.id || ""}
         onImportComplete={() => {
-          if (user) fetchClients(user.id);
+          if (user) {
+            const importedAt = new Date().toISOString();
+            writeLastContactsImport(user.id, importedAt);
+            setLastImportAt(importedAt);
+            fetchClients(user.id);
+          }
         }}
       />
 
