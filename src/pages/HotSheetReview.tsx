@@ -15,7 +15,7 @@ import { AacBackButton } from "@/components/layout/AacBackLink";
 import { AacPageIntro } from "@/components/layout/AacPageIntro";
 import { AgentResultsSummaryControls } from "@/components/listing-search/AgentResultsSummaryControls";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { cn } from "@/lib/utils";
+import { cn, formatListingConversationTitle } from "@/lib/utils";
 import { agentWorkspacePageContainer, agentWorkspaceMapResultsGrid } from "@/lib/agentWorkspaceLayout";
 import {
   AGENT_WORKSPACE_BTN_PRIMARY,
@@ -1584,11 +1584,10 @@ const HotSheetReview = () => {
           otherUserId={buyerUserId}
           hotSheetId={id ?? null}
           hotSheetAgentUserId={agentUserId}
-          threadTitle={
-            listings.find((l) => l.id === chatListingId)
-              ? `${listings.find((l) => l.id === chatListingId)!.address}, ${listings.find((l) => l.id === chatListingId)!.city}`
-              : "Listing discussion"
-          }
+          threadTitle={(() => {
+            const row = listings.find((l) => l.id === chatListingId);
+            return row ? formatListingConversationTitle(row) : "Listing discussion";
+          })()}
           onInboxInvalidate={() => {
             if (!agentUserId || !buyerUserId || !chatListingId) return;
             void fetchListingConversationMessagesMap(

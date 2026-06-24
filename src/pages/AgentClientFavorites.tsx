@@ -17,6 +17,7 @@ import {
 } from "@/components/success-hub/listingCardAdapter";
 import type { ListedByAgentProfile } from "@/lib/listingListedBy";
 import type { AgentSplitListing } from "@/lib/agentSplitResults";
+import { formatListingConversationTitle } from "@/lib/utils";
 import { removeBuyerFavoriteForAgent } from "@/lib/removeBuyerFavoriteForAgent";
 
 function titleCaseToken(term: string): string {
@@ -322,7 +323,7 @@ export default function AgentClientFavorites() {
       const merged = mapped ? { ...mapped, ...(listingEnrich[listingId] ?? {}) } : null;
       const title =
         merged && (merged.address || merged.city)
-          ? [merged.address, merged.city].filter(Boolean).join(", ").trim()
+          ? formatListingConversationTitle(merged)
           : "Listing discussion";
 
       setDiscussionListingId(listingId);

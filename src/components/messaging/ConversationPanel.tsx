@@ -10,7 +10,7 @@ import { DateSeparator } from "./DateSeparator";
 import { MessageComposer } from "./MessageComposer";
 import { UserAvatar } from "./UserAvatar";
 import { isSameDay, formatDistanceToNow } from "date-fns";
-import { cn } from "@/lib/utils";
+import { cn, formatListingConversationTitle } from "@/lib/utils";
 import { showMessageSentToast } from "@/lib/messageSentFeedback";
 
 interface ConversationPanelProps {
@@ -64,14 +64,12 @@ export function ConversationPanel({
     }
     supabase
       .from("listings")
-      .select("address, city, state")
+      .select("address, city, state, zip_code, unit_number, condo_details")
       .eq("id", details.listingId)
       .maybeSingle()
       .then(({ data }) => {
         if (data) {
-          setListingAddress(
-            [data.address, data.city, data.state].filter(Boolean).join(", ")
-          );
+          setListingAddress(formatListingConversationTitle(data));
         } else {
           setListingAddress("Listing conversation");
         }
@@ -215,6 +213,13 @@ export function ConversationPanel({
     details?.listingId && !threadTitle?.trim() ? listingAddress || "Listing conversation" : null;
 
   const isEmbedded = layoutVariant === "embedded";
+  const isEmptyThread = messages.length === 0;
+  const listingThreadHeader = isEmbedded && Boolean(threadTitle?.trim());
+  const contactSubtitle = details?.otherUserName
+    ? details.otherUserIsAgent
+      ? `Your agent • ${details.otherUserName}`
+      : details.otherUserName
+    : null;
 
   const composer = (
     <MessageComposer
@@ -227,9 +232,11 @@ export function ConversationPanel({
         return ok;
       }}
       sending={sending}
-      footerClassName={
-        isEmbedded ? "pb-4 pb-[max(1rem,env(safe-area-inset-bottom,0px))]" : undefined
-      }
+      footerClassName={cn(
+        isEmbedded && "pb-4 pb-[max(1rem,env(safe-area-inset-bottom,0px))]",
+        isEmbedded && isEmptyThread && "pt-1.5",
+        isEmbedded && !isEmptyThread && "pt-2",
+      )}
     />
   );
 
@@ -237,11 +244,12 @@ export function ConversationPanel({
     ? "flex h-full min-h-0 w-full flex-col overflow-hidden"
     : "flex h-full min-h-0 w-full max-h-full flex-1 flex-col overflow-hidden";
 
-  const rolePill = details ? (
-    <span className="inline-flex shrink-0 items-center rounded border border-neutral-200/60 bg-white px-1.5 py-px text-[10px] font-medium uppercase tracking-wide text-zinc-500">
-      {details.otherUserIsAgent ? "AAC agent" : "Client"}
-    </span>
-  ) : null;
+  const rolePill =
+    details && !listingThreadHeader ? (
+      <span className="inline-flex shrink-0 items-center rounded border border-neutral-200/60 bg-white px-1.5 py-px text-[10px] font-medium uppercase tracking-wide text-zinc-500">
+        {details.otherUserIsAgent ? "AAC agent" : "Client"}
+      </span>
+    ) : null;
 
   const presenceDot =
     details?.otherUserId && isOnline ? (
@@ -255,18 +263,35 @@ export function ConversationPanel({
   return (
     <div className={rootClass}>
       {/* Header */}
-      <div className="shrink-0 border-b border-neutral-200/90 px-4 py-2.5">
+      <div
+        className={cn(
+          "shrink-0 border-b border-neutral-200/90",
+          listingThreadHeader ? "px-3.5 py-2" : "px-4 py-2.5",
+        )}
+      >
         <div className="flex w-full items-center justify-between gap-3">
-          <div className="flex min-w-0 flex-1 items-center gap-2.5">
+          <div className={cn("flex min-w-0 flex-1 items-center", listingThreadHeader ? "gap-2" : "gap-2.5")}>
             <UserAvatar
               name={details?.otherUserName ?? ""}
               headshotUrl={details?.otherUserHeadshotUrl ?? null}
-              size="lg"
+              size={listingThreadHeader ? "md" : "lg"}
               showPresence={false}
               isBuyer={!(details?.otherUserIsAgent ?? false)}
             />
             <div className="min-w-0">
-              {threadTitle?.trim() ? (
+              {listingThreadHeader ? (
+                <>
+                  <h2 className="truncate text-[15px] font-semibold leading-tight tracking-tight text-zinc-900">
+                    {threadTitle!.trim()}
+                  </h2>
+                  {contactSubtitle ? (
+                    <div className="mt-px flex min-w-0 items-center gap-1.5">
+                      <span className="truncate text-[12px] leading-snug text-zinc-500">{contactSubtitle}</span>
+                      {presenceDot}
+                    </div>
+                  ) : null}
+                </>
+              ) : threadTitle?.trim() ? (
                 <>
                   <h2 className="truncate text-[15px] font-semibold tracking-tight text-zinc-900">{threadTitle.trim()}</h2>
                   <div className="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5">
@@ -308,25 +333,39 @@ export function ConversationPanel({
         </div>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-white px-4 pb-3 pt-2">
+      <div
+        className={cn(
+          "overscroll-contain bg-white",
+          listingThreadHeader ? "px-3.5" : "px-4",
+          isEmbedded && isEmptyThread
+            ? cn("shrink-0", listingThreadHeader ? "pb-0 pt-1" : "pb-3 pt-2")
+            : cn("min-h-0 flex-1 overflow-y-auto", listingThreadHeader ? "pb-2 pt-1.5" : "pb-3 pt-2"),
+        )}
+      >
         <div className="mx-auto w-full max-w-[520px]">
-          {threadElements.length === 0 ? (
+          {isEmptyThread ? (
             <div
               className={cn(
                 "flex flex-col items-center px-2",
-                isEmbedded ? "justify-start pt-5 pb-2" : "justify-center py-8 sm:py-12",
+                listingThreadHeader
+                  ? "justify-start pb-0 pt-1.5"
+                  : isEmbedded
+                    ? "justify-start pb-1 pt-3"
+                    : "justify-center py-8 sm:py-12",
               )}
             >
               <div
                 className={cn(
                   "w-full rounded-xl border border-dashed border-neutral-200 bg-white px-4 text-center",
-                  isEmbedded ? "py-5" : "py-8 sm:py-10",
+                  listingThreadHeader ? "py-2.5" : isEmbedded ? "py-3" : "py-8 sm:py-10",
                 )}
               >
                 <p className="text-[13px] font-medium text-zinc-700">No messages yet</p>
-                <p className="mt-2 text-[12px] leading-snug text-zinc-500">
-                  Send a message below to start this thread.
-                </p>
+                {!isEmbedded ? (
+                  <p className="mt-2 text-[12px] leading-snug text-zinc-500">
+                    Send a message below to start this thread.
+                  </p>
+                ) : null}
               </div>
             </div>
           ) : (

@@ -42,7 +42,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
-import { cn } from "@/lib/utils";
+import { cn, formatListingConversationTitle } from "@/lib/utils";
 import { useAuthRole } from "@/hooks/useAuthRole";
 import { ArrowLeft, MapPin, Heart } from "lucide-react";
 import { AacBackButton } from "@/components/layout/AacBackLink";
@@ -1302,7 +1302,7 @@ const Favorites = ({
             threadTitle={(() => {
               const fav = favorites.find((f) => f.listings?.id === favoritesChatListingId);
               const l = fav?.listings;
-              return l ? `${l.address}, ${l.city}` : "Listing discussion";
+              return l ? formatListingConversationTitle(l) : "Listing discussion";
             })()}
             onInboxInvalidate={() => {
               void (async () => {
@@ -1572,7 +1572,7 @@ const Favorites = ({
           threadTitle={(() => {
             const fav = favorites.find((f) => f.listings?.id === favoritesChatListingId);
             const l = fav?.listings;
-            return l ? `${l.address}, ${l.city}` : "Listing discussion";
+            return l ? formatListingConversationTitle(l) : "Listing discussion";
           })()}
           onInboxInvalidate={() => {
             void (async () => {

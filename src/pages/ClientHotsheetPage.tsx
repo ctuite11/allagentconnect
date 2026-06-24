@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
 import { ListChecks, MapPin, Pencil, Plus, Trash2, UserPlus } from "lucide-react";
 import { BulkShareListingsDialog } from "@/components/BulkShareListingsDialog";
-import { cn } from "@/lib/utils";
+import { cn, formatListingConversationTitle } from "@/lib/utils";
 import { AacBackButton } from "@/components/layout/AacBackLink";
 import AACMonogram from "@/components/ui/AACMonogram";
 import { enforceClientIdentity } from "@/lib/enforceClientIdentity";
@@ -1054,7 +1054,7 @@ const ClientHotsheetPage = () => {
           hotSheetAgentUserId={hotSheet.user_id}
           threadTitle={(() => {
             const row = listings.find((l) => l.id === listingChatListingId);
-            return row ? `${row.address}, ${row.city}` : "Listing discussion";
+            return row ? formatListingConversationTitle(row) : "Listing discussion";
           })()}
           onInboxInvalidate={() => {
             void (async () => {

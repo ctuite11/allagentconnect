@@ -210,6 +210,15 @@ export function listingCardStreetHeading(listing: ListingAddressUnitSource): str
   return full;
 }
 
+/** Drawer / thread header: street + `#unit` when present, then city (e.g. `300 Commercial St #434, Boston`). */
+export function formatListingConversationTitle(listing: ListingAddressUnitSource): string {
+  const street = listingCardStreetHeading(listing);
+  const city = (listing.city ?? "").trim();
+  if (!street && !city) return "Listing discussion";
+  if (!city) return street;
+  return `${street}, ${city}`;
+}
+
 /**
  * Convert human-readable property type to database enum format
  */
