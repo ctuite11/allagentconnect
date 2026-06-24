@@ -53,6 +53,8 @@ import { checkDuplicateListing, isLiveStatus } from "@/lib/checkDuplicateListing
 import { dcmlsPublishSnapshot, dcmlsShowOnFromRecord } from "@/lib/dcmlsPublishPayload";
 import { Seo } from "@/components/Seo";
 import { Skeleton } from "@/components/ui/skeleton";
+import { DcmlsPublishingIntroOverlay } from "@/components/add-listing/DcmlsPublishingIntroOverlay";
+import { useAddListingDcmlsIntro } from "@/hooks/useAddListingDcmlsIntro";
 
 // State name to abbreviation mapping
 const STATE_ABBREVIATIONS: Record<string, string> = {
@@ -239,6 +241,7 @@ const AddListing = () => {
   );
   const initialStatus = searchParams.get("status") || "new";
   const [user, setUser] = useState<any>(null);
+  const { introVisible, showComingSoonRow, handleGotIt } = useAddListingDcmlsIntro(user);
   const [loading, setLoading] = useState(true);
   const [isLoadingListing, setIsLoadingListing] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -3161,11 +3164,7 @@ const AddListing = () => {
                 <Skeleton className="h-10 w-10 rounded-md bg-zinc-100" />
               </div>
               <Skeleton className="h-4 w-64 max-w-[90%] rounded-md bg-zinc-100" />
-              <div className="flex flex-wrap items-start gap-4">
-                <Skeleton className="h-12 min-w-0 flex-1 rounded-lg bg-zinc-100 sm:max-w-xl" />
-                <Skeleton className="h-16 w-16 shrink-0 rounded-lg bg-zinc-100" />
-              </div>
-              <Skeleton className="h-24 w-full rounded-xl bg-zinc-100" />
+              <Skeleton className="h-10 w-full rounded-lg bg-zinc-100" />
               <Skeleton className="h-[min(52vh,440px)] w-full rounded-xl bg-zinc-100" />
               <div className="grid gap-4 sm:grid-cols-2">
                 <Skeleton className="h-32 rounded-xl bg-zinc-100" />
@@ -3181,6 +3180,7 @@ const AddListing = () => {
   return (
     <>
       <Seo title="Add Listing" />
+      <DcmlsPublishingIntroOverlay open={introVisible} onGotIt={handleGotIt} />
       <div className="min-h-0 bg-white pb-10">
       <div className="container mx-auto px-4 pb-6">
         <div className="max-w-5xl mx-auto">
@@ -3197,56 +3197,6 @@ const AddListing = () => {
               ) : null
             }
           />
-
-          {/* DCMLS — visible roadmap; publishing disabled until AAC launch (payload always internal-only). */}
-          <div className="mb-5 border-b border-zinc-200/80 pb-5">
-            <div className="rounded-2xl border border-zinc-200/90 bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
-              <div className="flex items-start justify-between gap-6">
-                <div className="min-w-0 flex-1">
-                  <div className="mb-1 flex flex-wrap items-center gap-2">
-                    <h3 className={agentSectionTitle}>Publish to DCMLS?</h3>
-                    <span
-                      className={cn(
-                        "inline-flex rounded-md border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
-                        formData.status === LISTING_STATUS.COMING_SOON || formData.show_on_dcmls
-                          ? "border-emerald-200 bg-emerald-50 text-emerald-800"
-                          : "border-zinc-200 bg-zinc-50 text-zinc-500",
-                      )}
-                    >
-                      Coming Soon
-                    </span>
-                  </div>
-                  <p className="mb-3 text-sm leading-snug text-neutral-500">
-                    Coming Soon — DCMLS publishing will be available once AAC listings are live and ready for launch. Until
-                    then, saves keep this listing internal to AAC agents only.
-                  </p>
-                  <div
-                    className="pointer-events-none select-none space-y-2 rounded-lg border border-zinc-100 bg-zinc-50/40 px-3 py-3 text-neutral-600"
-                    aria-disabled="true"
-                  >
-                    <div className="flex items-center gap-3 rounded-md p-1.5 opacity-55">
-                      <span
-                        className="flex h-4 w-4 shrink-0 items-center justify-center rounded-none border-2 border-zinc-300 bg-white"
-                        aria-hidden
-                      />
-                      <span className="text-sm font-medium text-zinc-700">Yes, publish to DCMLS</span>
-                    </div>
-                    <div className="flex items-center gap-3 rounded-md border border-zinc-200/80 bg-white/80 p-1.5">
-                      <CheckCircle2 className="h-4 w-4 shrink-0 text-neon-green" aria-hidden />
-                      <span className="text-sm font-medium text-zinc-900">No, keep as internal only</span>
-                      <span className="ml-auto text-[10px] font-medium uppercase tracking-wide text-neutral-400">Active</span>
-                    </div>
-                  </div>
-                  <p className="mt-3 text-xs text-neutral-500">
-                    Published listings will be visible to external DCMLS consumers once this option is enabled.
-                  </p>
-                </div>
-                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl border border-zinc-200/90 bg-white shadow-[inset_0_1px_0_rgba(0,0,0,0.03)]">
-                  <Lock className="h-7 w-7 text-zinc-300" aria-hidden />
-                </div>
-              </div>
-            </div>
-          </div>
 
           {/* Action Buttons - Sticky Top Bar */}
           <div className="-mx-4 sticky top-0 z-10 mb-6 border-b border-zinc-200/90 bg-white/95 px-4 py-2.5 shadow-[0_1px_3px_rgba(0,0,0,0.04)] backdrop-blur-sm supports-[backdrop-filter]:bg-white/90">
@@ -3271,6 +3221,19 @@ const AddListing = () => {
                   </div>
                 )}
               </div>
+
+              <div className="flex flex-wrap items-center gap-2 sm:ml-auto">
+                {showComingSoonRow ? (
+                  <div
+                    className="flex flex-wrap items-center gap-2 pr-1 text-xs text-neutral-500"
+                    aria-label="Direct Connect MLS publishing status"
+                  >
+                    <span>Direct Connect MLS publishing</span>
+                    <span className="inline-flex rounded-md border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-800">
+                      Coming Soon
+                    </span>
+                  </div>
+                ) : null}
 
               {/* Edit mode: Preview + Save Changes only */}
               {listingId ? (
@@ -3353,6 +3316,7 @@ const AddListing = () => {
                   </Button>
                 </>
               )}
+              </div>
             </div>
           </div>
 
