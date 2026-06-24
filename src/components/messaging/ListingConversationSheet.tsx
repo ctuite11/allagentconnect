@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 import { ConversationPanel } from "@/components/messaging/ConversationPanel";
@@ -36,6 +36,11 @@ export function ListingConversationSheet({
 }: ListingConversationSheetProps) {
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [resolving, setResolving] = useState(false);
+  const onOpenChangeRef = useRef(onOpenChange);
+  const onInboxInvalidateRef = useRef(onInboxInvalidate);
+
+  onOpenChangeRef.current = onOpenChange;
+  onInboxInvalidateRef.current = onInboxInvalidate;
 
   useEffect(() => {
     if (!open) {
@@ -72,12 +77,12 @@ export function ListingConversationSheet({
       if (!convId) {
         toast.error("Could not open this conversation.");
         setResolving(false);
-        onOpenChange(false);
+        onOpenChangeRef.current(false);
         return;
       }
 
       await unarchiveConversationForUser(supabase, convId);
-      onInboxInvalidate?.();
+      onInboxInvalidateRef.current?.();
 
       setConversationId(convId);
       setResolving(false);
@@ -86,7 +91,7 @@ export function ListingConversationSheet({
     return () => {
       cancelled = true;
     };
-  }, [open, listingId, otherUserId, onOpenChange, onInboxInvalidate]);
+  }, [open, listingId, otherUserId]);
 
   const handleClose = useCallback(() => {
     onOpenChange(false);
