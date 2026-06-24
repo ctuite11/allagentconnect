@@ -15,6 +15,7 @@ import { AuthShell } from "@/components/auth/AuthShell";
 import { cn } from "@/lib/utils";
 import { authDebug } from "@/lib/authDebug";
 import { resolveUserRole, getRouteForRole } from "@/lib/resolveUserRole";
+import { hasRole } from "@/lib/auth/roles";
 import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 import { validateAgentSignup } from "@/lib/agentSignupValidation";
 
@@ -634,11 +635,29 @@ const Auth = () => {
       if (checkCancelled()) return;
 
       if (roleResult.error) {
-        console.error('[REGISTER] Step 4 warning - role assignment error:', roleResult.error);
-        // Don't fail registration for this - role can be fixed later
-      } else {
-        console.log('[REGISTER] Step 4 complete: Role assigned');
+        console.error('[REGISTER] FAILED at Step 4:', roleResult.error);
+        toast.error("Couldn't finish account setup. Your agent role was not assigned. Please try again or contact support.");
+        return;
       }
+
+      let roleConfirmed = false;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        if (attempt > 0) {
+          await new Promise((resolve) => setTimeout(resolve, 500));
+        }
+        if (await hasRole(userId, "agent")) {
+          roleConfirmed = true;
+          break;
+        }
+      }
+
+      if (!roleConfirmed) {
+        console.error('[REGISTER] FAILED at Step 4: agent role not confirmed after assign_self_role');
+        toast.error("Couldn't confirm your agent role. Please try again or contact support.");
+        return;
+      }
+
+      console.log('[REGISTER] Step 4 complete: Role assigned and verified');
 
       // ========== STEP 5: Send admin notification (NON-BLOCKING) ==========
       console.log('[REGISTER] Step 5: Sending admin notification (non-blocking)');

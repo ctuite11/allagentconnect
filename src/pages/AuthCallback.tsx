@@ -286,6 +286,34 @@ const AuthCallback = () => {
     };
   }, [navigate, searchParams]);
 
+  const resolveRoleWithRetries = async (verifiedUserId: string) => {
+    const maxAttempts = 3;
+    const retryDelayMs = 500;
+    let resolved = await resolveUserRole(verifiedUserId);
+
+    if (import.meta.env.DEV) {
+      console.info("[POST_LOGIN] resolveUserRole #1", {
+        userId: verifiedUserId,
+        role: resolved.role,
+        is_verified_agent: resolved.is_verified_agent,
+      });
+    }
+
+    for (let attempt = 1; attempt < maxAttempts && resolved.role === "unknown"; attempt++) {
+      await new Promise((r) => setTimeout(r, retryDelayMs));
+      resolved = await resolveUserRole(verifiedUserId);
+      if (import.meta.env.DEV) {
+        console.info(`[POST_LOGIN] resolveUserRole #${attempt + 1} (retry)`, {
+          userId: verifiedUserId,
+          role: resolved.role,
+          is_verified_agent: resolved.is_verified_agent,
+        });
+      }
+    }
+
+    return resolved;
+  };
+
   const routeUser = async (userId: string) => {
     if (didNavigate.current) return;
 
@@ -315,29 +343,18 @@ const AuthCallback = () => {
       const { data: userData } = await supabase.auth.getUser();
       const verifiedUserId = userData?.user?.id ?? userId;
       const verifiedEmail = userData?.user?.email ?? session?.user?.email ?? null;
+      const intendedRole = userData?.user?.user_metadata?.intended_role;
 
-      // First attempt
-      let resolved = await resolveUserRole(verifiedUserId);
-      if (import.meta.env.DEV) {
-        console.info("[POST_LOGIN] resolveUserRole #1", {
-          userId: verifiedUserId,
-          email: verifiedEmail,
-          role: resolved.role,
-          is_verified_agent: resolved.is_verified_agent,
-        });
-      }
+      let resolved = await resolveRoleWithRetries(verifiedUserId);
 
-      // Retry once if RPC returned unknown (covers JWT propagation race on
-      // a freshly issued token). Never treat unknown/null/error as pending.
-      if (resolved.role === "unknown") {
-        await new Promise((r) => setTimeout(r, 250));
-        resolved = await resolveUserRole(verifiedUserId);
-        if (import.meta.env.DEV) {
-          console.info("[POST_LOGIN] resolveUserRole #2 (retry)", {
-            userId: verifiedUserId,
-            role: resolved.role,
-            is_verified_agent: resolved.is_verified_agent,
-          });
+      if (resolved.role === "unknown" && intendedRole === "agent") {
+        authDebug("routeUser self-heal assign_self_role", { userId: verifiedUserId });
+        const { error: assignError } = await supabase.rpc("assign_self_role", { _role: "agent" });
+        if (assignError) {
+          console.error("[AuthCallback] self-heal assign_self_role failed:", assignError);
+        } else {
+          await new Promise((r) => setTimeout(r, 500));
+          resolved = await resolveRoleWithRetries(verifiedUserId);
         }
       }
 
