@@ -50,6 +50,7 @@ import FavoriteButton from "@/components/FavoriteButton";
 import { cn, resolveListingUnitNumber, type ListingAddressUnitSource } from "@/lib/utils";
 import { listingSelectionCheckboxClass } from "@/lib/listingSelectionStyles";
 import { profileInitials } from "@/lib/buyerProfile";
+import { REMOVE_BUYER_BUTTON_LABEL } from "@/lib/removeBuyer";
 import { hasUnreadMessages, MessagesUnreadBadge } from "@/components/messaging/MessagesUnreadBadge";
 
 export interface ClientDashboardAgentInfo {
@@ -602,7 +603,7 @@ export function ClientDashboardView({
                           onClick={() => setShowEndDialog?.(true)}
                         >
                           <UserX className="mr-1.5 h-4 w-4 shrink-0 sm:mr-2" />
-                          End relationship
+                          {REMOVE_BUYER_BUTTON_LABEL}
                         </Button>
                       ) : null}
                     </div>

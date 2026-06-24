@@ -30,6 +30,12 @@ import { consumeInviteAcceptance } from "@/lib/inviteAcceptanceHandoff";
 import type { ListedByAgentProfile } from "@/lib/listingListedBy";
 import { loadBuyerGenericFavorites } from "@/lib/loadBuyerFavorites";
 import type { ClientDashboardFavoriteRow } from "@/components/buyer/ClientDashboardView";
+import {
+  REMOVE_BUYER_BUTTON_LABEL,
+  REMOVE_BUYER_DIALOG_BODY,
+  REMOVE_BUYER_DIALOG_TITLE,
+  removeBuyer,
+} from "@/lib/removeBuyer";
 
 interface AgentInfo {
   id: string;
@@ -471,21 +477,13 @@ export default function ClientDashboard() {
 
   const handleEndRelationship = async () => {
     if (!currentUserId) {
-      console.error("End relationship: currentUserId is null");
       toast.error("Please sign in again and retry");
       return;
     }
 
-    const { error } = await supabase.rpc('end_client_relationship');
+    const result = await removeBuyer({ scope: "self" });
+    if (!result.ok) return;
 
-    if (error) {
-      console.error("End relationship RPC error:", error);
-      toast.error(error.message ?? "Failed to end relationship");
-      return;
-    }
-
-    console.log("End relationship success via RPC");
-    toast.success("Relationship ended successfully.");
     clearPrimaryAgentId();
     setAgent(null);
     setRelationshipId(null);
@@ -718,9 +716,11 @@ export default function ClientDashboard() {
       <AlertDialog open={showEndDialog} onOpenChange={setShowEndDialog}>
         <AlertDialogContent className="border border-neutral-200 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.08)] sm:rounded-xl">
           <AlertDialogHeader className="text-left">
-            <AlertDialogTitle className="text-lg font-semibold text-neutral-900">End relationship?</AlertDialogTitle>
+            <AlertDialogTitle className="text-lg font-semibold text-neutral-900">
+              {REMOVE_BUYER_DIALOG_TITLE}
+            </AlertDialogTitle>
             <AlertDialogDescription className="text-[13px] leading-snug text-neutral-500">
-              You will still have access to your dashboard using Direct Connect MLS.
+              {REMOVE_BUYER_DIALOG_BODY}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="gap-2">
@@ -730,7 +730,7 @@ export default function ClientDashboard() {
               className="h-9 bg-neutral-900 px-5 text-[13px] text-white shadow-sm hover:bg-neutral-800 focus-visible:ring-2 focus-visible:ring-zinc-400/40 focus-visible:ring-offset-2"
               onClick={() => void handleEndRelationship()}
             >
-              Yes, end relationship
+              {REMOVE_BUYER_BUTTON_LABEL}
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>

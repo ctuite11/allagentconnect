@@ -456,7 +456,6 @@ export default function BuyersList() {
                     buyerMetricsLoading={buyerMetricsStillLoading}
                     metrics={metricsForBuyer ?? null}
                     to={agentBuyerAccountPath(b.clientId)}
-                    agentId={agentUserId}
                     onRemoved={() => void loadBuyers({ silent: true })}
                   />
                 );
@@ -494,7 +493,6 @@ function BuyerCard({
   metrics,
   buyerMetricsLoading,
   to,
-  agentId,
   onRemoved,
 }: {
   buyer: BuyerRow;
@@ -502,7 +500,6 @@ function BuyerCard({
   buyerMetricsLoading: boolean;
   /** Absolute path to buyer workspace (`/agent/buyers/:crmClientId`). */
   to: string;
-  agentId: string | null;
   onRemoved: () => void;
 }) {
   const [resending, setResending] = useState(false);
@@ -643,10 +640,10 @@ function BuyerCard({
           setRemoveOpen(true);
         }}
         className="inline-flex items-center gap-1 rounded-full border border-[#EF4444]/30 bg-[#EF4444]/10 px-2.5 py-0.5 text-[11px] font-medium text-[#B91C1C] transition-colors hover:border-[#EF4444]/40 hover:bg-[#EF4444]/15"
-        aria-label={`Delete buyer ${buyer.name}`}
+        aria-label={`Remove buyer ${buyer.name}`}
       >
         <Trash2 className="h-3 w-3 shrink-0 text-[#EF4444]" strokeWidth={2} aria-hidden />
-        Delete buyer
+        Remove Buyer
       </button>
     </div>
   );
@@ -693,8 +690,6 @@ function BuyerCard({
       <RemoveBuyerClientDialog
         open={removeOpen}
         onOpenChange={setRemoveOpen}
-        buyerName={buyer.name}
-        agentId={agentId}
         buyerId={buyer.clientId}
         onRemoved={onRemoved}
       />

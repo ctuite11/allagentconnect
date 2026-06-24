@@ -30,6 +30,12 @@ import {
   buyerOutlineSecondary,
 } from "@/lib/buyerUi";
 import { displayNameFromProfile, profileInitials, upsertBuyerProfile } from "@/lib/buyerProfile";
+import {
+  REMOVE_BUYER_BUTTON_LABEL,
+  REMOVE_BUYER_DIALOG_BODY,
+  REMOVE_BUYER_DIALOG_TITLE,
+  removeBuyer,
+} from "@/lib/removeBuyer";
 
 interface AgentInfo {
   id: string;
@@ -174,18 +180,13 @@ const ClientAgentSettings = () => {
 
     try {
       setEnding(true);
-      const { error } = await supabase.rpc("end_client_relationship");
-      if (error) throw error;
+      const result = await removeBuyer({ scope: "self" });
+      if (!result.ok) return;
 
-      toast.success("Relationship ended successfully");
       clearPrimaryAgentId();
       setAgent(null);
       setRelationshipId(null);
       await loadAgentRelationship(currentUserId);
-    } catch (error: unknown) {
-      console.error("Error ending relationship:", error);
-      const message = error instanceof Error ? error.message : "Failed to end relationship";
-      toast.error(message);
     } finally {
       setEnding(false);
     }
@@ -405,16 +406,13 @@ const ClientAgentSettings = () => {
                         className={`h-9 flex-1 ${buyerOutlineSecondary}`}
                       >
                         <UserX className="mr-2 h-4 w-4" aria-hidden />
-                        End relationship
+                        {REMOVE_BUYER_BUTTON_LABEL}
                       </Button>
                     </AlertDialogTrigger>
                     <AlertDialogContent className="border border-neutral-200 bg-white sm:rounded-xl">
                       <AlertDialogHeader>
-                        <AlertDialogTitle>End relationship?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          You can keep your account active after ending this relationship. Your saved homes,
-                          searches, and profile stay with you.
-                        </AlertDialogDescription>
+                        <AlertDialogTitle>{REMOVE_BUYER_DIALOG_TITLE}</AlertDialogTitle>
+                        <AlertDialogDescription>{REMOVE_BUYER_DIALOG_BODY}</AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
@@ -426,10 +424,10 @@ const ClientAgentSettings = () => {
                           {ending ? (
                             <>
                               <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden />
-                              Ending…
+                              Removing…
                             </>
                           ) : (
-                            "End relationship"
+                            REMOVE_BUYER_BUTTON_LABEL
                           )}
                         </AlertDialogAction>
                       </AlertDialogFooter>

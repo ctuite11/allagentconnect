@@ -20,6 +20,12 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
+import {
+  REMOVE_BUYER_BUTTON_LABEL,
+  REMOVE_BUYER_DIALOG_BODY,
+  REMOVE_BUYER_DIALOG_TITLE,
+  removeBuyer,
+} from "@/lib/removeBuyer";
 
 const PAGE_SIZE = 25;
 const SEARCH_DEBOUNCE_MS = 300;
@@ -221,41 +227,10 @@ export default function AdminConsumers() {
     setDeletingId(user.id);
     setConfirmUser(null);
     try {
-      // Step 1: Delete auth user FIRST — if this fails, don't proceed
-      const { data: fnData, error: fnErr } = await supabase.functions.invoke("delete-users", {
-        body: user.email ? { emails: [user.email] } : { userIds: [user.id] },
-      });
-      if (fnErr) throw fnErr;
-      if (!fnData || fnData.success !== true) {
-        // Build actionable error message from blockers + errors
-        let detail = fnData?.error || "Auth account removal failed";
-        if (fnData?.errors?.length) {
-          const errMsgs = fnData.errors.map((e: any) => {
-            let msg = e.error;
-            if (e.blockers) {
-              const blockerList = Object.entries(e.blockers)
-                .map(([k, v]) => `${k} (${v})`)
-                .join(", ");
-              msg += ` — blocked by: ${blockerList}`;
-            }
-            return msg;
-          });
-          detail = errMsgs.join("; ");
-        }
-        throw new Error(detail);
-      }
+      const result = await removeBuyer({ scope: "admin", userId: user.id });
+      if (!result.ok) return;
 
-      // Step 2: Only soft-deactivate after auth is confirmed deleted
-      const { error: rpcErr } = await supabase.rpc("admin_deactivate_buyer" as any, {
-        p_user_id: user.id,
-      });
-      if (rpcErr) throw rpcErr;
-
-      toast.success(`${user.email} deactivated`);
       fetchPage(page, debouncedSearch);
-    } catch (err: any) {
-      console.error("[AdminConsumers] deactivate error:", err);
-      toast.error(err?.message ?? "Failed to deactivate buyer", { duration: 8000 });
     } finally {
       setDeletingId(null);
     }
@@ -407,22 +382,18 @@ export default function AdminConsumers() {
       <AlertDialog open={!!confirmUser} onOpenChange={(open) => { if (!open) setConfirmUser(null); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Deactivate Buyer Account</AlertDialogTitle>
+            <AlertDialogTitle>{REMOVE_BUYER_DIALOG_TITLE}</AlertDialogTitle>
             <AlertDialogDescription>
-              Disables login and ends relationships for{" "}
-              <span className="font-semibold">{confirmUser?.email}</span>.
-              Agent CRM contacts are not removed.
-              <br /><br />
-              <span className="text-red-600 font-medium">The user's auth account will be removed.</span> They may re-register with the same email.
+              {REMOVE_BUYER_DIALOG_BODY}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               className="bg-red-600 hover:bg-red-700 text-white"
-              onClick={() => confirmUser && handleDeactivate(confirmUser)}
+              onClick={() => confirmUser && void handleDeactivate(confirmUser)}
             >
-              Deactivate Account
+              {REMOVE_BUYER_BUTTON_LABEL}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

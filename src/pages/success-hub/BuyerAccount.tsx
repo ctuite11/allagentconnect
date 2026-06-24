@@ -241,7 +241,7 @@ export default function BuyerAccount() {
               onClick={() => setRemoveOpen(true)}
             >
               <Trash2 className="mr-1.5 h-3.5 w-3.5 shrink-0 text-neutral-600" aria-hidden strokeWidth={2} />
-              Delete buyer
+              Remove Buyer
             </Button>
           </>
         }
@@ -286,8 +286,6 @@ export default function BuyerAccount() {
       <RemoveBuyerClientDialog
         open={removeOpen}
         onOpenChange={setRemoveOpen}
-        buyerName={capitalizedName}
-        agentId={client.agent_id}
         buyerId={client.id}
         onRemoved={() => navigate("/agent/buyers")}
       />
