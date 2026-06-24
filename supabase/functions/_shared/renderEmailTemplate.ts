@@ -9,6 +9,7 @@ import { formatListingShareEmailStreetLine } from "./listingShareEmailAddress.ts
 import { renderCompactListingEmailCard, renderListingEmailCard } from "./listingEmailCard.ts";
 import { resolveEmailPhotoUrl } from "./listingPhotoUrl.ts";
 import { formatPersonDisplayName } from "./personDisplayName.ts";
+import { formatUsPhoneForDisplay } from "./phoneFormat.ts";
 
 /* ------------------------------------------------------------------ */
 /*  Shared helpers for Share Listings emails                           */
@@ -203,7 +204,7 @@ export function renderEmailTemplate(
       const firstName = recipientFullName.split(/\s+/)[0] || "there";
       const inviterName = formatPersonDisplayName(String(variables.inviterName || "Your agent"));
       const inviterEmail = variables.inviterEmail || "";
-      const inviterPhone = variables.inviterPhone || "";
+      const inviterPhone = formatUsPhoneForDisplay(variables.inviterPhone || "");
       const inviterBrokerage = variables.inviterBrokerage || "";
       const hotSheetLink = String(variables.hotSheetLink || "");
       const isInviteOnly = variables.inviteOnly === true || !variables.hotSheetName;
