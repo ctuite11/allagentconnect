@@ -1437,17 +1437,28 @@ export function CreateHotSheetDialog({
               {selectedClients.length > 0 ? (
                 <div className="space-y-2">
                   <Label>Selected Contacts</Label>
-                  <div className="space-y-2 p-3 bg-white rounded-md border border-neutral-200">
+                  <div className="space-y-2 rounded-md border border-emerald-100 bg-emerald-50/40 p-2">
                     {selectedClients.map((client) => {
                       const isLocked = lockedToClient && client.id === clientId;
                       return (
-                        <div key={client.id} className="flex items-center justify-between p-2 bg-white rounded border border-neutral-200">
-                          <div className="flex-1">
-                            <div className="font-medium text-sm">{client.first_name} {client.last_name}</div>
-                            <div className="text-xs text-muted-foreground">{client.email}</div>
-                            {client.phone && (
-                              <div className="text-xs text-muted-foreground">{formatPhoneNumber(client.phone)}</div>
-                            )}
+                        <div
+                          key={client.id}
+                          className="flex items-center justify-between gap-3 rounded-md border border-emerald-200 bg-emerald-50 p-2.5"
+                        >
+                          <div className="flex min-w-0 flex-1 items-start gap-2.5">
+                            <span
+                              className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-600/10"
+                              aria-hidden
+                            >
+                              <Check className="h-3 w-3 text-emerald-600" strokeWidth={2.5} />
+                            </span>
+                            <div className="min-w-0 flex-1">
+                              <div className="text-sm font-medium">{client.first_name} {client.last_name}</div>
+                              <div className="text-xs text-muted-foreground">{client.email}</div>
+                              {client.phone && (
+                                <div className="text-xs text-muted-foreground">{formatPhoneNumber(client.phone)}</div>
+                              )}
+                            </div>
                           </div>
                           {!isLocked && (
                             <Button
