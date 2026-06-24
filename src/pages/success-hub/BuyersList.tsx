@@ -15,7 +15,10 @@ import { showInviteEmailSentToast } from "@/lib/inviteEmailSentFeedback";
 import { toast } from "sonner";
 import { CreateBuyerDialog } from "@/components/CreateBuyerDialog";
 import { BuyerCreatedNextStepDialog, type CreatedBuyer } from "@/components/success-hub/BuyerCreatedNextStepDialog";
+import { BuyersPageIntroOverlay } from "@/components/success-hub/BuyersPageIntroOverlay";
 import { RemoveBuyerClientDialog } from "@/components/success-hub/RemoveBuyerClientAction";
+import { useAuthRole } from "@/hooks/useAuthRole";
+import { useBuyersPageIntro } from "@/hooks/useBuyersPageIntro";
 import { Seo } from "@/components/Seo";
 import { cn } from "@/lib/utils";
 import {
@@ -79,6 +82,9 @@ function BuyersRowsSkeleton({ count = 6 }: { count?: number }) {
 export default function BuyersList() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useAuthRole();
+  const { visible: showBuyersIntro, handleLater: handleBuyersIntroLater, handleAddBuyer: dismissBuyersIntro } =
+    useBuyersPageIntro(user);
   const [buyers, setBuyers] = useState<BuyerRow[]>([]);
   const [loading, setLoading] = useState(true);
   /** Last fetch failed with no buyer rows to show (avoid empty-state masking errors). */
@@ -365,6 +371,14 @@ export default function BuyersList() {
 
   return (
     <>
+      <BuyersPageIntroOverlay
+        open={showBuyersIntro}
+        onLater={handleBuyersIntroLater}
+        onAddBuyer={(dontShowAgain) => {
+          dismissBuyersIntro(dontShowAgain);
+          setShowCreate(true);
+        }}
+      />
       <Seo
         title="Buyers | All Agent Connect"
         description="View and manage buyer accounts, activity, and connected workflows inside All Agent Connect."
