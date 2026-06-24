@@ -53,6 +53,12 @@ const toTitleCase = (str: string) => {
     .join(' ');
 };
 
+const MY_CONTACTS_SUBTITLE =
+  "Build your contact network to share listings, Hot Sheets, market updates, and stay connected with clients and colleagues.";
+
+const MY_CONTACTS_EMPTY_VALUE =
+  "Add contacts one at a time or import your existing database to quickly share listings, Hot Sheets, and market updates.";
+
 // Null-safe helpers used by contact sort/autocomplete on /my-clients.
 // Search matching lives in @/lib/contactSearch (shared with share pickers, hot sheets, etc.).
 
@@ -633,7 +639,8 @@ const MyClients = () => {
           <AgentPageHeader
             withTopPadding
             title="My Contacts"
-            subtitle="Add contacts as you go, or upload a list anytime. Share listings, market updates, and hot sheets—all from one place."
+            titleAccent="underline"
+            subtitle={MY_CONTACTS_SUBTITLE}
           />
           <div className="mb-5 flex flex-wrap gap-2">
             <Skeleton className="h-9 w-32 rounded-lg bg-neutral-100" />
@@ -675,7 +682,8 @@ const MyClients = () => {
           <AgentPageHeader
             withTopPadding
             title="My Contacts"
-            subtitle="Add contacts as you go, or upload a list anytime. Share listings, market updates, and hot sheets—all from one place."
+            titleAccent="underline"
+            subtitle={MY_CONTACTS_SUBTITLE}
           />
           <AgentSectionCard className="border border-neutral-200 p-8 shadow-sm">
             <div className="space-y-4 text-center">
@@ -710,7 +718,8 @@ const MyClients = () => {
         <AgentPageHeader
           withTopPadding
           title="My Contacts"
-          subtitle="Add contacts as you go, or upload a list anytime. Share listings, market updates, and hot sheets—all from one place."
+          titleAccent="underline"
+          subtitle={MY_CONTACTS_SUBTITLE}
         />
 
           {/* Action Buttons - Primary left, utilities right */}
@@ -878,12 +887,14 @@ const MyClients = () => {
           {clients.length === 0 ? (
             <AgentSectionCard className="border border-neutral-200 p-8 shadow-sm">
               <div className="py-4 text-center">
-                <User className="mx-auto mb-3 h-12 w-12 text-neutral-300" />
+                <div
+                  className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full border border-emerald-100 bg-emerald-50/70"
+                  aria-hidden
+                >
+                  <User className="h-7 w-7 text-emerald-600" />
+                </div>
                 <h3 className="mb-1 text-lg font-semibold text-neutral-900">No contacts yet</h3>
-                <p className="mb-5 text-sm text-neutral-500">
-                  Add contacts as you go, or upload a list anytime. Share listings, market updates, and hot sheets—all
-                  from one place.
-                </p>
+                <p className="mb-5 text-sm text-neutral-500">{MY_CONTACTS_EMPTY_VALUE}</p>
                 <Button
                   size="sm"
                   onClick={handleAddClient}
