@@ -923,15 +923,17 @@ const ClientHotsheetPage = () => {
                       ? "Deselect all"
                       : "Select all"}
                   </Button>
-                  {!showKeptOnly && selectedListingIds.size > 0 ? (
+                  {!showKeptOnly ? (
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
+                      disabled={selectedListingIds.size === 0}
                       onClick={handleKeepSelectedOnly}
-                      className={BUYER_HOT_SHEET_ACTION_BTN}
+                      className={cn(BUYER_HOT_SHEET_ACTION_BTN, "disabled:opacity-50")}
                     >
-                      Keep selected only
+                      Keep Selected
+                      {selectedListingIds.size > 0 ? ` (${selectedListingIds.size})` : ""}
                     </Button>
                   ) : null}
                   {showKeptOnly ? (
