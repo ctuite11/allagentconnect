@@ -8,6 +8,7 @@ import {
   agentPageTitleClass,
   agentPageTopPaddingClass,
 } from "@/lib/agentUi";
+import { AacTitleAccent } from "@/components/layout/AacTitleAccent";
 
 export type AacPageIntroProps = {
   /** Typically `<AacBackLink />` or `<AacBackButton />`. */
@@ -60,7 +61,10 @@ export function AacPageIntro({
           {hasTitleBlock ? (
             <div className="min-w-0 space-y-1">
               {title ? (
-                <h1 className={cn(agentPageTitleClass, titleClassName)}>{title}</h1>
+                <>
+                  <h1 className={cn(agentPageTitleClass, titleClassName)}>{title}</h1>
+                  <AacTitleAccent />
+                </>
               ) : null}
               {subtitle ? <p className={agentPageSubtitleClass}>{subtitle}</p> : null}
               {afterSubtitle ? <div className="pt-3">{afterSubtitle}</div> : null}

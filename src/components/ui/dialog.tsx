@@ -3,6 +3,7 @@ import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { AacTitleAccent } from "@/components/layout/AacTitleAccent";
 
 const Dialog = DialogPrimitive.Root;
 
@@ -68,12 +69,17 @@ DialogFooter.displayName = "DialogFooter";
 const DialogTitle = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Title>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title>
->(({ className, ...props }, ref) => (
-  <DialogPrimitive.Title
-    ref={ref}
-    className={cn("text-lg font-semibold leading-none tracking-tight", className)}
-    {...props}
-  />
+>(({ className, children, ...props }, ref) => (
+  <div className="space-y-1">
+    <DialogPrimitive.Title
+      ref={ref}
+      className={cn("text-lg font-semibold leading-none tracking-tight", className)}
+      {...props}
+    >
+      {children}
+    </DialogPrimitive.Title>
+    <AacTitleAccent />
+  </div>
 ));
 DialogTitle.displayName = DialogPrimitive.Title.displayName;
 

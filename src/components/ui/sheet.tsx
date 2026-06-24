@@ -4,6 +4,7 @@ import { X } from "lucide-react";
 import * as React from "react";
 
 import { cn } from "@/lib/utils";
+import { AacTitleAccent } from "@/components/layout/AacTitleAccent";
 
 const Sheet = SheetPrimitive.Root;
 
@@ -80,8 +81,13 @@ SheetFooter.displayName = "SheetFooter";
 const SheetTitle = React.forwardRef<
   React.ElementRef<typeof SheetPrimitive.Title>,
   React.ComponentPropsWithoutRef<typeof SheetPrimitive.Title>
->(({ className, ...props }, ref) => (
-  <SheetPrimitive.Title ref={ref} className={cn("text-lg font-semibold text-foreground", className)} {...props} />
+>(({ className, children, ...props }, ref) => (
+  <div className="space-y-1">
+    <SheetPrimitive.Title ref={ref} className={cn("text-lg font-semibold text-foreground", className)} {...props}>
+      {children}
+    </SheetPrimitive.Title>
+    <AacTitleAccent />
+  </div>
 ));
 SheetTitle.displayName = SheetPrimitive.Title.displayName;
 

@@ -25,6 +25,10 @@ export const agentPageTitleClass =
 export const agentPageSubtitleClass =
   "text-sm leading-snug text-neutral-500";
 
+/** Emerald accent bar under page / modal titles (AAC signature). */
+export const aacTitleAccentBarClass =
+  "h-0.5 w-10 rounded-full bg-emerald-600/75";
+
 /**
  * AAC page vertical rhythm — shell vs intro (see `AgentContentInsetProvider` in AppShell).
  *

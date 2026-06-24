@@ -652,7 +652,6 @@ const MyClients = () => {
           <AgentPageHeader
             withTopPadding
             title="My Contacts"
-            titleAccent="underline"
             subtitle={MY_CONTACTS_SUBTITLE}
           />
           <div className="mb-5 flex flex-wrap gap-2">
@@ -695,7 +694,6 @@ const MyClients = () => {
           <AgentPageHeader
             withTopPadding
             title="My Contacts"
-            titleAccent="underline"
             subtitle={MY_CONTACTS_SUBTITLE}
           />
           <AgentSectionCard className="border border-neutral-200 p-8 shadow-sm">
@@ -731,7 +729,6 @@ const MyClients = () => {
         <AgentPageHeader
           withTopPadding
           title="My Contacts"
-          titleAccent="underline"
           subtitle={MY_CONTACTS_SUBTITLE}
         />
 
@@ -766,7 +763,7 @@ const MyClients = () => {
                   <DialogDescription className="text-sm text-zinc-500">
                     {editingClient
                       ? "Update contact information"
-                      : "Add contacts as you go, or upload a list anytime. Share listings, market updates, and hot sheets—all from one place."}
+                      : "Add contacts as you go, or upload a list anytime. Share listings, market updates, and Hot Sheets—all from one place."}
                   </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-6 py-5 space-y-4">

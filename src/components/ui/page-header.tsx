@@ -4,6 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { aacBackLinkClass } from "@/components/layout/AacBackLink";
 import { AacPageIntro } from "@/components/layout/AacPageIntro";
+import { AacTitleAccent } from "@/components/layout/AacTitleAccent";
 import {
   agentPageIntroSpacingClass,
   agentPageSubtitleClass,
@@ -93,6 +94,7 @@ export function PageHeader({
             {icon}
             {title}
           </h1>
+          <AacTitleAccent />
           {subtitle ? (
             <p className={cn(agentPageSubtitleClass, subtitleClassName)}>{subtitle}</p>
           ) : null}
