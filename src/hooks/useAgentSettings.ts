@@ -47,18 +47,21 @@ export const useAgentSettings = (user: User | null) => {
   const [settings, setSettings] = useState<AgentSettings | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const userId = user?.id ?? null;
+
   const fetchSettings = useCallback(async () => {
-    if (!user) {
+    if (!userId) {
       setSettings(null);
       setLoading(false);
       return;
     }
 
+    setLoading(true);
     try {
       const { data, error } = await supabase
         .from("agent_settings")
         .select("*")
-        .eq("user_id", user.id)
+        .eq("user_id", userId)
         .maybeSingle();
 
       if (error) throw error;
@@ -67,7 +70,7 @@ export const useAgentSettings = (user: User | null) => {
         setSettings(data as AgentSettings);
       } else {
         // Create default settings for new user
-        const newSettings = { user_id: user.id, ...defaultSettings };
+        const newSettings = { user_id: userId, ...defaultSettings };
         const { data: inserted, error: insertError } = await supabase
           .from("agent_settings")
           .insert(newSettings)
@@ -82,7 +85,7 @@ export const useAgentSettings = (user: User | null) => {
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [userId]);
 
   useEffect(() => {
     fetchSettings();
@@ -120,14 +123,14 @@ export const useAgentSettings = (user: User | null) => {
   const completeTour = () => updateSettings({ tour_completed: true });
 
   // Check if profile is complete (using agent_profiles table)
-  const checkProfileComplete = async (): Promise<boolean> => {
-    if (!user) return false;
-    
+  const checkProfileComplete = useCallback(async (): Promise<boolean> => {
+    if (!userId) return false;
+
     try {
       const { data, error } = await supabase
         .from("agent_profiles")
         .select("first_name, last_name, company, phone, email")
-        .eq("id", user.id)
+        .eq("id", userId)
         .maybeSingle();
 
       if (error) throw error;
@@ -143,7 +146,7 @@ export const useAgentSettings = (user: User | null) => {
       console.error("Error checking profile complete:", error);
       return false;
     }
-  };
+  }, [userId]);
 
   return {
     settings,

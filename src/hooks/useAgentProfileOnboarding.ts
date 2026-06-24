@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import { AGENT_PROFILE_ONBOARDING_SESSION_KEY } from "@/components/success-hub/AgentProfileOnboardingOverlay";
 import { useAgentSettings } from "@/hooks/useAgentSettings";
 
-export function useAgentProfileOnboarding(user: User | null, isVerifiedAgent: boolean) {
+export function useAgentProfileOnboarding(user: User | null) {
+  const userId = user?.id ?? null;
   const {
     settings,
     loading: settingsLoading,
@@ -11,54 +12,48 @@ export function useAgentProfileOnboarding(user: User | null, isVerifiedAgent: bo
     checkProfileComplete,
   } = useAgentSettings(user);
 
-  const [profileComplete, setProfileComplete] = useState<boolean | null>(null);
-  const [checkingProfile, setCheckingProfile] = useState(false);
+  const [visible, setVisible] = useState(false);
   const [sessionDismissed, setSessionDismissed] = useState(
     () => sessionStorage.getItem(AGENT_PROFILE_ONBOARDING_SESSION_KEY) === "1",
   );
-  const [visible, setVisible] = useState(false);
+  const evaluationRef = useRef(0);
 
-  const evaluateProfile = useCallback(async () => {
-    if (!user || !isVerifiedAgent) {
-      setProfileComplete(null);
-      setVisible(false);
-      return;
-    }
+  useEffect(() => {
+    let cancelled = false;
+    const evaluationId = ++evaluationRef.current;
 
-    setCheckingProfile(true);
-    try {
+    const evaluate = async () => {
+      if (!userId || sessionDismissed) {
+        if (!cancelled) setVisible(false);
+        return;
+      }
+
+      if (settingsLoading) {
+        return;
+      }
+
+      if (settings?.welcome_modal_dismissed) {
+        if (!cancelled) setVisible(false);
+        return;
+      }
+
       const complete = await checkProfileComplete();
-      setProfileComplete(complete);
-    } finally {
-      setCheckingProfile(false);
-    }
-  }, [user, isVerifiedAgent, checkProfileComplete]);
+      if (cancelled || evaluationId !== evaluationRef.current) return;
 
-  useEffect(() => {
-    void evaluateProfile();
-  }, [evaluateProfile]);
+      setVisible(!complete);
+    };
 
-  useEffect(() => {
-    if (!user || !isVerifiedAgent || settingsLoading || checkingProfile) {
-      setVisible(false);
-      return;
-    }
+    void evaluate();
 
-    if (profileComplete === null) return;
-
-    const permanentlyDismissed = settings?.welcome_modal_dismissed === true;
-    const shouldShow =
-      !profileComplete && !permanentlyDismissed && !sessionDismissed;
-
-    setVisible(shouldShow);
+    return () => {
+      cancelled = true;
+    };
   }, [
-    user,
-    isVerifiedAgent,
-    settingsLoading,
-    checkingProfile,
-    profileComplete,
-    settings?.welcome_modal_dismissed,
+    userId,
     sessionDismissed,
+    settingsLoading,
+    settings?.welcome_modal_dismissed,
+    checkProfileComplete,
   ]);
 
   const dismissForSession = useCallback(() => {
@@ -85,6 +80,5 @@ export function useAgentProfileOnboarding(user: User | null, isVerifiedAgent: bo
     visible,
     handleLater,
     handleCompleteProfile,
-    refetchProfileStatus: evaluateProfile,
   };
 }

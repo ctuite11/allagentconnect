@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { BadgeCheck, ShieldCheck, TrendingUp, UserCheck, Users } from "lucide-react";
 import AACMonogram from "@/components/ui/AACMonogram";
@@ -54,9 +55,9 @@ export function AgentProfileOnboardingOverlay({
     onLater(dontShowAgain);
   };
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-[100] overflow-y-auto bg-white"
+      className="fixed inset-0 z-[200] overflow-y-auto bg-white"
       role="dialog"
       aria-modal="true"
       aria-labelledby="agent-profile-onboarding-title"
@@ -149,6 +150,7 @@ export function AgentProfileOnboardingOverlay({
           </div>
         </div>
       </main>
-    </div>
+    </div>,
+    document.body,
   );
 }
