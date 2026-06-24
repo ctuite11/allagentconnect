@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { enqueueBuyerWorkspaceInvite } from "@/lib/enqueueBuyerWorkspaceInvite";
+import { showInviteEmailSentToast } from "@/lib/inviteEmailSentFeedback";
 import { toast } from "sonner";
 import { Loader2, Mail, ArrowRight } from "lucide-react";
 
@@ -139,9 +140,7 @@ export function ReviewBuyerInviteDialog({
         );
       });
 
-      toast.success(
-        `Invite email queued for ${fullName}. They should receive it shortly (check spam if needed).`,
-      );
+      showInviteEmailSentToast();
       onSent?.();
       onClose();
     } catch (err: any) {

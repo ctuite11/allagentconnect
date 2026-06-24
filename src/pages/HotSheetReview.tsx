@@ -49,6 +49,7 @@ import {
 } from "@/lib/listingConversationThread";
 import { fetchActiveRelationshipsForCrmClients } from "@/lib/resolveHotSheetReviewConversationBuyer";
 import { enqueueBuyerWorkspaceInvite } from "@/lib/enqueueBuyerWorkspaceInvite";
+import { showInviteEmailSentToast } from "@/lib/inviteEmailSentFeedback";
 
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
 import type { ListedByAgentProfile } from "@/lib/listingListedBy";
@@ -1156,18 +1157,14 @@ const HotSheetReview = () => {
       if (failures.length > 0) {
         console.error("[handleSendInvites] Partial failures:", failures.map((f) => f.error));
         toast.error(
-          `Queued ${succeeded}, failed ${failures.length}. Check console for details.`
+          `Sent ${succeeded}, failed ${failures.length}. Check console for details.`,
         );
         // Don't set invitesSent if any failed — let agent retry
         return;
       }
 
       setInvitesSent(true);
-      toast.success(
-        `Invites queued (${succeeded} client${succeeded !== 1 ? "s" : ""}` +
-          (resendCount > 0 ? ` — ${resendCount} resend${resendCount !== 1 ? "s" : ""}` : "") +
-          ")",
-      );
+      showInviteEmailSentToast();
       void supabase.functions.invoke("kick-email-queue").catch((e) => {
         console.warn(
           "[HotSheetReview] kick-email-queue failed — emails stay in queue until worker runs",
@@ -1667,7 +1664,7 @@ const HotSheetReview = () => {
                   });
                   setInviteBuyerSending(false);
                   if (res.ok) {
-                    toast.success(`Invite sent to ${inviteBuyerTarget.email}`);
+                    showInviteEmailSentToast();
                     setInviteBuyerDialogOpen(false);
                     setInviteBuyerTarget(null);
                   } else {

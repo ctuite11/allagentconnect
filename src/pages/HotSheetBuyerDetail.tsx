@@ -9,6 +9,7 @@ import { buildListingsQuery } from "@/lib/buildListingsQuery";
 import { EditHotsheetCriteriaDialog } from "@/components/EditHotsheetCriteriaDialog";
 import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
 import { toast } from "sonner";
+import { showInviteEmailSentToast } from "@/lib/inviteEmailSentFeedback";
 import { buyerSectionCard } from "@/lib/buyerUi";
 import { BuyerHotSheetPreviewCard } from "@/components/buyer/BuyerHotSheetPreviewCard";
 import {
@@ -274,7 +275,7 @@ const HotSheetBuyerDetail = () => {
         actor_user_id: user.id,
       }).then(() => {});
 
-      toast.success(`Invite resent to ${buyer.email}.`);
+      showInviteEmailSentToast();
     } catch (e: any) {
       console.error("[ResendInvite] error", e);
       toast.error(e?.message ?? "Resend failed.");

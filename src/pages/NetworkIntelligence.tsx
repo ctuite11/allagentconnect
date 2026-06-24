@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { showInviteEmailSentToast } from "@/lib/inviteEmailSentFeedback";
 import {
   TrendingUp,
   RefreshCcw,
@@ -248,7 +249,7 @@ export default function NetworkIntelligence() {
       });
 
       if (fnErr) throw fnErr;
-      toast.success(`Invite resent to ${email}`);
+      showInviteEmailSentToast();
     } catch (err: any) {
       toast.error(err.message ?? "Failed to resend invite");
     } finally {

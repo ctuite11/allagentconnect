@@ -11,6 +11,7 @@ import { AgentBuyerActivityHeaderCard } from "@/components/agent/AgentBuyerActiv
 import { BuyerRowStatusPill } from "@/components/agent/BuyerRowStatusPill";
 import { supabase } from "@/integrations/supabase/client";
 import { enqueueBuyerWorkspaceInvite } from "@/lib/enqueueBuyerWorkspaceInvite";
+import { showInviteEmailSentToast } from "@/lib/inviteEmailSentFeedback";
 import { toast } from "sonner";
 import { CreateBuyerDialog } from "@/components/CreateBuyerDialog";
 import { BuyerCreatedNextStepDialog, type CreatedBuyer } from "@/components/success-hub/BuyerCreatedNextStepDialog";
@@ -608,7 +609,7 @@ function BuyerCard({
       }
 
       void supabase.functions.invoke("kick-email-queue", { body: {} });
-      toast.success(`Invite resent to ${buyer.email}`);
+      showInviteEmailSentToast();
     } catch (err: any) {
       toast.error(err?.message || "Failed to resend invite");
     } finally {
