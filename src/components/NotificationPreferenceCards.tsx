@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Send, Users, TrendingUp, Home, MessageSquare } from "lucide-react";
 import { SendMessageDialog } from "./SendMessageDialog";
+import { CommunicationPreferencesPrompt } from "@/components/communication-center/CommunicationPreferencesPrompt";
+import { useCommunicationComposeGate } from "@/hooks/useCommunicationComposeGate";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
@@ -21,6 +23,7 @@ interface NotificationPreferences {
 }
 
 export const NotificationPreferenceCards = () => {
+  const { requestCompose, promptOpen, checking, closePrompt } = useCommunicationComposeGate();
   const [preferences, setPreferences] = useState<NotificationPreferences>({
     buyer_need: false,
     sales_intel: false,
@@ -177,6 +180,10 @@ export const NotificationPreferenceCards = () => {
 
   const anyEnabled = Object.values(preferences).some(v => v);
 
+  const openCompose = (category: keyof NotificationPreferences, title: string) => {
+    requestCompose(() => setOpenDialog({ open: true, category, title }));
+  };
+
   return (
     <>
       <div>
@@ -187,7 +194,7 @@ export const NotificationPreferenceCards = () => {
               <div
                 key={card.key}
                 className={channelCard}
-                onClick={() => setOpenDialog({ open: true, category: card.key, title: card.title })}
+                onClick={() => openCompose(card.key, card.title)}
               >
                 {/* Top row: Icon + Title + Description */}
                 <div className="flex items-start gap-3 [&_svg]:!text-[#16A34A]">
@@ -205,7 +212,7 @@ export const NotificationPreferenceCards = () => {
                     className={channelSendClassName}
                     onClick={(e) => {
                       e.stopPropagation();
-                      setOpenDialog({ open: true, category: card.key, title: card.title });
+                      openCompose(card.key, card.title);
                     }}
                   >
                     <span className="flex items-center gap-1.5">
@@ -253,6 +260,12 @@ export const NotificationPreferenceCards = () => {
         )}
       </div>
 
+      {checking ? (
+        <div className="sr-only" aria-live="polite">
+          Checking communication preferences…
+        </div>
+      ) : null}
+
       {openDialog.category && (
         <SendMessageDialog
           open={openDialog.open}
@@ -262,6 +275,8 @@ export const NotificationPreferenceCards = () => {
           defaultSubject={openDialog.title}
         />
       )}
+
+      <CommunicationPreferencesPrompt open={promptOpen} onClose={closePrompt} />
     </>
   );
 };

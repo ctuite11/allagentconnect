@@ -207,6 +207,7 @@ const ClientNeedsDashboard = () => {
 
       toast.success("Preferences saved successfully");
       setHasUnsavedChanges(false);
+      await supabase.from("agent_settings").update({ preferences_set: true }).eq("user_id", user.id);
       await checkPreferences();
     } catch (error) {
       console.error("Error saving preferences:", error);
@@ -245,6 +246,7 @@ const ClientNeedsDashboard = () => {
           .from("agent_buyer_coverage_areas")
           .select("id")
           .eq("agent_id", user.id)
+          .eq("source", "notifications")
           .limit(1);
 
         if (geoError) {

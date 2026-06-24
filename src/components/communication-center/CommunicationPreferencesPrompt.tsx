@@ -1,6 +1,6 @@
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
-import { Radio, ShieldCheck, SlidersHorizontal } from "lucide-react";
+import { Radio, ShieldCheck } from "lucide-react";
 import AACMonogram from "@/components/ui/AACMonogram";
 import { Button } from "@/components/ui/button";
 import { ROUTES } from "@/constants/routes";
@@ -22,23 +22,18 @@ function OnboardingBrand() {
   );
 }
 
-type NetworkActivityPreferencesPromptProps = {
+type CommunicationPreferencesPromptProps = {
   open: boolean;
-  onSetPreferences: () => void;
-  onContinueWithoutPreferences: () => void;
+  onClose: () => void;
 };
 
-export function NetworkActivityPreferencesPrompt({
-  open,
-  onSetPreferences,
-  onContinueWithoutPreferences,
-}: NetworkActivityPreferencesPromptProps) {
+export function CommunicationPreferencesPrompt({ open, onClose }: CommunicationPreferencesPromptProps) {
   const navigate = useNavigate();
 
   if (!open) return null;
 
-  const handleSetPreferences = () => {
-    onSetPreferences();
+  const handleGoToCommunicationsCenter = () => {
+    onClose();
     navigate(ROUTES.COMMUNICATIONS, { state: { scrollToPreferences: true } });
   };
 
@@ -47,7 +42,7 @@ export function NetworkActivityPreferencesPrompt({
       className="fixed inset-0 z-[200] flex items-center justify-center overflow-y-auto bg-black/45 p-4 backdrop-blur-[2px] sm:p-6"
       role="dialog"
       aria-modal="true"
-      aria-labelledby="network-activity-preferences-title"
+      aria-labelledby="communication-preferences-prompt-title"
     >
       <div className="my-auto w-full max-w-lg overflow-hidden rounded-2xl border border-zinc-200/90 bg-white shadow-[0_24px_80px_rgba(15,23,42,0.18)]">
         <div className="flex items-center justify-between border-b border-zinc-100 px-5 py-3.5 sm:px-6">
@@ -65,19 +60,14 @@ export function NetworkActivityPreferencesPrompt({
             </span>
             <div className="min-w-0 space-y-2.5">
               <h1
-                id="network-activity-preferences-title"
+                id="communication-preferences-prompt-title"
                 className="text-xl font-semibold leading-snug tracking-tight text-zinc-900 sm:text-[1.35rem]"
               >
-                Target the Right Agents
+                Target the right agents and streamline your inbox
               </h1>
               <p className="text-[13px] leading-relaxed text-zinc-600 sm:text-sm">
-                Before creating network activity, set your communication preferences so your posts,
-                referrals, buyer needs, and listing opportunities reach the agents most likely to
-                care.
-              </p>
-              <p className="flex items-start gap-2 text-[12px] leading-relaxed text-zinc-500">
-                <SlidersHorizontal className="mt-0.5 h-3.5 w-3.5 shrink-0 text-zinc-400" aria-hidden />
-                <span>You can manage these anytime in the Communications Center.</span>
+                Set your Communications Center preferences to send updates to the right agents and
+                receive only the notifications that matter most to you.
               </p>
             </div>
           </div>
@@ -85,18 +75,18 @@ export function NetworkActivityPreferencesPrompt({
           <div className="space-y-2.5 border-t border-zinc-100 pt-5">
             <Button
               type="button"
-              onClick={handleSetPreferences}
+              onClick={handleGoToCommunicationsCenter}
               className={cn("h-10 w-full rounded-xl text-[13px]", AGENT_PRIMARY_BTN_CLASS)}
             >
-              Set Preferences in Comms Center
+              Go to Communications Center
             </Button>
             <Button
               type="button"
               variant="outline"
-              onClick={onContinueWithoutPreferences}
+              onClick={onClose}
               className="h-10 w-full rounded-xl border-zinc-200 bg-white text-[13px] text-zinc-700 hover:bg-zinc-50"
             >
-              Continue Without Preferences
+              Cancel
             </Button>
           </div>
         </div>
