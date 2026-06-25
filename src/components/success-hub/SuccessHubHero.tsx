@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { AgentAvatar } from "@/components/ui/AgentAvatar";
+import { AacTitleAccent } from "@/components/layout/AacTitleAccent";
 import { Home, MessageSquare, UserPlus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "@/constants/routes";
@@ -26,6 +27,7 @@ export function SuccessHubHero({ summary }: SuccessHubHeroProps) {
             <h1 className="text-lg font-semibold tracking-tight text-neutral-900 sm:text-xl">
               Success Hub
             </h1>
+            <AacTitleAccent />
             <p className="text-[13px] font-medium text-neutral-600">
               Hi, {displayFirst}
             </p>
