@@ -48,9 +48,45 @@ interface EnrichedAgent {
 
 const PAGE_SIZE = 24;
 
-function hasUsableAgentName(agent: { first_name?: string | null; last_name?: string | null }): boolean {
-  return Boolean(agent.first_name?.trim() && agent.last_name?.trim());
+function normalizeAgentNamePart(value?: string | null): string {
+  return (value ?? "").replace(/[\u200B-\u200D\uFEFF]/g, "").trim();
 }
+
+function hasUsableAgentName(agent: { first_name?: string | null; last_name?: string | null }): boolean {
+  return Boolean(
+    normalizeAgentNamePart(agent.first_name) && normalizeAgentNamePart(agent.last_name),
+  );
+}
+
+function hasUsableHeadshot(agent: { headshot_url?: string | null }): boolean {
+  return Boolean(agent.headshot_url?.trim());
+}
+
+function isVisibleInAgentNetwork(agent: {
+  first_name?: string | null;
+  last_name?: string | null;
+  headshot_url?: string | null;
+}): boolean {
+  return hasUsableAgentName(agent) && hasUsableHeadshot(agent);
+}
+
+const AGENT_NETWORK_DB_FILTERS = <
+  T extends {
+    not: (column: string, operator: string, value: string) => T;
+    neq: (column: string, value: string) => T;
+  },
+>(
+  query: T,
+): T =>
+  query
+    .not("first_name", "is", null)
+    .not("last_name", "is", null)
+    .neq("first_name", "")
+    .neq("last_name", "")
+    .not("first_name", "match", "^[[:space:]]*$")
+    .not("last_name", "match", "^[[:space:]]*$")
+    .not("headshot_url", "is", null)
+    .neq("headshot_url", "");
 
 interface County {
   id: string;
@@ -137,44 +173,77 @@ const OurAgents = ({
         return;
       }
 
-      // Step 2: Fetch only verified agents using .in() filter
-      const { data: agentData, count, error: agentError } = await supabase
-        .from("agent_profiles")
-        .select(`
+      // Step 2a: Resolve visible verified agents (name + headshot), then paginate in-memory
+      // so trim rules match the grid and totalCount stays accurate.
+      const { data: nameRows, error: nameError } = await AGENT_NETWORK_DB_FILTERS(
+        supabase
+          .from("agent_profiles")
+          .select("id, first_name, last_name, headshot_url")
+          .in("id", verifiedIds),
+      );
+
+      if (nameError) throw nameError;
+
+      const visibleAgentRows = (nameRows || [])
+        .filter((agent) => verifiedIds.includes(agent.id))
+        .filter(isVisibleInAgentNetwork)
+        .sort((a, b) => {
+          const byLast = (a.last_name || "").localeCompare(b.last_name || "");
+          return byLast !== 0 ? byLast : (a.first_name || "").localeCompare(b.first_name || "");
+        });
+
+      setTotalCount(visibleAgentRows.length);
+
+      const pageAgentIds = visibleAgentRows.slice(from, to + 1).map((agent) => agent.id);
+
+      const countiesPromise = supabase
+        .from("counties")
+        .select("*")
+        .order("state", { ascending: true })
+        .order("name", { ascending: true });
+
+      if (pageAgentIds.length === 0) {
+        const { data: countyData, error: countyError } = await countiesPromise;
+        if (countyError) throw countyError;
+        setAgents([]);
+        setCounties(countyData || []);
+        setLoading(false);
+        return;
+      }
+
+      // Step 2b: Fetch full profile rows for the current page only
+      const { data: agentData, error: agentError } = await AGENT_NETWORK_DB_FILTERS(
+        supabase
+          .from("agent_profiles")
+          .select(`
           id, aac_id, first_name, last_name, company, office_name, team_name, cell_phone, phone, email, headshot_url, buyer_incentives, updated_at, title,
           agent_county_preferences(
             county_id,
             counties(name, state)
           ),
           agent_buyer_coverage_areas(city, state, county)
-        `, { count: "exact" })
-        .in("id", verifiedIds)
-        .not("first_name", "is", null)
-        .not("last_name", "is", null)
-        .neq("first_name", "")
-        .neq("last_name", "")
-        .order("last_name", { ascending: true })
-        .range(from, to);
+        `)
+          .in("id", pageAgentIds),
+      );
 
       if (agentError) throw agentError;
-      
-      setTotalCount(count || 0);
+
+      const agentById = new Map((agentData || []).map((agent) => [agent.id, agent]));
+      const orderedAgentData = pageAgentIds
+        .map((id) => agentById.get(id))
+        .filter((agent): agent is NonNullable<typeof agent> => Boolean(agent));
 
       // Fetch listings for all agents to get counts
-      const { data: listingsData, error: listingsError } = await supabase
-        .from("listings")
-        .select("agent_id, status, property_type, created_at")
-        .in("status", ["active", "coming_soon", "off_market", "sold"]);
+      const [{ data: listingsData, error: listingsError }, { data: countyData, error: countyError }] =
+        await Promise.all([
+          supabase
+            .from("listings")
+            .select("agent_id, status, property_type, created_at")
+            .in("status", ["active", "coming_soon", "off_market", "sold"]),
+          countiesPromise,
+        ]);
 
       if (listingsError) throw listingsError;
-
-      // Fetch counties for filter
-      const { data: countyData, error: countyError } = await supabase
-        .from("counties")
-        .select("*")
-        .order("state", { ascending: true })
-        .order("name", { ascending: true });
-
       if (countyError) throw countyError;
 
       // Calculate 12 months ago
@@ -182,10 +251,8 @@ const OurAgents = ({
       twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 12);
 
       // Enrich agent data with listing counts and derived data
-      // UI backstop: verified IDs + usable first/last name (defensive after DB filters)
-      const enrichedAgents: EnrichedAgent[] = (agentData || [])
-        .filter((agent: any) => verifiedIds.includes(agent.id))
-        .filter(hasUsableAgentName)
+      const enrichedAgents: EnrichedAgent[] = orderedAgentData
+        .filter(isVisibleInAgentNetwork)
         .map((agent: any) => {
         const agentListings = (listingsData || []).filter(l => l.agent_id === agent.id);
         
@@ -308,7 +375,7 @@ function AgentPhotoTileGrid({
 
   // Filter and sort agents
   const filteredAgents = useMemo(() => {
-    let result = [...agents];
+    let result = agents.filter(isVisibleInAgentNetwork);
 
     // Unified text search - searches name, company, email, office, and service areas
     if (searchQuery) {
