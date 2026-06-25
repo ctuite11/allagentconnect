@@ -16,7 +16,7 @@ export const ADD_LISTING_STATUS_INTRO = {
     {
       label: "Off Market",
       description:
-        "Private listing visible inside All Agent Connect only. Status changes manually when you're ready.",
+        "A listing with no On MLS date. Can be published on Direct Connect MLS. Status is updated by the agent only.",
     },
     {
       label: "Coming Soon",
