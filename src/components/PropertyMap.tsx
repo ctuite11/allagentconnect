@@ -466,6 +466,16 @@ const PropertyMap = ({
             map.setCenter(fallbackCenter);
             map.setZoom(fallbackZoom ?? 10);
             lastListingsKeyRef.current = listingsKey;
+          } else if (
+            markerCount === 0 &&
+            !fallbackCenter &&
+            lastListingsKeyRef.current !== listingsKey
+          ) {
+            // Safety net: when no listings have coordinates and no fallback was provided,
+            // paint tiles centered on the continental US so the panel never renders blank.
+            map.setCenter({ lat: 39.5, lng: -98.35 });
+            map.setZoom(4);
+            lastListingsKeyRef.current = listingsKey;
           }
 
           applyMarkerStyles(googleMaps);
