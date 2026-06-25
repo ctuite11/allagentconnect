@@ -1,6 +1,7 @@
 /// <reference lib="deno.ns" />
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { verifyTurnstileToken, TURNSTILE_GENERIC_ERROR } from "../_shared/verifyTurnstile.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -27,6 +28,7 @@ type RequestBody = {
   password?: string;
   /** When true, user must already exist and password is verified (not overwritten). */
   existingAccount?: boolean;
+  turnstile_token?: string;
 };
 
 function json(body: unknown, status = 200) {
@@ -187,6 +189,12 @@ serve(async (req) => {
     body = await req.json();
   } catch {
     return json({ success: false, error: "Invalid JSON" }, 400);
+  }
+
+  // Server-side Cloudflare Turnstile verification — blocks direct API abuse.
+  const turnstileResult = await verifyTurnstileToken(body.turnstile_token, req);
+  if (!turnstileResult.ok) {
+    return json({ success: false, error: TURNSTILE_GENERIC_ERROR }, 403);
   }
 
   const token = body.token?.trim();
