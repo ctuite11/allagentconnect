@@ -9,6 +9,8 @@ import { FormattedInput } from "@/components/ui/formatted-input";
 import { toast } from "sonner";
 import { User } from "@supabase/supabase-js";
 import { z } from "zod";
+import { TurnstileField } from "@/components/security/TurnstileField";
+import { useTurnstile } from "@/hooks/useTurnstile";
 
 const signUpSchema = z.object({
   email: z.string().trim().email("Invalid email address").max(255, "Email must be less than 255 characters"),
@@ -43,6 +45,8 @@ const BuyerAuth = () => {
     lastName: "",
     phone: "",
   });
+  const showSignupTurnstile = !isLogin && !isForgotPassword && !isResettingPassword;
+  const turnstile = useTurnstile("buyer_register", showSignupTurnstile);
 
   useEffect(() => {
     let mounted = true;
@@ -139,8 +143,11 @@ const BuyerAuth = () => {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    const turnstileToken = turnstile.requireToken();
+    if (!turnstileToken) return;
 
+    setLoading(true);
+    let succeeded = false;
     try {
       const validatedData = signUpSchema.parse(formData);
 
@@ -149,6 +156,10 @@ const BuyerAuth = () => {
         password: validatedData.password,
         options: {
           emailRedirectTo: `${window.location.origin}/`,
+          data: {
+            intended_role: "buyer",
+            turnstile_token: turnstileToken,
+          },
         },
       });
 
@@ -186,6 +197,7 @@ const BuyerAuth = () => {
         if (roleError) throw roleError;
 
         toast.success("Account created successfully!");
+        succeeded = true;
       }
     } catch (error: any) {
       if (error instanceof z.ZodError) {
@@ -194,6 +206,7 @@ const BuyerAuth = () => {
         toast.error(error.message);
       }
     } finally {
+      if (!succeeded) turnstile.reset();
       setLoading(false);
     }
   };
@@ -444,7 +457,15 @@ const BuyerAuth = () => {
               </div>
             )}
 
-            <Button type="submit" className="w-full" disabled={loading}>
+            {showSignupTurnstile && (
+              <TurnstileField containerRef={turnstile.containerRef} error={turnstile.error} />
+            )}
+
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={loading || (showSignupTurnstile && !turnstile.isVerified)}
+            >
               {loading 
                 ? "Processing..." 
                 : isResettingPassword 
@@ -492,7 +513,10 @@ const BuyerAuth = () => {
               <>
                 <button
                   type="button"
-                  onClick={() => setIsLogin(!isLogin)}
+                  onClick={() => {
+                    turnstile.reset();
+                    setIsLogin(!isLogin);
+                  }}
                   className="text-primary hover:underline text-sm block w-full"
                 >
                   {isLogin

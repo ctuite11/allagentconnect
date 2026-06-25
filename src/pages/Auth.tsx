@@ -18,6 +18,8 @@ import { resolveUserRole, getRouteForRole } from "@/lib/resolveUserRole";
 import { hasRole } from "@/lib/auth/roles";
 import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 import { validateAgentSignup } from "@/lib/agentSignupValidation";
+import { TurnstileField } from "@/components/security/TurnstileField";
+import { useTurnstile } from "@/hooks/useTurnstile";
 
 /** Premium white card — email-template aligned (soft border, subtle shadow). */
 const authCardSurface =
@@ -105,6 +107,7 @@ const Auth = () => {
   const isRegistering = useRef(false);
   const cancelledRef = useRef(false);
   const abortRef = useRef<AbortController | null>(null);
+  const turnstile = useTurnstile("agent_register", mode === "register");
 
   // Computed mismatch detection with normalized emails
   const normalizedSessionEmail = (sessionEmail || "").trim().toLowerCase();
@@ -394,6 +397,7 @@ const Auth = () => {
     setLoading(true);
     setRegisterStep("creating_account");
     isRegistering.current = true;
+    let registrationSucceeded = false;
 
     // Helper to check if cancelled before proceeding
     const checkCancelled = (): boolean => {
@@ -445,6 +449,9 @@ const Auth = () => {
         return;
       }
 
+      const turnstileToken = turnstile.requireToken();
+      if (!turnstileToken) return;
+
       // Server-side mirror — blocks direct-API bypass.
       try {
         const { data: validateData, error: validateError } = await withTimeout(
@@ -456,6 +463,7 @@ const Auth = () => {
               phone: phone.trim() || null,
               licenseState,
               licenseNumber: licenseNumber.trim(),
+              turnstile_token: turnstileToken,
             },
           }),
           15000,
@@ -484,6 +492,7 @@ const Auth = () => {
           options: {
             data: {
               intended_role: 'agent',
+              turnstile_token: turnstileToken,
             },
           },
         }),
@@ -718,6 +727,7 @@ const Auth = () => {
       // Guard against late navigation after cancel
       if (!cancelledRef.current && !didNavigate.current) {
         didNavigate.current = true;
+        registrationSucceeded = true;
         navigate('/pending-verification', { replace: true });
       }
 
@@ -739,6 +749,9 @@ const Auth = () => {
       }
     } finally {
       // ALWAYS reset state - this guarantees we never get stuck
+      if (!registrationSucceeded) {
+        turnstile.reset();
+      }
       isRegistering.current = false;
       abortRef.current = null;
       setLoading(false);
@@ -804,6 +817,7 @@ const Auth = () => {
       setPhone("");
       setLicenseState("");
       setLicenseNumber("");
+      turnstile.reset();
     }
   };
 
@@ -1194,10 +1208,25 @@ const Auth = () => {
                 </div>
               )}
 
+              {mode === "register" && (
+                <TurnstileField
+                  containerRef={turnstile.containerRef}
+                  error={turnstile.error}
+                />
+              )}
+
               <Button 
                 type="submit" 
                 className="w-full h-11 bg-aac hover:bg-aac-hover active:bg-aac-active text-white font-medium rounded-xl focus-visible:ring-2 focus-visible:ring-aac-ring no-touch-hover" 
-                disabled={loading || (mode === "register" && (!allPasswordRulesPass || !passwordsMatch || !licenseState || !licenseNumber.trim()))}
+                disabled={
+                  loading ||
+                  (mode === "register" &&
+                    (!allPasswordRulesPass ||
+                      !passwordsMatch ||
+                      !licenseState ||
+                      !licenseNumber.trim() ||
+                      !turnstile.isVerified))
+                }
               >
                 {loading ? (
                   <>

@@ -7,6 +7,7 @@ export type AcceptClientHotSheetInviteInput = {
   lastName: string;
   password: string;
   existingAccount?: boolean;
+  turnstileToken?: string;
 };
 
 export type AcceptClientHotSheetInviteResult =
@@ -34,6 +35,7 @@ export async function acceptClientHotSheetInvite(
       lastName: input.lastName.trim(),
       password: input.password,
       existingAccount: input.existingAccount === true,
+      turnstile_token: input.turnstileToken,
     },
   });
 

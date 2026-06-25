@@ -29,6 +29,8 @@ import {
   Dialog,
   DialogContent,
 } from "@/components/ui/dialog";
+import { TurnstileField } from "@/components/security/TurnstileField";
+import { useTurnstile } from "@/hooks/useTurnstile";
 
 const US_STATES = [
   { value: "AL", label: "Alabama" },
@@ -115,6 +117,7 @@ const Register = () => {
   const [isDuplicate, setIsDuplicate] = useState(false);
   const [showInviteDialog, setShowInviteDialog] = useState(false);
   const [showVideoModal, setShowVideoModal] = useState(false);
+  const turnstile = useTurnstile("agent_early_access");
   
   // Auto-open video modal if autoplay=1 (for listing traffic only)
   useEffect(() => {
@@ -168,12 +171,16 @@ const Register = () => {
   };
 
   const onSubmit = async (data: FormData) => {
+    const turnstileToken = turnstile.requireToken();
+    if (!turnstileToken) return;
+
     // GA4 conversion event - fires immediately on submit intent
     window.gtag?.('event', 'agent_signup_start', {
       source: 'early_access_form'
     });
     
     setIsSubmitting(true);
+    let succeeded = false;
     try {
       const { data: response, error } = await supabase.functions.invoke(
         "submit-early-access",
@@ -186,6 +193,7 @@ const Register = () => {
             brokerage: data.brokerage,
             state: data.state,
             license_number: data.license_number,
+            turnstile_token: turnstileToken,
             // Listing attribution
             listing_id: listingId || undefined,
             source: source || undefined,
@@ -202,8 +210,10 @@ const Register = () => {
       if (response.duplicate) {
         setIsDuplicate(true);
         setIsSuccess(true);
+        succeeded = true;
       } else if (response.success) {
         setIsSuccess(true);
+        succeeded = true;
       } else if (response.error) {
         toast.error(response.error);
       }
@@ -211,6 +221,7 @@ const Register = () => {
       console.error("Unexpected error:", err);
       toast.error("Something went wrong. Please try again.");
     } finally {
+      if (!succeeded) turnstile.reset();
       setIsSubmitting(false);
     }
   };
@@ -536,11 +547,15 @@ const Register = () => {
                     </div>
                   </div>
 
+                  <TurnstileField
+                    containerRef={turnstile.containerRef}
+                    error={turnstile.error}
+                  />
 
                   {/* Submit */}
                   <button
                     type="submit"
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || !turnstile.isVerified}
                     className="w-full inline-flex items-center justify-center gap-3 h-12 bg-zinc-900 text-white text-[15px] font-semibold rounded-xl mt-2 shadow-[0_1px_2px_rgba(0,0,0,0.10)] hover:bg-zinc-950 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
                     {isSubmitting ? "Submitting..." : "Request Early Access"}
