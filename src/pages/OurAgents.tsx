@@ -48,6 +48,10 @@ interface EnrichedAgent {
 
 const PAGE_SIZE = 24;
 
+function hasUsableAgentName(agent: { first_name?: string | null; last_name?: string | null }): boolean {
+  return Boolean(agent.first_name?.trim() && agent.last_name?.trim());
+}
+
 interface County {
   id: string;
   name: string;
@@ -145,6 +149,10 @@ const OurAgents = ({
           agent_buyer_coverage_areas(city, state, county)
         `, { count: "exact" })
         .in("id", verifiedIds)
+        .not("first_name", "is", null)
+        .not("last_name", "is", null)
+        .neq("first_name", "")
+        .neq("last_name", "")
         .order("last_name", { ascending: true })
         .range(from, to);
 
@@ -174,9 +182,10 @@ const OurAgents = ({
       twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 12);
 
       // Enrich agent data with listing counts and derived data
-      // UI backstop: filter to only verified IDs (defensive - should already be filtered by query)
+      // UI backstop: verified IDs + usable first/last name (defensive after DB filters)
       const enrichedAgents: EnrichedAgent[] = (agentData || [])
         .filter((agent: any) => verifiedIds.includes(agent.id))
+        .filter(hasUsableAgentName)
         .map((agent: any) => {
         const agentListings = (listingsData || []).filter(l => l.agent_id === agent.id);
         
