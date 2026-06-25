@@ -78,12 +78,11 @@ export function AgentProfileOnboardingOverlay({
                 id="agent-profile-onboarding-title"
                 className="text-xl font-semibold leading-snug tracking-tight text-zinc-900 sm:text-[1.35rem]"
               >
-                Complete Your Agent Profile
+                Complete your profile to appear in the Agent Network
               </h1>
               <p className="text-[13px] leading-relaxed text-zinc-500 sm:text-sm">
-                Your profile is how buyers and other agents discover and evaluate you on All Agent
-                Connect. Completing it ensures you&apos;re eligible to receive buyer leads, seller
-                leads, and in-network referrals.
+                Upload a professional headshot and complete your profile to become visible to other
+                agents and to be eligible for buyer leads, seller leads, and in-network referrals.
               </p>
             </div>
 
@@ -106,9 +105,9 @@ export function AgentProfileOnboardingOverlay({
                   Complete your agent profile
                 </h2>
                 <p className="text-[13px] leading-relaxed text-zinc-500">
-                  Your agent profile helps other agents and buyers know who they are working with.
-                  Agents with incomplete profiles may not be eligible to receive seller leads,
-                  buyer leads, or in-network referrals.
+                  Verified agents without a headshot or complete profile are hidden from the Agent
+                  Network until their profile is ready. Update yours to become visible and stay
+                  eligible for leads and referrals.
                 </p>
               </div>
 

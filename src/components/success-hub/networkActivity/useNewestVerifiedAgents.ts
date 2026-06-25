@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { isVisibleInAgentNetwork } from "@/lib/agentNetworkVisibility";
 
 export type NewestVerifiedAgent = {
   id: string;
@@ -24,7 +25,10 @@ export function useNewestVerifiedAgents(limit = 12) {
         setLoading(false);
         return;
       }
-      const mapped: NewestVerifiedAgent[] = (data as any[]).map((a) => {
+      const mapped: NewestVerifiedAgent[] = (data as any[])
+        .filter(isVisibleInAgentNetwork)
+        .slice(0, limit)
+        .map((a) => {
         const name = [a.first_name, a.last_name].filter(Boolean).join(" ").trim() || "Agent";
         const market = [a.office_city, a.office_state].filter(Boolean).join(", ");
         return {

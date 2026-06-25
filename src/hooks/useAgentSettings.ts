@@ -1,5 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  hasUsableAgentName,
+  hasUsableHeadshot,
+} from "@/lib/agentNetworkVisibility";
 import { User } from "@supabase/supabase-js";
 
 export interface AgentSettings {
@@ -129,19 +133,19 @@ export const useAgentSettings = (user: User | null) => {
     try {
       const { data, error } = await supabase
         .from("agent_profiles")
-        .select("first_name, last_name, company, phone, email")
+        .select("first_name, last_name, headshot_url, company, phone, email")
         .eq("id", userId)
         .maybeSingle();
 
       if (error) throw error;
       if (!data) return false;
 
-      // Profile complete when name + company + (phone OR email)
-      const hasName = !!(data.first_name && data.last_name);
-      const hasBrokerage = !!data.company;
-      const hasContact = !!(data.phone || data.email);
+      const hasName = hasUsableAgentName(data);
+      const hasHeadshot = hasUsableHeadshot(data);
+      const hasBrokerage = !!data.company?.trim();
+      const hasContact = !!(data.phone?.trim() || data.email?.trim());
 
-      return hasName && hasBrokerage && hasContact;
+      return hasName && hasHeadshot && hasBrokerage && hasContact;
     } catch (error) {
       console.error("Error checking profile complete:", error);
       return false;

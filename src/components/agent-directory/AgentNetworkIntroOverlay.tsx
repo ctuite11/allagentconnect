@@ -86,12 +86,11 @@ export function AgentNetworkIntroOverlay({
                 id="agent-network-intro-title"
                 className="text-xl font-semibold leading-snug tracking-tight text-zinc-900 sm:text-[1.35rem]"
               >
-                Your Profile Helps You Win More Leads
+                Complete your profile to appear in the Agent Network
               </h1>
               <p className="text-[13px] leading-relaxed text-zinc-500 sm:text-sm">
-                All Agent Connect will help connect agents with seller leads, buyer leads, and
-                in-network referrals. A complete, up-to-date profile helps other agents and future
-                clients learn more about you and increases your visibility throughout the network.
+                Upload a professional headshot and complete your profile to become visible to other
+                agents and to be eligible for buyer leads, seller leads, and in-network referrals.
               </p>
             </div>
 
@@ -114,8 +113,9 @@ export function AgentNetworkIntroOverlay({
                   Review and update your profile
                 </h2>
                 <p className="text-[13px] leading-relaxed text-zinc-500">
-                  See how other agents view your profile, or jump into Profile &amp; Branding to
-                  make updates.
+                  Verified agents without a headshot or complete profile are hidden from this
+                  directory until their profile is ready. Review yours or update Profile &amp;
+                  Branding to become visible.
                 </p>
               </div>
 
