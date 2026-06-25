@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.0";
+import { verifyTurnstileToken, TURNSTILE_GENERIC_ERROR } from "../_shared/verifyTurnstile.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -14,6 +15,7 @@ interface ContactEmailRequest {
   senderPhone?: string;
   message: string;
   listingAddress: string;
+  turnstile_token?: string;
 }
 
 interface RateLimitResult {
@@ -103,7 +105,17 @@ const handler = async (req: Request): Promise<Response> => {
       senderPhone,
       message,
       listingAddress,
+      turnstile_token,
     }: ContactEmailRequest = await req.json();
+
+    // Server-side Cloudflare Turnstile verification — blocks direct API abuse.
+    const turnstileResult = await verifyTurnstileToken(turnstile_token, req);
+    if (!turnstileResult.ok) {
+      return new Response(
+        JSON.stringify({ error: TURNSTILE_GENERIC_ERROR }),
+        { status: 403, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
 
     console.log("Sending contact email to agent:", agentEmail);
 
