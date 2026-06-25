@@ -20,6 +20,8 @@ import { fetchListingPreview } from "@/lib/fetchListingPreview";
 import { ListingPreviewCard } from "@/components/share/ListingPreviewCard";
 import type { ListingPreview } from "@/components/share/ShareListingsDialog";
 import { cn } from "@/lib/utils";
+import { TurnstileField } from "@/components/security/TurnstileField";
+import { useTurnstile } from "@/hooks/useTurnstile";
 
 const contactMessageSchema = z.object({
   sender_name: z.string().trim().min(1, "Please enter your name").max(100),
@@ -63,6 +65,7 @@ const ContactAgentDialog = ({
     message: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const turnstile = useTurnstile("contact_agent", open);
 
   useEffect(() => {
     if (!open) return;
@@ -108,6 +111,9 @@ const ContactAgentDialog = ({
     e.preventDefault();
     setErrors({});
 
+    const turnstileToken = turnstile.requireToken();
+    if (!turnstileToken) return;
+
     try {
       const validatedData = contactMessageSchema.parse(formData);
 
@@ -140,6 +146,7 @@ const ContactAgentDialog = ({
               senderEmail: validatedData.sender_email,
               message: validatedData.message,
               listingAddress: listingAddress,
+              turnstile_token: turnstileToken,
             },
           });
         } catch (emailError) {
@@ -161,6 +168,7 @@ const ContactAgentDialog = ({
       } else {
         toast.error("Failed to send message. Please try again.");
       }
+      turnstile.reset();
     } finally {
       setLoading(false);
     }
@@ -251,6 +259,8 @@ const ContactAgentDialog = ({
               {errors.message ? <p className="text-sm text-destructive">{errors.message}</p> : null}
               <p className="text-xs text-muted-foreground">{formData.message.length}/1000</p>
             </div>
+
+            <TurnstileField containerRef={turnstile.containerRef} error={turnstile.error} />
           </div>
 
           <div className="flex shrink-0 items-center justify-end gap-2 border-t border-neutral-200 bg-white px-4 py-3 sm:px-5">

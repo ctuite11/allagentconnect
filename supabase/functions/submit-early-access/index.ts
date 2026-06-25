@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { verifyTurnstileToken, TURNSTILE_GENERIC_ERROR } from "../_shared/verifyTurnstile.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -18,6 +19,7 @@ interface EarlyAccessRequest {
   // Listing attribution fields
   listing_id?: string;
   source?: string;
+  turnstile_token?: string;
 }
 
 interface RateLimitResult {
@@ -78,6 +80,15 @@ Deno.serve(async (req) => {
 
   try {
     const body: EarlyAccessRequest = await req.json();
+
+    // Server-side Cloudflare Turnstile verification — blocks direct API abuse.
+    const turnstileResult = await verifyTurnstileToken(body.turnstile_token, req);
+    if (!turnstileResult.ok) {
+      return new Response(
+        JSON.stringify({ error: TURNSTILE_GENERIC_ERROR }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
     
     // Validate required fields
     const requiredFields = ['first_name', 'last_name', 'email', 'brokerage', 'state', 'license_number'];

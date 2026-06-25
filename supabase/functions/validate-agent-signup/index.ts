@@ -1,4 +1,5 @@
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+import { verifyTurnstileToken, TURNSTILE_GENERIC_ERROR } from "../_shared/verifyTurnstile.ts";
 
 /**
  * Server-side mirror of src/lib/agentSignupValidation.ts.
@@ -94,6 +95,7 @@ type Body = {
   licenseState?: string;
   licenseNumber?: string;
   licenseLastName?: string | null;
+  turnstile_token?: string;
 };
 
 Deno.serve(async (req) => {
@@ -103,6 +105,15 @@ Deno.serve(async (req) => {
 
   try {
     const body = (await req.json().catch(() => ({}))) as Body;
+
+    // Server-side Cloudflare Turnstile verification — blocks direct API abuse.
+    const turnstileResult = await verifyTurnstileToken(body.turnstile_token, req);
+    if (!turnstileResult.ok) {
+      return new Response(JSON.stringify({ ok: false, errors: [TURNSTILE_GENERIC_ERROR] }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const errors: string[] = [];
     if (!isValidName(body.firstName)) {

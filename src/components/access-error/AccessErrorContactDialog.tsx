@@ -9,6 +9,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { z } from "zod";
 import { useSenderProfilePrefill } from "@/lib/currentSenderProfile";
+import { TurnstileField } from "@/components/security/TurnstileField";
+import { useTurnstile } from "@/hooks/useTurnstile";
 
 interface Props {
   open: boolean;
@@ -28,6 +30,7 @@ export default function AccessErrorContactDialog({ open, onOpenChange, defaultEm
   const [senderEmail, setSenderEmail] = useState(defaultEmail);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const turnstile = useTurnstile("contact_support", open);
 
   const applySender = useCallback(
     (sender: { name: string; email: string }) => {
@@ -46,6 +49,8 @@ export default function AccessErrorContactDialog({ open, onOpenChange, defaultEm
       toast.error(parsed.error.issues[0]?.message ?? "Please check your inputs");
       return;
     }
+    const turnstileToken = turnstile.requireToken();
+    if (!turnstileToken) return;
     setLoading(true);
     try {
       const { error } = await supabase.functions.invoke("send-contact-email", {
@@ -56,6 +61,7 @@ export default function AccessErrorContactDialog({ open, onOpenChange, defaultEm
           senderEmail: parsed.data.senderEmail,
           message: parsed.data.message,
           listingAddress: "Access Error — Support Request",
+          turnstile_token: turnstileToken,
         },
       });
       if (error) throw error;
@@ -65,6 +71,7 @@ export default function AccessErrorContactDialog({ open, onOpenChange, defaultEm
     } catch (err: any) {
       console.error("Contact support error:", err);
       toast.error(err?.message || "Failed to send message. Please try again.");
+      turnstile.reset();
     } finally {
       setLoading(false);
     }
@@ -92,6 +99,7 @@ export default function AccessErrorContactDialog({ open, onOpenChange, defaultEm
             <Label htmlFor="ae-message">Message</Label>
             <Textarea id="ae-message" value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Tell us what's happening…" rows={5} required />
           </div>
+          <TurnstileField containerRef={turnstile.containerRef} error={turnstile.error} />
           <DialogFooter>
             <Button type="button" variant="ghost" onClick={() => onOpenChange(false)} disabled={loading}>
               Cancel
