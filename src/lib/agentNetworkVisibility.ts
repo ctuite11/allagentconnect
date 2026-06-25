@@ -23,15 +23,9 @@ export function isVisibleInAgentNetwork(agent: {
   return hasUsableAgentName(agent) && hasUsableHeadshot(agent);
 }
 
-export const AGENT_NETWORK_DB_FILTERS = <
-  T extends {
-    not: (column: string, operator: string, value: string) => T;
-    neq: (column: string, value: string) => T;
-  },
->(
-  query: T,
-): T =>
-  query
+export const AGENT_NETWORK_DB_FILTERS = <T = any>(query: T): T => {
+  const q = query as any;
+  return q
     .not("first_name", "is", null)
     .not("last_name", "is", null)
     .neq("first_name", "")
@@ -39,4 +33,5 @@ export const AGENT_NETWORK_DB_FILTERS = <
     .not("first_name", "match", "^[[:space:]]*$")
     .not("last_name", "match", "^[[:space:]]*$")
     .not("headshot_url", "is", null)
-    .neq("headshot_url", "");
+    .neq("headshot_url", "") as T;
+};
