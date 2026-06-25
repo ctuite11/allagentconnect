@@ -1,5 +1,10 @@
 const LISTING_PHOTOS_BUCKET = "listing-photos";
 const CDN_HOST = "https://cdn.allagentconnect.com";
+// Direct Supabase storage host — used for email image URLs while the
+// branded CDN at cdn.allagentconnect.com is returning 403/text-plain.
+// Restore CDN rewriting in `rewriteEmailImageUrl` / `resolveEmailPhotoUrl`
+// once the CDN serves 200 image/jpeg again.
+const SUPABASE_STORAGE_HOST = "https://qocduqtfbsevnhlgsfka.supabase.co";
 
 /** Rewrite Supabase storage public/render URLs onto the cdn.allagentconnect.com CNAME. */
 function rewriteToCdn(url: string): string {
@@ -10,20 +15,26 @@ function rewriteToCdn(url: string): string {
 }
 
 /**
- * Public helper: rewrite any single image URL to the AAC CDN host when it
- * resolves to a Supabase storage public/render path. Safe to call with
- * absolute URLs, relative paths (leading slash optional), or empty strings.
+ * Public helper: resolve any single image URL to a working public host for
+ * use in email <img src>. Currently bypasses cdn.allagentconnect.com (which
+ * returns 403/text-plain) and returns the direct Supabase storage URL.
+ * Safe to call with absolute URLs, relative paths (leading slash optional),
+ * or empty strings. Non-Supabase absolute URLs pass through untouched.
  */
 export function rewriteEmailImageUrl(url: string | null | undefined): string {
   if (!url) return "";
   const raw = String(url).trim();
   if (!raw) return "";
-  if (/^https?:\/\//i.test(raw)) return rewriteToCdn(raw);
-  // Relative storage path → absolute CDN URL. Tolerate leading slash and
-  // already-prefixed "/storage/v1/..." inputs.
+  if (/^https?:\/\//i.test(raw)) {
+    // If it's already on the broken CDN host, swap it for direct Supabase storage.
+    const cdnMatch = raw.match(/^https?:\/\/cdn\.allagentconnect\.com(\/storage\/v1\/.*)$/i);
+    if (cdnMatch) return `${SUPABASE_STORAGE_HOST}${cdnMatch[1]}`;
+    return raw;
+  }
+  // Relative storage path → absolute Supabase storage URL.
   const path = raw.replace(/^\/+/, "");
-  if (/^storage\/v1\//i.test(path)) return `${CDN_HOST}/${path}`;
-  return `${CDN_HOST}/storage/v1/object/public/${LISTING_PHOTOS_BUCKET}/${path}`;
+  if (/^storage\/v1\//i.test(path)) return `${SUPABASE_STORAGE_HOST}/${path}`;
+  return `${SUPABASE_STORAGE_HOST}/storage/v1/object/public/${LISTING_PHOTOS_BUCKET}/${path}`;
 }
 
 /**
