@@ -151,6 +151,18 @@ const BuyerAuth = () => {
     try {
       const validatedData = signUpSchema.parse(formData);
 
+      // Server-side Turnstile verification gate — direct API/signup abuse
+      // cannot bypass this because supabase.auth.signUp would otherwise be
+      // reachable without any check.
+      const { data: verifyData, error: verifyError } = await supabase.functions.invoke(
+        "verify-turnstile",
+        { body: { token: turnstileToken, action: "buyer_register" } },
+      );
+      if (verifyError || !verifyData?.ok) {
+        toast.error("Verification failed. Please refresh and try again.");
+        return;
+      }
+
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email: validatedData.email,
         password: validatedData.password,
