@@ -1,5 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { verifyTurnstileToken, TURNSTILE_GENERIC_ERROR } from "../_shared/verifyTurnstile.ts";
+import { validateAgentSignup } from "../_shared/agentSignupValidation.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -106,6 +107,25 @@ Deno.serve(async (req) => {
     if (!emailRegex.test(body.email)) {
       return new Response(
         JSON.stringify({ error: 'Invalid email format' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Apply standard agent-signup validators (name format, placeholder license,
+    // disposable email, US phone, 2-letter license state). Mirrors
+    // validate-agent-signup so Early Access can't bypass the real rules.
+    const validationErrors = validateAgentSignup({
+      firstName: body.first_name,
+      lastName: body.last_name,
+      email: body.email,
+      phone: body.phone ?? null,
+      licenseState: body.state,
+      licenseNumber: body.license_number,
+      company: body.brokerage ?? null,
+    });
+    if (validationErrors.length > 0) {
+      return new Response(
+        JSON.stringify({ error: 'Validation failed', details: validationErrors }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
