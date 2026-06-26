@@ -149,7 +149,6 @@ const Auth = () => {
     let signedOut = true;
     try {
       try {
-        // @ts-expect-error scope is supported on supabase-js v2 but typed loosely
         await supabase.auth.signOut({ scope: "global" });
       } catch {
         await supabase.auth.signOut();
