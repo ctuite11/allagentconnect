@@ -191,6 +191,7 @@ serve(async (req) => {
 
     if (!buyerEmail && !buyerAuthId && crmClientIds.length === 0) {
       return json({
+        success: true,
         status: "skipped",
         reason: "buyer_not_found",
         auth_deleted: false,
@@ -263,6 +264,7 @@ serve(async (req) => {
       );
       if (protectedRole) {
         return json({
+          success: true,
           status: "relationship_ended_only",
           reason: "user_is_agent_or_admin",
           auth_deleted: false,
@@ -284,6 +286,7 @@ serve(async (req) => {
           .or(orFilters.join(","));
         if ((stillActive?.length ?? 0) > 0) {
           return json({
+            success: true,
             status: "relationship_ended_only",
             reason: "linked_to_other_agent",
             auth_deleted: false,
@@ -295,6 +298,7 @@ serve(async (req) => {
     // ---- 4. No auth user → nothing more to do ----
     if (!buyerAuthId) {
       return json({
+        success: true,
         status: "removed",
         reason: "no_auth_user",
         auth_deleted: false,
@@ -339,6 +343,7 @@ serve(async (req) => {
       `remove-buyer: removed auth user ${buyerAuthId} (${buyerEmail ?? "?"}) by caller ${callerId}`,
     );
     return json({
+      success: true,
       status: "removed",
       auth_deleted: true,
       deleted_user_id: buyerAuthId,
