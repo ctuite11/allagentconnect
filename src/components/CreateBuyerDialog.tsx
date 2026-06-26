@@ -7,6 +7,16 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FormattedInput } from "@/components/ui/formatted-input";
@@ -64,6 +74,14 @@ export function CreateBuyerDialog({ open, onOpenChange, onSuccess }: CreateBuyer
   const [agentUserId, setAgentUserId] = useState<string | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [selectedContact, setSelectedContact] = useState<AgentContact | null>(null);
+
+  // Pending-invite confirmation (A): when a recent pending invite already exists
+  // we ask the agent to resend or back out instead of hard-blocking.
+  const [pendingConfirm, setPendingConfirm] = useState<{
+    relId: string;
+    createdAt: string;
+    payload: CreatedBuyerPayload;
+  } | null>(null);
 
   useEffect(() => {
     if (!open) return;
