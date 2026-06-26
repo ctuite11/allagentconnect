@@ -82,6 +82,7 @@ import {
 } from "@/components/ListingMessageDialog";
 import { canMessageListingAgent as viewerCanMessageListingAgent, resolveListingAgentId } from "@/lib/canMessageListingAgent";
 import { useAuthRole } from "@/hooks/useAuthRole";
+import { useSharedListingGuest } from "@/contexts/SharedListingGuestContext";
 import ContactAgentDialog from "@/components/ContactAgentDialog";
 
 // ATTRIBUTION MASKING (BUYER UI)
