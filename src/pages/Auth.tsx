@@ -20,7 +20,7 @@ import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 import { validateAgentSignup } from "@/lib/agentSignupValidation";
 import { TurnstileField } from "@/components/security/TurnstileField";
 import { useTurnstile } from "@/hooks/useTurnstile";
-import { clearGuestListing, resolvePostAuthRedirect } from "@/lib/sharedListingGuest";
+import { clearGuestListing, isPublicReturnTo, resolvePostAuthRedirect } from "@/lib/sharedListingGuest";
 
 /** Premium white card — email-template aligned (soft border, subtle shadow). */
 const authCardSurface =
