@@ -245,7 +245,7 @@ export function renderSearchStyleListingEmailCard(
 
   const photoCellInner = photoUrl
     ? `<a href="${safeUrl}" style="text-decoration:none;display:block;line-height:0;font-size:0;">
-         <img src="${escapeHtml(photoUrl)}" alt="${safeAlt}" width="600" height="${photoHeight}" style="display:block;width:100%;max-width:600px;height:${photoHeight}px;object-fit:cover;object-position:center;border:0;outline:none;text-decoration:none;" />
+         <img src="${escapeHtml(photoUrl)}" alt="${safeAlt}" width="600" style="display:block;width:100%;max-width:600px;height:auto;border:0;outline:none;text-decoration:none;" />
        </a>`
     : `<div style="width:100%;height:${photoHeight}px;line-height:${photoHeight}px;text-align:center;color:#9ca3af;font-size:13px;font-family:system-ui,-apple-system,sans-serif;background:#f3f4f6;">Photo unavailable</div>`;
 
@@ -356,7 +356,7 @@ export function renderCompactListingEmailCard(
 
   const photoCellInner = photoUrl
     ? `<a href="${safeUrl}" style="text-decoration:none;display:block;line-height:0;font-size:0;">
-         <img src="${escapeHtml(photoUrl)}" alt="${safeAlt}" width="600" height="${photoHeight}" style="display:block;width:100%;max-width:600px;height:${photoHeight}px;object-fit:cover;object-position:center;border:0;outline:none;text-decoration:none;" />
+         <img src="${escapeHtml(photoUrl)}" alt="${safeAlt}" width="600" style="display:block;width:100%;max-width:600px;height:auto;border:0;outline:none;text-decoration:none;" />
        </a>`
     : `<div style="width:100%;height:${photoHeight}px;line-height:${photoHeight}px;text-align:center;color:#9ca3af;font-size:12px;font-family:system-ui,-apple-system,sans-serif;background:#f3f4f6;">Photo unavailable</div>`;
 
