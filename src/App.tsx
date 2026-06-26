@@ -138,6 +138,8 @@ import Footer from "./components/Footer";
 import { AuthRoleProvider, useAuthRole } from "./hooks/useAuthRole";
 import { LoadingScreen } from "./components/LoadingScreen";
 import { Skeleton } from "./components/ui/skeleton";
+import { SharedListingGuestProvider } from "./contexts/SharedListingGuestContext";
+import { SharedListingGate } from "./components/SharedListingGate";
 
 /** Legacy `/dashboard` → role-appropriate home (buyers must land on `/client/dashboard`). */
 function LegacyDashboardRedirect() {
