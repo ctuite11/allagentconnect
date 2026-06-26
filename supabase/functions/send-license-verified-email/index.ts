@@ -49,7 +49,7 @@ const handler = async (req: Request): Promise<Response> => {
       firstName: "Chris",
       lastName: "Tuite",
       title: "Founder",
-      company: "All Agent Connect",
+      company: null,
       email: "chris@allagentconnect.com",
       phone: "6178770519",
       headshotUrl:
