@@ -881,11 +881,14 @@ const Auth = () => {
 
   const handleLogout = async () => {
     setLoading(true);
-    await supabase.auth.signOut();
-    setExistingSession(false);
-    setSessionEmail(null);
+    const { signedOut } = await clearAllAuthState();
     setLoading(false);
-    toast.success("Signed out successfully");
+    if (signedOut) {
+      toast.success("Signed out successfully");
+    } else {
+      toast("Session cleared. Please sign in again.");
+    }
+    navigate("/auth", { replace: true });
   };
 
   const switchMode = (newMode: AuthMode) => {
