@@ -53,10 +53,10 @@ function renderBullets(items: string[]): string {
     .map(
       (label) => `<tr><td style="padding:0 0 12px;vertical-align:top;">
         <table role="presentation" cellspacing="0" cellpadding="0" width="100%"><tr>
-          <td valign="top" width="22" style="padding:3px 10px 0 0;">
-            <div style="width:8px;height:8px;border-radius:2px;background-color:${EMERALD_ACCENT};"></div>
+          <td valign="top" width="18" style="padding:9px 10px 0 0;line-height:0;">
+            <div style="width:6px;height:6px;border-radius:2px;background-color:${EMERALD_ACCENT};"></div>
           </td>
-          <td style="font-size:15px;line-height:1.55;color:${TEXT_BODY};font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${escapeHtml(label)}</td>
+          <td valign="top" style="font-size:15px;line-height:1.55;color:${TEXT_BODY};font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${escapeHtml(label)}</td>
         </tr></table>
       </td></tr>`,
     )
