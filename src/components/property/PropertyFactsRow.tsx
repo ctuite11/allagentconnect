@@ -44,7 +44,7 @@ export function PropertyFactsRow({
 
   if (propertyTypeLabel) {
     groups.push(
-      <div key="type" className={propertyFactItem}>
+      <div key="type" className={cn(propertyFactItem, "shrink-0 whitespace-nowrap")}>
         <span className={cn(propertyFactLabel, "text-neutral-600")}>Property Type:</span>
         <span className={cn(propertyFactValue, "text-sm text-neutral-900")}>{propertyTypeLabel}</span>
       </div>,
@@ -52,7 +52,7 @@ export function PropertyFactsRow({
   }
   if (bedrooms != null && bedrooms > 0) {
     groups.push(
-      <div key="beds" className={propertyFactItem}>
+      <div key="beds" className={cn(propertyFactItem, "shrink-0 whitespace-nowrap")}>
         <Bed className={iconCls} aria-hidden />
         <span className={propertyFactValue}>{bedrooms}</span>
       </div>,
@@ -60,7 +60,7 @@ export function PropertyFactsRow({
   }
   if (bathrooms != null && bathrooms > 0) {
     groups.push(
-      <div key="baths" className={propertyFactItem}>
+      <div key="baths" className={cn(propertyFactItem, "shrink-0 whitespace-nowrap")}>
         <Bath className={iconCls} aria-hidden />
         <span className={propertyFactValue}>{bathrooms}</span>
       </div>,
@@ -68,21 +68,21 @@ export function PropertyFactsRow({
   }
   if (squareFeet != null && squareFeet > 0) {
     groups.push(
-      <div key="sqft" className={propertyFactItem}>
+      <div key="sqft" className={cn(propertyFactItem, "shrink-0 whitespace-nowrap")}>
         <Square className={iconCls} aria-hidden />
         <span className={propertyFactValue}>{squareFeet.toLocaleString()}</span>
       </div>,
     );
   }
   groups.push(
-    <div key="parking" className={propertyFactItem}>
+    <div key="parking" className={cn(propertyFactItem, "shrink-0 whitespace-nowrap")}>
       <CircleParking className={iconCls} aria-hidden />
       <span className={propertyFactValue}>{totalParkingSpaces ?? 0}</span>
     </div>,
   );
   if (daysOnMarket != null && daysOnMarket >= 0) {
     groups.push(
-      <div key="dom" className={propertyFactItem}>
+      <div key="dom" className={cn(propertyFactItem, "shrink-0 whitespace-nowrap")}>
         <span className={cn(propertyFactLabel, "text-neutral-500")}>DOM</span>
         <span className={propertyFactValue}>{daysOnMarket}</span>
       </div>,
@@ -93,7 +93,7 @@ export function PropertyFactsRow({
     <div className={cn(containerClassName)}>
       <div
         className={cn(
-          "mt-0 flex min-w-0 flex-wrap items-center gap-x-9 gap-y-2.5 border-b-0 pb-0",
+          "mt-0 flex min-w-0 flex-nowrap items-center gap-x-4 sm:gap-x-9 gap-y-2.5 border-b-0 pb-0 overflow-x-auto [&::-webkit-scrollbar]:hidden",
           className,
         )}
       >
