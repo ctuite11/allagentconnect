@@ -52,6 +52,7 @@ const GATED_PREFIXES = [
   "/agent/",
   "/team/",
   "/property/", // other listings — exact allowed listing is filtered separately
+  "/consumer-property/",
   "/favorites",
   "/my-favorites",
   "/hot-sheets",
@@ -102,6 +103,7 @@ export function SharedListingGate({ children }: SharedListingGateProps) {
     if (isAlwaysAllowed(path)) return false;
     // The originally shared listing is always allowed.
     if (path === `/property/${allowedListingId}`) return false;
+    if (path === `/consumer-property/${allowedListingId}`) return false;
     return isGatedPath(path);
   }, [loading, user, isGuest, allowedListingId, location.pathname]);
 
