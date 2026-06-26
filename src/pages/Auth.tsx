@@ -20,6 +20,7 @@ import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 import { validateAgentSignup } from "@/lib/agentSignupValidation";
 import { TurnstileField } from "@/components/security/TurnstileField";
 import { useTurnstile } from "@/hooks/useTurnstile";
+import { clearGuestListing, resolvePostAuthRedirect } from "@/lib/sharedListingGuest";
 
 /** Premium white card — email-template aligned (soft border, subtle shadow). */
 const authCardSurface =
@@ -268,7 +269,9 @@ const Auth = () => {
 
           // Admin and buyer go immediately — no agent_settings polling
           if (resolved.role === "admin" || resolved.role === "buyer") {
-            const target = getRouteForRole(resolved);
+            const returnTo = resolvePostAuthRedirect(searchParams);
+            const target = returnTo ?? getRouteForRole(resolved);
+            clearGuestListing();
             authDebug("handleSession terminal_redirect", { role: resolved.role, target });
             if (mounted) {
               didNavigate.current = true;
