@@ -80,10 +80,79 @@ function renderSection(title: string, items: string[]): string {
 export interface AgentForwardEmailOptions {
   ctaUrl: string;
   preheader?: string;
+  agent?: AgentFooterInfo | null;
+}
+
+export interface AgentFooterInfo {
+  firstName?: string | null;
+  lastName?: string | null;
+  title?: string | null;
+  company?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  headshotUrl?: string | null;
+  websiteUrl?: string | null;
+}
+
+function renderAgentFooter(agent: AgentFooterInfo): string {
+  const fullName = [agent.firstName, agent.lastName].filter(Boolean).join(" ").trim();
+  const initials = [agent.firstName, agent.lastName]
+    .filter(Boolean)
+    .map((p) => (p as string).trim()[0]?.toUpperCase() ?? "")
+    .join("");
+  const avatarCell = agent.headshotUrl
+    ? `<img src="${escapeHtml(agent.headshotUrl)}" width="72" height="72" alt="${escapeHtml(fullName)}" style="display:block;width:72px;height:72px;border-radius:50%;object-fit:cover;border:2px solid ${EMERALD_ACCENT};" />`
+    : `<div style="width:72px;height:72px;border-radius:50%;background:${EMERALD_ACCENT};color:#fff;font-weight:700;font-size:24px;line-height:72px;text-align:center;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${escapeHtml(initials || "AA")}</div>`;
+
+  const lines: string[] = [];
+  if (fullName) {
+    lines.push(
+      `<p style="margin:0;font-size:16px;font-weight:700;color:#fff;letter-spacing:-0.01em;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${escapeHtml(fullName)}</p>`,
+    );
+  }
+  if (agent.title) {
+    lines.push(
+      `<p style="margin:2px 0 0;font-size:12px;color:rgba(255,255,255,0.72);font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${escapeHtml(agent.title)}</p>`,
+    );
+  }
+  if (agent.company) {
+    lines.push(
+      `<p style="margin:2px 0 0;font-size:12px;color:rgba(255,255,255,0.72);font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${escapeHtml(agent.company)}</p>`,
+    );
+  }
+  const contactParts: string[] = [];
+  if (agent.phone) {
+    contactParts.push(
+      `<a href="tel:${escapeHtml(agent.phone.replace(/[^0-9+]/g, ""))}" style="color:#fff;text-decoration:none;">${escapeHtml(agent.phone)}</a>`,
+    );
+  }
+  if (agent.email) {
+    contactParts.push(
+      `<a href="mailto:${escapeHtml(agent.email)}" style="color:#fff;text-decoration:none;">${escapeHtml(agent.email)}</a>`,
+    );
+  }
+  if (agent.websiteUrl) {
+    const display = agent.websiteUrl.replace(/^https?:\/\//, "");
+    const href = agent.websiteUrl.startsWith("http") ? agent.websiteUrl : `https://${agent.websiteUrl}`;
+    contactParts.push(
+      `<a href="${escapeHtml(href)}" style="color:#fff;text-decoration:none;">${escapeHtml(display)}</a>`,
+    );
+  }
+  if (contactParts.length) {
+    lines.push(
+      `<p style="margin:8px 0 0;font-size:12.5px;color:#fff;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${contactParts.join(' &nbsp;·&nbsp; ')}</p>`,
+    );
+  }
+
+  return `<table role="presentation" cellspacing="0" cellpadding="0" align="center"><tr>
+    <td valign="middle" style="padding-right:18px;">${avatarCell}</td>
+    <td valign="middle" align="left">${lines.join("")}</td>
+  </tr></table>
+  <p style="margin:18px 0 0;font-size:10.5px;color:rgba(255,255,255,0.45);font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Shared via All Agent Connect &middot; By Agents. For Agents. All Agents.</p>`;
 }
 
 export function buildAgentForwardEmailHtml(opts: AgentForwardEmailOptions): string {
-  const { ctaUrl } = opts;
+  const { ctaUrl, agent } = opts;
   const preheader =
     opts.preheader ??
     "A professional platform built exclusively for licensed real estate agents.";
@@ -130,10 +199,8 @@ export function buildAgentForwardEmailHtml(opts: AgentForwardEmailOptions): stri
         </td></tr>
 
         <!-- Footer -->
-        <tr><td align="center" style="background-color:${NAVY};border-top:2px solid ${EMERALD_ACCENT};border-radius:0 0 14px 14px;padding:26px 40px 24px;">
-          <img src="${MONOGRAM_URL}" width="22" height="22" alt="" style="display:block;margin:0 auto 10px;border:0;outline:none;text-decoration:none;" />
-          <p style="margin:0 0 4px;font-size:13px;font-weight:600;letter-spacing:0.02em;color:#ffffff;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">By Agents. For Agents. All Agents.</p>
-          <p style="margin:0;font-size:11px;color:rgba(255,255,255,0.55);font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">All Agent Connect</p>
+        <tr><td align="center" style="background-color:${NAVY};border-top:2px solid ${EMERALD_ACCENT};border-radius:0 0 14px 14px;padding:26px 40px 26px;">
+          ${agent ? renderAgentFooter(agent) : `<img src="${MONOGRAM_URL}" width="22" height="22" alt="" style="display:block;margin:0 auto 10px;border:0;outline:none;text-decoration:none;" /><p style="margin:0 0 4px;font-size:13px;font-weight:600;letter-spacing:0.02em;color:#ffffff;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">By Agents. For Agents. All Agents.</p><p style="margin:0;font-size:11px;color:rgba(255,255,255,0.55);font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">All Agent Connect</p>`}
         </td></tr>
 
       </table>
