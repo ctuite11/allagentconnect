@@ -277,7 +277,7 @@ export function CreateBuyerDialog({ open, onOpenChange, onSuccess }: CreateBuyer
         // Look up the latest relationship for this contact so we can branch.
         const { data: rel } = await supabase
           .from("client_agent_relationships")
-          .select("id, status, ended_at, client_id")
+          .select("id, status, ended_at, client_id, created_at")
           .eq("agent_id", user.id)
           .eq("crm_client_id", existing.id)
           .order("created_at", { ascending: false })
@@ -292,7 +292,37 @@ export function CreateBuyerDialog({ open, onOpenChange, onSuccess }: CreateBuyer
           return;
         }
         if (isPending) {
-          toast.error("This buyer already has a pending invite.");
+          // (B) Auto-heal: if the pending row is stale (>24h) or was never
+          // linked to a live buyer auth account, treat it as resendable and
+          // continue silently into the normal Review → Send flow.
+          const ageMs = rel?.created_at
+            ? Date.now() - new Date(rel.created_at).getTime()
+            : 0;
+          const isStale = ageMs > 24 * 60 * 60 * 1000;
+          const isOrphan = !rel?.client_id;
+
+          const resendPayload: CreatedBuyerPayload = {
+            id: existing.id,
+            firstName: existing.first_name || firstName.trim(),
+            lastName: existing.last_name || lastName.trim(),
+            email: (existing.email || normalizedEmail).toLowerCase(),
+          };
+
+          if (isStale || isOrphan) {
+            invalidateAgentContactsCache();
+            resetForm();
+            onOpenChange(false);
+            onSuccess(resendPayload);
+            return;
+          }
+
+          // (A) Recent + linked pending invite → ask the agent to resend or
+          // go back to the form instead of hard-blocking.
+          setPendingConfirm({
+            relId: rel.id,
+            createdAt: rel.created_at as string,
+            payload: resendPayload,
+          });
           return;
         }
 
