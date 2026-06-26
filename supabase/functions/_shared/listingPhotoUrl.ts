@@ -115,5 +115,9 @@ export function toOgImageUrl(publicUrl: string): string {
   if (idx === -1) return publicUrl;
   const rest = publicUrl.slice(idx + marker.length); // "<bucket>/<path>"
   const params = "width=1200&height=630&resize=cover&quality=80&format=origin";
-  return `${CDN_HOST}/storage/v1/render/image/public/${rest}?${params}`;
+  // Bypass cdn.allagentconnect.com — it currently returns 403/text-html for
+  // /storage/v1/render/image/* paths, which trips the social-preview HEAD
+  // validator and forces the AAC placeholder. Use direct Supabase storage
+  // host until the CDN is repaired at Cloudflare.
+  return `${SUPABASE_STORAGE_HOST}/storage/v1/render/image/public/${rest}?${params}`;
 }
