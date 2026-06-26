@@ -429,6 +429,48 @@ export function CreateBuyerDialog({ open, onOpenChange, onSuccess }: CreateBuyer
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
+        <AlertDialog
+          open={!!pendingConfirm}
+          onOpenChange={(next) => {
+            if (!next) setPendingConfirm(null);
+          }}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>
+                This buyer already has a pending invite
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                {pendingConfirm?.createdAt
+                  ? `An invite was sent on ${new Date(
+                      pendingConfirm.createdAt
+                    ).toLocaleDateString(undefined, {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                    })} and hasn't been accepted yet. Would you like to resend it, or cancel and go back?`
+                  : "An invite was sent earlier and hasn't been accepted yet. Would you like to resend it, or cancel and go back?"}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Back to form</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => {
+                  const payload = pendingConfirm?.payload;
+                  setPendingConfirm(null);
+                  if (!payload) return;
+                  invalidateAgentContactsCache();
+                  resetForm();
+                  onOpenChange(false);
+                  onSuccess(payload);
+                }}
+              >
+                Resend invite
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
         <DialogHeader>
           <DialogTitle>New Buyer</DialogTitle>
           <DialogDescription>
