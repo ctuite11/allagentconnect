@@ -64,3 +64,20 @@ export function consumePostAuthRedirect(): string | null {
   if (v) ss.removeItem(POST_AUTH_REDIRECT_KEY);
   return v && v.startsWith("/") && !v.startsWith("//") ? v : null;
 }
+
+/**
+ * Resolve the post-auth destination: prefer the explicit `returnTo` query
+ * param, fall back to any sessionStorage value the guest gate stashed.
+ * Always clears both side effects (storage + nothing else) so the next call
+ * returns null. Returns null if no safe internal path was found.
+ */
+export function resolvePostAuthRedirect(
+  searchParams: URLSearchParams | null,
+): string | null {
+  const fromQuery = searchParams?.get("returnTo") ?? null;
+  const stashed = consumePostAuthRedirect();
+  const candidate = fromQuery && fromQuery.length > 0 ? fromQuery : stashed;
+  if (!candidate) return null;
+  if (!candidate.startsWith("/") || candidate.startsWith("//")) return null;
+  return candidate;
+}
