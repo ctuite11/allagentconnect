@@ -153,6 +153,10 @@ export function DashboardSidebar({
   const prevRouteContextRef = useRef(routeContext);
   const [collapsed, setCollapsed] = useState(() => routeContext === "workspace");
 
+  // `collapsed` only governs the desktop (lg+) rail width. On mobile the off-canvas
+  // drawer is always full-width and must always show labels.
+  const showCollapsed = collapsed && !mobileOpen;
+
   // Collapse on map/workspace routes; expand on dashboard routes. Manual toggles persist
   // until the user navigates between workspace ↔ standard (not on every in-category route).
   useEffect(() => {
@@ -215,7 +219,7 @@ export function DashboardSidebar({
           "flex flex-col bg-zinc-900 transition-all duration-200",
           // Desktop: in-flow, fixed width
           "lg:relative lg:h-full lg:shrink-0 lg:translate-x-0",
-          collapsed ? "lg:w-[72px]" : "lg:w-[212px]",
+          showCollapsed ? "lg:w-[72px]" : "lg:w-[212px]",
           // Mobile: off-canvas drawer
           "fixed inset-y-0 left-0 z-50 w-[260px] max-w-[85vw] h-full shadow-2xl",
           mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
@@ -223,9 +227,9 @@ export function DashboardSidebar({
         )}
       >
         {/* Logo area */}
-        <div className={cn("flex items-center px-4 pt-6 pb-8", collapsed ? "justify-center" : "gap-2")}>
-          <AACMonogram className={cn("shrink-0 text-emerald-500", collapsed ? "h-[22px] w-[22px]" : "h-6 w-6")} />
-          {!collapsed && (
+        <div className={cn("flex items-center px-4 pt-6 pb-8", showCollapsed ? "justify-center" : "gap-2")}>
+          <AACMonogram className={cn("shrink-0 text-emerald-500", showCollapsed ? "h-[22px] w-[22px]" : "h-6 w-6")} />
+          {!showCollapsed && (
             <span className="text-[14px] font-semibold text-white tracking-tight">
               All Agent Connect
             </span>
@@ -236,12 +240,12 @@ export function DashboardSidebar({
         <button
           onClick={() => setCollapsed((c) => !c)}
           className={cn(
-            "flex items-center h-8 text-zinc-400 hover:text-zinc-200 transition-colors duration-150 mx-2 mb-1 rounded-md hover:bg-zinc-800/50",
-            collapsed ? "justify-center px-0" : "px-3 gap-2"
+            "hidden lg:flex items-center h-8 text-zinc-400 hover:text-zinc-200 transition-colors duration-150 mx-2 mb-1 rounded-md hover:bg-zinc-800/50",
+            showCollapsed ? "justify-center px-0" : "px-3 gap-2"
           )}
-          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          aria-label={showCollapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
-          {collapsed ? (
+          {showCollapsed ? (
             <PanelLeft className="h-[16px] w-[16px]" />
           ) : (
             <>
@@ -253,13 +257,13 @@ export function DashboardSidebar({
 
         {/* Main menu */}
         <nav className="flex-1 space-y-0.5 px-2">
-          <SectionLabel collapsed={collapsed}>Main Menu</SectionLabel>
+          <SectionLabel collapsed={showCollapsed}>Main Menu</SectionLabel>
           {mainMenu.map((item) => (
             <SidebarRow
               key={item.label}
               item={item}
               active={item.label === resolvedActive}
-              collapsed={collapsed}
+              collapsed={showCollapsed}
               onClick={() => handleNav(item)}
             />
           ))}
@@ -268,19 +272,19 @@ export function DashboardSidebar({
             <SidebarRow
               item={adminItem}
               active={resolvedActive === "Admin"}
-              collapsed={collapsed}
+              collapsed={showCollapsed}
               onClick={() => handleNav(adminItem)}
             />
           )}
 
           <div className="mt-4">
-            <SectionLabel collapsed={collapsed}>Other Tools</SectionLabel>
+            <SectionLabel collapsed={showCollapsed}>Other Tools</SectionLabel>
             {otherTools.map((item) => (
               <SidebarRow
                 key={item.label}
                 item={item}
                 active={item.label === resolvedActive}
-                collapsed={collapsed}
+                collapsed={showCollapsed}
                 onClick={() => handleNav(item)}
               />
             ))}
@@ -295,14 +299,14 @@ export function DashboardSidebar({
                 onClick={handleLogout}
                 className={cn(
                   "flex w-full items-center gap-2.5 rounded-sm px-4 h-9 text-[13px] tracking-tight text-zinc-300 font-normal hover:text-white hover:bg-zinc-800/50 transition-colors duration-150",
-                  collapsed && "justify-center px-0"
+                  showCollapsed && "justify-center px-0"
                 )}
               >
                 <LogOut className="h-[18px] w-[18px] shrink-0 text-zinc-300" />
-                {!collapsed && <span>Sign Out</span>}
+                {!showCollapsed && <span>Sign Out</span>}
               </button>
             </TooltipTrigger>
-            {collapsed && (
+            {showCollapsed && (
               <TooltipContent side="right" className="bg-white text-zinc-900 text-[12px] font-medium border border-zinc-200 rounded px-2 py-1 shadow-sm">
                 Sign Out
               </TooltipContent>

@@ -1,47 +1,39 @@
-# Hot Sheet Match Email — Photo Cut-Off Fix
+# Mobile sidebar — show labels next to icons
 
 ## Root cause
 
-In `supabase/functions/_shared/listingEmailCard.ts`, the hero photo in `renderCompactListingEmailCard` (used by `renderHotSheetMatchListingEmailCard`) is rendered as:
+`src/components/agent-dashboard-v2/DashboardSidebar.tsx` initializes:
 
-```html
-<img width="600" height="170"
-     style="width:100%;max-width:600px;height:170px;object-fit:cover;..." />
+```ts
+const [collapsed, setCollapsed] = useState(() => routeContext === "workspace");
 ```
 
-The width is fluid (`width:100%`), but the height is locked to **170px**. On mobile email clients (Yahoo, Gmail mobile, iOS Mail), the container shrinks well below 600px while the height stays pinned at 170px. With `object-fit:cover`, the renderer crops more and more of the photo horizontally to fill the now-much-taller-relative box. The result: the listing photo appears severely cut off / zoomed in on mobile.
+For workspace routes (Search, Buyers, Hot Sheets, etc.) `collapsed` starts as `true`. That state is then used everywhere — including inside the **mobile off-canvas drawer**. So when a mobile user opens the menu on Search, the drawer renders the icon-only rail layout (no labels, monogram-only header, mini icons) even though it's 260px wide. Result: blank text column next to every icon.
 
-The full-size card (`renderSearchStyleListingEmailCard`, line 248) has the same fixed-height pattern at a larger height — same issue, just less obvious because it's only used in single-listing emails.
+The `collapsed` flag should only control the **desktop (lg+) rail width**. On mobile, the drawer is always full-width and must always render labels.
 
 ## Fix
 
-Make the hero photo scale proportionally instead of force-cropping:
+Make `collapsed` lg-only:
 
-1. **Compact card (Hot Sheet match)** — `renderCompactListingEmailCard`
-   - Drop the fixed `height="170"` HTML attribute and `height:170px` inline style.
-   - Replace `object-fit:cover` with `height:auto` so the image scales to its native aspect ratio (typical 4:3 listing photos render ~450px tall at 600px wide on desktop, ~285px at 380px wide on mobile — no cropping).
-   - Keep `width="600"` and `max-width:600px` for desktop sizing.
-   - Update the "Photo unavailable" placeholder to use the same height behavior so empty states stay consistent (keep its 170px since it has no aspect to preserve, but mark it explicitly as a fallback).
+1. Add a derived value, e.g. `const showCollapsed = collapsed && !mobileOpen;` — or read viewport via existing `useIsMobile` hook and force `collapsed=false` on mobile.
+2. Pass `showCollapsed` (instead of `collapsed`) to:
+   - `SectionLabel`
+   - Each `<NavRow>` / `collapsed` prop
+   - Header monogram sizing block
+   - Collapse toggle button row
+   - Sign Out row
+3. Keep the toggle button itself hidden on mobile (it's only meaningful for the desktop rail). Wrap it in `hidden lg:flex`.
+4. Leave the actual `collapsed` state intact so when the user closes the drawer and the layout returns to desktop, the rail keeps its previous state.
 
-2. **Search-style card (single-listing emails)** — `renderSearchStyleListingEmailCard`
-   - Apply the same `height:auto` change so price-change / share / inquiry emails don't crop either.
+No other files change. Frontend-only.
 
-3. Redeploy affected edge functions so the change goes live:
-   - `process-hot-sheet`
-   - `send-new-match-notification`
-   - `send-listing-share`
-   - `send-bulk-listing-share`
-   - `send-hot-sheet-invite` (uses the same shared card)
+## Verification
+
+- Mobile (<lg): open the drawer on `/listing-search` → every icon shows its label ("Success Hub", "Search", "Comms", …), header shows the AAC wordmark, no toggle button.
+- Desktop (lg+): rail still collapses/expands via the existing toggle on workspace routes. No regression.
 
 ## Technical details
 
 Files touched:
-- `supabase/functions/_shared/listingEmailCard.ts` — two `<img>` blocks (lines ~248 and ~359).
-
-No frontend changes. No DB changes. No copy changes.
-
-## Verification
-
-- Send a test Hot Sheet match to a Yahoo/Gmail address.
-- Confirm the hero photo renders full and uncropped on mobile and desktop.
-- Confirm existing listing-share/inquiry emails still look correct (proportional, no layout break).
+- `src/components/agent-dashboard-v2/DashboardSidebar.tsx` — single component; ~6 references to `collapsed` swap to `showCollapsed`, plus `hidden lg:flex` on the collapse-toggle button.
