@@ -6,6 +6,7 @@ import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 import { Button } from "@/components/ui/button";
 import { authDebug } from "@/lib/authDebug";
 import { resolveUserRole, getRouteForRole } from "@/lib/resolveUserRole";
+import { clearGuestListing, resolvePostAuthRedirect } from "@/lib/sharedListingGuest";
 
 const AuthCallback = () => {
   const navigate = useNavigate();
@@ -358,7 +359,10 @@ const AuthCallback = () => {
         }
       }
 
-      const target = getRouteForRole(resolved);
+      const returnTo = resolvePostAuthRedirect(searchParams);
+      const target = returnTo ?? getRouteForRole(resolved);
+      // Visitor has now signed in — they're no longer a shared-listing guest.
+      clearGuestListing();
 
       authDebug("routeUser resolved", {
         email: verifiedEmail,
