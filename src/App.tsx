@@ -138,6 +138,8 @@ import Footer from "./components/Footer";
 import { AuthRoleProvider, useAuthRole } from "./hooks/useAuthRole";
 import { LoadingScreen } from "./components/LoadingScreen";
 import { Skeleton } from "./components/ui/skeleton";
+import { SharedListingGuestProvider } from "./contexts/SharedListingGuestContext";
+import { SharedListingGate } from "./components/SharedListingGate";
 
 /** Legacy `/dashboard` → role-appropriate home (buyers must land on `/client/dashboard`). */
 function LegacyDashboardRedirect() {
@@ -312,12 +314,14 @@ const App = () => (
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
           <TooltipProvider>
             <AuthRoleProvider>
+            <SharedListingGuestProvider>
             <Sonner />
             <ScrollToTop />
             <ScrollRestoration />
             <>
               <NewMessageToastListener />
               <CrossTabSessionGuard />
+              <SharedListingGate>
               <Routes>
                 <Route path="/" element={<HomepageV2 />} />
                 <Route path="/register" element={<Register />} />
@@ -495,8 +499,10 @@ const App = () => (
                 <Route path="/idx/property/:mlsNumber" element={<IDXListingDetailBeta />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
+              </SharedListingGate>
               <CookieConsent />
             </>
+            </SharedListingGuestProvider>
             </AuthRoleProvider>
           </TooltipProvider>
         </ThemeProvider>

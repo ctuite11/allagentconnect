@@ -82,6 +82,7 @@ import {
 } from "@/components/ListingMessageDialog";
 import { canMessageListingAgent as viewerCanMessageListingAgent, resolveListingAgentId } from "@/lib/canMessageListingAgent";
 import { useAuthRole } from "@/hooks/useAuthRole";
+import { useSharedListingGuest } from "@/contexts/SharedListingGuestContext";
 import ContactAgentDialog from "@/components/ContactAgentDialog";
 
 // ATTRIBUTION MASKING (BUYER UI)
@@ -177,6 +178,15 @@ const ConsumerPropertyDetail = () => {
   const [listingMessageOpen, setListingMessageOpen] = useState(false);
   const [listingMessageVariant, setListingMessageVariant] = useState<"agent" | "buyer">("buyer");
   const { user, role } = useAuthRole();
+  const { registerGuestListing } = useSharedListingGuest();
+
+  // Shared-listing guest mode: unauthenticated viewers anchor on this listing.
+  useEffect(() => {
+    if (user) return;
+    if (!id) return;
+    registerGuestListing(id);
+  }, [user, id, registerGuestListing]);
+
   const isAgentView = role === "agent" || role === "admin";
   const viewerId = user?.id;
   const listingAgentId = resolveListingAgentId(listing, agentProfile);

@@ -20,6 +20,7 @@ import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 import { validateAgentSignup } from "@/lib/agentSignupValidation";
 import { TurnstileField } from "@/components/security/TurnstileField";
 import { useTurnstile } from "@/hooks/useTurnstile";
+import { clearGuestListing, resolvePostAuthRedirect } from "@/lib/sharedListingGuest";
 
 /** Premium white card — email-template aligned (soft border, subtle shadow). */
 const authCardSurface =
@@ -179,6 +180,20 @@ const Auth = () => {
     }
   }, [searchParams]);
 
+  // Stash ?returnTo= so AuthCallback can route the user back where they
+  // intended (used by SharedListingGate's CTAs and any other deep-link auth
+  // flow). Survives the redirect to /auth/callback via sessionStorage.
+  useEffect(() => {
+    const r = searchParams.get("returnTo");
+    if (r && r.startsWith("/") && !r.startsWith("//")) {
+      try {
+        sessionStorage.setItem("aac_post_auth_redirect", r);
+      } catch {
+        // ignore
+      }
+    }
+  }, [searchParams]);
+
   // Check for logout param, reset success, or existing session
   useEffect(() => {
     let mounted = true;
@@ -268,7 +283,9 @@ const Auth = () => {
 
           // Admin and buyer go immediately — no agent_settings polling
           if (resolved.role === "admin" || resolved.role === "buyer") {
-            const target = getRouteForRole(resolved);
+            const returnTo = resolvePostAuthRedirect(searchParams);
+            const target = returnTo ?? getRouteForRole(resolved);
+            clearGuestListing();
             authDebug("handleSession terminal_redirect", { role: resolved.role, target });
             if (mounted) {
               didNavigate.current = true;

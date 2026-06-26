@@ -51,6 +51,7 @@ const listingDetailOutlineCtaClass =
   "border-[#0E56F5]/30 text-[#0E56F5] hover:bg-[#0E56F5]/5 hover:text-[#0B46CC]";
 import { useListingView } from "@/hooks/useListingView";
 import { useAuthRole } from "@/hooks/useAuthRole";
+import { useSharedListingGuest } from "@/contexts/SharedListingGuestContext";
 import { usePropertyDetailRailPosition } from "@/hooks/usePropertyDetailRailPosition";
 import { PropertyMetaTags } from "@/components/PropertyMetaTags";
 import { Seo } from "@/components/Seo";
@@ -196,6 +197,18 @@ const PropertyDetail = () => {
 
   // Role detection + URL-based client mode
   const { user, role, loading: roleLoading } = useAuthRole();
+  const { registerGuestListing } = useSharedListingGuest();
+
+  // Shared-listing guest mode: when an unauthenticated visitor lands on a
+  // listing page (typically from a shared Facebook/Twitter/etc link), record
+  // this listing as the one they're allowed to view freely. First-write wins.
+  useEffect(() => {
+    if (roleLoading) return;
+    if (user) return;
+    if (!id) return;
+    registerGuestListing(id);
+  }, [roleLoading, user, id, registerGuestListing]);
+
   const railPositionEnabled = !loading && !fetchError && !!listing;
   const { layoutRef, anchorRef, panelRef, panelStyle } =
     usePropertyDetailRailPosition(railPositionEnabled);
