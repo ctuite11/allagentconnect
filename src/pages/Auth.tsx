@@ -138,11 +138,50 @@ const Auth = () => {
   };
 
   // Handle switching to a different account
-  const handleSwitchAccount = async () => {
-    setLoading(true);
-    await supabase.auth.signOut();
+  /**
+   * Hard reset of all auth state — used by every sign-out CTA on /auth so a
+   * stale Supabase session can never trap the user on the Welcome Back card.
+   * Clears: Supabase session (global scope when available), AAC session
+   * markers, any sb-*-auth-token entries in both storages, and all local
+   * component state that drives the Welcome Back / mismatch branches.
+   */
+  const clearAllAuthState = async (): Promise<{ signedOut: boolean }> => {
+    let signedOut = true;
+    try {
+      try {
+        // @ts-expect-error scope is supported on supabase-js v2 but typed loosely
+        await supabase.auth.signOut({ scope: "global" });
+      } catch {
+        await supabase.auth.signOut();
+      }
+    } catch (e) {
+      console.warn("[AUTH] signOut failed, continuing with local cleanup", e);
+      signedOut = false;
+    }
+
+    try {
+      const aacKeys = [
+        "aac_password_setup_flow",
+        "aac_recovery_flow",
+        "aac_shared_listing_guest",
+        "aac_post_auth_redirect",
+      ];
+      for (const storage of [window.localStorage, window.sessionStorage]) {
+        for (const k of aacKeys) {
+          try { storage.removeItem(k); } catch { /* ignore */ }
+        }
+        try {
+          const stale = Object.keys(storage).filter(
+            (k) => k.startsWith("sb-") && k.endsWith("-auth-token"),
+          );
+          for (const k of stale) storage.removeItem(k);
+        } catch { /* ignore */ }
+      }
+    } catch { /* best-effort */ }
+
     setExistingSession(false);
     setSessionEmail(null);
+    setAgentStatus(null);
     setEmail("");
     setPassword("");
     setConfirmPassword("");
@@ -151,7 +190,20 @@ const Auth = () => {
     setPhone("");
     setLicenseState("");
     setLicenseNumber("");
+    setMode("signin");
+    try { turnstile.reset(); } catch { /* ignore */ }
+
+    return { signedOut };
+  };
+
+  const handleSwitchAccount = async () => {
+    setLoading(true);
+    const { signedOut } = await clearAllAuthState();
     setLoading(false);
+    if (!signedOut) {
+      toast("Session cleared. Please sign in again.");
+    }
+    navigate("/auth", { replace: true });
   };
 
   // Password validation for register mode
