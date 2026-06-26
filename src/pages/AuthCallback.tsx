@@ -22,22 +22,33 @@ const AuthCallback = () => {
     const typeFromHash = hashParams.get("type");
     const typeFromQuery = searchParams.get("type");
     const isRecovery = typeFromHash === "recovery" || typeFromQuery === "recovery";
-    return { isRecovery };
+    const setupFromHash = hashParams.get("setup");
+    const setupFromQuery = searchParams.get("setup");
+    const isSetup = setupFromHash === "1" || setupFromQuery === "1";
+    return { isRecovery, isSetup };
   }, [searchParams]);
 
   const isRecoveryContext = recoveryInfo.isRecovery;
 
   // Set sessionStorage markers in useLayoutEffect (before paint, but not in render)
   useLayoutEffect(() => {
-    if (!recoveryInfo.isRecovery || typeof window === "undefined") return;
+    if (typeof window === "undefined") return;
+    if (!recoveryInfo.isRecovery && !recoveryInfo.isSetup) return;
 
     sessionStorage.setItem("aac_recovery_flow", "1");
-    sessionStorage.removeItem("aac_password_setup_flow");
+    if (recoveryInfo.isSetup) {
+      sessionStorage.setItem("aac_password_setup_flow", "1");
+    } else {
+      sessionStorage.removeItem("aac_password_setup_flow");
+    }
 
     if (import.meta.env.DEV) {
-      console.log("[AuthCallback] Recovery context captured, flow: reset");
+      console.log(
+        "[AuthCallback] Recovery context captured, flow:",
+        recoveryInfo.isSetup ? "setup" : "reset",
+      );
     }
-  }, [recoveryInfo.isRecovery]);
+  }, [recoveryInfo.isRecovery, recoveryInfo.isSetup]);
   // ═══════════════════════════════════════════════════════════════════════════
 
   useEffect(() => {

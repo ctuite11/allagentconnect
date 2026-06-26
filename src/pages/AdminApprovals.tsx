@@ -591,6 +591,48 @@ export default function AdminApprovals() {
     }
   };
 
+  // Generate a one-time password setup link via the service-role edge function.
+  const generateSetupLink = async (agent: Agent): Promise<string | null> => {
+    const { data, error } = await supabase.functions.invoke("generate-agent-setup-link", {
+      body: { userId: agent.is_early_access ? undefined : agent.id, email: agent.email },
+    });
+    if (error || !data?.setupUrl) {
+      console.error("Setup link generation failed:", error);
+      toast.error("Could not generate setup link");
+      return null;
+    }
+    return data.setupUrl as string;
+  };
+
+  const handleCopySetupLink = async (agent: Agent) => {
+    const setupUrl = await generateSetupLink(agent);
+    if (!setupUrl) return;
+    try {
+      await navigator.clipboard.writeText(setupUrl);
+      toast.success("Setup link copied to clipboard");
+    } catch {
+      toast.error("Could not copy to clipboard");
+    }
+  };
+
+  const handleEmailSetupLink = async (agent: Agent) => {
+    const setupUrl = await generateSetupLink(agent);
+    if (!setupUrl) return;
+    const { error } = await supabase.functions.invoke("send-license-verified-email", {
+      body: {
+        to: agent.email,
+        agentName: agent.first_name || undefined,
+        ctaUrl: setupUrl,
+      },
+    });
+    if (error) {
+      console.error("Send license-verified email failed:", error);
+      toast.error("Could not send setup email");
+      return;
+    }
+    toast.success(`Setup link emailed to ${agent.email}`);
+  };
+
   if (authLoading) {
     return (
       <>
@@ -1057,6 +1099,20 @@ export default function AdminApprovals() {
                         </button>
                       </>
                     )}
+                    <span className="text-zinc-300">•</span>
+                    <button
+                      onClick={() => handleCopySetupLink(agent)}
+                      className="text-zinc-500 hover:text-zinc-900 hover:underline transition-colors"
+                    >
+                      Copy setup link
+                    </button>
+                    <span className="text-zinc-300">•</span>
+                    <button
+                      onClick={() => handleEmailSetupLink(agent)}
+                      className="text-zinc-500 hover:text-zinc-900 hover:underline transition-colors"
+                    >
+                      Email setup link
+                    </button>
                     <span className="text-zinc-300">•</span>
                     <button 
                       onClick={() => handleStatusChange(agent, "rejected")}

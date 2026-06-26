@@ -902,6 +902,12 @@ const Auth = () => {
 
   // Already signed in state - only block signin, not registration
   if (existingSession && mode !== "register") {
+    // Approved-agent setup flow: never show the Welcome Back interstitial.
+    // The AuthCallback set this marker after consuming the recovery link.
+    if (typeof window !== "undefined" && sessionStorage.getItem("aac_password_setup_flow") === "1") {
+      navigate("/password-reset", { replace: true });
+      return <AacMonogramLoader variant="fullscreen" message="Setting up your account…" />;
+    }
     const isPending = agentStatus === 'pending_verification' || agentStatus === 'pending_approval';
     const isVerified = agentStatus === 'verified';
     
