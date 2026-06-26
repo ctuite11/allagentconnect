@@ -228,6 +228,20 @@ const PendingVerification = () => {
     navigate("/auth", { replace: true });
   };
 
+  const handleLogoutToHome = async () => {
+    if (pollIntervalRef.current) {
+      clearInterval(pollIntervalRef.current);
+      pollIntervalRef.current = null;
+    }
+    didNavigate.current = true;
+    try {
+      await supabase.auth.signOut();
+    } catch (e) {
+      console.warn("[PendingVerification] signOut failed:", e);
+    }
+    navigate("/", { replace: true });
+  };
+
   if (loading) {
     return <AacMonogramLoader variant="fullscreen" message="Loading…" />;
   }
