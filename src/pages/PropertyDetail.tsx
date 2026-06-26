@@ -197,6 +197,18 @@ const PropertyDetail = () => {
 
   // Role detection + URL-based client mode
   const { user, role, loading: roleLoading } = useAuthRole();
+  const { registerGuestListing } = useSharedListingGuest();
+
+  // Shared-listing guest mode: when an unauthenticated visitor lands on a
+  // listing page (typically from a shared Facebook/Twitter/etc link), record
+  // this listing as the one they're allowed to view freely. First-write wins.
+  useEffect(() => {
+    if (roleLoading) return;
+    if (user) return;
+    if (!id) return;
+    registerGuestListing(id);
+  }, [roleLoading, user, id, registerGuestListing]);
+
   const railPositionEnabled = !loading && !fetchError && !!listing;
   const { layoutRef, anchorRef, panelRef, panelStyle } =
     usePropertyDetailRailPosition(railPositionEnabled);
