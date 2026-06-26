@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -122,13 +122,25 @@ serve(async (req) => {
     // ---- AuthN ----
     const authHeader = req.headers.get("Authorization") ?? "";
     const token = authHeader.replace("Bearer ", "");
-    if (!token) return json({ error: "Unauthorized" }, 401);
+    if (!token) {
+      console.error("remove-buyer: missing bearer token");
+      return json({ error: "Unauthorized", reason: "missing_token" }, 401);
+    }
 
     const userClient = createClient(supabaseUrl, anonKey, {
       global: { headers: { Authorization: `Bearer ${token}` } },
     });
-    const { data: userData, error: userErr } = await userClient.auth.getUser();
-    if (userErr || !userData?.user) return json({ error: "Unauthorized" }, 401);
+    const { data: userData, error: userErr } = await userClient.auth.getUser(token);
+    if (userErr || !userData?.user) {
+      console.error("remove-buyer: getUser failed", {
+        message: userErr?.message,
+        status: (userErr as any)?.status,
+      });
+      return json(
+        { error: "Unauthorized", reason: "getUser_failed", detail: userErr?.message ?? null },
+        401,
+      );
+    }
     const callerId = userData.user.id;
     const callerEmail = userData.user.email?.toLowerCase() ?? null;
 
