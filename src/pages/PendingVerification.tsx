@@ -22,6 +22,7 @@ const PendingVerification = () => {
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [fatalError, setFatalError] = useState<string | null>(null);
+  const [hasSession, setHasSession] = useState(false);
   const didNavigate = useRef(false);
   const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -67,6 +68,7 @@ const PendingVerification = () => {
       const email = session.user.email || null;
       setUserEmail(email);
       setUserId(uid);
+      setHasSession(true);
       
       authDebug("PendingVerification checking status", { userId: uid, email });
 
@@ -442,15 +444,17 @@ const PendingVerification = () => {
             }}
             className="h-10 px-5"
           >
-            Browse AAC
+            Home
           </Button>
-          <Button
-            variant="ghost"
-            onClick={handleLogoutToHome}
-            className="h-10 px-5 text-muted-foreground hover:text-foreground"
-          >
-            Log out
-          </Button>
+          {hasSession && (
+            <Button
+              variant="ghost"
+              onClick={handleLogoutToHome}
+              className="h-10 px-5 text-muted-foreground hover:text-foreground"
+            >
+              Log out
+            </Button>
+          )}
         </div>
       </div>
     </PendingShell>
