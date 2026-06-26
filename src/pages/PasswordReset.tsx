@@ -128,18 +128,23 @@ const PasswordReset = () => {
 
       // Clear recovery state
       sessionStorage.removeItem("aac_recovery_flow");
+      const wasSetupFlow = isSetupFlow;
       sessionStorage.removeItem("aac_password_setup_flow");
-      
+
       // Clear recovery URL state before redirecting
       window.history.replaceState(null, "", "/password-reset");
-      
-      // CRITICAL: Sign out immediately to prevent recovery session from touching onboarding
-      await supabase.auth.signOut();
-      
-      toast.success("Password updated successfully! Please sign in with your new password.");
-      
-      // Redirect to auth with success flag - NO auto-login, NO onboarding
-      navigate("/auth?reset=success", { replace: true });
+
+      if (wasSetupFlow) {
+        // First-time setup: keep the freshly-authenticated session and
+        // drop the agent straight into Success Hub.
+        toast.success("Password set. Welcome to All Agent Connect!");
+        navigate("/agent-dashboard", { replace: true });
+      } else {
+        // Normal reset: sign out so they re-authenticate with the new password.
+        await supabase.auth.signOut();
+        toast.success("Password updated successfully! Please sign in with your new password.");
+        navigate("/auth?reset=success", { replace: true });
+      }
     } catch (error) {
       console.error("[PasswordReset] Error:", error);
       toast.error("An error occurred while resetting your password");
