@@ -73,8 +73,8 @@ function renderAgentFooter(agent: FooterAgent): string {
     .map((p) => (p as string).trim()[0]?.toUpperCase() ?? "")
     .join("");
   const avatarCell = agent.headshotUrl
-    ? `<img src="${escapeHtml(agent.headshotUrl)}" width="72" height="72" alt="${escapeHtml(fullName)}" style="display:block;width:72px;height:72px;border-radius:50%;object-fit:cover;border:2px solid ${EMERALD_ACCENT};" />`
-    : `<div style="width:72px;height:72px;border-radius:50%;background:${EMERALD_ACCENT};color:#fff;font-weight:700;font-size:24px;line-height:72px;text-align:center;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${escapeHtml(initials || "AA")}</div>`;
+    ? `<img src="${escapeHtml(agent.headshotUrl)}" width="104" height="104" alt="${escapeHtml(fullName)}" style="display:block;width:104px;height:104px;border-radius:50%;object-fit:cover;border:2px solid ${EMERALD_ACCENT};" />`
+    : `<div style="width:104px;height:104px;border-radius:50%;background:${EMERALD_ACCENT};color:#fff;font-weight:700;font-size:34px;line-height:104px;text-align:center;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${escapeHtml(initials || "AA")}</div>`;
 
   const lines: string[] = [];
   if (fullName) {
