@@ -429,6 +429,29 @@ const PendingVerification = () => {
             hello@allagentconnect.com
           </a>
         </p>
+
+        <div className="mt-8 flex w-full flex-col items-center gap-3 sm:flex-row sm:justify-center">
+          <Button
+            variant="outline"
+            onClick={() => {
+              if (pollIntervalRef.current) {
+                clearInterval(pollIntervalRef.current);
+                pollIntervalRef.current = null;
+              }
+              navigate("/");
+            }}
+            className="h-10 px-5"
+          >
+            Browse AAC
+          </Button>
+          <Button
+            variant="ghost"
+            onClick={handleLogoutToHome}
+            className="h-10 px-5 text-muted-foreground hover:text-foreground"
+          >
+            Log out
+          </Button>
+        </div>
       </div>
     </PendingShell>
   );
