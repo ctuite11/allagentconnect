@@ -7,6 +7,16 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FormattedInput } from "@/components/ui/formatted-input";
@@ -64,6 +74,14 @@ export function CreateBuyerDialog({ open, onOpenChange, onSuccess }: CreateBuyer
   const [agentUserId, setAgentUserId] = useState<string | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [selectedContact, setSelectedContact] = useState<AgentContact | null>(null);
+
+  // Pending-invite confirmation (A): when a recent pending invite already exists
+  // we ask the agent to resend or back out instead of hard-blocking.
+  const [pendingConfirm, setPendingConfirm] = useState<{
+    relId: string;
+    createdAt: string;
+    payload: CreatedBuyerPayload;
+  } | null>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -259,7 +277,7 @@ export function CreateBuyerDialog({ open, onOpenChange, onSuccess }: CreateBuyer
         // Look up the latest relationship for this contact so we can branch.
         const { data: rel } = await supabase
           .from("client_agent_relationships")
-          .select("id, status, ended_at, client_id")
+          .select("id, status, ended_at, client_id, created_at")
           .eq("agent_id", user.id)
           .eq("crm_client_id", existing.id)
           .order("created_at", { ascending: false })
@@ -274,7 +292,37 @@ export function CreateBuyerDialog({ open, onOpenChange, onSuccess }: CreateBuyer
           return;
         }
         if (isPending) {
-          toast.error("This buyer already has a pending invite.");
+          // (B) Auto-heal: if the pending row is stale (>24h) or was never
+          // linked to a live buyer auth account, treat it as resendable and
+          // continue silently into the normal Review → Send flow.
+          const ageMs = rel?.created_at
+            ? Date.now() - new Date(rel.created_at).getTime()
+            : 0;
+          const isStale = ageMs > 24 * 60 * 60 * 1000;
+          const isOrphan = !rel?.client_id;
+
+          const resendPayload: CreatedBuyerPayload = {
+            id: existing.id,
+            firstName: existing.first_name || firstName.trim(),
+            lastName: existing.last_name || lastName.trim(),
+            email: (existing.email || normalizedEmail).toLowerCase(),
+          };
+
+          if (isStale || isOrphan) {
+            invalidateAgentContactsCache();
+            resetForm();
+            onOpenChange(false);
+            onSuccess(resendPayload);
+            return;
+          }
+
+          // (A) Recent + linked pending invite → ask the agent to resend or
+          // go back to the form instead of hard-blocking.
+          setPendingConfirm({
+            relId: rel.id,
+            createdAt: rel.created_at as string,
+            payload: resendPayload,
+          });
           return;
         }
 
@@ -381,6 +429,48 @@ export function CreateBuyerDialog({ open, onOpenChange, onSuccess }: CreateBuyer
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
+        <AlertDialog
+          open={!!pendingConfirm}
+          onOpenChange={(next) => {
+            if (!next) setPendingConfirm(null);
+          }}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>
+                This buyer already has a pending invite
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                {pendingConfirm?.createdAt
+                  ? `An invite was sent on ${new Date(
+                      pendingConfirm.createdAt
+                    ).toLocaleDateString(undefined, {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                    })} and hasn't been accepted yet. Would you like to resend it, or cancel and go back?`
+                  : "An invite was sent earlier and hasn't been accepted yet. Would you like to resend it, or cancel and go back?"}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Back to form</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => {
+                  const payload = pendingConfirm?.payload;
+                  setPendingConfirm(null);
+                  if (!payload) return;
+                  invalidateAgentContactsCache();
+                  resetForm();
+                  onOpenChange(false);
+                  onSuccess(payload);
+                }}
+              >
+                Resend invite
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
         <DialogHeader>
           <DialogTitle>New Buyer</DialogTitle>
           <DialogDescription>
