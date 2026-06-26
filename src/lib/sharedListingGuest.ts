@@ -81,3 +81,38 @@ export function resolvePostAuthRedirect(
   if (!candidate.startsWith("/") || candidate.startsWith("//")) return null;
   return candidate;
 }
+
+/**
+ * Allow-list of public paths a pending/unverified agent may bounce to via
+ * `returnTo` instead of being trapped on /pending-verification. Anything not
+ * in this list falls through to the normal role-based routing.
+ */
+const PUBLIC_RETURN_PREFIXES = [
+  "/property/",
+  "/search",
+  "/browse",
+  "/listing-results",
+  "/our-agents",
+  "/agents",
+  "/find-agent",
+  "/about",
+  "/contact",
+  "/blog",
+  "/privacy",
+  "/terms",
+  "/cookies",
+  "/fair-housing",
+  "/disclosures",
+  "/agent-rules",
+];
+
+export function isPublicReturnTo(path: string | null | undefined): boolean {
+  if (!path) return false;
+  if (!path.startsWith("/") || path.startsWith("//")) return false;
+  // Strip query/hash for prefix check.
+  const cleanPath = path.split(/[?#]/)[0];
+  if (cleanPath === "/") return true;
+  return PUBLIC_RETURN_PREFIXES.some(
+    (p) => cleanPath === p || cleanPath.startsWith(p),
+  );
+}

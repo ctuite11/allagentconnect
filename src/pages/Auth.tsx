@@ -20,7 +20,7 @@ import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 import { validateAgentSignup } from "@/lib/agentSignupValidation";
 import { TurnstileField } from "@/components/security/TurnstileField";
 import { useTurnstile } from "@/hooks/useTurnstile";
-import { clearGuestListing, resolvePostAuthRedirect } from "@/lib/sharedListingGuest";
+import { clearGuestListing, isPublicReturnTo, resolvePostAuthRedirect } from "@/lib/sharedListingGuest";
 
 /** Premium white card — email-template aligned (soft border, subtle shadow). */
 const authCardSurface =
@@ -299,6 +299,20 @@ const Auth = () => {
           // For agents: surface verification status to UI
           if (resolved.role === "agent") {
             setAgentStatus(resolved.is_verified_agent ? "verified" : "pending");
+            // Pending/unverified agents are not trapped: if a safe public
+            // returnTo was provided, send them there instead of leaving them
+            // on /auth (which would bounce to /pending-verification).
+            if (!resolved.is_verified_agent) {
+              const returnTo = resolvePostAuthRedirect(searchParams);
+              if (returnTo && isPublicReturnTo(returnTo)) {
+                authDebug("handleSession pending_agent_public_returnTo", { target: returnTo });
+                if (mounted) {
+                  didNavigate.current = true;
+                  navigate(returnTo, { replace: true });
+                }
+                return;
+              }
+            }
           }
         }
         setCheckingSession(false);
