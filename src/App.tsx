@@ -314,12 +314,14 @@ const App = () => (
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
           <TooltipProvider>
             <AuthRoleProvider>
+            <SharedListingGuestProvider>
             <Sonner />
             <ScrollToTop />
             <ScrollRestoration />
             <>
               <NewMessageToastListener />
               <CrossTabSessionGuard />
+              <SharedListingGate>
               <Routes>
                 <Route path="/" element={<HomepageV2 />} />
                 <Route path="/register" element={<Register />} />
@@ -497,8 +499,10 @@ const App = () => (
                 <Route path="/idx/property/:mlsNumber" element={<IDXListingDetailBeta />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
+              </SharedListingGate>
               <CookieConsent />
             </>
+            </SharedListingGuestProvider>
             </AuthRoleProvider>
           </TooltipProvider>
         </ThemeProvider>
