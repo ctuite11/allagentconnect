@@ -146,8 +146,10 @@ serve(async (req) => {
 
     // ---- Input ----
     const body = await req.json().catch(() => ({}));
-    const buyerClientId: string | undefined = body?.buyer_client_id;
-    const buyerUserIdInput: string | undefined = body?.buyer_user_id;
+    const buyerClientId: string | undefined =
+      body?.buyer_client_id ?? body?.crm_client_id ?? body?.crmClientId;
+    const buyerUserIdInput: string | undefined =
+      body?.buyer_user_id ?? body?.user_id ?? body?.userId;
 
     if (!buyerClientId && !buyerUserIdInput) {
       return json({ error: "buyer_client_id or buyer_user_id required" }, 400);
