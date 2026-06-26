@@ -13,6 +13,7 @@ interface ForwardInviteRequest {
   to: string[];
   ctaUrl?: string;
   subject?: string;
+  agentId?: string;
 }
 
 const DEFAULT_SUBJECT = "All Agent Connect — A professional platform built for agents";
@@ -38,14 +39,38 @@ const handler = async (req: Request): Promise<Response> => {
     const ctaUrl = body.ctaUrl?.trim() || `${PUBLIC_SITE_URL}/register`;
     const subject = body.subject?.trim() || DEFAULT_SUBJECT;
 
-    const html = buildAgentForwardEmailHtml({ ctaUrl });
-
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     if (!supabaseUrl || !supabaseServiceKey) {
       throw new Error("Server misconfigured: missing Supabase service credentials");
     }
     const admin = createClient(supabaseUrl, supabaseServiceKey);
+
+    let agent: any = null;
+    let replyTo = "hello@allagentconnect.com";
+    if (body.agentId) {
+      const { data: ap } = await admin
+        .from("agent_profiles")
+        .select("first_name,last_name,title,company,email,phone,cell_phone,headshot_url,social_links")
+        .eq("id", body.agentId)
+        .maybeSingle();
+      if (ap) {
+        const website = (ap.social_links as any)?.website ?? null;
+        agent = {
+          firstName: ap.first_name,
+          lastName: ap.last_name,
+          title: ap.title,
+          company: ap.company,
+          email: ap.email,
+          phone: ap.phone || ap.cell_phone,
+          headshotUrl: ap.headshot_url,
+          websiteUrl: website,
+        };
+        if (ap.email) replyTo = ap.email;
+      }
+    }
+
+    const html = buildAgentForwardEmailHtml({ ctaUrl, agent });
 
     const results: Array<{ email: string; success: boolean; error?: string }> = [];
 
@@ -57,7 +82,7 @@ const handler = async (req: Request): Promise<Response> => {
           to: email,
           subject,
           html,
-          reply_to: "hello@allagentconnect.com",
+          reply_to: replyTo,
         },
       });
 
