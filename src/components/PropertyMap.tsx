@@ -198,8 +198,8 @@ const PropertyMap = ({
   }, [listings]);
 
   const resolveGoogleMapsKey = () => {
-    const envKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined;
-    if (envKey && envKey.trim()) return envKey.trim();
+    const envKey = getGoogleMapsBrowserKey();
+    if (envKey) return envKey;
 
     // Allow temporary key override in preview/debug links.
     const urlKey = new URLSearchParams(window.location.search).get("gmaps_key");
