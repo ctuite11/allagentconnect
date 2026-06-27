@@ -69,6 +69,8 @@ interface Agent {
   verified_at: string | null;
   created_at: string;
   is_early_access?: boolean;
+  has_auth_account?: boolean;
+  last_sign_in_at?: string | null;
 }
 
 const stateLicenseLookupUrls: Record<string, string> = {
@@ -95,7 +97,7 @@ const stateNames: Record<string, string> = {
   PA: "Pennsylvania",
 };
 
-type SortField = "name" | "status" | "created_at" | "company";
+type SortField = "name" | "status" | "created_at" | "company" | "last_sign_in_at";
 type SortDirection = "asc" | "desc";
 
 function risksForAgent(a: Agent): Risk[] {
@@ -128,6 +130,21 @@ function RiskBadges({ risks }: { risks: Risk[] }) {
       ))}
     </div>
   );
+}
+
+function formatRelativeSignIn(iso: string | null | undefined): string {
+  if (!iso) return "Never";
+  const t = new Date(iso).getTime();
+  if (Number.isNaN(t)) return "Never";
+  const diffMs = Date.now() - t;
+  const minute = 60 * 1000;
+  const hour = 60 * minute;
+  const day = 24 * hour;
+  if (diffMs < minute) return "Just now";
+  if (diffMs < hour) return `${Math.floor(diffMs / minute)}m ago`;
+  if (diffMs < day) return `${Math.floor(diffMs / hour)}h ago`;
+  if (diffMs < 7 * day) return `${Math.floor(diffMs / day)}d ago`;
+  return new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
 export default function AdminApprovals() {
@@ -448,9 +465,17 @@ export default function AdminApprovals() {
   // Status counts for the filter bar
   const statusCounts = useMemo(() => {
     const counts: Record<string, number> = { all: agents.length };
+    // Pending / Verified now driven by auth-account presence
+    let verified = 0;
+    let pending = 0;
     agents.forEach((a) => {
+      if (a.has_auth_account) verified++;
+      else pending++;
+      // Keep other status buckets (rejected/restricted/unverified) from agent_status
       counts[a.agent_status] = (counts[a.agent_status] || 0) + 1;
     });
+    counts.verified = verified;
+    counts.pending = pending;
     return counts;
   }, [agents]);
 
@@ -475,6 +500,10 @@ export default function AdminApprovals() {
         result = result.filter(
           (a) => !a.is_early_access && presenceMap.get(a.id)?.isOnline
         );
+      } else if (statusFilter === "verified") {
+        result = result.filter((a) => a.has_auth_account === true);
+      } else if (statusFilter === "pending") {
+        result = result.filter((a) => a.has_auth_account !== true);
       } else {
         result = result.filter((a) => a.agent_status === statusFilter);
       }
@@ -506,6 +535,16 @@ export default function AdminApprovals() {
         case "company":
           comparison = (a.company || "").localeCompare(b.company || "");
           break;
+        case "last_sign_in_at": {
+          // Most-recent first when desc; nulls always last
+          const at = a.last_sign_in_at ? new Date(a.last_sign_in_at).getTime() : null;
+          const bt = b.last_sign_in_at ? new Date(b.last_sign_in_at).getTime() : null;
+          if (at === null && bt === null) comparison = 0;
+          else if (at === null) return 1;
+          else if (bt === null) return -1;
+          else comparison = at - bt;
+          break;
+        }
         case "created_at":
         default:
           comparison = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
@@ -845,6 +884,8 @@ export default function AdminApprovals() {
                   <SelectItem value="name-desc">Name Z-A</SelectItem>
                   <SelectItem value="created_at-desc">Newest first</SelectItem>
                   <SelectItem value="created_at-asc">Oldest first</SelectItem>
+                  <SelectItem value="last_sign_in_at-desc">Last sign-in (recent)</SelectItem>
+                  <SelectItem value="last_sign_in_at-asc">Last sign-in (oldest)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -1028,23 +1069,30 @@ export default function AdminApprovals() {
                     </div>
                     
                     <div className="flex items-center gap-3 shrink-0">
-                      <Select
-                        value={agent.agent_status}
-                        onValueChange={(val) => handleStatusChange(agent, val)}
-                        disabled={isProcessing}
+                      {agent.has_auth_account ? (
+                        <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700 ring-1 ring-emerald-200">
+                          Verified
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700 ring-1 ring-amber-200">
+                          Pending
+                        </span>
+                      )}
+                      <span
+                        className="text-xs text-zinc-500"
+                        title={
+                          agent.last_sign_in_at
+                            ? `Last sign-in: ${new Date(agent.last_sign_in_at).toLocaleString()}`
+                            : "Never signed in"
+                        }
                       >
-                        <SelectTrigger className="w-auto h-auto rounded-lg border-0 bg-transparent p-0 [&>svg]:hidden">
-                          <AgentStatusBadge status={agent.agent_status} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {AGENT_STATUS_OPTIONS.map((opt) => (
-                            <SelectItem key={opt.value} value={opt.value}>
-                              {opt.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <span className="text-xs text-zinc-500">
+                        {agent.last_sign_in_at ? (
+                          <>Last sign-in: {formatRelativeSignIn(agent.last_sign_in_at)}</>
+                        ) : (
+                          <span className="text-zinc-400">Never signed in</span>
+                        )}
+                      </span>
+                      <span className="text-xs text-zinc-400">
                         {new Date(agent.created_at).toLocaleDateString()}
                       </span>
                     </div>
