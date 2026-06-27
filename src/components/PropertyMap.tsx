@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef } from "react";
 import { formatListingMapPinTruncated, type ListingPriceFields } from "@/lib/formatListingPriceDisplay";
+import { getGoogleMapsBrowserKey } from "@/lib/googleMapsConfig";
 
 type GoogleMapsApi = typeof google.maps;
 type SearchMarker = (google.maps.Marker | google.maps.marker.AdvancedMarkerElement) & {
