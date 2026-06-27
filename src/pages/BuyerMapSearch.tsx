@@ -10,6 +10,7 @@ import { compareListingsByRecency } from "@/lib/listingRecencySort";
 import { formatListingShareEmailStreetLine } from "@/lib/buildHotSheetShareEmailHtml";
 import { buildNewListingSharedEmailSubject } from "@/lib/listingEmailSubject";
 import { isDcmlsHost } from "@/lib/host";
+import { getGoogleMapsBrowserKey } from "@/lib/googleMapsConfig";
 import {
   RENT_PRICE_ABS_MAX,
   RENT_PRICE_ABS_MIN,
