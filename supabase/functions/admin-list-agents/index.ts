@@ -40,6 +40,8 @@ interface MergedAgent {
   verified_at: string | null
   created_at: string
   is_early_access?: boolean
+  has_auth_account?: boolean
+  last_sign_in_at?: string | null
 }
 
 Deno.serve(async (req) => {
@@ -106,6 +108,39 @@ Deno.serve(async (req) => {
     // Use service role client to bypass RLS
     const adminClient = createClient(supabaseUrl, supabaseServiceKey)
 
+    // Build maps of auth.users by lowercase email — drives has_auth_account + last_sign_in_at
+    const authEmails = new Set<string>()
+    const lastSignInByEmail = new Map<string, string | null>()
+    try {
+      let page = 1
+      const perPage = 1000
+      // Hard cap to avoid runaway loops
+      while (page <= 50) {
+        const { data: list, error: listErr } = await adminClient.auth.admin.listUsers({ page, perPage })
+        if (listErr) {
+          console.error('[admin-list-agents] auth.admin.listUsers error:', listErr.message)
+          break
+        }
+        const users = list?.users ?? []
+        for (const u of users) {
+          const email = (u.email ?? '').toLowerCase()
+          if (!email) continue
+          authEmails.add(email)
+          const prev = lastSignInByEmail.get(email)
+          const next = u.last_sign_in_at ?? null
+          // Keep most-recent sign-in if duplicate email rows exist
+          if (!prev || (next && new Date(next).getTime() > new Date(prev).getTime())) {
+            lastSignInByEmail.set(email, next)
+          }
+        }
+        if (users.length < perPage) break
+        page++
+      }
+      console.log('[admin-list-agents] auth users scanned:', authEmails.size)
+    } catch (e) {
+      console.error('[admin-list-agents] auth listUsers exception:', e)
+    }
+
     // Fetch all profiles
     const { data: profiles, error: profilesError } = await adminClient
       .from('agent_profiles')
@@ -150,6 +185,7 @@ Deno.serve(async (req) => {
 
     const agents: MergedAgent[] = profiles.map(p => {
       const s = settingsByUser.get(p.id)
+      const emailKey = (p.email ?? '').toLowerCase()
       return {
         id: p.id,
         aac_id: p.aac_id,
@@ -164,6 +200,8 @@ Deno.serve(async (req) => {
         agent_status: s?.agent_status ?? 'unknown',
         verified_at: s?.verified_at ?? null,
         created_at: p.created_at || new Date().toISOString(),
+        has_auth_account: authEmails.has(emailKey),
+        last_sign_in_at: lastSignInByEmail.get(emailKey) ?? null,
       }
     })
 
@@ -192,7 +230,9 @@ Deno.serve(async (req) => {
     const newEarlyAccess = (earlyAccess || []).filter(ea => !existingEmails.has(ea.email.toLowerCase()))
 
     // Map early access records to MergedAgent format - RESPECT actual status from DB
-    const earlyAccessAgents: MergedAgent[] = newEarlyAccess.map(ea => ({
+    const earlyAccessAgents: MergedAgent[] = newEarlyAccess.map(ea => {
+      const emailKey = (ea.email ?? '').toLowerCase()
+      return {
       id: ea.id,
       aac_id: `EA-${ea.id.slice(0, 6).toUpperCase()}`,
       first_name: ea.first_name,
@@ -207,7 +247,10 @@ Deno.serve(async (req) => {
       verified_at: null,
       created_at: ea.created_at,
       is_early_access: true,
-    }))
+      has_auth_account: authEmails.has(emailKey),
+      last_sign_in_at: lastSignInByEmail.get(emailKey) ?? null,
+      }
+    })
 
     // Combine both lists
     const allAgents = [...agents, ...earlyAccessAgents]
