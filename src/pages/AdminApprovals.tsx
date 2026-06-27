@@ -69,6 +69,8 @@ interface Agent {
   verified_at: string | null;
   created_at: string;
   is_early_access?: boolean;
+  has_auth_account?: boolean;
+  last_sign_in_at?: string | null;
 }
 
 const stateLicenseLookupUrls: Record<string, string> = {
@@ -95,7 +97,7 @@ const stateNames: Record<string, string> = {
   PA: "Pennsylvania",
 };
 
-type SortField = "name" | "status" | "created_at" | "company";
+type SortField = "name" | "status" | "created_at" | "company" | "last_sign_in_at";
 type SortDirection = "asc" | "desc";
 
 function risksForAgent(a: Agent): Risk[] {
@@ -128,6 +130,21 @@ function RiskBadges({ risks }: { risks: Risk[] }) {
       ))}
     </div>
   );
+}
+
+function formatRelativeSignIn(iso: string | null | undefined): string {
+  if (!iso) return "Never";
+  const t = new Date(iso).getTime();
+  if (Number.isNaN(t)) return "Never";
+  const diffMs = Date.now() - t;
+  const minute = 60 * 1000;
+  const hour = 60 * minute;
+  const day = 24 * hour;
+  if (diffMs < minute) return "Just now";
+  if (diffMs < hour) return `${Math.floor(diffMs / minute)}m ago`;
+  if (diffMs < day) return `${Math.floor(diffMs / hour)}h ago`;
+  if (diffMs < 7 * day) return `${Math.floor(diffMs / day)}d ago`;
+  return new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
 export default function AdminApprovals() {
