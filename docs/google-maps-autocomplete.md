@@ -1,165 +1,47 @@
 # Google Maps Address Autocomplete
 
-This document explains how Google Maps / Places Autocomplete is configured across production (Netlify) and Lovable preview, and how to debug issues quickly.
+Google Maps / Places is configured through the **Google Maps Platform connector**.
+Linking the connector is the only setup required — Lovable provisions all keys.
 
----
+## Canonical configuration
 
-## Overview
+| Surface | Variable | Source |
+|---|---|---|
+| Browser (Maps JS, Places autocomplete) | `VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_BROWSER_KEY` | Connector (auto) |
+| Browser usage tracking channel | `VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_TRACKING_ID` | Connector (auto) |
+| Edge functions (geocoding, server calls) | `GOOGLE_MAPS_API_KEY` | Connector (auto) |
 
-Address autocomplete uses the **Google Maps JavaScript API + Places API**.  
-Because this is a frontend feature, the API key is public by design and secured via domain (referrer) restrictions in Google Cloud Console.
+Frontend code reads the browser key through `src/lib/googleMapsConfig.ts`
+(`getGoogleMapsBrowserKey()` / `getGoogleMapsTrackingId()`). No component should
+read `import.meta.env.VITE_*` for Maps directly.
 
-Due to build-time differences, production and preview environments load the key differently.
+Edge functions read `Deno.env.get("GOOGLE_MAPS_API_KEY")`.
 
----
+The legacy `VITE_GOOGLE_MAPS_API_KEY` secret is deprecated. Nothing in the
+codebase reads it. It will be deleted after the connector-only deploy is
+verified in production.
 
-## Production Setup (Netlify)
+## Preview debug override
 
-### Environment Variable
+`src/components/PropertyMap.tsx` still accepts a one-off `?gmaps_key=` URL
+parameter for ad-hoc preview debugging. It is not used in production.
 
-Set the following **build-time environment variable** in Netlify:
+## Google Cloud requirements
 
-```
-VITE_GOOGLE_MAPS_API_KEY
-```
+Managed by the connector. APIs (Maps JavaScript, Places New, Geocoding) and
+HTTP referrer restrictions for `allagentconnect.com`, `directconnectmls.com`,
+and `*.lovable.app` are configured on the connector's key.
 
-Optional debug env var:
-
-```
-VITE_DEBUG_PLACES=true
-```
-
-When enabled, the browser console includes Google Places lifecycle details, including `PlacesService.getDetails` status and whether `formatted_address` is present.
-
-**Important notes:**
-
-- `VITE_*` variables are baked into the frontend bundle at build time
-- Netlify injects this correctly during production builds
-- No query params or localStorage are needed in production
-
-### Expected Behavior
-
-- `/agent-match` loads autocomplete automatically
-- No console warnings
-- No URL parameters required
-
----
-
-## Lovable Preview Setup
-
-### Why This Is Different
-
-Lovable preview builds:
-
-- Do **not** reliably inject `VITE_*` variables into `import.meta.env`
-- Cloud secrets are available to edge/runtime code, not to Vite's build step
-
-Because of this, preview **cannot rely on** `VITE_GOOGLE_MAPS_API_KEY`.
-
-### Preview Workaround (Supported by Code)
-
-Open the preview URL **once** with the API key as a query param:
-
-```
-/agent-match?gmaps_key=YOUR_GOOGLE_MAPS_API_KEY
-```
-
-**What happens:**
-
-1. The app detects `gmaps_key` in the URL
-2. The key is stored in: `localStorage["aac_gmaps_key"]`
-3. All future visits to `/agent-match` work without the query param (in the same browser)
-
-### Verifying in Console
-
-Run:
-
-```javascript
-new URLSearchParams(window.location.search).get("gmaps_key")
-localStorage.getItem("aac_gmaps_key")
-```
-
-**Expected:**
-
-- First returns the key (on initial load)
-- Second returns the stored key (after reload)
-
-Console logs will show:
-
-```
-[AddressAutocomplete] gmaps key source: url
-[AddressAutocomplete] key present: [yes]
-[AddressAutocomplete] Google Places ready.
-```
-
----
-
-## Google Cloud Console Requirements
-
-### APIs (Must Be Enabled)
-
-- ✅ Maps JavaScript API
-- ✅ Places API
-
-### Key Restrictions (Required)
-
-**API restrictions**
-
-- Restrict to: Maps JavaScript API + Places API only
-
-**HTTP referrer restrictions**
-
-Include:
-
-- Production domain(s), e.g. `https://allagentconnect.com/*`
-- Lovable preview domains, e.g.:
-  - `https://*.lovable.app/*`
-  - `https://*.lovableproject.com/*`
-
----
-
-## Troubleshooting Guide (Read the Console)
-
-The component is intentionally loud when something is wrong.
-
-Look for these exact errors in the browser console:
+## Troubleshooting
 
 | Error | Meaning | Fix |
-|-------|---------|-----|
-| `RefererNotAllowedMapError` | Domain not allowed | Add preview domain to referrers |
-| `ApiNotActivatedMapError` | Places API disabled | Enable Places API |
-| `BillingNotEnabledMapError` | Billing not enabled | Enable billing in Google Cloud |
-| `InvalidKeyMapError` | Bad/disabled key | Rotate or re-enable key |
-| `Google Maps script loaded but Places unavailable` | Partial API config | Check APIs + restrictions |
-| `PlacesService.getDetails status: REQUEST_DENIED` | Key referrer restriction mismatch (common on deploy previews) | Use a preview-allowed key (for example `https://*.netlify.app/*`) or pass a preview key via `?gmaps_key=` |
+|---|---|---|
+| `RefererNotAllowedMapError` | Domain not on the key's referrer allowlist | Update the connector key's referrers in Google Cloud |
+| `ApiNotActivatedMapError` | Required Maps API not enabled | Enable on the connector key's Cloud project |
+| `InvalidKeyMapError` | Key rotated/disabled | Reconnect the Google Maps Platform connector |
+| `Autocomplete disabled (missing key)` | `VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_BROWSER_KEY` not injected | Confirm the connector is linked and republish |
 
-If autocomplete is disabled, the UI will show:
+## Security
 
-```
-Autocomplete disabled (missing key)
-```
-
-This is intentional — no silent failures.
-
----
-
-## Quick Reference
-
-### One-Line Preview Test
-
-```
-/agent-match?gmaps_key=YOUR_KEY
-```
-
-### Production
-
-- Uses `VITE_GOOGLE_MAPS_API_KEY`
-- No query param required
-
----
-
-## Security Notes
-
-- Google Maps keys are **public by design**
-- Security is enforced via **API + referrer restrictions**, not secrecy
-- Never reuse a key that was pasted into chat — rotate immediately
+Browser Maps keys are public by design and secured via referrer restrictions.
+The server key (`GOOGLE_MAPS_API_KEY`) is never exposed to the client.

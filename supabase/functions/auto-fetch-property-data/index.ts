@@ -33,7 +33,8 @@ serve(async (req) => {
     // Initialize Supabase client with service role key for full access
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const googleMapsApiKey = Deno.env.get("VITE_GOOGLE_MAPS_API_KEY");
+    // Server-side Google Maps key, provisioned by the Google Maps Platform connector.
+    const googleMapsApiKey = Deno.env.get("GOOGLE_MAPS_API_KEY");
     
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
