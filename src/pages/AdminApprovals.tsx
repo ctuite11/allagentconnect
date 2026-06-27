@@ -465,9 +465,17 @@ export default function AdminApprovals() {
   // Status counts for the filter bar
   const statusCounts = useMemo(() => {
     const counts: Record<string, number> = { all: agents.length };
+    // Pending / Verified now driven by auth-account presence
+    let verified = 0;
+    let pending = 0;
     agents.forEach((a) => {
+      if (a.has_auth_account) verified++;
+      else pending++;
+      // Keep other status buckets (rejected/restricted/unverified) from agent_status
       counts[a.agent_status] = (counts[a.agent_status] || 0) + 1;
     });
+    counts.verified = verified;
+    counts.pending = pending;
     return counts;
   }, [agents]);
 
@@ -492,6 +500,10 @@ export default function AdminApprovals() {
         result = result.filter(
           (a) => !a.is_early_access && presenceMap.get(a.id)?.isOnline
         );
+      } else if (statusFilter === "verified") {
+        result = result.filter((a) => a.has_auth_account === true);
+      } else if (statusFilter === "pending") {
+        result = result.filter((a) => a.has_auth_account !== true);
       } else {
         result = result.filter((a) => a.agent_status === statusFilter);
       }
@@ -523,6 +535,16 @@ export default function AdminApprovals() {
         case "company":
           comparison = (a.company || "").localeCompare(b.company || "");
           break;
+        case "last_sign_in_at": {
+          // Most-recent first when desc; nulls always last
+          const at = a.last_sign_in_at ? new Date(a.last_sign_in_at).getTime() : null;
+          const bt = b.last_sign_in_at ? new Date(b.last_sign_in_at).getTime() : null;
+          if (at === null && bt === null) comparison = 0;
+          else if (at === null) return 1;
+          else if (bt === null) return -1;
+          else comparison = at - bt;
+          break;
+        }
         case "created_at":
         default:
           comparison = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
