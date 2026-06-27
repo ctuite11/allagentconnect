@@ -1,39 +1,40 @@
-## Goal
-Create a polished, forwardable "Your license has been verified" email with a clear **Log In** CTA, matching the AAC brand (Navy header, Emerald accent, Green CTA) used by the Agent Forward invitation.
+## Restore the legacy key fallback in `googleMapsConfig.ts`
 
-## Deliverables
+This plan reverts the single deletion from commit `1f3c1a31` that broke Maps on `allagentconnect.com`. Nothing else changes.
 
-1. **New shared template builder**
-   `supabase/functions/_shared/buildLicenseVerifiedEmailHtml.ts`
-   - Exports `buildLicenseVerifiedEmailHtml({ ctaUrl, preheader, agentName? })`
-   - Same visual system as `buildAgentForwardEmailHtml.ts`:
-     - Navy (`#111317`) header with AAC monogram + 2px emerald underline
-     - White body card with brand border
-     - Headline: **Your license has been verified**
-     - Sub-copy: short confirmation that the account is approved and ready to use
-     - Short "What's next" bullets (3 items, emerald squares, top-aligned — same bullet pattern as Agent Forward):
-       - Complete your profile so other agents can find you
-       - Add or import your listings
-       - Start sharing listings and building Hot Sheets
-     - Green CTA button **Log In to All Agent Connect** → `${PUBLIC_SITE_URL}/auth`
-     - Navy footer with monogram + "By Agents. For Agents. All Agents."
-   - Generic/forwardable: no personalized agent footer, no recipient-specific tokens, no expiring links
+### Root cause (recap)
+- Production custom domain was being served by `VITE_GOOGLE_MAPS_API_KEY` — that's the key whose Google Cloud referrer allowlist includes `allagentconnect.com` / `directconnectmls.com`.
+- The connector var `VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_BROWSER_KEY` holds the Lovable-managed key, which is locked to `*.lovable.app`.
+- I removed the legacy fallback in `src/lib/googleMapsConfig.ts`, so the browser stopped reading the only key authorized for your domain.
 
-2. **New edge function**
-   `supabase/functions/send-license-verified-email/index.ts`
-   - Accepts `{ to: string | string[], ctaUrl?, subject?, agentName? }`
-   - Enqueues into `email_jobs` with:
-     - `template: "license-verified"`
-     - `subject` default: **Your license has been verified — welcome to All Agent Connect**
-     - `reply_to: "hello@allagentconnect.com"`
-   - Kicks `kick-email-queue` after enqueue
-   - Standard CORS + error envelope (matches `send-agent-forward-invite` shape)
+### Change
 
-3. **Deploy**
-   - Deploy `send-license-verified-email`
-   - Send one test to `chris@allagentconnect.com` so you have a forwardable copy in your inbox
+**File:** `src/lib/googleMapsConfig.ts` (only file touched)
 
-## Out of scope (not changing now)
-- No automatic wiring into the admin approval flow
-- No DB triggers, no audit rows
-- No changes to existing `send-license-upload-notification` (that's the admin-side notice)
+Restore the legacy fallback inside `getGoogleMapsBrowserKey()`:
+
+```ts
+export function getGoogleMapsBrowserKey(): string | undefined {
+  const connectorKey = import.meta.env.VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_BROWSER_KEY;
+  if (connectorKey) return connectorKey;
+
+  // Legacy fallback — required while production custom domains are
+  // authorized under VITE_GOOGLE_MAPS_API_KEY's referrer allowlist.
+  // Do not remove until that key's domains are migrated onto the connector key.
+  const legacyKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+  return legacyKey || undefined;
+}
+```
+
+### Explicitly NOT changing
+- No edits to `PropertyMap.tsx`, `AddressAutocomplete.tsx`, `BuyerMapSearch.tsx`, edge functions, `.env`, `.gitignore`, `netlify.toml`, docs, or any connector.
+- No Google Cloud changes, no key rotation, no secret add/delete.
+- Server-side edge functions keep using `GOOGLE_MAPS_API_KEY` as already configured.
+
+### Verification after deploy
+1. Open `allagentconnect.com/review-matches` → Map renders, no `RefererNotAllowedMapError` in console.
+2. Open the Lovable preview (`*.lovable.app`) → Map still renders (connector key path still works).
+3. Address autocomplete still functions on both domains.
+
+### Follow-up (not in this plan)
+Once you decide whether to keep the legacy key long-term or migrate its allowlisted domains onto the connector key, we can revisit consolidation — but only after confirming the chosen key's referrer list covers every production domain.
