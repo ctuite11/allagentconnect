@@ -884,6 +884,8 @@ export default function AdminApprovals() {
                   <SelectItem value="name-desc">Name Z-A</SelectItem>
                   <SelectItem value="created_at-desc">Newest first</SelectItem>
                   <SelectItem value="created_at-asc">Oldest first</SelectItem>
+                  <SelectItem value="last_sign_in_at-desc">Last sign-in (recent)</SelectItem>
+                  <SelectItem value="last_sign_in_at-asc">Last sign-in (oldest)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -1067,23 +1069,30 @@ export default function AdminApprovals() {
                     </div>
                     
                     <div className="flex items-center gap-3 shrink-0">
-                      <Select
-                        value={agent.agent_status}
-                        onValueChange={(val) => handleStatusChange(agent, val)}
-                        disabled={isProcessing}
+                      {agent.has_auth_account ? (
+                        <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700 ring-1 ring-emerald-200">
+                          Verified
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700 ring-1 ring-amber-200">
+                          Pending
+                        </span>
+                      )}
+                      <span
+                        className="text-xs text-zinc-500"
+                        title={
+                          agent.last_sign_in_at
+                            ? `Last sign-in: ${new Date(agent.last_sign_in_at).toLocaleString()}`
+                            : "Never signed in"
+                        }
                       >
-                        <SelectTrigger className="w-auto h-auto rounded-lg border-0 bg-transparent p-0 [&>svg]:hidden">
-                          <AgentStatusBadge status={agent.agent_status} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {AGENT_STATUS_OPTIONS.map((opt) => (
-                            <SelectItem key={opt.value} value={opt.value}>
-                              {opt.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <span className="text-xs text-zinc-500">
+                        {agent.last_sign_in_at ? (
+                          <>Last sign-in: {formatRelativeSignIn(agent.last_sign_in_at)}</>
+                        ) : (
+                          <span className="text-zinc-400">Never signed in</span>
+                        )}
+                      </span>
+                      <span className="text-xs text-zinc-400">
                         {new Date(agent.created_at).toLocaleDateString()}
                       </span>
                     </div>
