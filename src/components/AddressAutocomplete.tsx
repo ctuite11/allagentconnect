@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { Input } from "@/components/ui/input";
+import { getGoogleMapsBrowserKey } from "@/lib/googleMapsConfig";
 
 interface AddressAutocompleteProps {
   onPlaceSelect?: (place: any) => void;
@@ -28,7 +29,7 @@ function getGmapsKey(): {
   apiKey?: string;
   source: "env" | "missing";
 } {
-  const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined;
+  const apiKey = getGoogleMapsBrowserKey();
 
   return {
     apiKey,
@@ -256,7 +257,7 @@ const AddressAutocomplete = ({
 
     if (!apiKey) {
       console.warn(
-        "[AddressAutocomplete] Google Maps key missing. Set VITE_GOOGLE_MAPS_API_KEY (production) or open the preview URL with ?gmaps_key=YOUR_KEY.",
+        "[AddressAutocomplete] Google Maps key missing. Expected VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_BROWSER_KEY (connector) or VITE_GOOGLE_MAPS_API_KEY (legacy).",
       );
       setLoadError("Autocomplete disabled (missing key)");
       onErrorRef.current?.();

@@ -10,6 +10,7 @@ import { compareListingsByRecency } from "@/lib/listingRecencySort";
 import { formatListingShareEmailStreetLine } from "@/lib/buildHotSheetShareEmailHtml";
 import { buildNewListingSharedEmailSubject } from "@/lib/listingEmailSubject";
 import { isDcmlsHost } from "@/lib/host";
+import { getGoogleMapsBrowserKey } from "@/lib/googleMapsConfig";
 import {
   RENT_PRICE_ABS_MAX,
   RENT_PRICE_ABS_MIN,
@@ -139,7 +140,7 @@ export default function BuyerMapSearch() {
   }, []);
 
   useEffect(() => {
-    const envKey = (import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined)?.trim();
+    const envKey = getGoogleMapsBrowserKey();
     const urlKey = new URLSearchParams(window.location.search).get("gmaps_key")?.trim();
     setMapsKeyAvailable(Boolean(envKey || urlKey));
   }, []);
