@@ -346,11 +346,6 @@ export function CreateBuyerDialog({ open, onOpenChange, onSuccess }: CreateBuyer
           if (relErr) failWithStep("insert client_agent_relationships", relErr);
         }
 
-        toast.success(
-          selectedContact
-            ? "Contact added as a buyer."
-            : "Buyer reactivated."
-        );
         invalidateAgentContactsCache();
         const reactivatedPayload: CreatedBuyerPayload = {
           id: existing.id,
@@ -396,7 +391,6 @@ export function CreateBuyerDialog({ open, onOpenChange, onSuccess }: CreateBuyer
 
       if (relErr) failWithStep("insert client_agent_relationships", relErr);
 
-      toast.success("Buyer created successfully.");
       invalidateAgentContactsCache();
       const createdPayload: CreatedBuyerPayload = {
         id: client.id,
