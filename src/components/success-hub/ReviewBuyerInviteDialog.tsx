@@ -28,6 +28,12 @@ interface ReviewBuyerInviteDialogProps {
   buyer: ReviewInviteBuyer | null;
   onClose: () => void;
   onSent?: () => void;
+  /**
+   * Which flow opened this dialog. Controls the primary CTA label.
+   * - "invite-only" (default): standard workspace invite, no hot sheet attached.
+   * - "with-hot-sheet": invite is paired with a hot sheet send.
+   */
+  variant?: "invite-only" | "with-hot-sheet";
 }
 
 const DEFAULT_SUBJECT =
@@ -48,6 +54,7 @@ export function ReviewBuyerInviteDialog({
   buyer,
   onClose,
   onSent,
+  variant = "invite-only",
 }: ReviewBuyerInviteDialogProps) {
   const [agentName, setAgentName] = useState("Your agent");
   const [subject, setSubject] = useState(DEFAULT_SUBJECT);
@@ -162,7 +169,7 @@ export function ReviewBuyerInviteDialog({
     >
       <DialogContent className="sm:max-w-[560px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-lg">Review Buyer Invite</DialogTitle>
+          <DialogTitle className="text-lg">Review Buyer Invitation</DialogTitle>
           <DialogDescription>
             Confirm the details below before sending the invite.
           </DialogDescription>
@@ -237,7 +244,7 @@ export function ReviewBuyerInviteDialog({
                 </>
               ) : (
                 <>
-                  Send hotsheet with invite
+                  {variant === "with-hot-sheet" ? "Send Hot Sheet with Invite" : "Send Invite"}
                   <ArrowRight className="w-4 h-4 opacity-90" />
                 </>
               )}
