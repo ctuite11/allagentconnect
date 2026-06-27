@@ -257,7 +257,7 @@ const AddressAutocomplete = ({
 
     if (!apiKey) {
       console.warn(
-        "[AddressAutocomplete] Google Maps key missing. Expected VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_BROWSER_KEY (connector) or VITE_GOOGLE_MAPS_API_KEY (legacy).",
+        "[AddressAutocomplete] Google Maps key missing. Expected VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_BROWSER_KEY (provisioned by the Google Maps Platform connector).",
       );
       setLoadError("Autocomplete disabled (missing key)");
       onErrorRef.current?.();
