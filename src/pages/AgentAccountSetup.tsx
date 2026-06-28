@@ -83,7 +83,12 @@ const AgentAccountSetup = () => {
     const failSafe = setTimeout(() => {
       if (cancelled) return;
       console.warn("[AgentAccountSetup] init fail-safe reached");
-      setSessionError("We couldn't verify your activation link. Please refresh this page or request a new verification email.");
+      const handoffEmail = sessionStorage.getItem("aac_agent_setup_email") || "";
+      if (handoffEmail) {
+        setEmail((current) => current || handoffEmail);
+      } else {
+        setSessionError("We couldn't verify your activation link. Please refresh this page or request a new verification email.");
+      }
       setValidating(false);
     }, 6000);
 
@@ -92,34 +97,51 @@ const AgentAccountSetup = () => {
         console.info("[AgentAccountSetup] init start");
         const isSetup = sessionStorage.getItem("aac_password_setup_flow") === "1";
         const isRecovery = sessionStorage.getItem("aac_recovery_flow") === "1";
-        if (!isSetup && !isRecovery) {
+        const hasSetupHandoff = sessionStorage.getItem("aac_agent_setup_handoff") === "1";
+        const handoffEmail = sessionStorage.getItem("aac_agent_setup_email") || "";
+        const handoffUserId = sessionStorage.getItem("aac_agent_setup_user_id") || "";
+
+        if (handoffEmail) setEmail(handoffEmail);
+
+        if (!isSetup && !isRecovery && !hasSetupHandoff) {
           if (!cancelled) {
             setSessionError("Your activation link is invalid or expired. Please request a new one from your verification email.");
           }
           return;
         }
 
-        const { data: { session } } = await withTimeout(
-          supabase.auth.getSession(),
-          4500,
-          "Activation session check",
-        );
-        if (!session?.user) {
-          if (!cancelled) {
-            setSessionError("Your activation link has expired. Please request a new one from your verification email.");
+        let sessionUserId = handoffUserId;
+        try {
+          const { data: { session } } = await withTimeout(
+            supabase.auth.getSession(),
+            4500,
+            "Activation session check",
+          );
+          if (!session?.user) {
+            if (!cancelled && !handoffEmail) {
+              setSessionError("Your activation link has expired. Please request a new one from your verification email.");
+            }
+            return;
           }
-          return;
+
+          sessionUserId = session.user.id;
+          if (!cancelled) setEmail(session.user.email ?? handoffEmail);
+        } catch (sessionErr) {
+          console.warn("[AgentAccountSetup] session check delayed; using setup handoff if available:", sessionErr);
+          if (!handoffEmail) {
+            setSessionError("Your activation link has expired. Please request a new one from your verification email.");
+            return;
+          }
         }
 
         if (cancelled) return;
-        setEmail(session.user.email ?? "");
 
-        try {
+        if (sessionUserId) try {
           const { data: profile, error: profileError } = await withTimeout(
             supabase
               .from("agent_profiles")
               .select("first_name, last_name")
-              .eq("id", session.user.id)
+              .eq("id", sessionUserId)
               .maybeSingle(),
             3500,
             "Agent profile lookup",
@@ -222,6 +244,9 @@ const AgentAccountSetup = () => {
 
       sessionStorage.removeItem("aac_recovery_flow");
       sessionStorage.removeItem("aac_password_setup_flow");
+      sessionStorage.removeItem("aac_agent_setup_handoff");
+      sessionStorage.removeItem("aac_agent_setup_user_id");
+      sessionStorage.removeItem("aac_agent_setup_email");
       window.history.replaceState(null, "", "/agent-setup");
 
       toast.success("Account activated. Welcome to All Agent Connect!");
