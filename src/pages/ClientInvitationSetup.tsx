@@ -14,8 +14,6 @@ import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 import { acceptClientHotSheetInvite } from "@/lib/acceptClientHotSheetInvite";
 import { markInviteAcceptance } from "@/lib/inviteAcceptanceHandoff";
 import { cn } from "@/lib/utils";
-import { TurnstileField } from "@/components/security/TurnstileField";
-import { useTurnstile } from "@/hooks/useTurnstile";
 
 /** Buyer portal brand tokens — match `BuyerShell` / `BuyerPortalHeader`. */
 const BUYER_MONOGRAM_CLASS = "text-[#16A34A]";
@@ -75,15 +73,13 @@ const ClientInvitationSetup = () => {
   const isEmailLocked =
     Boolean(initialEmail.trim()) || Boolean(inviteAnchor?.clientEmail?.trim());
   const postAcceptPath = "/client/dashboard";
-  const turnstile = useTurnstile("buyer_invite_signup");
-
   const markInviteHandoff = (hotSheetId?: string | null) => {
     markInviteAcceptance(hotSheetId ?? inviteAnchor?.hotSheetId ?? null);
   };
 
   const finalizeInviteAndSignIn = async (
     plainPassword: string,
-    opts: { existingAccount: boolean; turnstileToken?: string },
+    opts: { existingAccount: boolean },
   ) => {
     const normalizedEmail = email.trim().toLowerCase();
     if (inviteAnchor?.clientEmail && normalizedEmail !== inviteAnchor.clientEmail) {
@@ -105,7 +101,6 @@ const ClientInvitationSetup = () => {
       lastName: lastName.trim(),
       password: plainPassword,
       existingAccount: opts.existingAccount,
-      turnstileToken: opts.turnstileToken,
     });
 
     if (!result.ok) {
@@ -280,22 +275,16 @@ const ClientInvitationSetup = () => {
       return;
     }
 
-    // Turnstile is best-effort on this flow — the invite token itself is single-use
-    // and email-gated. If the widget loaded, require a token; otherwise allow submit
-    // so a failed/blocked widget can't trap the buyer.
-    const turnstileToken = turnstile.ready ? turnstile.requireToken() : undefined;
-    if (turnstile.ready && !turnstileToken) return;
-
     setIsSubmitting(true);
     let succeeded = false;
     try {
-      await finalizeInviteAndSignIn(password, { existingAccount: false, turnstileToken });
+      await finalizeInviteAndSignIn(password, { existingAccount: false });
       succeeded = true;
     } catch (error: any) {
       console.error("Activation error:", error);
       toast.error(error.message || "Failed to activate account. Please try again.");
     } finally {
-      if (!succeeded) turnstile.reset();
+      void succeeded;
       setIsSubmitting(false);
     }
   };
@@ -580,8 +569,6 @@ const ClientInvitationSetup = () => {
                     </p>
                   )}
                 </div>
-
-                <TurnstileField containerRef={turnstile.containerRef} error={turnstile.error} />
 
                 <Button
                   type="submit"
