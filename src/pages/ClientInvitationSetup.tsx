@@ -57,7 +57,9 @@ const ClientInvitationSetup = () => {
   const initialFirstName = searchParams.get("first_name") || "";
   const initialLastName = searchParams.get("last_name") || "";
 
-  const [phase, setPhase] = useState<"form" | "signin" | "confirmation_required">("form");
+  const [phase, setPhase] = useState<
+    "form" | "signin" | "confirmation_required" | "account_mismatch"
+  >("form");
   const [email, setEmail] = useState(initialEmail);
   const [firstName, setFirstName] = useState(initialFirstName);
   const [lastName, setLastName] = useState(initialLastName);
@@ -69,6 +71,9 @@ const ClientInvitationSetup = () => {
   const [tokenValid, setTokenValid] = useState(false);
   const [inviteAnchor, setInviteAnchor] = useState<InviteAnchor | null>(null);
   const [agentFirstName, setAgentFirstName] = useState<string>("");
+  /** Email of an active, mismatched session (agent/admin/other buyer). Drives the blocking state. */
+  const [activeSessionEmail, setActiveSessionEmail] = useState<string | null>(null);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   /** Lock email when present on the URL or on the invite token payload (buyer must accept with invited email). */
   const isEmailLocked =
     Boolean(initialEmail.trim()) || Boolean(inviteAnchor?.clientEmail?.trim());
@@ -92,7 +97,20 @@ const ClientInvitationSetup = () => {
       throw new Error("Please enter your first and last name.");
     }
 
-    await supabase.auth.signOut();
+    // Session guard — never sign out or replace a logged-in agent/admin/other buyer
+    // session. The buyer must be logged out (or already signed in as the invite email).
+    const { data: activeUserData } = await supabase.auth.getUser();
+    const activeUser = activeUserData?.user ?? null;
+    if (activeUser?.email) {
+      const activeEmail = activeUser.email.trim().toLowerCase();
+      if (activeEmail !== normalizedEmail) {
+        setActiveSessionEmail(activeEmail);
+        setPhase("account_mismatch");
+        throw new Error(
+          `You are currently signed in as ${activeEmail}. Log out before accepting this invitation.`,
+        );
+      }
+    }
 
     const result = await acceptClientHotSheetInvite({
       token: invitationToken,
