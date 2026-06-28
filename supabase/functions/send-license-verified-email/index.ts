@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.0";
 import { buildLicenseVerifiedEmailHtml } from "../_shared/buildLicenseVerifiedEmailHtml.ts";
-import { resolveAacCtaUrl } from "../_shared/aacPublicUrl.ts";
+import { AAC_PUBLIC_URL, resolveAacCtaUrl, wrapSupabaseActionLinkForAac } from "../_shared/aacPublicUrl.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -16,6 +16,8 @@ interface SendRequest {
 }
 
 const DEFAULT_SUBJECT = "Your license has been verified — welcome to All Agent Connect";
+
+const SETUP_REDIRECT = `${AAC_PUBLIC_URL}/auth/callback?type=recovery&setup=1`;
 
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
@@ -34,7 +36,6 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    const ctaUrl = resolveAacCtaUrl(body.ctaUrl, "/auth");
     const subject = body.subject?.trim() || DEFAULT_SUBJECT;
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
@@ -43,6 +44,32 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("Server misconfigured: missing Supabase service credentials");
     }
     const admin = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Resolve CTA: caller-provided wins (allagentconnect.com only, or wrapped
+    // Supabase action link). Otherwise generate a per-recipient password
+    // setup/recovery link so the agent can set their password directly from
+    // the email — matching the Add Buyer Invite acceptance flow.
+    async function resolveCtaForRecipient(email: string): Promise<string> {
+      if (body.ctaUrl) {
+        return resolveAacCtaUrl(body.ctaUrl, "/auth");
+      }
+      try {
+        const { data, error } = await admin.auth.admin.generateLink({
+          type: "recovery",
+          email,
+          options: { redirectTo: SETUP_REDIRECT },
+        });
+        const actionLink = data?.properties?.action_link;
+        if (error || !actionLink) {
+          console.error("[send-license-verified-email] generateLink failed:", error);
+          return `${AAC_PUBLIC_URL}/auth`;
+        }
+        return wrapSupabaseActionLinkForAac(actionLink);
+      } catch (err) {
+        console.error("[send-license-verified-email] generateLink threw:", err);
+        return `${AAC_PUBLIC_URL}/auth`;
+      }
+    }
 
     const footerAgent = {
       firstName: "Chris",
@@ -60,6 +87,8 @@ const handler = async (req: Request): Promise<Response> => {
     const results: Array<{ email: string; success: boolean; error?: string }> = [];
 
     for (const email of recipients) {
+      const ctaUrl = await resolveCtaForRecipient(email);
+      const html = buildLicenseVerifiedEmailHtml({ ctaUrl, agentName: body.agentName, footerAgent });
       const { error } = await admin.from("email_jobs").insert({
         payload: {
           provider: "resend",
