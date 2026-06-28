@@ -1,28 +1,35 @@
-## Pin agent-side email CTAs to allagentconnect.com
+## Plan: fix License Verified verification email link stuck loading
 
-### New shared module
-Create `supabase/functions/_shared/aacPublicUrl.ts`:
-- Exports `AAC_PUBLIC_URL = "https://allagentconnect.com"`.
-- Exports `resolveAacCtaUrl(candidate, fallbackPath = "/auth")` that returns `candidate` only when its hostname is `allagentconnect.com` (or a subdomain); otherwise returns `${AAC_PUBLIC_URL}${fallbackPath}`. Logs a warning on rejection. Never throws.
+### Scope
+This is only for the **License Verified email link** flow:
 
-### Functions to update (agent-side only)
-For each, remove the `PUBLIC_SITE_URL` env read and use `AAC_PUBLIC_URL` / `resolveAacCtaUrl`:
+`License Verified email CTA → AAC /auth/setup → auth verify URL → /auth/callback?type=recovery&setup=1 → /agent-setup`
 
-1. **`send-license-verified-email`** — `ctaUrl = resolveAacCtaUrl(body.ctaUrl, "/auth")`. Final default: `https://allagentconnect.com/auth`.
-2. **`send-agent-forward-invite`** — `ctaUrl = resolveAacCtaUrl(body.ctaUrl, "/register")`.
-3. **`generate-agent-setup-link`** — `SETUP_REDIRECT` already hard-codes `allagentconnect.com`; leave the literal but switch to `${AAC_PUBLIC_URL}/auth/callback?type=recovery&setup=1` for consistency. No behavior change.
-4. **`send-agent-invite`** — agent-to-agent forward; `registerUrl = ${AAC_PUBLIC_URL}/register`. Drop the `allagentconnect.lovable.app` fallback.
-5. **`send-seller-alert`** — agent-facing alert; `baseUrl = AAC_PUBLIC_URL`. Drop the `.lovable.app` fallback.
-6. **`convert-early-access-to-account`** — agent password-setup redirect; `publicSiteUrl = AAC_PUBLIC_URL`.
-7. **`send-verification-submitted`** — already uses `allagentconnect.com` literals; verify only, no edit.
+No buyer invite, hot sheet, listing-share, or DCMLS consumer flows will be touched.
 
-### Out of scope (do NOT touch)
-- Buyer invite / hot-sheet / client-acceptance functions.
-- `send-listing-share` and any DCMLS consumer flows.
-- `process-email-queue`, queue infrastructure, deliverability headers.
+### Root issue
+The screenshot is the `/agent-setup` loader: **“Verifying your activation link…”**.
 
-### Deploy + verify
-1. Deploy the 6 modified functions.
-2. POST `/send-license-verified-email` with `{"to":"chris@allagentconnect.com"}`.
-3. Query the latest `email_jobs` row for that template and confirm the rendered HTML CTA `href` is exactly `https://allagentconnect.com/auth`.
-4. Report the verified href back.
+That page currently waits for session validation and agent profile prefill before it turns off loading. If any step stalls or throws, it can stay loading forever. The email link itself is reaching AAC, but the final setup page does not fail safely.
+
+### Fix
+1. **Harden `/agent-setup` initialization**
+   - Wrap setup initialization in `try/catch/finally`.
+   - Always end loading, even if profile lookup fails.
+   - Treat agent profile prefill as optional, not blocking.
+   - Add a short fail-safe timeout so the user sees an error panel instead of an infinite loader.
+
+2. **Keep the License Verified link on password setup**
+   - Preserve the existing AAC-pinned recovery/setup link behavior.
+   - Do not send users to plain `/auth` unless the setup link is invalid/expired.
+
+3. **Route correctly after setup**
+   - After password is set, resolve the user’s actual role.
+   - Admin routes to `/admin/approvals`.
+   - Verified agent routes to `/agent-dashboard`.
+   - If role resolution fails, show a clear error instead of hanging.
+
+4. **Verification**
+   - Re-send the License Verified email to `chris@allagentconnect.com`.
+   - Confirm the CTA starts on `allagentconnect.com` and reaches the password setup/reset flow.
+   - Confirm it no longer gets stuck on “Verifying your activation link…”.
