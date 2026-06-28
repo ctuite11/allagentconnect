@@ -366,6 +366,65 @@ const ClientInvitationSetup = () => {
     );
   }
 
+  if (phase === "account_mismatch") {
+    const inviteEmailDisplay = inviteAnchor?.clientEmail || email || "the invited email";
+    const handleLogoutAndContinue = async () => {
+      setIsLoggingOut(true);
+      try {
+        await supabase.auth.signOut();
+        setActiveSessionEmail(null);
+        setPhase("form");
+      } catch (err) {
+        console.error("[ClientInvitationSetup] sign out failed", err);
+        toast.error("Could not sign out. Please try again.");
+      } finally {
+        setIsLoggingOut(false);
+      }
+    };
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white px-4">
+        <div className="max-w-md w-full text-center space-y-6">
+          <AACMonogram className={cn("w-10 h-10 mx-auto", BUYER_MONOGRAM_CLASS)} />
+          <div className="space-y-2">
+            <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">
+              You&apos;re signed in as a different account
+            </h1>
+            <p className="text-sm text-zinc-500 leading-relaxed">
+              You are currently signed in as{" "}
+              <strong className="text-zinc-700">{activeSessionEmail}</strong>. This invite is for{" "}
+              <strong className="text-zinc-700">{inviteEmailDisplay}</strong>. Please open this invite
+              in a private window or log out first.
+            </p>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-2 justify-center">
+            <Button
+              variant="outline"
+              className="rounded-xl"
+              onClick={() => navigate("/")}
+              disabled={isLoggingOut}
+            >
+              Open Home
+            </Button>
+            <Button
+              className={cn("rounded-xl", BUYER_PRIMARY_BTN_CLASS)}
+              onClick={handleLogoutAndContinue}
+              disabled={isLoggingOut}
+            >
+              {isLoggingOut ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Logging out…
+                </>
+              ) : (
+                "Log out and continue"
+              )}
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (phase === "signin") {
     return (
       <div className="min-h-screen bg-white">
