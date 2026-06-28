@@ -129,7 +129,7 @@ const AuthCallback = () => {
         if (import.meta.env.DEV) console.log("[AuthCallback] Hash tokens detected - setting session");
         
         try {
-          const { error: sessionError } = await supabase.auth.setSession({
+          const { data: setSessionData, error: sessionError } = await supabase.auth.setSession({
             access_token: accessToken,
             refresh_token: refreshToken
           });
@@ -159,7 +159,7 @@ const AuthCallback = () => {
               const isAgentSetup =
                 recoveryInfo.isSetup ||
                 sessionStorage.getItem("aac_password_setup_flow") === "1";
-              if (isAgentSetup) rememberAgentSetupHandoff(session);
+              if (isAgentSetup) rememberAgentSetupHandoff(setSessionData?.session);
               navigate(isAgentSetup ? "/agent-setup" : "/password-reset", { replace: true });
             } else {
               const { data: { session: freshSession } } = await supabase.auth.getSession();
