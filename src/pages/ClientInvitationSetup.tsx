@@ -280,8 +280,11 @@ const ClientInvitationSetup = () => {
       return;
     }
 
-    const turnstileToken = turnstile.requireToken();
-    if (!turnstileToken) return;
+    // Turnstile is best-effort on this flow — the invite token itself is single-use
+    // and email-gated. If the widget loaded, require a token; otherwise allow submit
+    // so a failed/blocked widget can't trap the buyer.
+    const turnstileToken = turnstile.ready ? turnstile.requireToken() : undefined;
+    if (turnstile.ready && !turnstileToken) return;
 
     setIsSubmitting(true);
     let succeeded = false;
