@@ -57,7 +57,9 @@ const ClientInvitationSetup = () => {
   const initialFirstName = searchParams.get("first_name") || "";
   const initialLastName = searchParams.get("last_name") || "";
 
-  const [phase, setPhase] = useState<"form" | "signin" | "confirmation_required">("form");
+  const [phase, setPhase] = useState<
+    "form" | "signin" | "confirmation_required" | "account_mismatch"
+  >("form");
   const [email, setEmail] = useState(initialEmail);
   const [firstName, setFirstName] = useState(initialFirstName);
   const [lastName, setLastName] = useState(initialLastName);
@@ -69,6 +71,9 @@ const ClientInvitationSetup = () => {
   const [tokenValid, setTokenValid] = useState(false);
   const [inviteAnchor, setInviteAnchor] = useState<InviteAnchor | null>(null);
   const [agentFirstName, setAgentFirstName] = useState<string>("");
+  /** Email of an active, mismatched session (agent/admin/other buyer). Drives the blocking state. */
+  const [activeSessionEmail, setActiveSessionEmail] = useState<string | null>(null);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   /** Lock email when present on the URL or on the invite token payload (buyer must accept with invited email). */
   const isEmailLocked =
     Boolean(initialEmail.trim()) || Boolean(inviteAnchor?.clientEmail?.trim());
@@ -92,7 +97,20 @@ const ClientInvitationSetup = () => {
       throw new Error("Please enter your first and last name.");
     }
 
-    await supabase.auth.signOut();
+    // Session guard — never sign out or replace a logged-in agent/admin/other buyer
+    // session. The buyer must be logged out (or already signed in as the invite email).
+    const { data: activeUserData } = await supabase.auth.getUser();
+    const activeUser = activeUserData?.user ?? null;
+    if (activeUser?.email) {
+      const activeEmail = activeUser.email.trim().toLowerCase();
+      if (activeEmail !== normalizedEmail) {
+        setActiveSessionEmail(activeEmail);
+        setPhase("account_mismatch");
+        throw new Error(
+          `You are currently signed in as ${activeEmail}. Log out before accepting this invitation.`,
+        );
+      }
+    }
 
     const result = await acceptClientHotSheetInvite({
       token: invitationToken,
@@ -229,6 +247,23 @@ const ClientInvitationSetup = () => {
           if (agentData?.first_name) setAgentFirstName(agentData.first_name);
 
           setTokenValid(true);
+
+          // Session guard — detect mismatched logged-in user up front so we never
+          // mutate (or silently replace) an existing agent/admin session.
+          try {
+            const { data: activeUserData } = await supabase.auth.getUser();
+            const activeEmail = activeUserData?.user?.email?.trim().toLowerCase() ?? null;
+            const inviteEmail =
+              emailFromPayload?.trim().toLowerCase() ||
+              initialEmail.trim().toLowerCase() ||
+              null;
+            if (activeEmail && inviteEmail && activeEmail !== inviteEmail) {
+              setActiveSessionEmail(activeEmail);
+              setPhase("account_mismatch");
+            }
+          } catch (sessionErr) {
+            console.warn("[ClientInvitationSetup] session guard check failed", sessionErr);
+          }
         }
       } catch (error) {
         console.error("Token validation error:", error);
@@ -326,6 +361,65 @@ const ClientInvitationSetup = () => {
           <Button onClick={() => navigate("/")} variant="outline" className="rounded-xl">
             Return Home
           </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (phase === "account_mismatch") {
+    const inviteEmailDisplay = inviteAnchor?.clientEmail || email || "the invited email";
+    const handleLogoutAndContinue = async () => {
+      setIsLoggingOut(true);
+      try {
+        await supabase.auth.signOut();
+        setActiveSessionEmail(null);
+        setPhase("form");
+      } catch (err) {
+        console.error("[ClientInvitationSetup] sign out failed", err);
+        toast.error("Could not sign out. Please try again.");
+      } finally {
+        setIsLoggingOut(false);
+      }
+    };
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white px-4">
+        <div className="max-w-md w-full text-center space-y-6">
+          <AACMonogram className={cn("w-10 h-10 mx-auto", BUYER_MONOGRAM_CLASS)} />
+          <div className="space-y-2">
+            <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">
+              You&apos;re signed in as a different account
+            </h1>
+            <p className="text-sm text-zinc-500 leading-relaxed">
+              You are currently signed in as{" "}
+              <strong className="text-zinc-700">{activeSessionEmail}</strong>. This invite is for{" "}
+              <strong className="text-zinc-700">{inviteEmailDisplay}</strong>. Please open this invite
+              in a private window or log out first.
+            </p>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-2 justify-center">
+            <Button
+              variant="outline"
+              className="rounded-xl"
+              onClick={() => navigate("/")}
+              disabled={isLoggingOut}
+            >
+              Open Home
+            </Button>
+            <Button
+              className={cn("rounded-xl", BUYER_PRIMARY_BTN_CLASS)}
+              onClick={handleLogoutAndContinue}
+              disabled={isLoggingOut}
+            >
+              {isLoggingOut ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Logging out…
+                </>
+              ) : (
+                "Log out and continue"
+              )}
+            </Button>
+          </div>
         </div>
       </div>
     );
