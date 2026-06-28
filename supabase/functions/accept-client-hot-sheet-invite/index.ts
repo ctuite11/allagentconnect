@@ -191,11 +191,8 @@ serve(async (req) => {
     return json({ success: false, error: "Invalid JSON" }, 400);
   }
 
-  // Server-side Cloudflare Turnstile verification — blocks direct API abuse.
-  const turnstileResult = await verifyTurnstileToken(body.turnstile_token, req);
-  if (!turnstileResult.ok) {
-    return json({ success: false, error: TURNSTILE_GENERIC_ERROR }, 403);
-  }
+  // Turnstile intentionally not enforced here: the single-use, email-gated
+  // invite token is the security boundary for this flow.
 
   const token = body.token?.trim();
   const email = body.email ? normalizeEmail(body.email) : "";
