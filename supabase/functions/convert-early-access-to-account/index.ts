@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { AAC_PUBLIC_URL } from "../_shared/aacPublicUrl.ts";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
@@ -338,8 +339,8 @@ serve(async (req: Request): Promise<Response> => {
       );
     }
 
-    // Generate password reset link - use PUBLIC_SITE_URL env var for redirect
-    const publicSiteUrl = Deno.env.get("PUBLIC_SITE_URL") || "https://allagentconnect.com";
+    // Generate password reset link — pinned to AAC (never DCMLS).
+    const publicSiteUrl = AAC_PUBLIC_URL;
     const { data: resetData, error: resetError } = await supabaseAdmin.auth.admin.generateLink({
       type: "recovery",
       email,

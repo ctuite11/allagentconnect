@@ -1,40 +1,28 @@
-## Restore the legacy key fallback in `googleMapsConfig.ts`
+## Pin agent-side email CTAs to allagentconnect.com
 
-This plan reverts the single deletion from commit `1f3c1a31` that broke Maps on `allagentconnect.com`. Nothing else changes.
+### New shared module
+Create `supabase/functions/_shared/aacPublicUrl.ts`:
+- Exports `AAC_PUBLIC_URL = "https://allagentconnect.com"`.
+- Exports `resolveAacCtaUrl(candidate, fallbackPath = "/auth")` that returns `candidate` only when its hostname is `allagentconnect.com` (or a subdomain); otherwise returns `${AAC_PUBLIC_URL}${fallbackPath}`. Logs a warning on rejection. Never throws.
 
-### Root cause (recap)
-- Production custom domain was being served by `VITE_GOOGLE_MAPS_API_KEY` — that's the key whose Google Cloud referrer allowlist includes `allagentconnect.com` / `directconnectmls.com`.
-- The connector var `VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_BROWSER_KEY` holds the Lovable-managed key, which is locked to `*.lovable.app`.
-- I removed the legacy fallback in `src/lib/googleMapsConfig.ts`, so the browser stopped reading the only key authorized for your domain.
+### Functions to update (agent-side only)
+For each, remove the `PUBLIC_SITE_URL` env read and use `AAC_PUBLIC_URL` / `resolveAacCtaUrl`:
 
-### Change
+1. **`send-license-verified-email`** — `ctaUrl = resolveAacCtaUrl(body.ctaUrl, "/auth")`. Final default: `https://allagentconnect.com/auth`.
+2. **`send-agent-forward-invite`** — `ctaUrl = resolveAacCtaUrl(body.ctaUrl, "/register")`.
+3. **`generate-agent-setup-link`** — `SETUP_REDIRECT` already hard-codes `allagentconnect.com`; leave the literal but switch to `${AAC_PUBLIC_URL}/auth/callback?type=recovery&setup=1` for consistency. No behavior change.
+4. **`send-agent-invite`** — agent-to-agent forward; `registerUrl = ${AAC_PUBLIC_URL}/register`. Drop the `allagentconnect.lovable.app` fallback.
+5. **`send-seller-alert`** — agent-facing alert; `baseUrl = AAC_PUBLIC_URL`. Drop the `.lovable.app` fallback.
+6. **`convert-early-access-to-account`** — agent password-setup redirect; `publicSiteUrl = AAC_PUBLIC_URL`.
+7. **`send-verification-submitted`** — already uses `allagentconnect.com` literals; verify only, no edit.
 
-**File:** `src/lib/googleMapsConfig.ts` (only file touched)
+### Out of scope (do NOT touch)
+- Buyer invite / hot-sheet / client-acceptance functions.
+- `send-listing-share` and any DCMLS consumer flows.
+- `process-email-queue`, queue infrastructure, deliverability headers.
 
-Restore the legacy fallback inside `getGoogleMapsBrowserKey()`:
-
-```ts
-export function getGoogleMapsBrowserKey(): string | undefined {
-  const connectorKey = import.meta.env.VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_BROWSER_KEY;
-  if (connectorKey) return connectorKey;
-
-  // Legacy fallback — required while production custom domains are
-  // authorized under VITE_GOOGLE_MAPS_API_KEY's referrer allowlist.
-  // Do not remove until that key's domains are migrated onto the connector key.
-  const legacyKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-  return legacyKey || undefined;
-}
-```
-
-### Explicitly NOT changing
-- No edits to `PropertyMap.tsx`, `AddressAutocomplete.tsx`, `BuyerMapSearch.tsx`, edge functions, `.env`, `.gitignore`, `netlify.toml`, docs, or any connector.
-- No Google Cloud changes, no key rotation, no secret add/delete.
-- Server-side edge functions keep using `GOOGLE_MAPS_API_KEY` as already configured.
-
-### Verification after deploy
-1. Open `allagentconnect.com/review-matches` → Map renders, no `RefererNotAllowedMapError` in console.
-2. Open the Lovable preview (`*.lovable.app`) → Map still renders (connector key path still works).
-3. Address autocomplete still functions on both domains.
-
-### Follow-up (not in this plan)
-Once you decide whether to keep the legacy key long-term or migrate its allowlisted domains onto the connector key, we can revisit consolidation — but only after confirming the chosen key's referrer list covers every production domain.
+### Deploy + verify
+1. Deploy the 6 modified functions.
+2. POST `/send-license-verified-email` with `{"to":"chris@allagentconnect.com"}`.
+3. Query the latest `email_jobs` row for that template and confirm the rendered HTML CTA `href` is exactly `https://allagentconnect.com/auth`.
+4. Report the verified href back.

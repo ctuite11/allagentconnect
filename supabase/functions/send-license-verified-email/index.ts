@@ -1,8 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.0";
 import { buildLicenseVerifiedEmailHtml } from "../_shared/buildLicenseVerifiedEmailHtml.ts";
-
-const PUBLIC_SITE_URL = Deno.env.get("PUBLIC_SITE_URL") || "https://allagentconnect.com";
+import { resolveAacCtaUrl } from "../_shared/aacPublicUrl.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -35,7 +34,7 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    const ctaUrl = body.ctaUrl?.trim() || `${PUBLIC_SITE_URL}/auth`;
+    const ctaUrl = resolveAacCtaUrl(body.ctaUrl, "/auth");
     const subject = body.subject?.trim() || DEFAULT_SUBJECT;
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
