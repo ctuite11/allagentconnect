@@ -228,7 +228,8 @@ const AuthCallback = () => {
           if (!didNavigate.current) {
             didNavigate.current = true;
             window.history.replaceState(null, "", window.location.pathname);
-            navigate("/password-reset", { replace: true });
+            const isAgentSetup = sessionStorage.getItem("aac_password_setup_flow") === "1";
+            navigate(isAgentSetup ? "/agent-setup" : "/password-reset", { replace: true });
           }
           return;
         }
@@ -241,7 +242,8 @@ const AuthCallback = () => {
             if (!didNavigate.current) {
               didNavigate.current = true;
               window.history.replaceState(null, "", window.location.pathname);
-              navigate("/password-reset", { replace: true });
+              const isAgentSetup = sessionStorage.getItem("aac_password_setup_flow") === "1";
+              navigate(isAgentSetup ? "/agent-setup" : "/password-reset", { replace: true });
             }
             return;
           }
@@ -268,7 +270,8 @@ const AuthCallback = () => {
           }
           didNavigate.current = true;
           window.history.replaceState(null, "", window.location.pathname);
-          navigate("/password-reset", { replace: true });
+          const isAgentSetup = sessionStorage.getItem("aac_password_setup_flow") === "1";
+          navigate(isAgentSetup ? "/agent-setup" : "/password-reset", { replace: true });
           return;
         }
 
@@ -352,7 +355,8 @@ const AuthCallback = () => {
       if (isRecoverySession) {
         authDebug("routeUser", { action: "recovery_redirect" });
         didNavigate.current = true;
-        navigate('/password-reset', { replace: true });
+        const isAgentSetup = sessionStorage.getItem("aac_password_setup_flow") === "1";
+        navigate(isAgentSetup ? "/agent-setup" : "/password-reset", { replace: true });
         return;
       }
 
