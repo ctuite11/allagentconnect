@@ -4529,6 +4529,13 @@ export type Database = {
           token: string
         }[]
       }
+      list_sent_listings_for_member: {
+        Args: { _hot_sheet_ids: string[] }
+        Returns: {
+          hot_sheet_id: string
+          listing_id: string
+        }[]
+      }
       listings_within_radius: {
         Args: { origin_lat: number; origin_lng: number; radius_miles: number }
         Returns: {

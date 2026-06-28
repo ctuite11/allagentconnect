@@ -446,6 +446,21 @@ serve(async (req) => {
       console.error("[accept-client-hot-sheet-invite] hot_sheet_clients link failed:", hscError);
       return json({ success: false, error: "Failed to link accepted hot sheet to buyer account" }, 500);
     }
+
+    // Baseline existing matches so they DO NOT count as "New Matches" on the
+    // buyer dashboard. Best-effort: any failure is logged but never blocks the
+    // invite acceptance.
+    try {
+      const { error: baselineErr } = await supabaseAdmin.functions.invoke(
+        "process-hot-sheet",
+        { body: { hotSheetId, baselineOnly: true } },
+      );
+      if (baselineErr) {
+        console.warn("[accept-client-hot-sheet-invite] baseline invoke failed:", baselineErr);
+      }
+    } catch (baselineEx) {
+      console.warn("[accept-client-hot-sheet-invite] baseline threw:", baselineEx);
+    }
   }
 
   if (!tokenRow.accepted_at) {

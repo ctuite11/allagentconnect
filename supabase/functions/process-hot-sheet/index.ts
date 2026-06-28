@@ -12,6 +12,13 @@ interface ProcessHotSheetRequest {
   hotSheetId: string;
   sendInitialBatch?: boolean;
   selectedListingIds?: string[];
+  /**
+   * Baseline-only mode: record all currently matching listings as "sent" for this
+   * hot sheet (insert into hot_sheet_sent_listings) WITHOUT sending any email and
+   * WITHOUT respecting the 60s cooldown. Used at buyer invite acceptance time so
+   * the buyer dashboard's "New Matches" stat starts at 0.
+   */
+  baselineOnly?: boolean;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -36,7 +43,7 @@ const handler = async (req: Request): Promise<Response> => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    const { hotSheetId, sendInitialBatch = false, selectedListingIds }: ProcessHotSheetRequest = await req.json();
+    const { hotSheetId, sendInitialBatch = false, selectedListingIds, baselineOnly = false }: ProcessHotSheetRequest = await req.json();
 
     console.log("Processing hot sheet:", hotSheetId, { sendInitialBatch, selectedListingCount: selectedListingIds?.length });
 
@@ -50,8 +57,8 @@ const handler = async (req: Request): Promise<Response> => {
     if (hotSheetError) throw hotSheetError;
     if (!hotSheet) throw new Error("Hot sheet not found");
 
-    // Cooldown check: skip if sent within last 60 seconds
-    if (hotSheet.last_sent_at) {
+    // Cooldown check: skip if sent within last 60 seconds (not applied for baseline-only writes)
+    if (!baselineOnly && hotSheet.last_sent_at) {
       const lastSentTime = new Date(hotSheet.last_sent_at).getTime();
       const now = Date.now();
       const cooldownSeconds = 60;
@@ -137,7 +144,9 @@ const handler = async (req: Request): Promise<Response> => {
     console.log("Hot sheet criteria:", hotSheet.criteria);
 
     // Build query to match listings
-    let query = supabaseClient
+    // Use admin client for baseline-only writes (invoked by service-role flow at
+    // buyer invite acceptance time — buyer cannot see the agent's listings via RLS).
+    let query = (baselineOnly ? adminClient : supabaseClient)
       .from("listings")
       .select("*");
 
@@ -245,6 +254,24 @@ const handler = async (req: Request): Promise<Response> => {
     if (listingsError) throw listingsError;
 
     console.log("Found matching listings:", matchingListings?.length || 0);
+
+    // Baseline-only short-circuit: record everything as already sent, skip email.
+    if (baselineOnly) {
+      const rows = (matchingListings ?? []).map((l: any) => ({
+        hot_sheet_id: hotSheetId,
+        listing_id: l.id,
+        status_at_send: l.status || 'active',
+      }));
+      if (rows.length > 0) {
+        await adminClient
+          .from("hot_sheet_sent_listings")
+          .upsert(rows, { onConflict: "hot_sheet_id,listing_id", ignoreDuplicates: true });
+      }
+      return new Response(
+        JSON.stringify({ success: true, baseline: rows.length }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     // Get already sent listings
     const { data: sentListings } = await supabaseClient

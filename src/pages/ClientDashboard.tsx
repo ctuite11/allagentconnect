@@ -29,6 +29,7 @@ import { loadBuyerHotSheetAccess } from "@/lib/loadBuyerHotSheetAccess";
 import { consumeInviteAcceptance } from "@/lib/inviteAcceptanceHandoff";
 import type { ListedByAgentProfile } from "@/lib/listingListedBy";
 import { loadBuyerGenericFavorites } from "@/lib/loadBuyerFavorites";
+import { fetchBuyerSelfNewMatchesCount } from "@/lib/fetchBuyerSelfNewMatchesCount";
 import type { ClientDashboardFavoriteRow } from "@/components/buyer/ClientDashboardView";
 import {
   REMOVE_BUYER_BUTTON_LABEL,
@@ -118,6 +119,7 @@ export default function ClientDashboard() {
   const [buyerPhoneRaw, setBuyerPhoneRaw] = useState<string | null>(null);
   const [hotSheetPreviewPhotosById, setHotSheetPreviewPhotosById] = useState<Record<string, string[]>>({});
   const [hotSheetPreviewMatchCountsById, setHotSheetPreviewMatchCountsById] = useState<Record<string, number>>({});
+  const [newMatchesCount, setNewMatchesCount] = useState<number>(0);
   const [hotSheetDeleteId, setHotSheetDeleteId] = useState<string | null>(null);
   const [hotSheetDeleteLoading, setHotSheetDeleteLoading] = useState(false);
   const [editingHotSheetId, setEditingHotSheetId] = useState<string | null>(null);
@@ -336,12 +338,23 @@ export default function ClientDashboard() {
         setHotSheetPreviewPhotosById({});
         setHotSheetPreviewMatchCountsById({});
       }
+      // Compute "New Matches" count (relative to per-hot-sheet baseline).
+      try {
+        const count = await fetchBuyerSelfNewMatchesCount(
+          supabase,
+          loadedSheets.map((s) => ({ id: s.id, criteria: s.criteria })),
+        );
+        setNewMatchesCount(count);
+      } catch {
+        setNewMatchesCount(0);
+      }
       return loadedSheets;
     } catch (e) {
       console.error("loadBuyerHotSheetsForDashboard", e);
       setHotSheets([]);
       setHotSheetPreviewPhotosById({});
       setHotSheetPreviewMatchCountsById({});
+      setNewMatchesCount(0);
       return [];
     }
   };
@@ -507,9 +520,9 @@ export default function ClientDashboard() {
     },
     {
       label: "New Matches",
-      value: marketListings.length > 0 ? String(Math.min(marketListings.length, 6)) : "--",
+      value: String(newMatchesCount),
       icon: Sparkle,
-      subtle: marketListings.length > 0 ? "On the market" : "Awaiting activity",
+      subtle: newMatchesCount > 0 ? "New since you joined" : "All caught up",
     },
     {
       label: "Unread Messages",
