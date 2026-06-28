@@ -247,6 +247,23 @@ const ClientInvitationSetup = () => {
           if (agentData?.first_name) setAgentFirstName(agentData.first_name);
 
           setTokenValid(true);
+
+          // Session guard — detect mismatched logged-in user up front so we never
+          // mutate (or silently replace) an existing agent/admin session.
+          try {
+            const { data: activeUserData } = await supabase.auth.getUser();
+            const activeEmail = activeUserData?.user?.email?.trim().toLowerCase() ?? null;
+            const inviteEmail =
+              emailFromPayload?.trim().toLowerCase() ||
+              initialEmail.trim().toLowerCase() ||
+              null;
+            if (activeEmail && inviteEmail && activeEmail !== inviteEmail) {
+              setActiveSessionEmail(activeEmail);
+              setPhase("account_mismatch");
+            }
+          } catch (sessionErr) {
+            console.warn("[ClientInvitationSetup] session guard check failed", sessionErr);
+          }
         }
       } catch (error) {
         console.error("Token validation error:", error);
