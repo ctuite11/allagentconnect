@@ -14,6 +14,7 @@ import { setPostAuthRedirect } from "@/lib/sharedListingGuest";
 const ALWAYS_ALLOWED_PREFIXES = [
   "/auth",
   "/password-reset",
+  "/agent-setup",
   "/access-error",
   "/pending-verification",
   "/privacy",
