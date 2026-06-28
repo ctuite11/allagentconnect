@@ -403,6 +403,7 @@ const AuthCallback = () => {
       console.info("[AUTH_ROUTE_DECISION] AuthCallback.routeUser", {
         userId: verifiedUserId,
         email: verifiedEmail,
+        role: resolved.role,
         resolved_role: resolved.role,
         admin_role_present: diagnostics.admin_role_present,
         agent_role_present: diagnostics.agent_role_present,
@@ -412,6 +413,7 @@ const AuthCallback = () => {
         returnTo_value: returnToMeta.value,
         rejected_returnTo_source: returnToMeta.rejectedSource,
         rejected_returnTo_value: returnToMeta.rejectedValue,
+        target,
         final_redirect_target: target,
       });
 
