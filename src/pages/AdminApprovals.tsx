@@ -153,6 +153,8 @@ export default function AdminApprovals() {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [licenseUploadAgentIds, setLicenseUploadAgentIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
+  const [sendingSetupLinkFor, setSendingSetupLinkFor] = useState<Set<string>>(new Set());
+  const [lastSetupLinkSentAt, setLastSetupLinkSentAt] = useState<Map<string, number>>(new Map());
   
   // DIAGNOSTIC: Debug state for on-page panel
   const [debugInfo, setDebugInfo] = useState<{
