@@ -37,12 +37,12 @@ const AGENT_BADGE_CLASS =
 const AGENT_PRIMARY_BTN_CLASS =
   "bg-[#0E56F5] hover:bg-[#0A45CC] text-white font-medium";
 
-function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+function withTimeout<T>(promise: PromiseLike<T>, ms: number, label: string): Promise<T> {
   let timeoutId: ReturnType<typeof setTimeout> | undefined;
   const timeout = new Promise<never>((_, reject) => {
     timeoutId = setTimeout(() => reject(new Error(`${label} timed out`)), ms);
   });
-  return Promise.race([promise, timeout]).finally(() => {
+  return Promise.race([Promise.resolve(promise), timeout]).finally(() => {
     if (timeoutId) clearTimeout(timeoutId);
   });
 }
