@@ -582,7 +582,7 @@ const ClientInvitationSetup = () => {
 
                 <Button
                   type="submit"
-                  disabled={isSubmitting || !turnstile.isVerified}
+                  disabled={isSubmitting}
                   className={cn("w-full h-11 rounded-xl", BUYER_PRIMARY_BTN_CLASS)}
                 >
                   {isSubmitting ? (
