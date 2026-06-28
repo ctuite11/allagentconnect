@@ -1184,9 +1184,14 @@ export default function AdminApprovals() {
                     <span className="text-zinc-300">•</span>
                     <button
                       onClick={() => handleEmailSetupLink(agent)}
-                      className="text-zinc-500 hover:text-zinc-900 hover:underline transition-colors"
+                      disabled={sendingSetupLinkFor.has(agent.id)}
+                      className={
+                        sendingSetupLinkFor.has(agent.id)
+                          ? "text-zinc-300 cursor-not-allowed"
+                          : "text-zinc-500 hover:text-zinc-900 hover:underline transition-colors"
+                      }
                     >
-                      Email setup link
+                      {sendingSetupLinkFor.has(agent.id) ? "Sending..." : "Email setup link"}
                     </button>
                     <span className="text-zinc-300">•</span>
                     <button 
