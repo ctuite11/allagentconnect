@@ -81,7 +81,6 @@ const handler = async (req: Request): Promise<Response> => {
       headshotUrl:
         "https://qocduqtfbsevnhlgsfka.supabase.co/storage/v1/object/public/agent-headshots/1fc50da1-2664-4931-8cab-64e24dc5ed8c/headshot-1773973124574.jpg",
     };
-    const html = buildLicenseVerifiedEmailHtml({ ctaUrl, agentName: body.agentName, footerAgent });
     const replyTo = "chris@allagentconnect.com";
 
     const results: Array<{ email: string; success: boolean; error?: string }> = [];
