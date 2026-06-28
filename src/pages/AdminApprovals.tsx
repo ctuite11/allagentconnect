@@ -153,6 +153,8 @@ export default function AdminApprovals() {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [licenseUploadAgentIds, setLicenseUploadAgentIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
+  const [sendingSetupLinkFor, setSendingSetupLinkFor] = useState<Set<string>>(new Set());
+  const [lastSetupLinkSentAt, setLastSetupLinkSentAt] = useState<Map<string, number>>(new Map());
   
   // DIAGNOSTIC: Debug state for on-page panel
   const [debugInfo, setDebugInfo] = useState<{
@@ -655,21 +657,46 @@ export default function AdminApprovals() {
   };
 
   const handleEmailSetupLink = async (agent: Agent) => {
-    const setupUrl = await generateSetupLink(agent);
-    if (!setupUrl) return;
-    const { error } = await supabase.functions.invoke("send-license-verified-email", {
-      body: {
-        to: agent.email,
-        agentName: agent.first_name || undefined,
-        ctaUrl: setupUrl,
-      },
-    });
-    if (error) {
-      console.error("Send license-verified email failed:", error);
-      toast.error("Could not send setup email");
-      return;
+    if (sendingSetupLinkFor.has(agent.id)) return;
+
+    const lastSent = lastSetupLinkSentAt.get(agent.email.toLowerCase());
+    if (lastSent && Date.now() - lastSent < 60 * 60 * 1000) {
+      const minsAgo = Math.max(1, Math.round((Date.now() - lastSent) / 60000));
+      const ok = window.confirm(
+        `A setup email was already sent to ${agent.email} ${minsAgo} minute(s) ago. Send another one?`,
+      );
+      if (!ok) return;
     }
-    toast.success(`Setup link emailed to ${agent.email}`);
+
+    setSendingSetupLinkFor((prev) => new Set(prev).add(agent.id));
+    try {
+      const setupUrl = await generateSetupLink(agent);
+      if (!setupUrl) return;
+      const { error } = await supabase.functions.invoke("send-license-verified-email", {
+        body: {
+          to: agent.email,
+          agentName: agent.first_name || undefined,
+          ctaUrl: setupUrl,
+        },
+      });
+      if (error) {
+        console.error("Send license-verified email failed:", error);
+        toast.error("Could not send setup email");
+        return;
+      }
+      setLastSetupLinkSentAt((prev) => {
+        const next = new Map(prev);
+        next.set(agent.email.toLowerCase(), Date.now());
+        return next;
+      });
+      toast.success(`Setup link emailed to ${agent.email}`);
+    } finally {
+      setSendingSetupLinkFor((prev) => {
+        const next = new Set(prev);
+        next.delete(agent.id);
+        return next;
+      });
+    }
   };
 
   if (authLoading) {
@@ -1157,9 +1184,14 @@ export default function AdminApprovals() {
                     <span className="text-zinc-300">•</span>
                     <button
                       onClick={() => handleEmailSetupLink(agent)}
-                      className="text-zinc-500 hover:text-zinc-900 hover:underline transition-colors"
+                      disabled={sendingSetupLinkFor.has(agent.id)}
+                      className={
+                        sendingSetupLinkFor.has(agent.id)
+                          ? "text-zinc-300 cursor-not-allowed"
+                          : "text-zinc-500 hover:text-zinc-900 hover:underline transition-colors"
+                      }
                     >
-                      Email setup link
+                      {sendingSetupLinkFor.has(agent.id) ? "Sending..." : "Email setup link"}
                     </button>
                     <span className="text-zinc-300">•</span>
                     <button 

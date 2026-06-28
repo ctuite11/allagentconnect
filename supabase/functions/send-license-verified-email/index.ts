@@ -3,6 +3,20 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.0";
 import { buildLicenseVerifiedEmailHtml } from "../_shared/buildLicenseVerifiedEmailHtml.ts";
 import { AAC_PUBLIC_URL, resolveAacCtaUrl, wrapSupabaseActionLinkForAac } from "../_shared/aacPublicUrl.ts";
 
+/**
+ * Idempotency contract
+ * --------------------
+ * - Callers MAY pass `idempotencyKey` to control dedupe behavior.
+ * - If omitted, default key is `license-verified:<recipient-lowercased>:<YYYYMMDD>`
+ *   so the same recipient cannot be re-emailed on the same UTC day by accident.
+ * - Before enqueueing, we also reject any `license-verified` job for the same
+ *   recipient created within the last 10 minutes — even with a distinct key —
+ *   to absorb double-clicks and retry storms.
+ * - On dedupe we return `{ success: true, deduped: true, jobId }` (HTTP 200).
+ * - Pass an explicit, unique `idempotencyKey` AND wait >10 minutes to force a
+ *   legitimate re-send.
+ */
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -13,6 +27,7 @@ interface SendRequest {
   ctaUrl?: string;
   subject?: string;
   agentName?: string;
+  idempotencyKey?: string;
 }
 
 const DEFAULT_SUBJECT = "Your license has been verified — welcome to All Agent Connect";
@@ -86,9 +101,35 @@ const handler = async (req: Request): Promise<Response> => {
     const results: Array<{ email: string; success: boolean; error?: string }> = [];
 
     for (const email of recipients) {
+      const recipientLc = email.trim().toLowerCase();
+      const today = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+      const idempotencyKey =
+        (typeof body.idempotencyKey === "string" && body.idempotencyKey.trim()) ||
+        `license-verified:${recipientLc}:${today}`;
+
+      // 10-minute recency dedupe: any license-verified job for this recipient
+      // enqueued in the last 10 minutes blocks a new send, regardless of key.
+      const tenMinAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+      const { data: recent, error: recentErr } = await admin
+        .from("email_jobs")
+        .select("id")
+        .eq("payload->>template", "license-verified")
+        .eq("payload->>to", email)
+        .gte("created_at", tenMinAgo)
+        .order("created_at", { ascending: false })
+        .limit(1);
+
+      if (recentErr) {
+        console.error("[send-license-verified-email] dedupe lookup failed:", recentErr);
+      } else if (recent && recent.length > 0) {
+        console.log(`[send-license-verified-email] deduped (recent send) for ${email}`);
+        results.push({ email, success: true, deduped: true, jobId: recent[0].id } as any);
+        continue;
+      }
+
       const ctaUrl = await resolveCtaForRecipient(email);
       const html = buildLicenseVerifiedEmailHtml({ ctaUrl, agentName: body.agentName, footerAgent });
-      const { error } = await admin.from("email_jobs").insert({
+      const { data: inserted, error } = await admin.from("email_jobs").insert({
         payload: {
           provider: "resend",
           template: "license-verified",
@@ -96,14 +137,15 @@ const handler = async (req: Request): Promise<Response> => {
           subject,
           html,
           reply_to: replyTo,
+          idempotency_key: idempotencyKey,
         },
-      });
+      }).select("id").maybeSingle();
 
       if (error) {
         console.error(`[send-license-verified-email] enqueue failed for ${email}:`, error);
         results.push({ email, success: false, error: error.message });
       } else {
-        results.push({ email, success: true });
+        results.push({ email, success: true, jobId: inserted?.id } as any);
       }
     }
 
