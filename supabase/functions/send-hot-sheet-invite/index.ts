@@ -191,10 +191,12 @@ const handler = async (req: Request): Promise<Response> => {
     console.log("[send-hot-sheet-invite] Enqueuing job for:", invitedEmail, "mode:", mode);
 
     const subject = inviteOnly
-      ? `AAC`
+      ? `${displayInviterName} invited you to All Agent Connect`
       : buildHotSheetInviteEmailSubject(displayInviterName);
 
-    const preheader = inviteOnly ? "" : subject;
+    const preheader = inviteOnly
+      ? `Join ${displayInviterName} on AAC to see listings curated for you.`
+      : subject;
 
     const jobPayload: Record<string, unknown> = {
       provider: "resend",
