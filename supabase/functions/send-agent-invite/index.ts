@@ -1,8 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.0";
 import { buildAacEmail } from "../_shared/aacEmailTemplate.ts";
-
-const PUBLIC_SITE_URL = Deno.env.get("PUBLIC_SITE_URL") || "https://allagentconnect.lovable.app";
+import { AAC_PUBLIC_URL } from "../_shared/aacPublicUrl.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -25,7 +24,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log(`Sending invites from ${inviterName} to ${inviteeEmails.length} recipients`);
 
-    const registerUrl = `${PUBLIC_SITE_URL}/register`;
+    const registerUrl = `${AAC_PUBLIC_URL}/register`;
 
     const html = buildAacEmail({
       headline: `${inviterName} invited you to All Agent Connect`,
