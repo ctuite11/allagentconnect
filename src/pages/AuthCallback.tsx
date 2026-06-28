@@ -4,9 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { AlertCircle } from "lucide-react";
 import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 import { Button } from "@/components/ui/button";
-import { authDebug } from "@/lib/authDebug";
+import { authDebug, getAuthRouteDecisionDiagnostics } from "@/lib/authDebug";
 import { resolveUserRole, getRouteForRole } from "@/lib/resolveUserRole";
-import { clearGuestListing, resolvePostAuthRedirect } from "@/lib/sharedListingGuest";
+import { clearGuestListing, resolvePostAuthRedirectWithMeta } from "@/lib/sharedListingGuest";
 
 const AuthCallback = () => {
   const navigate = useNavigate();
@@ -380,8 +380,9 @@ const AuthCallback = () => {
         }
       }
 
-      const returnTo = resolvePostAuthRedirect(searchParams);
-      const target = returnTo ?? getRouteForRole(resolved);
+      const returnToMeta = resolvePostAuthRedirectWithMeta(searchParams);
+      const target = returnToMeta.value ?? getRouteForRole(resolved);
+      const diagnostics = await getAuthRouteDecisionDiagnostics(verifiedUserId);
       // Visitor has now signed in — they're no longer a shared-listing guest.
       clearGuestListing();
 
@@ -398,6 +399,20 @@ const AuthCallback = () => {
         role: resolved.role,
         is_verified_agent: resolved.is_verified_agent,
         target,
+      });
+      console.info("[AUTH_ROUTE_DECISION] AuthCallback.routeUser", {
+        userId: verifiedUserId,
+        email: verifiedEmail,
+        resolved_role: resolved.role,
+        admin_role_present: diagnostics.admin_role_present,
+        agent_role_present: diagnostics.agent_role_present,
+        agent_status: diagnostics.agent_status,
+        is_verified_agent: resolved.is_verified_agent,
+        returnTo_source: returnToMeta.source,
+        returnTo_value: returnToMeta.value,
+        rejected_returnTo_source: returnToMeta.rejectedSource,
+        rejected_returnTo_value: returnToMeta.rejectedValue,
+        final_redirect_target: target,
       });
 
       didNavigate.current = true;
