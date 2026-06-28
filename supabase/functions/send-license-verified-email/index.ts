@@ -3,6 +3,20 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.0";
 import { buildLicenseVerifiedEmailHtml } from "../_shared/buildLicenseVerifiedEmailHtml.ts";
 import { AAC_PUBLIC_URL, resolveAacCtaUrl, wrapSupabaseActionLinkForAac } from "../_shared/aacPublicUrl.ts";
 
+/**
+ * Idempotency contract
+ * --------------------
+ * - Callers MAY pass `idempotencyKey` to control dedupe behavior.
+ * - If omitted, default key is `license-verified:<recipient-lowercased>:<YYYYMMDD>`
+ *   so the same recipient cannot be re-emailed on the same UTC day by accident.
+ * - Before enqueueing, we also reject any `license-verified` job for the same
+ *   recipient created within the last 10 minutes — even with a distinct key —
+ *   to absorb double-clicks and retry storms.
+ * - On dedupe we return `{ success: true, deduped: true, jobId }` (HTTP 200).
+ * - Pass an explicit, unique `idempotencyKey` AND wait >10 minutes to force a
+ *   legitimate re-send.
+ */
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -13,6 +27,7 @@ interface SendRequest {
   ctaUrl?: string;
   subject?: string;
   agentName?: string;
+  idempotencyKey?: string;
 }
 
 const DEFAULT_SUBJECT = "Your license has been verified — welcome to All Agent Connect";
