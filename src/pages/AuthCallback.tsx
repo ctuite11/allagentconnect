@@ -8,6 +8,15 @@ import { authDebug, getAuthRouteDecisionDiagnostics } from "@/lib/authDebug";
 import { resolveUserRole, getRouteForRole } from "@/lib/resolveUserRole";
 import { clearGuestListing, resolvePostAuthRedirectWithMeta } from "@/lib/sharedListingGuest";
 
+const rememberAgentSetupHandoff = (session: { user?: { id?: string; email?: string | null } | null } | null | undefined) => {
+  if (typeof window === "undefined") return;
+  const user = session?.user;
+  if (!user) return;
+  sessionStorage.setItem("aac_agent_setup_handoff", "1");
+  if (user.id) sessionStorage.setItem("aac_agent_setup_user_id", user.id);
+  if (user.email) sessionStorage.setItem("aac_agent_setup_email", user.email);
+};
+
 const AuthCallback = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -120,7 +129,7 @@ const AuthCallback = () => {
         if (import.meta.env.DEV) console.log("[AuthCallback] Hash tokens detected - setting session");
         
         try {
-          const { error: sessionError } = await supabase.auth.setSession({
+          const { data: setSessionData, error: sessionError } = await supabase.auth.setSession({
             access_token: accessToken,
             refresh_token: refreshToken
           });
@@ -150,6 +159,7 @@ const AuthCallback = () => {
               const isAgentSetup =
                 recoveryInfo.isSetup ||
                 sessionStorage.getItem("aac_password_setup_flow") === "1";
+              if (isAgentSetup) rememberAgentSetupHandoff(setSessionData?.session);
               navigate(isAgentSetup ? "/agent-setup" : "/password-reset", { replace: true });
             } else {
               const { data: { session: freshSession } } = await supabase.auth.getSession();
@@ -193,6 +203,10 @@ const AuthCallback = () => {
               const isAgentSetup =
                 recoveryInfo.isSetup ||
                 sessionStorage.getItem("aac_password_setup_flow") === "1";
+              if (isAgentSetup) {
+                const { data: { session: setupSession } } = await supabase.auth.getSession();
+                rememberAgentSetupHandoff(setupSession);
+              }
               navigate(isAgentSetup ? "/agent-setup" : "/password-reset", { replace: true });
             } else {
               const { data: { session: freshSession } } = await supabase.auth.getSession();
@@ -229,6 +243,7 @@ const AuthCallback = () => {
             didNavigate.current = true;
             window.history.replaceState(null, "", window.location.pathname);
             const isAgentSetup = sessionStorage.getItem("aac_password_setup_flow") === "1";
+            if (isAgentSetup) rememberAgentSetupHandoff(session);
             navigate(isAgentSetup ? "/agent-setup" : "/password-reset", { replace: true });
           }
           return;
@@ -243,6 +258,7 @@ const AuthCallback = () => {
               didNavigate.current = true;
               window.history.replaceState(null, "", window.location.pathname);
               const isAgentSetup = sessionStorage.getItem("aac_password_setup_flow") === "1";
+              if (isAgentSetup) rememberAgentSetupHandoff(session);
               navigate(isAgentSetup ? "/agent-setup" : "/password-reset", { replace: true });
             }
             return;
@@ -271,6 +287,10 @@ const AuthCallback = () => {
           didNavigate.current = true;
           window.history.replaceState(null, "", window.location.pathname);
           const isAgentSetup = sessionStorage.getItem("aac_password_setup_flow") === "1";
+          if (isAgentSetup) {
+            const { data: { session } } = await supabase.auth.getSession();
+            rememberAgentSetupHandoff(session);
+          }
           navigate(isAgentSetup ? "/agent-setup" : "/password-reset", { replace: true });
           return;
         }
@@ -356,6 +376,7 @@ const AuthCallback = () => {
         authDebug("routeUser", { action: "recovery_redirect" });
         didNavigate.current = true;
         const isAgentSetup = sessionStorage.getItem("aac_password_setup_flow") === "1";
+        if (isAgentSetup) rememberAgentSetupHandoff(session);
         navigate(isAgentSetup ? "/agent-setup" : "/password-reset", { replace: true });
         return;
       }

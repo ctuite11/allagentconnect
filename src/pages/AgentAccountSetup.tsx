@@ -20,6 +20,7 @@ import { validatePassword } from "@/lib/passwordPolicy";
 import AACMonogram from "@/components/ui/AACMonogram";
 import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 import { cn } from "@/lib/utils";
+import { getRouteForRole, resolveUserRole } from "@/lib/resolveUserRole";
 
 /**
  * Agent Account Setup — final step of the approved-agent "License Verified"
@@ -35,6 +36,16 @@ const AGENT_BADGE_CLASS =
   "inline-flex items-center gap-1.5 rounded-full bg-[#0E56F5]/10 text-[#0E56F5] px-3 py-1 text-[12px] font-medium";
 const AGENT_PRIMARY_BTN_CLASS =
   "bg-[#0E56F5] hover:bg-[#0A45CC] text-white font-medium";
+
+function withTimeout<T>(promise: PromiseLike<T>, ms: number, label: string): Promise<T> {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(() => reject(new Error(`${label} timed out`)), ms);
+  });
+  return Promise.race([Promise.resolve(promise), timeout]).finally(() => {
+    if (timeoutId) clearTimeout(timeoutId);
+  });
+}
 
 function AgentSetupBrand({ monogramClassName = "w-7 h-7" }: { monogramClassName?: string }) {
   return (
@@ -68,35 +79,101 @@ const AgentAccountSetup = () => {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    const init = async () => {
-      const isSetup = sessionStorage.getItem("aac_password_setup_flow") === "1";
-      const isRecovery = sessionStorage.getItem("aac_recovery_flow") === "1";
-      if (!isSetup && !isRecovery) {
-        setSessionError("Your activation link is invalid or expired. Please request a new one from your verification email.");
-        setValidating(false);
-        return;
+    let cancelled = false;
+    const failSafe = setTimeout(() => {
+      if (cancelled) return;
+      console.warn("[AgentAccountSetup] init fail-safe reached");
+      const handoffEmail = sessionStorage.getItem("aac_agent_setup_email") || "";
+      if (handoffEmail) {
+        setEmail((current) => current || handoffEmail);
+      } else {
+        setSessionError("We couldn't verify your activation link. Please refresh this page or request a new verification email.");
       }
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user) {
-        setSessionError("Your activation link has expired. Please request a new one from your verification email.");
-        setValidating(false);
-        return;
-      }
-
-      setEmail(session.user.email ?? "");
-
-      // Pre-fill name from agent_profiles if available.
-      const { data: profile } = await supabase
-        .from("agent_profiles")
-        .select("first_name, last_name")
-        .eq("id", session.user.id)
-        .maybeSingle();
-      if (profile?.first_name) setFirstName(profile.first_name);
-      if (profile?.last_name) setLastName(profile.last_name);
-
       setValidating(false);
+    }, 6000);
+
+    const init = async () => {
+      try {
+        console.info("[AgentAccountSetup] init start");
+        const isSetup = sessionStorage.getItem("aac_password_setup_flow") === "1";
+        const isRecovery = sessionStorage.getItem("aac_recovery_flow") === "1";
+        const hasSetupHandoff = sessionStorage.getItem("aac_agent_setup_handoff") === "1";
+        const handoffEmail = sessionStorage.getItem("aac_agent_setup_email") || "";
+        const handoffUserId = sessionStorage.getItem("aac_agent_setup_user_id") || "";
+
+        if (handoffEmail) setEmail(handoffEmail);
+
+        if (!isSetup && !isRecovery && !hasSetupHandoff) {
+          if (!cancelled) {
+            setSessionError("Your activation link is invalid or expired. Please request a new one from your verification email.");
+          }
+          return;
+        }
+
+        let sessionUserId = handoffUserId;
+        try {
+          const { data: { session } } = await withTimeout(
+            supabase.auth.getSession(),
+            4500,
+            "Activation session check",
+          );
+          if (!session?.user) {
+            if (!cancelled && !handoffEmail) {
+              setSessionError("Your activation link has expired. Please request a new one from your verification email.");
+            }
+            return;
+          }
+
+          sessionUserId = session.user.id;
+          if (!cancelled) setEmail(session.user.email ?? handoffEmail);
+        } catch (sessionErr) {
+          console.warn("[AgentAccountSetup] session check delayed; using setup handoff if available:", sessionErr);
+          if (!handoffEmail) {
+            setSessionError("Your activation link has expired. Please request a new one from your verification email.");
+            return;
+          }
+        }
+
+        if (cancelled) return;
+
+        if (sessionUserId) try {
+          const { data: profile, error: profileError } = await withTimeout(
+            supabase
+              .from("agent_profiles")
+              .select("first_name, last_name")
+              .eq("id", sessionUserId)
+              .maybeSingle(),
+            3500,
+            "Agent profile lookup",
+          );
+          if (profileError) {
+            console.warn("[AgentAccountSetup] profile prefill skipped:", profileError.message);
+          }
+          if (!cancelled) {
+            if (profile?.first_name) setFirstName(profile.first_name);
+            if (profile?.last_name) setLastName(profile.last_name);
+          }
+        } catch (profileErr) {
+          console.warn("[AgentAccountSetup] profile prefill failed (non-fatal):", profileErr);
+        }
+      } catch (err) {
+        console.error("[AgentAccountSetup] init failed:", err);
+        if (!cancelled) {
+          setSessionError("We couldn't verify your activation link. Please refresh this page or request a new verification email.");
+        }
+      } finally {
+        if (!cancelled) {
+          clearTimeout(failSafe);
+          setValidating(false);
+        }
+      }
     };
     void init();
+
+    return () => {
+      cancelled = true;
+      clearTimeout(failSafe);
+    };
   }, []);
 
   const passwordResults = useMemo(() => validatePassword(password).results, [password]);
@@ -167,10 +244,15 @@ const AgentAccountSetup = () => {
 
       sessionStorage.removeItem("aac_recovery_flow");
       sessionStorage.removeItem("aac_password_setup_flow");
+      sessionStorage.removeItem("aac_agent_setup_handoff");
+      sessionStorage.removeItem("aac_agent_setup_user_id");
+      sessionStorage.removeItem("aac_agent_setup_email");
       window.history.replaceState(null, "", "/agent-setup");
 
       toast.success("Account activated. Welcome to All Agent Connect!");
-      navigate("/agent-dashboard", { replace: true });
+      const resolved = await resolveUserRole(data.user.id);
+      const target = getRouteForRole(resolved);
+      navigate(target, { replace: true });
     } catch (err: any) {
       console.error("[AgentAccountSetup] error:", err);
       toast.error(err?.message || "Activation failed. Please try again.");
