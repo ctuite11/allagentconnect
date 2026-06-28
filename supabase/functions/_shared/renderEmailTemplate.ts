@@ -210,7 +210,20 @@ export function renderEmailTemplate(
       const isInviteOnly = variables.inviteOnly === true || !variables.hotSheetName;
 
       if (isInviteOnly) {
-        return `<!doctype html><html><body><p>hi, see you inside the group</p></body></html>`;
+        return buildAacEmail({
+          headline: `${inviterName} invited you to All Agent Connect`,
+          preheader: String(
+            variables.preheader ||
+              `Join ${inviterName} on AAC to see listings curated for you.`,
+          ),
+          body: `
+            <p style="margin:0 0 14px;">Hi ${firstName},</p>
+            <p style="margin:0 0 18px;">${inviterName} invited you to join All Agent Connect — a private space where your agent can share listings curated for you and stay in touch.</p>
+            <p style="margin:0 0 18px;">Click below to accept the invitation and set up your account.</p>
+            ${renderSharedByBlock({ agentName: inviterName, agentBrokerage: inviterBrokerage, agentEmail: inviterEmail, agentPhone: inviterPhone })}`,
+          ctaLabel: "Accept Invitation",
+          ctaUrl: hotSheetLink,
+        });
       }
 
       return buildAacEmail({
@@ -413,7 +426,22 @@ export function renderEmailTemplate(
     }
 
     case "buyer-workspace-invite": {
-      return `<!doctype html><html><body><p>hi, see you inside the group</p></body></html>`;
+      const inviterName = formatPersonDisplayName(String(variables.inviterName || "A friend"));
+      const inviterEmail = String(variables.inviterEmail || "");
+      const friendFullName = String(variables.friendName || "there").trim();
+      const friendFirstName = friendFullName.split(/\s+/)[0] || "there";
+      const inviteLink = String(variables.inviteLink || "");
+      return buildAacEmail({
+        headline: `${inviterName} invited you to All Agent Connect`,
+        preheader: `Join ${inviterName} on AAC to share favorites, hot sheets, and saved searches.`,
+        body: `
+          <p style="margin:0 0 14px;">Hi ${friendFirstName},</p>
+          <p style="margin:0 0 18px;">${inviterName} invited you to share their home search on All Agent Connect — you'll see the same favorites, hot sheets, and saved searches in one private workspace.</p>
+          <p style="margin:0 0 18px;">Click below to accept the invitation and get started.</p>
+          ${renderSharedByBlock({ agentName: inviterName, agentEmail: inviterEmail })}`,
+        ctaLabel: "Accept Invitation",
+        ctaUrl: inviteLink,
+      });
     }
 
     case "agent-approval-accepted": {
