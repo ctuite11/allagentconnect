@@ -13,6 +13,30 @@
 const GUEST_KEY = "aac_shared_listing_guest";
 const POST_AUTH_REDIRECT_KEY = "aac_post_auth_redirect";
 
+type PostAuthRedirectSource = "query" | "sessionStorage" | null;
+
+export interface PostAuthRedirectResolution {
+  value: string | null;
+  source: PostAuthRedirectSource;
+  rejectedValue: string | null;
+  rejectedSource: PostAuthRedirectSource;
+}
+
+const BLOCKED_POST_AUTH_PATHS = new Set([
+  "/pending-verification",
+  "/access-error",
+  "/auth",
+  "/auth/callback",
+]);
+
+function sanitizePostAuthRedirectCandidate(path: string | null | undefined): string | null {
+  if (!path || !path.startsWith("/") || path.startsWith("//")) return null;
+
+  const cleanPath = path.split(/[?#]/)[0];
+  if (BLOCKED_POST_AUTH_PATHS.has(cleanPath)) return null;
+  return path;
+}
+
 function safeSession(): Storage | null {
   try {
     if (typeof window === "undefined") return null;
@@ -53,7 +77,7 @@ export function clearGuestListing(): void {
 export function setPostAuthRedirect(path: string): void {
   const ss = safeSession();
   if (!ss) return;
-  if (!path || !path.startsWith("/") || path.startsWith("//")) return;
+  if (!sanitizePostAuthRedirectCandidate(path)) return;
   ss.setItem(POST_AUTH_REDIRECT_KEY, path);
 }
 
@@ -62,7 +86,41 @@ export function consumePostAuthRedirect(): string | null {
   if (!ss) return null;
   const v = ss.getItem(POST_AUTH_REDIRECT_KEY);
   if (v) ss.removeItem(POST_AUTH_REDIRECT_KEY);
-  return v && v.startsWith("/") && !v.startsWith("//") ? v : null;
+  return sanitizePostAuthRedirectCandidate(v);
+}
+
+export function resolvePostAuthRedirectWithMeta(
+  searchParams: URLSearchParams | null,
+): PostAuthRedirectResolution {
+  const fromQuery = searchParams?.get("returnTo") ?? null;
+  const ss = safeSession();
+  const stashed = ss?.getItem(POST_AUTH_REDIRECT_KEY) ?? null;
+  if (stashed) ss?.removeItem(POST_AUTH_REDIRECT_KEY);
+  let rejectedValue: string | null = null;
+  let rejectedSource: PostAuthRedirectSource = null;
+
+  const candidates: Array<{ value: string | null; source: Exclude<PostAuthRedirectSource, null> }> = [
+    { value: fromQuery, source: "query" },
+    { value: stashed, source: "sessionStorage" },
+  ];
+
+  for (const candidate of candidates) {
+    if (!candidate.value) continue;
+    const sanitized = sanitizePostAuthRedirectCandidate(candidate.value);
+    if (sanitized) {
+      return {
+        value: sanitized,
+        source: candidate.source,
+        rejectedValue,
+        rejectedSource,
+      };
+    }
+
+    rejectedValue ??= candidate.value;
+    rejectedSource ??= candidate.source;
+  }
+
+  return { value: null, source: null, rejectedValue, rejectedSource };
 }
 
 /**
@@ -74,12 +132,7 @@ export function consumePostAuthRedirect(): string | null {
 export function resolvePostAuthRedirect(
   searchParams: URLSearchParams | null,
 ): string | null {
-  const fromQuery = searchParams?.get("returnTo") ?? null;
-  const stashed = consumePostAuthRedirect();
-  const candidate = fromQuery && fromQuery.length > 0 ? fromQuery : stashed;
-  if (!candidate) return null;
-  if (!candidate.startsWith("/") || candidate.startsWith("//")) return null;
-  return candidate;
+  return resolvePostAuthRedirectWithMeta(searchParams).value;
 }
 
 /**

@@ -80,6 +80,38 @@ export const getAgentStatus = async (userId: string): Promise<{
   }
 };
 
+export interface AuthRouteDecisionDiagnostics {
+  admin_role_present: boolean;
+  agent_role_present: boolean;
+  agent_status: string | null;
+}
+
+export const getAuthRouteDecisionDiagnostics = async (
+  userId: string,
+): Promise<AuthRouteDecisionDiagnostics> => {
+  const [adminResult, agentResult, agentStatusResult] = await Promise.all([
+    checkIsAdmin(userId),
+    supabase.rpc("has_role", {
+      _user_id: userId,
+      _role: "agent" as "admin" | "agent" | "buyer",
+    }),
+    getAgentStatus(userId),
+  ]);
+
+  if (agentResult.error) {
+    authDebug("getAuthRouteDecisionDiagnostics agent role error", {
+      userId,
+      error: agentResult.error.message,
+    });
+  }
+
+  return {
+    admin_role_present: adminResult.isAdmin,
+    agent_role_present: agentResult.data === true,
+    agent_status: agentStatusResult.status,
+  };
+};
+
 // Full auth diagnostic data
 export interface AuthDiagnostic {
   userId: string | null;

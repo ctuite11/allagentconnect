@@ -9,6 +9,7 @@ import { AGENT_STATUS } from "@/constants/status";
 import { toast } from "sonner";
 import AACMonogram from "@/components/ui/AACMonogram";
 import { AuthShell as PendingShell } from "@/components/auth/AuthShell";
+import { resolveUserRole, getRouteForRole } from "@/lib/resolveUserRole";
 
 const POLL_INTERVAL_MS = 5000;
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -48,6 +49,16 @@ const PendingVerification = () => {
     let attempts = 0;
     const maxAttempts = 5;
 
+    try {
+      const stashed = sessionStorage.getItem("aac_post_auth_redirect");
+      const cleanPath = stashed?.split(/[?#]/)[0];
+      if (cleanPath === "/pending-verification") {
+        sessionStorage.removeItem("aac_post_auth_redirect");
+      }
+    } catch {
+      // ignore storage errors
+    }
+
     const checkStatus = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       
@@ -77,30 +88,35 @@ const PendingVerification = () => {
       const email = userData.user.email || null;
       setUserEmail(email);
       setUserId(uid);
-      setHasSession(true);
       
       authDebug("PendingVerification checking status", { userId: uid, email });
 
-      // PRIORITY 1: Admin check
-      const { data: isAdmin } = await supabase.rpc("has_role", {
-        _user_id: uid,
-        _role: "admin",
-      });
-
-      if (isAdmin === true) {
-        authDebug("PendingVerification ADMIN_REDIRECT", { action: "terminal_redirect" });
+      // Authoritative role short-circuit: this page is only for truly unverified agents.
+      const resolved = await resolveUserRole(uid);
+      const roleTarget = getRouteForRole(resolved);
+      if (resolved.role !== "agent" || resolved.is_verified_agent) {
+        authDebug("PendingVerification role_short_circuit", {
+          userId: uid,
+          email,
+          role: resolved.role,
+          is_verified_agent: resolved.is_verified_agent,
+          target: roleTarget,
+        });
         if (pollIntervalRef.current) {
           clearInterval(pollIntervalRef.current);
           pollIntervalRef.current = null;
         }
         if (!didNavigate.current) {
           didNavigate.current = true;
-          navigate("/admin/approvals", { replace: true });
+          navigate(roleTarget, { replace: true });
         }
         return;
       }
 
-      // PRIORITY 2: Check agent status
+      // Log out is only visible for the page's actual intended audience.
+      setHasSession(true);
+
+      // Check agent status for the unverified-agent pending/rejected UI.
       const agentResult = await getAgentStatus(uid);
       authDebug("PendingVerification agent status", { userId: uid, status: agentResult.status, error: agentResult.error });
       

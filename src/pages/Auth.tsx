@@ -13,14 +13,20 @@ import AACMonogram from "@/components/ui/AACMonogram";
 import BrandMonogram from "@/components/home-v2/Monogram";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { cn } from "@/lib/utils";
-import { authDebug } from "@/lib/authDebug";
+import { authDebug, getAuthRouteDecisionDiagnostics } from "@/lib/authDebug";
 import { resolveUserRole, getRouteForRole } from "@/lib/resolveUserRole";
 import { hasRole } from "@/lib/auth/roles";
 import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 import { validateAgentSignup } from "@/lib/agentSignupValidation";
 import { TurnstileField } from "@/components/security/TurnstileField";
 import { useTurnstile } from "@/hooks/useTurnstile";
-import { clearGuestListing, isPublicReturnTo, resolvePostAuthRedirect } from "@/lib/sharedListingGuest";
+import {
+  clearGuestListing,
+  isPublicReturnTo,
+  resolvePostAuthRedirect,
+  resolvePostAuthRedirectWithMeta,
+  setPostAuthRedirect,
+} from "@/lib/sharedListingGuest";
 
 /** Premium white card — email-template aligned (soft border, subtle shadow). */
 const authCardSurface =
@@ -236,13 +242,7 @@ const Auth = () => {
   // flow). Survives the redirect to /auth/callback via sessionStorage.
   useEffect(() => {
     const r = searchParams.get("returnTo");
-    if (r && r.startsWith("/") && !r.startsWith("//")) {
-      try {
-        sessionStorage.setItem("aac_post_auth_redirect", r);
-      } catch {
-        // ignore
-      }
-    }
+    if (r) setPostAuthRedirect(r);
   }, [searchParams]);
 
   // Check for logout param, reset success, or existing session
@@ -338,10 +338,27 @@ const Auth = () => {
             resolved.role === "buyer" ||
             (resolved.role === "agent" && resolved.is_verified_agent);
           if (shouldRouteImmediately) {
-            const returnTo = resolvePostAuthRedirect(searchParams);
-            const target = returnTo ?? getRouteForRole(resolved);
+            const returnToMeta = resolvePostAuthRedirectWithMeta(searchParams);
+            const target = returnToMeta.value ?? getRouteForRole(resolved);
+            const diagnostics = await getAuthRouteDecisionDiagnostics(session.user.id);
             clearGuestListing();
             authDebug("handleSession terminal_redirect", { role: resolved.role, target });
+            console.info("[AUTH_ROUTE_DECISION] Auth.handleSession", {
+              userId: session.user.id,
+              email: session.user.email,
+              role: resolved.role,
+              resolved_role: resolved.role,
+              admin_role_present: diagnostics.admin_role_present,
+              agent_role_present: diagnostics.agent_role_present,
+              agent_status: diagnostics.agent_status,
+              is_verified_agent: resolved.is_verified_agent,
+              returnTo_source: returnToMeta.source,
+              returnTo_value: returnToMeta.value,
+              rejected_returnTo_source: returnToMeta.rejectedSource,
+              rejected_returnTo_value: returnToMeta.rejectedValue,
+              target,
+              final_redirect_target: target,
+            });
             console.info("[AUTH_ROUTE] handleSession redirect", {
               email: session.user.email,
               userId: session.user.id,
