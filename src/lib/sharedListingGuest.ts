@@ -96,6 +96,8 @@ export function resolvePostAuthRedirectWithMeta(
   const ss = safeSession();
   const stashed = ss?.getItem(POST_AUTH_REDIRECT_KEY) ?? null;
   if (stashed) ss?.removeItem(POST_AUTH_REDIRECT_KEY);
+  let rejectedValue: string | null = null;
+  let rejectedSource: PostAuthRedirectSource = null;
 
   const candidates: Array<{ value: string | null; source: Exclude<PostAuthRedirectSource, null> }> = [
     { value: fromQuery, source: "query" },
@@ -109,20 +111,16 @@ export function resolvePostAuthRedirectWithMeta(
       return {
         value: sanitized,
         source: candidate.source,
-        rejectedValue: null,
-        rejectedSource: null,
+        rejectedValue,
+        rejectedSource,
       };
     }
 
-    return {
-      value: null,
-      source: null,
-      rejectedValue: candidate.value,
-      rejectedSource: candidate.source,
-    };
+    rejectedValue ??= candidate.value;
+    rejectedSource ??= candidate.source;
   }
 
-  return { value: null, source: null, rejectedValue: null, rejectedSource: null };
+  return { value: null, source: null, rejectedValue, rejectedSource };
 }
 
 /**
