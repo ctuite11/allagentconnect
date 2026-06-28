@@ -392,9 +392,13 @@ const AuthCallback = () => {
         is_verified_agent: resolved.is_verified_agent,
         target,
       });
-      if (import.meta.env.DEV) {
-        console.info("[POST_LOGIN] redirect", { target, role: resolved.role });
-      }
+      console.info("[AUTH_ROUTE] AuthCallback redirect", {
+        email: verifiedEmail,
+        userId: verifiedUserId,
+        role: resolved.role,
+        is_verified_agent: resolved.is_verified_agent,
+        target,
+      });
 
       didNavigate.current = true;
       navigate(target, { replace: true });

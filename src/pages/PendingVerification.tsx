@@ -60,12 +60,21 @@ const PendingVerification = () => {
       
       if (!session?.user) {
         authDebug("PendingVerification", { action: "no_session_showing_page" });
+        setHasSession(false);
         setLoading(false);
         return;
       }
 
-      const uid = session.user.id;
-      const email = session.user.email || null;
+      // Server-confirm session before treating it as active (controls Log out visibility).
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError || !userData?.user) {
+        authDebug("PendingVerification", { action: "stale_session_no_logout", error: userError?.message });
+        setHasSession(false);
+        setLoading(false);
+        return;
+      }
+      const uid = userData.user.id;
+      const email = userData.user.email || null;
       setUserEmail(email);
       setUserId(uid);
       setHasSession(true);

@@ -332,12 +332,23 @@ const Auth = () => {
             is_verified_agent: resolved.is_verified_agent,
           });
 
-          // Admin and buyer go immediately — no agent_settings polling
-          if (resolved.role === "admin" || resolved.role === "buyer") {
+          // Admin, buyer, and verified agents route immediately — no Welcome Back interstitial.
+          const shouldRouteImmediately =
+            resolved.role === "admin" ||
+            resolved.role === "buyer" ||
+            (resolved.role === "agent" && resolved.is_verified_agent);
+          if (shouldRouteImmediately) {
             const returnTo = resolvePostAuthRedirect(searchParams);
             const target = returnTo ?? getRouteForRole(resolved);
             clearGuestListing();
             authDebug("handleSession terminal_redirect", { role: resolved.role, target });
+            console.info("[AUTH_ROUTE] handleSession redirect", {
+              email: session.user.email,
+              userId: session.user.id,
+              role: resolved.role,
+              is_verified_agent: resolved.is_verified_agent,
+              target,
+            });
             if (mounted) {
               didNavigate.current = true;
               navigate(target, { replace: true });
