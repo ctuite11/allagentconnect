@@ -76,6 +76,7 @@ const AAC_ROUTES = [
   '/register',
   '/pending-verification',
   '/password-reset',
+  '/agent-setup',
   '/seller',
   '/vendor',
   '/network',
