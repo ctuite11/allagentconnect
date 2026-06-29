@@ -1405,6 +1405,28 @@ export default function AdminApprovals() {
         }}
       />
 
+      <AlertDialog open={showVerifyConfirm} onOpenChange={setShowVerifyConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Verify {selectedIds.size} agent{selectedIds.size === 1 ? "" : "s"}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will verify {selectedIds.size} agent{selectedIds.size === 1 ? "" : "s"} and send each one an individual License Verified setup email. Emails are sent one at a time using a per-agent idempotency key — no custom subject or message.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setShowVerifyConfirm(false);
+                void handleBulkVerify();
+              }}
+            >
+              Verify &amp; Send
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <Dialog
         open={verifyConfirm !== null}
         onOpenChange={(open) => {
