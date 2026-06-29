@@ -674,6 +674,7 @@ export default function AdminApprovals() {
   // and to make per-row errors easy to surface. Per-agent idempotency keys in
   // send-license-verified-email prevent double-sends on retry.
   const [bulkVerifying, setBulkVerifying] = useState(false);
+  const [showVerifyConfirm, setShowVerifyConfirm] = useState(false);
   const handleBulkVerify = async () => {
     const targets = filteredAgents.filter(
       (a) => selectedIds.has(a.id) && a.agent_status !== "verified",
@@ -1099,7 +1100,7 @@ export default function AdminApprovals() {
                 {statusFilter === "pending" && (
                   <>
                     <button
-                      onClick={handleBulkVerify}
+                      onClick={() => setShowVerifyConfirm(true)}
                       disabled={selectedIds.size === 0 || bulkVerifying}
                       className={
                         selectedIds.size === 0 || bulkVerifying
@@ -1114,6 +1115,8 @@ export default function AdminApprovals() {
                     <span className="text-zinc-300">•</span>
                   </>
                 )}
+                {statusFilter !== "pending" && (
+                  <>
                 <button
                   onClick={handleBulkEmail}
                   disabled={selectedIds.size === 0}
@@ -1124,6 +1127,8 @@ export default function AdminApprovals() {
                   Email Selected
                 </button>
                 <span className="text-zinc-300">•</span>
+                  </>
+                )}
                 <button
                   onClick={() => setShowBulkDeleteDialog(true)}
                   disabled={selectedIds.size === 0}
