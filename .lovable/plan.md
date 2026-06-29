@@ -1,7 +1,3 @@
-Update the forwardable "Why pay for a network..." email CTA to link to the public Request Access page (`/register`), matching the screenshot.
+Send a fresh copy of the **personal forward invite** ("Why pay for a network when you can launch one for free?") to chris@allagentconnect.com via the `send-personal-forward-invite` edge function — the one designed for you to forward from your own inbox.
 
-## Changes
-1. **`supabase/functions/_shared/buildPersonalForwardEmailHtml.ts`** — Change CTA href to `https://allagentconnect.com/register` and button label to "Request Access".
-2. **Redeploy** `send-personal-forward-invite` and re-send a test email to chris@allagentconnect.com to confirm the link lands on the Request Access form.
-
-No other flows touched.
+No code changes. Just trigger the existing function with the default recipient and your agent profile.
