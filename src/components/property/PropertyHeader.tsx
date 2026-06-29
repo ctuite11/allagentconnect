@@ -26,12 +26,16 @@ function PropertyHeaderRow({
   priceSuffix,
 }: Pick<PropertyHeaderProps, "address" | "priceDisplay" | "priceSuffix">) {
   return (
-    <div className={cn(propertyHeaderRow, "w-full")}>
-      <h1 className={cn(propertyAddressH1, "min-w-0 flex-1")}>
+    <div
+      className={cn(
+        "flex flex-col gap-1 w-full sm:flex-row sm:flex-wrap sm:items-baseline sm:justify-between sm:gap-x-4 sm:gap-y-1",
+      )}
+    >
+      <h1 className={cn(propertyAddressH1, "min-w-0 w-full sm:w-auto sm:flex-1")}>
         <MapPin className={cn(LISTING_CARD_MAP_PIN_CLASS, "relative top-[1px]")} aria-hidden strokeWidth={2} />
         {address}
       </h1>
-      <p className={cn(propertyPriceText, "shrink-0 text-right tabular-nums")}>
+      <p className={cn(propertyPriceText, "shrink-0 text-left sm:text-right tabular-nums")}>
         {priceDisplay ?? "—"}
         {priceSuffix && (
           <span className="ml-1 text-sm font-normal text-muted-foreground">

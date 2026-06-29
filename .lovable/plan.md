@@ -1,18 +1,14 @@
-## Mark Yoni Haiminis as Active
+# Fix property header layout on mobile
 
-Yoni (yoni.haiminis@compass.com, `90247777-254d-4773-92c9-62b8b42c509b`) has an auth account and a live listing (31 Kappius Path, coming_soon) but his `agent_settings.agent_status` is still `pending`.
+**Problem:** On the property detail page (mobile), the address ("15 Lincoln St, Arlington, MA 02476") wraps to four ugly lines while the price ("$2,350,000 – $2,500,000") sits squeezed beside it. The flex row tries to keep both on one line, forcing the address into a narrow column.
 
-### Data changes (insert-tool only, no schema change, no emails)
+**Fix:** In `src/components/property/PropertyHeader.tsx` (the `PropertyHeaderRow` component), change the layout so address and price stack on mobile and only sit side-by-side on `sm:` and up.
 
-1. `agent_settings` for user `90247777-254d-4773-92c9-62b8b42c509b`:
-   - `agent_status = 'verified'`
-   - `verified_at = now()` (only if null)
-   - `account_activated_at = now()` (only if null)
-   - `approval_email_sent = true` (suppress future auto-send)
+Specifically:
+- Wrapper row: `flex flex-col gap-1 sm:flex-row sm:flex-wrap sm:items-baseline sm:justify-between sm:gap-x-4` (override `propertyHeaderRow`).
+- Address `<h1>`: drop `flex-1` on mobile (full width naturally); keep `min-w-0 sm:flex-1`.
+- Price `<p>`: remove forced right-align on mobile — `shrink-0 text-left sm:text-right tabular-nums`.
 
-2. `agent_early_access` for `yoni.haiminis@compass.com`:
-   - `status = 'verified'`
-   - `converted_at = now()` (only if null)
+Result on mobile: address renders on one/two natural lines full-width, price appears below it left-aligned. Desktop layout unchanged.
 
-### Result
-Yoni moves from Pending into the **Active** tab in Admin Approvals. No License Verified email is sent; if he ever needs to log in he can use Forgot Password.
+No other files touched. No business logic changes.
