@@ -42,6 +42,16 @@ import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 import { AGENT_STATUS_OPTIONS, AGENT_STATUS_CONFIG, getStatusConfig } from "@/constants/status";
 import { Pill, type PillVariant } from "@/components/ui/pill";
 import { Seo } from "@/components/Seo";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { assessRisks, hasRedFlag, type Risk } from "@/lib/agentSignupValidation";
 import { useAgentPresenceBatch } from "@/hooks/useAgentLastSeen";
 import { AgentOnlinePresenceBadge } from "@/components/ui/AgentOnlinePresenceBadge";
