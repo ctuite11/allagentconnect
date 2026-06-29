@@ -708,6 +708,16 @@ export default function AdminApprovals() {
     const toastId = toast.loading(`Verifying 0 of ${targets.length}…`);
     let ok = 0;
     let fail = 0;
+    const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+    const isRateLimit = (err: any) => {
+      const status = err?.status ?? err?.context?.status ?? err?.response?.status;
+      if (status === 429) return true;
+      const msg = String(err?.message ?? err ?? "").toLowerCase();
+      return msg.includes("429") || msg.includes("too many requests") || msg.includes("rate limit");
+    };
+    // Backend caps convert-early-access-to-account at 5/min per IP.
+    // ~13s between agents keeps us under the limit.
+    const THROTTLE_MS = 13_000;
     for (let i = 0; i < targets.length; i++) {
       const agent = targets[i];
       toast.loading(`Verifying ${i + 1} of ${targets.length}: ${agent.email}`, {
@@ -717,8 +727,23 @@ export default function AdminApprovals() {
         await handleStatusChange(agent, "verified");
         ok++;
       } catch (err) {
-        console.error("[bulk verify] failed for", agent.email, err);
-        fail++;
+        if (isRateLimit(err)) {
+          toast.loading("Rate limited — pausing 60s before continuing", { id: toastId });
+          await sleep(60_000);
+          try {
+            await handleStatusChange(agent, "verified");
+            ok++;
+          } catch (retryErr) {
+            console.error("[bulk verify] retry failed for", agent.email, retryErr);
+            fail++;
+          }
+        } else {
+          console.error("[bulk verify] failed for", agent.email, err);
+          fail++;
+        }
+      }
+      if (i < targets.length - 1) {
+        await sleep(THROTTLE_MS);
       }
     }
     toast.dismiss(toastId);
