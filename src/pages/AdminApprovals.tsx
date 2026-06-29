@@ -113,6 +113,27 @@ function risksForAgent(a: Agent): Risk[] {
   });
 }
 
+// User-facing admin status buckets. There is intentionally no "unverified"
+// label — agents without an auth account are surfaced as Pending. Internal
+// flows may still branch on `!has_auth_account` to decide whether the Verify
+// action needs to create the account first.
+type AdminDerivedStatus =
+  | "pending"
+  | "verified"
+  | "active"
+  | "rejected"
+  | "restricted";
+
+function deriveAdminStatus(a: Agent): AdminDerivedStatus {
+  if (a.agent_status === "rejected") return "rejected";
+  if (a.agent_status === "restricted") return "restricted";
+  if (a.agent_status === "verified") {
+    return a.account_activated_at ? "active" : "verified";
+  }
+  // Early-access leads (no auth account) and approval-queue agents both land here.
+  return "pending";
+}
+
 function RiskBadges({ risks }: { risks: Risk[] }) {
   if (risks.length === 0) return null;
   return (
@@ -491,28 +512,31 @@ export default function AdminApprovals() {
   // Status counts for the filter bar
   const statusCounts = useMemo(() => {
     const counts: Record<string, number> = { all: agents.length };
-    // Verified = agent_status === 'verified' (truthful, not just "has auth account")
-    // Pending  = has an auth account but agent_status is still 'pending'
-    // Unverified = no auth account yet (early-access leads)
+    // User-facing buckets only — no "unverified" surface area.
+    // Pending  = early-access leads + agents waiting on approval
+    // Verified = approved + setup email sent, but setup not completed yet
+    // Active   = setup completed (account_activated_at present)
     //
     // SAFEGUARD (2026-06-29): Never backfill auth users with the `buyer` role into
     // `agent_early_access`. A prior one-shot backfill ("source = 'backfill_unverified'")
     // inserted any auth user that had an `agent_settings` row, which polluted the
     // Pending tab with 8 buyer/test accounts. Future backfills MUST filter out users
     // who hold the `buyer` role in `user_roles`.
-    let verified = 0;
-    let pending = 0;
-    let unverified = 0;
+    const buckets: Record<AdminDerivedStatus, number> = {
+      pending: 0,
+      verified: 0,
+      active: 0,
+      rejected: 0,
+      restricted: 0,
+    };
     agents.forEach((a) => {
-      if (a.agent_status === "verified") verified++;
-      else if (a.has_auth_account && a.agent_status === "pending") pending++;
-      if (!a.has_auth_account) unverified++;
-      // Keep other status buckets (rejected/restricted) from agent_status
-      counts[a.agent_status] = (counts[a.agent_status] || 0) + 1;
+      buckets[deriveAdminStatus(a)]++;
     });
-    counts.verified = verified;
-    counts.pending = pending;
-    counts.unverified = unverified;
+    counts.pending = buckets.pending;
+    counts.verified = buckets.verified;
+    counts.active = buckets.active;
+    counts.rejected = buckets.rejected;
+    counts.restricted = buckets.restricted;
     return counts;
   }, [agents]);
 
@@ -520,7 +544,8 @@ export default function AdminApprovals() {
   const variantForStatus = (status: string): PillVariant => {
     switch (status) {
       case "pending": return "warning";
-      case "verified": return "success";
+      case "verified": return "primary";
+      case "active": return "success";
       case "rejected":
       case "restricted": return "danger";
       default: return "neutral";
@@ -537,16 +562,8 @@ export default function AdminApprovals() {
         result = result.filter(
           (a) => !a.is_early_access && presenceMap.get(a.id)?.isOnline
         );
-      } else if (statusFilter === "verified") {
-        result = result.filter((a) => a.agent_status === "verified");
-      } else if (statusFilter === "pending") {
-        result = result.filter(
-          (a) => a.has_auth_account === true && a.agent_status === "pending"
-        );
-      } else if (statusFilter === "unverified") {
-        result = result.filter((a) => a.has_auth_account !== true);
       } else {
-        result = result.filter((a) => a.agent_status === statusFilter);
+        result = result.filter((a) => deriveAdminStatus(a) === statusFilter);
       }
     }
 
@@ -1018,15 +1035,15 @@ export default function AdminApprovals() {
           />
           <Pill
             label={`Verified (${statusCounts.verified || 0})`}
-            variant="success"
+            variant="primary"
             active={statusFilter === "verified"}
             onClick={() => setStatusFilter("verified")}
           />
           <Pill
-            label={`Unverified (${statusCounts.unverified || 0})`}
-            variant="neutral"
-            active={statusFilter === "unverified"}
-            onClick={() => setStatusFilter("unverified")}
+            label={`Active (${statusCounts.active || 0})`}
+            variant="success"
+            active={statusFilter === "active"}
+            onClick={() => setStatusFilter("active")}
           />
           <Pill
             label={`Rejected (${statusCounts.rejected || 0})`}
@@ -1074,7 +1091,7 @@ export default function AdminApprovals() {
               </div>
               
               <div className="flex items-center gap-2 text-sm">
-                {statusFilter === "unverified" && (
+                {statusFilter === "pending" && (
                   <>
                     <button
                       onClick={handleBulkVerify}
@@ -1192,34 +1209,42 @@ export default function AdminApprovals() {
                     </div>
                     
                     <div className="flex items-center gap-3 shrink-0">
-                      {agent.has_auth_account ? (
-                        <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700 ring-1 ring-emerald-200">
-                          Verified
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700 ring-1 ring-amber-200">
-                          Pending
-                        </span>
-                      )}
-                      {statusFilter === "verified" && (
-                        agent.account_activated_at ? (
-                          <span
-                            className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700 ring-1 ring-emerald-200"
-                            title={`Account activated: ${new Date(agent.account_activated_at).toLocaleString()}`}
-                          >
-                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                            Account active · {formatRelativeSignIn(agent.account_activated_at)}
+                      {(() => {
+                        const derived = deriveAdminStatus(agent);
+                        if (derived === "rejected" || derived === "restricted") {
+                          return <AgentStatusBadge status={derived as any} />;
+                        }
+                        if (derived === "active") {
+                          return (
+                            <span
+                              className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700 ring-1 ring-emerald-200"
+                              title={
+                                agent.account_activated_at
+                                  ? `Account activated: ${new Date(agent.account_activated_at).toLocaleString()}`
+                                  : "Account active"
+                              }
+                            >
+                              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                              Active · {formatRelativeSignIn(agent.account_activated_at)}
+                            </span>
+                          );
+                        }
+                        if (derived === "verified") {
+                          return (
+                            <span
+                              className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700 ring-1 ring-blue-200"
+                              title="Approved and invited — setup not completed yet"
+                            >
+                              Verified · setup pending
+                            </span>
+                          );
+                        }
+                        return (
+                          <span className="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700 ring-1 ring-amber-200">
+                            Pending
                           </span>
-                        ) : (
-                          <span
-                            className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700 ring-1 ring-amber-200"
-                            title="Agent has not completed password setup yet"
-                          >
-                            <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
-                            Setup pending
-                          </span>
-                        )
-                      )}
+                        );
+                      })()}
                       <span
                         className="text-xs text-zinc-500"
                         title={
