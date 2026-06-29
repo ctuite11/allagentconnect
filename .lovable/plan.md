@@ -1,48 +1,24 @@
-## Root cause
+## Goal
+Stop public Request Access traffic from creating auth accounts directly, and keep Admin Pending/Verified tabs based on real verification status.
 
-`src/pages/AdminApprovals.tsx:471-479` defines the **Verified** tab as "has an auth account", not "agent_status = verified":
+## Plan
+1. **Repoint public Request Access CTAs to Early Access**
+   - Change homepage/public AAC CTAs from `/auth?mode=register` to `/register`.
+   - Include both active homepage variants found in `src/components/home-v2/*` and legacy `src/pages/Home.tsx` surfaces.
+   - Keep buyer/shared-listing invite signup links untouched because those are guest/invite account flows, not agent early-access marketing CTAs.
 
-```ts
-if (a.has_auth_account) verified++;
-```
+2. **Update legacy redirects**
+   - Change agent onboarding-style redirects in `src/App.tsx` (`/choose`, `/get-started`, `/onboarding`, `/verify-agent`, etc.) from `/auth?mode=register` to `/register` so old public links cannot bypass Early Access.
 
-Filter at line 505-506 matches:
-```ts
-} else if (statusFilter === "verified") {
-  result = result.filter((a) => a.has_auth_account === true);
-```
+3. **Add a guard on direct agent signup URL**
+   - In `src/pages/Auth.tsx`, if someone opens `/auth?mode=register` without a legitimate invite/deep-link context, redirect them to `/register`.
+   - Preserve allowed direct-account contexts such as shared listing return flows or buyer workspace invite flows, so existing invite acceptance paths do not break.
 
-Michelle and Emily signed up through `/auth?mode=register`, so they have auth accounts → they land in the **Verified** tab even though `agent_status = 'pending'` in the DB. They are *not* actually verified, and they have not received the License Verified email. That's why the Verified count looks inflated (~55) and why you cannot find them under Pending to send the email.
+4. **Keep Admin status tabs truthful**
+   - Confirm/keep the existing `AdminApprovals.tsx` correction: Verified means `agent_status === 'verified'`, Pending means auth account exists with `agent_status === 'pending'`, Unverified remains early-access leads without auth.
 
-The send action itself is fine — the bug is the bucket they're shown in.
-
-## Fix
-
-Repoint the Verified/Pending tabs to use `agent_status` truthfully, keeping `has_auth_account` only as a secondary signal.
-
-1. **Edit `src/pages/AdminApprovals.tsx`** — Status counts and filter logic:
-
-   ```text
-   Verified  = agent_status === 'verified'
-   Pending   = has_auth_account === true AND agent_status === 'pending'
-   Unverified = has_auth_account !== true        (unchanged: early-access leads w/o accounts)
-   ```
-
-   - Update the `statusCounts` memo (lines ~470-479).
-   - Update the `filteredAgents` memo branches for `"verified"` and `"pending"` (lines ~502-510).
-   - Leave Rejected/Restricted/Unverified untouched.
-
-2. **No DB changes.** Michelle and Emily stay `pending` exactly as they are.
-
-3. **You then send the email normally.** After the fix, both appear under the **Pending** tab; click **Send License Verified** on each. Existing 10-min idempotency + in-flight guard apply.
-
-## Out of scope (separate follow-ups, already planned)
-
-- Repointing HomepageV2 "Request Access" CTAs from `/auth?mode=register` to `/register` so future signups go through Early Access intake.
-- Backfilling Michelle/Emily's missing name/brokerage/state/license — they bypassed the intake form so their profile fields are blank.
-
-## Technical notes
-
-- `has_auth_account` is still useful for the Unverified bucket (early-access leads with no auth row yet).
-- No edge-function, RPC, or migration changes — purely client-side filter correction.
-- Verify after edit by opening AdminApprovals → Verified count drops by ~the number of pending-but-auth'd agents; Michelle and Emily appear in Pending; clicking **Send License Verified** enqueues an `email_jobs` row.
+## Verification
+- Search confirms no public AAC Request Access/Get Access CTA still points to `/auth?mode=register`.
+- `/auth?mode=register` entered directly routes to `/register`.
+- Invite/deep-link signup routes that need direct account creation still reach auth registration.
+- Admin Verified/Pending logic remains based on `agent_status`, so Michelle and Emily stay Pending and can receive the License Verified email from the admin UI.

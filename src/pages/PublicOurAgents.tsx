@@ -27,7 +27,7 @@ export default function PublicOurAgents() {
           <p className="mx-auto mb-6 max-w-xl text-[13px] leading-snug text-neutral-600">
             Join All Agent Connect and connect with buyers actively searching for properties in your area.
           </p>
-          <Button type="button" size="sm" onClick={() => navigate("/auth?mode=register")}>
+          <Button type="button" size="sm" onClick={() => navigate("/register")}>
             Register as an agent
           </Button>
         </div>

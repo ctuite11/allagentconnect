@@ -28,7 +28,7 @@ const GCISection = () => {
             </p>
             <div className="mt-10">
               <Link
-                to="/auth?mode=register"
+                to="/register"
                 className="bg-accent hover:bg-accent-hover text-accent-foreground font-semibold px-10 py-3.5 rounded-lg text-base transition-colors inline-block"
               >
                 Get Access

@@ -5,7 +5,7 @@ import { Separator } from "@/components/ui/separator";
 
 const platformLinks = [
   { label: "How It Works", href: "#how-it-works" },
-  { label: "Request Access", href: "/auth?mode=register" },
+  { label: "Request Access", href: "/register" },
   { label: "Request Demo", href: "#" },
   { label: "Login", href: "/auth" },
 ];
