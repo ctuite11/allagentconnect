@@ -35,7 +35,7 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    const ctaUrl = resolveAacCtaUrl(body.ctaUrl, "/register");
+    const ctaUrl = resolveAacCtaUrl(body.ctaUrl, "/auth?mode=register&source=agent_forward");
     const subject = body.subject?.trim() || DEFAULT_SUBJECT;
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
