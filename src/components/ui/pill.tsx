@@ -23,7 +23,7 @@ const variantStyles: Record<PillVariant, { default: string; active: string; disa
   },
   neutral: {
     default: "bg-neutral-soft text-neutral-text",
-    active: "bg-muted text-foreground",
+    active: "bg-neon-green text-white",
     disabled: "bg-neutral-soft text-neutral-text cursor-not-allowed opacity-70",
   },
   success: {
@@ -50,7 +50,7 @@ const variantStyles: Record<PillVariant, { default: string; active: string; disa
 
 const hoverStyles: Record<PillVariant, string> = {
   primary: "hover:brightness-105",
-  neutral: "hover:bg-muted",
+  neutral: "hover:bg-success-soft hover:text-neon-green",
   success: "hover:brightness-105",
   warning: "hover:brightness-105",
   danger: "hover:brightness-105",
