@@ -801,6 +801,7 @@ export type Database = {
       }
       agent_settings: {
         Row: {
+          account_activated_at: string | null
           agent_status: Database["public"]["Enums"]["agent_status"]
           approval_email_sent: boolean
           county: string | null
@@ -838,6 +839,7 @@ export type Database = {
           welcome_modal_dismissed: boolean
         }
         Insert: {
+          account_activated_at?: string | null
           agent_status?: Database["public"]["Enums"]["agent_status"]
           approval_email_sent?: boolean
           county?: string | null
@@ -875,6 +877,7 @@ export type Database = {
           welcome_modal_dismissed?: boolean
         }
         Update: {
+          account_activated_at?: string | null
           agent_status?: Database["public"]["Enums"]["agent_status"]
           approval_email_sent?: boolean
           county?: string | null

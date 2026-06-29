@@ -1,30 +1,35 @@
 ## Goal
 
-Move the following 16 verified agents back to the Early Access list so they appear under "Pending" in Admin Approvals and the License Verified email can be re-sent through the UI.
+Distinguish "verified + email sent" from "agent actually created their password and activated their account" in the Admin Verified tab.
 
-**Excluded (stay verified):** Erica Covelle, Emily Dugal, Michelle Hediger, Patrick Bateson, Chris Tuite.
+## Data source
 
-**Converting to Early Access / Pending (16):**
-Jon Mehr, Patricia Donovan, Lindsay Higgins, Jeffrey Goldman, Laura Wauters, Kiernan Middleman, Kimberlee Meserve, Murat Arslan, sean quirk, Rahel Choi, yoni Haiminis, Elizabeth Herald, John Paul Moran, Charles Joseph, Betsy McCombs, Maria del Carmen Vera-Diaz.
+Add a durable column `agent_settings.account_activated_at timestamptz` (nullable). This is the canonical activation marker. Reasoning:
 
-## Changes (data only, no code)
+- `auth.users.last_sign_in_at` is already returned by `admin-list-agents` but a sign-in does not mean setup was completed (and isn't set for some flows).
+- An explicit timestamp written exactly when `/agent-setup` finishes is unambiguous and won't be retroactively set for the 18+ historical verified agents who never finished setup.
 
-1. **`agent_settings`** for the 16 user_ids:
-   - `agent_status` → `'pending'`
-   - `verified_at` → `NULL`
-   - `early_access` → `true`
-   - `approval_email_sent` → `false` (so the License Verified email can be re-sent)
+### Backfill rule (conservative)
+Do NOT mark historical agents active. Leave `account_activated_at = NULL` for everyone, with one safe exception: agents whose `auth.users.last_sign_in_at IS NOT NULL` AND `agent_status = 'verified'` AND email confirmed — they have demonstrably used their account. We'll backfill those with their `last_sign_in_at` value so the admin view isn't full of false "Setup pending" rows for people who are actually using the app. Everyone else (incl. the 16 we just moved back to pending, plus Emily/Michelle/Covelle/Bateson if they haven't signed in) stays NULL = Setup pending until they complete `/agent-setup` or sign in again.
 
-2. **`agent_early_access`**: insert a row for each of the 13 agents not already present (3 — Jon, Laura, Kimberlee — already exist). Populate from `agent_profiles` (email, first_name, last_name, phone, brokerage, license_state, license_number where available).
+## Implementation
 
-3. **Auth accounts left intact.** They keep their existing logins; only their app-side status changes. No emails are sent by this change — you trigger the License Verified email from Admin UI when ready.
+1. **Migration** — add `account_activated_at timestamptz` to `agent_settings`. Backfill per rule above using `auth.users.last_sign_in_at` joined by email.
 
-## Out of scope
+2. **`/agent-setup` completion** (`src/pages/AgentAccountSetup.tsx`) — right after `supabase.auth.updateUser({ password })` succeeds, upsert `agent_settings.account_activated_at = now()` for the current user (only if currently NULL, to preserve the first-activation timestamp).
 
-- No code edits.
-- No automated email sending.
-- No deletion of auth users or profile rows.
+3. **`admin-list-agents` edge function** — include `account_activated_at` in the row payload for real agents (NULL for early-access leads).
+
+4. **`AdminApprovals.tsx`** — extend the `Agent` type and table:
+   - Add **Account Status** column on the Verified tab only (between current status and verified date).
+   - Render: green dot `Account active` + relative timestamp if `account_activated_at` is set; amber dot `Setup pending` otherwise.
+   - Add a row-level "Resend setup link" action when Setup pending (reuses existing `send-license-verified-email` with the per-agent idempotency key from earlier work — no duplicate-send risk).
+
+5. **No changes** to Verified tab membership rules, Pending/Unverified tabs, the License Verified email template, or the `/agent-setup` UI beyond the activation write.
 
 ## Verification
 
-After the data change, the Admin Approvals "Pending" tab should list these 16 agents and "Verified" should drop to 5 (Covelle, Emily, Michelle, Bateson, Chris).
+- New verified agent → email sent → tab shows **Setup pending**.
+- Agent opens setup link, sets password → row flips to **Account active** with timestamp.
+- Historical verified agents who already signed in (e.g. Chris) show **Account active** via backfill; those who never finished show **Setup pending**.
+- No agent is falsely marked active without an auth signal.
