@@ -1067,6 +1067,24 @@ export default function AdminApprovals() {
               </div>
               
               <div className="flex items-center gap-2 text-sm">
+                {statusFilter === "unverified" && (
+                  <>
+                    <button
+                      onClick={handleBulkVerify}
+                      disabled={selectedIds.size === 0 || bulkVerifying}
+                      className={
+                        selectedIds.size === 0 || bulkVerifying
+                          ? "text-zinc-300 cursor-not-allowed"
+                          : "text-emerald-600 hover:text-emerald-800 hover:underline transition-colors font-medium"
+                      }
+                    >
+                      {bulkVerifying
+                        ? "Verifying…"
+                        : `Verify Selected (${selectedIds.size})`}
+                    </button>
+                    <span className="text-zinc-300">•</span>
+                  </>
+                )}
                 <button
                   onClick={handleBulkEmail}
                   disabled={selectedIds.size === 0}
