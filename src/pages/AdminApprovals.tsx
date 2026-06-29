@@ -71,6 +71,7 @@ interface Agent {
   is_early_access?: boolean;
   has_auth_account?: boolean;
   last_sign_in_at?: string | null;
+  account_activated_at?: string | null;
 }
 
 const stateLicenseLookupUrls: Record<string, string> = {
