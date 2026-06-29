@@ -892,7 +892,8 @@ export default function AdminApprovals() {
             <Button 
               onClick={() => setShowCreateDialog(true)}
               size="sm"
-              className="bg-emerald-600 hover:bg-emerald-700"
+              variant="outline"
+              className="border-slate-300 text-slate-700 hover:bg-slate-100"
             >
               <UserPlus className="h-4 w-4 mr-2" />
               Create Agent
@@ -1050,12 +1051,6 @@ export default function AdminApprovals() {
             variant="neutral"
             active={statusFilter === "rejected"}
             onClick={() => setStatusFilter("rejected")}
-          />
-          <Pill
-            label={`Restricted (${statusCounts.restricted || 0})`}
-            variant="neutral"
-            active={statusFilter === "restricted"}
-            onClick={() => setStatusFilter("restricted")}
           />
           <Pill
             label={`Online (${onlineCount})`}
