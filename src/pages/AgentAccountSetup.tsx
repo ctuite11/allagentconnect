@@ -262,17 +262,28 @@ const AgentAccountSetup = () => {
 
       // Mark account as activated so the admin Verified tab can distinguish
       // "Setup pending" from "Account active". Only set on first activation —
-      // don't overwrite an existing timestamp.
+      // filter on IS NULL so a later password change doesn't reset the
+      // original activation timestamp.
       try {
+        const nowIso = new Date().toISOString();
+        const { error: updateErr } = await supabase
+          .from("agent_settings")
+          .update({ account_activated_at: nowIso, updated_at: nowIso })
+          .eq("user_id", data.user.id)
+          .is("account_activated_at", null);
+        // If no agent_settings row exists yet, insert one.
+        if (updateErr) {
+          console.warn("[AgentAccountSetup] activation update warn:", updateErr);
+        }
         await supabase
           .from("agent_settings")
           .upsert(
             [{
               user_id: data.user.id,
-              account_activated_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
+              account_activated_at: nowIso,
+              updated_at: nowIso,
             }],
-            { onConflict: "user_id", ignoreDuplicates: false },
+            { onConflict: "user_id", ignoreDuplicates: true },
           );
       } catch (e) {
         console.warn("[AgentAccountSetup] activation marker write failed (non-fatal):", e);
