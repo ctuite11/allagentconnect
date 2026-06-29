@@ -946,6 +946,25 @@ export default function AdminApprovals() {
               <Users className="h-4 w-4 mr-2" />
               Consumers
             </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={async () => {
+                toast.message("Sending forwardable invite to your inbox…");
+                const { data, error } = await supabase.functions.invoke(
+                  'send-personal-forward-invite',
+                  { body: { to: ['chris@allagentconnect.com'] } },
+                );
+                if (error || !data?.success) {
+                  toast.error(`Failed to send: ${error?.message ?? data?.error ?? 'Unknown error'}`);
+                } else {
+                  toast.success("Sent to chris@allagentconnect.com — forward from your inbox.");
+                }
+              }}
+              className="border-slate-300 text-slate-700 hover:bg-slate-100"
+            >
+              Email me forwardable invite
+            </Button>
             <Button 
               onClick={() => setShowCreateDialog(true)}
               size="sm"
