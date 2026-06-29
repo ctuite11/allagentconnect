@@ -226,8 +226,16 @@ const AuthCallback = () => {
                 recoveryInfo.isSetup ||
                 sessionStorage.getItem("aac_password_setup_flow") === "1";
               if (isAgentSetup) {
-                const { data: { session: setupSession } } = await supabase.auth.getSession();
-                rememberAgentSetupHandoff(setupSession);
+                try {
+                  const { data: { session: setupSession } } = await withCallbackTimeout(
+                    supabase.auth.getSession(),
+                    3000,
+                    "getSession(setup handoff)",
+                  );
+                  rememberAgentSetupHandoff(setupSession);
+                } catch {
+                  console.warn("[AuthCallback] diag", { branch: "pkce_handoff_getSession_timeout" });
+                }
               }
               navigate(isAgentSetup ? "/agent-setup" : "/password-reset", { replace: true });
             } else {
@@ -242,11 +250,18 @@ const AuthCallback = () => {
           }
           return;
         } catch (err) {
-          if (import.meta.env.DEV) console.error("[AuthCallback] PKCE exchange error:", err);
-          // Clear the processed marker since we failed
+          console.warn("[AuthCallback] diag", { branch: "pkce_exchange_timeout_or_error" });
           sessionStorage.removeItem(processedKey);
-          if (!cancelled) {
-            setError("Reset link expired or invalid. Please request a new one.");
+          if (!cancelled && !didNavigate.current) {
+            const isSetupCtx =
+              recoveryInfo.isSetup ||
+              sessionStorage.getItem("aac_password_setup_flow") === "1";
+            if (isSetupCtx) {
+              didNavigate.current = true;
+              navigate("/agent-setup", { replace: true });
+            } else {
+              setError("Reset link expired or invalid. Please request a new one.");
+            }
           }
           return;
         }
