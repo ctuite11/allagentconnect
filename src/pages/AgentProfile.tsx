@@ -246,7 +246,7 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
         .from("listings")
         .select("*")
         .eq("agent_id", agentUuid)
-        .eq("status", "active")
+        .in("status", ["active", "coming_soon"])
         .order("created_at", { ascending: false })
         .limit(6);
 
@@ -617,13 +617,13 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
         <section className={LISTINGS_SECTION}>
           <p className={EYEBROW}>Listings</p>
           <h2 className="mt-3 text-lg font-medium tracking-tight text-neutral-900 md:text-xl">
-            Active listings
+            Current listings
           </h2>
           <div className="mt-10 md:mt-11">
 
           {listings.length === 0 ? (
             <p className="text-center text-[13px] text-neutral-600">
-              No active listings right now.{" "}
+              No current listings right now.{" "}
               <button
                 type="button"
                 onClick={() => navigate(publicMode ? "/browse" : "/listing-search")}
