@@ -626,7 +626,7 @@ export default function AdminApprovals() {
 
   // Selection handlers
   const toggleSelectAll = () => {
-    if (selectedIds.size === filteredAgents.length) {
+    if (effectiveSelectedIds.size === filteredAgents.length) {
       setSelectedIds(new Set());
     } else {
       setSelectedIds(new Set(filteredAgents.map((a) => a.id)));
@@ -642,6 +642,27 @@ export default function AdminApprovals() {
     }
     setSelectedIds(newSet);
   };
+
+  // Reconcile selection with the currently visible (filtered) agents.
+  // Prevents stale "N selected" counters and bulk actions targeting
+  // rows that aren't visible after a tab/search/refresh.
+  const effectiveSelectedIds = useMemo(() => {
+    if (selectedIds.size === 0) return selectedIds;
+    const visible = new Set(filteredAgents.map((a) => a.id));
+    const next = new Set<string>();
+    selectedIds.forEach((id) => {
+      if (visible.has(id)) next.add(id);
+    });
+    return next;
+  }, [selectedIds, filteredAgents]);
+
+  // Prune the underlying state when the visible set shrinks so that
+  // hidden ids can never leak into bulk actions or re-appear later.
+  useEffect(() => {
+    if (selectedIds.size === 0) return;
+    if (effectiveSelectedIds.size === selectedIds.size) return;
+    setSelectedIds(effectiveSelectedIds);
+  }, [effectiveSelectedIds, selectedIds]);
 
   // Column sort handler
   const handleSort = (field: SortField) => {
@@ -665,7 +686,7 @@ export default function AdminApprovals() {
   // Bulk email
   const handleBulkEmail = () => {
     const recipients = filteredAgents
-      .filter((a) => selectedIds.has(a.id))
+      .filter((a) => effectiveSelectedIds.has(a.id))
       .map((a) => ({ id: a.id, email: a.email, name: `${a.first_name} ${a.last_name}` }));
     setEmailRecipients(recipients);
   };
@@ -677,7 +698,7 @@ export default function AdminApprovals() {
   const [showVerifyConfirm, setShowVerifyConfirm] = useState(false);
   const handleBulkVerify = async () => {
     const targets = filteredAgents.filter(
-      (a) => selectedIds.has(a.id) && a.agent_status !== "verified",
+      (a) => effectiveSelectedIds.has(a.id) && a.agent_status !== "verified",
     );
     if (targets.length === 0) {
       toast.error("No eligible agents selected");
@@ -1085,13 +1106,13 @@ export default function AdminApprovals() {
             <div className="flex items-center justify-between px-4 py-2">
               <div className="flex items-center gap-3">
                 <Checkbox
-                  checked={selectedIds.size === filteredAgents.length && filteredAgents.length > 0}
+                  checked={effectiveSelectedIds.size === filteredAgents.length && filteredAgents.length > 0}
                   onCheckedChange={toggleSelectAll}
                   aria-label="Select all agents"
                 />
                 <span className="text-sm text-zinc-600">
-                  {selectedIds.size > 0 
-                    ? `${selectedIds.size} of ${filteredAgents.length} selected` 
+                  {effectiveSelectedIds.size > 0 
+                    ? `${effectiveSelectedIds.size} of ${filteredAgents.length} selected` 
                     : "Select all"}
                 </span>
               </div>
@@ -1101,16 +1122,16 @@ export default function AdminApprovals() {
                   <>
                     <button
                       onClick={() => setShowVerifyConfirm(true)}
-                      disabled={selectedIds.size === 0 || bulkVerifying}
+                      disabled={effectiveSelectedIds.size === 0 || bulkVerifying}
                       className={
-                        selectedIds.size === 0 || bulkVerifying
+                        effectiveSelectedIds.size === 0 || bulkVerifying
                           ? "text-zinc-300 cursor-not-allowed"
                           : "text-emerald-600 hover:text-emerald-800 hover:underline transition-colors font-medium"
                       }
                     >
                       {bulkVerifying
                         ? "Verifying…"
-                        : `Verify Selected (${selectedIds.size})`}
+                        : `Verify Selected (${effectiveSelectedIds.size})`}
                     </button>
                     <span className="text-zinc-300">•</span>
                   </>
@@ -1119,8 +1140,8 @@ export default function AdminApprovals() {
                   <>
                 <button
                   onClick={handleBulkEmail}
-                  disabled={selectedIds.size === 0}
-                  className={selectedIds.size === 0 
+                  disabled={effectiveSelectedIds.size === 0}
+                  className={effectiveSelectedIds.size === 0 
                     ? "text-zinc-300 cursor-not-allowed" 
                     : "text-zinc-500 hover:text-zinc-900 hover:underline transition-colors"}
                 >
@@ -1131,14 +1152,14 @@ export default function AdminApprovals() {
                 )}
                 <button
                   onClick={() => setShowBulkDeleteDialog(true)}
-                  disabled={selectedIds.size === 0}
-                  className={selectedIds.size === 0 
+                  disabled={effectiveSelectedIds.size === 0}
+                  className={effectiveSelectedIds.size === 0 
                     ? "text-zinc-300 cursor-not-allowed" 
                     : "text-rose-500 hover:text-rose-700 hover:underline transition-colors"}
                 >
                   Delete Selected
                 </button>
-                {selectedIds.size > 0 && (
+                {effectiveSelectedIds.size > 0 && (
                   <>
                     <span className="text-zinc-300">•</span>
                     <button
@@ -1398,7 +1419,7 @@ export default function AdminApprovals() {
       <BulkDeleteAgentsDialog
         open={showBulkDeleteDialog}
         onOpenChange={setShowBulkDeleteDialog}
-        agents={filteredAgents.filter((a) => selectedIds.has(a.id))}
+        agents={filteredAgents.filter((a) => effectiveSelectedIds.has(a.id))}
         onDeleted={() => {
           setSelectedIds(new Set());
           fetchAgents();
@@ -1408,9 +1429,9 @@ export default function AdminApprovals() {
       <AlertDialog open={showVerifyConfirm} onOpenChange={setShowVerifyConfirm}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Verify {selectedIds.size} agent{selectedIds.size === 1 ? "" : "s"}?</AlertDialogTitle>
+            <AlertDialogTitle>Verify {effectiveSelectedIds.size} agent{effectiveSelectedIds.size === 1 ? "" : "s"}?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will verify {selectedIds.size} agent{selectedIds.size === 1 ? "" : "s"} and send each one an individual License Verified setup email. Emails are sent one at a time using a per-agent idempotency key — no custom subject or message.
+              This will verify {effectiveSelectedIds.size} agent{effectiveSelectedIds.size === 1 ? "" : "s"} and send each one an individual License Verified setup email. Emails are sent one at a time using a per-agent idempotency key — no custom subject or message.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
