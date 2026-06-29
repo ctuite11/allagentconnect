@@ -384,6 +384,13 @@ serve(async (req) => {
       );
     }
 
+    // ---- 7. Sweep residual identity rows (clients / profiles) by email ----
+    // Catches CRM rows that aren't keyed by auth uid (different `clients.id`).
+    if (buyerEmail) {
+      await admin.from("clients").delete().ilike("email", buyerEmail);
+      await admin.from("profiles").delete().ilike("email", buyerEmail);
+    }
+
     console.log(
       `remove-buyer: removed auth user ${buyerAuthId} (${buyerEmail ?? "?"}) by caller ${callerId}`,
     );
