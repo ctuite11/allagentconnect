@@ -544,7 +544,7 @@ export default function AdminApprovals() {
   const variantForStatus = (status: string): PillVariant => {
     switch (status) {
       case "pending": return "warning";
-      case "verified": return "info";
+      case "verified": return "primary";
       case "active": return "success";
       case "rejected":
       case "restricted": return "danger";
