@@ -263,14 +263,20 @@ serve(async (req) => {
       const isRealAdmin = roleSet.has("admin");
       const hasAgentRole = roleSet.has("agent");
 
+      const safeAudit = (action: string) =>
+        admin
+          .from("audit_logs")
+          .insert({
+            action,
+            user_id: callerId,
+            table_name: "auth.users",
+            record_id: buyerAuthId,
+          })
+          .then(() => null, () => null);
+
       // Never auto-purge a true admin.
       if (isRealAdmin) {
-        await admin.from("audit_logs").insert({
-          action: "remove_buyer_skipped",
-          target_user_id: buyerAuthId,
-          actor_user_id: callerId,
-          metadata: { reason: "user_is_admin" },
-        }).then(() => null, () => null);
+        await safeAudit("remove_buyer_skipped_admin");
         return json({
           success: true,
           status: "relationship_ended_only",
@@ -296,16 +302,7 @@ serve(async (req) => {
         // scope we can self-heal a stale role.
         const isAgentScopeCaller = isOwningAgent && !isAdmin && !isBuyerSelf;
         if (isRealAgent || isAgentScopeCaller) {
-          await admin.from("audit_logs").insert({
-            action: "remove_buyer_skipped",
-            target_user_id: buyerAuthId,
-            actor_user_id: callerId,
-            metadata: {
-              reason: "user_is_agent_or_admin",
-              is_real_agent: isRealAgent,
-              scope: isAdmin ? "admin" : isBuyerSelf ? "self" : "agent",
-            },
-          }).then(() => null, () => null);
+          await safeAudit("remove_buyer_skipped_agent");
           return json({
             success: true,
             status: "relationship_ended_only",
@@ -316,12 +313,7 @@ serve(async (req) => {
 
         // Stale agent role on a buyer — heal it and continue with purge.
         await admin.from("user_roles").delete().eq("user_id", buyerAuthId).eq("role", "agent");
-        await admin.from("audit_logs").insert({
-          action: "remove_buyer_healed_stale_role",
-          target_user_id: buyerAuthId,
-          actor_user_id: callerId,
-          metadata: { removed_role: "agent" },
-        }).then(() => null, () => null);
+        await safeAudit("remove_buyer_healed_stale_role");
       }
     }
 
