@@ -467,17 +467,22 @@ export default function AdminApprovals() {
   // Status counts for the filter bar
   const statusCounts = useMemo(() => {
     const counts: Record<string, number> = { all: agents.length };
-    // Pending / Verified now driven by auth-account presence
+    // Verified = agent_status === 'verified' (truthful, not just "has auth account")
+    // Pending  = has an auth account but agent_status is still 'pending'
+    // Unverified = no auth account yet (early-access leads)
     let verified = 0;
     let pending = 0;
+    let unverified = 0;
     agents.forEach((a) => {
-      if (a.has_auth_account) verified++;
-      else pending++;
-      // Keep other status buckets (rejected/restricted/unverified) from agent_status
+      if (a.agent_status === "verified") verified++;
+      else if (a.has_auth_account && a.agent_status === "pending") pending++;
+      if (!a.has_auth_account) unverified++;
+      // Keep other status buckets (rejected/restricted) from agent_status
       counts[a.agent_status] = (counts[a.agent_status] || 0) + 1;
     });
     counts.verified = verified;
     counts.pending = pending;
+    counts.unverified = unverified;
     return counts;
   }, [agents]);
 
@@ -503,8 +508,12 @@ export default function AdminApprovals() {
           (a) => !a.is_early_access && presenceMap.get(a.id)?.isOnline
         );
       } else if (statusFilter === "verified") {
-        result = result.filter((a) => a.has_auth_account === true);
+        result = result.filter((a) => a.agent_status === "verified");
       } else if (statusFilter === "pending") {
+        result = result.filter(
+          (a) => a.has_auth_account === true && a.agent_status === "pending"
+        );
+      } else if (statusFilter === "unverified") {
         result = result.filter((a) => a.has_auth_account !== true);
       } else {
         result = result.filter((a) => a.agent_status === statusFilter);

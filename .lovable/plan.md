@@ -1,35 +1,48 @@
-## Plan: fix License Verified verification email link stuck loading
+## Root cause
 
-### Scope
-This is only for the **License Verified email link** flow:
+`src/pages/AdminApprovals.tsx:471-479` defines the **Verified** tab as "has an auth account", not "agent_status = verified":
 
-`License Verified email CTA → AAC /auth/setup → auth verify URL → /auth/callback?type=recovery&setup=1 → /agent-setup`
+```ts
+if (a.has_auth_account) verified++;
+```
 
-No buyer invite, hot sheet, listing-share, or DCMLS consumer flows will be touched.
+Filter at line 505-506 matches:
+```ts
+} else if (statusFilter === "verified") {
+  result = result.filter((a) => a.has_auth_account === true);
+```
 
-### Root issue
-The screenshot is the `/agent-setup` loader: **“Verifying your activation link…”**.
+Michelle and Emily signed up through `/auth?mode=register`, so they have auth accounts → they land in the **Verified** tab even though `agent_status = 'pending'` in the DB. They are *not* actually verified, and they have not received the License Verified email. That's why the Verified count looks inflated (~55) and why you cannot find them under Pending to send the email.
 
-That page currently waits for session validation and agent profile prefill before it turns off loading. If any step stalls or throws, it can stay loading forever. The email link itself is reaching AAC, but the final setup page does not fail safely.
+The send action itself is fine — the bug is the bucket they're shown in.
 
-### Fix
-1. **Harden `/agent-setup` initialization**
-   - Wrap setup initialization in `try/catch/finally`.
-   - Always end loading, even if profile lookup fails.
-   - Treat agent profile prefill as optional, not blocking.
-   - Add a short fail-safe timeout so the user sees an error panel instead of an infinite loader.
+## Fix
 
-2. **Keep the License Verified link on password setup**
-   - Preserve the existing AAC-pinned recovery/setup link behavior.
-   - Do not send users to plain `/auth` unless the setup link is invalid/expired.
+Repoint the Verified/Pending tabs to use `agent_status` truthfully, keeping `has_auth_account` only as a secondary signal.
 
-3. **Route correctly after setup**
-   - After password is set, resolve the user’s actual role.
-   - Admin routes to `/admin/approvals`.
-   - Verified agent routes to `/agent-dashboard`.
-   - If role resolution fails, show a clear error instead of hanging.
+1. **Edit `src/pages/AdminApprovals.tsx`** — Status counts and filter logic:
 
-4. **Verification**
-   - Re-send the License Verified email to `chris@allagentconnect.com`.
-   - Confirm the CTA starts on `allagentconnect.com` and reaches the password setup/reset flow.
-   - Confirm it no longer gets stuck on “Verifying your activation link…”.
+   ```text
+   Verified  = agent_status === 'verified'
+   Pending   = has_auth_account === true AND agent_status === 'pending'
+   Unverified = has_auth_account !== true        (unchanged: early-access leads w/o accounts)
+   ```
+
+   - Update the `statusCounts` memo (lines ~470-479).
+   - Update the `filteredAgents` memo branches for `"verified"` and `"pending"` (lines ~502-510).
+   - Leave Rejected/Restricted/Unverified untouched.
+
+2. **No DB changes.** Michelle and Emily stay `pending` exactly as they are.
+
+3. **You then send the email normally.** After the fix, both appear under the **Pending** tab; click **Send License Verified** on each. Existing 10-min idempotency + in-flight guard apply.
+
+## Out of scope (separate follow-ups, already planned)
+
+- Repointing HomepageV2 "Request Access" CTAs from `/auth?mode=register` to `/register` so future signups go through Early Access intake.
+- Backfilling Michelle/Emily's missing name/brokerage/state/license — they bypassed the intake form so their profile fields are blank.
+
+## Technical notes
+
+- `has_auth_account` is still useful for the Unverified bucket (early-access leads with no auth row yet).
+- No edge-function, RPC, or migration changes — purely client-side filter correction.
+- Verify after edit by opening AdminApprovals → Verified count drops by ~the number of pending-but-auth'd agents; Michelle and Emily appear in Pending; clicking **Send License Verified** enqueues an `email_jobs` row.
