@@ -17,6 +17,16 @@ const rememberAgentSetupHandoff = (session: { user?: { id?: string; email?: stri
   if (user.email) sessionStorage.setItem("aac_agent_setup_email", user.email);
 };
 
+function withCallbackTimeout<T>(p: PromiseLike<T>, ms: number, label: string): Promise<T> {
+  let t: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    t = setTimeout(() => reject(new Error(`${label} timed out`)), ms);
+  });
+  return Promise.race([Promise.resolve(p), timeout]).finally(() => {
+    if (t) clearTimeout(t);
+  });
+}
+
 const AuthCallback = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -126,17 +136,19 @@ const AuthCallback = () => {
     const init = async () => {
       // Handle hash-based recovery tokens (implicit flow)
       if (accessToken && refreshToken) {
-        if (import.meta.env.DEV) console.log("[AuthCallback] Hash tokens detected - setting session");
-        
+        console.info("[AuthCallback] diag", { branch: "hash_setSession_start", setup: recoveryInfo.isSetup });
         try {
-          const { data: setSessionData, error: sessionError } = await supabase.auth.setSession({
-            access_token: accessToken,
-            refresh_token: refreshToken
-          });
+          const { data: setSessionData, error: sessionError } = await withCallbackTimeout(
+            supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken,
+            }),
+            6000,
+            "setSession",
+          );
           
           if (sessionError) {
-            if (import.meta.env.DEV) console.error("[AuthCallback] setSession error:", sessionError);
-            // Clear the processed marker since we failed
+            console.warn("[AuthCallback] diag", { branch: "hash_setSession_error" });
             sessionStorage.removeItem(processedKey);
             if (!cancelled) {
               setError("Reset link expired or invalid. Please request a new one.");
@@ -173,11 +185,18 @@ const AuthCallback = () => {
           }
           return;
         } catch (err) {
-          if (import.meta.env.DEV) console.error("[AuthCallback] setSession exception:", err);
-          // Clear the processed marker since we failed
+          console.warn("[AuthCallback] diag", { branch: "hash_setSession_timeout_or_exception" });
           sessionStorage.removeItem(processedKey);
-          if (!cancelled) {
-            setError("Reset link expired or invalid. Please request a new one.");
+          if (!cancelled && !didNavigate.current) {
+            const isSetupCtx =
+              recoveryInfo.isSetup ||
+              sessionStorage.getItem("aac_password_setup_flow") === "1";
+            if (isSetupCtx) {
+              didNavigate.current = true;
+              navigate("/agent-setup", { replace: true });
+            } else {
+              setError("Reset link expired or invalid. Please request a new one.");
+            }
           }
           return;
         }
@@ -185,10 +204,13 @@ const AuthCallback = () => {
 
       // Handle PKCE recovery link
       if (code) {
-        if (import.meta.env.DEV) console.log("[AuthCallback] PKCE code detected - exchanging for session");
-        
+        console.info("[AuthCallback] diag", { branch: "pkce_exchange_start", setup: recoveryInfo.isSetup });
         try {
-          await supabase.auth.exchangeCodeForSession(code);
+          await withCallbackTimeout(
+            supabase.auth.exchangeCodeForSession(code),
+            6000,
+            "exchangeCodeForSession",
+          );
           // Mark as processed AFTER successfully exchanging code
           if (hasStableTokenKey) sessionStorage.setItem(processedKey, "1");
 
@@ -204,8 +226,16 @@ const AuthCallback = () => {
                 recoveryInfo.isSetup ||
                 sessionStorage.getItem("aac_password_setup_flow") === "1";
               if (isAgentSetup) {
-                const { data: { session: setupSession } } = await supabase.auth.getSession();
-                rememberAgentSetupHandoff(setupSession);
+                try {
+                  const { data: { session: setupSession } } = await withCallbackTimeout(
+                    supabase.auth.getSession(),
+                    3000,
+                    "getSession(setup handoff)",
+                  );
+                  rememberAgentSetupHandoff(setupSession);
+                } catch {
+                  console.warn("[AuthCallback] diag", { branch: "pkce_handoff_getSession_timeout" });
+                }
               }
               navigate(isAgentSetup ? "/agent-setup" : "/password-reset", { replace: true });
             } else {
@@ -220,11 +250,18 @@ const AuthCallback = () => {
           }
           return;
         } catch (err) {
-          if (import.meta.env.DEV) console.error("[AuthCallback] PKCE exchange error:", err);
-          // Clear the processed marker since we failed
+          console.warn("[AuthCallback] diag", { branch: "pkce_exchange_timeout_or_error" });
           sessionStorage.removeItem(processedKey);
-          if (!cancelled) {
-            setError("Reset link expired or invalid. Please request a new one.");
+          if (!cancelled && !didNavigate.current) {
+            const isSetupCtx =
+              recoveryInfo.isSetup ||
+              sessionStorage.getItem("aac_password_setup_flow") === "1";
+            if (isSetupCtx) {
+              didNavigate.current = true;
+              navigate("/agent-setup", { replace: true });
+            } else {
+              setError("Reset link expired or invalid. Please request a new one.");
+            }
           }
           return;
         }
