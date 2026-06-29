@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Home, MessageSquare, Radio, TrendingUp, UserCheck, Users } from "lucide-react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { AgentAvatar } from "@/components/ui/AgentAvatar";
@@ -7,8 +7,6 @@ import { NetworkActivityCard } from "./NetworkActivityCard";
 import { ChannelPreviewCard } from "./ChannelPreviewCard";
 import { useNewestVerifiedAgents } from "./useNewestVerifiedAgents";
 import { SendMessageDialog } from "@/components/SendMessageDialog";
-import { CommunicationPreferencesPrompt } from "@/components/communication-center/CommunicationPreferencesPrompt";
-import { useCommunicationComposeGate } from "@/hooks/useCommunicationComposeGate";
 import {
   useBuyerNeedsPreview,
   useGeneralDiscussionsPreview,
@@ -144,19 +142,24 @@ export function NewestVerifiedAgentsRow() {
 }
 
 export function NetworkActivitySection() {
-  const { requestCompose, promptOpen, checking, closePrompt } = useCommunicationComposeGate();
   const [compose, setCompose] = useState<{ open: boolean; category: ComposeCategory; title: string }>({
     open: false,
     category: "buyer_need",
     title: "Buyer Needs",
   });
+  const [hintDismissed, setHintDismissed] = useState(true);
+  useEffect(() => {
+    setHintDismissed(localStorage.getItem("aac:commsPrefsHintDismissed") === "1");
+  }, []);
+  const dismissHint = () => {
+    localStorage.setItem("aac:commsPrefsHintDismissed", "1");
+    setHintDismissed(true);
+  };
 
   const launchCompose = (category: ComposeCategory, title: string) =>
     setCompose({ open: true, category, title });
 
-  const openCompose = (category: ComposeCategory, title: string) => {
-    requestCompose(() => launchCompose(category, title));
-  };
+  const openCompose = launchCompose;
 
   return (
     <section aria-labelledby="network-activity-heading" className="space-y-3">
@@ -191,9 +194,19 @@ export function NetworkActivitySection() {
         <GeneralDiscussionsChannel onCreate={() => openCompose("general_discussion", "General Discussions")} />
       </div>
 
-      {checking ? (
-        <div className="sr-only" aria-live="polite">
-          Checking communication preferences…
+      {!hintDismissed ? (
+        <div className="flex items-start justify-between gap-3 rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 text-[12px] text-neutral-600">
+          <span>
+            You can customize your audience and notification preferences anytime in Communications Center.
+          </span>
+          <button
+            type="button"
+            onClick={dismissHint}
+            className="shrink-0 text-[11px] font-medium text-neutral-500 hover:text-neutral-800"
+            aria-label="Dismiss"
+          >
+            Dismiss
+          </button>
         </div>
       ) : null}
 
@@ -203,8 +216,6 @@ export function NetworkActivitySection() {
         category={compose.category}
         categoryTitle={compose.title}
       />
-
-      <CommunicationPreferencesPrompt open={promptOpen} onClose={closePrompt} />
     </section>
   );
 }
