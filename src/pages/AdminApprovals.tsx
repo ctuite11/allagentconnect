@@ -42,6 +42,16 @@ import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 import { AGENT_STATUS_OPTIONS, AGENT_STATUS_CONFIG, getStatusConfig } from "@/constants/status";
 import { Pill, type PillVariant } from "@/components/ui/pill";
 import { Seo } from "@/components/Seo";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { assessRisks, hasRedFlag, type Risk } from "@/lib/agentSignupValidation";
 import { useAgentPresenceBatch } from "@/hooks/useAgentLastSeen";
 import { AgentOnlinePresenceBadge } from "@/components/ui/AgentOnlinePresenceBadge";
@@ -664,6 +674,7 @@ export default function AdminApprovals() {
   // and to make per-row errors easy to surface. Per-agent idempotency keys in
   // send-license-verified-email prevent double-sends on retry.
   const [bulkVerifying, setBulkVerifying] = useState(false);
+  const [showVerifyConfirm, setShowVerifyConfirm] = useState(false);
   const handleBulkVerify = async () => {
     const targets = filteredAgents.filter(
       (a) => selectedIds.has(a.id) && a.agent_status !== "verified",
@@ -1089,7 +1100,7 @@ export default function AdminApprovals() {
                 {statusFilter === "pending" && (
                   <>
                     <button
-                      onClick={handleBulkVerify}
+                      onClick={() => setShowVerifyConfirm(true)}
                       disabled={selectedIds.size === 0 || bulkVerifying}
                       className={
                         selectedIds.size === 0 || bulkVerifying
@@ -1104,6 +1115,8 @@ export default function AdminApprovals() {
                     <span className="text-zinc-300">•</span>
                   </>
                 )}
+                {statusFilter !== "pending" && (
+                  <>
                 <button
                   onClick={handleBulkEmail}
                   disabled={selectedIds.size === 0}
@@ -1114,6 +1127,8 @@ export default function AdminApprovals() {
                   Email Selected
                 </button>
                 <span className="text-zinc-300">•</span>
+                  </>
+                )}
                 <button
                   onClick={() => setShowBulkDeleteDialog(true)}
                   disabled={selectedIds.size === 0}
@@ -1389,6 +1404,28 @@ export default function AdminApprovals() {
           fetchAgents();
         }}
       />
+
+      <AlertDialog open={showVerifyConfirm} onOpenChange={setShowVerifyConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Verify {selectedIds.size} agent{selectedIds.size === 1 ? "" : "s"}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will verify {selectedIds.size} agent{selectedIds.size === 1 ? "" : "s"} and send each one an individual License Verified setup email. Emails are sent one at a time using a per-agent idempotency key — no custom subject or message.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setShowVerifyConfirm(false);
+                void handleBulkVerify();
+              }}
+            >
+              Verify &amp; Send
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <Dialog
         open={verifyConfirm !== null}
