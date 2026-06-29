@@ -2,8 +2,6 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Send, Users, TrendingUp, Home, MessageSquare } from "lucide-react";
 import { SendMessageDialog } from "./SendMessageDialog";
-import { CommunicationPreferencesPrompt } from "@/components/communication-center/CommunicationPreferencesPrompt";
-import { useCommunicationComposeGate } from "@/hooks/useCommunicationComposeGate";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
@@ -27,7 +25,6 @@ type NotificationPreferenceCardsProps = {
 };
 
 export const NotificationPreferenceCards = ({ onPreferencesChange }: NotificationPreferenceCardsProps = {}) => {
-  const { requestCompose, promptOpen, checking, closePrompt } = useCommunicationComposeGate();
   const [preferences, setPreferences] = useState<NotificationPreferences>({
     buyer_need: false,
     sales_intel: false,
@@ -187,7 +184,7 @@ export const NotificationPreferenceCards = ({ onPreferencesChange }: Notificatio
   const anyEnabled = Object.values(preferences).some(v => v);
 
   const openCompose = (category: keyof NotificationPreferences, title: string) => {
-    requestCompose(() => setOpenDialog({ open: true, category, title }));
+    setOpenDialog({ open: true, category, title });
   };
 
   return (
@@ -266,12 +263,6 @@ export const NotificationPreferenceCards = ({ onPreferencesChange }: Notificatio
         )}
       </div>
 
-      {checking ? (
-        <div className="sr-only" aria-live="polite">
-          Checking communication preferences…
-        </div>
-      ) : null}
-
       {openDialog.category && (
         <SendMessageDialog
           open={openDialog.open}
@@ -281,8 +272,6 @@ export const NotificationPreferenceCards = ({ onPreferencesChange }: Notificatio
           defaultSubject={openDialog.title}
         />
       )}
-
-      <CommunicationPreferencesPrompt open={promptOpen} onClose={closePrompt} />
     </>
   );
 };
