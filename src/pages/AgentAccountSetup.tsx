@@ -27,15 +27,16 @@ import { getRouteForRole, resolveUserRole } from "@/lib/resolveUserRole";
  * email flow. The agent arrives here from /auth/callback after a recovery
  * link has minted a session and the password-setup marker has been set.
  *
- * Mirrors the buyer invite acceptance layout (ClientInvitationSetup) but with
- * AAC primary-blue branding and agent-specific copy.
+ * Mirrors the buyer invite acceptance layout (ClientInvitationSetup) with
+ * AAC green branding aligned to the License Verified email.
  */
 
-const AGENT_MONOGRAM_CLASS = "text-[#0E56F5]";
+const AGENT_MONOGRAM_CLASS = "text-[#16A34A]";
 const AGENT_BADGE_CLASS =
-  "inline-flex items-center gap-1.5 rounded-full bg-[#0E56F5]/10 text-[#0E56F5] px-3 py-1 text-[12px] font-medium";
+  "inline-flex items-center gap-1.5 rounded-full bg-[#16A34A]/10 text-[#16A34A] px-3 py-1 text-[12px] font-medium";
 const AGENT_PRIMARY_BTN_CLASS =
-  "bg-[#0E56F5] hover:bg-[#0A45CC] text-white font-medium";
+  "bg-[#16A34A] hover:bg-[#15803D] text-white font-medium";
+const AGENT_ACCENT_CLASS = "text-[#16A34A]";
 
 function withTimeout<T>(promise: PromiseLike<T>, ms: number, label: string): Promise<T> {
   let timeoutId: ReturnType<typeof setTimeout> | undefined;
@@ -325,7 +326,7 @@ const AgentAccountSetup = () => {
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <AgentSetupBrand />
           <div className="hidden sm:flex items-center gap-1.5 text-[12px] text-zinc-500">
-            <ShieldCheck className="w-3.5 h-3.5" />
+            <ShieldCheck className={cn("w-3.5 h-3.5", AGENT_ACCENT_CLASS)} />
             <span>Secure activation</span>
           </div>
         </div>
