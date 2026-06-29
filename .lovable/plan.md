@@ -1,28 +1,18 @@
-## Mark 4 agents as Active
+## Mark Yoni Haiminis as Active
 
-All four already have `profiles` and `agent_settings` rows (so they have auth accounts). They just need to be flipped from `pending` → verified + activated.
+Yoni (yoni.haiminis@compass.com, `90247777-254d-4773-92c9-62b8b42c509b`) has an auth account and a live listing (31 Kappius Path, coming_soon) but his `agent_settings.agent_status` is still `pending`.
 
-### Targets
-| Name | Email |
-|---|---|
-| Betsy McCombs | betsy.mccombs@compass.com |
-| Charles Joseph | charles.joseph@compass.com |
-| Maria del Carmen Vera-Diaz | carmen.veradiaz@compass.com |
-| Kiernan Middleman | kmiddleman@warrenre.com |
+### Data changes (insert-tool only, no schema change, no emails)
 
-### Data changes (insert-tool, no schema change, no emails sent)
-
-1. `agent_settings` for those four user_ids:
+1. `agent_settings` for user `90247777-254d-4773-92c9-62b8b42c509b`:
    - `agent_status = 'verified'`
-   - `verified_at = now()` (only if currently null)
-   - `account_activated_at = now()` (only if currently null)
-   - `approval_email_sent = true` (suppress any future auto-send)
+   - `verified_at = now()` (only if null)
+   - `account_activated_at = now()` (only if null)
+   - `approval_email_sent = true` (suppress future auto-send)
 
-2. `agent_early_access` rows for those four emails:
+2. `agent_early_access` for `yoni.haiminis@compass.com`:
    - `status = 'verified'`
-   - `converted_at = now()` (only if currently null)
+   - `converted_at = now()` (only if null)
 
-No edge function calls. No License Verified email. No password reset. They already have auth accounts; if they ever need to log in they can use Forgot Password.
-
-### Result in Admin
-All four will move from the Pending tab to the **Active** tab (emerald "Active · just now").
+### Result
+Yoni moves from Pending into the **Active** tab in Admin Approvals. No License Verified email is sent; if he ever needs to log in he can use Forgot Password.
