@@ -113,6 +113,27 @@ function risksForAgent(a: Agent): Risk[] {
   });
 }
 
+// User-facing admin status buckets. There is intentionally no "unverified"
+// label — agents without an auth account are surfaced as Pending. Internal
+// flows may still branch on `!has_auth_account` to decide whether the Verify
+// action needs to create the account first.
+type AdminDerivedStatus =
+  | "pending"
+  | "verified"
+  | "active"
+  | "rejected"
+  | "restricted";
+
+function deriveAdminStatus(a: Agent): AdminDerivedStatus {
+  if (a.agent_status === "rejected") return "rejected";
+  if (a.agent_status === "restricted") return "restricted";
+  if (a.agent_status === "verified") {
+    return a.account_activated_at ? "active" : "verified";
+  }
+  // Early-access leads (no auth account) and approval-queue agents both land here.
+  return "pending";
+}
+
 function RiskBadges({ risks }: { risks: Risk[] }) {
   if (risks.length === 0) return null;
   return (
