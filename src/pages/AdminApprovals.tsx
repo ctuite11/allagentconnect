@@ -512,28 +512,31 @@ export default function AdminApprovals() {
   // Status counts for the filter bar
   const statusCounts = useMemo(() => {
     const counts: Record<string, number> = { all: agents.length };
-    // Verified = agent_status === 'verified' (truthful, not just "has auth account")
-    // Pending  = has an auth account but agent_status is still 'pending'
-    // Unverified = no auth account yet (early-access leads)
+    // User-facing buckets only — no "unverified" surface area.
+    // Pending  = early-access leads + agents waiting on approval
+    // Verified = approved + setup email sent, but setup not completed yet
+    // Active   = setup completed (account_activated_at present)
     //
     // SAFEGUARD (2026-06-29): Never backfill auth users with the `buyer` role into
     // `agent_early_access`. A prior one-shot backfill ("source = 'backfill_unverified'")
     // inserted any auth user that had an `agent_settings` row, which polluted the
     // Pending tab with 8 buyer/test accounts. Future backfills MUST filter out users
     // who hold the `buyer` role in `user_roles`.
-    let verified = 0;
-    let pending = 0;
-    let unverified = 0;
+    const buckets: Record<AdminDerivedStatus, number> = {
+      pending: 0,
+      verified: 0,
+      active: 0,
+      rejected: 0,
+      restricted: 0,
+    };
     agents.forEach((a) => {
-      if (a.agent_status === "verified") verified++;
-      else if (a.has_auth_account && a.agent_status === "pending") pending++;
-      if (!a.has_auth_account) unverified++;
-      // Keep other status buckets (rejected/restricted) from agent_status
-      counts[a.agent_status] = (counts[a.agent_status] || 0) + 1;
+      buckets[deriveAdminStatus(a)]++;
     });
-    counts.verified = verified;
-    counts.pending = pending;
-    counts.unverified = unverified;
+    counts.pending = buckets.pending;
+    counts.verified = buckets.verified;
+    counts.active = buckets.active;
+    counts.rejected = buckets.rejected;
+    counts.restricted = buckets.restricted;
     return counts;
   }, [agents]);
 
@@ -541,7 +544,8 @@ export default function AdminApprovals() {
   const variantForStatus = (status: string): PillVariant => {
     switch (status) {
       case "pending": return "warning";
-      case "verified": return "success";
+      case "verified": return "info";
+      case "active": return "success";
       case "rejected":
       case "restricted": return "danger";
       default: return "neutral";
@@ -558,16 +562,8 @@ export default function AdminApprovals() {
         result = result.filter(
           (a) => !a.is_early_access && presenceMap.get(a.id)?.isOnline
         );
-      } else if (statusFilter === "verified") {
-        result = result.filter((a) => a.agent_status === "verified");
-      } else if (statusFilter === "pending") {
-        result = result.filter(
-          (a) => a.has_auth_account === true && a.agent_status === "pending"
-        );
-      } else if (statusFilter === "unverified") {
-        result = result.filter((a) => a.has_auth_account !== true);
       } else {
-        result = result.filter((a) => a.agent_status === statusFilter);
+        result = result.filter((a) => deriveAdminStatus(a) === statusFilter);
       }
     }
 
