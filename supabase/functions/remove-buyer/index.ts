@@ -259,16 +259,61 @@ serve(async (req) => {
         .from("user_roles")
         .select("role")
         .eq("user_id", buyerAuthId);
-      const protectedRole = (buyerRoles ?? []).some(
-        (r: any) => r.role === "agent" || r.role === "admin",
-      );
-      if (protectedRole) {
+      const roleSet = new Set((buyerRoles ?? []).map((r: any) => String(r.role)));
+      const isRealAdmin = roleSet.has("admin");
+      const hasAgentRole = roleSet.has("agent");
+
+      const safeAudit = (action: string) =>
+        admin
+          .from("audit_logs")
+          .insert({
+            action,
+            user_id: callerId,
+            table_name: "auth.users",
+            record_id: buyerAuthId,
+          })
+          .then(() => null, () => null);
+
+      // Never auto-purge a true admin.
+      if (isRealAdmin) {
+        await safeAudit("remove_buyer_skipped_admin");
         return json({
           success: true,
           status: "relationship_ended_only",
           reason: "user_is_agent_or_admin",
           auth_deleted: false,
         });
+      }
+
+      if (hasAgentRole) {
+        // Distinguish a *real* agent (has agent_settings / agent_profiles /
+        // published listings) from a buyer with a stale `agent` role row.
+        const [{ count: settingsCount }, { count: profilesCount }, { count: listingsCount }] = await Promise.all([
+          admin.from("agent_settings").select("*", { count: "exact", head: true }).eq("user_id", buyerAuthId),
+          admin.from("agent_profiles").select("*", { count: "exact", head: true }).eq("user_id", buyerAuthId),
+          admin.from("listings").select("*", { count: "exact", head: true }).eq("agent_id", buyerAuthId),
+        ]);
+        const isRealAgent =
+          (settingsCount ?? 0) > 0 ||
+          (profilesCount ?? 0) > 0 ||
+          (listingsCount ?? 0) > 0;
+
+        // Agent-scope caller must never delete a real agent. For admin/self
+        // scope we can self-heal a stale role.
+        const isAgentScopeCaller = isOwningAgent && !isAdmin && !isBuyerSelf;
+        if (isRealAgent || isAgentScopeCaller) {
+          await safeAudit("remove_buyer_skipped_agent");
+          return json({
+            success: true,
+            status: "relationship_ended_only",
+            reason: "user_is_agent_or_admin",
+            auth_deleted: false,
+          });
+        }
+
+        // Stale agent role on a buyer — heal it and continue with purge.
+        await admin.from("user_roles").delete().eq("user_id", buyerAuthId).eq("role", "agent");
+        await safeAudit("remove_buyer_healed_stale_role");
       }
     }
 
@@ -337,6 +382,13 @@ serve(async (req) => {
         },
         500,
       );
+    }
+
+    // ---- 7. Sweep residual identity rows (clients / profiles) by email ----
+    // Catches CRM rows that aren't keyed by auth uid (different `clients.id`).
+    if (buyerEmail) {
+      await admin.from("clients").delete().ilike("email", buyerEmail);
+      await admin.from("profiles").delete().ilike("email", buyerEmail);
     }
 
     console.log(
