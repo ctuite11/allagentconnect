@@ -119,6 +119,9 @@ const Auth = () => {
   // Computed mismatch detection with normalized emails
   const normalizedSessionEmail = (sessionEmail || "").trim().toLowerCase();
   const normalizedTypedEmail = (email || "").trim().toLowerCase();
+  const modeParam = searchParams.get("mode");
+  const hasDirectSignupContext = Boolean(searchParams.get("returnTo") || searchParams.get("redirect"));
+  const shouldRouteAgentSignupToEarlyAccess = modeParam === "register" && !hasDirectSignupContext;
   const hasEmailMismatch = mode === "register" && 
     normalizedSessionEmail.length > 0 && 
     normalizedTypedEmail.length > 0 && 
@@ -220,14 +223,17 @@ const Auth = () => {
 
   // Sync mode state from URL parameter
   useEffect(() => {
-    const modeParam = searchParams.get("mode");
+    if (shouldRouteAgentSignupToEarlyAccess) {
+      navigate("/register", { replace: true });
+      return;
+    }
     if (modeParam === "register") {
       setMode("register");
     } else if (modeParam === "forgot-password") {
       setMode("forgot-password");
     }
     // Don't reset to signin on empty param - let manual switching work
-  }, [searchParams]);
+  }, [modeParam, navigate, shouldRouteAgentSignupToEarlyAccess]);
 
   // Prefill email from ?email= query param (e.g. from approval email CTA)
   useEffect(() => {
@@ -267,7 +273,13 @@ const Auth = () => {
       }
 
       // If user wants to register, sign out any existing session first
-      const modeParam = searchParams.get("mode");
+      if (shouldRouteAgentSignupToEarlyAccess) {
+        if (mounted) {
+          setCheckingSession(false);
+          setExistingSession(false);
+        }
+        return;
+      }
       if (modeParam === "register") {
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user) {
@@ -411,15 +423,14 @@ const Auth = () => {
     return () => {
       mounted = false;
     };
-  }, [searchParams]);
+  }, [searchParams, modeParam, navigate, shouldRouteAgentSignupToEarlyAccess]);
 
   // Suppress auth routing during register-mode sign-out cleanup
   const suppressAuthRoutingRef = useRef(false);
 
   // When register mode initializes, sign out and suppress routing events
   useEffect(() => {
-    const modeParam = searchParams.get("mode");
-    if (modeParam !== "register") return;
+    if (modeParam !== "register" || shouldRouteAgentSignupToEarlyAccess) return;
 
     suppressAuthRoutingRef.current = true;
 
@@ -428,7 +439,7 @@ const Auth = () => {
         suppressAuthRoutingRef.current = false;
       }, 0);
     });
-  }, [searchParams]);
+  }, [modeParam, shouldRouteAgentSignupToEarlyAccess]);
 
   // Listen for auth state changes (for sign in success)
   useEffect(() => {

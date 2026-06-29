@@ -346,12 +346,12 @@ const App = () => (
                 </Route>
                 
                 {/* Legacy redirects - all go to /auth */}
-                <Route path="/choose" element={<Navigate to="/auth?mode=register" replace />} />
-                <Route path="/get-started" element={<Navigate to="/auth?mode=register" replace />} />
-                <Route path="/onboarding" element={<Navigate to="/auth?mode=register" replace />} />
-                <Route path="/onboarding/create-account" element={<Navigate to="/auth?mode=register" replace />} />
-                <Route path="/onboarding/verify-license" element={<Navigate to="/auth?mode=register" replace />} />
-                <Route path="/verify-agent" element={<Navigate to="/auth?mode=register" replace />} />
+                <Route path="/choose" element={<Navigate to="/register" replace />} />
+                <Route path="/get-started" element={<Navigate to="/register" replace />} />
+                <Route path="/onboarding" element={<Navigate to="/register" replace />} />
+                <Route path="/onboarding/create-account" element={<Navigate to="/register" replace />} />
+                <Route path="/onboarding/verify-license" element={<Navigate to="/register" replace />} />
+                <Route path="/verify-agent" element={<Navigate to="/register" replace />} />
                 
                 {/* Legacy route redirect */}
                 <Route path="/allagentconnect" element={<Navigate to="/agent-dashboard" replace />} />
