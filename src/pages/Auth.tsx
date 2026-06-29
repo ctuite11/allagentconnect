@@ -410,14 +410,14 @@ const Auth = () => {
     return () => {
       mounted = false;
     };
-  }, [searchParams, modeParam, navigate, shouldRouteAgentSignupToEarlyAccess]);
+  }, [searchParams, modeParam, navigate]);
 
   // Suppress auth routing during register-mode sign-out cleanup
   const suppressAuthRoutingRef = useRef(false);
 
   // When register mode initializes, sign out and suppress routing events
   useEffect(() => {
-    if (modeParam !== "register" || shouldRouteAgentSignupToEarlyAccess) return;
+    if (modeParam !== "register") return;
 
     suppressAuthRoutingRef.current = true;
 
@@ -426,7 +426,7 @@ const Auth = () => {
         suppressAuthRoutingRef.current = false;
       }, 0);
     });
-  }, [modeParam, shouldRouteAgentSignupToEarlyAccess]);
+  }, [modeParam]);
 
   // Listen for auth state changes (for sign in success)
   useEffect(() => {
