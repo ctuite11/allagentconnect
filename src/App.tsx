@@ -90,8 +90,6 @@ import SeedTestData from "./pages/SeedTestData";
 import AllAgentConnectHome from "./pages/AllAgentConnectHome";
 import ShareLinkHandler from "./pages/ShareLinkHandler";
 import LandingPage from "./pages/LandingPage";
-import Register from "./pages/Register";
-import RequestAccess from "./pages/RequestAccess";
 import AgentMatch from "./pages/AgentMatch";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
