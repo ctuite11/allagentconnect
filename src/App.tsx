@@ -324,8 +324,8 @@ const App = () => (
               <SharedListingGate>
               <Routes>
                 <Route path="/" element={<HomepageV2 />} />
-                <Route path="/register" element={<Register />} />
-                <Route path="/request-access" element={<RequestAccess />} />
+                <Route path="/register" element={<Navigate to="/auth?mode=register" replace />} />
+                <Route path="/request-access" element={<Navigate to="/auth?mode=register" replace />} />
                 <Route path="/agent-match" element={<><AgentMatch /><Footer /></>} />
                 <Route path="/seller-listing/:id" element={<SellerListingDetail />} />
                 <Route path="/seller/dashboard" element={<SellerDashboard />} />
@@ -346,12 +346,12 @@ const App = () => (
                 </Route>
                 
                 {/* Legacy redirects - all go to /auth */}
-                <Route path="/choose" element={<Navigate to="/register" replace />} />
-                <Route path="/get-started" element={<Navigate to="/register" replace />} />
-                <Route path="/onboarding" element={<Navigate to="/register" replace />} />
-                <Route path="/onboarding/create-account" element={<Navigate to="/register" replace />} />
-                <Route path="/onboarding/verify-license" element={<Navigate to="/register" replace />} />
-                <Route path="/verify-agent" element={<Navigate to="/register" replace />} />
+                <Route path="/choose" element={<Navigate to="/auth?mode=register" replace />} />
+                <Route path="/get-started" element={<Navigate to="/auth?mode=register" replace />} />
+                <Route path="/onboarding" element={<Navigate to="/auth?mode=register" replace />} />
+                <Route path="/onboarding/create-account" element={<Navigate to="/auth?mode=register" replace />} />
+                <Route path="/onboarding/verify-license" element={<Navigate to="/auth?mode=register" replace />} />
+                <Route path="/verify-agent" element={<Navigate to="/auth?mode=register" replace />} />
                 
                 {/* Legacy route redirect */}
                 <Route path="/allagentconnect" element={<Navigate to="/agent-dashboard" replace />} />

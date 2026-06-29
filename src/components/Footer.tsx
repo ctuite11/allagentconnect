@@ -22,7 +22,7 @@ const Footer = () => {
           <div>
             <h4 className="font-semibold mb-4">Platform</h4>
             <ul className="space-y-2 text-muted-foreground text-sm">
-              <li><Link to="/register" className="hover:text-primary transition-colors">Request Access</Link></li>
+              <li><Link to="/auth?mode=register&source=footer" className="hover:text-primary transition-colors">Request Access</Link></li>
               <li><Link to="/our-agents" className="hover:text-primary transition-colors">Our Agents</Link></li>
               <li><Link to="/browse" className="hover:text-primary transition-colors">Browse Properties</Link></li>
             </ul>
