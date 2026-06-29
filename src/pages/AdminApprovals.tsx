@@ -1209,34 +1209,42 @@ export default function AdminApprovals() {
                     </div>
                     
                     <div className="flex items-center gap-3 shrink-0">
-                      {agent.has_auth_account ? (
-                        <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700 ring-1 ring-emerald-200">
-                          Verified
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700 ring-1 ring-amber-200">
-                          Pending
-                        </span>
-                      )}
-                      {statusFilter === "verified" && (
-                        agent.account_activated_at ? (
-                          <span
-                            className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700 ring-1 ring-emerald-200"
-                            title={`Account activated: ${new Date(agent.account_activated_at).toLocaleString()}`}
-                          >
-                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                            Account active · {formatRelativeSignIn(agent.account_activated_at)}
+                      {(() => {
+                        const derived = deriveAdminStatus(agent);
+                        if (derived === "rejected" || derived === "restricted") {
+                          return <AgentStatusBadge status={derived as any} />;
+                        }
+                        if (derived === "active") {
+                          return (
+                            <span
+                              className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700 ring-1 ring-emerald-200"
+                              title={
+                                agent.account_activated_at
+                                  ? `Account activated: ${new Date(agent.account_activated_at).toLocaleString()}`
+                                  : "Account active"
+                              }
+                            >
+                              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                              Active · {formatRelativeSignIn(agent.account_activated_at)}
+                            </span>
+                          );
+                        }
+                        if (derived === "verified") {
+                          return (
+                            <span
+                              className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700 ring-1 ring-blue-200"
+                              title="Approved and invited — setup not completed yet"
+                            >
+                              Verified · setup pending
+                            </span>
+                          );
+                        }
+                        return (
+                          <span className="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700 ring-1 ring-amber-200">
+                            Pending
                           </span>
-                        ) : (
-                          <span
-                            className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700 ring-1 ring-amber-200"
-                            title="Agent has not completed password setup yet"
-                          >
-                            <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
-                            Setup pending
-                          </span>
-                        )
-                      )}
+                        );
+                      })()}
                       <span
                         className="text-xs text-zinc-500"
                         title={
