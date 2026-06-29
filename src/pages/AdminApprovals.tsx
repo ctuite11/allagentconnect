@@ -1091,7 +1091,7 @@ export default function AdminApprovals() {
               </div>
               
               <div className="flex items-center gap-2 text-sm">
-                {statusFilter === "unverified" && (
+                {statusFilter === "pending" && (
                   <>
                     <button
                       onClick={handleBulkVerify}
