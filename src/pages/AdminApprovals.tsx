@@ -636,6 +636,45 @@ export default function AdminApprovals() {
     setEmailRecipients(recipients);
   };
 
+  // Bulk verify (Unverified tab) — sequential to keep edge-function load steady
+  // and to make per-row errors easy to surface. Per-agent idempotency keys in
+  // send-license-verified-email prevent double-sends on retry.
+  const [bulkVerifying, setBulkVerifying] = useState(false);
+  const handleBulkVerify = async () => {
+    const targets = filteredAgents.filter(
+      (a) => selectedIds.has(a.id) && a.agent_status !== "verified",
+    );
+    if (targets.length === 0) {
+      toast.error("No eligible agents selected");
+      return;
+    }
+    setBulkVerifying(true);
+    const toastId = toast.loading(`Verifying 0 of ${targets.length}…`);
+    let ok = 0;
+    let fail = 0;
+    for (let i = 0; i < targets.length; i++) {
+      const agent = targets[i];
+      toast.loading(`Verifying ${i + 1} of ${targets.length}: ${agent.email}`, {
+        id: toastId,
+      });
+      try {
+        await handleStatusChange(agent, "verified");
+        ok++;
+      } catch (err) {
+        console.error("[bulk verify] failed for", agent.email, err);
+        fail++;
+      }
+    }
+    toast.dismiss(toastId);
+    if (fail === 0) {
+      toast.success(`Verified ${ok} of ${targets.length} agents`);
+    } else {
+      toast.error(`${ok} verified, ${fail} failed`);
+    }
+    setSelectedIds(new Set());
+    setBulkVerifying(false);
+  };
+
   // Single email
   const handleEmailAgent = (agent: Agent) => {
     setEmailRecipients([{ id: agent.id, email: agent.email, name: `${agent.first_name} ${agent.last_name}` }]);
