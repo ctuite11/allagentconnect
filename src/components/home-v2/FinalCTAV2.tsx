@@ -13,7 +13,7 @@ const FinalCTAV2 = () => {
         </p>
         <div className="mt-10">
           <Link
-            to="/register"
+            to="/auth?mode=register"
             className="inline-flex bg-accent hover:bg-accent-hover text-accent-foreground font-semibold px-10 py-4 rounded-lg text-base transition-colors"
           >
             Request Access
