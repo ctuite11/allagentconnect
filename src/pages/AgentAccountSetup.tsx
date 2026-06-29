@@ -260,6 +260,35 @@ const AgentAccountSetup = () => {
         console.warn("[AgentAccountSetup] profile name sync failed (non-fatal):", e);
       }
 
+      // Mark account as activated so the admin Verified tab can distinguish
+      // "Setup pending" from "Account active". Only set on first activation —
+      // filter on IS NULL so a later password change doesn't reset the
+      // original activation timestamp.
+      try {
+        const nowIso = new Date().toISOString();
+        const { error: updateErr } = await supabase
+          .from("agent_settings")
+          .update({ account_activated_at: nowIso, updated_at: nowIso })
+          .eq("user_id", data.user.id)
+          .is("account_activated_at", null);
+        // If no agent_settings row exists yet, insert one.
+        if (updateErr) {
+          console.warn("[AgentAccountSetup] activation update warn:", updateErr);
+        }
+        await supabase
+          .from("agent_settings")
+          .upsert(
+            [{
+              user_id: data.user.id,
+              account_activated_at: nowIso,
+              updated_at: nowIso,
+            }],
+            { onConflict: "user_id", ignoreDuplicates: true },
+          );
+      } catch (e) {
+        console.warn("[AgentAccountSetup] activation marker write failed (non-fatal):", e);
+      }
+
       sessionStorage.removeItem("aac_recovery_flow");
       sessionStorage.removeItem("aac_password_setup_flow");
       sessionStorage.removeItem("aac_agent_setup_handoff");

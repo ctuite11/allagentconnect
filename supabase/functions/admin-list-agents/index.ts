@@ -23,6 +23,7 @@ interface AgentSettings {
   license_number: string | null
   license_state: string | null
   verified_at: string | null
+  account_activated_at: string | null
 }
 
 interface MergedAgent {
@@ -42,6 +43,7 @@ interface MergedAgent {
   is_early_access?: boolean
   has_auth_account?: boolean
   last_sign_in_at?: string | null
+  account_activated_at?: string | null
 }
 
 Deno.serve(async (req) => {
@@ -168,7 +170,7 @@ Deno.serve(async (req) => {
     const userIds = profiles.map(p => p.id)
     const { data: settings, error: settingsError } = await adminClient
       .from('agent_settings')
-      .select('user_id, agent_status, license_number, license_state, verified_at')
+      .select('user_id, agent_status, license_number, license_state, verified_at, account_activated_at')
       .in('user_id', userIds)
 
     if (settingsError) {
@@ -202,6 +204,7 @@ Deno.serve(async (req) => {
         created_at: p.created_at || new Date().toISOString(),
         has_auth_account: authEmails.has(emailKey),
         last_sign_in_at: lastSignInByEmail.get(emailKey) ?? null,
+        account_activated_at: s?.account_activated_at ?? null,
       }
     })
 
@@ -249,6 +252,7 @@ Deno.serve(async (req) => {
       is_early_access: true,
       has_auth_account: authEmails.has(emailKey),
       last_sign_in_at: lastSignInByEmail.get(emailKey) ?? null,
+      account_activated_at: null,
       }
     })
 
