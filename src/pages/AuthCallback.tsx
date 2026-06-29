@@ -185,11 +185,18 @@ const AuthCallback = () => {
           }
           return;
         } catch (err) {
-          if (import.meta.env.DEV) console.error("[AuthCallback] setSession exception:", err);
-          // Clear the processed marker since we failed
+          console.warn("[AuthCallback] diag", { branch: "hash_setSession_timeout_or_exception" });
           sessionStorage.removeItem(processedKey);
-          if (!cancelled) {
-            setError("Reset link expired or invalid. Please request a new one.");
+          if (!cancelled && !didNavigate.current) {
+            const isSetupCtx =
+              recoveryInfo.isSetup ||
+              sessionStorage.getItem("aac_password_setup_flow") === "1";
+            if (isSetupCtx) {
+              didNavigate.current = true;
+              navigate("/agent-setup", { replace: true });
+            } else {
+              setError("Reset link expired or invalid. Please request a new one.");
+            }
           }
           return;
         }
@@ -197,10 +204,13 @@ const AuthCallback = () => {
 
       // Handle PKCE recovery link
       if (code) {
-        if (import.meta.env.DEV) console.log("[AuthCallback] PKCE code detected - exchanging for session");
-        
+        console.info("[AuthCallback] diag", { branch: "pkce_exchange_start", setup: recoveryInfo.isSetup });
         try {
-          await supabase.auth.exchangeCodeForSession(code);
+          await withCallbackTimeout(
+            supabase.auth.exchangeCodeForSession(code),
+            6000,
+            "exchangeCodeForSession",
+          );
           // Mark as processed AFTER successfully exchanging code
           if (hasStableTokenKey) sessionStorage.setItem(processedKey, "1");
 
