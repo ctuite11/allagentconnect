@@ -1035,15 +1035,15 @@ export default function AdminApprovals() {
           />
           <Pill
             label={`Verified (${statusCounts.verified || 0})`}
-            variant="success"
+            variant="primary"
             active={statusFilter === "verified"}
             onClick={() => setStatusFilter("verified")}
           />
           <Pill
-            label={`Unverified (${statusCounts.unverified || 0})`}
-            variant="neutral"
-            active={statusFilter === "unverified"}
-            onClick={() => setStatusFilter("unverified")}
+            label={`Active (${statusCounts.active || 0})`}
+            variant="success"
+            active={statusFilter === "active"}
+            onClick={() => setStatusFilter("active")}
           />
           <Pill
             label={`Rejected (${statusCounts.rejected || 0})`}
