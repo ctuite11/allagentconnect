@@ -136,17 +136,19 @@ const AuthCallback = () => {
     const init = async () => {
       // Handle hash-based recovery tokens (implicit flow)
       if (accessToken && refreshToken) {
-        if (import.meta.env.DEV) console.log("[AuthCallback] Hash tokens detected - setting session");
-        
+        console.info("[AuthCallback] diag", { branch: "hash_setSession_start", setup: recoveryInfo.isSetup });
         try {
-          const { data: setSessionData, error: sessionError } = await supabase.auth.setSession({
-            access_token: accessToken,
-            refresh_token: refreshToken
-          });
+          const { data: setSessionData, error: sessionError } = await withCallbackTimeout(
+            supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken,
+            }),
+            6000,
+            "setSession",
+          );
           
           if (sessionError) {
-            if (import.meta.env.DEV) console.error("[AuthCallback] setSession error:", sessionError);
-            // Clear the processed marker since we failed
+            console.warn("[AuthCallback] diag", { branch: "hash_setSession_error" });
             sessionStorage.removeItem(processedKey);
             if (!cancelled) {
               setError("Reset link expired or invalid. Please request a new one.");
