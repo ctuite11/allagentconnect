@@ -332,57 +332,80 @@ export default function AdminApprovals() {
     setProcessingIds((prev) => new Set(prev).add(agent.id));
 
     try {
-      // Branch: Early access agents being verified - convert to full account
-      if (agent.is_early_access && newStatus === "verified") {
-        console.log(`Converting early access user to full account: ${agent.email}`);
-        
-        // Call the conversion edge function which creates auth user (email skipped; approval email sent separately)
-        const { data, error } = await supabase.functions.invoke("convert-early-access-to-account", {
-          body: {
-            earlyAccessId: agent.id,
-            email: agent.email,
-            firstName: agent.first_name,
-            lastName: agent.last_name,
-            phone: agent.phone,
-            licenseState: agent.license_state,
-            licenseNumber: agent.license_number,
-            brokerage: agent.company,
-            skipEmail: true,
-          },
-        });
+      // Unified verification path — every Unverified row ends here regardless
+      // of origin (Early Access lead, backfilled orphan, or existing auth account).
+      // 1) Ensure an auth account / agent_settings row exists.
+      // 2) Mark agent_status = 'verified'.
+      // 3) Send the License Verified email (CTA → /agent-setup).
+      if (newStatus === "verified") {
+        if (agent.is_early_access) {
+          console.log(`Converting early access user to full account: ${agent.email}`);
+          const { error: convertError } = await supabase.functions.invoke(
+            "convert-early-access-to-account",
+            {
+              body: {
+                earlyAccessId: agent.id,
+                email: agent.email,
+                firstName: agent.first_name,
+                lastName: agent.last_name,
+                phone: agent.phone,
+                licenseState: agent.license_state,
+                licenseNumber: agent.license_number,
+                brokerage: agent.company,
+                skipEmail: true,
+              },
+            },
+          );
+          if (convertError) {
+            console.error("Conversion error:", convertError);
+            throw new Error("Failed to create account for early access user");
+          }
 
-        if (error) {
-          console.error("Conversion error:", error);
-          throw new Error("Failed to create account for early access user");
+          const { error: eaUpdateError } = await supabase
+            .from("agent_early_access")
+            .update({
+              status: "verified",
+              verified_at: new Date().toISOString(),
+            })
+            .eq("id", agent.id);
+          if (eaUpdateError) {
+            console.error("Error updating early access status:", eaUpdateError);
+          }
+        } else {
+          const { error: settingsError } = await supabase
+            .from("agent_settings")
+            .upsert(
+              [{
+                user_id: agent.id,
+                agent_status: "verified" as any,
+                verified_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+              }],
+              { onConflict: "user_id" },
+            );
+          if (settingsError) throw settingsError;
         }
 
-        console.log("Conversion result:", data);
-
-        // Update early access record status
-        const { error: updateError } = await supabase
-          .from("agent_early_access")
-          .update({ 
-            status: "verified",
-            verified_at: new Date().toISOString(),
-          })
-          .eq("id", agent.id);
-
-        if (updateError) {
-          console.error("Error updating early access status:", updateError);
-        }
-
-        // Send "You've Been Accepted" approval email with password setup link
-        await supabase.functions.invoke("send-agent-approval-email", {
-          body: {
-            userId: null,
-            email: agent.email,
-            firstName: agent.first_name,
-            approved: true,
-            isEarlyAccess: true,
+        // Single email for every verified agent. Per-agent idempotency key
+        // dedupes double-clicks and bulk-verify retries.
+        const { error: emailError } = await supabase.functions.invoke(
+          "send-license-verified-email",
+          {
+            body: {
+              to: agent.email,
+              agentName: agent.first_name || undefined,
+              idempotencyKey: `license-verified:verify:${agent.id}`,
+            },
           },
-        });
-
-        toast.success(`Account created and acceptance email sent to ${agent.email}`);
+        );
+        if (emailError) {
+          console.error("send-license-verified-email failed:", emailError);
+          toast.error(
+            `Verified ${agent.email}, but activation email failed. Use Email setup link to retry.`,
+          );
+        } else {
+          toast.success(`Verified — activation email sent to ${agent.email}`);
+        }
       } else if (agent.is_early_access) {
         // Early access non-verify status change (e.g., rejected)
         const { error } = await supabase
@@ -410,7 +433,7 @@ export default function AdminApprovals() {
 
         toast.success(`Status updated to ${newStatus}`);
       } else {
-        // Real agents: update agent_settings table
+        // Real agents non-verify status change (rejected/restricted/pending).
         const { error } = await supabase
           .from("agent_settings")
           .upsert(
@@ -425,14 +448,14 @@ export default function AdminApprovals() {
 
         if (error) throw error;
 
-        // Send email for approval/rejection for real agents
-        if (newStatus === "verified" || newStatus === "rejected") {
+        // Verified is handled by the unified path above; only rejection mails here.
+        if (newStatus === "rejected") {
           await supabase.functions.invoke("send-agent-approval-email", {
             body: {
               userId: agent.id,
               email: agent.email,
               firstName: agent.first_name,
-              approved: newStatus === "verified",
+              approved: false,
               isEarlyAccess: false,
             },
           });
@@ -611,6 +634,45 @@ export default function AdminApprovals() {
       .filter((a) => selectedIds.has(a.id))
       .map((a) => ({ id: a.id, email: a.email, name: `${a.first_name} ${a.last_name}` }));
     setEmailRecipients(recipients);
+  };
+
+  // Bulk verify (Unverified tab) — sequential to keep edge-function load steady
+  // and to make per-row errors easy to surface. Per-agent idempotency keys in
+  // send-license-verified-email prevent double-sends on retry.
+  const [bulkVerifying, setBulkVerifying] = useState(false);
+  const handleBulkVerify = async () => {
+    const targets = filteredAgents.filter(
+      (a) => selectedIds.has(a.id) && a.agent_status !== "verified",
+    );
+    if (targets.length === 0) {
+      toast.error("No eligible agents selected");
+      return;
+    }
+    setBulkVerifying(true);
+    const toastId = toast.loading(`Verifying 0 of ${targets.length}…`);
+    let ok = 0;
+    let fail = 0;
+    for (let i = 0; i < targets.length; i++) {
+      const agent = targets[i];
+      toast.loading(`Verifying ${i + 1} of ${targets.length}: ${agent.email}`, {
+        id: toastId,
+      });
+      try {
+        await handleStatusChange(agent, "verified");
+        ok++;
+      } catch (err) {
+        console.error("[bulk verify] failed for", agent.email, err);
+        fail++;
+      }
+    }
+    toast.dismiss(toastId);
+    if (fail === 0) {
+      toast.success(`Verified ${ok} of ${targets.length} agents`);
+    } else {
+      toast.error(`${ok} verified, ${fail} failed`);
+    }
+    setSelectedIds(new Set());
+    setBulkVerifying(false);
   };
 
   // Single email
@@ -1005,6 +1067,24 @@ export default function AdminApprovals() {
               </div>
               
               <div className="flex items-center gap-2 text-sm">
+                {statusFilter === "unverified" && (
+                  <>
+                    <button
+                      onClick={handleBulkVerify}
+                      disabled={selectedIds.size === 0 || bulkVerifying}
+                      className={
+                        selectedIds.size === 0 || bulkVerifying
+                          ? "text-zinc-300 cursor-not-allowed"
+                          : "text-emerald-600 hover:text-emerald-800 hover:underline transition-colors font-medium"
+                      }
+                    >
+                      {bulkVerifying
+                        ? "Verifying…"
+                        : `Verify Selected (${selectedIds.size})`}
+                    </button>
+                    <span className="text-zinc-300">•</span>
+                  </>
+                )}
                 <button
                   onClick={handleBulkEmail}
                   disabled={selectedIds.size === 0}
