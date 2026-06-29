@@ -246,7 +246,7 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
         .from("listings")
         .select("*")
         .eq("agent_id", agentUuid)
-        .in("status", ["active", "coming_soon"])
+        .in("status", ["active", "coming_soon", "off_market", "sold", "rented"])
         .order("created_at", { ascending: false })
         .limit(6);
 
