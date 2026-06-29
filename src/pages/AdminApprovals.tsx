@@ -494,6 +494,12 @@ export default function AdminApprovals() {
     // Verified = agent_status === 'verified' (truthful, not just "has auth account")
     // Pending  = has an auth account but agent_status is still 'pending'
     // Unverified = no auth account yet (early-access leads)
+    //
+    // SAFEGUARD (2026-06-29): Never backfill auth users with the `buyer` role into
+    // `agent_early_access`. A prior one-shot backfill ("source = 'backfill_unverified'")
+    // inserted any auth user that had an `agent_settings` row, which polluted the
+    // Pending tab with 8 buyer/test accounts. Future backfills MUST filter out users
+    // who hold the `buyer` role in `user_roles`.
     let verified = 0;
     let pending = 0;
     let unverified = 0;
