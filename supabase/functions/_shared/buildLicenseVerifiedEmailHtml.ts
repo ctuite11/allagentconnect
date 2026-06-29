@@ -73,7 +73,7 @@ function renderAgentFooter(agent: FooterAgent): string {
     .map((p) => (p as string).trim()[0]?.toUpperCase() ?? "")
     .join("");
   const avatarCell = agent.headshotUrl
-    ? `<img src="${escapeHtml(agent.headshotUrl)}" width="104" height="104" alt="${escapeHtml(fullName)}" style="display:block;width:104px;height:104px;border-radius:50%;object-fit:cover;border:2px solid ${EMERALD_ACCENT};" />`
+    ? `<img src="${escapeHtml(agent.headshotUrl)}" width="104" height="104" alt="${escapeHtml(fullName)}" style="display:block;width:104px;height:104px;border-radius:50%;object-fit:cover;border:1px solid ${EMERALD_ACCENT};" />`
     : `<div style="width:104px;height:104px;border-radius:50%;background:${EMERALD_ACCENT};color:#fff;font-weight:700;font-size:34px;line-height:104px;text-align:center;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${escapeHtml(initials || "AA")}</div>`;
 
   const lines: string[] = [];
@@ -164,14 +164,14 @@ export function buildLicenseVerifiedEmailHtml(opts: LicenseVerifiedEmailOptions)
                 <a href="${ctaUrl}" target="_blank" style="display:inline-block;padding:15px 34px;background-color:${CTA_GREEN};color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;letter-spacing:0.01em;border-radius:10px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Log In to All Agent Connect</a>
               </td></tr></table>
             </td></tr>
-            <tr><td align="center" style="padding:10px 0 24px;">
+            <tr><td align="center" style="padding:10px 0 44px;">
               <p style="margin:0;font-size:12px;color:${TEXT_MUTED};font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Welcome to the network.</p>
             </td></tr>
           </table>
         </td></tr>
 
         <!-- Footer -->
-        <tr><td align="center" style="background-color:${NAVY};border-top:2px solid ${EMERALD_ACCENT};border-radius:0 0 14px 14px;padding:26px 40px 26px;">
+        <tr><td align="center" style="background-color:${NAVY};border-radius:0 0 14px 14px;padding:26px 40px 26px;">
           ${footerAgent ? renderAgentFooter(footerAgent) : `<img src="${MONOGRAM_URL}" width="22" height="22" alt="" style="display:block;margin:0 auto 10px;border:0;outline:none;text-decoration:none;" /><p style="margin:0 0 4px;font-size:13px;font-weight:600;letter-spacing:0.02em;color:#ffffff;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">By Agents. For Agents. All Agents.</p><p style="margin:0;font-size:11px;color:rgba(255,255,255,0.55);font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">All Agent Connect</p>`}
         </td></tr>
 
