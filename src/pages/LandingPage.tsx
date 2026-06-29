@@ -138,7 +138,7 @@ const LandingPage = () => {
               {/* CTAs - Royal Blue for early access */}
               <div className="flex flex-col sm:flex-row gap-3">
                 <button
-                  onClick={() => navigate('/register')}
+                  onClick={() => navigate('/auth?mode=register&source=landing')}
                   className="inline-flex items-center gap-3 h-12 px-6 rounded-xl bg-zinc-900 text-white text-[15px] font-semibold shadow-[0_1px_2px_rgba(0,0,0,0.10)] hover:bg-zinc-950 focus:outline-none focus-visible:ring-4 focus-visible:ring-[rgba(24,24,27,0.18)] transition-colors"
                 >
                   Request Early Access

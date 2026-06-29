@@ -39,7 +39,7 @@ export default function Home() {
             </button>
 
             <button
-              onClick={() => navigate("/register")}
+              onClick={() => navigate("/auth?mode=register&source=home_nav")}
               className="group inline-flex items-center gap-2 rounded-xl bg-black px-5 py-2.5 text-sm font-semibold text-white shadow-[0_10px_30px_rgba(0,0,0,0.12)] hover:bg-zinc-900 hover:-translate-y-0.5 transition-all"
             >
               Get Access
@@ -95,7 +95,7 @@ export default function Home() {
 
             {/* CTA - black with emerald accent */}
             <button
-              onClick={() => navigate("/register")}
+              onClick={() => navigate("/auth?mode=register&source=home_hero")}
               className="group inline-flex items-center justify-center gap-2 rounded-2xl bg-black px-8 py-4 text-base font-semibold text-white shadow-[0_10px_30px_rgba(0,0,0,0.12)] hover:bg-zinc-900 hover:-translate-y-0.5 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/40"
             >
               Request Access
@@ -294,7 +294,7 @@ export default function Home() {
               Ready to operate ahead of the market?
             </h3>
             <button
-              onClick={() => navigate("/register")}
+              onClick={() => navigate("/auth?mode=register&source=home_midcta")}
               className="group inline-flex items-center justify-center gap-2 rounded-2xl bg-black px-8 py-4 text-base font-semibold text-white shadow-[0_10px_30px_rgba(0,0,0,0.12)] hover:bg-zinc-900 hover:-translate-y-0.5 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/40"
             >
               Request Access
@@ -405,7 +405,7 @@ export default function Home() {
 
               <div className="mt-8">
                 <button
-                  onClick={() => navigate("/register")}
+                  onClick={() => navigate("/auth?mode=register&source=home_about")}
                   className="group inline-flex items-center justify-center gap-2 rounded-2xl bg-black px-8 py-4 text-base font-semibold text-white shadow-[0_10px_30px_rgba(0,0,0,0.12)] hover:bg-zinc-900 hover:-translate-y-0.5 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/40"
                 >
                   Request Access
@@ -437,7 +437,7 @@ export default function Home() {
               Terms
             </a>
             <button
-              onClick={() => navigate("/register")}
+              onClick={() => navigate("/auth?mode=register&source=home_footer")}
               className="group inline-flex items-center gap-2 rounded-xl bg-black px-4 py-2 text-sm font-semibold text-white hover:bg-zinc-900 hover:-translate-y-0.5 transition-all"
             >
               Get Access

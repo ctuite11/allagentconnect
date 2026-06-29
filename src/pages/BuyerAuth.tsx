@@ -540,7 +540,7 @@ const BuyerAuth = () => {
                   <Button 
                     variant="outline" 
                     size="sm"
-                    onClick={() => navigate("/register")}
+                    onClick={() => navigate("/auth?mode=register&source=buyer_auth")}
                   >
                     Register as Agent
                   </Button>

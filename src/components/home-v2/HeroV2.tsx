@@ -22,7 +22,7 @@ const HeroV2 = () => {
             Login
           </Link>
           <Link
-            to="/register"
+            to="/auth?mode=register&source=herov2_nav"
             className="bg-accent hover:bg-accent-hover text-accent-foreground text-sm font-medium px-5 py-2.5 rounded-lg transition-colors"
           >
             Get Access
@@ -43,7 +43,7 @@ const HeroV2 = () => {
             </p>
             <div className="mt-10 flex flex-wrap gap-4">
               <Link
-                to="/register"
+                to="/auth?mode=register&source=herov2_hero"
                 className="bg-accent hover:bg-accent-hover text-accent-foreground font-semibold px-8 py-3.5 rounded-lg text-base transition-colors"
               >
                 Get Access
