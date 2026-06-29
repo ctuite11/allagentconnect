@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { invalidateAgentContactsCache } from "@/lib/contactSearch";
+import { removeBuyer } from "@/lib/removeBuyer";
 
 export type DuplicateExistingClient = {
   id: string;
@@ -115,56 +116,23 @@ export function DuplicateContactDialog({
     if (deleting || adding) return;
     setDeleting(true);
     try {
-      // Backend RPC handles ending the relationship and any safe cleanup of
-      // relationship rows that reference this CRM contact. The browser must
-      // NOT delete from client_agent_relationships directly — there is no
-      // delete policy for that table, and direct deletes surface as
-      // "Could not delete this contact from your CRM."
-      const { error: rpcError } = await supabase.rpc("agent_end_client_relationship", {
-        p_client_id: existingClient.id,
+      // Route through the canonical purge path so the buyer's auth user,
+      // profile, CRM row, and roles are all cleared together. This prevents
+      // "ghost" buyers (auth row survives, signup fails with user_already_exists)
+      // when an agent re-adds someone they previously removed.
+      const result = await removeBuyer({
+        scope: "agent",
+        crmClientId: existingClient.id,
       });
-      if (rpcError) {
-        console.error("[DuplicateContactDialog] end relationship failed", rpcError);
-        toast.error("Could not delete this contact from your CRM.");
+      if (!result.ok) {
+        // removeBuyer already surfaced an error toast.
         setDeleting(false);
         return;
       }
-      // Only delete the CRM row if it is safe — i.e. this agent still owns
-      // an orphan CRM contact with no remaining active relationship rows
-      // referencing it. Otherwise rely on the RPC's soft-remove and leave
-      // the row intact. Any failure here is non-fatal; the duplicate lookup
-      // is keyed on this agent's CRM row, which the RPC has already neutralized.
-      const { data: orphanRow, error: orphanLookupError } = await supabase
-        .from("clients")
-        .select("id, agent_id")
-        .eq("id", existingClient.id)
-        .maybeSingle();
-      if (orphanLookupError) {
-        console.error("[DuplicateContactDialog] orphan lookup failed", orphanLookupError);
-      } else if (orphanRow) {
-        const { data: remainingRels, error: remainingRelsError } = await supabase
-          .from("client_agent_relationships")
-          .select("id")
-          .eq("crm_client_id", existingClient.id)
-          .limit(1);
-        if (remainingRelsError) {
-          console.error(
-            "[DuplicateContactDialog] remaining relationships lookup failed",
-            remainingRelsError,
-          );
-        } else if (!remainingRels || remainingRels.length === 0) {
-          const { error: deleteError } = await supabase
-            .from("clients")
-            .delete()
-            .eq("id", existingClient.id);
-          if (deleteError) {
-            console.error("[DuplicateContactDialog] delete CRM row failed", deleteError);
-            // Non-fatal: RPC already soft-removed the contact for this agent.
-          }
-        }
-      }
       invalidateAgentContactsCache();
-      toast.success("Contact removed from your CRM.");
+      if (!result.showedSuccessToast) {
+        toast.success("Contact removed from your CRM.");
+      }
       await onDeleted();
     } catch (err) {
       console.error("[DuplicateContactDialog] unexpected error", err);
