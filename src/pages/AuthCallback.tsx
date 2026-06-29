@@ -17,6 +17,16 @@ const rememberAgentSetupHandoff = (session: { user?: { id?: string; email?: stri
   if (user.email) sessionStorage.setItem("aac_agent_setup_email", user.email);
 };
 
+function withCallbackTimeout<T>(p: PromiseLike<T>, ms: number, label: string): Promise<T> {
+  let t: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    t = setTimeout(() => reject(new Error(`${label} timed out`)), ms);
+  });
+  return Promise.race([Promise.resolve(p), timeout]).finally(() => {
+    if (t) clearTimeout(t);
+  });
+}
+
 const AuthCallback = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
