@@ -82,7 +82,7 @@ const AgentAccountSetup = () => {
     let cancelled = false;
     const failSafe = setTimeout(() => {
       if (cancelled) return;
-      console.warn("[AgentAccountSetup] init fail-safe reached");
+      console.warn("[AgentAccountSetup] diag", { branch: "failsafe_timeout" });
       const handoffEmail = sessionStorage.getItem("aac_agent_setup_email") || "";
       if (handoffEmail) {
         setEmail((current) => current || handoffEmail);
@@ -90,20 +90,29 @@ const AgentAccountSetup = () => {
         setSessionError("We couldn't verify your activation link. Please refresh this page or request a new verification email.");
       }
       setValidating(false);
-    }, 6000);
+    }, 5000);
 
     const init = async () => {
       try {
-        console.info("[AgentAccountSetup] init start");
         const isSetup = sessionStorage.getItem("aac_password_setup_flow") === "1";
         const isRecovery = sessionStorage.getItem("aac_recovery_flow") === "1";
         const hasSetupHandoff = sessionStorage.getItem("aac_agent_setup_handoff") === "1";
         const handoffEmail = sessionStorage.getItem("aac_agent_setup_email") || "";
         const handoffUserId = sessionStorage.getItem("aac_agent_setup_user_id") || "";
 
+        console.info("[AgentAccountSetup] diag", {
+          branch: "init_start",
+          setupFlag: isSetup,
+          recoveryFlag: isRecovery,
+          handoffPresent: hasSetupHandoff,
+          handoffEmailPresent: !!handoffEmail,
+          handoffUserIdPresent: !!handoffUserId,
+        });
+
         if (handoffEmail) setEmail(handoffEmail);
 
         if (!isSetup && !isRecovery && !hasSetupHandoff) {
+          console.warn("[AgentAccountSetup] diag", { branch: "no_setup_context" });
           if (!cancelled) {
             setSessionError("Your activation link is invalid or expired. Please request a new one from your verification email.");
           }
@@ -111,13 +120,15 @@ const AgentAccountSetup = () => {
         }
 
         let sessionUserId = handoffUserId;
+        let sessionResolved = false;
         try {
           const { data: { session } } = await withTimeout(
             supabase.auth.getSession(),
-            4500,
+            3500,
             "Activation session check",
           );
           if (!session?.user) {
+            console.warn("[AgentAccountSetup] diag", { branch: "no_session", handoffEmailPresent: !!handoffEmail });
             if (!cancelled && !handoffEmail) {
               setSessionError("Your activation link has expired. Please request a new one from your verification email.");
             }
@@ -125,9 +136,14 @@ const AgentAccountSetup = () => {
           }
 
           sessionUserId = session.user.id;
+          sessionResolved = true;
           if (!cancelled) setEmail(session.user.email ?? handoffEmail);
+          console.info("[AgentAccountSetup] diag", { branch: "session_resolved" });
         } catch (sessionErr) {
-          console.warn("[AgentAccountSetup] session check delayed; using setup handoff if available:", sessionErr);
+          console.warn("[AgentAccountSetup] diag", {
+            branch: "session_timeout",
+            hasHandoff: !!handoffEmail,
+          });
           if (!handoffEmail) {
             setSessionError("Your activation link has expired. Please request a new one from your verification email.");
             return;
@@ -136,14 +152,14 @@ const AgentAccountSetup = () => {
 
         if (cancelled) return;
 
-        if (sessionUserId) try {
+        if (sessionResolved && sessionUserId) try {
           const { data: profile, error: profileError } = await withTimeout(
             supabase
               .from("agent_profiles")
               .select("first_name, last_name")
               .eq("id", sessionUserId)
               .maybeSingle(),
-            3500,
+            2500,
             "Agent profile lookup",
           );
           if (profileError) {
@@ -156,8 +172,9 @@ const AgentAccountSetup = () => {
         } catch (profileErr) {
           console.warn("[AgentAccountSetup] profile prefill failed (non-fatal):", profileErr);
         }
+        console.info("[AgentAccountSetup] diag", { branch: "ready" });
       } catch (err) {
-        console.error("[AgentAccountSetup] init failed:", err);
+        console.error("[AgentAccountSetup] diag", { branch: "init_exception" });
         if (!cancelled) {
           setSessionError("We couldn't verify your activation link. Please refresh this page or request a new verification email.");
         }
@@ -278,10 +295,25 @@ const AgentAccountSetup = () => {
               </h1>
             </div>
             <p className="text-sm text-zinc-500">{sessionError}</p>
+            <p className="text-xs text-zinc-400">
+              Need help? Email{" "}
+              <a href="mailto:support@allagentconnect.com" className="underline hover:text-zinc-600">
+                support@allagentconnect.com
+              </a>{" "}
+              or request a new setup link.
+            </p>
           </div>
-          <Button onClick={() => navigate("/auth")} variant="outline" className="rounded-xl">
-            Go to Sign In
-          </Button>
+          <div className="flex items-center justify-center gap-2">
+            <Button onClick={() => navigate("/auth")} variant="outline" className="rounded-xl">
+              Go to Sign In
+            </Button>
+            <Button
+              onClick={() => { window.location.href = "mailto:support@allagentconnect.com?subject=Activation%20link%20help"; }}
+              className={cn("rounded-xl", AGENT_PRIMARY_BTN_CLASS)}
+            >
+              Contact Support
+            </Button>
+          </div>
         </div>
       </div>
     );
