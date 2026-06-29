@@ -1106,13 +1106,13 @@ export default function AdminApprovals() {
             <div className="flex items-center justify-between px-4 py-2">
               <div className="flex items-center gap-3">
                 <Checkbox
-                  checked={selectedIds.size === filteredAgents.length && filteredAgents.length > 0}
+                  checked={effectiveSelectedIds.size === filteredAgents.length && filteredAgents.length > 0}
                   onCheckedChange={toggleSelectAll}
                   aria-label="Select all agents"
                 />
                 <span className="text-sm text-zinc-600">
-                  {selectedIds.size > 0 
-                    ? `${selectedIds.size} of ${filteredAgents.length} selected` 
+                  {effectiveSelectedIds.size > 0 
+                    ? `${effectiveSelectedIds.size} of ${filteredAgents.length} selected` 
                     : "Select all"}
                 </span>
               </div>
@@ -1122,16 +1122,16 @@ export default function AdminApprovals() {
                   <>
                     <button
                       onClick={() => setShowVerifyConfirm(true)}
-                      disabled={selectedIds.size === 0 || bulkVerifying}
+                      disabled={effectiveSelectedIds.size === 0 || bulkVerifying}
                       className={
-                        selectedIds.size === 0 || bulkVerifying
+                        effectiveSelectedIds.size === 0 || bulkVerifying
                           ? "text-zinc-300 cursor-not-allowed"
                           : "text-emerald-600 hover:text-emerald-800 hover:underline transition-colors font-medium"
                       }
                     >
                       {bulkVerifying
                         ? "Verifying…"
-                        : `Verify Selected (${selectedIds.size})`}
+                        : `Verify Selected (${effectiveSelectedIds.size})`}
                     </button>
                     <span className="text-zinc-300">•</span>
                   </>
@@ -1140,8 +1140,8 @@ export default function AdminApprovals() {
                   <>
                 <button
                   onClick={handleBulkEmail}
-                  disabled={selectedIds.size === 0}
-                  className={selectedIds.size === 0 
+                  disabled={effectiveSelectedIds.size === 0}
+                  className={effectiveSelectedIds.size === 0 
                     ? "text-zinc-300 cursor-not-allowed" 
                     : "text-zinc-500 hover:text-zinc-900 hover:underline transition-colors"}
                 >
@@ -1152,14 +1152,14 @@ export default function AdminApprovals() {
                 )}
                 <button
                   onClick={() => setShowBulkDeleteDialog(true)}
-                  disabled={selectedIds.size === 0}
-                  className={selectedIds.size === 0 
+                  disabled={effectiveSelectedIds.size === 0}
+                  className={effectiveSelectedIds.size === 0 
                     ? "text-zinc-300 cursor-not-allowed" 
                     : "text-rose-500 hover:text-rose-700 hover:underline transition-colors"}
                 >
                   Delete Selected
                 </button>
-                {selectedIds.size > 0 && (
+                {effectiveSelectedIds.size > 0 && (
                   <>
                     <span className="text-zinc-300">•</span>
                     <button
@@ -1419,7 +1419,7 @@ export default function AdminApprovals() {
       <BulkDeleteAgentsDialog
         open={showBulkDeleteDialog}
         onOpenChange={setShowBulkDeleteDialog}
-        agents={filteredAgents.filter((a) => selectedIds.has(a.id))}
+        agents={filteredAgents.filter((a) => effectiveSelectedIds.has(a.id))}
         onDeleted={() => {
           setSelectedIds(new Set());
           fetchAgents();
@@ -1429,9 +1429,9 @@ export default function AdminApprovals() {
       <AlertDialog open={showVerifyConfirm} onOpenChange={setShowVerifyConfirm}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Verify {selectedIds.size} agent{selectedIds.size === 1 ? "" : "s"}?</AlertDialogTitle>
+            <AlertDialogTitle>Verify {effectiveSelectedIds.size} agent{effectiveSelectedIds.size === 1 ? "" : "s"}?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will verify {selectedIds.size} agent{selectedIds.size === 1 ? "" : "s"} and send each one an individual License Verified setup email. Emails are sent one at a time using a per-agent idempotency key — no custom subject or message.
+              This will verify {effectiveSelectedIds.size} agent{effectiveSelectedIds.size === 1 ? "" : "s"} and send each one an individual License Verified setup email. Emails are sent one at a time using a per-agent idempotency key — no custom subject or message.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
