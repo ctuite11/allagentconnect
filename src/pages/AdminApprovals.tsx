@@ -1029,37 +1029,37 @@ export default function AdminApprovals() {
           />
           <Pill
             label={`Pending (${statusCounts.pending || 0})`}
-            variant="warning"
+            variant="neutral"
             active={statusFilter === "pending"}
             onClick={() => setStatusFilter("pending")}
           />
           <Pill
             label={`Verified (${statusCounts.verified || 0})`}
-            variant="primary"
+            variant="neutral"
             active={statusFilter === "verified"}
             onClick={() => setStatusFilter("verified")}
           />
           <Pill
             label={`Active (${statusCounts.active || 0})`}
-            variant="success"
+            variant="neutral"
             active={statusFilter === "active"}
             onClick={() => setStatusFilter("active")}
           />
           <Pill
             label={`Rejected (${statusCounts.rejected || 0})`}
-            variant="danger"
+            variant="neutral"
             active={statusFilter === "rejected"}
             onClick={() => setStatusFilter("rejected")}
           />
           <Pill
             label={`Restricted (${statusCounts.restricted || 0})`}
-            variant="danger"
+            variant="neutral"
             active={statusFilter === "restricted"}
             onClick={() => setStatusFilter("restricted")}
           />
           <Pill
             label={`Online (${onlineCount})`}
-            variant="success"
+            variant="neutral"
             active={statusFilter === "online"}
             onClick={() => setStatusFilter("online")}
           />
