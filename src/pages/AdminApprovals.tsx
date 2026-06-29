@@ -626,7 +626,7 @@ export default function AdminApprovals() {
 
   // Selection handlers
   const toggleSelectAll = () => {
-    if (selectedIds.size === filteredAgents.length) {
+    if (effectiveSelectedIds.size === filteredAgents.length) {
       setSelectedIds(new Set());
     } else {
       setSelectedIds(new Set(filteredAgents.map((a) => a.id)));
@@ -642,6 +642,27 @@ export default function AdminApprovals() {
     }
     setSelectedIds(newSet);
   };
+
+  // Reconcile selection with the currently visible (filtered) agents.
+  // Prevents stale "N selected" counters and bulk actions targeting
+  // rows that aren't visible after a tab/search/refresh.
+  const effectiveSelectedIds = useMemo(() => {
+    if (selectedIds.size === 0) return selectedIds;
+    const visible = new Set(filteredAgents.map((a) => a.id));
+    const next = new Set<string>();
+    selectedIds.forEach((id) => {
+      if (visible.has(id)) next.add(id);
+    });
+    return next;
+  }, [selectedIds, filteredAgents]);
+
+  // Prune the underlying state when the visible set shrinks so that
+  // hidden ids can never leak into bulk actions or re-appear later.
+  useEffect(() => {
+    if (selectedIds.size === 0) return;
+    if (effectiveSelectedIds.size === selectedIds.size) return;
+    setSelectedIds(effectiveSelectedIds);
+  }, [effectiveSelectedIds, selectedIds]);
 
   // Column sort handler
   const handleSort = (field: SortField) => {
@@ -665,7 +686,7 @@ export default function AdminApprovals() {
   // Bulk email
   const handleBulkEmail = () => {
     const recipients = filteredAgents
-      .filter((a) => selectedIds.has(a.id))
+      .filter((a) => effectiveSelectedIds.has(a.id))
       .map((a) => ({ id: a.id, email: a.email, name: `${a.first_name} ${a.last_name}` }));
     setEmailRecipients(recipients);
   };
@@ -677,7 +698,7 @@ export default function AdminApprovals() {
   const [showVerifyConfirm, setShowVerifyConfirm] = useState(false);
   const handleBulkVerify = async () => {
     const targets = filteredAgents.filter(
-      (a) => selectedIds.has(a.id) && a.agent_status !== "verified",
+      (a) => effectiveSelectedIds.has(a.id) && a.agent_status !== "verified",
     );
     if (targets.length === 0) {
       toast.error("No eligible agents selected");
