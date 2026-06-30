@@ -523,6 +523,7 @@ setHeaderBackgroundType(profile.header_background_type || "color");
       setSuggestedZips([]);
       
       toast.success(`${validZips.length} coverage area(s) added!`);
+      void markPreferencesSet(session.user.id);
     } catch (error) {
       console.error("Error adding coverage area:", error);
       toast.error("Failed to add coverage area");
@@ -541,6 +542,8 @@ setHeaderBackgroundType(profile.header_background_type || "color");
       
       setCoverageAreas(coverageAreas.filter((area) => area.id !== id));
       toast.success("Coverage area removed");
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) void markPreferencesSet(session.user.id);
     } catch (error) {
       console.error("Error deleting coverage area:", error);
       toast.error("Failed to remove coverage area");
@@ -562,6 +565,7 @@ setHeaderBackgroundType(profile.header_background_type || "color");
 
       setCoverageAreas([]);
       toast.success("All coverage areas cleared");
+      void markPreferencesSet(session.user.id);
     } catch (error: any) {
       console.error("Error clearing coverage areas:", error);
       toast.error("Failed to clear coverage areas");
