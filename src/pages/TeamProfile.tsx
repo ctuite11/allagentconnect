@@ -15,6 +15,7 @@ import {
 import ContactAgentProfileDialog from "@/components/ContactAgentProfileDialog";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { AacMonogramLoader } from "@/components/AacMonogramLoader";
+import { XIcon } from "@/components/icons/XIcon";
 
 const generateTeamVCard = (team: any, members: any[]) => {
   const primaryContact = members.find(m => m.role === 'owner')?.agent_profiles || members[0]?.agent_profiles;
