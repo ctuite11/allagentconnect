@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { authDebug, getAuthRouteDecisionDiagnostics } from "@/lib/authDebug";
 import { resolveUserRole, getRouteForRole } from "@/lib/resolveUserRole";
 import { clearGuestListing, resolvePostAuthRedirectWithMeta } from "@/lib/sharedListingGuest";
+import { clearRecoveryState } from "@/lib/authRecovery";
 
 const rememberAgentSetupHandoff = (session: { user?: { id?: string; email?: string | null } | null } | null | undefined) => {
   if (typeof window === "undefined") return;
@@ -271,6 +272,13 @@ const AuthCallback = () => {
       const { data } = supabase.auth.onAuthStateChange((event, session) => {
         if (import.meta.env.DEV) console.log("[AuthCallback] Auth event:", event);
 
+        // After a password update, scrub markers so no later event can
+        // route the user back into a password form.
+        if (event === "USER_UPDATED") {
+          clearRecoveryState();
+          return;
+        }
+
         // Handle password recovery
         if ((event === "PASSWORD_RECOVERY" || isRecoveryContext) && session?.user) {
           // Mark recovery flow
@@ -287,14 +295,17 @@ const AuthCallback = () => {
         }
 
         if (event === "SIGNED_IN" && session?.user) {
-          // CRITICAL: Check STORED recovery marker, not just computed isRecoveryContext
-          // The marker is set synchronously at component top level
-          const hasRecoveryMarker = sessionStorage.getItem("aac_recovery_flow") === "1";
-          if (isRecoveryContext || hasRecoveryMarker) {
+          // Only treat this as a recovery/setup landing when the CURRENT
+          // URL carries recovery context, or an active setup flag is
+          // present. A stale `aac_recovery_flow` from an earlier flow
+          // must not hijack a normal sign-in.
+          const hasActiveSetup =
+            sessionStorage.getItem("aac_password_setup_flow") === "1";
+          if (isRecoveryContext || hasActiveSetup) {
             if (!didNavigate.current) {
               didNavigate.current = true;
               window.history.replaceState(null, "", window.location.pathname);
-              const isAgentSetup = sessionStorage.getItem("aac_password_setup_flow") === "1";
+              const isAgentSetup = hasActiveSetup;
               if (isAgentSetup) rememberAgentSetupHandoff(session);
               navigate(isAgentSetup ? "/agent-setup" : "/password-reset", { replace: true });
             }
@@ -315,15 +326,19 @@ const AuthCallback = () => {
 
       // Check for existing session
       const checkExistingSession = async () => {
-        // CRITICAL: Check recovery marker FIRST - takes priority over any existing session
-        const hasRecoveryMarker = sessionStorage.getItem("aac_recovery_flow") === "1";
-        if (hasRecoveryMarker && !didNavigate.current) {
+        // Recovery/setup priority: only act on markers when the CURRENT
+        // navigation carries recovery context, or a setup flag is active.
+        // A stale `aac_recovery_flow` from an earlier flow must not
+        // override a normal authenticated session.
+        const hasActiveSetup =
+          sessionStorage.getItem("aac_password_setup_flow") === "1";
+        if ((isRecoveryContext || hasActiveSetup) && !didNavigate.current) {
           if (import.meta.env.DEV) {
-            console.log("[AuthCallback] Recovery marker found in checkExistingSession - redirecting to password-reset");
+            console.log("[AuthCallback] Active recovery/setup context — routing to setup form");
           }
           didNavigate.current = true;
           window.history.replaceState(null, "", window.location.pathname);
-          const isAgentSetup = sessionStorage.getItem("aac_password_setup_flow") === "1";
+          const isAgentSetup = hasActiveSetup;
           if (isAgentSetup) {
             const { data: { session } } = await supabase.auth.getSession();
             rememberAgentSetupHandoff(session);
@@ -400,19 +415,22 @@ const AuthCallback = () => {
       
       const { data: { session } } = await supabase.auth.getSession();
       
-      // Check if this is a recovery session (type=recovery or sessionStorage flag only)
+      // Recovery short-circuit: only when CURRENT URL carries recovery
+      // context, or an active setup flag is present. A stale recovery
+      // marker alone must never re-route a normal sign-in.
       const hashParams = new URLSearchParams(window.location.hash.substring(1));
       const urlParams = new URLSearchParams(window.location.search);
-      
+      const hasActiveSetup =
+        sessionStorage.getItem("aac_password_setup_flow") === "1";
       const isRecoverySession =
         hashParams.get("type") === "recovery" ||
         urlParams.get("type") === "recovery" ||
-        sessionStorage.getItem("aac_recovery_flow") === "1";
+        hasActiveSetup;
       
       if (isRecoverySession) {
         authDebug("routeUser", { action: "recovery_redirect" });
         didNavigate.current = true;
-        const isAgentSetup = sessionStorage.getItem("aac_password_setup_flow") === "1";
+        const isAgentSetup = hasActiveSetup;
         if (isAgentSetup) rememberAgentSetupHandoff(session);
         navigate(isAgentSetup ? "/agent-setup" : "/password-reset", { replace: true });
         return;
