@@ -301,6 +301,8 @@ const ClientNeedsDashboard = () => {
             className="mb-0"
           />
 
+          <CommunicationsDefaultsNotice userId={user?.id} />
+
           <section id="comms-channels" className="space-y-2 scroll-mt-6">
             <h2 className="text-xl font-semibold text-neutral-900">Channels</h2>
             <p className="text-sm text-neutral-500">Choose what you send and receive</p>
