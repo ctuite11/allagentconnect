@@ -68,7 +68,7 @@ serve(async (req: Request): Promise<Response> => {
         firstName: ap.first_name,
         lastName: ap.last_name,
         title: "Founder",
-        company: ap.company,
+        company: null,
         email: ap.email,
         phone: formatUsPhoneForDisplay(rawPhone),
         headshotUrl: ap.headshot_url,
