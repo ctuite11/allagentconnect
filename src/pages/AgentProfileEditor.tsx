@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/select";
 import AddressAutocomplete from "@/components/AddressAutocomplete";
 import { toast } from "sonner";
+import { markPreferencesSet } from "@/lib/markPreferencesSet";
 import { 
   Trash2, Plus, Star, X, MapPin, User, FileText, 
   Share2, MessageSquare, Eye, ExternalLink, Users, Pencil, Home
