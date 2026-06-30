@@ -1,8 +1,12 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { resolveEmailBaseUrl } from "../_shared/aacPublicUrl.ts";
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const appBaseUrl = resolveEmailBaseUrl(
+  Deno.env.get("EMAIL_BASE_URL") || Deno.env.get("APP_URL"),
+);
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -134,7 +138,7 @@ serve(async (req) => {
                 <p style="margin: 12px 0 0 0; color: ${color}; font-weight: 600;">
                   Price ${direction} by $${Math.abs(priceDiff).toLocaleString()} (${percentChange}%)
                 </p>
-                <a href="${supabaseUrl.replace('.supabase.co', '.lovable.app')}/consumer-property/${change.listing_id}" 
+                <a href="${appBaseUrl}/consumer-property/${change.listing_id}" 
                    style="display: inline-block; margin-top: 12px; padding: 8px 16px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px;">
                   View Property
                 </a>
@@ -164,7 +168,7 @@ serve(async (req) => {
                     <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #e5e7eb;">
                       <p style="margin: 0; color: #6b7280; font-size: 14px;">
                         You're receiving this because you saved these properties. 
-                        <a href="${supabaseUrl.replace('.supabase.co', '.lovable.app')}/consumer/dashboard" style="color: #2563eb;">Manage your notifications</a>
+                        <a href="${appBaseUrl}/consumer/dashboard" style="color: #2563eb;">Manage your notifications</a>
                       </p>
                     </div>
                   </div>
