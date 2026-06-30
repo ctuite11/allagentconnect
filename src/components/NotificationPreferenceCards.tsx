@@ -92,6 +92,16 @@ export const NotificationPreferenceCards = ({ onPreferencesChange }: Notificatio
       if (error) throw error;
 
       setPreferences(newPreferences);
+      // Mark preferences as explicitly set by the agent so default-on logic
+      // and the default-notice banner stop applying.
+      try {
+        await supabase
+          .from("agent_settings")
+          .update({ preferences_set: true })
+          .eq("user_id", user.id);
+      } catch (e) {
+        console.warn("[NotificationPreferenceCards] preferences_set update skipped:", e);
+      }
       onPreferencesChange?.();
     } catch (error) {
       console.error("Error updating preferences:", error);
@@ -122,6 +132,14 @@ export const NotificationPreferenceCards = ({ onPreferencesChange }: Notificatio
       if (error) throw error;
 
       setPreferences(newPreferences);
+      try {
+        await supabase
+          .from("agent_settings")
+          .update({ preferences_set: true })
+          .eq("user_id", user.id);
+      } catch (e) {
+        console.warn("[NotificationPreferenceCards] preferences_set update skipped:", e);
+      }
       onPreferencesChange?.();
     } catch (error) {
       console.error("Error updating preferences:", error);

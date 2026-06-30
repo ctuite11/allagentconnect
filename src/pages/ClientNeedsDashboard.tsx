@@ -6,8 +6,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { Loader2, AlertTriangle, SlidersHorizontal, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NotificationPreferenceCards } from "@/components/NotificationPreferenceCards";
-import { CommunicationsChannelsOnboardingOverlay } from "@/components/communication-center/CommunicationsChannelsOnboardingOverlay";
-import { useCommunicationsChannelsOnboarding } from "@/hooks/useCommunicationsChannelsOnboarding";
+import { CommunicationsDefaultsNotice } from "@/components/communication-center/CommunicationsDefaultsNotice";
 import { ClientNeedsNotificationSettings } from "@/components/ClientNeedsNotificationSettings";
 import GeographicPreferencesManager, { GeographicData } from "@/components/GeographicPreferencesManager";
 import PriceRangePreferences, { PriceRangeData } from "@/components/PriceRangePreferences";
@@ -46,12 +45,8 @@ const ClientNeedsDashboard = () => {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [saving, setSaving] = useState(false);
   const [channelPreferencesVersion, setChannelPreferencesVersion] = useState(0);
-
-  const {
-    visible: showChannelsOnboarding,
-    handleLater: handleChannelsOnboardingLater,
-    handleChooseChannels: dismissChannelsOnboarding,
-  } = useCommunicationsChannelsOnboarding(user?.id, channelPreferencesVersion);
+  // Onboarding overlay retired — channels are ON by default for new agents.
+  // The dismissible CommunicationsDefaultsNotice below replaces it.
 
   const priceDataRef = useRef<PriceRangeData | null>(null);
   const geoDataRef = useRef<GeographicData | null>(null);
@@ -105,14 +100,6 @@ const ClientNeedsDashboard = () => {
     setEmailAlertNoticeDismissed(true);
   };
 
-  const scrollToChannels = () => {
-    document.getElementById("comms-channels")?.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
-
-  const onChooseChannelsClick = () => {
-    dismissChannelsOnboarding();
-    scrollToChannels();
-  };
 
   const checkAuth = async () => {
     const {
@@ -294,12 +281,6 @@ const ClientNeedsDashboard = () => {
 
   return (
     <>
-      {showChannelsOnboarding ? (
-        <CommunicationsChannelsOnboardingOverlay
-          onLater={handleChannelsOnboardingLater}
-          onChooseChannels={onChooseChannelsClick}
-        />
-      ) : null}
       <Seo
         title="Communications Center | All Agent Connect"
         description="Agent-to-agent channels, notification preferences, and email alert settings."
@@ -315,6 +296,8 @@ const ClientNeedsDashboard = () => {
             subtitleClassName="text-neutral-500"
             className="mb-0"
           />
+
+          <CommunicationsDefaultsNotice userId={user?.id} />
 
           <section id="comms-channels" className="space-y-2 scroll-mt-6">
             <h2 className="text-xl font-semibold text-neutral-900">Channels</h2>
