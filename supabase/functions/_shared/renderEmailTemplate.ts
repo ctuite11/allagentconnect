@@ -10,6 +10,7 @@ import { renderCompactListingEmailCard, renderListingEmailCard } from "./listing
 import { resolveEmailPhotoUrl } from "./listingPhotoUrl.ts";
 import { formatPersonDisplayName } from "./personDisplayName.ts";
 import { formatUsPhoneForDisplay } from "./phoneFormat.ts";
+import { resolveEmailBaseUrl } from "./aacPublicUrl.ts";
 
 /* ------------------------------------------------------------------ */
 /*  Shared helpers for Share Listings emails                           */
