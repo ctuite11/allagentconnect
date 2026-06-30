@@ -562,9 +562,6 @@ const HotSheetBuyerDetail = () => {
                 subtitle={`${hs.matchCount} ${hs.matchCount === 1 ? "match" : "matches"}`}
                 preferWideTitle
                 createdAt={hs.createdAt}
-                invitePending={hs.invitePending}
-                resendInviteLoading={resendingHotSheetId === hs.id}
-                onResendInvite={() => handleResendInvite(hs)}
                 onClick={() => navigate(`/hot-sheets/${hs.id}/review`)}
                 onKeyDown={(e) => {
                   if (e.key !== "Enter" && e.key !== " ") return;
