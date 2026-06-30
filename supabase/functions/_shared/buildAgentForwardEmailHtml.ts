@@ -81,6 +81,7 @@ export interface AgentForwardEmailOptions {
   ctaUrl: string;
   preheader?: string;
   agent?: AgentFooterInfo | null;
+  contactLayout?: "inline" | "stacked";
 }
 
 export interface AgentFooterInfo {
@@ -94,7 +95,7 @@ export interface AgentFooterInfo {
   websiteUrl?: string | null;
 }
 
-function renderAgentFooter(agent: AgentFooterInfo): string {
+function renderAgentFooter(agent: AgentFooterInfo, layout: "inline" | "stacked" = "inline"): string {
   const fullName = [agent.firstName, agent.lastName].filter(Boolean).join(" ").trim();
   const initials = [agent.firstName, agent.lastName]
     .filter(Boolean)
@@ -139,9 +140,18 @@ function renderAgentFooter(agent: AgentFooterInfo): string {
     );
   }
   if (contactParts.length) {
-    lines.push(
-      `<p style="margin:8px 0 0;font-size:12.5px;color:#fff;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${contactParts.join(' &nbsp;·&nbsp; ')}</p>`,
-    );
+    if (layout === "stacked") {
+      contactParts.forEach((part, idx) => {
+        const mt = idx === 0 ? 8 : 2;
+        lines.push(
+          `<p style="margin:${mt}px 0 0;font-size:12.5px;color:#fff;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${part}</p>`,
+        );
+      });
+    } else {
+      lines.push(
+        `<p style="margin:8px 0 0;font-size:12.5px;color:#fff;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${contactParts.join(' &nbsp;·&nbsp; ')}</p>`,
+      );
+    }
   }
 
   return `<table role="presentation" cellspacing="0" cellpadding="0" align="center"><tr>
@@ -152,7 +162,7 @@ function renderAgentFooter(agent: AgentFooterInfo): string {
 }
 
 export function buildAgentForwardEmailHtml(opts: AgentForwardEmailOptions): string {
-  const { ctaUrl, agent } = opts;
+  const { ctaUrl, agent, contactLayout } = opts;
   const preheader =
     opts.preheader ??
     "A professional platform built exclusively for licensed real estate agents.";
@@ -200,7 +210,7 @@ export function buildAgentForwardEmailHtml(opts: AgentForwardEmailOptions): stri
 
         <!-- Footer -->
         <tr><td align="center" style="background-color:${NAVY};border-radius:0 0 14px 14px;padding:26px 40px 26px;">
-          ${agent ? renderAgentFooter(agent) : `<img src="${MONOGRAM_URL}" width="22" height="22" alt="" style="display:block;margin:0 auto 10px;border:0;outline:none;text-decoration:none;" /><p style="margin:0 0 4px;font-size:13px;font-weight:600;letter-spacing:0.02em;color:#ffffff;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">By Agents. For Agents. All Agents.</p><p style="margin:0;font-size:11px;color:rgba(255,255,255,0.55);font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">All Agent Connect</p>`}
+          ${agent ? renderAgentFooter(agent, contactLayout ?? "inline") : `<img src="${MONOGRAM_URL}" width="22" height="22" alt="" style="display:block;margin:0 auto 10px;border:0;outline:none;text-decoration:none;" /><p style="margin:0 0 4px;font-size:13px;font-weight:600;letter-spacing:0.02em;color:#ffffff;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">By Agents. For Agents. All Agents.</p><p style="margin:0;font-size:11px;color:rgba(255,255,255,0.55);font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">All Agent Connect</p>`}
         </td></tr>
 
       </table>
