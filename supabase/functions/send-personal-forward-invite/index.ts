@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.0";
 import { buildPersonalForwardEmailHtml } from "../_shared/buildPersonalForwardEmailHtml.ts";
 import { resolveAacCtaUrl } from "../_shared/aacPublicUrl.ts";
+import { formatUsPhoneForDisplay } from "../_shared/phoneFormat.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -62,20 +63,21 @@ serve(async (req: Request): Promise<Response> => {
       .maybeSingle();
     if (ap) {
       const website = (ap.social_links as any)?.website ?? null;
+      const rawPhone = ap.phone || ap.cell_phone;
       agent = {
         firstName: ap.first_name,
         lastName: ap.last_name,
-        title: ap.title,
+        title: "Founder",
         company: ap.company,
         email: ap.email,
-        phone: ap.phone || ap.cell_phone,
+        phone: formatUsPhoneForDisplay(rawPhone),
         headshotUrl: ap.headshot_url,
         websiteUrl: website,
       };
       if (ap.email) replyTo = ap.email;
     }
 
-    const html = buildPersonalForwardEmailHtml({ ctaUrl, agent });
+    const html = buildPersonalForwardEmailHtml({ ctaUrl, agent, contactLayout: "stacked" });
 
     const results: Array<{ email: string; success: boolean; error?: string }> = [];
     for (const email of recipients) {
