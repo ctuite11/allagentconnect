@@ -4,6 +4,7 @@ import { buildAgentSharedPropertyEmailSubject } from "../_shared/listingEmailSub
 import { renderEmailTemplate } from "../_shared/renderEmailTemplate.ts";
 import { buildTransactionalFrom } from "../_shared/transactionalSender.ts";
 import { formatListingShareEmailFullAddress } from "../_shared/listingShareEmailAddress.ts";
+import { resolveEmailBaseUrl } from "../_shared/aacPublicUrl.ts";
 import nodemailer from "npm:nodemailer@6.9.16";
 
 const corsHeaders = {
@@ -227,7 +228,9 @@ const handler = async (req: Request): Promise<Response> => {
       return jsonResponse({ success: false, error: 'Listing not found' }, 404);
     }
 
-    const appUrl = Deno.env.get('APP_URL') || 'https://allagentconnect.com';
+    const appUrl = resolveEmailBaseUrl(
+      Deno.env.get('EMAIL_BASE_URL') || Deno.env.get('APP_URL'),
+    );
     const listingUrl = `${appUrl}/property/${listingId}`;
 
     const subject = buildAgentSharedPropertyEmailSubject(agentName, listing);

@@ -56,3 +56,41 @@ export function resolveAacCtaUrl(
     return fallback;
   }
 }
+
+/**
+ * Canonical base URL resolver for OUTBOUND EMAIL LINKS.
+ *
+ * Always returns an absolute URL with NO trailing slash. Defaults to
+ * `AAC_PUBLIC_URL`. An env-provided candidate may override the default for
+ * future staging environments, but localhost, loopback, *.local, Lovable
+ * preview hosts, and malformed URLs are rejected and replaced with
+ * `AAC_PUBLIC_URL` so a dev/preview hostname can never leak into a
+ * production email.
+ *
+ * Do NOT pass `req.headers.get("origin")` into this — the request origin is
+ * not a safe source for outbound email URLs.
+ */
+export function resolveEmailBaseUrl(candidate?: string | null): string {
+  const raw = typeof candidate === "string" ? candidate.trim() : "";
+  if (!raw) return AAC_PUBLIC_URL;
+  let host: string;
+  try {
+    host = new URL(raw).hostname.toLowerCase();
+  } catch {
+    console.warn("[resolveEmailBaseUrl] rejected malformed URL, using AAC_PUBLIC_URL");
+    return AAC_PUBLIC_URL;
+  }
+  const isLocal =
+    host === "localhost" ||
+    host === "127.0.0.1" ||
+    host === "0.0.0.0" ||
+    host.endsWith(".local");
+  const isPreview =
+    host.endsWith(".lovable.app") ||
+    host.endsWith(".lovableproject.com");
+  if (isLocal || isPreview) {
+    console.warn(`[resolveEmailBaseUrl] rejected non-production host: ${host}`);
+    return AAC_PUBLIC_URL;
+  }
+  return raw.replace(/\/+$/, "");
+}
