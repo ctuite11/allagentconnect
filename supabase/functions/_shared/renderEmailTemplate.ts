@@ -359,7 +359,9 @@ export function renderEmailTemplate(
 
       const safeBody = esc(messageBodyRaw).replace(/\n/g, "<br>");
       const safeSender = esc(senderName);
-      const appUrl = Deno.env.get("APP_URL") || "https://allagentconnect.com";
+      const appUrl = resolveEmailBaseUrl(
+        Deno.env.get("EMAIL_BASE_URL") || Deno.env.get("APP_URL"),
+      );
       const ctaHref = ctaUrl.startsWith("http")
         ? ctaUrl
         : `${appUrl}${ctaUrl.startsWith("/") ? "" : "/"}${ctaUrl}`;

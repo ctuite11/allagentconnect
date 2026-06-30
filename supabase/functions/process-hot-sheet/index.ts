@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { renderHotSheetMatchListingEmailCard } from "../_shared/listingEmailCard.ts";
+import { resolveEmailBaseUrl } from "../_shared/aacPublicUrl.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -436,7 +437,7 @@ const handler = async (req: Request): Promise<Response> => {
           payload: tokenRow.payload
         });
 
-        const baseUrl = req.headers.get("origin") || "http://localhost:5173";
+        const baseUrl = resolveEmailBaseUrl(Deno.env.get("EMAIL_BASE_URL"));
         const accessUrl = `${baseUrl}/client-hot-sheet/${token}`;
         
         // Render compact AAC listing cards (same as message notification emails)

@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { renderHotSheetMatchListingEmailCard } from "../_shared/listingEmailCard.ts";
+import { resolveEmailBaseUrl } from "../_shared/aacPublicUrl.ts";
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -153,7 +154,11 @@ serve(async (req) => {
         continue;
       }
 
-      const appBaseUrl = Deno.env.get("APP_BASE_URL") || Deno.env.get("SITE_URL") || "http://localhost:5173";
+      const appBaseUrl = resolveEmailBaseUrl(
+        Deno.env.get("EMAIL_BASE_URL") ||
+          Deno.env.get("APP_BASE_URL") ||
+          Deno.env.get("SITE_URL"),
+      );
 
       // Build listings HTML
       const listingsHtml = listings
