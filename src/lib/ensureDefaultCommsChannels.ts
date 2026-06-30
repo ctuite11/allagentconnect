@@ -51,7 +51,77 @@ export async function ensureDefaultCommsChannels(userId: string): Promise<void> 
         },
         { onConflict: "user_id" },
       );
+
+    await ensureDefaultBuyerCoverage(userId);
   } catch (err) {
     console.warn("[ensureDefaultCommsChannels] non-fatal:", err);
+  }
+}
+
+/**
+ * Ensures the agent has at least one buyer-coverage row so Buyer Need
+ * broadcasts (which filter by `agent_buyer_coverage_areas.state`) can reach
+ * them. Resolves a sensible default state from the agent's profile/license/
+ * early-access record, falling back to "MA" (the network's primary market).
+ *
+ * - Never overwrites or touches existing coverage rows.
+ * - Uses source='default' + zip_code='00000' as a sentinel so a real coverage
+ *   entry the agent later adds in the UI won't conflict on the unique key
+ *   (agent_id, zip_code, source).
+ * - Never flips `preferences_set` — explicit user choice remains the only
+ *   path to that flag.
+ */
+async function ensureDefaultBuyerCoverage(userId: string): Promise<void> {
+  try {
+    const { data: existing } = await supabase
+      .from("agent_buyer_coverage_areas")
+      .select("id")
+      .eq("agent_id", userId)
+      .limit(1);
+
+    if (existing && existing.length > 0) return;
+
+    const [{ data: profile }, { data: settings }] = await Promise.all([
+      supabase
+        .from("agent_profiles")
+        .select("email, office_state")
+        .eq("id", userId)
+        .maybeSingle(),
+      supabase
+        .from("agent_settings")
+        .select("license_state")
+        .eq("user_id", userId)
+        .maybeSingle(),
+    ]);
+
+    let earlyAccessState: string | null = null;
+    if (profile?.email) {
+      const { data: ea } = await supabase
+        .from("agent_early_access")
+        .select("state")
+        .eq("email", profile.email)
+        .maybeSingle();
+      earlyAccessState = ea?.state ?? null;
+    }
+
+    const resolvedState =
+      (earlyAccessState && earlyAccessState.trim()) ||
+      (settings?.license_state && settings.license_state.trim()) ||
+      (profile?.office_state && profile.office_state.trim()) ||
+      "MA";
+
+    await supabase
+      .from("agent_buyer_coverage_areas")
+      .upsert(
+        {
+          agent_id: userId,
+          state: resolvedState,
+          zip_code: "00000",
+          source: "default",
+        },
+        { onConflict: "agent_id,zip_code,source" },
+      );
+  } catch (err) {
+    console.warn("[ensureDefaultBuyerCoverage] non-fatal:", err);
   }
 }
