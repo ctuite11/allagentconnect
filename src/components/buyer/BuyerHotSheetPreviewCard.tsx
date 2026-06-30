@@ -1,5 +1,5 @@
 import { useState, type KeyboardEvent, type MouseEvent } from "react";
-import { Clock, Eye, Heart, Pencil, RefreshCw, Trash2 } from "lucide-react";
+import { Eye, Heart, Pencil, Trash2 } from "lucide-react";
 import { DashboardListingImage } from "@/components/buyer/DashboardListingImage";
 import {
   buyerCollectionCardRoot,
@@ -111,9 +111,6 @@ export interface BuyerHotSheetPreviewCardProps {
   /** Buyer dashboard 2-up grid — allow title to wrap to two lines instead of truncating. */
   preferWideTitle?: boolean;
   createdAt?: string | null;
-  invitePending?: boolean;
-  onResendInvite?: (e: MouseEvent<HTMLButtonElement>) => void;
-  resendInviteLoading?: boolean;
 }
 
 /**
@@ -134,9 +131,6 @@ export function BuyerHotSheetPreviewCard({
   onEditClick,
   preferWideTitle = false,
   createdAt = null,
-  invitePending = false,
-  onResendInvite,
-  resendInviteLoading = false,
 }: BuyerHotSheetPreviewCardProps) {
   const isHotSheetsPage = variant === "hotSheetsPage";
   const isAgentDetail = variant === "agentDetail";
@@ -205,32 +199,6 @@ export function BuyerHotSheetPreviewCard({
               </p>
             {createdLabel ? (
               <p className="mt-1 text-[11px] leading-snug text-neutral-500">{createdLabel}</p>
-            ) : null}
-            {invitePending ? (
-              <div className="mt-1.5 flex flex-wrap items-center gap-2">
-                <span className="inline-flex items-center gap-1 rounded-full border border-neutral-200 bg-neutral-50 px-2 py-0.5 text-[11px] font-medium text-neutral-700">
-                  <Clock className="h-3 w-3 shrink-0 text-neutral-500" aria-hidden strokeWidth={2} />
-                  Pending Invite
-                </span>
-                {onResendInvite ? (
-                  <button
-                    type="button"
-                    disabled={resendInviteLoading}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onResendInvite(e);
-                    }}
-                    className="inline-flex items-center gap-1 rounded-full border border-[#0E56F5]/20 bg-[rgba(14,86,245,0.06)] px-2 py-0.5 text-[11px] font-medium text-[#0E56F5] transition-colors hover:bg-[rgba(14,86,245,0.12)] disabled:opacity-60"
-                  >
-                    <RefreshCw
-                      className={`h-3 w-3 shrink-0 ${resendInviteLoading ? "animate-spin" : ""}`}
-                      strokeWidth={2}
-                      aria-hidden
-                    />
-                    {resendInviteLoading ? "Resending…" : "Resend invite"}
-                  </button>
-                ) : null}
-              </div>
             ) : null}
               <div className="mt-2 flex items-center justify-between gap-2">
                 {subtitle ? (
