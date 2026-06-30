@@ -100,10 +100,6 @@ const ClientNeedsDashboard = () => {
     setEmailAlertNoticeDismissed(true);
   };
 
-  const scrollToChannels = () => {
-    document.getElementById("comms-channels")?.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
-
 
   const checkAuth = async () => {
     const {
