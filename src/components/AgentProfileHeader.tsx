@@ -1,18 +1,18 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Mail, 
-  Phone, 
-  Globe, 
-  Linkedin, 
-  Facebook, 
-  Twitter, 
-  Instagram, 
+import {
+  Mail,
+  Phone,
+  Globe,
+  Linkedin,
+  Facebook,
+  Instagram,
   Download,
   Users,
   ShieldCheck,
-  ArrowLeft
+  ArrowLeft,
 } from "lucide-react";
+import { XIcon } from "@/components/icons/XIcon";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { getHeaderBackgroundStyle } from "@/components/profile-editor/HeaderBackgroundSelector";
 import ContactAgentProfileDialog from "@/components/ContactAgentProfileDialog";
@@ -59,7 +59,7 @@ const AgentProfileHeader = ({ agent, onSaveContact }: AgentProfileHeaderProps) =
     { key: "facebook", icon: Facebook, url: agent.social_links?.facebook },
     { key: "instagram", icon: Instagram, url: agent.social_links?.instagram },
     { key: "linkedin", icon: Linkedin, url: agent.social_links?.linkedin },
-    { key: "twitter", icon: Twitter, url: agent.social_links?.twitter },
+    { key: "twitter", icon: XIcon, url: agent.social_links?.twitter },
   ].filter(s => s.url);
 
   return (

@@ -1,4 +1,5 @@
-import { Linkedin, Twitter, Facebook, Instagram, Globe } from "lucide-react";
+import { Linkedin, Facebook, Instagram, Globe } from "lucide-react";
+import { XIcon } from "@/components/icons/XIcon";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -26,9 +27,9 @@ const SocialLinksSection = ({ socialLinks, onChange }: SocialLinksSectionProps) 
     },
     {
       key: "twitter" as const,
-      label: "Twitter / X",
-      icon: Twitter,
-      placeholder: "https://twitter.com/yourhandle",
+      label: "X",
+      icon: XIcon,
+      placeholder: "https://x.com/yourhandle",
       iconColor: "text-foreground",
     },
     {

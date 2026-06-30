@@ -6,7 +6,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Share2, Facebook, Twitter, Linkedin, Mail, MessageCircle, Link2 } from "lucide-react";
+import { Share2, Facebook, Linkedin, Mail, MessageCircle, Link2 } from "lucide-react";
+import { XIcon } from "@/components/icons/XIcon";
 import { toast } from "sonner";
 import { ShareListingDialog } from "@/components/ShareListingDialog";
 import { trackShare } from "@/lib/trackShare";
@@ -42,7 +43,7 @@ const SocialShareMenu = ({
 
   const shareLinks = {
     facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
-    twitter: `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}`,
+    twitter: `https://x.com/intent/post?url=${encodedUrl}&text=${encodedTitle}`,
     linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`,
     whatsapp: `https://wa.me/?text=${encodedTitle}%20${encodedUrl}`,
   };
@@ -99,8 +100,8 @@ const SocialShareMenu = ({
             onClick={() => void handleSocialShare("twitter")}
             className={shareMenuItemClass}
           >
-            <Twitter className="h-4 w-4 shrink-0 text-neutral-600" />
-            Twitter
+            <XIcon className="h-4 w-4 shrink-0 text-neutral-600" />
+            X
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => void handleSocialShare("linkedin")}

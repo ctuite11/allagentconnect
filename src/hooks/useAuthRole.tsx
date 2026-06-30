@@ -111,6 +111,16 @@ function useAuthRoleStore(): AuthRoleState {
         return;
       }
 
+      // After a password update succeeds anywhere in the app, scrub any
+      // recovery/setup markers. This guarantees a remount of AuthCallback
+      // (or any other listener) cannot bounce a freshly-activated agent
+      // back into a password form.
+      if (event === "USER_UPDATED") {
+        void import("@/lib/authRecovery").then(({ clearRecoveryState }) => {
+          clearRecoveryState();
+        });
+      }
+
       const newUser = session?.user ?? null;
       if (newUser) {
         setUser(newUser);

@@ -695,10 +695,10 @@ const ManageTeam = () => {
                 />
               </div>
               <div>
-                <Label htmlFor="twitter">Twitter/X</Label>
+                <Label htmlFor="twitter">X</Label>
                 <Input
                   id="twitter"
-                  placeholder="https://twitter.com/..."
+                  placeholder="https://x.com/..."
                   value={socialLinks.twitter}
                   onChange={(e) => setSocialLinks({ ...socialLinks, twitter: e.target.value })}
                   disabled={!isOwner && !!team}

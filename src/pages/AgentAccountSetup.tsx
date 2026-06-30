@@ -21,6 +21,7 @@ import AACMonogram from "@/components/ui/AACMonogram";
 import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 import { cn } from "@/lib/utils";
 import { getRouteForRole, resolveUserRole } from "@/lib/resolveUserRole";
+import { clearRecoveryState } from "@/lib/authRecovery";
 
 /**
  * Agent Account Setup — final step of the approved-agent "License Verified"
@@ -289,11 +290,7 @@ const AgentAccountSetup = () => {
         console.warn("[AgentAccountSetup] activation marker write failed (non-fatal):", e);
       }
 
-      sessionStorage.removeItem("aac_recovery_flow");
-      sessionStorage.removeItem("aac_password_setup_flow");
-      sessionStorage.removeItem("aac_agent_setup_handoff");
-      sessionStorage.removeItem("aac_agent_setup_user_id");
-      sessionStorage.removeItem("aac_agent_setup_email");
+      clearRecoveryState();
       window.history.replaceState(null, "", "/agent-setup");
 
       toast.success("Account activated. Welcome to All Agent Connect!");
