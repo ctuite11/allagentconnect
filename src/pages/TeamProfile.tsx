@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { 
   Users, Globe, ArrowLeft, Mail, Phone, MapPin, 
-  Linkedin, Facebook, Twitter, Instagram, Download, Star, 
+  Linkedin, Facebook, Instagram, Download, Star,
   Home, Building2, DollarSign
 } from "lucide-react";
 import ContactAgentProfileDialog from "@/components/ContactAgentProfileDialog";
@@ -311,8 +311,8 @@ const TeamProfile = () => {
                       </a>
                     )}
                     {team.social_links.twitter && (
-                      <a href={team.social_links.twitter} target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-black hover:bg-gray-800 text-white transition-colors">
-                        <Twitter className="h-5 w-5" />
+                      <a href={team.social_links.twitter} target="_blank" rel="noopener noreferrer" aria-label="X" className="p-2 rounded-lg bg-black hover:bg-gray-800 text-white transition-colors">
+                        <XIcon className="h-5 w-5" />
                       </a>
                     )}
                     {team.social_links.instagram && (

@@ -7,7 +7,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { getHotSheetReviewShareUrl } from "@/lib/getPublicUrl";
-import { Facebook, Link2, Linkedin, Mail, Share2, Twitter } from "lucide-react";
+import { Facebook, Link2, Linkedin, Mail, Share2 } from "lucide-react";
+import { XIcon } from "@/components/icons/XIcon";
 import { toast } from "sonner";
 import {
   PersonalHotSheetShareEmailDialog,
@@ -49,7 +50,7 @@ export function PersonalHotSheetShareActions({
     : encodeURIComponent(title);
   const shareLinks = {
     facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
-    twitter: `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${socialText}`,
+    twitter: `https://x.com/intent/post?url=${encodedUrl}&text=${socialText}`,
     linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`,
   } as const;
 
@@ -121,8 +122,8 @@ export function PersonalHotSheetShareActions({
               LinkedIn
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => handleSocialShare("twitter")} className="cursor-pointer gap-2 text-[13px]">
-              <Twitter className="h-4 w-4 shrink-0" aria-hidden />
-              X (Twitter)
+              <XIcon className="h-4 w-4 shrink-0" aria-hidden />
+              X
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
