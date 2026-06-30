@@ -9,6 +9,7 @@ import { AlertTriangle } from "lucide-react";
 import { validatePassword } from "@/lib/passwordPolicy";
 import { PasswordChecklist } from "@/components/PasswordChecklist";
 import { AuthShell } from "@/components/auth/AuthShell";
+import { clearRecoveryState } from "@/lib/authRecovery";
 
 const authCardSurface =
   "rounded-2xl border border-zinc-100 bg-white p-8 shadow-sm";
@@ -25,16 +26,27 @@ const PasswordReset = () => {
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      setIsSetupFlow(sessionStorage.getItem("aac_password_setup_flow") === "1");
+      const setup = sessionStorage.getItem("aac_password_setup_flow") === "1";
+      setIsSetupFlow(setup);
+      // Agent License-Verified setup must use /agent-setup, not this page.
+      if (setup) {
+        navigate("/agent-setup", { replace: true });
+      }
     }
-  }, []);
+  }, [navigate]);
 
   useEffect(() => {
     const checkSession = async () => {
       const isRecoveryFlow = sessionStorage.getItem("aac_recovery_flow") === "1";
       const isSetup = sessionStorage.getItem("aac_password_setup_flow") === "1";
-      
-      if (!isRecoveryFlow && !isSetup) {
+
+      // Setup flow belongs on /agent-setup — bounce immediately.
+      if (isSetup) {
+        navigate("/agent-setup", { replace: true });
+        return;
+      }
+
+      if (!isRecoveryFlow) {
         console.log("[PasswordReset] No recovery/setup flow marker found");
         setSessionError("Invalid or expired reset link. Please request a new password reset.");
         return;
@@ -93,8 +105,7 @@ const PasswordReset = () => {
         // Check for specific token-related errors
         if (error.message.includes("token") || error.message.includes("expired") || error.message.includes("invalid")) {
           toast.error("Your reset link has expired. Please request a new one.");
-          sessionStorage.removeItem("aac_recovery_flow");
-          sessionStorage.removeItem("aac_password_setup_flow");
+          clearRecoveryState();
           navigate("/auth?mode=forgot-password", { replace: true });
           return;
         }
@@ -105,7 +116,7 @@ const PasswordReset = () => {
       // Verify the update actually happened
       if (!data.user) {
         toast.error("Password update failed. Please request a new reset link.");
-        sessionStorage.removeItem("aac_recovery_flow");
+        clearRecoveryState();
         navigate("/auth?mode=forgot-password", { replace: true });
         return;
       }
@@ -127,18 +138,17 @@ const PasswordReset = () => {
       }
 
       // Clear recovery state
-      sessionStorage.removeItem("aac_recovery_flow");
       const wasSetupFlow = isSetupFlow;
-      sessionStorage.removeItem("aac_password_setup_flow");
+      clearRecoveryState();
 
       // Clear recovery URL state before redirecting
       window.history.replaceState(null, "", "/password-reset");
 
       if (wasSetupFlow) {
-        // First-time setup: keep the freshly-authenticated session and
-        // drop the agent straight into Success Hub.
-        toast.success("Password set. Welcome to All Agent Connect!");
-        navigate("/agent-dashboard", { replace: true });
+        // Setup flow should never reach this page — guarded above. If it
+        // somehow does, route to /agent-setup so activation happens through
+        // the one canonical surface (and sets account_activated_at).
+        navigate("/agent-setup", { replace: true });
       } else {
         // Normal reset: sign out so they re-authenticate with the new password.
         await supabase.auth.signOut();
@@ -154,14 +164,12 @@ const PasswordReset = () => {
   };
 
   const handleRequestNewLink = () => {
-    sessionStorage.removeItem("aac_recovery_flow");
-    sessionStorage.removeItem("aac_password_setup_flow");
+    clearRecoveryState();
     navigate("/auth?mode=forgot-password", { replace: true });
   };
 
   const handleGoToSignIn = () => {
-    sessionStorage.removeItem("aac_recovery_flow");
-    sessionStorage.removeItem("aac_password_setup_flow");
+    clearRecoveryState();
     navigate("/auth", { replace: true });
   };
 
