@@ -22,6 +22,7 @@ import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 import { cn } from "@/lib/utils";
 import { getRouteForRole, resolveUserRole } from "@/lib/resolveUserRole";
 import { clearRecoveryState } from "@/lib/authRecovery";
+import { ensureDefaultCommsChannels } from "@/lib/ensureDefaultCommsChannels";
 
 /**
  * Agent Account Setup — final step of the approved-agent "License Verified"
@@ -292,6 +293,14 @@ const AgentAccountSetup = () => {
 
       clearRecoveryState();
       window.history.replaceState(null, "", "/agent-setup");
+
+      // Default Communications Center channels ON for newly activated agents
+      // (best-effort; respects preferences_set and never overwrites explicit choices).
+      try {
+        await ensureDefaultCommsChannels(data.user.id);
+      } catch (e) {
+        console.warn("[AgentAccountSetup] default comms channels skipped:", e);
+      }
 
       toast.success("Account activated. Welcome to All Agent Connect!");
       const resolved = await resolveUserRole(data.user.id);
