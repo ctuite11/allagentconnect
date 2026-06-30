@@ -104,10 +104,6 @@ const ClientNeedsDashboard = () => {
     document.getElementById("comms-channels")?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
-  const onChooseChannelsClick = () => {
-    dismissChannelsOnboarding();
-    scrollToChannels();
-  };
 
   const checkAuth = async () => {
     const {
