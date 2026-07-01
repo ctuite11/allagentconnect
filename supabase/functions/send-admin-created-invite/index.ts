@@ -29,7 +29,7 @@ interface SendRequest {
   idempotencyKey?: string;
 }
 
-const DEFAULT_SUBJECT = "Your All Agent Connect account is ready";
+const DEFAULT_SUBJECT = "Chris Tuite invited you to All Agent Connect";
 const SETUP_REDIRECT = `${AAC_PUBLIC_URL}/auth/callback?type=recovery&setup=1`;
 const REPLY_TO = "chris@allagentconnect.com";
 const TEMPLATE_NAME = "admin-created-invite";
