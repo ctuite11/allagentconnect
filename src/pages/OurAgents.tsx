@@ -495,10 +495,15 @@ function AgentPhotoTileGrid({
         <AgentDirectoryFilters
           sortOrder={sortOrder}
           setSortOrder={setSortOrder}
-          resultCount={filteredAgents.length}
+          resultCount={totalCount}
           searchQuery={searchQuery}
           itemLabel="Agents"
           loading={loading}
+          pageSize={pageSize}
+          onPageSizeChange={(size) => {
+            setPageSize(size);
+            setPage(1);
+          }}
         />
 
         {/* Agent Grid */}
@@ -539,7 +544,7 @@ function AgentPhotoTileGrid({
                 />
 
                 {/* Pagination Controls */}
-                {totalCount > PAGE_SIZE && (
+                {pageSize !== "all" && totalCount > pageSize && (
                   <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
                     <Button
                       variant="outline"
@@ -552,13 +557,13 @@ function AgentPhotoTileGrid({
                       Prev
                     </Button>
                     <span className="text-[13px] tabular-nums text-neutral-600">
-                      Page {page} of {Math.ceil(totalCount / PAGE_SIZE)}
+                      Page {page} of {Math.ceil(totalCount / (pageSize as number))} · {totalCount.toLocaleString()} total
                     </span>
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => setPage((p) => p + 1)}
-                      disabled={page * PAGE_SIZE >= totalCount}
+                      disabled={page * (pageSize as number) >= totalCount}
                       className="gap-1 border-neutral-200 shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
                     >
                       Next
