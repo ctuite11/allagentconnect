@@ -7,12 +7,8 @@ const corsHeaders = {
 
 interface CreateUserRequest {
   email: string;
-  password: string;
   firstName: string;
   lastName: string;
-  phone?: string;
-  licenseState: string;
-  licenseNumber: string;
 }
 
 Deno.serve(async (req) => {
@@ -79,10 +75,10 @@ Deno.serve(async (req) => {
 
     // Parse the request body
     const body: CreateUserRequest = await req.json();
-    const { email, password, firstName, lastName, phone, licenseState, licenseNumber } = body;
+    const { email, firstName, lastName } = body;
 
     // Validate required fields
-    if (!email || !password || !firstName || !lastName || !licenseState || !licenseNumber) {
+    if (!email || !firstName || !lastName) {
       return new Response(
         JSON.stringify({ error: "Missing required fields" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -94,11 +90,12 @@ Deno.serve(async (req) => {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
-    // Create the user using admin API (does NOT sign in the new user)
+    // Create the user using admin API (does NOT sign in the new user).
+    // No password is set — the agent will create their password via the
+    // recovery/setup link fired by send-admin-created-invite.
     console.log("[admin-create-user] Creating auth user for:", email);
     const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
       email: email.trim().toLowerCase(),
-      password,
       email_confirm: true, // Auto-confirm the email
       user_metadata: {
         intended_role: "agent",
@@ -142,7 +139,7 @@ Deno.serve(async (req) => {
         email: email.trim().toLowerCase(),
         first_name: firstName.trim(),
         last_name: lastName.trim(),
-        phone: phone?.trim() || null,
+        phone: null,
       });
 
     if (profileError) {
@@ -152,12 +149,11 @@ Deno.serve(async (req) => {
       console.log("[admin-create-user] Agent profile created");
     }
 
-    // Update agent_settings with license info (row created by handle_new_user trigger)
+    // Update agent_settings — license fields are left NULL and completed by
+    // the agent during /agent-setup Phase 2.
     const { error: settingsError } = await adminClient
       .from("agent_settings")
       .update({
-        license_state: licenseState,
-        license_number: licenseNumber.trim(),
         license_last_name: lastName.trim(),
         agent_status: "pending", // Set to pending for admin review
       })
@@ -170,8 +166,6 @@ Deno.serve(async (req) => {
         .from("agent_settings")
         .insert({
           user_id: userId,
-          license_state: licenseState,
-          license_number: licenseNumber.trim(),
           license_last_name: lastName.trim(),
           agent_status: "pending",
         });
