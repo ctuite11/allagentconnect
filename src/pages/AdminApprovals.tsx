@@ -535,8 +535,8 @@ export default function AdminApprovals() {
     // Pending tab with 8 buyer/test accounts. Future backfills MUST filter out users
     // who hold the `buyer` role in `user_roles`.
     const buckets: Record<AdminDerivedStatus, number> = {
+      invited: 0,
       pending: 0,
-      verified: 0,
       active: 0,
       rejected: 0,
       restricted: 0,
@@ -544,8 +544,8 @@ export default function AdminApprovals() {
     agents.forEach((a) => {
       buckets[deriveAdminStatus(a)]++;
     });
+    counts.invited = buckets.invited;
     counts.pending = buckets.pending;
-    counts.verified = buckets.verified;
     counts.active = buckets.active;
     counts.rejected = buckets.rejected;
     counts.restricted = buckets.restricted;
@@ -556,7 +556,7 @@ export default function AdminApprovals() {
   const variantForStatus = (status: string): PillVariant => {
     switch (status) {
       case "pending": return "warning";
-      case "verified": return "primary";
+      case "invited": return "primary";
       case "active": return "success";
       case "rejected":
       case "restricted": return "danger";
