@@ -106,7 +106,12 @@ const ListingSearch = () => {
         filters.listingType,
         filters.propertyTypes,
       );
-      if (filters.statuses.length > 0) query = query.in("status", filters.statuses);
+      if (filters.statuses.length > 0) {
+        query = query.in("status", filters.statuses);
+      } else {
+        // No statuses selected → return zero results (sentinel match)
+        query = query.in("status", ["__none__"]);
+      }
       if (queryPropertyTypes.length > 0) query = query.in("property_type", queryPropertyTypes);
       {
         const pmin = filters.priceMin ? parseInt(filters.priceMin, 10) : NaN;
