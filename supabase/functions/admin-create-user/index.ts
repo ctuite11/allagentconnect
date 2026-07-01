@@ -199,6 +199,29 @@ Deno.serve(async (req) => {
 
     console.log("[admin-create-user] SUCCESS - User created:", email);
 
+    // Fire personal "account is ready" invite from Chris.
+    // This is ONLY sent for admin-created agents — normal Pending → Verify
+    // flow continues to use send-license-verified-email.
+    // Fire-and-forget: failures are logged but do not fail the create.
+    try {
+      void fetch(`${supabaseUrl}/functions/v1/send-admin-created-invite`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${supabaseServiceKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          to: email.trim().toLowerCase(),
+          firstName: firstName.trim(),
+          idempotencyKey: `admin-created-invite:${userId}`,
+        }),
+      }).catch((err) => {
+        console.warn("[admin-create-user] invite dispatch failed:", err);
+      });
+    } catch (inviteErr) {
+      console.warn("[admin-create-user] invite dispatch threw:", inviteErr);
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
