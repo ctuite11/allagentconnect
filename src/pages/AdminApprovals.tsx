@@ -1306,13 +1306,13 @@ export default function AdminApprovals() {
                             </span>
                           );
                         }
-                        if (derived === "verified") {
+                        if (derived === "invited") {
                           return (
                             <span
                               className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700 ring-1 ring-blue-200"
-                              title="Approved and invited — setup not completed yet"
+                              title="Invite sent — agent has not completed setup yet"
                             >
-                              Verified · setup pending
+                              Invited
                             </span>
                           );
                         }
