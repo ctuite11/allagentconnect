@@ -34,7 +34,7 @@ const benefits: { icon: typeof Users; label: string; iconClass: string }[] = [
 
 type CommunicationsChannelsOnboardingOverlayProps = {
   onLater: (dontShowAgain: boolean) => void;
-  onChooseChannels: () => void;
+  onChooseChannels: (dontShowAgain: boolean) => void;
 };
 
 export function CommunicationsChannelsOnboardingOverlay({
@@ -44,7 +44,7 @@ export function CommunicationsChannelsOnboardingOverlay({
   const [dontShowAgain, setDontShowAgain] = useState(false);
 
   const handleChooseChannels = () => {
-    onChooseChannels();
+    onChooseChannels(dontShowAgain);
   };
 
   const handleLater = () => {

@@ -72,9 +72,15 @@ export function useAgentProfileOnboarding(user: User | null) {
     [dismissForSession, dismissWelcomeModal],
   );
 
-  const handleCompleteProfile = useCallback(() => {
-    dismissForSession();
-  }, [dismissForSession]);
+  const handleCompleteProfile = useCallback(
+    async (dontShowAgain?: boolean) => {
+      if (dontShowAgain) {
+        await dismissWelcomeModal();
+      }
+      dismissForSession();
+    },
+    [dismissForSession, dismissWelcomeModal],
+  );
 
   return {
     visible,

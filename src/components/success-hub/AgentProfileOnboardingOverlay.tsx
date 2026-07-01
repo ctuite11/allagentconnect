@@ -36,7 +36,7 @@ const benefits: { icon: typeof Users; label: string; iconClass: string }[] = [
 
 type AgentProfileOnboardingOverlayProps = {
   onLater: (dontShowAgain: boolean) => void;
-  onCompleteProfile: () => void;
+  onCompleteProfile: (dontShowAgain: boolean) => void;
 };
 
 export function AgentProfileOnboardingOverlay({
@@ -47,7 +47,7 @@ export function AgentProfileOnboardingOverlay({
   const [dontShowAgain, setDontShowAgain] = useState(false);
 
   const handleCompleteProfile = () => {
-    onCompleteProfile();
+    onCompleteProfile(dontShowAgain);
     navigate(PROFILE_EDITOR_PATH);
   };
 
