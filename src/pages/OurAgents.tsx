@@ -526,7 +526,7 @@ function AgentPhotoTileGrid({
             ) : (
               <>
                 <AgentPhotoTileGrid
-                  agents={filteredAgents}
+                  agents={paginatedAgents}
                   onViewProfile={handleViewProfile}
                   hideDirectContact={effectivePublicMode}
                   showPresence={effectiveAgentMode}
