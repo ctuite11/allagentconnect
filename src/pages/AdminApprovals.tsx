@@ -128,8 +128,8 @@ function risksForAgent(a: Agent): Risk[] {
 // flows may still branch on `!has_auth_account` to decide whether the Verify
 // action needs to create the account first.
 type AdminDerivedStatus =
+  | "invited"
   | "pending"
-  | "verified"
   | "active"
   | "rejected"
   | "restricted";
@@ -137,10 +137,12 @@ type AdminDerivedStatus =
 function deriveAdminStatus(a: Agent): AdminDerivedStatus {
   if (a.agent_status === "rejected") return "rejected";
   if (a.agent_status === "restricted") return "restricted";
-  if (a.agent_status === "verified") {
-    return a.account_activated_at ? "active" : "verified";
-  }
-  // Early-access leads (no auth account) and approval-queue agents both land here.
+  // DB "verified" = admin approved → user-facing "Active".
+  if (a.agent_status === "verified") return "active";
+  // Admin-created but agent hasn't finished /agent-setup yet.
+  if (a.agent_status === "invited") return "invited";
+  // Everything else (pending, legacy unverified, early-access leads,
+  // approval-queue agents) surfaces as Pending review.
   return "pending";
 }
 
