@@ -25,33 +25,11 @@ const TEXT_MUTED = "#64748b";
 const BORDER = "#e5e7eb";
 const MONOGRAM_URL = "https://allagentconnect.com/email/aac-monogram-green-128.png";
 
-const FEATURES = [
-  "Buyer Needs from agents across the network",
-  "Private and off-market opportunities",
-  "Agent referrals and direct messaging",
-  "Hot Sheets and real-time network activity",
-];
-
 function formatPhone(raw: string): string {
   const d = raw.replace(/\D/g, "");
   if (d.length === 10) return `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6)}`;
   if (d.length === 11 && d.startsWith("1")) return `(${d.slice(1, 4)}) ${d.slice(4, 7)}-${d.slice(7)}`;
   return raw;
-}
-
-function renderBullets(items: string[]): string {
-  return items
-    .map(
-      (label) => `<tr><td style="padding:0 0 10px;vertical-align:top;">
-        <table role="presentation" cellspacing="0" cellpadding="0" width="100%"><tr>
-          <td valign="top" width="18" style="padding:9px 10px 0 0;line-height:0;">
-            <div style="width:6px;height:6px;border-radius:2px;background-color:${EMERALD_ACCENT};"></div>
-          </td>
-          <td valign="top" style="font-size:15px;line-height:1.55;color:${TEXT_BODY};font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${escapeHtml(label)}</td>
-        </tr></table>
-      </td></tr>`,
-    )
-    .join("");
 }
 
 function renderAgentFooter(agent: FooterAgent): string {
