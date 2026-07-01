@@ -80,7 +80,7 @@ export function buildAdminCreatedInviteEmailHtml(opts: AdminCreatedInviteEmailOp
   const greetingName = first ? escapeHtml(first) : "there";
   const preheader =
     opts.preheader ??
-    "We created an account for you on the new All Agent Connect platform.";
+    "A personal invitation from Chris Tuite. Activate whenever you're ready.";
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -100,7 +100,7 @@ export function buildAdminCreatedInviteEmailHtml(opts: AdminCreatedInviteEmailOp
           <img src="${MONOGRAM_URL}" width="44" height="44" alt="All Agent Connect" style="display:block;margin:0 auto;border:0;outline:none;text-decoration:none;" />
           <p style="margin:14px 0 0;font-size:18px;font-weight:600;letter-spacing:-0.02em;color:#ffffff;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">All Agent Connect</p>
           <div style="width:48px;height:2px;background-color:${EMERALD_ACCENT};margin:18px auto 22px;border-radius:1px;"></div>
-          <h1 style="margin:0 0 12px;font-size:26px;line-height:1.25;font-weight:700;letter-spacing:-0.02em;color:#ffffff;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Your All Agent Connect account is ready</h1>
+          <h1 style="margin:0 0 12px;font-size:26px;line-height:1.25;font-weight:700;letter-spacing:-0.02em;color:#ffffff;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">A personal invitation from Chris</h1>
           <p style="margin:0;font-size:14px;line-height:1.55;color:rgba(255,255,255,0.72);font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">A personal note from Chris.</p>
         </td></tr>
 
@@ -108,25 +108,13 @@ export function buildAdminCreatedInviteEmailHtml(opts: AdminCreatedInviteEmailOp
         <tr><td style="background-color:#ffffff;border:1px solid ${BORDER};border-top:none;padding:36px 40px 8px;">
           <p style="margin:0 0 18px;font-size:16px;line-height:1.6;color:${TEXT_DARK};font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Hi ${greetingName},</p>
 
-          <p style="margin:0 0 16px;font-size:15px;line-height:1.65;color:${TEXT_BODY};font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Since you're a member of the <strong style="color:${TEXT_DARK};">All Agent Connect Facebook community</strong>, we created an account for you on the new All Agent Connect platform.</p>
+          <p style="margin:0 0 16px;font-size:15px;line-height:1.65;color:${TEXT_BODY};font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Since you're already a member of the All Agent Connect Facebook community, we created your account so you wouldn't have to register from scratch.</p>
 
-          <p style="margin:0 0 16px;font-size:15px;line-height:1.65;color:${TEXT_BODY};font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Over the past several months, we've been building a platform designed to help agents <strong style="color:${TEXT_DARK};">connect, communicate, and collaborate</strong> through a more modern and streamlined approach to networking, referrals, and sharing opportunities.</p>
+          <p style="margin:0 0 16px;font-size:15px;line-height:1.65;color:${TEXT_BODY};font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">If you'd like to activate your account, simply click the button below to create your password.</p>
 
-          <p style="margin:0 0 12px;font-size:15px;line-height:1.65;color:${TEXT_BODY};font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">If you'd like to take advantage of everything All Agent Connect has to offer, simply activate your account by creating your password using the button below.</p>
+          <p style="margin:0 0 16px;font-size:15px;line-height:1.65;color:${TEXT_BODY};font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">There's absolutely no obligation. If now isn't the right time, your account will be here whenever you're ready.</p>
 
-          <p style="margin:0 0 14px;font-size:15px;line-height:1.65;color:${TEXT_BODY};font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">You'll have access to features including:</p>
-
-          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 22px;">
-            <tr><td>
-              <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
-                ${renderBullets(FEATURES)}
-              </table>
-            </td></tr>
-          </table>
-
-          <p style="margin:0 0 16px;font-size:15px;line-height:1.65;color:${TEXT_BODY};font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">If now isn't the right time, that's perfectly okay. Your account will be here whenever you're ready.</p>
-
-          <p style="margin:0 0 24px;font-size:15px;line-height:1.65;color:${TEXT_BODY};font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">We hope you'll join us as we continue building a platform created <strong style="color:${TEXT_DARK};">by agents, for agents, and shaped by the members who use it every day.</strong></p>
+          <p style="margin:0 0 24px;font-size:15px;line-height:1.65;color:${TEXT_BODY};font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">I appreciate your support of the All Agent Connect community and hope you'll join us on the platform.</p>
 
           <!-- CTA -->
           <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:8px 0 4px;">
@@ -136,7 +124,7 @@ export function buildAdminCreatedInviteEmailHtml(opts: AdminCreatedInviteEmailOp
               </td></tr></table>
             </td></tr>
             <tr><td align="center" style="padding:14px 0 8px;">
-              <p style="margin:0;font-size:13px;color:${TEXT_MUTED};font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Thanks for being part of the All Agent Connect community.</p>
+              <p style="margin:0;font-size:13px;color:${TEXT_MUTED};font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Thanks,</p>
             </td></tr>
             <tr><td align="center" style="padding:0 0 40px;">
               <p style="margin:0;font-size:13px;color:${TEXT_DARK};font-weight:600;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Chris Tuite</p>
