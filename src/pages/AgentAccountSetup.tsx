@@ -23,6 +23,17 @@ import { cn } from "@/lib/utils";
 import { getRouteForRole, resolveUserRole } from "@/lib/resolveUserRole";
 import { clearRecoveryState } from "@/lib/authRecovery";
 import { ensureDefaultCommsChannels } from "@/lib/ensureDefaultCommsChannels";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+const US_STATES = [
+  "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY","DC",
+];
 
 /**
  * Agent Account Setup — final step of the approved-agent "License Verified"
@@ -74,12 +85,23 @@ const AgentAccountSetup = () => {
 
   const [validating, setValidating] = useState(true);
   const [sessionError, setSessionError] = useState<string | null>(null);
+  const [phase, setPhase] = useState<1 | 2>(1);
+  const [userId, setUserId] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  // Phase 2 fields
+  const [phone, setPhone] = useState("");
+  const [company, setCompany] = useState("");
+  const [licenseState, setLicenseState] = useState("");
+  const [licenseNumber, setLicenseNumber] = useState("");
+  const [headshotFile, setHeadshotFile] = useState<File | null>(null);
+  const [headshotPreview, setHeadshotPreview] = useState<string | null>(null);
+  const [uploadingHeadshot, setUploadingHeadshot] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -155,11 +177,13 @@ const AgentAccountSetup = () => {
 
         if (cancelled) return;
 
+        if (sessionUserId) setUserId(sessionUserId);
+
         if (sessionResolved && sessionUserId) try {
           const { data: profile, error: profileError } = await withTimeout(
             supabase
               .from("agent_profiles")
-              .select("first_name, last_name")
+              .select("first_name, last_name, phone, company, headshot_url")
               .eq("id", sessionUserId)
               .maybeSingle(),
             2500,
@@ -171,6 +195,36 @@ const AgentAccountSetup = () => {
           if (!cancelled) {
             if (profile?.first_name) setFirstName(profile.first_name);
             if (profile?.last_name) setLastName(profile.last_name);
+            if (profile?.phone) setPhone(profile.phone);
+            if (profile?.company) setCompany(profile.company);
+            if (profile?.headshot_url) setHeadshotPreview(profile.headshot_url);
+
+            // Prefill license fields from agent_settings
+            const { data: settings } = await supabase
+              .from("agent_settings")
+              .select("license_state, license_number, account_activated_at")
+              .eq("user_id", sessionUserId)
+              .maybeSingle();
+            if (settings?.license_state) setLicenseState(settings.license_state);
+            if (settings?.license_number) setLicenseNumber(settings.license_number);
+
+            // If password is already set (account_activated_at present) AND we're
+            // NOT in a recovery/setup flow, land on Phase 2 or route home.
+            const isSetup = sessionStorage.getItem("aac_password_setup_flow") === "1";
+            const isRecovery = sessionStorage.getItem("aac_recovery_flow") === "1";
+            if (settings?.account_activated_at && !isSetup && !isRecovery) {
+              const profileComplete =
+                !!profile?.phone &&
+                !!profile?.company &&
+                !!settings?.license_state &&
+                !!settings?.license_number;
+              if (profileComplete) {
+                const resolved = await resolveUserRole(sessionUserId);
+                navigate(getRouteForRole(resolved), { replace: true });
+                return;
+              }
+              setPhase(2);
+            }
           }
         } catch (profileErr) {
           console.warn("[AgentAccountSetup] profile prefill failed (non-fatal):", profileErr);
@@ -302,13 +356,108 @@ const AgentAccountSetup = () => {
         console.warn("[AgentAccountSetup] default comms channels skipped:", e);
       }
 
-      toast.success("Account activated. Welcome to All Agent Connect!");
-      const resolved = await resolveUserRole(data.user.id);
-      const target = getRouteForRole(resolved);
-      navigate(target, { replace: true });
+      toast.success("Password created. One last step — complete your profile.");
+      setUserId(data.user.id);
+      setPhase(2);
     } catch (err: any) {
       console.error("[AgentAccountSetup] error:", err);
       toast.error(err?.message || "Activation failed. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleHeadshotChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please upload an image file.");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Headshot must be under 5MB.");
+      return;
+    }
+    setHeadshotFile(file);
+    setHeadshotPreview(URL.createObjectURL(file));
+  };
+
+  const handleCompleteProfile = async () => {
+    if (!userId) {
+      toast.error("Session lost. Please refresh and try again.");
+      return;
+    }
+    const digits = phone.replace(/\D/g, "");
+    if (digits.length < 10) {
+      toast.error("Please enter a valid phone number.");
+      return;
+    }
+    if (company.trim().length < 2) {
+      toast.error("Please enter your brokerage.");
+      return;
+    }
+    if (!licenseState) {
+      toast.error("Please select your license state.");
+      return;
+    }
+    if (!licenseNumber.trim()) {
+      toast.error("Please enter your license number.");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      let headshotUrl: string | null = null;
+      if (headshotFile) {
+        setUploadingHeadshot(true);
+        try {
+          const ext = headshotFile.name.split(".").pop() || "jpg";
+          const path = `${userId}/headshot-${Date.now()}.${ext}`;
+          const { error: upErr } = await supabase.storage
+            .from("agent-headshots")
+            .upload(path, headshotFile, { upsert: true });
+          if (upErr) throw upErr;
+          const { data: pub } = supabase.storage
+            .from("agent-headshots")
+            .getPublicUrl(path);
+          headshotUrl = pub.publicUrl;
+        } catch (upEx) {
+          console.warn("[AgentAccountSetup] headshot upload failed:", upEx);
+          toast.error("Headshot upload failed. Continuing without it.");
+        } finally {
+          setUploadingHeadshot(false);
+        }
+      }
+
+      const profileUpdate: Record<string, unknown> = {
+        phone: phone.trim(),
+        company: company.trim(),
+      };
+      if (headshotUrl) profileUpdate.headshot_url = headshotUrl;
+
+      const { error: profErr } = await supabase
+        .from("agent_profiles")
+        .update(profileUpdate)
+        .eq("id", userId);
+      if (profErr) throw profErr;
+
+      const { error: setErr } = await supabase
+        .from("agent_settings")
+        .update({
+          license_state: licenseState,
+          license_number: licenseNumber.trim(),
+          license_last_name: lastName.trim() || null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("user_id", userId);
+      if (setErr) console.warn("[AgentAccountSetup] settings update warn:", setErr);
+
+      toast.success("Profile complete. Welcome to All Agent Connect.");
+      const resolved = await resolveUserRole(userId);
+      navigate(getRouteForRole(resolved), { replace: true });
+    } catch (err: any) {
+      console.error("[AgentAccountSetup] profile completion error:", err);
+      toast.error(err?.message || "Could not save your profile. Please try again.");
     } finally {
       setSubmitting(false);
     }
