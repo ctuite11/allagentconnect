@@ -105,7 +105,6 @@ const OurAgents = ({
   const [page, setPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [pageSize, setPageSize] = useState<AgentDirectoryPageSize>(DEFAULT_PAGE_SIZE);
-  const effectivePageSize = pageSize === "all" ? Math.max(totalCount, 1) : pageSize;
 
   // Page titles based on mode
   const pageTitle = effectiveAgentMode ? "AAC Referral Network" : "Find an Agent";
@@ -115,16 +114,11 @@ const OurAgents = ({
 
   useEffect(() => {
     fetchData();
-  }, [page, pageSize]);
+  }, []);
 
   const fetchData = async () => {
     try {
       setLoading(true);
-      
-      const isAll = pageSize === "all";
-      const size = isAll ? Number.MAX_SAFE_INTEGER : pageSize;
-      const from = isAll ? 0 : (page - 1) * size;
-      const to = isAll ? Number.MAX_SAFE_INTEGER : from + size - 1;
       
       // Step 1: Get verified agent IDs via SECURITY DEFINER RPC (bypasses agent_settings RLS safely)
       const { data: verifiedRows, error: verifiedError } = await supabase
@@ -142,48 +136,14 @@ const OurAgents = ({
         return;
       }
 
-      // Step 2a: Resolve visible verified agents (name + headshot), then paginate in-memory
-      // so trim rules match the grid and totalCount stays accurate.
-      const { data: nameRows, error: nameError } = await AGENT_NETWORK_DB_FILTERS(
-        supabase
-          .from("agent_profiles")
-          .select("id, first_name, last_name, headshot_url")
-          .in("id", verifiedIds),
-      );
-
-      if (nameError) throw nameError;
-
-      const visibleAgentRows = (nameRows || [])
-        .filter((agent) => verifiedIds.includes(agent.id))
-        .filter(isVisibleInAgentNetwork)
-        .sort((a, b) => {
-          const byLast = (a.last_name || "").localeCompare(b.last_name || "");
-          return byLast !== 0 ? byLast : (a.first_name || "").localeCompare(b.first_name || "");
-        });
-
-      setTotalCount(visibleAgentRows.length);
-
-      const pageAgentIds = (isAll
-        ? visibleAgentRows
-        : visibleAgentRows.slice(from, to + 1)
-      ).map((agent) => agent.id);
-
       const countiesPromise = supabase
         .from("counties")
         .select("*")
         .order("state", { ascending: true })
         .order("name", { ascending: true });
 
-      if (pageAgentIds.length === 0) {
-        const { data: countyData, error: countyError } = await countiesPromise;
-        if (countyError) throw countyError;
-        setAgents([]);
-        setCounties(countyData || []);
-        setLoading(false);
-        return;
-      }
-
-      // Step 2b: Fetch full profile rows for the current page only
+      // Fetch the full profile for every visible verified agent so search/filters
+      // operate on the entire network — not just the current page.
       const { data: agentData, error: agentError } = await AGENT_NETWORK_DB_FILTERS(
         supabase
           .from("agent_profiles")
@@ -195,15 +155,17 @@ const OurAgents = ({
           ),
           agent_buyer_coverage_areas(city, state, county)
         `)
-          .in("id", pageAgentIds),
+          .in("id", verifiedIds),
       );
 
       if (agentError) throw agentError;
 
-      const agentById = new Map((agentData || []).map((agent) => [agent.id, agent]));
-      const orderedAgentData = pageAgentIds
-        .map((id) => agentById.get(id))
-        .filter((agent): agent is NonNullable<typeof agent> => Boolean(agent));
+      const orderedAgentData = (agentData || [])
+        .filter(isVisibleInAgentNetwork)
+        .sort((a: any, b: any) => {
+          const byLast = (a.last_name || "").localeCompare(b.last_name || "");
+          return byLast !== 0 ? byLast : (a.first_name || "").localeCompare(b.first_name || "");
+        });
 
       // Fetch listings for all agents to get counts
       const [{ data: listingsData, error: listingsError }, { data: countyData, error: countyError }] =
@@ -299,6 +261,7 @@ const OurAgents = ({
       });
 
       setAgents(enrichedAgents);
+      setTotalCount(enrichedAgents.length);
       setCounties(countyData || []);
     } catch (error: any) {
       console.error("Error loading agents:", error);
@@ -349,18 +312,27 @@ function AgentPhotoTileGrid({
   const filteredAgents = useMemo(() => {
     let result = agents.filter(isVisibleInAgentNetwork);
 
-    // Unified text search - searches name, company, email, office, and service areas
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      result = result.filter(agent =>
-        agent.first_name?.toLowerCase().includes(query) ||
-        agent.last_name?.toLowerCase().includes(query) ||
-        agent.company?.toLowerCase().includes(query) ||
-        agent.email?.toLowerCase().includes(query) ||
-        agent.office_name?.toLowerCase().includes(query) ||
-        agent.team_name?.toLowerCase().includes(query) ||
-        agent.serviceAreas.some(area => area.toLowerCase().includes(query))
-      );
+    // Unified text search — tokenized so "first last" and "smith boston" both work.
+    const tokens = searchQuery
+      .toLowerCase()
+      .split(/\s+/)
+      .map((t) => t.trim())
+      .filter(Boolean);
+    if (tokens.length > 0) {
+      result = result.filter((agent) => {
+        const fullName = `${agent.first_name ?? ""} ${agent.last_name ?? ""}`.toLowerCase();
+        const haystack = [
+          fullName,
+          agent.company ?? "",
+          agent.email ?? "",
+          agent.office_name ?? "",
+          agent.team_name ?? "",
+          agent.serviceAreas.join(" "),
+        ]
+          .join(" ")
+          .toLowerCase();
+        return tokens.every((t) => haystack.includes(t));
+      });
     }
 
     // State filter (check service areas)
@@ -400,6 +372,23 @@ function AgentPhotoTileGrid({
 
     return result;
   }, [agents, searchQuery, selectedState, selectedCounties, counties, showBuyerIncentivesOnly, showListingAgentsOnly, sortOrder]);
+
+  // Keep header count + pager in sync with the filtered set.
+  useEffect(() => {
+    setTotalCount(filteredAgents.length);
+  }, [filteredAgents.length]);
+
+  // Reset to page 1 whenever the filtered result changes.
+  useEffect(() => {
+    setPage(1);
+  }, [searchQuery, selectedState, selectedCounties, showBuyerIncentivesOnly, showListingAgentsOnly, pageSize]);
+
+  // Client-side pagination over the filtered set.
+  const paginatedAgents = useMemo(() => {
+    if (pageSize === "all") return filteredAgents;
+    const start = (page - 1) * pageSize;
+    return filteredAgents.slice(start, start + pageSize);
+  }, [filteredAgents, page, pageSize]);
 
   const toggleCounty = (countyId: string) => {
     setSelectedCounties(prev =>
@@ -537,7 +526,7 @@ function AgentPhotoTileGrid({
             ) : (
               <>
                 <AgentPhotoTileGrid
-                  agents={filteredAgents}
+                  agents={paginatedAgents}
                   onViewProfile={handleViewProfile}
                   hideDirectContact={effectivePublicMode}
                   showPresence={effectiveAgentMode}
