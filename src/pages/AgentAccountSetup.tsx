@@ -447,14 +447,18 @@ const AgentAccountSetup = () => {
           license_state: licenseState,
           license_number: licenseNumber.trim(),
           license_last_name: lastName.trim() || null,
+          // Setup complete → waiting for admin approval. Admin will flip
+          // this to "verified" from the approval queue.
+          agent_status: "pending",
           updated_at: new Date().toISOString(),
         })
         .eq("user_id", userId);
       if (setErr) console.warn("[AgentAccountSetup] settings update warn:", setErr);
 
-      toast.success("Profile complete. Welcome to All Agent Connect.");
-      const resolved = await resolveUserRole(userId);
-      navigate(getRouteForRole(resolved), { replace: true });
+      toast.success("Profile submitted — we'll review and activate your account shortly.");
+      // Do NOT land newly-setup agents in the Success Hub. They stay on
+      // /pending-verification until an admin approves them (agent_status → verified).
+      navigate("/pending-verification", { replace: true });
     } catch (err: any) {
       console.error("[AgentAccountSetup] profile completion error:", err);
       toast.error(err?.message || "Could not save your profile. Please try again.");
