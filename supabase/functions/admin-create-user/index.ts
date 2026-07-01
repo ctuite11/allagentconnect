@@ -155,7 +155,10 @@ Deno.serve(async (req) => {
       .from("agent_settings")
       .update({
         license_last_name: lastName.trim(),
-        agent_status: "pending", // Set to pending for admin review
+        // "invited" = admin created the account, personal invite sent,
+        // agent has NOT yet completed /agent-setup. Becomes "pending"
+        // once the agent finishes profile + license in Phase 2.
+        agent_status: "invited",
       })
       .eq("user_id", userId);
 
@@ -167,7 +170,7 @@ Deno.serve(async (req) => {
         .insert({
           user_id: userId,
           license_last_name: lastName.trim(),
-          agent_status: "pending",
+          agent_status: "invited",
         });
       
       if (insertError) {

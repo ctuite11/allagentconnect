@@ -25,6 +25,7 @@ import { humanizeSnakeCase } from "@/lib/format";
 
 export const AGENT_STATUS = {
   UNVERIFIED: "unverified",
+  INVITED: "invited",
   PENDING: "pending",
   VERIFIED: "verified",
   RESTRICTED: "restricted",
@@ -35,16 +36,19 @@ export type AgentStatus = (typeof AGENT_STATUS)[keyof typeof AGENT_STATUS];
 
 export const AGENT_STATUS_LABELS: Record<AgentStatus, string> = {
   [AGENT_STATUS.UNVERIFIED]: "Unverified",
+  [AGENT_STATUS.INVITED]: "Invited",
   [AGENT_STATUS.PENDING]: "Pending",
-  [AGENT_STATUS.VERIFIED]: "Verified",
+  // User-facing: DB "verified" displays as "Active".
+  [AGENT_STATUS.VERIFIED]: "Active",
   [AGENT_STATUS.RESTRICTED]: "Restricted",
   [AGENT_STATUS.REJECTED]: "Rejected",
 };
 
 export const AGENT_STATUS_CONFIG: Record<AgentStatus, { bg: string; text: string; label: string }> = {
   [AGENT_STATUS.UNVERIFIED]: { bg: "bg-neutral-100", text: "text-neutral-600", label: "Unverified" },
+  [AGENT_STATUS.INVITED]: { bg: "bg-blue-50", text: "text-blue-700", label: "Invited" },
   [AGENT_STATUS.PENDING]: { bg: "bg-amber-50", text: "text-amber-700", label: "Pending" },
-  [AGENT_STATUS.VERIFIED]: { bg: "bg-emerald-50", text: "text-emerald-700", label: "Verified" },
+  [AGENT_STATUS.VERIFIED]: { bg: "bg-emerald-50", text: "text-emerald-700", label: "Active" },
   [AGENT_STATUS.RESTRICTED]: { bg: "bg-rose-50", text: "text-rose-700", label: "Restricted" },
   [AGENT_STATUS.REJECTED]: { bg: "bg-rose-50", text: "text-rose-700", label: "Rejected" },
 };
@@ -319,6 +323,7 @@ export const LISTING_SEARCH_STATUSES = [
  */
 export const AGENT_STATUS_OPTIONS = [
   { value: AGENT_STATUS.UNVERIFIED, label: AGENT_STATUS_LABELS[AGENT_STATUS.UNVERIFIED] },
+  { value: AGENT_STATUS.INVITED, label: AGENT_STATUS_LABELS[AGENT_STATUS.INVITED] },
   { value: AGENT_STATUS.PENDING, label: AGENT_STATUS_LABELS[AGENT_STATUS.PENDING] },
   { value: AGENT_STATUS.VERIFIED, label: AGENT_STATUS_LABELS[AGENT_STATUS.VERIFIED] },
   { value: AGENT_STATUS.REJECTED, label: AGENT_STATUS_LABELS[AGENT_STATUS.REJECTED] },

@@ -128,8 +128,8 @@ function risksForAgent(a: Agent): Risk[] {
 // flows may still branch on `!has_auth_account` to decide whether the Verify
 // action needs to create the account first.
 type AdminDerivedStatus =
+  | "invited"
   | "pending"
-  | "verified"
   | "active"
   | "rejected"
   | "restricted";
@@ -137,10 +137,12 @@ type AdminDerivedStatus =
 function deriveAdminStatus(a: Agent): AdminDerivedStatus {
   if (a.agent_status === "rejected") return "rejected";
   if (a.agent_status === "restricted") return "restricted";
-  if (a.agent_status === "verified") {
-    return a.account_activated_at ? "active" : "verified";
-  }
-  // Early-access leads (no auth account) and approval-queue agents both land here.
+  // DB "verified" = admin approved → user-facing "Active".
+  if (a.agent_status === "verified") return "active";
+  // Admin-created but agent hasn't finished /agent-setup yet.
+  if (a.agent_status === "invited") return "invited";
+  // Everything else (pending, legacy unverified, early-access leads,
+  // approval-queue agents) surfaces as Pending review.
   return "pending";
 }
 
@@ -533,8 +535,8 @@ export default function AdminApprovals() {
     // Pending tab with 8 buyer/test accounts. Future backfills MUST filter out users
     // who hold the `buyer` role in `user_roles`.
     const buckets: Record<AdminDerivedStatus, number> = {
+      invited: 0,
       pending: 0,
-      verified: 0,
       active: 0,
       rejected: 0,
       restricted: 0,
@@ -542,8 +544,8 @@ export default function AdminApprovals() {
     agents.forEach((a) => {
       buckets[deriveAdminStatus(a)]++;
     });
+    counts.invited = buckets.invited;
     counts.pending = buckets.pending;
-    counts.verified = buckets.verified;
     counts.active = buckets.active;
     counts.rejected = buckets.rejected;
     counts.restricted = buckets.restricted;
@@ -554,7 +556,7 @@ export default function AdminApprovals() {
   const variantForStatus = (status: string): PillVariant => {
     switch (status) {
       case "pending": return "warning";
-      case "verified": return "primary";
+      case "invited": return "primary";
       case "active": return "success";
       case "rejected":
       case "restricted": return "danger";
@@ -1111,10 +1113,10 @@ export default function AdminApprovals() {
             onClick={() => setStatusFilter("pending")}
           />
           <Pill
-            label={`Verified (${statusCounts.verified || 0})`}
+            label={`Invited (${statusCounts.invited || 0})`}
             variant="neutral"
-            active={statusFilter === "verified"}
-            onClick={() => setStatusFilter("verified")}
+            active={statusFilter === "invited"}
+            onClick={() => setStatusFilter("invited")}
           />
           <Pill
             label={`Active (${statusCounts.active || 0})`}
@@ -1127,6 +1129,12 @@ export default function AdminApprovals() {
             variant="neutral"
             active={statusFilter === "rejected"}
             onClick={() => setStatusFilter("rejected")}
+          />
+          <Pill
+            label={`Restricted (${statusCounts.restricted || 0})`}
+            variant="neutral"
+            active={statusFilter === "restricted"}
+            onClick={() => setStatusFilter("restricted")}
           />
           <Pill
             label={`Online (${onlineCount})`}
@@ -1304,13 +1312,13 @@ export default function AdminApprovals() {
                             </span>
                           );
                         }
-                        if (derived === "verified") {
+                        if (derived === "invited") {
                           return (
                             <span
                               className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700 ring-1 ring-blue-200"
-                              title="Approved and invited — setup not completed yet"
+                              title="Invite sent — agent has not completed setup yet"
                             >
-                              Verified · setup pending
+                              Invited
                             </span>
                           );
                         }
