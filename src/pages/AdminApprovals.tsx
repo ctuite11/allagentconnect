@@ -1113,10 +1113,10 @@ export default function AdminApprovals() {
             onClick={() => setStatusFilter("pending")}
           />
           <Pill
-            label={`Verified (${statusCounts.verified || 0})`}
+            label={`Invited (${statusCounts.invited || 0})`}
             variant="neutral"
-            active={statusFilter === "verified"}
-            onClick={() => setStatusFilter("verified")}
+            active={statusFilter === "invited"}
+            onClick={() => setStatusFilter("invited")}
           />
           <Pill
             label={`Active (${statusCounts.active || 0})`}
@@ -1129,6 +1129,12 @@ export default function AdminApprovals() {
             variant="neutral"
             active={statusFilter === "rejected"}
             onClick={() => setStatusFilter("rejected")}
+          />
+          <Pill
+            label={`Restricted (${statusCounts.restricted || 0})`}
+            variant="neutral"
+            active={statusFilter === "restricted"}
+            onClick={() => setStatusFilter("restricted")}
           />
           <Pill
             label={`Online (${onlineCount})`}
