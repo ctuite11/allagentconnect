@@ -100,9 +100,16 @@ export function useCommunicationsChannelsOnboarding(
     [dismissForSession, dismissPermanently],
   );
 
-  const handleChooseChannels = useCallback(() => {
-    dismissForSession();
-  }, [dismissForSession]);
+  const handleChooseChannels = useCallback(
+    (dontShowAgain?: boolean) => {
+      if (dontShowAgain) {
+        dismissPermanently();
+      } else {
+        dismissForSession();
+      }
+    },
+    [dismissForSession, dismissPermanently],
+  );
 
   return {
     visible,
