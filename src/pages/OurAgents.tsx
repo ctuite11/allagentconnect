@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import AgentPhotoTile from "@/components/agent-directory/AgentPhotoTile";
 import AgentDirectoryFilters from "@/components/agent-directory/AgentDirectoryFilters";
+import type { AgentDirectoryPageSize } from "@/components/agent-directory/AgentDirectoryFilters";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -50,7 +51,7 @@ interface EnrichedAgent {
   specialties: string[];
 }
 
-const PAGE_SIZE = 24;
+const DEFAULT_PAGE_SIZE: AgentDirectoryPageSize = 24;
 
 interface County {
   id: string;
@@ -103,6 +104,8 @@ const OurAgents = ({
   // Pagination
   const [page, setPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
+  const [pageSize, setPageSize] = useState<AgentDirectoryPageSize>(DEFAULT_PAGE_SIZE);
+  const effectivePageSize = pageSize === "all" ? Math.max(totalCount, 1) : pageSize;
 
   // Page titles based on mode
   const pageTitle = effectiveAgentMode ? "AAC Referral Network" : "Find an Agent";
@@ -112,14 +115,16 @@ const OurAgents = ({
 
   useEffect(() => {
     fetchData();
-  }, [page]);
+  }, [page, pageSize]);
 
   const fetchData = async () => {
     try {
       setLoading(true);
       
-      const from = (page - 1) * PAGE_SIZE;
-      const to = from + PAGE_SIZE - 1;
+      const isAll = pageSize === "all";
+      const size = isAll ? Number.MAX_SAFE_INTEGER : pageSize;
+      const from = isAll ? 0 : (page - 1) * size;
+      const to = isAll ? Number.MAX_SAFE_INTEGER : from + size - 1;
       
       // Step 1: Get verified agent IDs via SECURITY DEFINER RPC (bypasses agent_settings RLS safely)
       const { data: verifiedRows, error: verifiedError } = await supabase
@@ -158,7 +163,10 @@ const OurAgents = ({
 
       setTotalCount(visibleAgentRows.length);
 
-      const pageAgentIds = visibleAgentRows.slice(from, to + 1).map((agent) => agent.id);
+      const pageAgentIds = (isAll
+        ? visibleAgentRows
+        : visibleAgentRows.slice(from, to + 1)
+      ).map((agent) => agent.id);
 
       const countiesPromise = supabase
         .from("counties")
