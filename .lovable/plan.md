@@ -1,26 +1,26 @@
-## Change
+## Problem
+On `/our-members` (and `/our-agents`), the count in the filter bar ("N agents found") only reflects the current page's paginated slice, not the total across all pages. There is also no way to change how many agents show per page.
 
-In `src/lib/buildListingsQuery.ts` (line ~67), remove the implicit fallback that adds `["active", "coming_soon"]` when the caller passes an empty `statuses` array.
+## Changes
 
-**Current:**
-```ts
-statuses: rawCriteria.statuses?.length ? rawCriteria.statuses : ["active", "coming_soon"]
-```
+### 1. `src/pages/OurAgents.tsx`
+- Pass the true total (`totalCount` from the network-visibility query, not `filteredAgents.length`) into `AgentDirectoryFilters` so the header reads e.g. "312 agents found" regardless of current page.
+- Add a `pageSize` state (default 24) with options: **24, 48, 96, All**.
+- Replace the hard-coded `PAGE_SIZE` constant with the stateful `pageSize` in `fetchData` (`from/to` calculation) and in the pagination footer math.
+- When `pageSize === "All"`, fetch the full visible list in one page (skip the `.slice` window) and hide the Prev/Next controls.
+- Reset `page` to 1 whenever `pageSize` changes.
+- Keep client-side filters (search, state, county, buyer incentives, listing agents) working on the current page's data — no change to filter logic.
 
-**New:** honor the caller's `statuses` array as-is. When it's empty, apply a sentinel filter (`query.in("status", ["__none__"])`) so the query returns 0 rows.
+### 2. `src/components/agent-directory/AgentDirectoryFilters.tsx`
+- Add optional `pageSize` and `onPageSizeChange` props.
+- Render a small "Show per page" `Select` (24 / 48 / 96 / All) next to the existing sort dropdown, matching the existing minimalist style.
+- Loading skeleton row gets a second skeleton chip so layout doesn't jump.
 
-## Why
+### 3. Pagination footer (in `OurAgents.tsx`)
+- Show controls only when `pageSize !== "All"` and `totalCount > pageSize`.
+- Label updates to `Page X of Y · N total`.
 
-The screenshot shows the default pill set (8 statuses checked → 5 results, correct). If the agent unchecks every status pill, they currently still see 5 results because the library silently re-adds `active` + `coming_soon`. Expected: **0 statuses selected → 0 results**.
-
-## Scope guardrails
-
-- Only touch `src/lib/buildListingsQuery.ts`.
-- Do not change the search UI, the default pill set shown in the screenshot, or any other caller.
-- No DB changes. DCMLS, hot sheets, and admin queries are untouched.
-
-## Verification
-
-- Uncheck all Status pills → `0 results`.
-- Default pill set (8 checked) → still `5 results` (2 off_market + 3 coming_soon).
-- Only "Off Market" checked → `2 results`.
+## Out of scope
+- No changes to visibility rules, RPC, RLS, or agent enrichment logic.
+- No redesign of tiles, filters layout, or brand tokens.
+- `AgentSearch.tsx` / `IDXSearch.tsx` are untouched — the complaint is about the Agent Network.
