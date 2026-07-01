@@ -63,8 +63,10 @@ export function buildListingsQuery(
   let query = supabase.from("listings").select("*");
 
   // Normalize criteria
+  // Note: honor the caller's statuses array as-is. An empty array is a valid
+  // "no status selected" signal and must yield zero results (see filter below).
   const criteria: Required<SearchCriteria> = {
-    statuses: rawCriteria.statuses?.length ? rawCriteria.statuses : ["active", "coming_soon"],
+    statuses: rawCriteria.statuses ?? [],
     propertyTypes: rawCriteria.propertyTypes || [],
     cities: rawCriteria.cities || [],
     neighborhoods: rawCriteria.neighborhoods || [],
@@ -93,10 +95,12 @@ export function buildListingsQuery(
     query = query.eq("listing_type", criteria.listingType);
   }
 
-  // Status filter (defaults to active and coming_soon)
-  // Note: Private listings are included in the status filter when explicitly requested
+  // Status filter — if no statuses are selected, return zero results
+  // rather than silently defaulting to active/coming_soon.
   if (criteria.statuses.length > 0) {
     query = query.in("status", criteria.statuses);
+  } else {
+    query = query.in("status", ["__none__"]);
   }
 
   // Property types - map UI codes to database values
