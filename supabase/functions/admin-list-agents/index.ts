@@ -44,6 +44,30 @@ interface MergedAgent {
   has_auth_account?: boolean
   last_sign_in_at?: string | null
   account_activated_at?: string | null
+  invite_email?: EmailStatusInfo | null
+  license_verified_email?: EmailStatusInfo | null
+}
+
+interface EmailStatusInfo {
+  status: 'queued' | 'sent' | 'delivered' | 'bounced' | 'complained' | 'failed'
+  created_at: string
+  event_at: string | null
+  attempts: number | null
+  last_error: string | null
+}
+
+function deriveEmailStatus(row: {
+  status: string | null
+  delivery_status: string | null
+}): EmailStatusInfo['status'] {
+  const ds = (row.delivery_status || '').toLowerCase()
+  if (ds === 'delivered') return 'delivered'
+  if (ds === 'bounced' || ds === 'bounce') return 'bounced'
+  if (ds === 'complained' || ds === 'complaint') return 'complained'
+  const s = (row.status || '').toLowerCase()
+  if (s === 'sent') return 'sent'
+  if (s === 'failed' || s === 'dlq' || s === 'error') return 'failed'
+  return 'queued'
 }
 
 Deno.serve(async (req) => {
