@@ -423,6 +423,74 @@ export default function AdminApprovals() {
     setProcessingIds((prev) => new Set(prev).add(agent.id));
 
     try {
+      // Phase 3: Request-Access leads (pending_verifications rows with no
+      // auth user yet). Route through convert-pending-verification-to-agent
+      // which is idempotent + collision-safe, then send the existing
+      // License Verified email. Rejection just flips the pending row.
+      if (agent.source === "pending_verification") {
+        if (newStatus === "verified") {
+          const { data: convData, error: convErr } = await supabase.functions.invoke(
+            "convert-pending-verification-to-agent",
+            { body: { pendingVerificationId: agent.pending_verification_id ?? agent.id } },
+          );
+          if (convErr || !convData?.ok || !convData?.userId) {
+            console.error("[AdminApprovals] convert failed:", convErr || convData);
+            throw new Error(
+              (convErr as any)?.message ||
+                (convData as any)?.error ||
+                "Failed to convert pending verification",
+            );
+          }
+          const newUserId = convData.userId as string;
+          const { error: emailError } = await supabase.functions.invoke(
+            "send-license-verified-email",
+            {
+              body: {
+                to: agent.email,
+                agentName: agent.first_name || undefined,
+                idempotencyKey: `license-verified:verify:${newUserId}`,
+              },
+            },
+          );
+          if (emailError) {
+            console.error("send-license-verified-email failed:", emailError);
+            toast.error(
+              `Verified ${agent.email}, but activation email failed. Use Email setup link to retry.`,
+            );
+          } else {
+            toast.success(`Verified — activation email sent to ${agent.email}`);
+          }
+          // Refetch so the synthetic row is replaced by the real converted
+          // agent row (with auth user id, presence, email badges, etc.).
+          setSelectedIds((prev) => {
+            const next = new Set(prev);
+            next.delete(agent.id);
+            return next;
+          });
+          await fetchAgents();
+          return;
+        }
+        if (newStatus === "rejected") {
+          const pvId = agent.pending_verification_id ?? agent.id;
+          const { error: rejErr } = await supabase
+            .from("pending_verifications")
+            .update({ status: "rejected" })
+            .eq("id", pvId);
+          if (rejErr) throw rejErr;
+          toast.success("Request rejected");
+          setAgents((prev) => prev.filter((a) => a.id !== agent.id));
+          setSelectedIds((prev) => {
+            const next = new Set(prev);
+            next.delete(agent.id);
+            return next;
+          });
+          return;
+        }
+        // Any other status change on a Phase 2 lead is a no-op — they have
+        // no auth account yet, so restricted/pending etc. don't apply.
+        return;
+      }
+
       // Unified verification path — every Unverified row ends here regardless
       // of origin (Early Access lead, backfilled orphan, or existing auth account).
       // 1) Ensure an auth account / agent_settings row exists.
