@@ -259,6 +259,34 @@ export default function AdminApprovals() {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showBulkDeleteDialog, setShowBulkDeleteDialog] = useState(false);
 
+  // Phase 4 guardrail — shared "previously deleted" gate. When set, the
+  // dialog is open and `resolve` is awaited by whichever action opened it
+  // (single verify, bulk verify iteration, email setup link, etc.).
+  const [deletedGate, setDeletedGate] = useState<{
+    match: PreviouslyDeletedAgentMatch;
+    actionLabel: string;
+    resolve: (proceed: boolean) => void;
+  } | null>(null);
+  const [deletedGateBusy, setDeletedGateBusy] = useState(false);
+
+  /**
+   * Returns true if the caller may proceed with the action:
+   *   - No matching deleted_users row → true immediately.
+   *   - Matching row → opens the dialog; resolves to true if the admin clicks
+   *     "Continue anyway" (and writes an audit_logs override row); false on
+   *     Cancel or dismiss.
+   */
+  const guardDeletedAgent = async (
+    email: string,
+    actionLabel: string,
+  ): Promise<boolean> => {
+    const match = await checkDeletedAgent(email);
+    if (!match) return true;
+    return await new Promise<boolean>((resolve) => {
+      setDeletedGate({ match, actionLabel, resolve });
+    });
+  };
+
   // Risk-flagged verification confirmation dialog
   const [verifyConfirm, setVerifyConfirm] = useState<{
     agent: Agent;
