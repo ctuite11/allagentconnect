@@ -1598,7 +1598,7 @@ export default function AdminApprovals() {
                     >
                       Email
                     </button>
-                    {!agent.is_early_access && (
+                    {!agent.is_early_access && agent.source !== "pending_verification" && (
                       <>
                         <span className="text-zinc-300">•</span>
                         <button 
