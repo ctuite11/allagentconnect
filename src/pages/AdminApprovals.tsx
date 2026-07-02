@@ -1271,6 +1271,7 @@ export default function AdminApprovals() {
                 )}
               </div>
             </div>
+            <EmailDeliveryLegend />
             {filteredAgents.map((agent) => {
               const isProcessing = processingIds.has(agent.id);
 
