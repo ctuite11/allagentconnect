@@ -89,6 +89,12 @@ interface Agent {
   account_activated_at?: string | null;
   invite_email?: EmailStatusInfo | null;
   license_verified_email?: EmailStatusInfo | null;
+  // Phase 3: identifies where this row originated so Verify/Reject can
+  // branch. Absent = legacy profile row (default behaviour).
+  source?: "profile" | "early_access" | "pending_verification";
+  // Present only when source === 'pending_verification'. The
+  // pending_verifications.id used by convert-pending-verification-to-agent.
+  pending_verification_id?: string;
 }
 
 const stateLicenseLookupUrls: Record<string, string> = {
