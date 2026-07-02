@@ -416,15 +416,13 @@ const AgentAccountSetup = () => {
             <div className="space-y-4">
               <span className={AGENT_BADGE_CLASS}>
                 <ShieldCheck className="w-3.5 h-3.5" />
-                {phase === 1 ? "License verified" : "Almost there"}
+                License verified
               </span>
               <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight text-zinc-900 leading-[1.15]">
-                {phase === 1 ? "Welcome to All Agent Connect" : "One last step — complete your profile"}
+                Welcome to All Agent Connect
               </h1>
               <p className="text-[15px] sm:text-base text-zinc-500 leading-relaxed max-w-md">
-                {phase === 1
-                  ? "Your license has been verified. Create your password to activate your agent account and access your Success Hub."
-                  : "This is what other agents and buyers see. You can update it any time in Settings."}
+                Your license has been verified. Create your password to activate your agent account and access your Success Hub.
               </p>
             </div>
 
@@ -442,7 +440,6 @@ const AgentAccountSetup = () => {
 
           <div className="lg:pl-4 lg:-mt-7">
             <div className="max-w-md mx-auto lg:mx-0 lg:ml-auto rounded-3xl border border-zinc-200 bg-white shadow-sm p-7 sm:p-8">
-              {phase === 1 ? (
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
@@ -552,106 +549,6 @@ const AgentAccountSetup = () => {
                   <a href="/privacy" className="underline hover:text-zinc-600">Privacy Policy</a>.
                 </p>
               </form>
-              ) : (
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  void handleCompleteProfile();
-                }}
-                className="space-y-5"
-              >
-                <div className="space-y-1.5">
-                  <Label htmlFor="phone" className="text-[13px] text-zinc-600">Phone *</Label>
-                  <Input
-                    id="phone"
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="(555) 123-4567"
-                    className="h-11 rounded-xl"
-                    required
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label htmlFor="company" className="text-[13px] text-zinc-600">Brokerage *</Label>
-                  <Input
-                    id="company"
-                    value={company}
-                    onChange={(e) => setCompany(e.target.value)}
-                    placeholder="e.g. Compass"
-                    className="h-11 rounded-xl"
-                    required
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <Label htmlFor="licenseState" className="text-[13px] text-zinc-600">License State *</Label>
-                    <Select value={licenseState} onValueChange={setLicenseState}>
-                      <SelectTrigger id="licenseState" className="h-11 rounded-xl">
-                        <SelectValue placeholder="State" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {US_STATES.map((s) => (
-                          <SelectItem key={s} value={s}>{s}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="licenseNumber" className="text-[13px] text-zinc-600">License Number *</Label>
-                    <Input
-                      id="licenseNumber"
-                      value={licenseNumber}
-                      onChange={(e) => setLicenseNumber(e.target.value)}
-                      placeholder="12345678"
-                      className="h-11 rounded-xl"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label htmlFor="headshot" className="text-[13px] text-zinc-600">
-                    Headshot <span className="text-zinc-400">(optional)</span>
-                  </Label>
-                  <div className="flex items-center gap-3">
-                    {headshotPreview ? (
-                      <img
-                        src={headshotPreview}
-                        alt="Headshot preview"
-                        className="w-12 h-12 rounded-full object-cover border border-zinc-200"
-                      />
-                    ) : (
-                      <div className="w-12 h-12 rounded-full bg-zinc-100 border border-zinc-200" />
-                    )}
-                    <Input
-                      id="headshot"
-                      type="file"
-                      accept="image/*"
-                      onChange={handleHeadshotChange}
-                      className="h-11 rounded-xl text-[13px] file:mr-3 file:rounded-md file:border-0 file:bg-zinc-100 file:px-3 file:py-1.5 file:text-[12px]"
-                    />
-                  </div>
-                </div>
-
-                <Button
-                  type="submit"
-                  disabled={submitting || uploadingHeadshot}
-                  className={cn("w-full h-11 rounded-xl", AGENT_PRIMARY_BTN_CLASS)}
-                >
-                  {submitting ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Finishing up…
-                    </>
-                  ) : (
-                    "Enter Success Hub"
-                  )}
-                </Button>
-              </form>
-              )}
             </div>
           </div>
         </div>
