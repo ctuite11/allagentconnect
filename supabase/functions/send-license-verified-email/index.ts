@@ -179,6 +179,24 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     const successCount = results.filter((r) => r.success).length;
+    const blockedResults = results.filter((r) => r.error === "previously_deleted");
+
+    // Phase 4 — when every recipient is blocked by the deleted-agent guard,
+    // surface a 409 so the UI can open PreviouslyDeletedAgentDialog. Mixed
+    // batches (some blocked, some sent) still return 200 with per-recipient
+    // results so the sender can inspect.
+    if (successCount === 0 && blockedResults.length > 0) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          code: "previously_deleted",
+          // deno-lint-ignore no-explicit-any
+          match: (blockedResults[0] as any).match ?? null,
+          results,
+        }),
+        { status: 409, headers: { "Content-Type": "application/json", ...corsHeaders } },
+      );
+    }
 
     if (successCount > 0) {
       void fetch(`${supabaseUrl}/functions/v1/kick-email-queue`, {
