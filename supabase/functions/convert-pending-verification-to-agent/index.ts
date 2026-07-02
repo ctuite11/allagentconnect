@@ -48,7 +48,7 @@ async function findAuthUserByEmail(
     console.error("[convert] listUsers error:", error.message);
     return null;
   }
-  const match = data?.users?.find((u) => (u.email || "").toLowerCase() === target);
+  const match = data?.users?.find((u: { email?: string | null }) => (u.email || "").toLowerCase() === target);
   return match ? { id: match.id, email: match.email || target } : null;
 }
 
