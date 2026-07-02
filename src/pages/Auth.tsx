@@ -26,6 +26,7 @@ import {
   resolvePostAuthRedirectWithMeta,
   setPostAuthRedirect,
 } from "@/lib/sharedListingGuest";
+import { isVerifiedAgentEmail, VERIFIED_AGENT_SIGNIN_HINT } from "@/lib/agentActivationHint";
 
 /** Premium white card — email-template aligned (soft border, subtle shadow). */
 const authCardSurface =
@@ -285,6 +286,21 @@ const Auth = () => {
         if (!mounted) return;
         
         if (session?.user) {
+          // License Verified activation: never route to Welcome Back or Success Hub
+          // until the agent has finished setting their password on /agent-setup.
+          if (typeof window !== "undefined") {
+            const needsAgentSetup =
+              sessionStorage.getItem("aac_password_setup_flow") === "1" ||
+              sessionStorage.getItem("aac_agent_setup_handoff") === "1";
+            if (needsAgentSetup) {
+              if (mounted) {
+                didNavigate.current = true;
+                navigate("/agent-setup", { replace: true });
+              }
+              return;
+            }
+          }
+
           // STALE AUTH GUARD: getSession() reads localStorage only (no server hit).
           // Validate the token is still live on the server before running role checks.
           // This handles the "deleted user + cached JWT = infinite broken login" case.
@@ -450,7 +466,12 @@ const Auth = () => {
 
       if (error) {
         if (error.message.includes("Invalid login credentials")) {
-          toast.error("Invalid email or password. Please try again.");
+          const verifiedAgent = await isVerifiedAgentEmail(validatedEmail);
+          toast.error(
+            verifiedAgent
+              ? VERIFIED_AGENT_SIGNIN_HINT
+              : "Invalid email or password. Please try again.",
+          );
         } else {
           toast.error(error.message);
         }
@@ -733,8 +754,12 @@ const Auth = () => {
   if (existingSession && mode !== "register") {
     // Approved-agent setup flow: never show the Welcome Back interstitial.
     // The AuthCallback set this marker after consuming the recovery link.
-    if (typeof window !== "undefined" && sessionStorage.getItem("aac_password_setup_flow") === "1") {
-      navigate("/password-reset", { replace: true });
+    if (
+      typeof window !== "undefined" &&
+      (sessionStorage.getItem("aac_password_setup_flow") === "1" ||
+        sessionStorage.getItem("aac_agent_setup_handoff") === "1")
+    ) {
+      navigate("/agent-setup", { replace: true });
       return <AacMonogramLoader variant="fullscreen" message="Setting up your account…" />;
     }
     const isPending = agentStatus === 'pending_verification' || agentStatus === 'pending_approval';

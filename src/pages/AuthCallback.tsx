@@ -1,5 +1,5 @@
-import { useEffect, useLayoutEffect, useRef, useState, useMemo } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useEffect, useLayoutEffect, useRef, useState, useMemo, type MutableRefObject } from "react";
+import { useNavigate, useSearchParams, type NavigateFunction } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { AlertCircle } from "lucide-react";
 import { AacMonogramLoader } from "@/components/AacMonogramLoader";
@@ -8,6 +8,53 @@ import { authDebug, getAuthRouteDecisionDiagnostics } from "@/lib/authDebug";
 import { resolveUserRole, getRouteForRole } from "@/lib/resolveUserRole";
 import { clearGuestListing, resolvePostAuthRedirectWithMeta } from "@/lib/sharedListingGuest";
 import { clearRecoveryState } from "@/lib/authRecovery";
+import { AGENT_ACTIVATION_SUPPORT_EMAIL } from "@/lib/agentActivationHint";
+
+type AuthCallbackErrorKind = "setup" | "reset" | "generic";
+
+const SETUP_LINK_ERROR =
+  "This activation link may have already been used or has expired. Open the link from your License Verified email, or contact support for a new one.";
+
+const RESET_LINK_ERROR =
+  "Reset link expired or invalid. Please request a new one.";
+
+const RESET_LINK_USED_ERROR =
+  "This link was already used. Please request a new password reset link.";
+
+function isAgentSetupContext(setupFromUrl = false): boolean {
+  if (typeof window === "undefined") return setupFromUrl;
+  return (
+    setupFromUrl ||
+    sessionStorage.getItem("aac_password_setup_flow") === "1" ||
+    sessionStorage.getItem("aac_agent_setup_handoff") === "1"
+  );
+}
+
+function isRecoveryFlowContext(isRecoveryFromUrl: boolean): boolean {
+  if (typeof window === "undefined") return isRecoveryFromUrl;
+  return isRecoveryFromUrl || sessionStorage.getItem("aac_recovery_flow") === "1";
+}
+
+async function tryContinueRecoveryFlow(opts: {
+  isRecoveryFromUrl: boolean;
+  setupFromUrl: boolean;
+  navigate: NavigateFunction;
+  didNavigate: MutableRefObject<boolean>;
+}): Promise<boolean> {
+  const { isRecoveryFromUrl, setupFromUrl, navigate, didNavigate } = opts;
+  if (!isRecoveryFlowContext(isRecoveryFromUrl)) return false;
+
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.user) return false;
+
+  const agentSetup = isAgentSetupContext(setupFromUrl);
+  if (agentSetup) rememberAgentSetupHandoff(session);
+
+  didNavigate.current = true;
+  window.history.replaceState(null, "", window.location.pathname);
+  navigate(agentSetup ? "/agent-setup" : "/password-reset", { replace: true });
+  return true;
+}
 
 const rememberAgentSetupHandoff = (session: { user?: { id?: string; email?: string | null } | null } | null | undefined) => {
   if (typeof window === "undefined") return;
@@ -33,6 +80,12 @@ const AuthCallback = () => {
   const [searchParams] = useSearchParams();
   const didNavigate = useRef(false);
   const [error, setError] = useState<string | null>(null);
+  const [errorKind, setErrorKind] = useState<AuthCallbackErrorKind>("generic");
+
+  const showAuthError = (message: string, kind: AuthCallbackErrorKind = "generic") => {
+    setErrorKind(kind);
+    setError(message);
+  };
 
   // ═══════════════════════════════════════════════════════════════════════════
   // Parse recovery context from URL (pure computation — no side effects)
@@ -103,38 +156,56 @@ const AuthCallback = () => {
       });
     }
 
-    // Check for error in URL hash
-    const errorParam = hashParams.get("error");
-    const errorDescription = hashParams.get("error_description");
-
-    if (errorParam) {
-      console.error("[AuthCallback] Hash error:", errorParam, errorDescription);
-      setError(errorDescription || errorParam);
-      return;
-    }
-
-    // If we landed here without a usable token/code, fail fast with a clear message.
-    // This commonly happens when the one-time link was already consumed.
-    if (isRecoveryContext && !accessToken && !refreshToken && !code) {
-      setError("Reset link expired or invalid. Please request a new one.");
-      return;
-    }
-
-    // CRITICAL: Check if this link was already processed (email clients can double-open)
-    // Only enforce this when we actually have a stable token key.
-    if (hasStableTokenKey && sessionStorage.getItem(processedKey)) {
-      console.log("[AuthCallback] Link already processed, showing error");
-      setError("This link was already used. Please request a new password reset link.");
-      return;
-    }
-
     const hasAuthHash = window.location.hash.includes("access_token");
 
     let timeout: ReturnType<typeof setTimeout> | undefined;
     let subscription: { unsubscribe: () => void } | null = null;
     let cancelled = false;
 
+    const recoveryRescueOpts = () => ({
+      isRecoveryFromUrl: isRecoveryContext,
+      setupFromUrl: recoveryInfo.isSetup,
+      navigate,
+      didNavigate,
+    });
+
     const init = async () => {
+      // Check for error in URL hash — still try to continue if setup session exists.
+      const errorParam = hashParams.get("error");
+      const errorDescription = hashParams.get("error_description");
+
+      if (errorParam) {
+        console.error("[AuthCallback] Hash error:", errorParam, errorDescription);
+        if (await tryContinueRecoveryFlow(recoveryRescueOpts())) return;
+        const agentSetup = isAgentSetupContext(recoveryInfo.isSetup);
+        showAuthError(
+          errorDescription || errorParam,
+          agentSetup ? "setup" : isRecoveryContext ? "reset" : "generic",
+        );
+        return;
+      }
+
+      // One-time link already consumed: continue when a valid recovery/setup session exists.
+      if (isRecoveryContext && !accessToken && !refreshToken && !code) {
+        if (await tryContinueRecoveryFlow(recoveryRescueOpts())) return;
+        showAuthError(
+          isAgentSetupContext(recoveryInfo.isSetup) ? SETUP_LINK_ERROR : RESET_LINK_ERROR,
+          isAgentSetupContext(recoveryInfo.isSetup) ? "setup" : "reset",
+        );
+        return;
+      }
+
+      if (hasStableTokenKey && sessionStorage.getItem(processedKey)) {
+        console.log("[AuthCallback] Link already processed — checking for existing session");
+        if (await tryContinueRecoveryFlow(recoveryRescueOpts())) return;
+        const agentSetup = isAgentSetupContext(recoveryInfo.isSetup);
+        showAuthError(
+          agentSetup ? SETUP_LINK_ERROR : RESET_LINK_USED_ERROR,
+          agentSetup ? "setup" : "reset",
+        );
+        return;
+      }
+
       // Handle hash-based recovery tokens (implicit flow)
       if (accessToken && refreshToken) {
         console.info("[AuthCallback] diag", { branch: "hash_setSession_start", setup: recoveryInfo.isSetup });
@@ -152,7 +223,12 @@ const AuthCallback = () => {
             console.warn("[AuthCallback] diag", { branch: "hash_setSession_error" });
             sessionStorage.removeItem(processedKey);
             if (!cancelled) {
-              setError("Reset link expired or invalid. Please request a new one.");
+              if (await tryContinueRecoveryFlow(recoveryRescueOpts())) return;
+              const agentSetup = isAgentSetupContext(recoveryInfo.isSetup);
+              showAuthError(
+                agentSetup ? SETUP_LINK_ERROR : RESET_LINK_ERROR,
+                agentSetup ? "setup" : "reset",
+              );
             }
             return;
           }
@@ -169,9 +245,7 @@ const AuthCallback = () => {
             didNavigate.current = true;
             window.history.replaceState(null, "", window.location.pathname);
             if (isSetupContext) {
-              const isAgentSetup =
-                recoveryInfo.isSetup ||
-                sessionStorage.getItem("aac_password_setup_flow") === "1";
+              const isAgentSetup = isAgentSetupContext(recoveryInfo.isSetup);
               if (isAgentSetup) rememberAgentSetupHandoff(setSessionData?.session);
               navigate(isAgentSetup ? "/agent-setup" : "/password-reset", { replace: true });
             } else {
@@ -189,14 +263,13 @@ const AuthCallback = () => {
           console.warn("[AuthCallback] diag", { branch: "hash_setSession_timeout_or_exception" });
           sessionStorage.removeItem(processedKey);
           if (!cancelled && !didNavigate.current) {
-            const isSetupCtx =
-              recoveryInfo.isSetup ||
-              sessionStorage.getItem("aac_password_setup_flow") === "1";
+            const isSetupCtx = isAgentSetupContext(recoveryInfo.isSetup);
             if (isSetupCtx) {
+              if (await tryContinueRecoveryFlow(recoveryRescueOpts())) return;
               didNavigate.current = true;
               navigate("/agent-setup", { replace: true });
             } else {
-              setError("Reset link expired or invalid. Please request a new one.");
+              showAuthError(RESET_LINK_ERROR, "reset");
             }
           }
           return;
@@ -223,9 +296,7 @@ const AuthCallback = () => {
             didNavigate.current = true;
             window.history.replaceState(null, "", window.location.pathname);
             if (isSetupContext) {
-              const isAgentSetup =
-                recoveryInfo.isSetup ||
-                sessionStorage.getItem("aac_password_setup_flow") === "1";
+              const isAgentSetup = isAgentSetupContext(recoveryInfo.isSetup);
               if (isAgentSetup) {
                 try {
                   const { data: { session: setupSession } } = await withCallbackTimeout(
@@ -254,14 +325,13 @@ const AuthCallback = () => {
           console.warn("[AuthCallback] diag", { branch: "pkce_exchange_timeout_or_error" });
           sessionStorage.removeItem(processedKey);
           if (!cancelled && !didNavigate.current) {
-            const isSetupCtx =
-              recoveryInfo.isSetup ||
-              sessionStorage.getItem("aac_password_setup_flow") === "1";
+            const isSetupCtx = isAgentSetupContext(recoveryInfo.isSetup);
             if (isSetupCtx) {
+              if (await tryContinueRecoveryFlow(recoveryRescueOpts())) return;
               didNavigate.current = true;
               navigate("/agent-setup", { replace: true });
             } else {
-              setError("Reset link expired or invalid. Please request a new one.");
+              showAuthError(RESET_LINK_ERROR, "reset");
             }
           }
           return;
@@ -287,7 +357,7 @@ const AuthCallback = () => {
           if (!didNavigate.current) {
             didNavigate.current = true;
             window.history.replaceState(null, "", window.location.pathname);
-            const isAgentSetup = sessionStorage.getItem("aac_password_setup_flow") === "1";
+            const isAgentSetup = isAgentSetupContext();
             if (isAgentSetup) rememberAgentSetupHandoff(session);
             navigate(isAgentSetup ? "/agent-setup" : "/password-reset", { replace: true });
           }
@@ -299,8 +369,7 @@ const AuthCallback = () => {
           // URL carries recovery context, or an active setup flag is
           // present. A stale `aac_recovery_flow` from an earlier flow
           // must not hijack a normal sign-in.
-          const hasActiveSetup =
-            sessionStorage.getItem("aac_password_setup_flow") === "1";
+          const hasActiveSetup = isAgentSetupContext();
           if (isRecoveryContext || hasActiveSetup) {
             if (!didNavigate.current) {
               didNavigate.current = true;
@@ -330,8 +399,7 @@ const AuthCallback = () => {
         // navigation carries recovery context, or a setup flag is active.
         // A stale `aac_recovery_flow` from an earlier flow must not
         // override a normal authenticated session.
-        const hasActiveSetup =
-          sessionStorage.getItem("aac_password_setup_flow") === "1";
+        const hasActiveSetup = isAgentSetupContext();
         if ((isRecoveryContext || hasActiveSetup) && !didNavigate.current) {
           if (import.meta.env.DEV) {
             console.log("[AuthCallback] Active recovery/setup context — routing to setup form");
@@ -420,8 +488,7 @@ const AuthCallback = () => {
       // marker alone must never re-route a normal sign-in.
       const hashParams = new URLSearchParams(window.location.hash.substring(1));
       const urlParams = new URLSearchParams(window.location.search);
-      const hasActiveSetup =
-        sessionStorage.getItem("aac_password_setup_flow") === "1";
+      const hasActiveSetup = isAgentSetupContext();
       const isRecoverySession =
         hashParams.get("type") === "recovery" ||
         urlParams.get("type") === "recovery" ||
@@ -505,15 +572,27 @@ const AuthCallback = () => {
   };
 
   if (error) {
+    const isSetupError = errorKind === "setup";
+    const supportMailto = `mailto:${AGENT_ACTIVATION_SUPPORT_EMAIL}?subject=${encodeURIComponent("Agent account activation help")}`;
+
     return (
       <div className="min-h-screen flex items-center justify-center bg-background px-4">
         <div className="text-center max-w-md">
           <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
-          <h1 className="text-xl font-semibold mb-2">Authentication Failed</h1>
+          <h1 className="text-xl font-semibold mb-2">
+            {isSetupError ? "Activation Link Unavailable" : "Authentication Failed"}
+          </h1>
           <p className="text-muted-foreground mb-6">{error}</p>
-          <Button onClick={() => navigate("/auth", { replace: true })}>
-            Back to Sign In
-          </Button>
+          <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
+            <Button onClick={() => navigate("/auth", { replace: true })}>
+              Go to Sign In
+            </Button>
+            {isSetupError && (
+              <Button variant="outline" asChild>
+                <a href={supportMailto}>Contact Support</a>
+              </Button>
+            )}
+          </div>
         </div>
       </div>
     );
