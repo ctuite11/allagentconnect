@@ -1404,6 +1404,14 @@ export default function AdminApprovals() {
                         <span className="font-mono text-xs text-black">{agent.aac_id}</span>
                         <span className="text-zinc-300">•</span>
                         <span className="font-semibold text-[#0E56F5]">{agent.first_name} {agent.last_name}</span>
+                        {agent.source === "pending_verification" && (
+                          <span
+                            className="inline-flex items-center rounded-full bg-indigo-50 px-2 py-0.5 text-[11px] font-medium text-indigo-700 ring-1 ring-indigo-200"
+                            title="Submitted via the Request Access form"
+                          >
+                            Request Access
+                          </span>
+                        )}
                         {!agent.is_early_access && presenceMap.get(agent.id)?.isOnline && (
                           <AgentOnlinePresenceBadge />
                         )}
