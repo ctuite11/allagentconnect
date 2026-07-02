@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { findDeletedAgent } from "../_shared/checkDeletedAgent.ts";
 
 /**
  * Phase 1 backend foundation. Admin-only conversion of a pending_verifications
@@ -27,6 +28,11 @@ const corsHeaders = {
 interface ConvertBody {
   pendingVerificationId?: unknown;
   email?: unknown;
+  /**
+   * Phase 4 guardrail — set to true only after the admin has explicitly
+   * confirmed the "previously deleted" dialog in the UI.
+   */
+  acknowledgeDeleted?: unknown;
 }
 
 function json(status: number, body: unknown) {
@@ -98,6 +104,7 @@ export async function handleRequest(req: Request): Promise<Response> {
 
   const pendingId = typeof body.pendingVerificationId === "string" ? body.pendingVerificationId : null;
   const bodyEmail = typeof body.email === "string" ? body.email.trim().toLowerCase() : null;
+  const acknowledgeDeleted = body.acknowledgeDeleted === true;
   if (!pendingId && !bodyEmail) {
     return json(400, { error: "pendingVerificationId or email is required" });
   }
@@ -162,6 +169,26 @@ export async function handleRequest(req: Request): Promise<Response> {
   }
 
   const email = pending.email.toLowerCase();
+
+  // 3b. Phase 4 guardrail — block silent recreation of a previously-deleted
+  // agent. Admin must acknowledge in the UI and resubmit with
+  // { acknowledgeDeleted: true } to bypass.
+  if (!acknowledgeDeleted) {
+    const deletedMatch = await findDeletedAgent(admin, email);
+    if (deletedMatch) {
+      console.warn(
+        "[convert] blocked previously-deleted agent:",
+        email,
+        deletedMatch.id,
+      );
+      return json(409, {
+        error:
+          "This agent was previously deleted. Confirm in the UI to proceed.",
+        code: "previously_deleted",
+        match: deletedMatch,
+      });
+    }
+  }
 
   // 4. Auth user handling: reuse existing or create fresh (no password).
   let userId: string;

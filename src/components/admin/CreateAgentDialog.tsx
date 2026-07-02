@@ -14,6 +14,14 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { z } from "zod";
+import {
+  PreviouslyDeletedAgentDialog,
+  type PreviouslyDeletedAgentMatch,
+} from "@/components/admin/PreviouslyDeletedAgentDialog";
+import {
+  checkDeletedAgent,
+  logDeletedAgentOverride,
+} from "@/lib/previouslyDeletedAgent";
 
 interface CreateAgentDialogProps {
   open: boolean;
@@ -28,11 +36,63 @@ export function CreateAgentDialog({ open, onOpenChange, onSuccess }: CreateAgent
   const [email, setEmail] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [deletedMatch, setDeletedMatch] = useState<PreviouslyDeletedAgentMatch | null>(null);
 
   const resetForm = () => {
     setEmail("");
     setFirstName("");
     setLastName("");
+    setDeletedMatch(null);
+  };
+
+  const submitToServer = async (acknowledgeDeleted: boolean) => {
+    const normalizedEmail = email.trim().toLowerCase();
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error("You must be logged in to create agents");
+        return;
+      }
+
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-create-user`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({
+            email: normalizedEmail,
+            firstName: firstName.trim(),
+            lastName: lastName.trim(),
+            ...(acknowledgeDeleted ? { acknowledgeDeleted: true } : {}),
+          }),
+        },
+      );
+
+      const result = await response.json();
+
+      // Server-side Phase 4 guardrail — if we get 409 previously_deleted and
+      // we haven't yet acknowledged, open the dialog (belt-and-suspenders in
+      // case the client-side pre-check missed it, e.g. lookup returned null).
+      if (response.status === 409 && result?.code === "previously_deleted") {
+        setDeletedMatch(result.match ?? null);
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to create agent");
+      }
+
+      toast.success(`Invite sent to ${normalizedEmail}`);
+      resetForm();
+      onSuccess();
+      onOpenChange(false);
+    } catch (error: any) {
+      console.error("[CreateAgentDialog] Error:", error);
+      toast.error(error.message || "Failed to create agent");
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -51,49 +111,34 @@ export function CreateAgentDialog({ open, onOpenChange, onSuccess }: CreateAgent
     }
 
     setLoading(true);
-
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        toast.error("You must be logged in to create agents");
+      // Phase 4 pre-check — if this email was previously deleted, open the
+      // confirmation dialog before we even talk to admin-create-user.
+      const match = await checkDeletedAgent(email);
+      if (match) {
+        setDeletedMatch(match);
         return;
       }
+      await submitToServer(false);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-create-user`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${session.access_token}`,
-          },
-          body: JSON.stringify({
-            email: email.trim().toLowerCase(),
-            firstName: firstName.trim(),
-            lastName: lastName.trim(),
-          }),
-        }
-      );
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || "Failed to create agent");
-      }
-
-      toast.success(`Invite sent to ${email.trim().toLowerCase()}`);
-      resetForm();
-      onSuccess();
-      onOpenChange(false);
-    } catch (error: any) {
-      console.error("[CreateAgentDialog] Error:", error);
-      toast.error(error.message || "Failed to create agent");
+  const handleContinueAnyway = async () => {
+    if (!deletedMatch) return;
+    setLoading(true);
+    try {
+      await logDeletedAgentOverride(deletedMatch);
+      setDeletedMatch(null);
+      await submitToServer(true);
     } finally {
       setLoading(false);
     }
   };
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[440px]">
         <DialogHeader>
@@ -162,5 +207,14 @@ export function CreateAgentDialog({ open, onOpenChange, onSuccess }: CreateAgent
         </form>
       </DialogContent>
     </Dialog>
+    <PreviouslyDeletedAgentDialog
+      open={Boolean(deletedMatch)}
+      match={deletedMatch}
+      actionLabel="create this agent"
+      loading={loading}
+      onCancel={() => setDeletedMatch(null)}
+      onContinue={handleContinueAnyway}
+    />
+    </>
   );
 }

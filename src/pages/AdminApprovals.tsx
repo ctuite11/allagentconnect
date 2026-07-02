@@ -36,6 +36,14 @@ import { DeleteAgentDialog } from "@/components/admin/DeleteAgentDialog";
 import { BulkDeleteAgentsDialog } from "@/components/admin/BulkDeleteAgentsDialog";
 import { EmailAgentDialog } from "@/components/admin/EmailAgentDialog";
 import { CreateAgentDialog } from "@/components/admin/CreateAgentDialog";
+import {
+  PreviouslyDeletedAgentDialog,
+  type PreviouslyDeletedAgentMatch,
+} from "@/components/admin/PreviouslyDeletedAgentDialog";
+import {
+  checkDeletedAgent,
+  logDeletedAgentOverride,
+} from "@/lib/previouslyDeletedAgent";
 import { UserPlus } from "lucide-react";
 import { AgentStatusBadge } from "@/components/ui/status-badge";
 import { AacMonogramLoader } from "@/components/AacMonogramLoader";
@@ -251,6 +259,34 @@ export default function AdminApprovals() {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showBulkDeleteDialog, setShowBulkDeleteDialog] = useState(false);
 
+  // Phase 4 guardrail — shared "previously deleted" gate. When set, the
+  // dialog is open and `resolve` is awaited by whichever action opened it
+  // (single verify, bulk verify iteration, email setup link, etc.).
+  const [deletedGate, setDeletedGate] = useState<{
+    match: PreviouslyDeletedAgentMatch;
+    actionLabel: string;
+    resolve: (proceed: boolean) => void;
+  } | null>(null);
+  const [deletedGateBusy, setDeletedGateBusy] = useState(false);
+
+  /**
+   * Returns true if the caller may proceed with the action:
+   *   - No matching deleted_users row → true immediately.
+   *   - Matching row → opens the dialog; resolves to true if the admin clicks
+   *     "Continue anyway" (and writes an audit_logs override row); false on
+   *     Cancel or dismiss.
+   */
+  const guardDeletedAgent = async (
+    email: string,
+    actionLabel: string,
+  ): Promise<boolean> => {
+    const match = await checkDeletedAgent(email);
+    if (!match) return true;
+    return await new Promise<boolean>((resolve) => {
+      setDeletedGate({ match, actionLabel, resolve });
+    });
+  };
+
   // Risk-flagged verification confirmation dialog
   const [verifyConfirm, setVerifyConfirm] = useState<{
     agent: Agent;
@@ -411,7 +447,11 @@ export default function AdminApprovals() {
   }, [agents]);
 
   // Handle status change with upsert - branches for early access vs real agents
-  const handleStatusChange = async (agent: Agent, newStatus: string) => {
+  const handleStatusChange = async (
+    agent: Agent,
+    newStatus: string,
+    acknowledgeDeleted: boolean = false,
+  ) => {
     // Safety guard — invited (admin-created) agents must never enter the
     // pending/verify flow. They complete /agent-setup and self-activate.
     if (agent.agent_status === "invited" && newStatus === "verified") {
@@ -420,6 +460,17 @@ export default function AdminApprovals() {
       );
       return;
     }
+
+    // Phase 4 guardrail — for every verify action, if this email was
+    // previously deleted as an agent, require an explicit admin ack before
+    // recreating the account and re-sending the License Verified email.
+    // Rejection paths are unaffected — they never create or email anyone.
+    if (newStatus === "verified" && !acknowledgeDeleted) {
+      const proceed = await guardDeletedAgent(agent.email, "verify this agent");
+      if (!proceed) return;
+      acknowledgeDeleted = true;
+    }
+
     setProcessingIds((prev) => new Set(prev).add(agent.id));
 
     try {
@@ -431,7 +482,12 @@ export default function AdminApprovals() {
         if (newStatus === "verified") {
           const { data: convData, error: convErr } = await supabase.functions.invoke(
             "convert-pending-verification-to-agent",
-            { body: { pendingVerificationId: agent.pending_verification_id ?? agent.id } },
+            {
+              body: {
+                pendingVerificationId: agent.pending_verification_id ?? agent.id,
+                ...(acknowledgeDeleted ? { acknowledgeDeleted: true } : {}),
+              },
+            },
           );
           if (convErr || !convData?.ok || !convData?.userId) {
             console.error("[AdminApprovals] convert failed:", convErr || convData);
@@ -449,6 +505,7 @@ export default function AdminApprovals() {
                 to: agent.email,
                 agentName: agent.first_name || undefined,
                 idempotencyKey: `license-verified:verify:${newUserId}`,
+                ...(acknowledgeDeleted ? { acknowledgeDeleted: true } : {}),
               },
             },
           );
@@ -512,6 +569,7 @@ export default function AdminApprovals() {
                 licenseNumber: agent.license_number,
                 brokerage: agent.company,
                 skipEmail: true,
+                ...(acknowledgeDeleted ? { acknowledgeDeleted: true } : {}),
               },
             },
           );
@@ -554,6 +612,7 @@ export default function AdminApprovals() {
               to: agent.email,
               agentName: agent.first_name || undefined,
               idempotencyKey: `license-verified:verify:${agent.id}`,
+              ...(acknowledgeDeleted ? { acknowledgeDeleted: true } : {}),
             },
           },
         );
@@ -979,6 +1038,13 @@ export default function AdminApprovals() {
       if (!ok) return;
     }
 
+    // Phase 4 guardrail — same "previously deleted" check as Verify.
+    const proceed = await guardDeletedAgent(
+      agent.email,
+      "email a setup link to this agent",
+    );
+    if (!proceed) return;
+
     setSendingSetupLinkFor((prev) => new Set(prev).add(agent.id));
     try {
       const setupUrl = await generateSetupLink(agent);
@@ -988,6 +1054,9 @@ export default function AdminApprovals() {
           to: agent.email,
           agentName: agent.first_name || undefined,
           ctaUrl: setupUrl,
+          // Gate already passed above → allow the send even for a
+          // previously-deleted email.
+          acknowledgeDeleted: true,
         },
       });
       if (error) {
@@ -1680,6 +1749,31 @@ export default function AdminApprovals() {
         open={showCreateDialog}
         onOpenChange={setShowCreateDialog}
         onSuccess={fetchAgents}
+      />
+
+      <PreviouslyDeletedAgentDialog
+        open={Boolean(deletedGate)}
+        match={deletedGate?.match ?? null}
+        actionLabel={deletedGate?.actionLabel ?? "proceed"}
+        loading={deletedGateBusy}
+        onCancel={() => {
+          if (deletedGateBusy) return;
+          const gate = deletedGate;
+          setDeletedGate(null);
+          gate?.resolve(false);
+        }}
+        onContinue={async () => {
+          if (!deletedGate || deletedGateBusy) return;
+          setDeletedGateBusy(true);
+          try {
+            await logDeletedAgentOverride(deletedGate.match);
+          } finally {
+            const gate = deletedGate;
+            setDeletedGate(null);
+            setDeletedGateBusy(false);
+            gate.resolve(true);
+          }
+        }}
       />
 
       <BulkDeleteAgentsDialog

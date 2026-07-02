@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { AAC_PUBLIC_URL } from "../_shared/aacPublicUrl.ts";
+import { findDeletedAgent } from "../_shared/checkDeletedAgent.ts";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
@@ -20,6 +21,11 @@ interface ConvertRequest {
   licenseNumber?: string;
   brokerage?: string;
   skipEmail?: boolean;
+  /**
+   * Phase 4 guardrail — set to true only after the admin has explicitly
+   * confirmed the "previously deleted" dialog in the UI.
+   */
+  acknowledgeDeleted?: boolean;
 }
 
 interface RateLimitResult {
@@ -186,6 +192,7 @@ serve(async (req: Request): Promise<Response> => {
       licenseNumber,
       brokerage,
       skipEmail,
+      acknowledgeDeleted,
     } = body;
 
     if (!email || !firstName || !lastName) {
@@ -216,6 +223,29 @@ serve(async (req: Request): Promise<Response> => {
     if (!rateLimitResult.allowed) {
       console.log(`[rate-limit] Blocked IP: ${ip}, count: ${rateLimitResult.current_count}`);
       return build429Response(rateLimitResult.reset_at);
+    }
+
+    // Phase 4 guardrail — block silent recreation of a previously-deleted
+    // agent. Admin must acknowledge in the UI and resubmit with
+    // { acknowledgeDeleted: true } to bypass.
+    if (!acknowledgeDeleted) {
+      const deletedMatch = await findDeletedAgent(supabaseAdmin, email);
+      if (deletedMatch) {
+        console.warn(
+          "[convert-early-access] blocked previously-deleted agent:",
+          email,
+          deletedMatch.id,
+        );
+        return new Response(
+          JSON.stringify({
+            error:
+              "This agent was previously deleted. Confirm in the UI to proceed.",
+            code: "previously_deleted",
+            match: deletedMatch,
+          }),
+          { status: 409, headers: { "Content-Type": "application/json", ...corsHeaders } },
+        );
+      }
     }
 
     // Check if user already exists in auth.users
