@@ -149,33 +149,67 @@ export function SendEmailDialog({ open, onOpenChange, onSuccess }: SendEmailDial
     setSelectedCities([]);
   }, [state]);
 
-  // Fetch recipient count when criteria changes
-  useEffect(() => {
-    if (open && state) {
-      fetchRecipientCount();
-    }
-  }, [open, state, selectedCountyId, selectedCities, propertyTypes, minPrice, maxPrice]);
-
-  const fetchRecipientCount = async () => {
-    setLoadingCount(true);
-    try {
-      // For now, we'll estimate based on coverage areas
-      // This would be replaced with actual matching logic
-      const { count, error } = await supabase
-        .from("agent_buyer_coverage_areas")
-        .select("*", { count: "exact", head: true })
-        .eq("state", state);
-      
-      if (!error) {
-        setRecipientCount(count || 0);
+  // Build criteria the same way handleSend does — single source of truth for recipient logic.
+  const buildCriteria = () => {
+    const cities: string[] = [];
+    const neighborhoods: string[] = [];
+    selectedCities.forEach((town) => {
+      if (town.includes("-")) {
+        const [city, neighborhood] = town.split("-");
+        if (!cities.includes(city)) cities.push(city);
+        neighborhoods.push(neighborhood);
+      } else {
+        if (!cities.includes(town)) cities.push(town);
       }
-    } catch (error) {
-      console.error("Error fetching count:", error);
-      setRecipientCount(0);
-    } finally {
-      setLoadingCount(false);
-    }
+    });
+    return {
+      state,
+      counties: selectedCountyId !== "all" ? [selectedCountyId] : undefined,
+      cities: cities.length > 0 ? cities : undefined,
+      neighborhoods: neighborhoods.length > 0 ? neighborhoods : undefined,
+      minPrice: minPrice ? parseFloat(minPrice) : undefined,
+      maxPrice: maxPrice ? parseFloat(maxPrice) : undefined,
+      propertyTypes: propertyTypes.length > 0 ? propertyTypes : undefined,
+    };
   };
+
+  // Fetch recipient count via previewOnly so preview matches actual send list.
+  useEffect(() => {
+    if (!open || !state) return;
+    let cancelled = false;
+    setLoadingCount(true);
+    const handle = setTimeout(async () => {
+      try {
+        const criteria = buildCriteria();
+        const { data, error } = await supabase.functions.invoke(
+          "send-client-need-notification",
+          {
+            body: {
+              category: "buyer_need",
+              subject: "",
+              message: "",
+              previewOnly: true,
+              criteria,
+            },
+          }
+        );
+        if (cancelled) return;
+        if (error) throw error;
+        setRecipientCount(data?.recipientCount ?? 0);
+      } catch (err) {
+        if (!cancelled) {
+          console.error("Error fetching recipient preview:", err);
+          setRecipientCount(0);
+        }
+      } finally {
+        if (!cancelled) setLoadingCount(false);
+      }
+    }, 300);
+    return () => {
+      cancelled = true;
+      clearTimeout(handle);
+    };
+  }, [open, state, selectedCountyId, selectedCities, propertyTypes, minPrice, maxPrice]);
 
   const toggleCity = (city: string) => {
     setSelectedCities(prev =>
