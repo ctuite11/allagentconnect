@@ -23,17 +23,6 @@ import { cn } from "@/lib/utils";
 import { getRouteForRole, resolveUserRole } from "@/lib/resolveUserRole";
 import { clearRecoveryState } from "@/lib/authRecovery";
 import { ensureDefaultCommsChannels } from "@/lib/ensureDefaultCommsChannels";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-
-const US_STATES = [
-  "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY","DC",
-];
 
 /**
  * Agent Account Setup — final step of the approved-agent "License Verified"
@@ -85,7 +74,6 @@ const AgentAccountSetup = () => {
 
   const [validating, setValidating] = useState(true);
   const [sessionError, setSessionError] = useState<string | null>(null);
-  const [phase, setPhase] = useState<1 | 2>(1);
   const [userId, setUserId] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [firstName, setFirstName] = useState("");
@@ -93,15 +81,6 @@ const AgentAccountSetup = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
-
-  // Phase 2 fields
-  const [phone, setPhone] = useState("");
-  const [company, setCompany] = useState("");
-  const [licenseState, setLicenseState] = useState("");
-  const [licenseNumber, setLicenseNumber] = useState("");
-  const [headshotFile, setHeadshotFile] = useState<File | null>(null);
-  const [headshotPreview, setHeadshotPreview] = useState<string | null>(null);
-  const [uploadingHeadshot, setUploadingHeadshot] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -183,7 +162,7 @@ const AgentAccountSetup = () => {
           const { data: profile, error: profileError } = await withTimeout(
             supabase
               .from("agent_profiles")
-              .select("first_name, last_name, phone, company, headshot_url")
+              .select("first_name, last_name")
               .eq("id", sessionUserId)
               .maybeSingle(),
             2500,
@@ -195,35 +174,21 @@ const AgentAccountSetup = () => {
           if (!cancelled) {
             if (profile?.first_name) setFirstName(profile.first_name);
             if (profile?.last_name) setLastName(profile.last_name);
-            if (profile?.phone) setPhone(profile.phone);
-            if (profile?.company) setCompany(profile.company);
-            if (profile?.headshot_url) setHeadshotPreview(profile.headshot_url);
 
-            // Prefill license fields from agent_settings
+            // If the account was already activated and we're NOT inside an
+            // active recovery / password-setup handoff, route straight to the
+            // agent's role home instead of re-showing the password form.
             const { data: settings } = await supabase
               .from("agent_settings")
-              .select("license_state, license_number, account_activated_at")
+              .select("account_activated_at")
               .eq("user_id", sessionUserId)
               .maybeSingle();
-            if (settings?.license_state) setLicenseState(settings.license_state);
-            if (settings?.license_number) setLicenseNumber(settings.license_number);
-
-            // If password is already set (account_activated_at present) AND we're
-            // NOT in a recovery/setup flow, land on Phase 2 or route home.
             const isSetup = sessionStorage.getItem("aac_password_setup_flow") === "1";
             const isRecovery = sessionStorage.getItem("aac_recovery_flow") === "1";
             if (settings?.account_activated_at && !isSetup && !isRecovery) {
-              const profileComplete =
-                !!profile?.phone &&
-                !!profile?.company &&
-                !!settings?.license_state &&
-                !!settings?.license_number;
-              if (profileComplete) {
-                const resolved = await resolveUserRole(sessionUserId);
-                navigate(getRouteForRole(resolved), { replace: true });
-                return;
-              }
-              setPhase(2);
+              const resolved = await resolveUserRole(sessionUserId);
+              navigate(getRouteForRole(resolved), { replace: true });
+              return;
             }
           }
         } catch (profileErr) {
