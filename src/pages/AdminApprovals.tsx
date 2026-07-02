@@ -324,12 +324,9 @@ export default function AdminApprovals() {
 
       if (!agentList || agentList.length === 0) {
         console.log("[AdminApprovals] No agents found");
-        setAgents([]);
-        setLoading(false);
-        return;
+        // Fall through so Phase 2 leads can still surface even when the
+        // main agent list is empty.
       }
-
-      setAgents(agentList);
 
       // Fetch which agents have uploaded license docs
       const { data: uploads } = await supabase
@@ -350,6 +347,43 @@ export default function AdminApprovals() {
       if (pendingData) {
         setPendingVerifications(pendingData);
       }
+
+      // Phase 3: surface Phase 2 "Request Access" leads
+      // (status='pending' AND user_id IS NULL) as first-class rows in the
+      // Unverified/Pending list so admins can Verify them via the new
+      // convert-pending-verification-to-agent flow.
+      const existingEmails = new Set(
+        (agentList ?? []).map((a: Agent) => (a.email || "").toLowerCase())
+      );
+      const phase2Leads: Agent[] = (pendingData ?? [])
+        .filter((p: any) => p?.status === "pending" && !p?.user_id)
+        .filter((p: any) => !existingEmails.has(String(p.email || "").toLowerCase()))
+        .map((p: any): Agent => ({
+          id: p.id,
+          aac_id: `REQ-${String(p.id).slice(0, 4).toUpperCase()}`,
+          first_name: p.first_name || "",
+          last_name: p.last_name || "",
+          email: p.email,
+          phone: p.phone ?? null,
+          company: p.company ?? null,
+          bio: null,
+          license_number: p.license_number ?? null,
+          license_state: p.license_state ?? null,
+          agent_status: "pending",
+          verified_at: null,
+          created_at: p.created_at,
+          is_early_access: false,
+          has_auth_account: false,
+          last_sign_in_at: null,
+          account_activated_at: null,
+          invite_email: null,
+          license_verified_email: null,
+          source: "pending_verification",
+          pending_verification_id: p.id,
+        }));
+
+      const merged: Agent[] = [...phase2Leads, ...((agentList ?? []) as Agent[])];
+      setAgents(merged);
     } catch (error) {
       console.error("Unexpected error:", error);
       toast.error("Failed to load agents");
