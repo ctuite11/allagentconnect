@@ -36,8 +36,9 @@ function json(status: number, body: unknown) {
   });
 }
 
+// deno-lint-ignore no-explicit-any
 async function findAuthUserByEmail(
-  admin: ReturnType<typeof createClient>,
+  admin: any,
   email: string,
 ): Promise<{ id: string; email: string } | null> {
   const target = email.toLowerCase();
