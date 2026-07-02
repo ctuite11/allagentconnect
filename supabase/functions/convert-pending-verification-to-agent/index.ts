@@ -185,14 +185,15 @@ export async function handleRequest(req: Request): Promise<Response> {
     userId = created.user.id;
   }
 
-  // 5. Upsert agent_profiles.
+  // 5. Upsert agent_profiles. first_name/last_name are NOT NULL in the table.
   const profileRow: Record<string, unknown> = {
     id: userId,
     email,
+    first_name: pending.first_name || "Agent",
+    last_name: pending.last_name || "Pending",
   };
-  if (pending.first_name) profileRow.first_name = pending.first_name;
-  if (pending.last_name) profileRow.last_name = pending.last_name;
   if (pending.phone) profileRow.phone = pending.phone;
+  if (pending.company) profileRow.company = pending.company;
   const { error: profileErr } = await admin
     .from("agent_profiles")
     .upsert(profileRow, { onConflict: "id" });
@@ -201,7 +202,7 @@ export async function handleRequest(req: Request): Promise<Response> {
     return json(500, { error: "Failed to upsert agent profile", code: "profile_failed" });
   }
 
-  // 6. Upsert agent_settings.
+  // 6. Upsert agent_settings. Include license fields from pending row.
   //    approval_email_sent stays false — Phase 3 will flip after actually
   //    enqueueing send-license-verified-email.
   const nowIso = new Date().toISOString();
@@ -211,6 +212,9 @@ export async function handleRequest(req: Request): Promise<Response> {
     verified_at: nowIso,
     approval_email_sent: false,
   };
+  if (pending.license_state) settingsRow.license_state = pending.license_state;
+  if (pending.license_number) settingsRow.license_number = pending.license_number;
+  if (pending.license_last_name) settingsRow.license_last_name = pending.license_last_name;
   const { error: settingsErr } = await admin
     .from("agent_settings")
     .upsert(settingsRow, { onConflict: "user_id" });
@@ -244,16 +248,14 @@ export async function handleRequest(req: Request): Promise<Response> {
     return json(500, { error: "Failed to update pending verification", code: "pending_update_failed" });
   }
 
-  // 9. Best-effort audit row (table exists per schema).
+  // 9. Best-effort audit row (table's action check allows 'verified').
   const { error: auditErr } = await admin.from("agent_verification_audit").insert({
-    actor_id: caller.id,
-    target_user_id: userId,
-    action: "converted",
-    details: {
-      source: "pending_verifications",
-      pending_verification_id: pending.id,
-      reused_existing_auth_user: !!existing,
-    },
+    agent_user_id: userId,
+    admin_user_id: caller.id,
+    action: "verified",
+    previous_status: "pending",
+    new_status: "verified",
+    notes: `Converted from pending_verifications ${pending.id}${existing ? " (reused existing auth user)" : ""}`,
   });
   if (auditErr) {
     console.error("[convert] audit insert error (non-fatal):", auditErr.message);
