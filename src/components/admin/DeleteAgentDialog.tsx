@@ -36,17 +36,28 @@ export function DeleteAgentDialog({ open, onOpenChange, agent, onDeleted }: Dele
     try {
       // EARLY ACCESS BRANCH: Simple delete from agent_early_access only
       if (agent.is_early_access) {
-        const { error } = await supabase
-          .from("agent_early_access")
-          .delete()
-          .eq("id", agent.id);
+        const { data: rowsDeleted, error } = await supabase.rpc(
+          "admin_delete_early_access",
+          { p_id: agent.id }
+        );
         if (error) throw error;
+        if (!rowsDeleted || rowsDeleted === 0) {
+          throw new Error(
+            "No row was removed. You may not have admin permission, or the record was already deleted. Refresh and try again."
+          );
+        }
 
-        await supabase.functions.invoke("delete-users", {
+        const { error: authError } = await supabase.functions.invoke("delete-users", {
           body: { emails: [agent.email] },
         });
-
-        toast.success(`${agent.first_name} ${agent.last_name} (early access) has been deleted`);
+        if (authError) {
+          console.error("Error purging auth user:", authError);
+          toast.warning(
+            `${agent.first_name} ${agent.last_name} (early access) removed, but auth cleanup failed`
+          );
+        } else {
+          toast.success(`${agent.first_name} ${agent.last_name} (early access) has been deleted`);
+        }
         onDeleted();
         onOpenChange(false);
         return;
