@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { Navigate, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -268,6 +268,11 @@ export default function AdminApprovals() {
     resolve: (proceed: boolean) => void;
   } | null>(null);
   const [deletedGateBusy, setDeletedGateBusy] = useState(false);
+  // Synchronous mirror of `deletedGateBusy` for the onCancel / onContinue
+  // handlers on the dialog. React state updates aren't visible until the
+  // next render, so without this ref an onOpenChange(false) firing in the
+  // same tick as onContinue would still see busy=false and cancel the gate.
+  const deletedGateBusyRef = useRef(false);
 
   /**
    * Returns true if the caller may proceed with the action:
@@ -283,7 +288,17 @@ export default function AdminApprovals() {
     const match = await checkDeletedAgent(email);
     if (!match) return true;
     return await new Promise<boolean>((resolve) => {
-      setDeletedGate({ match, actionLabel, resolve });
+      // Single-shot resolver — Cancel and Continue both call this; only the
+      // first call wins, so any stray double-fire (e.g. dialog auto-close
+      // firing onCancel after onContinue) is a harmless no-op instead of
+      // silently dropping the retry.
+      let settled = false;
+      const once = (proceed: boolean) => {
+        if (settled) return;
+        settled = true;
+        resolve(proceed);
+      };
+      setDeletedGate({ match, actionLabel, resolve: once });
     });
   };
 
@@ -1709,13 +1724,16 @@ export default function AdminApprovals() {
         actionLabel={deletedGate?.actionLabel ?? "proceed"}
         loading={deletedGateBusy}
         onCancel={() => {
-          if (deletedGateBusy) return;
+          if (deletedGateBusy || deletedGateBusyRef.current) return;
           const gate = deletedGate;
           setDeletedGate(null);
           gate?.resolve(false);
         }}
         onContinue={async () => {
-          if (!deletedGate || deletedGateBusy) return;
+          if (!deletedGate || deletedGateBusy || deletedGateBusyRef.current) return;
+          // Flip the ref synchronously so any onCancel that fires in this
+          // same tick (e.g. from Radix auto-close) bails out immediately.
+          deletedGateBusyRef.current = true;
           setDeletedGateBusy(true);
           try {
             await logDeletedAgentOverride(deletedGate.match);
@@ -1723,6 +1741,7 @@ export default function AdminApprovals() {
             const gate = deletedGate;
             setDeletedGate(null);
             setDeletedGateBusy(false);
+            deletedGateBusyRef.current = false;
             gate.resolve(true);
           }
         }}
