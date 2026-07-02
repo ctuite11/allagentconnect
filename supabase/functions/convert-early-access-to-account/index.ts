@@ -224,7 +224,25 @@ serve(async (req: Request): Promise<Response> => {
 
     if (existingUser) {
       console.log(`User ${email} already exists in auth.users, skipping account creation`);
-      
+
+      // Safety guard — admin-created agents (agent_status = 'invited') MUST
+      // NOT be run through the Early Access conversion path. They complete
+      // /agent-setup and self-activate.
+      const { data: existingSettings } = await supabaseAdmin
+        .from("agent_settings")
+        .select("agent_status")
+        .eq("user_id", existingUser.id)
+        .maybeSingle();
+      if (existingSettings?.agent_status === "invited") {
+        return new Response(
+          JSON.stringify({
+            error:
+              "This agent was created by an admin (Invited). They must complete /agent-setup to activate — no conversion needed.",
+          }),
+          { status: 409, headers: { "Content-Type": "application/json", ...corsHeaders } },
+        );
+      }
+
       // Just update their agent_settings to verified status
       const { error: settingsError } = await supabaseAdmin
         .from("agent_settings")

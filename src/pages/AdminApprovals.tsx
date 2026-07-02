@@ -363,6 +363,14 @@ export default function AdminApprovals() {
 
   // Handle status change with upsert - branches for early access vs real agents
   const handleStatusChange = async (agent: Agent, newStatus: string) => {
+    // Safety guard — invited (admin-created) agents must never enter the
+    // pending/verify flow. They complete /agent-setup and self-activate.
+    if (agent.agent_status === "invited" && newStatus === "verified") {
+      toast.error(
+        "Admin-created agents are already verified. They activate by completing /agent-setup — no manual verify.",
+      );
+      return;
+    }
     setProcessingIds((prev) => new Set(prev).add(agent.id));
 
     try {
@@ -698,6 +706,38 @@ export default function AdminApprovals() {
   // send-license-verified-email prevent double-sends on retry.
   const [bulkVerifying, setBulkVerifying] = useState(false);
   const [showVerifyConfirm, setShowVerifyConfirm] = useState(false);
+  const [resendingInviteFor, setResendingInviteFor] = useState<Set<string>>(new Set());
+
+  // Resend the admin-created setup invite (Chris personal note).
+  // Used only for Invited-tab agents. Reuses the same idempotency-guarded
+  // send-admin-created-invite edge function fired at create time.
+  const handleResendInvite = async (agent: Agent) => {
+    if (resendingInviteFor.has(agent.id)) return;
+    setResendingInviteFor((prev) => new Set(prev).add(agent.id));
+    try {
+      const { error } = await supabase.functions.invoke("send-admin-created-invite", {
+        body: {
+          to: agent.email,
+          firstName: agent.first_name || undefined,
+          // Force a fresh send (bypass 10-min recency dedupe) when admin
+          // explicitly resends.
+          idempotencyKey: `admin-created-invite:${agent.id}:${Date.now()}`,
+        },
+      });
+      if (error) {
+        console.error("[AdminApprovals] Resend invite failed:", error);
+        toast.error("Could not resend invite");
+        return;
+      }
+      toast.success(`Invite resent to ${agent.email}`);
+    } finally {
+      setResendingInviteFor((prev) => {
+        const next = new Set(prev);
+        next.delete(agent.id);
+        return next;
+      });
+    }
+  };
   const handleBulkVerify = async () => {
     const targets = filteredAgents.filter(
       (a) => effectiveSelectedIds.has(a.id) && a.agent_status !== "verified",
@@ -1350,6 +1390,43 @@ export default function AdminApprovals() {
 
                   {/* Row 2: Actions */}
                   <div className="mt-3 flex items-center gap-2 text-sm">
+                  {deriveAdminStatus(agent) === "invited" ? (
+                    <>
+                      <button
+                        onClick={() => handleResendInvite(agent)}
+                        disabled={resendingInviteFor.has(agent.id)}
+                        className={
+                          resendingInviteFor.has(agent.id)
+                            ? "text-zinc-300 cursor-not-allowed"
+                            : "text-emerald-600 hover:text-emerald-800 hover:underline transition-colors font-medium"
+                        }
+                      >
+                        {resendingInviteFor.has(agent.id) ? "Sending…" : "Resend Invite"}
+                      </button>
+                      <span className="text-zinc-300">•</span>
+                      <button
+                        onClick={() => handleCopySetupLink(agent)}
+                        className="text-zinc-500 hover:text-zinc-900 hover:underline transition-colors"
+                      >
+                        Copy Setup Link
+                      </button>
+                      <span className="text-zinc-300">•</span>
+                      <button
+                        onClick={() => setEditAgent(agent)}
+                        className="text-zinc-500 hover:text-zinc-900 hover:underline transition-colors"
+                      >
+                        Edit
+                      </button>
+                      <span className="text-zinc-300">•</span>
+                      <button
+                        onClick={() => setDeleteAgent(agent)}
+                        className="text-rose-600 hover:text-rose-700 hover:underline transition-colors"
+                      >
+                        Delete
+                      </button>
+                    </>
+                  ) : (
+                  <>
                     <button 
                       onClick={() => {
                         const risks = risksForAgent(agent);
@@ -1433,6 +1510,8 @@ export default function AdminApprovals() {
                     >
                       Delete
                     </button>
+                  </>
+                  )}
                   </div>
                 </div>
               );
