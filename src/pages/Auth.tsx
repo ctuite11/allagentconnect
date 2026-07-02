@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -8,14 +8,13 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { z } from "zod";
-import { ArrowLeft, Loader2, CheckCircle2, Circle, LogOut, Clock, XCircle } from "lucide-react";
+import { ArrowLeft, Loader2, CheckCircle2, LogOut, Clock, XCircle } from "lucide-react";
 import AACMonogram from "@/components/ui/AACMonogram";
 import BrandMonogram from "@/components/home-v2/Monogram";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { cn } from "@/lib/utils";
 import { authDebug, getAuthRouteDecisionDiagnostics } from "@/lib/authDebug";
 import { resolveUserRole, getRouteForRole } from "@/lib/resolveUserRole";
-import { hasRole } from "@/lib/auth/roles";
 import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 import { validateAgentSignup } from "@/lib/agentSignupValidation";
 import { TurnstileField } from "@/components/security/TurnstileField";
@@ -32,7 +31,6 @@ import {
 const authCardSurface =
   "rounded-2xl border border-zinc-100 bg-white p-8 shadow-sm";
 
-// NOTE: This is generic only when it declares <T> and returns Promise<T>.
 // Timeout wrapper - truly generic + typed for PromiseLike
 function withTimeout<T>(
   promiseLike: PromiseLike<T>,
@@ -54,13 +52,7 @@ function withTimeout<T>(
   });
 }
 
-type RegisterStep = "creating_account" | "saving_profile" | "saving_license" | "finishing" | null;
-
 const emailSchema = z.string().trim().email("Please enter a valid email address");
-
-// Password policy — imported from shared module
-import { validatePassword } from "@/lib/passwordPolicy";
-import { PasswordChecklist } from "@/components/PasswordChecklist";
 
 // US States for license dropdown
 const US_STATES = [
@@ -109,7 +101,6 @@ const Auth = () => {
   const [checkingSession, setCheckingSession] = useState(true);
   const [resetEmailSent, setResetEmailSent] = useState(false);
   const [agentStatus, setAgentStatus] = useState<string | null>(null);
-  const [registerStep, setRegisterStep] = useState<RegisterStep>(null);
   const [sessionEmail, setSessionEmail] = useState<string | null>(null);
   const didNavigate = useRef(false);
   const isRegistering = useRef(false);
@@ -213,13 +204,6 @@ const Auth = () => {
     }
     navigate("/auth", { replace: true });
   };
-
-  // Password validation for register mode
-  const { results: passwordValidation, allPass: allPasswordRulesPass } = useMemo(
-    () => validatePassword(password),
-    [password]
-  );
-  const passwordsMatch = password === confirmPassword && confirmPassword.length > 0;
 
   // Sync mode state from URL parameter
   useEffect(() => {
