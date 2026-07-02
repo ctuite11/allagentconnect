@@ -1751,6 +1751,31 @@ export default function AdminApprovals() {
         onSuccess={fetchAgents}
       />
 
+      <PreviouslyDeletedAgentDialog
+        open={Boolean(deletedGate)}
+        match={deletedGate?.match ?? null}
+        actionLabel={deletedGate?.actionLabel ?? "proceed"}
+        loading={deletedGateBusy}
+        onCancel={() => {
+          if (deletedGateBusy) return;
+          const gate = deletedGate;
+          setDeletedGate(null);
+          gate?.resolve(false);
+        }}
+        onContinue={async () => {
+          if (!deletedGate || deletedGateBusy) return;
+          setDeletedGateBusy(true);
+          try {
+            await logDeletedAgentOverride(deletedGate.match);
+          } finally {
+            const gate = deletedGate;
+            setDeletedGate(null);
+            setDeletedGateBusy(false);
+            gate.resolve(true);
+          }
+        }}
+      />
+
       <BulkDeleteAgentsDialog
         open={showBulkDeleteDialog}
         onOpenChange={setShowBulkDeleteDialog}
