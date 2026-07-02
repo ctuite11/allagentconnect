@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.0";
 import { buildLicenseVerifiedEmailHtml } from "../_shared/buildLicenseVerifiedEmailHtml.ts";
 import { AAC_PUBLIC_URL, resolveAacCtaUrl, wrapSupabaseActionLinkForAac } from "../_shared/aacPublicUrl.ts";
+import { findDeletedAgent } from "../_shared/checkDeletedAgent.ts";
 
 /**
  * Idempotency contract
@@ -28,6 +29,11 @@ interface SendRequest {
   subject?: string;
   agentName?: string;
   idempotencyKey?: string;
+  /**
+   * Phase 4 guardrail — set to true only after the admin has explicitly
+   * confirmed the "previously deleted" dialog in the UI.
+   */
+  acknowledgeDeleted?: boolean;
 }
 
 const DEFAULT_SUBJECT = "Your license has been verified — welcome to All Agent Connect";
@@ -102,6 +108,29 @@ const handler = async (req: Request): Promise<Response> => {
 
     for (const email of recipients) {
       const recipientLc = email.trim().toLowerCase();
+
+      // Phase 4 guardrail — block license-verified sends to a previously
+      // deleted agent unless the admin explicitly acknowledged in the UI.
+      // Applies per-recipient so a mixed batch surfaces exact addresses.
+      if (!body.acknowledgeDeleted) {
+        const deletedMatch = await findDeletedAgent(admin, recipientLc);
+        if (deletedMatch) {
+          console.warn(
+            "[send-license-verified-email] blocked previously-deleted agent:",
+            recipientLc,
+            deletedMatch.id,
+          );
+          results.push({
+            email,
+            success: false,
+            error: "previously_deleted",
+            // deno-lint-ignore no-explicit-any
+            match: deletedMatch,
+          } as any);
+          continue;
+        }
+      }
+
       const today = new Date().toISOString().slice(0, 10).replace(/-/g, "");
       const idempotencyKey =
         (typeof body.idempotencyKey === "string" && body.idempotencyKey.trim()) ||
