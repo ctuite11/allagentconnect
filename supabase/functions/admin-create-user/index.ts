@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { findDeletedAgent } from "../_shared/checkDeletedAgent.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -9,6 +10,11 @@ interface CreateUserRequest {
   email: string;
   firstName: string;
   lastName: string;
+  /**
+   * Phase 4 guardrail — set to true only after the admin has explicitly
+   * confirmed the "previously deleted" dialog in the UI.
+   */
+  acknowledgeDeleted?: boolean;
 }
 
 Deno.serve(async (req) => {
@@ -75,7 +81,7 @@ Deno.serve(async (req) => {
 
     // Parse the request body
     const body: CreateUserRequest = await req.json();
-    const { email, firstName, lastName } = body;
+    const { email, firstName, lastName, acknowledgeDeleted } = body;
 
     // Validate required fields
     if (!email || !firstName || !lastName) {
@@ -89,6 +95,29 @@ Deno.serve(async (req) => {
     const adminClient = createClient(supabaseUrl, supabaseServiceKey, {
       auth: { autoRefreshToken: false, persistSession: false },
     });
+
+    // Phase 4 guardrail — block silent recreation of a previously-deleted
+    // agent. Admin must acknowledge in the UI and resubmit with
+    // { acknowledgeDeleted: true } to bypass.
+    if (!acknowledgeDeleted) {
+      const match = await findDeletedAgent(adminClient, email);
+      if (match) {
+        console.warn(
+          "[admin-create-user] blocked previously-deleted agent:",
+          email,
+          match.id,
+        );
+        return new Response(
+          JSON.stringify({
+            error:
+              "This agent was previously deleted. Confirm in the UI to proceed.",
+            code: "previously_deleted",
+            match,
+          }),
+          { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+    }
 
     // Create the user using admin API (does NOT sign in the new user).
     // No password is set — the agent will create their password via the
