@@ -407,6 +407,18 @@ const AgentAccountSetup = () => {
 
     setSubmitting(true);
     try {
+      // Determine whether this agent came in via the Admin-Created (Invited)
+      // path. Invited agents self-activate at the end of Phase 2 and land in
+      // the Success Hub. Requested-access (Verified) agents keep the
+      // existing behavior: agent_status → pending, redirect to
+      // /pending-verification for admin approval.
+      const { data: preSettings } = await supabase
+        .from("agent_settings")
+        .select("agent_status")
+        .eq("user_id", userId)
+        .maybeSingle();
+      const wasInvited = preSettings?.agent_status === "invited";
+
       let headshotUrl: string | null = null;
       if (headshotFile) {
         setUploadingHeadshot(true);
@@ -441,24 +453,36 @@ const AgentAccountSetup = () => {
         .eq("id", userId);
       if (profErr) throw profErr;
 
+      const nowIso = new Date().toISOString();
+      const settingsUpdate: Record<string, unknown> = {
+        license_state: licenseState,
+        license_number: licenseNumber.trim(),
+        license_last_name: lastName.trim() || null,
+        updated_at: nowIso,
+      };
+      if (wasInvited) {
+        // Admin already verified this agent by creating them. Self-activate.
+        settingsUpdate.agent_status = "verified";
+        settingsUpdate.verified_at = nowIso;
+        settingsUpdate.account_activated_at = nowIso;
+      } else {
+        // Requested-access agent finishing setup — awaits admin approval.
+        settingsUpdate.agent_status = "pending";
+      }
       const { error: setErr } = await supabase
         .from("agent_settings")
-        .update({
-          license_state: licenseState,
-          license_number: licenseNumber.trim(),
-          license_last_name: lastName.trim() || null,
-          // Setup complete → waiting for admin approval. Admin will flip
-          // this to "verified" from the approval queue.
-          agent_status: "pending",
-          updated_at: new Date().toISOString(),
-        })
+        .update(settingsUpdate)
         .eq("user_id", userId);
       if (setErr) console.warn("[AgentAccountSetup] settings update warn:", setErr);
 
-      toast.success("Profile submitted — we'll review and activate your account shortly.");
-      // Do NOT land newly-setup agents in the Success Hub. They stay on
-      // /pending-verification until an admin approves them (agent_status → verified).
-      navigate("/pending-verification", { replace: true });
+      if (wasInvited) {
+        toast.success("You're all set — welcome to All Agent Connect.");
+        const resolved = await resolveUserRole(userId);
+        navigate(getRouteForRole(resolved), { replace: true });
+      } else {
+        toast.success("Profile submitted — we'll review and activate your account shortly.");
+        navigate("/pending-verification", { replace: true });
+      }
     } catch (err: any) {
       console.error("[AgentAccountSetup] profile completion error:", err);
       toast.error(err?.message || "Could not save your profile. Please try again.");
