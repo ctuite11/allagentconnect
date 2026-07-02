@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Loader2, Upload, CheckCircle2 } from "lucide-react";
@@ -17,6 +17,8 @@ const ACCEPTED_TYPES = ["image/jpeg", "image/png", "application/pdf"];
 
 const PendingVerification = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const justSubmitted = searchParams.get("submitted") === "1";
   const [loading, setLoading] = useState(true);
   const [isApproved, setIsApproved] = useState(false);
   const [isRejected, setIsRejected] = useState(false);
@@ -427,13 +429,19 @@ const PendingVerification = () => {
     <PendingShell maxWidth="560px">
       <div className="flex flex-col items-center text-center">
         <h1 className="mt-4 text-[34px] font-semibold leading-tight tracking-normal text-foreground sm:text-[42px]">
-          Almost there.
+          {!hasSession && justSubmitted ? "We’ve received your request." : "Almost there."}
         </h1>
 
-        {userEmail && (
-          <p className="mt-4 max-w-[420px] text-[15px] leading-6 text-muted-foreground sm:text-base">
-            Your AAC membership request is in review. We’ll email you as soon as verification is complete.
+        {!hasSession && justSubmitted ? (
+          <p className="mt-4 max-w-[440px] text-[15px] leading-6 text-muted-foreground sm:text-base">
+            Thanks for requesting access. Our team will verify your real-estate license and email you as soon as you’re approved.
           </p>
+        ) : (
+          userEmail && (
+            <p className="mt-4 max-w-[420px] text-[15px] leading-6 text-muted-foreground sm:text-base">
+              Your AAC membership request is in review. We’ll email you as soon as verification is complete.
+            </p>
+          )
         )}
 
         <div className="mt-8 w-full rounded-[28px] border border-border bg-foreground px-5 py-4 text-primary-foreground shadow-custom-lg sm:mt-10">
