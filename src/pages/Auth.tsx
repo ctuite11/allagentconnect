@@ -930,6 +930,7 @@ const Auth = () => {
       setPhone("");
       setLicenseState("");
       setLicenseNumber("");
+      setCompany("");
       turnstile.reset();
     }
   };
