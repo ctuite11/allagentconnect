@@ -3417,43 +3417,70 @@ export type Database = {
       }
       pending_verifications: {
         Row: {
+          company: string | null
+          converted_user_id: string | null
           created_at: string | null
           email: string
           first_name: string
           id: string
           last_name: string
+          license_last_name: string | null
           license_number: string | null
           license_state: string | null
+          phone: string | null
           processed: boolean | null
           processed_at: string | null
           processed_by: string | null
-          user_id: string
+          rejected_at: string | null
+          rejected_reason: string | null
+          status: string
+          turnstile_verified_at: string | null
+          updated_at: string
+          user_id: string | null
         }
         Insert: {
+          company?: string | null
+          converted_user_id?: string | null
           created_at?: string | null
           email: string
           first_name: string
           id?: string
           last_name: string
+          license_last_name?: string | null
           license_number?: string | null
           license_state?: string | null
+          phone?: string | null
           processed?: boolean | null
           processed_at?: string | null
           processed_by?: string | null
-          user_id: string
+          rejected_at?: string | null
+          rejected_reason?: string | null
+          status?: string
+          turnstile_verified_at?: string | null
+          updated_at?: string
+          user_id?: string | null
         }
         Update: {
+          company?: string | null
+          converted_user_id?: string | null
           created_at?: string | null
           email?: string
           first_name?: string
           id?: string
           last_name?: string
+          license_last_name?: string | null
           license_number?: string | null
           license_state?: string | null
+          phone?: string | null
           processed?: boolean | null
           processed_at?: string | null
           processed_by?: string | null
-          user_id?: string
+          rejected_at?: string | null
+          rejected_reason?: string | null
+          status?: string
+          turnstile_verified_at?: string | null
+          updated_at?: string
+          user_id?: string | null
         }
         Relationships: []
       }
