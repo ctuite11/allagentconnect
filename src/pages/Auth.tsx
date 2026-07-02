@@ -125,7 +125,6 @@ const Auth = () => {
     abortRef.current?.abort();
     isRegistering.current = false;
     setLoading(false);
-    setRegisterStep(null);
     toast.info("Registration cancelled");
   };
 
@@ -487,7 +486,6 @@ const Auth = () => {
     abortRef.current = new AbortController();
 
     setLoading(true);
-    setRegisterStep("finishing");
     isRegistering.current = true;
     let submissionSucceeded = false;
 
@@ -614,7 +612,6 @@ const Auth = () => {
       isRegistering.current = false;
       abortRef.current = null;
       setLoading(false);
-      setRegisterStep(null);
     }
   };
 
