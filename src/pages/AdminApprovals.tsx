@@ -1038,6 +1038,13 @@ export default function AdminApprovals() {
       if (!ok) return;
     }
 
+    // Phase 4 guardrail — same "previously deleted" check as Verify.
+    const proceed = await guardDeletedAgent(
+      agent.email,
+      "email a setup link to this agent",
+    );
+    if (!proceed) return;
+
     setSendingSetupLinkFor((prev) => new Set(prev).add(agent.id));
     try {
       const setupUrl = await generateSetupLink(agent);
@@ -1047,6 +1054,9 @@ export default function AdminApprovals() {
           to: agent.email,
           agentName: agent.first_name || undefined,
           ctaUrl: setupUrl,
+          // Gate already passed above → allow the send even for a
+          // previously-deleted email.
+          acknowledgeDeleted: true,
         },
       });
       if (error) {
