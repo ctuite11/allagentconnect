@@ -363,6 +363,14 @@ export default function AdminApprovals() {
 
   // Handle status change with upsert - branches for early access vs real agents
   const handleStatusChange = async (agent: Agent, newStatus: string) => {
+    // Safety guard — invited (admin-created) agents must never enter the
+    // pending/verify flow. They complete /agent-setup and self-activate.
+    if (agent.agent_status === "invited" && newStatus === "verified") {
+      toast.error(
+        "Admin-created agents are already verified. They activate by completing /agent-setup — no manual verify.",
+      );
+      return;
+    }
     setProcessingIds((prev) => new Set(prev).add(agent.id));
 
     try {
