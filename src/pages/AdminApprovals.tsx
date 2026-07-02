@@ -1396,6 +1396,15 @@ export default function AdminApprovals() {
                     </div>
                   </div>
 
+                  {/* Email delivery status — read-only surfacing from email_jobs */}
+                  <div className="mt-2 flex flex-wrap items-center gap-2 pl-8">
+                    <EmailDeliveryBadge label="Invite" info={agent.invite_email} />
+                    <EmailDeliveryBadge
+                      label="License Verified"
+                      info={agent.license_verified_email}
+                    />
+                  </div>
+
                   {/* Row 2: Actions */}
                   <div className="mt-3 flex items-center gap-2 text-sm">
                   {deriveAdminStatus(agent) === "invited" ? (
