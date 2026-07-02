@@ -4581,6 +4581,7 @@ export type Database = {
         | "verified"
         | "restricted"
         | "rejected"
+        | "invited"
       app_role: "buyer" | "agent" | "admin"
       property_type:
         | "single_family"
@@ -4736,6 +4737,7 @@ export const Constants = {
         "verified",
         "restricted",
         "rejected",
+        "invited",
       ],
       app_role: ["buyer", "agent", "admin"],
       property_type: [
