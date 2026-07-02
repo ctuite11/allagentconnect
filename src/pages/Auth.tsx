@@ -1022,8 +1022,27 @@ const Auth = () => {
                 </div>
               )}
 
-              {/* Password field (not for forgot-password) */}
-              {mode !== "forgot-password" && (
+              {/* Registration: optional company field */}
+              {mode === "register" && (
+                <div>
+                  <Label htmlFor="company" className="text-[13px] font-medium text-neutral-700">
+                    Brokerage / Company <span className="text-neutral-400 font-normal">(optional)</span>
+                  </Label>
+                  <Input
+                    id="company"
+                    type="text"
+                    placeholder="Your brokerage"
+                    value={company}
+                    onChange={(e) => setCompany(e.target.value)}
+                    className="mt-1.5 h-11 border-zinc-200 rounded-[10px] bg-white placeholder:text-neutral-400 focus:ring-0 focus:border-[#50C878] focus-visible:border-[#50C878] focus-visible:ring-2 focus-visible:ring-[#50C878]/20"
+                  />
+                </div>
+              )}
+
+              {/* Password field — sign-in only. Register mode no longer collects
+                  a password; the agent sets it after license verification via
+                  the setup link. */}
+              {mode === "signin" && (
                 <div>
                   <Label htmlFor="password" className="text-[13px] font-medium text-neutral-700">
                     Password
@@ -1037,46 +1056,6 @@ const Auth = () => {
                     containerClassName="mt-1.5"
                     className="h-11 border-zinc-200 rounded-[10px] bg-white placeholder:text-neutral-400 focus:ring-0 focus:border-[#50C878] focus-visible:border-[#50C878] focus-visible:ring-2 focus-visible:ring-[#50C878]/20"
                   />
-                </div>
-              )}
-
-              {/* Password rules checklist - only for register mode */}
-              {mode === "register" && password.length > 0 && (
-                <div className="bg-neutral-50 rounded-lg p-3">
-                  <PasswordChecklist password={password} />
-                </div>
-              )}
-
-              {/* Confirm password - only for register mode */}
-              {mode === "register" && (
-                <div>
-                  <Label htmlFor="confirmPassword" className="text-[13px] font-medium text-neutral-700">
-                    Confirm Password
-                  </Label>
-                  <PasswordInput
-                    id="confirmPassword"
-                    placeholder="••••••••"
-                    required
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    containerClassName="mt-1.5"
-                    className="h-11 border-zinc-200 rounded-[10px] bg-white placeholder:text-neutral-400 focus:ring-0 focus:border-[#50C878] focus-visible:border-[#50C878] focus-visible:ring-2 focus-visible:ring-[#50C878]/20"
-                  />
-                  {confirmPassword.length > 0 && (
-                    <div className="flex items-center gap-2 text-sm mt-2">
-                      {passwordsMatch ? (
-                        <>
-                          <CheckCircle2 className="h-4 w-4 text-[#50C878]" />
-                          <span className="text-[#50C878]">Passwords match</span>
-                        </>
-                      ) : (
-                        <>
-                          <Circle className="h-4 w-4 text-neutral-400" />
-                          <span className="text-neutral-500">Passwords do not match</span>
-                        </>
-                      )}
-                    </div>
-                  )}
                 </div>
               )}
 
@@ -1106,9 +1085,9 @@ const Auth = () => {
                 disabled={
                   loading ||
                   (mode === "register" &&
-                    (!allPasswordRulesPass ||
-                      !passwordsMatch ||
-                      !licenseState ||
+                    (!licenseState ||
+                      !firstName.trim() ||
+                      !lastName.trim() ||
                       !licenseNumber.trim() ||
                       !turnstile.isVerified))
                 }
@@ -1117,19 +1096,13 @@ const Auth = () => {
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     {mode === "signin" && "Signing in..."}
-                    {mode === "register" && (
-                      registerStep === "creating_account" ? "Creating account..." :
-                      registerStep === "saving_profile" ? "Saving profile..." :
-                      registerStep === "saving_license" ? "Saving license..." :
-                      registerStep === "finishing" ? "Finishing up..." :
-                      "Creating account..."
-                    )}
+                    {mode === "register" && "Submitting request..."}
                     {mode === "forgot-password" && "Sending..."}
                   </>
                 ) : (
                   <>
                     {mode === "signin" && "Sign In"}
-                    {mode === "register" && "Create Account"}
+                    {mode === "register" && "Request Access"}
                     {mode === "forgot-password" && "Send Reset Link"}
                   </>
                 )}
