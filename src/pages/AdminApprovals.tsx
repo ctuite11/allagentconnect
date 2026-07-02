@@ -447,7 +447,11 @@ export default function AdminApprovals() {
   }, [agents]);
 
   // Handle status change with upsert - branches for early access vs real agents
-  const handleStatusChange = async (agent: Agent, newStatus: string) => {
+  const handleStatusChange = async (
+    agent: Agent,
+    newStatus: string,
+    acknowledgeDeleted: boolean = false,
+  ) => {
     // Safety guard — invited (admin-created) agents must never enter the
     // pending/verify flow. They complete /agent-setup and self-activate.
     if (agent.agent_status === "invited" && newStatus === "verified") {
@@ -456,6 +460,17 @@ export default function AdminApprovals() {
       );
       return;
     }
+
+    // Phase 4 guardrail — for every verify action, if this email was
+    // previously deleted as an agent, require an explicit admin ack before
+    // recreating the account and re-sending the License Verified email.
+    // Rejection paths are unaffected — they never create or email anyone.
+    if (newStatus === "verified" && !acknowledgeDeleted) {
+      const proceed = await guardDeletedAgent(agent.email, "verify this agent");
+      if (!proceed) return;
+      acknowledgeDeleted = true;
+    }
+
     setProcessingIds((prev) => new Set(prev).add(agent.id));
 
     try {
@@ -467,7 +482,12 @@ export default function AdminApprovals() {
         if (newStatus === "verified") {
           const { data: convData, error: convErr } = await supabase.functions.invoke(
             "convert-pending-verification-to-agent",
-            { body: { pendingVerificationId: agent.pending_verification_id ?? agent.id } },
+            {
+              body: {
+                pendingVerificationId: agent.pending_verification_id ?? agent.id,
+                ...(acknowledgeDeleted ? { acknowledgeDeleted: true } : {}),
+              },
+            },
           );
           if (convErr || !convData?.ok || !convData?.userId) {
             console.error("[AdminApprovals] convert failed:", convErr || convData);
@@ -485,6 +505,7 @@ export default function AdminApprovals() {
                 to: agent.email,
                 agentName: agent.first_name || undefined,
                 idempotencyKey: `license-verified:verify:${newUserId}`,
+                ...(acknowledgeDeleted ? { acknowledgeDeleted: true } : {}),
               },
             },
           );
@@ -548,6 +569,7 @@ export default function AdminApprovals() {
                 licenseNumber: agent.license_number,
                 brokerage: agent.company,
                 skipEmail: true,
+                ...(acknowledgeDeleted ? { acknowledgeDeleted: true } : {}),
               },
             },
           );
@@ -590,6 +612,7 @@ export default function AdminApprovals() {
               to: agent.email,
               agentName: agent.first_name || undefined,
               idempotencyKey: `license-verified:verify:${agent.id}`,
+              ...(acknowledgeDeleted ? { acknowledgeDeleted: true } : {}),
             },
           },
         );
