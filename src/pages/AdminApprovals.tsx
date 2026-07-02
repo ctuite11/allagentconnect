@@ -1382,6 +1382,43 @@ export default function AdminApprovals() {
 
                   {/* Row 2: Actions */}
                   <div className="mt-3 flex items-center gap-2 text-sm">
+                  {deriveAdminStatus(agent) === "invited" ? (
+                    <>
+                      <button
+                        onClick={() => handleResendInvite(agent)}
+                        disabled={resendingInviteFor.has(agent.id)}
+                        className={
+                          resendingInviteFor.has(agent.id)
+                            ? "text-zinc-300 cursor-not-allowed"
+                            : "text-emerald-600 hover:text-emerald-800 hover:underline transition-colors font-medium"
+                        }
+                      >
+                        {resendingInviteFor.has(agent.id) ? "Sending…" : "Resend Invite"}
+                      </button>
+                      <span className="text-zinc-300">•</span>
+                      <button
+                        onClick={() => handleCopySetupLink(agent)}
+                        className="text-zinc-500 hover:text-zinc-900 hover:underline transition-colors"
+                      >
+                        Copy Setup Link
+                      </button>
+                      <span className="text-zinc-300">•</span>
+                      <button
+                        onClick={() => setEditAgent(agent)}
+                        className="text-zinc-500 hover:text-zinc-900 hover:underline transition-colors"
+                      >
+                        Edit
+                      </button>
+                      <span className="text-zinc-300">•</span>
+                      <button
+                        onClick={() => setDeleteAgent(agent)}
+                        className="text-rose-600 hover:text-rose-700 hover:underline transition-colors"
+                      >
+                        Delete
+                      </button>
+                    </>
+                  ) : (
+                  <>
                     <button 
                       onClick={() => {
                         const risks = risksForAgent(agent);
@@ -1465,6 +1502,8 @@ export default function AdminApprovals() {
                     >
                       Delete
                     </button>
+                  </>
+                  )}
                   </div>
                 </div>
               );
