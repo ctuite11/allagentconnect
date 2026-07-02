@@ -310,6 +310,30 @@ const AgentAccountSetup = () => {
         console.warn("[AgentAccountSetup] activation marker write failed (non-fatal):", e);
       }
 
+      // For admin-created (invited) agents, self-activate now — admin has
+      // already vetted them, no further approval gate. Never downgrade an
+      // already-verified row.
+      try {
+        const { data: pre } = await supabase
+          .from("agent_settings")
+          .select("agent_status")
+          .eq("user_id", data.user.id)
+          .maybeSingle();
+        if (pre?.agent_status === "invited") {
+          const nowIso2 = new Date().toISOString();
+          await supabase
+            .from("agent_settings")
+            .update({
+              agent_status: "verified",
+              verified_at: nowIso2,
+              updated_at: nowIso2,
+            })
+            .eq("user_id", data.user.id);
+        }
+      } catch (e) {
+        console.warn("[AgentAccountSetup] invited→verified flip skipped:", e);
+      }
+
       clearRecoveryState();
       window.history.replaceState(null, "", "/agent-setup");
 
@@ -321,136 +345,13 @@ const AgentAccountSetup = () => {
         console.warn("[AgentAccountSetup] default comms channels skipped:", e);
       }
 
-      toast.success("Password created. One last step — complete your profile.");
+      toast.success("You're all set — welcome to All Agent Connect.");
       setUserId(data.user.id);
-      setPhase(2);
+      const resolved = await resolveUserRole(data.user.id);
+      navigate(getRouteForRole(resolved), { replace: true });
     } catch (err: any) {
       console.error("[AgentAccountSetup] error:", err);
       toast.error(err?.message || "Activation failed. Please try again.");
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleHeadshotChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (!file.type.startsWith("image/")) {
-      toast.error("Please upload an image file.");
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("Headshot must be under 5MB.");
-      return;
-    }
-    setHeadshotFile(file);
-    setHeadshotPreview(URL.createObjectURL(file));
-  };
-
-  const handleCompleteProfile = async () => {
-    if (!userId) {
-      toast.error("Session lost. Please refresh and try again.");
-      return;
-    }
-    const digits = phone.replace(/\D/g, "");
-    if (digits.length < 10) {
-      toast.error("Please enter a valid phone number.");
-      return;
-    }
-    if (company.trim().length < 2) {
-      toast.error("Please enter your brokerage.");
-      return;
-    }
-    if (!licenseState) {
-      toast.error("Please select your license state.");
-      return;
-    }
-    if (!licenseNumber.trim()) {
-      toast.error("Please enter your license number.");
-      return;
-    }
-
-    setSubmitting(true);
-    try {
-      // Determine whether this agent came in via the Admin-Created (Invited)
-      // path. Invited agents self-activate at the end of Phase 2 and land in
-      // the Success Hub. Requested-access (Verified) agents keep the
-      // existing behavior: agent_status → pending, redirect to
-      // /pending-verification for admin approval.
-      const { data: preSettings } = await supabase
-        .from("agent_settings")
-        .select("agent_status")
-        .eq("user_id", userId)
-        .maybeSingle();
-      const wasInvited = preSettings?.agent_status === "invited";
-
-      let headshotUrl: string | null = null;
-      if (headshotFile) {
-        setUploadingHeadshot(true);
-        try {
-          const ext = headshotFile.name.split(".").pop() || "jpg";
-          const path = `${userId}/headshot-${Date.now()}.${ext}`;
-          const { error: upErr } = await supabase.storage
-            .from("agent-headshots")
-            .upload(path, headshotFile, { upsert: true });
-          if (upErr) throw upErr;
-          const { data: pub } = supabase.storage
-            .from("agent-headshots")
-            .getPublicUrl(path);
-          headshotUrl = pub.publicUrl;
-        } catch (upEx) {
-          console.warn("[AgentAccountSetup] headshot upload failed:", upEx);
-          toast.error("Headshot upload failed. Continuing without it.");
-        } finally {
-          setUploadingHeadshot(false);
-        }
-      }
-
-      const profileUpdate: Record<string, unknown> = {
-        phone: phone.trim(),
-        company: company.trim(),
-      };
-      if (headshotUrl) profileUpdate.headshot_url = headshotUrl;
-
-      const { error: profErr } = await supabase
-        .from("agent_profiles")
-        .update(profileUpdate)
-        .eq("id", userId);
-      if (profErr) throw profErr;
-
-      const nowIso = new Date().toISOString();
-      const settingsUpdate: Record<string, unknown> = {
-        license_state: licenseState,
-        license_number: licenseNumber.trim(),
-        license_last_name: lastName.trim() || null,
-        updated_at: nowIso,
-      };
-      if (wasInvited) {
-        // Admin already verified this agent by creating them. Self-activate.
-        settingsUpdate.agent_status = "verified";
-        settingsUpdate.verified_at = nowIso;
-        settingsUpdate.account_activated_at = nowIso;
-      } else {
-        // Requested-access agent finishing setup — awaits admin approval.
-        settingsUpdate.agent_status = "pending";
-      }
-      const { error: setErr } = await supabase
-        .from("agent_settings")
-        .update(settingsUpdate)
-        .eq("user_id", userId);
-      if (setErr) console.warn("[AgentAccountSetup] settings update warn:", setErr);
-
-      if (wasInvited) {
-        toast.success("You're all set — welcome to All Agent Connect.");
-        const resolved = await resolveUserRole(userId);
-        navigate(getRouteForRole(resolved), { replace: true });
-      } else {
-        toast.success("Profile submitted — we'll review and activate your account shortly.");
-        navigate("/pending-verification", { replace: true });
-      }
-    } catch (err: any) {
-      console.error("[AgentAccountSetup] profile completion error:", err);
-      toast.error(err?.message || "Could not save your profile. Please try again.");
     } finally {
       setSubmitting(false);
     }
