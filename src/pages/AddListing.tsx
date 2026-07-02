@@ -3309,7 +3309,7 @@ const AddListing = () => {
                     ) : (
                       <>
                         <Upload className="h-4 w-4 shrink-0" />
-                        Publish
+                        Publish Listing
                       </>
                     )}
                   </Button>
