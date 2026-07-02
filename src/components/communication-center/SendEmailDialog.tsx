@@ -247,29 +247,7 @@ export function SendEmailDialog({ open, onOpenChange, onSuccess }: SendEmailDial
         return;
       }
 
-      // Build criteria
-      const cities: string[] = [];
-      const neighborhoods: string[] = [];
-      
-      selectedCities.forEach(town => {
-        if (town.includes('-')) {
-          const [city, neighborhood] = town.split('-');
-          if (!cities.includes(city)) cities.push(city);
-          neighborhoods.push(neighborhood);
-        } else {
-          if (!cities.includes(town)) cities.push(town);
-        }
-      });
-
-      const criteria = {
-        state,
-        counties: selectedCountyId !== "all" ? [selectedCountyId] : undefined,
-        cities: cities.length > 0 ? cities : undefined,
-        neighborhoods: neighborhoods.length > 0 ? neighborhoods : undefined,
-        minPrice: minPrice ? parseFloat(minPrice) : undefined,
-        maxPrice: maxPrice ? parseFloat(maxPrice) : undefined,
-        propertyTypes: propertyTypes.length > 0 ? propertyTypes : undefined,
-      };
+      const criteria = buildCriteria();
 
       const { data, error } = await supabase.functions.invoke(
         "send-client-need-notification",
