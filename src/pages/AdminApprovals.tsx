@@ -56,6 +56,11 @@ import { assessRisks, hasRedFlag, type Risk } from "@/lib/agentSignupValidation"
 import { useAgentPresenceBatch } from "@/hooks/useAgentLastSeen";
 import { AgentOnlinePresenceBadge } from "@/components/ui/AgentOnlinePresenceBadge";
 import {
+  EmailDeliveryBadge,
+  EmailDeliveryLegend,
+  type EmailStatusInfo,
+} from "@/components/admin/EmailDeliveryBadge";
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -82,6 +87,8 @@ interface Agent {
   has_auth_account?: boolean;
   last_sign_in_at?: string | null;
   account_activated_at?: string | null;
+  invite_email?: EmailStatusInfo | null;
+  license_verified_email?: EmailStatusInfo | null;
 }
 
 const stateLicenseLookupUrls: Record<string, string> = {
