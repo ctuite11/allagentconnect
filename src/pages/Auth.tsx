@@ -101,6 +101,7 @@ const Auth = () => {
   const [phone, setPhone] = useState("");
   const [licenseState, setLicenseState] = useState("");
   const [licenseNumber, setLicenseNumber] = useState("");
+  const [company, setCompany] = useState("");
   
   // UI state
   const [loading, setLoading] = useState(false);
@@ -196,6 +197,7 @@ const Auth = () => {
     setPhone("");
     setLicenseState("");
     setLicenseNumber("");
+    setCompany("");
     setMode("signin");
     try { turnstile.reset(); } catch { /* ignore */ }
 
