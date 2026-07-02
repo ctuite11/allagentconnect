@@ -23,17 +23,6 @@ import { cn } from "@/lib/utils";
 import { getRouteForRole, resolveUserRole } from "@/lib/resolveUserRole";
 import { clearRecoveryState } from "@/lib/authRecovery";
 import { ensureDefaultCommsChannels } from "@/lib/ensureDefaultCommsChannels";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-
-const US_STATES = [
-  "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY","DC",
-];
 
 /**
  * Agent Account Setup — final step of the approved-agent "License Verified"
@@ -85,7 +74,6 @@ const AgentAccountSetup = () => {
 
   const [validating, setValidating] = useState(true);
   const [sessionError, setSessionError] = useState<string | null>(null);
-  const [phase, setPhase] = useState<1 | 2>(1);
   const [userId, setUserId] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [firstName, setFirstName] = useState("");
@@ -93,15 +81,6 @@ const AgentAccountSetup = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
-
-  // Phase 2 fields
-  const [phone, setPhone] = useState("");
-  const [company, setCompany] = useState("");
-  const [licenseState, setLicenseState] = useState("");
-  const [licenseNumber, setLicenseNumber] = useState("");
-  const [headshotFile, setHeadshotFile] = useState<File | null>(null);
-  const [headshotPreview, setHeadshotPreview] = useState<string | null>(null);
-  const [uploadingHeadshot, setUploadingHeadshot] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -183,7 +162,7 @@ const AgentAccountSetup = () => {
           const { data: profile, error: profileError } = await withTimeout(
             supabase
               .from("agent_profiles")
-              .select("first_name, last_name, phone, company, headshot_url")
+              .select("first_name, last_name")
               .eq("id", sessionUserId)
               .maybeSingle(),
             2500,
@@ -195,35 +174,21 @@ const AgentAccountSetup = () => {
           if (!cancelled) {
             if (profile?.first_name) setFirstName(profile.first_name);
             if (profile?.last_name) setLastName(profile.last_name);
-            if (profile?.phone) setPhone(profile.phone);
-            if (profile?.company) setCompany(profile.company);
-            if (profile?.headshot_url) setHeadshotPreview(profile.headshot_url);
 
-            // Prefill license fields from agent_settings
+            // If the account was already activated and we're NOT inside an
+            // active recovery / password-setup handoff, route straight to the
+            // agent's role home instead of re-showing the password form.
             const { data: settings } = await supabase
               .from("agent_settings")
-              .select("license_state, license_number, account_activated_at")
+              .select("account_activated_at")
               .eq("user_id", sessionUserId)
               .maybeSingle();
-            if (settings?.license_state) setLicenseState(settings.license_state);
-            if (settings?.license_number) setLicenseNumber(settings.license_number);
-
-            // If password is already set (account_activated_at present) AND we're
-            // NOT in a recovery/setup flow, land on Phase 2 or route home.
             const isSetup = sessionStorage.getItem("aac_password_setup_flow") === "1";
             const isRecovery = sessionStorage.getItem("aac_recovery_flow") === "1";
             if (settings?.account_activated_at && !isSetup && !isRecovery) {
-              const profileComplete =
-                !!profile?.phone &&
-                !!profile?.company &&
-                !!settings?.license_state &&
-                !!settings?.license_number;
-              if (profileComplete) {
-                const resolved = await resolveUserRole(sessionUserId);
-                navigate(getRouteForRole(resolved), { replace: true });
-                return;
-              }
-              setPhase(2);
+              const resolved = await resolveUserRole(sessionUserId);
+              navigate(getRouteForRole(resolved), { replace: true });
+              return;
             }
           }
         } catch (profileErr) {
@@ -345,6 +310,30 @@ const AgentAccountSetup = () => {
         console.warn("[AgentAccountSetup] activation marker write failed (non-fatal):", e);
       }
 
+      // For admin-created (invited) agents, self-activate now — admin has
+      // already vetted them, no further approval gate. Never downgrade an
+      // already-verified row.
+      try {
+        const { data: pre } = await supabase
+          .from("agent_settings")
+          .select("agent_status")
+          .eq("user_id", data.user.id)
+          .maybeSingle();
+        if (pre?.agent_status === "invited") {
+          const nowIso2 = new Date().toISOString();
+          await supabase
+            .from("agent_settings")
+            .update({
+              agent_status: "verified",
+              verified_at: nowIso2,
+              updated_at: nowIso2,
+            })
+            .eq("user_id", data.user.id);
+        }
+      } catch (e) {
+        console.warn("[AgentAccountSetup] invited→verified flip skipped:", e);
+      }
+
       clearRecoveryState();
       window.history.replaceState(null, "", "/agent-setup");
 
@@ -356,136 +345,13 @@ const AgentAccountSetup = () => {
         console.warn("[AgentAccountSetup] default comms channels skipped:", e);
       }
 
-      toast.success("Password created. One last step — complete your profile.");
+      toast.success("You're all set — welcome to All Agent Connect.");
       setUserId(data.user.id);
-      setPhase(2);
+      const resolved = await resolveUserRole(data.user.id);
+      navigate(getRouteForRole(resolved), { replace: true });
     } catch (err: any) {
       console.error("[AgentAccountSetup] error:", err);
       toast.error(err?.message || "Activation failed. Please try again.");
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleHeadshotChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (!file.type.startsWith("image/")) {
-      toast.error("Please upload an image file.");
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("Headshot must be under 5MB.");
-      return;
-    }
-    setHeadshotFile(file);
-    setHeadshotPreview(URL.createObjectURL(file));
-  };
-
-  const handleCompleteProfile = async () => {
-    if (!userId) {
-      toast.error("Session lost. Please refresh and try again.");
-      return;
-    }
-    const digits = phone.replace(/\D/g, "");
-    if (digits.length < 10) {
-      toast.error("Please enter a valid phone number.");
-      return;
-    }
-    if (company.trim().length < 2) {
-      toast.error("Please enter your brokerage.");
-      return;
-    }
-    if (!licenseState) {
-      toast.error("Please select your license state.");
-      return;
-    }
-    if (!licenseNumber.trim()) {
-      toast.error("Please enter your license number.");
-      return;
-    }
-
-    setSubmitting(true);
-    try {
-      // Determine whether this agent came in via the Admin-Created (Invited)
-      // path. Invited agents self-activate at the end of Phase 2 and land in
-      // the Success Hub. Requested-access (Verified) agents keep the
-      // existing behavior: agent_status → pending, redirect to
-      // /pending-verification for admin approval.
-      const { data: preSettings } = await supabase
-        .from("agent_settings")
-        .select("agent_status")
-        .eq("user_id", userId)
-        .maybeSingle();
-      const wasInvited = preSettings?.agent_status === "invited";
-
-      let headshotUrl: string | null = null;
-      if (headshotFile) {
-        setUploadingHeadshot(true);
-        try {
-          const ext = headshotFile.name.split(".").pop() || "jpg";
-          const path = `${userId}/headshot-${Date.now()}.${ext}`;
-          const { error: upErr } = await supabase.storage
-            .from("agent-headshots")
-            .upload(path, headshotFile, { upsert: true });
-          if (upErr) throw upErr;
-          const { data: pub } = supabase.storage
-            .from("agent-headshots")
-            .getPublicUrl(path);
-          headshotUrl = pub.publicUrl;
-        } catch (upEx) {
-          console.warn("[AgentAccountSetup] headshot upload failed:", upEx);
-          toast.error("Headshot upload failed. Continuing without it.");
-        } finally {
-          setUploadingHeadshot(false);
-        }
-      }
-
-      const profileUpdate: Record<string, unknown> = {
-        phone: phone.trim(),
-        company: company.trim(),
-      };
-      if (headshotUrl) profileUpdate.headshot_url = headshotUrl;
-
-      const { error: profErr } = await supabase
-        .from("agent_profiles")
-        .update(profileUpdate)
-        .eq("id", userId);
-      if (profErr) throw profErr;
-
-      const nowIso = new Date().toISOString();
-      const settingsUpdate: Record<string, unknown> = {
-        license_state: licenseState,
-        license_number: licenseNumber.trim(),
-        license_last_name: lastName.trim() || null,
-        updated_at: nowIso,
-      };
-      if (wasInvited) {
-        // Admin already verified this agent by creating them. Self-activate.
-        settingsUpdate.agent_status = "verified";
-        settingsUpdate.verified_at = nowIso;
-        settingsUpdate.account_activated_at = nowIso;
-      } else {
-        // Requested-access agent finishing setup — awaits admin approval.
-        settingsUpdate.agent_status = "pending";
-      }
-      const { error: setErr } = await supabase
-        .from("agent_settings")
-        .update(settingsUpdate)
-        .eq("user_id", userId);
-      if (setErr) console.warn("[AgentAccountSetup] settings update warn:", setErr);
-
-      if (wasInvited) {
-        toast.success("You're all set — welcome to All Agent Connect.");
-        const resolved = await resolveUserRole(userId);
-        navigate(getRouteForRole(resolved), { replace: true });
-      } else {
-        toast.success("Profile submitted — we'll review and activate your account shortly.");
-        navigate("/pending-verification", { replace: true });
-      }
-    } catch (err: any) {
-      console.error("[AgentAccountSetup] profile completion error:", err);
-      toast.error(err?.message || "Could not save your profile. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -550,15 +416,13 @@ const AgentAccountSetup = () => {
             <div className="space-y-4">
               <span className={AGENT_BADGE_CLASS}>
                 <ShieldCheck className="w-3.5 h-3.5" />
-                {phase === 1 ? "License verified" : "Almost there"}
+                License verified
               </span>
               <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight text-zinc-900 leading-[1.15]">
-                {phase === 1 ? "Welcome to All Agent Connect" : "One last step — complete your profile"}
+                Welcome to All Agent Connect
               </h1>
               <p className="text-[15px] sm:text-base text-zinc-500 leading-relaxed max-w-md">
-                {phase === 1
-                  ? "Your license has been verified. Create your password to activate your agent account and access your Success Hub."
-                  : "This is what other agents and buyers see. You can update it any time in Settings."}
+                Your license has been verified. Create your password to activate your agent account and access your Success Hub.
               </p>
             </div>
 
@@ -576,7 +440,6 @@ const AgentAccountSetup = () => {
 
           <div className="lg:pl-4 lg:-mt-7">
             <div className="max-w-md mx-auto lg:mx-0 lg:ml-auto rounded-3xl border border-zinc-200 bg-white shadow-sm p-7 sm:p-8">
-              {phase === 1 ? (
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
@@ -686,106 +549,6 @@ const AgentAccountSetup = () => {
                   <a href="/privacy" className="underline hover:text-zinc-600">Privacy Policy</a>.
                 </p>
               </form>
-              ) : (
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  void handleCompleteProfile();
-                }}
-                className="space-y-5"
-              >
-                <div className="space-y-1.5">
-                  <Label htmlFor="phone" className="text-[13px] text-zinc-600">Phone *</Label>
-                  <Input
-                    id="phone"
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="(555) 123-4567"
-                    className="h-11 rounded-xl"
-                    required
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label htmlFor="company" className="text-[13px] text-zinc-600">Brokerage *</Label>
-                  <Input
-                    id="company"
-                    value={company}
-                    onChange={(e) => setCompany(e.target.value)}
-                    placeholder="e.g. Compass"
-                    className="h-11 rounded-xl"
-                    required
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <Label htmlFor="licenseState" className="text-[13px] text-zinc-600">License State *</Label>
-                    <Select value={licenseState} onValueChange={setLicenseState}>
-                      <SelectTrigger id="licenseState" className="h-11 rounded-xl">
-                        <SelectValue placeholder="State" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {US_STATES.map((s) => (
-                          <SelectItem key={s} value={s}>{s}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="licenseNumber" className="text-[13px] text-zinc-600">License Number *</Label>
-                    <Input
-                      id="licenseNumber"
-                      value={licenseNumber}
-                      onChange={(e) => setLicenseNumber(e.target.value)}
-                      placeholder="12345678"
-                      className="h-11 rounded-xl"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label htmlFor="headshot" className="text-[13px] text-zinc-600">
-                    Headshot <span className="text-zinc-400">(optional)</span>
-                  </Label>
-                  <div className="flex items-center gap-3">
-                    {headshotPreview ? (
-                      <img
-                        src={headshotPreview}
-                        alt="Headshot preview"
-                        className="w-12 h-12 rounded-full object-cover border border-zinc-200"
-                      />
-                    ) : (
-                      <div className="w-12 h-12 rounded-full bg-zinc-100 border border-zinc-200" />
-                    )}
-                    <Input
-                      id="headshot"
-                      type="file"
-                      accept="image/*"
-                      onChange={handleHeadshotChange}
-                      className="h-11 rounded-xl text-[13px] file:mr-3 file:rounded-md file:border-0 file:bg-zinc-100 file:px-3 file:py-1.5 file:text-[12px]"
-                    />
-                  </div>
-                </div>
-
-                <Button
-                  type="submit"
-                  disabled={submitting || uploadingHeadshot}
-                  className={cn("w-full h-11 rounded-xl", AGENT_PRIMARY_BTN_CLASS)}
-                >
-                  {submitting ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Finishing up…
-                    </>
-                  ) : (
-                    "Enter Success Hub"
-                  )}
-                </Button>
-              </form>
-              )}
             </div>
           </div>
         </div>
