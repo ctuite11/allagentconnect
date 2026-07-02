@@ -221,7 +221,7 @@ export default function AdminApprovals() {
   }>>([]);
   
   // Filters & Search - default to "pending" to show approval queue
-  const [statusFilter, setStatusFilter] = useState<string>("pending");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   
   // Sorting
