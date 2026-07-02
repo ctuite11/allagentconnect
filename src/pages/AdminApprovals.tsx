@@ -36,6 +36,14 @@ import { DeleteAgentDialog } from "@/components/admin/DeleteAgentDialog";
 import { BulkDeleteAgentsDialog } from "@/components/admin/BulkDeleteAgentsDialog";
 import { EmailAgentDialog } from "@/components/admin/EmailAgentDialog";
 import { CreateAgentDialog } from "@/components/admin/CreateAgentDialog";
+import {
+  PreviouslyDeletedAgentDialog,
+  type PreviouslyDeletedAgentMatch,
+} from "@/components/admin/PreviouslyDeletedAgentDialog";
+import {
+  checkDeletedAgent,
+  logDeletedAgentOverride,
+} from "@/lib/previouslyDeletedAgent";
 import { UserPlus } from "lucide-react";
 import { AgentStatusBadge } from "@/components/ui/status-badge";
 import { AacMonogramLoader } from "@/components/AacMonogramLoader";
