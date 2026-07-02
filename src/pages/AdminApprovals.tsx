@@ -260,7 +260,9 @@ export default function AdminApprovals() {
 
   // Online presence for real (non-early-access) agents
   const realAgentIds = useMemo(
-    () => agents.filter((a) => !a.is_early_access).map((a) => a.id),
+    () => agents
+      .filter((a) => !a.is_early_access && a.source !== "pending_verification")
+      .map((a) => a.id),
     [agents]
   );
   const presenceMap = useAgentPresenceBatch(realAgentIds);
