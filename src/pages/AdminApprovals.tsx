@@ -89,6 +89,12 @@ interface Agent {
   account_activated_at?: string | null;
   invite_email?: EmailStatusInfo | null;
   license_verified_email?: EmailStatusInfo | null;
+  // Phase 3: identifies where this row originated so Verify/Reject can
+  // branch. Absent = legacy profile row (default behaviour).
+  source?: "profile" | "early_access" | "pending_verification";
+  // Present only when source === 'pending_verification'. The
+  // pending_verifications.id used by convert-pending-verification-to-agent.
+  pending_verification_id?: string;
 }
 
 const stateLicenseLookupUrls: Record<string, string> = {
@@ -254,7 +260,9 @@ export default function AdminApprovals() {
 
   // Online presence for real (non-early-access) agents
   const realAgentIds = useMemo(
-    () => agents.filter((a) => !a.is_early_access).map((a) => a.id),
+    () => agents
+      .filter((a) => !a.is_early_access && a.source !== "pending_verification")
+      .map((a) => a.id),
     [agents]
   );
   const presenceMap = useAgentPresenceBatch(realAgentIds);
@@ -316,12 +324,9 @@ export default function AdminApprovals() {
 
       if (!agentList || agentList.length === 0) {
         console.log("[AdminApprovals] No agents found");
-        setAgents([]);
-        setLoading(false);
-        return;
+        // Fall through so Phase 2 leads can still surface even when the
+        // main agent list is empty.
       }
-
-      setAgents(agentList);
 
       // Fetch which agents have uploaded license docs
       const { data: uploads } = await supabase
@@ -342,6 +347,43 @@ export default function AdminApprovals() {
       if (pendingData) {
         setPendingVerifications(pendingData);
       }
+
+      // Phase 3: surface Phase 2 "Request Access" leads
+      // (status='pending' AND user_id IS NULL) as first-class rows in the
+      // Unverified/Pending list so admins can Verify them via the new
+      // convert-pending-verification-to-agent flow.
+      const existingEmails = new Set(
+        (agentList ?? []).map((a: Agent) => (a.email || "").toLowerCase())
+      );
+      const phase2Leads: Agent[] = (pendingData ?? [])
+        .filter((p: any) => p?.status === "pending" && !p?.user_id)
+        .filter((p: any) => !existingEmails.has(String(p.email || "").toLowerCase()))
+        .map((p: any): Agent => ({
+          id: p.id,
+          aac_id: `REQ-${String(p.id).slice(0, 4).toUpperCase()}`,
+          first_name: p.first_name || "",
+          last_name: p.last_name || "",
+          email: p.email,
+          phone: p.phone ?? null,
+          company: p.company ?? null,
+          bio: null,
+          license_number: p.license_number ?? null,
+          license_state: p.license_state ?? null,
+          agent_status: "pending",
+          verified_at: null,
+          created_at: p.created_at,
+          is_early_access: false,
+          has_auth_account: false,
+          last_sign_in_at: null,
+          account_activated_at: null,
+          invite_email: null,
+          license_verified_email: null,
+          source: "pending_verification",
+          pending_verification_id: p.id,
+        }));
+
+      const merged: Agent[] = [...phase2Leads, ...((agentList ?? []) as Agent[])];
+      setAgents(merged);
     } catch (error) {
       console.error("Unexpected error:", error);
       toast.error("Failed to load agents");
@@ -381,6 +423,74 @@ export default function AdminApprovals() {
     setProcessingIds((prev) => new Set(prev).add(agent.id));
 
     try {
+      // Phase 3: Request-Access leads (pending_verifications rows with no
+      // auth user yet). Route through convert-pending-verification-to-agent
+      // which is idempotent + collision-safe, then send the existing
+      // License Verified email. Rejection just flips the pending row.
+      if (agent.source === "pending_verification") {
+        if (newStatus === "verified") {
+          const { data: convData, error: convErr } = await supabase.functions.invoke(
+            "convert-pending-verification-to-agent",
+            { body: { pendingVerificationId: agent.pending_verification_id ?? agent.id } },
+          );
+          if (convErr || !convData?.ok || !convData?.userId) {
+            console.error("[AdminApprovals] convert failed:", convErr || convData);
+            throw new Error(
+              (convErr as any)?.message ||
+                (convData as any)?.error ||
+                "Failed to convert pending verification",
+            );
+          }
+          const newUserId = convData.userId as string;
+          const { error: emailError } = await supabase.functions.invoke(
+            "send-license-verified-email",
+            {
+              body: {
+                to: agent.email,
+                agentName: agent.first_name || undefined,
+                idempotencyKey: `license-verified:verify:${newUserId}`,
+              },
+            },
+          );
+          if (emailError) {
+            console.error("send-license-verified-email failed:", emailError);
+            toast.error(
+              `Verified ${agent.email}, but activation email failed. Use Email setup link to retry.`,
+            );
+          } else {
+            toast.success(`Verified — activation email sent to ${agent.email}`);
+          }
+          // Refetch so the synthetic row is replaced by the real converted
+          // agent row (with auth user id, presence, email badges, etc.).
+          setSelectedIds((prev) => {
+            const next = new Set(prev);
+            next.delete(agent.id);
+            return next;
+          });
+          await fetchAgents();
+          return;
+        }
+        if (newStatus === "rejected") {
+          const pvId = agent.pending_verification_id ?? agent.id;
+          const { error: rejErr } = await supabase
+            .from("pending_verifications")
+            .update({ status: "rejected" })
+            .eq("id", pvId);
+          if (rejErr) throw rejErr;
+          toast.success("Request rejected");
+          setAgents((prev) => prev.filter((a) => a.id !== agent.id));
+          setSelectedIds((prev) => {
+            const next = new Set(prev);
+            next.delete(agent.id);
+            return next;
+          });
+          return;
+        }
+        // Any other status change on a Phase 2 lead is a no-op — they have
+        // no auth account yet, so restricted/pending etc. don't apply.
+        return;
+      }
+
       // Unified verification path — every Unverified row ends here regardless
       // of origin (Early Access lead, backfilled orphan, or existing auth account).
       // 1) Ensure an auth account / agent_settings row exists.
@@ -1294,6 +1404,14 @@ export default function AdminApprovals() {
                         <span className="font-mono text-xs text-black">{agent.aac_id}</span>
                         <span className="text-zinc-300">•</span>
                         <span className="font-semibold text-[#0E56F5]">{agent.first_name} {agent.last_name}</span>
+                        {agent.source === "pending_verification" && (
+                          <span
+                            className="inline-flex items-center rounded-full bg-indigo-50 px-2 py-0.5 text-[11px] font-medium text-indigo-700 ring-1 ring-indigo-200"
+                            title="Submitted via the Request Access form"
+                          >
+                            Request Access
+                          </span>
+                        )}
                         {!agent.is_early_access && presenceMap.get(agent.id)?.isOnline && (
                           <AgentOnlinePresenceBadge />
                         )}
@@ -1480,7 +1598,7 @@ export default function AdminApprovals() {
                     >
                       Email
                     </button>
-                    {!agent.is_early_access && (
+                    {!agent.is_early_access && agent.source !== "pending_verification" && (
                       <>
                         <span className="text-zinc-300">•</span>
                         <button 
