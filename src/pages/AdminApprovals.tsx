@@ -1724,13 +1724,16 @@ export default function AdminApprovals() {
         actionLabel={deletedGate?.actionLabel ?? "proceed"}
         loading={deletedGateBusy}
         onCancel={() => {
-          if (deletedGateBusy) return;
+          if (deletedGateBusy || deletedGateBusyRef.current) return;
           const gate = deletedGate;
           setDeletedGate(null);
           gate?.resolve(false);
         }}
         onContinue={async () => {
-          if (!deletedGate || deletedGateBusy) return;
+          if (!deletedGate || deletedGateBusy || deletedGateBusyRef.current) return;
+          // Flip the ref synchronously so any onCancel that fires in this
+          // same tick (e.g. from Radix auto-close) bails out immediately.
+          deletedGateBusyRef.current = true;
           setDeletedGateBusy(true);
           try {
             await logDeletedAgentOverride(deletedGate.match);
@@ -1738,6 +1741,7 @@ export default function AdminApprovals() {
             const gate = deletedGate;
             setDeletedGate(null);
             setDeletedGateBusy(false);
+            deletedGateBusyRef.current = false;
             gate.resolve(true);
           }
         }}
