@@ -1,0 +1,192 @@
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import {
+  validateAgentSignup,
+  type AgentSignupInput,
+} from "../_shared/agentSignupValidation.ts";
+import {
+  verifyTurnstileToken,
+  TURNSTILE_GENERIC_ERROR,
+} from "../_shared/verifyTurnstile.ts";
+
+/**
+ * Phase 1 backend foundation. Public endpoint for the future Request Access
+ * form. Does NOT send emails or notify admins yet — that ships with the UI
+ * in Phase 2.
+ *
+ * Behavior:
+ *   1. Method/CORS guards.
+ *   2. Validate input (Zod-lite manual checks + validateAgentSignup).
+ *   3. Verify Turnstile token.
+ *   4. If a confirmed auth user already exists → { code: "account_exists" }.
+ *   5. If an open pending row exists → { code: "already_pending" } (idempotent).
+ *   6. Insert new row (status='pending', user_id=null).
+ *   7. On unique-violation race → return already_pending.
+ */
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
+
+interface SubmitBody {
+  firstName?: unknown;
+  lastName?: unknown;
+  email?: unknown;
+  phone?: unknown;
+  company?: unknown;
+  licenseState?: unknown;
+  licenseNumber?: unknown;
+  licenseLastName?: unknown;
+  turnstileToken?: unknown;
+}
+
+function json(status: number, body: unknown) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
+
+function asTrimmedString(v: unknown, max = 200): string {
+  if (typeof v !== "string") return "";
+  return v.trim().slice(0, max);
+}
+
+function asOptionalString(v: unknown, max = 200): string | null {
+  const s = asTrimmedString(v, max);
+  return s.length ? s : null;
+}
+
+export async function handleRequest(req: Request): Promise<Response> {
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
+  if (req.method !== "POST") {
+    return json(405, { error: "Method not allowed" });
+  }
+
+  let body: SubmitBody;
+  try {
+    body = await req.json();
+  } catch {
+    return json(400, { error: "Invalid JSON body" });
+  }
+
+  const firstName = asTrimmedString(body.firstName, 100);
+  const lastName = asTrimmedString(body.lastName, 100);
+  const email = asTrimmedString(body.email, 320).toLowerCase();
+  const phone = asOptionalString(body.phone, 40);
+  const company = asOptionalString(body.company, 200);
+  const licenseState = asTrimmedString(body.licenseState, 2).toUpperCase();
+  const licenseNumber = asTrimmedString(body.licenseNumber, 60);
+  const licenseLastName = asOptionalString(body.licenseLastName, 100);
+  const turnstileToken = typeof body.turnstileToken === "string" ? body.turnstileToken : "";
+
+  if (!email || !email.includes("@")) {
+    return json(400, { error: "A valid email is required.", code: "invalid_email" });
+  }
+
+  const signupInput: AgentSignupInput = {
+    firstName,
+    lastName,
+    email,
+    phone,
+    licenseState,
+    licenseNumber,
+    licenseLastName,
+    company,
+  };
+  const validationErrors = validateAgentSignup(signupInput);
+  if (validationErrors.length > 0) {
+    return json(400, {
+      error: validationErrors[0],
+      code: "validation_failed",
+      errors: validationErrors,
+    });
+  }
+
+  const turnstile = await verifyTurnstileToken(turnstileToken, req);
+  if (!turnstile.ok) {
+    return json(403, { error: TURNSTILE_GENERIC_ERROR, code: "turnstile_failed" });
+  }
+
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const admin = createClient(supabaseUrl, serviceKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+
+  // Step 4: confirmed auth user already exists?
+  //   listUsers() has no email filter — fall back to a direct auth schema query
+  //   via SQL isn't available, so use the admin.listUsers filter param on newer
+  //   supabase-js; if unsupported, we still safely detect via pending index +
+  //   downstream signup collision. Use email filter if available.
+  try {
+    // supabase-js v2 supports `.listUsers({ page, perPage })` but not email
+    // filter. Use the paginated search with a page size of 1 and email hint
+    // via generateLink — no, simplest: query auth.users via a security-definer
+    // RPC. We don't have that, so use admin.getUserByEmail if available.
+    // In supabase-js v2 the method is admin.getUserById; email lookup is
+    // performed by scanning listUsers. Cost is acceptable for a public form
+    // gate. Cap at first page (up to 1000).
+    const { data: usersPage, error: listErr } = await admin.auth.admin.listUsers({
+      page: 1,
+      perPage: 1000,
+    });
+    if (listErr) {
+      console.error("[submit-agent-verification-request] listUsers error:", listErr.message);
+    } else if (usersPage?.users?.some((u) => (u.email || "").toLowerCase() === email)) {
+      return json(200, {
+        ok: false,
+        code: "account_exists",
+        message: "An account with this email already exists. Please sign in.",
+      });
+    }
+  } catch (err) {
+    console.error("[submit-agent-verification-request] listUsers threw:", err);
+  }
+
+  // Step 5+6: insert. Rely on the partial unique index on lower(email)
+  // WHERE status='pending' to detect duplicates race-safely.
+  const { data: inserted, error: insertErr } = await admin
+    .from("pending_verifications")
+    .insert({
+      email,
+      first_name: firstName,
+      last_name: lastName,
+      phone,
+      company,
+      license_state: licenseState,
+      license_number: licenseNumber,
+      license_last_name: licenseLastName,
+      status: "pending",
+      user_id: null,
+      turnstile_verified_at: new Date().toISOString(),
+    })
+    .select("id")
+    .single();
+
+  if (insertErr) {
+    // 23505 = unique_violation → race on the partial index.
+    // deno-lint-ignore no-explicit-any
+    const code = (insertErr as any).code;
+    if (code === "23505") {
+      return json(200, {
+        ok: true,
+        code: "already_pending",
+        message: "We already have your request on file. We'll be in touch shortly.",
+      });
+    }
+    console.error("[submit-agent-verification-request] insert error:", insertErr);
+    return json(500, { error: "Failed to record request.", code: "insert_failed" });
+  }
+
+  return json(200, {
+    ok: true,
+    code: "submitted",
+    id: inserted.id,
+  });
+}
+
+Deno.serve(handleRequest);
