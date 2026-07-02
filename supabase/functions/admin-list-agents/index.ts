@@ -44,6 +44,30 @@ interface MergedAgent {
   has_auth_account?: boolean
   last_sign_in_at?: string | null
   account_activated_at?: string | null
+  invite_email?: EmailStatusInfo | null
+  license_verified_email?: EmailStatusInfo | null
+}
+
+interface EmailStatusInfo {
+  status: 'queued' | 'sent' | 'delivered' | 'bounced' | 'complained' | 'failed'
+  created_at: string
+  event_at: string | null
+  attempts: number | null
+  last_error: string | null
+}
+
+function deriveEmailStatus(row: {
+  status: string | null
+  delivery_status: string | null
+}): EmailStatusInfo['status'] {
+  const ds = (row.delivery_status || '').toLowerCase()
+  if (ds === 'delivered') return 'delivered'
+  if (ds === 'bounced' || ds === 'bounce') return 'bounced'
+  if (ds === 'complained' || ds === 'complaint') return 'complained'
+  const s = (row.status || '').toLowerCase()
+  if (s === 'sent') return 'sent'
+  if (s === 'failed' || s === 'dlq' || s === 'error') return 'failed'
+  return 'queued'
 }
 
 Deno.serve(async (req) => {
@@ -258,6 +282,55 @@ Deno.serve(async (req) => {
 
     // Combine both lists
     const allAgents = [...agents, ...earlyAccessAgents]
+
+    // Fetch latest License Verified and Admin-Created Invite email status per recipient.
+    // Read-only surfacing — no template, sender, or Resend config is touched here.
+    try {
+      const emailsLower = new Set(allAgents.map(a => (a.email ?? '').toLowerCase()).filter(Boolean))
+      const templates = ['license-verified', 'admin-created-invite']
+      const { data: jobs, error: jobsErr } = await adminClient
+        .from('email_jobs')
+        .select('id, status, delivery_status, delivery_status_at, created_at, attempts, last_error, payload')
+        .in('payload->>template', templates)
+        .order('created_at', { ascending: false })
+        .limit(5000)
+      if (jobsErr) {
+        console.error('[admin-list-agents] email_jobs error:', jobsErr.message)
+      } else if (jobs) {
+        const latest = new Map<string, EmailStatusInfo & { template: string }>()
+        for (const j of jobs as any[]) {
+          const to = String(j?.payload?.to ?? '').toLowerCase()
+          const template = String(j?.payload?.template ?? '')
+          if (!to || !template || !emailsLower.has(to)) continue
+          const key = `${to}::${template}`
+          if (latest.has(key)) continue // first row is the latest thanks to desc order
+          latest.set(key, {
+            template,
+            status: deriveEmailStatus(j),
+            created_at: j.created_at,
+            event_at: j.delivery_status_at ?? null,
+            attempts: j.attempts ?? null,
+            last_error: j.last_error ?? null,
+          })
+        }
+        for (const a of allAgents) {
+          const key = (a.email ?? '').toLowerCase()
+          if (!key) continue
+          const inv = latest.get(`${key}::admin-created-invite`)
+          const lic = latest.get(`${key}::license-verified`)
+          if (inv) {
+            const { template: _t, ...rest } = inv
+            a.invite_email = rest
+          }
+          if (lic) {
+            const { template: _t, ...rest } = lic
+            a.license_verified_email = rest
+          }
+        }
+      }
+    } catch (e) {
+      console.error('[admin-list-agents] email_jobs exception:', e)
+    }
 
     // Recalculate status distribution with early access included
     const allStatusCounts = allAgents.reduce((acc, a) => {

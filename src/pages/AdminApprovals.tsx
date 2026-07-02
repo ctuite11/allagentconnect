@@ -56,6 +56,11 @@ import { assessRisks, hasRedFlag, type Risk } from "@/lib/agentSignupValidation"
 import { useAgentPresenceBatch } from "@/hooks/useAgentLastSeen";
 import { AgentOnlinePresenceBadge } from "@/components/ui/AgentOnlinePresenceBadge";
 import {
+  EmailDeliveryBadge,
+  EmailDeliveryLegend,
+  type EmailStatusInfo,
+} from "@/components/admin/EmailDeliveryBadge";
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -82,6 +87,8 @@ interface Agent {
   has_auth_account?: boolean;
   last_sign_in_at?: string | null;
   account_activated_at?: string | null;
+  invite_email?: EmailStatusInfo | null;
+  license_verified_email?: EmailStatusInfo | null;
 }
 
 const stateLicenseLookupUrls: Record<string, string> = {
@@ -1264,6 +1271,7 @@ export default function AdminApprovals() {
                 )}
               </div>
             </div>
+            <EmailDeliveryLegend />
             {filteredAgents.map((agent) => {
               const isProcessing = processingIds.has(agent.id);
 
@@ -1386,6 +1394,15 @@ export default function AdminApprovals() {
                         {new Date(agent.created_at).toLocaleDateString()}
                       </span>
                     </div>
+                  </div>
+
+                  {/* Email delivery status — read-only surfacing from email_jobs */}
+                  <div className="mt-2 flex flex-wrap items-center gap-2 pl-8">
+                    <EmailDeliveryBadge label="Invite" info={agent.invite_email} />
+                    <EmailDeliveryBadge
+                      label="License Verified"
+                      info={agent.license_verified_email}
+                    />
                   </div>
 
                   {/* Row 2: Actions */}
