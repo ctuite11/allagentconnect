@@ -44,6 +44,13 @@ export const DISPOSABLE_EMAIL_DOMAINS = new Set([
 
 const NAME_RE = /^[A-Za-z][A-Za-z\s'\-\.]{1,}$/;
 
+/** True when the value contains an "@" — used to catch emails typed into name fields. */
+export function containsAtSign(raw: string | null | undefined): boolean {
+  return (raw || "").includes("@");
+}
+
+const NAME_NOT_EMAIL_MSG = "Please enter a name, not an email address.";
+
 /** Strip everything except digits. */
 function digitsOnly(s: string): string {
   return (s || "").replace(/\D+/g, "");
@@ -136,6 +143,15 @@ export type AgentSignupInput = {
  */
 export function validateAgentSignup(input: AgentSignupInput): string[] {
   const errors: string[] = [];
+  if (containsAtSign(input.firstName)) {
+    errors.push(NAME_NOT_EMAIL_MSG);
+  }
+  if (containsAtSign(input.lastName)) {
+    errors.push(NAME_NOT_EMAIL_MSG);
+  }
+  if (input.licenseLastName && containsAtSign(input.licenseLastName)) {
+    errors.push(NAME_NOT_EMAIL_MSG);
+  }
   if (!isValidName(input.firstName)) {
     errors.push("First name must be at least 2 letters and contain only letters, spaces, hyphens, or apostrophes.");
   }

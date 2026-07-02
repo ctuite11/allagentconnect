@@ -87,6 +87,12 @@ function licenseLastNameMatches(a: string, b: string): boolean {
   return (a || "").trim().toLowerCase() === (b || "").trim().toLowerCase() && !!(a || "").trim();
 }
 
+function containsAtSign(raw: string | null | undefined): boolean {
+  return (raw || "").includes("@");
+}
+
+const NAME_NOT_EMAIL_MSG = "Please enter a name, not an email address.";
+
 type Body = {
   firstName?: string;
   lastName?: string;
@@ -116,6 +122,15 @@ Deno.serve(async (req) => {
     }
 
     const errors: string[] = [];
+    if (containsAtSign(body.firstName)) {
+      errors.push(NAME_NOT_EMAIL_MSG);
+    }
+    if (containsAtSign(body.lastName)) {
+      errors.push(NAME_NOT_EMAIL_MSG);
+    }
+    if (body.licenseLastName && containsAtSign(body.licenseLastName)) {
+      errors.push(NAME_NOT_EMAIL_MSG);
+    }
     if (!isValidName(body.firstName)) {
       errors.push("First name must be at least 2 letters and contain only letters, spaces, hyphens, or apostrophes.");
     }
