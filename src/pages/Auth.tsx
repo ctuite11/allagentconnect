@@ -486,66 +486,40 @@ const Auth = () => {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Prevent double submission
     if (isRegistering.current) {
-      console.log('[REGISTER] Already registering, ignoring duplicate submission');
+      console.log('[REGISTER] Already submitting, ignoring duplicate');
       return;
     }
 
-    // Check network connectivity first
     if (!navigator.onLine) {
       toast.error("No internet connection. Please check your network and try again.");
       return;
     }
-    
-    // Reset cancellation flag and abort any previous request
+
     cancelledRef.current = false;
     abortRef.current?.abort();
     abortRef.current = new AbortController();
-    
-    setLoading(true);
-    setRegisterStep("creating_account");
-    isRegistering.current = true;
-    let registrationSucceeded = false;
 
-    // Helper to check if cancelled before proceeding
-    const checkCancelled = (): boolean => {
-      if (cancelledRef.current) {
-        console.log('[REGISTER] Operation cancelled by user');
-        return true;
-      }
-      return false;
-    };
+    setLoading(true);
+    setRegisterStep("finishing");
+    isRegistering.current = true;
+    let submissionSucceeded = false;
 
     try {
-      // ========== STEP 0: Validate all fields upfront ==========
-      console.log('[REGISTER] Step 0: Validating fields');
-      
+      // ========== Client-side validation ==========
       const validatedEmail = emailSchema.parse(email);
 
       if (!firstName.trim() || !lastName.trim()) {
         toast.error("Please enter your first and last name");
         return;
       }
-
       if (!licenseState || !licenseNumber.trim()) {
         toast.error("Please enter your license information");
         return;
       }
 
-      if (!allPasswordRulesPass) {
-        toast.error("Password does not meet all requirements");
-        return;
-      }
-
-      if (password !== confirmPassword) {
-        toast.error("Passwords do not match");
-        return;
-      }
-
-      // Hard-fail signup if any submission looks fake. Mirrors the
-      // server-side validate-agent-signup edge function. Both must pass.
       const signupErrors = validateAgentSignup({
         firstName: firstName.trim(),
         lastName: lastName.trim(),
@@ -562,305 +536,96 @@ const Auth = () => {
       const turnstileToken = turnstile.requireToken();
       if (!turnstileToken) return;
 
-      // Server-side mirror — blocks direct-API bypass.
-      try {
-        const { data: validateData, error: validateError } = await withTimeout(
-          supabase.functions.invoke('validate-agent-signup', {
-            body: {
-              firstName: firstName.trim(),
-              lastName: lastName.trim(),
-              email: validatedEmail,
-              phone: phone.trim() || null,
-              licenseState,
-              licenseNumber: licenseNumber.trim(),
-              turnstile_token: turnstileToken,
-            },
-          }),
-          15000,
-          "Validate signup"
-        );
-        const serverErrors = (validateData as { ok?: boolean; errors?: string[] } | null)?.errors;
-        if (validateError || (serverErrors && serverErrors.length > 0)) {
-          toast.error(serverErrors?.[0] || validateError?.message || "Signup failed validation");
-          return;
-        }
-      } catch (e) {
-        console.error('[REGISTER] Step 0.5 server validation error:', e);
-        toast.error("Could not validate signup. Please try again.");
-        return;
-      }
-
-      // ========== STEP 1: Create auth user with timeout ==========
-      if (checkCancelled()) return;
-      console.log('[REGISTER] Step 1: Creating auth user for:', validatedEmail);
-      setRegisterStep("creating_account");
-      
-      const { data: authData, error: authError } = await withTimeout(
-        supabase.auth.signUp({
-          email: validatedEmail,
-          password,
-          options: {
-            data: {
-              intended_role: 'agent',
-              turnstile_token: turnstileToken,
-            },
-          },
-        }),
-        20000,
-        "Create account"
-      );
-
-      if (checkCancelled()) return;
-
-      // Check for "fake success" - user exists but identities is empty
-      if (authData?.user && authData.user.identities?.length === 0) {
-        console.error('[REGISTER] FAILED at Step 1: User already exists (empty identities)');
-        toast.error("This email is already registered. Please sign in instead.");
-        return;
-      }
-
-      if (authError) {
-        console.error('[REGISTER] FAILED at Step 1:', authError);
-        if (authError.message.includes("already registered")) {
-          toast.error("This email is already registered. Please sign in instead.");
-        } else {
-          toast.error(authError.message);
-        }
-        return;
-      }
-
-      const userId = authData.user?.id;
-      if (!userId) {
-        console.error('[REGISTER] FAILED at Step 1: No user ID returned');
-        toast.error("Failed to create account. Please try again.");
-        return;
-      }
-
-      console.log('[REGISTER] Step 1 complete: User created', { userId });
-
-      // ========== STEP 2: Create agent profile with timeout ==========
-      if (checkCancelled()) return;
-      console.log('[REGISTER] Step 2: Creating agent profile');
-      setRegisterStep("saving_profile");
-      
-      const profileResult = await withTimeout(
-        supabase
-          .from('agent_profiles')
-          .insert({
-            id: userId,
-            email: validatedEmail,
-            first_name: firstName.trim(),
-            last_name: lastName.trim(),
-            phone: phone.trim() || null,
-          }),
-        20000,
-        "Save profile"
-      );
-
-      if (checkCancelled()) return;
-
-      if (profileResult.error) {
-        console.error('[REGISTER] FAILED at Step 2:', profileResult.error);
-        toast.error("Failed to create profile. Please contact support.");
-        return;
-      }
-      
-      console.log('[REGISTER] Step 2 complete: Profile created');
-
-      // ========== STEP 3: Save license info with UPDATE→INSERT fallback ==========
-      if (checkCancelled()) return;
-      console.log('[REGISTER] Step 3: Saving license information');
-      setRegisterStep("saving_license");
-      
-      let licenseWriteSuccess = false;
-      
-      // First, try UPDATE (row may already exist from handle_new_user trigger)
-      const updateResult = await withTimeout(
-        supabase
-          .from('agent_settings')
-          .update({
-            license_state: licenseState,
-            license_number: licenseNumber.trim(),
-            license_last_name: lastName.trim(),
-            agent_status: 'pending',
-          })
-          .eq('user_id', userId)
-          .select(),
-        20000,
-        "Save license"
-      );
-
-      if (checkCancelled()) return;
-
-      if (updateResult.error) {
-        console.error('[REGISTER] Step 3 UPDATE error:', updateResult.error);
-      }
-
-      // Check if UPDATE affected any rows
-      if (updateResult.data && updateResult.data.length > 0) {
-        console.log('[REGISTER] Step 3 complete: License info updated via UPDATE', { 
-          license_state: licenseState, 
-          license_number: licenseNumber.trim() 
-        });
-        licenseWriteSuccess = true;
-      } else {
-        // No rows updated - try INSERT as fallback
-        console.log('[REGISTER] Step 3: UPDATE affected 0 rows, trying INSERT fallback');
-        
-        const insertResult = await withTimeout(
-          supabase
-            .from('agent_settings')
-            .insert({
-              user_id: userId,
-              license_state: licenseState,
-              license_number: licenseNumber.trim(),
-              license_last_name: lastName.trim(),
-              agent_status: 'pending',
-            }),
-          20000,
-          "Save license"
-        );
-
-        if (checkCancelled()) return;
-
-        if (insertResult.error) {
-          console.error('[REGISTER] FAILED at Step 3 INSERT fallback:', insertResult.error);
-          toast.error("Failed to save license information. Please contact support.");
-          return;
-        }
-        
-        console.log('[REGISTER] Step 3 complete: License info saved via INSERT fallback');
-        licenseWriteSuccess = true;
-      }
-
-      // Verify the write was successful
-      if (!licenseWriteSuccess) {
-        console.error('[REGISTER] FAILED at Step 3: License write not confirmed');
-        toast.error("Failed to save license information. Please contact support.");
-        return;
-      }
-
-      // ========== STEP 4: Assign agent role ==========
-      if (checkCancelled()) return;
-      console.log('[REGISTER] Step 4: Assigning agent role');
-      setRegisterStep("finishing");
-      
-      const roleResult = await withTimeout(
-        supabase.rpc('assign_self_role', { _role: 'agent' }),
-        20000,
-        "Assign role"
-      );
-
-      if (checkCancelled()) return;
-
-      if (roleResult.error) {
-        console.error('[REGISTER] FAILED at Step 4:', roleResult.error);
-        toast.error("Couldn't finish account setup. Your agent role was not assigned. Please try again or contact support.");
-        return;
-      }
-
-      let roleConfirmed = false;
-      for (let attempt = 0; attempt < 3; attempt++) {
-        if (attempt > 0) {
-          await new Promise((resolve) => setTimeout(resolve, 500));
-        }
-        if (await hasRole(userId, "agent")) {
-          roleConfirmed = true;
-          break;
-        }
-      }
-
-      if (!roleConfirmed) {
-        console.error('[REGISTER] FAILED at Step 4: agent role not confirmed after assign_self_role');
-        toast.error("Couldn't confirm your agent role. Please try again or contact support.");
-        return;
-      }
-
-      console.log('[REGISTER] Step 4 complete: Role assigned and verified');
-
-      // ========== STEP 5: Send admin notification (NON-BLOCKING) ==========
-      console.log('[REGISTER] Step 5: Sending admin notification (non-blocking)');
-      
-      // Fire and forget - don't block the user
-      // Capture values for closure
-      const notificationData = {
-        userId,
-        email: validatedEmail,
-        firstName: firstName.trim(),
-        lastName: lastName.trim(),
-        licenseState,
-        licenseNumber: licenseNumber.trim(),
-      };
-      
-      withTimeout(
-        supabase.functions.invoke('send-verification-submitted', {
+      // ========== Submit to Phase 1 backend ==========
+      // Creates only a pending_verifications row (no auth user, no password).
+      // The Phase 1 function re-runs validation + Turnstile server-side and
+      // gates on existing auth users / duplicate pending rows.
+      const { data, error: fnError } = await withTimeout(
+        supabase.functions.invoke('submit-agent-verification-request', {
           body: {
-            email: notificationData.email,
-            firstName: notificationData.firstName,
-            lastName: notificationData.lastName,
-            licenseState: notificationData.licenseState,
-            licenseNumber: notificationData.licenseNumber,
+            firstName: firstName.trim(),
+            lastName: lastName.trim(),
+            email: validatedEmail,
+            phone: phone.trim() || null,
+            company: company.trim() || null,
+            licenseState,
+            licenseNumber: licenseNumber.trim(),
+            licenseLastName: lastName.trim(),
+            turnstileToken,
           },
         }),
-        15000,
-        "Admin notification"
-      ).then((result) => {
-        if (result.error) {
-          console.error('[REGISTER] Step 5 backend function error:', result.error);
-          // Store backup if admin notification failed
-          Promise.resolve(supabase.from('pending_verifications').insert({
-            user_id: notificationData.userId,
-            email: notificationData.email,
-            first_name: notificationData.firstName,
-            last_name: notificationData.lastName,
-            license_state: notificationData.licenseState,
-            license_number: notificationData.licenseNumber,
-          })).then(() => {
-            console.log('[REGISTER] Step 5: Backup verification stored');
-          }).catch((backupError: unknown) => {
-            console.error('[REGISTER] Step 5 backup storage error:', backupError);
-          });
-        } else {
-          console.log('[REGISTER] Step 5 complete: Admin notification sent');
-        }
-      }).catch((emailError: unknown) => {
-        console.error('[REGISTER] Step 5 exception:', emailError);
-      });
+        20000,
+        "Submit request"
+      );
 
-      // ========== STEP 6: Success - redirect to pending verification ==========
-      if (checkCancelled() || didNavigate.current) return;
-      console.log('[REGISTER] Complete: All critical steps finished successfully');
-      
-      // Single success toast (no waterfall)
-      toast.success("Account created! Your license is pending verification.");
-      
-      // Guard against late navigation after cancel
-      if (!cancelledRef.current && !didNavigate.current) {
-        didNavigate.current = true;
-        registrationSucceeded = true;
-        navigate('/pending-verification', { replace: true });
-      }
-
-    } catch (error: any) {
-      // Don't show error if cancelled
-      if (cancelledRef.current) {
-        console.log('[REGISTER] Error after cancellation, ignoring');
+      if (fnError) {
+        console.error('[REGISTER] submit-agent-verification-request error:', fnError);
+        toast.error("Couldn't submit your request. Please try again.");
         return;
       }
-      
+
+      const result = (data ?? {}) as {
+        ok?: boolean;
+        code?: string;
+        message?: string;
+        error?: string;
+        errors?: string[];
+      };
+
+      switch (result.code) {
+        case "submitted":
+          toast.success("Request received. We'll email you when your license is verified.");
+          submissionSucceeded = true;
+          if (!didNavigate.current) {
+            didNavigate.current = true;
+            navigate('/pending-verification?submitted=1', { replace: true });
+          }
+          return;
+
+        case "already_pending":
+          toast.info(result.message || "We already have your request on file. We'll be in touch shortly.");
+          submissionSucceeded = true;
+          if (!didNavigate.current) {
+            didNavigate.current = true;
+            navigate('/pending-verification?submitted=1', { replace: true });
+          }
+          return;
+
+        case "account_exists":
+          toast.error("An account with this email already exists. Please sign in.");
+          // Break the "reset-password loop" — do NOT push to recovery.
+          // Flip to sign-in with email prefilled.
+          switchMode("signin");
+          setEmail(validatedEmail);
+          return;
+
+        case "validation_failed":
+          toast.error(result.errors?.[0] || result.error || "Please review your submission.");
+          return;
+
+        case "turnstile_failed":
+          toast.error(result.error || "Verification failed. Please refresh and try again.");
+          turnstile.reset();
+          return;
+
+        default:
+          console.error('[REGISTER] Unexpected response:', result);
+          toast.error(result.error || "Something went wrong. Please try again.");
+          return;
+      }
+    } catch (error: any) {
+      if (cancelledRef.current) return;
       console.error('[REGISTER] Unexpected error:', error);
-      
       if (error instanceof z.ZodError) {
         toast.error(error.errors[0].message);
       } else if (error.message?.includes('timed out')) {
         toast.error(error.message);
       } else {
-        toast.error(error.message || "Failed to create account. Please try again.");
+        toast.error(error.message || "Failed to submit request. Please try again.");
       }
     } finally {
-      // ALWAYS reset state - this guarantees we never get stuck
-      if (!registrationSucceeded) {
-        turnstile.reset();
+      if (!submissionSucceeded) {
+        try { turnstile.reset(); } catch { /* ignore */ }
       }
       isRegistering.current = false;
       abortRef.current = null;
