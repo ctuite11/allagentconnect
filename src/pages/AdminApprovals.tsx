@@ -698,6 +698,38 @@ export default function AdminApprovals() {
   // send-license-verified-email prevent double-sends on retry.
   const [bulkVerifying, setBulkVerifying] = useState(false);
   const [showVerifyConfirm, setShowVerifyConfirm] = useState(false);
+  const [resendingInviteFor, setResendingInviteFor] = useState<Set<string>>(new Set());
+
+  // Resend the admin-created setup invite (Chris personal note).
+  // Used only for Invited-tab agents. Reuses the same idempotency-guarded
+  // send-admin-created-invite edge function fired at create time.
+  const handleResendInvite = async (agent: Agent) => {
+    if (resendingInviteFor.has(agent.id)) return;
+    setResendingInviteFor((prev) => new Set(prev).add(agent.id));
+    try {
+      const { error } = await supabase.functions.invoke("send-admin-created-invite", {
+        body: {
+          to: agent.email,
+          firstName: agent.first_name || undefined,
+          // Force a fresh send (bypass 10-min recency dedupe) when admin
+          // explicitly resends.
+          idempotencyKey: `admin-created-invite:${agent.id}:${Date.now()}`,
+        },
+      });
+      if (error) {
+        console.error("[AdminApprovals] Resend invite failed:", error);
+        toast.error("Could not resend invite");
+        return;
+      }
+      toast.success(`Invite resent to ${agent.email}`);
+    } finally {
+      setResendingInviteFor((prev) => {
+        const next = new Set(prev);
+        next.delete(agent.id);
+        return next;
+      });
+    }
+  };
   const handleBulkVerify = async () => {
     const targets = filteredAgents.filter(
       (a) => effectiveSelectedIds.has(a.id) && a.agent_status !== "verified",
