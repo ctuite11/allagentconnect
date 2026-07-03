@@ -2,6 +2,7 @@ import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.39.3
 
 export async function assertDelegatesFeatureEnabled(
   admin: SupabaseClient,
+  userId?: string,
 ): Promise<{ ok: true } | { ok: false; error: string; status: number }> {
   const { data, error } = await admin
     .from("feature_flags")
@@ -14,11 +15,26 @@ export async function assertDelegatesFeatureEnabled(
     return { ok: false, error: "Failed to check feature flag", status: 500 };
   }
 
-  if (!data?.enabled) {
-    return { ok: false, error: "delegates_disabled", status: 403 };
+  if (data?.enabled) return { ok: true };
+
+  // Global flag off — check per-user allowlist if we have a userId
+  if (userId) {
+    const { data: allow, error: allowErr } = await admin
+      .from("feature_flag_users")
+      .select("user_id")
+      .eq("flag_name", "agent_account_delegates")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (allowErr) {
+      console.error("[agent-delegates] allowlist lookup failed:", allowErr);
+      return { ok: false, error: "Failed to check feature flag", status: 500 };
+    }
+
+    if (allow) return { ok: true };
   }
 
-  return { ok: true };
+  return { ok: false, error: "delegates_disabled", status: 403 };
 }
 
 export async function isLicensedOwner(
