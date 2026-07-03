@@ -46,7 +46,7 @@ serve(async (req) => {
   const userId = user.id;
   const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
 
-  const flag = await assertDelegatesFeatureEnabled(supabaseAdmin);
+  const flag = await assertDelegatesFeatureEnabled(supabaseAdmin, userId);
   if (!flag.ok) return json({ success: false, error: flag.error }, flag.status);
 
   let input: { token?: string };

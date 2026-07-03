@@ -51,7 +51,7 @@ serve(async (req) => {
   const ownerUserId = user.id;
   const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
 
-  const flag = await assertDelegatesFeatureEnabled(supabaseAdmin);
+  const flag = await assertDelegatesFeatureEnabled(supabaseAdmin, ownerUserId);
   if (!flag.ok) return json({ success: false, error: flag.error }, flag.status);
 
   if (!(await isLicensedOwner(supabaseAdmin, ownerUserId))) {
