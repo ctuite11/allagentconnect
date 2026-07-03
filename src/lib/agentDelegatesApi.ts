@@ -19,17 +19,97 @@ export type AccountDelegateRow = {
   is_online: boolean;
 };
 
-export type SetActiveOwnerContextResult = {
-  owner_user_id: string;
-  is_account_owner: boolean;
-  owner_first_name: string | null;
-  owner_last_name: string | null;
-  expires_at: string;
+export type DelegateInvitePreview = {
+  valid: boolean;
+  error?: string;
+  status?: string;
+  already_accepted?: boolean;
+  invite_email?: string;
+  display_name?: string | null;
+  role_label?: string | null;
+  owner_user_id?: string;
+  owner_first_name?: string | null;
+  owner_last_name?: string | null;
+  owner_company?: string | null;
+  owner_headshot_url?: string | null;
+  account_exists?: boolean;
+  is_licensed_agent?: boolean;
+  blocked?: boolean;
+  blocked_message?: string | null;
 };
+
+export type SetupDelegateInviteInput = {
+  token: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  password: string;
+  existingAccount?: boolean;
+};
+
+export type SetupDelegateInviteResult =
+  | {
+      ok: true;
+      ownerUserId: string;
+      ownerDisplayName: string;
+      alreadyAccepted?: boolean;
+    }
+  | {
+      ok: false;
+      error: string;
+      code?: string;
+    };
 
 async function getAccessToken(): Promise<string | null> {
   const { data: { session } } = await supabase.auth.getSession();
   return session?.access_token ?? null;
+}
+
+export async function previewDelegateInvite(token: string): Promise<DelegateInvitePreview> {
+  const { data, error } = await supabase.rpc("get_delegate_invite_preview", {
+    p_token: token.trim(),
+  });
+
+  if (error) {
+    console.error("[previewDelegateInvite]", error.message);
+    return { valid: false, error: "invalid_token" };
+  }
+
+  return (data ?? { valid: false, error: "invalid_token" }) as DelegateInvitePreview;
+}
+
+export async function setupDelegateInvite(
+  input: SetupDelegateInviteInput,
+): Promise<SetupDelegateInviteResult> {
+  const { data, error } = await supabase.functions.invoke("accept-account-delegate-invite", {
+    body: {
+      token: input.token.trim(),
+      email: input.email.trim().toLowerCase(),
+      firstName: input.firstName.trim(),
+      lastName: input.lastName.trim(),
+      password: input.password,
+      existingAccount: input.existingAccount === true,
+    },
+  });
+
+  if (error) {
+    return { ok: false, error: error.message || "Failed to accept invitation" };
+  }
+
+  if (!data?.success) {
+    return {
+      ok: false,
+      error: data?.error || "Failed to accept invitation",
+      code: data?.code,
+    };
+  }
+
+  return {
+    ok: true,
+    ownerUserId: String(data.owner_user_id),
+    ownerDisplayName: String(data.owner_display_name || "the account owner"),
+    alreadyAccepted: data.alreadyAccepted === true,
+  };
 }
 
 export async function inviteAccountDelegate(input: {
@@ -70,48 +150,6 @@ export async function revokeAccountDelegate(
   return { ok: true };
 }
 
-export async function acceptAccountDelegateInvite(
-  token: string,
-): Promise<{ ok: boolean; error?: string; owner_user_id?: string; owner_display_name?: string }> {
-  const accessToken = await getAccessToken();
-  if (!accessToken) return { ok: false, error: "Not authenticated" };
-
-  const { data, error } = await supabase.functions.invoke("accept-account-delegate-invite", {
-    body: { token },
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
-
-  if (error || !data?.success) {
-    return { ok: false, error: data?.error || error?.message || "Failed to accept invite" };
-  }
-
-  return {
-    ok: true,
-    owner_user_id: data.owner_user_id,
-    owner_display_name: data.owner_display_name,
-  };
-}
-
-export async function setActiveOwnerContext(
-  ownerUserId: string,
-): Promise<{ ok: boolean; error?: string; data?: SetActiveOwnerContextResult }> {
-  const { data, error } = await supabase.rpc("set_active_owner_context", {
-    p_owner_user_id: ownerUserId,
-  });
-
-  if (error) {
-    return { ok: false, error: error.message };
-  }
-
-  return { ok: true, data: data as SetActiveOwnerContextResult };
-}
-
-export async function clearActiveOwnerContext(): Promise<{ ok: boolean; error?: string }> {
-  const { error } = await supabase.rpc("clear_active_owner_context");
-  if (error) return { ok: false, error: error.message };
-  return { ok: true };
-}
-
 export async function listAccountDelegatesForOwner(): Promise<AccountDelegateRow[]> {
   const { data, error } = await supabase.rpc("list_account_delegates_for_owner");
   if (error) {
@@ -119,13 +157,4 @@ export async function listAccountDelegatesForOwner(): Promise<AccountDelegateRow
     return [];
   }
   return (data ?? []) as AccountDelegateRow[];
-}
-
-export async function listDelegateMemberships(): Promise<DelegateMembership[]> {
-  const { data, error } = await supabase.rpc("list_delegate_memberships");
-  if (error) {
-    console.error("[listDelegateMemberships]", error.message);
-    return [];
-  }
-  return (data ?? []) as DelegateMembership[];
 }

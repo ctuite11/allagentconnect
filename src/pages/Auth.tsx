@@ -336,6 +336,7 @@ const Auth = () => {
           const shouldRouteImmediately =
             resolved.role === "admin" ||
             resolved.role === "buyer" ||
+            resolved.role === "delegate" ||
             (resolved.role === "agent" && resolved.is_verified_agent);
           if (shouldRouteImmediately) {
             const returnToMeta = resolvePostAuthRedirectWithMeta(searchParams);

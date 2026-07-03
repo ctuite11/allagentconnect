@@ -1,24 +1,22 @@
-import { useCallback } from "react";
-import { useAuthRole } from "@/hooks/useAuthRole";
 import { useFeatureFlag } from "@/hooks/useFeatureFlag";
-import {
-  clearActiveOwnerContext,
-  setActiveOwnerContext,
-} from "@/lib/agentDelegatesApi";
+import { useAuthRole } from "@/hooks/useAuthRole";
 
 export function useActiveAgentAccount() {
   const { enabled: delegatesEnabled } = useFeatureFlag("agent_account_delegates");
   const {
     user,
+    role,
     isLicensedOwner,
     isDelegate,
     activeOwnerUserId,
-    delegateMemberships,
     refreshRole,
   } = useAuthRole();
 
+  const isDelegateUser = role === "delegate" || isDelegate;
+
   const isActingAsOwner =
     delegatesEnabled &&
+    isDelegateUser &&
     !!activeOwnerUserId &&
     !!user?.id &&
     activeOwnerUserId !== user.id;
@@ -26,38 +24,14 @@ export function useActiveAgentAccount() {
   const effectiveOwnerUserId =
     delegatesEnabled && activeOwnerUserId ? activeOwnerUserId : user?.id ?? null;
 
-  const switchToOwner = useCallback(
-    async (ownerUserId: string) => {
-      const result = await setActiveOwnerContext(ownerUserId);
-      if (!result.ok) {
-        return result;
-      }
-      await refreshRole();
-      return result;
-    },
-    [refreshRole],
-  );
-
-  const returnToSelf = useCallback(async () => {
-    const result = await clearActiveOwnerContext();
-    if (!result.ok) {
-      return result;
-    }
-    await refreshRole();
-    return result;
-  }, [refreshRole]);
-
   return {
     user,
     delegatesEnabled,
     isLicensedOwner,
-    isDelegate,
-    isActingAsOwner,
+    isDelegate: isDelegateUser,
+    isActingAsOwner: delegatesEnabled && (isDelegateUser || isActingAsOwner),
     effectiveOwnerUserId,
     activeOwnerUserId,
-    delegateMemberships,
-    switchToOwner,
-    returnToSelf,
     refreshRole,
   };
 }

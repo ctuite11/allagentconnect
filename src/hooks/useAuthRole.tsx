@@ -24,6 +24,8 @@ export interface AuthRoleState {
   isLicensedOwner: boolean;
   isDelegate: boolean;
   activeOwnerUserId: string | null;
+  ownerDisplayName: string | null;
+  canAccessSuccessHub: boolean;
   delegateMemberships: import("@/lib/resolveUserRole").DelegateMembershipSummary[];
   refreshRole: () => Promise<void>;
 }
@@ -58,6 +60,8 @@ function useAuthRoleStore(): AuthRoleState {
   const [isLicensedOwner, setIsLicensedOwner] = useState(false);
   const [isDelegate, setIsDelegate] = useState(false);
   const [activeOwnerUserId, setActiveOwnerUserId] = useState<string | null>(null);
+  const [ownerDisplayName, setOwnerDisplayName] = useState<string | null>(null);
+  const [canAccessSuccessHub, setCanAccessSuccessHub] = useState(false);
   const [delegateMemberships, setDelegateMemberships] = useState<DelegateMembershipSummary[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const initialLoadDone = useRef(false);
@@ -75,6 +79,8 @@ function useAuthRoleStore(): AuthRoleState {
     setIsLicensedOwner(result.is_licensed_owner ?? false);
     setIsDelegate(result.is_delegate ?? false);
     setActiveOwnerUserId(result.active_owner_user_id ?? null);
+    setOwnerDisplayName(result.owner_display_name ?? null);
+    setCanAccessSuccessHub(result.can_access_success_hub ?? false);
     setDelegateMemberships(result.delegate_memberships ?? []);
   }, []);
 
@@ -101,6 +107,8 @@ function useAuthRoleStore(): AuthRoleState {
         setIsLicensedOwner(false);
         setIsDelegate(false);
         setActiveOwnerUserId(null);
+        setOwnerDisplayName(null);
+        setCanAccessSuccessHub(false);
         setDelegateMemberships([]);
         setLoading(false);
         initialLoadDone.current = true;
@@ -128,6 +136,8 @@ function useAuthRoleStore(): AuthRoleState {
         setIsLicensedOwner(false);
         setIsDelegate(false);
         setActiveOwnerUserId(null);
+        setOwnerDisplayName(null);
+        setCanAccessSuccessHub(false);
         setDelegateMemberships([]);
         return;
       }
@@ -175,6 +185,8 @@ function useAuthRoleStore(): AuthRoleState {
       isLicensedOwner,
       isDelegate,
       activeOwnerUserId,
+      ownerDisplayName,
+      canAccessSuccessHub,
       delegateMemberships,
       refreshRole: async () => {
         if (user?.id) await loadRoleForUser(user.id);
@@ -189,6 +201,8 @@ function useAuthRoleStore(): AuthRoleState {
       isLicensedOwner,
       isDelegate,
       activeOwnerUserId,
+      ownerDisplayName,
+      canAccessSuccessHub,
       delegateMemberships,
       loadRoleForUser,
     ],

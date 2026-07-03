@@ -20,7 +20,7 @@ export const RouteGuard: React.FC<Props> = ({
   /** Agent routes require verified license status unless explicitly disabled. */
   requireVerified = true,
 }) => {
-  const { user, role, loading, isAdmin, isVerifiedAgent } = useAuthRole();
+  const { user, role, loading, isAdmin, isVerifiedAgent, isDelegate, canAccessSuccessHub } = useAuthRole();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -61,9 +61,14 @@ export const RouteGuard: React.FC<Props> = ({
     }
 
     // Role mismatch → route to correct dashboard
-    const roleAllowed = Array.isArray(requireRole) ? requireRole.includes(role as AllowedRole) : role === requireRole;
+    const agentAccess = requireRole === "agent" && (role === "agent" || role === "delegate");
+    const roleAllowed = agentAccess
+      ? true
+      : Array.isArray(requireRole)
+        ? requireRole.includes(role as AllowedRole)
+        : role === requireRole;
     if (user && requireRole && role && !roleAllowed && role !== "admin") {
-      if (role === "agent") {
+      if (role === "agent" || role === "delegate") {
         navigate("/agent-dashboard", { replace: true });
       } else if (role === "buyer") {
         navigate("/client/dashboard", { replace: true });
@@ -75,6 +80,12 @@ export const RouteGuard: React.FC<Props> = ({
 
     // Verification gate — uses isVerifiedAgent from the single RPC (no extra query)
     if (shouldVerify && user && requireRole === "agent") {
+      if (role === "delegate") {
+        setIsVerified(true);
+        setVerificationChecked(true);
+        return;
+      }
+
       if (location.pathname === "/pending-verification") {
         setVerificationChecked(true);
         return;
@@ -96,7 +107,7 @@ export const RouteGuard: React.FC<Props> = ({
         return;
       }
 
-      if (isVerifiedAgent) {
+      if (isVerifiedAgent || canAccessSuccessHub) {
         setIsVerified(true);
       } else {
         if (import.meta.env.DEV) {
@@ -113,7 +124,7 @@ export const RouteGuard: React.FC<Props> = ({
       setVerificationChecked(true);
       setIsVerified(true);
     }
-  }, [loading, user, role, isAdmin, isVerifiedAgent, requireAuth, requireRole, shouldVerify, location.pathname, navigate]);
+  }, [loading, user, role, isAdmin, isVerifiedAgent, isDelegate, canAccessSuccessHub, requireAuth, requireRole, shouldVerify, location.pathname, navigate]);
 
   if (loading) {
     return <LoadingScreen message="Checking your session..." />;
@@ -133,7 +144,12 @@ export const RouteGuard: React.FC<Props> = ({
   }
 
   // Role mismatch — navigated in effect
-  const roleMatchesRender = Array.isArray(requireRole) ? requireRole.includes(role as AllowedRole) : role === requireRole;
+  const roleMatchesRender =
+    requireRole === "agent"
+      ? role === "agent" || role === "delegate"
+      : Array.isArray(requireRole)
+        ? requireRole.includes(role as AllowedRole)
+        : role === requireRole;
   if (requireRole && role && user && !roleMatchesRender && role !== "admin") {
     return null;
   }
