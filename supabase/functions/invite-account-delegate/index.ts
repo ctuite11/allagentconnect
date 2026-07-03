@@ -19,6 +19,16 @@ const corsHeaders = {
 
 const INVITE_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 
+type SupabaseAdmin = ReturnType<typeof createClient>;
+
+type PendingInviteRow = {
+  id: string;
+  invite_token: string;
+  invite_email: string;
+  display_name: string | null;
+  role_label: string | null;
+};
+
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
@@ -35,8 +45,6 @@ function generateInviteToken(): string {
 function inviteExpiresAt(): string {
   return new Date(Date.now() + INVITE_TTL_MS).toISOString();
 }
-
-type SupabaseAdmin = ReturnType<typeof createClient>;
 
 async function loadOwnerInviteContext(supabaseAdmin: SupabaseAdmin, ownerUserId: string) {
   const { data: ownerProfile } = await supabaseAdmin
@@ -113,6 +121,149 @@ async function logDelegateInviteAudit(
   }
 }
 
+async function loadSupersededTokens(
+  supabaseAdmin: SupabaseAdmin,
+  memberId: string,
+): Promise<string[]> {
+  const { data, error } = await supabaseAdmin
+    .from("agent_account_members")
+    .select("superseded_invite_tokens")
+    .eq("id", memberId)
+    .maybeSingle();
+
+  if (error) {
+    console.warn("[invite-account-delegate] superseded token lookup skipped:", error.message);
+    return [];
+  }
+
+  return Array.isArray(data?.superseded_invite_tokens) ? data.superseded_invite_tokens : [];
+}
+
+async function findPendingInvite(
+  supabaseAdmin: SupabaseAdmin,
+  ownerUserId: string,
+  opts: { memberId?: string; inviteEmail?: string },
+): Promise<PendingInviteRow | null> {
+  const selectFields = "id, invite_token, invite_email, display_name, role_label";
+
+  if (opts.memberId) {
+    const { data, error } = await supabaseAdmin
+      .from("agent_account_members")
+      .select(selectFields)
+      .eq("id", opts.memberId)
+      .eq("owner_user_id", ownerUserId)
+      .eq("status", "invited")
+      .maybeSingle();
+
+    if (error) {
+      console.error("[invite-account-delegate] pending lookup by member_id failed:", error);
+      return null;
+    }
+    return data as PendingInviteRow | null;
+  }
+
+  if (opts.inviteEmail) {
+    const { data, error } = await supabaseAdmin
+      .from("agent_account_members")
+      .select(selectFields)
+      .eq("owner_user_id", ownerUserId)
+      .eq("invite_email", opts.inviteEmail)
+      .eq("status", "invited")
+      .maybeSingle();
+
+    if (error) {
+      console.error("[invite-account-delegate] pending lookup by email failed:", error);
+      return null;
+    }
+    return data as PendingInviteRow | null;
+  }
+
+  return null;
+}
+
+async function resendPendingInvite(
+  supabaseAdmin: SupabaseAdmin,
+  supabaseUrl: string,
+  serviceRoleKey: string,
+  appUrl: string,
+  ownerUserId: string,
+  pendingInvite: PendingInviteRow,
+  input: { display_name?: string; role_label?: string },
+): Promise<Response> {
+  const newToken = generateInviteToken();
+  const supersededTokens = [
+    ...(await loadSupersededTokens(supabaseAdmin, pendingInvite.id)),
+    pendingInvite.invite_token,
+  ];
+
+  const displayName = "display_name" in input
+    ? input.display_name?.trim() || null
+    : pendingInvite.display_name;
+  const roleLabel = "role_label" in input
+    ? input.role_label?.trim() || null
+    : pendingInvite.role_label;
+
+  const updatePayload: Record<string, unknown> = {
+    invite_token: newToken,
+    invite_expires_at: inviteExpiresAt(),
+    invited_at: new Date().toISOString(),
+    superseded_invite_tokens: supersededTokens,
+    display_name: displayName,
+    role_label: roleLabel,
+  };
+
+  let { data: updatedRow, error: updateErr } = await supabaseAdmin
+    .from("agent_account_members")
+    .update(updatePayload)
+    .eq("id", pendingInvite.id)
+    .eq("owner_user_id", ownerUserId)
+    .eq("status", "invited")
+    .select("id, invite_token, display_name, role_label, invite_email")
+    .single();
+
+  if (updateErr?.message?.includes("superseded_invite_tokens")) {
+    const { superseded_invite_tokens: _ignored, ...withoutSuperseded } = updatePayload;
+    ({ data: updatedRow, error: updateErr } = await supabaseAdmin
+      .from("agent_account_members")
+      .update(withoutSuperseded)
+      .eq("id", pendingInvite.id)
+      .eq("owner_user_id", ownerUserId)
+      .eq("status", "invited")
+      .select("id, invite_token, display_name, role_label, invite_email")
+      .single());
+  }
+
+  if (updateErr || !updatedRow) {
+    console.error("[invite-account-delegate] resend update failed:", updateErr);
+    return json({ success: false, error: "Failed to refresh invite" }, 500);
+  }
+
+  const emailResult = await enqueueDelegateInviteEmail(
+    supabaseAdmin,
+    supabaseUrl,
+    serviceRoleKey,
+    appUrl,
+    ownerUserId,
+    updatedRow.invite_email,
+    updatedRow.invite_token,
+    updatedRow.display_name,
+    updatedRow.role_label,
+  );
+
+  if (!emailResult.ok) {
+    return json({ success: false, error: emailResult.error }, 500);
+  }
+
+  await logDelegateInviteAudit(supabaseAdmin, ownerUserId, updatedRow.id, "DELEGATE_INVITE_RESENT");
+
+  return json({
+    success: true,
+    member_id: updatedRow.id,
+    invite_email: updatedRow.invite_email,
+    resent: true,
+  });
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return json({ success: false, error: "Method not allowed" }, 405);
@@ -150,88 +301,53 @@ serve(async (req) => {
     return json({ success: false, error: "Only verified account owners can invite delegates" }, 403);
   }
 
-  let input: { invite_email?: string; display_name?: string; role_label?: string };
+  let input: {
+    invite_email?: string;
+    member_id?: string;
+    display_name?: string;
+    role_label?: string;
+  };
   try {
     input = await req.json();
   } catch {
     return json({ success: false, error: "Invalid JSON" }, 400);
   }
 
+  const memberId = input.member_id?.trim();
   const inviteEmail = input.invite_email?.trim().toLowerCase();
-  if (!inviteEmail) {
-    return json({ success: false, error: "invite_email is required" }, 400);
+  if (!memberId && !inviteEmail) {
+    return json({ success: false, error: "invite_email or member_id is required" }, 400);
   }
 
-  const ownerEmail = await resolveAuthUserEmail(supabaseAdmin, ownerUserId);
-  if (ownerEmail && ownerEmail === inviteEmail) {
-    return json({ success: false, error: "You cannot invite yourself as a delegate" }, 400);
+  if (inviteEmail) {
+    const ownerEmail = await resolveAuthUserEmail(supabaseAdmin, ownerUserId);
+    if (ownerEmail && ownerEmail === inviteEmail) {
+      return json({ success: false, error: "You cannot invite yourself as a delegate" }, 400);
+    }
   }
 
   const displayName = input.display_name?.trim() || null;
   const roleLabel = input.role_label?.trim() || null;
 
-  const { data: pendingInvite } = await supabaseAdmin
-    .from("agent_account_members")
-    .select("id, invite_token, display_name, role_label, superseded_invite_tokens")
-    .eq("owner_user_id", ownerUserId)
-    .eq("invite_email", inviteEmail)
-    .eq("status", "invited")
-    .maybeSingle();
+  const pendingInvite = await findPendingInvite(supabaseAdmin, ownerUserId, {
+    memberId,
+    inviteEmail,
+  });
 
   if (pendingInvite) {
-    const newToken = generateInviteToken();
-    const supersededTokens = [
-      ...(Array.isArray(pendingInvite.superseded_invite_tokens)
-        ? pendingInvite.superseded_invite_tokens
-        : []),
-      pendingInvite.invite_token,
-    ];
-    const updatePayload: Record<string, unknown> = {
-      invite_token: newToken,
-      invite_expires_at: inviteExpiresAt(),
-      invited_at: new Date().toISOString(),
-      superseded_invite_tokens: supersededTokens,
-    };
-
-    if ("display_name" in input) updatePayload.display_name = displayName;
-    if ("role_label" in input) updatePayload.role_label = roleLabel;
-
-    const { data: updatedRow, error: updateErr } = await supabaseAdmin
-      .from("agent_account_members")
-      .update(updatePayload)
-      .eq("id", pendingInvite.id)
-      .select("id, invite_token, display_name, role_label")
-      .single();
-
-    if (updateErr || !updatedRow) {
-      console.error("[invite-account-delegate] resend update failed:", updateErr);
-      return json({ success: false, error: "Failed to refresh invite" }, 500);
-    }
-
-    const emailResult = await enqueueDelegateInviteEmail(
+    return await resendPendingInvite(
       supabaseAdmin,
       supabaseUrl,
       serviceRoleKey,
       appUrl,
       ownerUserId,
-      inviteEmail,
-      updatedRow.invite_token,
-      updatedRow.display_name,
-      updatedRow.role_label,
+      pendingInvite,
+      input,
     );
+  }
 
-    if (!emailResult.ok) {
-      return json({ success: false, error: emailResult.error }, 500);
-    }
-
-    await logDelegateInviteAudit(supabaseAdmin, ownerUserId, updatedRow.id, "DELEGATE_INVITE_RESENT");
-
-    return json({
-      success: true,
-      member_id: updatedRow.id,
-      invite_email: inviteEmail,
-      resent: true,
-    });
+  if (!inviteEmail) {
+    return json({ success: false, error: "Pending invite not found for this member" }, 404);
   }
 
   const { data: acceptedMembership } = await supabaseAdmin
@@ -257,14 +373,27 @@ serve(async (req) => {
       invited_by: ownerUserId,
       invite_expires_at: inviteExpiresAt(),
     })
-    .select("id, invite_token, display_name, role_label")
+    .select("id, invite_token, display_name, role_label, invite_email")
     .single();
 
   if (insertErr || !memberRow) {
     console.error("[invite-account-delegate] insert failed:", insertErr);
+
     if (insertErr?.code === "23505") {
-      return json({ success: false, error: "This person has already been invited." }, 400);
+      const existingPending = await findPendingInvite(supabaseAdmin, ownerUserId, { inviteEmail });
+      if (existingPending) {
+        return await resendPendingInvite(
+          supabaseAdmin,
+          supabaseUrl,
+          serviceRoleKey,
+          appUrl,
+          ownerUserId,
+          existingPending,
+          input,
+        );
+      }
     }
+
     return json({ success: false, error: "Failed to create invite" }, 500);
   }
 
@@ -274,7 +403,7 @@ serve(async (req) => {
     serviceRoleKey,
     appUrl,
     ownerUserId,
-    inviteEmail,
+    memberRow.invite_email,
     memberRow.invite_token,
     memberRow.display_name,
     memberRow.role_label,

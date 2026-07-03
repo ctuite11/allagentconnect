@@ -150,6 +150,7 @@ export async function setupDelegateInvite(
 
 export async function inviteAccountDelegate(input: {
   invite_email: string;
+  member_id?: string;
   display_name?: string;
   role_label?: string;
 }): Promise<{ ok: boolean; error?: string; member_id?: string; resent?: boolean }> {

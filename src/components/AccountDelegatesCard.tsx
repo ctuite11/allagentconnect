@@ -61,8 +61,12 @@ export function AccountDelegatesCard() {
     }
 
     setInviting(true);
+    const pendingRow = delegates.find(
+      (row) => row.status === "invited" && row.invite_email === email,
+    );
     const result = await inviteAccountDelegate({
       invite_email: email,
+      ...(pendingRow ? { member_id: pendingRow.member_id } : {}),
       display_name: displayName.trim() || undefined,
       role_label: roleLabel.trim() || undefined,
     });
@@ -83,6 +87,7 @@ export function AccountDelegatesCard() {
   const handleResend = async (row: AccountDelegateRow) => {
     setResendingId(row.member_id);
     const result = await inviteAccountDelegate({
+      member_id: row.member_id,
       invite_email: row.invite_email,
       ...(row.display_name ? { display_name: row.display_name } : {}),
       ...(row.role_label ? { role_label: row.role_label } : {}),
