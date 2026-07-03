@@ -4576,6 +4576,7 @@ export type Database = {
           zip_code: string
         }[]
       }
+      get_delegate_invite_preview: { Args: { p_token: string }; Returns: Json }
       get_hot_sheet_by_token: { Args: { _token: string }; Returns: Json }
       get_hot_sheet_for_member: {
         Args: { _hot_sheet_id: string }

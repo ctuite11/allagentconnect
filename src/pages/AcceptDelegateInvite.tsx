@@ -98,7 +98,7 @@ export default function AcceptDelegateInvite() {
       existingAccount,
     });
 
-    if (!result.ok) {
+    if (result.ok !== true) {
       if (result.code === "existing_account") {
         setPhase("signin");
         return;
