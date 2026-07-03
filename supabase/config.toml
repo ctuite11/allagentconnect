@@ -111,7 +111,7 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.admin-set-user-password]
-verify_jwt = false
+verify_jwt = true
 
 [functions.resend-buyer-workspace-invite]
 verify_jwt = false
