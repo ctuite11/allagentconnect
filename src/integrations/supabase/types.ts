@@ -204,50 +204,83 @@ export type Database = {
       }
       agent_account_members: {
         Row: {
+          accepted_at: string | null
+          accepted_by: string | null
           created_at: string
+          delegate_user_id: string | null
+          display_name: string | null
           id: string
-          member_user_id: string
-          owner_agent_id: string
-          role: string
-          status: string
+          invite_email: string
+          invite_expires_at: string
+          invite_token: string | null
+          invited_at: string
+          invited_by: string
+          last_active_at: string | null
+          owner_user_id: string
+          revoked_at: string | null
+          revoked_by: string | null
+          role_label: string | null
+          status: Database["public"]["Enums"]["agent_delegate_status"]
           updated_at: string
         }
         Insert: {
+          accepted_at?: string | null
+          accepted_by?: string | null
           created_at?: string
+          delegate_user_id?: string | null
+          display_name?: string | null
           id?: string
-          member_user_id: string
-          owner_agent_id: string
-          role?: string
-          status?: string
+          invite_email: string
+          invite_expires_at?: string
+          invite_token?: string | null
+          invited_at?: string
+          invited_by: string
+          last_active_at?: string | null
+          owner_user_id: string
+          revoked_at?: string | null
+          revoked_by?: string | null
+          role_label?: string | null
+          status?: Database["public"]["Enums"]["agent_delegate_status"]
           updated_at?: string
         }
         Update: {
+          accepted_at?: string | null
+          accepted_by?: string | null
           created_at?: string
+          delegate_user_id?: string | null
+          display_name?: string | null
           id?: string
-          member_user_id?: string
-          owner_agent_id?: string
-          role?: string
-          status?: string
+          invite_email?: string
+          invite_expires_at?: string
+          invite_token?: string | null
+          invited_at?: string
+          invited_by?: string
+          last_active_at?: string | null
+          owner_user_id?: string
+          revoked_at?: string | null
+          revoked_by?: string | null
+          role_label?: string | null
+          status?: Database["public"]["Enums"]["agent_delegate_status"]
           updated_at?: string
         }
         Relationships: []
       }
       agent_active_context: {
         Row: {
-          active_owner_agent_id: string
-          created_at: string
+          active_owner_user_id: string
+          expires_at: string
           updated_at: string
           user_id: string
         }
         Insert: {
-          active_owner_agent_id: string
-          created_at?: string
+          active_owner_user_id: string
+          expires_at: string
           updated_at?: string
           user_id: string
         }
         Update: {
-          active_owner_agent_id?: string
-          created_at?: string
+          active_owner_user_id?: string
+          expires_at?: string
           updated_at?: string
           user_id?: string
         }
@@ -1023,6 +1056,7 @@ export type Database = {
       }
       audit_logs: {
         Row: {
+          acting_as_user_id: string | null
           action: string
           created_at: string
           id: string
@@ -1033,6 +1067,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          acting_as_user_id?: string | null
           action: string
           created_at?: string
           id?: string
@@ -1043,6 +1078,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          acting_as_user_id?: string | null
           action?: string
           created_at?: string
           id?: string
@@ -4362,6 +4398,7 @@ export type Database = {
       }
     }
     Functions: {
+      _purge_expired_agent_active_context: { Args: never; Returns: undefined }
       accept_client_hot_sheet_invite: {
         Args: { _token: string }
         Returns: Json
@@ -4393,6 +4430,10 @@ export type Database = {
         Args: { p_user_a: string; p_user_b: string }
         Returns: undefined
       }
+      assert_agent_context: {
+        Args: { p_owner_user_id: string }
+        Returns: boolean
+      }
       assign_self_role: {
         Args: { _role: Database["public"]["Enums"]["app_role"] }
         Returns: undefined
@@ -4402,6 +4443,7 @@ export type Database = {
         Args: { p_message_id: string }
         Returns: Json
       }
+      can_act_for_agent: { Args: { p_agent_user_id: string }; Returns: boolean }
       can_authenticated_buyer_view_hot_sheet_client: {
         Args: { p_crm_client_id: string; p_hot_sheet_id: string }
         Returns: boolean
@@ -4429,6 +4471,7 @@ export type Database = {
         Args: { _email: string }
         Returns: number
       }
+      clear_active_owner_context: { Args: never; Returns: undefined }
       count_matching_agents: {
         Args: {
           p_bathrooms: number
@@ -4445,7 +4488,6 @@ export type Database = {
         Returns: string
       }
       current_account_owner_id: { Args: never; Returns: string }
-      delegates_enabled: { Args: never; Returns: boolean }
       delete_draft_listing: {
         Args: { p_listing_id: string }
         Returns: undefined
@@ -4454,6 +4496,7 @@ export type Database = {
         Args: { p_crm_client_id: string; p_hot_sheet_id: string }
         Returns: Json
       }
+      effective_agent_id: { Args: never; Returns: string }
       email_jobs_claim: {
         Args: { p_limit: number }
         Returns: {
@@ -4551,10 +4594,11 @@ export type Database = {
         Args: { p_hot_sheet_id: string }
         Returns: boolean
       }
-      is_account_member_of: {
-        Args: { _owner_agent_id: string; _user_id: string }
+      is_accepted_delegate_for: {
+        Args: { p_owner_user_id: string }
         Returns: boolean
       }
+      is_account_owner: { Args: never; Returns: boolean }
       is_buyer_represented_by_other_agent: {
         Args: {
           p_email: string
@@ -4577,6 +4621,7 @@ export type Database = {
         Args: { p_workspace_id: string }
         Returns: boolean
       }
+      is_delegate: { Args: never; Returns: boolean }
       is_email_registered_with_aac: {
         Args: { p_email: string }
         Returns: boolean
@@ -4586,11 +4631,42 @@ export type Database = {
         Returns: boolean
       }
       is_feature_enabled: { Args: { p_flag_name: string }; Returns: boolean }
+      is_licensed_owner: { Args: never; Returns: boolean }
       is_team_owner: {
         Args: { p_team_id: string; p_user_id: string }
         Returns: boolean
       }
       is_verified_agent: { Args: never; Returns: boolean }
+      is_verified_agent_for_context: {
+        Args: { p_owner_user_id: string }
+        Returns: boolean
+      }
+      list_account_delegates_for_owner: {
+        Args: never
+        Returns: {
+          accepted_at: string
+          delegate_user_id: string
+          display_name: string
+          invite_email: string
+          invited_at: string
+          is_online: boolean
+          last_active_at: string
+          member_id: string
+          role_label: string
+          status: Database["public"]["Enums"]["agent_delegate_status"]
+        }[]
+      }
+      list_delegate_memberships: {
+        Args: never
+        Returns: {
+          display_name: string
+          last_active_at: string
+          owner_first_name: string
+          owner_last_name: string
+          owner_user_id: string
+          role_label: string
+        }[]
+      }
       list_hot_sheets_for_member: {
         Args: { _hot_sheet_ids: string[] }
         Returns: {
@@ -4631,7 +4707,7 @@ export type Database = {
         }[]
       }
       matches_current_account: {
-        Args: { _owner_agent_id: string }
+        Args: { p_agent_user_id: string }
         Returns: boolean
       }
       normalize_listing_address_text: {
@@ -4658,12 +4734,17 @@ export type Database = {
       }
       resolve_share_token: { Args: { _token: string }; Returns: Json }
       resolve_user_role: { Args: { _user_id: string }; Returns: Json }
+      set_active_owner_context: {
+        Args: { p_owner_user_id: string }
+        Returns: Json
+      }
       verify_buyer_contact_row: {
         Args: { p_crm_client_id: string }
         Returns: Json
       }
     }
     Enums: {
+      agent_delegate_status: "invited" | "accepted" | "revoked"
       agent_status:
         | "unverified"
         | "pending"
@@ -4820,6 +4901,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      agent_delegate_status: ["invited", "accepted", "revoked"],
       agent_status: [
         "unverified",
         "pending",
