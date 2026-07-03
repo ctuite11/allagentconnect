@@ -116,6 +116,15 @@ verify_jwt = true
 [functions.resend-buyer-workspace-invite]
 verify_jwt = false
 
+[functions.invite-account-delegate]
+verify_jwt = false
+
+[functions.accept-account-delegate-invite]
+verify_jwt = false
+
+[functions.revoke-account-delegate]
+verify_jwt = false
+
 [functions.unsubscribe-hotsheet]
 verify_jwt = false
 

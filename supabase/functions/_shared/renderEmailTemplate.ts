@@ -447,6 +447,34 @@ export function renderEmailTemplate(
       });
     }
 
+    case "account-delegate-invite": {
+      const ownerName = formatPersonDisplayName(String(variables.ownerName || "An agent"));
+      const ownerBrokerage = String(variables.ownerBrokerage || "");
+      const roleLabel = String(variables.roleLabel || "").trim();
+      const inviteeName = String(variables.inviteeName || "").trim();
+      const inviteeFirstName = inviteeName.split(/\s+/)[0] || "there";
+      const inviteLink = String(variables.inviteLink || "");
+      const roleLine = roleLabel
+        ? `<p style="margin:0 0 18px;">You'll be joining as: <strong>${roleLabel}</strong></p>`
+        : "";
+      return buildAacEmail({
+        headline: `${ownerName} invited you to their account`,
+        preheader: `Accept to help manage ${ownerName}'s All Agent Connect account.`,
+        body: `
+          <p style="margin:0 0 14px;">Hi ${inviteeFirstName},</p>
+          <p style="margin:0 0 18px;">${ownerName} invited you to act on their behalf in All Agent Connect — you'll be able to manage their clients, listings, and hot sheets when signed in as their account.</p>
+          ${roleLine}
+          <p style="margin:0 0 18px;">This invitation expires in 30 days. Click below to accept.</p>
+          ${renderSharedByBlock({
+            agentName: ownerName,
+            agentBrokerage: ownerBrokerage,
+            agentEmail: "",
+          })}`,
+        ctaLabel: "Accept Invitation",
+        ctaUrl: inviteLink,
+      });
+    }
+
     case "agent-approval-accepted": {
       const recipientName = variables.recipientName || "Agent";
       const signInUrl = variables.signInUrl || variables.passwordSetupUrl || "https://allagentconnect.com/auth";
