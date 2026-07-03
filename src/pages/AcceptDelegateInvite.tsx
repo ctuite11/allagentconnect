@@ -106,6 +106,8 @@ export default function AcceptDelegateInvite() {
       throw new Error(result.error);
     }
 
+    // TS narrowing helper (unreachable branch removed by discriminated union)
+
     const { error: signInError } = await supabase.auth.signInWithPassword({
       email: normalizedEmail,
       password: plainPassword,
