@@ -221,6 +221,7 @@ export type Database = {
           revoked_by: string | null
           role_label: string | null
           status: Database["public"]["Enums"]["agent_delegate_status"]
+          superseded_invite_tokens: string[]
           updated_at: string
         }
         Insert: {
@@ -241,6 +242,7 @@ export type Database = {
           revoked_by?: string | null
           role_label?: string | null
           status?: Database["public"]["Enums"]["agent_delegate_status"]
+          superseded_invite_tokens?: string[]
           updated_at?: string
         }
         Update: {
@@ -261,6 +263,7 @@ export type Database = {
           revoked_by?: string | null
           role_label?: string | null
           status?: Database["public"]["Enums"]["agent_delegate_status"]
+          superseded_invite_tokens?: string[]
           updated_at?: string
         }
         Relationships: []
