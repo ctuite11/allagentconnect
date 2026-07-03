@@ -7,7 +7,7 @@ No bypass secret. Uses the existing `admin-set-user-password` edge function with
 2. Give me the temporary password to set for her.
 
 ### What I will do, in order
-1. **Delete** the leftover `ADMIN_SETUP_BYPASS_SECRET` so no bypass path exists.
+1. **Delete** the leftover `ADMIN_SETUP_BYPASS_SECRET` so no bypass path exists. (This is a deletion, not a creation.)
 2. Verify the current `admin-set-user-password` function:
    - Requires admin caller (`has_role` check).
    - Does not log the password value.
@@ -27,7 +27,6 @@ No bypass secret. Uses the existing `admin-set-user-password` edge function with
 8. Confirm to you: done.
 
 ### After the reset (your handoff to Chrissy)
-Tell her, out-of-band:
 - URL: `https://allagentconnect.com/auth`
 - Email: `chrissy@southshoresir.com`
 - Temporary password: (the value you gave me)
