@@ -2272,6 +2272,33 @@ export type Database = {
           },
         ]
       }
+      feature_flag_users: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          flag_name: string
+          id: string
+          note: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          flag_name: string
+          id?: string
+          note?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          flag_name?: string
+          id?: string
+          note?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       feature_flags: {
         Row: {
           created_at: string
