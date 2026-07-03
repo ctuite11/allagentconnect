@@ -1,21 +1,3 @@
-## Fix: `min(uuid)` error blocks login for allowlisted delegate users
-
-### Root cause
-`public.current_account_owner_id()` runs:
-```sql
-SELECT count(*)::int, min(m.owner_user_id)
-  INTO v_count, v_single
-FROM public.agent_account_members m
-WHERE m.delegate_user_id = v_uid AND m.status = 'accepted';
-```
-Postgres has no `min(uuid)` aggregate → `function min(uuid) does not exist`.
-
-The function short-circuits when the delegates flag is off, so this only started firing after Phase 5 allowlisted `chris@allagentconnect.com`. `resolve_user_role` calls it for every admin/agent, so any allowlisted user now lands on `/access-error`.
-
-### Fix (one migration, no schema changes)
-Replace the aggregate with a plain lookup. Behavior is identical — we only need the single owner_user_id when `count(*) = 1`.
-
-```sql
 CREATE OR REPLACE FUNCTION public.current_account_owner_id()
 RETURNS uuid
 LANGUAGE plpgsql
@@ -75,11 +57,3 @@ BEGIN
   RETURN NULL;
 END;
 $function$;
-```
-
-### Verify
-1. Call `resolve_user_role(<chris uuid>)` via `supabase--read_query` → returns admin role JSON, no error.
-2. You sign in → land on `/admin/approvals` (or verified-agent dashboard) instead of `/access-error`.
-3. Then we can proceed with Grace's password reset.
-
-Approve and I'll apply.
