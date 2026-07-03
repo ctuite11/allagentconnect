@@ -182,7 +182,9 @@ export default function AcceptDelegateInvite() {
 
   if (!token || !preview?.valid) {
     const message =
-      preview?.error === "expired"
+      preview?.error === "superseded"
+        ? "This invitation has been replaced by a newer one. Please use the most recent email invitation."
+        : preview?.error === "expired"
         ? "This invitation has expired. Ask the account owner to send a new invite."
         : preview?.error === "revoked"
           ? "This invitation is no longer valid."

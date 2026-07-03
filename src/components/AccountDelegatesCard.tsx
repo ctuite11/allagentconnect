@@ -8,29 +8,38 @@ import { agentSectionDesc, agentSectionTitle } from "@/lib/agentUi";
 import { useFeatureFlag } from "@/hooks/useFeatureFlag";
 import { useAuthRole } from "@/hooks/useAuthRole";
 import {
+  delegateInviteActivityLabel,
   inviteAccountDelegate,
   listAccountDelegatesForOwner,
+  listDelegateInviteActivity,
   revokeAccountDelegate,
   type AccountDelegateRow,
+  type DelegateInviteActivityRow,
 } from "@/lib/agentDelegatesApi";
 import { toast } from "sonner";
-import { Users, UserPlus } from "lucide-react";
+import { Clock, Users, UserPlus } from "lucide-react";
 
 export function AccountDelegatesCard() {
   const { enabled: delegatesEnabled, loading: flagLoading } = useFeatureFlag("agent_account_delegates");
   const { isLicensedOwner } = useAuthRole();
   const [delegates, setDelegates] = useState<AccountDelegateRow[]>([]);
+  const [activity, setActivity] = useState<DelegateInviteActivityRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [inviteEmail, setInviteEmail] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [roleLabel, setRoleLabel] = useState("");
   const [inviting, setInviting] = useState(false);
+  const [resendingId, setResendingId] = useState<string | null>(null);
   const [revokingId, setRevokingId] = useState<string | null>(null);
 
   const loadDelegates = useCallback(async () => {
     setLoading(true);
-    const rows = await listAccountDelegatesForOwner();
+    const [rows, activityRows] = await Promise.all([
+      listAccountDelegatesForOwner(),
+      listDelegateInviteActivity(),
+    ]);
     setDelegates(rows);
+    setActivity(activityRows);
     setLoading(false);
   }, []);
 
@@ -64,10 +73,28 @@ export function AccountDelegatesCard() {
       return;
     }
 
-    toast.success("Delegate invite sent");
+    toast.success(result.resent ? "Invitation resent" : "Delegate invite sent");
     setInviteEmail("");
     setDisplayName("");
     setRoleLabel("");
+    await loadDelegates();
+  };
+
+  const handleResend = async (row: AccountDelegateRow) => {
+    setResendingId(row.member_id);
+    const result = await inviteAccountDelegate({
+      invite_email: row.invite_email,
+      ...(row.display_name ? { display_name: row.display_name } : {}),
+      ...(row.role_label ? { role_label: row.role_label } : {}),
+    });
+    setResendingId(null);
+
+    if (!result.ok) {
+      toast.error(result.error || "Failed to resend invite");
+      return;
+    }
+
+    toast.success("Invitation resent");
     await loadDelegates();
   };
 
@@ -178,6 +205,16 @@ export function AccountDelegatesCard() {
                 </div>
                 <div className="flex items-center gap-2">
                   {statusBadge(row)}
+                  {row.status === "invited" && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={resendingId === row.member_id}
+                      onClick={() => void handleResend(row)}
+                    >
+                      {resendingId === row.member_id ? "Resending..." : "Resend"}
+                    </Button>
+                  )}
                   {row.status !== "revoked" && (
                     <Button
                       size="sm"
@@ -194,6 +231,28 @@ export function AccountDelegatesCard() {
           </div>
         )}
       </div>
+
+      {activity.length > 0 && (
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 text-sm font-medium text-neutral-900">
+            <Clock className="h-4 w-4 text-[#0E56F5]" />
+            Recent activity
+          </div>
+          <div className="space-y-2">
+            {activity.map((event) => (
+              <div
+                key={event.id}
+                className="flex items-center justify-between gap-3 rounded-lg border border-zinc-100 bg-white px-3 py-2 text-sm"
+              >
+                <span className="text-neutral-700">{delegateInviteActivityLabel(event.action)}</span>
+                <span className="shrink-0 text-xs text-neutral-400">
+                  {new Date(event.created_at).toLocaleString()}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </AgentSectionCard>
   );
 }

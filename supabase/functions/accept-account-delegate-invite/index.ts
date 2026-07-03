@@ -162,6 +162,9 @@ serve(async (req) => {
     auth: { autoRefreshToken: false, persistSession: false },
   });
 
+  const SUPERSEDED_INVITE_MESSAGE =
+    "This invitation has been replaced by a newer one. Please use the most recent email invitation.";
+
   const { data: invite, error: inviteErr } = await supabaseAdmin
     .from("agent_account_members")
     .select(
@@ -171,6 +174,20 @@ serve(async (req) => {
     .maybeSingle();
 
   if (inviteErr || !invite) {
+    const { data: supersededRow } = await supabaseAdmin
+      .from("agent_account_members")
+      .select("id")
+      .contains("superseded_invite_tokens", [inviteToken])
+      .maybeSingle();
+
+    if (supersededRow) {
+      return json({
+        success: false,
+        error: SUPERSEDED_INVITE_MESSAGE,
+        code: "superseded",
+      }, 400);
+    }
+
     return json({ success: false, error: "Invalid invite token" }, 400);
   }
 

@@ -17,11 +17,100 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
+const INVITE_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
     headers: { "Content-Type": "application/json", ...corsHeaders },
   });
+}
+
+function generateInviteToken(): string {
+  const bytes = new Uint8Array(32);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+function inviteExpiresAt(): string {
+  return new Date(Date.now() + INVITE_TTL_MS).toISOString();
+}
+
+type SupabaseAdmin = ReturnType<typeof createClient>;
+
+async function loadOwnerInviteContext(supabaseAdmin: SupabaseAdmin, ownerUserId: string) {
+  const { data: ownerProfile } = await supabaseAdmin
+    .from("agent_profiles")
+    .select("first_name, last_name, company")
+    .eq("id", ownerUserId)
+    .maybeSingle();
+
+  const ownerName = formatPersonDisplayName(
+    [ownerProfile?.first_name, ownerProfile?.last_name].filter(Boolean).join(" ") || "An agent",
+  );
+
+  return {
+    ownerName,
+    ownerBrokerage: ownerProfile?.company || "",
+  };
+}
+
+async function enqueueDelegateInviteEmail(
+  supabaseAdmin: SupabaseAdmin,
+  supabaseUrl: string,
+  serviceRoleKey: string,
+  appUrl: string,
+  ownerUserId: string,
+  inviteEmail: string,
+  inviteToken: string,
+  displayName: string | null,
+  roleLabel: string | null,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const { ownerName, ownerBrokerage } = await loadOwnerInviteContext(supabaseAdmin, ownerUserId);
+  const inviteLink = `${appUrl}/accept-delegate-invite?token=${inviteToken}`;
+  const subject = `${ownerName} invited you to their All Agent Connect account`;
+
+  const { error: emailErr } = await supabaseAdmin.from("email_jobs").insert({
+    payload: {
+      provider: "resend",
+      template: "account-delegate-invite",
+      to: inviteEmail,
+      subject,
+      variables: {
+        ownerName,
+        ownerBrokerage,
+        roleLabel: roleLabel || "",
+        inviteeName: displayName || "",
+        inviteLink,
+      },
+    },
+  });
+
+  if (emailErr) {
+    console.error("[invite-account-delegate] email enqueue failed:", emailErr);
+    return { ok: false, error: "Failed to send invite email" };
+  }
+
+  kickEmailQueue(supabaseUrl, serviceRoleKey);
+  return { ok: true };
+}
+
+async function logDelegateInviteAudit(
+  supabaseAdmin: SupabaseAdmin,
+  ownerUserId: string,
+  memberId: string,
+  action: "DELEGATE_INVITE_SENT" | "DELEGATE_INVITE_RESENT",
+): Promise<void> {
+  const { error } = await supabaseAdmin.from("audit_logs").insert({
+    user_id: ownerUserId,
+    action,
+    table_name: "agent_account_members",
+    record_id: memberId,
+  });
+
+  if (error) {
+    console.error(`[invite-account-delegate] audit insert failed (${action}):`, error);
+  }
 }
 
 serve(async (req) => {
@@ -83,14 +172,66 @@ serve(async (req) => {
 
   const { data: pendingInvite } = await supabaseAdmin
     .from("agent_account_members")
-    .select("id")
+    .select("id, invite_token, display_name, role_label, superseded_invite_tokens")
     .eq("owner_user_id", ownerUserId)
     .eq("invite_email", inviteEmail)
     .eq("status", "invited")
     .maybeSingle();
 
   if (pendingInvite) {
-    return json({ success: false, error: "This person has already been invited." }, 400);
+    const newToken = generateInviteToken();
+    const supersededTokens = [
+      ...(Array.isArray(pendingInvite.superseded_invite_tokens)
+        ? pendingInvite.superseded_invite_tokens
+        : []),
+      pendingInvite.invite_token,
+    ];
+    const updatePayload: Record<string, unknown> = {
+      invite_token: newToken,
+      invite_expires_at: inviteExpiresAt(),
+      invited_at: new Date().toISOString(),
+      superseded_invite_tokens: supersededTokens,
+    };
+
+    if ("display_name" in input) updatePayload.display_name = displayName;
+    if ("role_label" in input) updatePayload.role_label = roleLabel;
+
+    const { data: updatedRow, error: updateErr } = await supabaseAdmin
+      .from("agent_account_members")
+      .update(updatePayload)
+      .eq("id", pendingInvite.id)
+      .select("id, invite_token, display_name, role_label")
+      .single();
+
+    if (updateErr || !updatedRow) {
+      console.error("[invite-account-delegate] resend update failed:", updateErr);
+      return json({ success: false, error: "Failed to refresh invite" }, 500);
+    }
+
+    const emailResult = await enqueueDelegateInviteEmail(
+      supabaseAdmin,
+      supabaseUrl,
+      serviceRoleKey,
+      appUrl,
+      ownerUserId,
+      inviteEmail,
+      updatedRow.invite_token,
+      updatedRow.display_name,
+      updatedRow.role_label,
+    );
+
+    if (!emailResult.ok) {
+      return json({ success: false, error: emailResult.error }, 500);
+    }
+
+    await logDelegateInviteAudit(supabaseAdmin, ownerUserId, updatedRow.id, "DELEGATE_INVITE_RESENT");
+
+    return json({
+      success: true,
+      member_id: updatedRow.id,
+      invite_email: inviteEmail,
+      resent: true,
+    });
   }
 
   const { data: acceptedMembership } = await supabaseAdmin
@@ -114,8 +255,9 @@ serve(async (req) => {
       role_label: roleLabel,
       status: "invited",
       invited_by: ownerUserId,
+      invite_expires_at: inviteExpiresAt(),
     })
-    .select("id, invite_token")
+    .select("id, invite_token, display_name, role_label")
     .single();
 
   if (insertErr || !memberRow) {
@@ -126,46 +268,28 @@ serve(async (req) => {
     return json({ success: false, error: "Failed to create invite" }, 500);
   }
 
-  const { data: ownerProfile } = await supabaseAdmin
-    .from("agent_profiles")
-    .select("first_name, last_name, company")
-    .eq("id", ownerUserId)
-    .maybeSingle();
-
-  const ownerName = formatPersonDisplayName(
-    [ownerProfile?.first_name, ownerProfile?.last_name].filter(Boolean).join(" ") || "An agent",
+  const emailResult = await enqueueDelegateInviteEmail(
+    supabaseAdmin,
+    supabaseUrl,
+    serviceRoleKey,
+    appUrl,
+    ownerUserId,
+    inviteEmail,
+    memberRow.invite_token,
+    memberRow.display_name,
+    memberRow.role_label,
   );
 
-  const inviteLink = `${appUrl}/accept-delegate-invite?token=${memberRow.invite_token}`;
-  const subject = `${ownerName} invited you to their All Agent Connect account`;
-
-  const { error: emailErr } = await supabaseAdmin.from("email_jobs").insert({
-    payload: {
-      provider: "resend",
-      template: "account-delegate-invite",
-      to: inviteEmail,
-      subject,
-      variables: {
-        ownerName,
-        ownerBrokerage: ownerProfile?.company || "",
-        roleLabel: roleLabel || "",
-        inviteeName: displayName || "",
-        inviteLink,
-      },
-    },
-  });
-
-  if (emailErr) {
-    console.error("[invite-account-delegate] email enqueue failed:", emailErr);
-    await supabaseAdmin.from("agent_account_members").delete().eq("id", memberRow.id);
-    return json({ success: false, error: "Failed to send invite email" }, 500);
+  if (emailResult.ok) {
+    await logDelegateInviteAudit(supabaseAdmin, ownerUserId, memberRow.id, "DELEGATE_INVITE_SENT");
+    return json({
+      success: true,
+      member_id: memberRow.id,
+      invite_email: inviteEmail,
+      resent: false,
+    });
   }
 
-  kickEmailQueue(supabaseUrl, serviceRoleKey);
-
-  return json({
-    success: true,
-    member_id: memberRow.id,
-    invite_email: inviteEmail,
-  });
+  await supabaseAdmin.from("agent_account_members").delete().eq("id", memberRow.id);
+  return json({ success: false, error: emailResult.error }, 500);
 });

@@ -1,10 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-
-export type DelegateMembership = {
-  owner_user_id: string;
-  display_name: string | null;
-  role_label: string | null;
-};
+import { invokeEdgeFunction, resolveEdgeFunctionErrorMessage } from "@/lib/invokeEdgeFunction";
 
 export type AccountDelegateRow = {
   member_id: string;
@@ -60,9 +55,60 @@ export type SetupDelegateInviteResult =
       code?: string;
     };
 
-async function getAccessToken(): Promise<string | null> {
-  const { data: { session } } = await supabase.auth.getSession();
-  return session?.access_token ?? null;
+async function invokeDelegateEdgeFunction<T extends Record<string, unknown>>(
+  name: string,
+  body: unknown,
+): Promise<{ ok: true; data: T } | { ok: false; error: string; code?: string }> {
+  try {
+    const data = await invokeEdgeFunction<T>(name, body);
+    return { ok: true, data };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Something went wrong. Please try again.";
+    return { ok: false, error: message };
+  }
+}
+
+async function invokePublicDelegateEdgeFunction(
+  name: string,
+  body: unknown,
+): Promise<{ ok: true; data: Record<string, unknown> } | { ok: false; error: string; code?: string }> {
+  const functionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/${name}`;
+  const anonKey =
+    import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+  const response = await fetch(functionUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      apikey: anonKey,
+      Authorization: `Bearer ${anonKey}`,
+    },
+    body: JSON.stringify(body),
+  });
+
+  const text = await response.text();
+  let data: Record<string, unknown> | null = null;
+  if (text.trim()) {
+    try {
+      data = JSON.parse(text) as Record<string, unknown>;
+    } catch {
+      data = { error: text };
+    }
+  }
+
+  if (!response.ok || !data?.success) {
+    const message = await resolveEdgeFunctionErrorMessage(
+      response.ok ? null : { context: response, message: response.statusText },
+      data,
+    );
+    return {
+      ok: false,
+      error: message,
+      code: typeof data?.code === "string" ? data.code : undefined,
+    };
+  }
+
+  return { ok: true, data };
 }
 
 export async function previewDelegateInvite(token: string): Promise<DelegateInvitePreview> {
@@ -81,34 +127,24 @@ export async function previewDelegateInvite(token: string): Promise<DelegateInvi
 export async function setupDelegateInvite(
   input: SetupDelegateInviteInput,
 ): Promise<SetupDelegateInviteResult> {
-  const { data, error } = await supabase.functions.invoke("accept-account-delegate-invite", {
-    body: {
-      token: input.token.trim(),
-      email: input.email.trim().toLowerCase(),
-      firstName: input.firstName.trim(),
-      lastName: input.lastName.trim(),
-      password: input.password,
-      existingAccount: input.existingAccount === true,
-    },
+  const result = await invokePublicDelegateEdgeFunction("accept-account-delegate-invite", {
+    token: input.token.trim(),
+    email: input.email.trim().toLowerCase(),
+    firstName: input.firstName.trim(),
+    lastName: input.lastName.trim(),
+    password: input.password,
+    existingAccount: input.existingAccount === true,
   });
 
-  if (error) {
-    return { ok: false, error: error.message || "Failed to accept invitation" };
-  }
-
-  if (!data?.success) {
-    return {
-      ok: false,
-      error: data?.error || "Failed to accept invitation",
-      code: data?.code,
-    };
+  if (!result.ok) {
+    return { ok: false, error: result.error, code: result.code };
   }
 
   return {
     ok: true,
-    ownerUserId: String(data.owner_user_id),
-    ownerDisplayName: String(data.owner_display_name || "the account owner"),
-    alreadyAccepted: data.alreadyAccepted === true,
+    ownerUserId: String(result.data.owner_user_id),
+    ownerDisplayName: String(result.data.owner_display_name || "the account owner"),
+    alreadyAccepted: result.data.alreadyAccepted === true,
   };
 }
 
@@ -116,38 +152,66 @@ export async function inviteAccountDelegate(input: {
   invite_email: string;
   display_name?: string;
   role_label?: string;
-}): Promise<{ ok: boolean; error?: string; member_id?: string }> {
-  const accessToken = await getAccessToken();
-  if (!accessToken) return { ok: false, error: "Not authenticated" };
+}): Promise<{ ok: boolean; error?: string; member_id?: string; resent?: boolean }> {
+  const result = await invokeDelegateEdgeFunction<{ member_id?: string; resent?: boolean }>(
+    "invite-account-delegate",
+    input,
+  );
 
-  const { data, error } = await supabase.functions.invoke("invite-account-delegate", {
-    body: input,
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
-
-  if (error || !data?.success) {
-    return { ok: false, error: data?.error || error?.message || "Failed to send invite" };
+  if (!result.ok) {
+    return { ok: false, error: result.error };
   }
 
-  return { ok: true, member_id: data.member_id };
+  return { ok: true, member_id: result.data.member_id, resent: result.data.resent === true };
 }
 
 export async function revokeAccountDelegate(
   memberId: string,
 ): Promise<{ ok: boolean; error?: string }> {
-  const accessToken = await getAccessToken();
-  if (!accessToken) return { ok: false, error: "Not authenticated" };
-
-  const { data, error } = await supabase.functions.invoke("revoke-account-delegate", {
-    body: { member_id: memberId },
-    headers: { Authorization: `Bearer ${accessToken}` },
+  const result = await invokeDelegateEdgeFunction("revoke-account-delegate", {
+    member_id: memberId,
   });
 
-  if (error || !data?.success) {
-    return { ok: false, error: data?.error || error?.message || "Failed to revoke delegate" };
+  if (!result.ok) {
+    return { ok: false, error: result.error };
   }
 
   return { ok: true };
+}
+
+export type DelegateInviteActivityRow = {
+  id: string;
+  action: "DELEGATE_INVITE_SENT" | "DELEGATE_INVITE_RESENT";
+  created_at: string;
+  record_id: string | null;
+};
+
+export function delegateInviteActivityLabel(action: DelegateInviteActivityRow["action"]): string {
+  if (action === "DELEGATE_INVITE_RESENT") return "Invitation resent";
+  return "Invitation sent";
+}
+
+export async function listDelegateInviteActivity(): Promise<DelegateInviteActivityRow[]> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  const { data, error } = await supabase
+    .from("audit_logs")
+    .select("id, action, created_at, record_id")
+    .eq("user_id", user.id)
+    .eq("table_name", "agent_account_members")
+    .in("action", ["DELEGATE_INVITE_SENT", "DELEGATE_INVITE_RESENT"])
+    .order("created_at", { ascending: false })
+    .limit(10);
+
+  if (error) {
+    console.error("[listDelegateInviteActivity]", error.message);
+    return [];
+  }
+
+  return (data ?? []) as DelegateInviteActivityRow[];
 }
 
 export async function listAccountDelegatesForOwner(): Promise<AccountDelegateRow[]> {

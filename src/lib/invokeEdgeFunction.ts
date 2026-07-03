@@ -56,6 +56,10 @@ function friendlyEdgeFunctionMessage(raw: string, status?: number): string {
     return "Your account is missing an email address. Update your profile and try again.";
   }
 
+  if (lower.includes("delegates_disabled")) {
+    return "Account delegates are not enabled for this account yet.";
+  }
+
   return raw;
 }
 
