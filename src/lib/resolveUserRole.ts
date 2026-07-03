@@ -2,9 +2,19 @@ import { supabase } from "@/integrations/supabase/client";
 
 export type ResolvedRole = "admin" | "agent" | "buyer" | "unknown";
 
+export type DelegateMembershipSummary = {
+  owner_user_id: string;
+  display_name: string | null;
+  role_label: string | null;
+};
+
 export interface ResolvedRoleResult {
   role: ResolvedRole;
   is_verified_agent: boolean;
+  is_licensed_owner?: boolean;
+  is_delegate?: boolean;
+  active_owner_user_id?: string | null;
+  delegate_memberships?: DelegateMembershipSummary[];
 }
 
 /**
@@ -30,6 +40,10 @@ export async function resolveUserRole(userId: string): Promise<ResolvedRoleResul
   return {
     role: result.role as ResolvedRole,
     is_verified_agent: result.is_verified_agent ?? false,
+    is_licensed_owner: result.is_licensed_owner ?? false,
+    is_delegate: result.is_delegate ?? false,
+    active_owner_user_id: result.active_owner_user_id ?? null,
+    delegate_memberships: result.delegate_memberships ?? [],
   };
 }
 

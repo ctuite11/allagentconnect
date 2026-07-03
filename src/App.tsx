@@ -98,6 +98,7 @@ import DesignMockup from "./pages/DesignMockup";
 import HomepageV2 from "./pages/HomepageV2";
 import AgentDiagnostics from "./pages/AgentDiagnostics";
 import AcceptBuyerWorkspaceInvite from "./pages/AcceptBuyerWorkspaceInvite";
+import AcceptDelegateInvite from "./pages/AcceptDelegateInvite";
 import UnsubscribeHotSheet from "./pages/UnsubscribeHotSheet";
 import HotSheetPreview from "./pages/HotSheetPreview";
 import DraftListings from "./pages/DraftListings";
@@ -481,6 +482,7 @@ const App = () => (
                 <Route path="/client/hot-sheets" element={<Navigate to="/hot-sheets" replace />} />
                 <Route path="/client/favorites" element={<Navigate to="/favorites" replace />} />
                 <Route path="/accept-buyer-workspace-invite" element={<AcceptBuyerWorkspaceInvite />} />
+                <Route path="/accept-delegate-invite" element={<AcceptDelegateInvite />} />
                 <Route path="/unsubscribe-hotsheet" element={<UnsubscribeHotSheet />} />
                 <Route path="/hotsheet-preview" element={<HotSheetPreview />} />
                 <Route path="/seed-test-data" element={<SeedTestData />} />

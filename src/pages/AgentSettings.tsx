@@ -10,6 +10,8 @@ import { Seo } from "@/components/Seo";
 import { AgentAacPage } from "@/components/layout/AgentAacPage";
 import { AgentPageHeader } from "@/components/layout/AgentPageHeader";
 import { AgentSectionCard } from "@/components/layout/AgentSectionCard";
+import { AccountDelegatesCard } from "@/components/AccountDelegatesCard";
+import { DelegateMembershipCard } from "@/components/DelegateMembershipCard";
 import { agentSectionDesc, agentSectionTitle } from "@/lib/agentUi";
 
 export default function AgentSettings() {
@@ -203,6 +205,9 @@ export default function AgentSettings() {
               </div>
             </div>
           </AgentSectionCard>
+
+          <AccountDelegatesCard />
+          <DelegateMembershipCard />
         </div>
       </AgentAacPage>
     </>

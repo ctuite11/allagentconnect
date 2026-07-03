@@ -9,7 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { resolveUserRole } from "@/lib/resolveUserRole";
+import { resolveUserRole, type DelegateMembershipSummary } from "@/lib/resolveUserRole";
 import type { ResolvedRole } from "@/lib/resolveUserRole";
 import type { User } from "@supabase/supabase-js";
 
@@ -21,6 +21,11 @@ export interface AuthRoleState {
   loading: boolean;
   isAdmin: boolean;
   isVerifiedAgent: boolean;
+  isLicensedOwner: boolean;
+  isDelegate: boolean;
+  activeOwnerUserId: string | null;
+  delegateMemberships: import("@/lib/resolveUserRole").DelegateMembershipSummary[];
+  refreshRole: () => Promise<void>;
 }
 
 const AuthRoleContext = createContext<AuthRoleState | null>(null);
@@ -50,6 +55,10 @@ function useAuthRoleStore(): AuthRoleState {
   const [role, setRole] = useState<Role>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isVerifiedAgent, setIsVerifiedAgent] = useState(false);
+  const [isLicensedOwner, setIsLicensedOwner] = useState(false);
+  const [isDelegate, setIsDelegate] = useState(false);
+  const [activeOwnerUserId, setActiveOwnerUserId] = useState<string | null>(null);
+  const [delegateMemberships, setDelegateMemberships] = useState<DelegateMembershipSummary[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const initialLoadDone = useRef(false);
 
@@ -63,6 +72,10 @@ function useAuthRoleStore(): AuthRoleState {
     setRole(nextRole);
     setIsAdmin(result.role === "admin");
     setIsVerifiedAgent(result.is_verified_agent);
+    setIsLicensedOwner(result.is_licensed_owner ?? false);
+    setIsDelegate(result.is_delegate ?? false);
+    setActiveOwnerUserId(result.active_owner_user_id ?? null);
+    setDelegateMemberships(result.delegate_memberships ?? []);
   }, []);
 
   useEffect(() => {
@@ -85,6 +98,10 @@ function useAuthRoleStore(): AuthRoleState {
         setRole(null);
         setIsAdmin(false);
         setIsVerifiedAgent(false);
+        setIsLicensedOwner(false);
+        setIsDelegate(false);
+        setActiveOwnerUserId(null);
+        setDelegateMemberships([]);
         setLoading(false);
         initialLoadDone.current = true;
         return;
@@ -108,6 +125,10 @@ function useAuthRoleStore(): AuthRoleState {
         setRole(null);
         setIsAdmin(false);
         setIsVerifiedAgent(false);
+        setIsLicensedOwner(false);
+        setIsDelegate(false);
+        setActiveOwnerUserId(null);
+        setDelegateMemberships([]);
         return;
       }
 
@@ -145,7 +166,31 @@ function useAuthRoleStore(): AuthRoleState {
   }, [user?.id, role, isVerifiedAgent, loadRoleForUser]);
 
   return useMemo(
-    () => ({ user, role, loading, isAdmin, isVerifiedAgent }),
-    [user, role, loading, isAdmin, isVerifiedAgent],
+    () => ({
+      user,
+      role,
+      loading,
+      isAdmin,
+      isVerifiedAgent,
+      isLicensedOwner,
+      isDelegate,
+      activeOwnerUserId,
+      delegateMemberships,
+      refreshRole: async () => {
+        if (user?.id) await loadRoleForUser(user.id);
+      },
+    }),
+    [
+      user,
+      role,
+      loading,
+      isAdmin,
+      isVerifiedAgent,
+      isLicensedOwner,
+      isDelegate,
+      activeOwnerUserId,
+      delegateMemberships,
+      loadRoleForUser,
+    ],
   );
 }
