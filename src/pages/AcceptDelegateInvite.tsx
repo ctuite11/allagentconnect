@@ -98,15 +98,13 @@ export default function AcceptDelegateInvite() {
       existingAccount,
     });
 
-    if (!result.ok) {
+    if (result.ok !== true) {
       if (result.code === "existing_account") {
         setPhase("signin");
         return;
       }
       throw new Error(result.error);
     }
-
-    // TS narrowing helper (unreachable branch removed by discriminated union)
 
     const { error: signInError } = await supabase.auth.signInWithPassword({
       email: normalizedEmail,
