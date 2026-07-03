@@ -202,6 +202,57 @@ export type Database = {
           },
         ]
       }
+      agent_account_members: {
+        Row: {
+          created_at: string
+          id: string
+          member_user_id: string
+          owner_agent_id: string
+          role: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          member_user_id: string
+          owner_agent_id: string
+          role?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          member_user_id?: string
+          owner_agent_id?: string
+          role?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      agent_active_context: {
+        Row: {
+          active_owner_agent_id: string
+          created_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          active_owner_agent_id: string
+          created_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          active_owner_agent_id?: string
+          created_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       agent_buyer_coverage_areas: {
         Row: {
           agent_id: string
@@ -4393,6 +4444,8 @@ export type Database = {
         Args: { p_criteria: Json; p_name: string }
         Returns: string
       }
+      current_account_owner_id: { Args: never; Returns: string }
+      delegates_enabled: { Args: never; Returns: boolean }
       delete_draft_listing: {
         Args: { p_listing_id: string }
         Returns: undefined
@@ -4498,6 +4551,10 @@ export type Database = {
         Args: { p_hot_sheet_id: string }
         Returns: boolean
       }
+      is_account_member_of: {
+        Args: { _owner_agent_id: string; _user_id: string }
+        Returns: boolean
+      }
       is_buyer_represented_by_other_agent: {
         Args: {
           p_email: string
@@ -4572,6 +4629,10 @@ export type Database = {
         Returns: {
           listing_id: string
         }[]
+      }
+      matches_current_account: {
+        Args: { _owner_agent_id: string }
+        Returns: boolean
       }
       normalize_listing_address_text: {
         Args: { input: string }
