@@ -48,6 +48,10 @@ export type SetupDelegateInviteResult =
       ownerUserId: string;
       ownerDisplayName: string;
       alreadyAccepted?: boolean;
+      session?: {
+        access_token: string;
+        refresh_token: string;
+      };
     }
   | {
       ok: false;
@@ -140,11 +144,24 @@ export async function setupDelegateInvite(
     return { ok: false, error: result.error, code: result.code };
   }
 
+  const sessionPayload = result.data.session;
+  const session =
+    sessionPayload &&
+    typeof sessionPayload === "object" &&
+    typeof (sessionPayload as { access_token?: unknown }).access_token === "string" &&
+    typeof (sessionPayload as { refresh_token?: unknown }).refresh_token === "string"
+      ? {
+          access_token: (sessionPayload as { access_token: string }).access_token,
+          refresh_token: (sessionPayload as { refresh_token: string }).refresh_token,
+        }
+      : undefined;
+
   return {
     ok: true,
     ownerUserId: String(result.data.owner_user_id),
     ownerDisplayName: String(result.data.owner_display_name || "the account owner"),
     alreadyAccepted: result.data.alreadyAccepted === true,
+    session,
   };
 }
 

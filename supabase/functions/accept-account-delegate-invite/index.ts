@@ -130,6 +130,85 @@ async function setOwnerContext(
   if (error) throw error;
 }
 
+type AuthSessionTokens = {
+  access_token: string;
+  refresh_token: string;
+};
+
+async function signInAndGetSession(
+  supabaseUrl: string,
+  anonKey: string,
+  email: string,
+  password: string,
+  opts?: { retries?: number },
+): Promise<{ ok: true; session: AuthSessionTokens } | { ok: false; error: string }> {
+  const anonClient = createClient(supabaseUrl, anonKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+
+  const maxAttempts = Math.max(1, opts?.retries ?? 1);
+  let lastError = "Failed to sign in";
+
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    if (attempt > 0) {
+      await new Promise((resolve) => setTimeout(resolve, 250 * attempt));
+    }
+
+    const { data, error } = await anonClient.auth.signInWithPassword({ email, password });
+    if (data.session?.access_token && data.session.refresh_token) {
+      return {
+        ok: true,
+        session: {
+          access_token: data.session.access_token,
+          refresh_token: data.session.refresh_token,
+        },
+      };
+    }
+
+    lastError = error?.message || lastError;
+    const lower = lastError.toLowerCase();
+    if (lower.includes("invalid login") || lower.includes("invalid credentials")) {
+      break;
+    }
+  }
+
+  console.error("[accept-account-delegate-invite] signIn failed:", lastError);
+  return { ok: false, error: lastError };
+}
+
+async function buildSuccessResponse(
+  supabaseUrl: string,
+  anonKey: string,
+  email: string,
+  password: string,
+  ownerUserId: string,
+  ownerName: string,
+  userId: string,
+  extras?: { alreadyAccepted?: boolean; signInRetries?: number },
+) {
+  const signIn = await signInAndGetSession(supabaseUrl, anonKey, email, password, {
+    retries: extras?.signInRetries ?? 3,
+  });
+
+  if (!signIn.ok) {
+    return json({
+      success: false,
+      error:
+        "Your account is ready, but we could not sign you in automatically. Try signing in from the login page.",
+      code: "session_failed",
+    }, 500);
+  }
+
+  return json({
+    success: true,
+    owner_user_id: ownerUserId,
+    owner_display_name: ownerName,
+    userId,
+    session: signIn.session,
+    alreadyAccepted: extras?.alreadyAccepted === true,
+  });
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return json({ success: false, error: "Method not allowed" }, 405);
@@ -214,12 +293,16 @@ serve(async (req) => {
       if (existingUser?.id === invite.delegate_user_id) {
         const ownerName = await loadOwnerDisplayName(supabaseAdmin, invite.owner_user_id);
         await setOwnerContext(supabaseAdmin, existingUser.id, invite.owner_user_id);
-        return json({
-          success: true,
-          owner_user_id: invite.owner_user_id,
-          owner_display_name: ownerName,
-          alreadyAccepted: true,
-        });
+        return await buildSuccessResponse(
+          supabaseUrl,
+          anonKey,
+          email,
+          password,
+          invite.owner_user_id,
+          ownerName,
+          existingUser.id,
+          { alreadyAccepted: true },
+        );
       }
     }
     return json({ success: false, error: "This invite has already been accepted" }, 400);
@@ -249,11 +332,8 @@ serve(async (req) => {
       }, 403);
     }
 
-    const anonClient = createClient(supabaseUrl, anonKey, {
-      auth: { autoRefreshToken: false, persistSession: false },
-    });
-    const { error: signInError } = await anonClient.auth.signInWithPassword({ email, password });
-    if (signInError) {
+    const passwordCheck = await signInAndGetSession(supabaseUrl, anonKey, email, password);
+    if (!passwordCheck.ok) {
       return json({ success: false, error: "Invalid password" }, 401);
     }
 
@@ -369,10 +449,13 @@ serve(async (req) => {
 
   const ownerName = await loadOwnerDisplayName(supabaseAdmin, invite.owner_user_id);
 
-  return json({
-    success: true,
-    owner_user_id: invite.owner_user_id,
-    owner_display_name: ownerName,
+  return await buildSuccessResponse(
+    supabaseUrl,
+    anonKey,
+    email,
+    password,
+    invite.owner_user_id,
+    ownerName,
     userId,
-  });
+  );
 });

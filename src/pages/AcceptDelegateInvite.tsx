@@ -106,15 +106,36 @@ export default function AcceptDelegateInvite() {
       throw new Error(result.error);
     }
 
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email: normalizedEmail,
-      password: plainPassword,
-    });
+    if (result.session) {
+      const { error: sessionError } = await supabase.auth.setSession({
+        access_token: result.session.access_token,
+        refresh_token: result.session.refresh_token,
+      });
 
-    if (signInError) {
+      if (sessionError) {
+        throw new Error(
+          sessionError.message ||
+            "Your account is ready, but we could not sign you in automatically. Try signing in from the login page.",
+        );
+      }
+    } else {
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: normalizedEmail,
+        password: plainPassword,
+      });
+
+      if (signInError) {
+        throw new Error(
+          signInError.message ||
+            "Your account is ready, but we could not sign you in automatically. Try signing in from the login page.",
+        );
+      }
+    }
+
+    const { data: sessionCheck } = await supabase.auth.getSession();
+    if (!sessionCheck.session) {
       throw new Error(
-        signInError.message ||
-          "Your account is ready, but we could not sign you in automatically. Try signing in from the login page.",
+        "Your account is ready, but we could not sign you in automatically. Try signing in from the login page.",
       );
     }
 
