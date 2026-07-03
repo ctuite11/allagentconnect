@@ -8,7 +8,7 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
-    const email = "mott1976@gmail.com";
+    const email = "mark.ott@cbrealty.com";
     const password = "Password12$";
 
     let userId: string | null = null;
