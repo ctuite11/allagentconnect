@@ -136,7 +136,7 @@ export async function setupDelegateInvite(
     existingAccount: input.existingAccount === true,
   });
 
-  if (!result.ok) {
+  if (result.ok !== true) {
     return { ok: false, error: result.error, code: result.code };
   }
 
@@ -158,7 +158,7 @@ export async function inviteAccountDelegate(input: {
     input,
   );
 
-  if (!result.ok) {
+  if (result.ok !== true) {
     return { ok: false, error: result.error };
   }
 
@@ -172,7 +172,7 @@ export async function revokeAccountDelegate(
     member_id: memberId,
   });
 
-  if (!result.ok) {
+  if (result.ok !== true) {
     return { ok: false, error: result.error };
   }
 
