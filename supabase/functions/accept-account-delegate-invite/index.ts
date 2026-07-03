@@ -130,6 +130,32 @@ async function setOwnerContext(
   if (error) throw error;
 }
 
+async function ensureDelegateFeatureAllowlist(
+  admin: SupabaseClient,
+  delegateUserId: string,
+): Promise<void> {
+  const { data: flag } = await admin
+    .from("feature_flags")
+    .select("enabled")
+    .eq("flag_name", "agent_account_delegates")
+    .maybeSingle();
+
+  if (flag?.enabled) return;
+
+  const { error } = await admin.from("feature_flag_users").upsert(
+    {
+      flag_name: "agent_account_delegates",
+      user_id: delegateUserId,
+      note: "Auto-allowlisted on delegate invite accept",
+    },
+    { onConflict: "flag_name,user_id" },
+  );
+
+  if (error) {
+    console.error("[accept-account-delegate-invite] allowlist upsert failed:", error);
+  }
+}
+
 type AuthSessionTokens = {
   access_token: string;
   refresh_token: string;
@@ -293,6 +319,7 @@ serve(async (req) => {
       if (existingUser?.id === invite.delegate_user_id) {
         const ownerName = await loadOwnerDisplayName(supabaseAdmin, invite.owner_user_id);
         await setOwnerContext(supabaseAdmin, existingUser.id, invite.owner_user_id);
+        await ensureDelegateFeatureAllowlist(supabaseAdmin, existingUser.id);
         return await buildSuccessResponse(
           supabaseUrl,
           anonKey,
@@ -442,6 +469,7 @@ serve(async (req) => {
 
   try {
     await setOwnerContext(supabaseAdmin, userId, invite.owner_user_id);
+    await ensureDelegateFeatureAllowlist(supabaseAdmin, userId);
   } catch (ctxErr) {
     console.error("[accept-account-delegate-invite] context set failed:", ctxErr);
     return json({ success: false, error: "Failed to set account context" }, 500);

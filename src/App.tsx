@@ -151,7 +151,7 @@ function LegacyDashboardRedirect() {
     if (loading) return;
     if (role === "admin") {
       navigate("/admin/approvals", { replace: true });
-    } else if (role === "agent") {
+    } else if (role === "agent" || role === "delegate") {
       navigate("/agent-dashboard", { replace: true });
     } else if (role === "buyer") {
       navigate("/client/dashboard", { replace: true });

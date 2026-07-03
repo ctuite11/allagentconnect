@@ -6,6 +6,8 @@ import {
   setupDelegateInvite,
   type DelegateInvitePreview,
 } from "@/lib/agentDelegatesApi";
+import { resolveUserRole } from "@/lib/resolveUserRole";
+import { useAuthRole } from "@/hooks/useAuthRole";
 import { validatePassword } from "@/lib/passwordPolicy";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -38,6 +40,7 @@ function SetupBrand() {
 export default function AcceptDelegateInvite() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { refreshRole } = useAuthRole();
   const token = searchParams.get("token") ?? "";
 
   const [loadingPreview, setLoadingPreview] = useState(true);
@@ -133,10 +136,24 @@ export default function AcceptDelegateInvite() {
     }
 
     const { data: sessionCheck } = await supabase.auth.getSession();
-    if (!sessionCheck.session) {
+    if (!sessionCheck.session?.user) {
       throw new Error(
         "Your account is ready, but we could not sign you in automatically. Try signing in from the login page.",
       );
+    }
+
+    await refreshRole();
+
+    for (let attempt = 0; attempt < 12; attempt++) {
+      const resolved = await resolveUserRole(sessionCheck.session.user.id);
+      if (resolved.role === "delegate") break;
+      if (attempt === 11 && resolved.role !== "delegate") {
+        throw new Error(
+          "Your account is ready, but delegate access is still activating. Refresh the page or sign in again.",
+        );
+      }
+      await refreshRole();
+      await new Promise((resolve) => setTimeout(resolve, 200));
     }
 
     toast.success(`You're now working in ${result.ownerDisplayName}'s account.`);
