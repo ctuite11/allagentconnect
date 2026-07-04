@@ -1456,6 +1456,12 @@ export default function AdminApprovals() {
             onClick={() => setStatusFilter("profile_complete")}
           />
           <Pill
+            label={`Awaiting Activation (${statusCounts.awaiting_activation || 0})`}
+            variant="warning"
+            active={statusFilter === "awaiting_activation"}
+            onClick={() => setStatusFilter("awaiting_activation")}
+          />
+          <Pill
             label={`Rejected (${statusCounts.rejected || 0})`}
             variant="neutral"
             active={statusFilter === "rejected"}
