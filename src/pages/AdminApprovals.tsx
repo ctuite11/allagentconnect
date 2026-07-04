@@ -1793,6 +1793,35 @@ export default function AdminApprovals() {
         onSuccess={fetchAgents}
       />
 
+      <AgentDetailsDrawer
+        agent={detailsAgent as any}
+        open={!!detailsAgent}
+        onOpenChange={(open) => !open && setDetailsAgent(null)}
+        hasLicenseUpload={detailsAgent ? licenseUploadAgentIds.has(detailsAgent.id) : false}
+        isInvited={detailsAgent ? deriveAdminStatus(detailsAgent) === "invited" : false}
+        isProcessing={detailsAgent ? processingIds.has(detailsAgent.id) : false}
+        isResendingInvite={detailsAgent ? resendingInviteFor.has(detailsAgent.id) : false}
+        isSendingSetupLink={detailsAgent ? sendingSetupLinkFor.has(detailsAgent.id) : false}
+        onVerify={() => {
+          if (!detailsAgent) return;
+          const risks = risksForAgent(detailsAgent);
+          if (hasRedFlag(risks) && detailsAgent.agent_status !== "verified") {
+            setConfirmText("");
+            setVerifyConfirm({ agent: detailsAgent, risks });
+          } else {
+            handleStatusChange(detailsAgent, "verified");
+          }
+        }}
+        onReject={() => detailsAgent && handleStatusChange(detailsAgent, "rejected")}
+        onEdit={() => detailsAgent && setEditAgent(detailsAgent)}
+        onEmail={() => detailsAgent && handleEmailAgent(detailsAgent)}
+        onResetPassword={() => detailsAgent && handleSendPasswordReset(detailsAgent)}
+        onCopySetupLink={() => detailsAgent && handleCopySetupLink(detailsAgent)}
+        onEmailSetupLink={() => detailsAgent && handleEmailSetupLink(detailsAgent)}
+        onResendInvite={() => detailsAgent && handleResendInvite(detailsAgent)}
+        onDelete={() => detailsAgent && setDeleteAgent(detailsAgent)}
+      />
+
       <PreviouslyDeletedAgentDialog
         open={Boolean(deletedGate)}
         match={deletedGate?.match ?? null}
