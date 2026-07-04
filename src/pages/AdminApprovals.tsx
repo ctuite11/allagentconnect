@@ -107,6 +107,11 @@ interface Agent {
   invite_email?: EmailStatusInfo | null;
   license_verified_email?: EmailStatusInfo | null;
   profile_complete?: boolean;
+  // Historical signal — this email ever had a pending_verifications row,
+  // even after it was processed/deleted. Used by the drawer so
+  // Requested Access doesn't flip back to No after verification.
+  ever_requested?: boolean;
+  requested_access_at?: string | null;
   // Phase 3: identifies where this row originated so Verify/Reject can
   // branch. Absent = legacy profile row (default behaviour).
   source?: "profile" | "early_access" | "pending_verification";
