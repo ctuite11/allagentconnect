@@ -762,7 +762,8 @@ export default function AdminApprovals() {
     switch (status) {
       case "pending": return "warning";
       case "invited": return "primary";
-      case "active": return "success";
+      case "account_created": return "primary";
+      case "profile_complete": return "success";
       case "rejected":
       case "restricted": return "danger";
       default: return "neutral";
