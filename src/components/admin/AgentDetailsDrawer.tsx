@@ -47,6 +47,8 @@ export interface AgentDetailsAgent {
   invite_email?: EmailStatusInfo | null;
   license_verified_email?: EmailStatusInfo | null;
   source?: "profile" | "early_access" | "pending_verification";
+  ever_requested?: boolean;
+  requested_access_at?: string | null;
 }
 
 interface AgentDetailsDrawerProps {
@@ -126,9 +128,16 @@ export function AgentDetailsDrawer({
   if (!agent) return null;
 
   const requested =
-    agent.source === "pending_verification" || agent.is_early_access === true;
+    agent.source === "pending_verification" ||
+    agent.is_early_access === true ||
+    agent.ever_requested === true;
   const verified = agent.agent_status === "verified";
-  const setupSent = !!agent.invite_email || agent.agent_status === "invited";
+  const setupEmail = agent.license_verified_email || agent.invite_email;
+  const setupSent = !!setupEmail || agent.agent_status === "invited";
+  const requestedDetail = agent.requested_access_at || agent.created_at;
+  const setupSentDetail = setupEmail
+    ? `${setupEmail.status} · ${fmt(setupEmail.event_at ?? setupEmail.created_at) ?? ""}`
+    : null;
   const accountCreated = agent.has_auth_account === true;
   const profileComplete = agent.profile_complete === true;
   const canPasswordReset = !agent.is_early_access && agent.source !== "pending_verification";
@@ -210,7 +219,7 @@ export function AgentDetailsDrawer({
               <LifecycleRow
                 label="Requested Access"
                 yes={requested}
-                detail={requested ? fmt(agent.created_at) : null}
+                detail={requested ? fmt(requestedDetail) : null}
               />
               <LifecycleRow
                 label="Verified"
@@ -220,11 +229,7 @@ export function AgentDetailsDrawer({
               <LifecycleRow
                 label="Setup Email Sent"
                 yes={setupSent}
-                detail={
-                  setupSent && agent.invite_email
-                    ? `${agent.invite_email.status} · ${fmt(agent.invite_email.event_at ?? agent.invite_email.created_at) ?? ""}`
-                    : null
-                }
+                detail={setupSentDetail}
               />
               <LifecycleRow
                 label="Account Created"
