@@ -840,6 +840,42 @@ export default function AdminApprovals() {
           else comparison = at - bt;
           break;
         }
+        case "requested_access": {
+          const av = a.source === "pending_verification" || a.is_early_access ? 1 : 0;
+          const bv = b.source === "pending_verification" || b.is_early_access ? 1 : 0;
+          comparison = av - bv;
+          break;
+        }
+        case "verified": {
+          const av = a.agent_status === "verified" ? 1 : 0;
+          const bv = b.agent_status === "verified" ? 1 : 0;
+          comparison = av - bv;
+          break;
+        }
+        case "setup_email_sent": {
+          const av = a.invite_email || a.agent_status === "invited" ? 1 : 0;
+          const bv = b.invite_email || b.agent_status === "invited" ? 1 : 0;
+          comparison = av - bv;
+          break;
+        }
+        case "account_created": {
+          const av = a.has_auth_account ? 1 : 0;
+          const bv = b.has_auth_account ? 1 : 0;
+          comparison = av - bv;
+          break;
+        }
+        case "profile_complete": {
+          const av = a.profile_complete ? 1 : 0;
+          const bv = b.profile_complete ? 1 : 0;
+          comparison = av - bv;
+          break;
+        }
+        case "online": {
+          const av = presenceMap.get(a.id)?.isOnline ? 1 : 0;
+          const bv = presenceMap.get(b.id)?.isOnline ? 1 : 0;
+          comparison = av - bv;
+          break;
+        }
         case "created_at":
         default:
           comparison = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
