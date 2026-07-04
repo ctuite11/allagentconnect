@@ -806,6 +806,7 @@ export default function AdminApprovals() {
     counts.profile_complete = buckets.profile_complete;
     counts.rejected = buckets.rejected;
     counts.restricted = buckets.restricted;
+    counts.awaiting_activation = agents.filter(isAwaitingActivation).length;
     return counts;
   }, [agents]);
 
@@ -832,6 +833,8 @@ export default function AdminApprovals() {
         result = result.filter(
           (a) => !a.is_early_access && presenceMap.get(a.id)?.isOnline
         );
+      } else if (statusFilter === "awaiting_activation") {
+        result = result.filter(isAwaitingActivation);
       } else {
         result = result.filter((a) => deriveAdminStatus(a) === statusFilter);
       }
