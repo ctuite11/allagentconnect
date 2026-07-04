@@ -1781,6 +1781,16 @@ export default function AdminApprovals() {
                                   <DropdownMenuItem onSelect={() => handleCopySetupLink(agent)}>
                                     Copy setup link
                                   </DropdownMenuItem>
+                                  {isAwaitingActivation(agent) && (
+                                    <DropdownMenuItem
+                                      disabled={sendingSetupLinkFor.has(agent.id)}
+                                      onSelect={() => handleEmailSetupLink(agent)}
+                                    >
+                                      {sendingSetupLinkFor.has(agent.id)
+                                        ? "Sending…"
+                                        : "Send activation reminder"}
+                                    </DropdownMenuItem>
+                                  )}
                                   <DropdownMenuItem
                                     disabled={sendingSetupLinkFor.has(agent.id)}
                                     onSelect={() => handleEmailSetupLink(agent)}
