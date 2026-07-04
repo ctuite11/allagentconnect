@@ -251,6 +251,47 @@ export function AgentDetailsDrawer({
 
           <section>
             <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">
+              Activation Reminder Details
+            </h4>
+            <div className="rounded-md border border-zinc-100 bg-white p-3 text-xs">
+              <dl className="grid grid-cols-[120px,1fr] gap-y-1.5">
+                <dt className="text-zinc-500">From</dt>
+                <dd className="text-zinc-800">
+                  All Agent Connect{" "}
+                  <span className="text-zinc-500">&lt;hello@allagentconnect.com&gt;</span>
+                </dd>
+                <dt className="text-zinc-500">Reply-To</dt>
+                <dd className="text-zinc-800">chris@allagentconnect.com</dd>
+                <dt className="text-zinc-500">Template</dt>
+                <dd className="text-zinc-800">License Verified</dd>
+                <dt className="text-zinc-500">Link type</dt>
+                <dd className="text-zinc-800">
+                  Fresh Supabase recovery / setup link (single-use, ~1 hr)
+                </dd>
+                <dt className="text-zinc-500">Last sent</dt>
+                <dd className="text-zinc-800">
+                  {fmt(
+                    agent.license_verified_email?.event_at ??
+                      agent.license_verified_email?.created_at,
+                  ) ?? <span className="text-zinc-400">Never</span>}
+                </dd>
+                <dt className="text-zinc-500">Delivery</dt>
+                <dd>
+                  {agent.license_verified_email ? (
+                    <EmailDeliveryBadge
+                      label="License Verified"
+                      info={agent.license_verified_email}
+                    />
+                  ) : (
+                    <span className="text-zinc-400">No send recorded</span>
+                  )}
+                </dd>
+              </dl>
+            </div>
+          </section>
+
+          <section>
+            <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">
               Actions
             </h4>
             <div className="flex flex-wrap gap-2">
