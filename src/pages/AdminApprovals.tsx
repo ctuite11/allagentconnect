@@ -1494,50 +1494,43 @@ export default function AdminApprovals() {
                   <tr>
                     <th className="w-10 px-3 py-2"></th>
                     <th className="px-3 py-2 text-left">
-                      <button
-                        type="button"
-                        onClick={() => handleSort("name")}
-                        className="inline-flex items-center hover:text-zinc-900"
-                      >
+                      <button type="button" onClick={() => handleSort("name")} className="inline-flex items-center hover:text-zinc-900">
                         Agent<SortIcon field="name" />
                       </button>
                     </th>
-                    <th className="px-3 py-2 text-left">Contact</th>
                     <th className="px-3 py-2 text-left">
-                      <button
-                        type="button"
-                        onClick={() => handleSort("company")}
-                        className="inline-flex items-center hover:text-zinc-900"
-                      >
-                        Brokerage<SortIcon field="company" />
-                      </button>
-                    </th>
-                    <th className="px-3 py-2 text-left">License</th>
-                    <th className="px-3 py-2 text-left">
-                      <button
-                        type="button"
-                        onClick={() => handleSort("status")}
-                        className="inline-flex items-center hover:text-zinc-900"
-                      >
-                        Status<SortIcon field="status" />
+                      <button type="button" onClick={() => handleSort("requested_access")} className="inline-flex items-center hover:text-zinc-900">
+                        Requested<SortIcon field="requested_access" />
                       </button>
                     </th>
                     <th className="px-3 py-2 text-left">
-                      <button
-                        type="button"
-                        onClick={() => handleSort("last_sign_in_at")}
-                        className="inline-flex items-center hover:text-zinc-900"
-                      >
-                        Last sign-in<SortIcon field="last_sign_in_at" />
+                      <button type="button" onClick={() => handleSort("verified")} className="inline-flex items-center hover:text-zinc-900">
+                        Verified<SortIcon field="verified" />
                       </button>
                     </th>
                     <th className="px-3 py-2 text-left">
-                      <button
-                        type="button"
-                        onClick={() => handleSort("created_at")}
-                        className="inline-flex items-center hover:text-zinc-900"
-                      >
-                        Created<SortIcon field="created_at" />
+                      <button type="button" onClick={() => handleSort("setup_email_sent")} className="inline-flex items-center hover:text-zinc-900">
+                        Setup Sent<SortIcon field="setup_email_sent" />
+                      </button>
+                    </th>
+                    <th className="px-3 py-2 text-left">
+                      <button type="button" onClick={() => handleSort("account_created")} className="inline-flex items-center hover:text-zinc-900">
+                        Account<SortIcon field="account_created" />
+                      </button>
+                    </th>
+                    <th className="px-3 py-2 text-left">
+                      <button type="button" onClick={() => handleSort("profile_complete")} className="inline-flex items-center hover:text-zinc-900">
+                        Profile<SortIcon field="profile_complete" />
+                      </button>
+                    </th>
+                    <th className="px-3 py-2 text-left">
+                      <button type="button" onClick={() => handleSort("online")} className="inline-flex items-center hover:text-zinc-900">
+                        Online<SortIcon field="online" />
+                      </button>
+                    </th>
+                    <th className="px-3 py-2 text-left">
+                      <button type="button" onClick={() => handleSort("last_sign_in_at")} className="inline-flex items-center hover:text-zinc-900">
+                        Last Login<SortIcon field="last_sign_in_at" />
                       </button>
                     </th>
                     <th className="w-12 px-3 py-2"></th>
@@ -1548,56 +1541,14 @@ export default function AdminApprovals() {
                     const isProcessing = processingIds.has(agent.id);
                     const derived = deriveAdminStatus(agent);
                     const isSelected = selectedIds.has(agent.id);
-                    const renderStatusPill = () => {
-                      if (derived === "rejected" || derived === "restricted") {
-                        return <AgentStatusBadge status={derived as any} />;
-                      }
-                      if (derived === "profile_complete") {
-                        return (
-                          <span
-                            className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700 ring-1 ring-emerald-200"
-                            title={
-                              agent.account_activated_at
-                                ? `Profile complete · Account activated: ${new Date(agent.account_activated_at).toLocaleString()}`
-                                : "Profile complete"
-                            }
-                          >
-                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                            Profile Complete
-                          </span>
-                        );
-                      }
-                      if (derived === "account_created") {
-                        return (
-                          <span
-                            className="inline-flex items-center gap-1.5 rounded-full bg-sky-50 px-2.5 py-0.5 text-xs font-medium text-sky-700 ring-1 ring-sky-200"
-                            title={
-                              agent.account_activated_at
-                                ? `Account created · ${new Date(agent.account_activated_at).toLocaleString()} — profile not finished`
-                                : "Account created — profile not finished"
-                            }
-                          >
-                            <span className="h-1.5 w-1.5 rounded-full bg-sky-500" />
-                            Account Created
-                          </span>
-                        );
-                      }
-                      if (derived === "invited") {
-                        return (
-                          <span
-                            className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700 ring-1 ring-blue-200"
-                            title="Invite sent — agent has not completed setup yet"
-                          >
-                            Invited
-                          </span>
-                        );
-                      }
-                      return (
-                        <span className="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700 ring-1 ring-amber-200">
-                          Pending
-                        </span>
-                      );
-                    };
+                    const requested = agent.source === "pending_verification" || agent.is_early_access === true;
+                    const verified = agent.agent_status === "verified";
+                    const setupSent = !!agent.invite_email || agent.agent_status === "invited";
+                    const accountCreated = agent.has_auth_account === true;
+                    const profileDone = agent.profile_complete === true;
+                    const isOnline = !agent.is_early_access && !!presenceMap.get(agent.id)?.isOnline;
+                    const yesTitle = (iso: string | null | undefined) =>
+                      iso ? new Date(iso).toLocaleString() : undefined;
 
                     return (
                       <tr
@@ -1616,14 +1567,15 @@ export default function AdminApprovals() {
                           />
                         </td>
                         <td className="px-3 py-3 align-top">
-                          <div className="flex flex-col gap-0.5">
+                          <button
+                            type="button"
+                            onClick={() => setDetailsAgent(agent)}
+                            className="flex flex-col gap-0.5 text-left"
+                          >
                             <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                              <span className="font-semibold text-[#0E56F5]">
+                              <span className="font-semibold text-[#0E56F5] hover:underline">
                                 {agent.first_name} {agent.last_name}
                               </span>
-                              {!agent.is_early_access && presenceMap.get(agent.id)?.isOnline && (
-                                <AgentOnlinePresenceBadge />
-                              )}
                               {agent.source === "pending_verification" && (
                                 <span
                                   className="inline-flex items-center rounded-full bg-indigo-50 px-2 py-0.5 text-[11px] font-medium text-indigo-700 ring-1 ring-indigo-200"
@@ -1632,52 +1584,31 @@ export default function AdminApprovals() {
                                   Request Access
                                 </span>
                               )}
-                              {licenseUploadAgentIds.has(agent.id) && (
-                                <span className="inline-flex items-center gap-1 text-amber-600 text-[11px] font-medium">
-                                  <FileText className="h-3 w-3" />
-                                  License
-                                </span>
-                              )}
                             </div>
                             <span className="font-mono text-[11px] text-zinc-500">{agent.aac_id}</span>
-                            {agent.agent_status === "pending" && (
-                              <RiskBadges risks={risksForAgent(agent)} />
-                            )}
-                          </div>
+                          </button>
                         </td>
+                        <YesNoCell yes={requested} iso={agent.created_at} title={yesTitle(agent.created_at)} />
+                        <YesNoCell yes={verified} iso={agent.verified_at} title={yesTitle(agent.verified_at)} />
+                        <YesNoCell
+                          yes={setupSent}
+                          iso={agent.invite_email?.event_at ?? agent.invite_email?.created_at ?? null}
+                          extra={agent.invite_email?.status}
+                        />
+                        <YesNoCell
+                          yes={accountCreated}
+                          iso={agent.account_activated_at ?? agent.last_sign_in_at ?? null}
+                        />
+                        <YesNoCell yes={profileDone} />
                         <td className="px-3 py-3 align-top">
-                          <div className="flex flex-col gap-0.5 text-zinc-600">
-                            <span className="truncate">{agent.email}</span>
-                            {agent.phone && (
-                              <span className="text-zinc-500 text-xs">{formatPhoneNumber(agent.phone ?? "")}</span>
-                            )}
-                          </div>
-                        </td>
-                        <td className="px-3 py-3 align-top text-zinc-600">
-                          {agent.company || <span className="text-zinc-300">—</span>}
-                        </td>
-                        <td className="px-3 py-3 align-top">
-                          {agent.license_state && agent.license_number ? (
-                            <a
-                              href={stateLicenseLookupUrls[agent.license_state]}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-primary hover:underline text-xs"
-                            >
-                              {agent.license_state} #{agent.license_number}
-                            </a>
+                          {isOnline ? (
+                            <span className="inline-flex items-center gap-1 text-emerald-700">
+                              <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                              <span className="text-[11px] font-medium">Yes</span>
+                            </span>
                           ) : (
-                            <span className="text-zinc-300">—</span>
+                            <span className="text-[11px] text-zinc-400">—</span>
                           )}
-                        </td>
-                        <td className="px-3 py-3 align-top">
-                          <div className="flex flex-col gap-1.5">
-                            {renderStatusPill()}
-                            <div className="flex flex-wrap items-center gap-1.5">
-                              <EmailDeliveryBadge label="Invite" info={agent.invite_email} />
-                              <EmailDeliveryBadge label="License Verified" info={agent.license_verified_email} />
-                            </div>
-                          </div>
                         </td>
                         <td
                           className="px-3 py-3 align-top text-xs text-zinc-500"
@@ -1693,9 +1624,6 @@ export default function AdminApprovals() {
                             <span className="text-zinc-400">Never</span>
                           )}
                         </td>
-                        <td className="px-3 py-3 align-top text-xs text-zinc-500">
-                          {new Date(agent.created_at).toLocaleDateString()}
-                        </td>
                         <td className="px-3 py-3 align-top text-right">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -1708,6 +1636,10 @@ export default function AdminApprovals() {
                               </button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-52">
+                              <DropdownMenuItem onSelect={() => setDetailsAgent(agent)}>
+                                View details
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
                               {derived === "invited" ? (
                                 <>
                                   <DropdownMenuItem
