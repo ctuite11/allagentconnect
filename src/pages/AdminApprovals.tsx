@@ -138,7 +138,18 @@ const stateNames: Record<string, string> = {
   PA: "Pennsylvania",
 };
 
-type SortField = "name" | "status" | "created_at" | "company" | "last_sign_in_at";
+type SortField =
+  | "name"
+  | "status"
+  | "created_at"
+  | "company"
+  | "last_sign_in_at"
+  | "requested_access"
+  | "verified"
+  | "setup_email_sent"
+  | "account_created"
+  | "profile_complete"
+  | "online";
 type SortDirection = "asc" | "desc";
 
 function risksForAgent(a: Agent): Risk[] {
