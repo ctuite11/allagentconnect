@@ -147,7 +147,6 @@ type SortField =
   | "last_sign_in_at"
   | "requested_access"
   | "verified"
-  | "setup_email_sent"
   | "account_created"
   | "profile_complete"
   | "online";
@@ -887,12 +886,6 @@ export default function AdminApprovals() {
           comparison = av - bv;
           break;
         }
-        case "setup_email_sent": {
-          const av = a.invite_email || a.agent_status === "invited" ? 1 : 0;
-          const bv = b.invite_email || b.agent_status === "invited" ? 1 : 0;
-          comparison = av - bv;
-          break;
-        }
         case "account_created": {
           const av = a.has_auth_account ? 1 : 0;
           const bv = b.has_auth_account ? 1 : 0;
@@ -1542,13 +1535,8 @@ export default function AdminApprovals() {
                       </button>
                     </th>
                     <th className="px-3 py-2 text-left">
-                      <button type="button" onClick={() => handleSort("setup_email_sent")} className="inline-flex items-center hover:text-zinc-900">
-                        Setup Sent<SortIcon field="setup_email_sent" />
-                      </button>
-                    </th>
-                    <th className="px-3 py-2 text-left">
                       <button type="button" onClick={() => handleSort("account_created")} className="inline-flex items-center hover:text-zinc-900">
-                        Account<SortIcon field="account_created" />
+                        Activated<SortIcon field="account_created" />
                       </button>
                     </th>
                     <th className="px-3 py-2 text-left">
@@ -1576,7 +1564,6 @@ export default function AdminApprovals() {
                     const isSelected = selectedIds.has(agent.id);
                     const requested = agent.source === "pending_verification" || agent.is_early_access === true;
                     const verified = agent.agent_status === "verified";
-                    const setupSent = !!agent.invite_email || agent.agent_status === "invited";
                     const accountCreated = agent.has_auth_account === true;
                     const profileDone = agent.profile_complete === true;
                     const isOnline = !agent.is_early_access && !!presenceMap.get(agent.id)?.isOnline;
@@ -1623,11 +1610,6 @@ export default function AdminApprovals() {
                         </td>
                         <YesNoCell yes={requested} iso={agent.created_at} title={yesTitle(agent.created_at)} />
                         <YesNoCell yes={verified} iso={agent.verified_at} title={yesTitle(agent.verified_at)} />
-                        <YesNoCell
-                          yes={setupSent}
-                          iso={agent.invite_email?.event_at ?? agent.invite_email?.created_at ?? null}
-                          extra={agent.invite_email?.status}
-                        />
                         <YesNoCell
                           yes={accountCreated}
                           iso={agent.account_activated_at ?? agent.last_sign_in_at ?? null}
