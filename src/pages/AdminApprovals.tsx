@@ -152,7 +152,8 @@ function risksForAgent(a: Agent): Risk[] {
 type AdminDerivedStatus =
   | "invited"
   | "pending"
-  | "active"
+  | "account_created"
+  | "profile_complete"
   | "rejected"
   | "restricted";
 
@@ -160,7 +161,9 @@ function deriveAdminStatus(a: Agent): AdminDerivedStatus {
   if (a.agent_status === "rejected") return "rejected";
   if (a.agent_status === "restricted") return "restricted";
   // DB "verified" = admin approved → user-facing "Active".
-  if (a.agent_status === "verified") return "active";
+  if (a.agent_status === "verified") {
+    return a.profile_complete ? "profile_complete" : "account_created";
+  }
   // Admin-created but agent hasn't finished /agent-setup yet.
   if (a.agent_status === "invited") return "invited";
   // Everything else (pending, legacy unverified, early-access leads,
