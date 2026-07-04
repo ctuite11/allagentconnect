@@ -97,6 +97,7 @@ interface Agent {
   account_activated_at?: string | null;
   invite_email?: EmailStatusInfo | null;
   license_verified_email?: EmailStatusInfo | null;
+  profile_complete?: boolean;
   // Phase 3: identifies where this row originated so Verify/Reject can
   // branch. Absent = legacy profile row (default behaviour).
   source?: "profile" | "early_access" | "pending_verification";
