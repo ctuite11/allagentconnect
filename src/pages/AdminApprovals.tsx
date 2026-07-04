@@ -880,8 +880,8 @@ export default function AdminApprovals() {
           break;
         }
         case "account_created": {
-          const av = a.has_auth_account ? 1 : 0;
-          const bv = b.has_auth_account ? 1 : 0;
+          const av = a.account_activated_at ? 1 : 0;
+          const bv = b.account_activated_at ? 1 : 0;
           comparison = av - bv;
           break;
         }
@@ -1551,7 +1551,7 @@ export default function AdminApprovals() {
                     const derived = deriveAdminStatus(agent);
                     const isSelected = selectedIds.has(agent.id);
                     const verified = agent.agent_status === "verified";
-                    const accountCreated = agent.has_auth_account === true;
+                    const activated = !!agent.account_activated_at;
                     const profileDone = agent.profile_complete === true;
                     const isOnline = !agent.is_early_access && !!presenceMap.get(agent.id)?.isOnline;
                     const yesTitle = (iso: string | null | undefined) =>
@@ -1597,7 +1597,7 @@ export default function AdminApprovals() {
                         </td>
                         <YesNoCell yes={verified} iso={agent.verified_at} title={yesTitle(agent.verified_at)} />
                         <YesNoCell
-                          yes={accountCreated}
+                          yes={activated}
                           iso={agent.account_activated_at ?? agent.last_sign_in_at ?? null}
                         />
                         <YesNoCell yes={profileDone} />
