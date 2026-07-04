@@ -11,6 +11,8 @@ const WORKSPACE_ROUTE_MATCHERS: Array<(path: string) => boolean> = [
   (path) => path === "/listing-search",
   (path) => path === "/listing-results" || path.startsWith("/listing-results/"),
   (path) => path === "/agent-search",
+  // Admin operational pages benefit from wide horizontal space
+  (path) => path.startsWith("/admin"),
   // Property / listing detail (agent AppShell via PropertyDetailShell)
   (path) => /^\/property\/[^/]+/.test(path),
   // Hot sheet match review
