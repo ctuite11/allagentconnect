@@ -46,6 +46,7 @@ interface MergedAgent {
   account_activated_at?: string | null
   invite_email?: EmailStatusInfo | null
   license_verified_email?: EmailStatusInfo | null
+  profile_complete?: boolean
 }
 
 interface EmailStatusInfo {
@@ -170,7 +171,7 @@ Deno.serve(async (req) => {
     // Fetch all profiles
     const { data: profiles, error: profilesError } = await adminClient
       .from('agent_profiles')
-      .select('id, aac_id, first_name, last_name, email, phone, company, bio, created_at')
+      .select('id, aac_id, first_name, last_name, email, phone, company, bio, headshot_url, created_at')
       .order('created_at', { ascending: false })
 
     if (profilesError) {
@@ -212,6 +213,13 @@ Deno.serve(async (req) => {
     const agents: MergedAgent[] = profiles.map(p => {
       const s = settingsByUser.get(p.id)
       const emailKey = (p.email ?? '').toLowerCase()
+      const headshotUrl = (p as any).headshot_url as string | null | undefined
+      const profileComplete =
+        !!(p.first_name && p.first_name.trim()) &&
+        !!(p.last_name && p.last_name.trim()) &&
+        !!(headshotUrl && String(headshotUrl).trim()) &&
+        !!(p.company && p.company.trim()) &&
+        !!((p.phone && p.phone.trim()) || (p.email && p.email.trim()))
       return {
         id: p.id,
         aac_id: p.aac_id,
@@ -229,6 +237,7 @@ Deno.serve(async (req) => {
         has_auth_account: authEmails.has(emailKey),
         last_sign_in_at: lastSignInByEmail.get(emailKey) ?? null,
         account_activated_at: s?.account_activated_at ?? null,
+        profile_complete: profileComplete,
       }
     })
 
@@ -277,6 +286,7 @@ Deno.serve(async (req) => {
       has_auth_account: authEmails.has(emailKey),
       last_sign_in_at: lastSignInByEmail.get(emailKey) ?? null,
       account_activated_at: null,
+      profile_complete: false,
       }
     })
 

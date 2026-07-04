@@ -146,8 +146,9 @@ export default function AcceptDelegateInvite() {
 
     for (let attempt = 0; attempt < 12; attempt++) {
       const resolved = await resolveUserRole(sessionCheck.session.user.id);
-      if (resolved.role === "delegate") break;
-      if (attempt === 11 && resolved.role !== "delegate") {
+      const resolvedRole = resolved.role as string;
+      if (resolvedRole === "delegate") break;
+      if (attempt === 11 && resolvedRole !== "delegate") {
         throw new Error(
           "Your account is ready, but delegate access is still activating. Refresh the page or sign in again.",
         );

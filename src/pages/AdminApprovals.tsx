@@ -97,6 +97,7 @@ interface Agent {
   account_activated_at?: string | null;
   invite_email?: EmailStatusInfo | null;
   license_verified_email?: EmailStatusInfo | null;
+  profile_complete?: boolean;
   // Phase 3: identifies where this row originated so Verify/Reject can
   // branch. Absent = legacy profile row (default behaviour).
   source?: "profile" | "early_access" | "pending_verification";
@@ -151,7 +152,8 @@ function risksForAgent(a: Agent): Risk[] {
 type AdminDerivedStatus =
   | "invited"
   | "pending"
-  | "active"
+  | "account_created"
+  | "profile_complete"
   | "rejected"
   | "restricted";
 
@@ -159,7 +161,9 @@ function deriveAdminStatus(a: Agent): AdminDerivedStatus {
   if (a.agent_status === "rejected") return "rejected";
   if (a.agent_status === "restricted") return "restricted";
   // DB "verified" = admin approved → user-facing "Active".
-  if (a.agent_status === "verified") return "active";
+  if (a.agent_status === "verified") {
+    return a.profile_complete ? "profile_complete" : "account_created";
+  }
   // Admin-created but agent hasn't finished /agent-setup yet.
   if (a.agent_status === "invited") return "invited";
   // Everything else (pending, legacy unverified, early-access leads,
@@ -736,7 +740,8 @@ export default function AdminApprovals() {
     const buckets: Record<AdminDerivedStatus, number> = {
       invited: 0,
       pending: 0,
-      active: 0,
+      account_created: 0,
+      profile_complete: 0,
       rejected: 0,
       restricted: 0,
     };
@@ -745,7 +750,8 @@ export default function AdminApprovals() {
     });
     counts.invited = buckets.invited;
     counts.pending = buckets.pending;
-    counts.active = buckets.active;
+    counts.account_created = buckets.account_created;
+    counts.profile_complete = buckets.profile_complete;
     counts.rejected = buckets.rejected;
     counts.restricted = buckets.restricted;
     return counts;
@@ -756,7 +762,8 @@ export default function AdminApprovals() {
     switch (status) {
       case "pending": return "warning";
       case "invited": return "primary";
-      case "active": return "success";
+      case "account_created": return "primary";
+      case "profile_complete": return "success";
       case "rejected":
       case "restricted": return "danger";
       default: return "neutral";
@@ -1312,10 +1319,16 @@ export default function AdminApprovals() {
             onClick={() => setStatusFilter("invited")}
           />
           <Pill
-            label={`Active (${statusCounts.active || 0})`}
+            label={`Account Created (${statusCounts.account_created || 0})`}
             variant="neutral"
-            active={statusFilter === "active"}
-            onClick={() => setStatusFilter("active")}
+            active={statusFilter === "account_created"}
+            onClick={() => setStatusFilter("account_created")}
+          />
+          <Pill
+            label={`Profile Complete (${statusCounts.profile_complete || 0})`}
+            variant="neutral"
+            active={statusFilter === "profile_complete"}
+            onClick={() => setStatusFilter("profile_complete")}
           />
           <Pill
             label={`Rejected (${statusCounts.rejected || 0})`}
@@ -1499,18 +1512,33 @@ export default function AdminApprovals() {
                         if (derived === "rejected" || derived === "restricted") {
                           return <AgentStatusBadge status={derived as any} />;
                         }
-                        if (derived === "active") {
+                        if (derived === "profile_complete") {
                           return (
                             <span
                               className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700 ring-1 ring-emerald-200"
                               title={
                                 agent.account_activated_at
-                                  ? `Account activated: ${new Date(agent.account_activated_at).toLocaleString()}`
-                                  : "Account active"
+                                  ? `Profile complete · Account activated: ${new Date(agent.account_activated_at).toLocaleString()}`
+                                  : "Profile complete"
                               }
                             >
                               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                              Active · {formatRelativeSignIn(agent.account_activated_at)}
+                              Profile Complete · {formatRelativeSignIn(agent.account_activated_at)}
+                            </span>
+                          );
+                        }
+                        if (derived === "account_created") {
+                          return (
+                            <span
+                              className="inline-flex items-center gap-1.5 rounded-full bg-sky-50 px-2.5 py-0.5 text-xs font-medium text-sky-700 ring-1 ring-sky-200"
+                              title={
+                                agent.account_activated_at
+                                  ? `Account created · ${new Date(agent.account_activated_at).toLocaleString()} — profile not finished`
+                                  : "Account created — profile not finished"
+                              }
+                            >
+                              <span className="h-1.5 w-1.5 rounded-full bg-sky-500" />
+                              Account Created · {formatRelativeSignIn(agent.account_activated_at)}
                             </span>
                           );
                         }
