@@ -740,7 +740,8 @@ export default function AdminApprovals() {
     const buckets: Record<AdminDerivedStatus, number> = {
       invited: 0,
       pending: 0,
-      active: 0,
+      account_created: 0,
+      profile_complete: 0,
       rejected: 0,
       restricted: 0,
     };
@@ -749,7 +750,8 @@ export default function AdminApprovals() {
     });
     counts.invited = buckets.invited;
     counts.pending = buckets.pending;
-    counts.active = buckets.active;
+    counts.account_created = buckets.account_created;
+    counts.profile_complete = buckets.profile_complete;
     counts.rejected = buckets.rejected;
     counts.restricted = buckets.restricted;
     return counts;
