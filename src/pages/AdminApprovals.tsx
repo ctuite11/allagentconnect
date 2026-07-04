@@ -1319,10 +1319,16 @@ export default function AdminApprovals() {
             onClick={() => setStatusFilter("invited")}
           />
           <Pill
-            label={`Active (${statusCounts.active || 0})`}
+            label={`Account Created (${statusCounts.account_created || 0})`}
             variant="neutral"
-            active={statusFilter === "active"}
-            onClick={() => setStatusFilter("active")}
+            active={statusFilter === "account_created"}
+            onClick={() => setStatusFilter("account_created")}
+          />
+          <Pill
+            label={`Profile Complete (${statusCounts.profile_complete || 0})`}
+            variant="neutral"
+            active={statusFilter === "profile_complete"}
+            onClick={() => setStatusFilter("profile_complete")}
           />
           <Pill
             label={`Rejected (${statusCounts.rejected || 0})`}
