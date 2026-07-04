@@ -65,16 +65,19 @@ Deno.serve(async (req) => {
 
     const admin = createClient(supabaseUrl, supabaseServiceKey)
 
-    // Fetch last 25 matching email_jobs by recipient + template
-    const { data: jobs, error: jobsErr } = await admin
+    // Fetch last 50 candidate email_jobs by recipient, then filter templates in JS
+    // (PostgREST `in` on JSON accessors is unreliable across versions).
+    const { data: rawJobs, error: jobsErr } = await admin
       .from('email_jobs')
       .select(
         'id, created_at, status, delivery_status, delivery_status_at, provider_message_id, idempotency_key, last_error, payload',
       )
-      .in('payload->>template', templates)
       .eq('payload->>to', email)
       .order('created_at', { ascending: false })
-      .limit(25)
+      .limit(50)
+    const jobs = (rawJobs ?? [])
+      .filter((j: any) => templates.includes(j.payload?.template))
+      .slice(0, 25)
 
     if (jobsErr) {
       return new Response(JSON.stringify({ error: jobsErr.message }), {
