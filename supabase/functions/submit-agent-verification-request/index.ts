@@ -29,6 +29,92 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
+const ADMIN_NOTIFY_EMAIL = "chris@allagentconnect.com";
+const ADMIN_PANEL_URL = "https://allagentconnect.com/admin/approvals";
+
+const STATE_LICENSE_LOOKUP: Record<string, string> = {
+  MA: "https://www.mass.gov/orgs/board-of-registration-of-real-estate-brokers-and-salespersons",
+  CT: "https://www.elicense.ct.gov/",
+  RI: "https://dbr.ri.gov/divisions/commercial-licensing",
+  NH: "https://www.oplc.nh.gov/real-estate-commission",
+  ME: "https://www.maine.gov/pfr/professionallicensing/",
+  VT: "https://sos.vermont.gov/opr/",
+  NY: "https://appext20.dos.ny.gov/nydos/selSearchType.do",
+  NJ: "https://newjersey.mylicense.com/verification/",
+  PA: "https://www.pals.pa.gov/",
+};
+
+async function enqueueAdminNotification(
+  admin: ReturnType<typeof createClient>,
+  pendingId: string,
+  applicant: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string | null;
+    company: string | null;
+    licenseState: string;
+    licenseNumber: string;
+  },
+) {
+  const idempotencyKey = `verification-submitted:${pendingId}`;
+  const subject = `New License Verification — ${applicant.firstName} ${applicant.lastName}`;
+  const payload = {
+    provider: "resend",
+    template: "agent-verification-submitted",
+    to: ADMIN_NOTIFY_EMAIL,
+    subject,
+    reply_to: applicant.email,
+    variables: {
+      firstName: applicant.firstName,
+      lastName: applicant.lastName,
+      email: applicant.email,
+      phone: applicant.phone ?? "",
+      company: applicant.company ?? "",
+      licenseState: applicant.licenseState,
+      licenseNumber: applicant.licenseNumber,
+      submittedAt: new Date().toISOString(),
+      adminUrl: ADMIN_PANEL_URL,
+      licenseLookupUrl: STATE_LICENSE_LOOKUP[applicant.licenseState] || "",
+    },
+  };
+
+  const { error: insertErr } = await admin
+    .from("email_jobs")
+    .insert({ payload, idempotency_key: idempotencyKey });
+
+  if (insertErr) {
+    // 23505 = idempotency race → already notified for this pending id.
+    // deno-lint-ignore no-explicit-any
+    const code = (insertErr as any).code;
+    if (code === "23505") {
+      console.log(
+        `[submit-agent-verification-request] admin notification already queued for ${pendingId}`,
+      );
+      return;
+    }
+    console.error(
+      "[submit-agent-verification-request] failed to enqueue admin notification (non-fatal):",
+      insertErr,
+    );
+    return;
+  }
+
+  // Best-effort kick — do not block the caller.
+  try {
+    await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/kick-email-queue`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""}`,
+      },
+      body: "{}",
+    });
+  } catch (e) {
+    console.warn("[submit-agent-verification-request] kick-email-queue failed (non-fatal):", e);
+  }
+}
+
 interface SubmitBody {
   firstName?: unknown;
   lastName?: unknown;
@@ -172,6 +258,34 @@ export async function handleRequest(req: Request): Promise<Response> {
     // deno-lint-ignore no-explicit-any
     const code = (insertErr as any).code;
     if (code === "23505") {
+      // Notify admin even on re-submit — idempotency key on email_jobs
+      // ensures we send at most one notification per pending row.
+      try {
+        const { data: existing } = await admin
+          .from("pending_verifications")
+          .select("id")
+          .ilike("email", email)
+          .eq("status", "pending")
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (existing?.id) {
+          await enqueueAdminNotification(admin, existing.id, {
+            firstName,
+            lastName,
+            email,
+            phone,
+            company,
+            licenseState,
+            licenseNumber,
+          });
+        }
+      } catch (e) {
+        console.error(
+          "[submit-agent-verification-request] already_pending admin notify failed (non-fatal):",
+          e,
+        );
+      }
       return json(200, {
         ok: true,
         code: "already_pending",
@@ -180,6 +294,24 @@ export async function handleRequest(req: Request): Promise<Response> {
     }
     console.error("[submit-agent-verification-request] insert error:", insertErr);
     return json(500, { error: "Failed to record request.", code: "insert_failed" });
+  }
+
+  // Fresh insert → notify admin. Never fails the request.
+  try {
+    await enqueueAdminNotification(admin, inserted.id, {
+      firstName,
+      lastName,
+      email,
+      phone,
+      company,
+      licenseState,
+      licenseNumber,
+    });
+  } catch (e) {
+    console.error(
+      "[submit-agent-verification-request] admin notify threw (non-fatal):",
+      e,
+    );
   }
 
   return json(200, {

@@ -529,6 +529,55 @@ export function renderEmailTemplate(
       });
     }
 
+    case "agent-verification-submitted": {
+      const firstName = variables.firstName || "";
+      const lastName = variables.lastName || "";
+      const fullName = `${firstName} ${lastName}`.trim() || "Unknown Agent";
+      const email = variables.email || "";
+      const phone = variables.phone || "";
+      const company = variables.company || "";
+      const licenseState = variables.licenseState || "";
+      const licenseNumber = variables.licenseNumber || "";
+      const submittedAt = variables.submittedAt || new Date().toISOString();
+      const adminUrl = variables.adminUrl || "https://allagentconnect.com/admin/approvals";
+      const licenseLookupUrl = variables.licenseLookupUrl || "";
+
+      const submittedDisplay = (() => {
+        try {
+          return new Date(submittedAt).toLocaleString("en-US", {
+            timeZone: "America/New_York",
+            dateStyle: "full",
+            timeStyle: "short",
+          }) + " EST";
+        } catch {
+          return submittedAt;
+        }
+      })();
+
+      const row = (label: string, value: string) =>
+        `<tr><td style="padding:12px 16px;color:#64748b;font-size:14px;">${label}:</td><td style="padding:12px 16px;color:#0f172a;font-weight:600;font-size:14px;">${value}</td></tr>`;
+
+      const detailsTable = `
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#ffffff;border:1px solid #e5e7eb;border-radius:8px;margin:16px 0;">
+          ${row("Agent Name", fullName)}
+          <tr><td style="padding:12px 16px;color:#64748b;font-size:14px;">Email:</td><td style="padding:12px 16px;font-size:14px;"><a href="mailto:${email}" style="color:#0E56F5;text-decoration:none;">${email}</a></td></tr>
+          ${phone ? row("Phone", phone) : ""}
+          ${company ? row("Company", company) : ""}
+          ${row("License #", licenseNumber)}
+          ${row("State", licenseState)}
+          ${row("Submitted", submittedDisplay)}
+        </table>
+        ${licenseLookupUrl ? `<p style="margin:8px 0 0;font-size:13px;"><a href="${licenseLookupUrl}" target="_blank" style="color:#0E56F5;text-decoration:none;">Verify ${licenseState} license →</a></p>` : ""}`;
+
+      return buildAacEmail({
+        headline: "New Agent License Verification",
+        preheader: `New verification: ${fullName} — ${licenseState} #${licenseNumber}`,
+        body: detailsTable,
+        ctaLabel: "Review in Admin Panel",
+        ctaUrl: adminUrl,
+      });
+    }
+
     default:
       return buildAacEmail({
         headline: "",
