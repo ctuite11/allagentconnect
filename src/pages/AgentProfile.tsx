@@ -478,20 +478,13 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
                 </ul>
               ) : null}
 
-              <div className="mt-4 border-t border-neutral-100 pt-4">
+              <div className="relative z-10 mt-4 border-t border-neutral-100 pt-4">
                 <div className="flex w-full flex-col items-center gap-2 lg:w-auto lg:items-start">
                 <div className="flex flex-wrap items-center justify-center gap-2 lg:justify-start">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="h-[34px] min-w-[7.75rem] rounded-md border border-neutral-900 bg-neutral-900 px-5 text-[13px] font-medium tracking-wide text-white hover:bg-neutral-800"
-                    disabled={isStartingChat}
-                    onClick={async () => {
-                      if (!user?.id) {
-                        navigate("/auth");
-                        return;
-                      }
-                      if (!agent.id) return;
+                  {(() => {
+                    const isGuestOrPublic = !user || publicMode;
+                    const authedHandler = async () => {
+                      if (!user?.id || !agent.id) return;
                       setIsStartingChat(true);
                       try {
                         const convoId = await findOrCreateConversation(user.id, agent.id);
@@ -501,11 +494,31 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
                       } finally {
                         setIsStartingChat(false);
                       }
-                    }}
-                  >
-                    <MessageSquare className="mr-1.5 h-3.5 w-3.5 text-white" aria-hidden />
-                    Message {agent.first_name}
-                  </Button>
+                    };
+                    const messageButton = (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-[34px] min-w-[7.75rem] rounded-md border border-neutral-900 bg-neutral-900 px-5 text-[13px] font-medium tracking-wide text-white hover:bg-neutral-800"
+                        disabled={!!user && isStartingChat}
+                        onClick={isGuestOrPublic ? undefined : authedHandler}
+                      >
+                        <MessageSquare className="mr-1.5 h-3.5 w-3.5 text-white" aria-hidden />
+                        Message {agent.first_name}
+                      </Button>
+                    );
+                    return isGuestOrPublic && agent.email ? (
+                      <ContactAgentProfileDialog
+                        agentId={agent.id}
+                        agentName={agentFullName}
+                        agentEmail={agent.email}
+                        initialSender={viewerSender}
+                        trigger={messageButton}
+                      />
+                    ) : (
+                      messageButton
+                    );
+                  })()}
                 </div>
 
                 {activeSocials.length > 0 ? (
