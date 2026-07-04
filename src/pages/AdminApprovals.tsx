@@ -1137,16 +1137,20 @@ export default function AdminApprovals() {
     }
   };
 
-  const handleEmailSetupLink = async (agent: Agent) => {
-    if (sendingSetupLinkFor.has(agent.id)) return;
+  const handleEmailSetupLink = async (
+    agent: Agent,
+    opts?: { silent?: boolean },
+  ): Promise<boolean> => {
+    if (sendingSetupLinkFor.has(agent.id)) return false;
 
     const lastSent = lastSetupLinkSentAt.get(agent.email.toLowerCase());
     if (lastSent && Date.now() - lastSent < 60 * 60 * 1000) {
+      if (opts?.silent) return false;
       const minsAgo = Math.max(1, Math.round((Date.now() - lastSent) / 60000));
       const ok = window.confirm(
         `A setup email was already sent to ${agent.email} ${minsAgo} minute(s) ago. Send another one?`,
       );
-      if (!ok) return;
+      if (!ok) return false;
     }
 
     // Phase 4 guardrail — same "previously deleted" check as Verify.
@@ -1154,12 +1158,12 @@ export default function AdminApprovals() {
       agent.email,
       "email a setup link to this agent",
     );
-    if (!proceed) return;
+    if (!proceed) return false;
 
     setSendingSetupLinkFor((prev) => new Set(prev).add(agent.id));
     try {
       const setupUrl = await generateSetupLink(agent);
-      if (!setupUrl) return;
+      if (!setupUrl) return false;
       const { error } = await supabase.functions.invoke("send-license-verified-email", {
         body: {
           to: agent.email,
@@ -1172,15 +1176,16 @@ export default function AdminApprovals() {
       });
       if (error) {
         console.error("Send license-verified email failed:", error);
-        toast.error("Could not send setup email");
-        return;
+        if (!opts?.silent) toast.error("Could not send setup email");
+        return false;
       }
       setLastSetupLinkSentAt((prev) => {
         const next = new Map(prev);
         next.set(agent.email.toLowerCase(), Date.now());
         return next;
       });
-      toast.success(`Setup link emailed to ${agent.email}`);
+      if (!opts?.silent) toast.success(`Setup link emailed to ${agent.email}`);
+      return true;
     } finally {
       setSendingSetupLinkFor((prev) => {
         const next = new Set(prev);
@@ -1188,6 +1193,37 @@ export default function AdminApprovals() {
         return next;
       });
     }
+  };
+
+  // Bulk activation reminders — sends the same setup-link email to every
+  // selected agent that is verified-but-not-activated. Sequential to
+  // respect the edge function's rate limits and the per-agent throttle.
+  const [bulkRemindingActivation, setBulkRemindingActivation] = useState(false);
+  const handleBulkActivationReminder = async () => {
+    const eligible = filteredAgents.filter(
+      (a) => effectiveSelectedIds.has(a.id) && isAwaitingActivation(a),
+    );
+    const skipped = effectiveSelectedIds.size - eligible.length;
+    if (eligible.length === 0) {
+      toast.info("No selected agents are awaiting activation");
+      return;
+    }
+    setBulkRemindingActivation(true);
+    let sent = 0;
+    let failed = 0;
+    try {
+      for (const agent of eligible) {
+        const ok = await handleEmailSetupLink(agent, { silent: true });
+        if (ok) sent++;
+        else failed++;
+      }
+    } finally {
+      setBulkRemindingActivation(false);
+    }
+    const parts = [`Sent ${sent} reminder${sent === 1 ? "" : "s"}`];
+    if (skipped > 0) parts.push(`skipped ${skipped} ineligible`);
+    if (failed > 0) parts.push(`${failed} failed`);
+    toast.success(parts.join(" · "));
   };
 
   if (authLoading) {
