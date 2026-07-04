@@ -505,7 +505,114 @@ export default function AdminApprovals() {
         }));
 
       const merged: Agent[] = [...phase2Leads, ...((agentList ?? []) as Agent[])];
-      setAgents(merged);
+
+      // Enrich merged rows with email delivery status + historical
+      // request-access signal so the drawer's Lifecycle indicators
+      // reflect reality. Frontend-only, read-only, bounded to the
+      // rendered list.
+      const normEmails = Array.from(
+        new Set(
+          merged
+            .map((a) => (a.email || "").trim().toLowerCase())
+            .filter((e) => e.length > 0),
+        ),
+      );
+
+      const licenseByEmail = new Map<string, EmailStatusInfo>();
+      const inviteByEmail = new Map<string, EmailStatusInfo>();
+      const everRequested = new Map<string, string>(); // email -> earliest created_at
+
+      if (normEmails.length > 0) {
+        try {
+          const { data: jobRows } = await supabase
+            .from("email_jobs")
+            .select(
+              "payload, status, delivery_status, delivery_status_at, created_at, last_error, attempts",
+            )
+            .in("payload->>template", ["license-verified", "agent-invite"])
+            .order("created_at", { ascending: false })
+            .limit(2000);
+
+          const toStatus = (row: any): EmailStatusInfo => {
+            const ds = (row.delivery_status || "").toLowerCase();
+            const known = [
+              "queued",
+              "sent",
+              "delivered",
+              "bounced",
+              "complained",
+              "failed",
+            ];
+            let status: EmailStatusInfo["status"];
+            if (ds && known.includes(ds)) {
+              status = ds as EmailStatusInfo["status"];
+            } else if (row.status === "failed") {
+              status = "failed";
+            } else if (row.status === "sent") {
+              status = "sent";
+            } else {
+              status = "queued";
+            }
+            return {
+              status,
+              created_at: row.created_at,
+              event_at: row.delivery_status_at ?? null,
+              attempts: row.attempts ?? null,
+              last_error: row.last_error ?? null,
+            };
+          };
+
+          for (const row of (jobRows ?? []) as any[]) {
+            const template = row?.payload?.template as string | undefined;
+            const to = String(row?.payload?.to || "").trim().toLowerCase();
+            if (!to || !normEmails.includes(to)) continue;
+            const target =
+              template === "license-verified"
+                ? licenseByEmail
+                : template === "agent-invite"
+                  ? inviteByEmail
+                  : null;
+            if (!target) continue;
+            // rows are ordered newest first; keep the first (newest) per email
+            if (!target.has(to)) target.set(to, toStatus(row));
+          }
+        } catch (e) {
+          console.warn("[AdminApprovals] email_jobs enrichment failed:", e);
+        }
+
+        try {
+          const { data: pvRows } = await supabase
+            .from("pending_verifications")
+            .select("email, created_at")
+            .in("email", normEmails);
+          for (const row of (pvRows ?? []) as any[]) {
+            const em = String(row.email || "").trim().toLowerCase();
+            if (!em) continue;
+            const existing = everRequested.get(em);
+            if (!existing || new Date(row.created_at) < new Date(existing)) {
+              everRequested.set(em, row.created_at);
+            }
+          }
+        } catch (e) {
+          console.warn("[AdminApprovals] pending_verifications enrichment failed:", e);
+        }
+      }
+
+      const enriched: Agent[] = merged.map((a) => {
+        const em = (a.email || "").trim().toLowerCase();
+        const lic = licenseByEmail.get(em) ?? a.license_verified_email ?? null;
+        const inv = inviteByEmail.get(em) ?? a.invite_email ?? null;
+        const reqAt = everRequested.get(em) ?? null;
+        return {
+          ...a,
+          license_verified_email: lic,
+          invite_email: inv,
+          ever_requested: !!reqAt || a.ever_requested === true,
+          requested_access_at: reqAt ?? a.requested_access_at ?? null,
+        };
+      });
+
+      setAgents(enriched);
     } catch (error) {
       console.error("Unexpected error:", error);
       toast.error("Failed to load agents");
