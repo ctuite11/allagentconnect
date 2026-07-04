@@ -44,6 +44,7 @@ import { DeleteAgentDialog } from "@/components/admin/DeleteAgentDialog";
 import { BulkDeleteAgentsDialog } from "@/components/admin/BulkDeleteAgentsDialog";
 import { EmailAgentDialog } from "@/components/admin/EmailAgentDialog";
 import { CreateAgentDialog } from "@/components/admin/CreateAgentDialog";
+import { AgentDetailsDrawer } from "@/components/admin/AgentDetailsDrawer";
 import {
   PreviouslyDeletedAgentDialog,
   type PreviouslyDeletedAgentMatch,
