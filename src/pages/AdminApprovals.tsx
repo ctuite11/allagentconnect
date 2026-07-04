@@ -1439,290 +1439,315 @@ export default function AdminApprovals() {
               </div>
             </div>
             <EmailDeliveryLegend />
-            {filteredAgents.map((agent) => {
-              const isProcessing = processingIds.has(agent.id);
-
-              return (
-                <div 
-                  key={agent.id} 
-                  className={`relative bg-white border rounded-xl px-4 py-4 transition-shadow hover:shadow-[0_2px_8px_rgba(0,0,0,0.04)] ${
-                    selectedIds.has(agent.id) ? 'border-emerald-300 bg-emerald-50/30' : 'border-zinc-100 hover:border-zinc-200'
-                  }`}
-                >
-                  {/* Row 1: Checkbox + Agent Info + Status/Date (right) */}
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <Checkbox
-                        checked={selectedIds.has(agent.id)}
-                        onCheckedChange={() => toggleSelect(agent.id)}
-                        aria-label={`Select ${agent.first_name}`}
-                      />
-                      <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm">
-                        <span className="font-mono text-xs text-black">{agent.aac_id}</span>
-                        <span className="text-zinc-300">•</span>
-                        <span className="font-semibold text-[#0E56F5]">{agent.first_name} {agent.last_name}</span>
-                        {agent.source === "pending_verification" && (
+            <div className="overflow-x-auto rounded-xl border border-zinc-200 bg-white">
+              <table className="w-full text-sm">
+                <thead className="bg-zinc-50 text-xs uppercase tracking-wide text-zinc-500">
+                  <tr>
+                    <th className="w-10 px-3 py-2"></th>
+                    <th className="px-3 py-2 text-left">
+                      <button
+                        type="button"
+                        onClick={() => handleSort("name")}
+                        className="inline-flex items-center hover:text-zinc-900"
+                      >
+                        Agent<SortIcon field="name" />
+                      </button>
+                    </th>
+                    <th className="px-3 py-2 text-left">Contact</th>
+                    <th className="px-3 py-2 text-left">
+                      <button
+                        type="button"
+                        onClick={() => handleSort("company")}
+                        className="inline-flex items-center hover:text-zinc-900"
+                      >
+                        Brokerage<SortIcon field="company" />
+                      </button>
+                    </th>
+                    <th className="px-3 py-2 text-left">License</th>
+                    <th className="px-3 py-2 text-left">
+                      <button
+                        type="button"
+                        onClick={() => handleSort("status")}
+                        className="inline-flex items-center hover:text-zinc-900"
+                      >
+                        Status<SortIcon field="status" />
+                      </button>
+                    </th>
+                    <th className="px-3 py-2 text-left">
+                      <button
+                        type="button"
+                        onClick={() => handleSort("last_sign_in_at")}
+                        className="inline-flex items-center hover:text-zinc-900"
+                      >
+                        Last sign-in<SortIcon field="last_sign_in_at" />
+                      </button>
+                    </th>
+                    <th className="px-3 py-2 text-left">
+                      <button
+                        type="button"
+                        onClick={() => handleSort("created_at")}
+                        className="inline-flex items-center hover:text-zinc-900"
+                      >
+                        Created<SortIcon field="created_at" />
+                      </button>
+                    </th>
+                    <th className="w-12 px-3 py-2"></th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-zinc-100">
+                  {filteredAgents.map((agent) => {
+                    const isProcessing = processingIds.has(agent.id);
+                    const derived = deriveAdminStatus(agent);
+                    const isSelected = selectedIds.has(agent.id);
+                    const renderStatusPill = () => {
+                      if (derived === "rejected" || derived === "restricted") {
+                        return <AgentStatusBadge status={derived as any} />;
+                      }
+                      if (derived === "profile_complete") {
+                        return (
                           <span
-                            className="inline-flex items-center rounded-full bg-indigo-50 px-2 py-0.5 text-[11px] font-medium text-indigo-700 ring-1 ring-indigo-200"
-                            title="Submitted via the Request Access form"
+                            className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700 ring-1 ring-emerald-200"
+                            title={
+                              agent.account_activated_at
+                                ? `Profile complete · Account activated: ${new Date(agent.account_activated_at).toLocaleString()}`
+                                : "Profile complete"
+                            }
                           >
-                            Request Access
+                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                            Profile Complete
                           </span>
-                        )}
-                        {!agent.is_early_access && presenceMap.get(agent.id)?.isOnline && (
-                          <AgentOnlinePresenceBadge />
-                        )}
-                        <span className="text-zinc-300">•</span>
-                        <span className="text-zinc-600">{agent.email}</span>
-                        {agent.company && (
-                          <>
-                            <span className="text-zinc-300">•</span>
-                            <span className="text-zinc-500">{agent.company}</span>
-                          </>
-                        )}
-                        {agent.phone && (
-                          <>
-                            <span className="text-zinc-300">•</span>
-                            <span className="text-zinc-500">{formatPhoneNumber(agent.phone ?? "")}</span>
-                          </>
-                        )}
-                        {agent.license_state && agent.license_number && (
-                          <>
-                            <span className="text-zinc-300">•</span>
-                            <a 
-                              href={stateLicenseLookupUrls[agent.license_state]} 
-                              target="_blank" 
+                        );
+                      }
+                      if (derived === "account_created") {
+                        return (
+                          <span
+                            className="inline-flex items-center gap-1.5 rounded-full bg-sky-50 px-2.5 py-0.5 text-xs font-medium text-sky-700 ring-1 ring-sky-200"
+                            title={
+                              agent.account_activated_at
+                                ? `Account created · ${new Date(agent.account_activated_at).toLocaleString()} — profile not finished`
+                                : "Account created — profile not finished"
+                            }
+                          >
+                            <span className="h-1.5 w-1.5 rounded-full bg-sky-500" />
+                            Account Created
+                          </span>
+                        );
+                      }
+                      if (derived === "invited") {
+                        return (
+                          <span
+                            className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700 ring-1 ring-blue-200"
+                            title="Invite sent — agent has not completed setup yet"
+                          >
+                            Invited
+                          </span>
+                        );
+                      }
+                      return (
+                        <span className="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700 ring-1 ring-amber-200">
+                          Pending
+                        </span>
+                      );
+                    };
+
+                    return (
+                      <tr
+                        key={agent.id}
+                        className={
+                          isSelected
+                            ? "bg-emerald-50/40"
+                            : "hover:bg-zinc-50/60"
+                        }
+                      >
+                        <td className="px-3 py-3 align-top">
+                          <Checkbox
+                            checked={isSelected}
+                            onCheckedChange={() => toggleSelect(agent.id)}
+                            aria-label={`Select ${agent.first_name}`}
+                          />
+                        </td>
+                        <td className="px-3 py-3 align-top">
+                          <div className="flex flex-col gap-0.5">
+                            <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                              <span className="font-semibold text-[#0E56F5]">
+                                {agent.first_name} {agent.last_name}
+                              </span>
+                              {!agent.is_early_access && presenceMap.get(agent.id)?.isOnline && (
+                                <AgentOnlinePresenceBadge />
+                              )}
+                              {agent.source === "pending_verification" && (
+                                <span
+                                  className="inline-flex items-center rounded-full bg-indigo-50 px-2 py-0.5 text-[11px] font-medium text-indigo-700 ring-1 ring-indigo-200"
+                                  title="Submitted via the Request Access form"
+                                >
+                                  Request Access
+                                </span>
+                              )}
+                              {licenseUploadAgentIds.has(agent.id) && (
+                                <span className="inline-flex items-center gap-1 text-amber-600 text-[11px] font-medium">
+                                  <FileText className="h-3 w-3" />
+                                  License
+                                </span>
+                              )}
+                            </div>
+                            <span className="font-mono text-[11px] text-zinc-500">{agent.aac_id}</span>
+                            {agent.agent_status === "pending" && (
+                              <RiskBadges risks={risksForAgent(agent)} />
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-3 py-3 align-top">
+                          <div className="flex flex-col gap-0.5 text-zinc-600">
+                            <span className="truncate">{agent.email}</span>
+                            {agent.phone && (
+                              <span className="text-zinc-500 text-xs">{formatPhoneNumber(agent.phone ?? "")}</span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-3 py-3 align-top text-zinc-600">
+                          {agent.company || <span className="text-zinc-300">—</span>}
+                        </td>
+                        <td className="px-3 py-3 align-top">
+                          {agent.license_state && agent.license_number ? (
+                            <a
+                              href={stateLicenseLookupUrls[agent.license_state]}
+                              target="_blank"
                               rel="noopener noreferrer"
-                              className="text-primary hover:underline"
+                              className="text-primary hover:underline text-xs"
                             >
                               {agent.license_state} #{agent.license_number}
                             </a>
-                          </>
-                        )}
-                        {licenseUploadAgentIds.has(agent.id) && (
-                          <>
-                            <span className="text-zinc-300">•</span>
-                            <span className="inline-flex items-center gap-1 text-amber-600 text-xs font-medium">
-                              <FileText className="h-3 w-3" />
-                              License uploaded
-                            </span>
-                          </>
-                        )}
-                      </div>
-                      {agent.agent_status === "pending" && (
-                        <RiskBadges risks={risksForAgent(agent)} />
-                      )}
-                    </div>
-                    
-                    <div className="flex items-center gap-3 shrink-0">
-                      {(() => {
-                        const derived = deriveAdminStatus(agent);
-                        if (derived === "rejected" || derived === "restricted") {
-                          return <AgentStatusBadge status={derived as any} />;
-                        }
-                        if (derived === "profile_complete") {
-                          return (
-                            <span
-                              className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700 ring-1 ring-emerald-200"
-                              title={
-                                agent.account_activated_at
-                                  ? `Profile complete · Account activated: ${new Date(agent.account_activated_at).toLocaleString()}`
-                                  : "Profile complete"
-                              }
-                            >
-                              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                              Profile Complete · {formatRelativeSignIn(agent.account_activated_at)}
-                            </span>
-                          );
-                        }
-                        if (derived === "account_created") {
-                          return (
-                            <span
-                              className="inline-flex items-center gap-1.5 rounded-full bg-sky-50 px-2.5 py-0.5 text-xs font-medium text-sky-700 ring-1 ring-sky-200"
-                              title={
-                                agent.account_activated_at
-                                  ? `Account created · ${new Date(agent.account_activated_at).toLocaleString()} — profile not finished`
-                                  : "Account created — profile not finished"
-                              }
-                            >
-                              <span className="h-1.5 w-1.5 rounded-full bg-sky-500" />
-                              Account Created · {formatRelativeSignIn(agent.account_activated_at)}
-                            </span>
-                          );
-                        }
-                        if (derived === "invited") {
-                          return (
-                            <span
-                              className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700 ring-1 ring-blue-200"
-                              title="Invite sent — agent has not completed setup yet"
-                            >
-                              Invited
-                            </span>
-                          );
-                        }
-                        return (
-                          <span className="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700 ring-1 ring-amber-200">
-                            Pending
-                          </span>
-                        );
-                      })()}
-                      <span
-                        className="text-xs text-zinc-500"
-                        title={
-                          agent.last_sign_in_at
-                            ? `Last sign-in: ${new Date(agent.last_sign_in_at).toLocaleString()}`
-                            : "Never signed in"
-                        }
-                      >
-                        {agent.last_sign_in_at ? (
-                          <>Last sign-in: {formatRelativeSignIn(agent.last_sign_in_at)}</>
-                        ) : (
-                          <span className="text-zinc-400">Never signed in</span>
-                        )}
-                      </span>
-                      <span className="text-xs text-zinc-400">
-                        {new Date(agent.created_at).toLocaleDateString()}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Email delivery status — read-only surfacing from email_jobs */}
-                  <div className="mt-2 flex flex-wrap items-center gap-2 pl-8">
-                    <EmailDeliveryBadge label="Invite" info={agent.invite_email} />
-                    <EmailDeliveryBadge
-                      label="License Verified"
-                      info={agent.license_verified_email}
-                    />
-                  </div>
-
-                  {/* Row 2: Actions */}
-                  <div className="mt-3 flex items-center gap-2 text-sm">
-                  {deriveAdminStatus(agent) === "invited" ? (
-                    <>
-                      <button
-                        onClick={() => handleResendInvite(agent)}
-                        disabled={resendingInviteFor.has(agent.id)}
-                        className={
-                          resendingInviteFor.has(agent.id)
-                            ? "text-zinc-300 cursor-not-allowed"
-                            : "text-emerald-600 hover:text-emerald-800 hover:underline transition-colors font-medium"
-                        }
-                      >
-                        {resendingInviteFor.has(agent.id) ? "Sending…" : "Resend Invite"}
-                      </button>
-                      <span className="text-zinc-300">•</span>
-                      <button
-                        onClick={() => handleCopySetupLink(agent)}
-                        className="text-zinc-500 hover:text-zinc-900 hover:underline transition-colors"
-                      >
-                        Copy Setup Link
-                      </button>
-                      <span className="text-zinc-300">•</span>
-                      <button
-                        onClick={() => setEditAgent(agent)}
-                        className="text-zinc-500 hover:text-zinc-900 hover:underline transition-colors"
-                      >
-                        Edit
-                      </button>
-                      <span className="text-zinc-300">•</span>
-                      <button
-                        onClick={() => setDeleteAgent(agent)}
-                        className="text-rose-600 hover:text-rose-700 hover:underline transition-colors"
-                      >
-                        Delete
-                      </button>
-                    </>
-                  ) : (
-                  <>
-                    <button 
-                      onClick={() => {
-                        const risks = risksForAgent(agent);
-                        if (hasRedFlag(risks) && agent.agent_status !== "verified") {
-                          setConfirmText("");
-                          setVerifyConfirm({ agent, risks });
-                        } else {
-                          handleStatusChange(agent, "verified");
-                        }
-                      }}
-                      disabled={isProcessing || agent.agent_status === "verified"}
-                      className={agent.agent_status === "verified" 
-                        ? "text-zinc-500 cursor-not-allowed flex items-center gap-1" 
-                        : "text-aacSuccess hover:text-aacSuccess/80 hover:underline transition-colors"}
-                    >
-                      {agent.agent_status === "verified" ? (
-                        <>
-                          <Check className="h-3.5 w-3.5 text-aacSuccess" />
-                          Verified
-                        </>
-                      ) : "Verify"}
-                    </button>
-                    <span className="text-zinc-300">•</span>
-                    <button 
-                      onClick={() => setEditAgent(agent)} 
-                      className="text-zinc-500 hover:text-zinc-900 hover:underline transition-colors"
-                    >
-                      Edit
-                    </button>
-                    <span className="text-zinc-300">•</span>
-                    <button 
-                      onClick={() => handleEmailAgent(agent)} 
-                      className="text-zinc-500 hover:text-zinc-900 hover:underline transition-colors"
-                    >
-                      Email
-                    </button>
-                    {!agent.is_early_access && agent.source !== "pending_verification" && (
-                      <>
-                        <span className="text-zinc-300">•</span>
-                        <button 
-                          onClick={() => handleSendPasswordReset(agent)} 
-                          className="text-zinc-500 hover:text-zinc-900 hover:underline transition-colors"
+                          ) : (
+                            <span className="text-zinc-300">—</span>
+                          )}
+                        </td>
+                        <td className="px-3 py-3 align-top">
+                          <div className="flex flex-col gap-1.5">
+                            {renderStatusPill()}
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              <EmailDeliveryBadge label="Invite" info={agent.invite_email} />
+                              <EmailDeliveryBadge label="License Verified" info={agent.license_verified_email} />
+                            </div>
+                          </div>
+                        </td>
+                        <td
+                          className="px-3 py-3 align-top text-xs text-zinc-500"
+                          title={
+                            agent.last_sign_in_at
+                              ? `Last sign-in: ${new Date(agent.last_sign_in_at).toLocaleString()}`
+                              : "Never signed in"
+                          }
                         >
-                          Reset Password
-                        </button>
-                      </>
-                    )}
-                    <span className="text-zinc-300">•</span>
-                    <button
-                      onClick={() => handleCopySetupLink(agent)}
-                      className="text-zinc-500 hover:text-zinc-900 hover:underline transition-colors"
-                    >
-                      Copy setup link
-                    </button>
-                    <span className="text-zinc-300">•</span>
-                    <button
-                      onClick={() => handleEmailSetupLink(agent)}
-                      disabled={sendingSetupLinkFor.has(agent.id)}
-                      className={
-                        sendingSetupLinkFor.has(agent.id)
-                          ? "text-zinc-300 cursor-not-allowed"
-                          : "text-zinc-500 hover:text-zinc-900 hover:underline transition-colors"
-                      }
-                    >
-                      {sendingSetupLinkFor.has(agent.id) ? "Sending..." : "Email setup link"}
-                    </button>
-                    <span className="text-zinc-300">•</span>
-                    <button 
-                      onClick={() => handleStatusChange(agent, "rejected")}
-                      disabled={isProcessing || agent.agent_status === "rejected"}
-                      className={agent.agent_status === "rejected" 
-                        ? "text-zinc-300 cursor-not-allowed" 
-                        : "text-zinc-500 hover:text-rose-600 hover:underline transition-colors"}
-                    >
-                      Reject
-                    </button>
-                    <span className="text-zinc-300">•</span>
-                    <button 
-                      onClick={() => setDeleteAgent(agent)} 
-                      className="text-rose-600 hover:text-rose-700 hover:underline transition-colors"
-                    >
-                      Delete
-                    </button>
-                  </>
-                  )}
-                  </div>
-                </div>
-              );
-            })}
+                          {agent.last_sign_in_at ? (
+                            formatRelativeSignIn(agent.last_sign_in_at)
+                          ) : (
+                            <span className="text-zinc-400">Never</span>
+                          )}
+                        </td>
+                        <td className="px-3 py-3 align-top text-xs text-zinc-500">
+                          {new Date(agent.created_at).toLocaleDateString()}
+                        </td>
+                        <td className="px-3 py-3 align-top text-right">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button
+                                type="button"
+                                className="inline-flex h-8 w-8 items-center justify-center rounded-md text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900"
+                                aria-label="Row actions"
+                              >
+                                <MoreHorizontal className="h-4 w-4" />
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-52">
+                              {derived === "invited" ? (
+                                <>
+                                  <DropdownMenuItem
+                                    disabled={resendingInviteFor.has(agent.id)}
+                                    onSelect={() => handleResendInvite(agent)}
+                                  >
+                                    {resendingInviteFor.has(agent.id) ? "Sending…" : "Resend Invite"}
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onSelect={() => handleCopySetupLink(agent)}>
+                                    Copy Setup Link
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onSelect={() => setEditAgent(agent)}>
+                                    Edit
+                                  </DropdownMenuItem>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem
+                                    className="text-rose-600 focus:text-rose-700"
+                                    onSelect={() => setDeleteAgent(agent)}
+                                  >
+                                    Delete
+                                  </DropdownMenuItem>
+                                </>
+                              ) : (
+                                <>
+                                  <DropdownMenuItem
+                                    disabled={isProcessing || agent.agent_status === "verified"}
+                                    onSelect={() => {
+                                      const risks = risksForAgent(agent);
+                                      if (hasRedFlag(risks) && agent.agent_status !== "verified") {
+                                        setConfirmText("");
+                                        setVerifyConfirm({ agent, risks });
+                                      } else {
+                                        handleStatusChange(agent, "verified");
+                                      }
+                                    }}
+                                  >
+                                    {agent.agent_status === "verified" ? (
+                                      <span className="inline-flex items-center gap-1">
+                                        <Check className="h-3.5 w-3.5 text-aacSuccess" />
+                                        Verified
+                                      </span>
+                                    ) : (
+                                      "Verify"
+                                    )}
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onSelect={() => setEditAgent(agent)}>
+                                    Edit
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onSelect={() => handleEmailAgent(agent)}>
+                                    Email
+                                  </DropdownMenuItem>
+                                  {!agent.is_early_access && agent.source !== "pending_verification" && (
+                                    <DropdownMenuItem onSelect={() => handleSendPasswordReset(agent)}>
+                                      Reset Password
+                                    </DropdownMenuItem>
+                                  )}
+                                  <DropdownMenuItem onSelect={() => handleCopySetupLink(agent)}>
+                                    Copy setup link
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    disabled={sendingSetupLinkFor.has(agent.id)}
+                                    onSelect={() => handleEmailSetupLink(agent)}
+                                  >
+                                    {sendingSetupLinkFor.has(agent.id) ? "Sending..." : "Email setup link"}
+                                  </DropdownMenuItem>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem
+                                    disabled={isProcessing || agent.agent_status === "rejected"}
+                                    onSelect={() => handleStatusChange(agent, "rejected")}
+                                  >
+                                    Reject
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    className="text-rose-600 focus:text-rose-700"
+                                    onSelect={() => setDeleteAgent(agent)}
+                                  >
+                                    Delete
+                                  </DropdownMenuItem>
+                                </>
+                              )}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>
