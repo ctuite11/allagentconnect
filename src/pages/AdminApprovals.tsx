@@ -226,6 +226,39 @@ function formatRelativeSignIn(iso: string | null | undefined): string {
   return new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
+function YesNoCell({
+  yes,
+  iso,
+  extra,
+  title,
+}: {
+  yes: boolean;
+  iso?: string | null;
+  extra?: string | null;
+  title?: string;
+}) {
+  return (
+    <td className="px-3 py-3 align-top" title={title}>
+      <div className="flex flex-col">
+        <span
+          className={
+            yes
+              ? "inline-flex w-fit items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700 ring-1 ring-emerald-200"
+              : "inline-flex w-fit items-center rounded-full bg-zinc-100 px-2 py-0.5 text-[11px] font-medium text-zinc-500"
+          }
+        >
+          {yes ? "Yes" : "No"}
+        </span>
+        {yes && (iso || extra) && (
+          <span className="mt-0.5 text-[10px] text-zinc-400">
+            {extra ? extra : new Date(iso!).toLocaleDateString()}
+          </span>
+        )}
+      </div>
+    </td>
+  );
+}
+
 export default function AdminApprovals() {
   const navigate = useNavigate();
   const { user, loading: authLoading, isAdmin } = useAuthRole();
