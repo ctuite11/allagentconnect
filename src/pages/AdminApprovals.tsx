@@ -189,6 +189,16 @@ function deriveAdminStatus(a: Agent): AdminDerivedStatus {
   return "pending";
 }
 
+// Verified by admin but the agent hasn't completed the password-setup
+// (activation) step yet. This is the cohort that benefits from an
+// activation reminder email.
+function isAwaitingActivation(a: Agent): boolean {
+  if (!a.verified_at) return false;
+  if (a.account_activated_at) return false;
+  if (a.agent_status === "rejected" || a.agent_status === "restricted") return false;
+  return true;
+}
+
 function RiskBadges({ risks }: { risks: Risk[] }) {
   if (risks.length === 0) return null;
   return (
