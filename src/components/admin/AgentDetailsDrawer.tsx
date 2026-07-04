@@ -12,6 +12,7 @@ import {
   EmailDeliveryBadge,
   type EmailStatusInfo,
 } from "@/components/admin/EmailDeliveryBadge";
+import { AgentEmailHistory } from "@/components/admin/AgentEmailHistory";
 
 const STATE_LICENSE_LOOKUP: Record<string, string> = {
   MA: "https://www.mass.gov/orgs/board-of-registration-of-real-estate-brokers-and-salespersons",
@@ -288,6 +289,13 @@ export function AgentDetailsDrawer({
                 </dd>
               </dl>
             </div>
+          </section>
+
+          <section>
+            <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">
+              Email History
+            </h4>
+            <AgentEmailHistory email={agent.email} />
           </section>
 
           <section>
