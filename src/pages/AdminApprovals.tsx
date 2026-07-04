@@ -145,7 +145,6 @@ type SortField =
   | "created_at"
   | "company"
   | "last_sign_in_at"
-  | "requested_access"
   | "verified"
   | "account_created"
   | "profile_complete"
@@ -874,12 +873,6 @@ export default function AdminApprovals() {
           else comparison = at - bt;
           break;
         }
-        case "requested_access": {
-          const av = a.source === "pending_verification" || a.is_early_access ? 1 : 0;
-          const bv = b.source === "pending_verification" || b.is_early_access ? 1 : 0;
-          comparison = av - bv;
-          break;
-        }
         case "verified": {
           const av = a.agent_status === "verified" ? 1 : 0;
           const bv = b.agent_status === "verified" ? 1 : 0;
@@ -1525,11 +1518,6 @@ export default function AdminApprovals() {
                       </button>
                     </th>
                     <th className="px-3 py-2 text-left">
-                      <button type="button" onClick={() => handleSort("requested_access")} className="inline-flex items-center hover:text-zinc-900">
-                        Requested<SortIcon field="requested_access" />
-                      </button>
-                    </th>
-                    <th className="px-3 py-2 text-left">
                       <button type="button" onClick={() => handleSort("verified")} className="inline-flex items-center hover:text-zinc-900">
                         Verified<SortIcon field="verified" />
                       </button>
@@ -1562,7 +1550,6 @@ export default function AdminApprovals() {
                     const isProcessing = processingIds.has(agent.id);
                     const derived = deriveAdminStatus(agent);
                     const isSelected = selectedIds.has(agent.id);
-                    const requested = agent.source === "pending_verification" || agent.is_early_access === true;
                     const verified = agent.agent_status === "verified";
                     const accountCreated = agent.has_auth_account === true;
                     const profileDone = agent.profile_complete === true;
@@ -1608,7 +1595,6 @@ export default function AdminApprovals() {
                             <span className="font-mono text-[11px] text-zinc-500">{agent.aac_id}</span>
                           </button>
                         </td>
-                        <YesNoCell yes={requested} iso={agent.created_at} title={yesTitle(agent.created_at)} />
                         <YesNoCell yes={verified} iso={agent.verified_at} title={yesTitle(agent.verified_at)} />
                         <YesNoCell
                           yes={accountCreated}
