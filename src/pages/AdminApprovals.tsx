@@ -1506,18 +1506,33 @@ export default function AdminApprovals() {
                         if (derived === "rejected" || derived === "restricted") {
                           return <AgentStatusBadge status={derived as any} />;
                         }
-                        if (derived === "active") {
+                        if (derived === "profile_complete") {
                           return (
                             <span
                               className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700 ring-1 ring-emerald-200"
                               title={
                                 agent.account_activated_at
-                                  ? `Account activated: ${new Date(agent.account_activated_at).toLocaleString()}`
-                                  : "Account active"
+                                  ? `Profile complete · Account activated: ${new Date(agent.account_activated_at).toLocaleString()}`
+                                  : "Profile complete"
                               }
                             >
                               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                              Active · {formatRelativeSignIn(agent.account_activated_at)}
+                              Profile Complete · {formatRelativeSignIn(agent.account_activated_at)}
+                            </span>
+                          );
+                        }
+                        if (derived === "account_created") {
+                          return (
+                            <span
+                              className="inline-flex items-center gap-1.5 rounded-full bg-sky-50 px-2.5 py-0.5 text-xs font-medium text-sky-700 ring-1 ring-sky-200"
+                              title={
+                                agent.account_activated_at
+                                  ? `Account created · ${new Date(agent.account_activated_at).toLocaleString()} — profile not finished`
+                                  : "Account created — profile not finished"
+                              }
+                            >
+                              <span className="h-1.5 w-1.5 rounded-full bg-sky-500" />
+                              Account Created · {formatRelativeSignIn(agent.account_activated_at)}
                             </span>
                           );
                         }
