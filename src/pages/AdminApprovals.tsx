@@ -281,6 +281,7 @@ export default function AdminApprovals() {
   const [emailRecipients, setEmailRecipients] = useState<Array<{ id: string; email: string; name: string }>>([]);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showBulkDeleteDialog, setShowBulkDeleteDialog] = useState(false);
+  const [detailsAgent, setDetailsAgent] = useState<Agent | null>(null);
 
   // Phase 4 guardrail — shared "previously deleted" gate. When set, the
   // dialog is open and `resolve` is awaited by whichever action opened it
