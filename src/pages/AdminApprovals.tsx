@@ -1539,6 +1539,32 @@ export default function AdminApprovals() {
                 <span className="text-zinc-300">•</span>
                   </>
                 )}
+                {(() => {
+                  const eligibleCount = filteredAgents.filter(
+                    (a) => effectiveSelectedIds.has(a.id) && isAwaitingActivation(a),
+                  ).length;
+                  if (effectiveSelectedIds.size === 0 && statusFilter !== "awaiting_activation") {
+                    return null;
+                  }
+                  return (
+                    <>
+                      <button
+                        onClick={handleBulkActivationReminder}
+                        disabled={eligibleCount === 0 || bulkRemindingActivation}
+                        className={
+                          eligibleCount === 0 || bulkRemindingActivation
+                            ? "text-zinc-300 cursor-not-allowed"
+                            : "text-amber-600 hover:text-amber-800 hover:underline transition-colors font-medium"
+                        }
+                      >
+                        {bulkRemindingActivation
+                          ? "Sending reminders…"
+                          : `Send activation reminders (${eligibleCount})`}
+                      </button>
+                      <span className="text-zinc-300">•</span>
+                    </>
+                  );
+                })()}
                 <button
                   onClick={() => setShowBulkDeleteDialog(true)}
                   disabled={effectiveSelectedIds.size === 0}
