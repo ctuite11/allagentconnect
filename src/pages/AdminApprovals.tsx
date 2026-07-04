@@ -1588,7 +1588,7 @@ export default function AdminApprovals() {
               </div>
             </div>
             <EmailDeliveryLegend />
-            <div className="overflow-x-auto rounded-xl border border-zinc-200 bg-white">
+            <div className="max-h-[calc(100vh-220px)] overflow-auto rounded-xl border border-zinc-200 bg-white">
               <table className="w-full text-sm">
                 <thead className="sticky top-0 z-10 bg-zinc-50 text-xs uppercase tracking-wide text-zinc-500 shadow-[0_1px_0_0_rgb(228_228_231)]">
                   <tr>
