@@ -26,6 +26,7 @@ import {
   AGENT_NETWORK_DB_FILTERS,
   isVisibleInAgentNetwork,
 } from "@/lib/agentNetworkVisibility";
+import { matchesAgentNetworkSearch } from "@/lib/agentNetworkSearch";
 
 interface EnrichedAgent {
   id: string;
@@ -312,27 +313,9 @@ function AgentPhotoTileGrid({
   const filteredAgents = useMemo(() => {
     let result = agents.filter(isVisibleInAgentNetwork);
 
-    // Unified text search — tokenized so "first last" and "smith boston" both work.
-    const tokens = searchQuery
-      .toLowerCase()
-      .split(/\s+/)
-      .map((t) => t.trim())
-      .filter(Boolean);
-    if (tokens.length > 0) {
-      result = result.filter((agent) => {
-        const fullName = `${agent.first_name ?? ""} ${agent.last_name ?? ""}`.toLowerCase();
-        const haystack = [
-          fullName,
-          agent.company ?? "",
-          agent.email ?? "",
-          agent.office_name ?? "",
-          agent.team_name ?? "",
-          agent.serviceAreas.join(" "),
-        ]
-          .join(" ")
-          .toLowerCase();
-        return tokens.every((t) => haystack.includes(t));
-      });
+    // Visible-field text search only (name, brokerage, email, phone).
+    if (searchQuery.trim()) {
+      result = result.filter((agent) => matchesAgentNetworkSearch(agent, searchQuery));
     }
 
     // State filter (check service areas)
