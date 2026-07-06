@@ -80,24 +80,40 @@ Deno.serve(async (req) => {
   if (!authorized) return json(403, { error: "Admin access required" });
 
   // ---- Body ----
-  let body: { dryRun?: boolean; limit?: number; testEmails?: string[] } = {};
+  let body: {
+    dryRun?: boolean;
+    limit?: number;
+    testEmails?: string[];
+    testEmail?: string;
+  } = {};
   try {
     body = await req.json();
   } catch {
     body = {};
   }
-  const dryRun = body.dryRun !== false; // default true
   const limit =
     typeof body.limit === "number" && body.limit > 0
       ? Math.floor(body.limit)
       : null;
-  const testEmails = Array.isArray(body.testEmails)
+  const rawTestEmails: string[] = [];
+  if (typeof body.testEmail === "string") rawTestEmails.push(body.testEmail);
+  if (Array.isArray(body.testEmails)) {
+    for (const e of body.testEmails) {
+      if (typeof e === "string") rawTestEmails.push(e);
+    }
+  }
+  const testEmails = rawTestEmails.length
     ? body.testEmails
-        .filter((e): e is string => typeof e === "string")
-        .map((e) => e.trim().toLowerCase())
-        .filter((e) => EMAIL_RE.test(e))
+        ? rawTestEmails.map((e) => e.trim().toLowerCase()).filter((e) => EMAIL_RE.test(e))
+        : rawTestEmails.map((e) => e.trim().toLowerCase()).filter((e) => EMAIL_RE.test(e))
     : [];
   const testMode = testEmails.length > 0;
+  // For a testEmail send, default to live-queue (dryRun=false) unless the
+  // caller explicitly asked for dryRun. For a non-test invocation, default
+  // to dryRun=true (safe default) unless explicitly false.
+  const dryRun = testMode
+    ? body.dryRun === true
+    : body.dryRun !== false;
 
   const admin = createClient(SUPABASE_URL, SERVICE_KEY);
 
@@ -329,6 +345,13 @@ Deno.serve(async (req) => {
   }
 
   return json(200, {
+    ...(testMode && testEmails.length === 1
+      ? {
+          success: true,
+          testEmail: testEmails[0],
+          message: `Test Hot Sheet preview queued for ${testEmails[0]}`,
+        }
+      : {}),
     dryRun,
     testMode,
     limit,
