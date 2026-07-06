@@ -2,7 +2,10 @@
 // agents who have not completed profile or market preferences. All sends
 // route through the existing email_jobs → process-email-queue pipeline.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.76.1";
-import { buildHotSheetPreviewEmailHtml } from "../_shared/buildHotSheetPreviewEmailHtml.ts";
+import {
+  buildHotSheetPreviewEmailHtml,
+  HOT_SHEET_PREVIEW_BLAST_SUBJECT,
+} from "../_shared/buildHotSheetPreviewEmailHtml.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -12,7 +15,6 @@ const corsHeaders = {
 const FEATURED_LISTING_ID = "ce892c22-6e2b-4d7a-a649-2e2b8a8f95a5";
 const CAMPAIGN_DATE_TAG = "2026-07-06";
 const CTA_URL = "https://allagentconnect.com/agent-settings";
-const SUBJECT = "Your personalized Hot Sheet is waiting";
 const CATEGORY = "hot_sheet_alerts";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -302,7 +304,7 @@ Deno.serve(async (req) => {
         provider: "resend",
         template: "hot-sheet-preview-blast",
         to: email,
-        subject: SUBJECT,
+        subject: HOT_SHEET_PREVIEW_BLAST_SUBJECT,
         html,
         category: CATEGORY,
         variables: {
