@@ -1,0 +1,1 @@
+DELETE FROM public.email_jobs WHERE idempotency_key = 'hotsheet-preview-blast-test-2026-07-06-chris@allagentconnect.com';
