@@ -110,6 +110,9 @@ verify_jwt = false
 [functions.accept-client-hot-sheet-invite]
 verify_jwt = false
 
+[functions.send-hot-sheet-preview-blast]
+verify_jwt = true
+
 [functions.admin-set-user-password]
 verify_jwt = true
 
