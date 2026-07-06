@@ -8,6 +8,9 @@
 // - Single green CTA.
 import { buildAacEmail } from "./aacEmailTemplate.ts";
 
+export const HOT_SHEET_PREVIEW_BLAST_SUBJECT =
+  "You're missing important opportunities";
+
 function escapeHtml(s: string): string {
   return String(s ?? "")
     .replaceAll("&", "&amp;")
