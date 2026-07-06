@@ -81,13 +81,24 @@ Deno.serve(async (req) => {
   if (!authorized) return json(403, { error: "Admin access required" });
 
   // ---- Body ----
-  let body: { dryRun?: boolean } = {};
+  let body: { dryRun?: boolean; limit?: number; testEmails?: string[] } = {};
   try {
     body = await req.json();
   } catch {
     body = {};
   }
   const dryRun = body.dryRun !== false; // default true
+  const limit =
+    typeof body.limit === "number" && body.limit > 0
+      ? Math.floor(body.limit)
+      : null;
+  const testEmails = Array.isArray(body.testEmails)
+    ? body.testEmails
+        .filter((e): e is string => typeof e === "string")
+        .map((e) => e.trim().toLowerCase())
+        .filter((e) => EMAIL_RE.test(e))
+    : [];
+  const testMode = testEmails.length > 0;
 
   const admin = createClient(SUPABASE_URL, SERVICE_KEY);
 
@@ -207,9 +218,28 @@ Deno.serve(async (req) => {
   const sampleRecipients: string[] = [];
   const jobsToInsert: Array<Record<string, unknown>> = [];
 
-  for (const agentId of eligibleIds) {
-    const p = profileById.get(agentId);
-    const email = (p?.email ?? "").trim().toLowerCase();
+  // Build iteration list. Test mode bypasses eligibility and queues to
+  // explicit test emails only, still rendering the exact same email.
+  const iterationSource: Array<{ agentId: string | null; email: string; firstName: string | null }> = [];
+  if (testMode) {
+    for (const em of testEmails) {
+      iterationSource.push({ agentId: null, email: em, firstName: null });
+    }
+  } else {
+    for (const agentId of eligibleIds) {
+      const p = profileById.get(agentId);
+      iterationSource.push({
+        agentId,
+        email: (p?.email ?? "").trim().toLowerCase(),
+        firstName: p?.first_name ?? null,
+      });
+    }
+  }
+
+  for (const rec of iterationSource) {
+    if (limit !== null && jobsToInsert.length >= limit) break;
+    const agentId = rec.agentId;
+    const email = rec.email;
     if (!email) {
       skipReasons.missing_email += 1;
       continue;
@@ -229,7 +259,9 @@ Deno.serve(async (req) => {
       continue;
     }
 
-    const idempotencyKey = `hotsheet-preview-blast-${CAMPAIGN_DATE_TAG}-${agentId}`;
+    const idempotencyKey = testMode
+      ? `hotsheet-preview-blast-test-${CAMPAIGN_DATE_TAG}-${email}`
+      : `hotsheet-preview-blast-${CAMPAIGN_DATE_TAG}-${agentId}`;
 
     // Already-queued check
     const { data: existing } = await admin
@@ -245,7 +277,7 @@ Deno.serve(async (req) => {
     if (sampleRecipients.length < 5) sampleRecipients.push(maskEmail(email));
 
     const html = buildHotSheetPreviewEmailHtml({
-      recipientFirstName: p?.first_name ?? null,
+      recipientFirstName: rec.firstName,
       listing: previewListing,
       ctaUrl: CTA_URL,
       recipientEmail: email,
@@ -264,6 +296,7 @@ Deno.serve(async (req) => {
           agentId,
           listingId: FEATURED_LISTING_ID,
           campaignDate: CAMPAIGN_DATE_TAG,
+          testMode,
         },
       },
     });
@@ -298,6 +331,8 @@ Deno.serve(async (req) => {
 
   return json(200, {
     dryRun,
+    testMode,
+    limit,
     listingId: FEATURED_LISTING_ID,
     totalVerifiedAgents,
     profileIncompleteCount: profileIncompleteIds.size,
