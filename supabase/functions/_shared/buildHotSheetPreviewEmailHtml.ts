@@ -1,7 +1,11 @@
-// Hot Sheet preview email body — full-bleed blurred luxury hero, feature row,
-// AAC green CTA. Renders inside the unified AAC shell (dark header/footer),
-// with the shell's default headline/padding suppressed via hideHeadline.
-// Palette: AAC green (#22C55E), charcoal (#111827), neutral grays, white.
+// Hot Sheet preview email — safe, email-client friendly design.
+// - Uses standard AAC dark header/footer via buildAacEmail (default shell).
+// - Headline + short body paragraphs.
+// - One dark "locked" preview panel: heavily blurred, dimmed listing image as
+//   background with ≥70% dark overlay and centered "Hot Sheet Preview Locked"
+//   text. No readable listing details.
+// - Compact benefit list.
+// - Single green CTA.
 import { buildAacEmail } from "./aacEmailTemplate.ts";
 
 function escapeHtml(s: string): string {
@@ -25,76 +29,75 @@ export interface HotSheetPreviewListing {
   property_type?: string | null;
 }
 
-// Full-bleed blurred hero with dark overlay, HOT SHEET PREVIEW pill, and headline.
-function renderHero(listing: HotSheetPreviewListing): string {
-  const photoUrl = listing.photoUrl || "";
-  const bgImage = photoUrl
-    ? `background-image:url('${escapeHtml(photoUrl)}');background-size:cover;background-position:center;`
+// Locked preview panel. Listing image is rendered only as a heavily blurred,
+// dimmed background inside a dark card. Dark overlay ≥70%. No listing details.
+function renderLockedPanel(photoUrl: string | null): string {
+  const bg = photoUrl
+    ? `background-image:linear-gradient(rgba(11,18,32,0.82),rgba(11,18,32,0.88)),url('${escapeHtml(photoUrl)}');background-size:cover;background-position:center;filter:blur(0);`
+    : `background:linear-gradient(135deg,#0b1220 0%,#1f2937 60%,#111827 100%);`;
+
+  // Blurred <img> layer for clients that ignore background-image filters,
+  // stacked under the dark overlay. Outlook fallback is a plain dark cell.
+  const blurredImg = photoUrl
+    ? `<!--[if !mso]><!-->
+        <img src="${escapeHtml(photoUrl)}" width="520" alt="" aria-hidden="true" style="display:block;width:100%;height:200px;object-fit:cover;filter:blur(28px) brightness(0.35) saturate(0.85);transform:scale(1.25);border:0;outline:none;" />
+       <!--<![endif]-->`
     : "";
-  const heroImg = photoUrl
-    ? `<img src="${escapeHtml(photoUrl)}" width="600" alt="" style="display:block;width:100%;height:340px;object-fit:cover;filter:blur(24px) saturate(0.9);transform:scale(1.15);border:0;outline:none;" />`
-    : `<div style="height:340px;background:linear-gradient(135deg,#0b1220 0%,#1f2937 60%,#111827 100%);"></div>`;
 
-  // Layer via VML for Outlook + z-index-less HTML tables for everyone else.
   return `
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color:#0b1220;">
-      <tr><td align="center" style="padding:0;position:relative;line-height:0;${bgImage}">
-        <!--[if !mso]><!-->
-        <div style="position:relative;overflow:hidden;">
-          ${heroImg}
-          <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(11,18,32,0.35) 0%,rgba(11,18,32,0.75) 100%);"></div>
-          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="position:absolute;inset:0;">
-            <tr><td align="center" valign="middle" style="padding:36px 32px;">
-              <table role="presentation" cellspacing="0" cellpadding="0"><tr><td align="center" style="padding:0 0 14px;">
-                <span style="display:inline-block;vertical-align:middle;width:8px;height:8px;background-color:#22C55E;border-radius:999px;margin-right:8px;"></span>
-                <span style="font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:#ffffff;">Hot Sheet Preview</span>
-              </td></tr></table>
-              <p style="margin:0;max-width:460px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;font-size:26px;font-weight:700;line-height:1.2;letter-spacing:-0.02em;color:#ffffff;">You are missing important opportunities.</p>
-            </td></tr>
-          </table>
-        </div>
-        <!--<![endif]-->
-        <!--[if mso]>
-        <table role="presentation" width="100%" cellspacing="0" cellpadding="0"><tr><td align="center" style="background-color:#0b1220;padding:56px 32px;">
-          <p style="margin:0 0 12px;font-family:Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:#22C55E;">HOT SHEET PREVIEW</p>
-          <p style="margin:0;font-family:Arial,sans-serif;font-size:24px;font-weight:700;color:#ffffff;line-height:1.2;">You are missing important opportunities.</p>
-        </td></tr></table>
-        <![endif]-->
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:20px 0 8px;">
+      <tr><td align="center" style="padding:0;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-radius:12px;overflow:hidden;background-color:#0b1220;">
+          <tr><td align="center" style="padding:0;line-height:0;${bg}">
+            <!--[if !mso]><!-->
+            <div style="position:relative;overflow:hidden;background-color:#0b1220;">
+              ${blurredImg}
+              <div style="position:absolute;inset:0;background-color:rgba(11,18,32,0.75);"></div>
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="position:absolute;inset:0;">
+                <tr><td align="center" valign="middle" style="padding:24px 20px;">
+                  <table role="presentation" cellspacing="0" cellpadding="0"><tr><td align="center" style="padding:0 0 10px;">
+                    <span style="display:inline-block;vertical-align:middle;font-size:14px;color:#22C55E;line-height:1;">&#9679;</span>
+                    <span style="display:inline-block;vertical-align:middle;margin-left:8px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:#ffffff;">Locked</span>
+                  </td></tr></table>
+                  <p style="margin:0;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;font-size:18px;font-weight:600;line-height:1.3;letter-spacing:-0.01em;color:#ffffff;">Hot Sheet Preview Locked</p>
+                  <p style="margin:8px 0 0;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;font-size:12px;color:rgba(255,255,255,0.65);">Complete your profile to unlock</p>
+                </td></tr>
+              </table>
+            </div>
+            <!--<![endif]-->
+            <!--[if mso]>
+            <table role="presentation" width="100%" cellspacing="0" cellpadding="0"><tr><td align="center" style="background-color:#0b1220;padding:56px 24px;">
+              <p style="margin:0 0 8px;font-family:Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:#22C55E;">LOCKED</p>
+              <p style="margin:0;font-family:Arial,sans-serif;font-size:18px;font-weight:700;color:#ffffff;">Hot Sheet Preview Locked</p>
+              <p style="margin:6px 0 0;font-family:Arial,sans-serif;font-size:12px;color:#c7cbd1;">Complete your profile to unlock</p>
+            </td></tr></table>
+            <![endif]-->
+          </td></tr>
+        </table>
       </td></tr>
     </table>`;
 }
 
-function renderFeatureRow(): string {
-  const items: Array<{ label: string; glyph: string }> = [
-    { label: "Matching listings", glyph: "◉" },
-    { label: "Buyer demand", glyph: "▲" },
-    { label: "Referrals", glyph: "↔" },
-    { label: "Broker opens", glyph: "◇" },
-    { label: "Network activity", glyph: "✦" },
+function renderBenefits(): string {
+  const items = [
+    "Matching listings",
+    "Buyer demand",
+    "Referrals",
+    "Broker opens",
+    "Network activity",
   ];
-  const cells = items
-    .map(
-      (it) => `
-        <td width="20%" align="center" valign="top" style="padding:0 6px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
-          <table role="presentation" cellspacing="0" cellpadding="0" align="center"><tr>
-            <td align="center" valign="middle" width="40" height="40" style="width:40px;height:40px;background-color:#ECFDF5;border:1px solid #A7F3D0;border-radius:999px;color:#22C55E;font-size:16px;font-weight:700;line-height:40px;text-align:center;">${it.glyph}</td>
-          </tr></table>
-          <p style="margin:10px 0 0;font-size:11px;font-weight:600;color:#111827;line-height:1.35;letter-spacing:0.01em;">${escapeHtml(it.label)}</p>
-        </td>`,
-    )
-    .join("");
   return `
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:28px 0 0;">
-      <tr>${cells}</tr>
-    </table>`;
-}
-
-function renderCta(ctaUrl: string): string {
-  return `
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
-      <tr><td align="center" style="padding:32px 0 8px;">
-        <a href="${ctaUrl}" target="_blank" style="display:inline-block;padding:14px 30px;background-color:#22C55E;color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;border-radius:10px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;letter-spacing:-0.01em;">Unlock My Hot Sheets</a>
-      </td></tr>
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:18px 0 4px;">
+      ${items
+        .map(
+          (label) => `<tr><td style="padding:6px 0;">
+            <table role="presentation" cellspacing="0" cellpadding="0"><tr>
+              <td valign="middle" style="padding:0 10px 0 0;font-size:14px;line-height:1;color:#22C55E;font-family:Arial,sans-serif;">&#10003;</td>
+              <td valign="middle" style="font-size:14px;line-height:1.5;color:#334155;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${escapeHtml(label)}</td>
+            </tr></table>
+          </td></tr>`,
+        )
+        .join("")}
     </table>`;
 }
 
@@ -111,23 +114,23 @@ export function buildHotSheetPreviewEmailHtml(
 ): string {
   const { listing, ctaUrl, unsubscribeUrl, recipientEmail } = opts;
 
-  // Body is edge-to-edge: hero fills the top of the white card, then padded
-  // section with feature row and CTA. hideHeadline suppresses the shell's <h2>.
   const body = `
-    ${renderHero(listing)}
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
-      <tr><td style="padding:28px 32px 36px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
-        ${renderFeatureRow()}
-        ${renderCta(ctaUrl)}
-      </td></tr>
-    </table>
+    <p style="margin:0 0 14px;font-size:15px;line-height:1.6;color:#334155;">
+      Your personalized Hot Sheets are currently locked because your profile or market preferences haven&#39;t been completed.
+    </p>
+    <p style="margin:0;font-size:15px;line-height:1.6;color:#334155;">
+      Complete them once and All Agent Connect will begin delivering matching listings, buyer demand, referrals, broker opens, and network activity tailored to your markets.
+    </p>
+    ${renderLockedPanel(listing.photoUrl || null)}
+    ${renderBenefits()}
   `;
 
   return buildAacEmail({
-    headline: "Your personalized Hot Sheet is waiting",
-    preheader: "Your personalized Hot Sheet is waiting",
-    hideHeadline: true,
+    headline: "You are missing important opportunities.",
+    preheader: "Your personalized Hot Sheet is waiting — complete your profile to unlock.",
     body,
+    ctaLabel: "Unlock My Hot Sheets",
+    ctaUrl,
     tracking: unsubscribeUrl
       ? {
           unsubscribeUrl,
