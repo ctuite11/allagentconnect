@@ -102,11 +102,9 @@ Deno.serve(async (req) => {
       if (typeof e === "string") rawTestEmails.push(e);
     }
   }
-  const testEmails = rawTestEmails.length
-    ? body.testEmails
-        ? rawTestEmails.map((e) => e.trim().toLowerCase()).filter((e) => EMAIL_RE.test(e))
-        : rawTestEmails.map((e) => e.trim().toLowerCase()).filter((e) => EMAIL_RE.test(e))
-    : [];
+  const testEmails = rawTestEmails
+    .map((e) => e.trim().toLowerCase())
+    .filter((e) => EMAIL_RE.test(e));
   const testMode = testEmails.length > 0;
   // For a testEmail send, default to live-queue (dryRun=false) unless the
   // caller explicitly asked for dryRun. For a non-test invocation, default
