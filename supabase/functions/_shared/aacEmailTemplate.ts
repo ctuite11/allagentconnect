@@ -20,6 +20,10 @@ interface AacEmailOptions {
   ctaUrl?: string;
   /** Hidden preheader text shown in inbox preview */
   preheader?: string;
+  /** When true, the <h2> headline and the default content padding are omitted
+   *  so the body can render its own edge-to-edge hero. The `headline` is still
+   *  used for the <title> tag and preheader fallback. */
+  hideHeadline?: boolean;
   /** Optional tracking + unsubscribe footer (marketing emails only) */
   tracking?: {
     pixelUrl?: string;
@@ -32,7 +36,7 @@ interface AacEmailOptions {
 }
 
 export function buildAacEmail(opts: AacEmailOptions): string {
-  const { headline, body, ctaLabel, preheader, tracking } = opts;
+  const { headline, body, ctaLabel, preheader, tracking, hideHeadline } = opts;
   const ctaUrl = tracking?.wrappedCtaUrl || opts.ctaUrl;
 
   const preheaderHtml = preheader
@@ -57,6 +61,14 @@ export function buildAacEmail(opts: AacEmailOptions): string {
   const pixelHtml = tracking?.pixelUrl
     ? `<img src="${tracking.pixelUrl}" width="1" height="1" alt="" style="display:block;width:1px;height:1px;border:0;outline:none;" />`
     : "";
+
+  const contentPadding = hideHeadline ? "0" : "28px 40px 32px";
+  const headlineHtml = hideHeadline
+    ? ""
+    : `<h2 style="margin:0 0 16px;font-size:20px;font-weight:700;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${escapeHtml(headline)}</h2>`;
+  const bodyWrapperOpen = hideHeadline
+    ? `<div>`
+    : `<div style="font-size:15px;line-height:1.6;color:#334155;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">`;
 
   const unsubHtml = tracking?.unsubscribeUrl
     ? `<p style="margin:10px 0 0;font-size:11px;color:rgba(255,255,255,0.45);font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
@@ -95,9 +107,9 @@ export function buildAacEmail(opts: AacEmailOptions): string {
         <tr><td style="background-color:#ffffff;border:1px solid #d1d5db;border-top:none;">
           <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
             <!-- Content -->
-            <tr><td style="padding:28px 40px 32px;">
-              <h2 style="margin:0 0 16px;font-size:20px;font-weight:700;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${escapeHtml(headline)}</h2>
-              <div style="font-size:15px;line-height:1.6;color:#334155;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
+            <tr><td style="padding:${contentPadding};">
+              ${headlineHtml}
+              ${bodyWrapperOpen}
                 ${body}
               </div>
               ${ctaHtml}

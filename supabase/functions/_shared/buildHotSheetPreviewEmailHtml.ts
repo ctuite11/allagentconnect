@@ -1,6 +1,7 @@
-// Blurred Hot Sheet preview email body — reuses the unified AAC shell.
+// Hot Sheet preview email body — full-bleed blurred luxury hero, feature row,
+// AAC green CTA. Renders inside the unified AAC shell (dark header/footer),
+// with the shell's default headline/padding suppressed via hideHeadline.
 // Palette: AAC green (#22C55E), charcoal (#111827), neutral grays, white.
-// No blue accents anywhere in this template.
 import { buildAacEmail } from "./aacEmailTemplate.ts";
 
 function escapeHtml(s: string): string {
@@ -24,105 +25,76 @@ export interface HotSheetPreviewListing {
   property_type?: string | null;
 }
 
-// "123 Main Street" -> "1•• • • • Street"
-function maskAddress(street: string): string {
-  const parts = (street || "").trim().split(/\s+/);
-  if (parts.length === 0 || !parts[0]) return "• • • Street";
-  const first = parts[0];
-  const firstMasked = first.length > 1
-    ? first[0] + "•".repeat(Math.max(1, first.length - 1))
-    : first;
-  const last = parts.length > 1 ? parts[parts.length - 1] : "Street";
-  return `${firstMasked} • • • ${last}`;
-}
-
-function maskCity(city?: string | null, state?: string | null): string {
-  const c = (city || "").trim();
-  if (!c) return "•••";
-  const head = c.slice(0, 1);
-  const cityMasked = `${head}${"•".repeat(Math.max(3, c.length - 1))}`;
-  return state ? `${cityMasked}, ${state}` : cityMasked;
-}
-
-function renderPreviewCard(listing: HotSheetPreviewListing): string {
-  const streetMasked = maskAddress(listing.address || "");
-  const cityMasked = maskCity(listing.city, listing.state);
-  const priceMasked = "$•,•••,•••";
-  const sqftMasked = "•,••• sqft";
-  const beds = listing.bedrooms != null ? String(listing.bedrooms) : "•";
-  const baths = listing.bathrooms != null ? String(listing.bathrooms) : "•";
-
+// Full-bleed blurred hero with dark overlay, HOT SHEET PREVIEW pill, and headline.
+function renderHero(listing: HotSheetPreviewListing): string {
   const photoUrl = listing.photoUrl || "";
-  const photoBlock = photoUrl
-    ? `<img src="${escapeHtml(photoUrl)}" width="600" alt="" style="display:block;width:100%;height:auto;max-height:320px;object-fit:cover;filter:blur(28px) saturate(0.85);transform:scale(1.2);opacity:0.7;border:0;outline:none;" />`
-    : `<div style="background:linear-gradient(135deg,#1f2937 0%,#374151 100%);height:220px;"></div>`;
+  const bgImage = photoUrl
+    ? `background-image:url('${escapeHtml(photoUrl)}');background-size:cover;background-position:center;`
+    : "";
+  const heroImg = photoUrl
+    ? `<img src="${escapeHtml(photoUrl)}" width="600" alt="" style="display:block;width:100%;height:340px;object-fit:cover;filter:blur(24px) saturate(0.9);transform:scale(1.15);border:0;outline:none;" />`
+    : `<div style="height:340px;background:linear-gradient(135deg,#0b1220 0%,#1f2937 60%,#111827 100%);"></div>`;
 
-  // Frosted overlay label — neutral (charcoal on frosted white), green pill.
-  const overlay = `
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:-64px 0 0;">
-      <tr><td align="center" style="padding:0 24px;">
-        <table role="presentation" cellspacing="0" cellpadding="0" style="max-width:340px;width:100%;background-color:rgba(255,255,255,0.92);border:1px solid rgba(17,24,39,0.08);border-radius:999px;">
-          <tr><td align="center" style="padding:10px 22px;">
-            <span style="display:inline-block;vertical-align:middle;width:8px;height:8px;background-color:#22C55E;border-radius:999px;margin-right:8px;"></span>
-            <span style="font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#111827;">Hot Sheet Preview</span>
-          </td></tr>
-        </table>
-      </td></tr>
-    </table>`;
-
-  const facts = `
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:18px 0 0;">
-      <tr><td style="padding:18px 22px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;border-top:1px solid #e5e7eb;">
-        <p style="margin:0;font-size:15px;font-weight:600;color:#111827;letter-spacing:-0.01em;">${escapeHtml(streetMasked)}</p>
-        <p style="margin:4px 0 0;font-size:13px;color:#6b7280;">${escapeHtml(cityMasked)}</p>
-        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:14px 0 0;">
-          <tr>
-            <td style="font-size:18px;font-weight:700;color:#111827;letter-spacing:-0.01em;">${escapeHtml(priceMasked)}</td>
-            <td align="right" style="font-size:13px;color:#374151;">
-              <span style="color:#111827;font-weight:600;">${escapeHtml(beds)}</span> bd
-              <span style="color:#d1d5db;padding:0 6px;">·</span>
-              <span style="color:#111827;font-weight:600;">${escapeHtml(baths)}</span> ba
-              <span style="color:#d1d5db;padding:0 6px;">·</span>
-              <span style="color:#6b7280;">${escapeHtml(sqftMasked)}</span>
-            </td>
-          </tr>
-        </table>
-      </td></tr>
-    </table>`;
-
+  // Layer via VML for Outlook + z-index-less HTML tables for everyone else.
   return `
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:8px 0 0;background-color:#ffffff;border:1px solid #e5e7eb;border-radius:14px;overflow:hidden;">
-      <tr><td style="padding:0;background-color:#111827;line-height:0;">
-        ${photoBlock}
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color:#0b1220;">
+      <tr><td align="center" style="padding:0;position:relative;line-height:0;${bgImage}">
+        <!--[if !mso]><!-->
+        <div style="position:relative;overflow:hidden;">
+          ${heroImg}
+          <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(11,18,32,0.35) 0%,rgba(11,18,32,0.75) 100%);"></div>
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="position:absolute;inset:0;">
+            <tr><td align="center" valign="middle" style="padding:36px 32px;">
+              <table role="presentation" cellspacing="0" cellpadding="0"><tr><td align="center" style="padding:0 0 14px;">
+                <span style="display:inline-block;vertical-align:middle;width:8px;height:8px;background-color:#22C55E;border-radius:999px;margin-right:8px;"></span>
+                <span style="font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:#ffffff;">Hot Sheet Preview</span>
+              </td></tr></table>
+              <p style="margin:0;max-width:460px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;font-size:26px;font-weight:700;line-height:1.2;letter-spacing:-0.02em;color:#ffffff;">You are missing important opportunities.</p>
+            </td></tr>
+          </table>
+        </div>
+        <!--<![endif]-->
+        <!--[if mso]>
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0"><tr><td align="center" style="background-color:#0b1220;padding:56px 32px;">
+          <p style="margin:0 0 12px;font-family:Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:#22C55E;">HOT SHEET PREVIEW</p>
+          <p style="margin:0;font-family:Arial,sans-serif;font-size:24px;font-weight:700;color:#ffffff;line-height:1.2;">You are missing important opportunities.</p>
+        </td></tr></table>
+        <![endif]-->
       </td></tr>
-      <tr><td style="padding:0;">
-        ${overlay}
-        ${facts}
-      </td></tr>
-    </table>
-  `;
+    </table>`;
 }
 
-function renderValueBullets(): string {
-  const items = [
-    "Matching listings",
-    "Buyer demand",
-    "Referrals",
-    "Broker opens",
-    "Network activity",
+function renderFeatureRow(): string {
+  const items: Array<{ label: string; glyph: string }> = [
+    { label: "Matching listings", glyph: "◉" },
+    { label: "Buyer demand", glyph: "▲" },
+    { label: "Referrals", glyph: "↔" },
+    { label: "Broker opens", glyph: "◇" },
+    { label: "Network activity", glyph: "✦" },
   ];
-  const rows = items
+  const cells = items
     .map(
-      (label) => `
-        <tr><td style="padding:6px 0;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;font-size:14px;color:#111827;line-height:1.5;">
-          <span style="display:inline-block;vertical-align:middle;width:6px;height:6px;background-color:#22C55E;border-radius:999px;margin-right:10px;"></span>
-          ${escapeHtml(label)}
-        </td></tr>`,
+      (it) => `
+        <td width="20%" align="center" valign="top" style="padding:0 6px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
+          <table role="presentation" cellspacing="0" cellpadding="0" align="center"><tr>
+            <td align="center" valign="middle" width="40" height="40" style="width:40px;height:40px;background-color:#ECFDF5;border:1px solid #A7F3D0;border-radius:999px;color:#22C55E;font-size:16px;font-weight:700;line-height:40px;text-align:center;">${it.glyph}</td>
+          </tr></table>
+          <p style="margin:10px 0 0;font-size:11px;font-weight:600;color:#111827;line-height:1.35;letter-spacing:0.01em;">${escapeHtml(it.label)}</p>
+        </td>`,
     )
     .join("");
   return `
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:22px 0 0;">
-      ${rows}
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:28px 0 0;">
+      <tr>${cells}</tr>
+    </table>`;
+}
+
+function renderCta(ctaUrl: string): string {
+  return `
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+      <tr><td align="center" style="padding:32px 0 8px;">
+        <a href="${ctaUrl}" target="_blank" style="display:inline-block;padding:14px 30px;background-color:#22C55E;color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;border-radius:10px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;letter-spacing:-0.01em;">Unlock My Hot Sheets</a>
+      </td></tr>
     </table>`;
 }
 
@@ -139,27 +111,23 @@ export function buildHotSheetPreviewEmailHtml(
 ): string {
   const { listing, ctaUrl, unsubscribeUrl, recipientEmail } = opts;
 
+  // Body is edge-to-edge: hero fills the top of the white card, then padded
+  // section with feature row and CTA. hideHeadline suppresses the shell's <h2>.
   const body = `
-    <p style="margin:0 0 14px;">
-      You're receiving a preview because your profile or market preferences
-      haven't been completed.
-    </p>
-    <p style="margin:0 0 18px;">
-      Complete them once, and All Agent Connect will automatically begin
-      delivering personalized Hot Sheets with listings, buyer demand,
-      referrals, broker opens, and other network activity tailored to your
-      markets.
-    </p>
-    ${renderPreviewCard(listing)}
-    ${renderValueBullets()}
+    ${renderHero(listing)}
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+      <tr><td style="padding:28px 32px 36px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
+        ${renderFeatureRow()}
+        ${renderCta(ctaUrl)}
+      </td></tr>
+    </table>
   `;
 
   return buildAacEmail({
-    headline: "Your personalized Hot Sheet is waiting.",
+    headline: "Your personalized Hot Sheet is waiting",
     preheader: "Your personalized Hot Sheet is waiting",
+    hideHeadline: true,
     body,
-    ctaLabel: "Unlock My Hot Sheets",
-    ctaUrl,
     tracking: unsubscribeUrl
       ? {
           unsubscribeUrl,
