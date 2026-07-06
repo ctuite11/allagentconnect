@@ -1,4 +1,6 @@
 // Blurred Hot Sheet preview email body — reuses the unified AAC shell.
+// Palette: AAC green (#22C55E), charcoal (#111827), neutral grays, white.
+// No blue accents anywhere in this template.
 import { buildAacEmail } from "./aacEmailTemplate.ts";
 
 function escapeHtml(s: string): string {
@@ -22,77 +24,66 @@ export interface HotSheetPreviewListing {
   property_type?: string | null;
 }
 
+// "123 Main Street" -> "1•• • • • Street"
 function maskAddress(street: string): string {
   const parts = (street || "").trim().split(/\s+/);
-  if (parts.length < 2) return "▪▪▪▪▪";
-  const middle = parts.slice(1, -1).join(" ") || parts[1];
-  const masked = middle.length > 1
-    ? middle[0] + "▪".repeat(Math.max(3, middle.length - 1))
-    : "▪▪▪";
-  return `${parts[0]} ${masked} ${parts[parts.length - 1]}`;
+  if (parts.length === 0 || !parts[0]) return "• • • Street";
+  const first = parts[0];
+  const firstMasked = first.length > 1
+    ? first[0] + "•".repeat(Math.max(1, first.length - 1))
+    : first;
+  const last = parts.length > 1 ? parts[parts.length - 1] : "Street";
+  return `${firstMasked} • • • ${last}`;
 }
 
-function maskPrice(price?: number | null): string {
-  if (!price || !Number.isFinite(price)) return "$•,•••,•••";
-  const digits = Math.round(price).toString().length;
-  if (digits >= 7) return "$•,•••,•••";
-  if (digits >= 4) return "$•••,•••";
-  return "$•••";
-}
-
-function maskSqft(sqft?: number | null): string {
-  if (!sqft || !Number.isFinite(sqft)) return "•,•••";
-  const digits = Math.round(sqft).toString().length;
-  if (digits >= 4) return "•,•••";
-  return "•••";
+function maskCity(city?: string | null, state?: string | null): string {
+  const c = (city || "").trim();
+  if (!c) return "•••";
+  const head = c.slice(0, 1);
+  const cityMasked = `${head}${"•".repeat(Math.max(3, c.length - 1))}`;
+  return state ? `${cityMasked}, ${state}` : cityMasked;
 }
 
 function renderPreviewCard(listing: HotSheetPreviewListing): string {
   const streetMasked = maskAddress(listing.address || "");
-  const cityState = [listing.city, listing.state].filter(Boolean).join(", ");
-  const priceMasked = maskPrice(listing.price);
+  const cityMasked = maskCity(listing.city, listing.state);
+  const priceMasked = "$•,•••,•••";
+  const sqftMasked = "•,••• sqft";
   const beds = listing.bedrooms != null ? String(listing.bedrooms) : "•";
   const baths = listing.bathrooms != null ? String(listing.bathrooms) : "•";
-  const sqftMasked = maskSqft(listing.square_feet);
-  const propertyType = listing.property_type
-    ? escapeHtml(String(listing.property_type).replace(/_/g, " "))
-    : "Home";
 
   const photoUrl = listing.photoUrl || "";
-
   const photoBlock = photoUrl
-    ? `<div style="position:relative;overflow:hidden;border-radius:12px 12px 0 0;background-color:#0f172a;line-height:0;">
-         <img src="${escapeHtml(photoUrl)}" width="600" alt="" style="display:block;width:100%;height:auto;max-height:320px;object-fit:cover;filter:blur(18px);transform:scale(1.15);opacity:0.85;border:0;outline:none;" />
-       </div>`
-    : `<div style="background:linear-gradient(135deg,#111317 0%,#1f2937 100%);height:220px;border-radius:12px 12px 0 0;"></div>`;
+    ? `<img src="${escapeHtml(photoUrl)}" width="600" alt="" style="display:block;width:100%;height:auto;max-height:320px;object-fit:cover;filter:blur(28px) saturate(0.85);transform:scale(1.2);opacity:0.7;border:0;outline:none;" />`
+    : `<div style="background:linear-gradient(135deg,#1f2937 0%,#374151 100%);height:220px;"></div>`;
 
+  // Frosted overlay label — neutral (charcoal on frosted white), green pill.
   const overlay = `
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:-72px 0 0;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:-64px 0 0;">
       <tr><td align="center" style="padding:0 24px;">
-        <table role="presentation" cellspacing="0" cellpadding="0" style="max-width:420px;width:100%;background-color:#ffffff;border:1px solid #e5e7eb;border-radius:14px;box-shadow:0 8px 24px rgba(15,23,42,0.18);">
-          <tr><td align="center" style="padding:20px 24px;">
-            <p style="margin:0;font-size:11px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#0E56F5;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Preview • Locked</p>
-            <p style="margin:8px 0 0;font-size:15px;line-height:1.5;color:#0f172a;font-weight:600;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">New ${propertyType} matching your area</p>
-            <p style="margin:6px 0 0;font-size:13px;line-height:1.5;color:#475569;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Complete your profile to unlock full details.</p>
+        <table role="presentation" cellspacing="0" cellpadding="0" style="max-width:340px;width:100%;background-color:rgba(255,255,255,0.92);border:1px solid rgba(17,24,39,0.08);border-radius:999px;">
+          <tr><td align="center" style="padding:10px 22px;">
+            <span style="display:inline-block;vertical-align:middle;width:8px;height:8px;background-color:#22C55E;border-radius:999px;margin-right:8px;"></span>
+            <span style="font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;color:#111827;">Hot Sheet Preview</span>
           </td></tr>
         </table>
       </td></tr>
     </table>`;
 
   const facts = `
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:16px 0 0;background:#f8fafc;border:1px solid #e5e7eb;border-radius:12px;">
-      <tr><td style="padding:18px 22px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
-        <p style="margin:0;font-size:16px;font-weight:700;color:#0f172a;letter-spacing:-0.01em;">${escapeHtml(streetMasked)}</p>
-        <p style="margin:4px 0 0;font-size:13px;color:#64748b;">${escapeHtml(cityState || "•••")}</p>
-        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:14px 0 0;border-top:1px solid #e2e8f0;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:18px 0 0;">
+      <tr><td style="padding:18px 22px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;border-top:1px solid #e5e7eb;">
+        <p style="margin:0;font-size:15px;font-weight:600;color:#111827;letter-spacing:-0.01em;">${escapeHtml(streetMasked)}</p>
+        <p style="margin:4px 0 0;font-size:13px;color:#6b7280;">${escapeHtml(cityMasked)}</p>
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:14px 0 0;">
           <tr>
-            <td style="padding-top:12px;font-size:20px;font-weight:700;color:#0E56F5;letter-spacing:-0.01em;">${escapeHtml(priceMasked)}</td>
-            <td align="right" style="padding-top:12px;font-size:13px;color:#334155;">
-              <span style="color:#0f172a;font-weight:600;">${escapeHtml(beds)}</span> bd
-              <span style="color:#cbd5e1;padding:0 6px;">·</span>
-              <span style="color:#0f172a;font-weight:600;">${escapeHtml(baths)}</span> ba
-              <span style="color:#cbd5e1;padding:0 6px;">·</span>
-              <span style="color:#0f172a;font-weight:600;">${escapeHtml(sqftMasked)}</span> sqft
+            <td style="font-size:18px;font-weight:700;color:#111827;letter-spacing:-0.01em;">${escapeHtml(priceMasked)}</td>
+            <td align="right" style="font-size:13px;color:#374151;">
+              <span style="color:#111827;font-weight:600;">${escapeHtml(beds)}</span> bd
+              <span style="color:#d1d5db;padding:0 6px;">·</span>
+              <span style="color:#111827;font-weight:600;">${escapeHtml(baths)}</span> ba
+              <span style="color:#d1d5db;padding:0 6px;">·</span>
+              <span style="color:#6b7280;">${escapeHtml(sqftMasked)}</span>
             </td>
           </tr>
         </table>
@@ -100,14 +91,39 @@ function renderPreviewCard(listing: HotSheetPreviewListing): string {
     </table>`;
 
   return `
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:8px 0 0;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;">
-      <tr><td style="padding:0;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:8px 0 0;background-color:#ffffff;border:1px solid #e5e7eb;border-radius:14px;overflow:hidden;">
+      <tr><td style="padding:0;background-color:#111827;line-height:0;">
         ${photoBlock}
+      </td></tr>
+      <tr><td style="padding:0;">
         ${overlay}
+        ${facts}
       </td></tr>
     </table>
-    ${facts}
   `;
+}
+
+function renderValueBullets(): string {
+  const items = [
+    "Matching listings",
+    "Buyer demand",
+    "Referrals",
+    "Broker opens",
+    "Network activity",
+  ];
+  const rows = items
+    .map(
+      (label) => `
+        <tr><td style="padding:6px 0;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;font-size:14px;color:#111827;line-height:1.5;">
+          <span style="display:inline-block;vertical-align:middle;width:6px;height:6px;background-color:#22C55E;border-radius:999px;margin-right:10px;"></span>
+          ${escapeHtml(label)}
+        </td></tr>`,
+    )
+    .join("");
+  return `
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:22px 0 0;">
+      ${rows}
+    </table>`;
 }
 
 export interface BuildHotSheetPreviewEmailOptions {
@@ -121,34 +137,28 @@ export interface BuildHotSheetPreviewEmailOptions {
 export function buildHotSheetPreviewEmailHtml(
   opts: BuildHotSheetPreviewEmailOptions,
 ): string {
-  const { recipientFirstName, listing, ctaUrl, unsubscribeUrl, recipientEmail } = opts;
-  const greetingName = (recipientFirstName || "").trim();
-  const greeting = greetingName
-    ? `<p style="margin:0 0 12px;">Hi ${escapeHtml(greetingName)},</p>`
-    : "";
+  const { listing, ctaUrl, unsubscribeUrl, recipientEmail } = opts;
 
-  const intro = `${greeting}
+  const body = `
+    <p style="margin:0 0 14px;">
+      You're receiving a preview because your profile or market preferences
+      haven't been completed.
+    </p>
     <p style="margin:0 0 18px;">
-      A new listing just hit the market in one of your service areas — but your
-      personalized Hot Sheet is still locked. Finish your profile and market
-      preferences and we'll deliver the full details in your next Hot Sheet.
-    </p>`;
-
-  const closing = `
-    <p style="margin:22px 0 0;font-size:13px;color:#64748b;line-height:1.6;">
-      Your Hot Sheet gets sharper the moment your profile is complete: matched
-      listings, buyer coverage, and personalized branding all switch on
-      automatically.
-    </p>`;
-
-  const body = `${intro}${renderPreviewCard(listing)}${closing}`;
+      Complete them once, and All Agent Connect will automatically begin
+      delivering personalized Hot Sheets with listings, buyer demand,
+      referrals, broker opens, and other network activity tailored to your
+      markets.
+    </p>
+    ${renderPreviewCard(listing)}
+    ${renderValueBullets()}
+  `;
 
   return buildAacEmail({
     headline: "Your personalized Hot Sheet is waiting.",
-    preheader:
-      "A preview of your personalized Hot Sheet — complete your profile to unlock it",
+    preheader: "Your personalized Hot Sheet is waiting",
     body,
-    ctaLabel: "Complete My Profile",
+    ctaLabel: "Unlock My Hot Sheets",
     ctaUrl,
     tracking: unsubscribeUrl
       ? {
