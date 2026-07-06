@@ -1,0 +1,1 @@
+DELETE FROM public.email_jobs WHERE idempotency_key LIKE 'hotsheet-preview-blast-test-2026-07-06-chris%' OR idempotency_key LIKE 'hotsheet-preview-blast-2026-07-06-test-chris%';

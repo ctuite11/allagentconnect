@@ -16,7 +16,7 @@ interface AacEmailOptions {
   headline: string;
   /** Already-assembled HTML body content (paragraphs, tables, etc.) */
   body: string;
-  /** When true, omit the shell <h2> — body supplies its own headline (e.g. hero layouts). */
+  /** When true, omit the shell <h2> and default content padding for edge-to-edge layouts. */
   hideHeadline?: boolean;
   /** Browser tab title; defaults to `headline` when omitted. */
   documentTitle?: string;
@@ -40,10 +40,6 @@ export function buildAacEmail(opts: AacEmailOptions): string {
   const documentTitle = opts.documentTitle ?? headline;
   const ctaUrl = tracking?.wrappedCtaUrl || opts.ctaUrl;
 
-  const headlineHtml = hideHeadline
-    ? ""
-    : `<h2 style="margin:0 0 16px;font-size:20px;font-weight:700;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${escapeHtml(headline)}</h2>`;
-
   const preheaderHtml = preheader
     ? `<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;">${escapeHtml(preheader)}</div>`
     : "";
@@ -66,6 +62,14 @@ export function buildAacEmail(opts: AacEmailOptions): string {
   const pixelHtml = tracking?.pixelUrl
     ? `<img src="${tracking.pixelUrl}" width="1" height="1" alt="" style="display:block;width:1px;height:1px;border:0;outline:none;" />`
     : "";
+
+  const contentPadding = hideHeadline ? "0" : "28px 40px 32px";
+  const headlineHtml = hideHeadline
+    ? ""
+    : `<h2 style="margin:0 0 16px;font-size:20px;font-weight:700;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${escapeHtml(headline)}</h2>`;
+  const bodyWrapperOpen = hideHeadline
+    ? `<div>`
+    : `<div style="font-size:15px;line-height:1.6;color:#334155;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">`;
 
   const unsubHtml = tracking?.unsubscribeUrl
     ? `<p style="margin:10px 0 0;font-size:11px;color:rgba(255,255,255,0.45);font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
@@ -104,9 +108,9 @@ export function buildAacEmail(opts: AacEmailOptions): string {
         <tr><td style="background-color:#ffffff;border:1px solid #d1d5db;border-top:none;">
           <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
             <!-- Content -->
-            <tr><td style="padding:28px 40px 32px;">
+            <tr><td style="padding:${contentPadding};">
               ${headlineHtml}
-              <div style="font-size:15px;line-height:1.6;color:#334155;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
+              ${bodyWrapperOpen}
                 ${body}
               </div>
               ${ctaHtml}

@@ -1,0 +1,1 @@
+DELETE FROM public.email_jobs WHERE idempotency_key LIKE 'hot-sheet-preview-blast:%chris@allagentconnect.com%';
