@@ -12,8 +12,7 @@ const corsHeaders = {
 const FEATURED_LISTING_ID = "ce892c22-6e2b-4d7a-a649-2e2b8a8f95a5";
 const CAMPAIGN_DATE_TAG = "2026-07-06";
 const CTA_URL = "https://allagentconnect.com/agent-settings";
-const SUBJECT =
-  "A preview of your personalized Hot Sheet — complete your profile to unlock it";
+const SUBJECT = "Your personalized Hot Sheet is waiting";
 const CATEGORY = "hot_sheet_alerts";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
