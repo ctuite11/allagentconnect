@@ -81,13 +81,24 @@ Deno.serve(async (req) => {
   if (!authorized) return json(403, { error: "Admin access required" });
 
   // ---- Body ----
-  let body: { dryRun?: boolean } = {};
+  let body: { dryRun?: boolean; limit?: number; testEmails?: string[] } = {};
   try {
     body = await req.json();
   } catch {
     body = {};
   }
   const dryRun = body.dryRun !== false; // default true
+  const limit =
+    typeof body.limit === "number" && body.limit > 0
+      ? Math.floor(body.limit)
+      : null;
+  const testEmails = Array.isArray(body.testEmails)
+    ? body.testEmails
+        .filter((e): e is string => typeof e === "string")
+        .map((e) => e.trim().toLowerCase())
+        .filter((e) => EMAIL_RE.test(e))
+    : [];
+  const testMode = testEmails.length > 0;
 
   const admin = createClient(SUPABASE_URL, SERVICE_KEY);
 
