@@ -16,6 +16,10 @@ interface AacEmailOptions {
   headline: string;
   /** Already-assembled HTML body content (paragraphs, tables, etc.) */
   body: string;
+  /** When true, omit the shell <h2> — body supplies its own headline (e.g. hero layouts). */
+  hideHeadline?: boolean;
+  /** Browser tab title; defaults to `headline` when omitted. */
+  documentTitle?: string;
   ctaLabel?: string;
   ctaUrl?: string;
   /** Hidden preheader text shown in inbox preview */
@@ -32,8 +36,13 @@ interface AacEmailOptions {
 }
 
 export function buildAacEmail(opts: AacEmailOptions): string {
-  const { headline, body, ctaLabel, preheader, tracking } = opts;
+  const { headline, body, ctaLabel, preheader, tracking, hideHeadline } = opts;
+  const documentTitle = opts.documentTitle ?? headline;
   const ctaUrl = tracking?.wrappedCtaUrl || opts.ctaUrl;
+
+  const headlineHtml = hideHeadline
+    ? ""
+    : `<h2 style="margin:0 0 16px;font-size:20px;font-weight:700;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${escapeHtml(headline)}</h2>`;
 
   const preheaderHtml = preheader
     ? `<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;">${escapeHtml(preheader)}</div>`
@@ -70,7 +79,7 @@ export function buildAacEmail(opts: AacEmailOptions): string {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>${escapeHtml(headline)}</title>
+  <title>${escapeHtml(documentTitle)}</title>
 </head>
 <body style="margin:0;padding:0;background-color:#ffffff;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
   ${preheaderHtml}
@@ -96,7 +105,7 @@ export function buildAacEmail(opts: AacEmailOptions): string {
           <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
             <!-- Content -->
             <tr><td style="padding:28px 40px 32px;">
-              <h2 style="margin:0 0 16px;font-size:20px;font-weight:700;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${escapeHtml(headline)}</h2>
+              ${headlineHtml}
               <div style="font-size:15px;line-height:1.6;color:#334155;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
                 ${body}
               </div>

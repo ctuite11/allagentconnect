@@ -152,3 +152,6 @@ verify_jwt = false
 [functions.accept-client-hot-sheet-invite]
 verify_jwt = false
 
+[functions.send-hot-sheet-preview-blast]
+verify_jwt = false
+
