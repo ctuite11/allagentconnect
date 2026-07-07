@@ -1,6 +1,5 @@
 import React from "react";
 import { UserRound } from "lucide-react";
-import { AgentOnlinePresenceBadge } from "@/components/ui/AgentOnlinePresenceBadge";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 
 type Agent = {
@@ -57,8 +56,8 @@ export default function AgentPhotoTile({
     >
       {/* Card container */}
       <div className="overflow-hidden rounded-2xl border border-neutral-200/90 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-[box-shadow,border-color,transform] duration-200 ease-out group-hover:-translate-y-px group-hover:border-neutral-300/90 group-hover:shadow-[0_4px_12px_rgba(0,0,0,0.07)]">
-        {/* PHOTO — no presence overlay; Online pill is inline beside the name below */}
-        <div className="aspect-[3/4] w-full overflow-hidden bg-white leading-[0]">
+        {/* PHOTO — online presence shown as a dot overlay so card heights stay uniform */}
+        <div className="relative aspect-[3/4] w-full overflow-hidden bg-white leading-[0]">
           {agent.headshot_url ? (
             <img
               src={agent.headshot_url}
@@ -72,13 +71,19 @@ export default function AgentPhotoTile({
               <UserRound className="h-14 w-14 text-neutral-300" aria-hidden strokeWidth={1.25} />
             </div>
           )}
+          {showPresenceBadge && isOnline ? (
+            <span
+              className="absolute right-2.5 top-2.5 flex h-3 w-3 items-center justify-center rounded-full bg-[#22C55E] ring-2 ring-white shadow-sm"
+              title="Online"
+              aria-label="Online"
+            />
+          ) : null}
         </div>
 
         {/* TEXT BLOCK */}
         <div className="px-4 pb-4 pt-4 md:px-5 md:pb-5 md:pt-5">
-          <p className="flex flex-wrap items-center gap-2 text-[17px] font-semibold leading-snug tracking-tight text-neutral-900 md:text-[18px]">
-            <span className="min-w-0 truncate">{fullName}</span>
-            {showPresenceBadge && isOnline ? <AgentOnlinePresenceBadge /> : null}
+          <p className="text-[17px] font-semibold leading-snug tracking-tight text-neutral-900 md:text-[18px]">
+            <span className="block truncate">{fullName}</span>
           </p>
           <div className="mt-1.5 truncate text-[13px] leading-snug text-neutral-600 md:text-[14px]">
             {brokerage || <span className="text-transparent">.</span>}
