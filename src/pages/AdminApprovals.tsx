@@ -330,6 +330,17 @@ export default function AdminApprovals() {
   const [showBulkDeleteDialog, setShowBulkDeleteDialog] = useState(false);
   const [detailsAgent, setDetailsAgent] = useState<Agent | null>(null);
 
+  // Keep the open details drawer in sync with the latest agents list so that
+  // status changes (e.g. Verify) reflect immediately in the drawer without
+  // needing to reopen it.
+  useEffect(() => {
+    if (!detailsAgent) return;
+    const fresh = agents.find((a) => a.id === detailsAgent.id);
+    if (fresh && fresh !== detailsAgent) {
+      setDetailsAgent(fresh);
+    }
+  }, [agents, detailsAgent]);
+
   // Phase 4 guardrail — shared "previously deleted" gate. When set, the
   // dialog is open and `resolve` is awaited by whichever action opened it
   // (single verify, bulk verify iteration, email setup link, etc.).
