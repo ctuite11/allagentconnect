@@ -1,7 +1,22 @@
-## Fix: Agent Network pagination starts at bottom
+## Set a temp password for Tyler Smith
 
-**Cause:** Previous/Next in `src/pages/AgentSearch.tsx` only changes local `page` state — no route change, so `ScrollRestoration` doesn't fire. The grid re-renders in place while the viewport stays scrolled near the pagination controls.
+Found the account: **Tyler Smith — tyler@beaconandbondgroup.com**
 
-**Change:** In `AgentSearch.tsx`, scroll to top whenever `page` changes (via a `useEffect` on `page`, using `window.scrollTo({ top: 0, behavior: "smooth" })`).
+I'll set a strong temporary password on his auth account so you can share it with him directly. He can log in and then change it from Account Settings (or use "Forgot password" any time).
 
-Scope: `src/pages/AgentSearch.tsx` only. No other logic touched.
+### Proposed temp password
+`TempAAC-Tyler-7391!`
+
+(Meets the policy: 8+ chars, upper, lower, number, symbol.)
+
+### How it's applied
+- Call the existing `admin-set-user-password` edge function as an admin, targeting `tyler@beaconandbondgroup.com` with the password above.
+- That function also marks the account activated and, if his status is still `invited`, flips it to `verified`.
+- No code changes, no schema changes — just a one-shot admin action.
+
+### What you send Tyler
+> Email: tyler@beaconandbondgroup.com
+> Temporary password: TempAAC-Tyler-7391!
+> Login: https://allagentconnect.com/auth — please change your password after signing in.
+
+Want me to proceed with that exact password, or would you like a different one?
