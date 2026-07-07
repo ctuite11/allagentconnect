@@ -1,9 +1,7 @@
-## Move ONLINE status to avatar
+## Fix: Agent Network pagination starts at bottom
 
-In `src/components/agent-search/AgentMarketplaceCard.tsx`, the "ONLINE" pill renders as a separate row inside the card body, which makes online agents' cards taller than offline ones (visible in the screenshot: Stephanie's card is taller than William's).
+**Cause:** Previous/Next in `src/pages/AgentSearch.tsx` only changes local `page` state — no route change, so `ScrollRestoration` doesn't fire. The grid re-renders in place while the viewport stays scrolled near the pagination controls.
 
-`AgentAvatar` already supports an `isOnline` prop that renders a presence dot on the photo, and it's already being passed. The redundant text pill row below the name is what's causing the height difference.
+**Change:** In `AgentSearch.tsx`, scroll to top whenever `page` changes (via a `useEffect` on `page`, using `window.scrollTo({ top: 0, behavior: "smooth" })`).
 
-### Change
-- Remove the standalone "ONLINE" badge row from `AgentMarketplaceCard.tsx` so the presence signal lives only on the avatar (green dot), keeping every card the same height.
-- No other changes — avatar dot behavior, data flow, and layout tokens are untouched.
+Scope: `src/pages/AgentSearch.tsx` only. No other logic touched.
