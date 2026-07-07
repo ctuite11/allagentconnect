@@ -16,7 +16,7 @@ const HEADLINE = "You're missing important opportunities.";
 
 const BODY_HTML = `
   <p style="margin:0 0 16px;">Your Profile and Communications Center preferences are incomplete.</p>
-  <p style="margin:0;">Complete them to become eligible for buyer and seller leads, matching listings, referrals, broker opens, and network activity tailored to your markets.</p>`;
+  <p style="margin:0;">Complete them to become eligible for buyer and seller leads and receive matching listings, referrals, broker opens, and network activity tailored to your markets.</p>`;
 
 const CTA_LABEL = "Complete My Profile & Preferences";
 
