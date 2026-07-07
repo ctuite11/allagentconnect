@@ -34,6 +34,14 @@ const AgentSearch = () => {
     setPage(1);
   }, [searchQuery, selectedState, selectedCompany]);
 
+  // Scroll to top when page changes (pagination doesn't change route)
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    // AppShell uses an inner scroll container; scroll it too
+    const scrollers = document.querySelectorAll<HTMLElement>(".overflow-y-auto");
+    scrollers.forEach((el) => el.scrollTo({ top: 0, behavior: "smooth" }));
+  }, [page]);
+
   const fetchAgents = async () => {
     try {
       setLoading(true);
