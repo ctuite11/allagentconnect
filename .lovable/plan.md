@@ -1,36 +1,44 @@
-## Goal
 
-Get Jon Kumin (`jonkumin@gmail.com`) into his account using the same manual-onboarding pattern used for the other stuck agents: admin-set a temporary password, then email him the credentials.
+## What's wrong
 
-## Current state
+Audit of the agent data on `/admin/approvals` found a real inconsistency, not a UI bug:
 
-- User ID: `74c498f5-8c53-4091-8c23-ec43f74af005`
-- `agent_status`: `verified`
-- `account_activated_at`: NULL (never activated)
-- License Verified activation email was delivered Jul 6 14:40 UTC; setup link has since expired.
+- 178 total agent profiles
+- 106 have actually signed in (auth `last_sign_in_at` is set)
+- Only 41 have `agent_settings.account_activated_at` filled
+- **66 agents have signed in but `account_activated_at` is NULL**
 
-## Steps
+The Admin table's "Activated" column reads `!!account_activated_at`. So agents who verified, signed in, and completed a profile show "Activated: No" alongside "Profile: Yes" — which is exactly the contradiction you flagged.
 
-1. **Generate a temporary password** for Jon (strong random, same format used for prior manual onboardings).
-2. **Invoke `admin-set-user-password`** with:
-   - `email`: `jonkumin@gmail.com`
-   - `password`: the generated temp password
-   - This function also:
-     - marks `email_confirm: true`
-     - sets `agent_settings.account_activated_at` to now (if still null)
-     - flips `agent_status` from `invited` → `verified` (already verified, so no-op)
-3. **Send Jon the credentials email** using the same channel/template used for the other manually onboarded agents. Confirm with you which method to use before sending:
-   - Option 1: Reuse whatever function/template was used last time (please confirm which — I don't want to guess and use the wrong template).
-   - Option 2: If there's no reusable template, send a plain credentials email via the existing transactional queue with subject/body matching prior sends.
-4. **Verify**:
-   - Confirm the `admin-set-user-password` response is `{ success: true, userId: ... }`.
-   - Confirm the credential email is queued in `email_jobs`.
-   - Report both back to you before you regard this as done.
+Root cause: `account_activated_at` is only stamped by two code paths (`AgentAccountSetup` and `admin-set-user-password`). Anyone who set their password through a legacy path (older recovery link, admin invite before this field existed, imported accounts) never got it stamped, even though they've been signing in normally.
 
-## No code changes
+Sample of affected agents already signing in daily: Ben Snow, Amy Fairchild, Gabrielle Russo, Michelle Easter, Matthew Aranson, Jorge Sariego, Mark Ott, and 59 others.
 
-Nothing in the codebase changes. This uses existing edge functions (`admin-set-user-password` + whatever send function was used previously). No template, subject, sender, CTA, eligibility, queue, or infrastructure changes.
+Other columns (`verified_at` vs `agent_status='verified'`, etc.) reconcile cleanly — no mismatches there.
 
-## Before I run this, I need one confirmation
+## Plan
 
-Which send path did you use for the earlier manual onboardings — a specific edge function / template name, or did you email them directly outside the app? That determines step 3. Everything else (steps 1, 2, 4) I can execute as soon as you approve.
+One-time backfill migration to set `account_activated_at` for agents who have clearly already activated. No UI or component changes.
+
+**Rule for backfill**: for every `agent_settings` row where `account_activated_at IS NULL` AND the auth user has `email_confirmed_at IS NOT NULL` AND `last_sign_in_at IS NOT NULL`, set:
+
+```
+account_activated_at = COALESCE(
+   auth.users.confirmed_at,
+   auth.users.email_confirmed_at,
+   auth.users.last_sign_in_at
+)
+```
+
+This uses the earliest confirmed activation signal from auth, so historical timestamps stay accurate rather than collapsing everything to "now".
+
+Scope guard: only touch rows where the field is currently NULL — never overwrite an existing activation timestamp.
+
+After the migration, the admin table on `/admin/approvals` will show "Activated: Yes" for all 66 affected agents on the next fetch, and no "Activated=No / Profile=Yes" rows will remain for agents who have actually signed in.
+
+## Technical details
+
+Single migration, updates only `public.agent_settings`. Reads from `auth.users` via a join (allowed inside a Postgres migration; no schema changes to `auth`). No RLS or grant changes.
+
+Not addressed (call out only, not fixing in this pass):
+- Preventing future drift. The current activation code paths are correct; new agents going through `AgentAccountSetup` or `admin-set-user-password` do get stamped. A defensive on-sign-in backfill (client- or trigger-based) could be added later if you want belt-and-suspenders, but it's not needed to correct the current data.
