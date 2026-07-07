@@ -10,7 +10,7 @@ export const HOT_SHEET_PREVIEW_BLAST_SUBJECT =
 export const HOT_SHEET_PREVIEW_CTA_URL = "https://allagentconnect.com/agent-dashboard";
 
 /** Verify deployed bundle — hero image layout. */
-export const HOT_SHEET_PREVIEW_BUILD_MARKER = "aac-hotsheet-preview:hero-v1";
+export const HOT_SHEET_PREVIEW_BUILD_MARKER = "aac-hotsheet-preview:hero-v2";
 
 const HERO_IMAGE_URL = "https://allagentconnect.com/email/hotsheet-coming-soon.jpg";
 
