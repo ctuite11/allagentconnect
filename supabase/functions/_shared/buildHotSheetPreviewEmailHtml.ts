@@ -14,7 +14,6 @@ export const HOT_SHEET_PREVIEW_CTA_URL = "https://allagentconnect.com/agent-dash
 export const HOT_SHEET_PREVIEW_BUILD_MARKER = "aac-hotsheet-preview:listing-v3";
 
 const AAC_GREEN = "#50C878";
-const CHARCOAL = "#111317";
 const BORDER = "#e8e8e8";
 const TEXT_PRIMARY = "#111317";
 const TEXT_SECONDARY = "#64748b";
