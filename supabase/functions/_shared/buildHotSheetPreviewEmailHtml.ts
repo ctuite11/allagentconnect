@@ -1,39 +1,35 @@
 /* ------------------------------------------------------------------ */
-/*  One-time Hot Sheet preview — blurred document + frosted overlay     */
+/*  One-time Hot Sheet preview — fictional luxury listing + unlock copy   */
 /* ------------------------------------------------------------------ */
 
 import { buildAacEmail } from "./aacEmailTemplate.ts";
-import {
-  LISTING_OG_PLACEHOLDER,
-  resolveEmailPhotoUrl,
-  toOgImageUrl,
-} from "./listingPhotoUrl.ts";
+import { LISTING_OG_PLACEHOLDER } from "./listingPhotoUrl.ts";
 
 export const HOT_SHEET_PREVIEW_BLAST_SUBJECT =
   "You're missing important opportunities";
 
 export const HOT_SHEET_PREVIEW_CTA_URL = "https://allagentconnect.com/agent-dashboard";
 
+/** Verify deployed bundle — not a real listing. */
+export const HOT_SHEET_PREVIEW_BUILD_MARKER = "aac-hotsheet-preview:listing-v3";
+
 const AAC_GREEN = "#50C878";
 const CHARCOAL = "#111317";
 const BORDER = "#e8e8e8";
+const TEXT_PRIMARY = "#111317";
+const TEXT_SECONDARY = "#64748b";
 
 const FONT_SANS =
   "system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
 
-const HERO_HEADLINE = "You're missing important opportunities.";
+/** Demo-only luxury preview — never a real active listing. */
+const DEMO_PHOTO_URL = LISTING_OG_PLACEHOLDER;
 
-const BODY_INTRO =
-  "Your personalized Hot Sheets are locked because your Profile and Communications Center preferences haven't been completed.";
+const HEADLINE = "You're missing important opportunities.";
 
-const BODY_UNLOCK =
-  "Complete your setup to unlock buyer and seller leads, matching listings, referrals, broker opens, and network activity tailored to your markets.";
-
-const PROFILE_FRAMING =
-  "Your Profile helps other agents and buyers understand who you are and where you work.";
-
-const COMMS_FRAMING =
-  "Your Communications Center preferences tell AAC which markets, listings, buyers, and referrals to send you.";
+const BODY_COPY =
+  "Your Profile and Communications Center preferences are incomplete. " +
+  "Complete them to unlock buyer and seller leads, matching listings, referrals, broker opens, and network activity tailored to your markets.";
 
 const CTA_LABEL = "Complete My Profile & Preferences";
 
@@ -46,190 +42,74 @@ function escapeHtml(s: string): string {
     .replaceAll("'", "&#39;");
 }
 
-function normalizePhotosArray(photos: unknown): unknown[] {
-  if (photos == null) return [];
-  if (Array.isArray(photos)) return photos;
-  if (typeof photos === "string") {
-    const trimmed = photos.trim();
-    if (!trimmed) return [];
-    if (trimmed.startsWith("[")) {
-      try {
-        const parsed = JSON.parse(trimmed) as unknown;
-        return Array.isArray(parsed) ? parsed : [trimmed];
-      } catch {
-        return [trimmed];
-      }
-    }
-    return [trimmed];
-  }
-  return [];
-}
-
-function resolveListingPhotoUrl(listing: Record<string, unknown>): string {
-  const photos = normalizePhotosArray(listing.photos);
-  const pickIndex = photos.length >= 2 ? 1 : 0;
-  const picked = photos.length > 0 ? [photos[pickIndex]] : listing.photos;
-  const direct = resolveEmailPhotoUrl(picked);
-  if (direct) {
-    if (direct.includes("/storage/v1/object/public/")) {
-      return toOgImageUrl(direct);
-    }
-    return direct;
-  }
-  return LISTING_OG_PLACEHOLDER;
-}
-
-/** Obfuscated placeholder bar — unreadable detail. */
-function redactBar(width = "72%"): string {
-  return `<span style="display:inline-block;width:${width};height:10px;background:#d4d4d4;border-radius:1px;vertical-align:middle;">&nbsp;</span>`;
-}
-
-function sectionLabel(title: string): string {
-  return `
-    <p style="margin:0 0 14px;font-family:${FONT_SANS};font-size:10px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:${CHARCOAL};">
-      ${escapeHtml(title)}
-    </p>`;
-}
-
-/**
- * Mock Hot Sheet document — structurally real, details intentionally unreadable.
- * Rendered sharp then blurred as a single layer behind the frosted overlay.
- */
-function renderHotSheetDocumentMock(photoUrl: string): string {
-  const safePhoto = escapeHtml(photoUrl);
-
-  const listingBlock = `
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border:1px solid ${BORDER};background:#ffffff;">
-      <tr>
-        <td style="padding:0;line-height:0;font-size:0;">
-          <img src="${safePhoto}" alt="" width="520" height="160" style="display:block;width:100%;height:160px;object-fit:cover;border:0;outline:none;" />
-        </td>
-      </tr>
-      <tr>
-        <td style="padding:16px 18px 18px;font-family:${FONT_SANS};">
-          <p style="margin:0 0 8px;font-size:20px;font-weight:700;color:${CHARCOAL};line-height:1;">${redactBar("38%")}</p>
-          <p style="margin:0 0 6px;font-size:13px;color:#525252;line-height:1.4;">${redactBar("85%")}</p>
-          <p style="margin:0 0 14px;font-size:12px;color:#737373;">${redactBar("55%")}</p>
-          <p style="margin:0;font-size:12px;color:#737373;letter-spacing:0.04em;">${redactBar("42%")}</p>
-        </td>
-      </tr>
-    </table>`;
-
-  const demandRow = `
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:0 0 10px;border:1px solid ${BORDER};background:#fafafa;">
-      <tr>
-        <td style="padding:14px 16px;font-family:${FONT_SANS};">
-          <p style="margin:0 0 6px;font-size:12px;font-weight:600;color:${CHARCOAL};">${redactBar("48%")}</p>
-          <p style="margin:0;font-size:11px;color:#737373;">${redactBar("64%")}</p>
-        </td>
-      </tr>
-    </table>`;
-
-  const networkRow = `
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:0 0 10px;border:1px solid ${BORDER};background:#ffffff;">
-      <tr>
-        <td style="padding:14px 16px;font-family:${FONT_SANS};">
-          <p style="margin:0 0 6px;font-size:12px;font-weight:600;color:${CHARCOAL};">${redactBar("52%")}</p>
-          <p style="margin:0;font-size:11px;color:#737373;">${redactBar("70%")}</p>
-        </td>
-      </tr>
-    </table>`;
+/** Hot Sheet–style listing card with fictional, clearly demo content. */
+function renderFictionalListingCard(): string {
+  const photo = escapeHtml(DEMO_PHOTO_URL);
 
   return `
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#ffffff;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border:1px solid ${BORDER};border-radius:4px;overflow:hidden;background:#ffffff;">
       <tr>
-        <td style="padding:28px 24px 32px;font-family:${FONT_SANS};">
-          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:0 0 28px;">
+        <td style="padding:10px 16px;background:#fafafa;border-bottom:1px solid ${BORDER};font-family:${FONT_SANS};">
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
             <tr>
-              <td style="font-size:11px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:${CHARCOAL};">
-                Personalized Hot Sheet
+              <td style="font-size:10px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:${TEXT_SECONDARY};">
+                Example Hot Sheet Preview
               </td>
-              <td align="right" style="font-size:11px;color:#737373;letter-spacing:0.04em;">
-                ${redactBar("28%")}
+              <td align="right">
+                <span style="display:inline-block;padding:4px 10px;background:rgba(80,200,120,0.12);color:${AAC_GREEN};font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;border-radius:999px;">
+                  Private Preview
+                </span>
               </td>
             </tr>
           </table>
-
-          ${sectionLabel("Matching Listings")}
-          ${listingBlock}
-
-          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:28px 0 0;">
-            <tr><td>
-              ${sectionLabel("Buyer Demand")}
-              ${demandRow}
-              ${demandRow}
-            </td></tr>
-          </table>
-
-          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:28px 0 0;">
-            <tr><td>
-              ${sectionLabel("Network Activity")}
-              ${networkRow}
-            </td></tr>
-          </table>
-
-          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:28px 0 0;">
-            <tr><td>
-              ${sectionLabel("Referrals & Broker Opens")}
-              ${networkRow}
-            </td></tr>
-          </table>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:0;line-height:0;font-size:0;">
+          <img src="${photo}" alt="" width="520" height="220" style="display:block;width:100%;height:220px;object-fit:cover;border:0;outline:none;" />
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:20px 18px 22px;font-family:${FONT_SANS};">
+          <p style="margin:0 0 6px;font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:${TEXT_SECONDARY};">
+            Luxury Single Family
+          </p>
+          <p style="margin:0 0 10px;font-size:24px;font-weight:700;color:${TEXT_PRIMARY};line-height:1.1;filter:blur(5px);-webkit-filter:blur(5px);user-select:none;">
+            $4,850,000
+          </p>
+          <p style="margin:0 0 14px;font-size:14px;line-height:1.45;color:#404040;filter:blur(4px);-webkit-filter:blur(4px);user-select:none;">
+            Private Estate &middot; Beacon Hill Area, Boston, MA
+          </p>
+          <p style="margin:0;font-size:13px;color:${TEXT_SECONDARY};letter-spacing:0.02em;">
+            5 bd &nbsp;&middot;&nbsp; 5.5 ba &nbsp;&middot;&nbsp; 6,200 sqft
+          </p>
+          <p style="margin:14px 0 0;font-size:11px;line-height:1.5;color:#94a3b8;font-style:italic;">
+            Illustrative preview only — not an available property.
+          </p>
         </td>
       </tr>
     </table>`;
 }
 
-/**
- * Full-bleed blurred Hot Sheet document with frosted access overlay.
- * Header/footer remain in the AAC shell; this is the entire body.
- */
-function renderBlurredDocumentSection(photoUrl: string, ctaUrl: string): string {
+function renderMessageAndCta(ctaUrl: string): string {
   const safeCta = escapeHtml(ctaUrl);
-  const documentHtml = renderHotSheetDocumentMock(photoUrl);
 
   return `
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:0 -40px;width:calc(100% + 80px);max-width:600px;border-collapse:collapse;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:36px 0 0;">
       <tr>
-        <td style="padding:0;position:relative;background:${CHARCOAL};overflow:hidden;">
-          <!-- Blurred Hot Sheet document layer -->
-          <div style="max-height:820px;overflow:hidden;line-height:0;font-size:0;background:#f5f5f5;">
-            <div style="filter:blur(7px);-webkit-filter:blur(7px);opacity:0.92;transform:scale(1.02);">
-              ${documentHtml}
-            </div>
-          </div>
-          <!-- Dim layer — details unreadable, document shape visible -->
-          <div style="height:820px;margin-top:-820px;background:rgba(17,19,23,0.58);line-height:0;font-size:0;">&nbsp;</div>
-          <!-- Frosted overlay -->
-          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-top:-820px;min-height:820px;">
+        <td style="padding:0;font-family:${FONT_SANS};">
+          <h1 style="margin:0 0 16px;font-size:22px;font-weight:600;line-height:1.3;letter-spacing:-0.02em;color:${TEXT_PRIMARY};">
+            ${escapeHtml(HEADLINE)}
+          </h1>
+          <p style="margin:0 0 28px;font-size:15px;line-height:1.7;color:${TEXT_SECONDARY};">
+            ${escapeHtml(BODY_COPY)}
+          </p>
+          <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin:0 auto;">
             <tr>
-              <td align="center" valign="middle" style="padding:40px 28px;">
-                <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="max-width:440px;width:100%;border-collapse:separate;">
-                  <tr>
-                    <td align="center" style="padding:44px 36px 40px;background:rgba(255,255,255,0.14);border:1px solid rgba(255,255,255,0.24);">
-                      <p style="margin:0 0 20px;font-family:${FONT_SANS};font-size:10px;font-weight:600;letter-spacing:0.2em;text-transform:uppercase;color:${AAC_GREEN};">
-                        Hot Sheet Preview
-                      </p>
-                      <h1 style="margin:0 0 24px;font-family:${FONT_SANS};font-size:24px;font-weight:600;line-height:1.25;letter-spacing:-0.02em;color:#ffffff;">
-                        ${escapeHtml(HERO_HEADLINE)}
-                      </h1>
-                      <p style="margin:0 0 16px;font-family:${FONT_SANS};font-size:14px;line-height:1.7;color:rgba(255,255,255,0.88);text-align:left;">
-                        ${escapeHtml(BODY_INTRO)}
-                      </p>
-                      <p style="margin:0 0 20px;font-family:${FONT_SANS};font-size:14px;line-height:1.7;color:rgba(255,255,255,0.82);text-align:left;">
-                        ${escapeHtml(BODY_UNLOCK)}
-                      </p>
-                      <p style="margin:0 0 10px;font-family:${FONT_SANS};font-size:13px;line-height:1.65;color:rgba(255,255,255,0.72);text-align:left;">
-                        ${escapeHtml(PROFILE_FRAMING)}
-                      </p>
-                      <p style="margin:0 0 32px;font-family:${FONT_SANS};font-size:13px;line-height:1.65;color:rgba(255,255,255,0.72);text-align:left;">
-                        ${escapeHtml(COMMS_FRAMING)}
-                      </p>
-                      <a href="${safeCta}" target="_blank" style="display:inline-block;padding:16px 32px;background-color:${AAC_GREEN};color:#ffffff;text-decoration:none;font-family:${FONT_SANS};font-size:15px;font-weight:600;letter-spacing:0.01em;border-radius:2px;">
-                        ${escapeHtml(CTA_LABEL)}
-                      </a>
-                    </td>
-                  </tr>
-                </table>
+              <td align="center">
+                <a href="${safeCta}" target="_blank" style="display:inline-block;padding:15px 32px;background-color:${AAC_GREEN};color:#ffffff;text-decoration:none;font-family:${FONT_SANS};font-size:15px;font-weight:600;letter-spacing:0.01em;border-radius:4px;">
+                  ${escapeHtml(CTA_LABEL)}
+                </a>
               </td>
             </tr>
           </table>
@@ -240,6 +120,7 @@ function renderBlurredDocumentSection(photoUrl: string, ctaUrl: string): string 
 
 export interface HotSheetPreviewEmailOptions {
   userName: string;
+  /** Ignored — preview uses fictional demo listing content only. */
   listing: Record<string, unknown>;
   baseUrl?: string;
   ctaUrl?: string;
@@ -248,15 +129,21 @@ export interface HotSheetPreviewEmailOptions {
 /** Full AAC-shell HTML for the one-time Hot Sheet preview activation email. */
 export function buildHotSheetPreviewEmailHtml(opts: HotSheetPreviewEmailOptions): string {
   const ctaUrl = opts.ctaUrl || HOT_SHEET_PREVIEW_CTA_URL;
-  const photoUrl = resolveListingPhotoUrl(opts.listing);
 
   return buildAacEmail({
-    headline: HERO_HEADLINE,
+    headline: HEADLINE,
     hideHeadline: true,
     documentTitle: HOT_SHEET_PREVIEW_BLAST_SUBJECT,
     preheader: "Complete your Profile and Communications Center preferences to unlock personalized Hot Sheets.",
     body: `
-      <!-- aac-hotsheet-preview:document-v2 -->
-      ${renderBlurredDocumentSection(photoUrl, ctaUrl)}`,
+      <!-- ${HOT_SHEET_PREVIEW_BUILD_MARKER} -->
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+        <tr>
+          <td style="padding:32px 40px 40px;font-family:${FONT_SANS};">
+            ${renderFictionalListingCard()}
+            ${renderMessageAndCta(ctaUrl)}
+          </td>
+        </tr>
+      </table>`,
   });
 }
