@@ -201,7 +201,7 @@ serve(async (req) => {
               hotSheetName: hotSheet.name,
               matchCount: recipientListings.length,
               listingsHtml: recipientListingsHtml,
-              hotSheetLink: `${appBaseUrl}/client-dashboard`,
+              hotSheetLink: `${appBaseUrl}/client/hot-sheets/${hotSheet.id}`,
             },
           },
         });
