@@ -2562,7 +2562,7 @@ const AddListing = () => {
   };
 
   // Centralized validation — single source of truth for required fields
-  const getValidationErrors = (): { field: string; label: string }[] => {
+  const getValidationErrors = (publishing: boolean = true): { field: string; label: string }[] => {
     const errors: { field: string; label: string }[] = [];
 
     if (!formData.address.trim()) errors.push({ field: "address", label: "Street Address" });
@@ -2596,6 +2596,10 @@ const AddListing = () => {
 
     if (formData.status === "coming_soon" && !formData.go_live_date.trim()) {
       errors.push({ field: "go_live_date", label: "Go-Live Date (required for Coming Soon)" });
+    }
+
+    if (publishing && photos.length === 0) {
+      errors.push({ field: "photos", label: "At least one listing photo" });
     }
 
     return errors;
