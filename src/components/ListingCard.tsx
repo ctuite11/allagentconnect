@@ -302,7 +302,7 @@ const ListingCard = ({
       try {
         const { data, error } = await supabase
           .from("agent_profiles")
-          .select("id, first_name, last_name, email, phone, headshot_url, company")
+          .select("id, first_name, last_name, headshot_url, company")
           .eq("id", listing.agent_id)
           .single();
         
