@@ -2904,7 +2904,7 @@ const AddListing = () => {
       }
 
       // Centralized validation
-      const errors = getValidationErrors();
+      const errors = getValidationErrors(publishNow);
       if (errors.length > 0) {
         setValidationErrors(errors);
         window.scrollTo({ top: 0, behavior: 'smooth' });
