@@ -1,43 +1,27 @@
-# Agent profile audit — who needs a "set up your profile" email
+## Problem
+Agent Network cards on `/our-members` render without phone or email. Root cause: the `agent_profiles` select in `src/pages/OurAgents.tsx` (line 151) omits the `email`, `phone`, and `cell_phone` columns. The enrichment mapping (lines 246–248) still tries to read them, so those fields land as `undefined` and the card's `AgentPhotoTile` renders nothing for the contact lines.
 
-Read-only audit of `agent_profiles` + `agent_settings`. No code, no DB changes.
+The search helper `src/lib/agentNetworkSearch.ts` already expects `email` / `phone` / `cell_phone` on each agent, so it's genuinely a missing-fetch bug — not a privacy gate.
 
-## Headline numbers
+## Fix
+Single-file, single-line change in `src/pages/OurAgents.tsx`:
 
-- Total agents in `agent_profiles`: **187**
-- Onboarding **never started**: **186**
-- Onboarding started, not completed: **1**
-- Onboarding completed: **0**
-- Missing headshot: **142**
-- Missing brokerage/company: **49**
-- Missing phone: **31**
-- Missing first/last name: **0**
-- **Agents missing at least one of headshot / company / phone → 148**
+Update the select at line 151 from:
+```
+id, aac_id, first_name, last_name, company, office_name, team_name, headshot_url, buyer_incentives, updated_at, title,
+```
+to:
+```
+id, aac_id, first_name, last_name, company, office_name, team_name, headshot_url, buyer_incentives, updated_at, title, email, phone, cell_phone,
+```
 
-Definition used for "needs setup email" (matches `checkProfileComplete` in `src/hooks/useAgentSettings.ts`): missing any of headshot_url, company, or phone/email contact. Name is present for everyone.
+No other logic changes. Enrichment mapping and card rendering already handle these fields.
 
-## Recommended segments for the email
+## Verification
+- Load `/our-members` as a verified agent → cards show name, brokerage, email, and phone.
+- Text search by phone digits / email substring works (already wired via `agentNetworkSearch`).
+- No RLS change: `agent_profiles` already returns these columns to authenticated agents.
 
-1. **Priority A — 142 agents missing a headshot.** Highest-visibility gap; drives their public profile card. Single CTA: "Add your headshot."
-2. **Priority B — 49 agents missing brokerage** (subset overlaps with A). CTA: "Add your brokerage."
-3. **Priority C — 31 agents missing phone.** CTA: "Add a contact number."
-4. **Combined blast** — 148 unique agents missing at least one field. One email, dynamic checklist of what's missing.
-
-Onboarding-state overlay (independent axis):
-- 186 have `onboarding_started = false` → they've never touched onboarding. Same email works; softer copy ("Finish setting up your profile").
-- 1 started but didn't finish → "Pick up where you left off."
-
-## Deliverable
-
-Once approved, in build mode I will:
-1. Export a CSV to `/mnt/documents/agent-profile-setup-needed.csv` with columns:
-   `id, email, first_name, last_name, company, phone, headshot_url, onboarding_started, onboarding_completed, missing_fields (comma-separated), created_at`
-   — one row per agent in the 148 "needs setup" set, sorted by most-missing-fields first.
-2. Print top-of-list summary (first ~20 rows) in chat so you can eyeball it.
-
-Nothing else changes — no emails sent, no schema touched, no code edited. Sending the email itself is a separate follow-up decision (which template, from which address, subject line).
-
-## Open questions before I export
-
-- Do you want the CSV scoped to the **148 missing-any-field** set, or the stricter **142 missing-headshot** set, or **all 187** with a `needs_email` flag column?
-- Should I exclude any admin/test accounts (e.g. your own `chris@allagentconnect.com`, the default founder id `1fc50da1-…`)?
+## Out of scope
+- Public `/our-agents` page (`PublicOurAgents`) — not mentioned by user; leave anti-scraping behavior untouched.
+- Card layout / styling.
