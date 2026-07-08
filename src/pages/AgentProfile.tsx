@@ -226,24 +226,29 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
       const { data: sessionData } = await supabase.auth.getSession();
       const isAuthed = Boolean(sessionData.session);
 
-      const anonColumns = `
-        id, aac_id, first_name, last_name, title, company, office_name, team_name,
-        bio, social_links, buyer_incentives, seller_incentives, headshot_url,
-        logo_url, header_background_type, header_background_value, header_image_url,
-        office_city, office_state, office_zip, receive_buyer_alerts,
-        created_at, updated_at,
-        agent_county_preferences ( county_id, counties (name, state) )
-      `;
-      const authedColumns = `
-        *,
-        agent_county_preferences ( county_id, counties (name, state) )
-      `;
+      const agentQuery = isAuthed
+        ? supabase
+            .from("agent_profiles")
+            .select(`
+              *,
+              agent_county_preferences ( county_id, counties (name, state) )
+            `)
+            .eq(filterCol, idOrCode)
+            .maybeSingle()
+        : supabase
+            .from("agent_profiles")
+            .select(`
+              id, aac_id, first_name, last_name, title, company, office_name, team_name,
+              bio, social_links, buyer_incentives, seller_incentives, headshot_url,
+              logo_url, header_background_type, header_background_value, header_image_url,
+              office_city, office_state, office_zip, receive_buyer_alerts,
+              created_at, updated_at,
+              agent_county_preferences ( county_id, counties (name, state) )
+            `)
+            .eq(filterCol, idOrCode)
+            .maybeSingle();
 
-      const { data: agentData, error: agentError } = await supabase
-        .from("agent_profiles")
-        .select(isAuthed ? authedColumns : anonColumns)
-        .eq(filterCol, idOrCode)
-        .maybeSingle();
+      const { data: agentData, error: agentError } = await agentQuery;
 
       if (agentError) throw agentError;
       if (!agentData) {
