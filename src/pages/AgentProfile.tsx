@@ -257,7 +257,7 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
         return;
       }
 
-      setAgent(agentData as AgentProfileData);
+      setAgent(agentData as unknown as AgentProfileData);
 
       const agentUuid = agentData.id;
 
