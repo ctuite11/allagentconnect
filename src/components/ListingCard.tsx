@@ -1511,12 +1511,9 @@ const ListingCard = ({
                 {agentProfile.first_name} {agentProfile.last_name}
               </div>
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                {agentProfile.phone && (
-                  <span className="flex items-center gap-1">
-                    <Phone className="w-3 h-3" />
-                    {formatPhoneNumber(agentProfile.phone)}
-                  </span>
-                )}
+                {agentProfile.company ? (
+                  <span className="truncate">{agentProfile.company}</span>
+                ) : null}
               </div>
             </div>
             <ContactAgentDialog
