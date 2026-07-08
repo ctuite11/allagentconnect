@@ -1943,6 +1943,9 @@ const AddListing = () => {
             } else {
               toast.success(`${uploadedPhotos.length} photo(s) uploaded`);
             }
+            if (uploadedPhotos.length > 0) {
+              setValidationErrors(prev => prev.filter(err => err.field !== "photos"));
+            }
           } catch (error) {
             console.error('[AddListing] Error saving photos:', error);
             toast.error('Photo upload failed, please try again');
