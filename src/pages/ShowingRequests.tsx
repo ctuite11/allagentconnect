@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 type ShowingRequest = {
   id: string;
@@ -41,7 +42,12 @@ export default function ShowingRequests() {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch(url);
+        const { data: { session } } = await supabase.auth.getSession();
+        const token = session?.access_token;
+        if (!token) throw new Error("You must be signed in to view showing requests.");
+        const res = await fetch(url, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         const json = await res.json();
         if (!res.ok || !json.ok) throw new Error(json?.error || "Request failed");
         if (!cancelled) setRows(json.data || []);

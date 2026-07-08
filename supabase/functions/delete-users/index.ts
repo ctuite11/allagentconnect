@@ -93,7 +93,36 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+
+    // --- AuthN/AuthZ: require an authenticated admin caller ---
+    const authHeader = req.headers.get("Authorization") || req.headers.get("authorization");
+    if (!authHeader || !authHeader.toLowerCase().startsWith("bearer ")) {
+      return new Response(JSON.stringify({ success: false, deleted: 0, error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+    const jwt = authHeader.replace(/^[Bb]earer\s+/, "");
+    const userClient = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: `Bearer ${jwt}` } },
+    });
+    const { data: userData, error: userErr } = await userClient.auth.getUser();
+    if (userErr || !userData?.user) {
+      return new Response(JSON.stringify({ success: false, deleted: 0, error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+    const callerId = userData.user.id;
+
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    const { data: isAdmin, error: roleErr } = await supabase.rpc("has_role", {
+      _user_id: callerId,
+      _role: "admin",
+    });
+    if (roleErr || isAdmin !== true) {
+      return new Response(JSON.stringify({ success: false, deleted: 0, error: "Forbidden: admin role required" }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+    console.log(`delete-users authorized for admin ${callerId}`);
 
     const { userIds: providedUserIds, emails, dryRun } = await req.json();
     const userIds: string[] = providedUserIds || [];
