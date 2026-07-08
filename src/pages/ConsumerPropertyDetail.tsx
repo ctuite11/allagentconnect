@@ -243,7 +243,7 @@ const ConsumerPropertyDetail = () => {
       }
       const { data } = await supabase
         .from("agent_profiles")
-        .select("id, first_name, last_name, email, phone, cell_phone, title, headshot_url, logo_url, company, office_name, social_links")
+        .select("id, first_name, last_name, title, headshot_url, logo_url, company, office_name, social_links")
         .eq("id", agentId)
         .maybeSingle();
       setStickyAgentProfile(data as AgentProfile | null);
@@ -277,7 +277,7 @@ const ConsumerPropertyDetail = () => {
       if (data.agent_id) {
         const { data: profile } = await supabase
           .from("agent_profiles")
-          .select("id, first_name, last_name, email, cell_phone, phone, title, company, office_name, headshot_url, logo_url, social_links")
+          .select("id, first_name, last_name, title, company, office_name, headshot_url, logo_url, social_links")
           .eq("id", data.agent_id)
           .maybeSingle();
 

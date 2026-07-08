@@ -219,17 +219,36 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
       const isUuid = UUID_RE.test(idOrCode ?? "");
       const filterCol = isUuid ? "id" : "aac_id";
 
-      const { data: agentData, error: agentError } = await supabase
-        .from("agent_profiles")
-        .select(`
-          *,
-          agent_county_preferences (
-            county_id,
-            counties (name, state)
-          )
-        `)
-        .eq(filterCol, idOrCode)
-        .maybeSingle();
+      // Anonymous callers cannot read PII columns (email, phone, cell_phone,
+      // office_phone, office_address) — column-level GRANTs on agent_profiles.
+      // Use an explicit safe-column list when there is no session; keep the
+      // full profile for authenticated viewers.
+      const { data: sessionData } = await supabase.auth.getSession();
+      const isAuthed = Boolean(sessionData.session);
+
+      const agentQuery = isAuthed
+        ? supabase
+            .from("agent_profiles")
+            .select(`
+              *,
+              agent_county_preferences ( county_id, counties (name, state) )
+            `)
+            .eq(filterCol, idOrCode)
+            .maybeSingle()
+        : supabase
+            .from("agent_profiles")
+            .select(`
+              id, aac_id, first_name, last_name, title, company, office_name, team_name,
+              bio, social_links, buyer_incentives, seller_incentives, headshot_url,
+              logo_url, header_background_type, header_background_value, header_image_url,
+              office_city, office_state, office_zip, receive_buyer_alerts,
+              created_at, updated_at,
+              agent_county_preferences ( county_id, counties (name, state) )
+            `)
+            .eq(filterCol, idOrCode)
+            .maybeSingle();
+
+      const { data: agentData, error: agentError } = await agentQuery;
 
       if (agentError) throw agentError;
       if (!agentData) {
@@ -238,7 +257,7 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
         return;
       }
 
-      setAgent(agentData as AgentProfileData);
+      setAgent(agentData as unknown as AgentProfileData);
 
       const agentUuid = agentData.id;
 

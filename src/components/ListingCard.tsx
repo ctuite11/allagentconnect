@@ -280,8 +280,6 @@ const ListingCard = ({
     id: string;
     first_name: string;
     last_name: string;
-    email: string;
-    phone?: string | null;
     headshot_url?: string | null;
     company?: string | null;
   } | null>(null);
@@ -302,7 +300,7 @@ const ListingCard = ({
       try {
         const { data, error } = await supabase
           .from("agent_profiles")
-          .select("id, first_name, last_name, email, phone, headshot_url, company")
+          .select("id, first_name, last_name, headshot_url, company")
           .eq("id", listing.agent_id)
           .single();
         
@@ -1513,12 +1511,9 @@ const ListingCard = ({
                 {agentProfile.first_name} {agentProfile.last_name}
               </div>
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                {agentProfile.phone && (
-                  <span className="flex items-center gap-1">
-                    <Phone className="w-3 h-3" />
-                    {formatPhoneNumber(agentProfile.phone)}
-                  </span>
-                )}
+                {agentProfile.company ? (
+                  <span className="truncate">{agentProfile.company}</span>
+                ) : null}
               </div>
             </div>
             <ContactAgentDialog
