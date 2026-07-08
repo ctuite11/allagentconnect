@@ -1,22 +1,43 @@
-## Set a temp password for Tyler Smith
+# Agent profile audit — who needs a "set up your profile" email
 
-Found the account: **Tyler Smith — tyler@beaconandbondgroup.com**
+Read-only audit of `agent_profiles` + `agent_settings`. No code, no DB changes.
 
-I'll set a strong temporary password on his auth account so you can share it with him directly. He can log in and then change it from Account Settings (or use "Forgot password" any time).
+## Headline numbers
 
-### Proposed temp password
-`TempAAC-Tyler-7391!`
+- Total agents in `agent_profiles`: **187**
+- Onboarding **never started**: **186**
+- Onboarding started, not completed: **1**
+- Onboarding completed: **0**
+- Missing headshot: **142**
+- Missing brokerage/company: **49**
+- Missing phone: **31**
+- Missing first/last name: **0**
+- **Agents missing at least one of headshot / company / phone → 148**
 
-(Meets the policy: 8+ chars, upper, lower, number, symbol.)
+Definition used for "needs setup email" (matches `checkProfileComplete` in `src/hooks/useAgentSettings.ts`): missing any of headshot_url, company, or phone/email contact. Name is present for everyone.
 
-### How it's applied
-- Call the existing `admin-set-user-password` edge function as an admin, targeting `tyler@beaconandbondgroup.com` with the password above.
-- That function also marks the account activated and, if his status is still `invited`, flips it to `verified`.
-- No code changes, no schema changes — just a one-shot admin action.
+## Recommended segments for the email
 
-### What you send Tyler
-> Email: tyler@beaconandbondgroup.com
-> Temporary password: TempAAC-Tyler-7391!
-> Login: https://allagentconnect.com/auth — please change your password after signing in.
+1. **Priority A — 142 agents missing a headshot.** Highest-visibility gap; drives their public profile card. Single CTA: "Add your headshot."
+2. **Priority B — 49 agents missing brokerage** (subset overlaps with A). CTA: "Add your brokerage."
+3. **Priority C — 31 agents missing phone.** CTA: "Add a contact number."
+4. **Combined blast** — 148 unique agents missing at least one field. One email, dynamic checklist of what's missing.
 
-Want me to proceed with that exact password, or would you like a different one?
+Onboarding-state overlay (independent axis):
+- 186 have `onboarding_started = false` → they've never touched onboarding. Same email works; softer copy ("Finish setting up your profile").
+- 1 started but didn't finish → "Pick up where you left off."
+
+## Deliverable
+
+Once approved, in build mode I will:
+1. Export a CSV to `/mnt/documents/agent-profile-setup-needed.csv` with columns:
+   `id, email, first_name, last_name, company, phone, headshot_url, onboarding_started, onboarding_completed, missing_fields (comma-separated), created_at`
+   — one row per agent in the 148 "needs setup" set, sorted by most-missing-fields first.
+2. Print top-of-list summary (first ~20 rows) in chat so you can eyeball it.
+
+Nothing else changes — no emails sent, no schema touched, no code edited. Sending the email itself is a separate follow-up decision (which template, from which address, subject line).
+
+## Open questions before I export
+
+- Do you want the CSV scoped to the **148 missing-any-field** set, or the stricter **142 missing-headshot** set, or **all 187** with a `needs_email` flag column?
+- Should I exclude any admin/test accounts (e.g. your own `chris@allagentconnect.com`, the default founder id `1fc50da1-…`)?
