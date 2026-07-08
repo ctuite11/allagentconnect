@@ -2635,7 +2635,7 @@ const AddListing = () => {
 
     // --- Centralized validation (skip for auto-save) ---
     if (!isAutoSave) {
-      const errors = getValidationErrors();
+      const errors = getValidationErrors(isLiveStatus(formData.status));
       if (errors.length > 0) {
         setValidationErrors(errors);
         window.scrollTo({ top: 0, behavior: 'smooth' });
