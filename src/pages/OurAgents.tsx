@@ -27,6 +27,8 @@ import {
   isVisibleInAgentNetwork,
 } from "@/lib/agentNetworkVisibility";
 import { matchesAgentNetworkSearch } from "@/lib/agentNetworkSearch";
+import { matchesAgentName } from "@/lib/agentNameSearch";
+import LocationAutocomplete, { type SelectedLocation } from "@/components/agent-directory/LocationAutocomplete";
 
 interface EnrichedAgent {
   id: string;
@@ -92,6 +94,7 @@ const OurAgents = ({
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedState, setSelectedState] = useState("");
   const [selectedCounties, setSelectedCounties] = useState<string[]>([]);
+  const [selectedLocation, setSelectedLocation] = useState<SelectedLocation | null>(null);
   const [showBuyerIncentivesOnly, setShowBuyerIncentivesOnly] = useState(false);
   const [showListingAgentsOnly, setShowListingAgentsOnly] = useState(false);
   const [sortOrder, setSortOrder] = useState<"a-z" | "z-a">("a-z");
