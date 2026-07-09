@@ -1,50 +1,38 @@
-## Goal
+## What's going on
 
-Split the single search on `/our-agents`, `/our-members`, `/agents`, `/find-agent` (all render `src/pages/OurAgents.tsx`) into two focused inputs:
+There are two `agent_profiles` rows for Matt Munden:
 
-1. **Name** — matches only `first_name` / `last_name`.
-2. **Location** — Google Places autocomplete (city / state / town / neighborhood / region).
+| id (short) | email | first_name | last_name |
+|---|---|---|---|
+| `3c9d908b…` | matt.munden@**compss**.com (typo) | Matt | **Munden** ✅ |
+| `b13407d8…` | matt.munden@**compass**.com (correct) | Matt | **matt.munden@compass.com** ❌ |
 
-Visibility rules (`isVisibleInAgentNetwork`, verified filter, headshot gate) stay untouched.
+Your admin edit landed on the typo-email row (compss.com). The correct-email row (compass.com) is the one showing in the admin list with the email-as-last-name.
 
-## Changes
+A third row has the same bug: James Lynch (`jlynchre@gmail.com`) has `last_name` = his email.
 
-### 1. New name-only matcher — `src/lib/agentNameSearch.ts`
-- Export `matchesAgentName(agent, query)`.
-- Normalize query with existing `normalizeSearchText`.
-- Split into tokens. Every token must be a prefix (or substring) of `first_name`, `last_name`, or the concatenated `"first last"`.
-- Two-token queries also match when token1 → first_name AND token2 → last_name.
-- Does NOT read company, office, email, phone, service areas, bio.
+There are also matching `agent_early_access` rows for both Matt emails with `first_name = "Unknown"`, `last_name = "Agent"`, still `pending` — likely the seed of this whole mess.
 
-### 2. New location autocomplete — `src/components/agent-directory/LocationAutocomplete.tsx`
-- Thin wrapper around existing `AddressAutocomplete` passing `types={["(regions)"]}` so Google returns cities, states, counties, neighborhoods (not street addresses).
-- Parses `place.address_components` into `{ formatted, city, state, stateShort, county, neighborhood }`.
-- Shows an "X" clear button; emits `null` on clear.
+## Plan
 
-### 3. `src/pages/OurAgents.tsx`
-- Replace the single search input block (around the current `Search` input, ~lines 447-462) with a two-input row:
-  - **Name input** — placeholder `Search by first or last name`.
-  - **Location input** — placeholder `Search city, state, or area`, powered by `LocationAutocomplete`.
-- Add state: `selectedLocation: { formatted, city, state, stateShort, county } | null`.
-- Update `filteredAgents` (~line 313):
-  - Name filter → use new `matchesAgentName` (replaces `matchesAgentNetworkSearch` here only).
-  - Location filter → if `selectedLocation` set, keep agent when ANY of its `serviceAreas` strings (already `"City, ST"` / `"County, ST"`) contains the selected `city` OR ends with `, ${stateShort}` / `, ${state}` OR matches selected `county`. Fall back to substring of `formatted` when no components resolved.
-- Reset paging on `selectedLocation` change; include in `handleClearFilters`.
-- Update the empty-state copy conditional to also consider `selectedLocation`.
-- Leave the existing (currently unrendered) `selectedState` / `selectedCounties` state alone.
+1. **Fix the data (no code change)**
+   - `agent_profiles` row `b13407d8…` → set `last_name = 'Munden'`.
+   - `agent_profiles` row `fd86632b…` (James Lynch) → set `last_name = 'Lynch'`.
+   - Leave the typo-email duplicate `3c9d908b…` alone for now and flag it for you to decide: delete the duplicate, or keep it and delete the compass.com one. I won't merge/delete without your call.
 
-### 4. Out of scope
-- `src/pages/AgentSearch.tsx` — not routed anywhere, untouched.
-- No schema changes, no visibility rule changes, no changes to the filter/sort bar (`AgentDirectoryFilters`).
+2. **Confirm which Matt row you actually want to keep**
+   - Ask you which email is real (`@compass.com` is almost certainly correct) so we can delete the other duplicate `agent_profiles` + `agent_early_access` rows in a follow-up.
 
-## Technical notes
+3. **Sweep for the same bug across the whole table**
+   - Run `SELECT id, email, last_name FROM agent_profiles WHERE last_name ILIKE '%@%'` and report the list back to you before touching anything else. Fix each by splitting the local-part or asking you, case-by-case — no bulk guessing.
 
-- Google key already provisioned via `getGoogleMapsBrowserKey()` and used by `AddressAutocomplete`; no new secrets or connector work.
-- `(regions)` autocomplete type covers city, state, county (admin_area_level_2), neighborhood, and postal town — matches the requested surface.
-- Matching city against `serviceAreas` uses case-insensitive substring so `"Boston, MA"` matches `"Boston"`. State-only selections match every service area ending in that state.
-- Name matcher is a pure function → unit-test friendly and cheap in the existing `useMemo`.
+4. **Out of scope for this turn**
+   - No code changes to admin list, edit form, or the early-access → agent conversion flow. If you want, I can open a separate plan to harden the conversion so `last_name` never gets seeded with the email again — but that's a separate task.
 
-## Files touched
-- add `src/lib/agentNameSearch.ts`
-- add `src/components/agent-directory/LocationAutocomplete.tsx`
-- edit `src/pages/OurAgents.tsx`
+### Technical notes
+
+- Data fixes go through the insert tool (UPDATE statements), not a migration.
+- The admin list (`admin-list-agents` edge function) reads `agent_profiles.last_name` directly, so once the row is corrected the admin UI will show it correctly on next load — no cache/deploy needed.
+- Duplicate cleanup (step 2) will need coordinated deletes across `agent_profiles`, `agent_settings`, and `agent_early_access` for whichever id you drop; I'll plan that separately once you confirm the keeper.
+
+**Question before I run step 1:** confirm `matt.munden@compass.com` is the correct email (so I fix that row's last name to "Munden"), and confirm "Lynch" is right for James.
