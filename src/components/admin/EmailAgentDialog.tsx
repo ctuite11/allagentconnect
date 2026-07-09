@@ -298,7 +298,6 @@ export function EmailAgentDialog({
 
             {/* Manual add */}
             <div className="space-y-1 pt-1">
-              <Label htmlFor="manual-email" className="text-xs text-muted-foreground">Add another recipient</Label>
               <div className="flex items-end gap-2">
                 <div className="flex-1">
                 <Input
