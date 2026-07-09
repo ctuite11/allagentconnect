@@ -1,18 +1,16 @@
-## Simplify the Email Agent dialog
+## Remove the manual "add recipient" input entirely
 
-Two small edits in `src/components/admin/EmailAgentDialog.tsx`:
+In `src/components/admin/EmailAgentDialog.tsx`, remove the whole manual-add block from the dialog — the email input, the Add button, and the wrapping container (lines ~300–331).
 
-1. **Remove the "Name (optional)" field** from the manual-add-recipient row.
-   - The row becomes just: Email input + Add button.
-   - When someone is added manually, we'll use the email address as the display name (or the part before `@`) so it still shows nicely in the recipient chip.
+Also clean up the now-unused code:
+- `manualRecipients` state and `setManualRecipients` calls (including the reset in the send handler and the initial state).
+- `manualEmail` state and `setManualEmail`.
+- `addManualRecipient` function.
+- `removeManualRecipient` function and the per-chip remove `X` button (only manual recipients could be removed; with manual add gone this is dead code).
+- Update `allRecipients` to just be `recipients` (no more merging with manual).
 
-2. **Clarify what the row is for** — relabel it from an untitled field group to a small heading like "Add another recipient" so it's obvious this is for adding people, not your own name.
+### Result
+The recipients section shows only the agents you selected on the admin page. No inputs, no Add button. If you need to email someone extra, you'd add them via the admin table instead.
 
 ### Not changing
-- Sender identity — emails already go out from your admin account; there's no sender-name input to remove.
-- The Profile Yes/No column — already exists (per your note) so you can visually pick who to remind and use the existing per-row Email action or Select-All → Email Selected.
-
-### Technical notes
-- Delete the `Name (optional)` `<Label>` + `<Input>` block (lines ~305–315).
-- Drop `manualName` state and `setManualName` calls; `addManualRecipient` uses `manualEmail` to derive the display name.
-- No backend, template, or edge-function changes.
+- Sender identity, template picker, subject, message, batch controls — all untouched.
