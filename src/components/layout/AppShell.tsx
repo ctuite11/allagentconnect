@@ -59,6 +59,7 @@ export function AppShell({ children }: AppShellProps) {
         </header>
         <AgentContentInsetProvider value>
           <div
+            data-app-scroll-root
             className={cn(
               "flex-1 w-full min-w-0 overflow-y-auto overflow-x-hidden overscroll-contain bg-[#FFFFFF]",
               agentPageShellTopClass,
