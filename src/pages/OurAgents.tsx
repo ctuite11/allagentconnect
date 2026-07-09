@@ -526,7 +526,7 @@ function AgentPhotoTileGrid({
             ) : filteredAgents.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-neutral-200 bg-white px-6 py-14 text-center shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
                 <p className="mx-auto max-w-md text-[13px] leading-snug text-neutral-600">
-                  {searchQuery || selectedState || selectedCounties.length > 0
+                  {searchQuery || selectedLocation || selectedState || selectedCounties.length > 0
                     ? effectivePublicMode
                       ? "No agents matched your search."
                       : "No agents found matching your criteria."
