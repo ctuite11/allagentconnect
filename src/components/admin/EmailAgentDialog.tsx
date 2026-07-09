@@ -170,7 +170,6 @@ export function EmailAgentDialog({
         setBatchSize("all");
         setBatchIndex(0);
         setManualRecipients([]);
-        setManualName("");
         setManualEmail("");
         onOpenChange(false);
       }
