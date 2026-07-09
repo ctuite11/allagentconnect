@@ -26,7 +26,8 @@ import {
   AGENT_NETWORK_DB_FILTERS,
   isVisibleInAgentNetwork,
 } from "@/lib/agentNetworkVisibility";
-import { matchesAgentNetworkSearch } from "@/lib/agentNetworkSearch";
+import { matchesAgentName } from "@/lib/agentNameSearch";
+import LocationAutocomplete, { type SelectedLocation } from "@/components/agent-directory/LocationAutocomplete";
 
 interface EnrichedAgent {
   id: string;
@@ -92,6 +93,7 @@ const OurAgents = ({
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedState, setSelectedState] = useState("");
   const [selectedCounties, setSelectedCounties] = useState<string[]>([]);
+  const [selectedLocation, setSelectedLocation] = useState<SelectedLocation | null>(null);
   const [showBuyerIncentivesOnly, setShowBuyerIncentivesOnly] = useState(false);
   const [showListingAgentsOnly, setShowListingAgentsOnly] = useState(false);
   const [sortOrder, setSortOrder] = useState<"a-z" | "z-a">("a-z");
@@ -315,7 +317,31 @@ function AgentPhotoTileGrid({
 
     // Visible-field text search only (name, brokerage, email, phone).
     if (searchQuery.trim()) {
-      result = result.filter((agent) => matchesAgentNetworkSearch(agent, searchQuery));
+      result = result.filter((agent) => matchesAgentName(agent, searchQuery));
+    }
+
+    // Location filter — Google Places selection matched against service areas
+    if (selectedLocation) {
+      const loc = selectedLocation;
+      const city = loc.city?.toLowerCase().trim();
+      const stateShort = loc.stateShort?.toUpperCase().trim();
+      const stateLong = loc.state?.toLowerCase().trim();
+      const county = loc.county?.toLowerCase().trim();
+      const formatted = loc.formatted?.toLowerCase().trim();
+
+      result = result.filter((agent) => {
+        const areas = (agent.serviceAreas || []).map((a) => a.toLowerCase());
+        if (areas.length === 0) return false;
+
+        if (city && areas.some((a) => a.includes(city))) return true;
+        if (county && areas.some((a) => a.includes(county))) return true;
+        if (stateShort && areas.some((a) => a.endsWith(`, ${stateShort.toLowerCase()}`))) return true;
+        if (stateLong && areas.some((a) => a.includes(stateLong))) return true;
+        if (!city && !county && !stateShort && !stateLong && formatted) {
+          return areas.some((a) => a.includes(formatted));
+        }
+        return false;
+      });
     }
 
     // State filter (check service areas)
@@ -354,7 +380,7 @@ function AgentPhotoTileGrid({
     }
 
     return result;
-  }, [agents, searchQuery, selectedState, selectedCounties, counties, showBuyerIncentivesOnly, showListingAgentsOnly, sortOrder]);
+  }, [agents, searchQuery, selectedState, selectedCounties, selectedLocation, counties, showBuyerIncentivesOnly, showListingAgentsOnly, sortOrder]);
 
   // Keep header count + pager in sync with the filtered set.
   useEffect(() => {
@@ -364,7 +390,7 @@ function AgentPhotoTileGrid({
   // Reset to page 1 whenever the filtered result changes.
   useEffect(() => {
     setPage(1);
-  }, [searchQuery, selectedState, selectedCounties, showBuyerIncentivesOnly, showListingAgentsOnly, pageSize]);
+  }, [searchQuery, selectedState, selectedCounties, selectedLocation, showBuyerIncentivesOnly, showListingAgentsOnly, pageSize]);
 
   // Client-side pagination over the filtered set.
   const paginatedAgents = useMemo(() => {
@@ -385,6 +411,7 @@ function AgentPhotoTileGrid({
     setSearchQuery("");
     setSelectedState("");
     setSelectedCounties([]);
+    setSelectedLocation(null);
     setShowBuyerIncentivesOnly(false);
     setShowListingAgentsOnly(false);
     setSortOrder("a-z");
@@ -443,22 +470,23 @@ function AgentPhotoTileGrid({
               className="mb-0"
             />
 
-            {/* Search Bar */}
-            <div className="mt-5 max-w-xl">
+            {/* Search Bar — separate name and location inputs */}
+            <div className="mt-5 grid max-w-3xl grid-cols-1 gap-3 md:grid-cols-2">
               <div className="relative">
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" aria-hidden />
                 <Input
                   type="text"
-                  placeholder={
-                    effectivePublicMode
-                      ? "Search by name, city, or brokerage..."
-                      : "Search by name, company, city, or ZIP..."
-                  }
+                  placeholder="Search by first or last name"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="h-10 rounded-lg border-neutral-200 bg-white pl-10 pr-3 text-sm shadow-none focus-visible:border-neutral-900 focus-visible:ring-1 focus-visible:ring-neutral-300/80 md:h-11 md:text-[15px]"
                 />
               </div>
+              <LocationAutocomplete
+                value={selectedLocation}
+                onChange={setSelectedLocation}
+                placeholder="Search city, state, or area"
+              />
             </div>
           </div>
         </section>
@@ -497,7 +525,7 @@ function AgentPhotoTileGrid({
             ) : filteredAgents.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-neutral-200 bg-white px-6 py-14 text-center shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
                 <p className="mx-auto max-w-md text-[13px] leading-snug text-neutral-600">
-                  {searchQuery || selectedState || selectedCounties.length > 0
+                  {searchQuery || selectedLocation || selectedState || selectedCounties.length > 0
                     ? effectivePublicMode
                       ? "No agents matched your search."
                       : "No agents found matching your criteria."
