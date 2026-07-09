@@ -42,7 +42,6 @@ export function EmailAgentDialog({
   const [batchSize, setBatchSize] = useState<string>("all"); // "all" | "250" | "500" | "1000"
   const [batchIndex, setBatchIndex] = useState<number>(0); // 0-based
   const [manualRecipients, setManualRecipients] = useState<Array<{ id: string; email: string; name: string }>>([]);
-  const [manualName, setManualName] = useState("");
   const [manualEmail, setManualEmail] = useState("");
   const [senderName, setSenderName] = useState("");
   const [senderEmail, setSenderEmail] = useState("");
@@ -76,7 +75,6 @@ export function EmailAgentDialog({
 
   const addManualRecipient = () => {
     const email = manualEmail.trim();
-    const name = manualName.trim();
     if (!email) {
       toast.error("Email is required");
       return;
@@ -92,9 +90,8 @@ export function EmailAgentDialog({
     }
     setManualRecipients((prev) => [
       ...prev,
-      { id: `manual-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, email, name: name || email.split("@")[0] },
+      { id: `manual-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, email, name: email.split("@")[0] },
     ]);
-    setManualName("");
     setManualEmail("");
   };
 
@@ -173,7 +170,6 @@ export function EmailAgentDialog({
         setBatchSize("all");
         setBatchIndex(0);
         setManualRecipients([]);
-        setManualName("");
         setManualEmail("");
         onOpenChange(false);
       }
@@ -301,20 +297,10 @@ export function EmailAgentDialog({
             </div>
 
             {/* Manual add */}
-            <div className="flex items-end gap-2 pt-1">
-              <div className="flex-1 space-y-1">
-                <Label htmlFor="manual-name" className="text-xs text-muted-foreground">Name (optional)</Label>
-                <Input
-                  id="manual-name"
-                  value={manualName}
-                  onChange={(e) => setManualName(e.target.value)}
-                  placeholder="Jane Doe"
-                  className="border-slate-200 h-9"
-                  maxLength={120}
-                />
-              </div>
-              <div className="flex-1 space-y-1">
-                <Label htmlFor="manual-email" className="text-xs text-muted-foreground">Email</Label>
+            <div className="space-y-1 pt-1">
+              <Label htmlFor="manual-email" className="text-xs text-muted-foreground">Add another recipient</Label>
+              <div className="flex items-end gap-2">
+                <div className="flex-1">
                 <Input
                   id="manual-email"
                   type="email"
@@ -341,6 +327,7 @@ export function EmailAgentDialog({
                 Add
               </Button>
             </div>
+          </div>
           </div>
           ) : (
             <div className="space-y-1.5">

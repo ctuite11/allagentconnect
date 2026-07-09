@@ -1,27 +1,18 @@
-## Problem
-Agent Network cards on `/our-members` render without phone or email. Root cause: the `agent_profiles` select in `src/pages/OurAgents.tsx` (line 151) omits the `email`, `phone`, and `cell_phone` columns. The enrichment mapping (lines 246–248) still tries to read them, so those fields land as `undefined` and the card's `AgentPhotoTile` renders nothing for the contact lines.
+## Simplify the Email Agent dialog
 
-The search helper `src/lib/agentNetworkSearch.ts` already expects `email` / `phone` / `cell_phone` on each agent, so it's genuinely a missing-fetch bug — not a privacy gate.
+Two small edits in `src/components/admin/EmailAgentDialog.tsx`:
 
-## Fix
-Single-file, single-line change in `src/pages/OurAgents.tsx`:
+1. **Remove the "Name (optional)" field** from the manual-add-recipient row.
+   - The row becomes just: Email input + Add button.
+   - When someone is added manually, we'll use the email address as the display name (or the part before `@`) so it still shows nicely in the recipient chip.
 
-Update the select at line 151 from:
-```
-id, aac_id, first_name, last_name, company, office_name, team_name, headshot_url, buyer_incentives, updated_at, title,
-```
-to:
-```
-id, aac_id, first_name, last_name, company, office_name, team_name, headshot_url, buyer_incentives, updated_at, title, email, phone, cell_phone,
-```
+2. **Clarify what the row is for** — relabel it from an untitled field group to a small heading like "Add another recipient" so it's obvious this is for adding people, not your own name.
 
-No other logic changes. Enrichment mapping and card rendering already handle these fields.
+### Not changing
+- Sender identity — emails already go out from your admin account; there's no sender-name input to remove.
+- The Profile Yes/No column — already exists (per your note) so you can visually pick who to remind and use the existing per-row Email action or Select-All → Email Selected.
 
-## Verification
-- Load `/our-members` as a verified agent → cards show name, brokerage, email, and phone.
-- Text search by phone digits / email substring works (already wired via `agentNetworkSearch`).
-- No RLS change: `agent_profiles` already returns these columns to authenticated agents.
-
-## Out of scope
-- Public `/our-agents` page (`PublicOurAgents`) — not mentioned by user; leave anti-scraping behavior untouched.
-- Card layout / styling.
+### Technical notes
+- Delete the `Name (optional)` `<Label>` + `<Input>` block (lines ~305–315).
+- Drop `manualName` state and `setManualName` calls; `addManualRecipient` uses `manualEmail` to derive the display name.
+- No backend, template, or edge-function changes.
