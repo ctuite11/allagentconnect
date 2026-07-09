@@ -141,8 +141,6 @@ export function EmailAgentDialog({
         setTemplate("custom");
         setBatchSize("all");
         setBatchIndex(0);
-        setManualRecipients([]);
-        setManualEmail("");
         onOpenChange(false);
       }
     } catch (error: any) {
@@ -245,60 +243,15 @@ export function EmailAgentDialog({
               {currentBatch.length === 0 ? (
                 <div className="text-xs text-muted-foreground py-1">No recipients yet. Add one below.</div>
               ) : (
-                currentBatch.map((recipient) => {
-                  const isManual = manualRecipients.some((m) => m.id === recipient.id);
-                  return (
-                    <div key={recipient.id} className="flex items-center gap-2 text-sm py-0.5">
-                      <Mail className="h-3 w-3 text-muted-foreground" />
-                      <span className="font-medium">{recipient.name}</span>
-                      <span className="text-muted-foreground">({recipient.email})</span>
-                      {isManual && (
-                        <button
-                          type="button"
-                          onClick={() => removeManualRecipient(recipient.id)}
-                          className="ml-auto text-muted-foreground hover:text-red-600"
-                          aria-label="Remove recipient"
-                        >
-                          <X className="h-3.5 w-3.5" />
-                        </button>
-                      )}
-                    </div>
-                  );
-                })
+                currentBatch.map((recipient) => (
+                  <div key={recipient.id} className="flex items-center gap-2 text-sm py-0.5">
+                    <Mail className="h-3 w-3 text-muted-foreground" />
+                    <span className="font-medium">{recipient.name}</span>
+                    <span className="text-muted-foreground">({recipient.email})</span>
+                  </div>
+                ))
               )}
             </div>
-
-            {/* Manual add */}
-            <div className="space-y-1 pt-1">
-              <div className="flex items-end gap-2">
-                <div className="flex-1">
-                <Input
-                  id="manual-email"
-                  type="email"
-                  value={manualEmail}
-                  onChange={(e) => setManualEmail(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      addManualRecipient();
-                    }
-                  }}
-                  placeholder="jane@example.com"
-                  className="border-slate-200 h-9"
-                  maxLength={255}
-                />
-              </div>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={addManualRecipient}
-                className="rounded-lg border-slate-200 h-9"
-              >
-                <Plus className="h-4 w-4 mr-1" />
-                Add
-              </Button>
-            </div>
-          </div>
           </div>
           ) : (
             <div className="space-y-1.5">
