@@ -16,7 +16,7 @@ import { EmailComposerToolbar } from "@/components/email/EmailComposerToolbar";
 import { supabase } from "@/integrations/supabase/client";
 import { useSenderProfilePrefill } from "@/lib/currentSenderProfile";
 import { toast } from "sonner";
-import { Loader2, Mail, Users, ChevronLeft, ChevronRight, Plus, X } from "lucide-react";
+import { Loader2, Mail, Users, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface EmailAgentDialogProps {
   open: boolean;
@@ -41,8 +41,6 @@ export function EmailAgentDialog({
   const [template, setTemplate] = useState<string>("custom");
   const [batchSize, setBatchSize] = useState<string>("all"); // "all" | "250" | "500" | "1000"
   const [batchIndex, setBatchIndex] = useState<number>(0); // 0-based
-  const [manualRecipients, setManualRecipients] = useState<Array<{ id: string; email: string; name: string }>>([]);
-  const [manualEmail, setManualEmail] = useState("");
   const [senderName, setSenderName] = useState("");
   const [senderEmail, setSenderEmail] = useState("");
   const messageRef = useRef<HTMLTextAreaElement>(null);
@@ -65,39 +63,13 @@ export function EmailAgentDialog({
     setBatchIndex(0);
   }, [batchSize, recipients.length]);
 
-  const allRecipients = [...recipients, ...manualRecipients];
+  const allRecipients = recipients;
   const sizeNum = batchSize === "all" ? allRecipients.length : parseInt(batchSize, 10);
   const totalBatches = sizeNum > 0 ? Math.max(1, Math.ceil(allRecipients.length / sizeNum)) : 1;
   const safeBatchIndex = Math.min(batchIndex, totalBatches - 1);
   const start = safeBatchIndex * sizeNum;
   const end = Math.min(start + sizeNum, allRecipients.length);
   const currentBatch = allRecipients.slice(start, end);
-
-  const addManualRecipient = () => {
-    const email = manualEmail.trim();
-    if (!email) {
-      toast.error("Email is required");
-      return;
-    }
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      toast.error("Please enter a valid email address");
-      return;
-    }
-    if (allRecipients.some((r) => r.email.toLowerCase() === email.toLowerCase())) {
-      toast.error("This recipient is already in the list");
-      return;
-    }
-    setManualRecipients((prev) => [
-      ...prev,
-      { id: `manual-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, email, name: email.split("@")[0] },
-    ]);
-    setManualEmail("");
-  };
-
-  const removeManualRecipient = (id: string) => {
-    setManualRecipients((prev) => prev.filter((r) => r.id !== id));
-  };
 
   const handleSend = async () => {
     const isTemplated =
