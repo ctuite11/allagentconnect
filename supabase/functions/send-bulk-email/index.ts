@@ -431,8 +431,9 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const body: BulkEmailRequest = await req.json();
     const isDiagnostic = body.diagnostic === true && Array.isArray(body.recipients) && body.recipients.length === 1;
+    const isProfileReminder = body.template === "profile-reminder";
 
-    if (BULK_OUTREACH_PAUSED && !isDiagnostic) {
+    if (BULK_OUTREACH_PAUSED && !isDiagnostic && !isProfileReminder) {
       return new Response(
         JSON.stringify({
           error: "Bulk outreach is temporarily paused to protect email deliverability.",
