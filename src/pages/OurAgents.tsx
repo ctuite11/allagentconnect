@@ -26,7 +26,6 @@ import {
   AGENT_NETWORK_DB_FILTERS,
   isVisibleInAgentNetwork,
 } from "@/lib/agentNetworkVisibility";
-import { matchesAgentNetworkSearch } from "@/lib/agentNetworkSearch";
 import { matchesAgentName } from "@/lib/agentNameSearch";
 import LocationAutocomplete, { type SelectedLocation } from "@/components/agent-directory/LocationAutocomplete";
 
