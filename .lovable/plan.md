@@ -1,41 +1,22 @@
-## Add a "Complete Your Profile" reminder template to the dropdown
+# Send Test Profile Reminder Email
 
-In `src/components/admin/EmailAgentDialog.tsx`, add a new option to the Template dropdown. Unlike the four existing pre-built templates (which ignore the message body and send a fixed HTML design), this one behaves like a saved snippet: it pre-fills the Subject and Message fields, and both stay fully editable.
+Send the newly-added "Complete Your Profile — Reminder" template to your admin email so you can review it in your inbox.
 
-### Dropdown entry
-- Value: `profile-reminder`
-- Label: **"Complete Your Profile — Reminder"**
-- Placed right under "Custom message".
+## Option A — Send via the app (recommended, no code changes)
 
-### On select, pre-fill
+1. Open **Admin → Approvals → Email Agents** dialog.
+2. In the template dropdown, select **"Complete Your Profile — Reminder"** — Subject and Message auto-fill.
+3. In the recipient list, select only your own admin agent record.
+4. Click Send.
 
-**Subject:** `Complete your All Agent Connect profile`
+The bulk-send function auto-prepends `Hello {first_name},` per recipient, so your inbox copy will read `Hello {your first name},` followed by the reminder body, then `Best, Chris / All Agent Connect`.
 
-**Message** (the greeting line is intentionally omitted — the bulk-send function auto-prepends `Hello {first name},` per recipient, so we don't hardcode "Ryan"):
+## Option B — I send it server-side to a specific address
 
-```
-This is a quick reminder to complete your agent profile and communication preferences on All Agent Connect.
+If you'd rather not go through the UI, reply with the email address you want it delivered to. I'll invoke the existing `send-bulk-email` edge function once with that single recipient using the template's subject and body. No code changes, no template changes.
 
-Agents without a completed profile do not appear in the Agent Network and will not be eligible to receive seller and buyer leads as we roll out these new features.
+## Out of scope
 
-Completing your profile and setting your communication preferences only takes a few minutes and ensures you can take full advantage of the network.
+- No new edge function, no new React Email template, no styling changes. This is purely a delivery test of the plain-text template that was just added to the dropdown.
 
-Complete your profile today to make sure you're visible and eligible for new opportunities.
-
-Best,
-
-Chris
-All Agent Connect
-```
-
-### Behavior
-- Selecting the template fills Subject + Message.
-- Both fields remain editable before sending.
-- Message is NOT ignored (unlike the four "pre-built" templates) — what you see is what gets sent.
-- Works for both single-recipient (per-row Email) and bulk (Email Selected).
-
-### Technical notes
-- Add the `SelectItem` in the template `<Select>`.
-- In the `onValueChange` handler, add a branch for `profile-reminder`: set subject if empty, overwrite message with the block above.
-- No changes to `isTemplated` — this stays a Custom-style editable template.
-- No backend, edge-function, or React Email template changes.
+Approve this plan and tell me which option (A or B, and the address if B) you'd like.
