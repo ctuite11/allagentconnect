@@ -1,22 +1,22 @@
-# Send Test Profile Reminder Email
+# Fix profile-reminder send from UI
 
-Send the newly-added "Complete Your Profile — Reminder" template to your admin email so you can review it in your inbox.
+## Root cause
 
-## Option A — Send via the app (recommended, no code changes)
+`EmailAgentDialog.tsx` line 123 only forwards `template` to the edge function when it's one of the fixed HTML templates (`isTemplated`). For `profile-reminder`, `template` is sent as `undefined`, so the edge function doesn't know to bypass the `BULK_OUTREACH_PAUSED` gate and returns 503 — surfaced in the UI as "Edge Function returned a non-2xx status code".
 
-1. Open **Admin → Approvals → Email Agents** dialog.
-2. In the template dropdown, select **"Complete Your Profile — Reminder"** — Subject and Message auto-fill.
-3. In the recipient list, select only your own admin agent record.
-4. Click Send.
+## Change (frontend only, one file)
 
-The bulk-send function auto-prepends `Hello {first_name},` per recipient, so your inbox copy will read `Hello {your first name},` followed by the reminder body, then `Best, Chris / All Agent Connect`.
+`src/components/admin/EmailAgentDialog.tsx`, in the `send-bulk-email` invoke body:
 
-## Option B — I send it server-side to a specific address
+- `template: isTemplated ? template : undefined` → `template: isTemplated ? template : (template === "profile-reminder" ? "profile-reminder" : undefined)`
+- `message: isTemplated ? "" : message.trim()` stays unchanged — profile-reminder is NOT templated, so the editable message body is still sent as-is.
 
-If you'd rather not go through the UI, reply with the email address you want it delivered to. I'll invoke the existing `send-bulk-email` edge function once with that single recipient using the template's subject and body. No code changes, no template changes.
+## Result
+
+- Selecting **Complete Your Profile — Reminder**, editing if desired, and clicking Send now reaches the edge function with `template: "profile-reminder"`, which the deployed backend already treats as a pause-gate bypass while still rendering as a custom message (`Hello {first name},` + your body + unsubscribe footer).
+- Every other template and the pause behavior for all other bulk sends are unchanged.
 
 ## Out of scope
 
-- No new edge function, no new React Email template, no styling changes. This is purely a delivery test of the plain-text template that was just added to the dropdown.
-
-Approve this plan and tell me which option (A or B, and the address if B) you'd like.
+- No edge-function changes (already deployed correctly last turn).
+- No changes to any other template's send path, subject/body auto-fill, or the pause gate itself.
