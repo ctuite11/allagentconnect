@@ -1,22 +1,20 @@
-# Fix profile-reminder send from UI
+## Problem
 
-## Root cause
+Navigating between agent profile pages (and other authenticated pages) leaves the new page scrolled to where the previous page was. `window.scrollTo(0, 0)` in `ScrollRestoration` has no effect because the actual scroll container is `AppShell`'s inner `overflow-y-auto` div, not the window.
 
-`EmailAgentDialog.tsx` line 123 only forwards `template` to the edge function when it's one of the fixed HTML templates (`isTemplated`). For `profile-reminder`, `template` is sent as `undefined`, so the edge function doesn't know to bypass the `BULK_OUTREACH_PAUSED` gate and returns 503 — surfaced in the UI as "Edge Function returned a non-2xx status code".
+## Fix
 
-## Change (frontend only, one file)
+1. **Tag the AppShell scroll container** in `src/components/layout/AppShell.tsx` with a stable hook, e.g. `data-app-scroll-root` on the existing `<div class="flex-1 ... overflow-y-auto ...">`.
 
-`src/components/admin/EmailAgentDialog.tsx`, in the `send-bulk-email` invoke body:
+2. **Update `src/components/ScrollRestoration.tsx`** so that on every `location.pathname` change it resets scroll on both surfaces:
+   - `window.scrollTo(0, 0)` (public pages / footer-based layouts)
+   - Every element matching `[data-app-scroll-root]` → `el.scrollTop = 0` (agent AppShell pages)
+   - Also reset `document.documentElement.scrollTop` / `document.body.scrollTop` as a safety net.
 
-- `template: isTemplated ? template : undefined` → `template: isTemplated ? template : (template === "profile-reminder" ? "profile-reminder" : undefined)`
-- `message: isTemplated ? "" : message.trim()` stays unchanged — profile-reminder is NOT templated, so the editable message body is still sent as-is.
+No other behavior changes. Existing `ScrollToTop` floating button stays as-is.
 
-## Result
+## Verification
 
-- Selecting **Complete Your Profile — Reminder**, editing if desired, and clicking Send now reaches the edge function with `template: "profile-reminder"`, which the deployed backend already treats as a pause-gate bypass while still rendering as a custom message (`Hello {first name},` + your body + unsubscribe footer).
-- Every other template and the pause behavior for all other bulk sends are unchanged.
-
-## Out of scope
-
-- No edge-function changes (already deployed correctly last turn).
-- No changes to any other template's send path, subject/body auto-fill, or the pause gate itself.
+- Navigate agent → agent profile → back → another agent: each load starts at top.
+- Verify public (`/agent/:id` while signed out) still lands at top.
+- Verify long buyer/search pages continue to scroll normally after the reset.
