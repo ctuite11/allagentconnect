@@ -318,7 +318,31 @@ function AgentPhotoTileGrid({
 
     // Visible-field text search only (name, brokerage, email, phone).
     if (searchQuery.trim()) {
-      result = result.filter((agent) => matchesAgentNetworkSearch(agent, searchQuery));
+      result = result.filter((agent) => matchesAgentName(agent, searchQuery));
+    }
+
+    // Location filter — Google Places selection matched against service areas
+    if (selectedLocation) {
+      const loc = selectedLocation;
+      const city = loc.city?.toLowerCase().trim();
+      const stateShort = loc.stateShort?.toUpperCase().trim();
+      const stateLong = loc.state?.toLowerCase().trim();
+      const county = loc.county?.toLowerCase().trim();
+      const formatted = loc.formatted?.toLowerCase().trim();
+
+      result = result.filter((agent) => {
+        const areas = (agent.serviceAreas || []).map((a) => a.toLowerCase());
+        if (areas.length === 0) return false;
+
+        if (city && areas.some((a) => a.includes(city))) return true;
+        if (county && areas.some((a) => a.includes(county))) return true;
+        if (stateShort && areas.some((a) => a.endsWith(`, ${stateShort.toLowerCase()}`))) return true;
+        if (stateLong && areas.some((a) => a.includes(stateLong))) return true;
+        if (!city && !county && !stateShort && !stateLong && formatted) {
+          return areas.some((a) => a.includes(formatted));
+        }
+        return false;
+      });
     }
 
     // State filter (check service areas)
@@ -357,7 +381,7 @@ function AgentPhotoTileGrid({
     }
 
     return result;
-  }, [agents, searchQuery, selectedState, selectedCounties, counties, showBuyerIncentivesOnly, showListingAgentsOnly, sortOrder]);
+  }, [agents, searchQuery, selectedState, selectedCounties, selectedLocation, counties, showBuyerIncentivesOnly, showListingAgentsOnly, sortOrder]);
 
   // Keep header count + pager in sync with the filtered set.
   useEffect(() => {
@@ -367,7 +391,7 @@ function AgentPhotoTileGrid({
   // Reset to page 1 whenever the filtered result changes.
   useEffect(() => {
     setPage(1);
-  }, [searchQuery, selectedState, selectedCounties, showBuyerIncentivesOnly, showListingAgentsOnly, pageSize]);
+  }, [searchQuery, selectedState, selectedCounties, selectedLocation, showBuyerIncentivesOnly, showListingAgentsOnly, pageSize]);
 
   // Client-side pagination over the filtered set.
   const paginatedAgents = useMemo(() => {
@@ -388,6 +412,7 @@ function AgentPhotoTileGrid({
     setSearchQuery("");
     setSelectedState("");
     setSelectedCounties([]);
+    setSelectedLocation(null);
     setShowBuyerIncentivesOnly(false);
     setShowListingAgentsOnly(false);
     setSortOrder("a-z");
