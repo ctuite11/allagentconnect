@@ -471,22 +471,23 @@ function AgentPhotoTileGrid({
               className="mb-0"
             />
 
-            {/* Search Bar */}
-            <div className="mt-5 max-w-xl">
+            {/* Search Bar — separate name and location inputs */}
+            <div className="mt-5 grid max-w-3xl grid-cols-1 gap-3 md:grid-cols-2">
               <div className="relative">
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" aria-hidden />
                 <Input
                   type="text"
-                  placeholder={
-                    effectivePublicMode
-                      ? "Search by name, city, or brokerage..."
-                      : "Search by name, company, city, or ZIP..."
-                  }
+                  placeholder="Search by first or last name"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="h-10 rounded-lg border-neutral-200 bg-white pl-10 pr-3 text-sm shadow-none focus-visible:border-neutral-900 focus-visible:ring-1 focus-visible:ring-neutral-300/80 md:h-11 md:text-[15px]"
                 />
               </div>
+              <LocationAutocomplete
+                value={selectedLocation}
+                onChange={setSelectedLocation}
+                placeholder="Search city, state, or area"
+              />
             </div>
           </div>
         </section>
