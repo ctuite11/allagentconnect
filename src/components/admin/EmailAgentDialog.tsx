@@ -329,6 +329,7 @@ export function EmailAgentDialog({
               </Button>
             </div>
           </div>
+          </div>
           ) : (
             <div className="space-y-1.5">
               <Label className="text-muted-foreground text-xs">To</Label>
