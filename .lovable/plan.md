@@ -1,38 +1,36 @@
 ## What's going on
 
-There are two `agent_profiles` rows for Matt Munden:
+There are **two Frank Carroll agent_profiles rows** — the same duplicate pattern as Matt Munden:
 
-| id (short) | email | first_name | last_name |
-|---|---|---|---|
-| `3c9d908b…` | matt.munden@**compss**.com (typo) | Matt | **Munden** ✅ |
-| `b13407d8…` | matt.munden@**compass**.com (correct) | Matt | **matt.munden@compass.com** ❌ |
+| id (short) | email | company | headshot | profile_complete |
+|---|---|---|---|---|
+| `14367da3…` | frank.carroll@compass.**om** (typo) | — | — | **No** ❌ |
+| `e9d00597…` | frank.carroll@compass.**com** (real) | Compass | ✅ | **Yes** ✅ |
 
-Your admin edit landed on the typo-email row (compss.com). The correct-email row (compass.com) is the one showing in the admin list with the email-as-last-name.
+The admin list computes `profile_complete` as: first_name + last_name + headshot_url + company + (phone or email). The typo-email row is missing company and headshot → shows "No". Both rows have their own `auth.users` account and their own `agent_settings` (both `verified`). There are also two `agent_early_access` rows, one per email.
 
-A third row has the same bug: James Lynch (`jlynchre@gmail.com`) has `last_name` = his email.
-
-There are also matching `agent_early_access` rows for both Matt emails with `first_name = "Unknown"`, `last_name = "Agent"`, still `pending` — likely the seed of this whole mess.
+Frank isn't seeing a bug — he has a real complete profile (`e9d00597…`). The admin list is showing *both* rows because they are two separate auth users, and the typo one is genuinely incomplete.
 
 ## Plan
 
-1. **Fix the data (no code change)**
-   - `agent_profiles` row `b13407d8…` → set `last_name = 'Munden'`.
-   - `agent_profiles` row `fd86632b…` (James Lynch) → set `last_name = 'Lynch'`.
-   - Leave the typo-email duplicate `3c9d908b…` alone for now and flag it for you to decide: delete the duplicate, or keep it and delete the compass.com one. I won't merge/delete without your call.
+Delete the typo-email duplicate `14367da3…` (email `frank.carroll@compass.om`) end-to-end, so the admin list only shows the real, complete Frank Carroll.
 
-2. **Confirm which Matt row you actually want to keep**
-   - Ask you which email is real (`@compass.com` is almost certainly correct) so we can delete the other duplicate `agent_profiles` + `agent_early_access` rows in a follow-up.
+Deletions, in order (all via the insert tool as DELETEs — no schema changes):
 
-3. **Sweep for the same bug across the whole table**
-   - Run `SELECT id, email, last_name FROM agent_profiles WHERE last_name ILIKE '%@%'` and report the list back to you before touching anything else. Fix each by splitting the local-part or asking you, case-by-case — no bulk guessing.
+1. `agent_early_access` where `id = e2700486-a8f2-4af5-b450-3ba63d574fb5` (the `.om` early-access row).
+2. `agent_settings` where `user_id = 14367da3-3417-48c7-b0c2-aa0f67cb131f`.
+3. `agent_profiles` where `id = 14367da3-3417-48c7-b0c2-aa0f67cb131f`.
+4. Report back the `auth.users` row for that id — I cannot delete auth users from SQL. You'll need to remove it from the Auth users list, or I can call an admin edge function if one exists (I'll check `admin-delete-user` / similar before touching anything).
 
-4. **Out of scope for this turn**
-   - No code changes to admin list, edit form, or the early-access → agent conversion flow. If you want, I can open a separate plan to harden the conversion so `last_name` never gets seeded with the email again — but that's a separate task.
+Not touching:
+- The real profile `e9d00597…` and its settings, early-access, or auth user.
+- Any other tables. If FK constraints block a delete, I'll pause and report which table still references the id — I won't cascade-delete blindly (messages, relationships, listings, etc. could hang off this uuid).
+
+Same offer as before for Matt Munden's typo duplicate `3c9d908b…` — say the word and I'll clean that one up the same way in a follow-up.
 
 ### Technical notes
 
-- Data fixes go through the insert tool (UPDATE statements), not a migration.
-- The admin list (`admin-list-agents` edge function) reads `agent_profiles.last_name` directly, so once the row is corrected the admin UI will show it correctly on next load — no cache/deploy needed.
-- Duplicate cleanup (step 2) will need coordinated deletes across `agent_profiles`, `agent_settings`, and `agent_early_access` for whichever id you drop; I'll plan that separately once you confirm the keeper.
+- The `profile_complete` logic lives in `supabase/functions/admin-list-agents/index.ts` — no code change needed; it will report correctly once the duplicate row is gone.
+- Root cause of the duplicates is the early-access → auth conversion accepting typo emails as separate accounts. Hardening that is a separate task; this plan is data cleanup only.
 
-**Question before I run step 1:** confirm `matt.munden@compass.com` is the correct email (so I fix that row's last name to "Munden"), and confirm "Lynch" is right for James.
+**Confirm:** OK to delete the `frank.carroll@compass.om` (typo) profile, its settings, and its early-access row?
