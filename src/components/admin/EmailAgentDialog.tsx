@@ -120,7 +120,11 @@ export function EmailAgentDialog({
             agentId: user.id,
             agentEmail: senderEmail.trim() || undefined,
             sendAsGroup: false,
-            template: isTemplated ? template : undefined,
+            template: isTemplated
+              ? template
+              : template === "profile-reminder"
+                ? "profile-reminder"
+                : undefined,
           },
           headers: { Authorization: `Bearer ${accessToken}` },
         });
