@@ -276,6 +276,18 @@ export function EmailAgentDialog({
                 value={template}
                 onValueChange={(v) => {
                   setTemplate(v);
+                  if (v === "profile-reminder") {
+                    setSubject((prev) => prev || "Complete your All Agent Connect profile");
+                    setMessage(
+                      "This is a quick reminder to complete your agent profile and communication preferences on All Agent Connect.\n\n" +
+                        "Agents without a completed profile do not appear in the Agent Network and will not be eligible to receive seller and buyer leads as we roll out these new features.\n\n" +
+                        "Completing your profile and setting your communication preferences only takes a few minutes and ensures you can take full advantage of the network.\n\n" +
+                        "Complete your profile today to make sure you're visible and eligible for new opportunities.\n\n" +
+                        "Best,\n\n" +
+                        "Chris\n" +
+                        "All Agent Connect"
+                    );
+                  }
                   if (v === "early-access-update-v1") {
                     setSubject((prev) => prev || "A first look inside All Agent Connect");
                   }
@@ -295,6 +307,9 @@ export function EmailAgentDialog({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="custom">Custom message</SelectItem>
+                  <SelectItem value="profile-reminder">
+                    Complete Your Profile — Reminder
+                  </SelectItem>
                   <SelectItem value="private-listing-network">
                     Private Listing Network — All Agents (recommended)
                   </SelectItem>
