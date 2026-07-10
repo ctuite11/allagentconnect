@@ -1,28 +1,56 @@
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
-import { LISTING_STATUS, isComingSoon } from "@/constants/status";
+import { LISTING_STATUS, OFF_MARKET_STATUSES } from "@/constants/status";
 import type { BannerData, OpenHouseBannerData } from "@/components/ListingCardShell";
 
 /**
  * useListingBanners — shared lifecycle photo-banner derivation.
  *
- * Extracted verbatim from src/components/ListingCard.tsx. Both the agent-side
- * ListingCard and the buyer-side SearchListingCard consume this hook so the
- * Coming Soon / New Listing / Back on Market / Price Reduced / Off Market /
- * Open House banners stay in lockstep.
+ * Temporary override precedence (highest first):
+ * 1. PRICE REDUCED — price decrease within 24h
+ * 2. BACK ON MARKET — return from off-market within 24h
+ * 3. Persistent base status banner for every searchable listing status
  *
- * Timing rules (must match agent card):
- * - COMING SOON       — while status = coming_soon
- * - NEW LISTING       — status = new, or status = active within 48h of the
- *                       most recent active transition, and !is_relisting
- * - BACK ON MARKET    — previous status was pending/under_agreement/withdrawn/
- *                       cancelled/temporarily_withdrawn, now active, within 48h
- * - PRICE REDUCED     — most recent favorite_price_history row is a decrease,
- *                       within 48h
- * - OFF MARKET        — while status = off_market
- * - OPEN HOUSE / BROKER OPEN — next upcoming open_houses event
+ * Open house is independent and may coexist with whichever primary banner wins.
+ *
+ * NEW LISTING is retired: active (and legacy `new`) listings use ON MLS.
+ * getStatusChangeBanner() must not return null solely because the status is
+ * outside Active / Coming Soon / Off Market.
  */
+
+const TEMP_BANNER_HOURS = 24;
+
+/** Solid photo-badge colors aligned with LISTING_STATUS_CONFIG families. */
+const PERSISTENT_STATUS_BANNERS: Record<
+  string,
+  { text: string; color: string; iconType: BannerData["iconType"] }
+> = {
+  [LISTING_STATUS.ACTIVE]: { text: "ON MLS", color: "bg-emerald-700", iconType: "sparkles" },
+  [LISTING_STATUS.NEW]: { text: "ON MLS", color: "bg-emerald-700", iconType: "sparkles" },
+  // Marketable lifecycle variants still read as on-MLS once temporary BOM expires.
+  [LISTING_STATUS.BACK_ON_MARKET]: { text: "ON MLS", color: "bg-emerald-700", iconType: "sparkles" },
+  [LISTING_STATUS.PRICE_CHANGED]: { text: "ON MLS", color: "bg-emerald-700", iconType: "sparkles" },
+  [LISTING_STATUS.EXTENDED]: { text: "ON MLS", color: "bg-emerald-700", iconType: "sparkles" },
+  [LISTING_STATUS.REACTIVATED]: { text: "ON MLS", color: "bg-emerald-700", iconType: "sparkles" },
+  [LISTING_STATUS.COMING_SOON]: { text: "COMING SOON", color: "bg-amber-600", iconType: "sparkles" },
+  [LISTING_STATUS.OFF_MARKET]: { text: "OFF MARKET", color: "bg-rose-600", iconType: "refresh" },
+  [LISTING_STATUS.PENDING]: { text: "PENDING", color: "bg-violet-600", iconType: "refresh" },
+  [LISTING_STATUS.UNDER_AGREEMENT]: { text: "UNDER AGREEMENT", color: "bg-violet-600", iconType: "refresh" },
+  [LISTING_STATUS.CONTINGENT]: { text: "CONTINGENT", color: "bg-violet-600", iconType: "refresh" },
+  [LISTING_STATUS.SOLD]: { text: "SOLD", color: "bg-neutral-700", iconType: "refresh" },
+  [LISTING_STATUS.RENTED]: { text: "RENTED", color: "bg-neutral-700", iconType: "refresh" },
+  [LISTING_STATUS.WITHDRAWN]: { text: "WITHDRAWN", color: "bg-neutral-600", iconType: "refresh" },
+  [LISTING_STATUS.TEMPORARILY_WITHDRAWN]: {
+    text: "TEMPORARILY WITHDRAWN",
+    color: "bg-neutral-600",
+    iconType: "refresh",
+  },
+  [LISTING_STATUS.CANCELLED]: { text: "CANCELLED", color: "bg-neutral-600", iconType: "refresh" },
+  [LISTING_STATUS.CANCELED]: { text: "CANCELLED", color: "bg-neutral-600", iconType: "refresh" },
+  [LISTING_STATUS.EXPIRED]: { text: "EXPIRED", color: "bg-neutral-600", iconType: "refresh" },
+  [LISTING_STATUS.DRAFT]: { text: "DRAFT", color: "bg-neutral-500", iconType: "refresh" },
+};
 
 export interface UseListingBannersInput {
   id: string;
@@ -32,7 +60,8 @@ export interface UseListingBannersInput {
 }
 
 export interface UseListingBannersResult {
-  statusBanner: BannerData | null;
+  /** Always set for listing cards — temporary BOM or persistent status. */
+  statusBanner: BannerData;
   priceChangeBanner: BannerData | null;
   openHouseBanner: OpenHouseBannerData | null;
 }
@@ -43,6 +72,10 @@ function formatTime(time: string): string {
   const ampm = hour >= 12 ? "PM" : "AM";
   const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
   return `${displayHour}:${minutes} ${ampm}`;
+}
+
+function hoursSince(iso: string): number {
+  return (Date.now() - new Date(iso).getTime()) / (1000 * 60 * 60);
 }
 
 function getNextOpenHouse(openHouses: unknown): any | null {
@@ -56,6 +89,19 @@ function getNextOpenHouse(openHouses: unknown): any | null {
     })
     .sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime());
   return upcoming[0] || null;
+}
+
+function fallbackStatusBanner(status: string): BannerData {
+  const text = status
+    .trim()
+    .replace(/_/g, " ")
+    .replace(/\s+/g, " ")
+    .toUpperCase() || "LISTING";
+  return {
+    text,
+    color: "bg-neutral-700",
+    iconType: "refresh",
+  };
 }
 
 export function useListingBanners(listing: UseListingBannersInput): UseListingBannersResult {
@@ -101,89 +147,12 @@ export function useListingBanners(listing: UseListingBannersInput): UseListingBa
     };
   }, [listing.id]);
 
-  const getStatusChangeBanner = (): BannerData | null => {
-    const currentStatus = listing.status;
-
-    if (isComingSoon(currentStatus)) {
-      return {
-        text: "COMING SOON",
-        color: "bg-purple-600",
-        iconType: "sparkles",
-      };
-    }
-
-    const isNewStatus = currentStatus === LISTING_STATUS.NEW;
-    const isActiveStatus = currentStatus === LISTING_STATUS.ACTIVE;
-
-    if ((isNewStatus || isActiveStatus) && !listing.is_relisting) {
-      if (isNewStatus) {
-        return {
-          text: "NEW LISTING",
-          color: "bg-neutral-900",
-          iconType: "sparkles",
-        };
-      }
-
-      if (isActiveStatus && statusHistory.length > 0) {
-        const allActiveStatuses = statusHistory.filter(
-          (h) => h.new_status === LISTING_STATUS.ACTIVE,
-        );
-        if (allActiveStatuses.length >= 1) {
-          const mostRecentActiveDate = new Date(allActiveStatuses[0].changed_at);
-          const hoursSinceActive =
-            (Date.now() - mostRecentActiveDate.getTime()) / (1000 * 60 * 60);
-          if (hoursSinceActive <= 48) {
-            return {
-              text: "NEW LISTING",
-              color: "bg-neutral-900",
-              iconType: "sparkles",
-            };
-          }
-        }
-      }
-    }
-
-    if (statusHistory.length >= 2 && isActiveStatus) {
-      const previousStatus = statusHistory[1]?.new_status;
-      const changeDate = new Date(statusHistory[0].changed_at);
-      const hoursSinceChange = (Date.now() - changeDate.getTime()) / (1000 * 60 * 60);
-
-      const offMarketStatuses = [
-        LISTING_STATUS.PENDING,
-        LISTING_STATUS.UNDER_AGREEMENT,
-        LISTING_STATUS.WITHDRAWN,
-        LISTING_STATUS.CANCELLED,
-        LISTING_STATUS.TEMPORARILY_WITHDRAWN,
-      ];
-      if (offMarketStatuses.includes(previousStatus) && hoursSinceChange <= 48) {
-        return {
-          text: "BACK ON MARKET",
-          color: "bg-orange-600",
-          iconType: "refresh",
-        };
-      }
-    }
-
-    if (currentStatus === LISTING_STATUS.OFF_MARKET) {
-      return {
-        text: "OFF MARKET",
-        color: "bg-rose-600",
-        iconType: "refresh",
-      };
-    }
-
-    return null;
-  };
-
   const getPriceChangeBanner = (): BannerData | null => {
     if (priceHistory.length === 0) return null;
 
     const recentPriceChange = priceHistory[0];
-    const changeDate = new Date(recentPriceChange.changed_at);
-    const hoursSinceChange = (Date.now() - changeDate.getTime()) / (1000 * 60 * 60);
-
     if (
-      hoursSinceChange <= 48 &&
+      hoursSince(recentPriceChange.changed_at) <= TEMP_BANNER_HOURS &&
       recentPriceChange.new_price < recentPriceChange.old_price
     ) {
       return {
@@ -194,6 +163,46 @@ export function useListingBanners(listing: UseListingBannersInput): UseListingBa
     }
 
     return null;
+  };
+
+  const getBackOnMarketBanner = (): BannerData | null => {
+    const currentStatus = listing.status;
+    const isActiveStatus =
+      currentStatus === LISTING_STATUS.ACTIVE ||
+      currentStatus === LISTING_STATUS.NEW ||
+      currentStatus === LISTING_STATUS.BACK_ON_MARKET;
+
+    if (!isActiveStatus || statusHistory.length < 2) return null;
+
+    const previousStatus = statusHistory[1]?.new_status;
+    const changeDate = statusHistory[0].changed_at;
+    if (hoursSince(changeDate) > TEMP_BANNER_HOURS) return null;
+
+    if (OFF_MARKET_STATUSES.includes(previousStatus)) {
+      return {
+        text: "BACK ON MARKET",
+        color: "bg-orange-600",
+        iconType: "refresh",
+      };
+    }
+
+    return null;
+  };
+
+  /** Persistent base status for every searchable listing card status. */
+  const getBaseStatusBanner = (): BannerData => {
+    const mapped = PERSISTENT_STATUS_BANNERS[listing.status];
+    if (mapped) return { ...mapped };
+    return fallbackStatusBanner(listing.status);
+  };
+
+  /**
+   * statusBanner carries temporary BACK ON MARKET or the persistent base status.
+   * PRICE REDUCED is returned separately and must win in ListingPhotoBanners.
+   * Never null for a listing card status — unknown statuses get a fallback chip.
+   */
+  const getStatusChangeBanner = (): BannerData => {
+    return getBackOnMarketBanner() ?? getBaseStatusBanner();
   };
 
   const getOpenHouseBanner = (): OpenHouseBannerData | null => {

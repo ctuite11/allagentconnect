@@ -5,7 +5,7 @@ import { ListingCardShell } from "@/components/ListingCardShell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ListingStatusBadge } from "@/components/ui/status-badge";
-import { Bed, Bath, Home, Edit, Trash2, Eye, Calendar, Users, Mail, Heart, Star, BarChart3, Sparkles, TrendingDown, RefreshCw, Maximize, ChevronLeft, ChevronRight, Phone, User, MessageSquare, CircleParking } from "lucide-react";
+import { Bed, Bath, Home, Edit, Trash2, Eye, Calendar, Users, Mail, Heart, Star, BarChart3, RefreshCw, Maximize, ChevronLeft, ChevronRight, Phone, User, MessageSquare, CircleParking } from "lucide-react";
 import { ListingInterestSignals } from "./ListingInterestSignals";
 import type { ListingSignals } from "@/hooks/useListingInterestSignals";
 import { useNavigate } from "react-router-dom";
@@ -26,6 +26,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { cn, propertyTypeToEnum } from "@/lib/utils";
 import { ListingCardAddressLine } from "@/components/listing/ListingCardAddressLine";
+import { ListingPhotoBanners } from "@/components/listing/ListingPhotoBanners";
 import {
   listingSelectionCardCompactSelected,
   listingSelectionCardGridSelected,
@@ -817,22 +818,13 @@ const ListingCard = ({
             )}
           </div>
           
-          {/* Status Change Banner (top priority) */}
-          {!compactAgentOwned && statusBanner && <div className={`absolute top-0 left-0 right-0 ${statusBanner.color} text-white text-xs font-bold px-2 py-1 text-center flex items-center justify-center gap-1`}>
-              {statusBanner.iconType === 'sparkles' ? <Sparkles className="w-3 h-3" /> : <RefreshCw className="w-3 h-3" />}
-              {statusBanner.text}
-            </div>}
-          
-          {/* Price Change Banner (second priority) */}
-          {!compactAgentOwned && priceChangeBanner && !statusBanner && <div className={`absolute top-0 left-0 right-0 ${priceChangeBanner.color} text-white text-xs font-bold px-2 py-1 text-center flex items-center justify-center gap-1`}>
-              <TrendingDown className="w-3 h-3" />
-              {priceChangeBanner.text}
-            </div>}
-          
-          {/* Open House Banner (third priority) */}
-          {!compactAgentOwned && openHouseBanner && !statusBanner && !priceChangeBanner && <div className={`absolute top-0 left-0 right-0 ${openHouseBanner.color} text-white text-xs font-bold px-2 py-1 text-center`}>
-              {openHouseBanner.isBroker ? '🚙' : '🎈'} {openHouseBanner.text}
-            </div>}
+          {!compactAgentOwned && (
+            <ListingPhotoBanners
+              statusBanner={statusBanner}
+              priceChangeBanner={priceChangeBanner}
+              openHouseBanner={openHouseBanner}
+            />
+          )}
         </div>
         <CardContent className="flex min-w-0 flex-1 flex-col gap-1 px-3.5 pb-2.5 pt-2">
           <div className="mb-0 flex min-w-0 items-start justify-between gap-2">

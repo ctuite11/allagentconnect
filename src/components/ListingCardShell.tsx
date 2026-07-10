@@ -18,14 +18,14 @@ import type { MouseEvent, ReactNode } from "react";
 import { Card } from "@/components/ui/card";
 import { ListingStatusBadge } from "@/components/ui/status-badge";
 import {
-  Bed, Bath, Home, Sparkles,
-  TrendingDown, RefreshCw, Calendar,
+  Bed, Bath, Home, Calendar,
 } from "lucide-react";
 import { format } from "date-fns";
 import DcmlsBadge from "@/components/DcmlsBadge";
 import { formatListingIdLabel, LISTING_ID_NAV_CLASS } from "@/lib/listingIdDisplay";
 import { formatListingPropertyTypeLabel } from "@/lib/format";
 import { ListingCardAddressLine } from "@/components/listing/ListingCardAddressLine";
+import { ListingPhotoBanners } from "@/components/listing/ListingPhotoBanners";
 import { cn } from "@/lib/utils";
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -150,16 +150,6 @@ export interface ListingCardShellProps {
   onListingNumberClick?: (e: MouseEvent) => void;
 }
 
-// ── Banner Icon ──────────────────────────────────────────────────────────────
-
-function BannerIcon({ type }: { type: BannerData["iconType"] }) {
-  switch (type) {
-    case "sparkles": return <Sparkles className="w-3 h-3" />;
-    case "refresh": return <RefreshCw className="w-3 h-3" />;
-    case "trendingDown": return <TrendingDown className="w-3 h-3" />;
-  }
-}
-
 // ── Component ────────────────────────────────────────────────────────────────
 
 export function ListingCardShell({
@@ -221,29 +211,12 @@ export function ListingCardShell({
             </div>
           )}
 
-          {/* Status Change Banner (top priority) */}
-          {!hidePhotoBanners && statusBanner && (
-            <div className={`absolute top-0 left-0 right-0 ${statusBanner.color} text-white text-xs font-bold px-2 py-1 text-center flex items-center justify-center gap-1`}>
-              <BannerIcon type={statusBanner.iconType} />
-              {statusBanner.text}
-            </div>
-          )}
-
-          {/* Price Change Banner (second priority) */}
-          {!hidePhotoBanners && priceChangeBanner && !statusBanner && (
-            <div className={`absolute top-0 left-0 right-0 ${priceChangeBanner.color} text-white text-xs font-bold px-2 py-1 text-center flex items-center justify-center gap-1`}>
-              <TrendingDown className="w-3 h-3" />
-              {priceChangeBanner.text}
-            </div>
-          )}
-
-          {/* Open House Banner */}
-          {!hidePhotoBanners && openHouseBanner && (
-            <div
-              className={`absolute ${statusBanner && priceChangeBanner ? 'top-6' : statusBanner || priceChangeBanner ? 'top-5' : 'top-0'} left-0 right-0 ${openHouseBanner.color} text-white text-xs font-bold px-2 py-1 text-center`}
-            >
-              {openHouseBanner.isBroker ? '🚙' : '🎈'} {openHouseBanner.date} • {openHouseBanner.time}
-            </div>
+          {!hidePhotoBanners && (
+            <ListingPhotoBanners
+              statusBanner={statusBanner}
+              priceChangeBanner={priceChangeBanner}
+              openHouseBanner={openHouseBanner}
+            />
           )}
 
           {/* Photo count badge */}

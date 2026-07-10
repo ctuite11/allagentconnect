@@ -15,7 +15,6 @@ import {
   Check, Mail, ExternalLink,
   Phone, Camera, FileText, Video,
   ChevronLeft, ChevronRight,
-  Sparkles, RefreshCw, TrendingDown,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
@@ -37,27 +36,13 @@ import { formatListingIdLabel, LISTING_ID_NAV_CLASS, LISTING_ID_NAV_CLASS_SEARCH
 import { formatListingEmailSubjectLocation } from "@/lib/listingEmailSubject";
 import { buildDisplayAddress, cn } from "@/lib/utils";
 import { ListingCardAddressLine } from "@/components/listing/ListingCardAddressLine";
+import { ListingPhotoBanners } from "@/components/listing/ListingPhotoBanners";
 import {
   listingSelectionCheckboxClass,
   listingSelectionSearchCardSelected,
 } from "@/lib/listingSelectionStyles";
 import { formatListingPriceDisplay, listingEffectiveNumericPrice } from "@/lib/formatListingPriceDisplay";
 import { useListingBanners } from "@/hooks/useListingBanners";
-import type { BannerData } from "@/components/ListingCardShell";
-
-// ── Banner icon (mirrors ListingCardShell) ──────────────────────────────────
-function BannerIcon({ type }: { type: BannerData["iconType"] }) {
-  switch (type) {
-    case "sparkles":
-      return <Sparkles className="w-3 h-3" />;
-    case "refresh":
-      return <RefreshCw className="w-3 h-3" />;
-    case "trendingDown":
-      return <TrendingDown className="w-3 h-3" />;
-    default:
-      return null;
-  }
-}
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -331,28 +316,12 @@ export const SearchListingCard = ({
             {/* A. Photo */}
             <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-neutral-100">
               <DcmlsBadge listing={listing} />
-              {/* Status Change Banner (top priority) */}
-              {statusBanner && (
-                <div className={`absolute top-0 left-0 right-0 z-20 ${statusBanner.color} text-white text-xs font-bold px-2 py-1 text-center flex items-center justify-center gap-1`}>
-                  <BannerIcon type={statusBanner.iconType} />
-                  {statusBanner.text}
-                </div>
-              )}
-              {/* Price Change Banner (second priority) */}
-              {priceChangeBanner && !statusBanner && (
-                <div className={`absolute top-0 left-0 right-0 z-20 ${priceChangeBanner.color} text-white text-xs font-bold px-2 py-1 text-center flex items-center justify-center gap-1`}>
-                  <BannerIcon type={priceChangeBanner.iconType} />
-                  {priceChangeBanner.text}
-                </div>
-              )}
-              {/* Open House Banner (stacks below status/price) */}
-              {openHouseBanner && (
-                <div
-                  className={`absolute ${statusBanner && priceChangeBanner ? 'top-6' : statusBanner || priceChangeBanner ? 'top-5' : 'top-0'} left-0 right-0 z-20 ${openHouseBanner.color} text-white text-xs font-bold px-2 py-1 text-center`}
-                >
-                  {openHouseBanner.isBroker ? '🚙' : '🎈'} {openHouseBanner.text} • {openHouseBanner.date} • {openHouseBanner.time}
-                </div>
-              )}
+              <ListingPhotoBanners
+                statusBanner={statusBanner}
+                priceChangeBanner={priceChangeBanner}
+                openHouseBanner={openHouseBanner}
+                className={onSelect ? "left-10" : undefined}
+              />
               {onSelect && (
                 <button
                   onClick={(e) => { e.stopPropagation(); onSelect(listing.id, e); }}
@@ -563,25 +532,13 @@ export const SearchListingCard = ({
               )}
               <div className="relative h-[75px] w-[100px] overflow-hidden rounded-md bg-neutral-100">
                 <DcmlsBadge listing={listing} />
-                {statusBanner && (
-                  <div className={`absolute top-0 left-0 right-0 z-20 ${statusBanner.color} text-white text-[9px] font-bold px-1 py-0.5 text-center flex items-center justify-center gap-0.5`}>
-                    <BannerIcon type={statusBanner.iconType} />
-                    <span className="truncate">{statusBanner.text}</span>
-                  </div>
-                )}
-                {priceChangeBanner && !statusBanner && (
-                  <div className={`absolute top-0 left-0 right-0 z-20 ${priceChangeBanner.color} text-white text-[9px] font-bold px-1 py-0.5 text-center flex items-center justify-center gap-0.5`}>
-                    <BannerIcon type={priceChangeBanner.iconType} />
-                    <span className="truncate">{priceChangeBanner.text}</span>
-                  </div>
-                )}
-                {openHouseBanner && (
-                  <div
-                    className={`absolute ${statusBanner || priceChangeBanner ? 'top-4' : 'top-0'} left-0 right-0 z-20 ${openHouseBanner.color} text-white text-[9px] font-bold px-1 py-0.5 text-center truncate`}
-                  >
-                    {openHouseBanner.isBroker ? '🚙' : '🎈'} {openHouseBanner.text}
-                  </div>
-                )}
+                <ListingPhotoBanners
+                  statusBanner={statusBanner}
+                  priceChangeBanner={priceChangeBanner}
+                  openHouseBanner={openHouseBanner}
+                  compact
+                  className={cn("top-1 left-1 max-w-[calc(100%-0.5rem)] gap-1", onSelect && "left-8")}
+                />
                 {photoUrl ? (
                   <img src={photoUrl} alt="" className="h-full w-full object-cover" />
                 ) : (
