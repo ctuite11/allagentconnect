@@ -1,11 +1,10 @@
-## Set temp password for Michael Brennan
+## No code change needed
 
-1. Generate a strong random 16-char password meeting policy (upper/lower/digit/symbol).
-2. Call `admin-set-user-password` edge function with `email: michael.brennan@donnellyandco.com` (runs under your admin session).
-3. Hand you the credentials to send:
-   - Login: `michael.brennan@donnellyandco.com`
-   - Password: (shown once)
-   - URL: https://allagentconnect.com
-4. He can rotate it under Settings → Password after login.
+The Lovable preview iframe is blank because its dev-server socket dropped (console shows "server connection lost. Polling for restart..."). The dev server itself is healthy — HTML serves, Vite restarted cleanly at 18:13, and your live site at https://allagentconnect.com is unaffected.
 
-No code or schema changes.
+### What to do
+- **Refresh the preview** (reload button above the iframe, or hard-refresh the Lovable tab). It should come back immediately.
+- If it stays blank after refresh, tell me and I'll restart the dev server.
+
+### For Michael's password (unblocked separately)
+When you're signed in as admin on https://allagentconnect.com, tell me and I'll reset his password to a copy-safe value like `AACtemp2026Brennan` (no ambiguous symbols).
