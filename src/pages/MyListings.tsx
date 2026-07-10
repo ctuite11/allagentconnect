@@ -763,19 +763,19 @@ function MyListingsView({
                     <button type="button" className="transition hover:text-emerald-700" onClick={() => onPhotos(l.id)}>
                       Photos
                     </button>
-                    <span className="text-zinc-300">•</span>
+                    <span className="hidden text-zinc-300 sm:inline">•</span>
                     <button
                       type="button"
-                      className="group flex items-center gap-1"
+                      className="group hidden items-center gap-1 sm:flex"
                       onClick={() => (hasPublicOpenHouse ? onViewOpenHouses(l) : onOpenHouse(l))}
                     >
                       <span aria-hidden>🎈</span>
                       <span className="transition group-hover:text-emerald-700">Open House</span>
                     </button>
-                    <span className="text-zinc-300">•</span>
+                    <span className="hidden text-zinc-300 sm:inline">•</span>
                     <button
                       type="button"
-                      className="group flex items-center gap-1"
+                      className="group hidden items-center gap-1 sm:flex"
                       onClick={() => (hasBrokerTour ? onViewOpenHouses(l) : onBrokerTour(l))}
                     >
                       <span aria-hidden>🚙</span>
@@ -785,12 +785,12 @@ function MyListingsView({
                     <button type="button" className="transition hover:text-emerald-700" onClick={() => onMatches(l)}>
                       Matches ({matchCount})
                     </button>
-                    <span className="text-zinc-300">•</span>
-                    <button type="button" className="transition hover:text-emerald-700" onClick={() => onEmail?.(l)}>
+                    <span className="hidden text-zinc-300 sm:inline">•</span>
+                    <button type="button" className="hidden transition hover:text-emerald-700 sm:inline" onClick={() => onEmail?.(l)}>
                       Email
                     </button>
-                    <span className="text-zinc-300">•</span>
-                    <button type="button" className="transition hover:text-emerald-700" onClick={() => onSocialShare(l)}>
+                    <span className="hidden text-zinc-300 sm:inline">•</span>
+                    <button type="button" className="hidden transition hover:text-emerald-700 sm:inline" onClick={() => onSocialShare(l)}>
                       Social
                     </button>
                     <span className="text-zinc-300">•</span>
@@ -809,35 +809,35 @@ function MyListingsView({
                       </svg>
                       <span className="text-[13px] font-medium leading-none text-zinc-800">{favorites}</span>
                     </span>
-                    <span className="text-zinc-300">•</span>
-                    <button type="button" className="transition hover:text-emerald-700" onClick={() => onStats(l.id)}>
+                    <span className="hidden text-zinc-300 sm:inline">•</span>
+                    <button type="button" className="hidden transition hover:text-emerald-700 sm:inline" onClick={() => onStats(l.id)}>
                       Stats
                     </button>
                   </div>
 
                   <div className="absolute right-4 top-4 z-10 space-y-0.5 text-right">
                     <ListingStatusBadge status={l.status} size="lg" />
-                    <div className="text-xs leading-tight">
+                    <div className="hidden text-xs leading-tight sm:block">
                       <span className="text-zinc-400">AAC List Date:</span>{" "}
                       <span className="text-zinc-500">{listDate}</span>
                     </div>
                     {isComingSoon(l.status) ? (
                       <>
                         {goLiveDate && (
-                          <div className="text-xs leading-tight">
+                          <div className="hidden text-xs leading-tight sm:block">
                             <span className="text-zinc-400">On MLS Date:</span>{" "}
                             <span className="text-zinc-500">{goLiveDate}</span>
                           </div>
                         )}
                         {expDate && (
-                          <div className="text-xs leading-tight">
+                          <div className="hidden text-xs leading-tight sm:block">
                             <span className="text-zinc-400">Exp:</span> <span className="text-zinc-500">{expDate}</span>
                           </div>
                         )}
                       </>
                     ) : (
                       expDate && (
-                        <div className="text-xs leading-tight">
+                        <div className="hidden text-xs leading-tight sm:block">
                           <span className="text-zinc-400">Exp:</span> <span className="text-zinc-500">{expDate}</span>
                         </div>
                       )
