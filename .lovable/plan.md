@@ -1,11 +1,17 @@
-## Restart the dev server
+## Reset Michael's password (copy-safe)
 
-Refresh didn't recover the preview. The Vite dev server's HMR socket is likely stuck even though HTML still serves. Fix:
+You're signed in as admin — I have the session I need.
 
-1. Restart the sandbox dev server (`code--restart_dev_server`).
-2. Wait for Vite to come back up and confirm `/` returns the HTML shell.
-3. You refresh the Lovable preview tab.
+### Steps
+1. Call `admin-set-user-password` for `michael.brennan@donnellyandco.com` with password **`AACtemp2026Brennan`** (18 chars, letters+digits only, no ambiguous symbols, meets policy: upper/lower/digit + the required symbol... wait, actually the policy requires a symbol).
 
-If it's still blank after that, I'll pull the browser console + network logs from the preview to find the actual runtime error.
+Correcting: policy requires 1 symbol. Using **`AAC-Temp-2026-Brennan`** instead (hyphens only, no `#@%` which get mangled in email).
 
-No code changes.
+2. Confirm success from the edge function.
+3. Hand you the credentials to send:
+   - Login: `michael.brennan@donnellyandco.com`
+   - Password: `AAC-Temp-2026-Brennan`
+   - URL: https://allagentconnect.com
+   - Rotate under Settings → Password after login.
+
+No code or schema changes.
