@@ -26,13 +26,13 @@ const PERSISTENT_STATUS_BANNERS: Record<
   string,
   { text: string; color: string; iconType: BannerData["iconType"] }
 > = {
-  [LISTING_STATUS.ACTIVE]: { text: "ON MLS", color: "bg-emerald-700", iconType: "sparkles" },
-  [LISTING_STATUS.NEW]: { text: "ON MLS", color: "bg-emerald-700", iconType: "sparkles" },
+  [LISTING_STATUS.ACTIVE]: { text: "ON MLS", color: "bg-neutral-900", iconType: "sparkles" },
+  [LISTING_STATUS.NEW]: { text: "ON MLS", color: "bg-neutral-900", iconType: "sparkles" },
   // Marketable lifecycle variants still read as on-MLS once temporary BOM expires.
-  [LISTING_STATUS.BACK_ON_MARKET]: { text: "ON MLS", color: "bg-emerald-700", iconType: "sparkles" },
-  [LISTING_STATUS.PRICE_CHANGED]: { text: "ON MLS", color: "bg-emerald-700", iconType: "sparkles" },
-  [LISTING_STATUS.EXTENDED]: { text: "ON MLS", color: "bg-emerald-700", iconType: "sparkles" },
-  [LISTING_STATUS.REACTIVATED]: { text: "ON MLS", color: "bg-emerald-700", iconType: "sparkles" },
+  [LISTING_STATUS.BACK_ON_MARKET]: { text: "ON MLS", color: "bg-neutral-900", iconType: "sparkles" },
+  [LISTING_STATUS.PRICE_CHANGED]: { text: "ON MLS", color: "bg-neutral-900", iconType: "sparkles" },
+  [LISTING_STATUS.EXTENDED]: { text: "ON MLS", color: "bg-neutral-900", iconType: "sparkles" },
+  [LISTING_STATUS.REACTIVATED]: { text: "ON MLS", color: "bg-neutral-900", iconType: "sparkles" },
   [LISTING_STATUS.COMING_SOON]: { text: "COMING SOON", color: "bg-amber-600", iconType: "sparkles" },
   [LISTING_STATUS.OFF_MARKET]: { text: "OFF MARKET", color: "bg-rose-600", iconType: "refresh" },
   [LISTING_STATUS.PENDING]: { text: "PENDING", color: "bg-violet-600", iconType: "refresh" },

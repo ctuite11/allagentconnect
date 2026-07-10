@@ -1,6 +1,6 @@
 /**
  * Compact Compass-style listing photo badges.
- * Content-width chips in the top-left of the photo — not full-width ribbons.
+ * Subtle metadata labels over the photo — not CTA-sized chips.
  * Banner eligibility/precedence still comes from useListingBanners + callers.
  */
 
@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import type { BannerData, OpenHouseBannerData } from "@/components/ListingCardShell";
 
 function BannerIcon({ type, compact }: { type: BannerData["iconType"]; compact?: boolean }) {
+  // ~12px default; slightly smaller on tiny thumbs
   const size = compact ? "h-2.5 w-2.5" : "h-3 w-3";
   switch (type) {
     case "sparkles":
@@ -49,10 +50,10 @@ export function ListingPhotoBannerBadge({
   return (
     <div
       className={cn(
-        "inline-flex max-w-full items-center gap-1 rounded-[5px] font-semibold leading-none text-white shadow-[0_1px_2px_rgba(0,0,0,0.18)]",
+        "inline-flex max-w-full items-center gap-0.5 rounded font-semibold leading-none text-white",
         compact
-          ? "h-[22px] px-1.5 text-[10px]"
-          : "h-[28px] px-2.5 text-[12px]",
+          ? "h-5 px-1.5 text-[10px]"
+          : "h-6 px-2 text-[11px]",
         color,
         className,
       )}
@@ -94,7 +95,7 @@ export function ListingPhotoBanners({
   return (
     <div
       className={cn(
-        "pointer-events-none absolute top-2 left-2 z-20 flex max-w-[calc(100%-1rem)] flex-wrap items-start gap-1.5",
+        "pointer-events-none absolute top-2 left-2 z-20 flex max-w-[calc(100%-1rem)] flex-wrap items-start gap-1",
         className,
       )}
     >
