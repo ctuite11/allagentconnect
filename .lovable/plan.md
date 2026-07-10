@@ -1,10 +1,11 @@
-## No code change needed
+## Restart the dev server
 
-The Lovable preview iframe is blank because its dev-server socket dropped (console shows "server connection lost. Polling for restart..."). The dev server itself is healthy — HTML serves, Vite restarted cleanly at 18:13, and your live site at https://allagentconnect.com is unaffected.
+Refresh didn't recover the preview. The Vite dev server's HMR socket is likely stuck even though HTML still serves. Fix:
 
-### What to do
-- **Refresh the preview** (reload button above the iframe, or hard-refresh the Lovable tab). It should come back immediately.
-- If it stays blank after refresh, tell me and I'll restart the dev server.
+1. Restart the sandbox dev server (`code--restart_dev_server`).
+2. Wait for Vite to come back up and confirm `/` returns the HTML shell.
+3. You refresh the Lovable preview tab.
 
-### For Michael's password (unblocked separately)
-When you're signed in as admin on https://allagentconnect.com, tell me and I'll reset his password to a copy-safe value like `AACtemp2026Brennan` (no ambiguous symbols).
+If it's still blank after that, I'll pull the browser console + network logs from the preview to find the actual runtime error.
+
+No code changes.
