@@ -56,22 +56,17 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const body: SendNotificationRequest & { sender_id?: string } = await req.json();
+    const body: SendNotificationRequest = await req.json();
     const dryRunEarly: boolean = body?.dry_run === true;
 
-    // Auth resolution. Live sends require a valid preview session; dry runs
-    // are zero-write and may fall back to an explicit `sender_id` in the body
-    // so operator-driven audit runs work even if the invoking client can't
-    // forward its Authorization header.
+    // Auth resolution. Both dry runs and live sends require a valid
+    // authenticated session — there is no alternate authorization path.
     const authHeader = req.headers.get("Authorization");
     let user: { id: string; email?: string | null } | null = null;
     if (authHeader) {
       const token = authHeader.replace("Bearer ", "");
       const { data, error } = await supabase.auth.getUser(token);
       if (!error && data?.user) user = { id: data.user.id, email: data.user.email };
-    }
-    if (!user && dryRunEarly && typeof body.sender_id === "string" && body.sender_id) {
-      user = { id: body.sender_id, email: null };
     }
     if (!user) throw new Error("Unauthorized");
 
