@@ -2,8 +2,13 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.0";
 import {
   getVerifiedAgentAudience,
-  classifyRecipients,
+  partitionAudience,
+  type EligibleAgent,
 } from "../_shared/verifiedAgentAudience.ts";
+import {
+  countExistingReminders,
+  reserveAndEnqueueMissingOpportunityReminder,
+} from "../_shared/missingOpportunitiesEmail.ts";
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -20,6 +25,7 @@ interface SendNotificationRequest {
   subject: string;
   message: string;
   previewOnly?: boolean;
+  dry_run?: boolean;
   sendCopyToSelf?: boolean;
   criteria?: {
     state?: string;
@@ -56,6 +62,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     const body: SendNotificationRequest = await req.json();
     const { category, subject, message, criteria, previewOnly, sendCopyToSelf } = body;
+    const dryRun: boolean = body?.dry_run === true;
 
     // Sender profile (for headers / self-copy)
     const { data: senderProfile } = await supabase
@@ -112,7 +119,7 @@ const handler = async (req: Request): Promise<Response> => {
       matchIds = new Set(audienceIds);
     }
 
-    const recipients = classifyRecipients(
+    const partition = partitionAudience<EligibleAgent>(
       audience,
       (a) => matchIds.has(a.agent_id),
       user.id,
@@ -124,7 +131,7 @@ const handler = async (req: Request): Promise<Response> => {
       const { data: profiles } = await supabase
         .from("agent_profiles")
         .select("id, email, first_name, last_name, phone, company")
-        .in("id", recipients.map((r) => r.agent_id));
+        .in("id", partition.real.map((r) => r.agent_id));
       const list = (profiles || []).map((a: any) => ({
         id: a.id,
         name: `${a.first_name ?? ""} ${a.last_name ?? ""}`.trim() || "AAC Agent",
@@ -136,11 +143,39 @@ const handler = async (req: Request): Promise<Response> => {
         JSON.stringify({
           success: true,
           recipientCount: list.length,
-          matched: recipients.filter((r) => r.reason === "preferences_match").length,
-          fallback: recipients.filter((r) => r.reason === "preferences_unset").length,
+          matched: partition.counts.preferences_matched,
+          fallback: partition.counts.preferences_unset_fallback,
           opted_out: optedOut.size,
           audience: audience.length,
+          profile_incomplete: partition.counts.profile_incomplete,
           recipients: list,
+        }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    // Dry-run: zero writes (no broadcast row, no email_jobs, no dedup).
+    if (dryRun) {
+      const reminderIdsDry = partition.reminder.map((a) => a.agent_id);
+      // We don't have a broadcast_id yet, so reminder dedup is not looked up here.
+      return new Response(
+        JSON.stringify({
+          dry_run: true,
+          category,
+          subject,
+          activated_verified_audience: audience.length,
+          profile_complete: partition.counts.profile_complete,
+          profile_incomplete: partition.counts.profile_incomplete,
+          no_email: partition.counts.no_email,
+          preferences_matched: partition.counts.preferences_matched,
+          preferences_unset_fallback: partition.counts.preferences_unset_fallback,
+          self_excluded: partition.counts.self_excluded,
+          category_opted_out: partition.counts.category_opted_out,
+          non_matching: partition.counts.non_matching,
+          already_received_real: 0,
+          reminder_already_recorded: 0,
+          final_real_recipients: partition.real.length,
+          final_reminder_recipients: reminderIdsDry.length,
         }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
@@ -166,13 +201,16 @@ const handler = async (req: Request): Promise<Response> => {
     const broadcastId = broadcast.id as string;
 
     // 6. Durable dedup against agent_sent_broadcasts
-    const { data: alreadySent } = await supabase
-      .from("agent_sent_broadcasts")
-      .select("agent_id")
-      .eq("broadcast_id", broadcastId)
-      .in("agent_id", recipients.map((r) => r.agent_id));
+    const realIds = partition.real.map((r) => r.agent_id);
+    const { data: alreadySent } = realIds.length
+      ? await supabase
+          .from("agent_sent_broadcasts")
+          .select("agent_id")
+          .eq("broadcast_id", broadcastId)
+          .in("agent_id", realIds)
+      : { data: [] as any[] };
     const sentSet = new Set((alreadySent || []).map((r: any) => r.agent_id));
-    const fresh = recipients.filter((r) => !sentSet.has(r.agent_id));
+    const fresh = partition.real.filter((r) => !sentSet.has(r.agent_id));
 
     // 7. Compose and enqueue
     let criteriaText = "";
@@ -269,11 +307,27 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
+    // Reminder enqueue via reserve-first RPC.
+    let reminderEnqueued = 0;
+    let reminderConflict = 0;
+    for (const a of partition.reminder) {
+      const res = await reserveAndEnqueueMissingOpportunityReminder(supabase, {
+        agent_id: a.agent_id,
+        event_type: "broadcast",
+        event_id: broadcastId,
+        email: a.email,
+        firstName: a.first_name,
+      });
+      if (res.queued) reminderEnqueued++;
+      else if (!res.reserved) reminderConflict++;
+      else if (res.error) console.error("[send-client-need-notification] reminder RPC error:", res.error);
+    }
+
     const matched = fresh.filter((r) => r.reason === "preferences_match").length;
     const fallback = fresh.filter((r) => r.reason === "preferences_unset").length;
 
     console.log(
-      `[send-client-need-notification] broadcast=${broadcastId} audience=${audience.length} matched=${matched} fallback=${fallback} sender_excluded=1 opted_out=${optedOut.size} duplicates_skipped=${recipients.length - fresh.length}`,
+      `[send-client-need-notification] broadcast=${broadcastId} audience=${audience.length} matched=${matched} fallback=${fallback} sender_excluded=1 opted_out=${optedOut.size} duplicates_skipped=${partition.real.length - fresh.length} reminder_enqueued=${reminderEnqueued}`,
     );
 
     return new Response(
@@ -284,9 +338,12 @@ const handler = async (req: Request): Promise<Response> => {
         matched,
         fallback,
         opted_out: optedOut.size,
-        duplicates_skipped: recipients.length - fresh.length,
+        duplicates_skipped: partition.real.length - fresh.length,
         audience: audience.length,
         broadcast_id: broadcastId,
+        profile_incomplete: partition.counts.profile_incomplete,
+        reminder_enqueued: reminderEnqueued,
+        reminder_skipped_duplicate: reminderConflict,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );

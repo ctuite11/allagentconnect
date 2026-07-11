@@ -2,6 +2,15 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { renderHotSheetMatchListingEmailCard } from "../_shared/listingEmailCard.ts";
 import { resolveEmailBaseUrl } from "../_shared/aacPublicUrl.ts";
+import {
+  getVerifiedAgentAudience,
+  partitionAudience,
+  type EligibleAgent,
+} from "../_shared/verifiedAgentAudience.ts";
+import {
+  countExistingReminders,
+  reserveAndEnqueueMissingOpportunityReminder,
+} from "../_shared/missingOpportunitiesEmail.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -123,225 +132,151 @@ serve(async (req) => {
       );
     }
 
-    // 2) Verified agents = user_roles(agent) ∩ agent_settings(verified) ∩ agent_profiles(email)
-    const { data: agentRoles, error: rolesError } = await admin
-      .from("user_roles")
-      .select("user_id")
-      .eq("role", "agent");
-    if (rolesError) throw rolesError;
+    // 2) Canonical activated+verified audience.
+    const audience = await getVerifiedAgentAudience(admin);
+    const audienceIds = audience.map((a) => a.agent_id);
 
-    const agentIds = (agentRoles ?? []).map((r: any) => String(r.user_id));
-    if (!agentIds.length) {
-      return new Response(JSON.stringify({ enqueued: 0, reason: "no agents" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const { data: settingsRows, error: settingsError } = await admin
-      .from("agent_settings")
-      .select("user_id, preferences_set, agent_status")
-      .in("user_id", agentIds)
-      .eq("agent_status", "verified");
-    if (settingsError) throw settingsError;
-
-    const verifiedIds = (settingsRows ?? []).map((s: any) => String(s.user_id));
-    if (!verifiedIds.length) {
-      return new Response(JSON.stringify({ enqueued: 0, reason: "no verified" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-    const prefsSetById = new Map<string, boolean>(
-      (settingsRows ?? []).map((s: any) => [String(s.user_id), s.preferences_set === true]),
-    );
-
-    const { data: profiles, error: profilesError } = await admin
-      .from("agent_profiles")
-      .select("id, email, first_name")
-      .in("id", verifiedIds);
-    if (profilesError) throw profilesError;
-
-    const { data: coverageRows, error: coverageError } = await admin
-      .from("agent_buyer_coverage_areas")
-      .select("agent_id, zip_code, city, state, county, neighborhood")
-      .in("agent_id", verifiedIds);
+    // Coverage rows for the domain-match predicate (only agents with coverage
+    // are considered preferences_set for listing alerts, matching prior behavior).
+    const { data: coverageRows, error: coverageError } = audienceIds.length
+      ? await admin
+          .from("agent_buyer_coverage_areas")
+          .select("agent_id, zip_code, city, state, county, neighborhood")
+          .in("agent_id", audienceIds)
+      : { data: [], error: null };
     if (coverageError) throw coverageError;
 
     const coverageByAgent = new Map<string, CoverageRow[]>();
     for (const c of (coverageRows ?? []) as CoverageRow[]) {
-      const key = String(c.agent_id);
-      const arr = coverageByAgent.get(key) ?? [];
+      const arr = coverageByAgent.get(String(c.agent_id)) ?? [];
       arr.push(c);
-      coverageByAgent.set(key, arr);
+      coverageByAgent.set(String(c.agent_id), arr);
     }
 
     const listingAgentId = (listing as any).agent_id
       ? String((listing as any).agent_id)
       : null;
 
-    type Candidate = {
-      agentId: string;
-      email: string;
-      firstName: string;
-      reason: "preferences_match" | "preferences_unset";
-    };
+    // No category opt-out surface for listing alerts today.
+    const optedOut = new Set<string>();
 
-    const seenEmail = new Set<string>();
-    const candidates: Candidate[] = [];
+    const partition = partitionAudience<EligibleAgent>(
+      audience,
+      (a) => coverageMatches(listing as ListingRow, coverageByAgent.get(a.agent_id) ?? []),
+      listingAgentId,
+      optedOut,
+    );
 
-    for (const p of (profiles ?? []) as any[]) {
-      const agentId = String(p.id);
-      if (listingAgentId && agentId === listingAgentId) continue; // self-exclude
-
-      const email = norm(p.email);
-      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) continue;
-      if (seenEmail.has(email)) continue;
-
-      const coverage = coverageByAgent.get(agentId) ?? [];
-      const prefsMarkedSet = prefsSetById.get(agentId) === true;
-      // Canonical "preferences set": preferences_set flag OR any coverage row.
-      const hasPrefs = prefsMarkedSet || coverage.length > 0;
-
-      let reason: Candidate["reason"];
-      if (!hasPrefs) {
-        reason = "preferences_unset";
-      } else {
-        if (!coverageMatches(listing as ListingRow, coverage)) continue;
-        reason = "preferences_match";
-      }
-
-      seenEmail.add(email);
-      candidates.push({
-        agentId,
-        email,
-        firstName: (p.first_name ?? "").toString().trim() || "there",
-        reason,
-      });
-    }
-
-    if (!candidates.length) {
-      console.log("[notify-agents-new-listing] no eligible agents");
-      return new Response(JSON.stringify({
-        enqueued: 0,
-        dry_run: dryRun,
-        listing_id: listingId,
-        status_at_send: status,
-        audience: (profiles ?? []).length,
-        matched: 0,
-        fallback: 0,
-        self_excluded: listingAgentId ? 1 : 0,
-        opted_out: 0,
-        already_received: 0,
-        final_new_recipients: 0,
-      }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    // Count matched / fallback / self-exclusions for reporting.
-    const matchedCount = candidates.filter((c) => c.reason === "preferences_match").length;
-    const fallbackCount = candidates.filter((c) => c.reason === "preferences_unset").length;
-    const selfExcludedCount = listingAgentId
-      ? (profiles ?? []).some((p: any) => String(p.id) === listingAgentId) ? 1 : 0
-      : 0;
-
-    // Pre-check dedup against agent_sent_listings so dry-run can report
-    // already-received counts without writing anything.
-    const { data: existingSent } = await admin
-      .from("agent_sent_listings")
-      .select("agent_id")
-      .eq("listing_id", listingId)
-      .eq("status_at_send", status)
-      .in("agent_id", candidates.map((c) => c.agentId));
+    // Pre-check dedup for real-content sends (agent_sent_listings, per status).
+    const realAgentIds = partition.real.map((r) => r.agent_id);
+    const { data: existingSent } = realAgentIds.length
+      ? await admin
+          .from("agent_sent_listings")
+          .select("agent_id")
+          .eq("listing_id", listingId)
+          .eq("status_at_send", status)
+          .in("agent_id", realAgentIds)
+      : { data: [] as any[] };
     const alreadySent = new Set(
       (existingSent ?? []).map((r: any) => String(r.agent_id)),
     );
-    const freshCandidates = candidates.filter((c) => !alreadySent.has(c.agentId));
+    const freshReal = partition.real.filter((r) => !alreadySent.has(r.agent_id));
+
+    // Pre-check reminder dedup.
+    const reminderAgentIds = partition.reminder.map((a) => a.agent_id);
+    const alreadyReminded = await countExistingReminders(
+      admin,
+      "new_listing",
+      listingId,
+      reminderAgentIds,
+    );
+    const freshReminder = partition.reminder.filter((a) => !alreadyReminded.has(a.agent_id));
+
+    const address = [
+      (listing as any).address,
+      (listing as any).city,
+      (listing as any).state,
+      (listing as any).zip_code,
+    ].filter(Boolean).join(", ");
+
+    const baseReport = {
+      listing_id: listingId,
+      status_at_send: status,
+      event_summary: {
+        id: listingId,
+        address,
+        listing_agent_id: listingAgentId,
+      },
+      activated_verified_audience: audience.length,
+      profile_complete: partition.counts.profile_complete,
+      profile_incomplete: partition.counts.profile_incomplete,
+      no_email: partition.counts.no_email,
+      preferences_matched: partition.counts.preferences_matched,
+      preferences_unset_fallback: partition.counts.preferences_unset_fallback,
+      self_excluded: partition.counts.self_excluded,
+      category_opted_out: partition.counts.category_opted_out,
+      non_matching: partition.counts.non_matching,
+      already_received_real: alreadySent.size,
+      reminder_already_recorded: alreadyReminded.size,
+      final_real_recipients: freshReal.length,
+      final_reminder_recipients: freshReminder.length,
+    };
 
     if (dryRun) {
-      const address = [
-        (listing as any).address,
-        (listing as any).city,
-        (listing as any).state,
-        (listing as any).zip_code,
-      ].filter(Boolean).join(", ");
       console.log(
-        `[notify-agents-new-listing] DRY_RUN listing=${listingId} status=${status} audience=${(profiles ?? []).length} matched=${matchedCount} fallback=${fallbackCount} already_received=${alreadySent.size} final=${freshCandidates.length}`,
+        `[notify-agents-new-listing] DRY_RUN listing=${listingId} status=${status} audience=${audience.length} complete=${partition.counts.profile_complete} incomplete=${partition.counts.profile_incomplete} matched=${partition.counts.preferences_matched} fallback=${partition.counts.preferences_unset_fallback} already_real=${alreadySent.size} already_reminded=${alreadyReminded.size} final_real=${freshReal.length} final_reminder=${freshReminder.length}`,
       );
       return new Response(
-        JSON.stringify({
-          dry_run: true,
-          listing_id: listingId,
-          status_at_send: status,
-          event_summary: {
-            id: listingId,
-            address,
-            listing_agent_id: listingAgentId,
-          },
-          audience: (profiles ?? []).length,
-          matched: matchedCount,
-          fallback: fallbackCount,
-          self_excluded: selfExcludedCount,
-          opted_out: 0,
-          already_received: alreadySent.size,
-          final_new_recipients: freshCandidates.length,
-        }),
+        JSON.stringify({ dry_run: true, ...baseReport }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
-    // 3) Dedup via agent_sent_listings insert (unique constraint)
+    // 3) Real-content enqueue with existing reserve-first dedup semantics.
     const baseUrl = resolveEmailBaseUrl(
       Deno.env.get("EMAIL_BASE_URL") ||
         Deno.env.get("APP_BASE_URL") ||
         Deno.env.get("SITE_URL"),
     );
-    const listingCardHtml = renderHotSheetMatchListingEmailCard(listing, {
-      baseUrl,
-    });
+    const listingCardHtml = renderHotSheetMatchListingEmailCard(listing, { baseUrl });
 
-    let enqueued = 0;
+    let enqueuedReal = 0;
     let skippedDup = 0;
-    for (const c of candidates) {
+    for (const c of partition.real) {
       const { error: dedupErr } = await admin
         .from("agent_sent_listings")
         .insert({
-          agent_id: c.agentId,
+          agent_id: c.agent_id,
           listing_id: listingId,
           status_at_send: status,
         });
-
       if (dedupErr) {
-        // Unique violation → already sent for this (agent, listing, status)
         skippedDup++;
         continue;
       }
-
-      const idempotencyKey = `agent-new-listing:${c.agentId}:${listingId}:${status}`;
-      const address = [
+      const idempotencyKey = `agent-new-listing:${c.agent_id}:${listingId}:${status}`;
+      const shortAddr = [
         (listing as any).address,
         (listing as any).city,
         (listing as any).state,
-      ]
-        .filter(Boolean)
-        .join(", ");
-
+      ].filter(Boolean).join(", ");
       const { error: insertErr } = await admin.from("email_jobs").insert({
         idempotency_key: idempotencyKey,
         payload: {
           provider: "resend",
           template: "agent-new-listing-alert",
           to: c.email,
-          subject: `New listing in your coverage: ${address || "see details"}`,
+          subject: `New listing in your coverage: ${shortAddr || "see details"}`,
           category: "hot_sheet_alerts",
           metadata: {
             audience: "agent",
             reason: c.reason,
-            agent_id: c.agentId,
+            agent_id: c.agent_id,
             listing_id: listingId,
             status_at_send: status,
           },
           variables: {
-            userName: c.firstName,
+            userName: (c.first_name ?? "").toString().trim() || "there",
             hotSheetName: "New listing alert",
             matchCount: 1,
             listingsHtml: listingCardHtml,
@@ -349,41 +284,48 @@ serve(async (req) => {
           },
         },
       });
-
       if (insertErr) {
-        // Roll back the dedup marker so a retry can re-enqueue.
         await admin
           .from("agent_sent_listings")
           .delete()
-          .eq("agent_id", c.agentId)
+          .eq("agent_id", c.agent_id)
           .eq("listing_id", listingId)
           .eq("status_at_send", status);
         console.error("[notify-agents-new-listing] enqueue failed:", insertErr);
         continue;
       }
+      enqueuedReal++;
+    }
 
-      enqueued++;
+    // 4) Reminder enqueue via reserve-first RPC.
+    let enqueuedReminder = 0;
+    let reminderConflict = 0;
+    for (const a of partition.reminder) {
+      const res = await reserveAndEnqueueMissingOpportunityReminder(admin, {
+        agent_id: a.agent_id,
+        event_type: "new_listing",
+        event_id: listingId,
+        email: a.email,
+        firstName: a.first_name,
+        baseUrl,
+      });
+      if (res.queued) enqueuedReminder++;
+      else if (!res.reserved) reminderConflict++;
+      else if (res.error) console.error("[notify-agents-new-listing] reminder RPC error:", res.error);
     }
 
     console.log(
-      `[notify-agents-new-listing] listing=${listingId} status=${status} candidates=${candidates.length} enqueued=${enqueued} skippedDup=${skippedDup}`,
+      `[notify-agents-new-listing] listing=${listingId} real_enqueued=${enqueuedReal} real_skipped_dup=${skippedDup} reminder_enqueued=${enqueuedReminder} reminder_conflict=${reminderConflict}`,
     );
 
     return new Response(
       JSON.stringify({
         success: true,
-        listing_id: listingId,
-        status_at_send: status,
-        candidates: candidates.length,
-        enqueued,
-        skipped_duplicate: skippedDup,
-        audience: (profiles ?? []).length,
-        matched: matchedCount,
-        fallback: fallbackCount,
-        self_excluded: selfExcludedCount,
-        opted_out: 0,
-        already_received: alreadySent.size,
-        final_new_recipients: enqueued,
+        ...baseReport,
+        real_enqueued: enqueuedReal,
+        real_skipped_duplicate: skippedDup,
+        reminder_enqueued: enqueuedReminder,
+        reminder_skipped_duplicate: reminderConflict,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );

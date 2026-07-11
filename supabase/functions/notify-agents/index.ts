@@ -2,8 +2,13 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.76.1";
 import {
   getVerifiedAgentAudience,
-  classifyRecipients,
+  partitionAudience,
+  type EligibleAgent,
 } from "../_shared/verifiedAgentAudience.ts";
+import {
+  countExistingReminders,
+  reserveAndEnqueueMissingOpportunityReminder,
+} from "../_shared/missingOpportunitiesEmail.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -21,6 +26,7 @@ interface BuyerNeedRequest {
   bedrooms?: string | number;
   bathrooms?: string | number;
   description?: string;
+  dry_run?: boolean;
 }
 
 serve(async (req) => {
@@ -61,6 +67,7 @@ serve(async (req) => {
     if (!body?.client_need_id || !body?.countyId) {
       throw new Error("client_need_id and countyId are required");
     }
+    const dryRun: boolean = body?.dry_run === true;
 
     // County lookup
     const { data: county } = await supabase
@@ -91,7 +98,7 @@ serve(async (req) => {
       if (r.receive_buyer_alerts === false) optedOut.add(r.id);
     }
 
-    const recipients = classifyRecipients(
+    const partition = partitionAudience<EligibleAgent>(
       audience,
       (a) => matchIds.has(a.agent_id),
       user.id,
@@ -99,13 +106,26 @@ serve(async (req) => {
     );
 
     // Durable dedup
-    const { data: alreadySent } = await supabase
-      .from("agent_sent_client_needs")
-      .select("agent_id")
-      .eq("client_need_id", body.client_need_id)
-      .in("agent_id", recipients.map((r) => r.agent_id));
+    const realIds = partition.real.map((r) => r.agent_id);
+    const { data: alreadySent } = realIds.length
+      ? await supabase
+          .from("agent_sent_client_needs")
+          .select("agent_id")
+          .eq("client_need_id", body.client_need_id)
+          .in("agent_id", realIds)
+      : { data: [] as any[] };
     const sentSet = new Set((alreadySent || []).map((r: any) => r.agent_id));
-    const fresh = recipients.filter((r) => !sentSet.has(r.agent_id));
+    const freshReal = partition.real.filter((r) => !sentSet.has(r.agent_id));
+
+    // Reminder pre-check
+    const reminderIds = partition.reminder.map((a) => a.agent_id);
+    const alreadyReminded = await countExistingReminders(
+      supabase,
+      "client_need_county",
+      body.client_need_id,
+      reminderIds,
+    );
+    const freshReminder = partition.reminder.filter((a) => !alreadyReminded.has(a.agent_id));
 
     const propertyTypeDisplay = String(body.propertyType)
       .split("_")
@@ -113,8 +133,34 @@ serve(async (req) => {
       .join(" ");
     const countyName = `${county.name}, ${county.state}`;
 
-    if (fresh.length > 0) {
-      const emailJobs = fresh.map((a) => ({
+    const baseReport = {
+      client_need_id: body.client_need_id,
+      county: countyName,
+      activated_verified_audience: audience.length,
+      profile_complete: partition.counts.profile_complete,
+      profile_incomplete: partition.counts.profile_incomplete,
+      no_email: partition.counts.no_email,
+      preferences_matched: partition.counts.preferences_matched,
+      preferences_unset_fallback: partition.counts.preferences_unset_fallback,
+      self_excluded: partition.counts.self_excluded,
+      category_opted_out: partition.counts.category_opted_out,
+      non_matching: partition.counts.non_matching,
+      already_received_real: sentSet.size,
+      reminder_already_recorded: alreadyReminded.size,
+      final_real_recipients: freshReal.length,
+      final_reminder_recipients: freshReminder.length,
+    };
+
+    if (dryRun) {
+      return new Response(
+        JSON.stringify({ dry_run: true, ...baseReport }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 },
+      );
+    }
+
+    let realEnqueued = 0;
+    if (freshReal.length > 0) {
+      const emailJobs = freshReal.map((a) => ({
         idempotency_key: `client-need:${body.client_need_id}:${a.agent_id}`,
         payload: {
           provider: "resend",
@@ -135,31 +181,42 @@ serve(async (req) => {
       }));
       await supabase.from("email_jobs").insert(emailJobs);
       await supabase.from("agent_sent_client_needs").upsert(
-        fresh.map((r) => ({
+        freshReal.map((r) => ({
           agent_id: r.agent_id,
           client_need_id: body.client_need_id,
           reason: r.reason,
         })),
         { onConflict: "agent_id,client_need_id" },
       );
+      realEnqueued = emailJobs.length;
     }
 
-    const matched = fresh.filter((r) => r.reason === "preferences_match").length;
-    const fallback = fresh.filter((r) => r.reason === "preferences_unset").length;
+    let reminderEnqueued = 0;
+    let reminderConflict = 0;
+    for (const a of partition.reminder) {
+      const res = await reserveAndEnqueueMissingOpportunityReminder(supabase, {
+        agent_id: a.agent_id,
+        event_type: "client_need_county",
+        event_id: body.client_need_id,
+        email: a.email,
+        firstName: a.first_name,
+      });
+      if (res.queued) reminderEnqueued++;
+      else if (!res.reserved) reminderConflict++;
+      else if (res.error) console.error("[notify-agents] reminder RPC error:", res.error);
+    }
 
     console.log(
-      `[notify-agents] client_need=${body.client_need_id} audience=${audience.length} matched=${matched} fallback=${fallback} opted_out=${optedOut.size} duplicates_skipped=${recipients.length - fresh.length}`,
+      `[notify-agents] client_need=${body.client_need_id} audience=${audience.length} real=${realEnqueued} reminder=${reminderEnqueued}`,
     );
 
     return new Response(
       JSON.stringify({
         success: true,
-        queued: fresh.length,
-        matched,
-        fallback,
-        opted_out: optedOut.size,
-        duplicates_skipped: recipients.length - fresh.length,
-        audience: audience.length,
+        ...baseReport,
+        real_enqueued: realEnqueued,
+        reminder_enqueued: reminderEnqueued,
+        reminder_skipped_duplicate: reminderConflict,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 },
     );

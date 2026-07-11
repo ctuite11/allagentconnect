@@ -2,8 +2,13 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import {
   getVerifiedAgentAudience,
-  classifyRecipients,
+  partitionAudience,
+  type EligibleAgent,
 } from "../_shared/verifiedAgentAudience.ts";
+import {
+  countExistingReminders,
+  reserveAndEnqueueMissingOpportunityReminder,
+} from "../_shared/missingOpportunitiesEmail.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -69,21 +74,6 @@ serve(async (req) => {
 
     // Canonical audience
     const audience = await getVerifiedAgentAudience(supabase);
-    if (!audience.length) {
-      return new Response(JSON.stringify({
-        notified_count: 0,
-        matched: 0,
-        fallback: 0,
-        self_excluded: 0,
-        opted_out: 0,
-        already_received: 0,
-        final_new_recipients: 0,
-        audience: 0,
-        dry_run: dryRun,
-      }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
 
     // Preference match set: state matches
     const { data: statePrefs } = await supabase
@@ -103,73 +93,73 @@ serve(async (req) => {
       if (r.receive_buyer_alerts === false) optedOut.add(r.id);
     }
 
-    const recipients = classifyRecipients(
+    const partition = partitionAudience<EligibleAgent>(
       audience,
       (a) => matchIds.has(a.agent_id),
       senderId,
       optedOut,
     );
 
-    const selfExcludedCount = senderId
-      ? audience.some((a) => a.agent_id === senderId) ? 1 : 0
-      : 0;
-
-    // Dedup against durable table
-    const { data: alreadySent } = await supabase
-      .from("agent_sent_client_needs")
-      .select("agent_id")
-      .eq("client_need_id", body.client_need_id)
-      .in("agent_id", recipients.map((r) => r.agent_id));
+    // Real-content dedup
+    const realIds = partition.real.map((r) => r.agent_id);
+    const { data: alreadySent } = realIds.length
+      ? await supabase
+          .from("agent_sent_client_needs")
+          .select("agent_id")
+          .eq("client_need_id", body.client_need_id)
+          .in("agent_id", realIds)
+      : { data: [] as any[] };
     const sentSet = new Set((alreadySent || []).map((r: any) => r.agent_id));
-    const fresh = recipients.filter((r) => !sentSet.has(r.agent_id));
+    const freshReal = partition.real.filter((r) => !sentSet.has(r.agent_id));
 
-    const matchedFresh = fresh.filter((r) => r.reason === "preferences_match").length;
-    const fallbackFresh = fresh.filter((r) => r.reason === "preferences_unset").length;
-    const matchedRecipients = recipients.filter((r) => r.reason === "preferences_match").length;
-    const fallbackRecipients = recipients.filter((r) => r.reason === "preferences_unset").length;
+    // Reminder dedup pre-check
+    const reminderIds = partition.reminder.map((a) => a.agent_id);
+    const alreadyReminded = await countExistingReminders(
+      supabase,
+      "client_need",
+      body.client_need_id,
+      reminderIds,
+    );
+    const freshReminder = partition.reminder.filter((a) => !alreadyReminded.has(a.agent_id));
+
+    const baseReport = {
+      client_need_id: body.client_need_id,
+      event_summary: {
+        id: body.client_need_id,
+        city, state,
+        property_type: propertyType,
+        max_price: maxPrice,
+        bedrooms, bathrooms, description,
+      },
+      activated_verified_audience: audience.length,
+      profile_complete: partition.counts.profile_complete,
+      profile_incomplete: partition.counts.profile_incomplete,
+      no_email: partition.counts.no_email,
+      preferences_matched: partition.counts.preferences_matched,
+      preferences_unset_fallback: partition.counts.preferences_unset_fallback,
+      self_excluded: partition.counts.self_excluded,
+      category_opted_out: partition.counts.category_opted_out,
+      non_matching: partition.counts.non_matching,
+      already_received_real: sentSet.size,
+      reminder_already_recorded: alreadyReminded.size,
+      final_real_recipients: freshReal.length,
+      final_reminder_recipients: freshReminder.length,
+    };
 
     if (dryRun) {
       console.log(
-        `[notify-agents-client-need] DRY_RUN client_need=${body.client_need_id} audience=${audience.length} matched=${matchedRecipients} fallback=${fallbackRecipients} self_excluded=${selfExcludedCount} opted_out=${optedOut.size} already_received=${sentSet.size} final=${fresh.length}`,
+        `[notify-agents-client-need] DRY_RUN client_need=${body.client_need_id} audience=${audience.length} complete=${partition.counts.profile_complete} incomplete=${partition.counts.profile_incomplete} final_real=${freshReal.length} final_reminder=${freshReminder.length}`,
       );
       return new Response(
-        JSON.stringify({
-          dry_run: true,
-          client_need_id: body.client_need_id,
-          event_summary: {
-            id: body.client_need_id,
-            city,
-            state,
-            property_type: propertyType,
-            max_price: maxPrice,
-            bedrooms,
-            bathrooms,
-            description,
-          },
-          audience: audience.length,
-          matched: matchedRecipients,
-          fallback: fallbackRecipients,
-          self_excluded: selfExcludedCount,
-          opted_out: optedOut.size,
-          already_received: sentSet.size,
-          final_new_recipients: fresh.length,
-        }),
+        JSON.stringify({ dry_run: true, ...baseReport }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
-    if (!fresh.length) {
+    // Real-content enqueue
+    if (freshReal.length === 0 && freshReminder.length === 0) {
       return new Response(
-        JSON.stringify({
-          notified_count: 0,
-          matched: 0,
-          fallback: 0,
-          duplicates_skipped: recipients.length,
-          self_excluded: selfExcludedCount,
-          opted_out: optedOut.size,
-          audience: audience.length,
-          final_new_recipients: 0,
-        }),
+        JSON.stringify({ success: true, ...baseReport, real_enqueued: 0, reminder_enqueued: 0 }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
@@ -181,7 +171,7 @@ serve(async (req) => {
       maximumFractionDigits: 0,
     }).format(maxPrice);
 
-    const emailJobs = fresh.map((a) => ({
+    const emailJobs = freshReal.map((a) => ({
       idempotency_key: `client-need:${body.client_need_id}:${a.agent_id}`,
       payload: {
         provider: "resend",
@@ -211,36 +201,48 @@ serve(async (req) => {
       },
     }));
 
-    const { error: insertError } = await supabase.from("email_jobs").insert(emailJobs);
-    if (insertError) throw insertError;
+    let realEnqueued = 0;
+    if (emailJobs.length) {
+      const { error: insertError } = await supabase.from("email_jobs").insert(emailJobs);
+      if (insertError) throw insertError;
+      await supabase.from("agent_sent_client_needs").upsert(
+        freshReal.map((r) => ({
+          agent_id: r.agent_id,
+          client_need_id: body.client_need_id,
+          reason: r.reason,
+        })),
+        { onConflict: "agent_id,client_need_id" },
+      );
+      realEnqueued = emailJobs.length;
+    }
 
-    await supabase.from("agent_sent_client_needs").upsert(
-      fresh.map((r) => ({
-        agent_id: r.agent_id,
-        client_need_id: body.client_need_id,
-        reason: r.reason,
-      })),
-      { onConflict: "agent_id,client_need_id" },
-    );
-
-    const matched = fresh.filter((r) => r.reason === "preferences_match").length;
-    const fallback = fresh.filter((r) => r.reason === "preferences_unset").length;
+    // Reminder enqueue via reserve-first RPC.
+    let reminderEnqueued = 0;
+    let reminderConflict = 0;
+    for (const a of partition.reminder) {
+      const res = await reserveAndEnqueueMissingOpportunityReminder(supabase, {
+        agent_id: a.agent_id,
+        event_type: "client_need",
+        event_id: body.client_need_id,
+        email: a.email,
+        firstName: a.first_name,
+      });
+      if (res.queued) reminderEnqueued++;
+      else if (!res.reserved) reminderConflict++;
+      else if (res.error) console.error("[notify-agents-client-need] reminder RPC error:", res.error);
+    }
 
     console.log(
-      `[notify-agents-client-need] client_need=${body.client_need_id} audience=${audience.length} matched=${matched} fallback=${fallback} sender_excluded=${senderId ? 1 : 0} opted_out=${optedOut.size} duplicates_skipped=${recipients.length - fresh.length}`,
+      `[notify-agents-client-need] client_need=${body.client_need_id} audience=${audience.length} real_enqueued=${realEnqueued} reminder_enqueued=${reminderEnqueued}`,
     );
 
     return new Response(
       JSON.stringify({
-        notified_count: fresh.length,
-        matched,
-        fallback,
-        duplicates_skipped: recipients.length - fresh.length,
-        opted_out: optedOut.size,
-        self_excluded: selfExcludedCount,
-        already_received: sentSet.size,
-        final_new_recipients: fresh.length,
-        audience: audience.length,
+        success: true,
+        ...baseReport,
+        real_enqueued: realEnqueued,
+        reminder_enqueued: reminderEnqueued,
+        reminder_skipped_duplicate: reminderConflict,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
