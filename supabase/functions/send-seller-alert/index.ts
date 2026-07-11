@@ -3,8 +3,13 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { AAC_PUBLIC_URL } from "../_shared/aacPublicUrl.ts";
 import {
   getVerifiedAgentAudience,
-  classifyRecipients,
+  partitionAudience,
+  type EligibleAgent,
 } from "../_shared/verifiedAgentAudience.ts";
+import {
+  countExistingReminders,
+  reserveAndEnqueueMissingOpportunityReminder,
+} from "../_shared/missingOpportunitiesEmail.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -13,6 +18,7 @@ const corsHeaders = {
 
 interface SellerAlertRequest {
   submission_id: string;
+  dry_run?: boolean;
 }
 
 serve(async (req: Request) => {
@@ -26,8 +32,9 @@ serve(async (req: Request) => {
     );
     const baseUrl = AAC_PUBLIC_URL;
 
-    const { submission_id }: SellerAlertRequest = await req.json();
+    const { submission_id, dry_run }: SellerAlertRequest = await req.json();
     if (!submission_id) throw new Error("submission_id is required");
+    const dryRun: boolean = dry_run === true;
 
     const { data: submission, error: subError } = await supabase
       .from("agent_match_submissions")
@@ -68,32 +75,65 @@ serve(async (req: Request) => {
     // Sender exclusion: if the seller is a linked agent user
     const senderId: string | null = submission.agent_id || submission.user_id || null;
 
-    const recipients = classifyRecipients(
+    const partition = partitionAudience<EligibleAgent>(
       audience,
       (a) => matchHotSheetByAgent.has(a.agent_id),
       senderId,
     );
 
     // Skip agents already notified for this submission (durable dedup)
-    const { data: existingDeliveries } = await supabase
-      .from("agent_match_deliveries")
-      .select("agent_id, notified_agent_at")
-      .eq("submission_id", submission_id)
-      .in("agent_id", recipients.map((r) => r.agent_id));
+    const realIds = partition.real.map((r) => r.agent_id);
+    const { data: existingDeliveries } = realIds.length
+      ? await supabase
+          .from("agent_match_deliveries")
+          .select("agent_id, notified_agent_at")
+          .eq("submission_id", submission_id)
+          .in("agent_id", realIds)
+      : { data: [] as any[] };
     const notifiedSet = new Set(
       (existingDeliveries || [])
         .filter((d: any) => d.notified_agent_at)
         .map((d: any) => d.agent_id),
     );
-    const fresh = recipients.filter((r) => !notifiedSet.has(r.agent_id));
+    const freshReal = partition.real.filter((r) => !notifiedSet.has(r.agent_id));
 
-    if (fresh.length === 0) {
+    // Reminder pre-check
+    const reminderIds = partition.reminder.map((a) => a.agent_id);
+    const alreadyReminded = await countExistingReminders(
+      supabase,
+      "seller_alert",
+      submission_id,
+      reminderIds,
+    );
+    const freshReminder = partition.reminder.filter((a) => !alreadyReminded.has(a.agent_id));
+
+    const baseReport = {
+      submission_id,
+      activated_verified_audience: audience.length,
+      profile_complete: partition.counts.profile_complete,
+      profile_incomplete: partition.counts.profile_incomplete,
+      no_email: partition.counts.no_email,
+      preferences_matched: partition.counts.preferences_matched,
+      preferences_unset_fallback: partition.counts.preferences_unset_fallback,
+      self_excluded: partition.counts.self_excluded,
+      category_opted_out: partition.counts.category_opted_out,
+      non_matching: partition.counts.non_matching,
+      already_received_real: notifiedSet.size,
+      reminder_already_recorded: alreadyReminded.size,
+      final_real_recipients: freshReal.length,
+      final_reminder_recipients: freshReminder.length,
+    };
+
+    if (dryRun) {
       return new Response(
-        JSON.stringify({
-          success: true,
-          agentsNotified: 0,
-          duplicates_skipped: recipients.length,
-        }),
+        JSON.stringify({ dry_run: true, ...baseReport }),
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } },
+      );
+    }
+
+    if (freshReal.length === 0 && freshReminder.length === 0) {
+      return new Response(
+        JSON.stringify({ success: true, ...baseReport, real_enqueued: 0, reminder_enqueued: 0 }),
         { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } },
       );
     }
@@ -109,7 +149,7 @@ serve(async (req: Request) => {
     const detailsUrl = `${baseUrl}/seller-listing/${submission_id}`;
 
     const emailJobs: any[] = [];
-    for (const r of fresh) {
+    for (const r of freshReal) {
       const hotSheetIds = matchHotSheetByAgent.get(r.agent_id) || [];
 
       // Record delivery row per hot sheet, or a single sentinel for fallback cohort
@@ -190,20 +230,34 @@ serve(async (req: Request) => {
       if (insertError) console.error("[send-seller-alert] enqueue failed:", insertError);
     }
 
-    const matched = fresh.filter((r) => r.reason === "preferences_match").length;
-    const fallback = fresh.filter((r) => r.reason === "preferences_unset").length;
+    // Reminder enqueue via reserve-first RPC.
+    let reminderEnqueued = 0;
+    let reminderConflict = 0;
+    for (const a of partition.reminder) {
+      const res = await reserveAndEnqueueMissingOpportunityReminder(supabase, {
+        agent_id: a.agent_id,
+        event_type: "seller_alert",
+        event_id: submission_id,
+        email: a.email,
+        firstName: a.first_name,
+        baseUrl,
+      });
+      if (res.queued) reminderEnqueued++;
+      else if (!res.reserved) reminderConflict++;
+      else if (res.error) console.error("[send-seller-alert] reminder RPC error:", res.error);
+    }
+
     console.log(
-      `[send-seller-alert] submission=${submission_id} audience=${audience.length} matched=${matched} fallback=${fallback} sender_excluded=${senderId ? 1 : 0} duplicates_skipped=${recipients.length - fresh.length}`,
+      `[send-seller-alert] submission=${submission_id} real_enqueued=${emailJobs.length} reminder_enqueued=${reminderEnqueued}`,
     );
 
     return new Response(
       JSON.stringify({
         success: true,
-        agentsNotified: emailJobs.length,
-        matched,
-        fallback,
-        duplicates_skipped: recipients.length - fresh.length,
-        audience: audience.length,
+        ...baseReport,
+        real_enqueued: emailJobs.length,
+        reminder_enqueued: reminderEnqueued,
+        reminder_skipped_duplicate: reminderConflict,
       }),
       { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } },
     );
