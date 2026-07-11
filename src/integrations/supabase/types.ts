@@ -710,6 +710,33 @@ export type Database = {
           },
         ]
       }
+      agent_missing_opportunity_reminders: {
+        Row: {
+          agent_id: string
+          email: string
+          event_id: string
+          event_type: string
+          id: string
+          sent_at: string
+        }
+        Insert: {
+          agent_id: string
+          email: string
+          event_id: string
+          event_type: string
+          id?: string
+          sent_at?: string
+        }
+        Update: {
+          agent_id?: string
+          email?: string
+          event_id?: string
+          event_type?: string
+          id?: string
+          sent_at?: string
+        }
+        Relationships: []
+      }
       agent_notifications: {
         Row: {
           agent_id: string
@@ -4834,6 +4861,16 @@ export type Database = {
           p_favorite_id: string
         }
         Returns: undefined
+      }
+      reserve_and_enqueue_missing_opportunity_reminder: {
+        Args: {
+          _agent_id: string
+          _email: string
+          _email_job: Json
+          _event_id: string
+          _event_type: string
+        }
+        Returns: Json
       }
       resolve_share_token: { Args: { _token: string }; Returns: Json }
       resolve_user_role: { Args: { _user_id: string }; Returns: Json }
