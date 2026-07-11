@@ -113,7 +113,8 @@ const AgentSearchTable = ({ agents, loading, sortOrder, onSortChange }: AgentSea
               </TableHead>
               <TableHead className="hidden md:table-cell">Brokerage</TableHead>
               <TableHead className="hidden lg:table-cell">Service Areas</TableHead>
-              <TableHead className="hidden xl:table-cell w-[180px]">Incentives</TableHead>
+              {/* Incentives column header hidden per AAC policy (pre-DCMLS launch) */}
+              <TableHead className="hidden w-[180px]" aria-hidden="true"></TableHead>
               <TableHead className="w-[100px]">
                 <Button
                   variant="ghost"
