@@ -325,6 +325,7 @@ const App = () => (
               <SharedListingGate>
               <Routes>
                 <Route path="/" element={<HomepageV2 />} />
+                <Route path="/index" element={<Navigate to="/" replace />} />
                 <Route path="/register" element={<Navigate to="/auth?mode=register" replace />} />
                 <Route path="/request-access" element={<Navigate to="/auth?mode=register" replace />} />
                 <Route path="/agent-match" element={<><AgentMatch /><Footer /></>} />
