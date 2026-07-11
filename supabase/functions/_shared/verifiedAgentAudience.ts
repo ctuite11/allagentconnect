@@ -76,31 +76,55 @@ export async function getVerifiedAgentAudience(
   const profileMap = new Map<string, any>();
   for (const p of profiles || []) profileMap.set(p.id, p);
 
-  // 4) Preference-source signals.
-  const [cov, states, counties] = await Promise.all([
-    // Only Communications-Center-owned coverage rows count as opportunity targeting.
-    // Profile/DCMLS/import/legacy rows are ignored so those agents fall into the
-    // preferences-unset fallback until they configure prefs in Comms Center.
-    supabase.from("agent_buyer_coverage_areas").select("agent_id").eq("source", "notifications").in("agent_id", eligibleIds),
-    supabase.from("agent_state_preferences").select("agent_id").in("agent_id", eligibleIds),
-    supabase.from("agent_county_preferences").select("agent_id").in("agent_id", eligibleIds),
+  // 4) Preference-source signals — Communications-Center-owned only.
+  //    An agent has "Comms Center preferences" iff EITHER:
+  //      (a) ≥1 row in agent_buyer_coverage_areas with source='notifications', OR
+  //      (b) explicit price / property-type targeting in notification_preferences
+  //          (property_types non-empty, min_price/max_price non-null, or
+  //           has_no_min/has_no_max = true).
+  //    Do NOT use agent_settings.preferences_set, agent_state_preferences,
+  //    agent_county_preferences, profile Buyer Leads rows, or legacy/DCMLS
+  //    coverage rows as a preferences-set signal. Agents whose only saved rows
+  //    live in those older sources fall into the preferences-unset fallback
+  //    until they deliberately configure Comms Center preferences.
+  const [cov, notifPrefs] = await Promise.all([
+    supabase
+      .from("agent_buyer_coverage_areas")
+      .select("agent_id")
+      .eq("source", "notifications")
+      .in("agent_id", eligibleIds),
+    supabase
+      .from("notification_preferences")
+      .select("user_id, min_price, max_price, has_no_min, has_no_max, property_types")
+      .in("user_id", eligibleIds),
   ]);
 
   const withPrefs = new Set<string>();
   for (const r of cov.data || []) withPrefs.add(r.agent_id);
-  for (const r of states.data || []) withPrefs.add(r.agent_id);
-  for (const r of counties.data || []) withPrefs.add(r.agent_id);
+  for (const p of (notifPrefs.data || []) as any[]) {
+    const hasPropertyTypes = Array.isArray(p.property_types) && p.property_types.length > 0;
+    const hasPriceBound = p.min_price != null || p.max_price != null;
+    const hasDeliberateOpenBound = p.has_no_min === true || p.has_no_max === true;
+    if (hasPropertyTypes || hasPriceBound || hasDeliberateOpenBound) {
+      withPrefs.add(p.user_id);
+    }
+  }
 
-  // 5) Global suppression list (unsubscribe by email).
+  // 5) Global suppression — union of email_unsubscribes AND suppressed_emails.
+  //    Both sources are authoritative; presence in either drops the agent.
   const emailsForSuppression = eligibleIds
     .map((id: string) => profileMap.get(id)?.email)
     .filter((e: any) => isNonEmpty(e))
     .map((e: string) => e.toLowerCase());
-  const { data: unsubs } = await supabase
-    .from("email_unsubscribes")
-    .select("email")
-    .in("email", emailsForSuppression);
-  const suppressed = new Set((unsubs || []).map((u: any) => String(u.email).toLowerCase()));
+  const suppressed = new Set<string>();
+  if (emailsForSuppression.length) {
+    const [unsubsRes, suppRes] = await Promise.all([
+      supabase.from("email_unsubscribes").select("email").in("email", emailsForSuppression),
+      supabase.from("suppressed_emails").select("email").in("email", emailsForSuppression),
+    ]);
+    for (const u of unsubsRes.data || []) suppressed.add(String(u.email).toLowerCase());
+    for (const u of suppRes.data || []) suppressed.add(String(u.email).toLowerCase());
+  }
 
   const settingsById = new Map<string, any>(
     (settings || []).map((s: any) => [s.user_id, s]),
@@ -126,8 +150,9 @@ export async function getVerifiedAgentAudience(
       isNonEmpty(profile.headshot_url) &&
       has_email;
 
-    const s = settingsById.get(id) || {};
-    const preferences_set = Boolean(s.preferences_set) || withPrefs.has(id);
+    // Communications-Center-owned preferences signal only.
+    // `agent_settings.preferences_set` is intentionally NOT consulted here.
+    const preferences_set = withPrefs.has(id);
 
     out.push({
       agent_id: id,

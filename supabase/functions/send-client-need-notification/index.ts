@@ -159,11 +159,21 @@ const handler = async (req: Request): Promise<Response> => {
     if (dryRun) {
       const reminderIdsDry = partition.reminder.map((a) => a.agent_id);
       // We don't have a broadcast_id yet, so reminder dedup is not looked up here.
+      // Production behavior note: when no targeting criteria are supplied, this
+      // function treats every eligible agent as a preference match (network-wide
+      // broadcast). That means preferences-set agents also land in the real
+      // bucket rather than being filtered out. This is the current production
+      // behavior — surface it here so operators can confirm it is intentional.
+      const noCriteriaSupplied = !criteria || !criteria.state;
       return new Response(
         JSON.stringify({
           dry_run: true,
           category,
           subject,
+          no_criteria_supplied: noCriteriaSupplied,
+          no_criteria_behavior: noCriteriaSupplied
+            ? "network_wide_broadcast: every preferences-set agent is treated as matched"
+            : null,
           activated_verified_audience: audience.length,
           profile_complete: partition.counts.profile_complete,
           profile_incomplete: partition.counts.profile_incomplete,
@@ -182,7 +192,10 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // 5. Persist broadcast first so we have a canonical id for dedup + metadata
+    // 5. Persist broadcast first so we have a canonical id for dedup + metadata.
+    //    recipient_count is finalized to the post-dedup real-content count
+    //    (`fresh.length`) after step 6. Insert with the pre-dedup real count
+    //    as a provisional value so we have a valid broadcastId for dedup lookup.
     const { data: broadcast, error: broadcastError } = await supabase
       .from("comms_broadcasts")
       .insert({
@@ -191,7 +204,7 @@ const handler = async (req: Request): Promise<Response> => {
         subject,
         message,
         criteria: criteria ?? null,
-        recipient_count: recipients.length,
+        recipient_count: partition.real.length,
       })
       .select("id")
       .single();
@@ -212,6 +225,16 @@ const handler = async (req: Request): Promise<Response> => {
       : { data: [] as any[] };
     const sentSet = new Set((alreadySent || []).map((r: any) => r.agent_id));
     const fresh = partition.real.filter((r) => !sentSet.has(r.agent_id));
+
+    // Finalize recipient_count = post-dedup real-content recipients only.
+    // `fresh` is strictly real-content; reminder recipients live on
+    // `partition.reminder` and are never counted here.
+    if (fresh.length !== partition.real.length) {
+      await supabase
+        .from("comms_broadcasts")
+        .update({ recipient_count: fresh.length })
+        .eq("id", broadcastId);
+    }
 
     // 7. Compose and enqueue
     let criteriaText = "";
