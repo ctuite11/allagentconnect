@@ -1273,9 +1273,9 @@ setHeaderBackgroundType(profile.header_background_type || "color");
               </CardContent>
             </Card>
 
-            {/* Testimonials Section */}
             )}
 
+            {/* Testimonials Section */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
