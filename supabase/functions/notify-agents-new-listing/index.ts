@@ -22,6 +22,7 @@ const QUALIFYING_STATUSES = new Set([
   "extended",
   "reactivated",
   "new",
+  "off_market",
 ]);
 
 type ListingRow = {
