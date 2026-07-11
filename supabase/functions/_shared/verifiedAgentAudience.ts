@@ -45,6 +45,23 @@ function isNonEmpty(v: unknown): boolean {
 export async function getVerifiedAgentAudience(
   supabase: any,
 ): Promise<EligibleAgent[]> {
+  const { audience } = await getVerifiedAgentAudienceWithStats(supabase);
+  return audience;
+}
+
+export interface AudienceWithStats {
+  audience: EligibleAgent[];
+  globally_suppressed: number;
+}
+
+/**
+ * Same canonical audience as {@link getVerifiedAgentAudience}, but also
+ * returns pre-partition counts (globally_suppressed) so callers can surface
+ * them in dry-run / debug output.
+ */
+export async function getVerifiedAgentAudienceWithStats(
+  supabase: any,
+): Promise<AudienceWithStats> {
   // 1) Verified agents visible in the Agent Network directory
   //    (canonical rule shared with /our-agents and /our-members).
   const { data: settings, error: settingsErr } = await supabase
@@ -53,7 +70,7 @@ export async function getVerifiedAgentAudience(
     .eq("agent_status", "verified")
     .eq("hide_from_directory", false);
   if (settingsErr) throw settingsErr;
-  if (!settings?.length) return [];
+  if (!settings?.length) return { audience: [], globally_suppressed: 0 };
 
   const userIds = settings.map((r: any) => r.user_id);
 
@@ -66,7 +83,7 @@ export async function getVerifiedAgentAudience(
   const agentRoleIds = new Set((roles || []).map((r: any) => r.user_id));
 
   const eligibleIds = userIds.filter((id: string) => agentRoleIds.has(id));
-  if (!eligibleIds.length) return [];
+  if (!eligibleIds.length) return { audience: [], globally_suppressed: 0 };
 
   // 3) Profile fields needed to evaluate completeness + delivery.
   const { data: profiles } = await supabase
@@ -131,6 +148,7 @@ export async function getVerifiedAgentAudience(
   );
 
   const out: EligibleAgent[] = [];
+  let globally_suppressed = 0;
   for (const id of eligibleIds) {
     const profile = profileMap.get(id) || {};
     const emailRaw = typeof profile.email === "string" ? profile.email : "";
@@ -138,7 +156,10 @@ export async function getVerifiedAgentAudience(
     const emailLc = emailTrim.toLowerCase();
 
     // Suppression is absolute — drop before either bucket.
-    if (emailLc && suppressed.has(emailLc)) continue;
+    if (emailLc && suppressed.has(emailLc)) {
+      globally_suppressed++;
+      continue;
+    }
 
     const has_email = isNonEmpty(emailTrim);
     // Directory profile-complete = Agent Network visibility rule:
@@ -164,7 +185,7 @@ export async function getVerifiedAgentAudience(
       has_email,
     });
   }
-  return out;
+  return { audience: out, globally_suppressed };
 }
 
 /**
