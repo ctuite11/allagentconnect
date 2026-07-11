@@ -12,6 +12,7 @@ const corsHeaders = {
 
 interface Payload {
   client_need_id: string;
+  dry_run?: boolean;
   // Optional overrides — otherwise loaded from client_needs row
   state?: string;
   city?: string;
@@ -47,6 +48,7 @@ serve(async (req) => {
     if (!body?.client_need_id) {
       throw new Error("client_need_id is required");
     }
+    const dryRun: boolean = body?.dry_run === true;
 
     // Load canonical event
     const { data: need, error: needErr } = await supabase
@@ -68,7 +70,17 @@ serve(async (req) => {
     // Canonical audience
     const audience = await getVerifiedAgentAudience(supabase);
     if (!audience.length) {
-      return new Response(JSON.stringify({ notified_count: 0, matched: 0, fallback: 0 }), {
+      return new Response(JSON.stringify({
+        notified_count: 0,
+        matched: 0,
+        fallback: 0,
+        self_excluded: 0,
+        opted_out: 0,
+        already_received: 0,
+        final_new_recipients: 0,
+        audience: 0,
+        dry_run: dryRun,
+      }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -98,6 +110,10 @@ serve(async (req) => {
       optedOut,
     );
 
+    const selfExcludedCount = senderId
+      ? audience.some((a) => a.agent_id === senderId) ? 1 : 0
+      : 0;
+
     // Dedup against durable table
     const { data: alreadySent } = await supabase
       .from("agent_sent_client_needs")
@@ -107,6 +123,41 @@ serve(async (req) => {
     const sentSet = new Set((alreadySent || []).map((r: any) => r.agent_id));
     const fresh = recipients.filter((r) => !sentSet.has(r.agent_id));
 
+    const matchedFresh = fresh.filter((r) => r.reason === "preferences_match").length;
+    const fallbackFresh = fresh.filter((r) => r.reason === "preferences_unset").length;
+    const matchedRecipients = recipients.filter((r) => r.reason === "preferences_match").length;
+    const fallbackRecipients = recipients.filter((r) => r.reason === "preferences_unset").length;
+
+    if (dryRun) {
+      console.log(
+        `[notify-agents-client-need] DRY_RUN client_need=${body.client_need_id} audience=${audience.length} matched=${matchedRecipients} fallback=${fallbackRecipients} self_excluded=${selfExcludedCount} opted_out=${optedOut.size} already_received=${sentSet.size} final=${fresh.length}`,
+      );
+      return new Response(
+        JSON.stringify({
+          dry_run: true,
+          client_need_id: body.client_need_id,
+          event_summary: {
+            id: body.client_need_id,
+            city,
+            state,
+            property_type: propertyType,
+            max_price: maxPrice,
+            bedrooms,
+            bathrooms,
+            description,
+          },
+          audience: audience.length,
+          matched: matchedRecipients,
+          fallback: fallbackRecipients,
+          self_excluded: selfExcludedCount,
+          opted_out: optedOut.size,
+          already_received: sentSet.size,
+          final_new_recipients: fresh.length,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
     if (!fresh.length) {
       return new Response(
         JSON.stringify({
@@ -114,6 +165,10 @@ serve(async (req) => {
           matched: 0,
           fallback: 0,
           duplicates_skipped: recipients.length,
+          self_excluded: selfExcludedCount,
+          opted_out: optedOut.size,
+          audience: audience.length,
+          final_new_recipients: 0,
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
@@ -182,6 +237,9 @@ serve(async (req) => {
         fallback,
         duplicates_skipped: recipients.length - fresh.length,
         opted_out: optedOut.size,
+        self_excluded: selfExcludedCount,
+        already_received: sentSet.size,
+        final_new_recipients: fresh.length,
         audience: audience.length,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
