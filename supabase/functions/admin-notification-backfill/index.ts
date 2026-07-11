@@ -20,6 +20,7 @@ const QUALIFYING_STATUSES = [
   "extended",
   "reactivated",
   "new",
+  "off_market",
 ];
 
 type Target = "latest_listing" | "latest_client_need" | "both";
