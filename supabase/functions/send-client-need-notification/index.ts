@@ -103,6 +103,7 @@ const handler = async (req: Request): Promise<Response> => {
         .from("agent_buyer_coverage_areas")
         .select("agent_id")
         .eq("state", criteria.state)
+        .eq("source", "notifications")
         .in("agent_id", audienceIds);
       matchIds = new Set((geo || []).map((r: any) => r.agent_id));
       if (criteria.minPrice || criteria.maxPrice) {
