@@ -886,6 +886,54 @@ export type Database = {
           },
         ]
       }
+      agent_sent_broadcasts: {
+        Row: {
+          agent_id: string
+          broadcast_id: string
+          id: string
+          reason: string
+          sent_at: string
+        }
+        Insert: {
+          agent_id: string
+          broadcast_id: string
+          id?: string
+          reason?: string
+          sent_at?: string
+        }
+        Update: {
+          agent_id?: string
+          broadcast_id?: string
+          id?: string
+          reason?: string
+          sent_at?: string
+        }
+        Relationships: []
+      }
+      agent_sent_client_needs: {
+        Row: {
+          agent_id: string
+          client_need_id: string
+          id: string
+          reason: string
+          sent_at: string
+        }
+        Insert: {
+          agent_id: string
+          client_need_id: string
+          id?: string
+          reason?: string
+          sent_at?: string
+        }
+        Update: {
+          agent_id?: string
+          client_need_id?: string
+          id?: string
+          reason?: string
+          sent_at?: string
+        }
+        Relationships: []
+      }
       agent_sent_listings: {
         Row: {
           agent_id: string
