@@ -320,20 +320,22 @@ export const SearchListingCard = ({
                 statusBanner={statusBanner}
                 priceChangeBanner={priceChangeBanner}
                 openHouseBanner={openHouseBanner}
-                className={onSelect ? "left-10" : undefined}
+                leading={
+                  onSelect ? (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onSelect(listing.id, e);
+                      }}
+                      className={listingSelectionCheckboxClass(isSelected)}
+                      aria-label="Select listing"
+                    >
+                      {isSelected && <Check className="h-3 w-3 text-white" />}
+                    </button>
+                  ) : undefined
+                }
               />
-              {onSelect && (
-                <button
-                  onClick={(e) => { e.stopPropagation(); onSelect(listing.id, e); }}
-                  className={cn(
-                    "absolute left-2.5 top-2.5 z-10",
-                    listingSelectionCheckboxClass(isSelected),
-                  )}
-                  aria-label="Select listing"
-                >
-                  {isSelected && <Check className="h-3 w-3 text-white" />}
-                </button>
-              )}
               {allPhotos.length > 0 ? (
                 <img src={allPhotos[currentPhotoIndex] || photoUrl!} alt="" className="w-full h-full object-cover" />
               ) : photoUrl ? (
@@ -518,18 +520,6 @@ export const SearchListingCard = ({
         <div className="p-4">
           <div className="flex gap-3">
             <div className="relative flex-shrink-0">
-              {onSelect && (
-                <button
-                  onClick={(e) => { e.stopPropagation(); onSelect(listing.id, e); }}
-                  className={cn(
-                    "absolute left-2 top-2 z-10",
-                    listingSelectionCheckboxClass(isSelected),
-                  )}
-                  aria-label="Select listing"
-                >
-                  {isSelected && <Check className="h-3 w-3 text-white" />}
-                </button>
-              )}
               <div className="relative h-[75px] w-[100px] overflow-hidden rounded-md bg-neutral-100">
                 <DcmlsBadge listing={listing} />
                 <ListingPhotoBanners
@@ -537,7 +527,22 @@ export const SearchListingCard = ({
                   priceChangeBanner={priceChangeBanner}
                   openHouseBanner={openHouseBanner}
                   compact
-                  className={cn("top-1 left-1 max-w-[calc(100%-0.5rem)] gap-1", onSelect && "left-8")}
+                  className="top-1.5 left-1.5"
+                  leading={
+                    onSelect ? (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onSelect(listing.id, e);
+                        }}
+                        className={listingSelectionCheckboxClass(isSelected)}
+                        aria-label="Select listing"
+                      >
+                        {isSelected && <Check className="h-3 w-3 text-white" />}
+                      </button>
+                    ) : undefined
+                  }
                 />
                 {photoUrl ? (
                   <img src={photoUrl} alt="" className="h-full w-full object-cover" />
