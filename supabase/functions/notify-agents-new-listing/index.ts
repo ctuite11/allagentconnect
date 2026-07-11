@@ -142,6 +142,7 @@ serve(async (req) => {
       ? await admin
           .from("agent_buyer_coverage_areas")
           .select("agent_id, zip_code, city, state, county, neighborhood")
+          .eq("source", "notifications")
           .in("agent_id", audienceIds)
       : { data: [], error: null };
     if (coverageError) throw coverageError;

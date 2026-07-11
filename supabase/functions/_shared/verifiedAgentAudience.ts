@@ -78,7 +78,10 @@ export async function getVerifiedAgentAudience(
 
   // 4) Preference-source signals.
   const [cov, states, counties] = await Promise.all([
-    supabase.from("agent_buyer_coverage_areas").select("agent_id").in("agent_id", eligibleIds),
+    // Only Communications-Center-owned coverage rows count as opportunity targeting.
+    // Profile/DCMLS/import/legacy rows are ignored so those agents fall into the
+    // preferences-unset fallback until they configure prefs in Comms Center.
+    supabase.from("agent_buyer_coverage_areas").select("agent_id").eq("source", "notifications").in("agent_id", eligibleIds),
     supabase.from("agent_state_preferences").select("agent_id").in("agent_id", eligibleIds),
     supabase.from("agent_county_preferences").select("agent_id").in("agent_id", eligibleIds),
   ]);

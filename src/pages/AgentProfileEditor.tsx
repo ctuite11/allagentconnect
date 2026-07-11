@@ -938,7 +938,9 @@ setHeaderBackgroundType(profile.header_background_type || "color");
               />
             )}
 
-            {/* Buyer Leads Section */}
+            {/* Buyer Leads Section - HIDDEN (UI only, state/handlers/DB preserved).
+                Opportunity targeting is owned by Communications Center. */}
+            {false && (
             <Card className="bg-white border border-zinc-200 rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,0.04)] overflow-hidden">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -1270,6 +1272,8 @@ setHeaderBackgroundType(profile.header_background_type || "color");
                 </div>
               </CardContent>
             </Card>
+
+            )}
 
             {/* Testimonials Section */}
             <Card>

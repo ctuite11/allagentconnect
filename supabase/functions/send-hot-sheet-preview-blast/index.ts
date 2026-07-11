@@ -197,6 +197,7 @@ async function resolveEligibleRecipients(admin: SupabaseClient): Promise<{
   const { data: coverageRows, error: coverageError } = await admin
     .from("agent_buyer_coverage_areas")
     .select("agent_id")
+    .eq("source", "notifications")
     .in("agent_id", verifiedIds);
 
   if (coverageError) throw coverageError;
