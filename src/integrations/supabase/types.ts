@@ -886,6 +886,30 @@ export type Database = {
           },
         ]
       }
+      agent_sent_listings: {
+        Row: {
+          agent_id: string
+          id: string
+          listing_id: string
+          sent_at: string
+          status_at_send: string
+        }
+        Insert: {
+          agent_id: string
+          id?: string
+          listing_id: string
+          sent_at?: string
+          status_at_send: string
+        }
+        Update: {
+          agent_id?: string
+          id?: string
+          listing_id?: string
+          sent_at?: string
+          status_at_send?: string
+        }
+        Relationships: []
+      }
       agent_settings: {
         Row: {
           account_activated_at: string | null

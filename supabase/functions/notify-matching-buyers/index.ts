@@ -57,6 +57,19 @@ const handler = async (req: Request): Promise<Response> => {
       console.error("[notify-matching-buyers] hot-sheet fanout invoke threw:", e);
     }
 
+    // 1b) Fan-out to automatic AGENT new-listing notifications
+    //     Independent of buyer/client path; owns its own dedup table
+    //     (agent_sent_listings) so cron/repeat triggers cannot duplicate.
+    try {
+      supabase.functions.invoke("notify-agents-new-listing", {
+        body: { listing_id: listing.listing_id },
+      }).then(({ error }) => {
+        if (error) console.error("[notify-matching-buyers] agent fanout error:", error);
+      });
+    } catch (e) {
+      console.error("[notify-matching-buyers] agent fanout invoke threw:", e);
+    }
+
     // 2) Legacy client_needs matching (kept for backward compatibility)
     let clientNeedsQuery = supabase
       .from("client_needs")
