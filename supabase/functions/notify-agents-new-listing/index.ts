@@ -101,6 +101,10 @@ serve(async (req) => {
     const body = await req.json().catch(() => ({} as any));
     const listingId: string | null = body?.listing_id ?? null;
     const dryRun: boolean = body?.dry_run === true;
+    // One-time backfill hatch: run the real listing-alert enqueue but skip
+    // the missing-opportunities reminder wave. Reminders still fire on
+    // future events under the 30-day cadence.
+    const suppressReminders: boolean = body?.suppress_reminders === true;
     if (!listingId) {
       return new Response(
         JSON.stringify({ error: "listing_id required" }),
@@ -301,7 +305,12 @@ serve(async (req) => {
     // 4) Reminder enqueue via reserve-first RPC.
     let enqueuedReminder = 0;
     let reminderConflict = 0;
+    let reminderSuppressed = 0;
     for (const a of partition.reminder) {
+      if (suppressReminders) {
+        reminderSuppressed++;
+        continue;
+      }
       const res = await reserveAndEnqueueMissingOpportunityReminder(admin, {
         agent_id: a.agent_id,
         event_type: "new_listing",
@@ -316,7 +325,7 @@ serve(async (req) => {
     }
 
     console.log(
-      `[notify-agents-new-listing] listing=${listingId} real_enqueued=${enqueuedReal} real_skipped_dup=${skippedDup} reminder_enqueued=${enqueuedReminder} reminder_conflict=${reminderConflict}`,
+      `[notify-agents-new-listing] listing=${listingId} real_enqueued=${enqueuedReal} real_skipped_dup=${skippedDup} reminder_enqueued=${enqueuedReminder} reminder_conflict=${reminderConflict} reminder_suppressed=${reminderSuppressed}`,
     );
 
     return new Response(
@@ -327,6 +336,8 @@ serve(async (req) => {
         real_skipped_duplicate: skippedDup,
         reminder_enqueued: enqueuedReminder,
         reminder_skipped_duplicate: reminderConflict,
+        reminder_suppressed: reminderSuppressed,
+        suppress_reminders: suppressReminders,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
