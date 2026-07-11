@@ -56,14 +56,27 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const authHeader = req.headers.get("Authorization")!;
-    const token = authHeader.replace("Bearer ", "");
-    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
-    if (userError || !user) throw new Error("Unauthorized");
+    const body: SendNotificationRequest & { sender_id?: string } = await req.json();
+    const dryRunEarly: boolean = body?.dry_run === true;
 
-    const body: SendNotificationRequest = await req.json();
+    // Auth resolution. Live sends require a valid preview session; dry runs
+    // are zero-write and may fall back to an explicit `sender_id` in the body
+    // so operator-driven audit runs work even if the invoking client can't
+    // forward its Authorization header.
+    const authHeader = req.headers.get("Authorization");
+    let user: { id: string; email?: string | null } | null = null;
+    if (authHeader) {
+      const token = authHeader.replace("Bearer ", "");
+      const { data, error } = await supabase.auth.getUser(token);
+      if (!error && data?.user) user = { id: data.user.id, email: data.user.email };
+    }
+    if (!user && dryRunEarly && typeof body.sender_id === "string" && body.sender_id) {
+      user = { id: body.sender_id, email: null };
+    }
+    if (!user) throw new Error("Unauthorized");
+
     const { category, subject, message, criteria, previewOnly, sendCopyToSelf } = body;
-    const dryRun: boolean = body?.dry_run === true;
+    const dryRun = dryRunEarly;
     // Default to "targeted"; anything other than the literal "network_wide"
     // is normalized back to "targeted" so no-criteria never silently
     // becomes a network-wide broadcast.
