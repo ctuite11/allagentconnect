@@ -763,26 +763,26 @@ function MyListingsView({
                     <button type="button" className="transition hover:text-emerald-700" onClick={() => onPhotos(l.id)}>
                       Photos
                     </button>
-                    <span className="hidden text-zinc-300 sm:inline">•</span>
+                    <span className="text-zinc-300">•</span>
                     <button
                       type="button"
-                      className="group hidden items-center gap-1 sm:flex"
+                      className="group inline-flex items-center gap-1"
                       onClick={() => (hasPublicOpenHouse ? onViewOpenHouses(l) : onOpenHouse(l))}
                     >
                       <span aria-hidden>🎈</span>
                       <span className="transition group-hover:text-emerald-700">Open House</span>
                     </button>
-                    <span className="hidden text-zinc-300 sm:inline">•</span>
+                    <span className="text-zinc-300">•</span>
                     <button
                       type="button"
-                      className="group hidden items-center gap-1 sm:flex"
+                      className="group inline-flex items-center gap-1"
                       onClick={() => (hasBrokerTour ? onViewOpenHouses(l) : onBrokerTour(l))}
                     >
                       <span aria-hidden>🚙</span>
                       <span className="transition group-hover:text-[#0E56F5]">Broker Tour</span>
                     </button>
-                    <span className="text-zinc-300">•</span>
-                    <button type="button" className="transition hover:text-emerald-700" onClick={() => onMatches(l)}>
+                    <span className="hidden text-zinc-300 sm:inline">•</span>
+                    <button type="button" className="hidden transition hover:text-emerald-700 sm:inline" onClick={() => onMatches(l)}>
                       Matches ({matchCount})
                     </button>
                     <span className="hidden text-zinc-300 sm:inline">•</span>
@@ -793,8 +793,8 @@ function MyListingsView({
                     <button type="button" className="hidden transition hover:text-emerald-700 sm:inline" onClick={() => onSocialShare(l)}>
                       Social
                     </button>
-                    <span className="text-zinc-300">•</span>
-                    <span className="inline-flex items-center gap-1 transition-opacity hover:opacity-80">
+                    <span className="hidden text-zinc-300 sm:inline">•</span>
+                    <span className="hidden items-center gap-1 transition-opacity hover:opacity-80 sm:inline-flex">
                       <svg viewBox="0 0 16 16" aria-hidden className="h-4 w-4 text-aac">
                         <path fill="currentColor" d="M8 2.75c3.73 0 6.7 2.2 7.95 5.25-1.25 3.05-4.22 5.25-7.95 5.25-3.73 0-6.7-2.2-7.95-5.25C1.3 4.95 4.27 2.75 8 2.75Z" />
                         <circle cx="8" cy="8" r="2.15" fill="hsl(var(--background))" />
@@ -802,8 +802,8 @@ function MyListingsView({
                       </svg>
                       <span className="text-[13px] font-medium leading-none text-zinc-800">{views}</span>
                     </span>
-                    <span className="text-zinc-300">•</span>
-                    <span className="inline-flex items-center gap-1 transition-opacity hover:opacity-80">
+                    <span className="hidden text-zinc-300 sm:inline">•</span>
+                    <span className="hidden items-center gap-1 transition-opacity hover:opacity-80 sm:inline-flex">
                       <svg viewBox="0 0 16 16" aria-hidden className="h-4 w-4 fill-current text-destructive">
                         <path d="M8 14s-5-3.1-5-7.1C3 4.6 4.6 3 6.5 3c1.1 0 2.2.5 2.9 1.4C10.1 3.5 11.2 3 12.3 3 14.2 3 15.8 4.6 15.8 6.9 15.8 10.9 10.8 14 8 14Z" />
                       </svg>
