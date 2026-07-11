@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.0";
 import {
-  getVerifiedAgentAudience,
+  getVerifiedAgentAudienceWithStats,
   partitionAudience,
   type EligibleAgent,
 } from "../_shared/verifiedAgentAudience.ts";
@@ -27,6 +27,7 @@ interface SendNotificationRequest {
   previewOnly?: boolean;
   dry_run?: boolean;
   sendCopyToSelf?: boolean;
+  audience_scope?: "targeted" | "network_wide";
   criteria?: {
     state?: string;
     counties?: string[];
@@ -63,6 +64,39 @@ const handler = async (req: Request): Promise<Response> => {
     const body: SendNotificationRequest = await req.json();
     const { category, subject, message, criteria, previewOnly, sendCopyToSelf } = body;
     const dryRun: boolean = body?.dry_run === true;
+    // Default to "targeted"; anything other than the literal "network_wide"
+    // is normalized back to "targeted" so no-criteria never silently
+    // becomes a network-wide broadcast.
+    const audienceScope: "targeted" | "network_wide" =
+      body?.audience_scope === "network_wide" ? "network_wide" : "targeted";
+
+    // Normalize criteria into a parsed_criteria object usable for matching
+    // and for the dry-run response contract.
+    const normStr = (v: unknown) =>
+      typeof v === "string" && v.trim().length > 0 ? v.trim() : null;
+    const normStrArr = (v: unknown) =>
+      Array.isArray(v)
+        ? Array.from(new Set(v.filter((x) => typeof x === "string" && x.trim().length > 0).map((x: string) => x.trim())))
+        : [];
+    const normNum = (v: unknown) =>
+      typeof v === "number" && Number.isFinite(v) ? v : null;
+    const parsedCriteria = {
+      state: normStr(criteria?.state),
+      counties: normStrArr(criteria?.counties),
+      cities: normStrArr(criteria?.cities),
+      neighborhoods: normStrArr(criteria?.neighborhoods),
+      min_price: normNum(criteria?.minPrice),
+      max_price: normNum(criteria?.maxPrice),
+      property_types: normStrArr(criteria?.propertyTypes),
+    };
+    const anyCriteriaSupplied =
+      !!parsedCriteria.state ||
+      parsedCriteria.counties.length > 0 ||
+      parsedCriteria.cities.length > 0 ||
+      parsedCriteria.neighborhoods.length > 0 ||
+      parsedCriteria.min_price != null ||
+      parsedCriteria.max_price != null ||
+      parsedCriteria.property_types.length > 0;
 
     // Sender profile (for headers / self-copy)
     const { data: senderProfile } = await supabase
@@ -77,47 +111,122 @@ const handler = async (req: Request): Promise<Response> => {
     const senderCompany = senderProfile?.company || "";
     const validReplyTo = senderEmail && isValidEmail(senderEmail) ? senderEmail : undefined;
 
-    // 1. Canonical audience of verified, profile-eligible agents (globally unsubscribed excluded)
-    const audience = await getVerifiedAgentAudience(supabase);
+    // 1. Canonical audience of verified, profile-eligible agents
+    //    (globally unsubscribed / suppressed excluded — count is surfaced).
+    const { audience, globally_suppressed } =
+      await getVerifiedAgentAudienceWithStats(supabase);
     const audienceIds = audience.map((a) => a.agent_id);
 
-    // 2. Category-level opt-out: notification_preferences.<category>=false (authoritative)
+    // 2. Category-level opt-out + preference-side price/property-type filters.
     const { data: prefs } = await supabase
       .from("notification_preferences")
-      .select(`user_id, ${category}, min_price, max_price`)
+      .select(
+        `user_id, ${category}, min_price, max_price, has_no_min, has_no_max, property_types`,
+      )
       .in("user_id", audienceIds);
     const optedOut = new Set<string>();
-    const priceRangeByAgent = new Map<string, { min: number; max: number }>();
+    const priceRangeByAgent = new Map<
+      string,
+      { min: number; max: number }
+    >();
+    const propertyTypesByAgent = new Map<string, string[]>();
     for (const p of (prefs || []) as any[]) {
       if (p[category] === false) optedOut.add(p.user_id);
-      priceRangeByAgent.set(p.user_id, {
-        min: p.min_price ?? 0,
-        max: p.max_price ?? Number.POSITIVE_INFINITY,
-      });
+      const min = p.has_no_min === true ? 0 : p.min_price ?? 0;
+      const max = p.has_no_max === true ? Number.POSITIVE_INFINITY : p.max_price ?? Number.POSITIVE_INFINITY;
+      priceRangeByAgent.set(p.user_id, { min, max });
+      if (Array.isArray(p.property_types) && p.property_types.length > 0) {
+        propertyTypesByAgent.set(p.user_id, p.property_types);
+      }
     }
 
-    // 3. Preference match set (only meaningful when the sender narrowed by geography/price).
+    // 3. Preference match set.
+    //    Semantics (canonical):
+    //      - audience_scope="network_wide": every eligible preferences-set
+    //        agent matches. Only allowed when explicitly supplied.
+    //      - audience_scope="targeted" (default) + any criteria: intersect
+    //        Comms-Center-owned coverage_areas (source='notifications') and
+    //        notification_preferences price/property_types with the criteria.
+    //        OR within each geography dimension, AND across supplied dimensions.
+    //      - audience_scope="targeted" + no criteria: match set is empty.
+    //        Preferences-set agents receive nothing; preferences-unset
+    //        fallback still delivers via partitionAudience.
     let matchIds: Set<string>;
-    if (criteria?.state) {
-      const { data: geo } = await supabase
+    if (audienceScope === "network_wide") {
+      matchIds = new Set(audienceIds);
+    } else if (!anyCriteriaSupplied) {
+      matchIds = new Set();
+    } else {
+      // Pull all Comms-Center coverage rows for the eligible audience once.
+      const { data: covRows } = await supabase
         .from("agent_buyer_coverage_areas")
-        .select("agent_id")
-        .eq("state", criteria.state)
+        .select("agent_id, state, county, city, neighborhood")
         .eq("source", "notifications")
         .in("agent_id", audienceIds);
-      matchIds = new Set((geo || []).map((r: any) => r.agent_id));
-      if (criteria.minPrice || criteria.maxPrice) {
-        const cMin = criteria.minPrice ?? 0;
-        const cMax = criteria.maxPrice ?? Number.POSITIVE_INFINITY;
-        for (const id of Array.from(matchIds)) {
-          const range = priceRangeByAgent.get(id);
-          if (!range) continue;
-          if (range.min > cMax || range.max < cMin) matchIds.delete(id);
-        }
+      const covByAgent = new Map<string, any[]>();
+      for (const r of (covRows || []) as any[]) {
+        const arr = covByAgent.get(r.agent_id) ?? [];
+        arr.push(r);
+        covByAgent.set(r.agent_id, arr);
       }
-    } else {
-      // No criteria supplied → treat every eligible agent as a preference match
-      matchIds = new Set(audienceIds);
+
+      const countiesSet = new Set(parsedCriteria.counties.map((s) => s.toLowerCase()));
+      const citiesSet = new Set(parsedCriteria.cities.map((s) => s.toLowerCase()));
+      const neighborhoodsSet = new Set(
+        parsedCriteria.neighborhoods.map((s) => s.toLowerCase()),
+      );
+      const geoDimensionsSupplied =
+        !!parsedCriteria.state ||
+        countiesSet.size > 0 ||
+        citiesSet.size > 0 ||
+        neighborhoodsSet.size > 0;
+
+      const cMin = parsedCriteria.min_price ?? 0;
+      const cMax = parsedCriteria.max_price ?? Number.POSITIVE_INFINITY;
+      const priceSupplied =
+        parsedCriteria.min_price != null || parsedCriteria.max_price != null;
+      const propertyTypesSet = new Set(
+        parsedCriteria.property_types.map((s) => s.toLowerCase()),
+      );
+      const propertyTypesSupplied = propertyTypesSet.size > 0;
+
+      matchIds = new Set();
+      for (const id of audienceIds) {
+        // Geography: AND across supplied dimensions, OR within each dimension.
+        if (geoDimensionsSupplied) {
+          const rows = covByAgent.get(id);
+          if (!rows || rows.length === 0) continue;
+          if (parsedCriteria.state) {
+            const stateLc = parsedCriteria.state.toLowerCase();
+            if (!rows.some((r) => (r.state ?? "").toLowerCase() === stateLc)) continue;
+          }
+          if (countiesSet.size > 0) {
+            if (!rows.some((r) => r.county && countiesSet.has(String(r.county).toLowerCase()))) continue;
+          }
+          if (citiesSet.size > 0) {
+            if (!rows.some((r) => r.city && citiesSet.has(String(r.city).toLowerCase()))) continue;
+          }
+          if (neighborhoodsSet.size > 0) {
+            if (!rows.some((r) => r.neighborhood && neighborhoodsSet.has(String(r.neighborhood).toLowerCase()))) continue;
+          }
+        }
+        // Price: overlap with the agent's saved range, if sender narrowed.
+        if (priceSupplied) {
+          const range = priceRangeByAgent.get(id);
+          // No price row means agent hasn't narrowed by price — treat as open.
+          if (range && (range.min > cMax || range.max < cMin)) continue;
+        }
+        // Property types: non-empty intersection when sender narrowed.
+        if (propertyTypesSupplied) {
+          const agentTypes = propertyTypesByAgent.get(id);
+          if (agentTypes && agentTypes.length > 0) {
+            const agentLc = agentTypes.map((t) => String(t).toLowerCase());
+            if (!agentLc.some((t) => propertyTypesSet.has(t))) continue;
+          }
+          // Agent has no property_types configured → treat as open.
+        }
+        matchIds.add(id);
+      }
     }
 
     const partition = partitionAudience<EligibleAgent>(
@@ -158,22 +267,14 @@ const handler = async (req: Request): Promise<Response> => {
     // Dry-run: zero writes (no broadcast row, no email_jobs, no dedup).
     if (dryRun) {
       const reminderIdsDry = partition.reminder.map((a) => a.agent_id);
-      // We don't have a broadcast_id yet, so reminder dedup is not looked up here.
-      // Production behavior note: when no targeting criteria are supplied, this
-      // function treats every eligible agent as a preference match (network-wide
-      // broadcast). That means preferences-set agents also land in the real
-      // bucket rather than being filtered out. This is the current production
-      // behavior — surface it here so operators can confirm it is intentional.
-      const noCriteriaSupplied = !criteria || !criteria.state;
       return new Response(
         JSON.stringify({
           dry_run: true,
           category,
           subject,
-          no_criteria_supplied: noCriteriaSupplied,
-          no_criteria_behavior: noCriteriaSupplied
-            ? "network_wide_broadcast: every preferences-set agent is treated as matched"
-            : null,
+          audience_scope: audienceScope,
+          parsed_criteria: parsedCriteria,
+          any_criteria_supplied: anyCriteriaSupplied,
           activated_verified_audience: audience.length,
           profile_complete: partition.counts.profile_complete,
           profile_incomplete: partition.counts.profile_incomplete,
@@ -182,6 +283,7 @@ const handler = async (req: Request): Promise<Response> => {
           preferences_unset_fallback: partition.counts.preferences_unset_fallback,
           self_excluded: partition.counts.self_excluded,
           category_opted_out: partition.counts.category_opted_out,
+          globally_suppressed,
           non_matching: partition.counts.non_matching,
           already_received_real: 0,
           reminder_already_recorded: 0,
