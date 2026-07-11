@@ -1,126 +1,154 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import {
+  getVerifiedAgentAudience,
+  classifyRecipients,
+} from "../_shared/verifiedAgentAudience.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-interface ClientNeedData {
+interface Payload {
   client_need_id: string;
-  state: string;
-  city: string;
-  property_type: string;
-  max_price: number;
+  // Optional overrides — otherwise loaded from client_needs row
+  state?: string;
+  city?: string;
+  property_type?: string;
+  max_price?: number;
   bedrooms?: number;
   bathrooms?: number;
   description?: string;
 }
 
-const handler = async (req: Request): Promise<Response> => {
+const PROPERTY_TYPE_MAP: Record<string, string> = {
+  single_family: "Single Family",
+  condo: "Condo",
+  townhouse: "Townhouse",
+  multi_family: "Multi-Family",
+  land: "Land",
+  commercial: "Commercial",
+  residential_rental: "Residential Rental",
+  commercial_rental: "Commercial Rental",
+};
+
+serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
-
   try {
-    console.log("=== Notify Agents Client Need Function Started ===");
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
 
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const body: Payload = await req.json();
+    if (!body?.client_need_id) {
+      throw new Error("client_need_id is required");
+    }
 
-    const clientNeedData: ClientNeedData = await req.json();
-    console.log("Client need data:", clientNeedData);
+    // Load canonical event
+    const { data: need, error: needErr } = await supabase
+      .from("client_needs")
+      .select("*")
+      .eq("id", body.client_need_id)
+      .single();
+    if (needErr || !need) throw new Error(`client_need not found: ${needErr?.message}`);
 
-    // Find agents who cover this state and have notifications enabled
-    const { data: agentPreferences, error: prefsError } = await supabase
+    const state: string = body.state ?? need.state;
+    const city: string = body.city ?? need.city;
+    const propertyType: string = body.property_type ?? need.property_type;
+    const maxPrice: number = Number(body.max_price ?? need.max_price ?? 0);
+    const bedrooms = body.bedrooms ?? need.bedrooms ?? null;
+    const bathrooms = body.bathrooms ?? need.bathrooms ?? null;
+    const description = body.description ?? need.description ?? null;
+    const senderId: string | null = need.submitted_by ?? null;
+
+    // Canonical audience
+    const audience = await getVerifiedAgentAudience(supabase);
+    if (!audience.length) {
+      return new Response(JSON.stringify({ notified_count: 0, matched: 0, fallback: 0 }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Preference match set: state matches
+    const { data: statePrefs } = await supabase
       .from("agent_state_preferences")
       .select("agent_id")
-      .eq("state", clientNeedData.state);
+      .eq("state", state)
+      .in("agent_id", audience.map((a) => a.agent_id));
+    const matchIds = new Set((statePrefs || []).map((r: any) => r.agent_id));
 
-    if (prefsError) {
-      console.error("Error fetching agent preferences:", prefsError);
-      throw prefsError;
-    }
-
-    if (!agentPreferences || agentPreferences.length === 0) {
-      console.log("No agents found covering state:", clientNeedData.state);
-      return new Response(
-        JSON.stringify({ message: "No matching agents found", notified_count: 0 }),
-        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
-    }
-
-    const agentIds = agentPreferences.map((p: any) => p.agent_id);
-
-    // Get agent profiles with email and notification preferences
-    const { data: agents, error: agentsError } = await supabase
+    // Explicit opt-out honored authoritatively
+    const { data: optOutRows } = await supabase
       .from("agent_profiles")
-      .select("id, email, first_name, last_name, receive_buyer_alerts")
-      .in("id", agentIds)
-      .eq("receive_buyer_alerts", true);
-
-    if (agentsError) {
-      console.error("Error fetching agent profiles:", agentsError);
-      throw agentsError;
+      .select("id, receive_buyer_alerts")
+      .in("id", audience.map((a) => a.agent_id));
+    const optedOut = new Set<string>();
+    for (const r of optOutRows || []) {
+      if (r.receive_buyer_alerts === false) optedOut.add(r.id);
     }
 
-    if (!agents || agents.length === 0) {
-      console.log("No agents with notifications enabled");
+    const recipients = classifyRecipients(
+      audience,
+      (a) => matchIds.has(a.agent_id),
+      senderId,
+      optedOut,
+    );
+
+    // Dedup against durable table
+    const { data: alreadySent } = await supabase
+      .from("agent_sent_client_needs")
+      .select("agent_id")
+      .eq("client_need_id", body.client_need_id)
+      .in("agent_id", recipients.map((r) => r.agent_id));
+    const sentSet = new Set((alreadySent || []).map((r: any) => r.agent_id));
+    const fresh = recipients.filter((r) => !sentSet.has(r.agent_id));
+
+    if (!fresh.length) {
       return new Response(
-        JSON.stringify({ message: "No agents with notifications enabled", notified_count: 0 }),
-        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        JSON.stringify({
+          notified_count: 0,
+          matched: 0,
+          fallback: 0,
+          duplicates_skipped: recipients.length,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
-    console.log(`[notify-agents-client-need] Enqueuing ${agents.length} jobs`);
-
-    // Format property type for display
-    const propertyTypeMap: Record<string, string> = {
-      single_family: "Single Family",
-      condo: "Condo",
-      townhouse: "Townhouse",
-      multi_family: "Multi-Family",
-      land: "Land",
-      commercial: "Commercial",
-      residential_rental: "Residential Rental",
-      commercial_rental: "Commercial Rental",
-    };
-    const propertyTypeDisplay = propertyTypeMap[clientNeedData.property_type] || clientNeedData.property_type;
-
-    // Format price
-    const priceFormatted = new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
+    const propertyTypeDisplay = PROPERTY_TYPE_MAP[propertyType] || propertyType;
+    const priceFormatted = new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
       maximumFractionDigits: 0,
-    }).format(clientNeedData.max_price);
+    }).format(maxPrice);
 
-    // Enqueue jobs for each agent
-    const emailJobs = agents.map((agent: any) => ({
+    const emailJobs = fresh.map((a) => ({
+      idempotency_key: `client-need:${body.client_need_id}:${a.agent_id}`,
       payload: {
         provider: "resend",
         template: "client-need-notification",
-        to: agent.email,
-        subject: `New Client Need in ${clientNeedData.city}, ${clientNeedData.state}`,
+        to: a.email,
+        subject: `New Client Need in ${city}, ${state}`,
+        metadata: { audience: "agent", reason: a.reason, client_need_id: body.client_need_id },
         variables: {
-          agentName: agent.first_name || 'Agent',
-          city: clientNeedData.city,
-          state: clientNeedData.state,
+          agentName: a.first_name || "Agent",
+          city, state,
           propertyType: propertyTypeDisplay,
           maxPrice: priceFormatted,
-          bedrooms: clientNeedData.bedrooms,
-          bathrooms: clientNeedData.bathrooms,
-          description: clientNeedData.description,
+          bedrooms, bathrooms, description,
           contentHtml: `
             <h3>Client Need Details:</h3>
             <ul>
-              <li><strong>Location:</strong> ${clientNeedData.city}, ${clientNeedData.state}</li>
+              <li><strong>Location:</strong> ${city}, ${state}</li>
               <li><strong>Property Type:</strong> ${propertyTypeDisplay}</li>
               <li><strong>Maximum Budget:</strong> ${priceFormatted}</li>
-              ${clientNeedData.bedrooms ? `<li><strong>Bedrooms:</strong> ${clientNeedData.bedrooms}</li>` : ''}
-              ${clientNeedData.bathrooms ? `<li><strong>Bathrooms:</strong> ${clientNeedData.bathrooms}</li>` : ''}
-              ${clientNeedData.description ? `<li><strong>Description:</strong> ${clientNeedData.description}</li>` : ''}
+              ${bedrooms ? `<li><strong>Bedrooms:</strong> ${bedrooms}</li>` : ""}
+              ${bathrooms ? `<li><strong>Bathrooms:</strong> ${bathrooms}</li>` : ""}
+              ${description ? `<li><strong>Description:</strong> ${description}</li>` : ""}
             </ul>
             <p>Log in to your dashboard to view more details and connect with this client.</p>
           `,
@@ -129,29 +157,40 @@ const handler = async (req: Request): Promise<Response> => {
     }));
 
     const { error: insertError } = await supabase.from("email_jobs").insert(emailJobs);
+    if (insertError) throw insertError;
 
-    if (insertError) {
-      console.error("[notify-agents-client-need] Failed to enqueue jobs:", insertError);
-      throw new Error("Failed to queue emails");
-    }
+    await supabase.from("agent_sent_client_needs").upsert(
+      fresh.map((r) => ({
+        agent_id: r.agent_id,
+        client_need_id: body.client_need_id,
+        reason: r.reason,
+      })),
+      { onConflict: "agent_id,client_need_id" },
+    );
 
-    console.log(`[notify-agents-client-need] Successfully enqueued ${emailJobs.length} jobs`);
+    const matched = fresh.filter((r) => r.reason === "preferences_match").length;
+    const fallback = fresh.filter((r) => r.reason === "preferences_unset").length;
+
+    console.log(
+      `[notify-agents-client-need] client_need=${body.client_need_id} audience=${audience.length} matched=${matched} fallback=${fallback} sender_excluded=${senderId ? 1 : 0} opted_out=${optedOut.size} duplicates_skipped=${recipients.length - fresh.length}`,
+    );
 
     return new Response(
-      JSON.stringify({ 
-        message: "Notifications queued", 
-        queued: emailJobs.length,
-        total_agents: agents.length
+      JSON.stringify({
+        notified_count: fresh.length,
+        matched,
+        fallback,
+        duplicates_skipped: recipients.length - fresh.length,
+        opted_out: optedOut.size,
+        audience: audience.length,
       }),
-      { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (error: any) {
-    console.error("Error in notify-agents-client-need function:", error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
-    );
+    console.error("[notify-agents-client-need] Error:", error);
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
-};
-
-serve(handler);
+});

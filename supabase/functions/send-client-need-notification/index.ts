@@ -1,5 +1,9 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.0";
+import {
+  getVerifiedAgentAudience,
+  classifyRecipients,
+} from "../_shared/verifiedAgentAudience.ts";
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -9,8 +13,10 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+type Category = "buyer_need" | "renter_need" | "sales_intel" | "general_discussion";
+
 interface SendNotificationRequest {
-  category: "buyer_need" | "sales_intel" | "renter_need" | "general_discussion";
+  category: Category;
   subject: string;
   message: string;
   previewOnly?: boolean;
@@ -26,118 +32,100 @@ interface SendNotificationRequest {
   };
 }
 
-const isValidEmail = (email: string): boolean => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+const isValidEmail = (email: string): boolean =>
+  /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
-const getCategoryLabel = (cat: string) => {
-  switch (cat) {
-    case "buyer_need": return "Buyer Need";
-    case "renter_need": return "Renter Need";
-    case "sales_intel": return "Sales Intel";
-    case "general_discussion": return "General Discussion";
-    default: return cat;
-  }
+const CATEGORY_LABEL: Record<Category, string> = {
+  buyer_need: "Buyer Need",
+  renter_need: "Renter Need",
+  sales_intel: "Sales Intel",
+  general_discussion: "General Discussion",
 };
 
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
-
   try {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
-    
+
     const authHeader = req.headers.get("Authorization")!;
     const token = authHeader.replace("Bearer ", "");
     const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+    if (userError || !user) throw new Error("Unauthorized");
 
-    if (userError || !user) {
-      throw new Error("Unauthorized");
-    }
+    const body: SendNotificationRequest = await req.json();
+    const { category, subject, message, criteria, previewOnly, sendCopyToSelf } = body;
 
-    const { category, subject, message, criteria, previewOnly, sendCopyToSelf }: SendNotificationRequest = await req.json();
-
-    // Get sender's profile
+    // Sender profile (for headers / self-copy)
     const { data: senderProfile } = await supabase
       .from("agent_profiles")
       .select("first_name, last_name, email, company")
       .eq("id", user.id)
       .single();
-
-    const senderName = senderProfile ? `${senderProfile.first_name} ${senderProfile.last_name}` : "An Agent";
+    const senderName = senderProfile
+      ? `${senderProfile.first_name} ${senderProfile.last_name}`
+      : "An Agent";
     const senderEmail = senderProfile?.email || user.email;
     const senderCompany = senderProfile?.company || "";
     const validReplyTo = senderEmail && isValidEmail(senderEmail) ? senderEmail : undefined;
 
-    // Query for agents with this notification preference enabled
-    let query = supabase.from("notification_preferences").select("user_id").eq(category, true);
+    // 1. Canonical audience of verified, profile-eligible agents (globally unsubscribed excluded)
+    const audience = await getVerifiedAgentAudience(supabase);
+    const audienceIds = audience.map((a) => a.agent_id);
 
-    // Apply criteria filters if provided
+    // 2. Category-level opt-out: notification_preferences.<category>=false (authoritative)
+    const { data: prefs } = await supabase
+      .from("notification_preferences")
+      .select(`user_id, ${category}, min_price, max_price`)
+      .in("user_id", audienceIds);
+    const optedOut = new Set<string>();
+    const priceRangeByAgent = new Map<string, { min: number; max: number }>();
+    for (const p of (prefs || []) as any[]) {
+      if (p[category] === false) optedOut.add(p.user_id);
+      priceRangeByAgent.set(p.user_id, {
+        min: p.min_price ?? 0,
+        max: p.max_price ?? Number.POSITIVE_INFINITY,
+      });
+    }
+
+    // 3. Preference match set (only meaningful when the sender narrowed by geography/price).
+    let matchIds: Set<string>;
     if (criteria?.state) {
-      const { data: allPrefs } = await query;
-      if (!allPrefs?.length) {
-        return new Response(
-          JSON.stringify({ success: true, message: "No agents found", recipientCount: 0 }),
-          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+      const { data: geo } = await supabase
+        .from("agent_buyer_coverage_areas")
+        .select("agent_id")
+        .eq("state", criteria.state)
+        .in("agent_id", audienceIds);
+      matchIds = new Set((geo || []).map((r: any) => r.agent_id));
+      if (criteria.minPrice || criteria.maxPrice) {
+        const cMin = criteria.minPrice ?? 0;
+        const cMax = criteria.maxPrice ?? Number.POSITIVE_INFINITY;
+        for (const id of Array.from(matchIds)) {
+          const range = priceRangeByAgent.get(id);
+          if (!range) continue;
+          if (range.min > cMax || range.max < cMin) matchIds.delete(id);
+        }
       }
-
-      let matchingAgentIds = allPrefs.map(p => p.user_id);
-
-      // Geographic filtering
-      if (criteria.state || criteria.cities?.length || criteria.counties?.length) {
-        const { data: geoPrefs } = await supabase
-          .from("agent_buyer_coverage_areas")
-          .select("agent_id")
-          .in("agent_id", matchingAgentIds)
-          .eq("state", criteria.state);
-
-        matchingAgentIds = [...new Set(geoPrefs?.map(p => p.agent_id) || [])];
-      }
-
-      // Price filtering
-      if ((criteria.minPrice || criteria.maxPrice) && matchingAgentIds.length > 0) {
-        const { data: pricePrefs } = await supabase
-          .from("notification_preferences")
-          .select("user_id, min_price, max_price")
-          .in("user_id", matchingAgentIds);
-
-        matchingAgentIds = (pricePrefs || [])
-          .filter(pref => {
-            const criteriaMin = criteria.minPrice || 0;
-            const criteriaMax = criteria.maxPrice || Infinity;
-            return (pref.min_price || 0) <= criteriaMax && (pref.max_price || Infinity) >= criteriaMin;
-          })
-          .map(p => p.user_id);
-      }
-
-      if (matchingAgentIds.length === 0) {
-        return new Response(
-          JSON.stringify({ success: true, message: "No agents match criteria", recipientCount: 0 }),
-          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-
-      query = supabase.from("notification_preferences").select("user_id").in("user_id", matchingAgentIds);
+    } else {
+      // No criteria supplied → treat every eligible agent as a preference match
+      matchIds = new Set(audienceIds);
     }
 
-    const { data: recipients } = await query;
+    const recipients = classifyRecipients(
+      audience,
+      (a) => matchIds.has(a.agent_id),
+      user.id,
+      optedOut,
+    );
 
-    if (!recipients?.length) {
-      return new Response(
-        JSON.stringify({ success: true, message: "No matching recipients", recipientCount: 0 }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    // Get agent profiles (needed for both preview and send)
-    const agentIds = recipients.map(r => r.user_id);
-    const { data: agentProfiles } = await supabase
-      .from("agent_profiles")
-      .select("id, email, first_name, last_name, phone, company")
-      .in("id", agentIds);
-
+    // 4. Preview short-circuit (no persistence, no send)
     if (previewOnly) {
-      const recipientList = (agentProfiles || []).map((a: any) => ({
+      const { data: profiles } = await supabase
+        .from("agent_profiles")
+        .select("id, email, first_name, last_name, phone, company")
+        .in("id", recipients.map((r) => r.agent_id));
+      const list = (profiles || []).map((a: any) => ({
         id: a.id,
         name: `${a.first_name ?? ""} ${a.last_name ?? ""}`.trim() || "AAC Agent",
         brokerage: a.company ?? null,
@@ -147,48 +135,80 @@ const handler = async (req: Request): Promise<Response> => {
       return new Response(
         JSON.stringify({
           success: true,
-          recipientCount: recipientList.length,
-          recipients: recipientList,
+          recipientCount: list.length,
+          matched: recipients.filter((r) => r.reason === "preferences_match").length,
+          fallback: recipients.filter((r) => r.reason === "preferences_unset").length,
+          opted_out: optedOut.size,
+          audience: audience.length,
+          recipients: list,
         }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
-    if (!agentProfiles?.length) {
-      throw new Error("Failed to fetch agent profiles");
+    // 5. Persist broadcast first so we have a canonical id for dedup + metadata
+    const { data: broadcast, error: broadcastError } = await supabase
+      .from("comms_broadcasts")
+      .insert({
+        sender_id: user.id,
+        category,
+        subject,
+        message,
+        criteria: criteria ?? null,
+        recipient_count: recipients.length,
+      })
+      .select("id")
+      .single();
+    if (broadcastError || !broadcast) {
+      console.error("[send-client-need-notification] broadcast persist failed:", broadcastError);
+      throw new Error("Failed to persist broadcast");
     }
+    const broadcastId = broadcast.id as string;
 
-    // Build criteria text
+    // 6. Durable dedup against agent_sent_broadcasts
+    const { data: alreadySent } = await supabase
+      .from("agent_sent_broadcasts")
+      .select("agent_id")
+      .eq("broadcast_id", broadcastId)
+      .in("agent_id", recipients.map((r) => r.agent_id));
+    const sentSet = new Set((alreadySent || []).map((r: any) => r.agent_id));
+    const fresh = recipients.filter((r) => !sentSet.has(r.agent_id));
+
+    // 7. Compose and enqueue
     let criteriaText = "";
     if (criteria) {
       if (criteria.state) criteriaText += `<strong>State:</strong> ${criteria.state}<br>`;
-      if (criteria.propertyTypes?.length) criteriaText += `<strong>Property Types:</strong> ${criteria.propertyTypes.join(', ')}<br>`;
-      if (criteria.minPrice) criteriaText += `<strong>Min Price:</strong> $${criteria.minPrice.toLocaleString()}<br>`;
-      if (criteria.maxPrice) criteriaText += `<strong>Max Price:</strong> $${criteria.maxPrice.toLocaleString()}<br>`;
+      if (criteria.propertyTypes?.length)
+        criteriaText += `<strong>Property Types:</strong> ${criteria.propertyTypes.join(", ")}<br>`;
+      if (criteria.minPrice)
+        criteriaText += `<strong>Min Price:</strong> $${criteria.minPrice.toLocaleString()}<br>`;
+      if (criteria.maxPrice)
+        criteriaText += `<strong>Max Price:</strong> $${criteria.maxPrice.toLocaleString()}<br>`;
     }
 
-    console.log(`[send-client-need-notification] Enqueuing ${agentProfiles.length} jobs`);
+    const categoryLabel = CATEGORY_LABEL[category];
 
-    // Enqueue jobs
-    const emailJobs: Array<{ payload: Record<string, any> }> = agentProfiles.map(agent => ({
+    const emailJobs: any[] = fresh.map((r) => ({
+      idempotency_key: `client-need-broadcast:${broadcastId}:${r.agent_id}`,
       payload: {
         provider: "resend",
         template: "client-need-broadcast",
-        to: agent.email,
-        subject: `[${getCategoryLabel(category)}] ${subject}`,
+        to: r.email,
+        subject: `[${categoryLabel}] ${subject}`,
         reply_to: validReplyTo,
+        metadata: { audience: "agent", reason: r.reason, broadcast_id: broadcastId, category },
         variables: {
-          agentName: agent.first_name,
+          agentName: r.first_name,
           senderName,
           senderCompany,
-          category: getCategoryLabel(category),
+          category: categoryLabel,
           subject,
           message,
           criteriaText,
           contentHtml: `
             <h2>${subject}</h2>
             <p><strong>From:</strong> ${senderName}${senderCompany ? ` (${senderCompany})` : ""}</p>
-            <p><strong>Category:</strong> ${getCategoryLabel(category)}</p>
+            <p><strong>Category:</strong> ${categoryLabel}</p>
             ${criteriaText ? `<div style="background:#ffffff;border:1px solid #e5e7eb;padding:16px;border-radius:8px;margin:20px 0;"><h3>Request Criteria</h3>${criteriaText}</div>` : ""}
             <div style="background:#ffffff;border:1px solid #e5e7eb;padding:16px;border-radius:8px;">
               <p style="white-space: pre-wrap;">${message}</p>
@@ -198,31 +218,30 @@ const handler = async (req: Request): Promise<Response> => {
       },
     }));
 
-    // Add sender copy if requested
     if (sendCopyToSelf && senderEmail && isValidEmail(senderEmail)) {
       emailJobs.push({
         payload: {
           provider: "resend",
           template: "client-need-broadcast",
           to: senderEmail,
-          subject: `[COPY] [${getCategoryLabel(category)}] ${subject}`,
-          reply_to: undefined,
+          subject: `[COPY] [${categoryLabel}] ${subject}`,
+          metadata: { audience: "sender_copy", broadcast_id: broadcastId, category },
           variables: {
             agentName: senderName,
             senderName,
             senderCompany,
-            category: getCategoryLabel(category),
+            category: categoryLabel,
             subject,
             message,
             criteriaText,
             isCopy: true,
-            recipientCount: agentProfiles.length,
+            recipientCount: fresh.length,
             contentHtml: `
               <div style="background: #ffffff; border: 1px solid #e5e7eb; padding: 12px; border-radius: 6px; margin-bottom: 20px;">
-                <p><strong>Copy of email sent to ${agentProfiles.length} recipients</strong></p>
+                <p><strong>Copy of email sent to ${fresh.length} recipients</strong></p>
               </div>
               <h2>${subject}</h2>
-              <p><strong>Category:</strong> ${getCategoryLabel(category)}</p>
+              <p><strong>Category:</strong> ${categoryLabel}</p>
               ${criteriaText ? `<div style="background:#ffffff;border:1px solid #e5e7eb;padding:16px;border-radius:8px;margin:20px 0;">${criteriaText}</div>` : ""}
               <div style="background:#ffffff;border:1px solid #e5e7eb;padding:16px;border-radius:8px;"><p style="white-space: pre-wrap;">${message}</p></div>
             `,
@@ -231,39 +250,51 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
-    const { error: insertError } = await supabase.from("email_jobs").insert(emailJobs);
-
-    if (insertError) {
-      console.error("[send-client-need-notification] Failed to enqueue:", insertError);
-      throw new Error("Failed to queue emails");
+    if (emailJobs.length > 0) {
+      const { error: insertError } = await supabase.from("email_jobs").insert(emailJobs);
+      if (insertError) {
+        console.error("[send-client-need-notification] enqueue failed:", insertError);
+        throw new Error("Failed to queue emails");
+      }
     }
 
-    // Persist broadcast for Success Hub > Network Activity feed
-    const { error: broadcastError } = await supabase.from("comms_broadcasts").insert({
-      sender_id: user.id,
-      category,
-      subject,
-      message,
-      criteria: criteria ?? null,
-      recipient_count: agentProfiles.length,
-    });
-    if (broadcastError) {
-      console.error("[send-client-need-notification] Failed to persist broadcast:", broadcastError);
+    if (fresh.length > 0) {
+      await supabase.from("agent_sent_broadcasts").upsert(
+        fresh.map((r) => ({
+          agent_id: r.agent_id,
+          broadcast_id: broadcastId,
+          reason: r.reason,
+        })),
+        { onConflict: "agent_id,broadcast_id" },
+      );
     }
+
+    const matched = fresh.filter((r) => r.reason === "preferences_match").length;
+    const fallback = fresh.filter((r) => r.reason === "preferences_unset").length;
+
+    console.log(
+      `[send-client-need-notification] broadcast=${broadcastId} audience=${audience.length} matched=${matched} fallback=${fallback} sender_excluded=1 opted_out=${optedOut.size} duplicates_skipped=${recipients.length - fresh.length}`,
+    );
 
     return new Response(
       JSON.stringify({
         success: true,
-        message: `Message sent to ${agentProfiles.length} agents`,
-        sent: agentProfiles.length,
+        message: `Message sent to ${fresh.length} agents`,
+        sent: fresh.length,
+        matched,
+        fallback,
+        opted_out: optedOut.size,
+        duplicates_skipped: recipients.length - fresh.length,
+        audience: audience.length,
+        broadcast_id: broadcastId,
       }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (error: any) {
     console.error("[send-client-need-notification] Error:", error);
     return new Response(
       JSON.stringify({ error: error.message, success: false }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   }
 };
