@@ -90,6 +90,7 @@ serve(async (req) => {
   try {
     const body = await req.json().catch(() => ({} as any));
     const listingId: string | null = body?.listing_id ?? null;
+    const dryRun: boolean = body?.dry_run === true;
     if (!listingId) {
       return new Response(
         JSON.stringify({ error: "listing_id required" }),
@@ -218,9 +219,73 @@ serve(async (req) => {
 
     if (!candidates.length) {
       console.log("[notify-agents-new-listing] no eligible agents");
-      return new Response(JSON.stringify({ enqueued: 0 }), {
+      return new Response(JSON.stringify({
+        enqueued: 0,
+        dry_run: dryRun,
+        listing_id: listingId,
+        status_at_send: status,
+        audience: (profiles ?? []).length,
+        matched: 0,
+        fallback: 0,
+        self_excluded: listingAgentId ? 1 : 0,
+        opted_out: 0,
+        already_received: 0,
+        final_new_recipients: 0,
+      }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    // Count matched / fallback / self-exclusions for reporting.
+    const matchedCount = candidates.filter((c) => c.reason === "preferences_match").length;
+    const fallbackCount = candidates.filter((c) => c.reason === "preferences_unset").length;
+    const selfExcludedCount = listingAgentId
+      ? (profiles ?? []).some((p: any) => String(p.id) === listingAgentId) ? 1 : 0
+      : 0;
+
+    // Pre-check dedup against agent_sent_listings so dry-run can report
+    // already-received counts without writing anything.
+    const { data: existingSent } = await admin
+      .from("agent_sent_listings")
+      .select("agent_id")
+      .eq("listing_id", listingId)
+      .eq("status_at_send", status)
+      .in("agent_id", candidates.map((c) => c.agentId));
+    const alreadySent = new Set(
+      (existingSent ?? []).map((r: any) => String(r.agent_id)),
+    );
+    const freshCandidates = candidates.filter((c) => !alreadySent.has(c.agentId));
+
+    if (dryRun) {
+      const address = [
+        (listing as any).address,
+        (listing as any).city,
+        (listing as any).state,
+        (listing as any).zip_code,
+      ].filter(Boolean).join(", ");
+      console.log(
+        `[notify-agents-new-listing] DRY_RUN listing=${listingId} status=${status} audience=${(profiles ?? []).length} matched=${matchedCount} fallback=${fallbackCount} already_received=${alreadySent.size} final=${freshCandidates.length}`,
+      );
+      return new Response(
+        JSON.stringify({
+          dry_run: true,
+          listing_id: listingId,
+          status_at_send: status,
+          event_summary: {
+            id: listingId,
+            address,
+            listing_agent_id: listingAgentId,
+          },
+          audience: (profiles ?? []).length,
+          matched: matchedCount,
+          fallback: fallbackCount,
+          self_excluded: selfExcludedCount,
+          opted_out: 0,
+          already_received: alreadySent.size,
+          final_new_recipients: freshCandidates.length,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
     }
 
     // 3) Dedup via agent_sent_listings insert (unique constraint)
@@ -311,6 +376,13 @@ serve(async (req) => {
         candidates: candidates.length,
         enqueued,
         skipped_duplicate: skippedDup,
+        audience: (profiles ?? []).length,
+        matched: matchedCount,
+        fallback: fallbackCount,
+        self_excluded: selfExcludedCount,
+        opted_out: 0,
+        already_received: alreadySent.size,
+        final_new_recipients: enqueued,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
