@@ -58,6 +58,7 @@ export interface ReminderEnqueueResult {
   agent_id: string;
   reserved: boolean;
   queued: boolean;
+  reason?: string;
   error?: string;
 }
 
@@ -126,7 +127,8 @@ export async function reserveAndEnqueueMissingOpportunityReminder(
   }
   const reserved = Boolean(data?.reserved);
   const queued = Boolean(data?.queued);
-  return { agent_id: args.agent_id, reserved, queued };
+  const reason = typeof data?.reason === "string" ? data.reason : undefined;
+  return { agent_id: args.agent_id, reserved, queued, reason };
 }
 
 export async function countExistingReminders(
