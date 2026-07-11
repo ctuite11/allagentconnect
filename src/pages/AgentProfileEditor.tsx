@@ -931,7 +931,8 @@ setHeaderBackgroundType(profile.header_background_type || "color");
             </Card>
 
             {/* Agent Proposal Incentives - Feature Flagged */}
-            {proposalsEnabled && userId && (
+            {/* HIDDEN (UI only, state/DB/flag preserved) */}
+            {false && proposalsEnabled && userId && (
               <AgentProposalIncentivesForm
                 userId={userId}
                 featureEnabled={proposalsEnabled}
