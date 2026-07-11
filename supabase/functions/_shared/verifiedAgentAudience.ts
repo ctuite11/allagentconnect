@@ -14,21 +14,6 @@ export interface EligibleAgent {
   first_name: string | null;
   last_name: string | null;
   preferences_set: boolean;
-  /**
-   * Value of `agent_settings.<domain-flag>` where applicable.
-   * Callers pass the specific column name they care about. When null we treat
-   * "no explicit setting" as opted-in.
-   */
-  category_opt_in: boolean | null;
-}
-
-export interface AudienceOptions {
-  /**
-   * Optional column name on `agent_settings` used to represent an explicit
-   * per-category opt-out. When provided, the helper returns each agent's
-   * value so the caller can honor it authoritatively.
-   */
-  optOutColumn?: string;
 }
 
 /**
@@ -44,22 +29,10 @@ export interface AudienceOptions {
  */
 export async function getVerifiedAgentAudience(
   supabase: any,
-  opts: AudienceOptions = {},
 ): Promise<EligibleAgent[]> {
-  const optOutColumn = opts.optOutColumn;
-
-  // Verified + agent role, with eligible profile (non-blank email).
-  const settingsSelect = [
-    "user_id",
-    "preferences_set",
-    optOutColumn ? optOutColumn : null,
-  ]
-    .filter(Boolean)
-    .join(", ");
-
   const { data: settings, error: settingsErr } = await supabase
     .from("agent_settings")
-    .select(settingsSelect)
+    .select("user_id, preferences_set")
     .eq("agent_status", "verified");
   if (settingsErr) throw settingsErr;
   if (!settings?.length) return [];
@@ -119,9 +92,6 @@ export async function getVerifiedAgentAudience(
 
     const s = settingsById.get(id) || {};
     const preferencesSet = Boolean(s.preferences_set) || withPrefs.has(id);
-    const categoryOptIn = optOutColumn
-      ? (s[optOutColumn] === null || s[optOutColumn] === undefined ? null : Boolean(s[optOutColumn]))
-      : null;
 
     out.push({
       agent_id: id,
@@ -129,7 +99,6 @@ export async function getVerifiedAgentAudience(
       first_name: profile.first_name ?? null,
       last_name: profile.last_name ?? null,
       preferences_set: preferencesSet,
-      category_opt_in: categoryOptIn,
     });
   }
   return out;
@@ -149,12 +118,12 @@ export function classifyRecipients<T extends EligibleAgent>(
   audience: T[],
   matches: (agent: T) => boolean,
   senderId: string | null,
-  honorOptOut = true,
+  optedOut?: Set<string>,
 ): Array<T & { reason: "preferences_match" | "preferences_unset" }> {
   const out: Array<T & { reason: "preferences_match" | "preferences_unset" }> = [];
   for (const a of audience) {
     if (senderId && a.agent_id === senderId) continue;
-    if (honorOptOut && a.category_opt_in === false) continue;
+    if (optedOut && optedOut.has(a.agent_id)) continue;
     if (a.preferences_set) {
       if (matches(a)) out.push({ ...a, reason: "preferences_match" });
     } else {
