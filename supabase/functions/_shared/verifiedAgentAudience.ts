@@ -1,9 +1,13 @@
 // Shared canonical eligibility helper for automatic agent notifications.
 //
 // Universal rule enforced by callers via partitionAudience:
-//   Base eligibility = activated + verified + user_roles.role='agent'
-//     - Activated  : agent_settings.account_activated_at IS NOT NULL
-//     - Verified   : agent_settings.agent_status = 'verified'
+//   Base eligibility = Agent Network directory visibility + user_roles.role='agent'
+//     - Verified            : agent_settings.agent_status = 'verified'
+//     - Not hidden          : agent_settings.hide_from_directory = false
+//     - Directory profile   : first_name, last_name, headshot_url all non-empty
+//       (identical to /our-agents and /our-members visibility rule)
+//   Note: account_activated_at is intentionally NOT part of eligibility —
+//   directory-visible agents are eligible even if that column is null.
 //   Real content bucket (per-event):
 //     - profile_complete && has_email && (preferences_set ? matches : true)
 //     - Excludes senderId, explicit category opt-out, globally suppressed email
@@ -41,12 +45,13 @@ function isNonEmpty(v: unknown): boolean {
 export async function getVerifiedAgentAudience(
   supabase: any,
 ): Promise<EligibleAgent[]> {
-  // 1) Activated + verified agents (canonical activation source used by Admin Approvals).
+  // 1) Verified agents visible in the Agent Network directory
+  //    (canonical rule shared with /our-agents and /our-members).
   const { data: settings, error: settingsErr } = await supabase
     .from("agent_settings")
-    .select("user_id, preferences_set, account_activated_at")
+    .select("user_id, preferences_set, hide_from_directory")
     .eq("agent_status", "verified")
-    .not("account_activated_at", "is", null);
+    .eq("hide_from_directory", false);
   if (settingsErr) throw settingsErr;
   if (!settings?.length) return [];
 
@@ -109,11 +114,13 @@ export async function getVerifiedAgentAudience(
     if (emailLc && suppressed.has(emailLc)) continue;
 
     const has_email = isNonEmpty(emailTrim);
+    // Directory profile-complete = Agent Network visibility rule:
+    // first name, last name, headshot. Email is required for delivery but is
+    // not part of the directory-visibility definition itself.
     const profile_complete =
       isNonEmpty(profile.first_name) &&
       isNonEmpty(profile.last_name) &&
       isNonEmpty(profile.headshot_url) &&
-      isNonEmpty(profile.company) &&
       has_email;
 
     const s = settingsById.get(id) || {};
