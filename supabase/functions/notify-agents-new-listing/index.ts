@@ -101,6 +101,10 @@ serve(async (req) => {
     const body = await req.json().catch(() => ({} as any));
     const listingId: string | null = body?.listing_id ?? null;
     const dryRun: boolean = body?.dry_run === true;
+    // One-time backfill hatch: run the real listing-alert enqueue but skip
+    // the missing-opportunities reminder wave. Reminders still fire on
+    // future events under the 30-day cadence.
+    const suppressReminders: boolean = body?.suppress_reminders === true;
     if (!listingId) {
       return new Response(
         JSON.stringify({ error: "listing_id required" }),
