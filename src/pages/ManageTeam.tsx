@@ -453,7 +453,7 @@ const ManageTeam = () => {
             />
             <div className="flex gap-2">
               {team && (
-                <Button onClick={() => navigate(`/team/${team.id}`)} variant="outline">
+                <Button onClick={() => navigate(`/team/${team.slug || team.id}`)} variant="outline">
                   <ExternalLink className="h-4 w-4 mr-2" />
                   View Public Profile
                 </Button>
@@ -902,10 +902,18 @@ const SortableMemberItem = ({ member, isOwner, onRemove, onNavigate }: SortableM
         </div>
       </button>
       <div className="flex items-center gap-2">
-        {member.role === 'owner' && (
-          <Badge variant="secondary" className="text-xs">Owner</Badge>
+        {member.role === 'lead' && (
+          <Badge variant="secondary" className="text-xs">Team Lead</Badge>
         )}
-        {isOwner && member.role !== 'owner' && (
+        {member.role === 'delegate' && (
+          <Badge variant="outline" className="text-xs">Delegate</Badge>
+        )}
+        {member.status && member.status !== 'accepted' && (
+          <Badge variant="outline" className="text-[10px] uppercase">
+            {member.status}
+          </Badge>
+        )}
+        {isOwner && member.role !== 'lead' && (
           <Button
             size="icon"
             variant="ghost"
