@@ -49,6 +49,7 @@ import { useFeatureFlag } from "@/hooks/useFeatureFlag";
 import AgentProposalIncentivesForm from "@/components/proposals/AgentProposalIncentivesForm";
 import { Seo } from "@/components/Seo";
 import TeamAccountCTA from "@/components/profile-editor/TeamAccountCTA";
+import { useAuthRole } from "@/hooks/useAuthRole";
 
 
 interface SocialLinks {
