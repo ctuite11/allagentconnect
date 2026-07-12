@@ -260,19 +260,36 @@ const ManageTeam = () => {
     if (!agent || !team) return;
 
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      // Block invite if the agent is already accepted on another team.
+      const { data: existing } = await supabase
+        .from("team_members")
+        .select("id, team_id")
+        .eq("agent_id", agent.id)
+        .eq("status", "accepted")
+        .maybeSingle();
+      if (existing && existing.team_id !== team.id) {
+        toast.error("This agent is already on another team.");
+        return;
+      }
+
       // Get the highest display_order to add new member at the end
       const maxOrder = members.length > 0 
         ? Math.max(...members.map(m => m.display_order ?? 0))
         : -1;
 
-      const { error } = await supabase
+      const { data: inserted, error } = await supabase
         .from("team_members")
         .insert({
           team_id: team.id,
           agent_id: agent.id,
           role: 'member',
+          status: 'invited',
+          invited_by: session?.user.id ?? null,
           display_order: maxOrder + 1,
-        });
+        })
+        .select("invite_token")
+        .single();
 
       if (error) throw error;
       
@@ -283,6 +300,7 @@ const ManageTeam = () => {
             agentEmail: agent.email,
             agentName: `${agent.first_name} ${agent.last_name}`,
             teamName: team.name,
+            inviteToken: inserted?.invite_token ?? null,
             teamContactEmail: contactEmail,
             teamContactPhone: contactPhone,
             teamOfficeName: officeName,
@@ -295,7 +313,7 @@ const ManageTeam = () => {
         // Don't fail the whole operation if email fails
       }
       
-      toast.success(`${agent.first_name} ${agent.last_name} added to team!`);
+      toast.success(`Invitation sent to ${agent.first_name} ${agent.last_name}`);
       setAddMemberOpen(false);
       await checkAuthAndLoadTeam();
     } catch (error: any) {
