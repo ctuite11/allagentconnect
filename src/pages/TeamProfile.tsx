@@ -216,6 +216,11 @@ const TeamProfile = () => {
   return (
     <div className="min-h-screen bg-background pt-20">
       <div className="container mx-auto px-4 py-8">
+        {previewNotice && (
+          <div className="mb-4 rounded-md border border-amber-300 bg-amber-50 px-4 py-2 text-sm text-amber-900">
+            {previewNotice}
+          </div>
+        )}
         <button
           onClick={() => navigate("/manage-team")}
           className="mb-6 p-1.5 -ml-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
