@@ -37,6 +37,9 @@ import ConsumerPropertyDetail from "./pages/ConsumerPropertyDetail";
 import AgentProfileEditor from "./pages/AgentProfileEditor";
 import ManageTeam from "./pages/ManageTeam";
 import TeamProfile from "./pages/TeamProfile";
+import TeamRequest from "./pages/TeamRequest";
+import TeamInviteAccept from "./pages/TeamInviteAccept";
+import AdminTeamApprovals from "./pages/AdminTeamApprovals";
 import ManageCoverageAreas from "./pages/ManageCoverageAreas";
 import BrowsePropertiesNew from "./pages/BrowsePropertiesNew";
 
@@ -403,6 +406,10 @@ const App = () => (
                   <Route path="/agent/profile" element={<RouteGuard requireRole="agent"><AgentProfileEditor /></RouteGuard>} />
                   <Route path="/agent-profile-editor" element={<RouteGuard requireRole="agent"><AgentProfileEditor /></RouteGuard>} />
                   <Route path="/manage-team" element={<RouteGuard requireRole="agent"><ManageTeam /></RouteGuard>} />
+                  <Route path="/team/:id/manage" element={<RouteGuard requireRole="agent"><ManageTeam /></RouteGuard>} />
+                  <Route path="/team/request" element={<RouteGuard requireRole="agent"><TeamRequest /></RouteGuard>} />
+                  <Route path="/team/invite/:token" element={<RouteGuard requireAuth><TeamInviteAccept /></RouteGuard>} />
+                  <Route path="/admin/team-approvals" element={<AdminTeamApprovals />} />
                   <Route path="/manage-coverage-areas" element={<RouteGuard requireRole="agent"><ManageCoverageAreas /></RouteGuard>} />
                   <Route path="/our-members" element={<RouteGuard requireRole="agent"><OurAgents defaultAgentMode={true} isAgentMode /></RouteGuard>} />
                   <Route path="/members" element={<RouteGuard requireRole="agent"><OurAgents defaultAgentMode={true} isAgentMode /></RouteGuard>} />

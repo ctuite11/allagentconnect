@@ -77,6 +77,7 @@ const TeamProfile = () => {
   const [listings, setListings] = useState<any[]>([]);
   const [testimonials, setTestimonials] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [previewNotice, setPreviewNotice] = useState<string | null>(null);
 
   useEffect(() => {
     fetchTeamProfile();
@@ -86,12 +87,17 @@ const TeamProfile = () => {
     try {
       setLoading(true);
 
-      // Fetch team data
-      const { data: teamData, error: teamError } = await supabase
-        .from("teams")
-        .select("*")
-        .eq("id", id)
-        .single();
+      // Fetch team by slug first, then fall back to UUID for legacy links.
+      let teamData: any = null;
+      {
+        const { data: bySlug } = await supabase.from("teams").select("*").eq("slug", id!).maybeSingle();
+        teamData = bySlug;
+      }
+      if (!teamData) {
+        const { data: byId } = await supabase.from("teams").select("*").eq("id", id!).maybeSingle();
+        teamData = byId;
+      }
+      const teamError = null as any;
 
       if (teamError) throw teamError;
       if (!teamData) {
@@ -100,9 +106,26 @@ const TeamProfile = () => {
         return;
       }
 
+      if (teamData.status !== "approved") {
+        // Only managers/admin can see the private preview.
+        const { data: { session } } = await supabase.auth.getSession();
+        const uid = session?.user.id;
+        let canPreview = false;
+        if (uid) {
+          const { data: canManage } = await supabase.rpc("is_team_manager", { _team_id: teamData.id, _user_id: uid });
+          canPreview = canManage === true;
+        }
+        if (!canPreview) {
+          toast.error("This team is not public yet");
+          navigate("/our-agents");
+          return;
+        }
+        setPreviewNotice(`This team is ${teamData.status}. Only managers can view this preview.`);
+      }
+
       setTeam(teamData);
 
-      // Fetch team members with their profiles ordered by display_order
+      // Fetch accepted team members (public rule) ordered by display_order.
       const { data: membersData, error: membersError } = await supabase
         .from("team_members")
         .select(`
@@ -119,14 +142,17 @@ const TeamProfile = () => {
             bio
           )
         `)
-        .eq("team_id", id)
+        .eq("team_id", teamData.id)
+        .eq("status", "accepted")
         .order("display_order");
 
       if (membersError) throw membersError;
       setMembers((membersData as any) || []);
 
-      // Fetch all listings from team members
-      const memberIds = (membersData as any)?.map((m: any) => m.agent_profiles.id) || [];
+      // Combined Team Listings = listings whose agent_id belongs to any accepted member.
+      const memberIds = (membersData as any)
+        ?.map((m: any) => m.agent_profiles?.id)
+        .filter(Boolean) || [];
       if (memberIds.length > 0) {
         const { data: listingsData, error: listingsError } = await supabase
           .from("listings")
@@ -182,11 +208,19 @@ const TeamProfile = () => {
     );
   }
 
-  const primaryContact = members.find(m => m.role === 'owner')?.agent_profiles || members[0]?.agent_profiles;
+  const primaryContact =
+    members.find((m: any) => m.role === "lead")?.agent_profiles ||
+    members.find((m: any) => m.role === "owner")?.agent_profiles ||
+    members[0]?.agent_profiles;
 
   return (
     <div className="min-h-screen bg-background pt-20">
       <div className="container mx-auto px-4 py-8">
+        {previewNotice && (
+          <div className="mb-4 rounded-md border border-amber-300 bg-amber-50 px-4 py-2 text-sm text-amber-900">
+            {previewNotice}
+          </div>
+        )}
         <button
           onClick={() => navigate("/manage-team")}
           className="mb-6 p-1.5 -ml-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"

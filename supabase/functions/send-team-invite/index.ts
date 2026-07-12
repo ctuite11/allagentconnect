@@ -10,6 +10,7 @@ interface TeamInviteRequest {
   agentEmail: string;
   agentName: string;
   teamName: string;
+  inviteToken?: string;
   teamContactEmail?: string;
   teamContactPhone?: string;
   teamOfficeName?: string;
@@ -31,6 +32,7 @@ const handler = async (req: Request): Promise<Response> => {
       agentEmail, 
       agentName, 
       teamName,
+      inviteToken,
       teamContactEmail,
       teamContactPhone,
       teamOfficeName,
@@ -48,21 +50,29 @@ const handler = async (req: Request): Promise<Response> => {
     if (teamOfficePhone) contactInfo.push(`Office Phone: ${teamOfficePhone}`);
     const contactDetails = contactInfo.length > 0 ? contactInfo.join(" | ") : "the team administrator";
 
+    const appOrigin = Deno.env.get("APP_ORIGIN") || "https://allagentconnect.com";
+    const acceptUrl = inviteToken ? `${appOrigin}/team/invite/${inviteToken}` : null;
+    const acceptCta = acceptUrl
+      ? `<p style="margin:20px 0;"><a href="${acceptUrl}" style="background:#0E56F5;color:#ffffff;padding:12px 20px;border-radius:6px;text-decoration:none;display:inline-block;">Review invitation</a></p>`
+      : "";
+
     const { error: insertError } = await supabase.from("email_jobs").insert({
       payload: {
         provider: "resend",
         template: "team-invite",
         to: agentEmail,
-        subject: `You've been added to ${teamName}`,
+        subject: `You've been invited to ${teamName}`,
         variables: {
           agentName,
           teamName,
           contactDetails,
+          acceptUrl,
           contentHtml: `
-            <h1>Welcome to ${teamName}!</h1>
+            <h1>You've been invited to ${teamName}</h1>
             <p>Hi ${agentName},</p>
-            <p>You have been added to <strong>${teamName}</strong> on All Agent Connect.</p>
-            <p>You can now view and manage team information, and collaborate with other team members.</p>
+            <p><strong>${teamName}</strong> has invited you to join their team on All Agent Connect.</p>
+            <p>You'll appear on the public Team Profile after you accept. Your individual agent profile remains unchanged.</p>
+            ${acceptCta}
             <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0;">
               <p style="margin: 0;"><strong>If this was done in error, please contact:</strong><br/>${contactDetails}</p>
             </div>

@@ -4042,28 +4042,46 @@ export type Database = {
       }
       team_members: {
         Row: {
+          accepted_at: string | null
           agent_id: string
           display_order: number | null
           id: string
+          invite_token: string | null
+          invited_at: string | null
+          invited_by: string | null
           joined_at: string
           role: string
+          status: string
           team_id: string
+          updated_at: string
         }
         Insert: {
+          accepted_at?: string | null
           agent_id: string
           display_order?: number | null
           id?: string
+          invite_token?: string | null
+          invited_at?: string | null
+          invited_by?: string | null
           joined_at?: string
           role?: string
+          status?: string
           team_id: string
+          updated_at?: string
         }
         Update: {
+          accepted_at?: string | null
           agent_id?: string
           display_order?: number | null
           id?: string
+          invite_token?: string | null
+          invited_at?: string | null
+          invited_by?: string | null
           joined_at?: string
           role?: string
+          status?: string
           team_id?: string
+          updated_at?: string
         }
         Relationships: [
           {
@@ -4084,6 +4102,9 @@ export type Database = {
       }
       teams: {
         Row: {
+          approved_at: string | null
+          approved_by: string | null
+          company: string | null
           contact_email: string | null
           contact_phone: string | null
           created_at: string
@@ -4095,12 +4116,20 @@ export type Database = {
           office_address: string | null
           office_name: string | null
           office_phone: string | null
+          rejection_reason: string | null
+          requester_role: string | null
+          slug: string
           social_links: Json | null
+          status: string
+          team_lead_user_id: string | null
           team_photo_url: string | null
           updated_at: string
           website: string | null
         }
         Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          company?: string | null
           contact_email?: string | null
           contact_phone?: string | null
           created_at?: string
@@ -4112,12 +4141,20 @@ export type Database = {
           office_address?: string | null
           office_name?: string | null
           office_phone?: string | null
+          rejection_reason?: string | null
+          requester_role?: string | null
+          slug: string
           social_links?: Json | null
+          status?: string
+          team_lead_user_id?: string | null
           team_photo_url?: string | null
           updated_at?: string
           website?: string | null
         }
         Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          company?: string | null
           contact_email?: string | null
           contact_phone?: string | null
           created_at?: string
@@ -4129,7 +4166,12 @@ export type Database = {
           office_address?: string | null
           office_name?: string | null
           office_phone?: string | null
+          rejection_reason?: string | null
+          requester_role?: string | null
+          slug?: string
           social_links?: Json | null
+          status?: string
+          team_lead_user_id?: string | null
           team_photo_url?: string | null
           updated_at?: string
           website?: string | null
@@ -4762,6 +4804,22 @@ export type Database = {
       }
       is_feature_enabled: { Args: { p_flag_name: string }; Returns: boolean }
       is_licensed_owner: { Args: never; Returns: boolean }
+      is_team_delegate: {
+        Args: { _team_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_team_lead: {
+        Args: { _team_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_team_manager: {
+        Args: { _team_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_team_member_visible: {
+        Args: { _team_id: string; _user_id: string }
+        Returns: boolean
+      }
       is_team_owner: {
         Args: { p_team_id: string; p_user_id: string }
         Returns: boolean
@@ -4878,6 +4936,7 @@ export type Database = {
         Args: { p_owner_user_id: string }
         Returns: Json
       }
+      slugify_text: { Args: { _txt: string }; Returns: string }
       verify_buyer_contact_row: {
         Args: { p_crm_client_id: string }
         Returns: Json

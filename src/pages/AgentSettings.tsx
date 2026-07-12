@@ -5,7 +5,8 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { validatePassword } from "@/lib/passwordPolicy";
 import { toast } from "@/hooks/use-toast";
-import { Check, X, Lock, CreditCard } from "lucide-react";
+import { Check, X, Lock, CreditCard, Users } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Seo } from "@/components/Seo";
 import { AgentAacPage } from "@/components/layout/AgentAacPage";
 import { AgentPageHeader } from "@/components/layout/AgentPageHeader";
@@ -206,6 +207,26 @@ export default function AgentSettings() {
           </AgentSectionCard>
 
           <AccountDelegatesCard />
+
+          <AgentSectionCard className="space-y-3 p-5 md:p-6">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2 className={agentSectionTitle}>Team Account</h2>
+                <p className={agentSectionDesc}>
+                  Request a shared public Team Profile. Team Accounts require admin approval before becoming public.
+                </p>
+              </div>
+              <Users className="h-5 w-5 text-neutral-400" />
+            </div>
+            <div className="flex gap-2">
+              <Button asChild size="sm">
+                <Link to="/team/request">Create a Team Account</Link>
+              </Button>
+              <Button asChild size="sm" variant="outline">
+                <Link to="/manage-team">Manage my team</Link>
+              </Button>
+            </div>
+          </AgentSectionCard>
         </div>
       </AgentAacPage>
     </>
