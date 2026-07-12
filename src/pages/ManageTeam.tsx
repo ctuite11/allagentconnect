@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams, Navigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 // Navigation removed - rendered globally in App.tsx
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -43,12 +43,14 @@ import { PageHeader } from "@/components/ui/page-header";
 
 const ManageTeam = () => {
   const navigate = useNavigate();
+  const { id: routeTeamId } = useParams();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [team, setTeam] = useState<any>(null);
   const [members, setMembers] = useState<any[]>([]);
   const [allAgents, setAllAgents] = useState<any[]>([]);
   const [isOwner, setIsOwner] = useState(false);
+  const [redirectToRequest, setRedirectToRequest] = useState(false);
   
   // Team form fields
   const [teamName, setTeamName] = useState("");
@@ -101,14 +103,40 @@ const ManageTeam = () => {
     try {
       setLoading(true);
 
-      // Check if user is part of a team
-      const { data: membership, error: membershipError } = await supabase
-        .from("team_members")
-        .select("*, teams(*)")
-        .eq("agent_id", userId)
-        .maybeSingle();
+      // Prefer the team specified in the route (/team/:id/manage). Otherwise find
+      // any team the user manages (lead OR accepted delegate).
+      let membership: any = null;
+      if (routeTeamId) {
+        const { data: teamRow } = await supabase
+          .from("teams")
+          .select("*")
+          .eq("id", routeTeamId)
+          .maybeSingle();
+        if (teamRow) {
+          const { data: myRow } = await supabase
+            .from("team_members")
+            .select("role, status")
+            .eq("team_id", teamRow.id)
+            .eq("agent_id", userId)
+            .maybeSingle();
+          membership = { role: myRow?.role ?? null, status: myRow?.status ?? null, teams: teamRow };
+        }
+      } else {
+        const { data: mine } = await supabase
+          .from("team_members")
+          .select("role, status, teams(*)")
+          .eq("agent_id", userId)
+          .in("status", ["invited", "accepted"])
+          .maybeSingle();
+        membership = mine;
+      }
 
-      if (membershipError) throw membershipError;
+      if (!membership || !membership.teams) {
+        // No team yet — send to the request flow.
+        setRedirectToRequest(true);
+        setLoading(false);
+        return;
+      }
 
       if (membership) {
         const teamData = membership.teams as any;
@@ -129,7 +157,11 @@ const ManageTeam = () => {
           twitter: "",
           instagram: "",
         });
-        setIsOwner(membership.role === 'owner');
+        // Manager = lead OR accepted delegate; treat both as editors.
+        setIsOwner(
+          membership.role === "lead" ||
+            (membership.role === "delegate" && membership.status === "accepted"),
+        );
 
         // Load team members ordered by display_order (no nested join to avoid FK requirement)
         const { data: teamMembers, error: membersError } = await supabase
@@ -209,45 +241,12 @@ const ManageTeam = () => {
 
         if (error) throw error;
         toast.success("Team updated successfully!");
-        // Navigate to team profile page
-        navigate(`/team/${team.id}`);
+        // Navigate to public team profile (by slug when available).
+        navigate(`/team/${team.slug || team.id}`);
       } else {
-        // Create new team
-        const { data: newTeam, error: teamError } = await supabase
-          .from("teams")
-          .insert({
-            name: teamName,
-            description,
-            website,
-            logo_url: logoUrl,
-            team_photo_url: teamPhotoUrl,
-            contact_email: contactEmail,
-            contact_phone: contactPhone,
-            office_name: officeName,
-            office_address: officeAddress,
-            office_phone: officePhone,
-            social_links: socialLinks,
-            created_by: session.user.id,
-          })
-          .select()
-          .single();
-
-        if (teamError) throw teamError;
-
-        // Add creator as owner
-        const { error: memberError } = await supabase
-          .from("team_members")
-          .insert({
-            team_id: newTeam.id,
-            agent_id: session.user.id,
-            role: 'owner',
-          });
-
-        if (memberError) throw memberError;
-
-        toast.success("Team created successfully!");
-        // Navigate to new team profile page
-        navigate(`/team/${newTeam.id}`);
+        // New team creation now happens via the approval-gated request flow.
+        navigate("/team/request");
+        return;
       }
     } catch (error: any) {
       console.error("Error saving team:", error);
@@ -387,6 +386,10 @@ const ManageTeam = () => {
       setUploadingPhoto(false);
     }
   };
+
+  if (redirectToRequest) {
+    return <Navigate to="/team/request" replace />;
+  }
 
   if (loading) {
     return (
