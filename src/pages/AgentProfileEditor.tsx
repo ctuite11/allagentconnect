@@ -48,6 +48,8 @@ import { PageHeader } from "@/components/ui/page-header";
 import { useFeatureFlag } from "@/hooks/useFeatureFlag";
 import AgentProposalIncentivesForm from "@/components/proposals/AgentProposalIncentivesForm";
 import { Seo } from "@/components/Seo";
+import TeamAccountCTA from "@/components/profile-editor/TeamAccountCTA";
+import { useAuthRole } from "@/hooks/useAuthRole";
 
 
 interface SocialLinks {
@@ -77,6 +79,7 @@ interface CoverageArea {
 
 const AgentProfileEditor = () => {
   const navigate = useNavigate();
+  const { isVerifiedAgent } = useAuthRole();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [redirecting, setRedirecting] = useState(false);
@@ -628,6 +631,8 @@ setHeaderBackgroundType(profile.header_background_type || "color");
             </Button>
           </div>
         </div>
+
+        <TeamAccountCTA userId={userId} isVerifiedAgent={isVerifiedAgent} />
 
         {/* Mobile Preview Modal */}
         <MobilePreviewModal
