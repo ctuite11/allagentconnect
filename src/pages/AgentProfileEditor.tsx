@@ -632,6 +632,8 @@ setHeaderBackgroundType(profile.header_background_type || "color");
           </div>
         </div>
 
+        <TeamAccountCTA userId={userId} isVerifiedAgent={isVerifiedAgent} />
+
         {/* Mobile Preview Modal */}
         <MobilePreviewModal
           open={showMobilePreview}
