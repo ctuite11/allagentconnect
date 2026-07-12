@@ -136,6 +136,29 @@ const TeamRequest = () => {
       const { error: memErr } = await supabase.from("team_members").insert(memberRows);
       if (memErr) throw memErr;
 
+      // Notify admin (chris) — non-blocking
+      try {
+        await supabase.functions.invoke("send-team-request-notification", {
+          body: {
+            teamId: team.id,
+            teamName: team.name,
+            slug: team.slug,
+            company: team.company,
+            bio,
+            website,
+            contactEmail,
+            contactPhone,
+            requesterRole: role,
+            requesterName: user.user_metadata?.full_name || user.email,
+            requesterEmail: user.email,
+            teamLeadName: role === "delegate" && leadAgent ? `${leadAgent.first_name} ${leadAgent.last_name}` : undefined,
+            teamLeadEmail: role === "delegate" && leadAgent ? leadAgent.email : undefined,
+          },
+        });
+      } catch (notifyErr) {
+        console.warn("[TeamRequest] admin notify failed", notifyErr);
+      }
+
       toast.success("Team Account request submitted. An admin will review shortly.");
       navigate(`/team/${team.id}/manage`);
     } catch (e: any) {
