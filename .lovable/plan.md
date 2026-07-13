@@ -28,6 +28,12 @@ Replace the single `Failed to upload {filename}` with categorized messages:
 - Do NOT touch storage folder layout (`${listingId}/…`) or the RLS mismatch with `${auth.uid}/…`. Logged as a separate follow-up task in `.lovable/plan.md` under a new "Follow-ups" section so it isn't lost.
 - No changes to `listing-floorplans`, listing status handling, photos JSON shape, or any other page.
 
+## Follow-ups (not done in this change)
+
+1. **Raise `listing-photos.file_size_limit` from 10 MB → 25 MB and confirm `allowed_mime_types = [image/jpeg, image/jpg, image/png, image/webp]`.**
+   Current tooling (`supabase--migration` / `supabase--insert` / `supabase--storage_update_bucket`) blocks writes to `storage.buckets` beyond the `public` flag (`bucket_sql_blocked`). Client already pre-flights at 25 MB, but the server bucket cap is still 10 MB until this is applied out-of-band. HEIC conversion typically yields JPEGs well under 10 MB, so iPhone HEIC uploads work today; oversized JPEGs between 10–25 MB will still be rejected by the bucket with a clear "too large" toast.
+2. **Storage path vs. RLS audit.** Uploads use `${listingId}/${filename}` but UPDATE/DELETE policies on `storage.objects` expect `${auth.uid}/…`. INSERT currently works, but replace/delete flows may fail. Audit and reconcile in a dedicated pass.
+
 ## Verification (manual, after deploy)
 - iPhone HEIC photo → converts and uploads as `.jpg`.
 - 15 MB JPEG → uploads.
