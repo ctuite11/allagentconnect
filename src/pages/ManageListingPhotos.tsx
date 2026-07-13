@@ -30,6 +30,21 @@ const ManageListingPhotos: React.FC<ManageListingPhotosProps> = ({ mode = 'photo
   const [saving, setSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
 
+  // Bucket-enforced max upload size. listing-photos is currently 10 MB server-side
+  // (raise coordinated separately); listing-floorplans keeps its existing limit.
+  const MAX_UPLOAD_BYTES = 25 * 1024 * 1024;
+  const WEB_SAFE_MIME = new Set(['image/jpeg', 'image/jpg', 'image/png', 'image/webp']);
+  const isHeic = (file: File) => {
+    const name = file.name.toLowerCase();
+    const type = (file.type || '').toLowerCase();
+    return (
+      type === 'image/heic' ||
+      type === 'image/heif' ||
+      name.endsWith('.heic') ||
+      name.endsWith('.heif')
+    );
+  };
+
   // Mode-specific configuration
   const config = {
     photos: {
