@@ -221,20 +221,53 @@ const ManageListingPhotos: React.FC<ManageListingPhotosProps> = ({ mode = 'photo
     const newItems: Photo[] = [];
     
     for (let i = 0; i < files.length; i++) {
-      const file = files[i];
+      const original = files[i];
+      let file: File = original;
+
+      // Pre-flight size check (photos only apply the 25 MB gate; floorplans unchanged behavior)
+      if (mode === 'photos' && original.size > MAX_UPLOAD_BYTES) {
+        toast.error(`${original.name} is too large (max 25 MB)`);
+        continue;
+      }
+
+      // Client-side HEIC/HEIF → JPEG conversion (photos only)
+      if (mode === 'photos' && isHeic(original)) {
+        try {
+          const { default: heic2any } = await import('heic2any');
+          const converted = await heic2any({
+            blob: original,
+            toType: 'image/jpeg',
+            quality: 0.9,
+          });
+          const blob = Array.isArray(converted) ? converted[0] : converted;
+          const jpgName = original.name.replace(/\.(heic|heif)$/i, '.jpg');
+          file = new File([blob], jpgName, { type: 'image/jpeg' });
+          if (file.size > MAX_UPLOAD_BYTES) {
+            toast.error(`${original.name} is too large after conversion (max 25 MB)`);
+            continue;
+          }
+        } catch (err: any) {
+          console.error('HEIC conversion failed:', err);
+          toast.error(`${original.name}: couldn't convert HEIC to JPEG. Try exporting as JPG from your phone.`);
+          continue;
+        }
+      } else if (mode === 'photos' && !WEB_SAFE_MIME.has((original.type || '').toLowerCase())) {
+        // Unsupported format (photos). Allow anything for floorplans (existing behavior).
+        toast.error(`${original.name}: unsupported format. Use JPG, PNG, WEBP, or HEIC.`);
+        continue;
+      }
+
       const fileExt = file.name.split('.').pop();
       const fileName = `${Math.random()}.${fileExt}`;
       const filePath = `${id}/${fileName}`;
 
       try {
-        // Upload to Supabase Storage
         const { error: uploadError } = await supabase.storage
           .from(config.storageBucket)
-          .upload(filePath, file);
+          .upload(filePath, file, { contentType: file.type || undefined });
 
         if (uploadError) throw uploadError;
 
-        // Get public URL
         const { data: { publicUrl } } = supabase.storage
           .from(config.storageBucket)
           .getPublicUrl(filePath);
@@ -246,7 +279,14 @@ const ManageListingPhotos: React.FC<ManageListingPhotosProps> = ({ mode = 'photo
         });
       } catch (error: any) {
         console.error(`Error uploading ${config.itemLabel.toLowerCase()}:`, error);
-        toast.error(`Failed to upload ${file.name}`);
+        const msg: string = error?.message || '';
+        if (/payload too large|exceeded the maximum/i.test(msg)) {
+          toast.error(`${original.name} is too large (max 25 MB)`);
+        } else if (/mime type|not supported/i.test(msg)) {
+          toast.error(`${original.name}: format not accepted by storage (${file.type || 'unknown'}).`);
+        } else {
+          toast.error(`${original.name}: upload failed${msg ? ` — ${msg}` : ''}`);
+        }
       }
     }
 
