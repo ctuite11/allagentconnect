@@ -7,6 +7,7 @@ import {
   partitionAudience,
   type EligibleAgent,
 } from "../_shared/verifiedAgentAudience.ts";
+import { matchesCommunicationPreferences } from "../_shared/communicationPreferencesMatcher.ts";
 import {
   countExistingReminders,
   reserveAndEnqueueMissingOpportunityReminder,
@@ -44,49 +45,6 @@ type ListingRow = {
   county: string | null;
   neighborhood: string | null;
 };
-
-type CoverageRow = {
-  agent_id: string;
-  zip_code: string | null;
-  city: string | null;
-  state: string | null;
-  county: string | null;
-  neighborhood: string | null;
-};
-
-function norm(v: string | null | undefined): string {
-  return (v ?? "").trim().toLowerCase();
-}
-
-function coverageMatches(listing: ListingRow, rows: CoverageRow[]): boolean {
-  if (!rows.length) return false;
-  const lState = norm(listing.state);
-  const lCity = norm(listing.city);
-  const lZip = norm(listing.zip_code);
-  const lCounty = norm(listing.county);
-  const lHood = norm(listing.neighborhood);
-
-  // State-level rows (only state present) match any listing in that state.
-  // More-specific rows must match on their populated field.
-  for (const r of rows) {
-    const rState = norm(r.state);
-    if (!rState || rState !== lState) continue;
-
-    const rCity = norm(r.city);
-    const rZip = norm(r.zip_code);
-    const rCounty = norm(r.county);
-    const rHood = norm(r.neighborhood);
-
-    const hasSpecific = Boolean(rCity || rZip || rCounty || rHood);
-    if (!hasSpecific) return true; // state-only coverage
-
-    if (rZip && rZip === lZip) return true;
-    if (rCity && rCity === lCity) return true;
-    if (rCounty && rCounty === lCounty) return true;
-    if (rHood && rHood === lHood) return true;
-  }
-  return false;
-}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -138,25 +96,6 @@ serve(async (req) => {
 
     // 2) Canonical activated+verified audience.
     const audience = await getVerifiedAgentAudience(admin);
-    const audienceIds = audience.map((a) => a.agent_id);
-
-    // Coverage rows for the domain-match predicate (only agents with coverage
-    // are considered preferences_set for listing alerts, matching prior behavior).
-    const { data: coverageRows, error: coverageError } = audienceIds.length
-      ? await admin
-          .from("agent_buyer_coverage_areas")
-          .select("agent_id, zip_code, city, state, county, neighborhood")
-          .eq("source", "notifications")
-          .in("agent_id", audienceIds)
-      : { data: [], error: null };
-    if (coverageError) throw coverageError;
-
-    const coverageByAgent = new Map<string, CoverageRow[]>();
-    for (const c of (coverageRows ?? []) as CoverageRow[]) {
-      const arr = coverageByAgent.get(String(c.agent_id)) ?? [];
-      arr.push(c);
-      coverageByAgent.set(String(c.agent_id), arr);
-    }
 
     const listingAgentId = (listing as any).agent_id
       ? String((listing as any).agent_id)
@@ -165,9 +104,24 @@ serve(async (req) => {
     // No category opt-out surface for listing alerts today.
     const optedOut = new Set<string>();
 
+    // Independent-dimension matcher. Listings use full geography + price
+    // point + single property type as the event.
+    const priceValue = Number((listing as any).price);
+    const preferenceEvent = {
+      state: (listing as ListingRow).state,
+      county: (listing as ListingRow).county,
+      city: (listing as ListingRow).city,
+      zip: (listing as ListingRow).zip_code,
+      neighborhood: (listing as ListingRow).neighborhood,
+      price: Number.isFinite(priceValue) && priceValue > 0 ? priceValue : null,
+      propertyTypes: (listing as any).property_type
+        ? [String((listing as any).property_type)]
+        : [],
+    };
+
     const partition = partitionAudience<EligibleAgent>(
       audience,
-      (a) => coverageMatches(listing as ListingRow, coverageByAgent.get(a.agent_id) ?? []),
+      (a) => matchesCommunicationPreferences(a.savedPrefs, preferenceEvent).matches,
       listingAgentId,
       optedOut,
     );
