@@ -95,9 +95,11 @@ export function EmailAgentDialog({
         return;
       }
 
-      // Single-agent listing inquiry path (non-template) uses the dedicated
-      // agent-contact function so it isn't blocked by the bulk-outreach pause.
-      if (!showTemplatePicker && currentBatch.length === 1) {
+      // Single-agent custom message path uses the dedicated agent-contact
+      // function so it isn't blocked by the bulk-outreach pause.
+      const isSingleCustom =
+        currentBatch.length === 1 && (!isTemplated) && template === "custom";
+      if ((!showTemplatePicker && currentBatch.length === 1) || isSingleCustom) {
         const recipient = currentBatch[0];
         const { error } = await supabase.functions.invoke("send-agent-profile-contact", {
           body: {
