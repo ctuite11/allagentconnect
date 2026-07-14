@@ -5,6 +5,7 @@ import {
   partitionAudience,
   type EligibleAgent,
 } from "../_shared/verifiedAgentAudience.ts";
+import { matchesCommunicationPreferences } from "../_shared/communicationPreferencesMatcher.ts";
 import {
   countExistingReminders,
   reserveAndEnqueueMissingOpportunityReminder,
@@ -80,13 +81,17 @@ serve(async (req) => {
     // Canonical audience
     const audience = await getVerifiedAgentAudience(supabase);
 
-    // Match set: agent covers this county
-    const { data: countyPrefs } = await supabase
-      .from("agent_county_preferences")
-      .select("agent_id")
-      .eq("county_id", body.countyId)
-      .in("agent_id", audience.map((a) => a.agent_id));
-    const matchIds = new Set((countyPrefs || []).map((r: any) => r.agent_id));
+    // Independent-dimension Comms-Center match: build the preference event
+    // from the county-scoped payload. County-only broadcasts carry no city,
+    // ZIP, or neighborhood; matcher treats those event fields as unset so
+    // saved rows without those fields still pass on the location dimension.
+    const maxPriceNum = parseFloat(String(body.maxPrice)) || 0;
+    const preferenceEvent = {
+      state: county.state,
+      county: county.name,
+      price: maxPriceNum > 0 ? maxPriceNum : null,
+      propertyTypes: body.propertyType ? [String(body.propertyType)] : [],
+    };
 
     // Explicit opt-out (authoritative)
     const { data: optOutRows } = await supabase
@@ -100,7 +105,7 @@ serve(async (req) => {
 
     const partition = partitionAudience<EligibleAgent>(
       audience,
-      (a) => matchIds.has(a.agent_id),
+      (a) => matchesCommunicationPreferences(a.savedPrefs, preferenceEvent).matches,
       user.id,
       optedOut,
     );
