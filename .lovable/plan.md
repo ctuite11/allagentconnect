@@ -1,80 +1,117 @@
 
-# Audit: agents classified as "preferences set"
+# Independent-dimension Comms Center matching (shared across all preference-targeted paths)
 
-**No code changes. No data changes. No emails sent. Queue stays paused.**
+## Audit result (already run, no code touched)
 
-## Headline finding
+Frank's Marina Bay broadcast `a9f202f2-6511-44c9-b74a-24fb23b8ed61` (state=MA, city=Quincy, type=condo, $700K–$1M) under independent-dimension rules:
 
-The earlier "41 preferences-set / 22 fallback" split was wrong. Re-run against the exact rule in `supabase/functions/_shared/verifiedAgentAudience.ts` on the current 64 profile-complete verified agents:
+- Eligible after sender + opt-out + suppression exclusions: **62**
+- Any dimension configured: 17 → **16 match**, **1 non-match** (Patrick Bateson, types=[single_family])
+- No dimensions configured (unset fallback): **45**
+- **Total would-receive: 61**
 
-| Bucket | Count |
-|---|---|
-| Profile-complete verified agents | **64** |
-| Classified `preferences_set = true` | **19** |
-| Classified `preferences_set = false` (fallback bucket) | **45** |
+This replaces the old 22-recipient outcome.
 
-The 22 recipients on Frank's broadcast = 45 fallback − Frank (self) − 22 opt-outs/dedup/etc. The "41 vs 22" number from earlier was a miscount; the real preferences-set population is 19.
+## Rule (approved)
 
-## What is flagging those 19 agents (row-level breakdown)
+For each profile-complete + has-email agent, after excluding sender / category opt-out / globally suppressed:
 
-Rule today (`verifiedAgentAudience.ts` lines 92-127): an agent is `preferences_set` if **any** of these is true:
-1. ≥1 row in `agent_buyer_coverage_areas` with `source='notifications'`
-2. `notification_preferences.property_types` non-empty
-3. `min_price` or `max_price` non-null
-4. `has_no_min = true` or `has_no_max = true`
+- **Location** (only `agent_buyer_coverage_areas.source='notifications'`): if 0 rows → auto-pass. Otherwise OR across saved rows; each row is a match when every populated field on the row matches the event on that field. Supported fields: `state`, `county`, `city`, `zip_code`, `neighborhood`. Case- and whitespace-normalized. ZIP sentinels `00000`/`00001` ignored. Empty fields on a saved row do not constrain that dimension.
+- **Price**: if `min_price` NULL → no lower bound; if `max_price` NULL → no upper bound; `has_no_min`/`has_no_max=true` also mean no bound on that side and never restrict. If event supplies a range `[eventMin, eventMax]`, use range intersection with `[savedMin ?? -∞, savedMax ?? +∞]`; if event supplies a single price, treat as a point.
+- **Property type**: if `property_types` empty → auto-pass; otherwise require normalized intersection with the event's `propertyTypes`.
+- Configured dimensions AND together. All-blank → preferences-unset fallback (still receives).
 
-Breakdown of the 19 by the **first** trigger that fires (in that order):
+## Shared matcher
 
-| Trigger | # agents | Notes |
-|---|---|---|
-| Notifications-sourced geography rows | **4** | Bateson, Beauregard, Godino, Rivera — all have actual city coverage rows they saved through Comms Center. **Deliberate.** |
-| `property_types` non-empty (no geo) | **13** | e.g. Archung, Argabrite, **Frank Carroll**, Cohen, Covelle, Dailey, … Every one has 3–5+ property types. |
-| Price bound (no geo, no property types) | **1** | Betsy McCombs — min 100k / max 80M, `has_no_min=true`, `has_no_max=true`. Looks like a default-ish "everything" save. |
-| Only `has_no_min` / `has_no_max` = true | **0** | Suspicion refuted: no agent is flagged by open-bound checkboxes alone. |
-| Legacy state/county tables | **0** | Not consulted by the current audience helper (already excluded). |
+New file `supabase/functions/_shared/communicationPreferencesMatcher.ts` exporting:
 
-Your suspicion about `has_no_min` / `has_no_max` defaults **is not the cause** — 0 agents are flagged by that field alone. The real driver is `property_types`.
+```ts
+export interface SavedGeoRow {
+  state?: string | null; county?: string | null; city?: string | null;
+  zip_code?: string | null; neighborhood?: string | null;
+}
+export interface AgentPreferences {
+  geoRows: SavedGeoRow[];              // only source='notifications'
+  minPrice: number | null;
+  maxPrice: number | null;
+  hasNoMin: boolean;
+  hasNoMax: boolean;
+  propertyTypes: string[];             // normalized lowercase snake_case
+}
+export interface PreferenceEvent {
+  state?: string | null; county?: string | null; city?: string | null;
+  zip?: string | null; neighborhood?: string | null;
+  price?: number | null;               // point value
+  minPrice?: number | null; maxPrice?: number | null;   // range form
+  propertyTypes?: string[] | null;     // event may carry >1 for broadcasts
+}
+export interface MatchResult {
+  matches: boolean;
+  anyDimensionConfigured: boolean;
+  failedDimension?: "location" | "price" | "property_type";
+  perDimension: { location: boolean; price: boolean; property_type: boolean };
+}
+export function matchesCommunicationPreferences(
+  agent: AgentPreferences,
+  event: PreferenceEvent,
+): MatchResult;
+```
 
-## What the Comms Center UI actually writes
+Contract:
+- `location`: no `geoRows` → true. Otherwise true iff ≥1 row where every non-empty field on the row equals the corresponding event field (normalized). ZIP `00000`/`00001` treated as unpopulated.
+- `price`: build saved band `[minPrice ?? -∞, maxPrice ?? +∞]`; build event band from `price` (as point) or `minPrice`/`maxPrice`. True iff bands intersect. `hasNoMin`/`hasNoMax` do not add restriction.
+- `property_type`: empty saved → true. Otherwise true iff `savedTypes ∩ eventTypes ≠ ∅`. Normalize both sides.
 
-`src/pages/ClientNeedsDashboard.tsx` line 141-169 (the Save handler):
+Unit-test the matcher (Deno test in `supabase/functions/_shared/`) with the six canonical cases from the spec (no-town, price-only, type-only, geo+price, all three, none) plus ZIP sentinels and case-insensitive location match.
 
-- Upserts `min_price`, `max_price`, `has_no_min`, `has_no_max` from `PriceRangePreferences` state.
-- Upserts `property_types` from `propertyTypesRef.current` as whatever array the property-types control returned.
+## `verifiedAgentAudience.ts` changes
 
-DB defaults: `min_price NULL`, `max_price NULL`, `has_no_min false`, `has_no_max false`, `property_types '[]'`. A row that only exists because some other setting was toggled (e.g. `client_needs_enabled`) would still leave `property_types = []` and would **not** trip the filter — so a bare insert isn't causing false positives.
+Extend `EligibleAgent` with the raw saved dimensions, drop the current preferences_set boolean as a gate (keep it as a computed convenience):
 
-The 13 property-types agents all have non-empty arrays with 3–5 concrete types. That means they went through the property-types control and it wrote a non-empty array. **Two questions remain, and the audit can't answer them without you:**
+```ts
+interface EligibleAgent {
+  // …existing fields
+  savedPrefs: AgentPreferences;
+  preferences_set: boolean; // derived: any dimension configured
+}
+```
 
-1. Does the property-types control preselect any types when an agent first opens Comms Center → Preferences? If it renders with the common types already checked, an agent who clicks Save (or lands on Save via another card like Price or Geography) will look "deliberate" when they never touched property types.
-2. Same question for the "select all 8 types" pattern — 2 of the 19 agents have all 8 types selected, which is what a "select-all" preset would produce.
+Populate `savedPrefs.geoRows` from `agent_buyer_coverage_areas` where `source='notifications'` (all five geo columns). Populate price + types from `notification_preferences`.
 
-If either preselect exists, those 13 agents are false positives; if not, they genuinely configured targeting.
+`partitionAudience` signature is unchanged; it continues to own profile-complete vs reminder, sender exclusion, category opt-out, and preferences-match vs preferences-unset reason. It calls the injected `matches` callback exactly as today — callers supply `(agent) => matchesCommunicationPreferences(agent.savedPrefs, event).matches`. Counter labels stay the same.
 
-## Answers to the three questions you asked
+## Edge function callers to update (all use the shared matcher)
 
-1. **How many genuinely configured Comms Center preferences?**
-   - Confirmed deliberate: **4** (the notifications-geo agents).
-   - Ambiguous, pending answer to the two UI questions above: **15** (13 property-types + 1 price-only + 1 all-8-types).
-2. **How many are false positives from defaults / legacy?**
-   - From DB defaults alone (`has_no_min`/`has_no_max` only, or empty `property_types`): **0**.
-   - From legacy `agent_state_preferences` / `agent_county_preferences` / non-`notifications` coverage rows: **0** (already excluded).
-   - Potential false positives from UI preselects: up to **15**, contingent on UI answer.
-3. **Exact correction needed so only deliberate configuration counts:**
-   - Tighten the `preferences_set` rule in `verifiedAgentAudience.ts` to **only** trust `agent_buyer_coverage_areas` rows with `source='notifications'`. Treat `notification_preferences` (price + property_types) as *matching criteria*, not as a "prefs are configured" signal. This makes "deliberate configuration" = "agent added at least one Comms Center coverage city," which is the same bar the Preferences UI already prompts for.
-   - Under that rule, the fallback bucket for Frank's Marina Bay broadcast becomes **60** of 64 profile-complete agents (64 − 4 with notif-geo), before self / opt-out / dedup.
-   - This is a policy tightening, not a code change I'm making now — you asked for audit only.
+1. `supabase/functions/notify-agents-client-need/index.ts` — event `{state, city, propertyTypes:[propertyType], price: maxPrice}` (or minPrice/maxPrice if the client_need grows a range later). Remove the current `agent_state_preferences` intersect.
+2. `supabase/functions/notify-agents-new-listing/index.ts` — event from listing `{state, county, city, zip, neighborhood, propertyTypes:[listing.property_type], price: listing.price}`.
+3. `supabase/functions/notify-agents/index.ts` — generic broadcast dispatcher; pass through the criteria payload (this is the path Frank's broadcast used).
+4. `supabase/functions/send-client-need-notification/index.ts` — same event shape as (1).
+5. `supabase/functions/send-seller-alert/index.ts` — event `{state, county, city, zip, neighborhood, propertyTypes, price}` from the seller alert row.
 
-## Row-level detail available on request
+Each caller: fetch audience via `getVerifiedAgentAudienceWithStats`, build the event object, call `partitionAudience(audience, a => matchesCommunicationPreferences(a.savedPrefs, event).matches, senderId, optedOut)`, keep existing dedup + email-jobs enqueue logic.
 
-I have the full 19-row table (agent id, name, email, `notif_cov_rows`, `cov_cities`, `min_price`, `max_price`, `has_no_min`, `has_no_max`, `property_types`, `pt_len`, `np_created`, `np_updated`, trigger_field). Say the word and I'll export it to `/mnt/documents/prefs_set_audit.csv` — still no writes to the app DB.
+## Not touched
 
-## Next step I need from you
+- Hot-sheet listing notification path (`hot_sheet_*`) — separate matching semantics, out of scope.
+- UI in `ClientNeedsDashboard.tsx` / Comms Center preferences editor — no changes.
+- Database schema — no migrations.
+- `checkAgentCommunicationPreferencesSet` client helper — no changes.
 
-Confirm which of these to do (still audit-only until you say otherwise):
+## Verification sequence (queue stays paused)
 
-- (a) Export the 19-row CSV.
-- (b) Inspect the property-types control to answer whether it preselects types, so we can finalize how many of the 13 are false positives.
-- (c) Both.
+1. Deploy code.
+2. `dry_run: true` on the three most recent buyer-need broadcasts (Frank's Marina Bay, Anthony Maiullari's Cambridge/Somerville $425k, Chris Tuite's MA-only). Confirm counts match the audit table above (Frank → 61) before any live send.
+3. Post `dry_run` output to chat for approval.
+4. Only then unpause and allow the next Comms Center send. No backfill / resend of Frank's broadcast unless explicitly requested — the 22 who already received it are recorded in `comms_broadcasts` history.
 
-No changes will be made to notification logic, the send queue, or the database until you approve the correction in question 3 above.
+## Files touched
+
+- `supabase/functions/_shared/communicationPreferencesMatcher.ts` (new)
+- `supabase/functions/_shared/communicationPreferencesMatcher.test.ts` (new)
+- `supabase/functions/_shared/verifiedAgentAudience.ts`
+- `supabase/functions/notify-agents-client-need/index.ts`
+- `supabase/functions/notify-agents-new-listing/index.ts`
+- `supabase/functions/notify-agents/index.ts`
+- `supabase/functions/send-client-need-notification/index.ts`
+- `supabase/functions/send-seller-alert/index.ts`
+- `.lovable/plan.md`
