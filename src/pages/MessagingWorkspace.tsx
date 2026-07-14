@@ -17,6 +17,7 @@ import { AacBackButton } from "@/components/layout/AacBackLink";
 import { AgentPageHeader } from "@/components/layout/AgentPageHeader";
 import { AacPageIntro } from "@/components/layout/AacPageIntro";
 import { buyerMessagingPanel } from "@/lib/buyerUi";
+import { cn } from "@/lib/utils";
 
 interface MessagingWorkspaceProps {
   isPublicMode?: boolean;
