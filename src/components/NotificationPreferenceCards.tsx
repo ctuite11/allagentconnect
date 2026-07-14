@@ -26,10 +26,13 @@ type NotificationPreferenceCardsProps = {
 
 export const NotificationPreferenceCards = ({ onPreferencesChange }: NotificationPreferenceCardsProps = {}) => {
   const [preferences, setPreferences] = useState<NotificationPreferences>({
-    buyer_need: false,
-    sales_intel: false,
-    renter_need: false,
-    general_discussion: false,
+    // Default to all-ON to match the DB column defaults. A missing
+    // notification_preferences row (PGRST116) is also treated as all-ON
+    // — agents must deliberately toggle a category off to opt out.
+    buyer_need: true,
+    sales_intel: true,
+    renter_need: true,
+    general_discussion: true,
   });
   const [loading, setLoading] = useState(true);
   const [openDialog, setOpenDialog] = useState<{
@@ -59,12 +62,13 @@ export const NotificationPreferenceCards = ({ onPreferencesChange }: Notificatio
 
       if (data) {
         setPreferences({
-          buyer_need: (data as any).buyer_need ?? false,
-          sales_intel: (data as any).sales_intel ?? false,
-          renter_need: (data as any).renter_need ?? false,
-          general_discussion: (data as any).general_discussion ?? false,
+          buyer_need: (data as any).buyer_need ?? true,
+          sales_intel: (data as any).sales_intel ?? true,
+          renter_need: (data as any).renter_need ?? true,
+          general_discussion: (data as any).general_discussion ?? true,
         });
       }
+      // No row yet → keep the all-ON default from useState above.
     } catch (error) {
       console.error("Error fetching preferences:", error);
     } finally {
