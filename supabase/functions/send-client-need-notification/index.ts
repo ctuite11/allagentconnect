@@ -126,17 +126,17 @@ const handler = async (req: Request): Promise<Response> => {
       await getVerifiedAgentAudienceWithStats(supabase);
     const audienceIds = audience.map((a) => a.agent_id);
 
-    // 2. Category-level opt-out lookup (buyer_need / renter_need / sales_intel /
-    //    general_discussion). Preference matching itself is delegated to the
-    //    shared independent-dimension matcher via each agent's savedPrefs.
-    const { data: prefs } = await supabase
-      .from("notification_preferences")
-      .select(`user_id, ${category}`)
-      .in("user_id", audienceIds);
+    // 2. Category-level opt-out lookup DISABLED.
+    //    The four notification_preferences booleans (buyer_need / renter_need /
+    //    sales_intel / general_discussion) defaulted to `false` in the DB and
+    //    most rows landed there without any user action (the price/type/geo
+    //    save flows create the row and never touch the category flags). The
+    //    audit could not distinguish deliberate opt-outs from default artifacts,
+    //    so — until the defaults are flipped and existing rows are backfilled —
+    //    we do NOT exclude any agent from a category based on these values.
+    //    audienceIds is retained above for future opt-out surfaces.
+    void audienceIds;
     const optedOut = new Set<string>();
-    for (const p of (prefs || []) as any[]) {
-      if (p[category] === false) optedOut.add(p.user_id);
-    }
 
     // 3. Preference match via shared independent-dimension matcher.
     //    Semantics:
