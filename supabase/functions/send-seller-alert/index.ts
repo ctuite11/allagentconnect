@@ -6,6 +6,7 @@ import {
   partitionAudience,
   type EligibleAgent,
 } from "../_shared/verifiedAgentAudience.ts";
+import { matchesCommunicationPreferences } from "../_shared/communicationPreferencesMatcher.ts";
 import {
   countExistingReminders,
   reserveAndEnqueueMissingOpportunityReminder,
@@ -49,14 +50,25 @@ serve(async (req: Request) => {
     const audience = await getVerifiedAgentAudience(supabase);
     const audienceIds = audience.map((a) => a.agent_id);
 
-    // Preference match: agent has an active hot_sheet whose criteria match this submission.
+    // Independent-dimension Comms-Center match against the seller submission.
+    // Hot-sheet criteria are no longer used for match determination; hot-sheet
+    // rows are still consulted below for `agent_match_deliveries.hot_sheet_id`
+    // provenance so we can attribute the alert to a specific saved search.
+    const price = parseFloat(submission.asking_price) || 0;
+    const preferenceEvent = {
+      state: submission.state ?? null,
+      city: submission.city ?? null,
+      neighborhood: submission.neighborhood ?? null,
+      price: price > 0 ? price : null,
+      propertyTypes: submission.property_type ? [String(submission.property_type)] : [],
+    };
+
+    // Best-effort hot-sheet attribution (for delivery row provenance only).
     const { data: hotSheets } = await supabase
       .from("hot_sheets")
       .select("id, user_id, criteria")
       .eq("is_active", true)
       .in("user_id", audienceIds);
-
-    const price = parseFloat(submission.asking_price) || 0;
     const matchHotSheetByAgent = new Map<string, string[]>();
     for (const hs of hotSheets || []) {
       const c = hs.criteria || {};
@@ -77,7 +89,7 @@ serve(async (req: Request) => {
 
     const partition = partitionAudience<EligibleAgent>(
       audience,
-      (a) => matchHotSheetByAgent.has(a.agent_id),
+      (a) => matchesCommunicationPreferences(a.savedPrefs, preferenceEvent).matches,
       senderId,
     );
 
