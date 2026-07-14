@@ -17,6 +17,7 @@ import { AacBackButton } from "@/components/layout/AacBackLink";
 import { AgentPageHeader } from "@/components/layout/AgentPageHeader";
 import { AacPageIntro } from "@/components/layout/AacPageIntro";
 import { buyerMessagingPanel } from "@/lib/buyerUi";
+import { cn } from "@/lib/utils";
 
 interface MessagingWorkspaceProps {
   isPublicMode?: boolean;
@@ -180,7 +181,11 @@ function MessagingWorkspaceContent({
               }
             >
               <div
-                className={`flex h-[min(38dvh,320px)] min-h-[220px] w-full shrink-0 flex-none md:h-full md:min-h-0 md:w-[320px] ${buyerMessagingPanel}`}
+                className={cn(
+                  "w-full shrink-0 flex-none md:flex md:h-full md:min-h-0 md:w-[320px]",
+                  selectedConversationId ? "hidden" : "flex h-[min(38dvh,320px)] min-h-[220px]",
+                  buyerMessagingPanel,
+                )}
               >
                 <ConversationsList
                   threads={safeThreads}
@@ -206,6 +211,7 @@ function MessagingWorkspaceContent({
                 <ConversationPanel
                   conversationId={selectedConversationId}
                   onInboxInvalidate={() => void refetchThreads()}
+                  onCloseRequest={() => navigate(messagesRouteBase)}
                 />
               </div>
             </div>
