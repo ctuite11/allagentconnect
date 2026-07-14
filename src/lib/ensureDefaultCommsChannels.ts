@@ -4,6 +4,13 @@ import { supabase } from "@/integrations/supabase/client";
  * Ensure the four Communications Center channel toggles are ON for an agent
  * who has never explicitly configured preferences.
  *
+ * NOTE (2026-07): The DB defaults for these four columns were flipped to
+ * `true` and all existing rows were backfilled to `true`. This helper is now
+ * largely redundant — a fresh notification_preferences insert will already
+ * yield all-ON. It remains here as a defensive safety net for the
+ * AgentAccountSetup flow so any pre-existing all-false row from before the
+ * backfill is still corrected on first login.
+ *
  * Rules:
  *   - Never overwrite an agent whose `agent_settings.preferences_set = true`.
  *   - Never touch targeting filters (price, property type, geographic coverage).
