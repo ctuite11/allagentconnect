@@ -292,7 +292,7 @@ export function DashboardSidebar({
         </nav>
 
         {/* Sign Out */}
-        <div className="mt-auto border-t border-zinc-800 px-2 py-3">
+        <div className="mt-auto shrink-0 border-t border-zinc-800 px-2 pt-3 pb-[calc(1.25rem+env(safe-area-inset-bottom))] lg:py-3">
           <Tooltip>
             <TooltipTrigger asChild>
               <button
