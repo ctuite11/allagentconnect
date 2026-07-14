@@ -1,4 +1,9 @@
 // Shared canonical eligibility helper for automatic agent notifications.
+
+import type {
+  AgentPreferences,
+  SavedGeoRow,
+} from "./communicationPreferencesMatcher.ts";
 //
 // Universal rule enforced by callers via partitionAudience:
 //   Base eligibility = Agent Network directory visibility + user_roles.role='agent'
@@ -25,6 +30,8 @@ export interface EligibleAgent {
   preferences_set: boolean;
   profile_complete: boolean;
   has_email: boolean;
+  /** Saved Comms-Center preferences (empty when none). */
+  savedPrefs: AgentPreferences;
 }
 
 function isNonEmpty(v: unknown): boolean {
@@ -107,7 +114,7 @@ export async function getVerifiedAgentAudienceWithStats(
   const [cov, notifPrefs] = await Promise.all([
     supabase
       .from("agent_buyer_coverage_areas")
-      .select("agent_id")
+      .select("agent_id, state, county, city, zip_code, neighborhood")
       .eq("source", "notifications")
       .in("agent_id", eligibleIds),
     supabase
@@ -116,16 +123,20 @@ export async function getVerifiedAgentAudienceWithStats(
       .in("user_id", eligibleIds),
   ]);
 
-  const withPrefs = new Set<string>();
-  for (const r of cov.data || []) withPrefs.add(r.agent_id);
-  for (const p of (notifPrefs.data || []) as any[]) {
-    const hasPropertyTypes = Array.isArray(p.property_types) && p.property_types.length > 0;
-    const hasPriceBound = p.min_price != null || p.max_price != null;
-    const hasDeliberateOpenBound = p.has_no_min === true || p.has_no_max === true;
-    if (hasPropertyTypes || hasPriceBound || hasDeliberateOpenBound) {
-      withPrefs.add(p.user_id);
-    }
+  const geoByAgent = new Map<string, SavedGeoRow[]>();
+  for (const r of (cov.data || []) as any[]) {
+    const arr = geoByAgent.get(r.agent_id) ?? [];
+    arr.push({
+      state: r.state ?? null,
+      county: r.county ?? null,
+      city: r.city ?? null,
+      zip_code: r.zip_code ?? null,
+      neighborhood: r.neighborhood ?? null,
+    });
+    geoByAgent.set(r.agent_id, arr);
   }
+  const prefsByAgent = new Map<string, any>();
+  for (const p of (notifPrefs.data || []) as any[]) prefsByAgent.set(p.user_id, p);
 
   // 5) Global suppression — union of email_unsubscribes AND suppressed_emails.
   //    Both sources are authoritative; presence in either drops the agent.
@@ -171,9 +182,26 @@ export async function getVerifiedAgentAudienceWithStats(
       isNonEmpty(profile.headshot_url) &&
       has_email;
 
-    // Communications-Center-owned preferences signal only.
-    // `agent_settings.preferences_set` is intentionally NOT consulted here.
-    const preferences_set = withPrefs.has(id);
+    // Build saved Comms-Center preferences record for the shared matcher.
+    const rawPrefs = prefsByAgent.get(id) ?? {};
+    const propertyTypes: string[] = Array.isArray(rawPrefs.property_types)
+      ? rawPrefs.property_types.filter((t: unknown) => typeof t === "string" && t.trim().length > 0)
+      : [];
+    const savedPrefs: AgentPreferences = {
+      geoRows: geoByAgent.get(id) ?? [],
+      minPrice: rawPrefs.min_price ?? null,
+      maxPrice: rawPrefs.max_price ?? null,
+      hasNoMin: rawPrefs.has_no_min === true,
+      hasNoMax: rawPrefs.has_no_max === true,
+      propertyTypes,
+    };
+    // Preferences-set = ANY dimension configured. `hasNoMin`/`hasNoMax`
+    // alone are not considered restrictive and do NOT flip this flag.
+    const preferences_set =
+      savedPrefs.geoRows.length > 0 ||
+      savedPrefs.minPrice != null ||
+      savedPrefs.maxPrice != null ||
+      savedPrefs.propertyTypes.length > 0;
 
     out.push({
       agent_id: id,
@@ -183,6 +211,7 @@ export async function getVerifiedAgentAudienceWithStats(
       preferences_set,
       profile_complete,
       has_email,
+      savedPrefs,
     });
   }
   return { audience: out, globally_suppressed };
