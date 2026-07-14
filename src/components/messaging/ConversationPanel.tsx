@@ -337,7 +337,7 @@ export function ConversationPanel({
         className={cn(
           "overscroll-contain bg-white",
           listingThreadHeader ? "px-3.5" : "px-4",
-          isEmbedded && isEmptyThread
+          isEmptyThread
             ? cn("shrink-0", listingThreadHeader ? "pb-0 pt-1" : "pb-3 pt-2")
             : cn("min-h-0 flex-1 overflow-y-auto", listingThreadHeader ? "pb-2 pt-1.5" : "pb-3 pt-2"),
         )}
