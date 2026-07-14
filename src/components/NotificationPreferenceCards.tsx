@@ -212,6 +212,11 @@ export const NotificationPreferenceCards = ({ onPreferencesChange }: Notificatio
   return (
     <>
       <div>
+        <p className="mb-3 text-sm text-neutral-500">
+          Choose which network activity you want to receive. Which opportunities
+          inside each category you get is controlled separately by your
+          targeting preferences below.
+        </p>
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-3">
           {cards.map((card) => {
             const IconComponent = card.icon;
