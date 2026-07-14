@@ -201,7 +201,7 @@ function MessagingWorkspaceContent({
               </div>
 
               <div
-                className={`flex h-[min(48dvh,400px)] min-h-[280px] w-full flex-1 flex-col overflow-hidden md:h-full md:min-h-0 md:w-[560px] md:max-w-[560px] md:flex-none ${panelShellClass}`}
+                className={`flex h-[min(58dvh,460px)] min-h-[360px] w-full flex-1 flex-col overflow-hidden md:h-full md:min-h-0 md:w-[560px] md:max-w-[560px] md:flex-none ${panelShellClass}`}
               >
                 <ConversationPanel
                   conversationId={selectedConversationId}

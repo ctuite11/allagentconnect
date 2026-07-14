@@ -351,13 +351,13 @@ export function ConversationPanel({
                   ? "justify-start pb-0 pt-1.5"
                   : isEmbedded
                     ? "justify-start pb-1 pt-3"
-                    : "justify-center py-8 sm:py-12",
+                    : "justify-center py-4 sm:py-12",
               )}
             >
               <div
                 className={cn(
                   "w-full rounded-xl border border-dashed border-neutral-200 bg-white px-4 text-center",
-                  listingThreadHeader ? "py-2.5" : isEmbedded ? "py-3" : "py-8 sm:py-10",
+                  listingThreadHeader ? "py-2.5" : isEmbedded ? "py-3" : "py-5 sm:py-10",
                 )}
               >
                 <p className="text-[13px] font-medium text-zinc-700">No messages yet</p>
