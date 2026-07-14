@@ -5,6 +5,7 @@ import {
   partitionAudience,
   type EligibleAgent,
 } from "../_shared/verifiedAgentAudience.ts";
+import { matchesCommunicationPreferences } from "../_shared/communicationPreferencesMatcher.ts";
 import {
   countExistingReminders,
   reserveAndEnqueueMissingOpportunityReminder,
@@ -125,121 +126,61 @@ const handler = async (req: Request): Promise<Response> => {
       await getVerifiedAgentAudienceWithStats(supabase);
     const audienceIds = audience.map((a) => a.agent_id);
 
-    // 2. Category-level opt-out + preference-side price/property-type filters.
+    // 2. Category-level opt-out lookup (buyer_need / renter_need / sales_intel /
+    //    general_discussion). Preference matching itself is delegated to the
+    //    shared independent-dimension matcher via each agent's savedPrefs.
     const { data: prefs } = await supabase
       .from("notification_preferences")
-      .select(
-        `user_id, ${category}, min_price, max_price, has_no_min, has_no_max, property_types`,
-      )
+      .select(`user_id, ${category}`)
       .in("user_id", audienceIds);
     const optedOut = new Set<string>();
-    const priceRangeByAgent = new Map<
-      string,
-      { min: number; max: number }
-    >();
-    const propertyTypesByAgent = new Map<string, string[]>();
     for (const p of (prefs || []) as any[]) {
       if (p[category] === false) optedOut.add(p.user_id);
-      const min = p.has_no_min === true ? 0 : p.min_price ?? 0;
-      const max = p.has_no_max === true ? Number.POSITIVE_INFINITY : p.max_price ?? Number.POSITIVE_INFINITY;
-      priceRangeByAgent.set(p.user_id, { min, max });
-      if (Array.isArray(p.property_types) && p.property_types.length > 0) {
-        propertyTypesByAgent.set(p.user_id, p.property_types);
-      }
     }
 
-    // 3. Preference match set.
-    //    Semantics (canonical):
-    //      - audience_scope="network_wide": every eligible preferences-set
-    //        agent matches. Only allowed when explicitly supplied.
-    //      - audience_scope="targeted" (default) + any criteria: intersect
-    //        Comms-Center-owned coverage_areas (source='notifications') and
-    //        notification_preferences price/property_types with the criteria.
-    //        OR within each geography dimension, AND across supplied dimensions.
-    //      - audience_scope="targeted" + no criteria: match set is empty.
-    //        Preferences-set agents receive nothing; preferences-unset
-    //        fallback still delivers via partitionAudience.
-    let matchIds: Set<string>;
-    if (audienceScope === "network_wide") {
-      matchIds = new Set(audienceIds);
-    } else if (!anyCriteriaSupplied) {
-      matchIds = new Set();
-    } else {
-      // Pull all Comms-Center coverage rows for the eligible audience once.
-      const { data: covRows } = await supabase
-        .from("agent_buyer_coverage_areas")
-        .select("agent_id, state, county, city, neighborhood")
-        .eq("source", "notifications")
-        .in("agent_id", audienceIds);
-      const covByAgent = new Map<string, any[]>();
-      for (const r of (covRows || []) as any[]) {
-        const arr = covByAgent.get(r.agent_id) ?? [];
-        arr.push(r);
-        covByAgent.set(r.agent_id, arr);
+    // 3. Preference match via shared independent-dimension matcher.
+    //    Semantics:
+    //      - audience_scope="network_wide": every preferences-set agent
+    //        matches (auto-pass regardless of dimensions).
+    //      - audience_scope="targeted" + no criteria: match set is empty
+    //        for preferences-set agents; preferences-unset agents still
+    //        receive via partitionAudience fallback.
+    //      - audience_scope="targeted" + criteria: expand the broadcast
+    //        criteria into one or more per-location events and pass if
+    //        the agent's saved prefs accept at least one.
+    const broadcastEvents: Array<Record<string, unknown>> = [];
+    if (audienceScope !== "network_wide" && anyCriteriaSupplied) {
+      const basePrice = {
+        minPrice: parsedCriteria.min_price ?? null,
+        maxPrice: parsedCriteria.max_price ?? null,
+        propertyTypes: parsedCriteria.property_types,
+      };
+      const cities = parsedCriteria.cities;
+      const counties = parsedCriteria.counties;
+      const hoods = parsedCriteria.neighborhoods;
+      // Emit one event per city / county / neighborhood so location OR
+      // semantics hold across dimensions. If only a state was supplied,
+      // emit a single state-level event.
+      const geoEvents: Array<Record<string, unknown>> = [];
+      for (const c of cities) geoEvents.push({ state: parsedCriteria.state, city: c });
+      for (const c of counties) geoEvents.push({ state: parsedCriteria.state, county: c });
+      for (const n of hoods) geoEvents.push({ state: parsedCriteria.state, neighborhood: n });
+      if (!geoEvents.length) {
+        geoEvents.push({ state: parsedCriteria.state ?? null });
       }
-
-      const countiesSet = new Set(parsedCriteria.counties.map((s) => s.toLowerCase()));
-      const citiesSet = new Set(parsedCriteria.cities.map((s) => s.toLowerCase()));
-      const neighborhoodsSet = new Set(
-        parsedCriteria.neighborhoods.map((s) => s.toLowerCase()),
-      );
-      const geoDimensionsSupplied =
-        !!parsedCriteria.state ||
-        countiesSet.size > 0 ||
-        citiesSet.size > 0 ||
-        neighborhoodsSet.size > 0;
-
-      const cMin = parsedCriteria.min_price ?? 0;
-      const cMax = parsedCriteria.max_price ?? Number.POSITIVE_INFINITY;
-      const priceSupplied =
-        parsedCriteria.min_price != null || parsedCriteria.max_price != null;
-      const propertyTypesSet = new Set(
-        parsedCriteria.property_types.map((s) => s.toLowerCase()),
-      );
-      const propertyTypesSupplied = propertyTypesSet.size > 0;
-
-      matchIds = new Set();
-      for (const id of audienceIds) {
-        // Geography: AND across supplied dimensions, OR within each dimension.
-        if (geoDimensionsSupplied) {
-          const rows = covByAgent.get(id);
-          if (!rows || rows.length === 0) continue;
-          if (parsedCriteria.state) {
-            const stateLc = parsedCriteria.state.toLowerCase();
-            if (!rows.some((r) => (r.state ?? "").toLowerCase() === stateLc)) continue;
-          }
-          if (countiesSet.size > 0) {
-            if (!rows.some((r) => r.county && countiesSet.has(String(r.county).toLowerCase()))) continue;
-          }
-          if (citiesSet.size > 0) {
-            if (!rows.some((r) => r.city && citiesSet.has(String(r.city).toLowerCase()))) continue;
-          }
-          if (neighborhoodsSet.size > 0) {
-            if (!rows.some((r) => r.neighborhood && neighborhoodsSet.has(String(r.neighborhood).toLowerCase()))) continue;
-          }
-        }
-        // Price: overlap with the agent's saved range, if sender narrowed.
-        if (priceSupplied) {
-          const range = priceRangeByAgent.get(id);
-          // No price row means agent hasn't narrowed by price — treat as open.
-          if (range && (range.min > cMax || range.max < cMin)) continue;
-        }
-        // Property types: non-empty intersection when sender narrowed.
-        if (propertyTypesSupplied) {
-          const agentTypes = propertyTypesByAgent.get(id);
-          if (agentTypes && agentTypes.length > 0) {
-            const agentLc = agentTypes.map((t) => String(t).toLowerCase());
-            if (!agentLc.some((t) => propertyTypesSet.has(t))) continue;
-          }
-          // Agent has no property_types configured → treat as open.
-        }
-        matchIds.add(id);
-      }
+      for (const g of geoEvents) broadcastEvents.push({ ...g, ...basePrice });
     }
+    const matchFn = (a: EligibleAgent): boolean => {
+      if (audienceScope === "network_wide") return true;
+      if (!anyCriteriaSupplied) return false;
+      return broadcastEvents.some(
+        (ev) => matchesCommunicationPreferences(a.savedPrefs, ev as any).matches,
+      );
+    };
 
     const partition = partitionAudience<EligibleAgent>(
       audience,
-      (a) => matchIds.has(a.agent_id),
+      matchFn,
       user.id,
       optedOut,
     );

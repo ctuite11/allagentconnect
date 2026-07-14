@@ -5,6 +5,7 @@ import {
   partitionAudience,
   type EligibleAgent,
 } from "../_shared/verifiedAgentAudience.ts";
+import { matchesCommunicationPreferences } from "../_shared/communicationPreferencesMatcher.ts";
 import {
   countExistingReminders,
   reserveAndEnqueueMissingOpportunityReminder,
@@ -75,13 +76,14 @@ serve(async (req) => {
     // Canonical audience
     const audience = await getVerifiedAgentAudience(supabase);
 
-    // Preference match set: state matches
-    const { data: statePrefs } = await supabase
-      .from("agent_state_preferences")
-      .select("agent_id")
-      .eq("state", state)
-      .in("agent_id", audience.map((a) => a.agent_id));
-    const matchIds = new Set((statePrefs || []).map((r: any) => r.agent_id));
+    // Independent-dimension matcher: uses each agent's saved Comms-Center
+    // preferences (geo/price/property_type) against this event.
+    const preferenceEvent = {
+      state,
+      city,
+      price: maxPrice > 0 ? maxPrice : null,
+      propertyTypes: propertyType ? [propertyType] : [],
+    };
 
     // Explicit opt-out honored authoritatively
     const { data: optOutRows } = await supabase
@@ -95,7 +97,7 @@ serve(async (req) => {
 
     const partition = partitionAudience<EligibleAgent>(
       audience,
-      (a) => matchIds.has(a.agent_id),
+      (a) => matchesCommunicationPreferences(a.savedPrefs, preferenceEvent).matches,
       senderId,
       optedOut,
     );
