@@ -104,6 +104,7 @@ interface Agent {
   has_auth_account?: boolean;
   last_sign_in_at?: string | null;
   account_activated_at?: string | null;
+  approval_email_sent?: boolean | null;
   invite_email?: EmailStatusInfo | null;
   license_verified_email?: EmailStatusInfo | null;
   profile_complete?: boolean;
