@@ -197,7 +197,7 @@ Deno.serve(async (req) => {
     const userIds = profiles.map(p => p.id)
     const { data: settings, error: settingsError } = await adminClient
       .from('agent_settings')
-      .select('user_id, agent_status, license_number, license_state, verified_at, account_activated_at')
+      .select('user_id, agent_status, license_number, license_state, verified_at, account_activated_at, approval_email_sent')
       .in('user_id', userIds)
 
     if (settingsError) {
@@ -239,6 +239,7 @@ Deno.serve(async (req) => {
         has_auth_account: authEmails.has(emailKey),
         last_sign_in_at: lastSignInByEmail.get(emailKey) ?? null,
         account_activated_at: s?.account_activated_at ?? null,
+        approval_email_sent: s?.approval_email_sent ?? null,
         profile_complete: profileComplete,
       }
     })
