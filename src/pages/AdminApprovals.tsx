@@ -1789,6 +1789,14 @@ export default function AdminApprovals() {
                     </button>
                   </>
                 )}
+                <span className="text-zinc-300">•</span>
+                <button
+                  onClick={handleExportActivationAudit}
+                  className="text-zinc-500 hover:text-zinc-900 hover:underline transition-colors"
+                  title="Download a CSV of every verified agent who hasn't completed setup, split into Bucket A (email never sent) and Bucket B (email sent, not activated)."
+                >
+                  Export activation audit
+                </button>
               </div>
             </div>
             <EmailDeliveryLegend />
