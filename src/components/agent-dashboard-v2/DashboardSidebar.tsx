@@ -240,7 +240,7 @@ export function DashboardSidebar({
         <button
           onClick={() => setCollapsed((c) => !c)}
           className={cn(
-            "flex items-center h-8 text-zinc-400 hover:text-zinc-200 transition-colors duration-150 mx-2 mb-1 rounded-md hover:bg-zinc-800/50",
+            "hidden lg:flex items-center h-8 text-zinc-400 hover:text-zinc-200 transition-colors duration-150 mx-2 mb-1 rounded-md hover:bg-zinc-800/50",
             showCollapsed ? "justify-center px-0" : "px-3 gap-2"
           )}
           aria-label={showCollapsed ? "Expand sidebar" : "Collapse sidebar"}
@@ -292,7 +292,7 @@ export function DashboardSidebar({
         </nav>
 
         {/* Sign Out */}
-        <div className="mt-auto shrink-0 border-t border-zinc-800 px-2 pt-3 pb-[calc(1.25rem+env(safe-area-inset-bottom))] lg:py-3">
+        <div className="mt-auto shrink-0 border-t border-zinc-800 px-2 pt-3 pb-[max(2.75rem,calc(1.5rem+env(safe-area-inset-bottom)))] lg:py-3">
           <Tooltip>
             <TooltipTrigger asChild>
               <button
