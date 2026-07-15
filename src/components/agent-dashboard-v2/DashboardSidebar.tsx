@@ -216,12 +216,12 @@ export function DashboardSidebar({
       />
       <aside
         className={cn(
-          "flex flex-col bg-zinc-900 transition-all duration-200",
+          "flex flex-col bg-zinc-900 transition-all duration-200 overflow-hidden",
           // Desktop: in-flow, fixed width
-          "lg:relative lg:h-full lg:shrink-0 lg:translate-x-0",
+          "lg:relative lg:h-full lg:max-h-none lg:shrink-0 lg:translate-x-0",
           showCollapsed ? "lg:w-[72px]" : "lg:w-[212px]",
           // Mobile: off-canvas drawer
-          "fixed inset-y-0 left-0 z-50 w-[260px] max-w-[85vw] h-full shadow-2xl",
+          "fixed left-0 top-0 z-50 h-[100dvh] max-h-[100dvh] w-[260px] max-w-[85vw] shadow-2xl",
           mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
           className
         )}
@@ -240,7 +240,7 @@ export function DashboardSidebar({
         <button
           onClick={() => setCollapsed((c) => !c)}
           className={cn(
-            "flex items-center h-8 text-zinc-400 hover:text-zinc-200 transition-colors duration-150 mx-2 mb-1 rounded-md hover:bg-zinc-800/50",
+            "hidden lg:flex items-center h-8 text-zinc-400 hover:text-zinc-200 transition-colors duration-150 mx-2 mb-1 rounded-md hover:bg-zinc-800/50",
             showCollapsed ? "justify-center px-0" : "px-3 gap-2"
           )}
           aria-label={showCollapsed ? "Expand sidebar" : "Collapse sidebar"}
@@ -256,7 +256,7 @@ export function DashboardSidebar({
         </button>
 
         {/* Main menu */}
-        <nav className="flex-1 space-y-0.5 px-2">
+        <nav className="min-h-0 flex-1 space-y-0.5 overflow-y-auto px-2 pb-3">
           <SectionLabel collapsed={showCollapsed}>Main Menu</SectionLabel>
           {mainMenu.map((item) => (
             <SidebarRow
@@ -292,7 +292,7 @@ export function DashboardSidebar({
         </nav>
 
         {/* Sign Out */}
-        <div className="mt-auto shrink-0 border-t border-zinc-800 px-2 pt-3 pb-[calc(1.25rem+env(safe-area-inset-bottom))] lg:py-3">
+        <div className="mt-auto shrink-0 border-t border-zinc-800 px-2 pt-3 pb-[max(2.75rem,calc(1.5rem+env(safe-area-inset-bottom)))] lg:py-3">
           <Tooltip>
             <TooltipTrigger asChild>
               <button
