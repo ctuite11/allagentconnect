@@ -216,12 +216,12 @@ export function DashboardSidebar({
       />
       <aside
         className={cn(
-          "flex flex-col bg-zinc-900 transition-all duration-200",
+          "flex flex-col bg-zinc-900 transition-all duration-200 overflow-hidden",
           // Desktop: in-flow, fixed width
-          "lg:relative lg:h-full lg:shrink-0 lg:translate-x-0",
+          "lg:relative lg:h-full lg:max-h-none lg:shrink-0 lg:translate-x-0",
           showCollapsed ? "lg:w-[72px]" : "lg:w-[212px]",
           // Mobile: off-canvas drawer
-          "fixed inset-y-0 left-0 z-50 w-[260px] max-w-[85vw] h-full shadow-2xl",
+          "fixed left-0 top-0 z-50 h-[100dvh] max-h-[100dvh] w-[260px] max-w-[85vw] shadow-2xl",
           mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
           className
         )}
@@ -256,7 +256,7 @@ export function DashboardSidebar({
         </button>
 
         {/* Main menu */}
-        <nav className="flex-1 space-y-0.5 px-2">
+        <nav className="min-h-0 flex-1 space-y-0.5 overflow-y-auto px-2 pb-3">
           <SectionLabel collapsed={showCollapsed}>Main Menu</SectionLabel>
           {mainMenu.map((item) => (
             <SidebarRow
