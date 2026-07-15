@@ -104,6 +104,7 @@ interface Agent {
   has_auth_account?: boolean;
   last_sign_in_at?: string | null;
   account_activated_at?: string | null;
+  approval_email_sent?: boolean | null;
   invite_email?: EmailStatusInfo | null;
   license_verified_email?: EmailStatusInfo | null;
   profile_complete?: boolean;
@@ -1349,6 +1350,86 @@ export default function AdminApprovals() {
     toast.success(parts.join(" · "));
   };
 
+  // Downloadable CSV of every agent whose account is not activated yet.
+  // Read-only report — no emails sent, no rows written. Used to review
+  // Bucket A (verified, License Verified email never sent) and Bucket B
+  // (email sent but agent hasn't completed /agent-setup) before any
+  // remediation runs.
+  const handleExportActivationAudit = () => {
+    const rows = agents.filter(isAwaitingActivation);
+    if (rows.length === 0) {
+      toast.info("No agents currently awaiting activation");
+      return;
+    }
+    const esc = (v: unknown): string => {
+      if (v === null || v === undefined) return "";
+      const s = String(v);
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const now = Date.now();
+    const daysSince = (iso: string | null | undefined): string => {
+      if (!iso) return "";
+      const t = new Date(iso).getTime();
+      if (!Number.isFinite(t)) return "";
+      return String(Math.max(0, Math.floor((now - t) / (24 * 60 * 60 * 1000))));
+    };
+    const header = [
+      "email",
+      "first_name",
+      "last_name",
+      "aac_id",
+      "agent_status",
+      "verified_at",
+      "days_since_verified",
+      "approval_email_sent",
+      "license_verified_email_status",
+      "license_verified_email_created_at",
+      "license_verified_email_event_at",
+      "license_verified_email_attempts",
+      "license_verified_email_last_error",
+      "bucket",
+    ];
+    const lines: string[] = [header.join(",")];
+    for (const a of rows) {
+      const lic = a.license_verified_email ?? null;
+      // Bucket A: License Verified email never enqueued for this agent.
+      // Bucket B: enqueued at least once but agent hasn't activated.
+      const bucket = lic ? "B_email_sent_not_activated" : "A_no_email_sent";
+      lines.push([
+        esc(a.email),
+        esc(a.first_name),
+        esc(a.last_name),
+        esc(a.aac_id),
+        esc(a.agent_status),
+        esc(a.verified_at ?? ""),
+        esc(daysSince(a.verified_at)),
+        esc(a.approval_email_sent === null || a.approval_email_sent === undefined ? "" : a.approval_email_sent),
+        esc(lic?.status ?? ""),
+        esc(lic?.created_at ?? ""),
+        esc(lic?.event_at ?? ""),
+        esc(lic?.attempts ?? ""),
+        esc(lic?.last_error ?? ""),
+        esc(bucket),
+      ].join(","));
+    }
+    const csv = lines.join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const stamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `activation-audit-${stamp}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    const bucketA = rows.filter((a) => !a.license_verified_email).length;
+    const bucketB = rows.length - bucketA;
+    toast.success(
+      `Exported ${rows.length} awaiting-activation agents · Bucket A: ${bucketA} · Bucket B: ${bucketB}`,
+    );
+  };
+
   if (authLoading) {
     return (
       <>
@@ -1708,6 +1789,14 @@ export default function AdminApprovals() {
                     </button>
                   </>
                 )}
+                <span className="text-zinc-300">•</span>
+                <button
+                  onClick={handleExportActivationAudit}
+                  className="text-zinc-500 hover:text-zinc-900 hover:underline transition-colors"
+                  title="Download a CSV of every verified agent who hasn't completed setup, split into Bucket A (email never sent) and Bucket B (email sent, not activated)."
+                >
+                  Export activation audit
+                </button>
               </div>
             </div>
             <EmailDeliveryLegend />
