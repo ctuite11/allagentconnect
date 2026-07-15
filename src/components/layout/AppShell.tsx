@@ -23,7 +23,29 @@ export function AppShell({ children }: AppShellProps) {
   const { isAdmin } = useAuthRole();
   useAgentPresence();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [appViewportHeight, setAppViewportHeight] = useState("100svh");
   const location = useLocation();
+
+  // Mobile Chrome can report `100vh` taller than the visible page after the
+  // off-canvas drawer opens/closes. Pin the shell to the visual viewport so the
+  // top header/content are not clipped by browser chrome changes.
+  useEffect(() => {
+    const updateViewportHeight = () => {
+      const height = window.visualViewport?.height ?? window.innerHeight;
+      setAppViewportHeight(`${height}px`);
+    };
+
+    updateViewportHeight();
+    window.addEventListener("resize", updateViewportHeight);
+    window.visualViewport?.addEventListener("resize", updateViewportHeight);
+    window.visualViewport?.addEventListener("scroll", updateViewportHeight);
+
+    return () => {
+      window.removeEventListener("resize", updateViewportHeight);
+      window.visualViewport?.removeEventListener("resize", updateViewportHeight);
+      window.visualViewport?.removeEventListener("scroll", updateViewportHeight);
+    };
+  }, []);
 
   // Close drawer on route change
   useEffect(() => {
@@ -31,7 +53,10 @@ export function AppShell({ children }: AppShellProps) {
   }, [location.pathname]);
 
   return (
-    <div className="h-screen flex w-full overflow-hidden bg-[#FFFFFF]">
+    <div
+      className="flex w-full overflow-hidden bg-[#FFFFFF] lg:h-screen lg:max-h-none"
+      style={{ "--app-shell-height": appViewportHeight, height: "var(--app-shell-height)", maxHeight: "var(--app-shell-height)" } as React.CSSProperties}
+    >
       {/* Page title is controlled by mounted route components, not by layout */}
       <DashboardSidebar
         isAdmin={isAdmin}

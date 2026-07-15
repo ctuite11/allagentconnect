@@ -221,7 +221,7 @@ export function DashboardSidebar({
           "lg:relative lg:h-full lg:max-h-none lg:shrink-0 lg:translate-x-0",
           showCollapsed ? "lg:w-[72px]" : "lg:w-[212px]",
           // Mobile: off-canvas drawer
-          "fixed left-0 top-0 z-50 h-[100dvh] max-h-[100dvh] w-[260px] max-w-[85vw] shadow-2xl",
+          "fixed left-0 top-0 z-50 h-[var(--app-shell-height,100svh)] max-h-[var(--app-shell-height,100svh)] w-[260px] max-w-[85vw] shadow-2xl",
           mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
           className
         )}
