@@ -53,7 +53,7 @@ import {
   checkDeletedAgent,
   logDeletedAgentOverride,
 } from "@/lib/previouslyDeletedAgent";
-import { resolveEdgeFunctionErrorMessage } from "@/lib/invokeEdgeFunction";
+import { invokeEdgeFunction } from "@/lib/invokeEdgeFunction";
 import { UserPlus } from "lucide-react";
 import { AgentStatusBadge } from "@/components/ui/status-badge";
 import { AacMonogramLoader } from "@/components/AacMonogramLoader";
@@ -663,61 +663,11 @@ export default function AdminApprovals() {
 
   /** Parse admin-verify-agent invoke; non-2xx bodies must not look like success. */
   const invokeAdminVerify = async (body: Record<string, unknown>): Promise<AdminVerifyResult> => {
-    // Root Cause A fix: force-refresh the session and send Authorization + apikey
-    // explicitly via fetch, matching src/lib/invokeEdgeFunction.ts. supabase-js's
-    // functions.invoke was intermittently reaching the edge function without a
-    // valid bearer, tripping the "Authorization required" 401 branch.
-    let {
-      data: { session },
-    } = await supabase.auth.getSession();
-    const expiresAt = session?.expires_at ?? 0;
-    const nowSec = Math.floor(Date.now() / 1000);
-    if (!session?.access_token || expiresAt - nowSec < 60) {
-      const { data: refreshed, error: refreshError } = await supabase.auth.refreshSession();
-      if (refreshError || !refreshed.session?.access_token) {
-        throw new Error("Please sign in again.");
-      }
-      session = refreshed.session;
-    }
-
-    const token = session!.access_token;
-    const anonKey =
-      import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY;
-    const functionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-verify-agent`;
-
-    const response = await fetch(functionUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        apikey: anonKey,
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(body),
-    });
-
-    const text = await response.text();
-    let payload: AdminVerifyResult | null = null;
-    if (text.trim()) {
-      try {
-        payload = JSON.parse(text) as AdminVerifyResult;
-      } catch {
-        payload = { success: false, error: text } as AdminVerifyResult;
-      }
-    }
-
-    if (!response.ok || !payload?.success) {
-      const message = await resolveEdgeFunctionErrorMessage(
-        response.ok ? null : { context: response, message: response.statusText },
-        payload,
-      );
-      console.error("[invokeAdminVerify]", { status: response.status, payload, message });
-      throw Object.assign(new Error(message), {
-        code: payload?.code,
-        match: payload?.match ?? null,
-      });
-    }
-
-    return payload;
+    // Route through the shared helper (force-refreshes session, sends
+    // Authorization: Bearer + apikey explicitly). The helper attaches
+    // `code` and `match` from the response payload onto thrown errors,
+    // preserving the 409 previously_deleted acknowledge flow.
+    return invokeEdgeFunction<AdminVerifyResult>("admin-verify-agent", body);
   };
 
   const toastVerifySuccess = (agent: Agent, verifyData: AdminVerifyResult): boolean => {
