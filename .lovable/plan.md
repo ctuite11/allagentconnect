@@ -1,26 +1,22 @@
-## Findings
+# Distinguish Buyers vs Agent Network sidebar icons
 
-Dara has two auth accounts:
+## Problem
+In `src/components/agent-dashboard-v2/DashboardSidebar.tsx`, both the Buyers item (the buyer network entry, route `/agent/buyers`) and Agent Network (`/our-members`) use the same `Users` icon, so they visually blur together in the sidebar.
 
-| Email | auth.users.id | agent_profiles | Status |
-|---|---|---|---|
-| `dara.cipollone@resisrealestate.com` (correct) | `8c2b3945-eed5-4880-82db-659802d72721` | present, id matches | **Keep — active account** |
-| `dara.cipollone@resisrealestste.com` (typo "realestste") | `adf9c48e-0831-4c14-b8e4-f9717d888112` | gone (archived under a different id `30913cec…` in `deleted_users`) | **Orphan auth row — needs cleanup** |
+## Change
+Single-file edit to `src/components/agent-dashboard-v2/DashboardSidebar.tsx`:
 
-Same class of bug we fixed for Yanis: the archived `agent_profiles.id` didn't match `auth.users.id`, so `delete-users` couldn't remove the auth row and returned "unsuccessful", even though the DB profile is already gone.
+- Keep `Users` icon on **Agent Network** (unchanged).
+- Swap the **Buyers** item icon from `Users` to a home-focused Lucide icon: `Home` (well-established, matches existing sidebar stroke weight; `House`/`HouseSearch` aren't part of the version pinned here — `Home` is the closest current-library match to your intent).
+- Add `Home` to the `lucide-react` import list; leave `Users` in place for Agent Network.
 
-## Fix
+## Explicitly not changing
+- Labels ("Buyers", "Agent Network")
+- Routes (`/agent/buyers`, `/our-members`)
+- Ordering
+- Any navigation behavior, tooltips logic, or badges
 
-One-line data migration:
-
-```sql
-DELETE FROM auth.users
-WHERE id = 'adf9c48e-0831-4c14-b8e4-f9717d888112'
-  AND email = 'dara.cipollone@resisrealestste.com';
-```
-
-The good account (`…@resisrealestate.com`) is untouched.
-
-## Verify
-
-Re-query `auth.users` / `agent_profiles` for `%cipollone%` → only the correct-spelling row remains.
+## Verification
+- Expanded sidebar: Buyers row shows the home icon, Agent Network still shows people icon.
+- Collapsed (icon-only) sidebar: the two icons are visibly different at a glance; hover tooltips still read "Buyers" and "Agent Network" respectively (tooltip logic untouched).
+- Active-state highlight still applies on both routes.
