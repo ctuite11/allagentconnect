@@ -663,27 +663,54 @@ export default function AdminApprovals() {
 
   /** Parse admin-verify-agent invoke; non-2xx bodies must not look like success. */
   const invokeAdminVerify = async (body: Record<string, unknown>): Promise<AdminVerifyResult> => {
-    const { data, error } = await supabase.functions.invoke("admin-verify-agent", { body });
-    let payload = (data ?? null) as AdminVerifyResult | null;
+    // Root Cause A fix: force-refresh the session and send Authorization + apikey
+    // explicitly via fetch, matching src/lib/invokeEdgeFunction.ts. supabase-js's
+    // functions.invoke was intermittently reaching the edge function without a
+    // valid bearer, tripping the "Authorization required" 401 branch.
+    let {
+      data: { session },
+    } = await supabase.auth.getSession();
+    const expiresAt = session?.expires_at ?? 0;
+    const nowSec = Math.floor(Date.now() / 1000);
+    if (!session?.access_token || expiresAt - nowSec < 60) {
+      const { data: refreshed, error: refreshError } = await supabase.auth.refreshSession();
+      if (refreshError || !refreshed.session?.access_token) {
+        throw new Error("Please sign in again.");
+      }
+      session = refreshed.session;
+    }
 
-    // supabase-js often leaves `data` null on 4xx; recover JSON from error.context.
-    if ((!payload || payload.success !== true) && error) {
-      const ctx = (error as { context?: Response }).context;
-      if (ctx instanceof Response) {
-        try {
-          const parsed = (await ctx.clone().json()) as AdminVerifyResult;
-          if (parsed && typeof parsed === "object") payload = { ...parsed, ...payload };
-        } catch {
-          /* ignore */
-        }
+    const token = session!.access_token;
+    const anonKey =
+      import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY;
+    const functionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-verify-agent`;
+
+    const response = await fetch(functionUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: anonKey,
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(body),
+    });
+
+    const text = await response.text();
+    let payload: AdminVerifyResult | null = null;
+    if (text.trim()) {
+      try {
+        payload = JSON.parse(text) as AdminVerifyResult;
+      } catch {
+        payload = { success: false, error: text } as AdminVerifyResult;
       }
     }
 
-    if (error || !payload?.success) {
+    if (!response.ok || !payload?.success) {
       const message = await resolveEdgeFunctionErrorMessage(
-        error,
-        payload ?? data,
+        response.ok ? null : { context: response, message: response.statusText },
+        payload,
       );
+      console.error("[invokeAdminVerify]", { status: response.status, payload, message });
       throw Object.assign(new Error(message), {
         code: payload?.code,
         match: payload?.match ?? null,
