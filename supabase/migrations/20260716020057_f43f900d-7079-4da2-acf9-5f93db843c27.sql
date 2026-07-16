@@ -1,0 +1,1 @@
+DELETE FROM auth.users WHERE id = 'c9895cfa-2ffb-42b7-9b74-b1aeea5cafc6' AND email = 'yanis@conceptre.com';

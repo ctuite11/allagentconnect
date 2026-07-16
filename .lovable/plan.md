@@ -1,10 +1,22 @@
-# Fix: Desktop sidebar hover tooltips clipped by `overflow-hidden`
+# Distinguish Buyers vs Agent Network sidebar icons
 
-## Root cause (desktop)
-On desktop the collapsed `<aside>` in `src/components/agent-dashboard-v2/DashboardSidebar.tsx` (line 219) has `overflow-hidden`. Our `TooltipContent` in `src/components/ui/tooltip.tsx` currently renders **inline** — it is NOT wrapped in Radix `Portal` — so the label positioned `side="right"` is clipped by the aside's own overflow. No z-index change fixes this; the previous z-[100] bump was a no-op.
+## Problem
+In `src/components/agent-dashboard-v2/DashboardSidebar.tsx`, both the Buyers item (the buyer network entry, route `/agent/buyers`) and Agent Network (`/our-members`) use the same `Users` icon, so they visually blur together in the sidebar.
 
-## Fix
-Wrap `TooltipPrimitive.Content` in `TooltipPrimitive.Portal` inside `src/components/ui/tooltip.tsx`. That is the shadcn default and matches `DialogContent` / `PopoverContent` behavior. Every existing tooltip call site keeps working with no other change — the label just renders into a portal at `document.body` and floats over the page.
+## Change
+Single-file edit to `src/components/agent-dashboard-v2/DashboardSidebar.tsx`:
+
+- Keep `Users` icon on **Agent Network** (unchanged).
+- Swap the **Buyers** item icon from `Users` to a home-focused Lucide icon: `Home` (well-established, matches existing sidebar stroke weight; `House`/`HouseSearch` aren't part of the version pinned here — `Home` is the closest current-library match to your intent).
+- Add `Home` to the `lucide-react` import list; leave `Users` in place for Agent Network.
+
+## Explicitly not changing
+- Labels ("Buyers", "Agent Network")
+- Routes (`/agent/buyers`, `/our-members`)
+- Ordering
+- Any navigation behavior, tooltips logic, or badges
 
 ## Verification
-Desktop, sidebar collapsed → hover each nav icon and Sign Out → label appears fully to the right of the sidebar, not clipped, not behind page content.
+- Expanded sidebar: Buyers row shows the home icon, Agent Network still shows people icon.
+- Collapsed (icon-only) sidebar: the two icons are visibly different at a glance; hover tooltips still read "Buyers" and "Agent Network" respectively (tooltip logic untouched).
+- Active-state highlight still applies on both routes.
