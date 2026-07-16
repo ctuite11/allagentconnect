@@ -168,7 +168,14 @@ export async function invokeEdgeFunction<T = Record<string, unknown>>(
       data,
     );
     console.error(`[invokeEdgeFunction:${name}]`, { status: response.status, data, message });
-    throw new Error(message);
+    // Preserve structured fields (code, match, status) on the thrown Error so
+    // callers can branch on server-provided error codes (e.g. 409 previously_deleted).
+    const payload = (data ?? {}) as Record<string, unknown>;
+    throw Object.assign(new Error(message), {
+      code: typeof payload.code === "string" ? payload.code : undefined,
+      match: "match" in payload ? payload.match : undefined,
+      status: response.status,
+    });
   }
 
   return data as T & { success: true };
