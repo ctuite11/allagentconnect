@@ -8,14 +8,12 @@ import { findDeletedAgent } from "../_shared/checkDeletedAgent.ts";
  * Idempotency contract
  * --------------------
  * - Callers MAY pass `idempotencyKey` to control dedupe behavior.
- * - If omitted, default key is `license-verified:<recipient-lowercased>:<YYYYMMDD>`
- *   so the same recipient cannot be re-emailed on the same UTC day by accident.
- * - Before enqueueing, we also reject any `license-verified` job for the same
- *   recipient created within the last 10 minutes — even with a distinct key —
- *   to absorb double-clicks and retry storms.
- * - On dedupe we return `{ success: true, deduped: true, jobId }` (HTTP 200).
- * - Pass an explicit, unique `idempotencyKey` AND wait >10 minutes to force a
- *   legitimate re-send.
+ * - Durable dedupe uses `email_jobs.idempotency_key` (unique partial index).
+ *   Re-inserts with the same key return the existing job as `{ success, deduped, jobId }`.
+ * - If omitted, default key is `license-verified:<recipient-lowercased>:<YYYYMMDD>`.
+ * - A 10-minute recency check remains as a secondary guard for default day keys.
+ * - Success requires a real job id (`successCount > 0`). HTTP 200 with
+ *   `successCount: 0` is never returned for non-blocked failures (use 422).
  */
 
 const corsHeaders = {
@@ -29,15 +27,10 @@ interface SendRequest {
   subject?: string;
   agentName?: string;
   idempotencyKey?: string;
-  /**
-   * Phase 4 guardrail — set to true only after the admin has explicitly
-   * confirmed the "previously deleted" dialog in the UI.
-   */
   acknowledgeDeleted?: boolean;
 }
 
 const DEFAULT_SUBJECT = "Your license has been verified — welcome to All Agent Connect";
-
 const SETUP_REDIRECT = `${AAC_PUBLIC_URL}/auth/callback?type=recovery&setup=1`;
 
 const handler = async (req: Request): Promise<Response> => {
@@ -66,10 +59,6 @@ const handler = async (req: Request): Promise<Response> => {
     }
     const admin = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Resolve CTA: caller-provided wins (allagentconnect.com only, or wrapped
-    // Supabase action link). Otherwise generate a per-recipient password
-    // setup/recovery link so the agent can set their password directly from
-    // the email — matching the Add Buyer Invite acceptance flow.
     async function resolveCtaForRecipient(email: string): Promise<string> {
       if (body.ctaUrl) {
         return resolveAacCtaUrl(body.ctaUrl, "/auth");
@@ -104,14 +93,17 @@ const handler = async (req: Request): Promise<Response> => {
     };
     const replyTo = "chris@allagentconnect.com";
 
-    const results: Array<{ email: string; success: boolean; error?: string }> = [];
+    const results: Array<{
+      email: string;
+      success: boolean;
+      error?: string;
+      jobId?: string;
+      deduped?: boolean;
+    }> = [];
 
     for (const email of recipients) {
       const recipientLc = email.trim().toLowerCase();
 
-      // Phase 4 guardrail — block license-verified sends to a previously
-      // deleted agent unless the admin explicitly acknowledged in the UI.
-      // Applies per-recipient so a mixed batch surfaces exact addresses.
       if (!body.acknowledgeDeleted) {
         const deletedMatch = await findDeletedAgent(admin, recipientLc);
         if (deletedMatch) {
@@ -125,8 +117,8 @@ const handler = async (req: Request): Promise<Response> => {
             success: false,
             error: "previously_deleted",
             // deno-lint-ignore no-explicit-any
-            match: deletedMatch,
-          } as any);
+            ...( { match: deletedMatch } as any ),
+          });
           continue;
         }
       }
@@ -136,8 +128,21 @@ const handler = async (req: Request): Promise<Response> => {
         (typeof body.idempotencyKey === "string" && body.idempotencyKey.trim()) ||
         `license-verified:${recipientLc}:${today}`;
 
-      // 10-minute recency dedupe: any license-verified job for this recipient
-      // enqueued in the last 10 minutes blocks a new send, regardless of key.
+      // Durable dedupe: existing job with this idempotency_key wins forever.
+      const { data: byKey, error: byKeyErr } = await admin
+        .from("email_jobs")
+        .select("id")
+        .eq("idempotency_key", idempotencyKey)
+        .maybeSingle();
+      if (byKeyErr) {
+        console.error("[send-license-verified-email] idempotency lookup failed:", byKeyErr);
+      } else if (byKey?.id) {
+        console.log(`[send-license-verified-email] deduped (idempotency_key) for ${email}`);
+        results.push({ email, success: true, deduped: true, jobId: byKey.id });
+        continue;
+      }
+
+      // Secondary: 10-minute recency for accidental double-clicks with distinct keys.
       const tenMinAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
       const { data: recent, error: recentErr } = await admin
         .from("email_jobs")
@@ -152,39 +157,54 @@ const handler = async (req: Request): Promise<Response> => {
         console.error("[send-license-verified-email] dedupe lookup failed:", recentErr);
       } else if (recent && recent.length > 0) {
         console.log(`[send-license-verified-email] deduped (recent send) for ${email}`);
-        results.push({ email, success: true, deduped: true, jobId: recent[0].id } as any);
+        results.push({ email, success: true, deduped: true, jobId: recent[0].id });
         continue;
       }
 
       const ctaUrl = await resolveCtaForRecipient(email);
       const html = buildLicenseVerifiedEmailHtml({ ctaUrl, agentName: body.agentName, footerAgent });
-      const { data: inserted, error } = await admin.from("email_jobs").insert({
-        payload: {
-          provider: "resend",
-          template: "license-verified",
-          to: email,
-          subject,
-          html,
-          reply_to: replyTo,
+      const { data: inserted, error } = await admin
+        .from("email_jobs")
+        .insert({
           idempotency_key: idempotencyKey,
-        },
-      }).select("id").maybeSingle();
+          payload: {
+            provider: "resend",
+            template: "license-verified",
+            to: email,
+            subject,
+            html,
+            reply_to: replyTo,
+            idempotency_key: idempotencyKey,
+          },
+        })
+        .select("id")
+        .maybeSingle();
 
       if (error) {
+        // Race: another insert won the unique index — treat as durable success.
+        if (error.code === "23505") {
+          const { data: raced } = await admin
+            .from("email_jobs")
+            .select("id")
+            .eq("idempotency_key", idempotencyKey)
+            .maybeSingle();
+          if (raced?.id) {
+            results.push({ email, success: true, deduped: true, jobId: raced.id });
+            continue;
+          }
+        }
         console.error(`[send-license-verified-email] enqueue failed for ${email}:`, error);
         results.push({ email, success: false, error: error.message });
+      } else if (!inserted?.id) {
+        results.push({ email, success: false, error: "Enqueue returned no job id" });
       } else {
-        results.push({ email, success: true, jobId: inserted?.id } as any);
+        results.push({ email, success: true, jobId: inserted.id });
       }
     }
 
     const successCount = results.filter((r) => r.success).length;
     const blockedResults = results.filter((r) => r.error === "previously_deleted");
 
-    // Phase 4 — when every recipient is blocked by the deleted-agent guard,
-    // surface a 409 so the UI can open PreviouslyDeletedAgentDialog. Mixed
-    // batches (some blocked, some sent) still return 200 with per-recipient
-    // results so the sender can inspect.
     if (successCount === 0 && blockedResults.length > 0) {
       return new Response(
         JSON.stringify({
@@ -192,24 +212,35 @@ const handler = async (req: Request): Promise<Response> => {
           code: "previously_deleted",
           // deno-lint-ignore no-explicit-any
           match: (blockedResults[0] as any).match ?? null,
+          successCount: 0,
           results,
         }),
         { status: 409, headers: { "Content-Type": "application/json", ...corsHeaders } },
       );
     }
 
-    if (successCount > 0) {
-      void fetch(`${supabaseUrl}/functions/v1/kick-email-queue`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${supabaseServiceKey}`,
-          "Content-Type": "application/json",
-        },
-        body: "{}",
-      }).catch((err) => {
-        console.warn("[send-license-verified-email] kick-email-queue failed:", err);
-      });
+    if (successCount === 0) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          successCount: 0,
+          error: results[0]?.error || "Failed to enqueue license-verified email",
+          results,
+        }),
+        { status: 422, headers: { "Content-Type": "application/json", ...corsHeaders } },
+      );
     }
+
+    void fetch(`${supabaseUrl}/functions/v1/kick-email-queue`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${supabaseServiceKey}`,
+        "Content-Type": "application/json",
+      },
+      body: "{}",
+    }).catch((err) => {
+      console.warn("[send-license-verified-email] kick-email-queue failed:", err);
+    });
 
     return new Response(
       JSON.stringify({ success: true, successCount, results }),

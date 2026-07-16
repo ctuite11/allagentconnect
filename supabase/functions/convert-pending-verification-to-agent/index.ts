@@ -33,6 +33,11 @@ interface ConvertBody {
    * confirmed the "previously deleted" dialog in the UI.
    */
   acknowledgeDeleted?: unknown;
+  /**
+   * @deprecated Ignored for status writes. Convert never marks non-activated
+   * agents verified — admin-verify-agent owns that after license-verified enqueue.
+   */
+  deferVerifiedStatus?: unknown;
 }
 
 function json(status: number, body: unknown) {
@@ -231,13 +236,22 @@ export async function handleRequest(req: Request): Promise<Response> {
   }
 
   // 6. Upsert agent_settings. Include license fields from pending row.
-  //    approval_email_sent stays false — Phase 3 will flip after actually
-  //    enqueueing send-license-verified-email.
+  //    Never finalize verified here — admin-verify-agent owns verified +
+  //    license-verified email enqueue. Leaving pending prevents orphaned
+  //    verified/no-job accounts if a caller bypasses the canonical path.
   const nowIso = new Date().toISOString();
+  const { data: existingSettings } = await admin
+    .from("agent_settings")
+    .select("account_activated_at, verified_at, agent_status")
+    .eq("user_id", userId)
+    .maybeSingle();
+  const alreadyActivated = Boolean(existingSettings?.account_activated_at);
   const settingsRow: Record<string, unknown> = {
     user_id: userId,
-    agent_status: "verified",
-    verified_at: nowIso,
+    agent_status: alreadyActivated ? "verified" : "pending",
+    verified_at: alreadyActivated
+      ? existingSettings?.verified_at || nowIso
+      : null,
     approval_email_sent: false,
   };
   if (pending.license_state) settingsRow.license_state = pending.license_state;
@@ -276,18 +290,11 @@ export async function handleRequest(req: Request): Promise<Response> {
     return json(500, { error: "Failed to update pending verification", code: "pending_update_failed" });
   }
 
-  // 9. Best-effort audit row (table's action check allows 'verified').
-  const { error: auditErr } = await admin.from("agent_verification_audit").insert({
-    agent_user_id: userId,
-    admin_user_id: caller.id,
-    action: "verified",
-    previous_status: "pending",
-    new_status: "verified",
-    notes: `Converted from pending_verifications ${pending.id}${existing ? " (reused existing auth user)" : ""}`,
-  });
-  if (auditErr) {
-    console.error("[convert] audit insert error (non-fatal):", auditErr.message);
-  }
+  // 9. Audit is owned by admin-verify-agent after license-verified enqueue.
+  //    Convert never finalizes verified for non-activated agents.
+  console.log(
+    `[convert] account ready for ${userId} from pending ${pending.id} (status pending until admin-verify-agent)`,
+  );
 
   return json(200, {
     ok: true,

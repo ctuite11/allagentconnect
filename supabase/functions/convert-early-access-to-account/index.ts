@@ -26,6 +26,12 @@ interface ConvertRequest {
    * confirmed the "previously deleted" dialog in the UI.
    */
   acknowledgeDeleted?: boolean;
+  /**
+   * @deprecated Ignored for status writes. Convert never marks non-activated
+   * agents verified — admin-verify-agent owns that after license-verified enqueue.
+   * Kept for API compatibility with admin-verify-agent callers.
+   */
+  deferVerifiedStatus?: boolean;
 }
 
 interface RateLimitResult {
@@ -193,7 +199,14 @@ serve(async (req: Request): Promise<Response> => {
       brokerage,
       skipEmail,
       acknowledgeDeleted,
+      deferVerifiedStatus: _deferVerifiedStatus,
     } = body;
+
+    // Never finalize verified here for non-activated agents. Canonical
+    // admin-verify-agent enqueues license-verified then sets verified.
+    void _deferVerifiedStatus;
+    const statusForCreate = "pending";
+    const verifiedAtForCreate: string | null = null;
 
     if (!email || !firstName || !lastName) {
       return new Response(
@@ -273,15 +286,25 @@ serve(async (req: Request): Promise<Response> => {
         );
       }
 
-      // Just update their agent_settings to verified status
+      // Update agent_settings — leave pending so admin-verify-agent can
+      // enqueue License Verified before finalizing (unless already activated).
+      const { data: existingActivated } = await supabaseAdmin
+        .from("agent_settings")
+        .select("account_activated_at, verified_at")
+        .eq("user_id", existingUser.id)
+        .maybeSingle();
+      const alreadyActivated = Boolean(existingActivated?.account_activated_at);
       const { error: settingsError } = await supabaseAdmin
         .from("agent_settings")
         .upsert({
           user_id: existingUser.id,
-          agent_status: "verified",
-          verified_at: new Date().toISOString(),
+          agent_status: alreadyActivated ? "verified" : statusForCreate,
+          verified_at: alreadyActivated
+            ? existingActivated?.verified_at || new Date().toISOString()
+            : verifiedAtForCreate,
           license_state: licenseState || null,
           license_number: licenseNumber || null,
+          approval_email_sent: false,
         }, { onConflict: "user_id" });
 
       if (settingsError) {
@@ -292,7 +315,9 @@ serve(async (req: Request): Promise<Response> => {
         JSON.stringify({ 
           success: true, 
           userId: existingUser.id, 
-          message: "User already exists, status updated to verified" 
+          message: alreadyActivated
+            ? "User already exists and is activated"
+            : "User already exists, status left pending until activation email enqueues",
         }),
         { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
@@ -346,17 +371,18 @@ serve(async (req: Request): Promise<Response> => {
       // Continue anyway - the trigger should have created it
     }
 
-    // Create agent_settings record with verified status
+    // Create agent_settings — leave pending until admin-verify-agent
+    // enqueues License Verified and finalizes.
     const { error: settingsError } = await supabaseAdmin
       .from("agent_settings")
       .upsert({
         user_id: userId,
-        agent_status: "verified",
-        verified_at: new Date().toISOString(),
+        agent_status: statusForCreate,
+        verified_at: verifiedAtForCreate,
         license_state: licenseState || null,
         license_number: licenseNumber || null,
         early_access: true,
-        approval_email_sent: true,
+        approval_email_sent: false,
       }, { onConflict: "user_id" });
 
     if (settingsError) {

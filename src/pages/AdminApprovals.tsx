@@ -53,6 +53,7 @@ import {
   checkDeletedAgent,
   logDeletedAgentOverride,
 } from "@/lib/previouslyDeletedAgent";
+import { resolveEdgeFunctionErrorMessage } from "@/lib/invokeEdgeFunction";
 import { UserPlus } from "lucide-react";
 import { AgentStatusBadge } from "@/components/ui/status-badge";
 import { AacMonogramLoader } from "@/components/AacMonogramLoader";
@@ -651,19 +652,77 @@ export default function AdminApprovals() {
     setDebugInfo(prev => ({ ...prev, stateCount: agents.length }));
   }, [agents]);
 
-  // Handle status change with upsert - branches for early access vs real agents
+  type AdminVerifyResult = {
+    success?: boolean;
+    jobId?: string;
+    emailSkipped?: boolean;
+    error?: string;
+    code?: string;
+    match?: PreviouslyDeletedAgentMatch | null;
+  };
+
+  /** Parse admin-verify-agent invoke; non-2xx bodies must not look like success. */
+  const invokeAdminVerify = async (body: Record<string, unknown>): Promise<AdminVerifyResult> => {
+    const { data, error } = await supabase.functions.invoke("admin-verify-agent", { body });
+    let payload = (data ?? null) as AdminVerifyResult | null;
+
+    // supabase-js often leaves `data` null on 4xx; recover JSON from error.context.
+    if ((!payload || payload.success !== true) && error) {
+      const ctx = (error as { context?: Response }).context;
+      if (ctx instanceof Response) {
+        try {
+          const parsed = (await ctx.clone().json()) as AdminVerifyResult;
+          if (parsed && typeof parsed === "object") payload = { ...parsed, ...payload };
+        } catch {
+          /* ignore */
+        }
+      }
+    }
+
+    if (error || !payload?.success) {
+      const message = await resolveEdgeFunctionErrorMessage(
+        error,
+        payload ?? data,
+      );
+      throw Object.assign(new Error(message), {
+        code: payload?.code,
+        match: payload?.match ?? null,
+      });
+    }
+
+    return payload;
+  };
+
+  const toastVerifySuccess = (agent: Agent, verifyData: AdminVerifyResult): boolean => {
+    if (verifyData.emailSkipped) {
+      toast.success(`Verified ${agent.email} (already activated — no activation email)`);
+      return true;
+    }
+    if (!verifyData.jobId) {
+      // Server should never return success without jobId when email is required.
+      toast.error(
+        `Verification incomplete for ${agent.email}: missing activation job id. Agent was not left verified without a job — check email_jobs and retry.`,
+      );
+      return false;
+    }
+    toast.success(`Verified — activation email queued for ${agent.email}`);
+    return true;
+  };
+
+  // Handle status change with upsert - branches for early access vs real agents.
+  // Returns true on success (bulk verify uses this — errors are toasted, not swallowed as ok).
   const handleStatusChange = async (
     agent: Agent,
     newStatus: string,
     acknowledgeDeleted: boolean = false,
-  ) => {
+  ): Promise<boolean> => {
     // Safety guard — invited (admin-created) agents must never enter the
     // pending/verify flow. They complete /agent-setup and self-activate.
     if (agent.agent_status === "invited" && newStatus === "verified") {
       toast.error(
         "Admin-created agents are already verified. They activate by completing /agent-setup — no manual verify.",
       );
-      return;
+      return false;
     }
 
     // Phase 4 guardrail — for every verify action, if this email was
@@ -672,65 +731,39 @@ export default function AdminApprovals() {
     // Rejection paths are unaffected — they never create or email anyone.
     if (newStatus === "verified" && !acknowledgeDeleted) {
       const proceed = await guardDeletedAgent(agent.email, "verify this agent");
-      if (!proceed) return;
+      if (!proceed) return false;
       acknowledgeDeleted = true;
     }
 
     setProcessingIds((prev) => new Set(prev).add(agent.id));
 
     try {
-      // Phase 3: Request-Access leads (pending_verifications rows with no
-      // auth user yet). Route through convert-pending-verification-to-agent
-      // which is idempotent + collision-safe, then send the existing
-      // License Verified email. Rejection just flips the pending row.
+      // Phase 3 pending_verifications leads — reject stays local; verify uses
+      // the canonical admin-verify-agent path (same as early access / existing).
       if (agent.source === "pending_verification") {
         if (newStatus === "verified") {
-          const { data: convData, error: convErr } = await supabase.functions.invoke(
-            "convert-pending-verification-to-agent",
-            {
-              body: {
-                pendingVerificationId: agent.pending_verification_id ?? agent.id,
-                ...(acknowledgeDeleted ? { acknowledgeDeleted: true } : {}),
-              },
-            },
-          );
-          if (convErr || !convData?.ok || !convData?.userId) {
-            console.error("[AdminApprovals] convert failed:", convErr || convData);
-            throw new Error(
-              (convErr as any)?.message ||
-                (convData as any)?.error ||
-                "Failed to convert pending verification",
-            );
-          }
-          const newUserId = convData.userId as string;
-          const { error: emailError } = await supabase.functions.invoke(
-            "send-license-verified-email",
-            {
-              body: {
-                to: agent.email,
-                agentName: agent.first_name || undefined,
-                idempotencyKey: `license-verified:verify:${newUserId}`,
-                ...(acknowledgeDeleted ? { acknowledgeDeleted: true } : {}),
-              },
-            },
-          );
-          if (emailError) {
-            console.error("send-license-verified-email failed:", emailError);
-            toast.error(
-              `Verified ${agent.email}, but activation email failed. Use Email setup link to retry.`,
-            );
-          } else {
-            toast.success(`Verified — activation email sent to ${agent.email}`);
-          }
-          // Refetch so the synthetic row is replaced by the real converted
-          // agent row (with auth user id, presence, email badges, etc.).
+          const verifyData = await invokeAdminVerify({
+            agentId: agent.id,
+            email: agent.email,
+            firstName: agent.first_name || undefined,
+            lastName: agent.last_name || undefined,
+            phone: agent.phone || undefined,
+            licenseState: agent.license_state || undefined,
+            licenseNumber: agent.license_number || undefined,
+            company: agent.company || undefined,
+            source: "pending_verification",
+            pendingVerificationId: agent.pending_verification_id ?? agent.id,
+            ...(acknowledgeDeleted ? { acknowledgeDeleted: true } : {}),
+          });
+          const ok = toastVerifySuccess(agent, verifyData);
+          if (!ok) return false;
           setSelectedIds((prev) => {
             const next = new Set(prev);
             next.delete(agent.id);
             return next;
           });
           await fetchAgents();
-          return;
+          return true;
         }
         if (newStatus === "rejected") {
           const pvId = agent.pending_verification_id ?? agent.id;
@@ -746,89 +779,34 @@ export default function AdminApprovals() {
             next.delete(agent.id);
             return next;
           });
-          return;
+          return true;
         }
         // Any other status change on a Phase 2 lead is a no-op — they have
         // no auth account yet, so restricted/pending etc. don't apply.
-        return;
+        return false;
       }
 
-      // Unified verification path — every Unverified row ends here regardless
-      // of origin (Early Access lead, backfilled orphan, or existing auth account).
-      // 1) Ensure an auth account / agent_settings row exists.
-      // 2) Mark agent_status = 'verified'.
-      // 3) Send the License Verified email (CTA → /agent-setup).
+      // Canonical server-side verify: account ensure → license-verified job → verified.
+      // Never marks verified without a durable email_jobs row (unless already activated).
       if (newStatus === "verified") {
-        if (agent.is_early_access) {
-          console.log(`Converting early access user to full account: ${agent.email}`);
-          const { error: convertError } = await supabase.functions.invoke(
-            "convert-early-access-to-account",
-            {
-              body: {
-                earlyAccessId: agent.id,
-                email: agent.email,
-                firstName: agent.first_name,
-                lastName: agent.last_name,
-                phone: agent.phone,
-                licenseState: agent.license_state,
-                licenseNumber: agent.license_number,
-                brokerage: agent.company,
-                skipEmail: true,
-                ...(acknowledgeDeleted ? { acknowledgeDeleted: true } : {}),
-              },
-            },
-          );
-          if (convertError) {
-            console.error("Conversion error:", convertError);
-            throw new Error("Failed to create account for early access user");
-          }
+        const verifyData = await invokeAdminVerify({
+          agentId: agent.id,
+          email: agent.email,
+          firstName: agent.first_name || undefined,
+          lastName: agent.last_name || undefined,
+          phone: agent.phone || undefined,
+          licenseState: agent.license_state || undefined,
+          licenseNumber: agent.license_number || undefined,
+          company: agent.company || undefined,
+          source: agent.source || undefined,
+          pendingVerificationId: agent.pending_verification_id ?? undefined,
+          isEarlyAccess: Boolean(agent.is_early_access),
+          earlyAccessId: agent.is_early_access ? agent.id : undefined,
+          ...(acknowledgeDeleted ? { acknowledgeDeleted: true } : {}),
+        });
 
-          const { error: eaUpdateError } = await supabase
-            .from("agent_early_access")
-            .update({
-              status: "verified",
-              verified_at: new Date().toISOString(),
-            })
-            .eq("id", agent.id);
-          if (eaUpdateError) {
-            console.error("Error updating early access status:", eaUpdateError);
-          }
-        } else {
-          const { error: settingsError } = await supabase
-            .from("agent_settings")
-            .upsert(
-              [{
-                user_id: agent.id,
-                agent_status: "verified" as any,
-                verified_at: new Date().toISOString(),
-                updated_at: new Date().toISOString(),
-              }],
-              { onConflict: "user_id" },
-            );
-          if (settingsError) throw settingsError;
-        }
-
-        // Single email for every verified agent. Per-agent idempotency key
-        // dedupes double-clicks and bulk-verify retries.
-        const { error: emailError } = await supabase.functions.invoke(
-          "send-license-verified-email",
-          {
-            body: {
-              to: agent.email,
-              agentName: agent.first_name || undefined,
-              idempotencyKey: `license-verified:verify:${agent.id}`,
-              ...(acknowledgeDeleted ? { acknowledgeDeleted: true } : {}),
-            },
-          },
-        );
-        if (emailError) {
-          console.error("send-license-verified-email failed:", emailError);
-          toast.error(
-            `Verified ${agent.email}, but activation email failed. Use Email setup link to retry.`,
-          );
-        } else {
-          toast.success(`Verified — activation email sent to ${agent.email}`);
-        }
+        const ok = toastVerifySuccess(agent, verifyData);
+        if (!ok) return false;
       } else if (agent.is_early_access) {
         // Early access non-verify status change (e.g., rejected)
         const { error } = await supabase
@@ -898,9 +876,11 @@ export default function AdminApprovals() {
             : a
         )
       );
+      return true;
     } catch (error: any) {
       console.error("Error updating status:", error);
       toast.error(error.message || "Failed to update status");
+      return false;
     } finally {
       setProcessingIds((prev) => {
         const newSet = new Set(prev);
@@ -1177,15 +1157,17 @@ export default function AdminApprovals() {
         id: toastId,
       });
       try {
-        await handleStatusChange(agent, "verified");
-        ok++;
+        const succeeded = await handleStatusChange(agent, "verified");
+        if (succeeded) ok++;
+        else fail++;
       } catch (err) {
         if (isRateLimit(err)) {
           toast.loading("Rate limited — pausing 60s before continuing", { id: toastId });
           await sleep(60_000);
           try {
-            await handleStatusChange(agent, "verified");
-            ok++;
+            const succeeded = await handleStatusChange(agent, "verified");
+            if (succeeded) ok++;
+            else fail++;
           } catch (retryErr) {
             console.error("[bulk verify] retry failed for", agent.email, retryErr);
             fail++;
