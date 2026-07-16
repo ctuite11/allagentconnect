@@ -138,9 +138,19 @@ export async function invokeEdgeFunction<T = Record<string, unknown>>(
   }
 
   const token = session!.access_token;
-  const functionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/${name}`;
+  const supabaseUrl =
+    import.meta.env.VITE_SUPABASE_URL ||
+    (supabase as unknown as { supabaseUrl?: string }).supabaseUrl;
   const anonKey =
-    import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY;
+    import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
+    import.meta.env.VITE_SUPABASE_ANON_KEY ||
+    (supabase as unknown as { supabaseKey?: string }).supabaseKey;
+
+  if (!supabaseUrl || !anonKey) {
+    throw new Error("Backend configuration is missing. Please refresh and try again.");
+  }
+
+  const functionUrl = `${supabaseUrl}/functions/v1/${name}`;
 
   const response = await fetch(functionUrl, {
     method: "POST",
