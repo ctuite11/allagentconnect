@@ -1,22 +1,23 @@
-# Distinguish Buyers vs Agent Network sidebar icons
 
-## Problem
-In `src/components/agent-dashboard-v2/DashboardSidebar.tsx`, both the Buyers item (the buyer network entry, route `/agent/buyers`) and Agent Network (`/our-members`) use the same `Users` icon, so they visually blur together in the sidebar.
+Hide the "N Agents found" count on the Network / Our Agents page (`/our-members`, `src/pages/OurAgents.tsx`).
 
 ## Change
-Single-file edit to `src/components/agent-dashboard-v2/DashboardSidebar.tsx`:
 
-- Keep `Users` icon on **Agent Network** (unchanged).
-- Swap the **Buyers** item icon from `Users` to a home-focused Lucide icon: `Home` (well-established, matches existing sidebar stroke weight; `House`/`HouseSearch` aren't part of the version pinned here — `Home` is the closest current-library match to your intent).
-- Add `Home` to the `lucide-react` import list; leave `Users` in place for Agent Network.
+In `src/components/agent-directory/AgentDirectoryFilters.tsx`, remove the `<p>` that renders `{resultCount} agents found …`. Replace it with an empty spacer `<div />` so the flex layout keeps the sort/page-size controls right-aligned. If a `searchQuery` is present, still show a small "Results for "…"" label (no number) so users know the search is applied — otherwise render nothing on the left.
 
-## Explicitly not changing
-- Labels ("Buyers", "Agent Network")
-- Routes (`/agent/buyers`, `/our-members`)
-- Ordering
-- Any navigation behavior, tooltips logic, or badges
+Keep `resultCount` in the props (still used by the parent for pagination math) — just don't display it.
 
-## Verification
-- Expanded sidebar: Buyers row shows the home icon, Agent Network still shows people icon.
-- Collapsed (icon-only) sidebar: the two icons are visibly different at a glance; hover tooltips still read "Buyers" and "Agent Network" respectively (tooltip logic untouched).
-- Active-state highlight still applies on both routes.
+## Also
+
+The pagination footer in `OurAgents.tsx` (line ~560) currently renders `Page X of Y · N total`. Drop the `· {totalCount.toLocaleString()} total` suffix so the count isn't leaked there either. Leave `Page X of Y` intact.
+
+## Out of scope
+
+- No changes to `PublicOurAgents.tsx` (doesn't render this count).
+- No data-fetching changes.
+- No layout/design changes beyond removing the count text.
+
+## Files
+
+- `src/components/agent-directory/AgentDirectoryFilters.tsx`
+- `src/pages/OurAgents.tsx`

@@ -557,7 +557,7 @@ function AgentPhotoTileGrid({
                       Prev
                     </Button>
                     <span className="text-[13px] tabular-nums text-neutral-600">
-                      Page {page} of {Math.ceil(totalCount / (pageSize as number))} · {totalCount.toLocaleString()} total
+                      Page {page} of {Math.ceil(totalCount / (pageSize as number))}
                     </span>
                     <Button
                       variant="outline"

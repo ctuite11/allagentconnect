@@ -29,7 +29,7 @@ const AgentDirectoryFilters = ({
     return (
       <div className="border-b border-neutral-200/90 bg-white py-3 md:py-4">
         <div className="mx-auto flex max-w-[1200px] flex-col gap-3 px-5 min-[520px]:flex-row min-[520px]:items-center min-[520px]:justify-between md:px-6">
-          <Skeleton className="h-5 w-40 rounded-md bg-neutral-100" />
+          <div />
           <div className="flex flex-col gap-2 min-[520px]:flex-row min-[520px]:items-center min-[520px]:gap-2">
             {onPageSizeChange ? (
               <Skeleton className="h-8 w-full rounded-md bg-neutral-100 min-[520px]:w-[9rem]" />
@@ -44,19 +44,13 @@ const AgentDirectoryFilters = ({
   return (
     <div className="border-b border-neutral-200/90 bg-white py-3 md:py-4">
       <div className="mx-auto flex max-w-[1200px] flex-col gap-3 px-5 min-[520px]:flex-row min-[520px]:items-center min-[520px]:justify-between md:px-6">
-        <p className="text-[13px] font-medium tabular-nums text-neutral-900">
-          {resultCount.toLocaleString()}{" "}
-          {resultCount === 1
-            ? itemLabel.replace(/s$/i, "").toLowerCase()
-            : itemLabel.toLowerCase()}{" "}
-          found
-          {searchQuery ? (
-            <span className="font-normal text-neutral-500">
-              {" "}
-              for &ldquo;{searchQuery}&rdquo;
-            </span>
-          ) : null}
-        </p>
+        {searchQuery ? (
+          <p className="text-[13px] font-normal text-neutral-500">
+            Results for &ldquo;{searchQuery}&rdquo;
+          </p>
+        ) : (
+          <div />
+        )}
 
         <div className="flex flex-col gap-2 min-[520px]:flex-row min-[520px]:items-center min-[520px]:gap-2">
           {onPageSizeChange && pageSize !== undefined ? (
