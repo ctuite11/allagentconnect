@@ -1,10 +1,26 @@
-# Fix: Desktop sidebar hover tooltips clipped by `overflow-hidden`
+## Findings
 
-## Root cause (desktop)
-On desktop the collapsed `<aside>` in `src/components/agent-dashboard-v2/DashboardSidebar.tsx` (line 219) has `overflow-hidden`. Our `TooltipContent` in `src/components/ui/tooltip.tsx` currently renders **inline** — it is NOT wrapped in Radix `Portal` — so the label positioned `side="right"` is clipped by the aside's own overflow. No z-index change fixes this; the previous z-[100] bump was a no-op.
+Dara has two auth accounts:
+
+| Email | auth.users.id | agent_profiles | Status |
+|---|---|---|---|
+| `dara.cipollone@resisrealestate.com` (correct) | `8c2b3945-eed5-4880-82db-659802d72721` | present, id matches | **Keep — active account** |
+| `dara.cipollone@resisrealestste.com` (typo "realestste") | `adf9c48e-0831-4c14-b8e4-f9717d888112` | gone (archived under a different id `30913cec…` in `deleted_users`) | **Orphan auth row — needs cleanup** |
+
+Same class of bug we fixed for Yanis: the archived `agent_profiles.id` didn't match `auth.users.id`, so `delete-users` couldn't remove the auth row and returned "unsuccessful", even though the DB profile is already gone.
 
 ## Fix
-Wrap `TooltipPrimitive.Content` in `TooltipPrimitive.Portal` inside `src/components/ui/tooltip.tsx`. That is the shadcn default and matches `DialogContent` / `PopoverContent` behavior. Every existing tooltip call site keeps working with no other change — the label just renders into a portal at `document.body` and floats over the page.
 
-## Verification
-Desktop, sidebar collapsed → hover each nav icon and Sign Out → label appears fully to the right of the sidebar, not clipped, not behind page content.
+One-line data migration:
+
+```sql
+DELETE FROM auth.users
+WHERE id = 'adf9c48e-0831-4c14-b8e4-f9717d888112'
+  AND email = 'dara.cipollone@resisrealestste.com';
+```
+
+The good account (`…@resisrealestate.com`) is untouched.
+
+## Verify
+
+Re-query `auth.users` / `agent_profiles` for `%cipollone%` → only the correct-spelling row remains.

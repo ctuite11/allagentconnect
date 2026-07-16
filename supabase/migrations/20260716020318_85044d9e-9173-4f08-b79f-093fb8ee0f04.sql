@@ -1,0 +1,1 @@
+DELETE FROM auth.users WHERE id = 'adf9c48e-0831-4c14-b8e4-f9717d888112' AND email = 'dara.cipollone@resisrealestste.com';
