@@ -91,9 +91,12 @@ export function DeleteAgentDialog({ open, onOpenChange, agent, onDeleted }: Dele
       });
       if (rpcErr) throw rpcErr;
 
-      // Purge auth user last
+      // Purge auth user last (ID + email: handles legacy profile/auth ID mismatches)
       const { error: authError } = await supabase.functions.invoke("delete-users", {
-        body: { userIds: [agent.id] },
+        body: {
+          userIds: [agent.id],
+          emails: [agent.email],
+        },
       });
 
       if (authError) {

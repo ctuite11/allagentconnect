@@ -97,9 +97,12 @@ export function BulkDeleteAgentsDialog({
         });
         if (rpcErr) throw rpcErr;
 
-        // Purge auth user
+        // Purge auth user (ID + email: handles legacy profile/auth ID mismatches)
         await supabase.functions.invoke("delete-users", {
-          body: { userIds: [agent.id] },
+          body: {
+            userIds: [agent.id],
+            emails: [agent.email],
+          },
         });
 
         successCount++;
