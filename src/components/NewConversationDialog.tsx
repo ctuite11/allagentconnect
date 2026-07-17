@@ -63,6 +63,8 @@ export function NewConversationDialog({
   const [unifiedSearchResults, setUnifiedSearchResults] = useState<UnifiedMessageRecipient[]>([]);
   const [buyerComposeLoading, setBuyerComposeLoading] = useState(false);
   const [agentSearchLoading, setAgentSearchLoading] = useState(false);
+  const [agentSearchError, setAgentSearchError] = useState<string | null>(null);
+  const [agentSearchAttempt, setAgentSearchAttempt] = useState(0);
   const [debouncedAgentSearch, setDebouncedAgentSearch] = useState("");
   const [search, setSearch] = useState("");
   const [selectedContact, setSelectedContact] = useState<UnifiedMessageRecipient | null>(null);
@@ -117,13 +119,20 @@ export function NewConversationDialog({
       return;
     }
 
+    // Same trimmed query as the last search (e.g. trailing space typed):
+    // no new request will fire, so don't leave the spinner running.
+    if (q === debouncedAgentSearch) {
+      setAgentSearchLoading(false);
+      return;
+    }
+
     setAgentSearchLoading(true);
     const timer = setTimeout(() => {
       setDebouncedAgentSearch(q);
     }, AGENT_RECIPIENT_SEARCH_DEBOUNCE_MS);
 
     return () => clearTimeout(timer);
-  }, [search, open, composeVariant]);
+  }, [search, open, composeVariant, debouncedAgentSearch]);
 
   // Agent compose: unified contact search (My Contacts + network agents, one row per person).
   useEffect(() => {
@@ -133,12 +142,14 @@ export function NewConversationDialog({
     if (q.length < AGENT_CONTACT_MIN_QUERY_LENGTH) {
       setUnifiedSearchResults([]);
       setAgentSearchLoading(false);
+      setAgentSearchError(null);
       return;
     }
 
     let cancelled = false;
     void (async () => {
       setAgentSearchLoading(true);
+      setAgentSearchError(null);
       try {
         const {
           data: { user },
@@ -149,7 +160,12 @@ export function NewConversationDialog({
         if (!cancelled) setUnifiedSearchResults(results);
       } catch (err) {
         console.error("Error searching unified message recipients:", err);
-        if (!cancelled) setUnifiedSearchResults([]);
+        if (!cancelled) {
+          setUnifiedSearchResults([]);
+          // Surface a real error state — a failed request must not present
+          // itself as an empty "no results" outcome.
+          setAgentSearchError("Search failed. Check your connection and try again.");
+        }
       } finally {
         if (!cancelled) setAgentSearchLoading(false);
       }
@@ -158,7 +174,7 @@ export function NewConversationDialog({
     return () => {
       cancelled = true;
     };
-  }, [debouncedAgentSearch, open, composeVariant]);
+  }, [debouncedAgentSearch, agentSearchAttempt, open, composeVariant]);
 
   // Buyer favorites — preload on open so we know whether listing context is available.
   useEffect(() => {
@@ -279,6 +295,7 @@ export function NewConversationDialog({
     setSearch("");
     setDebouncedAgentSearch("");
     setUnifiedSearchResults([]);
+    setAgentSearchError(null);
     requestAnimationFrame(() => messageRef.current?.focus());
   }, []);
 
@@ -389,6 +406,7 @@ export function NewConversationDialog({
     setSearch("");
     setDebouncedAgentSearch("");
     setAgentSearchLoading(false);
+    setAgentSearchError(null);
     setSelectedContact(null);
     setUnifiedSearchResults([]);
     setMessage("");
@@ -649,6 +667,17 @@ export function NewConversationDialog({
                     <Loader2 className="h-4 w-4 animate-spin" />
                     Searching…
                   </p>
+                ) : agentSearchError ? (
+                  <div className="space-y-2 px-2 py-6 text-center">
+                    <p className="text-sm text-zinc-600">{agentSearchError}</p>
+                    <button
+                      type="button"
+                      onClick={() => setAgentSearchAttempt((n) => n + 1)}
+                      className="text-sm font-medium text-[#0E56F5] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-300 focus-visible:ring-offset-2"
+                    >
+                      Try again
+                    </button>
+                  </div>
                 ) : unifiedSearchResults.length > 0 ? (
                   <div className="max-h-[240px] overflow-y-auto rounded-lg border border-zinc-100">
                     <div className="space-y-0.5 p-1">
