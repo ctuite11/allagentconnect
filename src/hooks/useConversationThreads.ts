@@ -76,40 +76,115 @@ export function useConversationThreads() {
         return;
       }
 
-      if (!inboxData || inboxData.length === 0) {
+      const filteredInbox = (inboxData ?? []).filter(
+        (row: any) => !isLocallyArchived(row.conversation_id)
+      );
+
+      // Newly created conversations with no messages are missing from
+      // conversation_inbox, so a fresh thread (e.g. "Message" from an agent
+      // profile) would be invisible to both participants until the first
+      // message. Merge them in with created_at as the activity timestamp.
+      const inboxIds = new Set(filteredInbox.map((row: any) => row.conversation_id));
+      let missingConvos: Array<{
+        id: string;
+        agent_a_id: string;
+        agent_b_id: string;
+        created_at: string;
+        listing_id: string | null;
+        buyer_need_id: string | null;
+      }> = [];
+      try {
+        const { data: convRows, error: convError } = await supabase
+          .from("conversations")
+          .select("id, agent_a_id, agent_b_id, created_at, listing_id, buyer_need_id")
+          .or(`agent_a_id.eq.${user.id},agent_b_id.eq.${user.id}`)
+          .order("created_at", { ascending: false })
+          .limit(100);
+        if (convError) {
+          console.error("Error fetching empty conversations:", convError);
+        } else {
+          const candidates = (convRows ?? []).filter(
+            (c) => !inboxIds.has(c.id) && !isLocallyArchived(c.id)
+          );
+          if (candidates.length > 0) {
+            // Respect per-user archive: a conversation the user deleted from
+            // their inbox must not reappear via this merge.
+            const { data: cpRows } = await supabase
+              .from("conversation_participants")
+              .select("conversation_id, is_archived")
+              .in("conversation_id", candidates.map((c) => c.id))
+              .eq("user_id", user.id);
+            const archivedIds = new Set(
+              (cpRows ?? [])
+                .filter((cp) => cp.is_archived === true)
+                .map((cp) => cp.conversation_id)
+            );
+            missingConvos = candidates.filter((c) => !archivedIds.has(c.id));
+          }
+        }
+      } catch (mergeError) {
+        // Merge is best-effort — never break the main inbox on failure.
+        console.error("Error merging empty conversations:", mergeError);
+      }
+
+      if (filteredInbox.length === 0 && missingConvos.length === 0) {
         setThreads([]);
         setLoading(false);
         return;
       }
 
-      const filteredInbox = inboxData.filter(
-        (row: any) => !isLocallyArchived(row.conversation_id)
-      );
-      const otherUserIds = filteredInbox.map((row: any) => row.other_user_id);
+      const otherUserIds = [
+        ...filteredInbox.map((row: any) => row.other_user_id),
+        ...missingConvos.map((c) => (c.agent_a_id === user.id ? c.agent_b_id : c.agent_a_id)),
+      ];
       const profileMap = await resolveDisplayProfiles(otherUserIds);
 
-      const formattedThreads: ConversationThread[] = filteredInbox.map((row: any) => {
-        const profile = profileMap.get(row.other_user_id);
+      const toDisplayName = (otherUserId: string) => {
+        const profile = profileMap.get(otherUserId);
         return {
-          id: row.conversation_id,
-          otherUserId: row.other_user_id,
           otherUserName: profile
             ? `${profile.first_name ?? ""} ${profile.last_name ?? ""}`.trim() || "Unknown User"
             : "Unknown User",
           otherUserEmail: profile?.email || "",
           otherUserHeadshotUrl: profile?.headshot_url ?? null,
           otherUserIsAgent: profile?.isAgent ?? false,
-          lastMessagePreview: row.last_message_preview?.substring(0, 100) || null,
-          lastMessageAt: row.last_message_at,
-          lastMessageSenderId: row.last_message_sender_id,
-          isUnread: row.is_unread,
-          unreadCount: typeof row.unread_count === 'number' ? row.unread_count : (row.is_unread ? 1 : 0),
-          listingId: row.listing_id,
-          buyerNeedId: row.buyer_need_id,
+        };
+      };
+
+      const formattedThreads: ConversationThread[] = filteredInbox.map((row: any) => ({
+        id: row.conversation_id,
+        otherUserId: row.other_user_id,
+        ...toDisplayName(row.other_user_id),
+        lastMessagePreview: row.last_message_preview?.substring(0, 100) || null,
+        lastMessageAt: row.last_message_at,
+        lastMessageSenderId: row.last_message_sender_id,
+        isUnread: row.is_unread,
+        unreadCount: typeof row.unread_count === 'number' ? row.unread_count : (row.is_unread ? 1 : 0),
+        listingId: row.listing_id,
+        buyerNeedId: row.buyer_need_id,
+      }));
+
+      const emptyThreads: ConversationThread[] = missingConvos.map((c) => {
+        const otherUserId = c.agent_a_id === user.id ? c.agent_b_id : c.agent_a_id;
+        return {
+          id: c.id,
+          otherUserId,
+          ...toDisplayName(otherUserId),
+          lastMessagePreview: null,
+          lastMessageAt: c.created_at,
+          lastMessageSenderId: null,
+          isUnread: false,
+          unreadCount: 0,
+          listingId: c.listing_id,
+          buyerNeedId: c.buyer_need_id,
         };
       });
 
-      setThreads(formattedThreads);
+      const merged = [...formattedThreads, ...emptyThreads].sort(
+        (a, b) => new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime()
+      );
+
+      setThreads(merged);
     } catch (error) {
       console.error("Error building thread list:", error);
     } finally {

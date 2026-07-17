@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { X, MessageSquare } from "lucide-react";
+import { X, MessageSquare, ArrowLeft } from "lucide-react";
 import { useConversation, type HotSheetCommentPreviewSync } from "@/hooks/useConversation";
 import { useAgentLastSeen } from "@/hooks/useAgentLastSeen";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,6 +22,11 @@ interface ConversationPanelProps {
    */
   onCloseRequest?: () => void;
   /**
+   * Mobile-only "← All messages" affordance. On small viewports the inbox
+   * column is hidden while a thread is open, so this is the way back.
+   */
+  onBackToInbox?: () => void;
+  /**
    * Primary header line — e.g. full listing address for a listing-scoped thread.
    * When set, the listing “About:” subtitle is omitted to avoid duplication.
    */
@@ -36,6 +41,7 @@ export function ConversationPanel({
   conversationId,
   onInboxInvalidate,
   onCloseRequest,
+  onBackToInbox,
   threadTitle,
   layoutVariant = "default",
   hotSheetPreviewSync,
@@ -262,6 +268,20 @@ export function ConversationPanel({
 
   return (
     <div className={rootClass}>
+      {/* Mobile-only escape hatch back to the inbox list (list column is hidden
+          below md while a thread is open). Desktop layout is untouched. */}
+      {onBackToInbox ? (
+        <div className="shrink-0 border-b border-neutral-100 md:hidden">
+          <button
+            type="button"
+            onClick={onBackToInbox}
+            className="flex w-full items-center gap-1.5 px-4 py-2 text-left text-[13px] font-medium text-[#0E56F5] transition-colors hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-300"
+          >
+            <ArrowLeft className="h-3.5 w-3.5 shrink-0" strokeWidth={2} aria-hidden />
+            All messages
+          </button>
+        </div>
+      ) : null}
       {/* Header */}
       <div
         className={cn(

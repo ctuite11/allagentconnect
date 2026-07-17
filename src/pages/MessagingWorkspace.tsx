@@ -212,6 +212,11 @@ function MessagingWorkspaceContent({
                   conversationId={selectedConversationId}
                   onInboxInvalidate={() => void refetchThreads()}
                   onCloseRequest={() => navigate(messagesRouteBase)}
+                  onBackToInbox={
+                    selectedConversationId
+                      ? () => navigate(messagesRouteBase)
+                      : undefined
+                  }
                 />
               </div>
             </div>
