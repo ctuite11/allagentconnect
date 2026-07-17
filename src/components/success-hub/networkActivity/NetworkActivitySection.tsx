@@ -187,7 +187,7 @@ export function NetworkActivitySection() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:items-start">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <BuyerNeedsChannel onCreate={() => openCompose("buyer_need", "Buyer Needs")} />
         <SalesIntelChannel onCreate={() => openCompose("sales_intel", "Sales Intel")} />
         <RenterNeedsChannel onCreate={() => openCompose("renter_need", "Renter Needs")} />

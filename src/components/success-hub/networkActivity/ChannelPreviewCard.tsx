@@ -18,8 +18,12 @@ type ChannelPreviewCardProps = {
 
 /**
  * Compact preview of a single Communications Center channel.
- * Renders at most 3 items + a "View all →" link to /communications filtered to this channel.
+ * Renders at most 2 items + a "View all →" link to /communications filtered
+ * to this channel. The content area keeps a consistent minimum height so all
+ * four channel cards stay uniform regardless of how much activity they have.
  */
+const MAX_PREVIEW_ITEMS = 2;
+
 export function ChannelPreviewCard({
   title,
   description,
@@ -32,6 +36,7 @@ export function ChannelPreviewCard({
 }: ChannelPreviewCardProps) {
   return (
     <NetworkActivityCard
+      className="h-full"
       title={title}
       description={description}
       icon={icon}
@@ -56,9 +61,10 @@ export function ChannelPreviewCard({
         </div>
       }
     >
+      <div className="min-h-[176px]">
       {loading ? (
         <ul className="divide-y divide-neutral-100">
-          {[0, 1, 2].map((i) => (
+          {[0, 1].map((i) => (
             <li key={i} className="py-2.5 first:pt-0 last:pb-0">
               <div className="h-3 w-1/2 rounded bg-neutral-100" />
               <div className="mt-1.5 h-2.5 w-1/3 rounded bg-neutral-100" />
@@ -70,7 +76,7 @@ export function ChannelPreviewCard({
         <p className="py-2 text-xs text-neutral-500">{emptyLabel}</p>
       ) : (
         <ul className="divide-y divide-neutral-100">
-          {items.slice(0, 3).map((item) => (
+          {items.slice(0, MAX_PREVIEW_ITEMS).map((item) => (
             <li key={item.id} className="py-2.5 first:pt-0 last:pb-0">
               <div className="flex items-start justify-between gap-2">
                 {item.subtitle ? (
@@ -100,6 +106,7 @@ export function ChannelPreviewCard({
           ))}
         </ul>
       )}
+      </div>
     </NetworkActivityCard>
   );
 }
