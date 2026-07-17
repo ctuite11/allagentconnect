@@ -126,6 +126,9 @@ serve(async (req) => {
 
     const { userIds: providedUserIds, emails, dryRun } = await req.json();
     const userIds: string[] = providedUserIds || [];
+    const emailsForCleanup: string[] = Array.isArray(emails)
+      ? emails.map((e: string) => String(e).toLowerCase()).filter(Boolean)
+      : [];
 
     // If emails provided, look up user IDs with pagination
     if (emails && Array.isArray(emails) && emails.length > 0) {
@@ -224,10 +227,33 @@ serve(async (req) => {
     }
 
     const allSucceeded = deletedAuthUsers.length === userIds.length;
+
+    // Also clear any orphaned pending_verifications rows for these emails.
+    // Phase 3 leads have no auth.users row — deleting only auth records
+    // leaves the pending row behind and it re-surfaces in Admin Approvals.
+    let pendingCleared = 0;
+    if (emailsForCleanup.length > 0) {
+      const { data: pvRows, error: pvErr } = await supabase
+        .from("pending_verifications")
+        .update({ status: "rejected" })
+        .in("email", emailsForCleanup)
+        .eq("status", "pending")
+        .select("id");
+      if (pvErr) {
+        console.log(`pending_verifications cleanup error: ${pvErr.message}`);
+      } else {
+        pendingCleared = pvRows?.length ?? 0;
+        if (pendingCleared > 0) {
+          console.log(`Cleared ${pendingCleared} orphaned pending_verifications row(s)`);
+        }
+      }
+    }
+
     return new Response(JSON.stringify({
       success: allSucceeded,
       deleted: deletedAuthUsers.length,
-      message: `Deleted ${deletedAuthUsers.length} of ${userIds.length} auth accounts`,
+      pendingVerificationsCleared: pendingCleared,
+      message: `Deleted ${deletedAuthUsers.length} of ${userIds.length} auth accounts${pendingCleared > 0 ? ` and cleared ${pendingCleared} pending verification row(s)` : ""}`,
       deletedUserIds: deletedAuthUsers,
       errors: errors.length > 0 ? errors : undefined,
       error: !allSucceeded ? `Failed to delete ${errors.length} of ${userIds.length} auth accounts` : undefined,

@@ -1,54 +1,47 @@
-## Scope
+## Diagnosis
 
-Single-file change: `src/pages/AdminApprovals.tsx` only.
+Morgan (`morgan@westgatecompanies.com`) was deleted, but her `pending_verifications` row is still `status='pending'` — which is why she still appears in the admin approval list.
 
-## What the file currently does
+**Confirmed remnants (all other records gone):**
+- `deleted_users`: ca72454f… ✅ (deletion succeeded)
+- `pending_verifications`: 7d049a1d… **status still `pending`** ← the leak
+- Everything else (`auth.users`, `agent_profiles`, `profiles`, `agent_settings`, `user_roles`, `agent_early_access`): gone
 
-`invokeAdminVerify()` already:
-- Force-refreshes the session (refreshes when access token missing or within 60s of expiry)
-- Sends `Authorization: Bearer <current_access_token>` and `apikey: <publishable/anon key>` explicitly via `fetch`
-- Parses response JSON and throws on non-2xx or `success: false`
-- Attaches `code` and `match` to the thrown Error so the caller can handle the 409 `previously_deleted` flow
+**Why reject didn't work first:**
+The reject path at `AdminApprovals.tsx:745-751` does a client-side `supabase.from("pending_verifications").update({ status: "rejected" })`. RLS policy `Admins can update pending verifications` requires `has_role(auth.uid(),'admin')`. If the session token wasn't validating (same class of issue we just fixed on `admin-verify-agent`), the update silently no-ops with 0 rows — no thrown error, no toast failure. That's consistent with "reject didn't work."
 
-So the runtime behavior you want is already in place. The requested change is to route this through the shared `invokeEdgeFunction("admin-verify-agent", body)` helper in `src/lib/invokeEdgeFunction.ts`, which uses the identical refresh + explicit-header pattern. This aligns the code path with every other admin call and removes the duplicate implementation.
+**Why delete left the row behind:**
+`delete-users` was built for auth-backed accounts (auth.users + related). For a Phase 3 lead whose only record is a `pending_verifications` row, it removes the auth/profile records (all zero of them) and never touches `pending_verifications`. Result: `deleted_users` marker is inserted, but the pending row is orphaned and re-surfaces in the admin list.
 
-## Change
+## Fix
 
-1. Import `invokeEdgeFunction` (in addition to `resolveEdgeFunctionErrorMessage`) from `@/lib/invokeEdgeFunction`.
-2. Rewrite the body of `invokeAdminVerify()` to:
-   ```ts
-   try {
-     return await invokeEdgeFunction<AdminVerifyResult>("admin-verify-agent", body);
-   } catch (err) {
-     // Preserve 409 previously_deleted acknowledge flow used by the caller.
-     // invokeEdgeFunction throws Error(message); re-attach code/match from
-     // the last known payload if the helper preserved it, otherwise rethrow.
-     throw err;
-   }
-   ```
-3. To preserve the `code`/`match` metadata on the thrown error (used by the "Previously Deleted Agent" dialog), extend `invokeEdgeFunction` in `src/lib/invokeEdgeFunction.ts` in a minimal, backwards-compatible way: when throwing, attach `code` and `match` (if present) from the parsed payload onto the Error via `Object.assign`. No other helper behavior changes.
+### 1. One-time cleanup (data)
+Mark Morgan's orphaned pending_verifications row as `rejected` so she stops appearing in the pending list. Do not delete the row — `deleted_users` audit already references this email, and keeping `rejected` preserves the historical signal used by `guardDeletedAgent`.
 
-Nothing else in the file or repo changes.
+```sql
+UPDATE public.pending_verifications
+SET status = 'rejected'
+WHERE id = '7d049a1d-3a5b-42ab-9765-efcdb7737f22'
+  AND status = 'pending';
+```
 
-## Explicitly NOT changed
+### 2. Make reject robust (frontend)
+In `src/pages/AdminApprovals.tsx` reject branch:
+- After the `update`, check `data`/rows-affected. If 0 rows updated, throw so the toast shows a real error instead of a silent success.
+- Use `.select('id').single()` on the update so a missing row / RLS block surfaces as an error.
 
-- Ryan Shannon's data
-- `supabase/functions/admin-verify-agent/*`
-- `convert-pending-verification-to-agent`
-- `convert-early-access-to-account`
-- `send-license-verified-email`
-- Database state
-- Verification ordering or idempotency logic
-- `AdminApprovals.tsx` UI, filters, or any handler other than `invokeAdminVerify`
+### 3. Make delete complete (edge function)
+In `supabase/functions/delete-users/index.ts`, after purging auth/profile records, also:
+- `UPDATE pending_verifications SET status='rejected' WHERE lower(email)=lower($1) AND status='pending'` for each deleted email.
+- Include the count in the response so the admin toast can say "also cleared N pending verification row(s)."
 
-## After apply
+This keeps the audit trail (row stays, marked `rejected`) and prevents future deletions from leaving the same orphan.
 
-You will need to **Publish** so the frontend actually ships (edge functions deploy automatically; the React bundle does not). Then click Verify on Ryan.
+### 4. Verify
+- Refresh admin approvals — Morgan should be gone.
+- Try reject on any remaining pending lead — expect either success toast or a real error, never silent no-op.
 
-## Validation I will run after your click
-
-1. Live edge request headers include `Authorization: Bearer …` and `apikey: …` (not just `x-client-info: supabase-js-web`).
-2. `admin-verify-agent` passes the missing-header check.
-3. `getUser()` result — success confirmed, or precise new 401 body if it becomes B.
-4. `has_role(admin)` result — success confirmed, or precise new 403 body if it becomes C.
-5. Ryan's `pending_verifications` row moves to processed, `auth.users` row exists, `agent_settings.agent_status = 'verified'`, and exactly one `email_jobs` row with idempotency key `license-verified:verify:<ryan-user-id>`.
+## Scope guardrails
+- No changes to verification logic, license-verified email, idempotency, or schema.
+- No delete-users behavior change beyond the added pending_verifications cleanup step.
+- No touching Ryan Shannon or any other row.
