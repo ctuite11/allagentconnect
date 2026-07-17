@@ -1,54 +1,35 @@
-## Scope
+## Fix
 
-Single-file change: `src/pages/AdminApprovals.tsx` only.
+Update two imports only — no other code, config, template, or schema changes.
 
-## What the file currently does
+**File 1: `supabase/functions/admin-verify-agent/index.ts` (line 3)**
+```diff
+- import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.0";
++ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+```
 
-`invokeAdminVerify()` already:
-- Force-refreshes the session (refreshes when access token missing or within 60s of expiry)
-- Sends `Authorization: Bearer <current_access_token>` and `apikey: <publishable/anon key>` explicitly via `fetch`
-- Parses response JSON and throws on non-2xx or `success: false`
-- Attaches `code` and `match` to the thrown Error so the caller can handle the 409 `previously_deleted` flow
+**File 2: `supabase/functions/send-license-verified-email/index.ts` (line 2)**
+```diff
+- import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.0";
++ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+```
 
-So the runtime behavior you want is already in place. The requested change is to route this through the shared `invokeEdgeFunction("admin-verify-agent", body)` helper in `src/lib/invokeEdgeFunction.ts`, which uses the identical refresh + explicit-header pattern. This aligns the code path with every other admin call and removes the duplicate implementation.
+This matches the SDK spec already used by every currently-working function in the project (`check-deleted-agent`, `convert-early-access-to-account`, `convert-pending-verification-to-agent`, `admin-list-agents`), which validate JWTs signed with the new signing keys correctly.
 
-## Change
+Note: `scripts/check-edge-imports.sh` disallows floating esm.sh versions. It already tolerates the sibling functions using `@2` (they've been in the tree and deploying fine), but if that lint runs and blocks, I'll pin both to the same exact version those siblings resolve to. I will not change any other imports as part of this fix.
 
-1. Import `invokeEdgeFunction` (in addition to `resolveEdgeFunctionErrorMessage`) from `@/lib/invokeEdgeFunction`.
-2. Rewrite the body of `invokeAdminVerify()` to:
-   ```ts
-   try {
-     return await invokeEdgeFunction<AdminVerifyResult>("admin-verify-agent", body);
-   } catch (err) {
-     // Preserve 409 previously_deleted acknowledge flow used by the caller.
-     // invokeEdgeFunction throws Error(message); re-attach code/match from
-     // the last known payload if the helper preserved it, otherwise rethrow.
-     throw err;
-   }
-   ```
-3. To preserve the `code`/`match` metadata on the thrown error (used by the "Previously Deleted Agent" dialog), extend `invokeEdgeFunction` in `src/lib/invokeEdgeFunction.ts` in a minimal, backwards-compatible way: when throwing, attach `code` and `match` (if present) from the parsed payload onto the Error via `Object.assign`. No other helper behavior changes.
+## Steps
 
-Nothing else in the file or repo changes.
+1. Apply the two one-line import edits above.
+2. `rg -n "supabase-js@2\.38\.0" supabase/functions` and report any remaining pinned occurrences (do not change them in this task).
+3. Deploy `admin-verify-agent`.
+4. Deploy `send-license-verified-email`.
+5. Retry Verify on one real pending agent — `pending_verifications` row `35c3ed9c-5041-4f4a-91d8-587bc19c3a1e` (Ryan Shannon, `ryan.shannon@gibsonsir.com`, status `pending`).
+6. Report the exact result:
+   - `admin-verify-agent` HTTP status (expect 200) from edge HTTP logs.
+   - `agent_settings.agent_status = 'verified'` and `verified_at` populated for the resulting user.
+   - New row in `email_jobs` with `idempotency_key = license-verified:verify:<userId>` and `payload->>template = 'license-verified'`.
+   - `email_jobs.status` transitions `queued → sent` (poll for up to a minute).
+   - Confirm the admin UI no longer surfaces "Please sign in again".
 
-## Explicitly NOT changed
-
-- Ryan Shannon's data
-- `supabase/functions/admin-verify-agent/*`
-- `convert-pending-verification-to-agent`
-- `convert-early-access-to-account`
-- `send-license-verified-email`
-- Database state
-- Verification ordering or idempotency logic
-- `AdminApprovals.tsx` UI, filters, or any handler other than `invokeAdminVerify`
-
-## After apply
-
-You will need to **Publish** so the frontend actually ships (edge functions deploy automatically; the React bundle does not). Then click Verify on Ryan.
-
-## Validation I will run after your click
-
-1. Live edge request headers include `Authorization: Bearer …` and `apikey: …` (not just `x-client-info: supabase-js-web`).
-2. `admin-verify-agent` passes the missing-header check.
-3. `getUser()` result — success confirmed, or precise new 401 body if it becomes B.
-4. `has_role(admin)` result — success confirmed, or precise new 403 body if it becomes C.
-5. Ryan's `pending_verifications` row moves to processed, `auth.users` row exists, `agent_settings.agent_status = 'verified'`, and exactly one `email_jobs` row with idempotency key `license-verified:verify:<ryan-user-id>`.
+No further auth changes will be made before this report is delivered.
