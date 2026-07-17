@@ -126,6 +126,9 @@ export function NewConversationDialog({
       return;
     }
 
+    // The input no longer matches the displayed results — clear them now so
+    // stale matches (e.g. "pa…" names) are never shown under a newer query.
+    setUnifiedSearchResults([]);
     setAgentSearchLoading(true);
     const timer = setTimeout(() => {
       setDebouncedAgentSearch(q);
@@ -148,6 +151,9 @@ export function NewConversationDialog({
 
     let cancelled = false;
     void (async () => {
+      // Clear before fetching (covers retry) — only results for the query
+      // currently in the input may ever be displayed.
+      setUnifiedSearchResults([]);
       setAgentSearchLoading(true);
       setAgentSearchError(null);
       try {
