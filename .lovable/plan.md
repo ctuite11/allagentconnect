@@ -1,35 +1,47 @@
+## Diagnosis
+
+Morgan (`morgan@westgatecompanies.com`) was deleted, but her `pending_verifications` row is still `status='pending'` — which is why she still appears in the admin approval list.
+
+**Confirmed remnants (all other records gone):**
+- `deleted_users`: ca72454f… ✅ (deletion succeeded)
+- `pending_verifications`: 7d049a1d… **status still `pending`** ← the leak
+- Everything else (`auth.users`, `agent_profiles`, `profiles`, `agent_settings`, `user_roles`, `agent_early_access`): gone
+
+**Why reject didn't work first:**
+The reject path at `AdminApprovals.tsx:745-751` does a client-side `supabase.from("pending_verifications").update({ status: "rejected" })`. RLS policy `Admins can update pending verifications` requires `has_role(auth.uid(),'admin')`. If the session token wasn't validating (same class of issue we just fixed on `admin-verify-agent`), the update silently no-ops with 0 rows — no thrown error, no toast failure. That's consistent with "reject didn't work."
+
+**Why delete left the row behind:**
+`delete-users` was built for auth-backed accounts (auth.users + related). For a Phase 3 lead whose only record is a `pending_verifications` row, it removes the auth/profile records (all zero of them) and never touches `pending_verifications`. Result: `deleted_users` marker is inserted, but the pending row is orphaned and re-surfaces in the admin list.
+
 ## Fix
 
-Update two imports only — no other code, config, template, or schema changes.
+### 1. One-time cleanup (data)
+Mark Morgan's orphaned pending_verifications row as `rejected` so she stops appearing in the pending list. Do not delete the row — `deleted_users` audit already references this email, and keeping `rejected` preserves the historical signal used by `guardDeletedAgent`.
 
-**File 1: `supabase/functions/admin-verify-agent/index.ts` (line 3)**
-```diff
-- import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.0";
-+ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+```sql
+UPDATE public.pending_verifications
+SET status = 'rejected'
+WHERE id = '7d049a1d-3a5b-42ab-9765-efcdb7737f22'
+  AND status = 'pending';
 ```
 
-**File 2: `supabase/functions/send-license-verified-email/index.ts` (line 2)**
-```diff
-- import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.0";
-+ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-```
+### 2. Make reject robust (frontend)
+In `src/pages/AdminApprovals.tsx` reject branch:
+- After the `update`, check `data`/rows-affected. If 0 rows updated, throw so the toast shows a real error instead of a silent success.
+- Use `.select('id').single()` on the update so a missing row / RLS block surfaces as an error.
 
-This matches the SDK spec already used by every currently-working function in the project (`check-deleted-agent`, `convert-early-access-to-account`, `convert-pending-verification-to-agent`, `admin-list-agents`), which validate JWTs signed with the new signing keys correctly.
+### 3. Make delete complete (edge function)
+In `supabase/functions/delete-users/index.ts`, after purging auth/profile records, also:
+- `UPDATE pending_verifications SET status='rejected' WHERE lower(email)=lower($1) AND status='pending'` for each deleted email.
+- Include the count in the response so the admin toast can say "also cleared N pending verification row(s)."
 
-Note: `scripts/check-edge-imports.sh` disallows floating esm.sh versions. It already tolerates the sibling functions using `@2` (they've been in the tree and deploying fine), but if that lint runs and blocks, I'll pin both to the same exact version those siblings resolve to. I will not change any other imports as part of this fix.
+This keeps the audit trail (row stays, marked `rejected`) and prevents future deletions from leaving the same orphan.
 
-## Steps
+### 4. Verify
+- Refresh admin approvals — Morgan should be gone.
+- Try reject on any remaining pending lead — expect either success toast or a real error, never silent no-op.
 
-1. Apply the two one-line import edits above.
-2. `rg -n "supabase-js@2\.38\.0" supabase/functions` and report any remaining pinned occurrences (do not change them in this task).
-3. Deploy `admin-verify-agent`.
-4. Deploy `send-license-verified-email`.
-5. Retry Verify on one real pending agent — `pending_verifications` row `35c3ed9c-5041-4f4a-91d8-587bc19c3a1e` (Ryan Shannon, `ryan.shannon@gibsonsir.com`, status `pending`).
-6. Report the exact result:
-   - `admin-verify-agent` HTTP status (expect 200) from edge HTTP logs.
-   - `agent_settings.agent_status = 'verified'` and `verified_at` populated for the resulting user.
-   - New row in `email_jobs` with `idempotency_key = license-verified:verify:<userId>` and `payload->>template = 'license-verified'`.
-   - `email_jobs.status` transitions `queued → sent` (poll for up to a minute).
-   - Confirm the admin UI no longer surfaces "Please sign in again".
-
-No further auth changes will be made before this report is delivered.
+## Scope guardrails
+- No changes to verification logic, license-verified email, idempotency, or schema.
+- No delete-users behavior change beyond the added pending_verifications cleanup step.
+- No touching Ryan Shannon or any other row.
