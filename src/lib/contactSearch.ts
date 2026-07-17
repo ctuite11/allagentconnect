@@ -39,7 +39,6 @@ let contactsCache: ContactsCache | null = null;
 /** Drop cached contacts after import, create, update, or delete. */
 export function invalidateAgentContactsCache(): void {
   contactsCache = null;
-  unifiedMessageDirectoryCache = null;
 }
 
 const norm = (v: unknown) => String(v ?? "").toLowerCase().trim();
@@ -382,14 +381,6 @@ interface AgentPeerForMerge {
   isVerified: boolean;
 }
 
-type UnifiedDirectoryCache = {
-  agentId: string;
-  entries: UnifiedMessageRecipient[];
-  fetchedAt: number;
-};
-
-let unifiedMessageDirectoryCache: UnifiedDirectoryCache | null = null;
-
 function normEmailForMerge(email: unknown): string {
   return String(email ?? "").trim().toLowerCase();
 }
@@ -570,51 +561,85 @@ export function filterUnifiedMessageRecipients(
     .slice(0, limit);
 }
 
-/** Batch size for `.in("user_id", ...)` lookups — keeps request URLs well under proxy limits. */
-const SETTINGS_LOOKUP_CHUNK_SIZE = 150;
+/** Max candidate rows fetched per source per search — plenty for a 25-result picker. */
+const RECIPIENT_CANDIDATE_LIMIT = 50;
 
-async function fetchAgentPeersForMerge(agentId: string): Promise<AgentPeerForMerge[]> {
-  // Paginate — PostgREST silently caps un-ranged selects (default 1000 rows),
-  // which would drop agents from the directory as the network grows.
-  type PeerRow = {
-    id: string;
-    first_name: string | null;
-    last_name: string | null;
-    email: string | null;
-    headshot_url: string | null;
-  };
-  const peers: PeerRow[] = [];
-  for (let from = 0; ; from += PAGE_SIZE) {
-    const { data, error } = await supabase
-      .from("agent_profiles")
-      .select("id, first_name, last_name, email, headshot_url")
-      .neq("id", agentId)
-      .order("last_name")
-      .order("id")
-      .range(from, from + PAGE_SIZE - 1);
+/** Strip characters that break PostgREST `.or()` filter syntax or act as ilike wildcards. */
+function sanitizeIlikeToken(tok: string): string {
+  return tok.replace(/[,()%_\\]/g, "").trim();
+}
 
-    if (error) throw error;
-    const batch = (data ?? []) as PeerRow[];
-    peers.push(...batch);
-    if (batch.length < PAGE_SIZE) break;
+/** Query tokens safe to embed in ilike patterns (max 3 — enough for "first last" + one). */
+function tokenizeRecipientQuery(rawQuery: string): string[] {
+  return (rawQuery ?? "")
+    .trim()
+    .split(/\s+/)
+    .map(sanitizeIlikeToken)
+    .filter(Boolean)
+    .slice(0, 3);
+}
+
+/**
+ * Server-side CRM candidate search — every token must hit name/email/phone.
+ * Chained `.or()` groups AND together in PostgREST.
+ */
+async function searchCrmContactCandidates(
+  agentId: string,
+  tokens: string[],
+): Promise<ContactRow[]> {
+  let qb = supabase
+    .from(AGENT_CONTACTS_SOURCE)
+    .select(
+      "id, first_name, last_name, email, phone, client_type, relationship_user_id, relationship_status, relationship_ended_at",
+    )
+    .eq("agent_id", agentId);
+
+  for (const tok of tokens) {
+    const pat = `%${tok}%`;
+    qb = qb.or(
+      `first_name.ilike.${pat},last_name.ilike.${pat},email.ilike.${pat},phone.ilike.${pat}`,
+    );
   }
 
+  const { data, error } = await qb.limit(RECIPIENT_CANDIDATE_LIMIT);
+  if (error) throw error;
+  return (data ?? []) as ContactRow[];
+}
+
+/** Server-side agent network candidate search, with verified lookup on candidates only. */
+async function searchAgentPeerCandidates(
+  agentId: string,
+  tokens: string[],
+): Promise<AgentPeerForMerge[]> {
+  let qb = supabase
+    .from("agent_profiles")
+    .select("id, first_name, last_name, email, headshot_url")
+    .neq("id", agentId);
+
+  for (const tok of tokens) {
+    const pat = `%${tok}%`;
+    qb = qb.or(`first_name.ilike.${pat},last_name.ilike.${pat},email.ilike.${pat}`);
+  }
+
+  const { data, error } = await qb.order("last_name").limit(RECIPIENT_CANDIDATE_LIMIT);
+  if (error) throw error;
+
+  const peers = data ?? [];
   if (peers.length === 0) return [];
 
-  // Verified lookup is best-effort: chunk the id list (a single .in() with
-  // every peer id produces an over-long URL once the network is big enough),
-  // and treat lookup failures as "not verified" rather than failing search.
+  // Verified lookup is best-effort — a failure downgrades the role badge to
+  // "Agent" rather than failing the search.
   const verifiedIds = new Set<string>();
-  for (let i = 0; i < peers.length; i += SETTINGS_LOOKUP_CHUNK_SIZE) {
-    const chunk = peers.slice(i, i + SETTINGS_LOOKUP_CHUNK_SIZE).map((p) => p.id);
-    const { data: settingsRows, error: settingsError } = await supabase
-      .from("agent_settings")
-      .select("user_id, agent_status")
-      .in("user_id", chunk);
-    if (settingsError) {
-      console.error("[contactSearch] agent_settings lookup failed:", settingsError);
-      continue;
-    }
+  const { data: settingsRows, error: settingsError } = await supabase
+    .from("agent_settings")
+    .select("user_id, agent_status")
+    .in(
+      "user_id",
+      peers.map((p) => p.id),
+    );
+  if (settingsError) {
+    console.error("[contactSearch] agent_settings lookup failed:", settingsError);
+  } else {
     for (const s of settingsRows ?? []) {
       if (s.agent_status === "verified") verifiedIds.add(s.user_id);
     }
@@ -631,63 +656,46 @@ async function fetchAgentPeersForMerge(agentId: string): Promise<AgentPeerForMer
 }
 
 /**
- * Load the unified New Message directory — My Contacts first, then network agents merged by email.
+ * Search unified message recipients for the signed-in agent's New Message compose.
+ * Candidates are filtered server-side by the typed tokens (no full-directory
+ * download), then merged and ranked with the shared client-side rules.
  */
-export async function fetchUnifiedMessageRecipientDirectory(
+export async function searchUnifiedMessageRecipients(
   agentId: string,
-  opts: { force?: boolean } = {},
+  query: string,
+  opts: { forceRefresh?: boolean; limit?: number } = {},
 ): Promise<UnifiedMessageRecipient[]> {
-  if (!agentId) return [];
+  const q = (query ?? "").trim();
+  if (!agentId || !q || q.length < AGENT_CONTACT_MIN_QUERY_LENGTH) return [];
 
-  const { force = false } = opts;
-  if (
-    !force &&
-    unifiedMessageDirectoryCache?.agentId === agentId &&
-    Date.now() - unifiedMessageDirectoryCache.fetchedAt < CACHE_TTL_MS
-  ) {
-    return unifiedMessageDirectoryCache.entries;
-  }
+  const tokens = tokenizeRecipientQuery(q);
+  if (tokens.length === 0) return [];
 
-  // One failing source must not blank the whole directory (e.g. a CRM view
-  // error should not hide every agent). Partial results are returned but not
-  // cached, so the failing source is retried on the next search.
+  // One failing source must not blank the whole result set (e.g. a CRM view
+  // error should not hide every agent).
   const [crmResult, peersResult] = await Promise.allSettled([
-    fetchAllAgentContacts(agentId, {
-      select:
-        "id, first_name, last_name, email, phone, client_type, relationship_user_id, relationship_status, relationship_ended_at",
-    }),
-    fetchAgentPeersForMerge(agentId),
+    searchCrmContactCandidates(agentId, tokens),
+    searchAgentPeerCandidates(agentId, tokens),
   ]);
 
   if (crmResult.status === "rejected" && peersResult.status === "rejected") {
-    console.error("[contactSearch] both directory sources failed:", crmResult.reason, peersResult.reason);
+    console.error(
+      "[contactSearch] both recipient search sources failed:",
+      crmResult.reason,
+      peersResult.reason,
+    );
     throw crmResult.reason;
   }
   if (crmResult.status === "rejected") {
-    console.error("[contactSearch] CRM contacts fetch failed (agents still searchable):", crmResult.reason);
+    console.error("[contactSearch] CRM candidate search failed (agents still searchable):", crmResult.reason);
   }
   if (peersResult.status === "rejected") {
-    console.error("[contactSearch] agent peers fetch failed (CRM still searchable):", peersResult.reason);
+    console.error("[contactSearch] agent candidate search failed (CRM still searchable):", peersResult.reason);
   }
 
   const crmContacts = crmResult.status === "fulfilled" ? crmResult.value : [];
   const agentPeers = peersResult.status === "fulfilled" ? peersResult.value : [];
 
   const entries = mergeUnifiedMessageRecipients(agentId, crmContacts, agentPeers);
-  if (crmResult.status === "fulfilled" && peersResult.status === "fulfilled") {
-    unifiedMessageDirectoryCache = { agentId, entries, fetchedAt: Date.now() };
-  }
-  return entries;
-}
-
-/** Search unified message recipients for the signed-in agent's New Message compose. */
-export async function searchUnifiedMessageRecipients(
-  agentId: string,
-  query: string,
-  opts: { forceRefresh?: boolean; limit?: number } = {},
-): Promise<UnifiedMessageRecipient[]> {
-  const directory = await fetchUnifiedMessageRecipientDirectory(agentId, {
-    force: opts.forceRefresh,
-  });
-  return filterUnifiedMessageRecipients(directory, query, opts.limit ?? 25);
+  return filterUnifiedMessageRecipients(entries, q, opts.limit ?? 25);
 }

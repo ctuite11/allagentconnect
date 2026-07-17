@@ -654,14 +654,17 @@ export function NewConversationDialog({
                     className="pl-9 w-full bg-white border-neutral-200 text-neutral-900 focus:outline-none focus-visible:outline-none focus-visible:ring-0 focus-visible:shadow-none focus:border-[#0E56F5] focus-visible:border-[#0E56F5]"
                     autoFocus
                   />
-                  {agentSearchLoading && agentSearchReady ? (
-                    <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-zinc-400" />
-                  ) : null}
                 </div>
                 {!agentSearchReady ? (
                   <p className="px-2 py-6 text-center text-sm text-zinc-400">
                     Start typing to search buyers and agents.
                   </p>
+                ) : unifiedSearchResults.length > 0 ? (
+                  <div className="max-h-[240px] overflow-y-auto rounded-lg border border-zinc-100">
+                    <div className="space-y-0.5 p-1">
+                      {unifiedSearchResults.map(renderUnifiedSearchRow)}
+                    </div>
+                  </div>
                 ) : agentSearchLoading ? (
                   <p className="flex items-center justify-center gap-2 px-2 py-6 text-sm text-zinc-400">
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -677,12 +680,6 @@ export function NewConversationDialog({
                     >
                       Try again
                     </button>
-                  </div>
-                ) : unifiedSearchResults.length > 0 ? (
-                  <div className="max-h-[240px] overflow-y-auto rounded-lg border border-zinc-100">
-                    <div className="space-y-0.5 p-1">
-                      {unifiedSearchResults.map(renderUnifiedSearchRow)}
-                    </div>
                   </div>
                 ) : (
                   <p className="px-2 py-6 text-center text-sm text-zinc-400">
