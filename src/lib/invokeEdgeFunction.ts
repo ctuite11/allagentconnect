@@ -128,13 +128,26 @@ export async function invokeEdgeFunction<T = Record<string, unknown>>(
   // Refresh if missing, or expiring within 60s.
   const expiresAt = session?.expires_at ?? 0;
   const nowSec = Math.floor(Date.now() / 1000);
+  let usedFallbackToken = false;
   if (!session?.access_token || expiresAt - nowSec < 60) {
     const { data: refreshed, error: refreshError } =
       await supabase.auth.refreshSession();
     if (refreshError || !refreshed.session?.access_token) {
-      throw new Error("Please sign in again.");
+      // A failed refresh is not proof the session is dead — e.g. another tab
+      // (or the SDK's auto-refresh) may have rotated the refresh token first.
+      // If we still hold an access token, send the request and let the server
+      // arbitrate; only a genuine 401 should sign the user out.
+      if (!session?.access_token) {
+        throw new Error("Please sign in again.");
+      }
+      usedFallbackToken = true;
+      console.warn(
+        `[invokeEdgeFunction:${name}] refreshSession failed — falling back to existing access token`,
+        { refreshError: refreshError?.message ?? "no session returned" },
+      );
+    } else {
+      session = refreshed.session;
     }
-    session = refreshed.session;
   }
 
   const token = session!.access_token;
@@ -161,6 +174,13 @@ export async function invokeEdgeFunction<T = Record<string, unknown>>(
     },
     body: JSON.stringify(body),
   });
+
+  if (usedFallbackToken) {
+    console.info(
+      `[invokeEdgeFunction:${name}] fallback token result`,
+      { status: response.status, accepted: response.status !== 401 },
+    );
+  }
 
   const text = await response.text();
   let data: unknown = null;
