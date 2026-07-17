@@ -744,11 +744,17 @@ export default function AdminApprovals() {
         }
         if (newStatus === "rejected") {
           const pvId = agent.pending_verification_id ?? agent.id;
-          const { error: rejErr } = await supabase
+          const { data: rejRows, error: rejErr } = await supabase
             .from("pending_verifications")
             .update({ status: "rejected" })
-            .eq("id", pvId);
+            .eq("id", pvId)
+            .select("id");
           if (rejErr) throw rejErr;
+          if (!rejRows || rejRows.length === 0) {
+            throw new Error(
+              "Reject did not update any row. You may not have admin permission, or the record was already handled. Refresh and try again."
+            );
+          }
           toast.success("Request rejected");
           setAgents((prev) => prev.filter((a) => a.id !== agent.id));
           setSelectedIds((prev) => {
