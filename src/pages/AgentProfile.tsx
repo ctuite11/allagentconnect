@@ -702,6 +702,7 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
                     showAgentEmailContact={showListingAgentEmail}
                     listingAgentContact={profileListingAgentContact}
                     listingEmailSubject={listingEmailSubjectFromRow(listing)}
+                    compactDetailNavigateState={{ from: location.pathname + location.search }}
                   />
                 </div>
               ))}
