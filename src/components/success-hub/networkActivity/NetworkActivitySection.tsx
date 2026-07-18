@@ -3,6 +3,7 @@ import { Home, MessageSquare, Radio, TrendingUp, UserCheck, Users } from "lucide
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { AgentAvatar } from "@/components/ui/AgentAvatar";
 import { ROUTES } from "@/constants/routes";
+import { initialsFromDisplayName } from "@/lib/initials";
 import { NetworkActivityCard } from "./NetworkActivityCard";
 import { ChannelPreviewCard } from "./ChannelPreviewCard";
 import { useNewestVerifiedAgents } from "./useNewestVerifiedAgents";
@@ -126,6 +127,10 @@ export function NewestVerifiedAgentsRow() {
                   size="lg"
                   avatarClassName="h-12 w-12 border border-neutral-200"
                   fallbackClassName="bg-neutral-100 text-neutral-600 text-sm"
+                  initialsFallback={{
+                    initials: initialsFromDisplayName(agent.name),
+                    className: "bg-neutral-200 text-neutral-700",
+                  }}
                 />
                 <p className="mt-2 w-full truncate text-[13px] font-semibold text-neutral-900">
                   {agent.name}

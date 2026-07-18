@@ -1,6 +1,6 @@
 import React from "react";
-import { UserRound } from "lucide-react";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
+import { initialsFromDisplayName } from "@/lib/initials";
 
 type Agent = {
   id: string;
@@ -68,7 +68,12 @@ export default function AgentPhotoTile({
             />
           ) : (
             <div className="flex h-full w-full flex-col items-center justify-center bg-neutral-100">
-              <UserRound className="h-14 w-14 text-neutral-300" aria-hidden strokeWidth={1.25} />
+              <span
+                className="flex h-20 w-20 items-center justify-center rounded-full bg-neutral-200 text-2xl font-semibold tracking-wide text-neutral-600"
+                aria-label={`${fullName} initials`}
+              >
+                {initialsFromDisplayName(fullName)}
+              </span>
             </div>
           )}
           {showPresenceBadge && isOnline ? (
