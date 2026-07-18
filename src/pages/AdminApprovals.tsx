@@ -188,16 +188,14 @@ function deriveAdminStatus(a: Agent): AdminDerivedStatus {
   if (a.agent_status === "restricted") return "restricted";
   // DB "verified" = admin approved → user-facing "Active".
   if (a.agent_status === "verified") {
-    // Canonical "usable account" rule: verified AND (activated OR has headshot)
-    // → treat as fully Active in the admin UI. This matches the email
-    // eligibility rule and prevents agents who came in via the Send Setup
-    // Link path (verified + headshot, no activation stamp yet) from being
-    // mislabeled as "Awaiting activation".
-    const hasHeadshot = !!(a.headshot_url && String(a.headshot_url).trim());
-    const hasActivation = !!a.account_activated_at;
-    if (a.profile_complete || hasActivation || hasHeadshot) {
-      return "profile_complete";
-    }
+    // The "Profile Complete" bucket strictly reflects a real completed
+    // profile (names + headshot + brokerage + contact) as computed by the
+    // backend `profile_complete` composite. Do NOT widen this bucket to
+    // "activated OR has headshot" — that conflates account usability with
+    // profile completeness and inflates the Profile Complete count.
+    // Row-level account usability is shown via the separate
+    // `isAccountActive` helper below.
+    if (a.profile_complete) return "profile_complete";
     return "account_created";
   }
   // Admin-created but agent hasn't finished /agent-setup yet.
@@ -205,6 +203,16 @@ function deriveAdminStatus(a: Agent): AdminDerivedStatus {
   // Everything else (pending, legacy unverified, early-access leads,
   // approval-queue agents) surfaces as Pending review.
   return "pending";
+}
+
+// Row-level "usable account" signal. Verified AND (activated OR headshot).
+// Kept independent from `deriveAdminStatus` so the Profile Complete tab
+// count stays tied to real profile completeness.
+function isAccountActive(a: Agent): boolean {
+  if (a.agent_status !== "verified") return false;
+  const hasHeadshot = !!(a.headshot_url && String(a.headshot_url).trim());
+  const hasActivation = !!a.account_activated_at;
+  return hasActivation || hasHeadshot;
 }
 
 // Verified by admin but the agent hasn't completed the password-setup
