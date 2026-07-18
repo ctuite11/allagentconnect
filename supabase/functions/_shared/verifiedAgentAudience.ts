@@ -1,26 +1,29 @@
 // Shared canonical eligibility helper for automatic agent notifications.
+//
+// Canonical FULL-ACCESS rule (July 2026):
+//   VERIFIED  AND  role = 'agent'  AND  (ACTIVATED OR HAS_HEADSHOT)
+//     - Verified          : agent_settings.agent_status = 'verified'
+//     - Activated         : agent_settings.account_activated_at IS NOT NULL
+//     - Has headshot      : agent_profiles.headshot_url non-empty
+//   Profile completeness (names, company, bio, phone) no longer gates email
+//   eligibility. hide_from_directory no longer suppresses emails either —
+//   that flag only controls Agent Network visibility, not deliverability.
+//
+//   Real content bucket (per-event):
+//     - has_email && (preferences_set ? matches : true)
+//     - Excludes senderId, explicit category opt-out, globally suppressed email
+//   Reminder bucket:
+//     - DEPRECATED. Always empty. The old "You're Missing Opportunities"
+//       automatic reminder has been removed. Agents who are verified but not
+//       activated and without a headshot are simply excluded from the audience;
+//       admins reach them via the manual "Send Setup Link" action.
+//   Never eligible: not verified, not (activated OR has headshot), no email,
+//   globally suppressed.
 
 import type {
   AgentPreferences,
   SavedGeoRow,
 } from "./communicationPreferencesMatcher.ts";
-//
-// Universal rule enforced by callers via partitionAudience:
-//   Base eligibility = Agent Network directory visibility + user_roles.role='agent'
-//     - Verified            : agent_settings.agent_status = 'verified'
-//     - Not hidden          : agent_settings.hide_from_directory = false
-//     - Directory profile   : first_name, last_name, headshot_url all non-empty
-//       (identical to /our-agents and /our-members visibility rule)
-//   Note: account_activated_at is intentionally NOT part of eligibility —
-//   directory-visible agents are eligible even if that column is null.
-//   Real content bucket (per-event):
-//     - profile_complete && has_email && (preferences_set ? matches : true)
-//     - Excludes senderId, explicit category opt-out, globally suppressed email
-//   Reminder bucket (account/service reminder — "You're Missing Opportunities"):
-//     - !profile_complete && has_email
-//     - Excludes senderId, globally suppressed email
-//     - Ignores category opt-outs (account/service, not marketing)
-//   Never eligible: not activated, not verified, no email, globally suppressed.
 
 export interface EligibleAgent {
   agent_id: string;
@@ -28,6 +31,8 @@ export interface EligibleAgent {
   first_name: string | null;
   last_name: string | null;
   preferences_set: boolean;
+  /** Retained for backward compatibility. Always true — inclusion in the
+   *  audience now IS the full-access gate. */
   profile_complete: boolean;
   has_email: boolean;
   /** Saved Comms-Center preferences (empty when none). */
@@ -69,13 +74,12 @@ export interface AudienceWithStats {
 export async function getVerifiedAgentAudienceWithStats(
   supabase: any,
 ): Promise<AudienceWithStats> {
-  // 1) Verified agents visible in the Agent Network directory
-  //    (canonical rule shared with /our-agents and /our-members).
+  // 1) Verified agents. hide_from_directory intentionally NOT filtered —
+  //    directory visibility no longer gates email deliverability.
   const { data: settings, error: settingsErr } = await supabase
     .from("agent_settings")
-    .select("user_id, preferences_set, hide_from_directory")
-    .eq("agent_status", "verified")
-    .eq("hide_from_directory", false);
+    .select("user_id, preferences_set, account_activated_at")
+    .eq("agent_status", "verified");
   if (settingsErr) throw settingsErr;
   if (!settings?.length) return { audience: [], globally_suppressed: 0 };
 
@@ -89,16 +93,29 @@ export async function getVerifiedAgentAudienceWithStats(
     .in("user_id", userIds);
   const agentRoleIds = new Set((roles || []).map((r: any) => r.user_id));
 
-  const eligibleIds = userIds.filter((id: string) => agentRoleIds.has(id));
-  if (!eligibleIds.length) return { audience: [], globally_suppressed: 0 };
+  const roleFilteredIds = userIds.filter((id: string) => agentRoleIds.has(id));
+  if (!roleFilteredIds.length) return { audience: [], globally_suppressed: 0 };
 
   // 3) Profile fields needed to evaluate completeness + delivery.
   const { data: profiles } = await supabase
     .from("agent_profiles")
     .select("id, email, first_name, last_name, headshot_url, company")
-    .in("id", eligibleIds);
+    .in("id", roleFilteredIds);
   const profileMap = new Map<string, any>();
   for (const p of profiles || []) profileMap.set(p.id, p);
+
+  // Apply canonical full-access gate: activated OR has headshot.
+  const settingsById0 = new Map<string, any>(
+    (settings || []).map((s: any) => [s.user_id, s]),
+  );
+  const eligibleIds = roleFilteredIds.filter((id: string) => {
+    const s = settingsById0.get(id);
+    const p = profileMap.get(id) || {};
+    const activated = s?.account_activated_at != null;
+    const hasHeadshot = isNonEmpty(p.headshot_url);
+    return activated || hasHeadshot;
+  });
+  if (!eligibleIds.length) return { audience: [], globally_suppressed: 0 };
 
   // 4) Preference-source signals — Communications-Center-owned only.
   //    An agent has "Comms Center preferences" iff EITHER:
@@ -173,14 +190,9 @@ export async function getVerifiedAgentAudienceWithStats(
     }
 
     const has_email = isNonEmpty(emailTrim);
-    // Directory profile-complete = Agent Network visibility rule:
-    // first name, last name, headshot. Email is required for delivery but is
-    // not part of the directory-visibility definition itself.
-    const profile_complete =
-      isNonEmpty(profile.first_name) &&
-      isNonEmpty(profile.last_name) &&
-      isNonEmpty(profile.headshot_url) &&
-      has_email;
+    // Full-access gate already applied upstream. Retained field for
+    // backward compatibility with existing partition logic.
+    const profile_complete = has_email;
 
     // Build saved Comms-Center preferences record for the shared matcher.
     const rawPrefs = prefsByAgent.get(id) ?? {};
