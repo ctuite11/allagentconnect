@@ -4936,6 +4936,7 @@ export type Database = {
           listing_id: string
         }[]
       }
+      mark_agent_activated: { Args: { _user_id: string }; Returns: string }
       matches_current_account: {
         Args: { p_agent_user_id: string }
         Returns: boolean
