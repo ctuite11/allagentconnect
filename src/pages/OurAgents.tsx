@@ -147,10 +147,9 @@ const OurAgents = ({
 
       // Fetch the full profile for every visible verified agent so search/filters
       // operate on the entire network — not just the current page.
-      const { data: agentData, error: agentError } = await AGENT_NETWORK_DB_FILTERS(
-        supabase
-          .from("agent_profiles")
-          .select(`
+      const agentQuery = supabase
+        .from("agent_profiles")
+        .select(`
           id, aac_id, first_name, last_name, company, office_name, team_name, headshot_url, buyer_incentives, updated_at, title, email, phone, cell_phone,
           agent_county_preferences(
             county_id,
@@ -158,8 +157,8 @@ const OurAgents = ({
           ),
           agent_buyer_coverage_areas(city, state, county)
         `)
-          .in("id", verifiedIds),
-      );
+        .in("id", verifiedIds);
+      const { data: agentData, error: agentError } = await AGENT_NETWORK_DB_FILTERS(agentQuery as any);
 
       if (agentError) throw agentError;
 
