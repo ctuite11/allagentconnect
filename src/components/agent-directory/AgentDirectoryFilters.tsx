@@ -29,7 +29,7 @@ const AgentDirectoryFilters = ({
     return (
       <div className="border-b border-neutral-200/90 bg-white py-3 md:py-4">
         <div className="mx-auto flex max-w-[1200px] flex-col gap-3 px-5 min-[520px]:flex-row min-[520px]:items-center min-[520px]:justify-between md:px-6">
-          <div />
+          <Skeleton className="h-4 w-24 rounded bg-neutral-100" />
           <div className="flex flex-col gap-2 min-[520px]:flex-row min-[520px]:items-center min-[520px]:gap-2">
             {onPageSizeChange ? (
               <Skeleton className="h-8 w-full rounded-md bg-neutral-100 min-[520px]:w-[9rem]" />
@@ -44,13 +44,16 @@ const AgentDirectoryFilters = ({
   return (
     <div className="border-b border-neutral-200/90 bg-white py-3 md:py-4">
       <div className="mx-auto flex max-w-[1200px] flex-col gap-3 px-5 min-[520px]:flex-row min-[520px]:items-center min-[520px]:justify-between md:px-6">
-        {searchQuery ? (
-          <p className="text-[13px] font-normal text-neutral-500">
-            Results for &ldquo;{searchQuery}&rdquo;
-          </p>
-        ) : (
-          <div />
-        )}
+        <p className="text-[13px] font-normal text-neutral-500">
+          {searchQuery ? (
+            <>
+              Results for &ldquo;{searchQuery}&rdquo;
+              <span className="mx-1.5 text-neutral-300">·</span>
+            </>
+          ) : null}
+          <span className="font-medium text-neutral-900">{resultCount.toLocaleString()}</span>{" "}
+          {resultCount === 1 ? itemLabel.replace(/s$/i, "") : itemLabel}
+        </p>
 
         <div className="flex flex-col gap-2 min-[520px]:flex-row min-[520px]:items-center min-[520px]:gap-2">
           {onPageSizeChange && pageSize !== undefined ? (
