@@ -302,57 +302,19 @@ const AgentAccountSetup = () => {
         return;
       }
 
-      // Mark account as activated so the admin Verified tab can distinguish
-      // "Setup pending" from "Account active". Only set on first activation —
-      // filter on IS NULL so a later password change doesn't reset the
-      // original activation timestamp.
+      // Canonical activation write. Idempotent: mark_agent_activated only
+      // stamps account_activated_at on the first successful account setup,
+      // regardless of which email/link brought the agent here. It also flips
+      // invited → verified for admin-created agents.
       try {
-        const nowIso = new Date().toISOString();
-        const { error: updateErr } = await supabase
-          .from("agent_settings")
-          .update({ account_activated_at: nowIso, updated_at: nowIso })
-          .eq("user_id", data.user.id)
-          .is("account_activated_at", null);
-        // If no agent_settings row exists yet, insert one.
-        if (updateErr) {
-          console.warn("[AgentAccountSetup] activation update warn:", updateErr);
+        const { error: rpcErr } = await supabase.rpc("mark_agent_activated", {
+          _user_id: data.user.id,
+        });
+        if (rpcErr) {
+          console.warn("[AgentAccountSetup] mark_agent_activated warn:", rpcErr);
         }
-        await supabase
-          .from("agent_settings")
-          .upsert(
-            [{
-              user_id: data.user.id,
-              account_activated_at: nowIso,
-              updated_at: nowIso,
-            }],
-            { onConflict: "user_id", ignoreDuplicates: true },
-          );
       } catch (e) {
         console.warn("[AgentAccountSetup] activation marker write failed (non-fatal):", e);
-      }
-
-      // For admin-created (invited) agents, self-activate now — admin has
-      // already vetted them, no further approval gate. Never downgrade an
-      // already-verified row.
-      try {
-        const { data: pre } = await supabase
-          .from("agent_settings")
-          .select("agent_status")
-          .eq("user_id", data.user.id)
-          .maybeSingle();
-        if (pre?.agent_status === "invited") {
-          const nowIso2 = new Date().toISOString();
-          await supabase
-            .from("agent_settings")
-            .update({
-              agent_status: "verified",
-              verified_at: nowIso2,
-              updated_at: nowIso2,
-            })
-            .eq("user_id", data.user.id);
-        }
-      } catch (e) {
-        console.warn("[AgentAccountSetup] invited→verified flip skipped:", e);
       }
 
       clearRecoveryState();
