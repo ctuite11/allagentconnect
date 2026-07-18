@@ -1,0 +1,100 @@
+CREATE OR REPLACE FUNCTION public.process_auth_deletion_queue()
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
+DECLARE
+  v_pending    integer;
+  v_key        text := current_setting('supabase.service_role_key', true);
+  request_id   bigint;
+  supabase_url text := 'https://qocduqtfbsevnhlgsfka.supabase.co';
+  r            record;
+  v_auth_id    uuid;
+BEGIN
+  SELECT count(*) INTO v_pending
+  FROM public.auth_user_deletion_queue
+  WHERE status = 'pending';
+
+  IF v_pending = 0 THEN
+    RETURN;
+  END IF;
+
+  IF v_key IS NOT NULL AND v_key <> '' THEN
+    SELECT net.http_post(
+      url := supabase_url || '/functions/v1/delete-users',
+      headers := jsonb_build_object(
+        'Content-Type', 'application/json',
+        'Authorization', 'Bearer ' || v_key
+      ),
+      body := jsonb_build_object('processQueue', true)
+    ) INTO request_id;
+    RAISE LOG 'process_auth_deletion_queue: dispatched edge retry for % pending row(s), request_id %', v_pending, request_id;
+    RETURN;
+  END IF;
+
+  RAISE LOG 'process_auth_deletion_queue: service key GUC empty; using SQL fallback for % pending row(s)', v_pending;
+
+  FOR r IN
+    SELECT id, auth_user_id, email, attempts
+    FROM public.auth_user_deletion_queue
+    WHERE status = 'pending'
+    ORDER BY created_at ASC
+    LIMIT 25
+  LOOP
+    BEGIN
+      v_auth_id := NULL;
+      IF r.auth_user_id IS NOT NULL THEN
+        SELECT id INTO v_auth_id FROM auth.users WHERE id = r.auth_user_id;
+      END IF;
+      IF v_auth_id IS NULL AND r.email IS NOT NULL THEN
+        SELECT id INTO v_auth_id
+        FROM auth.users
+        WHERE lower(email) = lower(r.email)
+        ORDER BY created_at ASC
+        LIMIT 1;
+      END IF;
+
+      IF v_auth_id IS NULL THEN
+        UPDATE public.auth_user_deletion_queue
+        SET status = 'completed', completed_at = now(), updated_at = now(),
+            last_error = 'sql_fallback: auth user already absent'
+        WHERE id = r.id;
+        CONTINUE;
+      END IF;
+
+      IF EXISTS (SELECT 1 FROM public.profiles p WHERE p.id = v_auth_id)
+         OR EXISTS (SELECT 1 FROM public.agent_profiles ap WHERE ap.id = v_auth_id)
+         OR EXISTS (SELECT 1 FROM public.user_roles ur WHERE ur.user_id = v_auth_id) THEN
+        UPDATE public.auth_user_deletion_queue
+        SET status = 'abandoned', updated_at = now(),
+            last_error = 'sql_fallback refused: user still has application identity rows (profiles/agent_profiles/user_roles)'
+        WHERE id = r.id;
+        CONTINUE;
+      END IF;
+
+      UPDATE public.share_tokens SET accepted_by_user_id = NULL WHERE accepted_by_user_id = v_auth_id;
+      UPDATE public.listing_status_history SET changed_by = NULL WHERE changed_by = v_auth_id;
+      UPDATE public.agent_invites SET accepted_user_id = NULL WHERE accepted_user_id = v_auth_id;
+      UPDATE public.buyer_credentials SET verified_by = NULL WHERE verified_by = v_auth_id;
+
+      DELETE FROM auth.users WHERE id = v_auth_id;
+
+      UPDATE public.auth_user_deletion_queue
+      SET status = 'completed', completed_at = now(), updated_at = now(),
+          last_error = NULL
+      WHERE id = r.id;
+
+      RAISE LOG 'process_auth_deletion_queue: sql_fallback deleted auth user %', v_auth_id;
+    EXCEPTION WHEN OTHERS THEN
+      UPDATE public.auth_user_deletion_queue
+      SET attempts = r.attempts + 1, updated_at = now(),
+          last_error = 'sql_fallback: ' || SQLERRM
+      WHERE id = r.id;
+      RAISE WARNING 'process_auth_deletion_queue: sql_fallback failed for queue row % — %', r.id, SQLERRM;
+    END;
+  END LOOP;
+EXCEPTION WHEN OTHERS THEN
+  RAISE WARNING 'process_auth_deletion_queue failed: %', SQLERRM;
+END;
+$$;
