@@ -78,6 +78,7 @@ const AgentAccountSetup = () => {
   const [email, setEmail] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [company, setCompany] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -162,7 +163,7 @@ const AgentAccountSetup = () => {
           const { data: profile, error: profileError } = await withTimeout(
             supabase
               .from("agent_profiles")
-              .select("first_name, last_name")
+              .select("first_name, last_name, company")
               .eq("id", sessionUserId)
               .maybeSingle(),
             2500,
@@ -174,6 +175,7 @@ const AgentAccountSetup = () => {
           if (!cancelled) {
             if (profile?.first_name) setFirstName(profile.first_name);
             if (profile?.last_name) setLastName(profile.last_name);
+            if (profile?.company) setCompany(profile.company);
 
             // If the account was already activated and we're NOT inside an
             // active recovery / password-setup handoff, route straight to the
@@ -213,7 +215,7 @@ const AgentAccountSetup = () => {
       cancelled = true;
       clearTimeout(failSafe);
     };
-  }, []);
+  }, [navigate]);
 
   const passwordResults = useMemo(() => validatePassword(password).results, [password]);
   const compactRules = useMemo(() => {
@@ -235,6 +237,10 @@ const AgentAccountSetup = () => {
       toast.error("Please enter your first and last name.");
       return;
     }
+    if (!company.trim()) {
+      toast.error("Please enter your brokerage.");
+      return;
+    }
     const { allPass } = validatePassword(password);
     if (!allPass) {
       toast.error("Password does not meet all requirements.");
@@ -247,9 +253,34 @@ const AgentAccountSetup = () => {
 
     setSubmitting(true);
     try {
+      if (!userId) {
+        toast.error("We couldn't verify your activation session. Please refresh and try again.");
+        return;
+      }
+
+      // Save required profile fields before changing the password. This keeps
+      // setup retryable if the profile write fails and avoids completing auth
+      // setup without the required brokerage value.
+      const { data: savedProfile, error: profileError } = await supabase
+        .from("agent_profiles")
+        .update({
+          first_name: firstName.trim(),
+          last_name: lastName.trim(),
+          company: company.trim(),
+        })
+        .eq("id", userId)
+        .select("id")
+        .maybeSingle();
+      if (profileError || !savedProfile) {
+        console.error("[AgentAccountSetup] required profile save failed:", profileError);
+        toast.error("We couldn't save your profile details. Please try again.");
+        return;
+      }
+
       const { data, error } = await supabase.auth.updateUser({ password });
       if (error) {
-        const errCode = (error as any)?.code || (error as any)?.error_code || "";
+        const authError = error as { code?: string; error_code?: string };
+        const errCode = authError.code || authError.error_code || "";
         const msg = (error.message || "").toLowerCase();
         if (
           errCode === "same_password" ||
@@ -269,16 +300,6 @@ const AgentAccountSetup = () => {
       if (!data.user) {
         toast.error("Activation failed. Please try again.");
         return;
-      }
-
-      // Best-effort: keep agent_profiles in sync with the name the agent confirmed here.
-      try {
-        await supabase
-          .from("agent_profiles")
-          .update({ first_name: firstName.trim(), last_name: lastName.trim() })
-          .eq("id", data.user.id);
-      } catch (e) {
-        console.warn("[AgentAccountSetup] profile name sync failed (non-fatal):", e);
       }
 
       // Mark account as activated so the admin Verified tab can distinguish
@@ -349,9 +370,9 @@ const AgentAccountSetup = () => {
       setUserId(data.user.id);
       const resolved = await resolveUserRole(data.user.id);
       navigate(getRouteForRole(resolved), { replace: true });
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("[AgentAccountSetup] error:", err);
-      toast.error(err?.message || "Activation failed. Please try again.");
+      toast.error(err instanceof Error ? err.message : "Activation failed. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -484,6 +505,20 @@ const AgentAccountSetup = () => {
                       required
                     />
                   </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="company" className="text-[13px] text-zinc-600">Brokerage</Label>
+                  <Input
+                    id="company"
+                    type="text"
+                    value={company}
+                    onChange={(e) => setCompany(e.target.value)}
+                    placeholder="Brokerage name"
+                    className="h-11 rounded-xl"
+                    autoComplete="organization"
+                    required
+                  />
                 </div>
 
                 <div className="space-y-1.5">
