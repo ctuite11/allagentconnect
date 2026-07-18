@@ -188,7 +188,17 @@ function deriveAdminStatus(a: Agent): AdminDerivedStatus {
   if (a.agent_status === "restricted") return "restricted";
   // DB "verified" = admin approved → user-facing "Active".
   if (a.agent_status === "verified") {
-    return a.profile_complete ? "profile_complete" : "account_created";
+    // Canonical "usable account" rule: verified AND (activated OR has headshot)
+    // → treat as fully Active in the admin UI. This matches the email
+    // eligibility rule and prevents agents who came in via the Send Setup
+    // Link path (verified + headshot, no activation stamp yet) from being
+    // mislabeled as "Awaiting activation".
+    const hasHeadshot = !!(a.headshot_url && String(a.headshot_url).trim());
+    const hasActivation = !!a.account_activated_at;
+    if (a.profile_complete || hasActivation || hasHeadshot) {
+      return "profile_complete";
+    }
+    return "account_created";
   }
   // Admin-created but agent hasn't finished /agent-setup yet.
   if (a.agent_status === "invited") return "invited";
