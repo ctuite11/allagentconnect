@@ -49,6 +49,7 @@ interface MergedAgent {
   invite_email?: EmailStatusInfo | null
   license_verified_email?: EmailStatusInfo | null
   profile_complete?: boolean
+  headshot_url?: string | null
 }
 
 interface EmailStatusInfo {
@@ -241,6 +242,7 @@ Deno.serve(async (req) => {
         account_activated_at: s?.account_activated_at ?? null,
         approval_email_sent: s?.approval_email_sent ?? null,
         profile_complete: profileComplete,
+        headshot_url: headshotUrl ?? null,
       }
     })
 
