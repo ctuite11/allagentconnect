@@ -10,8 +10,23 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
+import { invokeEdgeFunction } from "@/lib/invokeEdgeFunction";
 import { toast } from "sonner";
 import { Loader2, AlertTriangle } from "lucide-react";
+
+interface DeleteUsersResult {
+  success: true;
+  fullyDeleted?: boolean;
+  partialFailure?: boolean;
+  deleted: number;
+  results?: Array<{
+    status: "deleted" | "already_absent" | "failed";
+    email?: string | null;
+    stage?: string;
+    reason?: string;
+    queuedForRetry?: boolean;
+  }>;
+}
 
 interface Agent {
   id: string;
@@ -45,8 +60,10 @@ export function BulkDeleteAgentsDialog({
 
     const { data: { user: currentUser } } = await supabase.auth.getUser();
 
-    let successCount = 0;
-    let failCount = 0;
+    let fullCount = 0;      // DB + auth both removed
+    let partialCount = 0;   // DB removed, auth deletion queued for retry
+    let failCount = 0;      // nothing removed
+    const partialEmails: string[] = [];
 
     for (let i = 0; i < agents.length; i++) {
       const agent = agents[i];
@@ -64,11 +81,20 @@ export function BulkDeleteAgentsDialog({
             throw new Error("No row removed (permission or already deleted)");
           }
 
-          await supabase.functions.invoke("delete-users", {
-            body: { emails: [agent.email] },
-          });
-
-          successCount++;
+          try {
+            const result = await invokeEdgeFunction<DeleteUsersResult>("delete-users", {
+              emails: [agent.email],
+            });
+            if (result.fullyDeleted ?? true) {
+              fullCount++;
+            } else {
+              partialCount++;
+              partialEmails.push(agent.email);
+            }
+          } catch {
+            partialCount++;
+            partialEmails.push(agent.email);
+          }
           continue;
         }
 
@@ -91,22 +117,35 @@ export function BulkDeleteAgentsDialog({
           original_data: { agent_profile: agentProfile },
         });
 
-        // Single RPC cleans all DB records
-        const { error: rpcErr } = await supabase.rpc("admin_delete_agent", {
+        // Single RPC cleans all DB records AND enqueues the auth deletion in
+        // the same transaction; returns the canonical auth user id.
+        const { data: rpcData, error: rpcErr } = await supabase.rpc("admin_delete_agent", {
           p_agent_id: agent.id,
         });
         if (rpcErr) throw rpcErr;
 
-        // Purge auth user (ID + email: handles legacy profile/auth ID mismatches)
-        await supabase.functions.invoke("delete-users", {
-          body: {
-            userIds: [agent.id],
-            emails: [agent.email],
-          },
-        });
+        const handoff = (rpcData ?? {}) as { auth_user_id?: string | null };
+        const canonicalAuthId = handoff.auth_user_id ?? agent.id;
 
-        successCount++;
-      } catch (error: any) {
+        try {
+          const result = await invokeEdgeFunction<DeleteUsersResult>("delete-users", {
+            targets: [{ userId: canonicalAuthId, email: agent.email }],
+            userIds: [canonicalAuthId],
+            emails: [agent.email],
+          });
+          if (result.fullyDeleted ?? true) {
+            fullCount++;
+          } else {
+            partialCount++;
+            partialEmails.push(agent.email);
+          }
+        } catch (authError) {
+          // Outbox row from the RPC guarantees an automatic retry.
+          console.error(`Auth deletion pending for ${agent.email}:`, authError);
+          partialCount++;
+          partialEmails.push(agent.email);
+        }
+      } catch (error: unknown) {
         console.error(`Error deleting agent ${agent.email}:`, error);
         failCount++;
       }
@@ -115,10 +154,18 @@ export function BulkDeleteAgentsDialog({
     setDeleting(false);
     setProgress(0);
 
-    if (failCount === 0) {
-      toast.success(`Successfully deleted ${successCount} agent(s)`);
+    if (failCount === 0 && partialCount === 0) {
+      toast.success(`Successfully deleted ${fullCount} agent(s)`);
+    } else if (failCount === 0) {
+      toast.warning(
+        `${fullCount} agent(s) fully deleted. For ${partialCount} agent(s) (${partialEmails.join(", ")}), application records were removed but the login account could not be deleted yet — queued for automatic retry.`,
+        { duration: 15000 },
+      );
     } else {
-      toast.warning(`Deleted ${successCount} agent(s), ${failCount} failed`);
+      toast.error(
+        `${fullCount} fully deleted, ${partialCount} pending login-account cleanup${partialEmails.length ? ` (${partialEmails.join(", ")})` : ""}, ${failCount} failed entirely. Check the console for details.`,
+        { duration: 15000 },
+      );
     }
 
     onDeleted();

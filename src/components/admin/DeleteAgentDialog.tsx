@@ -10,8 +10,23 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
+import { invokeEdgeFunction } from "@/lib/invokeEdgeFunction";
 import { toast } from "sonner";
 import { Loader2, AlertTriangle } from "lucide-react";
+
+interface DeleteUsersResult {
+  success: true;
+  fullyDeleted?: boolean;
+  partialFailure?: boolean;
+  deleted: number;
+  results?: Array<{
+    status: "deleted" | "already_absent" | "failed";
+    email?: string | null;
+    stage?: string;
+    reason?: string;
+    queuedForRetry?: boolean;
+  }>;
+}
 
 interface DeleteAgentDialogProps {
   open: boolean;
@@ -47,16 +62,24 @@ export function DeleteAgentDialog({ open, onOpenChange, agent, onDeleted }: Dele
           );
         }
 
-        const { error: authError } = await supabase.functions.invoke("delete-users", {
-          body: { emails: [agent.email] },
-        });
-        if (authError) {
+        try {
+          const result = await invokeEdgeFunction<DeleteUsersResult>("delete-users", {
+            emails: [agent.email],
+          });
+          if (result.fullyDeleted ?? true) {
+            toast.success(`${agent.first_name} ${agent.last_name} (early access) has been deleted`);
+          } else {
+            toast.warning(
+              `${agent.first_name} ${agent.last_name} (early access) removed, but the login account could not be deleted yet. It has been queued for automatic retry.`,
+              { duration: 12000 },
+            );
+          }
+        } catch (authError) {
           console.error("Error purging auth user:", authError);
           toast.warning(
-            `${agent.first_name} ${agent.last_name} (early access) removed, but auth cleanup failed`
+            `${agent.first_name} ${agent.last_name} (early access) removed, but login-account cleanup failed. It has been queued for automatic retry.`,
+            { duration: 12000 },
           );
-        } else {
-          toast.success(`${agent.first_name} ${agent.last_name} (early access) has been deleted`);
         }
         onDeleted();
         onOpenChange(false);
@@ -85,32 +108,52 @@ export function DeleteAgentDialog({ open, onOpenChange, agent, onDeleted }: Dele
         original_data: { agent_profile: agentProfile },
       });
 
-      // Single RPC cleans all DB records
-      const { error: rpcErr } = await supabase.rpc("admin_delete_agent", {
+      // Single RPC cleans all DB records AND enqueues the auth deletion in
+      // the same transaction. It returns the canonical auth user id, which
+      // may differ from agent_profiles.id on legacy accounts.
+      const { data: rpcData, error: rpcErr } = await supabase.rpc("admin_delete_agent", {
         p_agent_id: agent.id,
       });
       if (rpcErr) throw rpcErr;
 
-      // Purge auth user last (ID + email: handles legacy profile/auth ID mismatches)
-      const { error: authError } = await supabase.functions.invoke("delete-users", {
-        body: {
-          userIds: [agent.id],
-          emails: [agent.email],
-        },
-      });
+      const handoff = (rpcData ?? {}) as { auth_user_id?: string | null; email?: string | null };
+      const canonicalAuthId = handoff.auth_user_id ?? agent.id;
 
-      if (authError) {
+      // Purge auth user now. If this fails, the outbox row written by the RPC
+      // guarantees an automatic retry — no ghost account.
+      try {
+        // targets = new structured shape; userIds/emails kept for back-compat
+        // with a previously deployed function version. Duplicates are deduped
+        // server-side by resolved auth id.
+        const result = await invokeEdgeFunction<DeleteUsersResult>("delete-users", {
+          targets: [{ userId: canonicalAuthId, email: agent.email }],
+          userIds: [canonicalAuthId],
+          emails: [agent.email],
+        });
+        // Legacy function versions have no fullyDeleted field; for them,
+        // success:true (already guaranteed here) meant all targets deleted.
+        if (result.fullyDeleted ?? true) {
+          toast.success(`${agent.first_name} ${agent.last_name} has been permanently deleted and archived`);
+        } else {
+          const failed = result.results?.find((r) => r.status === "failed");
+          toast.warning(
+            `Application records for ${agent.first_name} ${agent.last_name} were removed, but the login account (${agent.email}) could not be deleted${failed?.reason ? ` — ${failed.reason}` : ""}. It has been queued for automatic retry.`,
+            { duration: 12000 },
+          );
+        }
+      } catch (authError) {
         console.error("Error deleting auth user:", authError);
-        toast.warning(`${agent.first_name} ${agent.last_name} profile deleted, but auth account removal failed`);
-      } else {
-        toast.success(`${agent.first_name} ${agent.last_name} has been permanently deleted and archived`);
+        toast.warning(
+          `Application records for ${agent.first_name} ${agent.last_name} were removed, but the login account (${agent.email}) could not be deleted yet. It has been queued for automatic retry.`,
+          { duration: 12000 },
+        );
       }
 
       onDeleted();
       onOpenChange(false);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error deleting agent:", error);
-      toast.error("Failed to delete agent: " + error.message);
+      toast.error("Failed to delete agent: " + (error instanceof Error ? error.message : String(error)));
     } finally {
       setDeleting(false);
     }
