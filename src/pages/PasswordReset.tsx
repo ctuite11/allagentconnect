@@ -123,6 +123,17 @@ const PasswordReset = () => {
 
       console.log("[PasswordReset] Password updated successfully");
 
+      // Canonical activation write. No-op for non-agents; idempotent for
+      // agents whose account_activated_at is already set. Ensures that any
+      // legitimate password-setup path activates the agent.
+      if (data.user?.id) {
+        try {
+          await supabase.rpc("mark_agent_activated", { _user_id: data.user.id });
+        } catch (e) {
+          console.warn("[PasswordReset] mark_agent_activated warn:", e);
+        }
+      }
+
       // Send password changed confirmation email
       if (userEmail) {
         try {

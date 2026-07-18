@@ -96,24 +96,13 @@ serve(async (req: Request): Promise<Response> => {
       });
     }
 
-    const nowIso = new Date().toISOString();
-
-    await admin
-      .from("agent_settings")
-      .update({ account_activated_at: nowIso, updated_at: nowIso })
-      .eq("user_id", userId)
-      .is("account_activated_at", null);
-
-    const { data: pre } = await admin
-      .from("agent_settings")
-      .select("agent_status")
-      .eq("user_id", userId)
-      .maybeSingle();
-    if (pre?.agent_status === "invited") {
-      await admin
-        .from("agent_settings")
-        .update({ agent_status: "verified", updated_at: nowIso })
-        .eq("user_id", userId);
+    // Canonical activation write — idempotent, agent-role-scoped, and
+    // flips invited → verified in one place.
+    const { error: rpcErr } = await admin.rpc("mark_agent_activated", {
+      _user_id: userId,
+    });
+    if (rpcErr) {
+      console.warn("[admin-set-user-password] mark_agent_activated warn:", rpcErr.message);
     }
 
     return new Response(
