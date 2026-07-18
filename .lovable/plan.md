@@ -1,29 +1,41 @@
-## Problem
+## Goal
 
-On the Agent Profile page, clicking a listing card opens `/property/:id` with no navigation state. `PropertyDetail`'s Back handler falls back to `/listing-results` (Edit Search) for agents/admins when no `location.state.from` is provided — so Back sends the user to search instead of back to the agent profile.
+In Admin → Approvals, show the green **Active** badge for any verified agent whose account is usable — i.e. they have completed setup **or** already have a headshot on file. Today, agents who came in via the "Send Setup Link" path show a gray "Awaiting activation" pill even though their Verified + Headshot indicators are both green, which is misleading.
 
-`PropertyDetail.handlePropertyDetailBack` already honors `location.state.from` first, so the fix is just to have Agent Profile pass that state, the same way search results and other surfaces do.
+## Current behavior (confirmed in `src/pages/AdminApprovals.tsx`)
 
-## Fix (frontend only, one file)
+`deriveAdminStatus()`:
 
-**`src/pages/AgentProfile.tsx`** — in the Listings section, pass the current profile path as return-state to `ListingCard`:
+- `verified` + `profile_complete = true` → **Active** (green)
+- `verified` + `profile_complete = false` → **Account created / Awaiting activation** (gray/amber)
 
-- Add `useLocation()` from react-router-dom.
-- On each `<ListingCard>` rendered in the listings grid, add:
-  ```
-  compactDetailNavigateState={{ from: location.pathname + location.search }}
-  ```
+`profile_complete` is the legacy composite (names + headshot + activation), so a verified agent with a headshot but no `account_activated_at` still lands in the gray bucket — the exact case you're describing.
 
-`ListingCard`'s compact view already forwards `compactDetailNavigateState` into `navigate(detailPath, { state })`, and `PropertyDetail` will then Back to the agent profile URL.
+## Change
 
-## Out of scope
+Update `deriveAdminStatus` so a verified agent buckets as **Active** when:
 
-- No changes to `PropertyDetail`, `ListingCard`, `backTargets`, or route config.
-- No changes to consumer/public/buyer variants.
-- No behavior change for listings opened from any other surface (search, hot sheets, my listings, etc.).
+```
+agent_status = 'verified'
+AND (account_activated_at IS NOT NULL OR headshot_url is non-empty)
+```
+
+Verified agents with neither activation nor headshot continue to show as **Awaiting activation** (gray).
+
+No other logic changes:
+
+- DB `agent_status` stays authoritative.
+- `isAwaitingActivation()` — used to target reminder sends — is unchanged; it still keys off `account_activated_at IS NULL` so we don't stop nudging agents who truly haven't set a password.
+- Email eligibility rule (verified AND (activated OR headshot)) is already correct elsewhere.
+- Rejected / restricted / invited / pending buckets untouched.
+
+## Files
+
+- `src/pages/AdminApprovals.tsx` — adjust `deriveAdminStatus`.
+- `supabase/functions/admin-list-agents/index.ts` — confirm `headshot_url` is in the returned row shape; add it to the SELECT if missing so the client can read it.
 
 ## Verification
 
-1. From an agent profile (`/agent/:idOrCode` or `/agents/:id`), click a listing card → land on `/property/:id`.
-2. Click Back → returns to the same agent profile URL (path + query preserved).
-3. Opening the same listing from Listing Search still returns to search results (unchanged).
+- Reload Admin → Approvals: agents with verified + headshot but no activation now show green **Active** (matches their Verified/Headshot chips).
+- Verified agents with no headshot and no activation still show gray **Awaiting activation** and remain in the reminder cohort.
+- Status distribution counts still sum to the total agent count.
