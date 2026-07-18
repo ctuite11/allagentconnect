@@ -5,7 +5,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import AgentPhotoTile from "@/components/agent-directory/AgentPhotoTile";
 import AgentDirectoryFilters from "@/components/agent-directory/AgentDirectoryFilters";
-import type { AgentDirectoryPageSize } from "@/components/agent-directory/AgentDirectoryFilters";
+import type {
+  AgentDirectoryPageSize,
+  AgentDirectorySortOrder,
+} from "@/components/agent-directory/AgentDirectoryFilters";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,6 +27,7 @@ import { useAuthRole } from "@/hooks/useAuthRole";
 import { useAgentNetworkIntro } from "@/hooks/useAgentNetworkIntro";
 import {
   AGENT_NETWORK_DB_FILTERS,
+  hasUsableHeadshot,
   isVisibleInAgentNetwork,
 } from "@/lib/agentNetworkVisibility";
 import { matchesAgentName } from "@/lib/agentNameSearch";
@@ -96,7 +100,10 @@ const OurAgents = ({
   const [selectedLocation, setSelectedLocation] = useState<SelectedLocation | null>(null);
   const [showBuyerIncentivesOnly, setShowBuyerIncentivesOnly] = useState(false);
   const [showListingAgentsOnly, setShowListingAgentsOnly] = useState(false);
-  const [sortOrder, setSortOrder] = useState<"a-z" | "z-a">("a-z");
+  const [sortOrder, setSortOrder] = useState<AgentDirectorySortOrder>("featured");
+  // Stable per-visit shuffle ranks — assigned once per agent id, never reshuffled
+  // on filter/pagination/re-render. Refreshing the page generates new ranks.
+  const [shuffleRanks, setShuffleRanks] = useState<Map<string, number>>(() => new Map());
   
   const effectivePublicMode = isPublicMode || !effectiveAgentMode;
   
@@ -118,6 +125,23 @@ const OurAgents = ({
   useEffect(() => {
     fetchData();
   }, []);
+
+  // Assign a stable random rank to each agent once per visit. New agents that
+  // appear later get a rank without reshuffling already-ranked agents.
+  useEffect(() => {
+    if (agents.length === 0) return;
+    setShuffleRanks((prev) => {
+      let changed = false;
+      const next = new Map(prev);
+      for (const agent of agents) {
+        if (!next.has(agent.id)) {
+          next.set(agent.id, Math.random());
+          changed = true;
+        }
+      }
+      return changed ? next : prev;
+    });
+  }, [agents]);
 
   const fetchData = async () => {
     try {
@@ -371,15 +395,27 @@ function AgentPhotoTileGrid({
       result = result.filter(agent => agent.activeListingsCount > 0);
     }
 
-    // Sort by last name
-    if (sortOrder === "a-z") {
+    // Sort after filtering. Featured = photo-first with stable within-group
+    // shuffle; Random = full stable shuffle; A–Z / Z–A unchanged.
+    if (sortOrder === "featured") {
+      result.sort((a, b) => {
+        const aPhoto = hasUsableHeadshot(a) ? 0 : 1;
+        const bPhoto = hasUsableHeadshot(b) ? 0 : 1;
+        if (aPhoto !== bPhoto) return aPhoto - bPhoto;
+        return (shuffleRanks.get(a.id) ?? 0) - (shuffleRanks.get(b.id) ?? 0);
+      });
+    } else if (sortOrder === "random") {
+      result.sort(
+        (a, b) => (shuffleRanks.get(a.id) ?? 0) - (shuffleRanks.get(b.id) ?? 0),
+      );
+    } else if (sortOrder === "a-z") {
       result.sort((a, b) => (a.last_name || "").localeCompare(b.last_name || ""));
     } else {
       result.sort((a, b) => (b.last_name || "").localeCompare(a.last_name || ""));
     }
 
     return result;
-  }, [agents, searchQuery, selectedState, selectedCounties, selectedLocation, counties, showBuyerIncentivesOnly, showListingAgentsOnly, sortOrder]);
+  }, [agents, searchQuery, selectedState, selectedCounties, selectedLocation, counties, showBuyerIncentivesOnly, showListingAgentsOnly, sortOrder, shuffleRanks]);
 
   // Keep header count + pager in sync with the filtered set.
   useEffect(() => {
@@ -413,7 +449,7 @@ function AgentPhotoTileGrid({
     setSelectedLocation(null);
     setShowBuyerIncentivesOnly(false);
     setShowListingAgentsOnly(false);
-    setSortOrder("a-z");
+    setSortOrder("featured");
     setPage(1);
   };
 

@@ -3,9 +3,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export type AgentDirectoryPageSize = 24 | 48 | 96 | "all";
 
+export type AgentDirectorySortOrder = "featured" | "random" | "a-z" | "z-a";
+
 interface AgentDirectoryFiltersProps {
-  sortOrder: "a-z" | "z-a";
-  setSortOrder: (order: "a-z" | "z-a") => void;
+  sortOrder: AgentDirectorySortOrder;
+  setSortOrder: (order: AgentDirectorySortOrder) => void;
   resultCount: number;
   searchQuery?: string;
   itemLabel?: string;
@@ -74,11 +76,16 @@ const AgentDirectoryFilters = ({
               </SelectContent>
             </Select>
           ) : null}
-          <Select value={sortOrder} onValueChange={(value) => setSortOrder(value as "a-z" | "z-a")}>
+          <Select
+            value={sortOrder}
+            onValueChange={(value) => setSortOrder(value as AgentDirectorySortOrder)}
+          >
             <SelectTrigger className="h-8 w-full rounded-lg border-neutral-200/90 bg-white text-xs font-medium text-neutral-900 shadow-none min-[520px]:w-[11rem] focus-visible:ring-2 focus-visible:ring-neutral-300/50 focus-visible:ring-offset-2">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="featured">Recommended</SelectItem>
+              <SelectItem value="random">Random</SelectItem>
               <SelectItem value="a-z">Name A–Z</SelectItem>
               <SelectItem value="z-a">Name Z–A</SelectItem>
             </SelectContent>
