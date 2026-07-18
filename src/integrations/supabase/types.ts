@@ -4581,7 +4581,7 @@ export type Database = {
             Returns: string
           }
       admin_deactivate_buyer: { Args: { p_user_id: string }; Returns: Json }
-      admin_delete_agent: { Args: { p_agent_id: string }; Returns: Json }
+      admin_delete_agent: { Args: { p_agent_id: string }; Returns: undefined }
       admin_delete_client: { Args: { p_client_id: string }; Returns: undefined }
       admin_delete_consumer: { Args: { p_user_id: string }; Returns: undefined }
       admin_delete_early_access: { Args: { p_id: string }; Returns: number }
