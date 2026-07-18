@@ -1192,6 +1192,48 @@ export type Database = {
         }
         Relationships: []
       }
+      auth_user_deletion_queue: {
+        Row: {
+          attempts: number
+          auth_user_id: string | null
+          completed_at: string | null
+          created_at: string
+          email: string | null
+          id: string
+          last_error: string | null
+          requested_by: string | null
+          source: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          attempts?: number
+          auth_user_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          last_error?: string | null
+          requested_by?: string | null
+          source?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          attempts?: number
+          auth_user_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          last_error?: string | null
+          requested_by?: string | null
+          source?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       buyer_credentials: {
         Row: {
           approval_amount: number | null
@@ -4903,6 +4945,7 @@ export type Database = {
         Returns: string
       }
       owns_submission: { Args: { p_submission_id: string }; Returns: boolean }
+      process_auth_deletion_queue: { Args: never; Returns: undefined }
       process_pending_message_emails: {
         Args: { grace_minutes?: number }
         Returns: number
@@ -4929,6 +4972,13 @@ export type Database = {
           _event_type: string
         }
         Returns: Json
+      }
+      resolve_auth_user_for_deletion: {
+        Args: { p_email?: string; p_user_id?: string }
+        Returns: {
+          auth_email: string
+          auth_user_id: string
+        }[]
       }
       resolve_share_token: { Args: { _token: string }; Returns: Json }
       resolve_user_role: { Args: { _user_id: string }; Returns: Json }
