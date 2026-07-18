@@ -49,6 +49,7 @@ interface MergedAgent {
   invite_email?: EmailStatusInfo | null
   license_verified_email?: EmailStatusInfo | null
   profile_complete?: boolean
+  headshot_url?: string | null
 }
 
 interface EmailStatusInfo {
