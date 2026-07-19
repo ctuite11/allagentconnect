@@ -60,7 +60,7 @@ export function ActivityAgentContact({
       <button
         type="button"
         onClick={openDrawer}
-        className="block max-w-full truncate text-left font-medium text-neutral-900 transition-colors hover:text-[#0E56F5]"
+        className="block max-w-full truncate text-left font-medium text-[#0E56F5] hover:underline underline-offset-2"
       >
         {agentName}
       </button>
