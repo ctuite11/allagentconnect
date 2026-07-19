@@ -58,7 +58,7 @@ export function MessageRow({ message, showHeader, onViewAgent }: MessageRowProps
                   showPresence={false}
                   isBuyer={!!message.senderIsBuyer}
                 />
-                <span className="text-[13px] font-semibold text-zinc-900 group-hover:text-[#0E56F5] group-hover:underline underline-offset-4">
+                <span className="text-[13px] font-semibold text-[#0E56F5] group-hover:underline underline-offset-4">
                   {displayName}
                 </span>
               </button>
