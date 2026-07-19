@@ -350,7 +350,18 @@ export function ConversationPanel({
                   <h2 className="truncate text-[15px] font-semibold tracking-tight text-zinc-900">{threadTitle.trim()}</h2>
                   <div className="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5">
                     <span className="truncate text-[12px] leading-snug text-zinc-500">
-                      Discussion with {details?.otherUserName}
+                      Discussion with{" "}
+                      {otherUserIsAgent && details?.otherUserId ? (
+                        <button
+                          type="button"
+                          onClick={() => openAgentProfile(details.otherUserId)}
+                          className="font-medium text-[#0E56F5] hover:underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0E56F5]/40"
+                        >
+                          {details?.otherUserName}
+                        </button>
+                      ) : (
+                        details?.otherUserName
+                      )}
                     </span>
                     {presenceDot}
                     {rolePill}
@@ -359,9 +370,19 @@ export function ConversationPanel({
               ) : (
                 <>
                   <div className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5">
-                    <h2 className="truncate text-[15px] font-semibold tracking-tight text-zinc-900">
-                      {details?.otherUserName}
-                    </h2>
+                    {otherUserIsAgent && details?.otherUserId ? (
+                      <button
+                        type="button"
+                        onClick={() => openAgentProfile(details.otherUserId)}
+                        className="truncate rounded text-left text-[15px] font-semibold tracking-tight text-zinc-900 hover:text-[#0E56F5] hover:underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0E56F5]/40 focus-visible:ring-offset-1"
+                      >
+                        {details?.otherUserName}
+                      </button>
+                    ) : (
+                      <h2 className="truncate text-[15px] font-semibold tracking-tight text-zinc-900">
+                        {details?.otherUserName}
+                      </h2>
+                    )}
                     {presenceDot}
                     {rolePill}
                   </div>
