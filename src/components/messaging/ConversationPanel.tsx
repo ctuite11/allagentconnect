@@ -308,13 +308,30 @@ export function ConversationPanel({
       >
         <div className="flex w-full items-center justify-between gap-3">
           <div className={cn("flex min-w-0 flex-1 items-center", listingThreadHeader ? "gap-2" : "gap-2.5")}>
-            <UserAvatar
-              name={details?.otherUserName ?? ""}
-              headshotUrl={details?.otherUserHeadshotUrl ?? null}
-              size={listingThreadHeader ? "md" : "lg"}
-              showPresence={false}
-              isBuyer={!(details?.otherUserIsAgent ?? false)}
-            />
+            {otherUserIsAgent && details?.otherUserId ? (
+              <button
+                type="button"
+                onClick={() => openAgentProfile(details.otherUserId)}
+                aria-label={`View ${details?.otherUserName ?? "agent"}'s agent profile`}
+                className="shrink-0 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0E56F5]/40 focus-visible:ring-offset-1"
+              >
+                <UserAvatar
+                  name={details?.otherUserName ?? ""}
+                  headshotUrl={details?.otherUserHeadshotUrl ?? null}
+                  size={listingThreadHeader ? "md" : "lg"}
+                  showPresence={false}
+                  isBuyer={false}
+                />
+              </button>
+            ) : (
+              <UserAvatar
+                name={details?.otherUserName ?? ""}
+                headshotUrl={details?.otherUserHeadshotUrl ?? null}
+                size={listingThreadHeader ? "md" : "lg"}
+                showPresence={false}
+                isBuyer={!(details?.otherUserIsAgent ?? false)}
+              />
+            )}
             <div className="min-w-0">
               {listingThreadHeader ? (
                 <>
