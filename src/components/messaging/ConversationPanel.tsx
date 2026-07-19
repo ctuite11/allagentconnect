@@ -12,6 +12,8 @@ import { UserAvatar } from "./UserAvatar";
 import { isSameDay, formatDistanceToNow } from "date-fns";
 import { cn, formatListingConversationTitle } from "@/lib/utils";
 import { showMessageSentToast } from "@/lib/messageSentFeedback";
+import AgentIntelDrawer from "@/components/agent-search/AgentIntelDrawer";
+import { resolveAgentProfileByUserId } from "@/lib/resolveAgentProfileForViewer";
 
 interface ConversationPanelProps {
   conversationId: string | undefined;
@@ -54,6 +56,18 @@ export function ConversationPanel({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [listingAddress, setListingAddress] = useState<string | null>(null);
   const { lastSeenAt, isOnline } = useAgentLastSeen(details?.otherUserId);
+
+  // Single AgentIntelDrawer owned by the panel — one instance for the header
+  // and every incoming message row. See MessageRow.onViewAgent wiring below.
+  const [agentDrawer, setAgentDrawer] = useState<{ open: boolean; agent: any | null }>(
+    { open: false, agent: null },
+  );
+  const openAgentProfile = async (userId: string | null | undefined) => {
+    const row = await resolveAgentProfileByUserId(userId);
+    if (!row) return; // Not an agent / no profile row → do nothing.
+    setAgentDrawer({ open: true, agent: row });
+  };
+  const otherUserIsAgent = Boolean(details?.otherUserIsAgent);
 
   const handleHeaderClose = () => {
     if (onCloseRequest) {
@@ -199,15 +213,18 @@ export function ConversationPanel({
     }
 
     const showHeader = msg.senderId !== lastSenderId;
+    const senderIsBuyer = !msg.isOwn && !otherUserIsAgent;
+    const senderIsAgent = !msg.isOwn && otherUserIsAgent;
 
     threadElements.push(
       <MessageRow
         key={msg.id}
         message={{
           ...msg,
-          senderIsBuyer: !msg.isOwn && !(details?.otherUserIsAgent ?? false),
+          senderIsBuyer,
         }}
         showHeader={showHeader}
+        onViewAgent={senderIsAgent ? () => openAgentProfile(msg.senderId) : undefined}
       />
     );
 
@@ -291,13 +308,30 @@ export function ConversationPanel({
       >
         <div className="flex w-full items-center justify-between gap-3">
           <div className={cn("flex min-w-0 flex-1 items-center", listingThreadHeader ? "gap-2" : "gap-2.5")}>
-            <UserAvatar
-              name={details?.otherUserName ?? ""}
-              headshotUrl={details?.otherUserHeadshotUrl ?? null}
-              size={listingThreadHeader ? "md" : "lg"}
-              showPresence={false}
-              isBuyer={!(details?.otherUserIsAgent ?? false)}
-            />
+            {otherUserIsAgent && details?.otherUserId ? (
+              <button
+                type="button"
+                onClick={() => openAgentProfile(details.otherUserId)}
+                aria-label={`View ${details?.otherUserName ?? "agent"}'s agent profile`}
+                className="shrink-0 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0E56F5]/40 focus-visible:ring-offset-1"
+              >
+                <UserAvatar
+                  name={details?.otherUserName ?? ""}
+                  headshotUrl={details?.otherUserHeadshotUrl ?? null}
+                  size={listingThreadHeader ? "md" : "lg"}
+                  showPresence={false}
+                  isBuyer={false}
+                />
+              </button>
+            ) : (
+              <UserAvatar
+                name={details?.otherUserName ?? ""}
+                headshotUrl={details?.otherUserHeadshotUrl ?? null}
+                size={listingThreadHeader ? "md" : "lg"}
+                showPresence={false}
+                isBuyer={!(details?.otherUserIsAgent ?? false)}
+              />
+            )}
             <div className="min-w-0">
               {listingThreadHeader ? (
                 <>
@@ -316,7 +350,18 @@ export function ConversationPanel({
                   <h2 className="truncate text-[15px] font-semibold tracking-tight text-zinc-900">{threadTitle.trim()}</h2>
                   <div className="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5">
                     <span className="truncate text-[12px] leading-snug text-zinc-500">
-                      Discussion with {details?.otherUserName}
+                      Discussion with{" "}
+                      {otherUserIsAgent && details?.otherUserId ? (
+                        <button
+                          type="button"
+                          onClick={() => openAgentProfile(details.otherUserId)}
+                          className="font-medium text-[#0E56F5] hover:underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0E56F5]/40"
+                        >
+                          {details?.otherUserName}
+                        </button>
+                      ) : (
+                        details?.otherUserName
+                      )}
                     </span>
                     {presenceDot}
                     {rolePill}
@@ -325,9 +370,19 @@ export function ConversationPanel({
               ) : (
                 <>
                   <div className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5">
-                    <h2 className="truncate text-[15px] font-semibold tracking-tight text-zinc-900">
-                      {details?.otherUserName}
-                    </h2>
+                    {otherUserIsAgent && details?.otherUserId ? (
+                      <button
+                        type="button"
+                        onClick={() => openAgentProfile(details.otherUserId)}
+                        className="truncate rounded text-left text-[15px] font-semibold tracking-tight text-zinc-900 hover:text-[#0E56F5] hover:underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0E56F5]/40 focus-visible:ring-offset-1"
+                      >
+                        {details?.otherUserName}
+                      </button>
+                    ) : (
+                      <h2 className="truncate text-[15px] font-semibold tracking-tight text-zinc-900">
+                        {details?.otherUserName}
+                      </h2>
+                    )}
                     {presenceDot}
                     {rolePill}
                   </div>
@@ -395,6 +450,11 @@ export function ConversationPanel({
         </div>
       </div>
       {isEmbedded ? <div className="shrink-0">{composer}</div> : composer}
+      <AgentIntelDrawer
+        agent={agentDrawer.agent}
+        open={agentDrawer.open}
+        onOpenChange={(open) => setAgentDrawer((prev) => ({ ...prev, open }))}
+      />
     </div>
   );
 }
