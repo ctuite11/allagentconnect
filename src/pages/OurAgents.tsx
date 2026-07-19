@@ -57,7 +57,7 @@ interface EnrichedAgent {
   specialties: string[];
 }
 
-const DEFAULT_PAGE_SIZE: AgentDirectoryPageSize = 24;
+const DEFAULT_PAGE_SIZE: AgentDirectoryPageSize = 48;
 
 interface County {
   id: string;
