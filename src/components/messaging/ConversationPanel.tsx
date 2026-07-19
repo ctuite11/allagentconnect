@@ -12,6 +12,8 @@ import { UserAvatar } from "./UserAvatar";
 import { isSameDay, formatDistanceToNow } from "date-fns";
 import { cn, formatListingConversationTitle } from "@/lib/utils";
 import { showMessageSentToast } from "@/lib/messageSentFeedback";
+import AgentIntelDrawer from "@/components/agent-search/AgentIntelDrawer";
+import { resolveAgentProfileByUserId } from "@/lib/resolveAgentProfileForViewer";
 
 interface ConversationPanelProps {
   conversationId: string | undefined;
@@ -54,6 +56,18 @@ export function ConversationPanel({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [listingAddress, setListingAddress] = useState<string | null>(null);
   const { lastSeenAt, isOnline } = useAgentLastSeen(details?.otherUserId);
+
+  // Single AgentIntelDrawer owned by the panel — one instance for the header
+  // and every incoming message row. See MessageRow.onViewAgent wiring below.
+  const [agentDrawer, setAgentDrawer] = useState<{ open: boolean; agent: any | null }>(
+    { open: false, agent: null },
+  );
+  const openAgentProfile = async (userId: string | null | undefined) => {
+    const row = await resolveAgentProfileByUserId(userId);
+    if (!row) return; // Not an agent / no profile row → do nothing.
+    setAgentDrawer({ open: true, agent: row });
+  };
+  const otherUserIsAgent = Boolean(details?.otherUserIsAgent);
 
   const handleHeaderClose = () => {
     if (onCloseRequest) {
@@ -199,15 +213,18 @@ export function ConversationPanel({
     }
 
     const showHeader = msg.senderId !== lastSenderId;
+    const senderIsBuyer = !msg.isOwn && !otherUserIsAgent;
+    const senderIsAgent = !msg.isOwn && otherUserIsAgent;
 
     threadElements.push(
       <MessageRow
         key={msg.id}
         message={{
           ...msg,
-          senderIsBuyer: !msg.isOwn && !(details?.otherUserIsAgent ?? false),
+          senderIsBuyer,
         }}
         showHeader={showHeader}
+        onViewAgent={senderIsAgent ? () => openAgentProfile(msg.senderId) : undefined}
       />
     );
 
