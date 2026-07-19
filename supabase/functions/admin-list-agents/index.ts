@@ -298,6 +298,15 @@ Deno.serve(async (req) => {
     // Combine both lists
     const allAgents = [...agents, ...earlyAccessAgents]
 
+    // Sort by "most recently became a real, usable agent" — max of
+    // account_activated_at, verified_at, created_at. Keeps late activators
+    // (e.g. verified weeks ago, activated today) at the top.
+    const recency = (a: MergedAgent) => {
+      const t = (v: string | null | undefined) => (v ? new Date(v).getTime() : 0)
+      return Math.max(t(a.account_activated_at), t(a.verified_at), t(a.created_at))
+    }
+    allAgents.sort((a, b) => recency(b) - recency(a))
+
     // Fetch latest License Verified and Admin-Created Invite email status per recipient.
     // Read-only surfacing — no template, sender, or Resend config is touched here.
     try {
