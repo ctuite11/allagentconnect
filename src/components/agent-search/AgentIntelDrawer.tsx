@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -18,7 +18,7 @@ import {
   Gift,
   Clock
 } from "lucide-react";
-import ContactAgentProfileDialog from "@/components/ContactAgentProfileDialog";
+import AgentEmailQuickDialog from "@/components/agent-search/AgentEmailQuickDialog";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 
 interface AgentIntelDrawerProps {
@@ -29,6 +29,8 @@ interface AgentIntelDrawerProps {
 
 const AgentIntelDrawer = ({ agent, open, onOpenChange }: AgentIntelDrawerProps) => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const [emailOpen, setEmailOpen] = useState(false);
   const [buyerNeeds, setBuyerNeeds] = useState<any[]>([]);
   const [recentListings, setRecentListings] = useState<any[]>([]);
   const [coverageAreas, setCoverageAreas] = useState<any[]>([]);
@@ -111,16 +113,20 @@ const AgentIntelDrawer = ({ agent, open, onOpenChange }: AgentIntelDrawerProps) 
         <div className="space-y-6 pt-4">
           {/* Quick Actions */}
           <div className="grid grid-cols-2 gap-3">
-            <ContactAgentProfileDialog
-              agentId={agent.id}
-              agentName={agentName}
-              agentEmail={agent.email}
-              buttonText="Message"
-            />
+            <Button
+              variant="default"
+              onClick={() => setEmailOpen(true)}
+              className="gap-2"
+            >
+              <Mail className="h-4 w-4" />
+              Email
+            </Button>
             <Button 
               variant="outline" 
               onClick={() => {
-              navigate(`/agent/${agent.aac_id || agent.id}`);
+              navigate(`/agent/${agent.aac_id || agent.id}`, {
+                state: { from: location.pathname + location.search },
+              });
               onOpenChange(false);
               }}
               className="gap-2"
@@ -295,6 +301,12 @@ const AgentIntelDrawer = ({ agent, open, onOpenChange }: AgentIntelDrawerProps) 
           )}
         </div>
       </SheetContent>
+      <AgentEmailQuickDialog
+        open={emailOpen}
+        onOpenChange={setEmailOpen}
+        agentName={agentName}
+        agentEmail={agent.email}
+      />
     </Sheet>
   );
 };
