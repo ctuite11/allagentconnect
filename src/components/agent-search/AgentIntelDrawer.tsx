@@ -119,7 +119,7 @@ const AgentIntelDrawer = ({ agent, open, onOpenChange }: AgentIntelDrawerProps) 
               className="gap-2"
             >
               <Mail className="h-4 w-4" />
-              Email
+              {agent.first_name ? `Email ${agent.first_name}` : "Email"}
             </Button>
             <Button 
               variant="outline" 
