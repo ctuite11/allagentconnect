@@ -21,11 +21,18 @@ interface MessageRowProps {
     senderIsBuyer?: boolean;
   };
   showHeader: boolean;
+  /**
+   * When provided (sender is a confirmed agent, not the viewer), the sender's
+   * avatar + name become a single clickable target that opens the shared
+   * AgentIntelDrawer owned by ConversationPanel.
+   */
+  onViewAgent?: () => void;
 }
 
-export function MessageRow({ message, showHeader }: MessageRowProps) {
+export function MessageRow({ message, showHeader, onViewAgent }: MessageRowProps) {
   const time = formatMessageTime(message.createdAt);
   const displayName = message.isOwn ? "Me" : message.senderName;
+  const clickable = !message.isOwn && Boolean(onViewAgent);
 
   return (
     <div className={cn(
@@ -37,16 +44,38 @@ export function MessageRow({ message, showHeader }: MessageRowProps) {
         {/* Header: avatar + name + time (incoming only) */}
         {showHeader && !message.isOwn && (
           <div className="mb-1 flex items-center gap-2">
-            <UserAvatar
-              name={displayName}
-              headshotUrl={message.senderHeadshotUrl ?? null}
-              size="lg"
-              showPresence={false}
-              isBuyer={!!message.senderIsBuyer}
-            />
-            <span className="text-[13px] font-semibold text-zinc-900">
-              {displayName}
-            </span>
+            {clickable ? (
+              <button
+                type="button"
+                onClick={onViewAgent}
+                aria-label={`View ${displayName}'s agent profile`}
+                className="group flex items-center gap-2 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0E56F5]/40 focus-visible:ring-offset-1"
+              >
+                <UserAvatar
+                  name={displayName}
+                  headshotUrl={message.senderHeadshotUrl ?? null}
+                  size="lg"
+                  showPresence={false}
+                  isBuyer={!!message.senderIsBuyer}
+                />
+                <span className="text-[13px] font-semibold text-zinc-900 group-hover:text-[#0E56F5] group-hover:underline underline-offset-4">
+                  {displayName}
+                </span>
+              </button>
+            ) : (
+              <>
+                <UserAvatar
+                  name={displayName}
+                  headshotUrl={message.senderHeadshotUrl ?? null}
+                  size="lg"
+                  showPresence={false}
+                  isBuyer={!!message.senderIsBuyer}
+                />
+                <span className="text-[13px] font-semibold text-zinc-900">
+                  {displayName}
+                </span>
+              </>
+            )}
             <span className="text-[11px] text-zinc-400 tabular-nums">{time}</span>
           </div>
         )}
