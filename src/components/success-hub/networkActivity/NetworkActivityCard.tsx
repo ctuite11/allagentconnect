@@ -24,8 +24,8 @@ export function NetworkActivityCard({
 }: NetworkActivityCardProps) {
   return (
     <article className={cn(cardShell, className)}>
-      <header className="mb-3 flex items-start justify-between gap-3">
-        <div className="min-w-0">
+      <header className="mb-3 flex flex-wrap items-start justify-between gap-x-3 gap-y-2">
+        <div className="min-w-0 flex-1">
           <h3 className={cn(agentSectionTitle, "flex items-center gap-2 text-[15px]")}>
             {icon}
             {title}
@@ -34,7 +34,7 @@ export function NetworkActivityCard({
             <p className={cn(agentSectionDesc, "mt-0.5 text-xs")}>{description}</p>
           ) : null}
         </div>
-        {action ? <div className="shrink-0">{action}</div> : null}
+        {action ? <div className="shrink-0 flex-none">{action}</div> : null}
       </header>
       <div className="min-h-0 flex-1">{children}</div>
     </article>
