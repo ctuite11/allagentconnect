@@ -13,7 +13,10 @@ import { isSameDay, formatDistanceToNow } from "date-fns";
 import { cn, formatListingConversationTitle } from "@/lib/utils";
 import { showMessageSentToast } from "@/lib/messageSentFeedback";
 import AgentIntelDrawer from "@/components/agent-search/AgentIntelDrawer";
-import { resolveAgentProfileByUserId } from "@/lib/resolveAgentProfileForViewer";
+import {
+  resolveAgentProfilesByUserIds,
+  type AgentProfileRow,
+} from "@/lib/resolveAgentProfileForViewer";
 
 interface ConversationPanelProps {
   conversationId: string | undefined;
@@ -50,24 +53,83 @@ export function ConversationPanel({
 }: ConversationPanelProps) {
   const navigate = useNavigate();
   const location = useLocation();
-  const from = (location.state as any)?.from as string | undefined;
+  const from =
+    location.state &&
+    typeof location.state === "object" &&
+    "from" in location.state &&
+    typeof (location.state as { from?: unknown }).from === "string"
+      ? (location.state as { from: string }).from
+      : undefined;
   const { messages, details, loading, notFound, fetchError, sending, sendMessage, refetch } =
     useConversation(conversationId, { hotSheetPreviewSync });
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [listingAddress, setListingAddress] = useState<string | null>(null);
   const { lastSeenAt, isOnline } = useAgentLastSeen(details?.otherUserId);
 
-  // Single AgentIntelDrawer owned by the panel — one instance for the header
-  // and every incoming message row. See MessageRow.onViewAgent wiring below.
-  const [agentDrawer, setAgentDrawer] = useState<{ open: boolean; agent: any | null }>(
-    { open: false, agent: null },
-  );
-  const openAgentProfile = async (userId: string | null | undefined) => {
-    const row = await resolveAgentProfileByUserId(userId);
-    if (!row) return; // Not an agent / no profile row → do nothing.
+  // Exactly one AgentIntelDrawer, owned here — MessageRow never mounts one.
+  // Clickability is gated on a confirmed agent_profiles row for that auth user
+  // id (resolved below), not merely on "other participant looks like an agent".
+  const [agentDrawer, setAgentDrawer] = useState<{ open: boolean; agent: AgentProfileRow | null }>({
+    open: false,
+    agent: null,
+  });
+  /** auth user id → agent_profiles row | null (null = resolved, not an agent). */
+  const agentProfileCacheRef = useRef<Map<string, AgentProfileRow | null>>(new Map());
+  const [agentProfileCacheVersion, setAgentProfileCacheVersion] = useState(0);
+
+  // Reset drawer + cache when the active thread changes so a prior agent's
+  // drawer cannot leak into the next conversation.
+  useEffect(() => {
+    agentProfileCacheRef.current = new Map();
+    setAgentProfileCacheVersion((v) => v + 1);
+    setAgentDrawer({ open: false, agent: null });
+  }, [conversationId]);
+
+  // Resolve real agent_profiles rows for the counterpart + every inbound sender.
+  // Misses are cached as null so names stay plain text / non-clickable.
+  useEffect(() => {
+    if (!conversationId || loading || notFound || fetchError) return;
+
+    const candidates = new Set<string>();
+    if (details?.otherUserId) candidates.add(details.otherUserId);
+    for (const msg of messages) {
+      if (!msg.isOwn && msg.senderId) candidates.add(msg.senderId);
+    }
+
+    const missing = [...candidates].filter((id) => !agentProfileCacheRef.current.has(id));
+    if (missing.length === 0) return;
+
+    let cancelled = false;
+    void (async () => {
+      const found = await resolveAgentProfilesByUserIds(missing);
+      if (cancelled) return;
+      for (const id of missing) {
+        agentProfileCacheRef.current.set(id, found.get(id) ?? null);
+      }
+      setAgentProfileCacheVersion((v) => v + 1);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [conversationId, loading, notFound, fetchError, details?.otherUserId, messages]);
+
+  const canViewAgent = (userId: string | null | undefined): boolean => {
+    if (!userId) return false;
+    // Depend on version so React re-renders after cache fills.
+    void agentProfileCacheVersion;
+    return Boolean(agentProfileCacheRef.current.get(userId));
+  };
+
+  const openAgentProfile = (userId: string | null | undefined) => {
+    if (!userId) return;
+    const row = agentProfileCacheRef.current.get(userId);
+    if (!row) return;
     setAgentDrawer({ open: true, agent: row });
   };
+
   const otherUserIsAgent = Boolean(details?.otherUserIsAgent);
+  const otherUserProfileClickable = canViewAgent(details?.otherUserId);
 
   const handleHeaderClose = () => {
     if (onCloseRequest) {
@@ -214,7 +276,9 @@ export function ConversationPanel({
 
     const showHeader = msg.senderId !== lastSenderId;
     const senderIsBuyer = !msg.isOwn && !otherUserIsAgent;
-    const senderIsAgent = !msg.isOwn && otherUserIsAgent;
+    // Only attach onViewAgent when a real agent_profiles row has resolved for
+    // THIS sender. Buyers / unresolved ids stay plain text.
+    const senderProfileClickable = !msg.isOwn && canViewAgent(msg.senderId);
 
     threadElements.push(
       <MessageRow
@@ -224,7 +288,7 @@ export function ConversationPanel({
           senderIsBuyer,
         }}
         showHeader={showHeader}
-        onViewAgent={senderIsAgent ? () => openAgentProfile(msg.senderId) : undefined}
+        onViewAgent={senderProfileClickable ? () => openAgentProfile(msg.senderId) : undefined}
       />
     );
 
@@ -308,7 +372,7 @@ export function ConversationPanel({
       >
         <div className="flex w-full items-center justify-between gap-3">
           <div className={cn("flex min-w-0 flex-1 items-center", listingThreadHeader ? "gap-2" : "gap-2.5")}>
-            {otherUserIsAgent && details?.otherUserId ? (
+            {otherUserProfileClickable && details?.otherUserId ? (
               <button
                 type="button"
                 onClick={() => openAgentProfile(details.otherUserId)}
@@ -351,7 +415,7 @@ export function ConversationPanel({
                   <div className="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5">
                     <span className="truncate text-[12px] leading-snug text-zinc-500">
                       Discussion with{" "}
-                      {otherUserIsAgent && details?.otherUserId ? (
+                      {otherUserProfileClickable && details?.otherUserId ? (
                         <button
                           type="button"
                           onClick={() => openAgentProfile(details.otherUserId)}
@@ -370,11 +434,11 @@ export function ConversationPanel({
               ) : (
                 <>
                   <div className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5">
-                    {otherUserIsAgent && details?.otherUserId ? (
+                    {otherUserProfileClickable && details?.otherUserId ? (
                       <button
                         type="button"
                         onClick={() => openAgentProfile(details.otherUserId)}
-                        className="truncate rounded text-left text-[15px] font-semibold tracking-tight text-zinc-900 hover:text-[#0E56F5] hover:underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0E56F5]/40 focus-visible:ring-offset-1"
+                        className="truncate rounded text-left text-[15px] font-semibold tracking-tight text-[#0E56F5] hover:underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0E56F5]/40 focus-visible:ring-offset-1"
                       >
                         {details?.otherUserName}
                       </button>
