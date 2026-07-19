@@ -90,7 +90,7 @@ const AgentIntelDrawer = ({ agent, open, onOpenChange }: AgentIntelDrawerProps) 
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-[400px] sm:w-[450px] overflow-y-auto">
+      <SheetContent className="w-full max-w-full sm:max-w-[450px] sm:w-[450px] overflow-y-auto overflow-x-hidden">
         <SheetHeader className="pb-4">
           <div className="flex items-start gap-4">
             <AgentAvatar
@@ -116,23 +116,25 @@ const AgentIntelDrawer = ({ agent, open, onOpenChange }: AgentIntelDrawerProps) 
             <Button
               variant="default"
               onClick={() => setEmailOpen(true)}
-              className="gap-2"
+              className="gap-2 min-w-0"
             >
-              <Mail className="h-4 w-4" />
-              {agent.first_name ? `Email ${agent.first_name}` : "Email"}
+              <Mail className="h-4 w-4 shrink-0" />
+              <span className="truncate">
+                {agent.first_name ? `Email ${agent.first_name}` : "Email"}
+              </span>
             </Button>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => {
               navigate(`/agent/${agent.aac_id || agent.id}`, {
                 state: { from: location.pathname + location.search },
               });
               onOpenChange(false);
               }}
-              className="gap-2"
+              className="gap-2 min-w-0"
             >
-              <ExternalLink className="h-4 w-4" />
-              Profile
+              <ExternalLink className="h-4 w-4 shrink-0" />
+              <span className="truncate">Profile</span>
             </Button>
           </div>
 
