@@ -450,6 +450,11 @@ export function ConversationPanel({
         </div>
       </div>
       {isEmbedded ? <div className="shrink-0">{composer}</div> : composer}
+      <AgentIntelDrawer
+        agent={agentDrawer.agent}
+        open={agentDrawer.open}
+        onOpenChange={(open) => setAgentDrawer((prev) => ({ ...prev, open }))}
+      />
     </div>
   );
 }
