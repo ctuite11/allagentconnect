@@ -42,22 +42,22 @@ export function ChannelPreviewCard({
       icon={icon}
       action={
         <div className="flex shrink-0 items-center gap-3">
+          <Link
+            to={viewAllTo}
+            className="inline-flex items-center rounded-md bg-primary px-2.5 py-1 text-[11px] font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2"
+          >
+            View all
+          </Link>
           {onCreate ? (
             <button
               type="button"
               onClick={onCreate}
-              className="inline-flex items-center gap-1 rounded-md bg-primary px-2.5 py-1 text-[11px] font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2"
+              className="inline-flex items-center gap-1 rounded-sm text-[12px] font-medium text-neutral-700 underline-offset-2 transition-colors hover:text-neutral-900 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40 focus-visible:ring-offset-2"
             >
               <Plus className="h-3 w-3" />
               Create new
             </button>
           ) : null}
-          <Link
-            to={viewAllTo}
-            className="rounded-sm text-[12px] font-medium text-neutral-700 underline-offset-2 transition-colors hover:text-neutral-900 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40 focus-visible:ring-offset-2"
-          >
-            View all →
-          </Link>
         </div>
       }
     >
