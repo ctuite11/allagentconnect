@@ -1,24 +1,32 @@
 import { supabase } from "@/integrations/supabase/client";
 
-export type AgentProfileRow = Record<string, unknown> & {
+export type AgentProfileRow = {
   id: string;
   first_name?: string | null;
   last_name?: string | null;
   email?: string | null;
   headshot_url?: string | null;
   company?: string | null;
+  office_name?: string | null;
+  team_name?: string | null;
+  title?: string | null;
   aac_id?: string | null;
   phone?: string | null;
+  cell_phone?: string | null;
+  office_phone?: string | null;
+  bio?: string | null;
+  created_at?: string | null;
+  social_links?: unknown;
+  [key: string]: unknown;
 };
 
 /**
- * Resolve auth user id(s) → full `agent_profiles` row(s) for AgentIntelDrawer.
+ * Resolve auth user id(s) → full `agent_profiles` row(s) for Comms profile drawer.
  *
  * Lookup key is the auth user id. In the current schema `agent_profiles.id`
  * is that auth id (there is no separate `auth_user_id` column). Callers must
  * still treat a miss as "not an agent / not clickable" — never invent a
- * synthetic profile, and never assume every conversation participant has a
- * row just because `resolveDisplayProfiles` flagged `isAgent`.
+ * synthetic profile.
  */
 export async function resolveAgentProfileByUserId(
   userId: string | null | undefined,
@@ -36,9 +44,12 @@ export async function resolveAgentProfilesByUserIds(
   const map = new Map<string, AgentProfileRow>();
   if (ids.length === 0) return map;
 
+  // Same fields the public Agent Network / Agent Profile pages rely on.
   const { data, error } = await supabase
     .from("agent_profiles")
-    .select("*")
+    .select(
+      "id, aac_id, first_name, last_name, email, headshot_url, company, office_name, team_name, title, phone, cell_phone, office_phone, bio, created_at, social_links",
+    )
     .in("id", ids);
 
   if (error) {

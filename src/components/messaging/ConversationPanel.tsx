@@ -12,7 +12,7 @@ import { UserAvatar } from "./UserAvatar";
 import { isSameDay, formatDistanceToNow } from "date-fns";
 import { cn, formatListingConversationTitle } from "@/lib/utils";
 import { showMessageSentToast } from "@/lib/messageSentFeedback";
-import AgentIntelDrawer from "@/components/agent-search/AgentIntelDrawer";
+import AgentMessageProfileDrawer from "./AgentMessageProfileDrawer";
 import {
   resolveAgentProfilesByUserIds,
   type AgentProfileRow,
@@ -66,7 +66,7 @@ export function ConversationPanel({
   const [listingAddress, setListingAddress] = useState<string | null>(null);
   const { lastSeenAt, isOnline } = useAgentLastSeen(details?.otherUserId);
 
-  // Exactly one AgentIntelDrawer, owned here — MessageRow never mounts one.
+  // Exactly one agent profile drawer, owned here — MessageRow never mounts one.
   // Clickability is gated on a confirmed agent_profiles row for that auth user
   // id (resolved below), not merely on "other participant looks like an agent".
   const [agentDrawer, setAgentDrawer] = useState<{ open: boolean; agent: AgentProfileRow | null }>({
@@ -514,7 +514,7 @@ export function ConversationPanel({
         </div>
       </div>
       {isEmbedded ? <div className="shrink-0">{composer}</div> : composer}
-      <AgentIntelDrawer
+      <AgentMessageProfileDrawer
         agent={agentDrawer.agent}
         open={agentDrawer.open}
         onOpenChange={(open) => setAgentDrawer((prev) => ({ ...prev, open }))}
