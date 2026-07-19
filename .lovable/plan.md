@@ -1,47 +1,38 @@
-## Audit findings
+## Goal
+Flip visual hierarchy on Success Hub Communications channel preview cards so **View All** is primary and **Create New** is secondary.
 
-Two "Jas-like" agents exist in the database:
+## Scope
+Single file: `src/components/success-hub/networkActivity/ChannelPreviewCard.tsx`. Affects all four channel cards uniformly (Buyer Needs, Sales Intel, Renter Needs, General Discussions).
 
-| Agent | created_at | verified_at | account_activated_at |
-|---|---|---|---|
-| **Jason Manganello** | 2026-07-13 | 2026-07-13 | 2026-07-13 |
-| **Jas Bhogal** | 2026-07-11 | 2026-07-11 | **2026-07-18 (today)** |
+## Changes
 
-Jas Bhogal was created and verified on Jul 11, but only **activated his account today (Jul 18)**. Jason Manganello was created, verified, and activated on Jul 13.
+**Action row (top-right of each card):**
 
-### Why Jas is not first
-- **Success Hub "Newest Verified Agents" slider** (`get_newest_verified_agents` RPC): ordered by `verified_at DESC, created_at DESC`. By that rule, Jason (Jul 13) correctly ranks above Jas (Jul 11).
-- **Admin agent search** (`admin-list-agents/index.ts`): ordered by `agent_profiles.created_at DESC`. Same result — Jason ranks above Jas.
+Current:
+- `Create New` — filled primary button (blue, prominent)
+- `View all →` — small gray text link
 
-Both surfaces are behaving as coded. The mismatch is that the user's mental model of "newest" is **"most recently became a real, usable agent on the platform"** — which for Jas is his activation today — but both surfaces sort by profile/verification age instead.
+New:
+- `View All` — primary button (small filled or solid outlined, brand blue)
+- `+ Create New` — small secondary text link with plus icon, positioned to the right of View All
 
-## Proposed fix
+Both remain in the same top-right slot on every card for consistency.
 
-Redefine "newest" as the most recent of `account_activated_at`, `verified_at`, and `created_at` — i.e. the moment the agent last crossed into a usable state. This keeps day-of-activation late-verifiers like Jas at the top of "Newest" without disrupting stable ordering for everyone else.
+## Technical Details
 
-### 1. Success Hub slider — RPC change
-New migration replacing `public.get_newest_verified_agents`:
-- Same eligibility filters (verified, role=agent, not hidden, first/last name present, activated OR has company).
-- `ORDER BY GREATEST(COALESCE(s.account_activated_at, 'epoch'), COALESCE(s.verified_at, 'epoch'), ap.created_at) DESC`.
-- Tie-break on `s.verified_at DESC NULLS LAST, ap.created_at DESC`.
+In `ChannelPreviewCard.tsx`, swap the styling of the two elements in the `action` prop:
 
-Result: Jas ranks first (his activation is today), then Jason (Jul 13).
-
-### 2. Admin agent list — default sort
-Update `supabase/functions/admin-list-agents/index.ts` primary agent query to order by:
+```text
+[ View All ]   + Create New
+ (primary)     (secondary link)
 ```
-GREATEST(coalesce(agent_settings.account_activated_at, epoch),
-         coalesce(agent_settings.verified_at,          epoch),
-         agent_profiles.created_at) DESC
-```
-Applied via a SQL view or by fetching `agent_settings` alongside profiles and sorting server-side (already joined on the admin list). Keep secondary tie-break on `created_at DESC`.
 
-The pending/rejected buckets keep their existing `created_at DESC` ordering (activation is not meaningful there).
+- `View All` becomes a `<Link>` styled like the existing primary button (bg-primary, text-primary-foreground, px-2.5 py-1, text-[11px] font-semibold, rounded-md, hover:bg-primary/90).
+- `+ Create New` becomes a `<button>` styled like the current "View all" link (text-[12px] font-medium text-neutral-700, hover underline), with a small `<Plus className="h-3 w-3" />` inline.
+- Order: View All first (left), Create New second (right), separated by `gap-3`.
+- No changes to card body, empty state, or list rendering.
+- No changes to other files — the four channel cards on the Success Hub all consume this component, so hierarchy updates propagate automatically.
 
-### 3. Verification
-- Re-check the RPC with a direct SELECT — expect Jas first, Jason second.
-- Reload Success Hub → Jas is left-most tile in the slider.
-- Reload Admin → Agents tab → Jas is first row (no search filter).
-
-## Out of scope
-No changes to eligibility rules, no changes to the Agent Network / `/our-agents` sorting (that page has its own Recommended/Random logic).
+## Out of Scope
+- No changes to routes, filters, or the `onCreate` handlers.
+- No changes to other Success Hub sections.
