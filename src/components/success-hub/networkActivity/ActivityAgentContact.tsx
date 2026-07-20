@@ -1,8 +1,5 @@
-import { useState } from "react";
 import { Mail, Phone } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
-import AgentIntelDrawer from "@/components/agent-search/AgentIntelDrawer";
 import ContactAgentProfileDialog from "@/components/ContactAgentProfileDialog";
 
 export type ActivityAgentContactProps = {
@@ -25,45 +22,14 @@ export function ActivityAgentContact({
   agentEmail,
   agentPhone,
 }: ActivityAgentContactProps) {
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [drawerAgent, setDrawerAgent] = useState<any | null>(null);
-
-  const openDrawer = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    e.preventDefault();
-    if (!agentId) return;
-    // Fetch the full agent_profile so AgentIntelDrawer renders correctly.
-    const { data } = await supabase
-      .from("agent_profiles")
-      .select("*")
-      .eq("id", agentId)
-      .maybeSingle();
-    setDrawerAgent(
-      data ?? {
-        id: agentId,
-        first_name: agentName.split(" ")[0] ?? agentName,
-        last_name: agentName.split(" ").slice(1).join(" "),
-        email: agentEmail ?? "",
-        headshot_url: null,
-        company: null,
-        aac_id: null,
-      },
-    );
-    setDrawerOpen(true);
-  };
-
   const formattedPhone = agentPhone ? formatPhoneNumber(agentPhone) : null;
   const phoneHref = agentPhone ? `tel:${agentPhone.replace(/[^\d+]/g, "")}` : null;
 
   return (
     <div className="mt-1.5 space-y-0.5 text-[11px] text-neutral-600">
-      <button
-        type="button"
-        onClick={openDrawer}
-        className="block max-w-full truncate text-left font-medium text-[#0E56F5] hover:underline underline-offset-2"
-      >
+      <div className="block max-w-full truncate font-medium text-zinc-900">
         {agentName}
-      </button>
+      </div>
       <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5">
         {phoneHref && formattedPhone && formattedPhone !== "—" ? (
           <a
@@ -91,11 +57,6 @@ export function ActivityAgentContact({
           </span>
         ) : null}
       </div>
-      <AgentIntelDrawer
-        agent={drawerAgent}
-        open={drawerOpen}
-        onOpenChange={setDrawerOpen}
-      />
     </div>
   );
 }
