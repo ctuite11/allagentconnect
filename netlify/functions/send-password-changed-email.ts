@@ -1,4 +1,5 @@
 import type { Handler } from "@netlify/functions";
+import { createClient } from "@supabase/supabase-js";
 
 const cors = (origin: string | null) => ({
   "Access-Control-Allow-Origin": origin || "*",
@@ -23,6 +24,38 @@ const handler: Handler = async (event) => {
     return { statusCode: 405, headers, body: JSON.stringify({ error: "Method not allowed" }) };
   }
 
+  // Require caller authentication: either an internal service token (server-to-server)
+  // or a valid Supabase user session whose email matches the target address.
+  const expectedToken = process.env.INTERNAL_FUNCTION_TOKEN;
+  const providedToken =
+    event.headers["x-internal-token"] || event.headers["X-Internal-Token"];
+  const hasInternalToken =
+    !!expectedToken && !!providedToken && providedToken === expectedToken;
+
+  let authenticatedUserEmail: string | null = null;
+  if (!hasInternalToken) {
+    const authHeader = event.headers.authorization || event.headers.Authorization;
+    const bearer = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
+    const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+    const ANON =
+      process.env.SUPABASE_ANON_KEY ||
+      process.env.VITE_SUPABASE_ANON_KEY ||
+      process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+    if (!bearer || !SUPABASE_URL || !ANON) {
+      return { statusCode: 401, headers, body: JSON.stringify({ error: "Unauthorized" }) };
+    }
+    try {
+      const supabase = createClient(SUPABASE_URL, ANON);
+      const { data, error } = await supabase.auth.getUser(bearer);
+      if (error || !data?.user?.email) {
+        return { statusCode: 401, headers, body: JSON.stringify({ error: "Unauthorized" }) };
+      }
+      authenticatedUserEmail = data.user.email.toLowerCase();
+    } catch {
+      return { statusCode: 401, headers, body: JSON.stringify({ error: "Unauthorized" }) };
+    }
+  }
+
   const RESEND_API_KEY = process.env.RESEND_API_KEY;
   if (!RESEND_API_KEY) {
     console.error("[send-password-changed-email] Missing RESEND_API_KEY");
@@ -37,6 +70,12 @@ const handler: Handler = async (event) => {
     }
 
     const cleanEmail = email.trim().toLowerCase();
+
+    // For user-authenticated calls, the target address must be the caller's own account.
+    if (!hasInternalToken && authenticatedUserEmail && authenticatedUserEmail !== cleanEmail) {
+      return { statusCode: 403, headers, body: JSON.stringify({ error: "Forbidden" }) };
+    }
+
     const from =
       process.env.TRANSACTIONAL_FROM ||
       "All Agent Connect <hello@notify.allagentconnect.com>";
