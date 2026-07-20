@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useLocation, useSearchParams } from "react-router-dom";
 import { Search, ArrowLeft, Home, MessageSquare, TrendingUp, Users, Phone, Mail } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { PageShell } from "@/components/layout/PageShell";
@@ -7,6 +7,8 @@ import { PageHeader } from "@/components/ui/page-header";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Seo } from "@/components/Seo";
+import { AgentEmailQuickDialog } from "@/components/agent-search/AgentEmailQuickDialog";
+import { formatPhoneNumber } from "@/lib/phoneFormat";
 
 type Category = "buyer_need" | "sales_intel" | "renter_need" | "general_discussion";
 type Filter = "all" | Category;
@@ -53,6 +55,7 @@ function relativeTime(iso: string) {
 /** Communications Center > Feed — single searchable list of all broadcasts, filterable by message type. */
 export default function CommunicationsFeed() {
   const [params] = useSearchParams();
+  const location = useLocation();
   const channelParam = params.get("channel");
   const initialFilter: Filter = (FILTER_ORDER as string[]).includes(channelParam ?? "")
     ? (channelParam as Filter)
@@ -62,6 +65,8 @@ export default function CommunicationsFeed() {
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<Filter>(initialFilter);
+  const [emailTarget, setEmailTarget] = useState<{ name: string; email: string } | null>(null);
+  const returnState = { from: `${location.pathname}${location.search}` };
 
   useEffect(() => {
     let cancelled = false;
@@ -189,9 +194,9 @@ export default function CommunicationsFeed() {
               {rows.length === 0 ? "No activity yet." : "No matches for your search."}
             </div>
           ) : (
-            <ul className="divide-y divide-neutral-100">
+            <ul className="divide-y divide-neutral-200">
               {filtered.map((r) => (
-                <li key={r.id} className="px-6 py-4">
+                <li key={r.id} className="px-6 py-6">
                   <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-medium text-neutral-500">
                     {CATEGORY_META[r.category].icon}
                     <span>{CATEGORY_META[r.category].title}</span>
@@ -206,25 +211,30 @@ export default function CommunicationsFeed() {
                     </p>
                   )}
                   {r.sender && (
-                    <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-neutral-600">
+                    <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-neutral-600">
                       <Link
                         to={`/agent/${r.sender.id}`}
-                        className="font-medium text-neutral-900 hover:text-primary hover:underline"
+                        state={returnState}
+                        className="font-medium text-[#0E56F5] hover:underline"
                       >
                         {r.sender.name}
                       </Link>
                       {r.sender.company && <span className="text-neutral-500">{r.sender.company}</span>}
                       {r.sender.phone && (
-                        <a href={`tel:${r.sender.phone}`} className="inline-flex items-center gap-1 hover:text-primary">
+                        <span className="inline-flex items-center gap-1 text-neutral-600">
                           <Phone className="h-3 w-3" />
-                          {r.sender.phone}
-                        </a>
+                          {formatPhoneNumber(r.sender.phone)}
+                        </span>
                       )}
                       {r.sender.email && (
-                        <a href={`mailto:${r.sender.email}`} className="inline-flex items-center gap-1 hover:text-primary">
+                        <button
+                          type="button"
+                          onClick={() => setEmailTarget({ name: r.sender!.name, email: r.sender!.email! })}
+                          className="inline-flex items-center gap-1 text-[#0E56F5] hover:underline"
+                        >
                           <Mail className="h-3 w-3" />
                           {r.sender.email}
-                        </a>
+                        </button>
                       )}
                     </div>
                   )}
@@ -234,6 +244,12 @@ export default function CommunicationsFeed() {
           )}
         </div>
       </div>
+      <AgentEmailQuickDialog
+        open={!!emailTarget}
+        onOpenChange={(open) => !open && setEmailTarget(null)}
+        agentName={emailTarget?.name ?? ""}
+        agentEmail={emailTarget?.email ?? ""}
+      />
     </PageShell>
   );
 }
