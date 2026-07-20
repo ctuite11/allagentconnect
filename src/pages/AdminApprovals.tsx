@@ -1556,7 +1556,12 @@ export default function AdminApprovals() {
                   { body: { testTo: adminEmail } },
                 );
                 if (error || !data?.ok) {
-                  toast.error(`Failed: ${error?.message ?? data?.error ?? "Unknown error"}`);
+                  const msg =
+                    data?.error ??
+                    (error as any)?.context?.responseText ??
+                    error?.message ??
+                    "Unknown error";
+                  toast.error(`Failed: ${msg}`);
                 } else {
                   toast.success(`Preview sent to ${adminEmail}`);
                 }
