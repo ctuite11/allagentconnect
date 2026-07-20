@@ -61,70 +61,7 @@ export function ConversationPanel({
   const [listingAddress, setListingAddress] = useState<string | null>(null);
   const { lastSeenAt, isOnline } = useAgentLastSeen(details?.otherUserId);
 
-  // Exactly one agent card pop-up, owned here — MessageRow never mounts one.
-  // Clickability is gated on a confirmed agent_profiles row for that auth user
-  // id (resolved below), not merely on "other participant looks like an agent".
-  const [agentDrawer, setAgentDrawer] = useState<{ open: boolean; agent: AgentProfileRow | null }>({
-    open: false,
-    agent: null,
-  });
-  /** auth user id → agent_profiles row | null (null = resolved, not an agent). */
-  const agentProfileCacheRef = useRef<Map<string, AgentProfileRow | null>>(new Map());
-  const [agentProfileCacheVersion, setAgentProfileCacheVersion] = useState(0);
-
-  // Reset drawer + cache when the active thread changes so a prior agent's
-  // drawer cannot leak into the next conversation.
-  useEffect(() => {
-    agentProfileCacheRef.current = new Map();
-    setAgentProfileCacheVersion((v) => v + 1);
-    setAgentDrawer({ open: false, agent: null });
-  }, [conversationId]);
-
-  // Resolve real agent_profiles rows for the counterpart + every inbound sender.
-  // Misses are cached as null so names stay plain text / non-clickable.
-  useEffect(() => {
-    if (!conversationId || loading || notFound || fetchError) return;
-
-    const candidates = new Set<string>();
-    if (details?.otherUserId) candidates.add(details.otherUserId);
-    for (const msg of messages) {
-      if (!msg.isOwn && msg.senderId) candidates.add(msg.senderId);
-    }
-
-    const missing = [...candidates].filter((id) => !agentProfileCacheRef.current.has(id));
-    if (missing.length === 0) return;
-
-    let cancelled = false;
-    void (async () => {
-      const found = await resolveAgentProfilesByUserIds(missing);
-      if (cancelled) return;
-      for (const id of missing) {
-        agentProfileCacheRef.current.set(id, found.get(id) ?? null);
-      }
-      setAgentProfileCacheVersion((v) => v + 1);
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [conversationId, loading, notFound, fetchError, details?.otherUserId, messages]);
-
-  const canViewAgent = (userId: string | null | undefined): boolean => {
-    if (!userId) return false;
-    // Depend on version so React re-renders after cache fills.
-    void agentProfileCacheVersion;
-    return Boolean(agentProfileCacheRef.current.get(userId));
-  };
-
-  const openAgentProfile = (userId: string | null | undefined) => {
-    if (!userId) return;
-    const row = agentProfileCacheRef.current.get(userId);
-    if (!row) return;
-    setAgentDrawer({ open: true, agent: row });
-  };
-
   const otherUserIsAgent = Boolean(details?.otherUserIsAgent);
-  const otherUserProfileClickable = canViewAgent(details?.otherUserId);
 
   const handleHeaderClose = () => {
     if (onCloseRequest) {
