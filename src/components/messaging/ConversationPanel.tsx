@@ -12,11 +12,6 @@ import { UserAvatar } from "./UserAvatar";
 import { isSameDay, formatDistanceToNow } from "date-fns";
 import { cn, formatListingConversationTitle } from "@/lib/utils";
 import { showMessageSentToast } from "@/lib/messageSentFeedback";
-import AgentMessageProfileDrawer from "./AgentMessageProfileDrawer";
-import {
-  resolveAgentProfilesByUserIds,
-  type AgentProfileRow,
-} from "@/lib/resolveAgentProfileForViewer";
 
 interface ConversationPanelProps {
   conversationId: string | undefined;
@@ -66,70 +61,7 @@ export function ConversationPanel({
   const [listingAddress, setListingAddress] = useState<string | null>(null);
   const { lastSeenAt, isOnline } = useAgentLastSeen(details?.otherUserId);
 
-  // Exactly one agent card pop-up, owned here — MessageRow never mounts one.
-  // Clickability is gated on a confirmed agent_profiles row for that auth user
-  // id (resolved below), not merely on "other participant looks like an agent".
-  const [agentDrawer, setAgentDrawer] = useState<{ open: boolean; agent: AgentProfileRow | null }>({
-    open: false,
-    agent: null,
-  });
-  /** auth user id → agent_profiles row | null (null = resolved, not an agent). */
-  const agentProfileCacheRef = useRef<Map<string, AgentProfileRow | null>>(new Map());
-  const [agentProfileCacheVersion, setAgentProfileCacheVersion] = useState(0);
-
-  // Reset drawer + cache when the active thread changes so a prior agent's
-  // drawer cannot leak into the next conversation.
-  useEffect(() => {
-    agentProfileCacheRef.current = new Map();
-    setAgentProfileCacheVersion((v) => v + 1);
-    setAgentDrawer({ open: false, agent: null });
-  }, [conversationId]);
-
-  // Resolve real agent_profiles rows for the counterpart + every inbound sender.
-  // Misses are cached as null so names stay plain text / non-clickable.
-  useEffect(() => {
-    if (!conversationId || loading || notFound || fetchError) return;
-
-    const candidates = new Set<string>();
-    if (details?.otherUserId) candidates.add(details.otherUserId);
-    for (const msg of messages) {
-      if (!msg.isOwn && msg.senderId) candidates.add(msg.senderId);
-    }
-
-    const missing = [...candidates].filter((id) => !agentProfileCacheRef.current.has(id));
-    if (missing.length === 0) return;
-
-    let cancelled = false;
-    void (async () => {
-      const found = await resolveAgentProfilesByUserIds(missing);
-      if (cancelled) return;
-      for (const id of missing) {
-        agentProfileCacheRef.current.set(id, found.get(id) ?? null);
-      }
-      setAgentProfileCacheVersion((v) => v + 1);
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [conversationId, loading, notFound, fetchError, details?.otherUserId, messages]);
-
-  const canViewAgent = (userId: string | null | undefined): boolean => {
-    if (!userId) return false;
-    // Depend on version so React re-renders after cache fills.
-    void agentProfileCacheVersion;
-    return Boolean(agentProfileCacheRef.current.get(userId));
-  };
-
-  const openAgentProfile = (userId: string | null | undefined) => {
-    if (!userId) return;
-    const row = agentProfileCacheRef.current.get(userId);
-    if (!row) return;
-    setAgentDrawer({ open: true, agent: row });
-  };
-
   const otherUserIsAgent = Boolean(details?.otherUserIsAgent);
-  const otherUserProfileClickable = canViewAgent(details?.otherUserId);
 
   const handleHeaderClose = () => {
     if (onCloseRequest) {
@@ -276,9 +208,6 @@ export function ConversationPanel({
 
     const showHeader = msg.senderId !== lastSenderId;
     const senderIsBuyer = !msg.isOwn && !otherUserIsAgent;
-    // Only attach onViewAgent when a real agent_profiles row has resolved for
-    // THIS sender. Buyers / unresolved ids stay plain text.
-    const senderProfileClickable = !msg.isOwn && canViewAgent(msg.senderId);
 
     threadElements.push(
       <MessageRow
@@ -288,7 +217,6 @@ export function ConversationPanel({
           senderIsBuyer,
         }}
         showHeader={showHeader}
-        onViewAgent={senderProfileClickable ? () => openAgentProfile(msg.senderId) : undefined}
       />
     );
 
@@ -372,30 +300,13 @@ export function ConversationPanel({
       >
         <div className="flex w-full items-center justify-between gap-3">
           <div className={cn("flex min-w-0 flex-1 items-center", listingThreadHeader ? "gap-2" : "gap-2.5")}>
-            {otherUserProfileClickable && details?.otherUserId ? (
-              <button
-                type="button"
-                onClick={() => openAgentProfile(details.otherUserId)}
-                aria-label={`View ${details?.otherUserName ?? "agent"}'s agent profile`}
-                className="shrink-0 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0E56F5]/40 focus-visible:ring-offset-1"
-              >
-                <UserAvatar
-                  name={details?.otherUserName ?? ""}
-                  headshotUrl={details?.otherUserHeadshotUrl ?? null}
-                  size={listingThreadHeader ? "md" : "lg"}
-                  showPresence={false}
-                  isBuyer={false}
-                />
-              </button>
-            ) : (
-              <UserAvatar
-                name={details?.otherUserName ?? ""}
-                headshotUrl={details?.otherUserHeadshotUrl ?? null}
-                size={listingThreadHeader ? "md" : "lg"}
-                showPresence={false}
-                isBuyer={!(details?.otherUserIsAgent ?? false)}
-              />
-            )}
+            <UserAvatar
+              name={details?.otherUserName ?? ""}
+              headshotUrl={details?.otherUserHeadshotUrl ?? null}
+              size={listingThreadHeader ? "md" : "lg"}
+              showPresence={false}
+              isBuyer={!(details?.otherUserIsAgent ?? false)}
+            />
             <div className="min-w-0">
               {listingThreadHeader ? (
                 <>
@@ -414,18 +325,7 @@ export function ConversationPanel({
                   <h2 className="truncate text-[15px] font-semibold tracking-tight text-zinc-900">{threadTitle.trim()}</h2>
                   <div className="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5">
                     <span className="truncate text-[12px] leading-snug text-zinc-500">
-                      Discussion with{" "}
-                      {otherUserProfileClickable && details?.otherUserId ? (
-                        <button
-                          type="button"
-                          onClick={() => openAgentProfile(details.otherUserId)}
-                          className="font-medium text-[#0E56F5] hover:underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0E56F5]/40"
-                        >
-                          {details?.otherUserName}
-                        </button>
-                      ) : (
-                        details?.otherUserName
-                      )}
+                      Discussion with {details?.otherUserName}
                     </span>
                     {presenceDot}
                     {rolePill}
@@ -434,19 +334,9 @@ export function ConversationPanel({
               ) : (
                 <>
                   <div className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5">
-                    {otherUserProfileClickable && details?.otherUserId ? (
-                      <button
-                        type="button"
-                        onClick={() => openAgentProfile(details.otherUserId)}
-                        className="truncate rounded text-left text-[15px] font-semibold tracking-tight text-[#0E56F5] hover:underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0E56F5]/40 focus-visible:ring-offset-1"
-                      >
-                        {details?.otherUserName}
-                      </button>
-                    ) : (
-                      <h2 className="truncate text-[15px] font-semibold tracking-tight text-zinc-900">
-                        {details?.otherUserName}
-                      </h2>
-                    )}
+                    <h2 className="truncate text-[15px] font-semibold tracking-tight text-zinc-900">
+                      {details?.otherUserName}
+                    </h2>
                     {presenceDot}
                     {rolePill}
                   </div>
@@ -514,11 +404,6 @@ export function ConversationPanel({
         </div>
       </div>
       {isEmbedded ? <div className="shrink-0">{composer}</div> : composer}
-      <AgentMessageProfileDrawer
-        agent={agentDrawer.agent}
-        open={agentDrawer.open}
-        onOpenChange={(open) => setAgentDrawer((prev) => ({ ...prev, open }))}
-      />
     </div>
   );
 }
