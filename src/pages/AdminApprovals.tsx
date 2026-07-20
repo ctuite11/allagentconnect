@@ -1541,6 +1541,65 @@ export default function AdminApprovals() {
             >
               Email me forwardable invite
             </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={async () => {
+                const adminEmail = user?.email;
+                if (!adminEmail) {
+                  toast.error("No admin email on session");
+                  return;
+                }
+                toast.message("Sending Comms Center guide preview to your inbox…");
+                const { data, error } = await supabase.functions.invoke(
+                  "send-comms-guide-broadcast",
+                  { body: { testTo: adminEmail } },
+                );
+                if (error || !data?.ok) {
+                  toast.error(`Failed: ${error?.message ?? data?.error ?? "Unknown error"}`);
+                } else {
+                  toast.success(`Preview sent to ${adminEmail}`);
+                }
+              }}
+              className="border-slate-300 text-slate-700 hover:bg-slate-100"
+            >
+              Preview Comms guide email
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={async () => {
+                const { data: countData, error: countErr } = await supabase.functions.invoke(
+                  "send-comms-guide-broadcast",
+                  { body: { dryRun: true } },
+                );
+                if (countErr || !countData?.ok) {
+                  toast.error(`Failed: ${countErr?.message ?? countData?.error ?? "Unknown error"}`);
+                  return;
+                }
+                const n = countData.eligible_recipients ?? 0;
+                if (n === 0) {
+                  toast.error("No eligible recipients");
+                  return;
+                }
+                if (!confirm(`Send the “Too many emails?” Comms Center guide to ${n} verified agents? This cannot be undone.`)) {
+                  return;
+                }
+                toast.message(`Enqueuing ${n} emails…`);
+                const { data, error } = await supabase.functions.invoke(
+                  "send-comms-guide-broadcast",
+                  { body: {} },
+                );
+                if (error || !data?.ok) {
+                  toast.error(`Failed: ${error?.message ?? data?.error ?? "Unknown error"}`);
+                } else {
+                  toast.success(`Enqueued ${data.enqueued ?? 0} of ${data.eligible_recipients ?? n} emails`);
+                }
+              }}
+              className="border-amber-300 text-amber-700 hover:bg-amber-50"
+            >
+              Broadcast Comms guide
+            </Button>
             <Button 
               onClick={() => setShowCreateDialog(true)}
               size="sm"
