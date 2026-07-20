@@ -344,20 +344,20 @@ const ClientNeedsDashboard = () => {
             </div>
 
             <div className="space-y-2.5">
-              <PriceRangePreferences
+              <GeographicPreferencesManager
                 agentId={user?.id || ""}
                 onFiltersUpdated={handleFiltersUpdated}
-                onDataChange={handlePriceDataChange}
+                onDataChange={handleGeoDataChange}
               />
               <PropertyTypePreferences
                 agentId={user?.id || ""}
                 onFiltersUpdated={handleFiltersUpdated}
                 onDataChange={(data) => handlePropertyTypesChange(data.propertyTypes)}
               />
-              <GeographicPreferencesManager
+              <PriceRangePreferences
                 agentId={user?.id || ""}
                 onFiltersUpdated={handleFiltersUpdated}
-                onDataChange={handleGeoDataChange}
+                onDataChange={handlePriceDataChange}
               />
             </div>
           </section>
