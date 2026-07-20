@@ -10,7 +10,7 @@ import { renderCompactListingEmailCard, renderListingEmailCard } from "./listing
 import { resolveEmailPhotoUrl } from "./listingPhotoUrl.ts";
 import { formatPersonDisplayName } from "./personDisplayName.ts";
 import { formatUsPhoneForDisplay } from "./phoneFormat.ts";
-import { resolveEmailBaseUrl } from "./aacPublicUrl.ts";
+import { AAC_PUBLIC_URL, resolveEmailBaseUrl } from "./aacPublicUrl.ts";
 
 /* ------------------------------------------------------------------ */
 /*  Shared helpers for Share Listings emails                           */
@@ -273,6 +273,21 @@ export function renderEmailTemplate(
           <p style="margin:0 0 12px;">A new client need matches your preferences:</p>
           ${variables.contentHtml || ""}`,
       });
+
+    case "comms-digest": {
+      const cadenceLabel =
+        variables.cadence === "weekly" ? "Weekly" : "Daily";
+      return buildAacEmail({
+        headline: `${cadenceLabel} Communications Digest`,
+        preheader:
+          typeof variables.itemCount === "number"
+            ? `${variables.itemCount} Communications Center update${variables.itemCount === 1 ? "" : "s"}`
+            : "Your Communications Center digest",
+        body: variables.contentHtml || "",
+        ctaLabel: "Open Communications Center",
+        ctaUrl: variables.ctaUrl || `${AAC_PUBLIC_URL}/communications/feed`,
+      });
+    }
 
     case "seller-alert":
       return buildAacEmail({

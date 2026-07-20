@@ -10,6 +10,13 @@ import {
   countExistingReminders,
   reserveAndEnqueueMissingOpportunityReminder,
 } from "../_shared/missingOpportunitiesEmail.ts";
+import {
+  defaultCommsActionUrl,
+  insertDigestItems,
+  loadCommsSchedules,
+  partitionByCommsSchedule,
+  type DigestItemInsert,
+} from "../_shared/commsDigest.ts";
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -277,16 +284,6 @@ const handler = async (req: Request): Promise<Response> => {
     const sentSet = new Set((alreadySent || []).map((r: any) => r.agent_id));
     const fresh = partition.real.filter((r) => !sentSet.has(r.agent_id));
 
-    // Finalize recipient_count = post-dedup real-content recipients only.
-    // `fresh` is strictly real-content; reminder recipients live on
-    // `partition.reminder` and are never counted here.
-    if (fresh.length !== partition.real.length) {
-      await supabase
-        .from("comms_broadcasts")
-        .update({ recipient_count: fresh.length })
-        .eq("id", broadcastId);
-    }
-
     // 7. Compose and enqueue
     let criteriaText = "";
     if (criteria) {
@@ -301,7 +298,26 @@ const handler = async (req: Request): Promise<Response> => {
 
     const categoryLabel = CATEGORY_LABEL[category];
 
-    const emailJobs: any[] = fresh.map((r) => ({
+    const itemHtml = `
+            <h2 style="margin:0 0 8px;font-size:16px;color:#0f172a;">${subject}</h2>
+            <p style="margin:0 0 8px;font-size:14px;color:#334155;"><strong>From:</strong> ${senderName}${senderCompany ? ` (${senderCompany})` : ""}</p>
+            <p style="margin:0 0 12px;font-size:14px;color:#334155;"><strong>Category:</strong> ${categoryLabel}</p>
+            ${criteriaText ? `<div style="background:#ffffff;border:1px solid #e5e7eb;padding:16px;border-radius:8px;margin:12px 0;"><h3 style="margin:0 0 8px;font-size:14px;">Request Criteria</h3>${criteriaText}</div>` : ""}
+            <div style="background:#ffffff;border:1px solid #e5e7eb;padding:16px;border-radius:8px;">
+              <p style="white-space: pre-wrap;margin:0;font-size:14px;color:#334155;">${message}</p>
+            </div>`;
+
+    const { schedules, muted } = await loadCommsSchedules(
+      supabase,
+      fresh.map((r) => r.agent_id),
+    );
+    const { immediate, digest, skippedMuted } = partitionByCommsSchedule(
+      fresh,
+      schedules,
+      muted,
+    );
+
+    const emailJobs: any[] = immediate.map((r) => ({
       idempotency_key: `client-need-broadcast:${broadcastId}:${r.agent_id}`,
       payload: {
         provider: "resend",
@@ -318,15 +334,7 @@ const handler = async (req: Request): Promise<Response> => {
           subject,
           message,
           criteriaText,
-          contentHtml: `
-            <h2>${subject}</h2>
-            <p><strong>From:</strong> ${senderName}${senderCompany ? ` (${senderCompany})` : ""}</p>
-            <p><strong>Category:</strong> ${categoryLabel}</p>
-            ${criteriaText ? `<div style="background:#ffffff;border:1px solid #e5e7eb;padding:16px;border-radius:8px;margin:20px 0;"><h3>Request Criteria</h3>${criteriaText}</div>` : ""}
-            <div style="background:#ffffff;border:1px solid #e5e7eb;padding:16px;border-radius:8px;">
-              <p style="white-space: pre-wrap;">${message}</p>
-            </div>
-          `,
+          contentHtml: itemHtml,
         },
       },
     }));
@@ -353,10 +361,7 @@ const handler = async (req: Request): Promise<Response> => {
               <div style="background: #ffffff; border: 1px solid #e5e7eb; padding: 12px; border-radius: 6px; margin-bottom: 20px;">
                 <p><strong>Copy of email sent to ${fresh.length} recipients</strong></p>
               </div>
-              <h2>${subject}</h2>
-              <p><strong>Category:</strong> ${categoryLabel}</p>
-              ${criteriaText ? `<div style="background:#ffffff;border:1px solid #e5e7eb;padding:16px;border-radius:8px;margin:20px 0;">${criteriaText}</div>` : ""}
-              <div style="background:#ffffff;border:1px solid #e5e7eb;padding:16px;border-radius:8px;"><p style="white-space: pre-wrap;">${message}</p></div>
+              ${itemHtml}
             `,
           },
         },
@@ -371,15 +376,48 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
-    if (fresh.length > 0) {
+    let digestEnqueued = 0;
+    if (digest.length) {
+      const digestRows: DigestItemInsert[] = digest.map((r) => ({
+        agent_id: r.agent_id,
+        cadence: r.cadence,
+        source_type: "broadcast",
+        source_id: broadcastId,
+        category: categoryLabel,
+        title: subject,
+        summary: {
+          category,
+          category_label: categoryLabel,
+          sender_name: senderName,
+          sender_company: senderCompany,
+          reason: r.reason,
+        },
+        item_html: itemHtml,
+        action_url: defaultCommsActionUrl(),
+      }));
+      const dig = await insertDigestItems(supabase, digestRows);
+      digestEnqueued = dig.inserted + dig.conflicted;
+    }
+
+    const notified = [...immediate, ...digest];
+    if (notified.length > 0) {
       await supabase.from("agent_sent_broadcasts").upsert(
-        fresh.map((r) => ({
+        notified.map((r) => ({
           agent_id: r.agent_id,
           broadcast_id: broadcastId,
           reason: r.reason,
         })),
         { onConflict: "agent_id,broadcast_id" },
       );
+    }
+    void skippedMuted;
+
+    // Finalize recipient_count after timing partition (muted agents excluded).
+    if (notified.length !== partition.real.length) {
+      await supabase
+        .from("comms_broadcasts")
+        .update({ recipient_count: notified.length })
+        .eq("id", broadcastId);
     }
 
     // Reminder enqueue via reserve-first RPC.
@@ -398,18 +436,20 @@ const handler = async (req: Request): Promise<Response> => {
       else if (res.error) console.error("[send-client-need-notification] reminder RPC error:", res.error);
     }
 
-    const matched = fresh.filter((r) => r.reason === "preferences_match").length;
-    const fallback = fresh.filter((r) => r.reason === "preferences_unset").length;
+    const matched = notified.filter((r) => r.reason === "preferences_match").length;
+    const fallback = notified.filter((r) => r.reason === "preferences_unset").length;
 
     console.log(
-      `[send-client-need-notification] broadcast=${broadcastId} audience=${audience.length} matched=${matched} fallback=${fallback} sender_excluded=1 opted_out=${optedOut.size} duplicates_skipped=${partition.real.length - fresh.length} reminder_enqueued=${reminderEnqueued}`,
+      `[send-client-need-notification] broadcast=${broadcastId} audience=${audience.length} matched=${matched} fallback=${fallback} immediate=${immediate.length} digest=${digestEnqueued} sender_excluded=1 opted_out=${optedOut.size} duplicates_skipped=${partition.real.length - fresh.length} reminder_enqueued=${reminderEnqueued}`,
     );
 
     return new Response(
       JSON.stringify({
         success: true,
-        message: `Message sent to ${fresh.length} agents`,
-        sent: fresh.length,
+        message: `Message delivered to ${notified.length} agents (${immediate.length} immediate, ${digestEnqueued} digest)`,
+        sent: notified.length,
+        immediate_enqueued: immediate.length,
+        digest_enqueued: digestEnqueued,
         matched,
         fallback,
         opted_out: optedOut.size,

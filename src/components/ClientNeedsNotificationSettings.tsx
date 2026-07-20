@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Bell } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-type Frequency = "immediate" | "daily" | "weekly" | "off";
+type Frequency = "immediate" | "daily" | "weekly";
 
 interface NotificationSettings {
   frequency: Frequency;
@@ -17,28 +17,27 @@ const OPTIONS: { value: Frequency; label: string; description: string }[] = [
   {
     value: "immediate",
     label: "Immediately",
-    description:
-      "Get an alert for outbound communications and high-signal network sends as communications activity happens",
+    description: "Receive updates in real time.",
   },
   {
     value: "daily",
     label: "Daily digest",
-    description: "One daily summary of agent-network communications activity and updates",
+    description: "Receive one summary of the day's activity at 6:00 PM.",
   },
   {
     value: "weekly",
     label: "Weekly digest",
-    description: "One weekly summary of agent-network communications activity and updates",
-  },
-  {
-    value: "off",
-    label: "Off",
-    description: "Don't email me Communications Center or network workflow alerts",
+    description: "Receive one summary of the week's activity every Friday at 6:00 PM.",
   },
 ];
 
 const cardShell =
   "rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm transition-shadow duration-150 hover:shadow-md";
+
+function normalizeFrequency(raw: unknown): Frequency {
+  if (raw === "daily" || raw === "weekly" || raw === "immediate") return raw;
+  return "immediate";
+}
 
 export const ClientNeedsNotificationSettings = () => {
   const [settings, setSettings] = useState<NotificationSettings>({ frequency: "immediate" });
@@ -60,10 +59,11 @@ export const ClientNeedsNotificationSettings = () => {
       if (error && error.code !== "PGRST116") throw error;
 
       if (data) {
-        const prefs = data as any;
-        const frequency: Frequency =
-          prefs.new_matches_enabled === false ? "off" : ((prefs.client_needs_schedule ?? "immediate") as Frequency);
-        setSettings({ frequency });
+        const prefs = data as { client_needs_schedule?: string | null };
+        // Timing only — channel toggles control category on/off. Prior "Off"
+        // users (new_matches_enabled=false) still load as immediate in the UI;
+        // backend continues to mute them until they re-enable channels/timing.
+        setSettings({ frequency: normalizeFrequency(prefs.client_needs_schedule) });
       }
     } catch (error) {
       console.error("Error fetching notification settings:", error);
@@ -79,17 +79,14 @@ export const ClientNeedsNotificationSettings = () => {
       } = await supabase.auth.getUser();
       if (!user) return;
 
-      const isOff = newSettings.frequency === "off";
-      const payload: any = {
-        user_id: user.id,
-        client_needs_enabled: !isOff,
-        new_matches_enabled: !isOff,
-      };
-      if (!isOff) {
-        payload.client_needs_schedule = newSettings.frequency;
-      }
-
-      const { error } = await supabase.from("notification_preferences").upsert(payload, { onConflict: "user_id" });
+      const { error } = await supabase.from("notification_preferences").upsert(
+        {
+          user_id: user.id,
+          client_needs_schedule: newSettings.frequency,
+          client_needs_enabled: true,
+        },
+        { onConflict: "user_id" },
+      );
 
       if (error) throw error;
 
@@ -112,7 +109,7 @@ export const ClientNeedsNotificationSettings = () => {
             <Skeleton className="h-3 w-full max-w-xl rounded-md bg-neutral-100" />
           </CardHeader>
           <CardContent className="space-y-3 p-0">
-            {[0, 1, 2, 3].map((i) => (
+            {[0, 1, 2].map((i) => (
               <Skeleton key={i} className="h-14 w-full rounded-lg bg-neutral-100" />
             ))}
           </CardContent>
@@ -129,8 +126,8 @@ export const ClientNeedsNotificationSettings = () => {
           <CardTitle className="text-base font-semibold text-neutral-900">Communications notifications</CardTitle>
         </div>
         <p className="text-[13px] leading-relaxed text-neutral-500">
-          Chooses cadence for email about Comms Center activity: outbound communications, network sends, and agent-network
-          updates.
+          Chooses when you receive email about Comms Center activity. Channel toggles below control
+          which categories you get.
         </p>
       </CardHeader>
       <CardContent className="mt-4 space-y-1 p-0">

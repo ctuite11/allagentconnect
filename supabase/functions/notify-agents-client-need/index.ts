@@ -10,6 +10,13 @@ import {
   countExistingReminders,
   reserveAndEnqueueMissingOpportunityReminder,
 } from "../_shared/missingOpportunitiesEmail.ts";
+import {
+  defaultCommsActionUrl,
+  insertDigestItems,
+  loadCommsSchedules,
+  partitionByCommsSchedule,
+  type DigestItemInsert,
+} from "../_shared/commsDigest.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -173,7 +180,29 @@ serve(async (req) => {
       maximumFractionDigits: 0,
     }).format(maxPrice);
 
-    const emailJobs = freshReal.map((a) => ({
+    const itemHtml = `
+            <h3 style="margin:0 0 8px;font-size:15px;color:#0f172a;">Client Need Details</h3>
+            <ul style="margin:0;padding-left:18px;color:#334155;font-size:14px;line-height:1.5;">
+              <li><strong>Location:</strong> ${city}, ${state}</li>
+              <li><strong>Property Type:</strong> ${propertyTypeDisplay}</li>
+              <li><strong>Maximum Budget:</strong> ${priceFormatted}</li>
+              ${bedrooms ? `<li><strong>Bedrooms:</strong> ${bedrooms}</li>` : ""}
+              ${bathrooms ? `<li><strong>Bathrooms:</strong> ${bathrooms}</li>` : ""}
+              ${description ? `<li><strong>Description:</strong> ${description}</li>` : ""}
+            </ul>`;
+
+    // Timing preference: immediate → email_jobs; daily/weekly → digest queue only.
+    const { schedules, muted } = await loadCommsSchedules(
+      supabase,
+      freshReal.map((a) => a.agent_id),
+    );
+    const { immediate, digest, skippedMuted } = partitionByCommsSchedule(
+      freshReal,
+      schedules,
+      muted,
+    );
+
+    const emailJobs = immediate.map((a) => ({
       idempotency_key: `client-need:${body.client_need_id}:${a.agent_id}`,
       payload: {
         provider: "resend",
@@ -188,35 +217,58 @@ serve(async (req) => {
           maxPrice: priceFormatted,
           bedrooms, bathrooms, description,
           contentHtml: `
-            <h3>Client Need Details:</h3>
-            <ul>
-              <li><strong>Location:</strong> ${city}, ${state}</li>
-              <li><strong>Property Type:</strong> ${propertyTypeDisplay}</li>
-              <li><strong>Maximum Budget:</strong> ${priceFormatted}</li>
-              ${bedrooms ? `<li><strong>Bedrooms:</strong> ${bedrooms}</li>` : ""}
-              ${bathrooms ? `<li><strong>Bathrooms:</strong> ${bathrooms}</li>` : ""}
-              ${description ? `<li><strong>Description:</strong> ${description}</li>` : ""}
-            </ul>
-            <p>Log in to your dashboard to view more details and connect with this client.</p>
+            ${itemHtml}
+            <p style="margin:16px 0 0;">Log in to your dashboard to view more details and connect with this client.</p>
           `,
         },
       },
     }));
 
     let realEnqueued = 0;
+    let digestEnqueued = 0;
     if (emailJobs.length) {
       const { error: insertError } = await supabase.from("email_jobs").insert(emailJobs);
       if (insertError) throw insertError;
+      realEnqueued = emailJobs.length;
+    }
+
+    if (digest.length) {
+      const digestRows: DigestItemInsert[] = digest.map((a) => ({
+        agent_id: a.agent_id,
+        cadence: a.cadence,
+        source_type: "client_need",
+        source_id: body.client_need_id,
+        category: "Buyer Need",
+        title: `New Client Need in ${city}, ${state}`,
+        summary: {
+          city,
+          state,
+          property_type: propertyTypeDisplay,
+          max_price: priceFormatted,
+          bedrooms,
+          bathrooms,
+          reason: a.reason,
+        },
+        item_html: itemHtml,
+        action_url: defaultCommsActionUrl(),
+      }));
+      const dig = await insertDigestItems(supabase, digestRows);
+      digestEnqueued = dig.inserted + dig.conflicted;
+    }
+
+    // Mark notified for immediate + digest recipients (not muted skips).
+    const notified = [...immediate, ...digest];
+    if (notified.length) {
       await supabase.from("agent_sent_client_needs").upsert(
-        freshReal.map((r) => ({
+        notified.map((r) => ({
           agent_id: r.agent_id,
           client_need_id: body.client_need_id,
           reason: r.reason,
         })),
         { onConflict: "agent_id,client_need_id" },
       );
-      realEnqueued = emailJobs.length;
     }
+    void skippedMuted;
 
     // Reminder enqueue via reserve-first RPC.
     let reminderEnqueued = 0;
@@ -235,7 +287,7 @@ serve(async (req) => {
     }
 
     console.log(
-      `[notify-agents-client-need] client_need=${body.client_need_id} audience=${audience.length} real_enqueued=${realEnqueued} reminder_enqueued=${reminderEnqueued}`,
+      `[notify-agents-client-need] client_need=${body.client_need_id} audience=${audience.length} real_enqueued=${realEnqueued} digest_enqueued=${digestEnqueued} reminder_enqueued=${reminderEnqueued}`,
     );
 
     return new Response(
@@ -243,6 +295,7 @@ serve(async (req) => {
         success: true,
         ...baseReport,
         real_enqueued: realEnqueued,
+        digest_enqueued: digestEnqueued,
         reminder_enqueued: reminderEnqueued,
         reminder_skipped_duplicate: reminderConflict,
       }),
