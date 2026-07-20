@@ -22,6 +22,8 @@ export type AacPageIntroProps = {
   titleClassName?: string;
   /** Include standard top inset (use on first block in page shell). Default true. */
   withTopPadding?: boolean;
+  /** Hide the emerald accent bar beneath the title. */
+  hideTitleAccent?: boolean;
 };
 
 /**
@@ -42,6 +44,7 @@ export function AacPageIntro({
   className,
   titleClassName,
   withTopPadding = true,
+  hideTitleAccent = false,
 }: AacPageIntroProps) {
   const shellProvidesTopInset = useAgentContentShellInset();
   const hasTitleBlock = Boolean(title || subtitle);
@@ -63,7 +66,7 @@ export function AacPageIntro({
               {title ? (
                 <>
                   <h1 className={cn(agentPageTitleClass, titleClassName)}>{title}</h1>
-                  <AacTitleAccent />
+                  {hideTitleAccent ? null : <AacTitleAccent />}
                 </>
               ) : null}
               {subtitle ? <p className={agentPageSubtitleClass}>{subtitle}</p> : null}

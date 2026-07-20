@@ -159,6 +159,7 @@ function MessagingWorkspaceContent({
                 title="Messages"
                 subtitle="Conversation threads with clients and colleagues — same rhythm as inbox cards on Success Hub."
                 className="shrink-0"
+                hideTitleAccent
               />
             ) : null}
             {buyerMode ? (
@@ -170,6 +171,7 @@ function MessagingWorkspaceContent({
                 }
                 title="Messages"
                 subtitle="Stay in touch with your agent and keep everything about your home search in one place."
+                hideTitleAccent
               />
             ) : null}
 
