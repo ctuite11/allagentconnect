@@ -1,47 +1,17 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { Bell } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-type Frequency = "immediate" | "daily" | "weekly" | "off";
-
-interface NotificationSettings {
-  frequency: Frequency;
-}
-
-const OPTIONS: { value: Frequency; label: string; description: string }[] = [
-  {
-    value: "immediate",
-    label: "Immediately",
-    description:
-      "Get an alert for outbound communications and high-signal network sends as communications activity happens",
-  },
-  {
-    value: "daily",
-    label: "Daily digest",
-    description: "One daily summary of agent-network communications activity and updates",
-  },
-  {
-    value: "weekly",
-    label: "Weekly digest",
-    description: "One weekly summary of agent-network communications activity and updates",
-  },
-  {
-    value: "off",
-    label: "Off",
-    description: "Don't email me Communications Center or network workflow alerts",
-  },
-];
-
 const cardShell =
   "rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm transition-shadow duration-150 hover:shadow-md";
 
 export const ClientNeedsNotificationSettings = () => {
-  const [settings, setSettings] = useState<NotificationSettings>({ frequency: "immediate" });
+  const [enabled, setEnabled] = useState(true);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -61,10 +31,11 @@ export const ClientNeedsNotificationSettings = () => {
 
       if (data) {
         const prefs = data as any;
-        const frequency: Frequency =
-          prefs.new_matches_enabled === false ? "off" : ((prefs.client_needs_schedule ?? "immediate") as Frequency);
-        setSettings({ frequency });
+        // On unless either enabled boolean is explicitly false.
+        const isOff = prefs.new_matches_enabled === false || prefs.client_needs_enabled === false;
+        setEnabled(!isOff);
       }
+      // No row → default On (matches DB defaults).
     } catch (error) {
       console.error("Error fetching notification settings:", error);
     } finally {
@@ -72,35 +43,39 @@ export const ClientNeedsNotificationSettings = () => {
     }
   };
 
-  const updateSettings = async (newSettings: NotificationSettings) => {
+  const updateEnabled = async (nextEnabled: boolean) => {
     try {
       const {
         data: { user },
       } = await supabase.auth.getUser();
       if (!user) return;
 
-      const isOff = newSettings.frequency === "off";
-      const payload: any = {
-        user_id: user.id,
-        client_needs_enabled: !isOff,
-        new_matches_enabled: !isOff,
-      };
-      if (!isOff) {
-        payload.client_needs_schedule = newSettings.frequency;
-      }
-
-      const { error } = await supabase.from("notification_preferences").upsert(payload, { onConflict: "user_id" });
+      // Flip both enabled booleans together. Do NOT touch client_needs_schedule
+      // so any historical daily/weekly cadence is preserved.
+      const { error } = await supabase
+        .from("notification_preferences")
+        .upsert(
+          {
+            user_id: user.id,
+            client_needs_enabled: nextEnabled,
+            new_matches_enabled: nextEnabled,
+          },
+          { onConflict: "user_id" },
+        );
 
       if (error) throw error;
 
-      setSettings(newSettings);
+      setEnabled(nextEnabled);
+
+      // Mark preferences as explicitly set so the default-on notice stops.
+      try {
+        await supabase.from("agent_settings").update({ preferences_set: true }).eq("user_id", user.id);
+      } catch (e) {
+        console.warn("[ClientNeedsNotificationSettings] preferences_set update skipped:", e);
+      }
     } catch (error) {
       console.error("Error updating notification settings:", error);
     }
-  };
-
-  const handleFrequencyChange = (value: string) => {
-    updateSettings({ frequency: value as Frequency });
   };
 
   if (loading) {
@@ -112,9 +87,7 @@ export const ClientNeedsNotificationSettings = () => {
             <Skeleton className="h-3 w-full max-w-xl rounded-md bg-neutral-100" />
           </CardHeader>
           <CardContent className="space-y-3 p-0">
-            {[0, 1, 2, 3].map((i) => (
-              <Skeleton key={i} className="h-14 w-full rounded-lg bg-neutral-100" />
-            ))}
+            <Skeleton className="h-10 w-full rounded-lg bg-neutral-100" />
           </CardContent>
         </Card>
       </div>
@@ -129,41 +102,32 @@ export const ClientNeedsNotificationSettings = () => {
           <CardTitle className="text-base font-semibold text-neutral-900">Communications notifications</CardTitle>
         </div>
         <p className="text-[13px] leading-relaxed text-neutral-500">
-          Chooses cadence for email about Comms Center activity: outbound communications, network sends, and agent-network
-          updates.
+          Email me about Comms Center activity: outbound communications, network sends, and agent-network updates.
         </p>
       </CardHeader>
-      <CardContent className="mt-4 space-y-1 p-0">
-        <RadioGroup value={settings.frequency} onValueChange={handleFrequencyChange} className="space-y-1">
-          {OPTIONS.map((opt) => {
-            const active = settings.frequency === opt.value;
-            return (
-              <div
-                key={opt.value}
+      <CardContent className="mt-4 p-0">
+        <div className="flex items-center justify-between rounded-xl border border-neutral-200 bg-white px-3 py-2.5">
+          <Label htmlFor="comms-notifications-toggle" className="cursor-pointer text-[13px] font-medium text-neutral-900">
+            Email me about Comms Center activity
+          </Label>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
+              <span
                 className={cn(
-                  "flex items-start gap-3 rounded-xl border px-3 py-2.5 transition-colors",
-                  active
-                    ? "border-neutral-200 bg-white shadow-sm"
-                    : "border-transparent hover:bg-neutral-50/80",
+                  "h-2 w-2 shrink-0 rounded-full",
+                  enabled ? "!bg-[#16A34A]" : "!bg-neutral-400",
                 )}
-              >
-                <RadioGroupItem value={opt.value} id={`comms-notif-${opt.value}`} className="mt-0.5" />
-                <Label
-                  htmlFor={`comms-notif-${opt.value}`}
-                  className={cn(
-                    "cursor-pointer text-[13px] leading-snug",
-                    active ? "font-medium text-neutral-900" : "font-normal text-neutral-600",
-                  )}
-                >
-                  <span className="block">{opt.label}</span>
-                  <span className="mt-0.5 block text-xs font-normal leading-snug text-neutral-500">
-                    {opt.description}
-                  </span>
-                </Label>
-              </div>
-            );
-          })}
-        </RadioGroup>
+              />
+              <span className="text-xs font-medium !text-neutral-600">{enabled ? "On" : "Off"}</span>
+            </div>
+            <Switch
+              id="comms-notifications-toggle"
+              checked={enabled}
+              onCheckedChange={updateEnabled}
+              className="data-[state=checked]:!bg-[#0E56F5] data-[state=unchecked]:!bg-neutral-200 focus-visible:ring-[#0E56F5]/25"
+            />
+          </div>
+        </div>
       </CardContent>
     </Card>
   );
