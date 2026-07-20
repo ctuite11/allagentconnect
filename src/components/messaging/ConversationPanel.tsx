@@ -12,11 +12,6 @@ import { UserAvatar } from "./UserAvatar";
 import { isSameDay, formatDistanceToNow } from "date-fns";
 import { cn, formatListingConversationTitle } from "@/lib/utils";
 import { showMessageSentToast } from "@/lib/messageSentFeedback";
-import AgentMessageProfileDrawer from "./AgentMessageProfileDrawer";
-import {
-  resolveAgentProfilesByUserIds,
-  type AgentProfileRow,
-} from "@/lib/resolveAgentProfileForViewer";
 
 interface ConversationPanelProps {
   conversationId: string | undefined;
