@@ -16,6 +16,8 @@ export type AgentPageHeaderProps = {
   className?: string;
   /** Pass false when parent shell already applied top padding. */
   withTopPadding?: boolean;
+  /** Hide the emerald accent bar beneath the title. */
+  hideTitleAccent?: boolean;
 };
 
 /**
@@ -29,6 +31,7 @@ export function AgentPageHeader({
   actions,
   className,
   withTopPadding = false,
+  hideTitleAccent = false,
 }: AgentPageHeaderProps) {
   const navigate = useNavigate();
 
@@ -40,6 +43,7 @@ export function AgentPageHeader({
         title={title}
         subtitle={subtitle}
         actions={actions}
+        hideTitleAccent={hideTitleAccent}
         back={
           <button
             type="button"
@@ -60,7 +64,7 @@ export function AgentPageHeader({
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
         <div className="min-w-0 space-y-1">
           <h1 className={agentPageTitleClass}>{title}</h1>
-          <AacTitleAccent />
+          {hideTitleAccent ? null : <AacTitleAccent />}
           {subtitle ? <p className={agentPageSubtitleClass}>{subtitle}</p> : null}
         </div>
         {actions ? (
