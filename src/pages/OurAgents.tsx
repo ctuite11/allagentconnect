@@ -174,7 +174,7 @@ const OurAgents = ({
       const agentQuery = supabase
         .from("agent_profiles")
         .select(`
-          id, aac_id, first_name, last_name, company, office_name, team_name, headshot_url, buyer_incentives, updated_at, title, email, phone, cell_phone,
+          id, aac_id, first_name, last_name, company, office_name, team_name, headshot_url, buyer_incentives, updated_at, title,
           agent_county_preferences(
             county_id,
             counties(name, state)
