@@ -4533,21 +4533,6 @@ export type Database = {
         }
         Relationships: []
       }
-      agent_presence: {
-        Row: {
-          last_seen_at: string | null
-          user_id: string | null
-        }
-        Insert: {
-          last_seen_at?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          last_seen_at?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
       clients_with_relationship_status: {
         Row: {
           agent_id: string | null
@@ -4867,6 +4852,13 @@ export type Database = {
       }
       generate_aac_id: { Args: never; Returns: string }
       generate_listing_number: { Args: never; Returns: string }
+      get_agent_presence: {
+        Args: { user_ids: string[] }
+        Returns: {
+          last_seen_at: string
+          user_id: string
+        }[]
+      }
       get_client_favorites_for_agent: {
         Args: { p_buyer_user_id: string; p_crm_client_id?: string }
         Returns: {
