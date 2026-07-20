@@ -171,10 +171,15 @@ const OurAgents = ({
 
       // Fetch the full profile for every visible verified agent so search/filters
       // operate on the entire network — not just the current page.
+      // Anonymous visitors: never fetch contact PII (email / phone / cell_phone).
+      // Authenticated agents keep peer contact info in the directory.
+      const { data: sessionData } = await supabase.auth.getSession();
+      const isAuthed = Boolean(sessionData.session);
+      const contactColumns = isAuthed ? ", email, phone, cell_phone" : "";
       const agentQuery = supabase
         .from("agent_profiles")
         .select(`
-          id, aac_id, first_name, last_name, company, office_name, team_name, headshot_url, buyer_incentives, updated_at, title,
+          id, aac_id, first_name, last_name, company, office_name, team_name, headshot_url, buyer_incentives, updated_at, title${contactColumns},
           agent_county_preferences(
             county_id,
             counties(name, state)
