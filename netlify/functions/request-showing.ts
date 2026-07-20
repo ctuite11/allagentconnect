@@ -2,7 +2,7 @@ import type { Handler } from "@netlify/functions";
 import { createClient } from "@supabase/supabase-js";
 
 const ORIGIN = "https://allagentconnect.com";
-const REQUIRE_AUTH = false;
+const REQUIRE_AUTH = true;
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": ORIGIN,
@@ -21,6 +21,24 @@ function jsonResponse(statusCode: number, body: JsonValue) {
     },
     body: JSON.stringify(body),
   };
+}
+
+function escapeHtml(value: unknown): string {
+  if (value === null || value === undefined) return "";
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function isValidEmail(v: unknown): v is string {
+  return typeof v === "string" && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) && v.length <= 320;
+}
+
+function isBoundedString(v: unknown, max: number): v is string {
+  return typeof v === "string" && v.length <= max;
 }
 
 async function queueEmail(
@@ -51,8 +69,8 @@ async function queueEmail(
 
 function buildRequesterEmail(mlsNumber: string, requesterName: string): string {
   return `
-    <p>Hi ${requesterName},</p>
-    <p>Thanks for your showing request for MLS <strong>${mlsNumber}</strong>.</p>
+    <p>Hi ${escapeHtml(requesterName)},</p>
+    <p>Thanks for your showing request for MLS <strong>${escapeHtml(mlsNumber)}</strong>.</p>
     <p>We received your request and will route it to the listing agent/network shortly.</p>
     <p>— All Agent Connect</p>
   `;
@@ -71,13 +89,13 @@ function buildInternalEmail(args: {
 
   return `
     <h2>New Showing Request</h2>
-    <p><strong>Showing Request ID:</strong> ${showingRequestId ?? "N/A"}</p>
-    <p><strong>Created At:</strong> ${createdAt}</p>
-    <p><strong>MLS Number:</strong> ${mlsNumber}</p>
-    <p><strong>Requester Name:</strong> ${requesterName}</p>
-    <p><strong>Requester Email:</strong> ${requesterEmail}</p>
-    <p><strong>Requester Phone:</strong> ${requesterPhone || "Not provided"}</p>
-    <p><strong>Message:</strong> ${message || "Not provided"}</p>
+    <p><strong>Showing Request ID:</strong> ${escapeHtml(showingRequestId ?? "N/A")}</p>
+    <p><strong>Created At:</strong> ${escapeHtml(createdAt)}</p>
+    <p><strong>MLS Number:</strong> ${escapeHtml(mlsNumber)}</p>
+    <p><strong>Requester Name:</strong> ${escapeHtml(requesterName)}</p>
+    <p><strong>Requester Email:</strong> ${escapeHtml(requesterEmail)}</p>
+    <p><strong>Requester Phone:</strong> ${escapeHtml(requesterPhone || "Not provided")}</p>
+    <p><strong>Message:</strong> ${escapeHtml(message || "Not provided")}</p>
   `;
 }
 
@@ -126,11 +144,18 @@ export const handler: Handler = async (event) => {
 
   const { mlsNumber, requesterName, requesterEmail, requesterPhone, message } = body;
 
-  if (!mlsNumber || !requesterName || !requesterEmail) {
-    return jsonResponse(400, {
-      ok: false,
-      error: "Missing required fields",
-    });
+  if (
+    !isBoundedString(mlsNumber, 64) || !mlsNumber.trim() ||
+    !isBoundedString(requesterName, 200) || !requesterName.trim() ||
+    !isValidEmail(requesterEmail)
+  ) {
+    return jsonResponse(400, { ok: false, error: "Invalid or missing required fields" });
+  }
+  if (requesterPhone !== undefined && !isBoundedString(requesterPhone, 40)) {
+    return jsonResponse(400, { ok: false, error: "Invalid phone" });
+  }
+  if (message !== undefined && !isBoundedString(message, 2000)) {
+    return jsonResponse(400, { ok: false, error: "Message too long" });
   }
 
   if (REQUIRE_AUTH) {
