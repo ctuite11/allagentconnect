@@ -11,7 +11,7 @@ export type ActivityAgentContactProps = {
 
 /**
  * Reusable in-place agent contact row for Success Hub Network Activity feeds.
- * - Name → opens AgentIntelDrawer (no navigation)
+ * - Name → plain text
  * - Phone → tel: link
  * - Email → opens ContactAgentProfileDialog (preferred) or mailto: fallback
  * Scroll position is preserved because every action happens in-place.
