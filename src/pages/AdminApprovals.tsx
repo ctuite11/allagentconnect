@@ -517,7 +517,13 @@ export default function AdminApprovals() {
         (agentList ?? []).map((a: Agent) => (a.email || "").toLowerCase())
       );
       const phase2Leads: Agent[] = (pendingData ?? [])
-        .filter((p: any) => p?.status === "pending" && !p?.user_id)
+        .filter(
+          (p: any) =>
+            p?.status === "pending" &&
+            !p?.user_id &&
+            !p?.converted_user_id &&
+            p?.processed !== true,
+        )
         .filter((p: any) => !existingEmails.has(String(p.email || "").toLowerCase()))
         .map((p: any): Agent => ({
           id: p.id,
