@@ -314,7 +314,7 @@ const PropertyDetail = () => {
           if (data.agent_id) {
             const { data: profile } = await supabase
               .from("agent_profiles")
-              .select("id, first_name, last_name, email, cell_phone, phone, title, company, headshot_url, logo_url, social_links")
+              .select("id, first_name, last_name, title, company, headshot_url, logo_url, social_links")
               .eq("id", data.agent_id)
               .maybeSingle();
 
