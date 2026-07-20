@@ -357,7 +357,14 @@ export default function AdminApprovals() {
   useEffect(() => {
     if (!detailsAgent) return;
     const fresh = agents.find((a) => a.id === detailsAgent.id);
-    if (fresh && fresh !== detailsAgent) {
+    if (!fresh) {
+      // Row was processed/removed on refresh (e.g. pending request converted
+      // to a verified agent). Close the stale drawer instead of leaving it
+      // pointed at a phantom record.
+      setDetailsAgent(null);
+      return;
+    }
+    if (fresh !== detailsAgent) {
       setDetailsAgent(fresh);
     }
   }, [agents, detailsAgent]);
