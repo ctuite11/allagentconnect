@@ -1,43 +1,59 @@
-## Scope
+## Goal
 
-Publish the scoped listing-price validation release using the existing All Agent Connect publishing configuration only. Do not change any domain, slug, or deployment architecture.
+Add a new admin-triggered email template — "Too many emails? We've got you covered." — that walks verified agents through managing their Communications Center preferences, with the 3 annotated screenshots embedded inline.
 
-## Pre-publish check (shared-deployment safety)
+## Approach
 
-1. Call `project_urls--get_urls` and `publish_settings--get_publish_settings` to confirm:
-   - Lovable URL is `allagentconnect.lovable.app`.
-   - Custom domains currently attached: `allagentconnect.com`, `directconnectmls.com`, `www.directconnectmls.com`.
-2. Because both AAC and DCMLS custom domains are attached to the **same Lovable project (id `95492335-3a75-4285-8d44-828003cae42a`)**, a single publish of this project will update the frontend build served on every attached domain — including the DCMLS domains. There is no per-domain build in Lovable hosting.
-3. **Stop before calling `preview_ui--publish`** and surface this to the user with:
-   - The exact list of domains that will receive the new build.
-   - The fact that DCMLS shares this deployment.
-   - Await explicit confirmation to proceed anyway, or instructions to split domains onto separate projects first.
+Send from inside AAC using the existing admin broadcast/outreach flow (same pattern as other verified-agent blasts). Audience: verified agents (per current eligibility rules: verified AND (activated OR has_headshot)).
 
-## If (and only if) the user confirms after the shared-deployment disclosure
+## Steps
 
-1. Call `preview_ui--publish` with **no** `slug` argument (keeps `allagentconnect` subdomain, no domain reconfiguration).
-2. Do not call `publish_settings--update_visibility`, do not touch domain settings, do not change slug.
+### 1. Upload the 3 screenshots to Lovable Assets
+- `comms-channels.png` — Channels toggles overview
+- `comms-coverage.png` — Coverage Area setup
+- `comms-timing.png` — Notification timing options
 
-## Do NOT modify in this release
-- `netlify/functions/send-password-changed-email.ts`
-- `netlify/functions/send-pending-approval-email.ts`
-- `netlify/functions/request-showing.ts`
-- `EmailDetailDrawer`
-- Any domain, DNS, slug, or visibility configuration.
-- Any `manage_security_finding` state — the four deferred findings stay open.
+These become stable CDN URLs safe to reference from email HTML (email clients can't load `/src/assets`).
 
-## Security follow-up doc
-Already created this turn at `docs/security/2026-07-20-pre-existing-findings.md` with scanner IDs. No further security-tool calls.
+### 2. New email template
+Create `supabase/functions/_shared/emailTemplates/commsCenterGuide.ts`:
+- Uses the AAC Unified email shell (white bg, brand header, dark footer with unsubscribe — same as other transactional/marketing emails).
+- Subject: **"Too many emails? We've got you covered."**
+- Preheader: "A 30-second tour of your Communications Center."
+- Body copy (cleaned up from your draft):
+  - H1: "Too many emails? We've got you covered."
+  - Intro: "Head over to your Communications Center and follow these simple steps to stop the madness."
+  - **Step 1 — Turn channels on or off.** Screenshot 1. "Toggle Buyer Needs, Renter Needs, Sales Intel, and General Discussions based on what you actually want to hear about."
+  - **Step 2 — Set your coverage area.** Screenshot 2. "Narrow alerts to a state, county, specific towns, or even a single neighborhood."
+  - **Step 3 — Choose your cadence.** Screenshot 3. "Immediately, Daily digest (6 PM ET), or Weekly digest (Friday 6 PM ET)."
+- Primary CTA button → Comms Center Preferences page (`/comms-center/preferences` — confirm exact route during build).
+- Category: `marketing` so the standard one-click unsubscribe + suppression logic applies.
 
-## Post-publish report to user
-- Exact Lovable deploy URL returned by the tool.
-- Confirmation `allagentconnect.com` is serving the new build (primary AAC domain remains attached).
-- Explicit statement of which DCMLS domains share the same deployment and therefore also received the new build.
-- Migration status (`20260720190000_listings_non_draft_pricing_check.sql` — already applied; not re-run).
-- Confirmation the four security findings remain open and unchanged, with a link to `docs/security/2026-07-20-pre-existing-findings.md`.
+### 3. Register template in the email registry
+Add `comms_center_guide` to the `TEMPLATES` map used by `send-transactional-email` so it can be dispatched by name.
 
-## Explicitly out of scope
-- Any code change to the four flagged surfaces.
-- Any `manage_security_finding` ignore/fix calls.
-- Any domain, slug, visibility, or DNS change.
-- Any migration beyond what was already applied.
+### 4. Admin trigger UI
+Add a new tile/button in the existing Admin broadcast surface (same page you already use to send verified-agent blasts) labeled **"Send Comms Center Guide"**:
+- Confirmation dialog showing recipient count (verified agents eligible per shared audience helper).
+- On confirm, calls the existing bulk-enqueue path (reusing `verifiedAgentAudience.ts` + `email_jobs` queue). No new backend endpoint needed if we reuse the existing broadcast Edge Function; otherwise a thin wrapper.
+- Respects `suppressed_emails` and per-user unsubscribe on `marketing` category automatically via the shared send path.
+
+### 5. Send test to self first
+Include a "Send test to me" button so you can preview in your own inbox before the full broadcast.
+
+### 6. Deploy
+Redeploy the affected edge functions (`send-transactional-email` and whichever admin broadcast function we extend).
+
+## Technical notes
+
+- Screenshots embedded as `<img src="{cdn-url}" width="600" style="max-width:100%;...">` — no attachments, no CID.
+- Email width capped at 600px; images scale down on mobile.
+- Screenshots will be resized to ~1200px wide (2x for retina) before upload to keep the email under Gmail's 102KB clipping threshold.
+- No schema changes. No new tables. No changes to unsubscribe logic.
+- No changes to Comms Center preferences UI itself.
+
+## Out of scope
+
+- Changing existing preference UX or copy.
+- Scheduling/automating this email — it's a one-shot admin-triggered blast.
+- Non-verified agent audiences.
