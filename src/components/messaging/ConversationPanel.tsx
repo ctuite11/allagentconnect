@@ -208,9 +208,6 @@ export function ConversationPanel({
 
     const showHeader = msg.senderId !== lastSenderId;
     const senderIsBuyer = !msg.isOwn && !otherUserIsAgent;
-    // Only attach onViewAgent when a real agent_profiles row has resolved for
-    // THIS sender. Buyers / unresolved ids stay plain text.
-    const senderProfileClickable = !msg.isOwn && canViewAgent(msg.senderId);
 
     threadElements.push(
       <MessageRow
@@ -220,7 +217,6 @@ export function ConversationPanel({
           senderIsBuyer,
         }}
         showHeader={showHeader}
-        onViewAgent={senderProfileClickable ? () => openAgentProfile(msg.senderId) : undefined}
       />
     );
 
@@ -304,30 +300,13 @@ export function ConversationPanel({
       >
         <div className="flex w-full items-center justify-between gap-3">
           <div className={cn("flex min-w-0 flex-1 items-center", listingThreadHeader ? "gap-2" : "gap-2.5")}>
-            {otherUserProfileClickable && details?.otherUserId ? (
-              <button
-                type="button"
-                onClick={() => openAgentProfile(details.otherUserId)}
-                aria-label={`View ${details?.otherUserName ?? "agent"}'s agent profile`}
-                className="shrink-0 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0E56F5]/40 focus-visible:ring-offset-1"
-              >
-                <UserAvatar
-                  name={details?.otherUserName ?? ""}
-                  headshotUrl={details?.otherUserHeadshotUrl ?? null}
-                  size={listingThreadHeader ? "md" : "lg"}
-                  showPresence={false}
-                  isBuyer={false}
-                />
-              </button>
-            ) : (
-              <UserAvatar
-                name={details?.otherUserName ?? ""}
-                headshotUrl={details?.otherUserHeadshotUrl ?? null}
-                size={listingThreadHeader ? "md" : "lg"}
-                showPresence={false}
-                isBuyer={!(details?.otherUserIsAgent ?? false)}
-              />
-            )}
+            <UserAvatar
+              name={details?.otherUserName ?? ""}
+              headshotUrl={details?.otherUserHeadshotUrl ?? null}
+              size={listingThreadHeader ? "md" : "lg"}
+              showPresence={false}
+              isBuyer={!(details?.otherUserIsAgent ?? false)}
+            />
             <div className="min-w-0">
               {listingThreadHeader ? (
                 <>
@@ -346,18 +325,7 @@ export function ConversationPanel({
                   <h2 className="truncate text-[15px] font-semibold tracking-tight text-zinc-900">{threadTitle.trim()}</h2>
                   <div className="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5">
                     <span className="truncate text-[12px] leading-snug text-zinc-500">
-                      Discussion with{" "}
-                      {otherUserProfileClickable && details?.otherUserId ? (
-                        <button
-                          type="button"
-                          onClick={() => openAgentProfile(details.otherUserId)}
-                          className="font-medium text-[#0E56F5] hover:underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0E56F5]/40"
-                        >
-                          {details?.otherUserName}
-                        </button>
-                      ) : (
-                        details?.otherUserName
-                      )}
+                      Discussion with {details?.otherUserName}
                     </span>
                     {presenceDot}
                     {rolePill}
@@ -366,19 +334,9 @@ export function ConversationPanel({
               ) : (
                 <>
                   <div className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5">
-                    {otherUserProfileClickable && details?.otherUserId ? (
-                      <button
-                        type="button"
-                        onClick={() => openAgentProfile(details.otherUserId)}
-                        className="truncate rounded text-left text-[15px] font-semibold tracking-tight text-[#0E56F5] hover:underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0E56F5]/40 focus-visible:ring-offset-1"
-                      >
-                        {details?.otherUserName}
-                      </button>
-                    ) : (
-                      <h2 className="truncate text-[15px] font-semibold tracking-tight text-zinc-900">
-                        {details?.otherUserName}
-                      </h2>
-                    )}
+                    <h2 className="truncate text-[15px] font-semibold tracking-tight text-zinc-900">
+                      {details?.otherUserName}
+                    </h2>
                     {presenceDot}
                     {rolePill}
                   </div>
@@ -446,11 +404,6 @@ export function ConversationPanel({
         </div>
       </div>
       {isEmbedded ? <div className="shrink-0">{composer}</div> : composer}
-      <AgentMessageProfileDrawer
-        agent={agentDrawer.agent}
-        open={agentDrawer.open}
-        onOpenChange={(open) => setAgentDrawer((prev) => ({ ...prev, open }))}
-      />
     </div>
   );
 }
