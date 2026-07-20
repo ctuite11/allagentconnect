@@ -185,7 +185,7 @@ const GeographicPreferencesManager = ({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1.5">
                 <MapPin className="h-5 w-5 !text-[#16A34A]" strokeWidth={2} aria-hidden />
-                <CardTitle className="text-base font-semibold text-neutral-900">Geographic Area</CardTitle>
+                <CardTitle className="text-base font-semibold text-neutral-900">Coverage Area</CardTitle>
               </div>
               {isOpen ? (
                 <ChevronUp className="h-5 w-5 text-neutral-400" strokeWidth={2} />
@@ -194,7 +194,7 @@ const GeographicPreferencesManager = ({
               )}
             </div>
             <CardDescription className="mt-1 text-left text-sm text-neutral-500">
-              Limit alerts to your preferred markets.
+              Choose the areas where you want to receive relevant alerts.
             </CardDescription>
             {!isOpen && selectedTowns.length > 0 && (
               <div className="mt-2 rounded-xl border border-neutral-200 bg-white px-3 py-2 text-left">
