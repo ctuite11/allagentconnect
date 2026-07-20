@@ -1,17 +1,29 @@
-## Diagnosis
+## Scope
 
-The reordered Email Alert Settings (Geographic → Property Type → Price Range) and the simplified Communications notifications On/Off switch are already live on `/communications`. The remaining place still using the old wording is the **Channels** section at the top of the page — each channel card (Buyer Needs, Sales Intel, Renter Needs, General Discussions) already uses a single Switch, but its status pill still reads **Active / Muted** instead of **On / Off**. That's the "on/off toggle" you're not seeing.
+Publish the already-completed listing-price validation change only. Do not touch the four pre-existing security findings in this release. Record them as a separate follow-up task.
 
-## Change
+## Actions
 
-File: `src/components/NotificationPreferenceCards.tsx`
+1. **Publish scoped change**
+   - Call `preview_ui--publish` to deploy the current commit (migration `20260720190000_listings_non_draft_pricing_check.sql` + frontend pricing guards in `AddListing.tsx` / `MyListings.tsx` / reactivate flow).
+   - Publishing is currently blocked by 3 critical pre-existing findings. Use the acknowledged-override path if the platform allows it on this call. If the tool still refuses, stop and report back — do not modify the flagged files to force it through.
 
-- In the status pill next to each channel Switch, replace the `Active` / `Muted` label with `On` / `Off`.
-- No functional change: the same `Switch` writes the same booleans (`buyer_need`, `sales_intel`, `renter_need`, `general_discussion`) via the same upsert. Matching logic, defaults, and the `preferences_set` flag are untouched.
-- Leave the "Mute all" bulk action text as-is unless you want it renamed too (see question below).
+2. **Do NOT modify in this release**
+   - `netlify/functions/send-password-changed-email.ts`
+   - `netlify/functions/send-pending-approval-email.ts`
+   - `netlify/functions/request-showing.ts`
+   - `EmailDetailDrawer` (XSS finding)
 
-Everything else on the Preferences page stays exactly as it is now.
+3. **Create separate security follow-up record**
+   - Add `docs/security/2026-07-20-pre-existing-findings.md` listing the four findings, their scanner IDs (pulled from `security--get_scan_results`), suspected risk, affected files, and status = "acknowledged, deferred, not part of listing-price release."
+   - Do not call `security--manage_security_finding` to ignore or mark-as-fixed. Leave findings open in the scanner so they remain visible for the dedicated security pass.
 
-## Question before building
+4. **Verify after publish**
+   - Confirm publish tool returns a scheduled deploy URL.
+   - Confirm no edits landed in the four protected files (git status clean for those paths).
+   - Report back with: deploy URL, migration status, and a link to the new security follow-up doc.
 
-Rename the bulk action **"Mute all"** to **"Turn all off"** for consistency with On/Off? If unsure, I'll leave it as "Mute all".
+## Explicitly out of scope
+- Any code change to the four flagged surfaces.
+- Any `manage_security_finding` ignore/fix calls.
+- Any additional migrations.
