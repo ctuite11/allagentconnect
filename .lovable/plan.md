@@ -1,38 +1,17 @@
-## Goal
-Flip visual hierarchy on Success Hub Communications channel preview cards so **View All** is primary and **Create New** is secondary.
+## Diagnosis
 
-## Scope
-Single file: `src/components/success-hub/networkActivity/ChannelPreviewCard.tsx`. Affects all four channel cards uniformly (Buyer Needs, Sales Intel, Renter Needs, General Discussions).
+The reordered Email Alert Settings (Geographic → Property Type → Price Range) and the simplified Communications notifications On/Off switch are already live on `/communications`. The remaining place still using the old wording is the **Channels** section at the top of the page — each channel card (Buyer Needs, Sales Intel, Renter Needs, General Discussions) already uses a single Switch, but its status pill still reads **Active / Muted** instead of **On / Off**. That's the "on/off toggle" you're not seeing.
 
-## Changes
+## Change
 
-**Action row (top-right of each card):**
+File: `src/components/NotificationPreferenceCards.tsx`
 
-Current:
-- `Create New` — filled primary button (blue, prominent)
-- `View all →` — small gray text link
+- In the status pill next to each channel Switch, replace the `Active` / `Muted` label with `On` / `Off`.
+- No functional change: the same `Switch` writes the same booleans (`buyer_need`, `sales_intel`, `renter_need`, `general_discussion`) via the same upsert. Matching logic, defaults, and the `preferences_set` flag are untouched.
+- Leave the "Mute all" bulk action text as-is unless you want it renamed too (see question below).
 
-New:
-- `View All` — primary button (small filled or solid outlined, brand blue)
-- `+ Create New` — small secondary text link with plus icon, positioned to the right of View All
+Everything else on the Preferences page stays exactly as it is now.
 
-Both remain in the same top-right slot on every card for consistency.
+## Question before building
 
-## Technical Details
-
-In `ChannelPreviewCard.tsx`, swap the styling of the two elements in the `action` prop:
-
-```text
-[ View All ]   + Create New
- (primary)     (secondary link)
-```
-
-- `View All` becomes a `<Link>` styled like the existing primary button (bg-primary, text-primary-foreground, px-2.5 py-1, text-[11px] font-semibold, rounded-md, hover:bg-primary/90).
-- `+ Create New` becomes a `<button>` styled like the current "View all" link (text-[12px] font-medium text-neutral-700, hover underline), with a small `<Plus className="h-3 w-3" />` inline.
-- Order: View All first (left), Create New second (right), separated by `gap-3`.
-- No changes to card body, empty state, or list rendering.
-- No changes to other files — the four channel cards on the Success Hub all consume this component, so hierarchy updates propagate automatically.
-
-## Out of Scope
-- No changes to routes, filters, or the `onCreate` handlers.
-- No changes to other Success Hub sections.
+Rename the bulk action **"Mute all"** to **"Turn all off"** for consistency with On/Off? If unsure, I'll leave it as "Mute all".

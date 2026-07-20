@@ -260,7 +260,7 @@ export const NotificationPreferenceCards = ({ onPreferencesChange }: Notificatio
                         )}
                       />
                       <span className="text-xs font-medium !text-neutral-600">
-                        {card.active ? "Active" : "Muted"}
+                        {card.active ? "On" : "Off"}
                       </span>
                     </div>
                     <Switch
