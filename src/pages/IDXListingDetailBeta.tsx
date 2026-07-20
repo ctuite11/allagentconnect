@@ -226,9 +226,19 @@ export default function IDXListingDetailBeta() {
 
     setIsSubmittingRequest(true);
     try {
+      const {
+        data: { session: currentSession },
+      } = await supabase.auth.getSession();
+      const accessToken = currentSession?.access_token;
+      if (!accessToken) {
+        throw new Error("Please sign in as a verified agent to request a showing.");
+      }
       const response = await fetch("/api/request-showing", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
         body: JSON.stringify(body),
       });
 

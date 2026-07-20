@@ -137,11 +137,20 @@ const PasswordReset = () => {
       // Send password changed confirmation email
       if (userEmail) {
         try {
-          await fetch("/api/send-password-changed-email", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email: userEmail }),
-          });
+          const {
+            data: { session: currentSession },
+          } = await supabase.auth.getSession();
+          const accessToken = currentSession?.access_token;
+          if (accessToken) {
+            await fetch("/api/send-password-changed-email", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${accessToken}`,
+              },
+              body: JSON.stringify({ email: userEmail }),
+            });
+          }
         } catch (emailErr) {
           console.error("[PasswordReset] Failed to send confirmation email:", emailErr);
           // Don't block success flow for email failure
