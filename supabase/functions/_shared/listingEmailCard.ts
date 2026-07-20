@@ -36,8 +36,22 @@ function escapeHtml(value: unknown): string {
 
 function formatPrice(price: unknown): string {
   const num = typeof price === "number" ? price : Number(price);
-  if (!Number.isFinite(num) || num <= 0) return "Price upon request";
+  if (!Number.isFinite(num) || num <= 0) return "";
   return `$${Math.round(num).toLocaleString()}`;
+}
+
+function formatListingEmailPrice(listing: any): string {
+  const price = formatPrice(listing?.price);
+  if (price) return price;
+  const min = Number(listing?.price_range_min);
+  const max = Number(listing?.price_range_max);
+  if (Number.isFinite(min) && min > 0 && Number.isFinite(max) && max > 0) {
+    const lo = Math.min(min, max);
+    const hi = Math.max(min, max);
+    return `$${Math.round(lo).toLocaleString()} – $${Math.round(hi).toLocaleString()}`;
+  }
+  // Legacy invalid rows only — not valid business pricing.
+  return "Price upon request";
 }
 
 function resolvePhotoUrl(photos: unknown): string {
@@ -226,7 +240,7 @@ export function renderSearchStyleListingEmailCard(
   const safeUrl = escapeHtml(listingUrl);
 
   const photoUrl = rewriteEmailImageUrl(listing.photoUrl) || resolvePhotoUrl(listing.photos);
-  const price = formatPrice(listing.price);
+  const price = formatListingEmailPrice(listing);
   const propertyType = formatPropertyTypeLabel(listing.property_type);
   const fullAddress =
     formatListingShareEmailFullAddress(listing) ||
@@ -338,7 +352,7 @@ export function renderCompactListingEmailCard(
   const safeUrl = escapeHtml(listingUrl);
 
   const photoUrl = rewriteEmailImageUrl(listing.photoUrl) || resolvePhotoUrl(listing.photos);
-  const price = formatPrice(listing.price);
+  const price = formatListingEmailPrice(listing);
   const propertyType = formatPropertyTypeLabel(listing.property_type);
   const fullAddress =
     formatListingShareEmailFullAddress(listing) ||

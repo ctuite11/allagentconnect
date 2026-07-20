@@ -15,6 +15,8 @@ export type ListingShareEmailListing = {
   unit_number?: string | null;
   condo_details?: unknown;
   price?: number | null;
+  price_range_min?: number | null;
+  price_range_max?: number | null;
   bedrooms?: number | null;
   bathrooms?: number | null;
   square_feet?: number | null;
@@ -65,8 +67,26 @@ function escapeHtml(value: string): string {
 }
 
 function formatPrice(price?: number | null): string {
-  if (price == null || !Number.isFinite(price) || price <= 0) return "Price upon request";
+  if (price == null || !Number.isFinite(price) || price <= 0) return "";
   return `$${Math.round(price).toLocaleString()}`;
+}
+
+function formatListingSharePrice(listing: {
+  price?: number | null;
+  price_range_min?: number | null;
+  price_range_max?: number | null;
+}): string {
+  const price = formatPrice(listing.price);
+  if (price) return price;
+  const min = typeof listing.price_range_min === "number" ? listing.price_range_min : Number(listing.price_range_min);
+  const max = typeof listing.price_range_max === "number" ? listing.price_range_max : Number(listing.price_range_max);
+  if (Number.isFinite(min) && min > 0 && Number.isFinite(max) && max > 0) {
+    const lo = Math.min(min, max);
+    const hi = Math.max(min, max);
+    return `$${Math.round(lo).toLocaleString()} – $${Math.round(hi).toLocaleString()}`;
+  }
+  // Legacy invalid rows only — not valid business pricing.
+  return "Price upon request";
 }
 
 function buildListingShareEmailCard(listing: ListingShareEmailListing): string {
@@ -110,7 +130,7 @@ export function buildHotSheetShareEmailHtml(params: {
   const plainTextFallback = listings
     .map((listing) => {
       const listingUrl = getListingPublicUrl(listing.id);
-      const price = formatPrice(listing.price);
+      const price = formatListingSharePrice(listing);
       const street = formatListingShareEmailStreetLine(listing);
       const cityStateZip = `${listing.city || ""}, ${listing.state || ""} ${listing.zip_code || ""}`
         .trim()

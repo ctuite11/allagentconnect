@@ -30,6 +30,12 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { formatListingPriceDisplay, formatUsdWholeForInput, listingEffectiveNumericPrice, parseUsdWholeInput } from "@/lib/formatListingPriceDisplay";
+import {
+  isDraftListingStatus,
+  listingHasValidPricing,
+  listingMissingPricingMessage,
+  listingSatisfiesPricingRule,
+} from "@/lib/listingPricingValidation";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 type ListingStatus = "new" | "active" | "coming_soon" | "off_market" | "temporarily_withdrawn" | "cancelled" | "draft" | "expired";
@@ -46,6 +52,8 @@ interface Listing {
   state: string;
   zip_code: string;
   price: number;
+  price_range_min?: number | null;
+  price_range_max?: number | null;
   status: string;
   listing_number: string;
   listing_type?: string | null;
@@ -1289,6 +1297,11 @@ const MyListings = () => {
   const handleQuickUpdate = async (id: string, updates: Partial<Pick<Listing, "price" | "status">>) => {
     try {
       const current = listings.find((l) => l.id === id);
+      if (!current) {
+        toast.error("Listing not found");
+        return;
+      }
+
       const isInactiveStatus = (status?: string | null) =>
         status === "expired" ||
         status === "cancelled" ||
@@ -1301,10 +1314,36 @@ const MyListings = () => {
       // My Listings-only behavior: BOM action reactivates to `active` for inactive listings.
       if (
         updates.status === "back_on_market" &&
-        current &&
         isInactiveStatus(current.status)
       ) {
         nextUpdates = { ...nextUpdates, status: "active" };
+      }
+
+      const merged = {
+        listing_type: current.listing_type,
+        status: nextUpdates.status ?? current.status,
+        price: nextUpdates.price ?? current.price,
+        price_range_min: current.price_range_min,
+        price_range_max: current.price_range_max,
+      };
+
+      const leavingDraft =
+        isDraftListingStatus(current.status) && !isDraftListingStatus(merged.status);
+      const targetingNonDraft = !isDraftListingStatus(merged.status);
+
+      if ((leavingDraft || targetingNonDraft) && !listingSatisfiesPricingRule(merged)) {
+        toast.error(listingMissingPricingMessage(merged));
+        return;
+      }
+
+      // Block clearing price on a non-draft listing when no valid range remains.
+      if (
+        nextUpdates.price !== undefined &&
+        !isDraftListingStatus(merged.status) &&
+        !listingHasValidPricing(merged)
+      ) {
+        toast.error(listingMissingPricingMessage(merged));
+        return;
       }
 
       const { data, error } = await supabase.from("listings").update(nextUpdates).eq("id", id).select("*").single();

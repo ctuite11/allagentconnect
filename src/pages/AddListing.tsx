@@ -50,6 +50,7 @@ import {
 import AddressAutocomplete from "@/components/AddressAutocomplete";
 import { normalizeGooglePlace } from "@/lib/google-address";
 import { checkDuplicateListing, isLiveStatus } from "@/lib/checkDuplicateListing";
+import { formHasValidListingPricing } from "@/lib/listingPricingValidation";
 import { dcmlsPublishSnapshot, dcmlsShowOnFromRecord } from "@/lib/dcmlsPublishPayload";
 import { Seo } from "@/components/Seo";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -2562,7 +2563,11 @@ const AddListing = () => {
   };
 
   // Centralized validation — single source of truth for required fields
-  const getValidationErrors = (publishing: boolean = true): { field: string; label: string }[] => {
+  const getValidationErrors = (opts: {
+    requirePhotos?: boolean;
+    requirePricing?: boolean;
+  } = {}): { field: string; label: string }[] => {
+    const { requirePhotos = false, requirePricing = false } = opts;
     const errors: { field: string; label: string }[] = [];
 
     if (!formData.address.trim()) errors.push({ field: "address", label: "Street Address" });
@@ -2570,16 +2575,18 @@ const AddListing = () => {
     if (!formData.state.trim()) errors.push({ field: "state", label: "State" });
     if (!formData.zip_code.trim()) errors.push({ field: "zip_code", label: "ZIP Code" });
 
-    if (formData.listing_type === "for_sale") {
-      const hasPrice = formData.price && String(formData.price).trim() !== "" && Number(formData.price) > 0;
-      const hasValidRange = formData.price_range_min && String(formData.price_range_min).trim() !== "" && Number(formData.price_range_min) > 0
-        && formData.price_range_max && String(formData.price_range_max).trim() !== "" && Number(formData.price_range_max) > 0;
-      if (!hasPrice && !hasValidRange) {
-        errors.push({ field: "price", label: "Listing Price or Price Range" });
-      }
-    } else {
-      if (!formData.monthly_rent || String(formData.monthly_rent).trim() === "" || Number(formData.monthly_rent) === 0) {
-        errors.push({ field: "monthly_rent", label: "Monthly Rent" });
+    if (requirePricing) {
+      if (formData.listing_type === "for_sale" || formData.listing_type === "for_private_sale") {
+        const hasPrice = formData.price && String(formData.price).trim() !== "" && Number(formData.price) > 0;
+        const hasValidRange = formData.price_range_min && String(formData.price_range_min).trim() !== "" && Number(formData.price_range_min) > 0
+          && formData.price_range_max && String(formData.price_range_max).trim() !== "" && Number(formData.price_range_max) > 0;
+        if (!hasPrice && !hasValidRange) {
+          errors.push({ field: "price", label: "Listing Price or Price Range" });
+        }
+      } else if (formData.listing_type === "for_rent") {
+        if (!formData.monthly_rent || String(formData.monthly_rent).trim() === "" || Number(formData.monthly_rent) === 0) {
+          errors.push({ field: "monthly_rent", label: "Monthly Rent" });
+        }
       }
     }
 
@@ -2598,7 +2605,7 @@ const AddListing = () => {
       errors.push({ field: "go_live_date", label: "Go-Live Date (required for Coming Soon)" });
     }
 
-    if (publishing && photos.length === 0) {
+    if (requirePhotos && photos.length === 0) {
       errors.push({ field: "photos", label: "At least one listing photo" });
     }
 
@@ -2633,9 +2640,13 @@ const AddListing = () => {
       setSubmitting(true);
     }
 
-    // --- Centralized validation (skip for auto-save) ---
+    // --- Centralized validation (manual save only; autosave handled below) ---
     if (!isAutoSave) {
-      const errors = getValidationErrors(isLiveStatus(formData.status));
+      const targetIsDraft = !formData.status || formData.status === "draft";
+      const errors = getValidationErrors({
+        requirePhotos: isLiveStatus(formData.status),
+        requirePricing: !targetIsDraft,
+      });
       if (errors.length > 0) {
         setValidationErrors(errors);
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -2644,6 +2655,23 @@ const AddListing = () => {
         return;
       }
       setValidationErrors([]);
+    } else {
+      // Autosave must never persist an invalid non-draft pricing state.
+      // Skip silently and keep the last valid saved state (no toast noise).
+      const targetIsDraft = !formData.status || formData.status === "draft";
+      if (
+        !targetIsDraft &&
+        !formHasValidListingPricing({
+          listing_type: formData.listing_type,
+          price: formData.price,
+          price_range_min: formData.price_range_min,
+          price_range_max: formData.price_range_max,
+          monthly_rent: formData.monthly_rent,
+        })
+      ) {
+        setAutoSaving(false);
+        return;
+      }
     }
     // --- End validation ---
 
@@ -2904,7 +2932,10 @@ const AddListing = () => {
       }
 
       // Centralized validation
-      const errors = getValidationErrors(publishNow);
+      const errors = getValidationErrors({
+        requirePhotos: publishNow,
+        requirePricing: publishNow,
+      });
       if (errors.length > 0) {
         setValidationErrors(errors);
         window.scrollTo({ top: 0, behavior: 'smooth' });

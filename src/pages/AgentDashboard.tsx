@@ -16,6 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { DASHBOARD_FILTER_STATUSES, LISTING_STATUS_LABELS } from "@/constants/status";
 import { humanizeSnakeCase } from "@/lib/format";
+import { listingHasValidPricing, listingMissingPricingMessage } from "@/lib/listingPricingValidation";
 import { useAgentPresence } from "@/hooks/useAgentPresence";
 import { Seo } from "@/components/Seo";
 import { AacMonogramLoader } from "@/components/AacMonogramLoader";
@@ -26,6 +27,8 @@ interface Listing {
   state: string;
   zip_code: string;
   price: number;
+  price_range_min?: number | null;
+  price_range_max?: number | null;
   property_type: string | null;
   bedrooms: number | null;
   bathrooms: number | null;
@@ -345,6 +348,18 @@ const AgentDashboard = () => {
     try {
       const listing = listings.find(l => l.id === listingId);
       if (!listing) return;
+
+      if (
+        !listingHasValidPricing({
+          listing_type: listing.listing_type,
+          price: listing.price,
+          price_range_min: listing.price_range_min,
+          price_range_max: listing.price_range_max,
+        })
+      ) {
+        toast.error(listingMissingPricingMessage({ listing_type: listing.listing_type }));
+        return;
+      }
 
       // Check if 30 days have passed since cancellation
       const daysSinceCancellation = listing.cancelled_at ? Math.floor((Date.now() - new Date(listing.cancelled_at).getTime()) / (1000 * 60 * 60 * 24)) : 0;
