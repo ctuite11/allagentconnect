@@ -1,6 +1,8 @@
+import { useState } from "react";
+import { Link, useLocation } from "react-router-dom";
 import { Mail, Phone } from "lucide-react";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
-import ContactAgentProfileDialog from "@/components/ContactAgentProfileDialog";
+import { AgentEmailQuickDialog } from "@/components/agent-search/AgentEmailQuickDialog";
 
 export type ActivityAgentContactProps = {
   agentId: string;
@@ -23,38 +25,46 @@ export function ActivityAgentContact({
   agentPhone,
 }: ActivityAgentContactProps) {
   const formattedPhone = agentPhone ? formatPhoneNumber(agentPhone) : null;
-  const phoneHref = agentPhone ? `tel:${agentPhone.replace(/[^\d+]/g, "")}` : null;
+  const location = useLocation();
+  const [emailOpen, setEmailOpen] = useState(false);
 
   return (
     <div className="mt-1.5 space-y-0.5 text-[11px] text-neutral-600">
-      <div className="block max-w-full truncate font-medium text-zinc-900">
+      <Link
+        to={`/agent/${agentId}`}
+        state={{ from: `${location.pathname}${location.search}` }}
+        onClick={(e) => e.stopPropagation()}
+        className="block max-w-full truncate font-medium text-[#0E56F5] hover:underline"
+      >
         {agentName}
-      </div>
+      </Link>
       <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5">
-        {phoneHref && formattedPhone && formattedPhone !== "—" ? (
-          <a
-            href={phoneHref}
-            onClick={(e) => e.stopPropagation()}
-            className="inline-flex items-center gap-1 text-neutral-600 transition-colors hover:text-[#0E56F5]"
-          >
+        {formattedPhone && formattedPhone !== "—" ? (
+          <span className="inline-flex items-center gap-1 text-neutral-600">
             <Phone className="h-3 w-3" aria-hidden />
             {formattedPhone}
-          </a>
+          </span>
         ) : null}
         {agentEmail ? (
-          <span
-            onClick={(e) => e.stopPropagation()}
-            className="inline-flex items-center gap-1"
-          >
-            <Mail className="h-3 w-3 text-neutral-500" aria-hidden />
-            <ContactAgentProfileDialog
-              agentId={agentId}
+          <>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setEmailOpen(true);
+              }}
+              className="inline-flex items-center gap-1 text-[#0E56F5] hover:underline"
+            >
+              <Mail className="h-3 w-3" aria-hidden />
+              {agentEmail}
+            </button>
+            <AgentEmailQuickDialog
+              open={emailOpen}
+              onOpenChange={setEmailOpen}
               agentName={agentName}
               agentEmail={agentEmail}
-              buttonText={agentEmail}
-              triggerClassName="!h-auto !p-0 !bg-transparent !text-[11px] !font-normal !text-neutral-600 hover:!text-[#0E56F5] !shadow-none [&_svg]:hidden"
             />
-          </span>
+          </>
         ) : null}
       </div>
     </div>
