@@ -344,20 +344,20 @@ const ClientNeedsDashboard = () => {
             </div>
 
             <div className="space-y-2.5">
-              <PriceRangePreferences
+              <GeographicPreferencesManager
                 agentId={user?.id || ""}
                 onFiltersUpdated={handleFiltersUpdated}
-                onDataChange={handlePriceDataChange}
+                onDataChange={handleGeoDataChange}
               />
               <PropertyTypePreferences
                 agentId={user?.id || ""}
                 onFiltersUpdated={handleFiltersUpdated}
                 onDataChange={(data) => handlePropertyTypesChange(data.propertyTypes)}
               />
-              <GeographicPreferencesManager
+              <PriceRangePreferences
                 agentId={user?.id || ""}
                 onFiltersUpdated={handleFiltersUpdated}
-                onDataChange={handleGeoDataChange}
+                onDataChange={handlePriceDataChange}
               />
             </div>
           </section>
@@ -453,8 +453,7 @@ const ClientNeedsDashboard = () => {
 
         {hasUnsavedChanges && (
           <div className="sticky bottom-0 z-40 border-t border-neutral-200 bg-white">
-            <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-              <p className="text-sm text-neutral-500">You have unsaved changes</p>
+            <div className="mx-auto flex max-w-7xl items-center justify-end px-6 py-4">
               <Button type="button" onClick={handleSavePreferences} disabled={saving}>
                 {saving ? (
                   <span className="flex items-center gap-2">
