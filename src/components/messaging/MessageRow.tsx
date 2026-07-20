@@ -24,7 +24,7 @@ interface MessageRowProps {
   /**
    * When provided (sender is a confirmed agent, not the viewer), the sender's
    * avatar + name become a single clickable target that opens the shared
-   * AgentIntelDrawer owned by ConversationPanel.
+   * Agent Network card pop-up owned by ConversationPanel.
    */
   onViewAgent?: () => void;
 }

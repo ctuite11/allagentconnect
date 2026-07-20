@@ -18,11 +18,17 @@ type Agent = {
 
 type Props = {
   agent: Agent;
-  onClick: (id: string) => void;
+  onClick?: (id: string) => void;
   /** When true, show emerald Online badge beside the name (referral network only). */
   showPresenceBadge?: boolean;
   isOnline?: boolean;
   hideDirectContact?: boolean;
+  /**
+   * When false, render the same card chrome as a non-clickable surface
+   * (e.g. Comms Center profile pop-up). Defaults to true so Agent Network
+   * grid tiles are unchanged.
+   */
+  interactive?: boolean;
 };
 
 function titleCase(s: string) {
@@ -41,6 +47,7 @@ export default function AgentPhotoTile({
   showPresenceBadge = false,
   isOnline = false,
   hideDirectContact = false,
+  interactive = true,
 }: Props) {
   const rawName =
     [agent.first_name, agent.last_name].filter(Boolean).join(" ") || "Agent";
@@ -48,21 +55,25 @@ export default function AgentPhotoTile({
 
   const brokerage = agent.company || agent.office_name || agent.team_name || "";
 
-  return (
-    <button
-      type="button"
-      onClick={() => onClick(agent.id)}
-      className="group w-full rounded-2xl text-left outline-none transition-transform duration-200 ease-out focus-visible:ring-2 focus-visible:ring-neutral-300 focus-visible:ring-offset-2"
-    >
-      {/* Card container */}
-      <div className="overflow-hidden rounded-2xl border border-neutral-200/90 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-[box-shadow,border-color,transform] duration-200 ease-out group-hover:-translate-y-px group-hover:border-neutral-300/90 group-hover:shadow-[0_4px_12px_rgba(0,0,0,0.07)]">
+  const card = (
+      <div
+        className={
+          interactive
+            ? "overflow-hidden rounded-2xl border border-neutral-200/90 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-[box-shadow,border-color,transform] duration-200 ease-out group-hover:-translate-y-px group-hover:border-neutral-300/90 group-hover:shadow-[0_4px_12px_rgba(0,0,0,0.07)]"
+            : "overflow-hidden rounded-2xl border border-neutral-200/90 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
+        }
+      >
         {/* PHOTO — online presence shown as a dot overlay so card heights stay uniform */}
         <div className="relative aspect-[3/4] w-full overflow-hidden bg-white leading-[0]">
           {agent.headshot_url ? (
             <img
               src={agent.headshot_url}
               alt={fullName}
-              className="block h-full w-full object-cover transition-opacity duration-200 group-hover:opacity-[0.97]"
+              className={
+                interactive
+                  ? "block h-full w-full object-cover transition-opacity duration-200 group-hover:opacity-[0.97]"
+                  : "block h-full w-full object-cover"
+              }
               style={{ display: "block", lineHeight: 0, fontSize: 0 }}
               loading="lazy"
             />
@@ -107,6 +118,19 @@ export default function AgentPhotoTile({
           )}
         </div>
       </div>
+  );
+
+  if (!interactive) {
+    return <div className="w-full rounded-2xl">{card}</div>;
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => onClick?.(agent.id)}
+      className="group w-full rounded-2xl text-left outline-none transition-transform duration-200 ease-out focus-visible:ring-2 focus-visible:ring-neutral-300 focus-visible:ring-offset-2"
+    >
+      {card}
     </button>
   );
 }

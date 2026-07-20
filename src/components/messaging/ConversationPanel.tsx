@@ -66,7 +66,7 @@ export function ConversationPanel({
   const [listingAddress, setListingAddress] = useState<string | null>(null);
   const { lastSeenAt, isOnline } = useAgentLastSeen(details?.otherUserId);
 
-  // Exactly one agent profile drawer, owned here — MessageRow never mounts one.
+  // Exactly one agent card pop-up, owned here — MessageRow never mounts one.
   // Clickability is gated on a confirmed agent_profiles row for that auth user
   // id (resolved below), not merely on "other participant looks like an agent".
   const [agentDrawer, setAgentDrawer] = useState<{ open: boolean; agent: AgentProfileRow | null }>({
