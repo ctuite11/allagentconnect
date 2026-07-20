@@ -169,7 +169,7 @@ const SearchResults = ({
         if (agentIds.length > 0) {
           const { data: profiles } = await supabase
             .from("agent_profiles")
-            .select("id, first_name, last_name, company, office_name, headshot_url, phone, email")
+            .select("id, first_name, last_name, company, office_name, headshot_url")
             .in("id", agentIds);
 
           const profileMap = new Map((profiles || []).map(p => [p.id, p]));
