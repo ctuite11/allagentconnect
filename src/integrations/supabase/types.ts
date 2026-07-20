@@ -1730,6 +1730,129 @@ export type Database = {
           },
         ]
       }
+      comms_digest_items: {
+        Row: {
+          action_url: string | null
+          agent_id: string
+          cadence: string
+          category: string | null
+          created_at: string
+          digest_send_id: string | null
+          id: string
+          item_html: string
+          source_id: string
+          source_type: string
+          summary: Json
+          title: string
+        }
+        Insert: {
+          action_url?: string | null
+          agent_id: string
+          cadence: string
+          category?: string | null
+          created_at?: string
+          digest_send_id?: string | null
+          id?: string
+          item_html?: string
+          source_id: string
+          source_type: string
+          summary?: Json
+          title: string
+        }
+        Update: {
+          action_url?: string | null
+          agent_id?: string
+          cadence?: string
+          category?: string | null
+          created_at?: string
+          digest_send_id?: string | null
+          id?: string
+          item_html?: string
+          source_id?: string
+          source_type?: string
+          summary?: Json
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comms_digest_items_digest_send_id_fkey"
+            columns: ["digest_send_id"]
+            isOneToOne: false
+            referencedRelation: "comms_digest_sends"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      comms_digest_sends: {
+        Row: {
+          agent_id: string
+          attempts: number
+          cadence: string
+          created_at: string
+          email_job_id: string | null
+          id: string
+          item_count: number
+          last_error: string | null
+          max_attempts: number
+          period_key: string
+          sent_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          agent_id: string
+          attempts?: number
+          cadence: string
+          created_at?: string
+          email_job_id?: string | null
+          id?: string
+          item_count?: number
+          last_error?: string | null
+          max_attempts?: number
+          period_key: string
+          sent_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          agent_id?: string
+          attempts?: number
+          cadence?: string
+          created_at?: string
+          email_job_id?: string | null
+          id?: string
+          item_count?: number
+          last_error?: string | null
+          max_attempts?: number
+          period_key?: string
+          sent_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comms_digest_sends_email_job_id_fkey"
+            columns: ["email_job_id"]
+            isOneToOne: false
+            referencedRelation: "email_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comms_digest_sends_email_job_id_fkey"
+            columns: ["email_job_id"]
+            isOneToOne: false
+            referencedRelation: "email_jobs_delivery_status"
+            referencedColumns: ["job_id"]
+          },
+          {
+            foreignKeyName: "comms_digest_sends_email_job_id_fkey"
+            columns: ["email_job_id"]
+            isOneToOne: false
+            referencedRelation: "v_email_job_engagement"
+            referencedColumns: ["job_id"]
+          },
+        ]
+      }
       conversation_messages: {
         Row: {
           body: string
@@ -4808,6 +4931,7 @@ export type Database = {
         Args: { p_hot_sheet_id: string }
         Returns: boolean
       }
+      invoke_process_comms_digests: { Args: never; Returns: undefined }
       is_accepted_delegate_for: {
         Args: { p_owner_user_id: string }
         Returns: boolean
