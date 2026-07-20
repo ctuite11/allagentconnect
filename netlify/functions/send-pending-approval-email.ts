@@ -82,6 +82,17 @@ export const handler: Handler = async (event) => {
     return { statusCode: 405, headers, body: JSON.stringify({ ok: false, error: "Method not allowed" }) };
   }
 
+  const expectedToken = process.env.INTERNAL_FUNCTION_TOKEN;
+  const providedToken =
+    event.headers["x-internal-token"] || event.headers["X-Internal-Token"];
+  if (!expectedToken || !providedToken || providedToken !== expectedToken) {
+    return {
+      statusCode: 401,
+      headers,
+      body: JSON.stringify({ ok: false, error: "Unauthorized" }),
+    };
+  }
+
   try {
     const apiKey = process.env.RESEND_API_KEY;
     if (!apiKey) {
