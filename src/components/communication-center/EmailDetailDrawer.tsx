@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import DOMPurify from "dompurify";
 
 interface Campaign {
   id: string;
@@ -109,7 +110,11 @@ export function EmailDetailDrawer({
             <div className="mt-2 p-4 bg-background rounded-lg border border-border">
               <div 
                 className="prose prose-sm max-w-none dark:prose-invert whitespace-pre-wrap text-foreground"
-                dangerouslySetInnerHTML={{ __html: campaign.message }}
+                dangerouslySetInnerHTML={{
+                  __html: DOMPurify.sanitize(campaign.message ?? "", {
+                    USE_PROFILES: { html: true },
+                  }),
+                }}
               />
             </div>
           </div>
