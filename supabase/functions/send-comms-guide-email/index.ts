@@ -37,7 +37,7 @@ serve(async (req: Request): Promise<Response> => {
       );
     }
 
-    const ctaUrl = resolveAacCtaUrl(body.ctaUrl, "/agent/communications");
+    const ctaUrl = resolveAacCtaUrl(body.ctaUrl, "/communications");
     const subject = body.subject?.trim() || COMMS_CENTER_GUIDE_SUBJECT;
     const html = buildCommsCenterGuideEmailHtml({
       agentFirstName: body.agentFirstName ?? null,
