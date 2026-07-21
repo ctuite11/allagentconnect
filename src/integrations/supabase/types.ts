@@ -1013,6 +1013,7 @@ export type Database = {
           approval_email_sent: boolean
           county: string | null
           created_at: string
+          dismissed_announcement_ids: string[]
           early_access: boolean
           email_frequency: string
           hide_from_directory: boolean
@@ -1051,6 +1052,7 @@ export type Database = {
           approval_email_sent?: boolean
           county?: string | null
           created_at?: string
+          dismissed_announcement_ids?: string[]
           early_access?: boolean
           email_frequency?: string
           hide_from_directory?: boolean
@@ -1089,6 +1091,7 @@ export type Database = {
           approval_email_sent?: boolean
           county?: string | null
           created_at?: string
+          dismissed_announcement_ids?: string[]
           early_access?: boolean
           email_frequency?: string
           hide_from_directory?: boolean
