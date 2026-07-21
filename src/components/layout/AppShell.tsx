@@ -7,6 +7,7 @@ import { AgentContentInsetProvider } from "@/components/layout/AgentContentInset
 import { useAuthRole } from "@/hooks/useAuthRole";
 import { useAgentPresence } from "@/hooks/useAgentPresence";
 import { DelegateContextBanner } from "@/components/DelegateContextBanner";
+import { MessagingSystemUpdateAnnouncement } from "@/components/MessagingSystemUpdateAnnouncement";
 import { agentPageShellTopClass } from "@/lib/agentUi";
 import { cn } from "@/lib/utils";
 
@@ -65,6 +66,7 @@ export function AppShell({ children }: AppShellProps) {
       />
       <div className="flex min-h-0 min-w-0 flex-1 flex-col border-l border-zinc-100 bg-[#FFFFFF]">
         <DelegateContextBanner />
+        <MessagingSystemUpdateAnnouncement />
         {/* Mobile top bar with hamburger */}
         <header className="flex items-center gap-3 border-b border-zinc-100 bg-white px-4 h-14 shrink-0 lg:hidden">
           <button
