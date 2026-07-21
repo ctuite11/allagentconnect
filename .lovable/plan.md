@@ -1,18 +1,22 @@
 ## Goal
-After a bulk email send fully succeeds from Admin Approvals, clear the row checkmarks without refetching the list — scroll position, row order, and filters are untouched.
+Communications feed rows clamp the message body to 2 lines. Show the full message text on every row.
 
-## Changes
+## Change
+`src/pages/CommunicationsFeed.tsx` (~line 209): remove only `line-clamp-2` from the message `<p>`. Keep `whitespace-pre-wrap` so original paragraph/line breaks render.
 
-1. `src/components/BulkEmailDialog.tsx`
-   - Add optional prop `onSent?: () => void`.
-   - In `handleSend`, after the success toast for each branch (`comms-center-guide`, `custom`, templated `send-bulk-email`), and before the form reset + `onOpenChange(false)`, call `onSent?.()`.
-   - Placement is inside the `try` block after the toast, so any thrown error short-circuits before the callback runs. Do not call `onSent` from the `catch` branch, early validation returns, or the `finally` block.
+Before:
+```tsx
+<p className="mt-1 text-[13px] leading-snug text-neutral-700 line-clamp-2 whitespace-pre-wrap">
+```
 
-2. `src/pages/AdminApprovals.tsx`
-   - Pass `onSent={() => setSelectedIds(new Set())}` to `<BulkEmailDialog />`.
-   - Do NOT call `fetchAgents()` — clearing the selection Set alone rerenders row checkboxes in place with no scroll or list mutation.
+After:
+```tsx
+<p className="mt-1 text-[13px] leading-snug text-neutral-700 whitespace-pre-wrap">
+```
+
+## Verification
+Open View All Communications and confirm every row shows the complete message body with original line breaks preserved.
 
 ## Out of scope
-- Email sending logic, templates, recipients, toasts.
-- Bulk verify / bulk delete flows.
-- No new scroll restoration needed since the list is not refetched.
+- Success Hub Network Activity previews (stay compact).
+- Subject truncation, filters, search, contact row, data fetching, styling.
