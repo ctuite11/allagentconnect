@@ -24,12 +24,12 @@ export const MESSAGING_PREFERENCES_FIX_ANNOUNCEMENT_ID =
  */
 export function MessagingSystemUpdateAnnouncement() {
   const navigate = useNavigate();
-  const { user, role, loading: authLoading } = useAuthRole();
+  const { user, role, isAdmin, loading: authLoading } = useAuthRole();
   const [open, setOpen] = useState(false);
   const [ready, setReady] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const isAgent = role === "agent";
+  const isAgent = role === "agent" || isAdmin;
 
   useEffect(() => {
     let cancelled = false;

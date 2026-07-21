@@ -1,0 +1,2 @@
+ALTER TABLE public.agent_settings ADD COLUMN IF NOT EXISTS dismissed_announcement_ids text[] NOT NULL DEFAULT '{}'::text[];
+COMMENT ON COLUMN public.agent_settings.dismissed_announcement_ids IS 'Versioned in-app announcement IDs the agent has acknowledged (e.g. messaging-preferences-fix-2026-07).';
