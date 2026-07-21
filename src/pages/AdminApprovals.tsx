@@ -2077,6 +2077,7 @@ export default function AdminApprovals() {
         open={emailRecipients.length > 0}
         onOpenChange={(open) => !open && setEmailRecipients([])}
         recipients={emailRecipients}
+        onSent={() => setSelectedIds(new Set())}
       />
 
       <CreateAgentDialog

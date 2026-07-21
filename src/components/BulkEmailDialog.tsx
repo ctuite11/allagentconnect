@@ -18,9 +18,11 @@ interface BulkEmailDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   recipients: Array<{ id?: string; email: string; name: string }>;
+  /** Fires only after a send fully succeeds and the dialog is about to close. */
+  onSent?: () => void;
 }
 
-export function BulkEmailDialog({ open, onOpenChange, recipients }: BulkEmailDialogProps) {
+export function BulkEmailDialog({ open, onOpenChange, recipients, onSent }: BulkEmailDialogProps) {
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
@@ -176,6 +178,7 @@ export function BulkEmailDialog({ open, onOpenChange, recipients }: BulkEmailDia
       setSendAsGroup(false);
       setSendCopyToSelf(false);
       setTemplate("custom");
+      onSent?.();
       onOpenChange(false);
     } catch (error: unknown) {
       console.error("Error sending bulk email:", error);
