@@ -21,8 +21,8 @@ export function SuccessHubHero({ summary }: SuccessHubHeroProps) {
   const aacShort = summary.agentId ? summary.agentId.slice(0, 8) : "";
 
   return (
-    <div className="rounded-xl border border-neutral-200 bg-white px-8 py-7 shadow-sm transition-[box-shadow,border-color] duration-150 hover:border-neutral-300 hover:shadow-md sm:py-8">
-      <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between lg:gap-10">
+    <div className="rounded-xl border border-neutral-200 bg-white px-8 py-5 shadow-sm transition-[box-shadow,border-color] duration-150 hover:border-neutral-300 hover:shadow-md sm:py-6">
+      <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between lg:gap-10">
         <div className="min-w-0 flex-1">
           <h1 className="text-2xl font-semibold tracking-tight text-neutral-900 sm:text-[26px]">
             Success Hub
@@ -30,13 +30,13 @@ export function SuccessHubHero({ summary }: SuccessHubHeroProps) {
           <div className="mt-2">
             <AacTitleAccent />
           </div>
-          <p className="mt-4 text-lg font-semibold text-neutral-800">
+          <p className="mt-3 text-lg font-semibold text-neutral-800">
             Hi, {displayFirst}
           </p>
-          <p className="mt-2 max-w-xl text-sm leading-relaxed text-neutral-600">
+          <p className="mt-1.5 max-w-xl text-sm leading-relaxed text-neutral-600">
             Manage your buyers, listings, hot sheets, and messages.
           </p>
-          <div className="mt-6 flex flex-wrap gap-2">
+          <div className="mt-4 flex flex-wrap gap-2">
             <Button
               type="button"
               size="sm"
