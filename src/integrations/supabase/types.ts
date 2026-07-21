@@ -1044,7 +1044,6 @@ export type Database = {
           verification_payload: Json
           verified_at: string | null
           welcome_modal_dismissed: boolean
-          dismissed_announcement_ids: string[]
         }
         Insert: {
           account_activated_at?: string | null
@@ -1083,7 +1082,6 @@ export type Database = {
           verification_payload?: Json
           verified_at?: string | null
           welcome_modal_dismissed?: boolean
-          dismissed_announcement_ids?: string[]
         }
         Update: {
           account_activated_at?: string | null
@@ -1122,7 +1120,6 @@ export type Database = {
           verification_payload?: Json
           verified_at?: string | null
           welcome_modal_dismissed?: boolean
-          dismissed_announcement_ids?: string[]
         }
         Relationships: []
       }
