@@ -1553,7 +1553,7 @@ export default function AdminApprovals() {
                 toast.message("Sending Comms Center guide preview to your inbox…");
                 const { data, error } = await supabase.functions.invoke(
                   'send-comms-guide-email',
-                  { body: { to: [adminEmail] } },
+                  { body: { to: [adminEmail], preview: true } },
                 );
                 if (error || !data?.success) {
                   toast.error(`Failed: ${error?.message ?? data?.error ?? 'Unknown error'}`);

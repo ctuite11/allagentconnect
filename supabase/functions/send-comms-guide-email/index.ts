@@ -17,6 +17,7 @@ interface CommsGuideRequest {
   agentFirstName?: string;
   ctaUrl?: string;
   subject?: string;
+  preview?: boolean;
 }
 
 serve(async (req: Request): Promise<Response> => {
@@ -54,8 +55,11 @@ serve(async (req: Request): Promise<Response> => {
     const today = new Date().toISOString().slice(0, 10).replace(/-/g, "");
     const results: Array<{ email: string; success: boolean; error?: string }> = [];
     for (const email of recipients) {
+      const idempotencyKey = body.preview
+        ? `comms-guide-preview-${email}-${Date.now()}-${crypto.randomUUID().slice(0, 8)}`
+        : `comms-guide-${email}-${today}`;
       const { error } = await admin.from("email_jobs").insert({
-        idempotency_key: `comms-guide-${email}-${today}`,
+        idempotency_key: idempotencyKey,
         payload: {
           provider: "resend",
           template: "comms-center-guide",
