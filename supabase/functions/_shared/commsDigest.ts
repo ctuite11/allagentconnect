@@ -37,9 +37,14 @@ export function normalizeCommsSchedule(raw: unknown): CommsSchedule {
 }
 
 /**
- * Load client_needs_schedule (+ enabled flag) for many agents.
+ * Load client_needs_schedule (+ Comms Center enable flags) for many agents.
  * Missing prefs → immediate (legacy default).
- * client_needs_enabled === false → omitted from map as "muted" (caller skips).
+ *
+ * Both `client_needs_enabled` and `new_matches_enabled` are treated here as
+ * agent-side Comms Center master mutes: either === false removes the agent
+ * from both the immediate and digest paths. These flags are NOT buyer /
+ * hot-sheet preferences — buyer hot-sheet delivery is governed by
+ * `hot_sheet_subscribers`, not `notification_preferences`.
  */
 export async function loadCommsSchedules(
   supabase: SupabaseLike,
@@ -68,7 +73,10 @@ export async function loadCommsSchedules(
   for (const row of data || []) {
     const uid = row.user_id as string;
     found.add(uid);
-    // Honor prior "Off" (UI no longer offers it): mute both paths.
+      // Comms Center master mute: honor either flag being explicitly false.
+      // Timing changes never write these flags (see
+      // ClientNeedsNotificationSettings), so a `false` here is a deliberate
+      // agent-side opt-out from an earlier UI surface.
     if (row.client_needs_enabled === false || row.new_matches_enabled === false) {
       muted.add(uid);
       continue;

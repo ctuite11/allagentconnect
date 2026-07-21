@@ -507,9 +507,11 @@ const handler = async (req: Request): Promise<Response> => {
         console.log("Listing count:", newListings.length);
         console.log("Hot sheet:", hotSheet.name);
 
-        // ── Agent copy email (gated by notification_preferences) ─────────────
-        // When the buyer is sent invite + listings, also send a separate copy
-        // to the agent so they have a record of exactly what went out.
+        // ── Agent copy email (always sent) ────────────────────────────────
+        // The agent explicitly initiated / sent this hot sheet, so they
+        // always receive the copy of what their buyer received. This path
+        // no longer consults notification_preferences.new_matches_enabled
+        // (that flag is a Comms Center channel mute, not a hot-sheet gate).
         try {
           const { data: agentProfile2 } = await adminClient
             .from("agent_profiles")
@@ -517,17 +519,9 @@ const handler = async (req: Request): Promise<Response> => {
             .eq("id", hotSheet.user_id)
             .maybeSingle();
 
-          const { data: agentPrefs } = await adminClient
-            .from("notification_preferences")
-            .select("new_matches_enabled")
-            .eq("user_id", hotSheet.user_id)
-            .maybeSingle();
-
-          // Default ON if no preference row exists; only skip if explicitly off
-          const notificationsEnabled = !agentPrefs || agentPrefs.new_matches_enabled !== false;
           const agentEmail = agentProfile2?.email?.toLowerCase().trim();
 
-          if (notificationsEnabled && agentEmail) {
+          if (agentEmail) {
             const buyerLabel = clientName || "your buyer";
             const agentCopyHtml = `
               <div style="margin: 0 0 16px 0; padding: 12px 16px; background-color: #f3f4f6; border-radius: 8px; color: #374151; font-size: 13px;">

@@ -75,11 +75,13 @@ export const ClientNeedsNotificationSettings = () => {
       } = await supabase.auth.getUser();
       if (!user) return;
 
+      // Timing changes MUST only write client_needs_schedule. Do not touch
+      // client_needs_enabled or new_matches_enabled — those are channel
+      // enable flags owned by other surfaces; changing cadence should never
+      // silently un-mute a previously muted agent.
       const { error } = await supabase.from("notification_preferences").upsert(
         {
           user_id: user.id,
-          client_needs_enabled: true,
-          new_matches_enabled: true,
           client_needs_schedule: next,
         },
         { onConflict: "user_id" },
