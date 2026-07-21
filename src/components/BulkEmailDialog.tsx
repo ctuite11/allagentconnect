@@ -77,7 +77,8 @@ export function BulkEmailDialog({ open, onOpenChange, recipients }: BulkEmailDia
     const isTemplated =
       template === "early-access-update-v1" ||
       template === "early-access-update-v2" ||
-      template === "founding-partner-invitation";
+        template === "founding-partner-invitation" ||
+        template === "comms-center-guide";
     if (!subject.trim() || (!isTemplated && !message.trim())) {
       toast.error(isTemplated ? "Please fill in the subject" : "Please fill in both subject and message");
       return;
@@ -108,7 +109,19 @@ export function BulkEmailDialog({ open, onOpenChange, recipients }: BulkEmailDia
 
       // Regular contact email → transactional path (not paused).
       // Marketing templates → send-bulk-email (paused during deliverability recovery).
-      if (template === "custom") {
+      if (template === "comms-center-guide") {
+        // Comms Center guide uses its own dedicated function (enqueues via email_jobs).
+        for (const recipient of personalizedRecipients) {
+          const firstName = (recipient.name || "").trim().split(/\s+/)[0] || null;
+          const { error } = await supabase.functions.invoke("send-comms-guide-email", {
+            body: { to: [recipient.email], agentFirstName: firstName },
+          });
+          if (error) throw error;
+        }
+        toast.success(
+          `Comms Center guide sent to ${personalizedRecipients.length} recipient${personalizedRecipients.length === 1 ? "" : "s"}.`,
+        );
+      } else if (template === "custom") {
         const transactionalRecipients = personalizedRecipients.filter(
           (r) => r.email.trim() && r.email !== agentInfo?.email,
         );
@@ -246,18 +259,22 @@ export function BulkEmailDialog({ open, onOpenChange, recipients }: BulkEmailDia
               if (v === "founding-partner-invitation") {
                 setSubject((prev) => prev || "Founding Partner Invite | All Agent Connect");
               }
+              if (v === "comms-center-guide") {
+                setSubject((prev) => prev || "Too many emails? We've got you covered.");
+              }
             }}>
               <SelectTrigger id="template">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="custom">Custom message</SelectItem>
+                <SelectItem value="comms-center-guide">Comms Center Guide — Reduce Email Noise</SelectItem>
                 <SelectItem value="founding-partner-invitation">Founding Partner — Exclusive Invitation</SelectItem>
                 <SelectItem value="early-access-update-v2">Early Access — First Look (v2, recommended)</SelectItem>
                 <SelectItem value="early-access-update-v1">Early Access Update — Product Tour (5 sections, luxury sample data)</SelectItem>
               </SelectContent>
             </Select>
-            {(template === "early-access-update-v1" || template === "early-access-update-v2" || template === "founding-partner-invitation") && (
+            {(template === "early-access-update-v1" || template === "early-access-update-v2" || template === "founding-partner-invitation" || template === "comms-center-guide") && (
               <p className="text-xs text-muted-foreground">
                 Pre-built email featuring product screenshots and short captions. Your custom message below will be ignored.
               </p>
