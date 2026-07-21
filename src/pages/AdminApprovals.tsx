@@ -1551,59 +1551,46 @@ export default function AdminApprovals() {
                   return;
                 }
                 toast.message("Sending Comms Center guide preview to your inbox…");
-                const { data, error } = await supabase.functions.invoke(
-                  "send-comms-guide-broadcast",
-                  { body: { testTo: adminEmail } },
-                );
-                if (error || !data?.ok) {
-                  const msg =
-                    data?.error ??
-                    (error as any)?.context?.responseText ??
-                    error?.message ??
-                    "Unknown error";
-                  toast.error(`Failed: ${msg}`);
-                } else {
-                  toast.success(`Preview sent to ${adminEmail}`);
+                try {
+                  const { data: { session } } = await supabase.auth.getSession();
+                  const token = session?.access_token;
+                  if (!token) {
+                    toast.error("Please sign in again.");
+                    return;
+                  }
+                  const supabaseUrl =
+                    import.meta.env.VITE_SUPABASE_URL ||
+                    (supabase as unknown as { supabaseUrl?: string }).supabaseUrl;
+                  const anonKey =
+                    import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
+                    (supabase as unknown as { supabaseKey?: string }).supabaseKey;
+                  const res = await fetch(
+                    `${supabaseUrl}/functions/v1/send-comms-guide-broadcast`,
+                    {
+                      method: "POST",
+                      headers: {
+                        "Content-Type": "application/json",
+                        apikey: anonKey as string,
+                        Authorization: `Bearer ${token}`,
+                      },
+                      body: JSON.stringify({ testTo: adminEmail }),
+                    },
+                  );
+                  const text = await res.text();
+                  let data: any = null;
+                  try { data = text ? JSON.parse(text) : null; } catch { data = { error: text }; }
+                  if (!res.ok || !data?.ok) {
+                    toast.error(`Failed: ${data?.error ?? res.statusText ?? "Unknown error"}`);
+                  } else {
+                    toast.success(`Preview sent to ${adminEmail}`);
+                  }
+                } catch (e: any) {
+                  toast.error(`Failed: ${e?.message ?? "Unknown error"}`);
                 }
               }}
               className="border-slate-300 text-slate-700 hover:bg-slate-100"
             >
               Preview Comms guide email
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={async () => {
-                const { data: countData, error: countErr } = await supabase.functions.invoke(
-                  "send-comms-guide-broadcast",
-                  { body: { dryRun: true } },
-                );
-                if (countErr || !countData?.ok) {
-                  toast.error(`Failed: ${countErr?.message ?? countData?.error ?? "Unknown error"}`);
-                  return;
-                }
-                const n = countData.eligible_recipients ?? 0;
-                if (n === 0) {
-                  toast.error("No eligible recipients");
-                  return;
-                }
-                if (!confirm(`Send the “Too many emails?” Comms Center guide to ${n} verified agents? This cannot be undone.`)) {
-                  return;
-                }
-                toast.message(`Enqueuing ${n} emails…`);
-                const { data, error } = await supabase.functions.invoke(
-                  "send-comms-guide-broadcast",
-                  { body: {} },
-                );
-                if (error || !data?.ok) {
-                  toast.error(`Failed: ${error?.message ?? data?.error ?? "Unknown error"}`);
-                } else {
-                  toast.success(`Enqueued ${data.enqueued ?? 0} of ${data.eligible_recipients ?? n} emails`);
-                }
-              }}
-              className="border-amber-300 text-amber-700 hover:bg-amber-50"
-            >
-              Broadcast Comms guide
             </Button>
             <Button 
               onClick={() => setShowCreateDialog(true)}
