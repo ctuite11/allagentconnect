@@ -53,7 +53,7 @@ export function buildCommsCenterGuideEmailHtml(
         n: 1,
         title: "Turn channels on or off",
         desc:
-          "Toggle Buyer Needs, Renter Needs, Sales Intel, and General Discussions based on what you actually want to hear about. Mute a channel and you stop receiving those alerts entirely.",
+          "Toggle Buyer Needs, Renter Needs, Sales Intel, and General Discussions based on what you actually want to hear about. Turn a channel off and you stop receiving those alerts entirely.",
         img: `${IMG_BASE}/comms-channels.png`,
         alt: "Communications Center channel toggles",
       })}
