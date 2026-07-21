@@ -26,6 +26,8 @@ interface EmailAgentDialogProps {
   defaultSubject?: string;
   /** Hide admin-only templates (agent listing contact from result cards). */
   showTemplatePicker?: boolean;
+  /** Fires only after a send fully succeeds and the dialog is about to close. */
+  onSent?: () => void;
 }
 
 export function EmailAgentDialog({
@@ -34,6 +36,7 @@ export function EmailAgentDialog({
   recipients,
   defaultSubject,
   showTemplatePicker = true,
+  onSent,
 }: EmailAgentDialogProps) {
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
@@ -161,6 +164,7 @@ export function EmailAgentDialog({
         setTemplate("custom");
         setBatchSize("all");
         setBatchIndex(0);
+        onSent?.();
         onOpenChange(false);
       }
     } catch (error: any) {
