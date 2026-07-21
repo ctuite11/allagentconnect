@@ -133,17 +133,33 @@ const handler = async (req: Request): Promise<Response> => {
       await getVerifiedAgentAudienceWithStats(supabase);
     const audienceIds = audience.map((a) => a.agent_id);
 
-    // 2. Category-level opt-out lookup DISABLED.
-    //    The four notification_preferences booleans (buyer_need / renter_need /
-    //    sales_intel / general_discussion) defaulted to `false` in the DB and
-    //    most rows landed there without any user action (the price/type/geo
-    //    save flows create the row and never touch the category flags). The
-    //    audit could not distinguish deliberate opt-outs from default artifacts,
-    //    so — until the defaults are flipped and existing rows are backfilled —
-    //    we do NOT exclude any agent from a category based on these values.
-    //    audienceIds is retained above for future opt-out surfaces.
-    void audienceIds;
+    // 2. Category-level opt-out for the current broadcast category ONLY.
+    //    notification_preferences.{buyer_need,renter_need,sales_intel,
+    //    general_discussion} default to TRUE. Missing row => channel On.
+    //    A row with the category column explicitly === false is a deliberate
+    //    opt-out and MUST be excluded from this broadcast. Other categories'
+    //    values are not consulted — an agent who turned off Renter Needs
+    //    still receives Buyer Need / Sales Intel / General Discussion sends.
+    const CATEGORY_COLUMN: Record<Category, "buyer_need" | "renter_need" | "sales_intel" | "general_discussion"> = {
+      buyer_need: "buyer_need",
+      renter_need: "renter_need",
+      sales_intel: "sales_intel",
+      general_discussion: "general_discussion",
+    };
+    const categoryColumn = CATEGORY_COLUMN[category];
     const optedOut = new Set<string>();
+    if (audienceIds.length) {
+      const { data: prefRows, error: prefErr } = await supabase
+        .from("notification_preferences")
+        .select(`user_id, ${categoryColumn}`)
+        .in("user_id", audienceIds);
+      if (prefErr) {
+        console.error("[send-client-need-notification] notification_preferences lookup failed:", prefErr);
+      }
+      for (const r of (prefRows ?? []) as any[]) {
+        if (r?.[categoryColumn] === false) optedOut.add(r.user_id);
+      }
+    }
 
     // 3. Preference match via shared independent-dimension matcher.
     //    Semantics:
