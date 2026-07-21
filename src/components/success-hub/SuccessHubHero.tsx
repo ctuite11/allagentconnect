@@ -20,18 +20,18 @@ export function SuccessHubHero({ summary }: SuccessHubHeroProps) {
   const aacShort = summary.agentId ? summary.agentId.slice(0, 8) : "";
 
   return (
-    <div className="rounded-xl border border-neutral-200 bg-white px-5 py-3 shadow-sm transition-[box-shadow,border-color] duration-150 hover:border-neutral-300 hover:shadow-md">
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between lg:gap-4">
-        <div className="min-w-0 flex-1 space-y-2">
-          <div className="space-y-0.5">
+    <div className="rounded-xl border border-neutral-200 bg-white px-6 py-5 shadow-sm transition-[box-shadow,border-color] duration-150 hover:border-neutral-300 hover:shadow-md sm:py-6">
+      <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between lg:gap-8">
+        <div className="min-w-0 flex-1 space-y-4">
+          <div>
             <h1 className="text-lg font-semibold tracking-tight text-neutral-900 sm:text-xl">
               Success Hub
             </h1>
             <AacTitleAccent />
-            <p className="text-[13px] font-medium text-neutral-600">
+            <p className="mt-2 text-[13px] font-medium text-neutral-600">
               Hi, {displayFirst}
             </p>
-            <p className="max-w-xl text-xs leading-snug text-neutral-500">
+            <p className="mt-1.5 max-w-xl text-xs leading-snug text-neutral-500">
               Manage your buyers, listings, hot sheets, and messages.
             </p>
           </div>
@@ -70,7 +70,7 @@ export function SuccessHubHero({ summary }: SuccessHubHeroProps) {
           </div>
         </div>
 
-        <div className="flex w-full min-w-0 shrink-0 flex-row items-center gap-2 lg:w-[min(100%,22rem)]">
+        <div className="flex w-full min-w-0 shrink-0 flex-row items-center gap-4 lg:w-[min(100%,22rem)]">
           <AgentAvatar
             name={fullName}
             headshotUrl={summary.profile?.headshot_url ?? null}
@@ -79,7 +79,7 @@ export function SuccessHubHero({ summary }: SuccessHubHeroProps) {
             avatarClassName="h-14 w-14 border-2 border-zinc-100"
             fallbackClassName="border border-zinc-100 bg-white text-neutral-500"
           />
-          <div className="min-w-0 flex-1 space-y-0.5">
+          <div className="min-w-0 flex-1 space-y-1">
             <p className="text-sm font-semibold text-neutral-900">{fullName}</p>
             {summary.profile?.company ? (
               <p className="text-xs text-neutral-500">{summary.profile.company}</p>
@@ -88,7 +88,7 @@ export function SuccessHubHero({ summary }: SuccessHubHeroProps) {
               <p className="text-xs text-neutral-500">{summary.profile.title}</p>
             ) : null}
             {aacShort ? (
-              <p className="pt-1 font-mono text-[11px] text-neutral-400">AAC-{aacShort}</p>
+              <p className="font-mono text-[11px] text-neutral-400">AAC-{aacShort}</p>
             ) : null}
           </div>
         </div>
