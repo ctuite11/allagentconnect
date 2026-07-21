@@ -230,7 +230,7 @@ export default function CommunicationsFeed() {
                         <button
                           type="button"
                           onClick={() => setEmailTarget({ name: r.sender!.name, email: r.sender!.email! })}
-                          className="inline-flex items-center gap-1 text-[#0E56F5] hover:underline"
+                          className="inline-flex items-center gap-1 text-neutral-700 hover:text-neutral-900 hover:underline"
                         >
                           <Mail className="h-3 w-3" />
                           {r.sender.email}
