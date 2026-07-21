@@ -206,7 +206,7 @@ export default function CommunicationsFeed() {
                     <span className="shrink-0 text-[11px] font-medium text-neutral-400">{relativeTime(r.created_at)}</span>
                   </div>
                   {r.message && (
-                    <p className="mt-1 text-[13px] leading-snug text-neutral-700 line-clamp-2 whitespace-pre-wrap">
+                    <p className="mt-1 text-[13px] leading-snug text-neutral-700 whitespace-pre-wrap">
                       {r.message}
                     </p>
                   )}
