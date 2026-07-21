@@ -1551,41 +1551,14 @@ export default function AdminApprovals() {
                   return;
                 }
                 toast.message("Sending Comms Center guide preview to your inbox…");
-                try {
-                  const { data: { session } } = await supabase.auth.getSession();
-                  const token = session?.access_token;
-                  if (!token) {
-                    toast.error("Please sign in again.");
-                    return;
-                  }
-                  const supabaseUrl =
-                    import.meta.env.VITE_SUPABASE_URL ||
-                    (supabase as unknown as { supabaseUrl?: string }).supabaseUrl;
-                  const anonKey =
-                    import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
-                    (supabase as unknown as { supabaseKey?: string }).supabaseKey;
-                  const res = await fetch(
-                    `${supabaseUrl}/functions/v1/send-comms-guide-broadcast`,
-                    {
-                      method: "POST",
-                      headers: {
-                        "Content-Type": "application/json",
-                        apikey: anonKey as string,
-                        Authorization: `Bearer ${token}`,
-                      },
-                      body: JSON.stringify({ testTo: adminEmail }),
-                    },
-                  );
-                  const text = await res.text();
-                  let data: any = null;
-                  try { data = text ? JSON.parse(text) : null; } catch { data = { error: text }; }
-                  if (!res.ok || !data?.ok) {
-                    toast.error(`Failed: ${data?.error ?? res.statusText ?? "Unknown error"}`);
-                  } else {
-                    toast.success(`Preview sent to ${adminEmail}`);
-                  }
-                } catch (e: any) {
-                  toast.error(`Failed: ${e?.message ?? "Unknown error"}`);
+                const { data, error } = await supabase.functions.invoke(
+                  'send-comms-guide-email',
+                  { body: { to: [adminEmail] } },
+                );
+                if (error || !data?.success) {
+                  toast.error(`Failed: ${error?.message ?? data?.error ?? 'Unknown error'}`);
+                } else {
+                  toast.success(`Preview sent to ${adminEmail}`);
                 }
               }}
               className="border-slate-300 text-slate-700 hover:bg-slate-100"
