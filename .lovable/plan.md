@@ -1,17 +1,22 @@
-## Diagnosis
-
-The reordered Email Alert Settings (Geographic → Property Type → Price Range) and the simplified Communications notifications On/Off switch are already live on `/communications`. The remaining place still using the old wording is the **Channels** section at the top of the page — each channel card (Buyer Needs, Sales Intel, Renter Needs, General Discussions) already uses a single Switch, but its status pill still reads **Active / Muted** instead of **On / Off**. That's the "on/off toggle" you're not seeing.
+## Goal
+Communications feed rows clamp the message body to 2 lines. Show the full message text on every row.
 
 ## Change
+`src/pages/CommunicationsFeed.tsx` (~line 209): remove only `line-clamp-2` from the message `<p>`. Keep `whitespace-pre-wrap` so original paragraph/line breaks render.
 
-File: `src/components/NotificationPreferenceCards.tsx`
+Before:
+```tsx
+<p className="mt-1 text-[13px] leading-snug text-neutral-700 line-clamp-2 whitespace-pre-wrap">
+```
 
-- In the status pill next to each channel Switch, replace the `Active` / `Muted` label with `On` / `Off`.
-- No functional change: the same `Switch` writes the same booleans (`buyer_need`, `sales_intel`, `renter_need`, `general_discussion`) via the same upsert. Matching logic, defaults, and the `preferences_set` flag are untouched.
-- Leave the "Mute all" bulk action text as-is unless you want it renamed too (see question below).
+After:
+```tsx
+<p className="mt-1 text-[13px] leading-snug text-neutral-700 whitespace-pre-wrap">
+```
 
-Everything else on the Preferences page stays exactly as it is now.
+## Verification
+Open View All Communications and confirm every row shows the complete message body with original line breaks preserved.
 
-## Question before building
-
-Rename the bulk action **"Mute all"** to **"Turn all off"** for consistency with On/Off? If unsure, I'll leave it as "Mute all".
+## Out of scope
+- Success Hub Network Activity previews (stay compact).
+- Subject truncation, filters, search, contact row, data fetching, styling.

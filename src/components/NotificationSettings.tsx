@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -39,12 +38,15 @@ const NotificationSettings = () => {
       if (data) {
         setPreferences(data);
       } else {
+        // Buyer/consumer surface: only persist `frequency` here. The columns
+        // new_matches_enabled / price_changes_enabled are agent-side (Comms
+        // Center + hot-sheet agent-copy) and must not be written from the
+        // consumer dashboard — a shared row would cross-mute the same user's
+        // agent-side channels.
         const { data: newPrefs, error: createError } = await supabase
           .from("notification_preferences")
           .insert({
             user_id: user.id,
-            new_matches_enabled: true,
-            price_changes_enabled: true,
             frequency: "immediate",
           })
           .select()
@@ -73,8 +75,6 @@ const NotificationSettings = () => {
       const { error } = await supabase
         .from("notification_preferences")
         .update({
-          new_matches_enabled: preferences.new_matches_enabled,
-          price_changes_enabled: preferences.price_changes_enabled,
           frequency: preferences.frequency,
         })
         .eq("id", preferences.id);
@@ -154,40 +154,6 @@ const NotificationSettings = () => {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        <div className="flex items-start justify-between gap-4 border-b border-neutral-100 pb-6">
-          <div className="min-w-0 space-y-1">
-            <Label htmlFor="new-matches" className="text-[15px] font-medium text-neutral-900">
-              New property matches
-            </Label>
-            <p className="text-[13px] leading-snug text-neutral-500">
-              Get notified when new properties match your saved searches
-            </p>
-          </div>
-          <Switch
-            id="new-matches"
-            checked={preferences.new_matches_enabled || false}
-            onCheckedChange={(checked) => setPreferences({ ...preferences, new_matches_enabled: checked })}
-            className="shrink-0 data-[state=checked]:bg-neutral-700"
-          />
-        </div>
-
-        <div className="flex items-start justify-between gap-4 border-b border-neutral-100 pb-6">
-          <div className="min-w-0 space-y-1">
-            <Label htmlFor="price-changes" className="text-[15px] font-medium text-neutral-900">
-              Price changes
-            </Label>
-            <p className="text-[13px] leading-snug text-neutral-500">
-              Get notified when prices change on your saved homes
-            </p>
-          </div>
-          <Switch
-            id="price-changes"
-            checked={preferences.price_changes_enabled || false}
-            onCheckedChange={(checked) => setPreferences({ ...preferences, price_changes_enabled: checked })}
-            className="shrink-0 data-[state=checked]:bg-neutral-700"
-          />
-        </div>
-
         <div className="space-y-2">
           <Label className="text-[13px] font-medium text-neutral-800">Notification frequency</Label>
           <Select

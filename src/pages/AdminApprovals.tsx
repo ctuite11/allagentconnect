@@ -1541,6 +1541,30 @@ export default function AdminApprovals() {
             >
               Email me forwardable invite
             </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={async () => {
+                const adminEmail = user?.email;
+                if (!adminEmail) {
+                  toast.error("No admin email on session");
+                  return;
+                }
+                toast.message("Sending Comms Center guide preview to your inbox…");
+                const { data, error } = await supabase.functions.invoke(
+                  'send-comms-guide-email',
+                  { body: { to: [adminEmail], preview: true } },
+                );
+                if (error || !data?.success) {
+                  toast.error(`Failed: ${error?.message ?? data?.error ?? 'Unknown error'}`);
+                } else {
+                  toast.success(`Preview sent to ${adminEmail}`);
+                }
+              }}
+              className="border-slate-300 text-slate-700 hover:bg-slate-100"
+            >
+              Preview Comms guide email
+            </Button>
             <Button 
               onClick={() => setShowCreateDialog(true)}
               size="sm"
@@ -2053,6 +2077,7 @@ export default function AdminApprovals() {
         open={emailRecipients.length > 0}
         onOpenChange={(open) => !open && setEmailRecipients([])}
         recipients={emailRecipients}
+        onSent={() => setSelectedIds(new Set())}
       />
 
       <CreateAgentDialog

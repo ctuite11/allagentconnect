@@ -194,7 +194,7 @@ function SuccessHubDashboardBody() {
           onCompleteProfile={handleCompleteProfile}
         />
       ) : null}
-      <AgentAacPage className="space-y-6 pb-10">
+      <AgentAacPage className="space-y-8 pb-10">
       {error ? (
         <AgentSectionCard className="border-neutral-200 p-5 shadow-sm hover:border-neutral-200 hover:shadow-sm">
           <p className="text-sm font-medium text-neutral-900">Could not load Success Hub</p>

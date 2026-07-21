@@ -26,6 +26,8 @@ interface EmailAgentDialogProps {
   defaultSubject?: string;
   /** Hide admin-only templates (agent listing contact from result cards). */
   showTemplatePicker?: boolean;
+  /** Fires only after a send fully succeeds and the dialog is about to close. */
+  onSent?: () => void;
 }
 
 export function EmailAgentDialog({
@@ -34,6 +36,7 @@ export function EmailAgentDialog({
   recipients,
   defaultSubject,
   showTemplatePicker = true,
+  onSent,
 }: EmailAgentDialogProps) {
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
@@ -76,7 +79,8 @@ export function EmailAgentDialog({
       template === "early-access-update-v1" ||
       template === "early-access-update-v2" ||
       template === "founding-partner-invitation" ||
-      template === "private-listing-network";
+      template === "private-listing-network" ||
+      template === "comms-center-guide";
     if (!subject.trim() || (!isTemplated && !message.trim())) {
       toast.error("Please fill in both subject and message");
       return;
@@ -95,6 +99,18 @@ export function EmailAgentDialog({
         return;
       }
 
+      // Comms Center guide uses its own dedicated function which enqueues
+      // via email_jobs (bypasses the bulk-outreach pause).
+      if (template === "comms-center-guide") {
+        for (const recipient of currentBatch) {
+          const firstName = (recipient.name || "").trim().split(/\s+/)[0] || null;
+          const { error } = await supabase.functions.invoke("send-comms-guide-email", {
+            body: { to: [recipient.email], agentFirstName: firstName },
+            headers: { Authorization: `Bearer ${accessToken}` },
+          });
+          if (error) throw error;
+        }
+      } else {
       // Single-agent custom message path uses the dedicated agent-contact
       // function so it isn't blocked by the bulk-outreach pause.
       const isSingleCustom =
@@ -132,6 +148,7 @@ export function EmailAgentDialog({
         });
         if (error) throw error;
       }
+      }
 
       const sentCount = currentBatch.length;
       const hasNext = safeBatchIndex + 1 < totalBatches;
@@ -147,6 +164,7 @@ export function EmailAgentDialog({
         setTemplate("custom");
         setBatchSize("all");
         setBatchIndex(0);
+        onSent?.();
         onOpenChange(false);
       }
     } catch (error: any) {
@@ -306,6 +324,9 @@ export function EmailAgentDialog({
                   if (v === "private-listing-network") {
                     setSubject((prev) => prev || "The private listing network where agents share pre-market intelligence");
                   }
+                  if (v === "comms-center-guide") {
+                    setSubject((prev) => prev || "Too many emails? We\u2019ve got you covered.");
+                  }
                 }}
               >
                 <SelectTrigger id="email-template" className="border-slate-200">
@@ -315,6 +336,9 @@ export function EmailAgentDialog({
                   <SelectItem value="custom">Custom message</SelectItem>
                   <SelectItem value="profile-reminder">
                     Complete Your Profile — Reminder
+                  </SelectItem>
+                  <SelectItem value="comms-center-guide">
+                    Comms Center Guide — Reduce Email Noise
                   </SelectItem>
                   <SelectItem value="private-listing-network">
                     Private Listing Network — All Agents (recommended)
@@ -333,7 +357,8 @@ export function EmailAgentDialog({
               {(template === "early-access-update-v1" ||
                 template === "early-access-update-v2" ||
                 template === "founding-partner-invitation" ||
-                template === "private-listing-network") && (
+                template === "private-listing-network" ||
+                template === "comms-center-guide") && (
                 <p className="text-xs text-muted-foreground">
                   Pre-built email featuring product screenshots and short captions. Custom message below is ignored.
                 </p>

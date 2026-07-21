@@ -25,13 +25,11 @@ export function useAgentLastSeen(userId: string | undefined): LastSeenResult {
     }
 
     const fetch = async () => {
-      const { data } = await supabase
-        .from("agent_presence")
-        .select("last_seen_at")
-        .eq("user_id", userId)
-        .maybeSingle();
-
-      setLastSeenAt(data?.last_seen_at ?? null);
+      const { data } = await supabase.rpc("get_agent_presence", {
+        user_ids: [userId],
+      });
+      const row = Array.isArray(data) ? data[0] : null;
+      setLastSeenAt(row?.last_seen_at ?? null);
     };
 
     fetch();
@@ -66,16 +64,15 @@ export function useAgentPresenceBatch(userIds: string[]): Map<string, LastSeenRe
     }
 
     const fetch = async () => {
-      const { data } = await supabase
-        .from("agent_presence")
-        .select("user_id, last_seen_at")
-        .in("user_id", userIds);
+      const { data } = await supabase.rpc("get_agent_presence", {
+        user_ids: userIds,
+      });
 
       const next = new Map<string, LastSeenResult>();
       const now = Date.now();
 
       for (const id of userIds) {
-        const row = data?.find((r) => r.user_id === id);
+        const row = Array.isArray(data) ? data.find((r) => r.user_id === id) : undefined;
         const ls = row?.last_seen_at ?? null;
         next.set(id, {
           lastSeenAt: ls,
