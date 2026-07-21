@@ -61,7 +61,7 @@ export function buildCommsCenterGuideEmailHtml(
         n: 2,
         title: "Set your coverage area",
         desc:
-          "Set a broad scope, or narrow your preferences down to a single county, a specific town, or even one neighborhood. If you leave it empty, you&rsquo;ll hear about everything in your state.",
+          "Set a broad scope, or narrow your preferences down to a single county, a specific town, or even one neighborhood. If you leave it empty, you\u2019ll hear about everything in your state.",
         img: `${IMG_BASE}/comms-coverage.png`,
         alt: "Coverage area picker",
       })}
