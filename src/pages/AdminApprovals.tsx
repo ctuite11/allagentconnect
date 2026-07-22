@@ -694,10 +694,12 @@ export default function AdminApprovals() {
         const lic = licenseByEmail.get(em) ?? a.license_verified_email ?? null;
         const inv = inviteByEmail.get(em) ?? a.invite_email ?? null;
         const reqAt = everRequested.get(em) ?? null;
+        const rem = reminderByEmail.get(em) ?? null;
         return {
           ...a,
           license_verified_email: lic,
           invite_email: inv,
+          last_reminder: rem,
           ever_requested: !!reqAt || a.ever_requested === true,
           requested_access_at: reqAt ?? a.requested_access_at ?? null,
         };
