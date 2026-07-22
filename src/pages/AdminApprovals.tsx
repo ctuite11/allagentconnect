@@ -1925,6 +1925,35 @@ export default function AdminApprovals() {
                           </button>
                         </td>
                         <YesNoCell yes={verified} iso={agent.verified_at} title={yesTitle(agent.verified_at)} />
+                        <td
+                          className="px-3 py-3 align-top text-xs text-zinc-600"
+                          title={agent.verified_at ? new Date(agent.verified_at).toLocaleString() : undefined}
+                        >
+                          {agent.verified_at ? (
+                            <div className="flex flex-col gap-0.5">
+                              <span className="text-zinc-900">
+                                {new Date(agent.verified_at).toLocaleDateString(undefined, {
+                                  year: "numeric",
+                                  month: "short",
+                                  day: "numeric",
+                                })}
+                              </span>
+                              <span className="text-[11px] text-zinc-500">
+                                {(() => {
+                                  const days = Math.floor(
+                                    (Date.now() - new Date(agent.verified_at).getTime()) /
+                                      (1000 * 60 * 60 * 24),
+                                  );
+                                  if (days <= 0) return "today";
+                                  if (days === 1) return "1 day ago";
+                                  return `${days} days ago`;
+                                })()}
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="text-zinc-400">—</span>
+                          )}
+                        </td>
                         <YesNoCell
                           yes={activated}
                           iso={agent.account_activated_at ?? agent.last_sign_in_at ?? null}
