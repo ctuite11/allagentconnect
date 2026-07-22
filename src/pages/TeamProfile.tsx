@@ -548,7 +548,6 @@ const TeamProfile = () => {
           </Card>
         </div>
       </div>
-      <Footer />
     </div>
   );
 };
