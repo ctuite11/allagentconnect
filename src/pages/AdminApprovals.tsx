@@ -154,6 +154,7 @@ type SortField =
   | "company"
   | "last_sign_in_at"
   | "verified"
+  | "verified_at"
   | "account_created"
   | "profile_complete"
   | "online";
@@ -1011,6 +1012,15 @@ export default function AdminApprovals() {
           comparison = av - bv;
           break;
         }
+        case "verified_at": {
+          // Nulls always last in both directions
+          if (!a.verified_at && !b.verified_at) { comparison = 0; break; }
+          if (!a.verified_at) return 1;
+          if (!b.verified_at) return -1;
+          comparison =
+            new Date(a.verified_at).getTime() - new Date(b.verified_at).getTime();
+          break;
+        }
         case "account_created": {
           const av = a.account_activated_at ? 1 : 0;
           const bv = b.account_activated_at ? 1 : 0;
@@ -1837,6 +1847,11 @@ export default function AdminApprovals() {
                       </button>
                     </th>
                     <th className="px-3 py-2 text-left">
+                      <button type="button" onClick={() => handleSort("verified_at")} className="inline-flex items-center hover:text-zinc-900">
+                        Verified On<SortIcon field="verified_at" />
+                      </button>
+                    </th>
+                    <th className="px-3 py-2 text-left">
                       <button type="button" onClick={() => handleSort("account_created")} className="inline-flex items-center hover:text-zinc-900">
                         Activated<SortIcon field="account_created" />
                       </button>
@@ -1910,6 +1925,35 @@ export default function AdminApprovals() {
                           </button>
                         </td>
                         <YesNoCell yes={verified} iso={agent.verified_at} title={yesTitle(agent.verified_at)} />
+                        <td
+                          className="px-3 py-3 align-top text-xs text-zinc-600"
+                          title={agent.verified_at ? new Date(agent.verified_at).toLocaleString() : undefined}
+                        >
+                          {agent.verified_at ? (
+                            <div className="flex flex-col gap-0.5">
+                              <span className="text-zinc-900">
+                                {new Date(agent.verified_at).toLocaleDateString(undefined, {
+                                  year: "numeric",
+                                  month: "short",
+                                  day: "numeric",
+                                })}
+                              </span>
+                              <span className="text-[11px] text-zinc-500">
+                                {(() => {
+                                  const days = Math.floor(
+                                    (Date.now() - new Date(agent.verified_at).getTime()) /
+                                      (1000 * 60 * 60 * 24),
+                                  );
+                                  if (days <= 0) return "today";
+                                  if (days === 1) return "1 day ago";
+                                  return `${days} days ago`;
+                                })()}
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="text-zinc-400">—</span>
+                          )}
+                        </td>
                         <YesNoCell
                           yes={activated}
                           iso={agent.account_activated_at ?? agent.last_sign_in_at ?? null}
