@@ -387,7 +387,9 @@ function AgentPhotoTileGrid({
 
   // Filter and sort agents
   const filteredAgents = useMemo(() => {
-    let result = agents.filter(isVisibleInAgentNetwork);
+    let result = agents.filter(
+      (a) => a.entity_type === "team" || isVisibleInAgentNetwork(a),
+    );
 
     // Visible-field text search only (name, brokerage, email, phone).
     if (searchQuery.trim()) {
@@ -513,9 +515,16 @@ function AgentPhotoTileGrid({
   };
 
   const handleViewProfile = (agentId: string) => {
-    // Find agent to use aac_id for friendly URL
     const agent = agents.find(a => a.id === agentId);
-    navigate(`/agent/${agent?.aac_id || agentId}`, { state: { from: location.pathname + location.search } });
+    if (agent?.entity_type === "team") {
+      navigate(`/team/${agent.team_slug || agent.id}`, {
+        state: { from: location.pathname + location.search },
+      });
+      return;
+    }
+    navigate(`/agent/${agent?.aac_id || agentId}`, {
+      state: { from: location.pathname + location.search },
+    });
   };
 
   return (
