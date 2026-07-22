@@ -1934,6 +1934,11 @@ export default function AdminApprovals() {
                       </button>
                     </th>
                     <th className="px-3 py-2 text-left">
+                      <button type="button" onClick={() => handleSort("last_reminder")} className="inline-flex items-center hover:text-zinc-900">
+                        Last Reminder<SortIcon field="last_reminder" />
+                      </button>
+                    </th>
+                    <th className="px-3 py-2 text-left">
                       <button type="button" onClick={() => handleSort("account_created")} className="inline-flex items-center hover:text-zinc-900">
                         Activated<SortIcon field="account_created" />
                       </button>
