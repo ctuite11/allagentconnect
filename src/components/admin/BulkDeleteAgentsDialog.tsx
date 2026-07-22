@@ -75,7 +75,7 @@ export function BulkDeleteAgentsDialog({
         if (agent.is_early_access) {
           const { data: rowsDeleted, error } = await supabase.rpc(
             "admin_delete_early_access",
-            { p_id: agent.id }
+            { p_id: agent.id, p_email: agent.email }
           );
           if (error) throw error;
           if (!rowsDeleted || rowsDeleted === 0) {

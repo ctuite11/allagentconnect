@@ -268,7 +268,16 @@ Deno.serve(async (req) => {
 
     // Filter out early access entries that already have an agent profile (by email)
     const existingEmails = new Set(agents.map(a => a.email.toLowerCase()))
-    const newEarlyAccess = (earlyAccess || []).filter(ea => !existingEmails.has(ea.email.toLowerCase()))
+    // Verified EA rows without a matching agent_profiles row are stale ghosts
+    // left over after a real-agent deletion (admin_delete_agent used to leave
+    // agent_early_access untouched). Hide them from the admin list so deleted
+    // agents cannot reappear as approval items.
+    const newEarlyAccess = (earlyAccess || []).filter(ea => {
+      const emailLower = (ea.email ?? '').toLowerCase()
+      if (existingEmails.has(emailLower)) return false
+      if ((ea.status ?? '').toLowerCase() === 'verified') return false
+      return true
+    })
 
     // Map early access records to MergedAgent format - RESPECT actual status from DB
     const earlyAccessAgents: MergedAgent[] = newEarlyAccess.map(ea => {
