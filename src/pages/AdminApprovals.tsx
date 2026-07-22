@@ -154,6 +154,7 @@ type SortField =
   | "company"
   | "last_sign_in_at"
   | "verified"
+  | "verified_at"
   | "account_created"
   | "profile_complete"
   | "online";
@@ -1009,6 +1010,15 @@ export default function AdminApprovals() {
           const av = a.agent_status === "verified" ? 1 : 0;
           const bv = b.agent_status === "verified" ? 1 : 0;
           comparison = av - bv;
+          break;
+        }
+        case "verified_at": {
+          // Nulls always last in both directions
+          if (!a.verified_at && !b.verified_at) { comparison = 0; break; }
+          if (!a.verified_at) return 1;
+          if (!b.verified_at) return -1;
+          comparison =
+            new Date(a.verified_at).getTime() - new Date(b.verified_at).getTime();
           break;
         }
         case "account_created": {
