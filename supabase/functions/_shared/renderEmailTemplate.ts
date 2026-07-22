@@ -622,6 +622,46 @@ export function renderEmailTemplate(
       });
     }
 
+    case "team-approved": {
+      const teamName = String(variables.teamName || "your team");
+      const manageUrl = String(variables.manageUrl || "");
+      const publicUrl = String(variables.publicUrl || "");
+      const escape = (s: string) => s
+        .replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;").replaceAll("'", "&#39;");
+      return buildAacEmail({
+        headline: "Your team account is approved",
+        preheader: `${teamName} is live on All Agent Connect.`,
+        body: `
+          <p style="margin:0 0 14px;font-size:15px;color:#0f172a;">Great news — your team account <strong>${escape(teamName)}</strong> has been approved and is live on All Agent Connect.</p>
+          <p style="margin:0 0 14px;font-size:15px;color:#0f172a;">Use the button below to add teammates, upload your team photo, and fine-tune your public profile.</p>
+          ${publicUrl ? `<p style="margin:18px 0 0;font-size:14px;color:#475569;">Prefer to view your public profile first? <a href="${publicUrl}" style="color:#0E56F5;text-decoration:none;">View public team profile</a></p>` : ""}
+        `,
+        ctaLabel: manageUrl ? "Manage your team" : undefined,
+        ctaUrl: manageUrl || undefined,
+      });
+    }
+
+    case "team-rejected": {
+      const teamName = String(variables.teamName || "your team");
+      const requestUrl = String(variables.requestUrl || "");
+      const reason = String(variables.rejectionReason || "");
+      const escape = (s: string) => s
+        .replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;").replaceAll("'", "&#39;");
+      return buildAacEmail({
+        headline: "Your team account needs a few changes",
+        preheader: `A quick update is needed on ${teamName}.`,
+        body: `
+          <p style="margin:0 0 14px;font-size:15px;color:#0f172a;">Thanks for submitting <strong>${escape(teamName)}</strong>. Before we can approve it, we need a few changes:</p>
+          <div style="margin:16px 0;padding:14px 16px;background:#f8fafc;border:1px solid #e5e7eb;border-radius:10px;color:#0f172a;font-size:14px;white-space:pre-wrap;">${escape(reason)}</div>
+          <p style="margin:0;font-size:15px;color:#0f172a;">Use the button below to update your request. Once resubmitted, our team will review it again.</p>
+        `,
+        ctaLabel: requestUrl ? "Update your request" : undefined,
+        ctaUrl: requestUrl || undefined,
+      });
+    }
+
     default:
       // Fail-closed: unknown templates must never render a placeholder body.
       // process-email-queue detects this error and marks the job `failed`

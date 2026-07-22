@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { AgentAvatar } from "@/components/ui/AgentAvatar";
 import { FormattedInput } from "@/components/ui/formatted-input";
 import { toast } from "sonner";
-import { Users, Plus, Trash2, Upload, X, ExternalLink, GripVertical } from "lucide-react";
+import { Users, Plus, Trash2, Upload, X, ExternalLink, GripVertical, Shield } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -40,10 +40,12 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { PageHeader } from "@/components/ui/page-header";
+import { useAuthRole } from "@/hooks/useAuthRole";
 
 const ManageTeam = () => {
   const navigate = useNavigate();
   const { id: routeTeamId } = useParams();
+  const { isAdmin } = useAuthRole();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [team, setTeam] = useState<any>(null);
@@ -470,6 +472,12 @@ const ManageTeam = () => {
               backTo="/agent-profile-editor"
             />
             <div className="flex gap-2">
+              {isAdmin && (
+                <Button onClick={() => navigate("/admin/team-approvals")} variant="outline">
+                  <Shield className="h-4 w-4 mr-2" />
+                  Admin tools
+                </Button>
+              )}
               {team && (
                 <Button onClick={() => navigate(`/team/${team.slug || team.id}`)} variant="outline">
                   <ExternalLink className="h-4 w-4 mr-2" />
