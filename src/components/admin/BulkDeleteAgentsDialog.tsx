@@ -101,7 +101,7 @@ export function BulkDeleteAgentsDialog({
           company: (profile?.company as string | null) ?? null,
           deleted_by: currentUser?.id || null,
           deletion_reason: "Bulk admin deletion",
-          original_data: { agent_profile: profile ?? null },
+          original_data: { agent_profile: (profile ?? null) as unknown } as never,
         };
       });
       await supabase.from("deleted_users").insert(archiveRows);
