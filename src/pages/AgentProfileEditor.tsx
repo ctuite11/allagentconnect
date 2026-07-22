@@ -79,7 +79,7 @@ interface CoverageArea {
 
 const AgentProfileEditor = () => {
   const navigate = useNavigate();
-  const { isVerifiedAgent } = useAuthRole();
+  const { isVerifiedAgent, isAdmin } = useAuthRole();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [redirecting, setRedirecting] = useState(false);
