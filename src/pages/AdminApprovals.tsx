@@ -302,6 +302,22 @@ export default function AdminApprovals() {
   const [loading, setLoading] = useState(true);
   const [sendingSetupLinkFor, setSendingSetupLinkFor] = useState<Set<string>>(new Set());
   const [lastSetupLinkSentAt, setLastSetupLinkSentAt] = useState<Map<string, number>>(new Map());
+  const [pendingTeamsCount, setPendingTeamsCount] = useState<number>(0);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    let cancelled = false;
+    (async () => {
+      const { count } = await supabase
+        .from("teams")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "pending");
+      if (!cancelled) setPendingTeamsCount(count ?? 0);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [isAdmin]);
   
   // DIAGNOSTIC: Debug state for on-page panel
   const [debugInfo, setDebugInfo] = useState<{
