@@ -1557,6 +1557,20 @@ export default function AdminApprovals() {
             <Button
               variant="outline"
               size="sm"
+              onClick={() => navigate('/admin/team-approvals')}
+              className="border-slate-300 text-slate-700 hover:bg-slate-100"
+            >
+              <Users className="h-4 w-4 mr-2" />
+              Team Approvals
+              {pendingTeamsCount > 0 && (
+                <span className="ml-2 inline-flex items-center justify-center rounded-full bg-primary px-2 py-0.5 text-[11px] font-semibold text-primary-foreground">
+                  {pendingTeamsCount}
+                </span>
+              )}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
               onClick={async () => {
                 toast.message("Sending forwardable invite to your inbox…");
                 const { data, error } = await supabase.functions.invoke(
