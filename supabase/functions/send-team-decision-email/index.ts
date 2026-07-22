@@ -65,7 +65,7 @@ serve(async (req) => {
       const { data } = await admin
         .from("agent_profiles")
         .select("email")
-        .eq("user_id", userId)
+        .eq("id", userId)
         .maybeSingle();
       return data?.email || null;
     }
