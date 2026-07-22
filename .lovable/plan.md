@@ -1,55 +1,52 @@
-# Bulk delete confirmation + performance fix
+## Problem
 
-## Are they gone?
+`notify-agents-new-listing` enqueues jobs with `template: "agent-new-listing-alert"`. `renderEmailTemplate.ts` has no case for that template, so it falls through the `default:` branch and renders the literal string `"Email template: agent-new-listing-alert"`. The queue then marks the job `sent`. Confirmed impact: **329 sends in the last 7 days**, most recently a batch to verified agents for `309 E Street, South Boston, MA` on 2026-07-22 at 13:00 UTC.
 
-Yes — verified against the database just now:
+## Fix (4 parts)
 
-- `agent_profiles` rows for AAC-0130, -0127, -0125, -0120, -0117, -0115, -0113 → **0 rows**
-- `agent_early_access` rows for Bridget Fortunate, Jaclyn LeClair, abby Reid, Christie Xie, Matthew Foley, Andrew DaSilva, Stephen Higdon → **0 rows**
-- `auth_user_deletion_queue`: all 23 rows show `status = completed` (last update 03:21 UTC). No pending/abandoned entries.
+### 1. Render `agent-new-listing-alert` properly
 
-All seven agents are fully purged from profiles, early-access, and auth.
+In `supabase/functions/_shared/renderEmailTemplate.ts`, add a dedicated `case "agent-new-listing-alert":` that uses `buildAacEmail` with:
+- Headline: `"New listing in your coverage"`
+- Preheader: address line
+- Body: greeting to `variables.userName`, one-line context, then `variables.listingsHtml` (the pre-rendered listing card the caller already builds via `renderHotSheetMatchListingEmailCard`)
+- CTA: `"View listing"` → `variables.hotSheetLink`
 
-## Why the confirm toast takes ~30s
+No changes to `notify-agents-new-listing`; its payload already carries the right variables.
 
-`BulkDeleteAgentsDialog.handleBulkDelete` processes agents **strictly one at a time** with an `await` loop. For each real agent it runs, sequentially:
+### 2. Fail-closed guard on unknown templates
 
-1. `enqueueVerifiedInactiveAgentRemovalEmail` (edge function)
-2. `SELECT` from `agent_profiles`
-3. `INSERT` into `deleted_users`
-4. `admin_delete_agent` RPC
-5. `delete-users` edge function
+Replace the silent `default:` fallback in `renderEmailTemplate.ts` with a thrown error:
 
-That's ~5 round trips × 7 agents ≈ 35 sequential network calls before the toast fires. Cold-starting the two edge functions on the first couple of agents adds another few seconds. 30s is expected under the current code.
+```ts
+default:
+  throw new Error(`Unsupported email template: ${template}`);
+```
 
-## Fix
+In `process-email-queue/index.ts`, catch that error in the per-job try/block and mark the job `failed` (not retried, not `sent`) with `last_error = "Unsupported email template: <name>"`. Do not consume attempts against Resend for these — they should short-circuit before send.
 
-Refactor `src/components/admin/BulkDeleteAgentsDialog.tsx` so the batch completes in one or two round trips instead of ~35.
+Add a small allow-list check at enqueue time is out of scope; the renderer + worker guard is the authoritative gate.
 
-Approach:
+### 3. Audit the 329 affected sends
 
-1. **Parallelize the per-agent DB prep** with `Promise.allSettled` over all agents:
-   - fetch profiles (single `.in('id', ids)` query instead of N `.single()` calls)
-   - insert archive rows (single bulk `insert([...])`)
-   - fire `enqueueVerifiedInactiveAgentRemovalEmail` for all agents in parallel (non-blocking, best-effort as today)
-   - call `admin_delete_agent` per agent in parallel (RPC is per-id; `Promise.allSettled` is fine — it already handles its own transaction)
-   - call `admin_delete_early_access` per early-access agent in parallel
+Produce a CSV export at `/mnt/documents/agent-new-listing-alert-audit.csv` with: `created_at`, `recipient`, `subject`, `listing_id` (from `payload->metadata->>listing_id`), `agent_id`, `status_at_send`. Deduplicate by recipient+listing. Report totals (unique recipients, unique listings, date range) in chat so you can decide next steps.
 
-2. **Collapse auth cleanup into a single `delete-users` invocation** for the whole batch:
-   - Pass `{ userIds: [...canonicalAuthIds], emails: [...allEmails] }` once
-   - Read per-target `results[]` from the response to compute `fullCount` / `partialCount` / `partialEmails`
-   - The edge function already handles per-target success/failure and queue drain, so one call replaces N.
+No auto-resend. Deciding whether/how to notify affected agents is a separate step after you review the audit.
 
-3. **Progress bar**: switch from "n/agents" step counter to a two-phase indicator (prep → auth cleanup) since work is no longer strictly serial. Keep the existing toast copy.
+### 4. Verification
 
-4. **No behavior change** to what gets deleted, safety checks, archiving, or the outbox retry path — only the ordering/batching of the calls the browser makes.
+- Redeploy `process-email-queue` (renderer is imported by it).
+- Trigger `notify-agents-new-listing` with `dry_run:false` on a test listing to a single test recipient; confirm the email renders with the listing card and CTA, and that `email_send_log`/`email_events` show `sent`.
+- Enqueue a synthetic job with `template: "bogus-template"` and confirm it lands as `failed` with the `Unsupported email template` error and no Resend call.
 
-## Files to edit
+## Files touched
 
-- `src/components/admin/BulkDeleteAgentsDialog.tsx` — refactor `handleBulkDelete` as above.
+- `supabase/functions/_shared/renderEmailTemplate.ts` — new case + throw on default
+- `supabase/functions/process-email-queue/index.ts` — catch unsupported-template error → mark `failed`, skip Resend
+- (audit only) query + CSV to `/mnt/documents/`, no code change
 
-No schema, RPC, or edge-function changes required. Single-agent `DeleteAgentDialog` stays as-is (already fast enough for one row).
+## Out of scope
 
-## Expected result
-
-A 7-agent bulk delete should complete in roughly 2–4 seconds instead of ~30, with the same guarantees and the same toast messaging.
+- Redesigning the listing card
+- Automatic resend to the 329 recipients
+- Changes to `notify-agents-new-listing` logic, audiences, or dedup
