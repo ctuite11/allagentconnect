@@ -108,6 +108,11 @@ interface Agent {
   approval_email_sent?: boolean | null;
   invite_email?: EmailStatusInfo | null;
   license_verified_email?: EmailStatusInfo | null;
+  last_reminder?: {
+    sent_at: string;
+    template: string;
+    status: string;
+  } | null;
   profile_complete?: boolean;
   headshot_url?: string | null;
   // Historical signal — this email ever had a pending_verifications row,
@@ -157,7 +162,8 @@ type SortField =
   | "verified_at"
   | "account_created"
   | "profile_complete"
-  | "online";
+  | "online"
+  | "last_reminder";
 type SortDirection = "asc" | "desc";
 
 function risksForAgent(a: Agent): Risk[] {
