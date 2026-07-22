@@ -55,6 +55,8 @@ interface EnrichedAgent {
   buyerMatchCount: number;
   serviceAreas: string[];
   specialties: string[];
+  entity_type?: "agent" | "team";
+  team_slug?: string;
 }
 
 const DEFAULT_PAGE_SIZE: AgentDirectoryPageSize = 48;
