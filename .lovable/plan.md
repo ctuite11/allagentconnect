@@ -1,24 +1,25 @@
-## Context
+## Plan
 
-Josh Stiles' team request exists in `public.teams` as `Stiles Team` (`status=pending`, created 2026-07-22 13:11 UTC). The approvals UI lives at `/admin/team-approvals` (`src/pages/AdminTeamApprovals.tsx`) and works — but there is no link to it from the main Admin Approvals page, so admins have no way to reach it from the nav.
+Fix the mobile Admin Approvals header so the team approval entry point is visible on a phone.
 
-The zero-count on the Pending tab is a separate concern; on this turn we're only adding the entry point per your instruction.
+### Changes
 
-## Change
+1. **Mobile-friendly admin toolbar**
+   - Change the signed-in/admin action bar from a single horizontal row to a responsive layout.
+   - On mobile, stack/wrap the actions so **Team Approvals** is not pushed off-screen.
+   - Keep the current desktop layout visually unchanged as much as possible.
 
-In `src/pages/AdminApprovals.tsx` header actions row, add a **"Team Approvals"** button (outline, `Users` icon) that navigates to `/admin/team-approvals`. Show a small count badge next to the label when there are pending teams.
+2. **Prioritize Team Approvals**
+   - Keep **Team Approvals** near the front of the toolbar.
+   - Give it enough width on mobile so the label and pending count badge are readable.
 
-- Fetch pending count once on mount:
-  ```ts
-  supabase.from("teams").select("id", { count: "exact", head: true }).eq("status", "pending")
-  ```
-- Badge only renders when `count > 0`.
-- Button sits alongside the existing Export / Preview email actions in the header toolbar so it's discoverable without disturbing the current layout.
+3. **Keep existing behavior**
+   - Button still routes to `/admin/team-approvals`.
+   - Pending count badge still displays when count is greater than 0.
+   - No schema changes and no approval logic changes.
 
-No other files change. No schema changes.
+### Verification
 
-## Verify
-
-1. Load `/admin/approvals` as admin → see **Team Approvals · 1** button.
-2. Click → lands on `/admin/team-approvals`; Stiles Team is visible in Pending; Approve / Reject work as today.
-3. After approving, return to `/admin/approvals` → badge disappears on reload.
+- Open `/admin/approvals` at mobile width.
+- Confirm the **Team Approvals** button is visible without horizontal scrolling.
+- Tap it and confirm it lands on `/admin/team-approvals`.
