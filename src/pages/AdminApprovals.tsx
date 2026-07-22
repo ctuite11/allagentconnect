@@ -108,6 +108,11 @@ interface Agent {
   approval_email_sent?: boolean | null;
   invite_email?: EmailStatusInfo | null;
   license_verified_email?: EmailStatusInfo | null;
+  last_reminder?: {
+    sent_at: string;
+    template: string;
+    status: string;
+  } | null;
   profile_complete?: boolean;
   headshot_url?: string | null;
   // Historical signal — this email ever had a pending_verifications row,
@@ -157,7 +162,8 @@ type SortField =
   | "verified_at"
   | "account_created"
   | "profile_complete"
-  | "online";
+  | "online"
+  | "last_reminder";
 type SortDirection = "asc" | "desc";
 
 function risksForAgent(a: Agent): Risk[] {
@@ -582,6 +588,10 @@ export default function AdminApprovals() {
 
       const licenseByEmail = new Map<string, EmailStatusInfo>();
       const inviteByEmail = new Map<string, EmailStatusInfo>();
+      const reminderByEmail = new Map<
+        string,
+        { sent_at: string; template: string; status: string }
+      >();
       const everRequested = new Map<string, string>(); // email -> earliest created_at
 
       if (normEmails.length > 0) {
@@ -591,7 +601,11 @@ export default function AdminApprovals() {
             .select(
               "payload, status, delivery_status, delivery_status_at, created_at, last_error, attempts",
             )
-            .in("payload->>template", ["license-verified", "agent-invite"])
+            .in("payload->>template", [
+              "license-verified",
+              "agent-invite",
+              "agent-missing-opportunities",
+            ])
             .order("created_at", { ascending: false })
             .limit(2000);
 
@@ -634,9 +648,24 @@ export default function AdminApprovals() {
                 : template === "agent-invite"
                   ? inviteByEmail
                   : null;
-            if (!target) continue;
-            // rows are ordered newest first; keep the first (newest) per email
-            if (!target.has(to)) target.set(to, toStatus(row));
+            if (target && !target.has(to)) target.set(to, toStatus(row));
+
+            // Track the newest reminder across all three templates so the
+            // "Last Reminder" column can surface stale accounts.
+            if (
+              template === "license-verified" ||
+              template === "agent-invite" ||
+              template === "agent-missing-opportunities"
+            ) {
+              if (!reminderByEmail.has(to)) {
+                const status = toStatus(row);
+                reminderByEmail.set(to, {
+                  sent_at: row.created_at,
+                  template,
+                  status: status.status,
+                });
+              }
+            }
           }
         } catch (e) {
           console.warn("[AdminApprovals] email_jobs enrichment failed:", e);
@@ -665,10 +694,12 @@ export default function AdminApprovals() {
         const lic = licenseByEmail.get(em) ?? a.license_verified_email ?? null;
         const inv = inviteByEmail.get(em) ?? a.invite_email ?? null;
         const reqAt = everRequested.get(em) ?? null;
+        const rem = reminderByEmail.get(em) ?? null;
         return {
           ...a,
           license_verified_email: lic,
           invite_email: inv,
+          last_reminder: rem,
           ever_requested: !!reqAt || a.ever_requested === true,
           requested_access_at: reqAt ?? a.requested_access_at ?? null,
         };
@@ -1059,6 +1090,21 @@ export default function AdminApprovals() {
           const av = presenceMap.get(a.id)?.isOnline ? 1 : 0;
           const bv = presenceMap.get(b.id)?.isOnline ? 1 : 0;
           comparison = av - bv;
+          break;
+        }
+        case "last_reminder": {
+          // Nulls always last in both directions so "Never" surfaces as the
+          // most-overdue bucket when the admin flips to ascending.
+          const at = a.last_reminder?.sent_at
+            ? new Date(a.last_reminder.sent_at).getTime()
+            : null;
+          const bt = b.last_reminder?.sent_at
+            ? new Date(b.last_reminder.sent_at).getTime()
+            : null;
+          if (at === null && bt === null) { comparison = 0; break; }
+          if (at === null) return 1;
+          if (bt === null) return -1;
+          comparison = at - bt;
           break;
         }
         case "created_at":
@@ -1888,6 +1934,11 @@ export default function AdminApprovals() {
                       </button>
                     </th>
                     <th className="px-3 py-2 text-left">
+                      <button type="button" onClick={() => handleSort("last_reminder")} className="inline-flex items-center hover:text-zinc-900">
+                        Last Reminder<SortIcon field="last_reminder" />
+                      </button>
+                    </th>
+                    <th className="px-3 py-2 text-left">
                       <button type="button" onClick={() => handleSort("account_created")} className="inline-flex items-center hover:text-zinc-900">
                         Activated<SortIcon field="account_created" />
                       </button>
@@ -1988,6 +2039,39 @@ export default function AdminApprovals() {
                             </div>
                           ) : (
                             <span className="text-zinc-400">—</span>
+                          )}
+                        </td>
+                        <td
+                          className="px-3 py-3 align-top text-xs text-zinc-600"
+                          title={
+                            agent.last_reminder
+                              ? `${agent.last_reminder.template} • ${agent.last_reminder.status} • ${new Date(agent.last_reminder.sent_at).toLocaleString()}`
+                              : "No reminder email on record"
+                          }
+                        >
+                          {agent.last_reminder ? (
+                            <div className="flex flex-col gap-0.5">
+                              <span className="text-zinc-900">
+                                {new Date(agent.last_reminder.sent_at).toLocaleDateString(undefined, {
+                                  year: "numeric",
+                                  month: "short",
+                                  day: "numeric",
+                                })}
+                              </span>
+                              <span className="text-[11px] text-zinc-500">
+                                {(() => {
+                                  const days = Math.floor(
+                                    (Date.now() - new Date(agent.last_reminder.sent_at).getTime()) /
+                                      (1000 * 60 * 60 * 24),
+                                  );
+                                  if (days <= 0) return "today";
+                                  if (days === 1) return "1 day ago";
+                                  return `${days} days ago`;
+                                })()}
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="text-zinc-400">Never</span>
                           )}
                         </td>
                         <YesNoCell
