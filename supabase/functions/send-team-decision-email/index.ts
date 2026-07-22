@@ -1,6 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { buildAacEmail } from "../_shared/aacEmailTemplate.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -11,15 +10,6 @@ interface Payload {
   teamId: string;
   decision: "approved" | "rejected";
   rejectionReason?: string;
-}
-
-function escapeHtml(s: string): string {
-  return s
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
 }
 
 function json(status: number, body: unknown) {
@@ -102,54 +92,22 @@ serve(async (req) => {
     let subject: string;
     let template: string;
     let idempotencyKey: string;
-    let body: string;
-    let ctaLabel: string;
-    let ctaUrl: string;
-    let headline: string;
-    let preheader: string;
+    let variables: Record<string, unknown>;
 
     if (decision === "approved") {
       subject = `Your team account "${teamName}" is approved`;
       template = "team-approved";
       idempotencyKey = `team-approved:${team.id}`;
-      headline = "Your team account is approved";
-      preheader = `${teamName} is live on All Agent Connect.`;
-      ctaLabel = "Manage your team";
-      ctaUrl = manageUrl;
-      body = `
-        <p style="margin:0 0 14px;font-size:15px;color:#0f172a;">Great news — your team account <strong>${escapeHtml(teamName)}</strong> has been approved and is live on All Agent Connect.</p>
-        <p style="margin:0 0 14px;font-size:15px;color:#0f172a;">Use the button below to add teammates, upload your team photo, and fine-tune your public profile.</p>
-        <p style="margin:18px 0 0;font-size:14px;color:#475569;">
-          Prefer to view your public profile first?
-          <a href="${publicUrl}" style="color:#0E56F5;text-decoration:none;">View public team profile</a>
-        </p>
-      `;
+      variables = { teamName, manageUrl, publicUrl };
     } else {
       subject = `Your team account request needs changes`;
       template = "team-rejected";
-      // include short hash of reason so a resubmission can re-send
       const reasonHash = Array.from(rejectionReason!.trim())
         .reduce((h, c) => (h * 31 + c.charCodeAt(0)) & 0xffffffff, 0)
         .toString(36);
       idempotencyKey = `team-rejected:${team.id}:${reasonHash}`;
-      headline = "Your team account needs a few changes";
-      preheader = `A quick update is needed on ${teamName}.`;
-      ctaLabel = "Update your request";
-      ctaUrl = requestUrl;
-      body = `
-        <p style="margin:0 0 14px;font-size:15px;color:#0f172a;">Thanks for submitting <strong>${escapeHtml(teamName)}</strong>. Before we can approve it, we need a few changes:</p>
-        <div style="margin:16px 0;padding:14px 16px;background:#f8fafc;border:1px solid #e5e7eb;border-radius:10px;color:#0f172a;font-size:14px;white-space:pre-wrap;">${escapeHtml(rejectionReason!)}</div>
-        <p style="margin:0;font-size:15px;color:#0f172a;">Use the button below to update your request. Once resubmitted, our team will review it again.</p>
-      `;
+      variables = { teamName, requestUrl, rejectionReason };
     }
-
-    const html = buildAacEmail({
-      headline,
-      body,
-      ctaLabel,
-      ctaUrl,
-      preheader,
-    });
 
     const { error: insertErr } = await admin.from("email_jobs").insert({
       payload: {
@@ -157,7 +115,7 @@ serve(async (req) => {
         template,
         to: recipient,
         subject,
-        variables: { contentHtml: html },
+        variables,
         idempotency_key: idempotencyKey,
       },
     });
