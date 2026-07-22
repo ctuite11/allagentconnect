@@ -1092,6 +1092,21 @@ export default function AdminApprovals() {
           comparison = av - bv;
           break;
         }
+        case "last_reminder": {
+          // Nulls always last in both directions so "Never" surfaces as the
+          // most-overdue bucket when the admin flips to ascending.
+          const at = a.last_reminder?.sent_at
+            ? new Date(a.last_reminder.sent_at).getTime()
+            : null;
+          const bt = b.last_reminder?.sent_at
+            ? new Date(b.last_reminder.sent_at).getTime()
+            : null;
+          if (at === null && bt === null) { comparison = 0; break; }
+          if (at === null) return 1;
+          if (bt === null) return -1;
+          comparison = at - bt;
+          break;
+        }
         case "created_at":
         default:
           comparison = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
