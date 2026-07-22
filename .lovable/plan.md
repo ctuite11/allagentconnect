@@ -1,35 +1,55 @@
-## Audit result
+# Bulk delete confirmation + performance fix
 
-Alice Miles's status (verified, `account_activated_at IS NULL`, no headshot, no bio, no `last_seen_at`) matches **69 other agents** currently in the system. Every one of them has an empty profile shell — no headshot, no bio, no recorded sign-in.
+## Are they gone?
 
-### Age buckets (days since verification)
+Yes — verified against the database just now:
 
-```text
-Days since verified   Count   Notable AAC range
-────────────────────────────────────────────────
-23 days (2026-06-29)   28     AAC-0100 → AAC-0166
-17–19 days             10     AAC-0197 → AAC-0213
-10–15 days             13     AAC-0222 → AAC-0257
- 8–9  days              6     AAC-0265 → AAC-0280
- 4–5  days              3     AAC-0286, 0290, plus Ryan Shannon
- 0–2  days              9     AAC-0293 → AAC-0305
-```
+- `agent_profiles` rows for AAC-0130, -0127, -0125, -0120, -0117, -0115, -0113 → **0 rows**
+- `agent_early_access` rows for Bridget Fortunate, Jaclyn LeClair, abby Reid, Christie Xie, Matthew Foley, Andrew DaSilva, Stephen Higdon → **0 rows**
+- `auth_user_deletion_queue`: all 23 rows show `status = completed` (last update 03:21 UTC). No pending/abandoned entries.
 
-Oldest cohort (23 days, 28 agents) has had over 3 weeks to activate and hasn't. Newest cohort (0–2 days) has barely had a chance.
+All seven agents are fully purged from profiles, early-access, and auth.
 
-## What I need from you
+## Why the confirm toast takes ~30s
 
-Pick a deletion threshold and I'll run the same hardened deletion path used for Alice (removal email → `delete-users` edge fn → verify `agent_profiles` / `agent_settings` / `pending_verifications` cleared → auth queued):
+`BulkDeleteAgentsDialog.handleBulkDelete` processes agents **strictly one at a time** with an `await` loop. For each real agent it runs, sequentially:
 
-1. **Delete only the 23-day cohort** (28 agents, verified 2026-06-29) — most conservative
-2. **Delete everyone ≥14 days since verified** (~41 agents)
-3. **Delete everyone ≥7 days since verified** (~60 agents)
-4. **Custom threshold** — tell me the day count
-5. **Send one more resend-setup email** to the oldest cohort first, then delete non-responders in ~3 days
+1. `enqueueVerifiedInactiveAgentRemovalEmail` (edge function)
+2. `SELECT` from `agent_profiles`
+3. `INSERT` into `deleted_users`
+4. `admin_delete_agent` RPC
+5. `delete-users` edge function
 
-For any option I'll show you the final list before executing, and skip anyone you want spared.
+That's ~5 round trips × 7 agents ≈ 35 sequential network calls before the toast fires. Cold-starting the two edge functions on the first couple of agents adds another few seconds. 30s is expected under the current code.
 
-### Technical notes
-- Same query as Alice's audit: `agent_profiles` LEFT JOIN `agent_settings` WHERE `account_activated_at IS NULL`.
-- Deletion path is idempotent and already handles the "verified but never activated → no `deleted_users` archive row" case, matching Alice.
-- No code changes needed — this is a data operation only.
+## Fix
+
+Refactor `src/components/admin/BulkDeleteAgentsDialog.tsx` so the batch completes in one or two round trips instead of ~35.
+
+Approach:
+
+1. **Parallelize the per-agent DB prep** with `Promise.allSettled` over all agents:
+   - fetch profiles (single `.in('id', ids)` query instead of N `.single()` calls)
+   - insert archive rows (single bulk `insert([...])`)
+   - fire `enqueueVerifiedInactiveAgentRemovalEmail` for all agents in parallel (non-blocking, best-effort as today)
+   - call `admin_delete_agent` per agent in parallel (RPC is per-id; `Promise.allSettled` is fine — it already handles its own transaction)
+   - call `admin_delete_early_access` per early-access agent in parallel
+
+2. **Collapse auth cleanup into a single `delete-users` invocation** for the whole batch:
+   - Pass `{ userIds: [...canonicalAuthIds], emails: [...allEmails] }` once
+   - Read per-target `results[]` from the response to compute `fullCount` / `partialCount` / `partialEmails`
+   - The edge function already handles per-target success/failure and queue drain, so one call replaces N.
+
+3. **Progress bar**: switch from "n/agents" step counter to a two-phase indicator (prep → auth cleanup) since work is no longer strictly serial. Keep the existing toast copy.
+
+4. **No behavior change** to what gets deleted, safety checks, archiving, or the outbox retry path — only the ordering/batching of the calls the browser makes.
+
+## Files to edit
+
+- `src/components/admin/BulkDeleteAgentsDialog.tsx` — refactor `handleBulkDelete` as above.
+
+No schema, RPC, or edge-function changes required. Single-agent `DeleteAgentDialog` stays as-is (already fast enough for one row).
+
+## Expected result
+
+A 7-agent bulk delete should complete in roughly 2–4 seconds instead of ~30, with the same guarantees and the same toast messaging.
