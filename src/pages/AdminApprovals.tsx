@@ -970,17 +970,23 @@ export default function AdminApprovals() {
       }
     }
 
-    // Search
+    // Search — identity fields only (not brokerage, status, notes, etc.)
     if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      result = result.filter(
-        (a) =>
-          a.first_name.toLowerCase().includes(q) ||
-          a.last_name.toLowerCase().includes(q) ||
-          a.email.toLowerCase().includes(q) ||
-          (a.company && a.company.toLowerCase().includes(q)) ||
-          a.aac_id.toLowerCase().includes(q)
-      );
+      const q = searchQuery.trim().toLowerCase();
+      result = result.filter((a) => {
+        const first = (a.first_name ?? "").toLowerCase();
+        const last = (a.last_name ?? "").toLowerCase();
+        const fullName = `${first} ${last}`.trim();
+        const email = (a.email ?? "").toLowerCase();
+        const aacId = (a.aac_id ?? "").toLowerCase();
+        return (
+          first.includes(q) ||
+          last.includes(q) ||
+          fullName.includes(q) ||
+          email.includes(q) ||
+          aacId.includes(q)
+        );
+      });
     }
 
     // Sort
@@ -1606,7 +1612,7 @@ export default function AdminApprovals() {
               <div className="relative flex-1 max-w-sm">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search name, email, company, AAC ID..."
+                  placeholder="Search name, email, AAC ID…"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-9 border-0 bg-[#FAFAF8] rounded-xl focus-visible:ring-0 focus-visible:ring-offset-0 outline-none"
