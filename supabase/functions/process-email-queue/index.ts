@@ -1,6 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import type { EmailJob } from "../_shared/emailTypes.ts";
 import { sendEmail } from "../_shared/sendEmail.ts";
+import { UNSUPPORTED_TEMPLATE_ERROR_PREFIX } from "../_shared/renderEmailTemplate.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -260,7 +261,14 @@ Deno.serve(async (req) => {
               msg,
             );
 
-            if (nextAttempt < maxAttempts) {
+            // Fail-closed: unrenderable template = terminal failure. Never
+            // retry (payload is broken, not transient) and never let a
+            // subsequent attempt fall through to a placeholder body.
+            const isUnsupportedTemplate = msg.startsWith(
+              UNSUPPORTED_TEMPLATE_ERROR_PREFIX,
+            );
+
+            if (!isUnsupportedTemplate && nextAttempt < maxAttempts) {
               const backoffSec = computeBackoffSeconds(attemptsSoFar);
               const runAfter = new Date(
                 Date.now() + backoffSec * 1000,
@@ -289,7 +297,11 @@ Deno.serve(async (req) => {
               await safeUpdateJob(
                 job.id,
                 { status: "failed", last_error: msg },
-                { stage: "terminal_fail" },
+                {
+                  stage: isUnsupportedTemplate
+                    ? "unsupported_template"
+                    : "terminal_fail",
+                },
               );
 
               await logEvent(job.id, "failed", {
@@ -300,6 +312,7 @@ Deno.serve(async (req) => {
                 next_attempt: nextAttempt,
                 max_attempts: maxAttempts,
                 duration_ms: Date.now() - startedAt,
+                unsupported_template: isUnsupportedTemplate || undefined,
               });
 
               failed++;
