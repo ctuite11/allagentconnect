@@ -588,6 +588,10 @@ export default function AdminApprovals() {
 
       const licenseByEmail = new Map<string, EmailStatusInfo>();
       const inviteByEmail = new Map<string, EmailStatusInfo>();
+      const reminderByEmail = new Map<
+        string,
+        { sent_at: string; template: string; status: string }
+      >();
       const everRequested = new Map<string, string>(); // email -> earliest created_at
 
       if (normEmails.length > 0) {
@@ -597,7 +601,11 @@ export default function AdminApprovals() {
             .select(
               "payload, status, delivery_status, delivery_status_at, created_at, last_error, attempts",
             )
-            .in("payload->>template", ["license-verified", "agent-invite"])
+            .in("payload->>template", [
+              "license-verified",
+              "agent-invite",
+              "agent-missing-opportunities",
+            ])
             .order("created_at", { ascending: false })
             .limit(2000);
 
@@ -640,9 +648,24 @@ export default function AdminApprovals() {
                 : template === "agent-invite"
                   ? inviteByEmail
                   : null;
-            if (!target) continue;
-            // rows are ordered newest first; keep the first (newest) per email
-            if (!target.has(to)) target.set(to, toStatus(row));
+            if (target && !target.has(to)) target.set(to, toStatus(row));
+
+            // Track the newest reminder across all three templates so the
+            // "Last Reminder" column can surface stale accounts.
+            if (
+              template === "license-verified" ||
+              template === "agent-invite" ||
+              template === "agent-missing-opportunities"
+            ) {
+              if (!reminderByEmail.has(to)) {
+                const status = toStatus(row);
+                reminderByEmail.set(to, {
+                  sent_at: row.created_at,
+                  template,
+                  status: status.status,
+                });
+              }
+            }
           }
         } catch (e) {
           console.warn("[AdminApprovals] email_jobs enrichment failed:", e);
