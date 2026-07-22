@@ -606,12 +606,32 @@ export function renderEmailTemplate(
       });
     }
 
-    default:
+    case "agent-new-listing-alert": {
+      const userName = String(variables.userName || "there").trim() || "there";
+      const listingsHtml = variables.listingsHtml || "";
+      const ctaUrl = String(variables.hotSheetLink || "");
       return buildAacEmail({
-        headline: "",
-        body: variables.contentHtml ||
-          variables.message ||
-          `<p style="margin:0;">Email template: ${template}</p>`,
+        headline: "New listing in your coverage",
+        preheader: "A new listing matches your coverage area preferences.",
+        body: `
+          <p style="margin:0 0 12px;">Hi ${userName},</p>
+          <p style="margin:0 0 18px;">A new listing just hit the market that matches your coverage area and preferences:</p>
+          ${listingsHtml}`,
+        ctaLabel: ctaUrl ? "View listing" : undefined,
+        ctaUrl: ctaUrl || undefined,
       });
+    }
+
+    default:
+      // Fail-closed: unknown templates must never render a placeholder body.
+      // process-email-queue detects this error and marks the job `failed`
+      // without calling Resend or consuming retry attempts.
+      throw new Error(`Unsupported email template: ${template}`);
   }
 }
+
+/**
+ * Sentinel prefix used by process-email-queue to detect unrenderable templates
+ * and short-circuit the job to `failed` (no Resend send, no retries).
+ */
+export const UNSUPPORTED_TEMPLATE_ERROR_PREFIX = "Unsupported email template:";
