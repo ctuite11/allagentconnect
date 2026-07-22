@@ -1,52 +1,24 @@
-## Problem
+## Context
 
-`notify-agents-new-listing` enqueues jobs with `template: "agent-new-listing-alert"`. `renderEmailTemplate.ts` has no case for that template, so it falls through the `default:` branch and renders the literal string `"Email template: agent-new-listing-alert"`. The queue then marks the job `sent`. Confirmed impact: **329 sends in the last 7 days**, most recently a batch to verified agents for `309 E Street, South Boston, MA` on 2026-07-22 at 13:00 UTC.
+Josh Stiles' team request exists in `public.teams` as `Stiles Team` (`status=pending`, created 2026-07-22 13:11 UTC). The approvals UI lives at `/admin/team-approvals` (`src/pages/AdminTeamApprovals.tsx`) and works — but there is no link to it from the main Admin Approvals page, so admins have no way to reach it from the nav.
 
-## Fix (4 parts)
+The zero-count on the Pending tab is a separate concern; on this turn we're only adding the entry point per your instruction.
 
-### 1. Render `agent-new-listing-alert` properly
+## Change
 
-In `supabase/functions/_shared/renderEmailTemplate.ts`, add a dedicated `case "agent-new-listing-alert":` that uses `buildAacEmail` with:
-- Headline: `"New listing in your coverage"`
-- Preheader: address line
-- Body: greeting to `variables.userName`, one-line context, then `variables.listingsHtml` (the pre-rendered listing card the caller already builds via `renderHotSheetMatchListingEmailCard`)
-- CTA: `"View listing"` → `variables.hotSheetLink`
+In `src/pages/AdminApprovals.tsx` header actions row, add a **"Team Approvals"** button (outline, `Users` icon) that navigates to `/admin/team-approvals`. Show a small count badge next to the label when there are pending teams.
 
-No changes to `notify-agents-new-listing`; its payload already carries the right variables.
+- Fetch pending count once on mount:
+  ```ts
+  supabase.from("teams").select("id", { count: "exact", head: true }).eq("status", "pending")
+  ```
+- Badge only renders when `count > 0`.
+- Button sits alongside the existing Export / Preview email actions in the header toolbar so it's discoverable without disturbing the current layout.
 
-### 2. Fail-closed guard on unknown templates
+No other files change. No schema changes.
 
-Replace the silent `default:` fallback in `renderEmailTemplate.ts` with a thrown error:
+## Verify
 
-```ts
-default:
-  throw new Error(`Unsupported email template: ${template}`);
-```
-
-In `process-email-queue/index.ts`, catch that error in the per-job try/block and mark the job `failed` (not retried, not `sent`) with `last_error = "Unsupported email template: <name>"`. Do not consume attempts against Resend for these — they should short-circuit before send.
-
-Add a small allow-list check at enqueue time is out of scope; the renderer + worker guard is the authoritative gate.
-
-### 3. Audit the 329 affected sends
-
-Produce a CSV export at `/mnt/documents/agent-new-listing-alert-audit.csv` with: `created_at`, `recipient`, `subject`, `listing_id` (from `payload->metadata->>listing_id`), `agent_id`, `status_at_send`. Deduplicate by recipient+listing. Report totals (unique recipients, unique listings, date range) in chat so you can decide next steps.
-
-No auto-resend. Deciding whether/how to notify affected agents is a separate step after you review the audit.
-
-### 4. Verification
-
-- Redeploy `process-email-queue` (renderer is imported by it).
-- Trigger `notify-agents-new-listing` with `dry_run:false` on a test listing to a single test recipient; confirm the email renders with the listing card and CTA, and that `email_send_log`/`email_events` show `sent`.
-- Enqueue a synthetic job with `template: "bogus-template"` and confirm it lands as `failed` with the `Unsupported email template` error and no Resend call.
-
-## Files touched
-
-- `supabase/functions/_shared/renderEmailTemplate.ts` — new case + throw on default
-- `supabase/functions/process-email-queue/index.ts` — catch unsupported-template error → mark `failed`, skip Resend
-- (audit only) query + CSV to `/mnt/documents/`, no code change
-
-## Out of scope
-
-- Redesigning the listing card
-- Automatic resend to the 329 recipients
-- Changes to `notify-agents-new-listing` logic, audiences, or dedup
+1. Load `/admin/approvals` as admin → see **Team Approvals · 1** button.
+2. Click → lands on `/admin/team-approvals`; Stiles Team is visible in Pending; Approve / Reject work as today.
+3. After approving, return to `/admin/approvals` → badge disappears on reload.

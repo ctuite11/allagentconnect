@@ -302,6 +302,22 @@ export default function AdminApprovals() {
   const [loading, setLoading] = useState(true);
   const [sendingSetupLinkFor, setSendingSetupLinkFor] = useState<Set<string>>(new Set());
   const [lastSetupLinkSentAt, setLastSetupLinkSentAt] = useState<Map<string, number>>(new Map());
+  const [pendingTeamsCount, setPendingTeamsCount] = useState<number>(0);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    let cancelled = false;
+    (async () => {
+      const { count } = await supabase
+        .from("teams")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "pending");
+      if (!cancelled) setPendingTeamsCount(count ?? 0);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [isAdmin]);
   
   // DIAGNOSTIC: Debug state for on-page panel
   const [debugInfo, setDebugInfo] = useState<{
@@ -1537,6 +1553,20 @@ export default function AdminApprovals() {
             >
               <Users className="h-4 w-4 mr-2" />
               Consumers
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate('/admin/team-approvals')}
+              className="border-slate-300 text-slate-700 hover:bg-slate-100"
+            >
+              <Users className="h-4 w-4 mr-2" />
+              Team Approvals
+              {pendingTeamsCount > 0 && (
+                <span className="ml-2 inline-flex items-center justify-center rounded-full bg-primary px-2 py-0.5 text-[11px] font-semibold text-primary-foreground">
+                  {pendingTeamsCount}
+                </span>
+              )}
             </Button>
             <Button
               variant="outline"
