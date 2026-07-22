@@ -1540,16 +1540,16 @@ export default function AdminApprovals() {
         />
 
 
-        <div className="mb-4 flex items-center justify-between bg-slate-50 border border-slate-200 rounded-xl px-4 py-2">
-          <span className="text-sm text-slate-600">
+        <div className="mb-4 flex flex-col gap-3 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:py-2">
+          <span className="text-sm text-slate-600 break-words">
             Signed in as: <span className="font-medium text-slate-900">{user?.email}</span>
           </span>
-          <div className="flex items-center gap-2">
+          <div className="grid grid-cols-1 gap-2 sm:flex sm:flex-wrap sm:items-center sm:justify-end">
             <Button 
               variant="outline"
               size="sm"
               onClick={() => navigate('/admin/consumers')}
-              className="border-slate-300 text-slate-700 hover:bg-slate-100"
+              className="w-full justify-start border-slate-300 text-slate-700 hover:bg-slate-100 sm:w-auto sm:justify-center"
             >
               <Users className="h-4 w-4 mr-2" />
               Consumers
@@ -1558,7 +1558,7 @@ export default function AdminApprovals() {
               variant="outline"
               size="sm"
               onClick={() => navigate('/admin/team-approvals')}
-              className="border-slate-300 text-slate-700 hover:bg-slate-100"
+              className="w-full justify-start border-slate-300 text-slate-700 hover:bg-slate-100 sm:w-auto sm:justify-center"
             >
               <Users className="h-4 w-4 mr-2" />
               Team Approvals
@@ -1583,7 +1583,7 @@ export default function AdminApprovals() {
                   toast.success("Sent to chris@allagentconnect.com — forward from your inbox.");
                 }
               }}
-              className="border-slate-300 text-slate-700 hover:bg-slate-100"
+              className="w-full justify-start border-slate-300 text-slate-700 hover:bg-slate-100 sm:w-auto sm:justify-center"
             >
               Email me forwardable invite
             </Button>
@@ -1607,7 +1607,7 @@ export default function AdminApprovals() {
                   toast.success(`Preview sent to ${adminEmail}`);
                 }
               }}
-              className="border-slate-300 text-slate-700 hover:bg-slate-100"
+              className="w-full justify-start border-slate-300 text-slate-700 hover:bg-slate-100 sm:w-auto sm:justify-center"
             >
               Preview Comms guide email
             </Button>
@@ -1615,7 +1615,7 @@ export default function AdminApprovals() {
               onClick={() => setShowCreateDialog(true)}
               size="sm"
               variant="outline"
-              className="border-slate-300 text-slate-700 hover:bg-slate-100"
+              className="w-full justify-start border-slate-300 text-slate-700 hover:bg-slate-100 sm:w-auto sm:justify-center"
             >
               <UserPlus className="h-4 w-4 mr-2" />
               Create Agent
@@ -1627,7 +1627,7 @@ export default function AdminApprovals() {
                 await supabase.auth.signOut();
                 navigate('/auth');
               }}
-              className="text-sm text-slate-500 hover:text-slate-700"
+              className="w-full justify-start text-sm text-slate-500 hover:text-slate-700 sm:w-auto sm:justify-center"
             >
               Switch Account
             </Button>
