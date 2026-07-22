@@ -1,67 +1,17 @@
-## Plan (revised to match actual infrastructure)
+## Why it's not showing on mobile (or anywhere)
 
-Confirmed by reading `send-team-request-notification/index.ts`: there is no `send-transactional-email` function. The real contract is a direct insert into `email_jobs`:
+The strip I added last turn went into `src/pages/AgentDashboardV2.tsx`, but `/agent-dashboard` no longer renders that file. `App.tsx` routes `/agent-dashboard` → `SuccessHubDashboard` (in `src/pages/success-hub/SuccessHubDashboard.tsx`), and `/agent-dashboard-v2` redirects to `/agent-dashboard`. So the strip is effectively dead code and never renders on any device.
 
-```
-payload: {
-  provider: "resend",
-  template: "<template-key>",
-  to: "<recipient>",
-  subject: "<explicit subject>",
-  variables: { contentHtml: "<html>" },
-  idempotency_key: "<key>",
-}
-```
+The "Recent Conversations" block on the live Success Hub is `DashboardCommunications`, rendered near the bottom of `SuccessHubDashboard.tsx`.
 
-Subject is set on the payload (not returned by `renderEmailTemplate.ts`), which matches your note. The renderer isn't in the path for these HTML-embed emails.
+## Change
 
-### 1. New edge function: `send-team-decision-email`
+1. Remove the strip from `src/pages/AgentDashboardV2.tsx` (revert last turn's edit — that page is not on any live route).
+2. Add the same Communications Center strip in `src/pages/success-hub/SuccessHubDashboard.tsx`, directly above the `DashboardCommunications` section, wrapped in an `AgentSectionCard` so it matches the surrounding cards on mobile and desktop.
+3. Behavior unchanged from the previous spec: entire card is clickable → navigates to `/communications`; shows heading "Communications Center", the primary line, four category pills (Buyer Needs, Seller Needs, Renter Needs, General Discussions), and the smaller supporting line.
+4. No changes to email logic, preferences, or `DashboardCommunications`.
 
-Mirrors `send-team-request-notification`. Server-side:
+## Verification
 
-- Input: `{ teamId: string, decision: "approved" | "rejected", rejectionReason?: string }`. Admin-only — verify caller via JWT + `has_role('admin')`.
-- Uses service role client to:
-  1. Load the team row (`name`, `slug`, `id`, `team_lead_user_id`, `created_by`, `logo_url`).
-  2. **Resolve recipient server-side**: try `agent_profiles.email` for `team_lead_user_id`, then for `created_by`, then `auth.admin.getUserById(team_lead_user_id).email`, then `created_by`. Bail with a clear error if none.
-  3. Build HTML with `buildAacEmail` (`_shared/aacEmailTemplate.ts`) — same visual system as the rest of AAC email.
-  4. Insert into `email_jobs`:
-     - **Approved**
-       - `subject`: `Your team account "${teamName}" is approved`
-       - CTAs: primary `Manage your team` → `${APP_ORIGIN}/team/${teamId}/manage`; secondary `View public team profile` → `${APP_ORIGIN}/team/${slug || teamId}`
-       - `idempotency_key`: `team-approved:${teamId}`
-       - `template`: `team-approved`
-     - **Rejected**
-       - `subject`: `Your team account request needs changes`
-       - Includes `rejectionReason` (escaped) + CTA `Update your request` → `${APP_ORIGIN}/team/request`
-       - `idempotency_key`: `team-rejected:${teamId}:${short-hash(rejectionReason)}` so a resubmission after edits can re-send
-       - `template`: `team-rejected`
-- Returns `{ success, resolvedRecipient }` so the admin toast can show who was emailed.
-
-### 2. Wire into `AdminTeamApprovals.tsx`
-
-In `setTeamStatus`, after a successful `teams` update to `approved` or `rejected`:
-
-- `supabase.functions.invoke('send-team-decision-email', { body: { teamId, decision: next, rejectionReason: reason } })`
-- Soft-fail:
-  - Approval succeeds → success toast `Team approved · notified {resolvedRecipient}`.
-  - Email enqueue error → warning toast `Approved, but notification failed: {message}` (no rollback).
-- No `auth.users` reads from the browser.
-
-### 3. Admin shortcut buttons (previous ask, still in)
-
-Only rendered when `useAuthRole().isAdmin`:
-
-- `src/pages/AgentProfileEditor.tsx` header — outline "Admin tools" button → `/admin/approvals`.
-- `src/pages/ManageTeam.tsx` header — outline "Admin tools" button → `/admin/team-approvals`.
-- Existing Settings entries left as-is.
-
-### Deploy & verify
-
-- Deploy `send-team-decision-email`.
-- Pre-check for Josh: read `agent_profiles.email` for his `team_lead_user_id` / `created_by` so the resolved recipient is confirmed before you click Approve.
-- Approve Josh's pending team → email lands with a working `/team/${teamId}/manage` CTA → verification complete.
-
-### Not changing
-
-- `renderEmailTemplate.ts` and its fail-closed guard (irrelevant to this HTML-embed path).
-- `email_jobs` schema, `process-email-queue`, Resend config, `APP_ORIGIN` env.
+- Confirm the strip renders on `/agent-dashboard` immediately above Recent Conversations at desktop, tablet, and mobile widths.
+- Confirm click anywhere on the card routes to `/communications`.
