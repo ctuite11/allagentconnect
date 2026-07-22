@@ -52,7 +52,23 @@ const AdminTeamApprovals = () => {
       toast.error(error.message);
       return;
     }
-    toast.success(`Team ${next}`);
+    if (next === "approved" || next === "rejected") {
+      try {
+        const { data, error: fnErr } = await supabase.functions.invoke("send-team-decision-email", {
+          body: { teamId: t.id, decision: next, rejectionReason: reason },
+        });
+        if (fnErr || !(data as any)?.success) {
+          const msg = (data as any)?.error || fnErr?.message || "unknown error";
+          toast.warning(`Team ${next}, but notification failed: ${msg}`);
+        } else {
+          toast.success(`Team ${next} · notified ${(data as any).resolvedRecipient}`);
+        }
+      } catch (e: any) {
+        toast.warning(`Team ${next}, but notification failed: ${e?.message || e}`);
+      }
+    } else {
+      toast.success(`Team ${next}`);
+    }
     setRefreshTick((n) => n + 1);
   }
 
