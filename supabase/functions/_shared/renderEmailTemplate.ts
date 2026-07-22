@@ -524,6 +524,19 @@ export function renderEmailTemplate(
       });
     }
 
+    case "agent-account-removed": {
+      const recipientName = variables.recipientName || "there";
+      return buildAacEmail({
+        headline: "Your All Agent Connect account was removed",
+        preheader: "Your All Agent Connect account was removed.",
+        body: `
+          <p style="margin:0 0 16px;">Hi ${recipientName},</p>
+          <p style="margin:0 0 16px;">Your All Agent Connect account was removed because your license was verified, but the account setup process was not completed.</p>
+          <p style="margin:0 0 16px;">If you'd still like to join All Agent Connect, you can register again in the future and complete the setup process to activate your account.</p>
+          <p style="margin:0;">Thanks,<br>Chris<br>All Agent Connect</p>`,
+      });
+    }
+
     case "agent-client-email": {
       const clientName = variables.clientName || "there";
       const agentName = variables.agentName || "Your agent";

@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { invokeEdgeFunction } from "@/lib/invokeEdgeFunction";
+import { enqueueVerifiedInactiveAgentRemovalEmail } from "@/lib/enqueueVerifiedInactiveAgentRemovalEmail";
 import { toast } from "sonner";
 import { Loader2, AlertTriangle } from "lucide-react";
 
@@ -88,6 +89,14 @@ export function DeleteAgentDialog({ open, onOpenChange, agent, onDeleted }: Dele
 
       // REAL AGENT BRANCH: Server-side RPC handles full cleanup
       const { data: { user: currentUser } } = await supabase.auth.getUser();
+
+      // Notify verified-but-never-activated agents before rows are deleted
+      // so agent_settings.verified / account_activated_at are still readable.
+      await enqueueVerifiedInactiveAgentRemovalEmail({
+        agentId: agent.id,
+        email: agent.email,
+        firstName: agent.first_name,
+      });
 
       // Archive before deletion
       const { data: agentProfile } = await supabase

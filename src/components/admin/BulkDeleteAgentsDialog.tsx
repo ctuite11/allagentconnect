@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { invokeEdgeFunction } from "@/lib/invokeEdgeFunction";
+import { enqueueVerifiedInactiveAgentRemovalEmail } from "@/lib/enqueueVerifiedInactiveAgentRemovalEmail";
 import { toast } from "sonner";
 import { Loader2, AlertTriangle } from "lucide-react";
 
@@ -99,6 +100,13 @@ export function BulkDeleteAgentsDialog({
         }
 
         // REAL AGENT BRANCH: Archive then RPC
+        // Notify verified-but-never-activated agents before rows are deleted.
+        await enqueueVerifiedInactiveAgentRemovalEmail({
+          agentId: agent.id,
+          email: agent.email,
+          firstName: agent.first_name,
+        });
+
         const { data: agentProfile } = await supabase
           .from("agent_profiles")
           .select("*")
