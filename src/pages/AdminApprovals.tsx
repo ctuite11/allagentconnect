@@ -2041,6 +2041,39 @@ export default function AdminApprovals() {
                             <span className="text-zinc-400">—</span>
                           )}
                         </td>
+                        <td
+                          className="px-3 py-3 align-top text-xs text-zinc-600"
+                          title={
+                            agent.last_reminder
+                              ? `${agent.last_reminder.template} • ${agent.last_reminder.status} • ${new Date(agent.last_reminder.sent_at).toLocaleString()}`
+                              : "No reminder email on record"
+                          }
+                        >
+                          {agent.last_reminder ? (
+                            <div className="flex flex-col gap-0.5">
+                              <span className="text-zinc-900">
+                                {new Date(agent.last_reminder.sent_at).toLocaleDateString(undefined, {
+                                  year: "numeric",
+                                  month: "short",
+                                  day: "numeric",
+                                })}
+                              </span>
+                              <span className="text-[11px] text-zinc-500">
+                                {(() => {
+                                  const days = Math.floor(
+                                    (Date.now() - new Date(agent.last_reminder.sent_at).getTime()) /
+                                      (1000 * 60 * 60 * 24),
+                                  );
+                                  if (days <= 0) return "today";
+                                  if (days === 1) return "1 day ago";
+                                  return `${days} days ago`;
+                                })()}
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="text-zinc-400">Never</span>
+                          )}
+                        </td>
                         <YesNoCell
                           yes={activated}
                           iso={agent.account_activated_at ?? agent.last_sign_in_at ?? null}
