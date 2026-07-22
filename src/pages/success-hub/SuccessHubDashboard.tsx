@@ -14,7 +14,6 @@ import { DashboardBuyersTable } from "@/components/success-hub/DashboardBuyersTa
 import { SuccessHubHero } from "@/components/success-hub/SuccessHubHero";
 import { NetworkActivitySection } from "@/components/success-hub/networkActivity/NetworkActivitySection";
 import { NewestVerifiedAgentsRow } from "@/components/success-hub/networkActivity/NetworkActivitySection";
-import { NotificationPreferenceCards } from "@/components/NotificationPreferenceCards";
 import { SuccessHubStatRow } from "@/components/success-hub/SuccessHubStatRow";
 import { SuccessHubListingCard } from "@/components/success-hub/SuccessHubListingCard";
 import { SUCCESS_HUB_LISTINGS_GRID } from "@/components/success-hub/successHubListingLayout";
@@ -296,20 +295,6 @@ function SuccessHubDashboardBody() {
           </>
         )}
       </AgentSectionCard>
-      ) : null}
-
-      {!loading ? (
-        <AgentSectionCard className="border-neutral-200 p-5 shadow-sm hover:border-neutral-200 hover:shadow-sm">
-          <div className="mb-3">
-            <h3 className="text-[15px] font-semibold leading-snug text-neutral-900">
-              Communications Center
-            </h3>
-            <p className="mt-0.5 text-xs leading-snug text-neutral-500">
-              Manage which channels send you alerts and broadcast to the network.
-            </p>
-          </div>
-          <NotificationPreferenceCards />
-        </AgentSectionCard>
       ) : null}
       </AgentAacPage>
     </>
