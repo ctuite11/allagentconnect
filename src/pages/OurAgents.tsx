@@ -55,6 +55,8 @@ interface EnrichedAgent {
   buyerMatchCount: number;
   serviceAreas: string[];
   specialties: string[];
+  entity_type?: "agent" | "team";
+  team_slug?: string;
 }
 
 const DEFAULT_PAGE_SIZE: AgentDirectoryPageSize = 48;
@@ -198,18 +200,30 @@ const OurAgents = ({
           return byLast !== 0 ? byLast : (a.first_name || "").localeCompare(b.first_name || "");
         });
 
-      // Fetch listings for all agents to get counts
-      const [{ data: listingsData, error: listingsError }, { data: countyData, error: countyError }] =
-        await Promise.all([
-          supabase
-            .from("listings")
-            .select("agent_id, status, property_type, created_at")
-            .in("status", ["active", "coming_soon", "off_market", "sold"]),
-          countiesPromise,
-        ]);
+      // Fetch listings for all agents to get counts, plus approved teams so
+      // team profiles appear as tiles in the Agent Network directory.
+      const teamContactColumns = isAuthed ? ", contact_email, contact_phone" : "";
+      const [
+        { data: listingsData, error: listingsError },
+        { data: countyData, error: countyError },
+        { data: teamsData, error: teamsError },
+      ] = await Promise.all([
+        supabase
+          .from("listings")
+          .select("agent_id, status, property_type, created_at")
+          .in("status", ["active", "coming_soon", "off_market", "sold"]),
+        countiesPromise,
+        supabase
+          .from("teams")
+          .select(
+            `id, name, slug, logo_url, team_photo_url, company, office_name, team_lead_user_id, updated_at${teamContactColumns}`,
+          )
+          .eq("status", "approved"),
+      ]);
 
       if (listingsError) throw listingsError;
       if (countyError) throw countyError;
+      if (teamsError) console.warn("[our-agents] teams fetch failed:", teamsError.message);
 
       // Calculate 12 months ago
       const twelveMonthsAgo = new Date();
@@ -288,11 +302,43 @@ const OurAgents = ({
           buyerMatchCount: 0,
           serviceAreas,
           specialties,
+          entity_type: "agent" as const,
         };
       });
 
-      setAgents(enrichedAgents);
-      setTotalCount(enrichedAgents.length);
+      // Map approved teams into the same shape. Fall back to the team lead's
+      // service areas so location filters include the team when its lead
+      // covers that area.
+      const teamEntries: EnrichedAgent[] = (teamsData || []).map((team: any) => {
+        const leadEntry = enrichedAgents.find((a) => a.id === team.team_lead_user_id);
+        return {
+          id: team.id,
+          aac_id: team.slug || team.id,
+          first_name: team.name || "Team",
+          last_name: "",
+          company: team.company || team.office_name || "",
+          email: team.contact_email || "",
+          phone: team.contact_phone || "",
+          cell_phone: "",
+          headshot_url: team.team_photo_url || team.logo_url || "",
+          office_name: team.office_name || "",
+          team_name: team.name || "",
+          updated_at: team.updated_at,
+          activeListingsCount: 0,
+          comingSoonCount: 0,
+          offMarketCount: 0,
+          last12MonthsSales: 0,
+          buyerMatchCount: 0,
+          serviceAreas: leadEntry?.serviceAreas ?? [],
+          specialties: leadEntry?.specialties ?? [],
+          entity_type: "team" as const,
+          team_slug: team.slug || undefined,
+        };
+      });
+
+      const combined = [...enrichedAgents, ...teamEntries];
+      setAgents(combined);
+      setTotalCount(combined.length);
       setCounties(countyData || []);
     } catch (error: any) {
       console.error("Error loading agents:", error);
@@ -341,7 +387,9 @@ function AgentPhotoTileGrid({
 
   // Filter and sort agents
   const filteredAgents = useMemo(() => {
-    let result = agents.filter(isVisibleInAgentNetwork);
+    let result = agents.filter(
+      (a) => a.entity_type === "team" || isVisibleInAgentNetwork(a),
+    );
 
     // Visible-field text search only (name, brokerage, email, phone).
     if (searchQuery.trim()) {
@@ -467,9 +515,16 @@ function AgentPhotoTileGrid({
   };
 
   const handleViewProfile = (agentId: string) => {
-    // Find agent to use aac_id for friendly URL
     const agent = agents.find(a => a.id === agentId);
-    navigate(`/agent/${agent?.aac_id || agentId}`, { state: { from: location.pathname + location.search } });
+    if (agent?.entity_type === "team") {
+      navigate(`/team/${agent.team_slug || agent.id}`, {
+        state: { from: location.pathname + location.search },
+      });
+      return;
+    }
+    navigate(`/agent/${agent?.aac_id || agentId}`, {
+      state: { from: location.pathname + location.search },
+    });
   };
 
   return (

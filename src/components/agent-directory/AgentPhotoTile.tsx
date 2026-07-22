@@ -14,6 +14,7 @@ type Agent = {
   phone?: string | null;
   cell_phone?: string | null;
   email?: string | null;
+  entity_type?: "agent" | "team";
 };
 
 type Props = {
@@ -49,9 +50,11 @@ export default function AgentPhotoTile({
   hideDirectContact = false,
   interactive = true,
 }: Props) {
+  const isTeam = agent.entity_type === "team";
   const rawName =
-    [agent.first_name, agent.last_name].filter(Boolean).join(" ") || "Agent";
-  const fullName = titleCase(rawName);
+    [agent.first_name, agent.last_name].filter(Boolean).join(" ") ||
+    (isTeam ? "Team" : "Agent");
+  const fullName = isTeam ? rawName.trim() : titleCase(rawName);
 
   const brokerage = agent.company || agent.office_name || agent.team_name || "";
 
@@ -87,12 +90,20 @@ export default function AgentPhotoTile({
               </span>
             </div>
           )}
-          {showPresenceBadge && isOnline ? (
+          {showPresenceBadge && isOnline && !isTeam ? (
             <span
               className="absolute right-2.5 top-2.5 flex h-3 w-3 items-center justify-center rounded-full bg-[#22C55E] ring-2 ring-white shadow-sm"
               title="Online"
               aria-label="Online"
             />
+          ) : null}
+          {isTeam ? (
+            <span
+              className="absolute left-2.5 top-2.5 rounded-full bg-neutral-900/85 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white shadow-sm"
+              aria-label="Team profile"
+            >
+              Team
+            </span>
           ) : null}
         </div>
 
