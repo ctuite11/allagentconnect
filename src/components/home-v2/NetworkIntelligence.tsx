@@ -24,27 +24,19 @@ const NetworkIntelligence = () => {
       <div className="relative w-full max-w-[1260px] flex items-center justify-center">
         {/* Left property card */}
         <div className="hidden xl:block absolute left-0 z-20 w-[240px] rounded-2xl overflow-hidden shadow-[0_16px_48px_rgba(0,0,0,0.18)]" style={{ top: "50%", transform: "translateY(-55%)" }}>
-          <picture>
-            <source type="image/avif" srcSet={TILES.m4.avif} />
-            <img src={TILES.m4.webp} alt="Property" width={480} height={500} loading="lazy" decoding="async" className="w-full h-auto block" />
-          </picture>
+          <img src={TILES.m4.url} alt="Property" width={480} height={500} loading="lazy" decoding="async" className="w-full h-auto block" />
         </div>
 
         {/* Right property card */}
         <div className="hidden xl:block absolute right-0 z-20 w-[240px] rounded-2xl overflow-hidden shadow-[0_16px_48px_rgba(0,0,0,0.18)]" style={{ top: "50%", transform: "translateY(-55%)" }}>
-          <picture>
-            <source type="image/avif" srcSet={TILES.m5.avif} />
-            <img src={TILES.m5.webp} alt="Property" width={480} height={500} loading="lazy" decoding="async" className="w-full h-auto block" />
-          </picture>
+          <img src={TILES.m5.url} alt="Property" width={480} height={500} loading="lazy" decoding="async" className="w-full h-auto block" />
         </div>
 
         {/* Dashboard image */}
         <div className="relative z-10 w-full max-w-[900px] mx-auto">
           <div className="rounded-[28px] border-[10px] border-[#1a1d22] shadow-[0_48px_120px_rgba(15,23,42,0.38),0_16px_40px_rgba(15,23,42,0.18)] overflow-hidden">
-            <picture>
-              <source type="image/avif" srcSet={TILES.m3.avif} />
-              <img
-                src={TILES.m3.webp}
+            <img
+                src={TILES.m3.url}
                 alt="Platform dashboard"
                 width={1800}
                 height={1080}
@@ -53,7 +45,6 @@ const NetworkIntelligence = () => {
                 className="w-full h-auto block"
                 style={{ filter: "contrast(1.15) saturate(1.05)" }}
               />
-            </picture>
           </div>
 
           {/* Desktop floating badges */}
@@ -125,11 +116,7 @@ const NetworkIntelligence = () => {
             { tile: TILES.m10, label: "Sold Off-Market", price: "$3,500,000", dot: "#ff6b56" },
           ].map((card) => (
             <div key={card.label} className="relative rounded-2xl overflow-hidden" style={{ aspectRatio: "350/365" }}>
-              <picture>
-                <source type="image/avif" srcSet={card.tile.avif} />
-                <source type="image/webp" media="(max-width: 640px)" srcSet={card.tile.webpSmall} />
-                <img src={card.tile.webp} alt={card.label} width={350} height={365} loading="lazy" decoding="async" className="absolute inset-0 w-full h-full object-cover" />
-              </picture>
+              <img src={card.tile.url} alt={card.label} width={350} height={365} loading="lazy" decoding="async" className="absolute inset-0 w-full h-full object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
               <div className="absolute top-3 left-3">
                 <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-full shadow">
