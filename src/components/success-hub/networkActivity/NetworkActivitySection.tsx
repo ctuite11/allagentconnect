@@ -192,28 +192,24 @@ export function NetworkActivitySection() {
         </div>
       </div>
 
+      <div className="rounded-lg border border-neutral-200 bg-white px-3 py-2 text-[13px] leading-snug text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] sm:text-sm">
+        <span className="font-semibold text-red-600">Too many emails?</span>{" "}
+        <span>Adjust your filters in </span>
+        <Link
+          to="/communications"
+          className="font-medium text-[#0E56F5] underline-offset-2 hover:underline"
+        >
+          Communications Center
+        </Link>
+        <span>.</span>
+      </div>
+
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <BuyerNeedsChannel onCreate={() => openCompose("buyer_need", "Buyer Needs")} />
         <SalesIntelChannel onCreate={() => openCompose("sales_intel", "Sales Intel")} />
         <RenterNeedsChannel onCreate={() => openCompose("renter_need", "Renter Needs")} />
         <GeneralDiscussionsChannel onCreate={() => openCompose("general_discussion", "General Discussions")} />
       </div>
-
-      {!hintDismissed ? (
-        <div className="flex items-start justify-between gap-3 rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 text-[12px] text-neutral-600">
-          <span>
-            You can customize your audience and notification preferences anytime in Communications Center.
-          </span>
-          <button
-            type="button"
-            onClick={dismissHint}
-            className="shrink-0 text-[11px] font-medium text-neutral-500 hover:text-neutral-800"
-            aria-label="Dismiss"
-          >
-            Dismiss
-          </button>
-        </div>
-      ) : null}
 
       <SendMessageDialog
         open={compose.open}
