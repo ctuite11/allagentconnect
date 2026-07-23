@@ -331,13 +331,6 @@ export type Database = {
             referencedRelation: "agent_profiles"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "agent_buyer_coverage_areas_agent_id_fkey"
-            columns: ["agent_id"]
-            isOneToOne: false
-            referencedRelation: "agent_profiles_public"
-            referencedColumns: ["id"]
-          },
         ]
       }
       agent_county_preferences: {
@@ -365,13 +358,6 @@ export type Database = {
             columns: ["agent_id"]
             isOneToOne: false
             referencedRelation: "agent_profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "agent_county_preferences_agent_id_fkey"
-            columns: ["agent_id"]
-            isOneToOne: false
-            referencedRelation: "agent_profiles_public"
             referencedColumns: ["id"]
           },
           {
@@ -925,13 +911,6 @@ export type Database = {
             referencedRelation: "agent_profiles"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "agent_proposal_incentives_agent_id_fkey"
-            columns: ["agent_id"]
-            isOneToOne: true
-            referencedRelation: "agent_profiles_public"
-            referencedColumns: ["id"]
-          },
         ]
       }
       agent_sent_broadcasts: {
@@ -1420,13 +1399,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "buyer_workspace_invites_agent_id_fkey"
-            columns: ["agent_id"]
-            isOneToOne: false
-            referencedRelation: "agent_profiles_public"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "buyer_workspace_invites_workspace_id_fkey"
             columns: ["workspace_id"]
             isOneToOne: false
@@ -1646,13 +1618,6 @@ export type Database = {
             referencedRelation: "agent_profiles"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "buyer_needs_submitted_by_fkey"
-            columns: ["submitted_by"]
-            isOneToOne: false
-            referencedRelation: "agent_profiles_public"
-            referencedColumns: ["id"]
-          },
         ]
       }
       clients: {
@@ -1764,13 +1729,6 @@ export type Database = {
             columns: ["sender_id"]
             isOneToOne: false
             referencedRelation: "agent_profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "comms_broadcasts_sender_id_fkey"
-            columns: ["sender_id"]
-            isOneToOne: false
-            referencedRelation: "agent_profiles_public"
             referencedColumns: ["id"]
           },
         ]
@@ -3839,13 +3797,6 @@ export type Database = {
             referencedRelation: "agent_profiles"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "off_market_views_viewer_agent_id_fkey"
-            columns: ["viewer_agent_id"]
-            isOneToOne: false
-            referencedRelation: "agent_profiles_public"
-            referencedColumns: ["id"]
-          },
         ]
       }
       pending_verifications: {
@@ -4205,13 +4156,6 @@ export type Database = {
             referencedRelation: "agent_profiles"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "share_tokens_agent_id_fkey"
-            columns: ["agent_id"]
-            isOneToOne: false
-            referencedRelation: "agent_profiles_public"
-            referencedColumns: ["id"]
-          },
         ]
       }
       showing_requests: {
@@ -4313,13 +4257,6 @@ export type Database = {
             columns: ["agent_id"]
             isOneToOne: false
             referencedRelation: "agent_profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "team_members_agent_id_fkey"
-            columns: ["agent_id"]
-            isOneToOne: false
-            referencedRelation: "agent_profiles_public"
             referencedColumns: ["id"]
           },
           {
@@ -4446,13 +4383,6 @@ export type Database = {
             columns: ["agent_id"]
             isOneToOne: false
             referencedRelation: "agent_profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "testimonials_agent_id_fkey"
-            columns: ["agent_id"]
-            isOneToOne: false
-            referencedRelation: "agent_profiles_public"
             referencedColumns: ["id"]
           },
         ]
@@ -4603,78 +4533,6 @@ export type Database = {
         Update: {
           agent_status?: Database["public"]["Enums"]["agent_status"] | null
           user_id?: string | null
-        }
-        Relationships: []
-      }
-      agent_profiles_public: {
-        Row: {
-          aac_id: string | null
-          bio: string | null
-          buyer_incentives: string | null
-          company: string | null
-          created_at: string | null
-          first_name: string | null
-          header_background_type: string | null
-          header_background_value: string | null
-          header_image_url: string | null
-          headshot_url: string | null
-          id: string | null
-          last_name: string | null
-          logo_url: string | null
-          office_city: string | null
-          office_name: string | null
-          office_state: string | null
-          seller_incentives: string | null
-          social_links: Json | null
-          team_name: string | null
-          title: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          aac_id?: string | null
-          bio?: string | null
-          buyer_incentives?: string | null
-          company?: string | null
-          created_at?: string | null
-          first_name?: string | null
-          header_background_type?: string | null
-          header_background_value?: string | null
-          header_image_url?: string | null
-          headshot_url?: string | null
-          id?: string | null
-          last_name?: string | null
-          logo_url?: string | null
-          office_city?: string | null
-          office_name?: string | null
-          office_state?: string | null
-          seller_incentives?: string | null
-          social_links?: Json | null
-          team_name?: string | null
-          title?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          aac_id?: string | null
-          bio?: string | null
-          buyer_incentives?: string | null
-          company?: string | null
-          created_at?: string | null
-          first_name?: string | null
-          header_background_type?: string | null
-          header_background_value?: string | null
-          header_image_url?: string | null
-          headshot_url?: string | null
-          id?: string | null
-          last_name?: string | null
-          logo_url?: string | null
-          office_city?: string | null
-          office_name?: string | null
-          office_state?: string | null
-          seller_incentives?: string | null
-          social_links?: Json | null
-          team_name?: string | null
-          title?: string | null
-          updated_at?: string | null
         }
         Relationships: []
       }
