@@ -4621,9 +4621,11 @@ export type Database = {
           id: string | null
           last_name: string | null
           logo_url: string | null
+          office_address: string | null
           office_city: string | null
           office_name: string | null
           office_state: string | null
+          office_zip: string | null
           seller_incentives: string | null
           social_links: Json | null
           team_name: string | null
@@ -4644,9 +4646,11 @@ export type Database = {
           id?: string | null
           last_name?: string | null
           logo_url?: string | null
+          office_address?: string | null
           office_city?: string | null
           office_name?: string | null
           office_state?: string | null
+          office_zip?: string | null
           seller_incentives?: string | null
           social_links?: Json | null
           team_name?: string | null
@@ -4667,9 +4671,11 @@ export type Database = {
           id?: string | null
           last_name?: string | null
           logo_url?: string | null
+          office_address?: string | null
           office_city?: string | null
           office_name?: string | null
           office_state?: string | null
+          office_zip?: string | null
           seller_incentives?: string | null
           social_links?: Json | null
           team_name?: string | null
