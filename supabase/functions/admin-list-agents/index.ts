@@ -50,6 +50,7 @@ interface MergedAgent {
   license_verified_email?: EmailStatusInfo | null
   profile_complete?: boolean
   headshot_url?: string | null
+  last_reminder?: { sent_at: string; template: string; status: string } | null
 }
 
 interface EmailStatusInfo {
@@ -320,31 +321,44 @@ Deno.serve(async (req) => {
     // Read-only surfacing — no template, sender, or Resend config is touched here.
     try {
       const emailsLower = new Set(allAgents.map(a => (a.email ?? '').toLowerCase()).filter(Boolean))
-      const templates = ['license-verified', 'admin-created-invite']
+      const reminderTemplates = ['license-verified', 'agent-invite', 'agent-missing-opportunities']
+      const reminderTemplateSet = new Set(reminderTemplates)
+      const templates = ['license-verified', 'admin-created-invite', 'agent-invite', 'agent-missing-opportunities']
       const { data: jobs, error: jobsErr } = await adminClient
         .from('email_jobs')
         .select('id, status, delivery_status, delivery_status_at, created_at, attempts, last_error, payload')
         .in('payload->>template', templates)
         .order('created_at', { ascending: false })
-        .limit(5000)
+        .limit(20000)
       if (jobsErr) {
         console.error('[admin-list-agents] email_jobs error:', jobsErr.message)
       } else if (jobs) {
         const latest = new Map<string, EmailStatusInfo & { template: string }>()
+        const latestReminder = new Map<string, { sent_at: string; template: string; status: string }>()
         for (const j of jobs as any[]) {
           const to = String(j?.payload?.to ?? '').toLowerCase()
           const template = String(j?.payload?.template ?? '')
           if (!to || !template || !emailsLower.has(to)) continue
           const key = `${to}::${template}`
-          if (latest.has(key)) continue // first row is the latest thanks to desc order
-          latest.set(key, {
-            template,
-            status: deriveEmailStatus(j),
-            created_at: j.created_at,
-            event_at: j.delivery_status_at ?? null,
-            attempts: j.attempts ?? null,
-            last_error: j.last_error ?? null,
-          })
+          if (!latest.has(key)) {
+            latest.set(key, {
+              template,
+              status: deriveEmailStatus(j),
+              created_at: j.created_at,
+              event_at: j.delivery_status_at ?? null,
+              attempts: j.attempts ?? null,
+              last_error: j.last_error ?? null,
+            })
+          }
+          if (reminderTemplateSet.has(template) && !latestReminder.has(to)) {
+            // Rows are ordered by created_at desc, so the first reminder-template
+            // row we see per recipient is the newest across all reminder templates.
+            latestReminder.set(to, {
+              sent_at: j.created_at,
+              template,
+              status: deriveEmailStatus(j),
+            })
+          }
         }
         for (const a of allAgents) {
           const key = (a.email ?? '').toLowerCase()
@@ -359,6 +373,8 @@ Deno.serve(async (req) => {
             const { template: _t, ...rest } = lic
             a.license_verified_email = rest
           }
+          const rem = latestReminder.get(key)
+          a.last_reminder = rem ?? null
         }
       }
     } catch (e) {
