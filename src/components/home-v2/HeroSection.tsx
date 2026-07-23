@@ -1,26 +1,28 @@
 import React from "react";
 import AACMonogram from "@/components/ui/AACMonogram";
-import { HERO } from "./heroImages";
+
+// TEMPORARY: /__l5e/assets-v1/ CDN URLs are not proxied on our Netlify-fronted
+// custom domains, so optimized AVIF/WebP variants 404-as-HTML for real visitors.
+// Reverting the hero to the known-public animaapp.com origin until hosting
+// rewrites are in place. Rest of the perf work (lazy sections, reserved
+// dimensions, code splitting) is preserved.
+const HERO_FALLBACK = "https://c.animaapp.com/mmm3cgevnH1M3s/img/group-1707484446.png";
 
 const HeroSection = () => {
   return (
     <section className="relative w-full min-h-screen bg-[#111317] overflow-hidden flex flex-col">
       {/* Background: full-bleed hero image */}
       <div className="absolute inset-0">
-        <picture>
-          <source type="image/avif" srcSet={HERO.avif.srcset} sizes={HERO.sizes} />
-          <source type="image/webp" srcSet={HERO.webp.srcset} sizes={HERO.sizes} />
-          <img
-            src={HERO.webp.src}
-            alt="Real estate agents collaborating"
-            width={HERO.width}
-            height={HERO.height}
-            fetchPriority="high"
-            decoding="async"
-            className="absolute inset-0 w-full h-full object-cover"
-            style={{ objectPosition: "55% center" }}
-          />
-        </picture>
+        <img
+          src={HERO_FALLBACK}
+          alt="Real estate agents collaborating"
+          width={1920}
+          height={1080}
+          fetchPriority="high"
+          decoding="async"
+          className="absolute inset-0 w-full h-full object-cover"
+          style={{ objectPosition: "55% center" }}
+        />
       </div>
 
       {/* Lower-left readability wash — soft gradient, not a panel */}

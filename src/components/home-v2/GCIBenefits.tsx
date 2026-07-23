@@ -1,5 +1,8 @@
 import React from "react";
-import { GCI_GLOBE } from "./heroImages";
+
+// TEMPORARY: revert globe background to public animaapp.com PNG until
+// the /__l5e/assets-v1/ prefix is proxied on the custom domain.
+const GCI_GLOBE_FALLBACK = "https://c.animaapp.com/mmm3cgevnH1M3s/img/mask-group.png";
 
 const features = [
   {
@@ -27,9 +30,7 @@ const GCIBenefits = () => {
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
-          // image-set with type() picks AVIF where supported; browsers without
-          // image-set fall through to backgroundImage set below via CSS var.
-          backgroundImage: `image-set(url("${GCI_GLOBE.avif.src1800}") type("image/avif"), url("${GCI_GLOBE.webp.src1800}") type("image/webp")), url("${GCI_GLOBE.webp.src1800}")`,
+          backgroundImage: `url("${GCI_GLOBE_FALLBACK}")`,
           backgroundSize: "118%",
           backgroundPosition: "center 38%",
           opacity: 0.92,
