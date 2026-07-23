@@ -596,18 +596,34 @@ export default function AdminApprovals() {
 
       if (normEmails.length > 0) {
         try {
-          const { data: jobRows } = await supabase
-            .from("email_jobs")
-            .select(
-              "payload, status, delivery_status, delivery_status_at, created_at, last_error, attempts",
-            )
-            .in("payload->>template", [
-              "license-verified",
-              "agent-invite",
-              "agent-missing-opportunities",
-            ])
-            .order("created_at", { ascending: false })
-            .limit(2000);
+          // Scope by recipient email (chunked) instead of a global recency
+          // window. A global limit misses older reminders once high-volume
+          // templates (broadcasts, listing alerts) crowd out the window,
+          // and the .in() filter on a JSON accessor is unreliable in
+          // PostgREST — so we filter templates client-side below.
+          const CHUNK = 100;
+          const seenIds = new Set<string>();
+          const jobRows: any[] = [];
+          for (let i = 0; i < normEmails.length; i += CHUNK) {
+            const chunk = normEmails.slice(i, i + CHUNK);
+            const { data: chunkRows, error: chunkErr } = await supabase
+              .from("email_jobs")
+              .select(
+                "id, payload, status, delivery_status, delivery_status_at, created_at, last_error, attempts",
+              )
+              .in("payload->>to", chunk)
+              .order("created_at", { ascending: false });
+            if (chunkErr) {
+              console.warn("[AdminApprovals] email_jobs chunk failed:", chunkErr);
+              continue;
+            }
+            for (const row of (chunkRows ?? []) as any[]) {
+              const rid = String(row.id);
+              if (seenIds.has(rid)) continue;
+              seenIds.add(rid);
+              jobRows.push(row);
+            }
+          }
 
           const toStatus = (row: any): EmailStatusInfo => {
             const ds = (row.delivery_status || "").toLowerCase();
@@ -657,7 +673,11 @@ export default function AdminApprovals() {
               template === "agent-invite" ||
               template === "agent-missing-opportunities"
             ) {
-              if (!reminderByEmail.has(to)) {
+              const existing = reminderByEmail.get(to);
+              if (
+                !existing ||
+                new Date(row.created_at) > new Date(existing.sent_at)
+              ) {
                 const status = toStatus(row);
                 reminderByEmail.set(to, {
                   sent_at: row.created_at,
