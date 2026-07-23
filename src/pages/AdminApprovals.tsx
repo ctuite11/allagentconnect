@@ -596,32 +596,50 @@ export default function AdminApprovals() {
 
       if (normEmails.length > 0) {
         try {
-          // Scope by recipient email (chunked) instead of a global recency
-          // window. A global limit misses older reminders once high-volume
-          // templates (broadcasts, listing alerts) crowd out the window,
-          // and the .in() filter on a JSON accessor is unreliable in
-          // PostgREST — so we filter templates client-side below.
-          const CHUNK = 100;
+          // Fetch by reminder template, not recipient JSON path. The
+          // recipient-scoped JSON .in() filter can fail/open empty in the
+          // browser client even when rows exist, which made Last Reminder show
+          // "Never" for agents with real reminder jobs.
+          const reminderTemplates = [
+            "license-verified",
+            "agent-invite",
+            "agent-missing-opportunities",
+          ] as const;
+          const reminderTemplateSet = new Set<string>(reminderTemplates);
+          const reminderSince = new Date();
+          reminderSince.setFullYear(reminderSince.getFullYear() - 1);
+          const PAGE_SIZE = 1000;
+          const MAX_PAGES_PER_TEMPLATE = 25;
           const seenIds = new Set<string>();
           const jobRows: any[] = [];
-          for (let i = 0; i < normEmails.length; i += CHUNK) {
-            const chunk = normEmails.slice(i, i + CHUNK);
-            const { data: chunkRows, error: chunkErr } = await supabase
-              .from("email_jobs")
-              .select(
-                "id, payload, status, delivery_status, delivery_status_at, created_at, last_error, attempts",
-              )
-              .in("payload->>to", chunk)
-              .order("created_at", { ascending: false });
-            if (chunkErr) {
-              console.warn("[AdminApprovals] email_jobs chunk failed:", chunkErr);
-              continue;
-            }
-            for (const row of (chunkRows ?? []) as any[]) {
-              const rid = String(row.id);
-              if (seenIds.has(rid)) continue;
-              seenIds.add(rid);
-              jobRows.push(row);
+
+          for (const template of reminderTemplates) {
+            for (let page = 0; page < MAX_PAGES_PER_TEMPLATE; page += 1) {
+              const from = page * PAGE_SIZE;
+              const to = from + PAGE_SIZE - 1;
+              const { data: pageRows, error: pageErr } = await supabase
+                .from("email_jobs")
+                .select(
+                  "id, payload, status, delivery_status, delivery_status_at, created_at, last_error, attempts",
+                )
+                .eq("payload->>template", template)
+                .gte("created_at", reminderSince.toISOString())
+                .order("created_at", { ascending: false })
+                .range(from, to);
+
+              if (pageErr) {
+                console.warn("[AdminApprovals] email_jobs reminder page failed:", pageErr);
+                break;
+              }
+
+              for (const row of (pageRows ?? []) as any[]) {
+                const rid = String(row.id);
+                if (seenIds.has(rid)) continue;
+                seenIds.add(rid);
+                jobRows.push(row);
+              }
+
+              if (!pageRows || pageRows.length < PAGE_SIZE) break;
             }
           }
 
@@ -668,11 +686,7 @@ export default function AdminApprovals() {
 
             // Track the newest reminder across all three templates so the
             // "Last Reminder" column can surface stale accounts.
-            if (
-              template === "license-verified" ||
-              template === "agent-invite" ||
-              template === "agent-missing-opportunities"
-            ) {
+            if (template && reminderTemplateSet.has(template)) {
               const existing = reminderByEmail.get(to);
               if (
                 !existing ||
