@@ -15,29 +15,11 @@
 // flip back to optimized delivery in one commit once hosting is fixed.
 
 const A = "https://c.animaapp.com/mmm3cgevnH1M3s/img";
-const HERO_PNG = `${A}/group-1707484446.png`;
-const GCI_PNG = `${A}/mask-group.png`;
 const TILE = (n: number) => `${A}/mask-group-${n}.png`;
 
-export const HERO = {
-  width: 1920,
-  height: 1080,
-  avif: { src: HERO_PNG, srcset: HERO_PNG },
-  webp: { src: HERO_PNG, srcset: HERO_PNG },
-  sizes: "100vw",
-};
+type Tile = { url: string };
 
-export const GCI_GLOBE = {
-  avif: { src: GCI_PNG, src1800: GCI_PNG },
-  webp: { src: GCI_PNG, src1800: GCI_PNG },
-};
-
-type Tile = { avif: string; webp: string; webpSmall: string };
-
-const tile = (n: number): Tile => {
-  const url = TILE(n);
-  return { avif: url, webp: url, webpSmall: url };
-};
+const tile = (n: number): Tile => ({ url: TILE(n) });
 
 export const TILES: Record<string, Tile> = {
   m1: tile(1),
