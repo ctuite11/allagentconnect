@@ -32,12 +32,9 @@ export const GCI_GLOBE = {
   webp: { src: GCI_PNG, src1800: GCI_PNG },
 };
 
-type Tile = { avif: string; webp: string; webpSmall: string };
+type Tile = { url: string };
 
-const tile = (n: number): Tile => {
-  const url = TILE(n);
-  return { avif: url, webp: url, webpSmall: url };
-};
+const tile = (n: number): Tile => ({ url: TILE(n) });
 
 export const TILES: Record<string, Tile> = {
   m1: tile(1),
