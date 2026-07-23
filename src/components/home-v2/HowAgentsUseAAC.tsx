@@ -135,7 +135,7 @@ const HowAgentsUseAAC = () => {
                 <path d="M170 148 Q215 148 262 148" stroke="#cbd5e1" strokeWidth="1.5" fill="none" strokeDasharray="5 4" />
               </svg>
               <div className="relative z-10 w-[72px] h-[72px] rounded-full overflow-hidden border-[3px] border-white" style={{ boxShadow: "0 6px 16px rgba(15,23,42,0.10)" }}>
-                <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="Agent" className="w-full h-full object-cover" />
+                <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="Agent" width={72} height={72} loading="lazy" decoding="async" className="w-full h-full object-cover" />
               </div>
               {[
                 { src: "https://randomuser.me/api/portraits/men/32.jpg", size: 52, top: "18%", left: "14%" },
@@ -149,7 +149,7 @@ const HowAgentsUseAAC = () => {
                   className="absolute rounded-full overflow-hidden border-[2.5px] border-white"
                   style={{ width: a.size, height: a.size, top: a.top, left: a.left, bottom: a.bottom, right: a.right, boxShadow: "0 6px 16px rgba(15,23,42,0.10)" }}
                 >
-                  <img src={a.src} alt="Agent" className="w-full h-full object-cover" />
+                  <img src={a.src} alt="Agent" width={a.size} height={a.size} loading="lazy" decoding="async" className="w-full h-full object-cover" />
                 </div>
               ))}
             </div>

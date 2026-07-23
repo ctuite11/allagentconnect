@@ -1,4 +1,5 @@
 import React from "react";
+import { TILES } from "./heroImages";
 
 const CheckIcon = () => (
   <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -31,7 +32,11 @@ const ScalePersistence = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           {/* Left card */}
           <div className="relative rounded-3xl overflow-hidden bg-[#111317] h-[520px] hover:-translate-y-1 hover:shadow-xl transition-all duration-300">
-            <img src="https://c.animaapp.com/mmm3cgevnH1M3s/img/mask-group-1.png" alt="Property" className="absolute inset-0 w-full h-full object-cover" />
+            <picture>
+              <source type="image/avif" srcSet={TILES.m1.avif} />
+              <source type="image/webp" media="(max-width: 640px)" srcSet={TILES.m1.webpSmall} />
+              <img src={TILES.m1.webp} alt="Property" width={800} height={520} loading="lazy" decoding="async" className="absolute inset-0 w-full h-full object-cover" />
+            </picture>
             <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/15 to-transparent" />
             <div className="relative z-10 p-8 flex flex-col justify-between h-full">
               <h3 className="font-['Manrope'] font-semibold text-white text-3xl leading-tight max-w-[320px]">
@@ -50,7 +55,11 @@ const ScalePersistence = () => {
 
           {/* Right card */}
           <div className="relative rounded-3xl overflow-hidden bg-[#111317] h-[520px] hover:-translate-y-1 hover:shadow-xl transition-all duration-300">
-            <img src="https://c.animaapp.com/mmm3cgevnH1M3s/img/mask-group-2.png" alt="Tech network" className="absolute inset-0 w-full h-full object-cover" />
+            <picture>
+              <source type="image/avif" srcSet={TILES.m2.avif} />
+              <source type="image/webp" media="(max-width: 640px)" srcSet={TILES.m2.webpSmall} />
+              <img src={TILES.m2.webp} alt="Tech network" width={800} height={520} loading="lazy" decoding="async" className="absolute inset-0 w-full h-full object-cover" />
+            </picture>
             <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/15 to-transparent" />
             <div className="relative z-10 p-8 flex flex-col justify-between h-full">
               <h3 className="font-['Manrope'] font-semibold text-white text-3xl leading-tight max-w-[320px]">

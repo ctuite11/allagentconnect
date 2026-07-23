@@ -1,4 +1,5 @@
 import React from "react";
+import { GCI_GLOBE } from "./heroImages";
 
 const features = [
   {
@@ -26,7 +27,9 @@ const GCIBenefits = () => {
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
-          backgroundImage: "url(https://c.animaapp.com/mmm3cgevnH1M3s/img/mask-group.png)",
+          // image-set with type() picks AVIF where supported; browsers without
+          // image-set fall through to backgroundImage set below via CSS var.
+          backgroundImage: `image-set(url("${GCI_GLOBE.avif.src1800}") type("image/avif"), url("${GCI_GLOBE.webp.src1800}") type("image/webp")), url("${GCI_GLOBE.webp.src1800}")`,
           backgroundSize: "118%",
           backgroundPosition: "center 38%",
           opacity: 0.92,

@@ -1,17 +1,26 @@
 import React from "react";
 import AACMonogram from "@/components/ui/AACMonogram";
+import { HERO } from "./heroImages";
 
 const HeroSection = () => {
   return (
     <section className="relative w-full min-h-screen bg-[#111317] overflow-hidden flex flex-col">
       {/* Background: full-bleed hero image */}
       <div className="absolute inset-0">
-        <img
-          src="https://c.animaapp.com/mmm3cgevnH1M3s/img/group-1707484446.png"
-          alt="Real estate agents collaborating"
-          className="absolute inset-0 w-full h-full object-cover"
-          style={{ objectPosition: "55% center" }}
-        />
+        <picture>
+          <source type="image/avif" srcSet={HERO.avif.srcset} sizes={HERO.sizes} />
+          <source type="image/webp" srcSet={HERO.webp.srcset} sizes={HERO.sizes} />
+          <img
+            src={HERO.webp.src}
+            alt="Real estate agents collaborating"
+            width={HERO.width}
+            height={HERO.height}
+            fetchPriority="high"
+            decoding="async"
+            className="absolute inset-0 w-full h-full object-cover"
+            style={{ objectPosition: "55% center" }}
+          />
+        </picture>
       </div>
 
       {/* Lower-left readability wash — soft gradient, not a panel */}

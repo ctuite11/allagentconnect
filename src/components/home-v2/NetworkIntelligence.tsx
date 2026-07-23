@@ -1,4 +1,5 @@
 import React from "react";
+import { TILES } from "./heroImages";
 
 const NetworkIntelligence = () => {
   return (
@@ -23,23 +24,36 @@ const NetworkIntelligence = () => {
       <div className="relative w-full max-w-[1260px] flex items-center justify-center">
         {/* Left property card */}
         <div className="hidden xl:block absolute left-0 z-20 w-[240px] rounded-2xl overflow-hidden shadow-[0_16px_48px_rgba(0,0,0,0.18)]" style={{ top: "50%", transform: "translateY(-55%)" }}>
-          <img src="https://c.animaapp.com/mmm3cgevnH1M3s/img/mask-group-4.png" alt="Property" className="w-full h-auto block" />
+          <picture>
+            <source type="image/avif" srcSet={TILES.m4.avif} />
+            <img src={TILES.m4.webp} alt="Property" width={480} height={500} loading="lazy" decoding="async" className="w-full h-auto block" />
+          </picture>
         </div>
 
         {/* Right property card */}
         <div className="hidden xl:block absolute right-0 z-20 w-[240px] rounded-2xl overflow-hidden shadow-[0_16px_48px_rgba(0,0,0,0.18)]" style={{ top: "50%", transform: "translateY(-55%)" }}>
-          <img src="https://c.animaapp.com/mmm3cgevnH1M3s/img/mask-group-5.png" alt="Property" className="w-full h-auto block" />
+          <picture>
+            <source type="image/avif" srcSet={TILES.m5.avif} />
+            <img src={TILES.m5.webp} alt="Property" width={480} height={500} loading="lazy" decoding="async" className="w-full h-auto block" />
+          </picture>
         </div>
 
         {/* Dashboard image */}
         <div className="relative z-10 w-full max-w-[900px] mx-auto">
           <div className="rounded-[28px] border-[10px] border-[#1a1d22] shadow-[0_48px_120px_rgba(15,23,42,0.38),0_16px_40px_rgba(15,23,42,0.18)] overflow-hidden">
-            <img
-              src="https://c.animaapp.com/mmm3cgevnH1M3s/img/mask-group-3.png"
-              alt="Platform dashboard"
-              className="w-full h-auto block"
-              style={{ filter: "contrast(1.15) saturate(1.05)" }}
-            />
+            <picture>
+              <source type="image/avif" srcSet={TILES.m3.avif} />
+              <img
+                src={TILES.m3.webp}
+                alt="Platform dashboard"
+                width={1800}
+                height={1080}
+                loading="lazy"
+                decoding="async"
+                className="w-full h-auto block"
+                style={{ filter: "contrast(1.15) saturate(1.05)" }}
+              />
+            </picture>
           </div>
 
           {/* Desktop floating badges */}
@@ -105,13 +119,17 @@ const NetworkIntelligence = () => {
       <div className="w-full max-w-[1080px] mx-auto mt-20 pb-4">
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {[
-            { image: "https://c.animaapp.com/mmm3cgevnH1M3s/img/mask-group-7.png", label: "Off-Market listing", price: "$4,000,000", dot: "#2537ff" },
-            { image: "https://c.animaapp.com/mmm3cgevnH1M3s/img/mask-group-8.png", label: "Coming soon", price: "$2,450,000", dot: "#fac022" },
-            { image: "https://c.animaapp.com/mmm3cgevnH1M3s/img/mask-group-9.png", label: "Active", price: "$999,000", dot: "#50c878" },
-            { image: "https://c.animaapp.com/mmm3cgevnH1M3s/img/mask-group-10.png", label: "Sold Off-Market", price: "$3,500,000", dot: "#ff6b56" },
+            { tile: TILES.m7, label: "Off-Market listing", price: "$4,000,000", dot: "#2537ff" },
+            { tile: TILES.m8, label: "Coming soon", price: "$2,450,000", dot: "#fac022" },
+            { tile: TILES.m9, label: "Active", price: "$999,000", dot: "#50c878" },
+            { tile: TILES.m10, label: "Sold Off-Market", price: "$3,500,000", dot: "#ff6b56" },
           ].map((card) => (
             <div key={card.label} className="relative rounded-2xl overflow-hidden" style={{ aspectRatio: "350/365" }}>
-              <img src={card.image} alt={card.label} className="absolute inset-0 w-full h-full object-cover" />
+              <picture>
+                <source type="image/avif" srcSet={card.tile.avif} />
+                <source type="image/webp" media="(max-width: 640px)" srcSet={card.tile.webpSmall} />
+                <img src={card.tile.webp} alt={card.label} width={350} height={365} loading="lazy" decoding="async" className="absolute inset-0 w-full h-full object-cover" />
+              </picture>
               <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
               <div className="absolute top-3 left-3">
                 <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-full shadow">
