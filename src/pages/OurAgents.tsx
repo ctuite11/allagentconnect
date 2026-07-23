@@ -487,6 +487,18 @@ function AgentPhotoTileGrid({
     return filteredAgents.slice(start, start + pageSize);
   }, [filteredAgents, page, pageSize]);
 
+  // Scroll to top on pagination change (pathname stays the same, so
+  // ScrollRestoration does not fire). Support both window scroll (public)
+  // and AppShell inner scroll container (authenticated agents).
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    if (typeof document !== "undefined") {
+      document.querySelectorAll<HTMLElement>("[data-app-scroll-root]").forEach((el) => {
+        el.scrollTop = 0;
+      });
+    }
+  }, [page]);
+
   const toggleCounty = (countyId: string) => {
     setSelectedCounties(prev =>
       prev.includes(countyId)
