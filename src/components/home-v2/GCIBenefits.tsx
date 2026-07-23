@@ -1,4 +1,5 @@
 import React from "react";
+import { GCI_GLOBE } from "./heroImages";
 
 const features = [
   {
@@ -26,7 +27,7 @@ const GCIBenefits = () => {
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
-          backgroundImage: "url(https://c.animaapp.com/mmm3cgevnH1M3s/img/mask-group.png)",
+          backgroundImage: `image-set(url(${GCI_GLOBE.avif.src1800}) type("image/avif"), url(${GCI_GLOBE.webp.src1800}) type("image/webp"))`,
           backgroundSize: "118%",
           backgroundPosition: "center 38%",
           opacity: 0.92,
