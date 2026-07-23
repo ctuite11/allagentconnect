@@ -1,16 +1,18 @@
-import React from "react";
+import React, { lazy, Suspense } from "react";
 import { Helmet } from "react-helmet-async";
 import { Seo } from "@/components/Seo";
 import { isDcmlsHost } from "@/lib/host";
 import HeroSection from "@/components/home-v2/HeroSection";
 import ProofStrip from "@/components/home-v2/ProofStrip";
-import NetworkIntelligence from "@/components/home-v2/NetworkIntelligence";
-import EcosystemSection from "@/components/home-v2/EcosystemSection";
-import HowAgentsUseAAC from "@/components/home-v2/HowAgentsUseAAC";
-import ScalePersistence from "@/components/home-v2/ScalePersistence";
-import GCIBenefits from "@/components/home-v2/GCIBenefits";
-import FinalCTA from "@/components/home-v2/FinalCTA";
-import FooterV2 from "@/components/home-v2/FooterV2";
+// Below-the-fold sections are lazy so they don't inflate the initial JS payload
+// on the public landing page. Hero + ProofStrip stay eager for LCP/FCP.
+const NetworkIntelligence = lazy(() => import("@/components/home-v2/NetworkIntelligence"));
+const EcosystemSection = lazy(() => import("@/components/home-v2/EcosystemSection"));
+const HowAgentsUseAAC = lazy(() => import("@/components/home-v2/HowAgentsUseAAC"));
+const ScalePersistence = lazy(() => import("@/components/home-v2/ScalePersistence"));
+const GCIBenefits = lazy(() => import("@/components/home-v2/GCIBenefits"));
+const FinalCTA = lazy(() => import("@/components/home-v2/FinalCTA"));
+const FooterV2 = lazy(() => import("@/components/home-v2/FooterV2"));
 
 const HOMEPAGE_JSON_LD = {
   "@context": "https://schema.org",
@@ -46,13 +48,15 @@ const HomepageV2 = () => {
         <main className="flex flex-col w-full">
           <HeroSection />
           <ProofStrip />
-          <NetworkIntelligence />
-          <EcosystemSection />
-          <HowAgentsUseAAC />
-          <ScalePersistence />
-          <GCIBenefits />
-          <FinalCTA />
-          <FooterV2 />
+          <Suspense fallback={<div style={{ minHeight: 400 }} />}>
+            <NetworkIntelligence />
+            <EcosystemSection />
+            <HowAgentsUseAAC />
+            <ScalePersistence />
+            <GCIBenefits />
+            <FinalCTA />
+            <FooterV2 />
+          </Suspense>
         </main>
       </div>
     </>
