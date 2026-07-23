@@ -588,123 +588,12 @@ export default function AdminApprovals() {
 
       const licenseByEmail = new Map<string, EmailStatusInfo>();
       const inviteByEmail = new Map<string, EmailStatusInfo>();
-      const reminderByEmail = new Map<
-        string,
-        { sent_at: string; template: string; status: string }
-      >();
       const everRequested = new Map<string, string>(); // email -> earliest created_at
 
       if (normEmails.length > 0) {
-        try {
-          // Fetch by reminder template, not recipient JSON path. The
-          // recipient-scoped JSON .in() filter can fail/open empty in the
-          // browser client even when rows exist, which made Last Reminder show
-          // "Never" for agents with real reminder jobs.
-          const reminderTemplates = [
-            "license-verified",
-            "agent-invite",
-            "agent-missing-opportunities",
-          ] as const;
-          const reminderTemplateSet = new Set<string>(reminderTemplates);
-          const reminderSince = new Date();
-          reminderSince.setFullYear(reminderSince.getFullYear() - 1);
-          const PAGE_SIZE = 1000;
-          const MAX_PAGES_PER_TEMPLATE = 25;
-          const seenIds = new Set<string>();
-          const jobRows: any[] = [];
-
-          for (const template of reminderTemplates) {
-            for (let page = 0; page < MAX_PAGES_PER_TEMPLATE; page += 1) {
-              const from = page * PAGE_SIZE;
-              const to = from + PAGE_SIZE - 1;
-              const { data: pageRows, error: pageErr } = await supabase
-                .from("email_jobs")
-                .select(
-                  "id, payload, status, delivery_status, delivery_status_at, created_at, last_error, attempts",
-                )
-                .eq("payload->>template", template)
-                .gte("created_at", reminderSince.toISOString())
-                .order("created_at", { ascending: false })
-                .range(from, to);
-
-              if (pageErr) {
-                console.warn("[AdminApprovals] email_jobs reminder page failed:", pageErr);
-                break;
-              }
-
-              for (const row of (pageRows ?? []) as any[]) {
-                const rid = String(row.id);
-                if (seenIds.has(rid)) continue;
-                seenIds.add(rid);
-                jobRows.push(row);
-              }
-
-              if (!pageRows || pageRows.length < PAGE_SIZE) break;
-            }
-          }
-
-          const toStatus = (row: any): EmailStatusInfo => {
-            const ds = (row.delivery_status || "").toLowerCase();
-            const known = [
-              "queued",
-              "sent",
-              "delivered",
-              "bounced",
-              "complained",
-              "failed",
-            ];
-            let status: EmailStatusInfo["status"];
-            if (ds && known.includes(ds)) {
-              status = ds as EmailStatusInfo["status"];
-            } else if (row.status === "failed") {
-              status = "failed";
-            } else if (row.status === "sent") {
-              status = "sent";
-            } else {
-              status = "queued";
-            }
-            return {
-              status,
-              created_at: row.created_at,
-              event_at: row.delivery_status_at ?? null,
-              attempts: row.attempts ?? null,
-              last_error: row.last_error ?? null,
-            };
-          };
-
-          for (const row of (jobRows ?? []) as any[]) {
-            const template = row?.payload?.template as string | undefined;
-            const to = String(row?.payload?.to || "").trim().toLowerCase();
-            if (!to || !normEmails.includes(to)) continue;
-            const target =
-              template === "license-verified"
-                ? licenseByEmail
-                : template === "agent-invite"
-                  ? inviteByEmail
-                  : null;
-            if (target && !target.has(to)) target.set(to, toStatus(row));
-
-            // Track the newest reminder across all three templates so the
-            // "Last Reminder" column can surface stale accounts.
-            if (template && reminderTemplateSet.has(template)) {
-              const existing = reminderByEmail.get(to);
-              if (
-                !existing ||
-                new Date(row.created_at) > new Date(existing.sent_at)
-              ) {
-                const status = toStatus(row);
-                reminderByEmail.set(to, {
-                  sent_at: row.created_at,
-                  template,
-                  status: status.status,
-                });
-              }
-            }
-          }
-        } catch (e) {
-          console.warn("[AdminApprovals] email_jobs enrichment failed:", e);
-        }
-
+        // Note: license_verified_email, invite_email and last_reminder are
+        // enriched server-side in admin-list-agents (email_jobs is RLS-locked
+        // to service_role). The browser trusts those fields directly.
         try {
           const { data: pvRows } = await supabase
             .from("pending_verifications")
@@ -725,10 +614,10 @@ export default function AdminApprovals() {
 
       const enriched: Agent[] = merged.map((a) => {
         const em = (a.email || "").trim().toLowerCase();
-        const lic = licenseByEmail.get(em) ?? a.license_verified_email ?? null;
-        const inv = inviteByEmail.get(em) ?? a.invite_email ?? null;
+        const lic = a.license_verified_email ?? licenseByEmail.get(em) ?? null;
+        const inv = a.invite_email ?? inviteByEmail.get(em) ?? null;
         const reqAt = everRequested.get(em) ?? null;
-        const rem = reminderByEmail.get(em) ?? null;
+        const rem = a.last_reminder ?? null;
         return {
           ...a,
           license_verified_email: lic,
