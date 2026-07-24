@@ -191,11 +191,16 @@ const MyClients = () => {
     try {
       setLoading(true);
       setClientsLoadError(false);
-      const unique = await fetchAllAgentContacts<Client>(userId, { force: true });
+      const unique = await fetchAllAgentContacts<Client>(userId, {
+        force: true,
+        // Narrow select — full-row `*` on 14k+ CRM rows was timing out for large books.
+        select:
+          "id, first_name, last_name, email, phone, client_type, created_at, updated_at, relationship_status, relationship_ended_at, relationship_user_id",
+      });
       setClients(unique);
     } catch (error: any) {
       console.error("Error fetching clients:", error);
-      toast.error("Failed to load clients");
+      toast.error(error?.message ? `Failed to load contacts: ${error.message}` : "Failed to load contacts");
       setClientsLoadError(true);
     } finally {
       setLoading(false);
