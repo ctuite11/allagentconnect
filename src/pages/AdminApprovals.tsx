@@ -307,6 +307,7 @@ export default function AdminApprovals() {
   const [licenseUploadAgentIds, setLicenseUploadAgentIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [sendingSetupLinkFor, setSendingSetupLinkFor] = useState<Set<string>>(new Set());
+  const [isSendingCommsPreview, setIsSendingCommsPreview] = useState(false);
   const [lastSetupLinkSentAt, setLastSetupLinkSentAt] = useState<Map<string, number>>(new Map());
   const [pendingTeamsCount, setPendingTeamsCount] = useState<number>(0);
 
@@ -1559,26 +1560,33 @@ export default function AdminApprovals() {
             <Button
               variant="outline"
               size="sm"
+              disabled={isSendingCommsPreview}
               onClick={async () => {
                 const adminEmail = user?.email;
                 if (!adminEmail) {
                   toast.error("No admin email on session");
                   return;
                 }
+                if (isSendingCommsPreview) return;
+                setIsSendingCommsPreview(true);
                 toast.message("Sending Comms Center guide preview to your inbox…");
-                const { data, error } = await supabase.functions.invoke(
-                  'send-comms-guide-email',
-                  { body: { to: [adminEmail], preview: true } },
-                );
-                if (error || !data?.success) {
-                  toast.error(`Failed: ${error?.message ?? data?.error ?? 'Unknown error'}`);
-                } else {
-                  toast.success(`Preview sent to ${adminEmail}`);
+                try {
+                  const { data, error } = await supabase.functions.invoke(
+                    'send-comms-guide-email',
+                    { body: { to: [adminEmail], preview: true } },
+                  );
+                  if (error || !data?.success) {
+                    toast.error(`Failed: ${error?.message ?? data?.error ?? 'Unknown error'}`);
+                  } else {
+                    toast.success(`Preview sent to ${adminEmail}`);
+                  }
+                } finally {
+                  setIsSendingCommsPreview(false);
                 }
               }}
               className="w-full justify-start border-slate-300 text-slate-700 hover:bg-slate-100 sm:w-auto sm:justify-center"
             >
-              Preview Comms guide email
+              {isSendingCommsPreview ? "Sending…" : "Preview Comms guide email"}
             </Button>
             <Button 
               onClick={() => setShowCreateDialog(true)}
