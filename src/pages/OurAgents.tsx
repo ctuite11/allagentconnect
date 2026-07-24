@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useAgentPresenceBatch } from "@/hooks/useAgentLastSeen";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -117,6 +117,7 @@ const OurAgents = ({
   const [page, setPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [pageSize, setPageSize] = useState<AgentDirectoryPageSize>(DEFAULT_PAGE_SIZE);
+  const pageTopRef = useRef<HTMLDivElement>(null);
 
   // Page titles based on mode
   const pageTitle = effectiveAgentMode ? "AAC Referral Network" : "Find an Agent";
@@ -487,16 +488,52 @@ function AgentPhotoTileGrid({
     return filteredAgents.slice(start, start + pageSize);
   }, [filteredAgents, page, pageSize]);
 
-  // Scroll to top on pagination change (pathname stays the same, so
-  // ScrollRestoration does not fire). Support both window scroll (public)
-  // and AppShell inner scroll container (authenticated agents).
-  useEffect(() => {
-    window.scrollTo(0, 0);
-    if (typeof document !== "undefined") {
+  const scrollAgentNetworkToTop = () => {
+    if (typeof window === "undefined" || typeof document === "undefined") return;
+
+    const activeElement = document.activeElement;
+    if (activeElement instanceof HTMLElement) {
+      activeElement.blur();
+    }
+
+    const resetScrollContainers = () => {
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      if (document.documentElement) document.documentElement.scrollTop = 0;
+      if (document.body) document.body.scrollTop = 0;
+
       document.querySelectorAll<HTMLElement>("[data-app-scroll-root]").forEach((el) => {
         el.scrollTop = 0;
       });
-    }
+
+      let ancestor = pageTopRef.current?.parentElement ?? null;
+      while (ancestor) {
+        const style = window.getComputedStyle(ancestor);
+        const canScrollY = /(auto|scroll|overlay)/.test(style.overflowY);
+        if (canScrollY && ancestor.scrollHeight > ancestor.clientHeight) {
+          ancestor.scrollTop = 0;
+        }
+        ancestor = ancestor.parentElement;
+      }
+
+      pageTopRef.current?.scrollIntoView({ block: "start", inline: "nearest", behavior: "auto" });
+    };
+
+    resetScrollContainers();
+    window.requestAnimationFrame(resetScrollContainers);
+    window.setTimeout(resetScrollContainers, 80);
+  };
+
+  const handlePageChange = (nextPage: number) => {
+    scrollAgentNetworkToTop();
+    setPage(nextPage);
+  };
+
+  // Scroll to top on pagination change (pathname stays the same, so
+  // ScrollRestoration does not fire). Support both window scroll (public)
+  // and AppShell inner scroll container (authenticated agents), including
+  // mobile browsers that restore focus/anchor position after the render.
+  useEffect(() => {
+    scrollAgentNetworkToTop();
   }, [page]);
 
   const toggleCounty = (countyId: string) => {
@@ -566,7 +603,7 @@ function AgentPhotoTileGrid({
       />
       <main className="flex-1 pb-10">
         {/* Page Header + Search */}
-        <section className="border-b border-neutral-200/90 bg-white py-6 md:py-8">
+        <section ref={pageTopRef} className="scroll-mt-0 border-b border-neutral-200/90 bg-white py-6 md:py-8">
           <div className="mx-auto w-full max-w-[1200px] px-5 md:px-6">
             <PageHeader
               title={pageTitle}
@@ -656,7 +693,7 @@ function AgentPhotoTileGrid({
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setPage((p) => Math.max(1, p - 1))}
+                      onClick={() => handlePageChange(Math.max(1, page - 1))}
                       disabled={page === 1}
                       className="gap-1 border-neutral-200 shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
                     >
@@ -669,7 +706,7 @@ function AgentPhotoTileGrid({
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setPage((p) => p + 1)}
+                      onClick={() => handlePageChange(page + 1)}
                       disabled={page * (pageSize as number) >= totalCount}
                       className="gap-1 border-neutral-200 shadow-[0_1px_2px_rgba(0,0,0,0.04)]"
                     >
