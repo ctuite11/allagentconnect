@@ -274,6 +274,34 @@ export function renderEmailTemplate(
           ${variables.contentHtml || ""}`,
       });
 
+    case "client-need-broadcast": {
+      // contentHtml is TRUSTED internal HTML produced by the broadcast
+      // builder in send-client-need-notification. Do not accept arbitrary
+      // user HTML on this path.
+      const agentName = variables.agentName || "there";
+      const senderName = variables.senderName || "A verified agent";
+      const senderCompany = variables.senderCompany
+        ? ` (${variables.senderCompany})`
+        : "";
+      const category = variables.category || "Network Update";
+      const contentHtml = typeof variables.contentHtml === "string" ? variables.contentHtml : "";
+      return buildAacEmail({
+        headline: category,
+        preheader: `${senderName}${senderCompany} shared a ${category.toLowerCase()}`,
+        body: `
+          <p style="margin:0 0 4px;">
+            <span style="display:inline-block;padding:3px 10px;font-size:12px;font-weight:600;color:#0E56F5;background:#EEF3FF;border-radius:999px;letter-spacing:0.02em;">${category}</span>
+          </p>
+          <p style="margin:12px 0 4px;font-size:14px;color:#334155;">Hi ${agentName},</p>
+          <p style="margin:0 0 16px;font-size:14px;color:#334155;">
+            <strong>${senderName}</strong>${senderCompany} shared this with the network:
+          </p>
+          ${contentHtml}`,
+        ctaLabel: "Reply in Communications Center",
+        ctaUrl: `${AAC_PUBLIC_URL}/communications`,
+      });
+    }
+
     case "comms-digest": {
       const cadenceLabel =
         variables.cadence === "weekly" ? "Weekly" : "Daily";
