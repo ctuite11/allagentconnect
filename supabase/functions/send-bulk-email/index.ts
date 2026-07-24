@@ -424,8 +424,58 @@ function buildPrivateListingNetworkBody(): string {
 }
 
 function buildJoinInvitationBody(): string {
+  return buildJoinInvitationBodyFor(null);
+}
+
+function escapeHtmlAttr(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function sanitizeFirstName(raw?: string | null): string | null {
+  if (!raw) return null;
+  const trimmed = String(raw).trim();
+  if (!trimmed) return null;
+  if (trimmed.length > 40) return null;
+  // Reject emails, ids/uuids, urls, placeholders, punctuation-only, digits
+  if (/[@]/.test(trimmed)) return null;
+  if (/^https?:/i.test(trimmed)) return null;
+  if (/^[{[<]/.test(trimmed)) return null; // {{first}}, [First Name], <name>
+  if (/^[0-9\W_]+$/.test(trimmed)) return null; // digits/punctuation only
+  if (/[0-9]/.test(trimmed) && /-/.test(trimmed)) return null; // uuid-ish
+  if (!/^[\p{L}][\p{L}\p{M}'’.\- ]{0,39}$/u.test(trimmed)) return null;
+  const lower = trimmed.toLowerCase();
+  const banned = new Set([
+    "first",
+    "firstname",
+    "name",
+    "there",
+    "friend",
+    "agent",
+    "user",
+    "unknown",
+    "null",
+    "undefined",
+    "n/a",
+    "na",
+    "test",
+  ]);
+  if (banned.has(lower)) return null;
+  // First token only
+  const first = trimmed.split(/\s+/)[0];
+  return first.charAt(0).toUpperCase() + first.slice(1);
+}
+
+function buildJoinInvitationBodyFor(firstNameRaw?: string | null): string {
   const ctaUrl = "https://allagentconnect.com/auth?mode=register";
   const ctaLabel = "Create your account";
+  const safeFirst = sanitizeFirstName(firstNameRaw);
+  const greetingName = safeFirst ? escapeHtmlAttr(safeFirst) : "there";
+  const greetingHtml = `<p style="margin:0 0 14px;font-size:14px;line-height:1.65;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Hi ${greetingName},</p>`;
 
   const bullets = [
     "Buyer and seller leads",
@@ -454,6 +504,7 @@ function buildJoinInvitationBody(): string {
       </td></tr>
       <tr><td style="padding:0 0 16px;">
         <h1 style="margin:0 0 12px;font-size:24px;font-weight:700;line-height:1.25;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">You&rsquo;re invited to join All Agent Connect</h1>
+        ${greetingHtml}
         <p style="margin:0 0 14px;font-size:14px;line-height:1.65;color:#334155;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">I&rsquo;d like to invite you to join <strong>All Agent Connect</strong>, a private network built for real estate agents.</p>
         <p style="margin:0 0 14px;font-size:14px;line-height:1.65;color:#334155;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">AAC helps agents see and share opportunities that often happen before they reach the public market, including:</p>
         <div style="padding:14px 16px;background:#F7FBF4;border:1px solid #D8ECD1;border-radius:10px;margin:0 0 16px;">
@@ -633,7 +684,7 @@ const handler = async (req: Request): Promise<Response> => {
         <body>
           <div class="content">
             {{GREETING}}
-            <div>${renderedBody}</div>
+            <div>{{BODY}}</div>
           </div>
         </body>
       </html>
@@ -663,6 +714,7 @@ const handler = async (req: Request): Promise<Response> => {
         </p>`;
       const groupHtml = htmlTemplate
         .replace("{{GREETING}}", "")
+        .replace("{{BODY}}", renderedBody)
         .replace("</body>", `${unsubFooter}</body>`);
 
       // Enqueue single group job
@@ -734,6 +786,12 @@ const handler = async (req: Request): Promise<Response> => {
           ? diagnosticHtml(recipient.name, unsubUrl)
           : htmlTemplate
               .replace("{{GREETING}}", isTemplated ? "" : `<p>Hello ${recipient.name},</p>`)
+              .replace(
+                "{{BODY}}",
+                template === "join-invitation"
+                  ? buildJoinInvitationBodyFor((recipient.name || "").trim().split(/\s+/)[0])
+                  : renderedBody,
+              )
               .replace("</body>", `${unsubFooter}</body>`);
 
         return {
