@@ -117,7 +117,7 @@ const OurAgents = ({
   const [page, setPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [pageSize, setPageSize] = useState<AgentDirectoryPageSize>(DEFAULT_PAGE_SIZE);
-  const pageTopRef = useRef<HTMLDivElement>(null);
+  const pageTopRef = useRef<HTMLElement>(null);
 
   // Page titles based on mode
   const pageTitle = effectiveAgentMode ? "AAC Referral Network" : "Find an Agent";
