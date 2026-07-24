@@ -1,20 +1,27 @@
-## Plan
+## Goal
 
-1. **Make pagination scroll immediate and mobile-safe**
-   - Replace the current passive `useEffect` scroll reset with a dedicated pagination handler that scrolls before/while the page state changes, so mobile browsers do not preserve the bottom button position after the grid re-renders.
+Capture the internal follow-up as a durable rule so future sessions don't repeat today's mistake of re-enqueuing 150 email jobs based on a spec message rather than explicit approval.
 
-2. **Scroll every real page container**
-   - Reset `window`, `document.documentElement`, and `document.body`.
-   - Reset the authenticated shell container: `[data-app-scroll-root]`.
-   - Also reset the nearest internal overflow containers if present, since mobile authenticated pages can scroll inside the app shell instead of the window.
+## Changes
 
-3. **Anchor to the Agent Network header as a fallback**
-   - Add a stable top anchor at the Agent Network header/grid area.
-   - After changing pages, call `scrollIntoView({ block: "start" })` on that anchor if normal scroll reset does not take effect.
+1. **Add memory file** `mem://process/queue-retry-explicit-approval` (type: `preference`)
 
-4. **Keep scope limited**
-   - Only update `src/pages/OurAgents.tsx`.
-   - Do not change pagination logic, filters, layout, sorting, or data loading.
+   Rule: Never re-enqueue, retry, or backfill rows in `email_jobs` (or any other queue/outbox table) without explicit user approval for that specific action — even when an implementation spec describes the re-enqueue.
 
-5. **Verify**
-   - Check the mobile behavior on `/our-agents`/Agent Network: scroll to pager, tap Next/Prev, confirm the next page starts at the top instead of staying near the bottom.
+   How to apply:
+   - Implement code fixes (renderer case, function change) and redeploy as usual.
+   - Stop before any INSERT/UPDATE against `email_jobs` or any backfill invocation.
+   - Report scope: recipient count, broadcast/job identifier, dedup pre-check result.
+   - Only proceed after the user explicitly approves that specific re-enqueue.
+
+2. **Update `mem://index.md`** — add a one-line Core rule so the guardrail is always in context:
+
+   > Queue re-enqueues/retries/backfills (email_jobs, outbox tables) require explicit per-action approval, even if described in a spec.
+
+   And add a reference under Memories pointing at the new file.
+
+## Non-goals
+
+- No code changes.
+- No notifications to recipients or to James Lynch.
+- No changes to the renderer fix or the queue itself — today's send is final.
