@@ -714,6 +714,7 @@ const handler = async (req: Request): Promise<Response> => {
         </p>`;
       const groupHtml = htmlTemplate
         .replace("{{GREETING}}", "")
+        .replace("{{BODY}}", renderedBody)
         .replace("</body>", `${unsubFooter}</body>`);
 
       // Enqueue single group job
