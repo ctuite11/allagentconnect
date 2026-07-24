@@ -307,6 +307,7 @@ export default function AdminApprovals() {
   const [licenseUploadAgentIds, setLicenseUploadAgentIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [sendingSetupLinkFor, setSendingSetupLinkFor] = useState<Set<string>>(new Set());
+  const [isSendingCommsPreview, setIsSendingCommsPreview] = useState(false);
   const [lastSetupLinkSentAt, setLastSetupLinkSentAt] = useState<Map<string, number>>(new Map());
   const [pendingTeamsCount, setPendingTeamsCount] = useState<number>(0);
 
