@@ -423,6 +423,59 @@ function buildPrivateListingNetworkBody(): string {
     </table>`;
 }
 
+function buildJoinInvitationBody(): string {
+  const ctaUrl = "https://allagentconnect.com/auth?mode=register";
+  const ctaLabel = "Create your account";
+
+  const bullets = [
+    "Buyer and seller leads",
+    "Buyer and renter needs",
+    "Off-market and coming-soon listings",
+    "New listing activity",
+    "Referrals and agent discussions",
+    "Direct connections with other verified agents",
+  ];
+
+  const bulletHtml = bullets
+    .map(
+      (b) => `<p style="margin:0 0 6px;font-size:14px;line-height:1.55;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;"><span style="color:#22C55E;font-weight:700;">&#10003;</span> ${b}</p>`,
+    )
+    .join("");
+
+  const ctaButton = `
+    <tr><td align="center" style="padding:28px 0 0;">
+      <a href="${ctaUrl}" style="display:inline-block;padding:14px 28px;background:#0E56F5;color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;border-radius:8px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${ctaLabel} &rarr;</a>
+    </td></tr>`;
+
+  return `
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:600px;margin:0 auto;">
+      <tr><td align="center" style="padding:0 0 24px;">
+        <img src="${AAC_LOGO_URL}" alt="All Agent Connect" height="36" style="display:block;height:36px;width:auto;border:0;outline:none;" />
+      </td></tr>
+      <tr><td style="padding:0 0 16px;">
+        <h1 style="margin:0 0 12px;font-size:24px;font-weight:700;line-height:1.25;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">You&rsquo;re invited to join All Agent Connect</h1>
+        <p style="margin:0 0 14px;font-size:14px;line-height:1.65;color:#334155;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">I&rsquo;d like to invite you to join <strong>All Agent Connect</strong>, a private network built for real estate agents.</p>
+        <p style="margin:0 0 14px;font-size:14px;line-height:1.65;color:#334155;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">AAC helps agents see and share opportunities that often happen before they reach the public market, including:</p>
+        <div style="padding:14px 16px;background:#F7FBF4;border:1px solid #D8ECD1;border-radius:10px;margin:0 0 16px;">
+          ${bulletHtml}
+        </div>
+        <p style="margin:0 0 14px;font-size:14px;line-height:1.65;color:#334155;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">You can also control which opportunities and emails you receive by setting your preferences in the <a href="https://allagentconnect.com/communications" style="color:#0E56F5;text-decoration:none;font-weight:600;">Communications Center</a>.</p>
+        <p style="margin:0 0 14px;font-size:14px;line-height:1.65;color:#334155;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">There is no obligation to participate in everything. The goal is to give agents one place to find relevant leads, demand, listings, and opportunities from across the network.</p>
+        <p style="margin:0;font-size:14px;line-height:1.65;color:#334155;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Create your account: <a href="${ctaUrl}" style="color:#0E56F5;text-decoration:none;font-weight:600;">${ctaUrl}</a></p>
+      </td></tr>
+      ${ctaButton}
+      <tr><td style="padding:14px 0 0;">
+        <p style="margin:0;font-size:13px;line-height:1.6;color:#64748b;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Once your account is set up, you&rsquo;ll have access to the full agent network.</p>
+      </td></tr>
+      <tr><td style="padding:28px 0 0;border-top:1px solid #e2e8f0;">
+        <p style="margin:20px 0 4px;font-size:14px;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Thanks,</p>
+        <p style="margin:0 0 4px;font-size:14px;color:#0f172a;font-weight:600;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Chris Tuite</p>
+        <p style="margin:0 0 10px;font-size:13px;color:#64748b;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Founder, All Agent Connect</p>
+        <p style="margin:0;font-size:12px;color:#94a3b8;font-style:italic;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">By agents. For agents. All agents.</p>
+      </td></tr>
+    </table>`;
+}
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -432,8 +485,9 @@ const handler = async (req: Request): Promise<Response> => {
     const body: BulkEmailRequest = await req.json();
     const isDiagnostic = body.diagnostic === true && Array.isArray(body.recipients) && body.recipients.length === 1;
     const isProfileReminder = body.template === "profile-reminder";
+    const isJoinInvitation = body.template === "join-invitation";
 
-    if (BULK_OUTREACH_PAUSED && !isDiagnostic && !isProfileReminder) {
+    if (BULK_OUTREACH_PAUSED && !isDiagnostic && !isProfileReminder && !isJoinInvitation) {
       return new Response(
         JSON.stringify({
           error: "Bulk outreach is temporarily paused to protect email deliverability.",
@@ -452,7 +506,8 @@ const handler = async (req: Request): Promise<Response> => {
       template === "early-access-update-v1" ||
       template === "early-access-update-v2" ||
       template === "founding-partner-invitation" ||
-      template === "private-listing-network");
+      template === "private-listing-network" ||
+      template === "join-invitation");
 
     console.log(`[send-bulk-email] Enqueuing bulk email to ${recipients.length} recipients`);
 
@@ -533,13 +588,15 @@ const handler = async (req: Request): Promise<Response> => {
       s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
     const renderedBody = template === "private-listing-network"
       ? buildPrivateListingNetworkBody()
-      : template === "founding-partner-invitation"
-        ? buildFoundingPartnerBody()
-        : template === "early-access-update-v2"
-          ? buildEarlyAccessUpdateV2Body()
-          : template === "early-access-update-v1"
-            ? buildEarlyAccessUpdateBody()
-            : (/<[a-z][\s\S]*>/i.test(message) ? message : escapeHtml(message).replace(/\n/g, "<br>"));
+      : template === "join-invitation"
+        ? buildJoinInvitationBody()
+        : template === "founding-partner-invitation"
+          ? buildFoundingPartnerBody()
+          : template === "early-access-update-v2"
+            ? buildEarlyAccessUpdateV2Body()
+            : template === "early-access-update-v1"
+              ? buildEarlyAccessUpdateBody()
+              : (/<[a-z][\s\S]*>/i.test(message) ? message : escapeHtml(message).replace(/\n/g, "<br>"));
 
     // Diagnostic: absolute minimum HTML — no <style>, no wrapper class, no images,
     // single direct AAC link, visible unsubscribe appended later.

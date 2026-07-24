@@ -80,7 +80,8 @@ export function BulkEmailDialog({ open, onOpenChange, recipients, onSent }: Bulk
       template === "early-access-update-v1" ||
       template === "early-access-update-v2" ||
         template === "founding-partner-invitation" ||
-        template === "comms-center-guide";
+        template === "comms-center-guide" ||
+        template === "join-invitation";
     if (!subject.trim() || (!isTemplated && !message.trim())) {
       toast.error(isTemplated ? "Please fill in the subject" : "Please fill in both subject and message");
       return;
@@ -265,19 +266,23 @@ export function BulkEmailDialog({ open, onOpenChange, recipients, onSent }: Bulk
               if (v === "comms-center-guide") {
                 setSubject((prev) => prev || "Too many emails? We've got you covered.");
               }
+              if (v === "join-invitation") {
+                setSubject((prev) => prev || "You\u2019re invited to join All Agent Connect");
+              }
             }}>
               <SelectTrigger id="template">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="custom">Custom message</SelectItem>
+                <SelectItem value="join-invitation">Join Invitation — Invite Agent to AAC</SelectItem>
                 <SelectItem value="comms-center-guide">Comms Center Guide — Reduce Email Noise</SelectItem>
                 <SelectItem value="founding-partner-invitation">Founding Partner — Exclusive Invitation</SelectItem>
                 <SelectItem value="early-access-update-v2">Early Access — First Look (v2, recommended)</SelectItem>
                 <SelectItem value="early-access-update-v1">Early Access Update — Product Tour (5 sections, luxury sample data)</SelectItem>
               </SelectContent>
             </Select>
-            {(template === "early-access-update-v1" || template === "early-access-update-v2" || template === "founding-partner-invitation" || template === "comms-center-guide") && (
+            {(template === "early-access-update-v1" || template === "early-access-update-v2" || template === "founding-partner-invitation" || template === "comms-center-guide" || template === "join-invitation") && (
               <p className="text-xs text-muted-foreground">
                 Pre-built email featuring product screenshots and short captions. Your custom message below will be ignored.
               </p>

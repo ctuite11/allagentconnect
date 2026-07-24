@@ -80,7 +80,8 @@ export function EmailAgentDialog({
       template === "early-access-update-v2" ||
       template === "founding-partner-invitation" ||
       template === "private-listing-network" ||
-      template === "comms-center-guide";
+      template === "comms-center-guide" ||
+      template === "join-invitation";
     if (!subject.trim() || (!isTemplated && !message.trim())) {
       toast.error("Please fill in both subject and message");
       return;
@@ -327,6 +328,9 @@ export function EmailAgentDialog({
                   if (v === "comms-center-guide") {
                     setSubject((prev) => prev || "Too many emails? We\u2019ve got you covered.");
                   }
+                  if (v === "join-invitation") {
+                    setSubject((prev) => prev || "You\u2019re invited to join All Agent Connect");
+                  }
                 }}
               >
                 <SelectTrigger id="email-template" className="border-slate-200">
@@ -334,6 +338,9 @@ export function EmailAgentDialog({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="custom">Custom message</SelectItem>
+                  <SelectItem value="join-invitation">
+                    Join Invitation — Invite Agent to AAC
+                  </SelectItem>
                   <SelectItem value="profile-reminder">
                     Complete Your Profile — Reminder
                   </SelectItem>
@@ -358,7 +365,8 @@ export function EmailAgentDialog({
                 template === "early-access-update-v2" ||
                 template === "founding-partner-invitation" ||
                 template === "private-listing-network" ||
-                template === "comms-center-guide") && (
+                template === "comms-center-guide" ||
+                template === "join-invitation") && (
                 <p className="text-xs text-muted-foreground">
                   Pre-built email featuring product screenshots and short captions. Custom message below is ignored.
                 </p>
