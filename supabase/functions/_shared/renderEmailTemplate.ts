@@ -285,6 +285,19 @@ export function renderEmailTemplate(
         : "";
       const category = variables.category || "Network Update";
       const contentHtml = typeof variables.contentHtml === "string" ? variables.contentHtml : "";
+      const senderFirstNameRaw = typeof variables.senderName === "string"
+        ? variables.senderName.trim().split(/\s+/)[0]
+        : "";
+      const senderFirstName = senderFirstNameRaw && senderFirstNameRaw.length > 0
+        ? senderFirstNameRaw
+        : "";
+      const replyNoticeText = senderFirstName
+        ? `Interested or have a match? <strong>Reply directly to this email</strong> to contact ${senderFirstName}.`
+        : `Interested or have a match? <strong>Reply directly to this email</strong> to contact the sending agent.`;
+      const replyNoticeHtml = `
+        <div style="margin:20px 0 4px;padding:12px 16px;background:#f8fafc;border-left:3px solid #0E56F5;border-radius:6px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
+          <p style="margin:0;font-size:14px;line-height:1.55;color:#0f172a;">${replyNoticeText}</p>
+        </div>`;
       return buildAacEmail({
         headline: category,
         preheader: `${senderName}${senderCompany} shared a ${category.toLowerCase()}`,
@@ -296,9 +309,8 @@ export function renderEmailTemplate(
           <p style="margin:0 0 16px;font-size:14px;color:#334155;">
             <strong>${senderName}</strong>${senderCompany} shared this with the network:
           </p>
-          ${contentHtml}`,
-        ctaLabel: "Reply in Communications Center",
-        ctaUrl: `${AAC_PUBLIC_URL}/communications`,
+          ${contentHtml}
+          ${replyNoticeHtml}`,
       });
     }
 
