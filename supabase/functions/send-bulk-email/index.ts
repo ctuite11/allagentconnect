@@ -684,7 +684,7 @@ const handler = async (req: Request): Promise<Response> => {
         <body>
           <div class="content">
             {{GREETING}}
-            <div>${renderedBody}</div>
+            <div>{{BODY}}</div>
           </div>
         </body>
       </html>
