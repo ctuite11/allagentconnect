@@ -1,12 +1,20 @@
-## Problem
+## Plan
 
-On mobile, clicking Next/Prev on the Agent Network (`/our-agents`) keeps the scroll position at the bottom (near the pager), so the new page appears to start mid-list. Route pathname does not change on pagination, so `ScrollRestoration` does not fire.
+1. **Make pagination scroll immediate and mobile-safe**
+   - Replace the current passive `useEffect` scroll reset with a dedicated pagination handler that scrolls before/while the page state changes, so mobile browsers do not preserve the bottom button position after the grid re-renders.
 
-## Fix
+2. **Scroll every real page container**
+   - Reset `window`, `document.documentElement`, and `document.body`.
+   - Reset the authenticated shell container: `[data-app-scroll-root]`.
+   - Also reset the nearest internal overflow containers if present, since mobile authenticated pages can scroll inside the app shell instead of the window.
 
-In `src/pages/OurAgents.tsx`, add an effect that scrolls to the top whenever `page` changes:
+3. **Anchor to the Agent Network header as a fallback**
+   - Add a stable top anchor at the Agent Network header/grid area.
+   - After changing pages, call `scrollIntoView({ block: "start" })` on that anchor if normal scroll reset does not take effect.
 
-- Reset `window.scrollTo(0, 0)` and also reset any `[data-app-scroll-root]` container's `scrollTop` (agent-authenticated shell scrolls inside AppShell, public visitors scroll the window) — mirrors the logic already used in `ScrollRestoration.tsx`.
-- Trigger only on `page` change (not initial mount alongside pathname reset, which already handles first load).
+4. **Keep scope limited**
+   - Only update `src/pages/OurAgents.tsx`.
+   - Do not change pagination logic, filters, layout, sorting, or data loading.
 
-No other changes; pagination logic, filters, and layout stay identical.
+5. **Verify**
+   - Check the mobile behavior on `/our-agents`/Agent Network: scroll to pager, tap Next/Prev, confirm the next page starts at the top instead of staying near the bottom.
