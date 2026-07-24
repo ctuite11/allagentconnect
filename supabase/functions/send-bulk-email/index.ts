@@ -786,6 +786,12 @@ const handler = async (req: Request): Promise<Response> => {
           ? diagnosticHtml(recipient.name, unsubUrl)
           : htmlTemplate
               .replace("{{GREETING}}", isTemplated ? "" : `<p>Hello ${recipient.name},</p>`)
+              .replace(
+                "{{BODY}}",
+                template === "join-invitation"
+                  ? buildJoinInvitationBodyFor((recipient.name || "").trim().split(/\s+/)[0])
+                  : renderedBody,
+              )
               .replace("</body>", `${unsubFooter}</body>`);
 
         return {
