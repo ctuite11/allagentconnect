@@ -11,6 +11,7 @@ import { resolveEmailPhotoUrl } from "./listingPhotoUrl.ts";
 import { formatPersonDisplayName } from "./personDisplayName.ts";
 import { formatUsPhoneForDisplay } from "./phoneFormat.ts";
 import { AAC_PUBLIC_URL, resolveEmailBaseUrl } from "./aacPublicUrl.ts";
+import { buildAdminVerificationSubmittedEmailHtml } from "./buildAdminVerificationSubmittedEmailHtml.ts";
 
 /* ------------------------------------------------------------------ */
 /*  Shared helpers for Share Listings emails                           */
@@ -616,33 +617,23 @@ export function renderEmailTemplate(
             timeZone: "America/New_York",
             dateStyle: "full",
             timeStyle: "short",
-          }) + " EST";
+          }) + " ET";
         } catch {
           return submittedAt;
         }
       })();
 
-      const row = (label: string, value: string) =>
-        `<tr><td style="padding:12px 16px;color:#64748b;font-size:14px;">${label}:</td><td style="padding:12px 16px;color:#0f172a;font-weight:600;font-size:14px;">${value}</td></tr>`;
-
-      const detailsTable = `
-        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#ffffff;border:1px solid #e5e7eb;border-radius:8px;margin:16px 0;">
-          ${row("Agent Name", fullName)}
-          <tr><td style="padding:12px 16px;color:#64748b;font-size:14px;">Email:</td><td style="padding:12px 16px;font-size:14px;"><a href="mailto:${email}" style="color:#0E56F5;text-decoration:none;">${email}</a></td></tr>
-          ${phone ? row("Phone", phone) : ""}
-          ${company ? row("Company", company) : ""}
-          ${row("License #", licenseNumber)}
-          ${row("State", licenseState)}
-          ${row("Submitted", submittedDisplay)}
-        </table>
-        ${licenseLookupUrl ? `<p style="margin:8px 0 0;font-size:13px;"><a href="${licenseLookupUrl}" target="_blank" style="color:#0E56F5;text-decoration:none;">Verify ${licenseState} license →</a></p>` : ""}`;
-
-      return buildAacEmail({
-        headline: "New Agent License Verification",
-        preheader: `New verification: ${fullName} — ${licenseState} #${licenseNumber}`,
-        body: detailsTable,
-        ctaLabel: "Review in Admin Panel",
-        ctaUrl: adminUrl,
+      // Lean transactional admin alert — do not use buildAacEmail marketing shell.
+      return buildAdminVerificationSubmittedEmailHtml({
+        fullName,
+        email,
+        phone,
+        company,
+        licenseState,
+        licenseNumber,
+        submittedDisplay,
+        adminUrl,
+        licenseLookupUrl,
       });
     }
 
