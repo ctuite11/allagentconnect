@@ -44,7 +44,7 @@ export function PropertyFactsRow({
 
   if (propertyTypeLabel) {
     groups.push(
-      <div key="type" className={cn(propertyFactItem, "shrink-0 whitespace-nowrap")}>
+      <div key="type" className={cn(propertyFactItem, "shrink-0 whitespace-nowrap basis-full lg:basis-auto")}>
         <span className={cn(propertyFactLabel, "text-neutral-600")}>Property Type:</span>
         <span className={cn(propertyFactValue, "text-sm text-neutral-900")}>{propertyTypeLabel}</span>
       </div>,
