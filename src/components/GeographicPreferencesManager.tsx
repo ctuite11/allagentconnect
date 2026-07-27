@@ -361,7 +361,7 @@ const GeographicPreferencesManager = ({
                   <span className="font-medium text-neutral-900">No geographic areas selected</span>
                   <br />
                   <span className="text-neutral-500">
-                    You will receive notifications for client needs in all areas.
+                    You will receive notifications in all areas.
                   </span>
                 </p>
               </div>
