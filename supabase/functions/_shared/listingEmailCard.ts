@@ -69,7 +69,10 @@ function statusPill(status: unknown): string {
   const raw = String(status ?? "").toLowerCase().trim();
   if (!raw) return "";
   const map: Record<string, { bg: string; fg: string; label: string }> = {
-    active: { bg: "#dcfce7", fg: "#166534", label: "Active" },
+    active: { bg: "#dcfce7", fg: "#166534", label: "On MLS" },
+    on_mls: { bg: "#dcfce7", fg: "#166534", label: "On MLS" },
+    back_on_market: { bg: "#dcfce7", fg: "#166534", label: "Back on Market" },
+    off_market: { bg: "#e5e7eb", fg: "#374151", label: "Off Market" },
     active_under_contract: { bg: "#fef3c7", fg: "#92400e", label: "Under Contract" },
     under_contract: { bg: "#fef3c7", fg: "#92400e", label: "Under Contract" },
     pending: { bg: "#fef3c7", fg: "#92400e", label: "Pending" },
@@ -202,7 +205,10 @@ function renderStatusBanner(status: unknown): string {
   const raw = String(status ?? "").toLowerCase().trim();
   if (!raw) return "";
   const map: Record<string, { bg: string; label: string }> = {
-    active: { bg: "#22C55E", label: "Active" },
+    active: { bg: "#22C55E", label: "On MLS" },
+    on_mls: { bg: "#22C55E", label: "On MLS" },
+    back_on_market: { bg: "#22C55E", label: "Back on Market" },
+    off_market: { bg: "#6B7280", label: "Off Market" },
     coming_soon: { bg: AAC_PRIMARY_BLUE, label: "Coming Soon" },
     active_under_contract: { bg: "#F59E0B", label: "Under Contract" },
     under_contract: { bg: "#F59E0B", label: "Under Contract" },
