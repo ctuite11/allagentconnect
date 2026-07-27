@@ -1,31 +1,22 @@
-## Goal (mobile only, ≤ sm)
+## Goal (mobile ≤ lg)
 
-Property Detail page on phones should read:
+The price currently sits with a large gap above the photo because the outer grid uses `gap-y-6` and the mobile price wrapper adds `mb-2`. Result: ~32px between price baseline and the photo. Target: price sits tight (~4–6px) directly above the photo, still left-aligned.
 
-1. **Price** — left-aligned, directly above the photo (tight spacing).
-2. **Photo** (unchanged).
-3. **Address** — moved to sit directly **above** the Property Type / beds / baths facts row.
-4. **Facts row** — Property Type, beds, baths, sqft, parking, DOM must **wrap to two lines**, no horizontal scroll.
+Desktop layout is unchanged.
 
-Desktop (≥ lg) layout stays exactly as it is today (address left + price right above the photo, single-line facts row).
+## Change
 
-## Changes
+**`src/pages/PropertyDetail.tsx`** (mobile price block, ~line 618)
 
-### 1. `src/pages/PropertyDetail.tsx` (Row 1 + facts area)
-- Replace the `<PropertyHeader embedded … />` (Row 1) with a mobile/desktop split:
-  - **Mobile (`lg:hidden`)**: render just the **price** (left-aligned), reusing `propertyPriceText`, in the same slot above the photo. Tighten `mb-*` so the gap under it is small.
-  - **Desktop (`hidden lg:block`)**: keep the existing `<PropertyHeader embedded …>` with address + price side-by-side.
-- Directly above `<PropertyFactsRow …>` (around line 755), add a mobile-only address block (`lg:hidden`) that renders the `MapPin` + formatted address using the existing `propertyAddressH1` token (or a slightly smaller mobile variant) so styling matches the current address treatment.
+- Remove the `mb-2` bottom margin.
+- Add a negative bottom margin on mobile to cancel the parent grid's `gap-y-6` and pull the photo up close: e.g. `mb-1 -mb-4` won't compose cleanly, so use `mb-0` on the wrapper plus a mobile-only negative margin on the photo row (order-2) — `-mt-5 lg:mt-0` — so the visible gap becomes ~4px.
 
-### 2. `src/components/property/PropertyFactsRow.tsx`
-- Change the inner row classes from `flex-nowrap … overflow-x-auto [&::-webkit-scrollbar]:hidden` to `flex-wrap … lg:flex-nowrap` (and drop the horizontal-scroll classes on mobile). Result: facts wrap onto two rows on narrow screens; desktop still lays out on one row.
-- Keep `gap-x-4 sm:gap-x-9 gap-y-2.5` — the existing `gap-y-2.5` already handles the two-row spacing.
+Concretely:
+- Line 618 wrapper: `className="order-1 min-w-0 lg:hidden"` (drop `mb-2`).
+- Line 628 photo wrapper: prepend `-mt-5 lg:mt-0` so the photo tucks up under the price on mobile only, without touching desktop's `row-start-2` spacing.
 
-## Out of scope
-- `ConsumerPropertyDetail.tsx` and any shared token defaults — no changes.
-- Desktop layout, typography sizes, back button, badge, share/photos buttons — unchanged.
-- Business logic — none touched.
+No other rows, no desktop tokens, no PropertyHeader/PropertyFactsRow changes.
 
 ## Verification
-- Load `/property/L-1223` at 384px viewport (mobile preview) and confirm: price sits tight above the photo on the left; address sits directly above the "Property Type: …" line; all six fact chips are visible without horizontal scroll on two rows.
-- Load at desktop width and confirm header + facts row look identical to today.
+
+At 384px width on `/property/L-1223`: price sits ~4–6px above the top edge of the photo, still left-aligned. Address remains above the facts row. Desktop (≥1024px) unchanged.
