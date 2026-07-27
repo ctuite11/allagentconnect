@@ -615,7 +615,7 @@ const PropertyDetail = () => {
               className="order-1 mb-6 hidden min-w-0 lg:col-start-1 lg:row-start-1 lg:mb-8 lg:block"
             />
             {/* Mobile: price only, left-aligned, tight above photo */}
-            <div className="order-1 mb-2 min-w-0 lg:hidden">
+            <div className="order-1 min-w-0 lg:hidden">
               <p className="text-lg font-bold tabular-nums text-foreground">
                 {listingPriceDisplay ?? "—"}
                 {listing.listing_type === "for_rent" && (
@@ -625,7 +625,7 @@ const PropertyDetail = () => {
             </div>
 
             {/* Row 2 — photo */}
-            <div className="order-2 min-w-0 lg:col-start-1 lg:row-start-2">
+            <div className="order-2 -mt-5 min-w-0 lg:mt-0 lg:col-start-1 lg:row-start-2">
               <div
                 className={cn(
                   propertyHeroMedia,
