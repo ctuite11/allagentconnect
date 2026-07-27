@@ -93,7 +93,7 @@ export function PropertyFactsRow({
     <div className={cn(containerClassName)}>
       <div
         className={cn(
-          "mt-0 flex min-w-0 flex-nowrap items-center gap-x-4 sm:gap-x-9 gap-y-2.5 border-b-0 pb-0 overflow-x-auto [&::-webkit-scrollbar]:hidden",
+          "mt-0 flex min-w-0 flex-wrap items-center gap-x-4 gap-y-2.5 border-b-0 pb-0 lg:flex-nowrap lg:gap-x-9 lg:overflow-x-auto lg:[&::-webkit-scrollbar]:hidden",
           className,
         )}
       >
