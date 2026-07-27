@@ -12,6 +12,7 @@ import { formatPersonDisplayName } from "./personDisplayName.ts";
 import { formatUsPhoneForDisplay } from "./phoneFormat.ts";
 import { AAC_PUBLIC_URL, resolveEmailBaseUrl } from "./aacPublicUrl.ts";
 import { buildAdminVerificationSubmittedEmailHtml } from "./buildAdminVerificationSubmittedEmailHtml.ts";
+import { getHotSheetStatusCopy } from "./hotSheetStatusCopy.ts";
 
 /* ------------------------------------------------------------------ */
 /*  Shared helpers for Share Listings emails                           */
@@ -381,7 +382,6 @@ export function renderEmailTemplate(
 
     case "hot-sheet-status-change":
     case "hot-sheet-subscriber-status-change": {
-      const { getHotSheetStatusCopy } = await import("./hotSheetStatusCopy.ts");
       const copy = getHotSheetStatusCopy(variables.statusKey);
       const isSubscriber = template === "hot-sheet-subscriber-status-change";
       const unsubBlock = isSubscriber
