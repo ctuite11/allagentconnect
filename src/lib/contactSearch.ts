@@ -212,19 +212,62 @@ export async function fetchAllAgentContacts<T extends ContactRow = ContactRow>(
   }
 
   const all: T[] = [];
-  for (let from = 0; ; from += PAGE_SIZE) {
-    const { data, error } = await supabase
+  // Keyset pagination on (created_at DESC, id DESC) — matches
+  // idx_clients_agent_created_id and avoids the O(N) offset scan/sort that
+  // used to hit the authenticated statement timeout for agents with very
+  // large contact lists. clients.created_at and clients.id are NOT NULL.
+  let cursorCreatedAt: string | null = null;
+  let cursorId: string | null = null;
+  let prevCursorKey = "";
+
+  // Hard safety cap — the largest known agent has ~14.4k contacts; 200 pages
+  // of 1000 leaves generous headroom before we bail on a malformed cursor.
+  for (let pageIndex = 0; pageIndex < 200; pageIndex++) {
+    let query = supabase
       .from(AGENT_CONTACTS_SOURCE)
       .select(select)
       .eq("agent_id", agentId)
       .order("created_at", { ascending: false })
       .order("id", { ascending: false })
-      .range(from, from + PAGE_SIZE - 1);
+      .limit(PAGE_SIZE);
 
+    if (cursorCreatedAt && cursorId) {
+      // created_at < cursor OR (created_at = cursor AND id < cursorId)
+      query = query.or(
+        `created_at.lt.${cursorCreatedAt},and(created_at.eq.${cursorCreatedAt},id.lt.${cursorId})`,
+      );
+    }
+
+    const { data, error } = await query;
     if (error) throw error;
 
     const batch = (data ?? []) as unknown as T[];
+    if (batch.length === 0) break;
+
     all.push(...batch);
+
+    // Advance the cursor from the last raw row BEFORE any dedupe pass.
+    const lastRow = batch[batch.length - 1] as unknown as {
+      created_at?: string | null;
+      id?: string | null;
+    };
+    const nextCreatedAt = lastRow?.created_at ?? null;
+    const nextId = lastRow?.id ?? null;
+
+    if (!nextCreatedAt || !nextId) {
+      // Defensive: cursor cannot advance safely; stop rather than loop.
+      break;
+    }
+
+    const nextCursorKey = `${nextCreatedAt}|${nextId}`;
+    if (nextCursorKey === prevCursorKey) {
+      // Cursor did not advance — bail to avoid an infinite loop.
+      break;
+    }
+    prevCursorKey = nextCursorKey;
+    cursorCreatedAt = nextCreatedAt;
+    cursorId = nextId;
+
     if (batch.length < PAGE_SIZE) break;
   }
 
