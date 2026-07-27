@@ -478,7 +478,8 @@ function buildJoinInvitationBodyFor(firstNameRaw?: string | null): string {
   const greetingHtml = `<p style="margin:0 0 14px;font-size:14px;line-height:1.65;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Hi ${greetingName},</p>`;
 
   const bullets = [
-    "Buyer and seller leads",
+    "Seller leads",
+    "Buyer leads",
     "Buyer and renter needs",
     "Off-market and coming-soon listings",
     "New listing activity",
@@ -502,8 +503,10 @@ function buildJoinInvitationBodyFor(firstNameRaw?: string | null): string {
       <tr><td align="center" style="padding:0 0 24px;">
         <img src="${AAC_LOGO_URL}" alt="All Agent Connect" height="36" style="display:block;height:36px;width:auto;border:0;outline:none;" />
       </td></tr>
+      <tr><td align="center" style="padding:0 0 20px;">
+        <h1 style="margin:0;font-size:24px;font-weight:700;line-height:1.25;color:#0f172a;text-align:center;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">You&rsquo;re invited to join All Agent Connect</h1>
+      </td></tr>
       <tr><td style="padding:0 0 16px;">
-        <h1 style="margin:0 0 12px;font-size:24px;font-weight:700;line-height:1.25;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">You&rsquo;re invited to join All Agent Connect</h1>
         ${greetingHtml}
         <p style="margin:0 0 14px;font-size:14px;line-height:1.65;color:#334155;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">I&rsquo;d like to invite you to join <strong>All Agent Connect</strong>, a private network built for real estate agents.</p>
         <p style="margin:0 0 14px;font-size:14px;line-height:1.65;color:#334155;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">AAC helps agents connect around opportunities that often happen before they reach the public market, including:</p>
