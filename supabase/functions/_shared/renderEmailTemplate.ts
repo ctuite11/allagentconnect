@@ -380,30 +380,30 @@ export function renderEmailTemplate(
       });
 
     case "hot-sheet-status-change":
-      return buildAacEmail({
-        headline: "Status update in your Hot Sheet",
-        body: `
-          <p style="margin:0 0 12px;">Hi ${variables.userName},</p>
-          <p style="margin:0 0 16px;">${variables.matchCount} listing${variables.matchCount !== 1 ? "s" : ""} in "${variables.hotSheetName}" changed status — see the current status on each card below.</p>
-          ${variables.listingsHtml || ""}`,
-        ctaLabel: variables.hotSheetLink ? "Open Hot Sheet" : undefined,
-        ctaUrl: variables.hotSheetLink,
-      });
-
-    case "hot-sheet-subscriber-status-change":
-      return buildAacEmail({
-        headline: "Status update in your Hot Sheet",
-        body: `
-          <p style="margin:0 0 12px;">Hi ${variables.userName},</p>
-          <p style="margin:0 0 16px;">${variables.matchCount} listing${variables.matchCount !== 1 ? "s" : ""} in "${variables.hotSheetName}" changed status — see the current status on each card below.</p>
-          ${variables.listingsHtml || ""}
+    case "hot-sheet-subscriber-status-change": {
+      const { getHotSheetStatusCopy } = await import("./hotSheetStatusCopy.ts");
+      const copy = getHotSheetStatusCopy(variables.statusKey);
+      const isSubscriber = template === "hot-sheet-subscriber-status-change";
+      const unsubBlock = isSubscriber
+        ? `
           <p style="font-size:13px;color:#94a3b8;margin:24px 0 0;">
             You're receiving this because someone added you to this Hot Sheet.
             <a href="${variables.unsubscribeLink}" style="color:#0E56F5;">Unsubscribe</a>
-          </p>`,
-        ctaLabel: variables.previewLink ? "Forward this Hot Sheet" : undefined,
-        ctaUrl: variables.previewLink,
+          </p>`
+        : "";
+      return buildAacEmail({
+        headline: copy.headline,
+        body: `
+          <p style="margin:0 0 12px;">Hi ${variables.userName},</p>
+          <p style="margin:0 0 16px;">${copy.intro(Number(variables.matchCount) || 0, String(variables.hotSheetName || ""))}</p>
+          ${variables.listingsHtml || ""}
+          ${unsubBlock}`,
+        ctaLabel: isSubscriber
+          ? (variables.previewLink ? "Forward this Hot Sheet" : undefined)
+          : (variables.hotSheetLink ? "Open Hot Sheet" : undefined),
+        ctaUrl: isSubscriber ? variables.previewLink : variables.hotSheetLink,
       });
+    }
 
     case "hot-sheet-agent-reply":
       return buildAacEmail({
