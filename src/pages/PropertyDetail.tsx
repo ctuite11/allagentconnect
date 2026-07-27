@@ -606,13 +606,23 @@ const PropertyDetail = () => {
             )}
           >
             {/* Row 1 — address + price */}
+            {/* Desktop: address (left) + price (right) above photo */}
             <PropertyHeader
               embedded
               address={buildDisplayAddress(listing as any)}
               priceDisplay={listingPriceDisplay}
               priceSuffix={listing.listing_type === "for_rent" ? "/ mo" : undefined}
-              className="order-1 mb-6 min-w-0 lg:col-start-1 lg:row-start-1 lg:mb-8"
+              className="order-1 mb-6 hidden min-w-0 lg:col-start-1 lg:row-start-1 lg:mb-8 lg:block"
             />
+            {/* Mobile: price only, left-aligned, tight above photo */}
+            <div className="order-1 mb-2 min-w-0 lg:hidden">
+              <p className="text-lg font-bold tabular-nums text-foreground">
+                {listingPriceDisplay ?? "—"}
+                {listing.listing_type === "for_rent" && (
+                  <span className="ml-1 text-sm font-normal text-muted-foreground">/ mo</span>
+                )}
+              </p>
+            </div>
 
             {/* Row 2 — photo */}
             <div className="order-2 min-w-0 lg:col-start-1 lg:row-start-2">
@@ -750,6 +760,18 @@ const PropertyDetail = () => {
                       </span>
                     </p>
                   ) : null}
+                </div>
+
+                {/* Mobile-only address, sits directly above the facts row */}
+                <div className="mt-3 flex items-baseline gap-1.5 lg:hidden">
+                  <MapPin
+                    className="relative top-[1px] h-3.5 w-3.5 shrink-0 text-[#50C878]"
+                    aria-hidden
+                    strokeWidth={2}
+                  />
+                  <h1 className="min-w-0 text-lg font-semibold tracking-tight text-foreground">
+                    {buildDisplayAddress(listing as any)}
+                  </h1>
                 </div>
 
                 <PropertyFactsRow
