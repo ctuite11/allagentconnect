@@ -66,12 +66,50 @@ serve(async (req) => {
       totalMatches += matchingListings.length;
 
       // Fetch full listing details
+      const listingIds = matchingListings.map((m: any) => m.listing_id);
       const { data: listings } = await supabase
         .from("listings")
         .select("*")
-        .in("id", matchingListings.map((m: any) => m.listing_id));
+        .in("id", listingIds);
 
       if (!listings?.length) continue;
+
+      // Deterministic ordering
+      listings.sort((a: any, b: any) => String(a.id).localeCompare(String(b.id)));
+
+      // Classify each listing as new-match vs status-change based on ALL prior sends
+      const { data: priorSends } = await supabase
+        .from("hot_sheet_sent_listings")
+        .select("listing_id, status_at_send")
+        .eq("hot_sheet_id", hotSheet.id)
+        .in("listing_id", listingIds);
+
+      const priorStatusesByListing = new Map<string, Set<string>>();
+      for (const row of priorSends || []) {
+        const key = String((row as any).listing_id);
+        const set = priorStatusesByListing.get(key) || new Set<string>();
+        set.add(String((row as any).status_at_send || ""));
+        priorStatusesByListing.set(key, set);
+      }
+
+      const newMatchListings: any[] = [];
+      const statusChangeListings: any[] = [];
+      for (const l of listings) {
+        const prior = priorStatusesByListing.get(String(l.id));
+        const currentStatus = String(l.status || "active");
+        if (!prior || prior.size === 0) {
+          newMatchListings.push(l);
+        } else if (prior.has(currentStatus)) {
+          // Already sent at this exact status — skip
+          continue;
+        } else {
+          statusChangeListings.push(l);
+        }
+      }
+
+      if (newMatchListings.length === 0 && statusChangeListings.length === 0) {
+        continue;
+      }
 
       // Pull assigned recipients for this hot sheet
       const { data: hotSheetClients, error: clientsError } = await supabase
@@ -160,55 +198,87 @@ serve(async (req) => {
           Deno.env.get("SITE_URL"),
       );
 
-      // Build listings HTML
-      const listingsHtml = listings
-        .map((listing: any) => renderHotSheetMatchListingEmailCard(listing, { baseUrl: appBaseUrl }))
-        .join("");
+      const renderCards = (items: any[]) =>
+        items
+          .map((listing: any) => renderHotSheetMatchListingEmailCard(listing, { baseUrl: appBaseUrl }))
+          .join("");
+
+      const newMatchListingsHtml = renderCards(newMatchListings);
+      const statusChangeListingsHtml = renderCards(statusChangeListings);
 
       let queuedForHotSheet = 0;
+      // Track which (listing_id, status) pairs actually enqueued successfully so
+      // we only record dedup rows for sends that made it into email_jobs.
+      const successfullySent = new Set<string>();
+      const markSent = (items: any[]) => {
+        for (const l of items) successfullySent.add(`${l.id}::${String(l.status || "active")}`);
+      };
 
       for (const recipient of acceptedRecipients) {
-        // Suppress matches that predate acceptance for invite_only tokens
-        let recipientListings = listings;
-        if (recipient.suppressInitial && recipient.acceptedAt) {
+        // suppressInitial (invite_only) filters out anything that predates acceptance
+        const filterInitial = (items: any[]) => {
+          if (!(recipient.suppressInitial && recipient.acceptedAt)) return items;
           const cutoff = new Date(recipient.acceptedAt).getTime();
-          recipientListings = listings.filter((l: any) => {
+          return items.filter((l: any) => {
             const ts = l.created_at || l.updated_at;
             if (!ts) return false;
             return new Date(ts).getTime() > cutoff;
           });
-        }
+        };
 
-        if (!recipientListings.length) {
-          console.log(
-            `[send-new-match-notification] Skipping ${hotSheet.id} for ${recipient.email}: suppressInitial filtered all matches`
-          );
-          continue;
-        }
+        const recipientNew = filterInitial(newMatchListings);
+        const recipientStatus = filterInitial(statusChangeListings);
 
-        const recipientListingsHtml = recipientListings
-          .map((listing: any) => renderHotSheetMatchListingEmailCard(listing, { baseUrl: appBaseUrl }))
-          .join("");
-
-        const { error: insertError } = await supabase.from("email_jobs").insert({
-          payload: {
-            provider: "resend",
-            template: "new-match-notification",
-            to: recipient.email,
-            subject: `New matches in your Hot Sheet: ${hotSheet.name}`,
-            variables: {
-              userName: recipient.firstName || "there",
-              hotSheetName: hotSheet.name,
-              matchCount: recipientListings.length,
-              listingsHtml: recipientListingsHtml,
-              hotSheetLink: `${appBaseUrl}/client/hot-sheets/${hotSheet.id}`,
+        if (recipientNew.length > 0) {
+          const html = recipientNew === newMatchListings ? newMatchListingsHtml : renderCards(recipientNew);
+          const { error: insertError } = await supabase.from("email_jobs").insert({
+            payload: {
+              provider: "resend",
+              template: "new-match-notification",
+              to: recipient.email,
+              subject: `New matches in your Hot Sheet: ${hotSheet.name}`,
+              variables: {
+                userName: recipient.firstName || "there",
+                hotSheetName: hotSheet.name,
+                matchCount: recipientNew.length,
+                listingsHtml: html,
+                hotSheetLink: `${appBaseUrl}/client/hot-sheets/${hotSheet.id}`,
+              },
             },
-          },
-        });
+          });
+          if (!insertError) {
+            jobsQueued++;
+            queuedForHotSheet++;
+            markSent(recipientNew);
+          } else {
+            console.error(`[send-new-match-notification] enqueue new-match failed for ${recipient.email}:`, insertError);
+          }
+        }
 
-        if (!insertError) {
-          jobsQueued++;
-          queuedForHotSheet++;
+        if (recipientStatus.length > 0) {
+          const html = recipientStatus === statusChangeListings ? statusChangeListingsHtml : renderCards(recipientStatus);
+          const { error: insertError } = await supabase.from("email_jobs").insert({
+            payload: {
+              provider: "resend",
+              template: "hot-sheet-status-change",
+              to: recipient.email,
+              subject: `Status update on your Hot Sheet: ${hotSheet.name}`,
+              variables: {
+                userName: recipient.firstName || "there",
+                hotSheetName: hotSheet.name,
+                matchCount: recipientStatus.length,
+                listingsHtml: html,
+                hotSheetLink: `${appBaseUrl}/client/hot-sheets/${hotSheet.id}`,
+              },
+            },
+          });
+          if (!insertError) {
+            jobsQueued++;
+            queuedForHotSheet++;
+            markSent(recipientStatus);
+          } else {
+            console.error(`[send-new-match-notification] enqueue status-change failed for ${recipient.email}:`, insertError);
+          }
         }
       }
 
@@ -221,65 +291,98 @@ serve(async (req) => {
 
       if (subscribers?.length) {
         for (const sub of subscribers) {
-          const dedupeKey = `hss:${sub.id}:hs:${hotSheet.id}:listings:${matchingListings.map((m: any) => m.listing_id).sort().join(",")}`;
+          const previewLink = `${appBaseUrl}/hotsheet-preview?token=${(sub as any).preview_token}`;
+          const unsubscribeLink = `${appBaseUrl}/unsubscribe-hotsheet?token=${sub.unsubscribe_token}`;
 
-          const { error: subInsertError } = await supabase.from("email_jobs").insert({
-            idempotency_key: dedupeKey,
-            payload: {
-              provider: "resend",
-              template: "hot-sheet-subscriber-update",
-              to: sub.email,
-              subject: `New matches in ${hotSheet.name}`,
-              variables: {
-                userName: sub.first_name || "there",
-                hotSheetName: hotSheet.name,
-                matchCount: listings.length,
-                listingsHtml,
-                previewLink: `${appBaseUrl}/hotsheet-preview?token=${(sub as any).preview_token}`,
-                unsubscribeLink: `${appBaseUrl}/unsubscribe-hotsheet?token=${sub.unsubscribe_token}`,
+          if (newMatchListings.length > 0) {
+            const ids = newMatchListings.map((l: any) => l.id).sort().join(",");
+            const dedupeKey = `hss:${sub.id}:hs:${hotSheet.id}:new:${ids}`;
+            const { error } = await supabase.from("email_jobs").insert({
+              idempotency_key: dedupeKey,
+              payload: {
+                provider: "resend",
+                template: "hot-sheet-subscriber-update",
+                to: sub.email,
+                subject: `New matches in ${hotSheet.name}`,
+                variables: {
+                  userName: sub.first_name || "there",
+                  hotSheetName: hotSheet.name,
+                  matchCount: newMatchListings.length,
+                  listingsHtml: newMatchListingsHtml,
+                  previewLink,
+                  unsubscribeLink,
+                },
               },
-            },
-          });
+            });
+            if (!error) {
+              jobsQueued++;
+              queuedForHotSheet++;
+              markSent(newMatchListings);
+            } else {
+              console.error(`[send-new-match-notification] subscriber new-match enqueue failed:`, error);
+            }
+          }
 
-          if (!subInsertError) {
-            jobsQueued++;
-            queuedForHotSheet++;
+          if (statusChangeListings.length > 0) {
+            const pairs = statusChangeListings
+              .map((l: any) => `${l.id}:${String(l.status || "active")}`)
+              .sort()
+              .join(",");
+            const dedupeKey = `hss:${sub.id}:hs:${hotSheet.id}:status:${pairs}`;
+            const { error } = await supabase.from("email_jobs").insert({
+              idempotency_key: dedupeKey,
+              payload: {
+                provider: "resend",
+                template: "hot-sheet-subscriber-status-change",
+                to: sub.email,
+                subject: `Status update in ${hotSheet.name}`,
+                variables: {
+                  userName: sub.first_name || "there",
+                  hotSheetName: hotSheet.name,
+                  matchCount: statusChangeListings.length,
+                  listingsHtml: statusChangeListingsHtml,
+                  previewLink,
+                  unsubscribeLink,
+                },
+              },
+            });
+            if (!error) {
+              jobsQueued++;
+              queuedForHotSheet++;
+              markSent(statusChangeListings);
+            } else {
+              console.error(`[send-new-match-notification] subscriber status-change enqueue failed:`, error);
+            }
           }
         }
       }
 
       if (queuedForHotSheet > 0) {
-        
-        // Record in hot_sheet_sent_listings (canonical dedup source)
-        // Get listing statuses for status_at_send
-        const listingIds = matchingListings.map((m: any) => m.listing_id);
-        const { data: listingStatuses } = await supabase
-          .from("listings")
-          .select("id, status")
-          .in("id", listingIds);
+        // Record dedup rows ONLY for (listing, status) pairs that successfully enqueued.
+        // Failed enqueues stay eligible for retry on the next run.
+        const sentRecords = Array.from(successfullySent).map((key) => {
+          const [listing_id, status_at_send] = key.split("::");
+          return {
+            hot_sheet_id: hotSheet.id,
+            listing_id,
+            status_at_send: status_at_send || "active",
+          };
+        });
 
-        const statusMap = new Map((listingStatuses || []).map((l: any) => [l.id, l.status]));
+        if (sentRecords.length) {
+          await supabase
+            .from("hot_sheet_sent_listings")
+            .upsert(sentRecords, { onConflict: "hot_sheet_id,listing_id,status_at_send" });
 
-        const sentRecords = matchingListings.map((match: any) => ({
-          hot_sheet_id: hotSheet.id,
-          listing_id: match.listing_id,
-          status_at_send: statusMap.get(match.listing_id) || 'active',
-        }));
-
-        await supabase
-          .from("hot_sheet_sent_listings")
-          .upsert(sentRecords, { onConflict: "hot_sheet_id,listing_id,status_at_send" });
-
-        // Also record in hot_sheet_notifications (audit/logging)
-        const notificationRecords = matchingListings.map((match: any) => ({
-          hot_sheet_id: hotSheet.id,
-          listing_id: match.listing_id,
-          user_id: hotSheet.user_id,
-          notification_sent: true,
-          notification_sent_at: new Date().toISOString(),
-        }));
-
-        await supabase.from("hot_sheet_notifications").insert(notificationRecords);
+          const notificationRecords = sentRecords.map((r) => ({
+            hot_sheet_id: hotSheet.id,
+            listing_id: r.listing_id,
+            user_id: hotSheet.user_id,
+            notification_sent: true,
+            notification_sent_at: new Date().toISOString(),
+          }));
+          await supabase.from("hot_sheet_notifications").insert(notificationRecords);
+        }
       }
     }
 
