@@ -482,13 +482,13 @@ function buildJoinInvitationBodyFor(firstNameRaw?: string | null): string {
     "Buyer and renter needs",
     "Off-market and coming-soon listings",
     "New listing activity",
-    "Referrals and agent discussions",
-    "Direct connections with other verified agents",
+    "Referrals and agent-to-agent opportunities",
+    "Direct connections with verified agents",
   ];
 
   const bulletHtml = bullets
     .map(
-      (b) => `<p style="margin:0 0 6px;font-size:14px;line-height:1.55;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;"><span style="color:#22C55E;font-weight:700;">&#10003;</span> ${b}</p>`,
+      (b) => `<p style="margin:0 0 8px 18px;text-indent:-14px;font-size:14px;line-height:1.6;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;"><span style="color:#64748b;">&bull;</span>&nbsp;&nbsp;${b}</p>`,
     )
     .join("");
 
@@ -506,23 +506,17 @@ function buildJoinInvitationBodyFor(firstNameRaw?: string | null): string {
         <h1 style="margin:0 0 12px;font-size:24px;font-weight:700;line-height:1.25;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">You&rsquo;re invited to join All Agent Connect</h1>
         ${greetingHtml}
         <p style="margin:0 0 14px;font-size:14px;line-height:1.65;color:#334155;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">I&rsquo;d like to invite you to join <strong>All Agent Connect</strong>, a private network built for real estate agents.</p>
-        <p style="margin:0 0 14px;font-size:14px;line-height:1.65;color:#334155;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">AAC helps agents see and share opportunities that often happen before they reach the public market, including:</p>
-        <div style="padding:14px 16px;background:#F7FBF4;border:1px solid #D8ECD1;border-radius:10px;margin:0 0 16px;">
+        <p style="margin:0 0 14px;font-size:14px;line-height:1.65;color:#334155;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">AAC helps agents connect around opportunities that often happen before they reach the public market, including:</p>
+        <div style="margin:0 0 16px;">
           ${bulletHtml}
         </div>
-        <p style="margin:0 0 14px;font-size:14px;line-height:1.65;color:#334155;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">You can also control which opportunities and emails you receive by setting your preferences in the <a href="https://allagentconnect.com/communications" style="color:#0E56F5;text-decoration:none;font-weight:600;">Communications Center</a>.</p>
-        <p style="margin:0 0 14px;font-size:14px;line-height:1.65;color:#334155;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">There is no obligation to participate in everything. The goal is to give agents one place to find relevant leads, demand, listings, and opportunities from across the network.</p>
-        <p style="margin:0;font-size:14px;line-height:1.65;color:#334155;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Create your account: <a href="${ctaUrl}" style="color:#0E56F5;text-decoration:none;font-weight:600;">${ctaUrl}</a></p>
+        <p style="margin:0;font-size:14px;line-height:1.65;color:#334155;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">The goal is simple: give agents one place to see more demand, more listings, and more opportunities from across the network.</p>
       </td></tr>
       ${ctaButton}
-      <tr><td style="padding:14px 0 0;">
-        <p style="margin:0;font-size:13px;line-height:1.6;color:#64748b;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Once your account is set up, you&rsquo;ll have access to the full agent network.</p>
-      </td></tr>
-      <tr><td style="padding:28px 0 0;border-top:1px solid #e2e8f0;">
-        <p style="margin:20px 0 4px;font-size:14px;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Thanks,</p>
+      <tr><td style="padding:32px 0 0;">
+        <p style="margin:0 0 4px;font-size:14px;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Thanks,</p>
         <p style="margin:0 0 4px;font-size:14px;color:#0f172a;font-weight:600;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Chris Tuite</p>
-        <p style="margin:0 0 10px;font-size:13px;color:#64748b;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Founder, All Agent Connect</p>
-        <p style="margin:0;font-size:12px;color:#94a3b8;font-style:italic;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">By agents. For agents. All agents.</p>
+        <p style="margin:0;font-size:13px;color:#64748b;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Founder, All Agent Connect</p>
       </td></tr>
     </table>`;
 }
