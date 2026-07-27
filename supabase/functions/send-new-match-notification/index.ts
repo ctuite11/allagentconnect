@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { renderHotSheetMatchListingEmailCard } from "../_shared/listingEmailCard.ts";
 import { resolveEmailBaseUrl } from "../_shared/aacPublicUrl.ts";
+import { getHotSheetStatusCopy, normalizeStatusKey, type HotSheetStatusKey } from "../_shared/hotSheetStatusCopy.ts";
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -204,7 +205,16 @@ serve(async (req) => {
           .join("");
 
       const newMatchListingsHtml = renderCards(newMatchListings);
-      const statusChangeListingsHtml = renderCards(statusChangeListings);
+
+      // Group status-change listings by normalized current status so each
+      // transition type sends its own tailored email.
+      const statusGroups = new Map<HotSheetStatusKey, any[]>();
+      for (const l of statusChangeListings) {
+        const key = normalizeStatusKey(l.status);
+        const bucket = statusGroups.get(key) || [];
+        bucket.push(l);
+        statusGroups.set(key, bucket);
+      }
 
       let queuedForHotSheet = 0;
       // Track which (listing_id, status) pairs actually enqueued successfully so
@@ -227,7 +237,6 @@ serve(async (req) => {
         };
 
         const recipientNew = filterInitial(newMatchListings);
-        const recipientStatus = filterInitial(statusChangeListings);
 
         if (recipientNew.length > 0) {
           const html = recipientNew === newMatchListings ? newMatchListingsHtml : renderCards(recipientNew);
@@ -255,18 +264,30 @@ serve(async (req) => {
           }
         }
 
-        if (recipientStatus.length > 0) {
-          const html = recipientStatus === statusChangeListings ? statusChangeListingsHtml : renderCards(recipientStatus);
+        // One email per normalized status group per recipient.
+        for (const [statusKey, groupListings] of statusGroups) {
+          const recipientGroup = filterInitial(groupListings);
+          if (recipientGroup.length === 0) continue;
+
+          const copy = getHotSheetStatusCopy(statusKey);
+          const sortedIds = recipientGroup
+            .map((l: any) => String(l.id))
+            .sort()
+            .join(",");
+          const dedupeKey = `hs:${(recipient.clientId || recipient.email)}:hs:${hotSheet.id}:status:${statusKey}:${sortedIds}`;
+          const html = renderCards(recipientGroup);
           const { error: insertError } = await supabase.from("email_jobs").insert({
+            idempotency_key: dedupeKey,
             payload: {
               provider: "resend",
               template: "hot-sheet-status-change",
               to: recipient.email,
-              subject: `Status update on your Hot Sheet: ${hotSheet.name}`,
+              subject: copy.subject(hotSheet.name),
               variables: {
                 userName: recipient.firstName || "there",
                 hotSheetName: hotSheet.name,
-                matchCount: recipientStatus.length,
+                statusKey,
+                matchCount: recipientGroup.length,
                 listingsHtml: html,
                 hotSheetLink: `${appBaseUrl}/client/hot-sheets/${hotSheet.id}`,
               },
@@ -275,9 +296,9 @@ serve(async (req) => {
           if (!insertError) {
             jobsQueued++;
             queuedForHotSheet++;
-            markSent(recipientStatus);
+            markSent(recipientGroup);
           } else {
-            console.error(`[send-new-match-notification] enqueue status-change failed for ${recipient.email}:`, insertError);
+            console.error(`[send-new-match-notification] enqueue status-change (${statusKey}) failed for ${recipient.email}:`, insertError);
           }
         }
       }
@@ -323,24 +344,29 @@ serve(async (req) => {
             }
           }
 
-          if (statusChangeListings.length > 0) {
-            const pairs = statusChangeListings
-              .map((l: any) => `${l.id}:${String(l.status || "active")}`)
+          // One email per normalized status group per subscriber.
+          for (const [statusKey, groupListings] of statusGroups) {
+            if (groupListings.length === 0) continue;
+            const copy = getHotSheetStatusCopy(statusKey);
+            const sortedIds = groupListings
+              .map((l: any) => String(l.id))
               .sort()
               .join(",");
-            const dedupeKey = `hss:${sub.id}:hs:${hotSheet.id}:status:${pairs}`;
+            const dedupeKey = `hss:${sub.id}:hs:${hotSheet.id}:status:${statusKey}:${sortedIds}`;
+            const html = renderCards(groupListings);
             const { error } = await supabase.from("email_jobs").insert({
               idempotency_key: dedupeKey,
               payload: {
                 provider: "resend",
                 template: "hot-sheet-subscriber-status-change",
                 to: sub.email,
-                subject: `Status update in ${hotSheet.name}`,
+                subject: copy.subject(hotSheet.name),
                 variables: {
                   userName: sub.first_name || "there",
                   hotSheetName: hotSheet.name,
-                  matchCount: statusChangeListings.length,
-                  listingsHtml: statusChangeListingsHtml,
+                  statusKey,
+                  matchCount: groupListings.length,
+                  listingsHtml: html,
                   previewLink,
                   unsubscribeLink,
                 },
@@ -349,9 +375,9 @@ serve(async (req) => {
             if (!error) {
               jobsQueued++;
               queuedForHotSheet++;
-              markSent(statusChangeListings);
+              markSent(groupListings);
             } else {
-              console.error(`[send-new-match-notification] subscriber status-change enqueue failed:`, error);
+              console.error(`[send-new-match-notification] subscriber status-change (${statusKey}) enqueue failed:`, error);
             }
           }
         }
