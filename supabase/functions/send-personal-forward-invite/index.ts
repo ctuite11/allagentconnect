@@ -2,7 +2,6 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.0";
 import { buildPersonalForwardEmailHtml } from "../_shared/buildPersonalForwardEmailHtml.ts";
 import { resolveAacCtaUrl } from "../_shared/aacPublicUrl.ts";
-import { formatUsPhoneForDisplay } from "../_shared/phoneFormat.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -12,13 +11,11 @@ const corsHeaders = {
 
 interface PersonalForwardRequest {
   to?: string[];
-  agentId?: string;
   ctaUrl?: string;
   subject?: string;
 }
 
 const DEFAULT_TO = "chris@allagentconnect.com";
-const DEFAULT_AGENT_ID = "1fc50da1-2664-4931-8cab-64e24dc5ed8c";
 const DEFAULT_SUBJECT =
   "Why pay for a network when you can launch one for free?";
 
@@ -41,7 +38,6 @@ serve(async (req: Request): Promise<Response> => {
       );
     }
 
-    const agentId = body.agentId || DEFAULT_AGENT_ID;
     const ctaUrl = resolveAacCtaUrl(body.ctaUrl, "/auth?mode=register&source=personal_forward");
     const subject = body.subject?.trim() || DEFAULT_SUBJECT;
 
@@ -52,32 +48,8 @@ serve(async (req: Request): Promise<Response> => {
     }
     const admin = createClient(supabaseUrl, supabaseServiceKey);
 
-    let agent: any = null;
-    let replyTo = "hello@allagentconnect.com";
-    const { data: ap } = await admin
-      .from("agent_profiles")
-      .select(
-        "first_name,last_name,title,company,email,phone,cell_phone,headshot_url,social_links",
-      )
-      .eq("id", agentId)
-      .maybeSingle();
-    if (ap) {
-      const website = (ap.social_links as any)?.website ?? null;
-      const rawPhone = ap.phone || ap.cell_phone;
-      agent = {
-        firstName: ap.first_name,
-        lastName: ap.last_name,
-        title: "Founder",
-        company: null,
-        email: ap.email,
-        phone: formatUsPhoneForDisplay(rawPhone),
-        headshotUrl: ap.headshot_url,
-        websiteUrl: website,
-      };
-      if (ap.email) replyTo = ap.email;
-    }
-
-    const html = buildPersonalForwardEmailHtml({ ctaUrl, agent, contactLayout: "stacked" });
+    const replyTo = "chris@allagentconnect.com";
+    const html = buildPersonalForwardEmailHtml({ ctaUrl });
 
     const results: Array<{ email: string; success: boolean; error?: string }> = [];
     for (const email of recipients) {
