@@ -16,8 +16,7 @@ interface PersonalForwardRequest {
 }
 
 const DEFAULT_TO = "chris@allagentconnect.com";
-const DEFAULT_SUBJECT =
-  "Why pay for a network when you can launch one for free?";
+const DEFAULT_SUBJECT = "You\u2019re invited to join All Agent Connect";
 
 serve(async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
