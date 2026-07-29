@@ -146,7 +146,7 @@ export function ConversationsList({
   const canDelete = Boolean(onArchiveThreads);
 
   return (
-    <div className="flex h-full flex-col bg-white">
+    <div className="flex h-full min-h-0 w-full flex-1 flex-col bg-white">
       {/* Header */}
       <div className="flex-shrink-0 border-b border-neutral-100 p-4 pb-3">
         <div className="mb-3 flex items-center justify-between gap-2">

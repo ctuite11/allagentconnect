@@ -50,8 +50,15 @@ export function BuyerShell() {
     navigate("/auth");
   };
 
+  const isMessagesRoute =
+    location.pathname === "/messages" || location.pathname.startsWith("/messages/");
+
   return (
-    <div className={`flex flex-col ${buyerPageShell}`}>
+    <div
+      className={`flex flex-col ${buyerPageShell}${
+        isMessagesRoute ? " h-dvh max-h-dvh overflow-hidden" : ""
+      }`}
+    >
       <ActiveAgentBanner />
       {/* ── Top navigation bar ─────────────────────────────────────────── */}
       <header className="sticky top-0 z-50 w-full overflow-visible border-b border-neutral-100 bg-white shadow-none">
@@ -186,7 +193,13 @@ export function BuyerShell() {
       </header>
 
       {/* ── Page content ───────────────────────────────────────────────── */}
-      <main className="flex-1 bg-white">
+      <main
+        className={
+          isMessagesRoute
+            ? "flex min-h-0 flex-1 flex-col overflow-hidden bg-white"
+            : "flex-1 bg-white"
+        }
+      >
         <Outlet />
       </main>
     </div>

@@ -143,15 +143,16 @@ function MessagingWorkspaceContent({
         onStartMessaging={handleStartMessaging}
       />
       <Seo title={buyerMode ? "Messages" : "Messaging"} />
-      <div
-        className={
-          buyerMode
-            ? "flex min-h-0 flex-1 flex-col bg-white"
-            : "flex min-h-0 flex-1 flex-col bg-[#FFFFFF]"
-        }
-      >
-        <div className="mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col px-4 pb-10 sm:px-6 md:px-8">
-          <div className="mx-auto flex min-h-0 w-full max-w-full flex-1 flex-col">
+      {/*
+        Mobile: fill the shell viewport and let the inbox/thread panels own
+        scrolling. Fixed rem heights previously overflowed AppShell and created
+        a nested-scroll trap (list wouldn't scroll; taps wouldn't open threads).
+        AppShell / BuyerShell expose a flex, overflow-hidden content area on
+        messages routes so h-full / flex-1 resolve to the visible viewport.
+      */}
+      <div className="flex h-full max-h-full min-h-0 flex-1 flex-col overflow-hidden bg-white">
+        <div className="mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col overflow-hidden px-4 pb-4 sm:px-6 sm:pb-6 md:px-8 md:pb-10">
+          <div className="mx-auto flex min-h-0 w-full max-w-full flex-1 flex-col overflow-hidden">
             {!buyerMode ? (
               <AgentPageHeader
                 withTopPadding
@@ -178,14 +179,15 @@ function MessagingWorkspaceContent({
             <div
               className={
                 buyerMode
-                  ? "flex min-h-[360px] w-full flex-1 flex-col gap-4 overflow-hidden h-[calc(100dvh-10rem)] lg:h-[min(560px,calc(100dvh-10rem))] lg:max-h-[calc(100dvh-10rem)] lg:min-h-[360px] lg:flex-row lg:gap-5"
-                  : "flex min-h-[360px] w-full flex-1 flex-col gap-4 overflow-hidden h-[calc(100dvh-11rem)] md:h-[min(560px,calc(100dvh-11rem))] md:max-h-[calc(100dvh-11rem)] md:min-h-[400px] md:flex-row md:gap-5"
+                  ? "flex min-h-0 w-full flex-1 flex-col gap-4 overflow-hidden lg:h-[min(560px,calc(100dvh-10rem))] lg:max-h-[calc(100dvh-10rem)] lg:min-h-[360px] lg:flex-none lg:flex-row lg:gap-5"
+                  : "flex min-h-0 w-full flex-1 flex-col gap-4 overflow-hidden md:h-[min(560px,calc(100dvh-11rem))] md:max-h-[calc(100dvh-11rem)] md:min-h-[400px] md:flex-none md:flex-row md:gap-5"
               }
             >
               <div
                 className={cn(
-                  "w-full shrink-0 flex-none md:flex md:h-full md:min-h-0 md:w-[320px]",
-                  selectedConversationId ? "hidden" : "flex h-full min-h-0 flex-1",
+                  "w-full min-h-0 md:h-full md:w-[320px] md:flex-none",
+                  selectedConversationId ? "hidden" : "flex flex-1",
+                  "md:flex",
                   buyerMessagingPanel,
                 )}
               >
@@ -209,8 +211,8 @@ function MessagingWorkspaceContent({
 
               <div
                 className={cn(
-                  "w-full flex-col overflow-hidden md:flex md:h-full md:min-h-0 md:w-[560px] md:max-w-[560px] md:flex-none",
-                  selectedConversationId ? "flex h-full min-h-0 flex-1" : "hidden md:flex",
+                  "w-full min-h-0 flex-col overflow-hidden md:h-full md:w-[560px] md:max-w-[560px] md:flex-none",
+                  selectedConversationId ? "flex flex-1" : "hidden md:flex",
                   panelShellClass,
                 )}
               >

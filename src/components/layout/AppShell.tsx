@@ -53,6 +53,14 @@ export function AppShell({ children }: AppShellProps) {
     setMobileOpen(false);
   }, [location.pathname]);
 
+  // Messages owns its own internal scrollers (inbox list + thread). Keep the
+  // shell content area as a fixed flex viewport on those routes so nested
+  // mobile scrollers don't fight the page scroller (unscrollable inbox /
+  // taps that never open a thread).
+  const isMessagesRoute =
+    location.pathname === "/agent/messages" ||
+    location.pathname.startsWith("/agent/messages/");
+
   return (
     <div
       className="flex w-full overflow-hidden bg-[#FFFFFF] lg:h-screen lg:max-h-none"
@@ -88,8 +96,11 @@ export function AppShell({ children }: AppShellProps) {
           <div
             data-app-scroll-root
             className={cn(
-              "flex-1 w-full min-w-0 overflow-y-auto overflow-x-hidden overscroll-contain bg-[#FFFFFF]",
+              "flex-1 w-full min-w-0 overscroll-contain bg-[#FFFFFF]",
               agentPageShellTopClass,
+              isMessagesRoute
+                ? "flex min-h-0 flex-col overflow-hidden"
+                : "overflow-x-hidden overflow-y-auto",
             )}
           >
             {children}
