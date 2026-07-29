@@ -145,7 +145,7 @@ export function ConversationsList({
   const canDelete = Boolean(onArchiveThreads);
 
   return (
-    <div className="flex h-full min-h-0 w-full flex-1 flex-col bg-white">
+    <div className="flex w-full flex-col bg-white md:h-full md:min-h-0 md:flex-1">
       {/* Header */}
       <div className="flex-shrink-0 border-b border-neutral-100 p-4 pb-3">
         <div className="mb-3 flex items-center justify-between gap-2">
@@ -217,8 +217,9 @@ export function ConversationsList({
         </div>
       ) : null}
 
-      {/* Thread list */}
-      <div className="min-h-0 flex-1 touch-pan-y overflow-y-auto overscroll-contain px-2 py-2 [-webkit-overflow-scrolling:touch]">
+      {/* Thread list — mobile: flow in page scroll (no nested overflow).
+          Desktop: internal scroller inside the fixed-height sidebar. */}
+      <div className="px-2 py-2 md:min-h-0 md:flex-1 md:overflow-y-auto md:overscroll-contain">
         {loading ? (
           <div className="space-y-2 px-1">
             {[1, 2, 3, 4, 5].map((i) => (

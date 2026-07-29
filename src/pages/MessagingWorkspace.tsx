@@ -92,6 +92,13 @@ function MessagingWorkspaceContent({
   useEffect(() => {
     if (selectedConversationId) {
       void refetchThreads();
+      // Bring the thread panel into view after the inbox list unmounts.
+      document
+        .querySelectorAll<HTMLElement>("[data-app-scroll-root]")
+        .forEach((el) => {
+          el.scrollTop = 0;
+        });
+      window.scrollTo(0, 0);
     }
   }, [selectedConversationId, refetchThreads]);
 
@@ -143,10 +150,9 @@ function MessagingWorkspaceContent({
       />
       <Seo title={buyerMode ? "Messages" : "Messaging"} />
       {/*
-        Mobile uses EXPLICIT viewport heights (not flex-fill / absolute inset).
-        Flex-fill collapsed to ~0px inside AppShell on real devices; rem calcs
-        with min-heights caused nested scroll traps. Explicit dvh heights give
-        the inbox and thread panes a definite box so overflow-y-auto and taps work.
+        Mobile inbox scrolls with the page (no nested overflow-y-auto). Opening a
+        thread swaps to a viewport-height conversation panel. Desktop keeps the
+        two-column fixed-height layout.
       */}
       <div className="flex min-h-0 flex-1 flex-col bg-white">
         <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-4 pb-6 sm:px-6 md:px-8 md:pb-10">
@@ -183,15 +189,18 @@ function MessagingWorkspaceContent({
             >
               <div
                 className={cn(
-                  // Mobile inbox: definite height so the thread list can scroll.
                   "w-full",
                   selectedConversationId ? "hidden" : "flex",
-                  "h-[min(62dvh,560px)] min-h-[280px]",
-                  // Desktop sidebar
+                  // Mobile: NO fixed height / NO nested scroller — AppShell page
+                  // scroll owns the inbox. A fixed-height overflow-y-auto list
+                  // inside AppShell freezes pans/taps on iOS/Android (search
+                  // still works because it sits outside that scroller).
+                  "overflow-visible",
                   buyerMode
-                    ? "lg:flex lg:h-full lg:min-h-0 lg:w-[320px] lg:flex-none"
-                    : "md:flex md:h-full md:min-h-0 md:w-[320px] md:flex-none",
-                  buyerMessagingPanel,
+                    ? "lg:flex lg:h-full lg:min-h-0 lg:w-[320px] lg:flex-none lg:overflow-hidden"
+                    : "md:flex md:h-full md:min-h-0 md:w-[320px] md:flex-none md:overflow-hidden",
+                  // Panel chrome without the default overflow-hidden on mobile
+                  "bg-white rounded-2xl border border-neutral-200 shadow-sm flex flex-col",
                 )}
               >
                 <ConversationsList
@@ -214,16 +223,13 @@ function MessagingWorkspaceContent({
 
               <div
                 className={cn(
-                  "w-full flex-col overflow-hidden",
-                  // Mobile thread: definite viewport height so the panel (and
-                  // composer) is always on-screen after opening a conversation.
+                  "w-full flex-col",
                   selectedConversationId
-                    ? "flex h-[calc(100dvh-7.5rem)] min-h-[320px]"
-                    : "hidden min-h-[220px]",
-                  // Desktop conversation column always visible
+                    ? "flex h-[calc(100dvh-7.5rem)] min-h-[320px] overflow-hidden"
+                    : "hidden",
                   buyerMode
-                    ? "lg:flex lg:h-full lg:min-h-0 lg:w-[560px] lg:max-w-[560px] lg:flex-none"
-                    : "md:flex md:h-full md:min-h-0 md:w-[560px] md:max-w-[560px] md:flex-none",
+                    ? "lg:flex lg:h-full lg:min-h-0 lg:w-[560px] lg:max-w-[560px] lg:flex-none lg:overflow-hidden"
+                    : "md:flex md:h-full md:min-h-0 md:w-[560px] md:max-w-[560px] md:flex-none md:overflow-hidden",
                   panelShellClass,
                 )}
               >
