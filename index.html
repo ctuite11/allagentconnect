@@ -65,6 +65,25 @@
     })();
     </script>
     <!-- End Meta Pixel Code -->
+
+    <!-- Reddit Pixel -->
+    <script>
+    (function () {
+      var h = location.hostname.toLowerCase();
+      var isAacHost =
+        h === "allagentconnect.com" ||
+        h === "www.allagentconnect.com" ||
+        h === "allagentconnect.lovable.app" ||
+        h === "localhost" ||
+        /^id-preview--.*\.lovable\.app$/.test(h);
+      if (!isAacHost) return;
+      if (window.rdt) return;
+      !function(w,d){if(!w.rdt){var p=w.rdt=function(){p.sendEvent?p.sendEvent.apply(p,arguments):p.callQueue.push(arguments)};p.callQueue=[];var t=d.createElement("script");t.src="https://www.redditstatic.com/ads/pixel.js?pixel_id=a2_jf8ditb33x72",t.async=!0;var s=d.getElementsByTagName("script")[0];s.parentNode.insertBefore(t,s)}}(window,document);
+      rdt('init','a2_jf8ditb33x72');
+      rdt('track', 'PageVisit');
+    })();
+    </script>
+    <!-- End Reddit Pixel -->
   </head>
 
   <body>
