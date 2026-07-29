@@ -310,6 +310,48 @@ export default function AdminApprovals() {
   const [isSendingCommsPreview, setIsSendingCommsPreview] = useState(false);
   const [isSendingForwardInvite, setIsSendingForwardInvite] = useState(false);
   const [pendingEmailAction, setPendingEmailAction] = useState<null | "forward-invite" | "comms-preview">(null);
+
+  const sendForwardableInvite = async () => {
+    if (isSendingForwardInvite) return;
+    setIsSendingForwardInvite(true);
+    toast.message("Sending forwardable invite to your inbox…");
+    try {
+      const { data, error } = await supabase.functions.invoke(
+        'send-personal-forward-invite',
+        { body: { to: ['chris@allagentconnect.com'] } },
+      );
+      if (error || !data?.success) {
+        toast.error(`Failed to send: ${error?.message ?? data?.error ?? 'Unknown error'}`);
+      } else {
+        toast.success("Sent to chris@allagentconnect.com — forward from your inbox.");
+      }
+    } finally {
+      setIsSendingForwardInvite(false);
+    }
+  };
+
+  const sendCommsGuidePreview = async (adminEmail?: string | null) => {
+    if (!adminEmail) {
+      toast.error("No admin email on session");
+      return;
+    }
+    if (isSendingCommsPreview) return;
+    setIsSendingCommsPreview(true);
+    toast.message("Sending Comms Center guide preview to your inbox…");
+    try {
+      const { data, error } = await supabase.functions.invoke(
+        'send-comms-guide-email',
+        { body: { to: [adminEmail], preview: true } },
+      );
+      if (error || !data?.success) {
+        toast.error(`Failed: ${error?.message ?? data?.error ?? 'Unknown error'}`);
+      } else {
+        toast.success(`Preview sent to ${adminEmail}`);
+      }
+    } finally {
+      setIsSendingCommsPreview(false);
+    }
+  };
   const [lastSetupLinkSentAt, setLastSetupLinkSentAt] = useState<Map<string, number>>(new Map());
   const [pendingTeamsCount, setPendingTeamsCount] = useState<number>(0);
 
