@@ -308,6 +308,50 @@ export default function AdminApprovals() {
   const [loading, setLoading] = useState(true);
   const [sendingSetupLinkFor, setSendingSetupLinkFor] = useState<Set<string>>(new Set());
   const [isSendingCommsPreview, setIsSendingCommsPreview] = useState(false);
+  const [isSendingForwardInvite, setIsSendingForwardInvite] = useState(false);
+  const [pendingEmailAction, setPendingEmailAction] = useState<null | "forward-invite" | "comms-preview">(null);
+
+  const sendForwardableInvite = async () => {
+    if (isSendingForwardInvite) return;
+    setIsSendingForwardInvite(true);
+    toast.message("Sending forwardable invite to your inbox…");
+    try {
+      const { data, error } = await supabase.functions.invoke(
+        'send-personal-forward-invite',
+        { body: { to: ['chris@allagentconnect.com'] } },
+      );
+      if (error || !data?.success) {
+        toast.error(`Failed to send: ${error?.message ?? data?.error ?? 'Unknown error'}`);
+      } else {
+        toast.success("Sent to chris@allagentconnect.com — forward from your inbox.");
+      }
+    } finally {
+      setIsSendingForwardInvite(false);
+    }
+  };
+
+  const sendCommsGuidePreview = async (adminEmail?: string | null) => {
+    if (!adminEmail) {
+      toast.error("No admin email on session");
+      return;
+    }
+    if (isSendingCommsPreview) return;
+    setIsSendingCommsPreview(true);
+    toast.message("Sending Comms Center guide preview to your inbox…");
+    try {
+      const { data, error } = await supabase.functions.invoke(
+        'send-comms-guide-email',
+        { body: { to: [adminEmail], preview: true } },
+      );
+      if (error || !data?.success) {
+        toast.error(`Failed: ${error?.message ?? data?.error ?? 'Unknown error'}`);
+      } else {
+        toast.success(`Preview sent to ${adminEmail}`);
+      }
+    } finally {
+      setIsSendingCommsPreview(false);
+    }
+  };
   const [lastSetupLinkSentAt, setLastSetupLinkSentAt] = useState<Map<string, number>>(new Map());
   const [pendingTeamsCount, setPendingTeamsCount] = useState<number>(0);
 
@@ -1541,49 +1585,17 @@ export default function AdminApprovals() {
             <Button
               variant="outline"
               size="sm"
-              onClick={async () => {
-                toast.message("Sending forwardable invite to your inbox…");
-                const { data, error } = await supabase.functions.invoke(
-                  'send-personal-forward-invite',
-                  { body: { to: ['chris@allagentconnect.com'] } },
-                );
-                if (error || !data?.success) {
-                  toast.error(`Failed to send: ${error?.message ?? data?.error ?? 'Unknown error'}`);
-                } else {
-                  toast.success("Sent to chris@allagentconnect.com — forward from your inbox.");
-                }
-              }}
+              disabled={isSendingForwardInvite}
+              onClick={() => setPendingEmailAction("forward-invite")}
               className="w-full justify-start border-slate-300 text-slate-700 hover:bg-slate-100 sm:w-auto sm:justify-center"
             >
-              Email me forwardable invite
+              {isSendingForwardInvite ? "Sending…" : "Email me forwardable invite"}
             </Button>
             <Button
               variant="outline"
               size="sm"
               disabled={isSendingCommsPreview}
-              onClick={async () => {
-                const adminEmail = user?.email;
-                if (!adminEmail) {
-                  toast.error("No admin email on session");
-                  return;
-                }
-                if (isSendingCommsPreview) return;
-                setIsSendingCommsPreview(true);
-                toast.message("Sending Comms Center guide preview to your inbox…");
-                try {
-                  const { data, error } = await supabase.functions.invoke(
-                    'send-comms-guide-email',
-                    { body: { to: [adminEmail], preview: true } },
-                  );
-                  if (error || !data?.success) {
-                    toast.error(`Failed: ${error?.message ?? data?.error ?? 'Unknown error'}`);
-                  } else {
-                    toast.success(`Preview sent to ${adminEmail}`);
-                  }
-                } finally {
-                  setIsSendingCommsPreview(false);
-                }
-              }}
+              onClick={() => setPendingEmailAction("comms-preview")}
               className="w-full justify-start border-slate-300 text-slate-700 hover:bg-slate-100 sm:w-auto sm:justify-center"
             >
               {isSendingCommsPreview ? "Sending…" : "Preview Comms guide email"}
@@ -2248,6 +2260,40 @@ export default function AdminApprovals() {
           fetchAgents();
         }}
       />
+
+      <AlertDialog
+        open={pendingEmailAction !== null}
+        onOpenChange={(open) => { if (!open) setPendingEmailAction(null); }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Send this email?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {pendingEmailAction === "forward-invite"
+                ? "The forwardable Join Invitation will be sent to chris@allagentconnect.com."
+                : `The Comms Center guide preview will be sent to ${user?.email ?? "your admin email"}.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={isSendingForwardInvite || isSendingCommsPreview}
+              onClick={async (e) => {
+                e.preventDefault();
+                const action = pendingEmailAction;
+                if (action === "forward-invite") {
+                  await sendForwardableInvite();
+                } else if (action === "comms-preview") {
+                  await sendCommsGuidePreview(user?.email);
+                }
+                setPendingEmailAction(null);
+              }}
+            >
+              {isSendingForwardInvite || isSendingCommsPreview ? "Sending…" : "Send email"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AlertDialog open={showVerifyConfirm} onOpenChange={setShowVerifyConfirm}>
         <AlertDialogContent>
