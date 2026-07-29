@@ -1,14 +1,20 @@
-## Verify & Publish Meta Pixel
+## Change
 
-**Current state (verified in `index.html`):**
-- `fbq('init', '1057808070926908')` ✅
-- `<noscript>` image: `https://www.facebook.com/tr?id=1057808070926908&ev=PageView&noscript=1` ✅
+In `src/components/listing-search/ListingSearchFilters.tsx`, remove `"active"` (the "On MLS" status) from `initialFilters.statuses` so it is unchecked by default on the agent listing search (`/listing-search`).
 
-Both already carry the correct Pixel ID from commit `af212f5d`. No code changes needed.
+Before:
+```
+statuses: ["new", "active", "price_changed", "back_on_market", "extended", "reactivated", "coming_soon", "off_market"],
+```
 
-**Action:**
-1. Confirm no other Pixel IDs remain anywhere in the repo (quick `rg` sweep).
-2. Publish to production so the live site serves the corrected ID.
-3. No signup/conversion events added — PageView only, as requested.
+After:
+```
+statuses: ["new", "price_changed", "back_on_market", "extended", "reactivated", "coming_soon", "off_market"],
+```
 
-After publish, you can verify in Meta Events Manager → Test Events.
+## Behavior
+
+- On a fresh visit to `/listing-search`, "On MLS" listings no longer auto-populate in results.
+- Agents can still opt in by checking "On MLS" in the Status filter.
+- Saved searches / URL params that already include `active` are respected (unchanged).
+- No other search surfaces (buyer browse, hot sheets, DCMLS) are affected — this only touches the agent search initial filter defaults.
