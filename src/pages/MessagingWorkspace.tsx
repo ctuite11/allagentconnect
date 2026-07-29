@@ -178,14 +178,14 @@ function MessagingWorkspaceContent({
             <div
               className={
                 buyerMode
-                  ? "flex min-h-0 w-full flex-1 flex-col gap-4 overflow-hidden lg:h-[min(560px,calc(100dvh-10rem))] lg:max-h-[calc(100dvh-10rem)] lg:min-h-[360px] lg:flex-row lg:gap-5"
-                  : "flex min-h-0 w-full flex-1 flex-col gap-4 overflow-hidden md:h-[min(560px,calc(100dvh-11rem))] md:max-h-[calc(100dvh-11rem)] md:min-h-[400px] md:flex-row md:gap-5"
+                  ? "flex min-h-0 w-full flex-1 flex-col gap-4 overflow-hidden h-[calc(100dvh-8rem)] min-h-[520px] lg:h-[min(560px,calc(100dvh-10rem))] lg:max-h-[calc(100dvh-10rem)] lg:min-h-[360px] lg:flex-row lg:gap-5"
+                  : "flex min-h-0 w-full flex-1 flex-col gap-4 overflow-hidden h-[calc(100dvh-9rem)] min-h-[520px] md:h-[min(560px,calc(100dvh-11rem))] md:max-h-[calc(100dvh-11rem)] md:min-h-[400px] md:flex-row md:gap-5"
               }
             >
               <div
                 className={cn(
                   "w-full shrink-0 flex-none md:flex md:h-full md:min-h-0 md:w-[320px]",
-                  selectedConversationId ? "hidden" : "flex h-[min(38dvh,320px)] min-h-[220px]",
+                  selectedConversationId ? "hidden" : "flex h-full min-h-0 flex-1",
                   buyerMessagingPanel,
                 )}
               >
@@ -208,7 +208,11 @@ function MessagingWorkspaceContent({
               </div>
 
               <div
-                className={`flex w-full flex-1 flex-col overflow-hidden md:h-full md:min-h-0 md:w-[560px] md:max-w-[560px] md:flex-none ${panelShellClass}`}
+                className={cn(
+                  "w-full flex-col overflow-hidden md:flex md:h-full md:min-h-0 md:w-[560px] md:max-w-[560px] md:flex-none",
+                  selectedConversationId ? "flex h-full min-h-0 flex-1" : "hidden md:flex",
+                  panelShellClass,
+                )}
               >
                 <ConversationPanel
                   conversationId={selectedConversationId}
