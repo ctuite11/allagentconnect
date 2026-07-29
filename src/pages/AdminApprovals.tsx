@@ -308,6 +308,8 @@ export default function AdminApprovals() {
   const [loading, setLoading] = useState(true);
   const [sendingSetupLinkFor, setSendingSetupLinkFor] = useState<Set<string>>(new Set());
   const [isSendingCommsPreview, setIsSendingCommsPreview] = useState(false);
+  const [isSendingForwardInvite, setIsSendingForwardInvite] = useState(false);
+  const [pendingEmailAction, setPendingEmailAction] = useState<null | "forward-invite" | "comms-preview">(null);
   const [lastSetupLinkSentAt, setLastSetupLinkSentAt] = useState<Map<string, number>>(new Map());
   const [pendingTeamsCount, setPendingTeamsCount] = useState<number>(0);
 
