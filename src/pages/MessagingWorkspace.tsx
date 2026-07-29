@@ -3,7 +3,6 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { useAgentPresence } from "@/hooks/useAgentPresence";
 import { useAuthRole } from "@/hooks/useAuthRole";
-import { useLockBodyScroll } from "@/hooks/useLockBodyScroll";
 import { useMessageCenterIntro } from "@/hooks/useMessageCenterIntro";
 import { useConversationThreads } from "@/hooks/useConversationThreads";
 import { archiveConversationsForUser } from "@/lib/archiveConversationsForUser";
@@ -89,8 +88,6 @@ function MessagingWorkspaceContent({
   } = useConversationThreads();
 
   useAgentPresence();
-  // Keep touch pans inside the inbox/thread panels on mobile.
-  useLockBodyScroll(true);
 
   useEffect(() => {
     if (selectedConversationId) {
@@ -146,13 +143,14 @@ function MessagingWorkspaceContent({
       />
       <Seo title={buyerMode ? "Messages" : "Messaging"} />
       {/*
-        Mobile: absolute-fill single-pane swap (list XOR thread) inside a
-        bounded flex viewport. Avoid rem-based heights — they overflow AppShell
-        and create a nested-scroll trap. Desktop keeps the two-column layout.
+        Mobile uses EXPLICIT viewport heights (not flex-fill / absolute inset).
+        Flex-fill collapsed to ~0px inside AppShell on real devices; rem calcs
+        with min-heights caused nested scroll traps. Explicit dvh heights give
+        the inbox and thread panes a definite box so overflow-y-auto and taps work.
       */}
-      <div className="flex h-full max-h-full min-h-0 flex-1 flex-col overflow-hidden bg-white">
-        <div className="mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col overflow-hidden px-4 pb-3 sm:px-6 sm:pb-6 md:px-8 md:pb-10">
-          <div className="mx-auto flex min-h-0 w-full max-w-full flex-1 flex-col overflow-hidden">
+      <div className="flex min-h-0 flex-1 flex-col bg-white">
+        <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-4 pb-6 sm:px-6 md:px-8 md:pb-10">
+          <div className="mx-auto flex w-full max-w-full flex-1 flex-col">
             {!buyerMode ? (
               <AgentPageHeader
                 withTopPadding
@@ -179,24 +177,20 @@ function MessagingWorkspaceContent({
             <div
               className={
                 buyerMode
-                  ? "relative min-h-0 w-full flex-1 overflow-hidden lg:flex lg:h-[min(560px,calc(100dvh-10rem))] lg:max-h-[calc(100dvh-10rem)] lg:min-h-[360px] lg:flex-none lg:flex-row lg:gap-5"
-                  : "relative min-h-0 w-full flex-1 overflow-hidden md:flex md:h-[min(560px,calc(100dvh-11rem))] md:max-h-[calc(100dvh-11rem)] md:min-h-[400px] md:flex-none md:flex-row md:gap-5"
+                  ? "flex w-full flex-col gap-4 lg:h-[min(560px,calc(100dvh-10rem))] lg:max-h-[calc(100dvh-10rem)] lg:min-h-[360px] lg:flex-row lg:gap-5 lg:overflow-hidden"
+                  : "flex w-full flex-col gap-4 md:h-[min(560px,calc(100dvh-11rem))] md:max-h-[calc(100dvh-11rem)] md:min-h-[400px] md:flex-row md:gap-5 md:overflow-hidden"
               }
             >
-              {/* Mobile: absolute inset fill so the pane always gets a definite
-                  height for overflow-y-auto. Desktop: normal flex column.
-                  Agent two-column starts at md; buyer at lg. */}
               <div
                 className={cn(
-                  "min-h-0 overflow-hidden",
+                  // Mobile inbox: definite height so the thread list can scroll.
+                  "w-full",
+                  selectedConversationId ? "hidden" : "flex",
+                  "h-[min(62dvh,560px)] min-h-[280px]",
+                  // Desktop sidebar
                   buyerMode
-                    ? "absolute inset-0 lg:static lg:inset-auto lg:relative lg:h-full lg:w-[320px] lg:flex-none"
-                    : "absolute inset-0 md:static md:inset-auto md:relative md:h-full md:w-[320px] md:flex-none",
-                  selectedConversationId
-                    ? buyerMode
-                      ? "z-0 hidden lg:flex"
-                      : "z-0 hidden md:flex"
-                    : "z-10 flex",
+                    ? "lg:flex lg:h-full lg:min-h-0 lg:w-[320px] lg:flex-none"
+                    : "md:flex md:h-full md:min-h-0 md:w-[320px] md:flex-none",
                   buyerMessagingPanel,
                 )}
               >
@@ -220,15 +214,16 @@ function MessagingWorkspaceContent({
 
               <div
                 className={cn(
-                  "min-h-0 overflow-hidden",
-                  buyerMode
-                    ? "absolute inset-0 lg:static lg:inset-auto lg:relative lg:h-full lg:w-[560px] lg:max-w-[560px] lg:flex-none"
-                    : "absolute inset-0 md:static md:inset-auto md:relative md:h-full md:w-[560px] md:max-w-[560px] md:flex-none",
+                  "w-full flex-col overflow-hidden",
+                  // Mobile thread: definite viewport height so the panel (and
+                  // composer) is always on-screen after opening a conversation.
                   selectedConversationId
-                    ? "z-10 flex"
-                    : buyerMode
-                      ? "z-0 hidden lg:flex"
-                      : "z-0 hidden md:flex",
+                    ? "flex h-[calc(100dvh-7.5rem)] min-h-[320px]"
+                    : "hidden min-h-[220px]",
+                  // Desktop conversation column always visible
+                  buyerMode
+                    ? "lg:flex lg:h-full lg:min-h-0 lg:w-[560px] lg:max-w-[560px] lg:flex-none"
+                    : "md:flex md:h-full md:min-h-0 md:w-[560px] md:max-w-[560px] md:flex-none",
                   panelShellClass,
                 )}
               >
