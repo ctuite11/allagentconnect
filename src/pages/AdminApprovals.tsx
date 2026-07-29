@@ -1543,49 +1543,17 @@ export default function AdminApprovals() {
             <Button
               variant="outline"
               size="sm"
-              onClick={async () => {
-                toast.message("Sending forwardable invite to your inbox…");
-                const { data, error } = await supabase.functions.invoke(
-                  'send-personal-forward-invite',
-                  { body: { to: ['chris@allagentconnect.com'] } },
-                );
-                if (error || !data?.success) {
-                  toast.error(`Failed to send: ${error?.message ?? data?.error ?? 'Unknown error'}`);
-                } else {
-                  toast.success("Sent to chris@allagentconnect.com — forward from your inbox.");
-                }
-              }}
+              disabled={isSendingForwardInvite}
+              onClick={() => setPendingEmailAction("forward-invite")}
               className="w-full justify-start border-slate-300 text-slate-700 hover:bg-slate-100 sm:w-auto sm:justify-center"
             >
-              Email me forwardable invite
+              {isSendingForwardInvite ? "Sending…" : "Email me forwardable invite"}
             </Button>
             <Button
               variant="outline"
               size="sm"
               disabled={isSendingCommsPreview}
-              onClick={async () => {
-                const adminEmail = user?.email;
-                if (!adminEmail) {
-                  toast.error("No admin email on session");
-                  return;
-                }
-                if (isSendingCommsPreview) return;
-                setIsSendingCommsPreview(true);
-                toast.message("Sending Comms Center guide preview to your inbox…");
-                try {
-                  const { data, error } = await supabase.functions.invoke(
-                    'send-comms-guide-email',
-                    { body: { to: [adminEmail], preview: true } },
-                  );
-                  if (error || !data?.success) {
-                    toast.error(`Failed: ${error?.message ?? data?.error ?? 'Unknown error'}`);
-                  } else {
-                    toast.success(`Preview sent to ${adminEmail}`);
-                  }
-                } finally {
-                  setIsSendingCommsPreview(false);
-                }
-              }}
+              onClick={() => setPendingEmailAction("comms-preview")}
               className="w-full justify-start border-slate-300 text-slate-700 hover:bg-slate-100 sm:w-auto sm:justify-center"
             >
               {isSendingCommsPreview ? "Sending…" : "Preview Comms guide email"}
