@@ -2261,6 +2261,40 @@ export default function AdminApprovals() {
         }}
       />
 
+      <AlertDialog
+        open={pendingEmailAction !== null}
+        onOpenChange={(open) => { if (!open) setPendingEmailAction(null); }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Send this email?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {pendingEmailAction === "forward-invite"
+                ? "The forwardable Join Invitation will be sent to chris@allagentconnect.com."
+                : `The Comms Center guide preview will be sent to ${user?.email ?? "your admin email"}.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={isSendingForwardInvite || isSendingCommsPreview}
+              onClick={async (e) => {
+                e.preventDefault();
+                const action = pendingEmailAction;
+                if (action === "forward-invite") {
+                  await sendForwardableInvite();
+                } else if (action === "comms-preview") {
+                  await sendCommsGuidePreview(user?.email);
+                }
+                setPendingEmailAction(null);
+              }}
+            >
+              {isSendingForwardInvite || isSendingCommsPreview ? "Sending…" : "Send email"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <AlertDialog open={showVerifyConfirm} onOpenChange={setShowVerifyConfirm}>
         <AlertDialogContent>
           <AlertDialogHeader>
