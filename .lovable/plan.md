@@ -1,31 +1,34 @@
-## Problem
+## Root cause (confirmed by re-reading the code)
 
-On mobile (`/messages` and `/client/messages`), the inbox can't be scrolled and tapping a thread doesn't reveal the conversation.
+`src/pages/MessagingWorkspace.tsx` currently sets on the split container:
 
-Root cause in `src/pages/MessagingWorkspace.tsx`:
+- mobile: `h-[calc(100dvh-9rem)] min-h-[520px] overflow-hidden`
+- buyer mobile: `h-[calc(100dvh-8rem)] min-h-[520px] overflow-hidden`
 
-1. The workspace uses `flex min-h-0 flex-1 flex-col` and the split container uses `overflow-hidden` + `flex-1`, but on mobile there is **no fixed-height ancestor** (the desktop `md:h-[min(560px,calc(100dvh-11rem))]` only applies at `md+`). So the flex children collapse and the overflow-hidden clips whatever renders — the list can't scroll, and when a thread is picked, the conversation panel has 0 height.
-2. The list column is locked to `h-[min(38dvh,320px)]` on mobile, which is too short and doesn't participate in a scrollable page flow.
+`AppShell` on mobile is `100svh` and the content area breaks down to: mobile top bar `h-14` (56px) + `AgentPageHeader`/`AacPageIntro` (~80–100px) + banners. On the user's 384×625 viewport the space actually available inside the AppShell scroll root is roughly 430–470px, but:
 
-## Fix (mobile only, presentation-only)
+1. `min-h-[520px]` forces the split container taller than that available space, so the outer AppShell scroll root becomes the scroller. Two nested scrollers on mobile fight for touch — the inner `ConversationsList` (`min-h-0 flex-1 overflow-y-auto`) then never receives the pan gesture, so the inbox looks "unscrollable".
+2. Because the outer page is what scrolls, tapping a thread navigates to `/messages/:id` but the conversation column also sizes off the same broken math, so nothing meaningful appears — user perceives "can't open a thread".
+
+## Fix (presentation-only, mobile only)
 
 Edit only `src/pages/MessagingWorkspace.tsx`:
 
-- Give the split container an explicit mobile height so its flex children get real space:
-  - Add `h-[calc(100dvh-9rem)] min-h-[520px]` on mobile (buyer variant: `calc(100dvh-8rem)`), keep the existing `md:`/`lg:` height rules.
-- List column on mobile:
-  - When no thread is selected: `flex h-full min-h-0 flex-1` (fill the split container, allow inner list to scroll) instead of the fixed 38dvh box.
-  - When a thread is selected: keep `hidden` (single-pane behavior on mobile) and let the conversation panel take `h-full min-h-0 flex-1`.
-- Conversation column on mobile:
-  - When a thread is selected: `flex h-full min-h-0 flex-1`.
-  - When no thread is selected: `hidden` on mobile so the inbox owns the viewport (currently it renders an empty panel below the list, wasting space and confusing tap targets).
-- Keep all `md:`/`lg:` classes untouched so desktop/tablet layout is unchanged.
+- Remove `min-h-[520px]` from the split container on mobile (both agent and buyer variants). Keep the existing desktop `md:`/`lg:` rules unchanged.
+- Recompute the mobile height so the split container fits **inside** the AppShell scroll area (no outer page scroll):
+  - Agent: `h-[calc(100dvh-11rem)]` (accounts for AppShell mobile top bar `h-14` + `AgentPageHeader` with padding).
+  - Buyer: `h-[calc(100dvh-10rem)]` (buyer variant has no AppShell top bar but has `AacPageIntro` + page padding).
+  - Add a small `min-h-[360px]` floor so ultra-short viewports still show a usable list, but well under the available area so it never forces outer scroll.
+- Keep `overflow-hidden` on the split container so its children (list panel / conversation panel) own their own internal scroll via `min-h-0 flex-1 overflow-y-auto` (already in `ConversationsList` and `ConversationPanel`).
+- Keep the current single-pane swap on mobile: when `selectedConversationId` is set, list is `hidden` and conversation panel gets `flex h-full min-h-0 flex-1`; when unset, list gets `flex h-full min-h-0 flex-1` and the conversation panel is `hidden`.
 
-No changes to `ConversationsList`, `ConversationPanel`, routing, data, or business logic.
+No changes to `ConversationsList`, `ConversationPanel`, routes, hooks, data fetching, or business logic. Desktop (`md+`/`lg+`) layout classes are untouched.
 
 ## Verification
 
-- Load `/messages` on a 384px viewport: inbox fills the viewport and scrolls.
-- Tap a thread: URL becomes `/messages/:id`, list hides, conversation panel fills the screen and scrolls internally; back button returns to the inbox.
-- Repeat for `/client/messages` (buyer variant).
-- Desktop (`md+`) layout unchanged: two columns side-by-side with the existing capped height.
+- 384×625 mobile viewport at `/messages`:
+  - The page itself does NOT scroll; only the inbox list scrolls internally.
+  - Tapping a thread swaps to `/messages/:id`, list hides, conversation panel fills the visible area and its message stream scrolls internally.
+  - Back button returns to the inbox with scroll position preserved.
+- Repeat for `/client/messages` (buyer variant, no AppShell top bar).
+- Desktop (`md+`) two-column layout unchanged.

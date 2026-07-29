@@ -178,8 +178,8 @@ function MessagingWorkspaceContent({
             <div
               className={
                 buyerMode
-                  ? "flex min-h-0 w-full flex-1 flex-col gap-4 overflow-hidden h-[calc(100dvh-8rem)] min-h-[520px] lg:h-[min(560px,calc(100dvh-10rem))] lg:max-h-[calc(100dvh-10rem)] lg:min-h-[360px] lg:flex-row lg:gap-5"
-                  : "flex min-h-0 w-full flex-1 flex-col gap-4 overflow-hidden h-[calc(100dvh-9rem)] min-h-[520px] md:h-[min(560px,calc(100dvh-11rem))] md:max-h-[calc(100dvh-11rem)] md:min-h-[400px] md:flex-row md:gap-5"
+                  ? "flex min-h-[360px] w-full flex-1 flex-col gap-4 overflow-hidden h-[calc(100dvh-10rem)] lg:h-[min(560px,calc(100dvh-10rem))] lg:max-h-[calc(100dvh-10rem)] lg:min-h-[360px] lg:flex-row lg:gap-5"
+                  : "flex min-h-[360px] w-full flex-1 flex-col gap-4 overflow-hidden h-[calc(100dvh-11rem)] md:h-[min(560px,calc(100dvh-11rem))] md:max-h-[calc(100dvh-11rem)] md:min-h-[400px] md:flex-row md:gap-5"
               }
             >
               <div
