@@ -27,6 +27,11 @@ interface ConversationPanelProps {
    */
   onBackToInbox?: () => void;
   /**
+   * Tailwind class that hides the mobile back control once the two-column
+   * layout is active (agent: md+, buyer: lg+).
+   */
+  mobileBackHiddenClassName?: string;
+  /**
    * Primary header line — e.g. full listing address for a listing-scoped thread.
    * When set, the listing “About:” subtitle is omitted to avoid duplication.
    */
@@ -42,6 +47,7 @@ export function ConversationPanel({
   onInboxInvalidate,
   onCloseRequest,
   onBackToInbox,
+  mobileBackHiddenClassName = "md:hidden",
   threadTitle,
   layoutVariant = "default",
   hotSheetPreviewSync,
@@ -58,6 +64,7 @@ export function ConversationPanel({
   const { messages, details, loading, notFound, fetchError, sending, sendMessage, refetch } =
     useConversation(conversationId, { hotSheetPreviewSync });
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesScrollRef = useRef<HTMLDivElement>(null);
   const [listingAddress, setListingAddress] = useState<string | null>(null);
   const { lastSeenAt, isOnline } = useAgentLastSeen(details?.otherUserId);
 
@@ -92,7 +99,11 @@ export function ConversationPanel({
 
   useEffect(() => {
     if (messages.length === 0) return;
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    const scroller = messagesScrollRef.current;
+    if (!scroller) return;
+    // Scroll only the thread panel — never window/body (scrollIntoView on the
+    // sentinel can yank the page when the flex height hasn't settled yet).
+    scroller.scrollTop = scroller.scrollHeight;
   }, [messages]);
 
   // Thread may have been unarchived on load — refresh inbox lists (e.g. left sidebar).
@@ -280,7 +291,7 @@ export function ConversationPanel({
       {/* Mobile-only escape hatch back to the inbox list (list column is hidden
           below md while a thread is open). Desktop layout is untouched. */}
       {onBackToInbox ? (
-        <div className="shrink-0 border-b border-neutral-100 md:hidden">
+        <div className={cn("shrink-0 border-b border-neutral-100", mobileBackHiddenClassName)}>
           <button
             type="button"
             onClick={onBackToInbox}
@@ -363,8 +374,9 @@ export function ConversationPanel({
       </div>
 
       <div
+        ref={messagesScrollRef}
         className={cn(
-          "overscroll-contain bg-white",
+          "overscroll-contain bg-white touch-pan-y",
           listingThreadHeader ? "px-3.5" : "px-4",
           isEmptyThread
             ? cn("shrink-0", listingThreadHeader ? "pb-0 pt-1" : "pb-3 pt-2")

@@ -3,6 +3,7 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { useAgentPresence } from "@/hooks/useAgentPresence";
 import { useAuthRole } from "@/hooks/useAuthRole";
+import { useLockBodyScroll } from "@/hooks/useLockBodyScroll";
 import { useMessageCenterIntro } from "@/hooks/useMessageCenterIntro";
 import { useConversationThreads } from "@/hooks/useConversationThreads";
 import { archiveConversationsForUser } from "@/lib/archiveConversationsForUser";
@@ -12,7 +13,6 @@ import { ConversationsList } from "@/components/messaging/ConversationsList";
 import { NewConversationDialog } from "@/components/NewConversationDialog";
 import { MessageCenterIntroOverlay } from "@/components/messaging/MessageCenterIntroOverlay";
 import { Seo } from "@/components/Seo";
-import { Button } from "@/components/ui/button";
 import { AacBackButton } from "@/components/layout/AacBackLink";
 import { AgentPageHeader } from "@/components/layout/AgentPageHeader";
 import { AacPageIntro } from "@/components/layout/AacPageIntro";
@@ -89,6 +89,8 @@ function MessagingWorkspaceContent({
   } = useConversationThreads();
 
   useAgentPresence();
+  // Keep touch pans inside the inbox/thread panels on mobile.
+  useLockBodyScroll(true);
 
   useEffect(() => {
     if (selectedConversationId) {
@@ -144,14 +146,12 @@ function MessagingWorkspaceContent({
       />
       <Seo title={buyerMode ? "Messages" : "Messaging"} />
       {/*
-        Mobile: fill the shell viewport and let the inbox/thread panels own
-        scrolling. Fixed rem heights previously overflowed AppShell and created
-        a nested-scroll trap (list wouldn't scroll; taps wouldn't open threads).
-        AppShell / BuyerShell expose a flex, overflow-hidden content area on
-        messages routes so h-full / flex-1 resolve to the visible viewport.
+        Mobile: absolute-fill single-pane swap (list XOR thread) inside a
+        bounded flex viewport. Avoid rem-based heights — they overflow AppShell
+        and create a nested-scroll trap. Desktop keeps the two-column layout.
       */}
       <div className="flex h-full max-h-full min-h-0 flex-1 flex-col overflow-hidden bg-white">
-        <div className="mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col overflow-hidden px-4 pb-4 sm:px-6 sm:pb-6 md:px-8 md:pb-10">
+        <div className="mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col overflow-hidden px-4 pb-3 sm:px-6 sm:pb-6 md:px-8 md:pb-10">
           <div className="mx-auto flex min-h-0 w-full max-w-full flex-1 flex-col overflow-hidden">
             {!buyerMode ? (
               <AgentPageHeader
@@ -179,15 +179,24 @@ function MessagingWorkspaceContent({
             <div
               className={
                 buyerMode
-                  ? "flex min-h-0 w-full flex-1 flex-col gap-4 overflow-hidden lg:h-[min(560px,calc(100dvh-10rem))] lg:max-h-[calc(100dvh-10rem)] lg:min-h-[360px] lg:flex-none lg:flex-row lg:gap-5"
-                  : "flex min-h-0 w-full flex-1 flex-col gap-4 overflow-hidden md:h-[min(560px,calc(100dvh-11rem))] md:max-h-[calc(100dvh-11rem)] md:min-h-[400px] md:flex-none md:flex-row md:gap-5"
+                  ? "relative min-h-0 w-full flex-1 overflow-hidden lg:flex lg:h-[min(560px,calc(100dvh-10rem))] lg:max-h-[calc(100dvh-10rem)] lg:min-h-[360px] lg:flex-none lg:flex-row lg:gap-5"
+                  : "relative min-h-0 w-full flex-1 overflow-hidden md:flex md:h-[min(560px,calc(100dvh-11rem))] md:max-h-[calc(100dvh-11rem)] md:min-h-[400px] md:flex-none md:flex-row md:gap-5"
               }
             >
+              {/* Mobile: absolute inset fill so the pane always gets a definite
+                  height for overflow-y-auto. Desktop: normal flex column.
+                  Agent two-column starts at md; buyer at lg. */}
               <div
                 className={cn(
-                  "w-full min-h-0 md:h-full md:w-[320px] md:flex-none",
-                  selectedConversationId ? "hidden" : "flex flex-1",
-                  "md:flex",
+                  "min-h-0 overflow-hidden",
+                  buyerMode
+                    ? "absolute inset-0 lg:static lg:inset-auto lg:relative lg:h-full lg:w-[320px] lg:flex-none"
+                    : "absolute inset-0 md:static md:inset-auto md:relative md:h-full md:w-[320px] md:flex-none",
+                  selectedConversationId
+                    ? buyerMode
+                      ? "z-0 hidden lg:flex"
+                      : "z-0 hidden md:flex"
+                    : "z-10 flex",
                   buyerMessagingPanel,
                 )}
               >
@@ -211,8 +220,15 @@ function MessagingWorkspaceContent({
 
               <div
                 className={cn(
-                  "w-full min-h-0 flex-col overflow-hidden md:h-full md:w-[560px] md:max-w-[560px] md:flex-none",
-                  selectedConversationId ? "flex flex-1" : "hidden md:flex",
+                  "min-h-0 overflow-hidden",
+                  buyerMode
+                    ? "absolute inset-0 lg:static lg:inset-auto lg:relative lg:h-full lg:w-[560px] lg:max-w-[560px] lg:flex-none"
+                    : "absolute inset-0 md:static md:inset-auto md:relative md:h-full md:w-[560px] md:max-w-[560px] md:flex-none",
+                  selectedConversationId
+                    ? "z-10 flex"
+                    : buyerMode
+                      ? "z-0 hidden lg:flex"
+                      : "z-0 hidden md:flex",
                   panelShellClass,
                 )}
               >
@@ -225,6 +241,7 @@ function MessagingWorkspaceContent({
                       ? () => navigate(messagesRouteBase)
                       : undefined
                   }
+                  mobileBackHiddenClassName={buyerMode ? "lg:hidden" : "md:hidden"}
                 />
               </div>
             </div>

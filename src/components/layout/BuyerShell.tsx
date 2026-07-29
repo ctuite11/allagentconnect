@@ -55,13 +55,15 @@ export function BuyerShell() {
 
   return (
     <div
-      className={`flex flex-col ${buyerPageShell}${
-        isMessagesRoute ? " h-dvh max-h-dvh overflow-hidden" : ""
-      }`}
+      className={
+        isMessagesRoute
+          ? "flex h-dvh max-h-dvh min-h-0 flex-col overflow-hidden bg-white"
+          : `flex flex-col ${buyerPageShell}`
+      }
     >
       <ActiveAgentBanner />
       {/* ── Top navigation bar ─────────────────────────────────────────── */}
-      <header className="sticky top-0 z-50 w-full overflow-visible border-b border-neutral-100 bg-white shadow-none">
+      <header className="sticky top-0 z-50 w-full shrink-0 overflow-visible border-b border-neutral-100 bg-white shadow-none">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 overflow-visible px-4 pr-6 sm:px-6">
           {/* Brand */}
           <button
