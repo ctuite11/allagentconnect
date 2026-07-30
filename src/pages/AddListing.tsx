@@ -498,15 +498,40 @@ const AddListing = () => {
     setLocationValidation(validation);
   }, [selectedState, selectedCounty, formData.city]);
 
-  // Track form changes
+  // Track form changes against the post-hydration baseline.
+  // Normalizing backend values while loading is NOT a user edit, so dirty state is
+  // a comparison against a snapshot taken once hydration has settled.
+  const formSnapshot = useMemo(
+    () =>
+      canonicalizeListingFormState({
+        formData,
+        photos: describeMediaCollection(photos),
+        floorPlans: describeMediaCollection(floorPlans),
+        documents: describeMediaCollection(documents),
+        disclosures,
+        propertyFeatures,
+        amenities,
+      }),
+    [formData, photos, floorPlans, documents, disclosures, propertyFeatures, amenities],
+  );
+
+  // Establish the clean baseline once auth + any listing hydration has finished.
+  // A short settle delay lets dependent cascades (state/county -> city lists) finish first.
   useEffect(() => {
-    if (!user) return;
-    const hasContent = formData.address || formData.city || formData.price || 
-                       formData.bedrooms || formData.description;
-    if (hasContent) {
-      setHasUnsavedChanges(true);
-    }
-  }, [formData, user]);
+    if (!user || loading || isLoadingListing) return;
+    if (baselineSnapshotRef.current !== null) return;
+    const settleTimeout = setTimeout(() => {
+      baselineSnapshotRef.current = formSnapshotRef.current;
+      setHasUnsavedChanges(false);
+    }, 600);
+    return () => clearTimeout(settleTimeout);
+  }, [user, loading, isLoadingListing]);
+
+  useEffect(() => {
+    formSnapshotRef.current = formSnapshot;
+    if (!user || baselineSnapshotRef.current === null) return;
+    setHasUnsavedChanges(formSnapshot !== baselineSnapshotRef.current);
+  }, [formSnapshot, user]);
 
   // Auto-save functionality - debounced on changes
   useEffect(() => {
