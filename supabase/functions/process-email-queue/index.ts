@@ -39,6 +39,14 @@ Deno.serve(async (req) => {
   }
   if (req.method !== "POST") return json({ error: "Method not allowed" }, { status: 405 });
 
+  /* ---- GLOBAL KILL SWITCH ----
+   * Checked before any auth work, any email_jobs_claim call, and any provider call.
+   * Set the EMAIL_SENDING_PAUSED secret to "true" to freeze all outbound email. */
+  if ((Deno.env.get("EMAIL_SENDING_PAUSED") ?? "").trim().toLowerCase() === "true") {
+    console.log("[process-email-queue] EMAIL_SENDING_PAUSED=true — refusing to claim jobs");
+    return json({ paused: true, processed: 0 });
+  }
+
   const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
   const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
   const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
