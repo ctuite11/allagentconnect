@@ -136,3 +136,55 @@ No email jobs were modified, retried, requeued, cancelled or drained during this
 ## 6. Sibling privileged-function audit
 
 See `docs/security/2026-07-30-privileged-function-audit.md`.
+---
+
+## Closure corrections (2026-07-30, post-containment)
+
+### 1. Root cause of the seed account's self-verification
+`public.agent_settings` had a self-service UPDATE policy
+(`Users can update own settings`, `USING (user_id = current_account_owner_id())`)
+with **no `WITH CHECK` and no column-level restriction**, so any authenticated
+agent could update *every* column of their own row — including `agent_status`,
+`verified_at` and `account_activated_at`. That is why the audit trigger recorded
+the seeded agent's own ID as the acting user: the write really was made by that
+agent's JWT, not by an admin. Additionally, `public.mark_agent_activated(uuid)`
+was `SECURITY DEFINER` with `EXECUTE` granted to `PUBLIC` and no caller check,
+allowing any signed-in user to activate any user ID.
+
+Fixes:
+- `guard_agent_settings_lifecycle()` BEFORE UPDATE trigger raises `42501` when a
+  non-admin, non-service caller changes `agent_status`, `verified_at`,
+  `account_activated_at`, `verification_method`, `verification_payload`,
+  `verification_attempt_count`, `last_verification_attempt_at`, or
+  `approval_email_sent` (covers verification, restriction, rejection and
+  activation lifecycle states).
+- `guard_agent_settings_lifecycle_insert()` forces self-service inserts to
+  `pending` / null verification / null activation.
+- Self-update policy re-created with a matching `WITH CHECK`.
+- `mark_agent_activated()` now: only self or admin/service may call it, and
+  self-activation requires an admin-granted `verified`/`invited` status.
+- Verified by executing the exploit with a non-admin agent JWT context: the
+  update was rejected with "Agents cannot modify verification/activation
+  lifecycle fields".
+
+### 2. Build-time security guard
+`npm run security:guard` is no longer manual only: it now runs as both the
+`prebuild` script and the first step of `npm run build`. Verified by adding a
+temporary `/seed-test-data` route — `npm run build` exited 1 with
+"production route "seed-test-data" is forbidden" — then removing it and
+confirming a clean build.
+
+### 3. Email attachment storage (correction)
+The `email-attachments` bucket **is public and remains public**; the frontend
+still uses `getPublicUrl()`. Removing a SELECT policy does not privatize a
+public bucket. It is now explicitly documented as a public, non-sensitive
+inline-email-image bucket, and a separate private bucket
+`email-attachments-private` (owner-scoped RLS, signed/authenticated downloads
+only) exists for sensitive attachments. See
+`docs/security/storage-buckets-classification.md`.
+
+### 4. Queue wording (correction)
+Previous wording "queue drained" was ambiguous. Correct statement:
+**Auth-user deletion queue drained** (0 pending; 36 completed rows).
+**Email queue remains paused and untouched** — the queued backlog was not
+processed, retried, or modified, and `EMAIL_SENDING_PAUSED` remains true.
