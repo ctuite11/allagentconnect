@@ -1,51 +1,57 @@
-## Investigation result (confirmed by reading the code)
+## Who broke it
 
-Opening an existing listing always shows "Unsaved changes" — reproduced signed-in at `/agent/listings/edit/:id?ref=stale-reminder&confirm=1`.
+Not a person I can name from git — every commit in this repo is authored by the Lovable bot with the message "Changes", so the audit trail points to a **date and a change set**, not a human. The commits came from your own Lovable sessions on **2026-07-11**.
 
-**Cause — `src/pages/AddListing.tsx` lines 500-508:**
+What happened that day:
 
-```ts
-// Track form changes
-useEffect(() => {
-  if (!user) return;
-  const hasContent = formData.address || formData.city || formData.price ||
-                     formData.bedrooms || formData.description;
-  if (hasContent) setHasUnsavedChanges(true);
-}, [formData, user]);
-```
+- `a4a253f2f` (2026-07-11) — **created** `supabase/functions/notify-agents-new-listing/index.ts`. This is a brand-new broadcast function. It never looks at `hot_sheets`. It builds its audience from `getVerifiedAgentAudience` (every activated + verified agent) and filters with `communicationPreferencesMatcher` (Comms Center coverage area / price / property type).
+- `2f8baf8ad` (2026-07-11) — **wired it into the listing trigger**, adding the fan-out at `supabase/functions/notify-matching-buyers/index.ts:64-68`, right beside the existing hot-sheet call.
+- Same-day follow-ups `f6bd99b9c`, `0c41ee9d4`, `a6ee44a0a`, `ab49f9596`, `1044d2f23` expanded its audience and reminder logic.
 
-This effect treats *any* non-empty form content as a user edit — it never compares against what was loaded. In edit mode the sequence is:
+The damage is visible in the data: the first `agent-new-listing-alert` email job is timestamped **2026-07-11 03:12 UTC**. There are now **4,977** of them. The real hot-sheet template, `new-match-notification`, dates back to 2026-06-05 and has produced **35**.
 
-1. `loadExistingListing()` runs many `setFormData(...)` hydration calls and ends with `setHasUnsavedChanges(false)` (line 960).
-2. Those updates are batched, so the reset and the hydration land in the same commit.
-3. After commit, the tracking effect runs with the now-populated `formData`, sees `hasContent`, and immediately sets dirty back to `true`.
+The Hot Sheet system you built and tested never broke. A second, parallel pipeline was added on top of the same database trigger, and it labels its output `hot_sheet_alerts` while never consulting a hot sheet.
 
-Secondary contributors that re-fire the same effect after hydration (normalization counted as edits):
-- The state/county cascade effect (lines ~470-488) can clear `formData.city` when the city list is filtered/reloaded.
-- Numeric/array/date normalization during hydration (`String(parking_spaces)`, `lead_paint` string→array, price/date formatting) writes values that differ in shape from the DB row.
+**Why it was probably added:** `send-new-match-notification` (the canonical realtime path, cron `*/2 * * * *`) only emails buyers/clients — it never emails the agent and ignores `hot_sheets.notify_agent_email`. Only the manual `process-hot-sheet` honors that flag. So agent-facing listing alerts had a real gap, and it was filled with a broadcast instead of by closing the gap in the hot-sheet path.
 
-**Knock-on effects:** the 14-second debounced autosave (lines 510-526) is armed on load, and the `beforeunload` warning (lines 528-538) fires on navigation even with no edits.
+---
 
-`src/pages/AddRentalListing.tsx` has the identical pattern (lines 164-167, reset at 549).
+## Answers to your five questions
 
-## Fix plan
+**1. What invokes `notify-agents-new-listing`**
+`notify-matching-buyers/index.ts:64-68` (automatic, every qualifying listing event) and `admin-notification-backfill/index.ts:145-149` (manual admin replay). Nothing else.
 
-1. **Add a hydration baseline** in `AddListing.tsx`: a `baselineRef` holding a canonical snapshot of the form state, plus a `hydratedRef` flag.
-2. **Snapshot after hydration settles**, not mid-batch — set the baseline in an effect that runs once `isLoadingListing` flips false (and for the new-listing path, once initial defaults are set). Until the baseline exists, the tracking effect is a no-op, so hydration writes can never mark the form dirty.
-3. **Replace the `hasContent` heuristic with a comparison.** Dirty = canonical snapshot of current state differs from baseline. Canonicalization normalizes the known noise: `null`/`undefined` → `""`, numbers → trimmed strings, dates → `YYYY-MM-DD`, arrays sorted and empty-filtered, so null→empty-string and re-ordering are not edits.
-4. **Include the non-`formData` collections** already watched by autosave (photos, floor plans, documents, disclosures, features, amenities) in the same baseline so the check is consistent with what autosave saves.
-5. **Reset the baseline on save** — after `handleSaveDraft` / `handleSaveChanges` succeed (lines ~2519, ~2797), re-snapshot instead of only setting the flag false, so post-save state is the new clean point.
-6. **Mirror the same change in `AddRentalListing.tsx`** (lines 164-167 / 549).
+**2. When introduced** — 2026-07-11, commits above.
+
+**3. Same event also triggers the hot-sheet path** — yes. DB trigger `notify_matching_buyers_trigger` (AFTER INSERT OR UPDATE ON `listings`) → `notify-matching-buyers` → three fan-outs: `send-new-match-notification`, `notify-agents-new-listing`, plus inline legacy `client_needs` emails.
+
+**4. Duplicates** — each path dedups internally (`agent_sent_listings` vs `hot_sheet_sent_listings`), but there is no cross-path dedup, so one person can receive two or three emails for one listing event.
+
+**5. Which path passed the tests** — `process-hot-sheet` / `send-new-match-notification`. Criteria come from the hot sheet row, delivery is gated on `notification_schedule` / `notify_agent_email` / `notify_client_email`, clients must have accepted an invite.
+
+Last 14 days: 4,782 broadcast alerts to 189 agents. **2** of those agents own an active hot sheet.
+
+---
+
+## Fix: delete the second pipeline, close the gap in the first
+
+**1. Sever the regression.** Remove the fan-out at `notify-matching-buyers/index.ts:60-70`. Make `notify-agents-new-listing` return `{ disabled: true }` immediately so the admin backfill can't fire it either. No property notification uses Comms Center preferences anymore.
+
+**2. Add agent delivery to the canonical path.** In `send-new-match-notification`, for each hot sheet that matched this listing, also deliver to the owning agent when `is_active`, `notify_agent_email = true`, `notification_schedule = 'immediately'`, and the agent isn't the listing agent. Reuse the existing `hot_sheet_sent_listings` `(hot_sheet_id, listing_id, status_at_send)` reservation — one row covers both agent and buyer sends, so no duplicate with `process-hot-sheet`.
+
+Keeps the `agent-new-listing-alert` template and `hot_sheet_alerts` category, but with the real hot sheet name, and uses `hotSheetStatusCopy.ts` wording for status changes vs new matches. Key: `hs-agent:${hot_sheet_id}:${listing_id}:${status}`.
+
+**3. Leave `agent_sent_listings` in place** as history; it just stops being written. `communicationPreferencesMatcher` stays untouched for Buyer Needs / Seller / Renter broadcasts.
+
+**4. Queued backlog.** Unsent `agent-new-listing-alert` jobs exist. I will not cancel or retry any of them without your explicit say-so.
+
+## Result
+
+- No hot sheets → zero property emails.
+- Hot sheets that don't match the listing → zero.
+- One source of truth: every property alert starts from a hot sheet row.
+- Buyer Needs and other Comms Center broadcasts unchanged.
 
 ## Verification
 
-Signed-in via Playwright on the real listing:
-- Open the edit URL → no "Unsaved changes" badge, no autosave fires within ~20s.
-- Type in one field → badge appears.
-- Revert the field → badge clears (comparison-based, not one-way).
-- Save → badge clears and stays clear.
-- Navigate away untouched → no `beforeunload` prompt.
-
-## Out of scope
-
-No changes to PR #31 assistant work, no migration, no function deploys. If the PR #31 files (`team_scoped_account_assistants` migration, `AssistantSection`) appear in the workspace during this work, I stop and report the sync status before touching them.
+Dry-run against a recent listing (expect only the 2 hot-sheet owners, and only on criteria match). Negative tests: no hot sheet, paused hot sheet, non-matching criteria, `notify_agent_email = false`. Re-fire the same event twice to confirm dedup holds. Confirm Buyer Need volumes unchanged.

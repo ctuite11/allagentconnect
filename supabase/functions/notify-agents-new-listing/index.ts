@@ -51,6 +51,24 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // ─────────────────────────────────────────────────────────────────────
+  // RETIRED 2026-07-30.
+  // This function broadcast listing alerts to every activated+verified
+  // agent using Communications Center preferences, bypassing Hot Sheets
+  // entirely. Agent listing alerts are now owned exclusively by
+  // `send-new-match-notification`, driven by hot_sheets rows.
+  // Kept as a no-op so any lingering caller (e.g. admin backfill) is inert.
+  // ─────────────────────────────────────────────────────────────────────
+  return new Response(
+    JSON.stringify({
+      disabled: true,
+      reason:
+        "Retired. Agent listing alerts are owned by the Hot Sheet pipeline (send-new-match-notification).",
+    }),
+    { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+  );
+
+  // deno-lint-ignore no-unreachable
   const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
     auth: { autoRefreshToken: false, persistSession: false },
   });
