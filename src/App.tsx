@@ -89,7 +89,6 @@ import ClientAgentSettings from "./pages/ClientAgentSettings";
 import BuyerMapSearch from "./pages/BuyerMapSearch";
 import ClientCreateHotsheetNew from "./pages/ClientCreateHotsheetNew";
 import ComingSoon from "./pages/ComingSoon";
-import SeedTestData from "./pages/SeedTestData";
 import AllAgentConnectHome from "./pages/AllAgentConnectHome";
 import ShareLinkHandler from "./pages/ShareLinkHandler";
 import LandingPage from "./pages/LandingPage";
@@ -493,7 +492,6 @@ const App = () => (
                 <Route path="/accept-delegate-invite" element={<AcceptDelegateInvite />} />
                 <Route path="/unsubscribe-hotsheet" element={<UnsubscribeHotSheet />} />
                 <Route path="/hotsheet-preview" element={<HotSheetPreview />} />
-                <Route path="/seed-test-data" element={<SeedTestData />} />
                 <Route path="/link/:token" element={<ShareLinkHandler />} />
                 {/* Legal pages */}
                 <Route path="/privacy" element={<PrivacyPolicy />} />

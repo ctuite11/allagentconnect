@@ -1,0 +1,1 @@
+SELECT public.process_auth_deletion_queue();

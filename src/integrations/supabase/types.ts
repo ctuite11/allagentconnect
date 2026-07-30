@@ -3062,6 +3062,57 @@ export type Database = {
           },
         ]
       }
+      listing_audit_events: {
+        Row: {
+          acting_user_id: string | null
+          address: string | null
+          created_at: string
+          created_via_function: string | null
+          creation_source: string | null
+          db_role: string | null
+          details: Json | null
+          event_type: string
+          id: string
+          listing_agent_id: string | null
+          listing_id: string | null
+          listing_number: string | null
+          listing_status: string | null
+          request_id: string | null
+        }
+        Insert: {
+          acting_user_id?: string | null
+          address?: string | null
+          created_at?: string
+          created_via_function?: string | null
+          creation_source?: string | null
+          db_role?: string | null
+          details?: Json | null
+          event_type: string
+          id?: string
+          listing_agent_id?: string | null
+          listing_id?: string | null
+          listing_number?: string | null
+          listing_status?: string | null
+          request_id?: string | null
+        }
+        Update: {
+          acting_user_id?: string | null
+          address?: string | null
+          created_at?: string
+          created_via_function?: string | null
+          creation_source?: string | null
+          db_role?: string | null
+          details?: Json | null
+          event_type?: string
+          id?: string
+          listing_agent_id?: string | null
+          listing_id?: string | null
+          listing_number?: string | null
+          listing_status?: string | null
+          request_id?: string | null
+        }
+        Relationships: []
+      }
       listing_drafts: {
         Row: {
           created_at: string
@@ -3344,6 +3395,10 @@ export type Database = {
           cooling_types: Json | null
           county: string | null
           created_at: string
+          created_by_user_id: string | null
+          created_via_function: string | null
+          creation_request_id: string | null
+          creation_source: string | null
           dcmls_error: string | null
           dcmls_last_updated_at: string | null
           dcmls_published_at: string | null
@@ -3470,6 +3525,10 @@ export type Database = {
           cooling_types?: Json | null
           county?: string | null
           created_at?: string
+          created_by_user_id?: string | null
+          created_via_function?: string | null
+          creation_request_id?: string | null
+          creation_source?: string | null
           dcmls_error?: string | null
           dcmls_last_updated_at?: string | null
           dcmls_published_at?: string | null
@@ -3596,6 +3655,10 @@ export type Database = {
           cooling_types?: Json | null
           county?: string | null
           created_at?: string
+          created_by_user_id?: string | null
+          created_via_function?: string | null
+          creation_request_id?: string | null
+          creation_source?: string | null
           dcmls_error?: string | null
           dcmls_last_updated_at?: string | null
           dcmls_published_at?: string | null
@@ -4814,6 +4877,7 @@ export type Database = {
         Returns: string
       }
       current_account_owner_id: { Args: never; Returns: string }
+      current_request_role: { Args: never; Returns: string }
       delete_draft_listing: {
         Args: { p_listing_id: string }
         Returns: undefined
