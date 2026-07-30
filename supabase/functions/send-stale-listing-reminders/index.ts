@@ -113,8 +113,8 @@ const handler = async (req: Request): Promise<Response> => {
         .filter(Boolean)
         .join(" · ");
 
-      const editUrl = `${frontendUrl}/listing/${listing.id}/edit?ref=stale-reminder`;
-      const confirmUrl = `${frontendUrl}/listing/${listing.id}/edit?ref=stale-reminder&confirm=1`;
+      const editUrl = `${frontendUrl}/agent/listings/edit/${listing.id}?ref=stale-reminder`;
+      const confirmUrl = `${frontendUrl}/agent/listings/edit/${listing.id}?ref=stale-reminder&confirm=1`;
 
       const html = buildAacEmail({
         headline: `Quick check on your listing`,

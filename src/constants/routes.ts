@@ -26,7 +26,7 @@ export const ROUTES = {
   HOT_SHEET_REVIEW: '/hot-sheets/:id/review',
   LISTING_DETAIL: '/property/:id',
   ADD_LISTING: '/agent/listings/new',
-  EDIT_LISTING: '/agent/listings/:id/edit',
+  EDIT_LISTING: '/agent/listings/edit/:id',
   LISTING_ANALYTICS: '/agent/listings/:id/analytics',
   SEARCH_RESULTS: '/search',
   CLIENT_DETAIL: '/my-clients/:id',
