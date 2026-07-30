@@ -1,3 +1,13 @@
+/**
+ * Email composer toolbar.
+ *
+ * SECURITY: images inserted here are uploaded to the `email-attachments`
+ * bucket, which is intentionally PUBLIC (email clients must fetch images
+ * anonymously) and is served via `getPublicUrl()`. Only non-sensitive inline
+ * email images belong here. Sensitive attachments must use the private
+ * `email-attachments-private` bucket with signed/authenticated downloads.
+ * See docs/security/storage-buckets-classification.md
+ */
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
