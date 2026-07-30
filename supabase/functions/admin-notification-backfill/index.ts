@@ -11,18 +11,6 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 
-// Same qualifying-status set as notify-agents-new-listing.
-const QUALIFYING_STATUSES = [
-  "active",
-  "coming_soon",
-  "price_changed",
-  "back_on_market",
-  "extended",
-  "reactivated",
-  "new",
-  "off_market",
-];
-
 type Target = "latest_listing" | "latest_client_need" | "both";
 
 interface Body {
@@ -107,47 +95,18 @@ serve(async (req) => {
       caller: userData.user.id,
     };
 
-    // Listing ----------------------------------------------------------------
+    // Listing / property notifications ---------------------------------------
+    // The legacy broad-audience path (notify-agents-new-listing) is retired.
+    // Do not rebuild broad delivery here, and do not report a misleading
+    // successful property-notification replay.
     if (target === "latest_listing" || target === "both") {
-      let listingId = listingIdOverride;
-      if (!listingId) {
-        const { data: latest, error: lErr } = await admin
-          .from("listings")
-          .select("id, status, created_at")
-          .in("status", QUALIFYING_STATUSES)
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .maybeSingle();
-        if (lErr) throw lErr;
-        listingId = latest?.id ?? null;
-      } else {
-        // Validate override still qualifies for the automatic path.
-        const { data: chk } = await admin
-          .from("listings")
-          .select("id, status")
-          .eq("id", listingId)
-          .maybeSingle();
-        if (!chk || !QUALIFYING_STATUSES.includes(String(chk.status ?? ""))) {
-          return new Response(
-            JSON.stringify({
-              error: "listing_id override does not qualify for the automatic notification path",
-              listing_id: listingIdOverride,
-              status: chk?.status ?? null,
-            }),
-            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-          );
-        }
-      }
-
-      if (!listingId) {
-        result.listing = { skipped: true, reason: "no qualifying listing found" };
-      } else {
-        const { status, json } = await invokeFunction("notify-agents-new-listing", {
-          listing_id: listingId,
-          dry_run: dryRun,
-        });
-        result.listing = { http_status: status, ...(json ?? {}) };
-      }
+      result.listing = {
+        disabled: true,
+        reason:
+          "Legacy broad property-notification backfill is disabled. Property notifications are delivered only through matching active hot sheets (send-new-match-notification / process-hot-sheet).",
+        listing_id: listingIdOverride,
+        dry_run: dryRun,
+      };
     }
 
     // Client need ------------------------------------------------------------

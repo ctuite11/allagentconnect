@@ -97,6 +97,7 @@ serve(async (req: Request): Promise<Response> => {
     const { error: insertError } = await supabaseAdmin
       .from("email_jobs")
       .insert({
+        stream: "transactional",
         payload: {
           provider: "resend",
           template,

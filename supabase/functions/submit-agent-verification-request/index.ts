@@ -81,7 +81,9 @@ async function enqueueAdminNotification(
 
   const { error: insertErr } = await admin
     .from("email_jobs")
-    .insert({ payload, idempotency_key: idempotencyKey });
+    .insert({
+      stream: "system",
+      payload, idempotency_key: idempotencyKey });
 
   if (insertErr) {
     // 23505 = idempotency race → already notified for this pending id.

@@ -87,6 +87,7 @@ export async function reserveAndEnqueueMissingOpportunityReminder(
   });
 
   const emailJob = {
+    stream: "transactional",
     idempotency_key: idempotencyKey,
     payload: {
       provider: "resend",

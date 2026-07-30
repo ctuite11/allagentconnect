@@ -17,6 +17,7 @@ import {
   partitionByCommsSchedule,
   type DigestItemInsert,
 } from "../_shared/commsDigest.ts";
+import { assertCommsEnqueueAllowed } from "../_shared/emailStreams.ts";
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -62,6 +63,18 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(null, { headers: corsHeaders });
   }
   try {
+    const pauseGate = assertCommsEnqueueAllowed();
+    if (pauseGate.paused) {
+      return new Response(
+        JSON.stringify({
+          paused: true,
+          switch: pauseGate.switch,
+          reason: pauseGate.reason,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     const body: SendNotificationRequest = await req.json();
@@ -334,6 +347,7 @@ const handler = async (req: Request): Promise<Response> => {
     );
 
     const emailJobs: any[] = immediate.map((r) => ({
+      stream: "communications",
       idempotency_key: `client-need-broadcast:${broadcastId}:${r.agent_id}`,
       payload: {
         provider: "resend",
@@ -357,6 +371,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (sendCopyToSelf && senderEmail && isValidEmail(senderEmail)) {
       emailJobs.push({
+        stream: "communications",
         payload: {
           provider: "resend",
           template: "client-need-broadcast",

@@ -191,6 +191,7 @@ ${message ? `<p><strong>Message:</strong></p><p>${escapeHtml(message)}</p>` : ""
     const { data: jobRow, error: enqueueError } = await admin
       .from("email_jobs")
       .insert({
+        stream: "transactional",
         payload: {
           provider: "resend",
           template: "showing-request",

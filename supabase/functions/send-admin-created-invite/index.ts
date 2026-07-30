@@ -128,6 +128,7 @@ const handler = async (req: Request): Promise<Response> => {
     });
 
     const { data: inserted, error } = await admin.from("email_jobs").insert({
+      stream: "transactional",
       payload: {
         provider: "resend",
         template: TEMPLATE_NAME,

@@ -59,6 +59,7 @@ serve(async (req: Request): Promise<Response> => {
         ? `comms-guide-preview-${email}-${Date.now()}-${crypto.randomUUID().slice(0, 8)}`
         : `comms-guide-${email}-${today}`;
       const { error } = await admin.from("email_jobs").insert({
+        stream: "communications",
         idempotency_key: idempotencyKey,
         payload: {
           provider: "resend",

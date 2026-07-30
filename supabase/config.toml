@@ -164,3 +164,9 @@ verify_jwt = false
 [functions.process-comms-digests]
 verify_jwt = false
 
+
+[functions.dry-run-hot-sheet-listing]
+verify_jwt = false
+
+[functions.dry-run-comms-broadcast]
+verify_jwt = false

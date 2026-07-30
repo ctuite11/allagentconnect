@@ -52,6 +52,7 @@ const handler = async (req: Request): Promise<Response> => {
     const { data: jobRow, error: enqueueError } = await admin
       .from("email_jobs")
       .insert({
+        stream: "transactional",
         payload: {
           provider: "resend",
           template: "welcome-email",

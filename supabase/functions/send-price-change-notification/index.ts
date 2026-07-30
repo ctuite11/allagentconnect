@@ -185,6 +185,7 @@ serve(async (req) => {
         const { error: enqueueError } = await supabase
           .from("email_jobs")
           .insert({
+            stream: "transactional",
             idempotency_key: idempotencyKey,
             payload: {
               provider: "resend",

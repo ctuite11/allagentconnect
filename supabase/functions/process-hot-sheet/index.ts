@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { renderHotSheetMatchListingEmailCard } from "../_shared/listingEmailCard.ts";
 import { resolveEmailBaseUrl } from "../_shared/aacPublicUrl.ts";
+import { assertHotSheetEnqueueAllowed } from "../_shared/emailStreams.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -28,6 +29,10 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    const pauseGate = assertHotSheetEnqueueAllowed();
+    // baselineOnly may still write sent-listings without emailing; allow that
+    // path through and only block email enqueue when paused (checked later).
+
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_ANON_KEY") ?? "",
@@ -317,6 +322,21 @@ const handler = async (req: Request): Promise<Response> => {
     });
 
     if (shouldSendEmail) {
+      if (pauseGate.paused) {
+        console.log(`[process-hot-sheet] email enqueue paused: ${pauseGate.switch}`);
+        // Still mark listings as sent below only when emails would have gone;
+        // when paused, skip marking so delivery remains possible later.
+        return new Response(
+          JSON.stringify({
+            paused: true,
+            switch: pauseGate.switch,
+            reason: pauseGate.reason,
+            matchingCount: newListings.length,
+          }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+
       const recipientSet = new Set<string>();
       
       if (hotSheet.notify_agent_email) {
@@ -483,11 +503,13 @@ const handler = async (req: Request): Promise<Response> => {
 
         // Enqueue via email_jobs instead of direct Resend send
         const { error: emailJobError } = await adminClient.from("email_jobs").insert({
+          stream: "hot_sheet",
           payload: {
             provider: "resend",
             template: "hot-sheet-alert",
             to: recipients,
             subject: `${newListings.length} New Properties Match Your Search - ${hotSheet.name}`,
+            category: "hot_sheet_alerts",
             variables: {
               userName: clientName,
               hotSheetName: hotSheet.name,
@@ -533,12 +555,14 @@ const handler = async (req: Request): Promise<Response> => {
             `;
 
             const { error: agentCopyError } = await adminClient.from("email_jobs").insert({
+              stream: "hot_sheet",
               idempotency_key: `hotsheet-agent-copy:${hotSheet.id}:${Date.now()}`,
               payload: {
                 provider: "resend",
                 template: "hot-sheet-alert",
                 to: [agentEmail],
                 subject: `Copy: Hot Sheet sent to ${buyerLabel}`,
+                category: "hot_sheet_alerts",
                 variables: {
                   userName: agentProfile2?.first_name || "there",
                   hotSheetName: hotSheet.name,

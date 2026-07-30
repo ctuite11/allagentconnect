@@ -50,6 +50,7 @@ const handler = async (req: Request): Promise<Response> => {
     const { error: insertError } = await supabase
       .from("email_jobs")
       .insert({
+        stream: "transactional",
         payload: {
           provider: "resend",
           template: "favorites-share",

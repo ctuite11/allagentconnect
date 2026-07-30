@@ -48,6 +48,7 @@ const handler = async (req: Request): Promise<Response> => {
     `).join('');
 
     const { error: insertError } = await supabase.from("email_jobs").insert({
+      stream: "hot_sheet",
       payload: {
         provider: "resend",
         template: "hot-sheet-alert",

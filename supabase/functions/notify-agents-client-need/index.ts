@@ -17,6 +17,10 @@ import {
   partitionByCommsSchedule,
   type DigestItemInsert,
 } from "../_shared/commsDigest.ts";
+import {
+  assertCommsEnqueueAllowed,
+  isHotSheetSyncedClientNeed,
+} from "../_shared/emailStreams.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -52,6 +56,19 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
   try {
+    // Pause gate before audience selection.
+    const pauseGate = assertCommsEnqueueAllowed();
+    if (pauseGate.paused) {
+      return new Response(
+        JSON.stringify({
+          paused: true,
+          switch: pauseGate.switch,
+          reason: pauseGate.reason,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
@@ -79,6 +96,21 @@ serve(async (req) => {
     const bathrooms = body.bathrooms ?? need.bathrooms ?? null;
     const description = body.description ?? need.description ?? null;
     const senderId: string | null = need.submitted_by ?? null;
+
+    // Isolation: Hot Sheet sync must not enter the Comms broadcast path.
+    if (isHotSheetSyncedClientNeed(description)) {
+      console.log(
+        `[notify-agents-client-need] skip Hot-Sheet-synced client_need ${body.client_need_id}`,
+      );
+      return new Response(
+        JSON.stringify({
+          skipped: true,
+          reason: "hot_sheet_synced_client_need",
+          client_need_id: body.client_need_id,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
 
     // Canonical audience
     const audience = await getVerifiedAgentAudience(supabase);
@@ -203,6 +235,7 @@ serve(async (req) => {
     );
 
     const emailJobs = immediate.map((a) => ({
+      stream: "communications" as const,
       idempotency_key: `client-need:${body.client_need_id}:${a.agent_id}`,
       payload: {
         provider: "resend",

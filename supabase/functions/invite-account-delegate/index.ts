@@ -79,6 +79,7 @@ async function enqueueDelegateInviteEmail(
   const subject = `${ownerName} invited you to their All Agent Connect account`;
 
   const { error: emailErr } = await supabaseAdmin.from("email_jobs").insert({
+    stream: "transactional",
     payload: {
       provider: "resend",
       template: "account-delegate-invite",

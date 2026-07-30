@@ -1,6 +1,13 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import type { EmailJob } from "../_shared/emailTypes.ts";
 import { sendEmail } from "../_shared/sendEmail.ts";
+import {
+  assertJobSendable,
+  attemptsAfterPauseRaceRequeue,
+  getClaimableStreams,
+  isGlobalEmailPaused,
+  isPauseRaceBlock,
+} from "../_shared/emailStreams.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -36,14 +43,6 @@ function computeBackoffSeconds(attemptsSoFar: number) {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   if (req.method !== "POST") return json({ error: "Method not allowed" }, { status: 405 });
-
-  /* ---- GLOBAL KILL SWITCH ----
-   * Checked before the auth gate, before any email_jobs_claim call, and before any provider call.
-   * Set the EMAIL_SENDING_PAUSED secret to "true" to freeze all outbound email. */
-  if ((Deno.env.get("EMAIL_SENDING_PAUSED") ?? "").trim().toLowerCase() === "true") {
-    console.log("[kick-email-queue] EMAIL_SENDING_PAUSED=true — refusing to claim jobs");
-    return json({ paused: true, processed: 0 });
-  }
 
   /* ---- Auth gate ---- */
   const authHeader = req.headers.get("Authorization");
@@ -126,11 +125,29 @@ Deno.serve(async (req) => {
   };
 
   try {
-    const { data: jobs, error: claimErr } = await supabase.rpc("email_jobs_claim", { p_limit: 5 });
+    if (isGlobalEmailPaused()) {
+      return json({
+        processed: 0,
+        sent: 0,
+        failed: 0,
+        retried: 0,
+        paused: true,
+        switch: "EMAIL_SENDING_PAUSED",
+      });
+    }
+    const claimableStreams = getClaimableStreams();
+    if (claimableStreams.length === 0) {
+      return json({ processed: 0, sent: 0, failed: 0, retried: 0, paused: true, claimable_streams: [] });
+    }
+
+    const { data: jobs, error: claimErr } = await supabase.rpc("email_jobs_claim", {
+      p_limit: 5,
+      p_allowed_streams: claimableStreams,
+    });
     if (claimErr) throw claimErr;
 
     if (!jobs || jobs.length === 0) {
-      return json({ processed: 0, sent: 0, failed: 0, retried: 0 });
+      return json({ processed: 0, sent: 0, failed: 0, retried: 0, claimable_streams: claimableStreams });
     }
 
     console.log(`[kick-email-queue] Claimed ${jobs.length} jobs`);
@@ -171,6 +188,33 @@ Deno.serve(async (req) => {
             duration_ms: Date.now() - startedAt,
           });
 
+          failed++;
+          return;
+        }
+
+        const sendGate = assertJobSendable(job);
+        if (!sendGate.ok) {
+          if (isPauseRaceBlock(sendGate)) {
+            const runAfter = new Date(Date.now() + 15 * 60_000).toISOString();
+            const restoredAttempts = attemptsAfterPauseRaceRequeue(job.attempts);
+            await safeUpdateJob(
+              job.id,
+              {
+                status: "queued",
+                run_after: runAfter,
+                last_error: sendGate.error,
+                attempts: restoredAttempts,
+              },
+              { stage: "stream_paused_requeue" },
+            );
+            failed++;
+            return;
+          }
+          await safeUpdateJob(
+            job.id,
+            { status: "failed", last_error: sendGate.error },
+            { stage: "stream_send_gate_blocked" },
+          );
           failed++;
           return;
         }
