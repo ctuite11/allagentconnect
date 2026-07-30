@@ -667,14 +667,20 @@ export function renderEmailTemplate(
       const userName = String(variables.userName || "there").trim() || "there";
       const listingsHtml = variables.listingsHtml || "";
       const ctaUrl = String(variables.hotSheetLink || "");
+      const hotSheetName = String(variables.hotSheetName || "").trim();
+      const intro = hotSheetName
+        ? `New activity matching your Hot Sheet <strong>${hotSheetName}</strong>:`
+        : "New activity matching your Hot Sheet:";
       return buildAacEmail({
-        headline: "New listing in your coverage",
-        preheader: "A new listing matches your coverage area preferences.",
+        headline: hotSheetName ? `New matches in ${hotSheetName}` : "New Hot Sheet matches",
+        preheader: hotSheetName
+          ? `New listing activity in your Hot Sheet: ${hotSheetName}.`
+          : "New listing activity in your Hot Sheet.",
         body: `
           <p style="margin:0 0 12px;">Hi ${userName},</p>
-          <p style="margin:0 0 18px;">A new listing just hit the market that matches your coverage area and preferences:</p>
+          <p style="margin:0 0 18px;">${intro}</p>
           ${listingsHtml}`,
-        ctaLabel: ctaUrl ? "View listing" : undefined,
+        ctaLabel: ctaUrl ? "View Hot Sheet" : undefined,
         ctaUrl: ctaUrl || undefined,
       });
     }
