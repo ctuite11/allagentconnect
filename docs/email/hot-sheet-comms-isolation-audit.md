@@ -215,7 +215,7 @@ Hot Sheets no longer write to client_needs: PASS (triggers/functions dropped)
 Hot Sheet pause remains independent from Communications pause: PASS
 Communications pause remains independent from Hot Sheet pause: PASS
 Pause races do not consume attempts: PASS
-PR rebased and mergeable: (filled after rebase)
+PR rebased and mergeable: PASS (replayed onto current main; draft kept)
 ```
 
 ---
