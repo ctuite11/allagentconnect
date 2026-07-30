@@ -67,7 +67,7 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.convert-early-access-to-account]
-verify_jwt = false
+verify_jwt = true
 
 [functions.send-agent-invite]
 verify_jwt = false
