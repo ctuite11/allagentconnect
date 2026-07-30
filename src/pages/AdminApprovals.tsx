@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useRef } from "react";
+import { useCallback, useEffect, useState, useMemo, useRef } from "react";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -417,25 +417,43 @@ export default function AdminApprovals() {
   const [emailRecipients, setEmailRecipients] = useState<Array<{ id: string; email: string; name: string }>>([]);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showBulkDeleteDialog, setShowBulkDeleteDialog] = useState(false);
-  const [detailsAgent, setDetailsAgent] = useState<Agent | null>(null);
+  // The details drawer is driven by the `?agent=<id>` search param so that
+  // opening a card pushes a history entry. Browser Back then simply closes
+  // the drawer and keeps the admin list on screen (instead of popping the
+  // whole page off the stack and landing on the home page).
+  const [searchParams, setSearchParams] = useSearchParams();
+  const detailsAgentId = searchParams.get("agent");
+  const detailsAgent = useMemo(
+    () => (detailsAgentId ? agents.find((a) => a.id === detailsAgentId) ?? null : null),
+    [agents, detailsAgentId],
+  );
 
-  // Keep the open details drawer in sync with the latest agents list so that
-  // status changes (e.g. Verify) reflect immediately in the drawer without
-  // needing to reopen it.
+  const setDetailsAgent = useCallback(
+    (agent: Agent | null) => {
+      if (agent) {
+        const next = new URLSearchParams(searchParams);
+        next.set("agent", agent.id);
+        setSearchParams(next); // push → Back closes the drawer
+        return;
+      }
+      if (!searchParams.has("agent")) return;
+      const next = new URLSearchParams(searchParams);
+      next.delete("agent");
+      setSearchParams(next, { replace: true });
+    },
+    [searchParams, setSearchParams],
+  );
+
+  // Row was processed/removed on refresh (e.g. pending request converted to a
+  // verified agent). Drop the stale param instead of pointing at a phantom.
   useEffect(() => {
-    if (!detailsAgent) return;
-    const fresh = agents.find((a) => a.id === detailsAgent.id);
-    if (!fresh) {
-      // Row was processed/removed on refresh (e.g. pending request converted
-      // to a verified agent). Close the stale drawer instead of leaving it
-      // pointed at a phantom record.
-      setDetailsAgent(null);
-      return;
+    if (!detailsAgentId || loading) return;
+    if (!agents.some((a) => a.id === detailsAgentId)) {
+      const next = new URLSearchParams(searchParams);
+      next.delete("agent");
+      setSearchParams(next, { replace: true });
     }
-    if (fresh !== detailsAgent) {
-      setDetailsAgent(fresh);
-    }
-  }, [agents, detailsAgent]);
+  }, [agents, detailsAgentId, loading, searchParams, setSearchParams]);
 
   // Phase 4 guardrail — shared "previously deleted" gate. When set, the
   // dialog is open and `resolve` is awaited by whichever action opened it
