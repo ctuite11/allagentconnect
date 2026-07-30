@@ -59,6 +59,7 @@ import { AddListingStatusHelp } from "@/components/add-listing/AddListingStatusH
 import { AddListingStatusIntroOverlay } from "@/components/add-listing/AddListingStatusIntroOverlay";
 import { useAddListingStatusIntro } from "@/hooks/useAddListingStatusIntro";
 import { useAddListingDcmlsIntro } from "@/hooks/useAddListingDcmlsIntro";
+import { canonicalizeListingFormState, describeMediaCollection } from "@/lib/listingFormDirtyState";
 
 // State name to abbreviation mapping
 const STATE_ABBREVIATIONS: Record<string, string> = {
@@ -254,6 +255,9 @@ const AddListing = () => {
   /** Create flow: manual Save Draft only (Publish uses `submitting`). */
   const [savingDraft, setSavingDraft] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  /** Canonical snapshot of the last clean (hydrated or saved) state; null until hydration settles. */
+  const baselineSnapshotRef = useRef<string | null>(null);
+  const formSnapshotRef = useRef<string>("");
   const [lastAutoSave, setLastAutoSave] = useState<Date | null>(null);
   const [draftId, setDraftId] = useState<string | null>(null);
   const [autoSaving, setAutoSaving] = useState(false);
@@ -497,15 +501,40 @@ const AddListing = () => {
     setLocationValidation(validation);
   }, [selectedState, selectedCounty, formData.city]);
 
-  // Track form changes
+  // Track form changes against the post-hydration baseline.
+  // Normalizing backend values while loading is NOT a user edit, so dirty state is
+  // a comparison against a snapshot taken once hydration has settled.
+  const formSnapshot = useMemo(
+    () =>
+      canonicalizeListingFormState({
+        formData,
+        photos: describeMediaCollection(photos),
+        floorPlans: describeMediaCollection(floorPlans),
+        documents: describeMediaCollection(documents),
+        disclosures,
+        propertyFeatures,
+        amenities,
+      }),
+    [formData, photos, floorPlans, documents, disclosures, propertyFeatures, amenities],
+  );
+
+  // Establish the clean baseline once auth + any listing hydration has finished.
+  // A short settle delay lets dependent cascades (state/county -> city lists) finish first.
   useEffect(() => {
-    if (!user) return;
-    const hasContent = formData.address || formData.city || formData.price || 
-                       formData.bedrooms || formData.description;
-    if (hasContent) {
-      setHasUnsavedChanges(true);
-    }
-  }, [formData, user]);
+    if (!user || loading || isLoadingListing) return;
+    if (baselineSnapshotRef.current !== null) return;
+    const settleTimeout = setTimeout(() => {
+      baselineSnapshotRef.current = formSnapshotRef.current;
+      setHasUnsavedChanges(false);
+    }, 600);
+    return () => clearTimeout(settleTimeout);
+  }, [user, loading, isLoadingListing]);
+
+  useEffect(() => {
+    formSnapshotRef.current = formSnapshot;
+    if (!user || baselineSnapshotRef.current === null) return;
+    setHasUnsavedChanges(formSnapshot !== baselineSnapshotRef.current);
+  }, [formSnapshot, user]);
 
   // Auto-save functionality - debounced on changes
   useEffect(() => {
@@ -2516,6 +2545,8 @@ const AddListing = () => {
       // Mark all items as uploaded to prevent re-uploading on next save
       // (Don't clear arrays - this preserves data for continued editing)
 
+      // Saving establishes a new clean baseline.
+      baselineSnapshotRef.current = formSnapshotRef.current;
       setHasUnsavedChanges(false);
       setLastAutoSave(new Date());
 
@@ -2794,6 +2825,8 @@ const AddListing = () => {
         }
       }
 
+      // Saving establishes a new clean baseline.
+      baselineSnapshotRef.current = formSnapshotRef.current;
       setHasUnsavedChanges(false);
       if (isAutoSave) {
         setLastAutoSave(new Date());
