@@ -255,6 +255,9 @@ const AddListing = () => {
   /** Create flow: manual Save Draft only (Publish uses `submitting`). */
   const [savingDraft, setSavingDraft] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  /** Canonical snapshot of the last clean (hydrated or saved) state; null until hydration settles. */
+  const baselineSnapshotRef = useRef<string | null>(null);
+  const formSnapshotRef = useRef<string>("");
   const [lastAutoSave, setLastAutoSave] = useState<Date | null>(null);
   const [draftId, setDraftId] = useState<string | null>(null);
   const [autoSaving, setAutoSaving] = useState(false);
