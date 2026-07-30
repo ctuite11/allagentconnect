@@ -36,7 +36,7 @@ const ALWAYS_ALLOWED_PREFIXES = [
 /**
  * Path prefixes that ARE gated for guests. We use an allowlist for
  * always-allowed routes and a denylist for explicit gated routes; anything
- * else (e.g. /seed-test-data) is not gated.
+ * else is not gated.
  */
 const GATED_PREFIXES = [
   "/", // home — handled exactly below
