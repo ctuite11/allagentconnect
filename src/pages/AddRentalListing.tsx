@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { PageTitle } from "@/components/ui/page-title";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -27,6 +27,7 @@ import { getZipCodesForCity, hasZipCodeData } from "@/data/usZipCodesByCity";
 import { cn } from "@/lib/utils";
 import { RENTAL_STATUS_OPTIONS } from "@/constants/status";
 import { checkDuplicateListing, isLiveStatus } from "@/lib/checkDuplicateListing";
+import { canonicalizeListingFormState, describeMediaCollection } from "@/lib/listingFormDirtyState";
 
 interface FileWithPreview {
   file: File;
@@ -69,6 +70,9 @@ const AddRentalListing = () => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  /** Canonical snapshot of the last clean (hydrated or saved) state; null until hydration settles. */
+  const baselineSnapshotRef = useRef<string | null>(null);
+  const formSnapshotRef = useRef<string>("");
   const [lastAutoSave, setLastAutoSave] = useState<Date | null>(null);
   const [draftId, setDraftId] = useState<string | null>(null);
   const [autoSaving, setAutoSaving] = useState(false);
@@ -156,17 +160,37 @@ const AddRentalListing = () => {
     }
   }, [selectedState, selectedCounty]);
 
-  // Track form changes for unsaved changes warning
+  // Track form changes against the post-hydration baseline.
+  // Normalizing backend values while loading is NOT a user edit.
+  const formSnapshot = useMemo(
+    () =>
+      canonicalizeListingFormState({
+        formData,
+        photos: describeMediaCollection(photos),
+        floorPlans: describeMediaCollection(floorPlans),
+        documents: describeMediaCollection(documents),
+        disclosures,
+        propertyFeatures,
+        amenities,
+      }),
+    [formData, photos, floorPlans, documents, disclosures, propertyFeatures, amenities],
+  );
+
   useEffect(() => {
-    // Skip if it's the initial mount (no changes yet)
-    if (!user) return;
-    
-    const hasContent = formData.address || formData.city || formData.price || 
-                       formData.bedrooms || formData.description;
-    if (hasContent) {
-      setHasUnsavedChanges(true);
-    }
-  }, [formData, user]);
+    if (!user || loading) return;
+    if (baselineSnapshotRef.current !== null) return;
+    const settleTimeout = setTimeout(() => {
+      baselineSnapshotRef.current = formSnapshotRef.current;
+      setHasUnsavedChanges(false);
+    }, 600);
+    return () => clearTimeout(settleTimeout);
+  }, [user, loading]);
+
+  useEffect(() => {
+    formSnapshotRef.current = formSnapshot;
+    if (!user || baselineSnapshotRef.current === null) return;
+    setHasUnsavedChanges(formSnapshot !== baselineSnapshotRef.current);
+  }, [formSnapshot, user]);
 
   // Auto-save functionality
   useEffect(() => {
@@ -546,6 +570,8 @@ const AddRentalListing = () => {
         if (data) setDraftId(data.id);
       }
 
+      // Saving establishes a new clean baseline.
+      baselineSnapshotRef.current = formSnapshotRef.current;
       setHasUnsavedChanges(false);
       setLastAutoSave(new Date());
       
