@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { resolveUserRole, getRouteForRole } from "@/lib/resolveUserRole";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
@@ -76,22 +77,10 @@ const BuyerAuth = () => {
       setUser(session?.user ?? null);
       
       if (session?.user && !isRecovery) {
-        // Fetch role before redirecting
-        const { data: roleData } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', session.user.id)
-          .single();
-        
+        // Canonical resolver: admin > verified agent > delegate > agent > buyer.
+        const resolved = await resolveUserRole(session.user.id);
         if (!mounted) return;
-        
-        const userRole = roleData?.role;
-        
-        if (userRole === 'agent') {
-          navigate('/agent-dashboard');
-        } else {
-          navigate('/client/dashboard');
-        }
+        navigate(getRouteForRole(resolved), { replace: true });
       }
     });
 
@@ -114,22 +103,9 @@ const BuyerAuth = () => {
       setUser(session?.user ?? null);
       
       if (session?.user && !isRecovery) {
-        // Fetch role before redirecting
-        const { data: roleData } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', session.user.id)
-          .single();
-        
+        const resolved = await resolveUserRole(session.user.id);
         if (!mounted) return;
-        
-        const userRole = roleData?.role;
-        
-        if (userRole === 'agent') {
-          navigate('/agent-dashboard');
-        } else {
-          navigate('/client/dashboard');
-        }
+        navigate(getRouteForRole(resolved), { replace: true });
       }
     };
     

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { getRouteForRole } from "@/lib/resolveUserRole";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -38,7 +39,7 @@ const passwordSchema = z.object({
 
 const ConsumerAuth = () => {
   const navigate = useNavigate();
-  const { user, role, loading: authLoading } = useAuthRole();
+  const { user, role, isVerifiedAgent, loading: authLoading } = useAuthRole();
   const [formLoading, setFormLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("login");
   const [showForgotPassword, setShowForgotPassword] = useState(false);
@@ -77,13 +78,14 @@ const ConsumerAuth = () => {
     if (authLoading) return; // DO NOTHING WHILE LOADING
 
     if (user && role) {
-      if (role === "agent") {
-        navigate("/agent-dashboard", { replace: true });
-      } else if (role === "buyer") {
-        navigate("/client/dashboard", { replace: true });
-      }
+      // Canonical router: admins go to admin home, unverified agents to
+      // /pending-verification, buyers to /client/dashboard.
+      navigate(
+        getRouteForRole({ role, is_verified_agent: isVerifiedAgent }),
+        { replace: true },
+      );
     }
-  }, [authLoading, user, role, navigate]);
+  }, [authLoading, user, role, isVerifiedAgent, navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -186,7 +188,7 @@ const ConsumerAuth = () => {
       
       // Clear the hash from URL
       window.history.replaceState(null, "", window.location.pathname);
-      navigate("/consumer/dashboard");
+      navigate("/client/dashboard", { replace: true });
     } catch (error) {
       if (error instanceof z.ZodError) {
         toast.error(error.errors[0].message);
