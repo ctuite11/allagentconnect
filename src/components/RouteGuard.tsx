@@ -55,7 +55,7 @@ export const RouteGuard: React.FC<Props> = ({
         setPostAuthRedirect(intended);
         navigate(`/auth?returnTo=${encodeURIComponent(intended)}`, {
           replace: true,
-          state: { from: location.pathname },
+          state: { from: intended },
         });
       }
       return;
