@@ -42,6 +42,15 @@ function titleCase(s: string) {
     .join(" ");
 }
 
+/** Preserve mixed-case DB names (McDonald, O'Brien); title-case ALL CAPS / all-lower. */
+function formatAgentCardName(raw: string, isTeam: boolean): string {
+  const trimmed = raw.replace(/\s+/g, " ").trim();
+  if (!trimmed) return isTeam ? "Team" : "Agent";
+  if (isTeam) return trimmed;
+  if (/[a-z]/.test(trimmed) && /[A-Z]/.test(trimmed)) return trimmed;
+  return titleCase(trimmed);
+}
+
 export default function AgentPhotoTile({
   agent,
   onClick,
@@ -51,10 +60,8 @@ export default function AgentPhotoTile({
   interactive = true,
 }: Props) {
   const isTeam = agent.entity_type === "team";
-  const rawName =
-    [agent.first_name, agent.last_name].filter(Boolean).join(" ") ||
-    (isTeam ? "Team" : "Agent");
-  const fullName = isTeam ? rawName.trim() : titleCase(rawName);
+  const rawName = [agent.first_name, agent.last_name].filter(Boolean).join(" ");
+  const fullName = formatAgentCardName(rawName, isTeam);
 
   const brokerage = agent.company || agent.office_name || agent.team_name || "";
 

@@ -31,6 +31,7 @@ import {
   isVisibleInAgentNetwork,
 } from "@/lib/agentNetworkVisibility";
 import { matchesAgentName } from "@/lib/agentNameSearch";
+import { agentMatchesNetworkLocation } from "@/lib/agentNetworkLocation";
 import LocationAutocomplete, { type SelectedLocation } from "@/components/agent-directory/LocationAutocomplete";
 
 interface EnrichedAgent {
@@ -179,9 +180,14 @@ const OurAgents = ({
       const { data: sessionData } = await supabase.auth.getSession();
       const isAuthed = Boolean(sessionData.session);
       const contactColumns = isAuthed ? ", email, phone, cell_phone" : "";
-      const agentQuery = supabase
-        .from("agent_profiles")
-        .select(`
+      // Chunk .in() to stay under PostgREST URL / row limits (default max ~1000).
+      const PROFILE_CHUNK = 150;
+      const agentData: any[] = [];
+      for (let i = 0; i < verifiedIds.length; i += PROFILE_CHUNK) {
+        const idChunk = verifiedIds.slice(i, i + PROFILE_CHUNK);
+        const agentQuery = supabase
+          .from("agent_profiles")
+          .select(`
           id, aac_id, first_name, last_name, company, office_name, team_name, headshot_url, buyer_incentives, updated_at, title${contactColumns},
           agent_county_preferences(
             county_id,
@@ -189,10 +195,11 @@ const OurAgents = ({
           ),
           agent_buyer_coverage_areas(city, state, county)
         `)
-        .in("id", verifiedIds);
-      const { data: agentData, error: agentError } = await AGENT_NETWORK_DB_FILTERS(agentQuery as any);
-
-      if (agentError) throw agentError;
+          .in("id", idChunk);
+        const { data: chunkData, error: agentError } = await AGENT_NETWORK_DB_FILTERS(agentQuery as any);
+        if (agentError) throw agentError;
+        if (chunkData?.length) agentData.push(...chunkData);
+      }
 
       const orderedAgentData = (agentData || [])
         .filter(isVisibleInAgentNetwork)
@@ -392,33 +399,20 @@ function AgentPhotoTileGrid({
       (a) => a.entity_type === "team" || isVisibleInAgentNetwork(a),
     );
 
-    // Visible-field text search only (name, brokerage, email, phone).
+    // Name-only text search (first / last). Teams are excluded — the box is
+    // for agent names, and team display names are stuffed into first_name.
     if (searchQuery.trim()) {
-      result = result.filter((agent) => matchesAgentName(agent, searchQuery));
+      result = result.filter(
+        (agent) => agent.entity_type !== "team" && matchesAgentName(agent, searchQuery),
+      );
     }
 
-    // Location filter — Google Places selection matched against service areas
+    // Location filter — Google Places selection matched against service areas.
+    // City/county selections do not cascade to whole-state matches.
     if (selectedLocation) {
-      const loc = selectedLocation;
-      const city = loc.city?.toLowerCase().trim();
-      const stateShort = loc.stateShort?.toUpperCase().trim();
-      const stateLong = loc.state?.toLowerCase().trim();
-      const county = loc.county?.toLowerCase().trim();
-      const formatted = loc.formatted?.toLowerCase().trim();
-
-      result = result.filter((agent) => {
-        const areas = (agent.serviceAreas || []).map((a) => a.toLowerCase());
-        if (areas.length === 0) return false;
-
-        if (city && areas.some((a) => a.includes(city))) return true;
-        if (county && areas.some((a) => a.includes(county))) return true;
-        if (stateShort && areas.some((a) => a.endsWith(`, ${stateShort.toLowerCase()}`))) return true;
-        if (stateLong && areas.some((a) => a.includes(stateLong))) return true;
-        if (!city && !county && !stateShort && !stateLong && formatted) {
-          return areas.some((a) => a.includes(formatted));
-        }
-        return false;
-      });
+      result = result.filter((agent) =>
+        agentMatchesNetworkLocation(agent.serviceAreas, selectedLocation),
+      );
     }
 
     // State filter (check service areas)

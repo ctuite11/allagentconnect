@@ -23,7 +23,8 @@ import {
   KeyRound,
   Check,
   FileText,
-  MoreHorizontal
+  MoreHorizontal,
+  Download,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -57,9 +58,9 @@ import { invokeEdgeFunction } from "@/lib/invokeEdgeFunction";
 import { UserPlus } from "lucide-react";
 import { AgentStatusBadge } from "@/components/ui/status-badge";
 import { AacMonogramLoader } from "@/components/AacMonogramLoader";
-import { AGENT_STATUS_OPTIONS, AGENT_STATUS_CONFIG, getStatusConfig } from "@/constants/status";
 import { Pill, type PillVariant } from "@/components/ui/pill";
 import { Seo } from "@/components/Seo";
+import { normalizeSearchText } from "@/lib/agentNetworkSearch";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -211,6 +212,25 @@ function deriveAdminStatus(a: Agent): AdminDerivedStatus {
   // approval-queue agents) surfaces as Pending review.
   return "pending";
 }
+
+function formatAgentDisplayName(a: Pick<Agent, "first_name" | "last_name">): string {
+  return [a.first_name, a.last_name]
+    .map((part) => (part ?? "").trim())
+    .filter(Boolean)
+    .join(" ");
+}
+
+/** Status Select values must match pills / deriveAdminStatus — not raw DB statuses. */
+const ADMIN_STATUS_FILTER_OPTIONS: { value: string; label: string }[] = [
+  { value: "pending", label: "Pending" },
+  { value: "invited", label: "Invited" },
+  { value: "account_created", label: "Account Created" },
+  { value: "profile_complete", label: "Profile Complete" },
+  { value: "awaiting_activation", label: "Awaiting Activation" },
+  { value: "rejected", label: "Rejected" },
+  { value: "restricted", label: "Restricted" },
+  { value: "online", label: "Online" },
+];
 
 // Row-level "usable account" signal. Verified AND (activated OR headshot).
 // Kept independent from `deriveAdminStatus` so the Profile Complete tab
@@ -1004,21 +1024,14 @@ export default function AdminApprovals() {
     }
 
     // Search — identity fields only (not brokerage, status, notes, etc.)
+    // Tokenize so "First Last", "Last First", and double spaces all work.
     if (searchQuery.trim()) {
-      const q = searchQuery.trim().toLowerCase();
+      const tokens = normalizeSearchText(searchQuery).split(" ").filter(Boolean);
       result = result.filter((a) => {
-        const first = (a.first_name ?? "").toLowerCase();
-        const last = (a.last_name ?? "").toLowerCase();
-        const fullName = `${first} ${last}`.trim();
-        const email = (a.email ?? "").toLowerCase();
-        const aacId = (a.aac_id ?? "").toLowerCase();
-        return (
-          first.includes(q) ||
-          last.includes(q) ||
-          fullName.includes(q) ||
-          email.includes(q) ||
-          aacId.includes(q)
+        const haystack = normalizeSearchText(
+          [a.first_name, a.last_name, a.email, a.aac_id].filter(Boolean).join(" "),
         );
+        return tokens.every((token) => haystack.includes(token));
       });
     }
 
@@ -1027,7 +1040,7 @@ export default function AdminApprovals() {
       let comparison = 0;
       switch (sortField) {
         case "name":
-          comparison = `${a.first_name} ${a.last_name}`.localeCompare(`${b.first_name} ${b.last_name}`);
+          comparison = formatAgentDisplayName(a).localeCompare(formatAgentDisplayName(b));
           break;
         case "status":
           comparison = a.agent_status.localeCompare(b.agent_status);
@@ -1491,6 +1504,58 @@ export default function AdminApprovals() {
     );
   };
 
+  // CSV of agent emails from the current filtered list (or the selection
+  // when any rows are checked). Skips rows with no email.
+  const handleExportEmails = () => {
+    const source =
+      effectiveSelectedIds.size > 0
+        ? filteredAgents.filter((a) => effectiveSelectedIds.has(a.id))
+        : filteredAgents;
+    const rows = source.filter((a) => (a.email ?? "").trim());
+    if (rows.length === 0) {
+      toast.info(
+        effectiveSelectedIds.size > 0
+          ? "No emails on the selected agents"
+          : "No emails in the current filtered list",
+      );
+      return;
+    }
+    const esc = (v: unknown): string => {
+      if (v === null || v === undefined) return "";
+      const s = String(v);
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const header = ["email", "first_name", "last_name", "aac_id", "agent_status", "company"];
+    const lines: string[] = [header.join(",")];
+    for (const a of rows) {
+      lines.push(
+        [
+          esc((a.email ?? "").trim()),
+          esc(a.first_name),
+          esc(a.last_name),
+          esc(a.aac_id),
+          esc(a.agent_status),
+          esc(a.company),
+        ].join(","),
+      );
+    }
+    const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const stamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `agent-emails-${stamp}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    toast.success(
+      effectiveSelectedIds.size > 0
+        ? `Exported ${rows.length} selected email${rows.length === 1 ? "" : "s"}`
+        : `Exported ${rows.length} email${rows.length === 1 ? "" : "s"} from current filter`,
+    );
+  };
+
   if (authLoading) {
     return (
       <>
@@ -1663,7 +1728,7 @@ export default function AdminApprovals() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All statuses</SelectItem>
-                  {AGENT_STATUS_OPTIONS.map((opt) => (
+                  {ADMIN_STATUS_FILTER_OPTIONS.map((opt) => (
                     <SelectItem key={opt.value} value={opt.value}>
                       {opt.label}
                     </SelectItem>
@@ -1694,8 +1759,24 @@ export default function AdminApprovals() {
               </Select>
             </div>
 
-            <div className="text-sm text-muted-foreground">
-              {filteredAgents.length} of {agents.length} agents
+            <div className="flex flex-wrap items-center gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleExportEmails}
+                disabled={loading || filteredAgents.length === 0}
+                className="rounded-xl border-slate-300 bg-white"
+                title="Download a CSV of emails from the current filtered list. If agents are selected, only those are exported."
+              >
+                <Download className="h-4 w-4 mr-2" />
+                {effectiveSelectedIds.size > 0
+                  ? `Export emails (${effectiveSelectedIds.size})`
+                  : "Export emails"}
+              </Button>
+              <div className="text-sm text-muted-foreground">
+                {filteredAgents.length} of {agents.length} agents
+              </div>
             </div>
           </div>
 
@@ -1766,6 +1847,24 @@ export default function AdminApprovals() {
           <div className="rounded-3xl border border-gray-200 bg-white p-12 shadow-[0_10px_30px_rgba(0,0,0,0.08)] text-center">
             <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <p className="text-muted-foreground">No agents found</p>
+          </div>
+        ) : filteredAgents.length === 0 ? (
+          <div className="rounded-3xl border border-gray-200 bg-white p-12 shadow-[0_10px_30px_rgba(0,0,0,0.08)] text-center">
+            <Search className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <p className="text-muted-foreground">No agents match this search or status filter</p>
+            {(searchQuery.trim() || statusFilter !== "all") && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-4"
+                onClick={() => {
+                  setSearchQuery("");
+                  setStatusFilter("all");
+                }}
+              >
+                Clear search & filters
+              </Button>
+            )}
           </div>
         ) : (
           <div className="space-y-3">
@@ -1865,6 +1964,16 @@ export default function AdminApprovals() {
                 )}
                 <span className="text-zinc-300">•</span>
                 <button
+                  onClick={handleExportEmails}
+                  className="font-medium text-[#0E56F5] hover:text-[#0A3FB8] hover:underline transition-colors"
+                  title="Download a CSV of emails from the current filtered list. If agents are selected, only those are exported."
+                >
+                  {effectiveSelectedIds.size > 0
+                    ? `Export emails (${effectiveSelectedIds.size})`
+                    : "Export emails"}
+                </button>
+                <span className="text-zinc-300">•</span>
+                <button
                   onClick={handleExportActivationAudit}
                   className="text-zinc-500 hover:text-zinc-900 hover:underline transition-colors"
                   title="Download a CSV of every verified agent who hasn't completed setup, split into Bucket A (email never sent) and Bucket B (email sent, not activated)."
@@ -1947,7 +2056,7 @@ export default function AdminApprovals() {
                           <Checkbox
                             checked={isSelected}
                             onCheckedChange={() => toggleSelect(agent.id)}
-                            aria-label={`Select ${agent.first_name}`}
+                            aria-label={`Select ${formatAgentDisplayName(agent) || agent.email || "agent"}`}
                           />
                         </td>
                         <td className="px-3 py-3 align-top">
@@ -1958,7 +2067,7 @@ export default function AdminApprovals() {
                           >
                             <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
                               <span className="font-semibold text-[#0E56F5] hover:underline">
-                                {agent.first_name} {agent.last_name}
+                                {formatAgentDisplayName(agent) || "—"}
                               </span>
                               {agent.source === "pending_verification" && (
                                 <span

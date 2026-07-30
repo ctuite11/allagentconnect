@@ -14,14 +14,27 @@ export type AgentNetworkSearchable = {
   cell_phone?: string | null;
 };
 
-/** Lowercase, trim, strip punctuation, collapse whitespace. */
+/**
+ * Lowercase, fold diacritics, strip apostrophes, turn other punctuation into
+ * spaces, collapse whitespace.
+ *
+ * Important: do NOT use `[^\w\s]` — JS `\w` is ASCII-only, so "José" / "García"
+ * would become "jos" / "garc a" and fail to match "jose" / "garcia".
+ */
 export function normalizeSearchText(value: string): string {
   return value
-    .trim()
     .toLowerCase()
-    .replace(/[^\w\s]/g, " ")
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "")
+    .replace(/[''`]/g, "")
+    .replace(/[^\p{L}\p{N}\s]/gu, " ")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+/** Letters/digits only — for O'Brien → obrien, Anne-Marie → annemarie. */
+export function collapseSearchText(value: string): string {
+  return normalizeSearchText(value).replace(/\s+/g, "");
 }
 
 function normalizePhoneDigits(value: string): string {

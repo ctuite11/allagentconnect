@@ -1,4 +1,4 @@
-import { normalizeSearchText } from "@/lib/agentNetworkSearch";
+import { collapseSearchText, normalizeSearchText } from "@/lib/agentNetworkSearch";
 
 export type AgentNameSearchable = {
   first_name?: string | null;
@@ -12,10 +12,10 @@ export type AgentNameSearchable = {
  *
  * Rules:
  * - Empty/whitespace query → match all.
- * - Every token must appear as a substring of first_name, last_name,
- *   or the concatenated "first last".
- * - Two-token queries additionally match when token1 is a prefix of
- *   first_name AND token2 is a prefix of last_name.
+ * - Every token must match as a word prefix of first_name or last_name
+ *   (order-independent), so "smith john" and "john smith" both work.
+ * - Collapsed forms also match (O'Brien ↔ obrien, Anne-Marie ↔ annemarie).
+ * - Avoids mid-word false positives ("lee" must not match "Kathleen").
  */
 export function matchesAgentName(agent: AgentNameSearchable, rawQuery: string): boolean {
   const query = normalizeSearchText(rawQuery ?? "");
@@ -23,20 +23,23 @@ export function matchesAgentName(agent: AgentNameSearchable, rawQuery: string): 
 
   const first = normalizeSearchText(agent.first_name ?? "");
   const last = normalizeSearchText(agent.last_name ?? "");
-  const full = `${first} ${last}`.trim();
-  const tokens = query.split(/\s+/).filter(Boolean);
+  if (!first && !last) return false;
 
-  const tokenHits = (token: string) =>
-    (first && first.includes(token)) ||
-    (last && last.includes(token)) ||
-    (full && full.includes(token));
+  const tokens = query.split(" ").filter(Boolean);
+  if (tokens.length === 0) return true;
 
-  if (tokens.every(tokenHits)) return true;
+  const nameWords = [...first.split(" "), ...last.split(" ")].filter(Boolean);
+  const collapsedFirst = collapseSearchText(agent.first_name ?? "");
+  const collapsedLast = collapseSearchText(agent.last_name ?? "");
+  const collapsedFull = `${collapsedFirst}${collapsedLast}`;
 
-  if (tokens.length === 2) {
-    const [a, b] = tokens;
-    if (first.startsWith(a) && last.startsWith(b)) return true;
-  }
+  const tokenHits = (token: string) => {
+    if (nameWords.some((word) => word.startsWith(token))) return true;
+    if (collapsedFirst.startsWith(token) || collapsedLast.startsWith(token)) return true;
+    // Multi-part collapsed full name (e.g. query "annemarie" vs first "Anne-Marie")
+    if (token.length >= 3 && collapsedFull.startsWith(token)) return true;
+    return false;
+  };
 
-  return false;
+  return tokens.every(tokenHits);
 }
