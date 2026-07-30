@@ -11,7 +11,9 @@
     "preview": "vite preview",
     "deploy": "bash scripts/deploy.sh",
     "db:snapshot": "pg_dump --schema-only --schema=public > docs/database/schema_snapshot.sql",
-    "db:check": "bash scripts/check-schema-drift.sh"
+    "db:check": "bash scripts/check-schema-drift.sh",
+    "test:e2e:auth": "playwright test --config=playwright.auth.config.ts",
+    "test:unit:returnTo": "npx tsx e2e/unit/returnToSanitize.test.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

@@ -55,7 +55,9 @@ export const RouteGuard: React.FC<Props> = ({
         setPostAuthRedirect(intended);
         navigate(`/auth?returnTo=${encodeURIComponent(intended)}`, {
           replace: true,
-          state: { from: location.pathname },
+          // Keep pathname + search so any consumer of location.state.from
+          // sees the same destination as ?returnTo= / sessionStorage.
+          state: { from: intended },
         });
       }
       return;

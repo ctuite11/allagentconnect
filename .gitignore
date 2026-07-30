@@ -32,3 +32,6 @@ dist-ssr
 .env.*
 !.env.example
 supabase/.temp/
+e2e/playwright-report/
+e2e/test-results/
+e2e/.env
