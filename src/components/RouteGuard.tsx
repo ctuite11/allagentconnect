@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useAuthRole } from "@/hooks/useAuthRole";
 import { LoadingScreen } from "./LoadingScreen";
 import { authDebug } from "@/lib/authDebug";
+import { setPostAuthRedirect } from "@/lib/sharedListingGuest";
 
 type AllowedRole = "agent" | "admin" | "buyer";
 
@@ -47,7 +48,15 @@ export const RouteGuard: React.FC<Props> = ({
     // Route requires auth but no user → login
     if (requireAuth && !user) {
       if (location.pathname !== "/auth") {
-        navigate("/auth", { replace: true, state: { from: location.pathname } });
+        // Preserve the full intended destination (path + query, e.g. the
+        // stale-listing reminder's ?ref=stale-reminder&confirm=1) so /auth
+        // returns the agent to the editor instead of the default dashboard.
+        const intended = `${location.pathname}${location.search}`;
+        setPostAuthRedirect(intended);
+        navigate(`/auth?returnTo=${encodeURIComponent(intended)}`, {
+          replace: true,
+          state: { from: location.pathname },
+        });
       }
       return;
     }
