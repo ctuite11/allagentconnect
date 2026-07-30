@@ -2545,6 +2545,8 @@ const AddListing = () => {
       // Mark all items as uploaded to prevent re-uploading on next save
       // (Don't clear arrays - this preserves data for continued editing)
 
+      // Saving establishes a new clean baseline.
+      baselineSnapshotRef.current = formSnapshotRef.current;
       setHasUnsavedChanges(false);
       setLastAutoSave(new Date());
 
@@ -2823,6 +2825,8 @@ const AddListing = () => {
         }
       }
 
+      // Saving establishes a new clean baseline.
+      baselineSnapshotRef.current = formSnapshotRef.current;
       setHasUnsavedChanges(false);
       if (isAutoSave) {
         setLastAutoSave(new Date());
