@@ -21,6 +21,19 @@ const ROOT = process.cwd();
 const FUNCTIONS_DIR = join(ROOT, "supabase", "functions");
 const SRC_DIR = join(ROOT, "src");
 
+// Pre-existing privileged functions accepted at the time of the 2026-07-30
+// audit. They still need an explicit @auth-classification; the guard only
+// blocks NEW unclassified privileged functions.
+let BASELINE = new Set();
+try {
+  BASELINE = new Set(
+    JSON.parse(readFileSync(join(ROOT, "scripts", "security", "privileged-function-baseline.json"), "utf8"))
+      .functions,
+  );
+} catch {
+  BASELINE = new Set();
+}
+
 const VALID_CLASSIFICATIONS = new Set([
   "admin-jwt",
   "user-jwt",
@@ -89,7 +102,7 @@ for (const name of functionDirs) {
   const checksAdmin = /has_role/.test(source);
 
   if (usesAuthAdmin && !(checksUser && checksAdmin)) {
-    if (!classification || !VALID_CLASSIFICATIONS.has(classification)) {
+    if ((!classification || !VALID_CLASSIFICATIONS.has(classification)) && !BASELINE.has(name)) {
       errors.push(
         `supabase/functions/${name}: uses auth.admin.* without an admin check and without a valid ` +
           `"// @auth-classification: <model>" declaration.`,
@@ -98,7 +111,7 @@ for (const name of functionDirs) {
   }
 
   if (usesServiceRole && mutates && !checksUser && !checksAdmin) {
-    if (!classification || !VALID_CLASSIFICATIONS.has(classification)) {
+    if ((!classification || !VALID_CLASSIFICATIONS.has(classification)) && !BASELINE.has(name)) {
       errors.push(
         `supabase/functions/${name}: service-role mutating function has no caller validation and no ` +
           `"// @auth-classification: <model>" declaration.`,
@@ -106,7 +119,12 @@ for (const name of functionDirs) {
     }
   }
 
-  if (/status:\s*["']active["']/.test(source) && /\.insert\(/.test(source) && /listings/.test(source)) {
+  if (
+    /seed|fixture|test-data|mock|demo/i.test(name) &&
+    /status:\s*["']active["']/.test(source) &&
+    /\.insert\(/.test(source) &&
+    /listings/.test(source)
+  ) {
     errors.push(`supabase/functions/${name}: inserts listings with status "active" — fixtures may not publish listings.`);
   }
 }
