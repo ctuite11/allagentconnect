@@ -1,27 +1,22 @@
-## What's happening
+## Holding — merge PR #31 first
 
-Two separate causes, both confirmed in the code:
+No re-implementation, no new migration, no new components, no delegate logic changes while waiting. Nothing gets written until the merged code appears in this workspace.
 
-**1. Logged out when you leave/close the browser**
-`src/lib/tabScopedAuthStorage.ts` (loaded first in `src/main.tsx`) intercepts the auth token and redirects it from `localStorage` to `sessionStorage`. `sessionStorage` is wiped when the tab/browser closes, so every restart = signed out. It was added earlier to stop one tab from adopting another tab's account.
+Confirmed current workspace state (so we can tell merged from not-merged): latest migration is `20260727013950_*`, there is no `20260730160000_team_scoped_account_assistants.sql`, no `AssistantSection` component, and the three delegate edge functions have no `team_id` handling.
 
-**2. Back button from an agent card**
-In `src/pages/AdminApprovals.tsx` the agent card opens `AgentDetailsDrawer` via plain React state (`detailsAgent`) — no URL change, no history entry. So the browser Back button skips the drawer entirely and pops the page you were on before `/admin/approvals` (usually home), which renders signed-out chrome.
+## Sequence once you merge PR #31 into main
 
-## The fix
+1. **Confirm sync** — verify `supabase/migrations/20260730160000_team_scoped_account_assistants.sql` is present, plus the `AssistantSection` component and the `team_id` changes in `invite-account-delegate`, `accept-account-delegate-invite`, `revoke-account-delegate`. If any piece is missing, stop and report rather than filling the gap.
+2. **Apply the migration** — exactly the file from the PR, unmodified. No supplementary or duplicate migration.
+3. **Redeploy the three edge functions** — `invite-account-delegate`, `accept-account-delegate-invite`, `revoke-account-delegate`.
+4. **Confirm mount points** — `AssistantSection` renders on Agent Edit Profile (below Basic Information), Manage Team (team-scoped, lead only), and Settings, all reading the same `agent_account_members` records.
+5. **Run verification checks**
+   - Personal: invite an assistant from the profile editor; confirm the identical record appears in Settings; resend and remove both work.
+   - Team: invite the same email as a team assistant; confirm both rows coexist across scopes and a second invite within one scope is rejected.
+   - Regression: an invite request with `team_id` omitted behaves identically to today's personal flow.
+   - Scope: a team assistant gets team permissions only, cannot manage assistants, and cannot delete or transfer the team; a personal assistant gains no team access.
+   - Gating: everything stays behind `agent_account_delegates`; assistants never appear on public profiles.
 
-**Session persistence**
-- Change the auth-storage shim to keep the token in `localStorage` (durable across restarts) instead of `sessionStorage`, migrating any existing tab-scoped token back so you aren't signed out on the deploy.
-- Keep the existing cross-tab safety net: `CrossTabSessionGuard` already detects an in-place account switch and offers Reload / Sign out. That covers the original problem without destroying persistence.
-- Trade-off to be aware of: with `localStorage`, signing in as a test account in a second tab will again be visible to your admin tab — but you'll get the guard toast instead of a silent swap.
+## Separate, still open
 
-**Drawer + Back button**
-- Drive the drawer from a URL search param on `/admin/approvals` (e.g. `?agent=<id>`): opening a card pushes a history entry, closing it (X, Esc, overlay) pops back to the clean admin URL.
-- Browser Back then simply closes the drawer and leaves you on the admin list, with scroll position and filters intact.
-- Existing behavior preserved: the auto-close/stale-selection reconciliation stays, it just clears the param instead of only the state.
-
-## Technical notes
-
-- Files: `src/lib/tabScopedAuthStorage.ts` (storage target + one-time migration back from the `aac-tab-scoped-auth:` keys), `src/pages/AdminApprovals.tsx` (replace `detailsAgent` state with `useSearchParams`-derived selection).
-- No database, edge function, or RLS changes.
-- No changes to `src/integrations/supabase/client.ts` (auto-generated).
+The off-market reminder 404 — `send-stale-listing-reminders` links to `/listing/:id/edit`, but the only registered route is `/agent/listings/edit/:id`. Unrelated to PR #31 and untouched by this plan. Say the word and I'll fix and redeploy that function on its own, either now or after the merge.
