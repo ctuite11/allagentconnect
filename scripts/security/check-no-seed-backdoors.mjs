@@ -3,7 +3,7 @@
  * Security guard (added after the 2026-07-30 seed-backdoor incident).
  *
  * Fails the build when the repository reintroduces any of:
- *   1. A production route named /seed-* or /test-data (or a Seed*/TestData page).
+ *   1. A production route named /seed-anything or /test-data, or a Seed / TestData page.
  *   2. An Edge Function that calls `auth.admin.*` without an explicit
  *      authorization classification.
  *   3. A service-role Edge Function performing mutations without an approved
