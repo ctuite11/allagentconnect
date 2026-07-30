@@ -39,7 +39,7 @@ const passwordSchema = z.object({
 
 const ConsumerAuth = () => {
   const navigate = useNavigate();
-  const { user, role, loading: authLoading } = useAuthRole();
+  const { user, role, isVerifiedAgent, loading: authLoading } = useAuthRole();
   const [formLoading, setFormLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("login");
   const [showForgotPassword, setShowForgotPassword] = useState(false);
@@ -85,7 +85,7 @@ const ConsumerAuth = () => {
         { replace: true },
       );
     }
-  }, [authLoading, user, role, navigate]);
+  }, [authLoading, user, role, isVerifiedAgent, navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
