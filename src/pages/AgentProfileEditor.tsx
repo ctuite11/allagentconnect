@@ -38,6 +38,7 @@ import { getZipCodesForCity, hasZipCodeData } from "@/data/usZipCodesByCity";
 // New components
 import ProfilePreviewPanel from "@/components/profile-editor/ProfilePreviewPanel";
 import MobilePreviewModal from "@/components/profile-editor/MobilePreviewModal";
+import { AssistantSection } from "@/components/AssistantSection";
 import ProfilePhotoUpload from "@/components/profile-editor/ProfilePhotoUpload";
 import CompanyLogoUpload from "@/components/profile-editor/CompanyLogoUpload";
 import SocialLinksSection from "@/components/profile-editor/SocialLinksSection";
@@ -774,6 +775,8 @@ setHeaderBackgroundType(profile.header_background_type || "color");
                 </div>
               </CardContent>
             </Card>
+
+            <AssistantSection scope={{ kind: "agent" }} />
 
             {/* Contact Info Section */}
             <Card className="bg-white border border-zinc-200 rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,0.04)]">

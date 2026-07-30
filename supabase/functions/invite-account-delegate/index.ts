@@ -355,6 +355,48 @@ serve(async (req) => {
   const displayName = input.display_name?.trim() || null;
   const roleLabel = input.role_label?.trim() || null;
   const isTeamInvite = !!teamId;
+  const updateOnly = (input as { update_only?: boolean }).update_only === true;
+
+  // Manage Assistant: update display name / role label without resending.
+  if (updateOnly && memberId) {
+    let existingQuery = supabaseAdmin
+      .from("agent_account_members")
+      .select("id, status, invite_email")
+      .eq("id", memberId)
+      .eq("owner_user_id", ownerUserId)
+      .in("status", ["invited", "accepted"]);
+
+    existingQuery = teamId
+      ? existingQuery.eq("team_id", teamId)
+      : existingQuery.is("team_id", null);
+
+    const { data: existingMember } = await existingQuery.maybeSingle();
+    if (!existingMember) {
+      return json({ success: false, error: "Assistant not found" }, 404);
+    }
+
+    const { error: metaErr } = await supabaseAdmin
+      .from("agent_account_members")
+      .update({
+        display_name: displayName,
+        role_label: roleLabel,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", existingMember.id);
+
+    if (metaErr) {
+      console.error("[invite-account-delegate] metadata update failed:", metaErr);
+      return json({ success: false, error: "Failed to update assistant" }, 500);
+    }
+
+    return json({
+      success: true,
+      member_id: existingMember.id,
+      invite_email: existingMember.invite_email,
+      resent: false,
+      updated: true,
+    });
+  }
 
   const pendingInvite = await findPendingInvite(supabaseAdmin, ownerUserId, {
     memberId,
