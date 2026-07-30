@@ -37,6 +37,14 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   if (req.method !== "POST") return json({ error: "Method not allowed" }, { status: 405 });
 
+  /* ---- GLOBAL KILL SWITCH ----
+   * Checked before the auth gate, before any email_jobs_claim call, and before any provider call.
+   * Set the EMAIL_SENDING_PAUSED secret to "true" to freeze all outbound email. */
+  if ((Deno.env.get("EMAIL_SENDING_PAUSED") ?? "").trim().toLowerCase() === "true") {
+    console.log("[kick-email-queue] EMAIL_SENDING_PAUSED=true — refusing to claim jobs");
+    return json({ paused: true, processed: 0 });
+  }
+
   /* ---- Auth gate ---- */
   const authHeader = req.headers.get("Authorization");
   if (!authHeader?.startsWith("Bearer ")) return json({ error: "Unauthorized" }, { status: 401 });
