@@ -59,6 +59,7 @@ import { AddListingStatusHelp } from "@/components/add-listing/AddListingStatusH
 import { AddListingStatusIntroOverlay } from "@/components/add-listing/AddListingStatusIntroOverlay";
 import { useAddListingStatusIntro } from "@/hooks/useAddListingStatusIntro";
 import { useAddListingDcmlsIntro } from "@/hooks/useAddListingDcmlsIntro";
+import { canonicalizeListingFormState, describeMediaCollection } from "@/lib/listingFormDirtyState";
 
 // State name to abbreviation mapping
 const STATE_ABBREVIATIONS: Record<string, string> = {
