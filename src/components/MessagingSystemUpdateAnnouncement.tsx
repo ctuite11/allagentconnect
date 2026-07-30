@@ -12,10 +12,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthRole } from "@/hooks/useAuthRole";
+import {
+  MESSAGING_PREFERENCES_FIX_ANNOUNCEMENT_ID,
+  isAnnouncementEligible,
+} from "@/lib/announcements";
 
-/** Versioned ID — future announcements use a new ID and show independently. */
-export const MESSAGING_PREFERENCES_FIX_ANNOUNCEMENT_ID =
-  "messaging-preferences-fix-2026-07";
+export { MESSAGING_PREFERENCES_FIX_ANNOUNCEMENT_ID };
 
 /**
  * One-time high-visibility announcement for authenticated agents.
@@ -37,6 +39,22 @@ export function MessagingSystemUpdateAnnouncement() {
     const load = async () => {
       if (authLoading) return;
       if (!user?.id || !isAgent) {
+        if (!cancelled) {
+          setOpen(false);
+          setReady(true);
+        }
+        return;
+      }
+
+      // Cheap short-circuit: archived / expired / not-yet-published announcements
+      // and accounts created after publish never query at all.
+      if (
+        !isAnnouncementEligible({
+          announcementId: MESSAGING_PREFERENCES_FIX_ANNOUNCEMENT_ID,
+          accountCreatedAt: user.created_at,
+          dismissedIds: [],
+        })
+      ) {
         if (!cancelled) {
           setOpen(false);
           setReady(true);
@@ -69,7 +87,13 @@ export function MessagingSystemUpdateAnnouncement() {
         const dismissed = Array.isArray(data.dismissed_announcement_ids)
           ? (data.dismissed_announcement_ids as string[])
           : [];
-        setOpen(!dismissed.includes(MESSAGING_PREFERENCES_FIX_ANNOUNCEMENT_ID));
+        setOpen(
+          isAnnouncementEligible({
+            announcementId: MESSAGING_PREFERENCES_FIX_ANNOUNCEMENT_ID,
+            accountCreatedAt: user.created_at,
+            dismissedIds: dismissed,
+          }),
+        );
         setReady(true);
       } catch (e) {
         console.warn("[MessagingSystemUpdateAnnouncement] unexpected error:", e);
@@ -84,7 +108,7 @@ export function MessagingSystemUpdateAnnouncement() {
     return () => {
       cancelled = true;
     };
-  }, [authLoading, user?.id, isAgent]);
+  }, [authLoading, user?.id, user?.created_at, isAgent]);
 
   const acknowledge = useCallback(async () => {
     if (!user?.id || saving) return false;
