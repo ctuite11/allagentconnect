@@ -4966,6 +4966,10 @@ export type Database = {
         Returns: boolean
       }
       is_feature_enabled: { Args: { p_flag_name: string }; Returns: boolean }
+      is_hot_sheet_participant: {
+        Args: { p_hot_sheet_id: string }
+        Returns: boolean
+      }
       is_licensed_owner: { Args: never; Returns: boolean }
       is_team_delegate: {
         Args: { _team_id: string; _user_id: string }
