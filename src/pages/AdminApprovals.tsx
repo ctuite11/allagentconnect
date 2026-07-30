@@ -227,6 +227,7 @@ const ADMIN_STATUS_FILTER_OPTIONS: { value: string; label: string }[] = [
   { value: "account_created", label: "Account Created" },
   { value: "profile_complete", label: "Profile Complete" },
   { value: "awaiting_activation", label: "Awaiting Activation" },
+  { value: "activated", label: "Activated" },
   { value: "rejected", label: "Rejected" },
   { value: "restricted", label: "Restricted" },
   { value: "online", label: "Online" },
@@ -248,6 +249,14 @@ function isAccountActive(a: Agent): boolean {
 function isAwaitingActivation(a: Agent): boolean {
   if (!a.verified_at) return false;
   if (a.account_activated_at) return false;
+  if (a.agent_status === "rejected" || a.agent_status === "restricted") return false;
+  return true;
+}
+
+// Strictly activated: agent completed activation/password setup, regardless
+// of profile completeness. Excludes rejected/restricted accounts.
+function isActivatedAgent(a: Agent): boolean {
+  if (!a.account_activated_at) return false;
   if (a.agent_status === "rejected" || a.agent_status === "restricted") return false;
   return true;
 }
@@ -990,6 +999,7 @@ export default function AdminApprovals() {
     counts.rejected = buckets.rejected;
     counts.restricted = buckets.restricted;
     counts.awaiting_activation = agents.filter(isAwaitingActivation).length;
+    counts.activated = agents.filter(isActivatedAgent).length;
     return counts;
   }, [agents]);
 
@@ -1018,6 +1028,8 @@ export default function AdminApprovals() {
         );
       } else if (statusFilter === "awaiting_activation") {
         result = result.filter(isAwaitingActivation);
+      } else if (statusFilter === "activated") {
+        result = result.filter(isActivatedAgent);
       } else {
         result = result.filter((a) => deriveAdminStatus(a) === statusFilter);
       }
@@ -1819,6 +1831,12 @@ export default function AdminApprovals() {
             variant="warning"
             active={statusFilter === "awaiting_activation"}
             onClick={() => setStatusFilter("awaiting_activation")}
+          />
+          <Pill
+            label={`Activated (${statusCounts.activated || 0})`}
+            variant="success"
+            active={statusFilter === "activated"}
+            onClick={() => setStatusFilter("activated")}
           />
           <Pill
             label={`Rejected (${statusCounts.rejected || 0})`}
