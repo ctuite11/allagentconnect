@@ -1000,10 +1000,18 @@ export default function AdminApprovals() {
     return counts;
   }, [agents]);
 
+  /**
+   * Selecting a lifecycle pill clears the search box (and any stale row
+   * selection) so the pill count can never disagree with the visible rows.
+   */
+  const selectLifecycleFilter = useCallback((next: string) => {
+    setStatusFilter(next);
+    setSearchQuery("");
+    setSelectedIds(new Set());
+  }, []);
+
   // Helper to map status to Pill variant
   const variantForStatus = (status: string): PillVariant => {
-
-
     switch (status) {
       case "pending": return "warning";
       case "verified": return "primary";
