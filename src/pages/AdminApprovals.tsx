@@ -982,24 +982,18 @@ export default function AdminApprovals() {
     // Pending tab with 8 buyer/test accounts. Future backfills MUST filter out users
     // who hold the `buyer` role in `user_roles`.
     const buckets: Record<AdminDerivedStatus, number> = {
-      invited: 0,
       pending: 0,
-      account_created: 0,
-      profile_complete: 0,
+      verified: 0,
+      activated: 0,
       rejected: 0,
-      restricted: 0,
     };
     agents.forEach((a) => {
       buckets[deriveAdminStatus(a)]++;
     });
-    counts.invited = buckets.invited;
     counts.pending = buckets.pending;
-    counts.account_created = buckets.account_created;
-    counts.profile_complete = buckets.profile_complete;
+    counts.verified = buckets.verified;
+    counts.activated = buckets.activated;
     counts.rejected = buckets.rejected;
-    counts.restricted = buckets.restricted;
-    counts.awaiting_activation = agents.filter(isAwaitingActivation).length;
-    counts.activated = agents.filter(isActivatedAgent).length;
     return counts;
   }, [agents]);
 
@@ -1007,11 +1001,9 @@ export default function AdminApprovals() {
   const variantForStatus = (status: string): PillVariant => {
     switch (status) {
       case "pending": return "warning";
-      case "invited": return "primary";
-      case "account_created": return "primary";
-      case "profile_complete": return "success";
-      case "rejected":
-      case "restricted": return "danger";
+      case "verified": return "primary";
+      case "activated": return "success";
+      case "rejected": return "danger";
       default: return "neutral";
     }
   };
@@ -1026,10 +1018,6 @@ export default function AdminApprovals() {
         result = result.filter(
           (a) => !a.is_early_access && presenceMap.get(a.id)?.isOnline
         );
-      } else if (statusFilter === "awaiting_activation") {
-        result = result.filter(isAwaitingActivation);
-      } else if (statusFilter === "activated") {
-        result = result.filter(isActivatedAgent);
       } else {
         result = result.filter((a) => deriveAdminStatus(a) === statusFilter);
       }
