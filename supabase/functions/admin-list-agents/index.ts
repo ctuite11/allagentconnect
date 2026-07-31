@@ -509,6 +509,12 @@ Deno.serve(async (req) => {
 
     console.log('[admin-list-agents] Combined status distribution:', allStatusCounts)
 
+    const lifecycleCounts = allAgents.reduce((acc, a) => {
+      const k = a.lifecycle_status ?? 'pending'
+      acc[k] = (acc[k] || 0) + 1
+      return acc
+    }, {} as Record<string, number>)
+
     return new Response(
       JSON.stringify({
         agents: allAgents,
@@ -516,6 +522,8 @@ Deno.serve(async (req) => {
         settingsCount: settings?.length ?? 0,
         earlyAccessCount: earlyAccessAgents.length,
         statusDistribution: allStatusCounts,
+        lifecycleCounts,
+        pendingVerificationsError,
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
