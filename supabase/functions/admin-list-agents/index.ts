@@ -51,6 +51,38 @@ interface MergedAgent {
   profile_complete?: boolean
   headshot_url?: string | null
   last_reminder?: { sent_at: string; template: string; status: string } | null
+  // Lifecycle (server-authoritative). `requested_at` comes ONLY from
+  // pending_verifications.created_at — never from a profile/auth creation
+  // timestamp. null means "never submitted a request".
+  requested_at?: string | null
+  rejected_at?: string | null
+  lifecycle_status?: LifecycleStatus
+  ever_requested?: boolean
+  source?: 'profile' | 'early_access' | 'pending_verification'
+  pending_verification_id?: string
+}
+
+type LifecycleStatus = 'pending' | 'verified' | 'activated' | 'rejected'
+
+/**
+ * Lifecycle derivation — timestamps + explicit rejection only.
+ * Profile completeness, headshot, brokerage, preferences, email delivery,
+ * invitation state and last sign-in MUST NOT influence this.
+ *
+ * Historical `restricted` agent_status values are treated as blocked
+ * (grouped with rejected) so they can never masquerade as an active stage.
+ */
+function deriveLifecycleStatus(input: {
+  agent_status: string | null | undefined
+  verified_at: string | null | undefined
+  account_activated_at: string | null | undefined
+  explicitly_rejected: boolean
+}): LifecycleStatus {
+  const s = (input.agent_status || '').toLowerCase()
+  if (input.explicitly_rejected || s === 'rejected' || s === 'restricted') return 'rejected'
+  if (input.account_activated_at) return 'activated'
+  if (input.verified_at) return 'verified'
+  return 'pending'
 }
 
 interface EmailStatusInfo {
