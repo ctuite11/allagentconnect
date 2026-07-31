@@ -1,16 +1,20 @@
-## Goal
-Remove only the listings created today (Jul 30, 2026) that currently have status "On MLS" (`active`).
+## Style the "Verified" lifecycle state in light AAC green
 
-## What's actually there
-A query of the `listings` table shows 24 rows created today: 22 with status `active` (On MLS) and 2 drafts. All 22 active ones were inserted in a single burst at 17:51 UTC and look like bulk/seed data — listing numbers L-1251 through L-1272, spread across Boston, Cambridge, Plymouth, Worcester, Cape Cod, Springfield, Salem, Framingham, New Bedford, etc. The 2 drafts are untouched by this request.
+Match the treatment already used for the blue "New request" pill, but in AAC Success Emerald.
 
-## Plan
-1. Run a database migration that deletes exactly those rows:
-   - Scope: `status = 'active'` AND created today.
-   - Also clean up child rows that reference those listings (status history, hot sheet sent-listing records, saved/favorited entries, comments) so nothing is orphaned — anything not already set to cascade gets an explicit delete first.
-2. Re-query afterward to confirm zero active listings remain with today's creation date, and that the 2 drafts and all older listings are unchanged.
+### What changes
+In `src/pages/AdminApprovals.tsx` (and the matching badge in `src/components/admin/AgentDetailsDrawer.tsx` so the drawer agrees with the table):
 
-## Notes
-- This is a hard delete, not an archive. If you'd rather flip them to `off_market` or `withdrawn` so history is preserved, say so and I'll switch the migration to an update instead.
-- No emails are triggered by deletions, and outbound email remains paused, so this won't generate any notifications.
-- "Today" is evaluated on the UTC date; all 22 rows were created mid-afternoon ET today, so the boundary isn't ambiguous.
+- The **Verified** status badge in the Status column and the **Verified** lifecycle filter pill get:
+  - light emerald background
+  - emerald text
+  - emerald border
+  - same compact rounded-pill size/padding as the existing pills
+- Uses the AAC Success token (`#059669` / emerald-600 family) from `src/lib/brandColors.ts` — light tint background, not a solid fill.
+
+### What does not change
+- Pending, Activated, and Rejected keep their current styling.
+- No change to lifecycle derivation, counts, filters, timestamps, or data.
+
+### Technical note
+Styling only — badge/pill class strings. No edge function or database work.
