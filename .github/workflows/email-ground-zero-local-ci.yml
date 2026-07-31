@@ -30,18 +30,13 @@ jobs:
     timeout-minutes: 90
 
     # Explicitly empty — do not inherit production secrets.
+    # Do NOT set SUPABASE_ACCESS_TOKEN="" (empty string can confuse the CLI).
     env:
       EMAIL_SENDING_PAUSED: "true"
       HOT_SHEET_EMAILS_PAUSED: "true"
       COMMS_EMAILS_PAUSED: "true"
       # Synthetic only — never a real Resend secret.
       RESEND_API_KEY: "re_ci_synthetic_do_not_send"
-      # Ensure remote-targeting vars are unset for child processes.
-      SUPABASE_ACCESS_TOKEN: ""
-      SUPABASE_DB_PASSWORD: ""
-      SUPABASE_PROJECT_ID: ""
-      DATABASE_URL: ""
-      SUPABASE_DB_URL: ""
 
     steps:
       - name: Checkout
@@ -75,9 +70,28 @@ jobs:
       - name: Start local Supabase stack
         run: |
           set -euo pipefail
+          # Ensure remote-targeting vars are unset (not empty-string).
+          unset SUPABASE_ACCESS_TOKEN SUPABASE_DB_PASSWORD SUPABASE_PROJECT_ID \
+            DATABASE_URL SUPABASE_DB_URL DIRECT_URL POSTGRES_URL || true
+          docker version
+          docker info >/dev/null
+          supabase --version
           # Full local stack (Auth + DB + Edge runtime). Never --linked.
-          supabase start
+          if ! supabase start 2>&1 | tee /tmp/supabase-start.log; then
+            echo "::error::supabase start failed"
+            tail -n 200 /tmp/supabase-start.log || true
+            docker ps -a || true
+            exit 1
+          fi
           supabase status
+
+      - name: Upload supabase start log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: supabase-start-log
+          path: /tmp/supabase-start.log
+          if-no-files-found: ignore
 
       - name: Fresh migration install (local db reset)
         run: |
