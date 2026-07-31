@@ -1960,29 +1960,21 @@ export default function AdminApprovals() {
                         Agent<SortIcon field="name" />
                       </button>
                     </th>
+                    <th className="px-3 py-2 text-left">Status</th>
+                    <th className="px-3 py-2 text-left">Requested</th>
                     <th className="px-3 py-2 text-left">
-                      <button type="button" onClick={() => handleSort("verified")} className="inline-flex items-center hover:text-zinc-900">
-                        Verified<SortIcon field="verified" />
+                      <button type="button" onClick={() => handleSort("verified_at")} className="inline-flex items-center hover:text-zinc-900">
+                        License Verified<SortIcon field="verified_at" />
                       </button>
                     </th>
                     <th className="px-3 py-2 text-left">
-                      <button type="button" onClick={() => handleSort("verified_at")} className="inline-flex items-center hover:text-zinc-900">
-                        Verified On<SortIcon field="verified_at" />
+                      <button type="button" onClick={() => handleSort("account_created")} className="inline-flex items-center hover:text-zinc-900">
+                        Account Activated<SortIcon field="account_created" />
                       </button>
                     </th>
                     <th className="px-3 py-2 text-left">
                       <button type="button" onClick={() => handleSort("last_reminder")} className="inline-flex items-center hover:text-zinc-900">
                         Last Reminder<SortIcon field="last_reminder" />
-                      </button>
-                    </th>
-                    <th className="px-3 py-2 text-left">
-                      <button type="button" onClick={() => handleSort("account_created")} className="inline-flex items-center hover:text-zinc-900">
-                        Activated<SortIcon field="account_created" />
-                      </button>
-                    </th>
-                    <th className="px-3 py-2 text-left">
-                      <button type="button" onClick={() => handleSort("profile_complete")} className="inline-flex items-center hover:text-zinc-900">
-                        Profile<SortIcon field="profile_complete" />
                       </button>
                     </th>
                     <th className="px-3 py-2 text-left">
