@@ -2348,6 +2348,12 @@ export default function AdminApprovals() {
         onSuccess={fetchAgents}
       />
 
+      <SetTempPasswordDialog
+        open={showTempPasswordDialog}
+        onOpenChange={setShowTempPasswordDialog}
+        defaultEmail="lev.borinski@cbrealty.com"
+      />
+
       <AgentDetailsDrawer
         agent={detailsAgent as any}
         open={!!detailsAgent}
