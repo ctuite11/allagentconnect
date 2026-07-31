@@ -175,3 +175,29 @@ Deno.test("retired broad listing alert key namespace is quarantined (not Hot She
   assertEquals(isHotSheetIdempotencyKey("agent-new-listing:a:L:active"), false);
   assertEquals(isCommsIdempotencyKey("agent-new-listing:a:L:active"), false);
 });
+
+Deno.test(
+  "new subscriber against open (unbaselined) matches would enqueue backlog — baseline required",
+  () => {
+    const withoutBaseline = simulateHotSheetDeliveryPass({
+      hotSheetId: "hs-1",
+      openListings: [{ id: "L1", status: "active" }],
+      agentRecipient: null,
+      clientRecipients: [],
+      subscriberIds: ["friend-1"],
+      existingKeys: new Set(),
+    });
+    assertEquals(withoutBaseline.enqueuedKeys.length > 0, true);
+
+    // After baselineOnly, current matches are no longer "open" for SNMN.
+    const afterBaseline = simulateHotSheetDeliveryPass({
+      hotSheetId: "hs-1",
+      openListings: [],
+      agentRecipient: null,
+      clientRecipients: [],
+      subscriberIds: ["friend-1"],
+      existingKeys: new Set(),
+    });
+    assertEquals(afterBaseline.enqueuedKeys, []);
+  },
+);

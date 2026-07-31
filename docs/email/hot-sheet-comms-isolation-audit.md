@@ -229,6 +229,15 @@ PR rebased and mergeable: PASS (replayed onto current main; draft kept)
 5. **Global pause fail-closed** — production must set `EMAIL_SENDING_PAUSED=false` explicitly to resume any sending.
 6. **Unsubscribe / prefs / removals** for Communications still need verification before COMMS unpause.
 
+### Hot Sheet safety fixes (reconciled in this PR)
+
+| Fix | Status |
+|-----|--------|
+| Add a Friend / subscriber add → `process-hot-sheet` `{ baselineOnly: true }` (prevents backlog fan-out) | **Done** |
+| `baselineOnly` upsert conflict target matches unique index `(hot_sheet_id,listing_id,status_at_send)` | **Done** |
+| Legacy `send-hot-sheet-alert` edge function retired to disabled stub (no `email_jobs` insert) | **Done** |
+| Template `hot-sheet-alert` kept for intentional `process-hot-sheet` manual/batch path | **Kept** |
+
 ---
 
 ## 11. Boundary statements

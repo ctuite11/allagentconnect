@@ -17,8 +17,12 @@ interface ProcessHotSheetRequest {
   /**
    * Baseline-only mode: record all currently matching listings as "sent" for this
    * hot sheet (insert into hot_sheet_sent_listings) WITHOUT sending any email and
-   * WITHOUT respecting the 60s cooldown. Used at buyer invite acceptance time so
-   * the buyer dashboard's "New Matches" stat starts at 0.
+   * WITHOUT respecting the 60s cooldown.
+   *
+   * Used at:
+   * - buyer invite acceptance (dashboard "New Matches" starts at 0)
+   * - Add a Friend subscriber add/reactivate (prevent backlog fan-out to new
+   *   subscribers via send-new-match-notification)
    */
   baselineOnly?: boolean;
 }
@@ -271,7 +275,10 @@ const handler = async (req: Request): Promise<Response> => {
       if (rows.length > 0) {
         await adminClient
           .from("hot_sheet_sent_listings")
-          .upsert(rows, { onConflict: "hot_sheet_id,listing_id", ignoreDuplicates: true });
+          .upsert(rows, {
+            onConflict: "hot_sheet_id,listing_id,status_at_send",
+            ignoreDuplicates: true,
+          });
       }
       return new Response(
         JSON.stringify({ success: true, baseline: rows.length }),

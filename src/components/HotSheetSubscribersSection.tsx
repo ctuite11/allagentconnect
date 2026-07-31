@@ -98,6 +98,21 @@ export function HotSheetSubscribersSection({ hotSheetId }: HotSheetSubscribersSe
         if (error) throw error;
       }
 
+      // Baseline existing matches so a new/reactivated subscriber does not
+      // receive the full open backlog on the next send-new-match-notification
+      // pass. Best-effort: never fail the add if baselining fails.
+      try {
+        const { error: baselineErr } = await supabase.functions.invoke(
+          "process-hot-sheet",
+          { body: { hotSheetId, baselineOnly: true } },
+        );
+        if (baselineErr) {
+          console.warn("[HotSheetSubscribersSection] baseline invoke failed:", baselineErr);
+        }
+      } catch (baselineEx) {
+        console.warn("[HotSheetSubscribersSection] baseline threw:", baselineEx);
+      }
+
       toast.success("Friend added! They'll receive email updates for new matches.");
       setEmail("");
       setFirstName("");
