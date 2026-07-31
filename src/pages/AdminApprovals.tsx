@@ -188,39 +188,32 @@ function risksForAgent(a: Agent): Risk[] {
   });
 }
 
-// User-facing admin status buckets. There is intentionally no "unverified"
-// label — agents without an auth account are surfaced as Pending. Internal
-// flows may still branch on `!has_auth_account` to decide whether the Verify
-// action needs to create the account first.
-type AdminDerivedStatus =
-  | "invited"
-  | "pending"
-  | "account_created"
-  | "profile_complete"
-  | "rejected"
-  | "restricted";
+// The approval lifecycle has exactly four stages. Profile completeness,
+// headshot, brokerage, preferences, email delivery, invitation state and
+// last sign-in MUST NOT influence lifecycle status or counts.
+//
+// Historical `restricted` values still exist in the database enum, but are
+// invisible here: they fail safe into the blocked (rejected) bucket rather
+// than masquerading as an active stage.
+type AdminDerivedStatus = "pending" | "verified" | "activated" | "rejected";
 
 function deriveAdminStatus(a: Agent): AdminDerivedStatus {
-  if (a.agent_status === "rejected") return "rejected";
-  if (a.agent_status === "restricted") return "restricted";
-  // DB "verified" = admin approved → user-facing "Active".
-  if (a.agent_status === "verified") {
-    // The "Profile Complete" bucket strictly reflects a real completed
-    // profile (names + headshot + brokerage + contact) as computed by the
-    // backend `profile_complete` composite. Do NOT widen this bucket to
-    // "activated OR has headshot" — that conflates account usability with
-    // profile completeness and inflates the Profile Complete count.
-    // Row-level account usability is shown via the separate
-    // `isAccountActive` helper below.
-    if (a.profile_complete) return "profile_complete";
-    return "account_created";
-  }
-  // Admin-created but agent hasn't finished /agent-setup yet.
-  if (a.agent_status === "invited") return "invited";
-  // Everything else (pending, legacy unverified, early-access leads,
-  // approval-queue agents) surfaces as Pending review.
+  // Server-computed value wins — it is derived from the same rules with
+  // full pending_verifications visibility.
+  if (a.lifecycle_status) return a.lifecycle_status;
+  const status = (a.agent_status || "").toLowerCase();
+  if (status === "rejected" || status === "restricted") return "rejected";
+  if (a.account_activated_at) return "activated";
+  if (a.verified_at) return "verified";
   return "pending";
 }
+
+const LIFECYCLE_LABELS: Record<AdminDerivedStatus, string> = {
+  pending: "Pending",
+  verified: "Verified",
+  activated: "Activated",
+  rejected: "Rejected",
+};
 
 function formatAgentDisplayName(a: Pick<Agent, "first_name" | "last_name">): string {
   return [a.first_name, a.last_name]
@@ -232,13 +225,10 @@ function formatAgentDisplayName(a: Pick<Agent, "first_name" | "last_name">): str
 /** Status Select values must match pills / deriveAdminStatus — not raw DB statuses. */
 const ADMIN_STATUS_FILTER_OPTIONS: { value: string; label: string }[] = [
   { value: "pending", label: "Pending" },
-  { value: "invited", label: "Invited" },
-  { value: "account_created", label: "Account Created" },
-  { value: "profile_complete", label: "Profile Complete" },
-  { value: "awaiting_activation", label: "Awaiting Activation" },
+  { value: "verified", label: "Verified" },
   { value: "activated", label: "Activated" },
   { value: "rejected", label: "Rejected" },
-  { value: "restricted", label: "Restricted" },
+  // Utility indicator only — not a lifecycle stage.
   { value: "online", label: "Online" },
 ];
 
