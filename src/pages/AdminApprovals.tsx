@@ -1791,6 +1791,11 @@ export default function AdminApprovals() {
             variant="primary"
             active={statusFilter === "verified"}
             onClick={() => selectLifecycleFilter("verified")}
+            className={
+              statusFilter === "verified"
+                ? VERIFIED_PILL_ACTIVE_CLASS
+                : VERIFIED_PILL_CLASS
+            }
           />
           <Pill
             label={`Activated (${statusCounts.activated || 0})`}
@@ -2069,6 +2074,7 @@ export default function AdminApprovals() {
                           <Pill
                             label={LIFECYCLE_LABELS[derived]}
                             variant={variantForStatus(derived)}
+                            className={classNameForStatus(derived)}
                           />
                         </td>
                         <TimestampCell iso={agent.requested_at ?? null} />
