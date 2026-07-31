@@ -49,6 +49,10 @@ export interface AgentDetailsAgent {
   source?: "profile" | "early_access" | "pending_verification";
   ever_requested?: boolean;
   requested_access_at?: string | null;
+  /** Server-derived lifecycle fields from admin-list-agents. */
+  requested_at?: string | null;
+  rejected_at?: string | null;
+  lifecycle_status?: "pending" | "verified" | "activated" | "rejected" | null;
 }
 
 interface AgentDetailsDrawerProps {
