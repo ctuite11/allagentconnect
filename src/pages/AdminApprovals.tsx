@@ -1790,69 +1790,67 @@ export default function AdminApprovals() {
 
         </div>
 
-        {/* Status Count Bar */}
-        <div className="flex flex-wrap gap-2 mb-6">
+        {/* Lifecycle pills — Pending / Verified / Activated / Rejected only.
+            Clicking a pill clears the search so the count always matches the
+            visible rows. Online is a utility indicator, not a lifecycle stage. */}
+        <div className="flex flex-wrap gap-2 mb-2">
           <Pill
             label={`All (${statusCounts.all})`}
             variant="neutral"
             active={statusFilter === "all"}
-            onClick={() => setStatusFilter("all")}
+            onClick={() => selectLifecycleFilter("all")}
           />
           <Pill
             label={`Pending (${statusCounts.pending || 0})`}
-            variant="neutral"
-            active={statusFilter === "pending"}
-            onClick={() => setStatusFilter("pending")}
-          />
-          <Pill
-            label={`Invited (${statusCounts.invited || 0})`}
-            variant="neutral"
-            active={statusFilter === "invited"}
-            onClick={() => setStatusFilter("invited")}
-          />
-          <Pill
-            label={`Account Created (${statusCounts.account_created || 0})`}
-            variant="neutral"
-            active={statusFilter === "account_created"}
-            onClick={() => setStatusFilter("account_created")}
-          />
-          <Pill
-            label={`Profile Complete (${statusCounts.profile_complete || 0})`}
-            variant="neutral"
-            active={statusFilter === "profile_complete"}
-            onClick={() => setStatusFilter("profile_complete")}
-          />
-          <Pill
-            label={`Awaiting Activation (${statusCounts.awaiting_activation || 0})`}
             variant="warning"
-            active={statusFilter === "awaiting_activation"}
-            onClick={() => setStatusFilter("awaiting_activation")}
+            active={statusFilter === "pending"}
+            onClick={() => selectLifecycleFilter("pending")}
+          />
+          <Pill
+            label={`Verified (${statusCounts.verified || 0})`}
+            variant="primary"
+            active={statusFilter === "verified"}
+            onClick={() => selectLifecycleFilter("verified")}
           />
           <Pill
             label={`Activated (${statusCounts.activated || 0})`}
             variant="success"
             active={statusFilter === "activated"}
-            onClick={() => setStatusFilter("activated")}
+            onClick={() => selectLifecycleFilter("activated")}
           />
           <Pill
             label={`Rejected (${statusCounts.rejected || 0})`}
-            variant="neutral"
+            variant="danger"
             active={statusFilter === "rejected"}
-            onClick={() => setStatusFilter("rejected")}
-          />
-          <Pill
-            label={`Restricted (${statusCounts.restricted || 0})`}
-            variant="neutral"
-            active={statusFilter === "restricted"}
-            onClick={() => setStatusFilter("restricted")}
+            onClick={() => selectLifecycleFilter("rejected")}
           />
           <Pill
             label={`Online (${onlineCount})`}
             variant="neutral"
             active={statusFilter === "online"}
-            onClick={() => setStatusFilter("online")}
+            onClick={() => selectLifecycleFilter("online")}
           />
         </div>
+        <div className="mb-6 text-sm text-muted-foreground">
+          {filteredAgents.length} of{" "}
+          {statusFilter === "all"
+            ? statusCounts.all
+            : statusFilter === "online"
+              ? onlineCount
+              : statusCounts[statusFilter] ?? 0}{" "}
+          {statusFilter === "all" ? "agents" : `${statusFilter} rows`}
+        </div>
+        {lifecycleDataError && (
+          <div className="mb-6 flex items-center justify-between gap-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3">
+            <p className="text-sm font-medium text-rose-700">
+              Unable to load access-request history — Requested dates and Rejected
+              rows may be incomplete. This is an error, not an empty result.
+            </p>
+            <Button variant="outline" size="sm" onClick={() => void fetchAgents()}>
+              Retry
+            </Button>
+          </div>
+        )}
 
         {/* Agent Cards */}
         {loading ? (
