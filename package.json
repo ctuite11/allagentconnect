@@ -5,7 +5,6 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "prebuild": "node scripts/security/check-no-seed-backdoors.mjs",
     "build": "node scripts/security/check-no-seed-backdoors.mjs && vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
