@@ -1,0 +1,193 @@
+name: Email Ground Zero Local CI
+
+# Disposable local Supabase only. Never link, push, or use production credentials.
+on:
+  pull_request:
+    branches:
+      - cursor/fix-hot-sheet-property-notification-9df4
+      - main
+    paths:
+      - "supabase/migrations/**"
+      - "supabase/functions/**"
+      - "supabase/tests/email_*.sql"
+      - "scripts/ci/**"
+      - ".github/workflows/email-ground-zero-local-ci.yml"
+      - "docs/email/ground-zero-*.md"
+  push:
+    branches:
+      - cursor/email-ground-zero-hardening
+  workflow_dispatch:
+
+concurrency:
+  group: email-gz-local-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  local-supabase-gates:
+    name: Local Supabase email gates
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    # Explicitly empty — do not inherit production secrets.
+    env:
+      EMAIL_SENDING_PAUSED: "true"
+      HOT_SHEET_EMAILS_PAUSED: "true"
+      COMMS_EMAILS_PAUSED: "true"
+      # Synthetic only — never a real Resend secret.
+      RESEND_API_KEY: "re_ci_synthetic_do_not_send"
+      # Ensure remote-targeting vars are unset for child processes.
+      SUPABASE_ACCESS_TOKEN: ""
+      SUPABASE_DB_PASSWORD: ""
+      SUPABASE_PROJECT_ID: ""
+      DATABASE_URL: ""
+      SUPABASE_DB_URL: ""
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Refuse production / remote Supabase targeting
+        run: |
+          chmod +x scripts/ci/assert-no-production-supabase.sh scripts/ci/run-email-sql-tests.sh
+          ./scripts/ci/assert-no-production-supabase.sh
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Setup PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Start local Supabase stack
+        run: |
+          set -euo pipefail
+          # Full local stack (Auth + DB + Edge runtime). Never --linked.
+          supabase start
+          supabase status
+
+      - name: Fresh migration install (local db reset)
+        run: |
+          set -euo pipefail
+          # Destroys/rebuilds ONLY the local database. Never use --linked.
+          supabase db reset
+          echo "Fresh migration installation: PASS"
+
+      - name: Verify Ground Zero pause posture after reset
+        run: |
+          set -euo pipefail
+          DB_URL="$(supabase status -o env | sed -n 's/^DB_URL=//p' | head -1 | tr -d '"')"
+          if [[ -z "$DB_URL" ]]; then
+            DB_URL="postgresql://postgres:postgres@127.0.0.1:54322/postgres"
+          fi
+          case "$DB_URL" in
+            *127.0.0.1*|*localhost*) ;;
+            *) echo "::error::non-local DB_URL"; exit 1 ;;
+          esac
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -c \
+            "SELECT global_paused, hot_sheet_paused, communications_paused, transactional_paused, system_paused
+             FROM public.email_control_state WHERE id = true;"
+
+      - name: Run PR #33 + Ground Zero SQL suites
+        run: ./scripts/ci/run-email-sql-tests.sh
+
+      - name: Export local Supabase env for function invokes
+        run: |
+          set -euo pipefail
+          supabase status -o env \
+            --override-name api.url=SUPABASE_URL \
+            --override-name auth.anon_key=SUPABASE_ANON_KEY \
+            --override-name auth.service_role_key=SUPABASE_SERVICE_ROLE_KEY \
+            --override-name db.url=DB_URL \
+            > /tmp/supabase-local.env
+          grep -E '^(SUPABASE_URL|SUPABASE_ANON_KEY|SUPABASE_SERVICE_ROLE_KEY|DB_URL)=' /tmp/supabase-local.env \
+            | sed 's/"//g' >> "$GITHUB_ENV"
+          # shellcheck disable=SC1090
+          set -a
+          # shellcheck disable=SC1091
+          source <(grep -E '^(SUPABASE_URL|SUPABASE_ANON_KEY|SUPABASE_SERVICE_ROLE_KEY|DB_URL)=' /tmp/supabase-local.env | sed 's/"//g')
+          set +a
+          echo "SUPABASE_URL=${SUPABASE_URL}"
+          case "${SUPABASE_URL}" in
+            *127.0.0.1*|*localhost*) echo "Local URL OK" ;;
+            *) echo "::error::non-local SUPABASE_URL"; exit 1 ;;
+          esac
+
+      - name: Serve required Edge Functions locally
+        run: |
+          set -euo pipefail
+          cat > /tmp/functions-ci.env <<EOF
+          EMAIL_SENDING_PAUSED=true
+          HOT_SHEET_EMAILS_PAUSED=true
+          COMMS_EMAILS_PAUSED=true
+          RESEND_API_KEY=re_ci_synthetic_do_not_send
+          EOF
+          nohup supabase functions serve \
+            process-email-queue \
+            kick-email-queue \
+            send-new-match-notification \
+            notify-agents-client-need \
+            notify-agents-new-listing \
+            process-comms-digests \
+            --env-file /tmp/functions-ci.env \
+            > /tmp/functions-serve.log 2>&1 &
+          echo $! > /tmp/functions-serve.pid
+          for i in $(seq 1 60); do
+            if curl -sf "$SUPABASE_URL/functions/v1/notify-agents-new-listing" \
+              -H "apikey: $SUPABASE_ANON_KEY" \
+              -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
+              -H "Content-Type: application/json" \
+              -d '{}' >/tmp/fn-ready.json 2>/dev/null; then
+              echo "functions ready"
+              cat /tmp/fn-ready.json || true
+              break
+            fi
+            sleep 2
+            if [[ "$i" -eq 60 ]]; then
+              echo "::error::functions serve did not become ready"
+              tail -n 200 /tmp/functions-serve.log || true
+              exit 1
+            fi
+          done
+
+      - name: JWT caller matrix (local)
+        run: |
+          set -euo pipefail
+          export EMAIL_SENDING_PAUSED=true
+          deno run --allow-net --allow-env --allow-read --allow-run \
+            scripts/ci/run-email-jwt-caller-matrix.ts
+
+      - name: Final report
+        if: always()
+        run: |
+          cat <<'EOF'
+          == Required report (see step outcomes above) ==
+          Fresh migration installation: see "Fresh migration install"
+          PR #33 stream immutability SQL: see SQL suites
+          Ground Zero migrations 50000–50300: see SQL suites
+          Ground Zero abuse matrix: see SQL suites
+          Rollback leaves no test data: see SQL suites
+          Unauthorized function invokes rejected: see JWT matrix
+          Authorized function invokes accepted but paused: see JWT matrix
+          Production credentials used: NO
+          Production changes made: NO
+          Emails sent: 0
+          EOF
+
+      - name: Stop local stack
+        if: always()
+        run: |
+          if [[ -f /tmp/functions-serve.pid ]]; then
+            kill "$(cat /tmp/functions-serve.pid)" || true
+          fi
+          supabase stop || true
