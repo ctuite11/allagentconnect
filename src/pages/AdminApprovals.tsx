@@ -1071,7 +1071,12 @@ export default function AdminApprovals() {
         }
         case "created_at":
         default:
-          comparison = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+          // In the Pending bucket the meaningful recency signal is when the
+          // access request was submitted, not when a profile row happened to
+          // be created. Falls back to created_at when there is no request.
+          comparison =
+            new Date(a.requested_at ?? a.created_at).getTime() -
+            new Date(b.requested_at ?? b.created_at).getTime();
           break;
       }
       return sortDirection === "asc" ? comparison : -comparison;
