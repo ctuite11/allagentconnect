@@ -5061,6 +5061,7 @@ export type Database = {
         Args: { p_owner_user_id: string }
         Returns: boolean
       }
+      jwt_role_text: { Args: never; Returns: string }
       list_account_delegates_for_owner: {
         Args: never
         Returns: {
