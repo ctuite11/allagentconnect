@@ -295,27 +295,34 @@ function formatRelativeSignIn(iso: string | null | undefined): string {
   return new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
-function YesNoCell({
-  yes,
-  iso,
-  extra,
-  title,
-}: {
-  yes: boolean;
-  iso?: string | null;
-  extra?: string | null;
-  title?: string;
-}) {
+/**
+ * Lifecycle timestamp cell: absolute date plus a relative hint.
+ * Renders an em dash when the stage has not happened — never a guessed date.
+ */
+function TimestampCell({ iso, emptyLabel = "—" }: { iso?: string | null; emptyLabel?: string }) {
+  if (!iso) {
+    return (
+      <td className="px-3 py-3 align-top text-xs">
+        <span className="text-zinc-400">{emptyLabel}</span>
+      </td>
+    );
+  }
+  const d = new Date(iso);
+  const days = Math.floor((Date.now() - d.getTime()) / 86400000);
+  const rel = days <= 0 ? "today" : days === 1 ? "1 day ago" : `${days} days ago`;
   return (
-    <td className="px-3 py-3 align-top" title={title}>
-      <div className="flex flex-col">
-        <span
-          className={
-            yes
-              ? "inline-flex w-fit items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700 ring-1 ring-emerald-200"
-              : "inline-flex w-fit items-center rounded-full bg-zinc-100 px-2 py-0.5 text-[11px] font-medium text-zinc-500"
-          }
-        >
+    <td className="px-3 py-3 align-top text-xs" title={d.toLocaleString()}>
+      <div className="flex flex-col gap-0.5">
+        <span className="text-zinc-900">
+          {d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" })}
+        </span>
+        <span className="text-[11px] text-zinc-500">{rel}</span>
+      </div>
+    </td>
+  );
+}
+
+function YesNoCell({
   yes,
   iso,
   extra,
