@@ -6,6 +6,7 @@ import {
   type DigestCadence,
 } from "../_shared/commsDigest.ts";
 import { assertCommsEnqueueAllowed } from "../_shared/emailStreams.ts";
+import { assertPrivilegedEmailProducerAuthority } from "../_shared/emailFunctionAuth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -30,6 +31,14 @@ const MAX_AGENTS_PER_RUN = 200;
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  const auth = await assertPrivilegedEmailProducerAuthority(req);
+  if (!auth.ok) {
+    return new Response(JSON.stringify({ error: auth.error }), {
+      status: auth.status,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 
   try {

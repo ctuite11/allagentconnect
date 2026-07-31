@@ -4785,6 +4785,36 @@ export type Database = {
       }
     }
     Functions: {
+      email_control_get: {
+        Args: never
+        Returns: {
+          id: boolean
+          ground_zero_at: string
+          global_paused: boolean
+          hot_sheet_paused: boolean
+          communications_paused: boolean
+          transactional_paused: boolean
+          system_paused: boolean
+          changed_by: string | null
+          changed_at: string
+          change_reason: string
+          last_auto_shutdown_reason: string | null
+          last_auto_shutdown_at: string | null
+          last_auto_shutdown_source_event: string | null
+          updated_at: string
+        }
+      }
+      email_safety_dashboard: { Args: never; Returns: Json }
+      email_jobs_enqueue_batch: {
+        Args: {
+          p_source_event_id: string
+          p_stream: string
+          p_template: string
+          p_jobs: Json
+          p_approved?: boolean
+        }
+        Returns: Json
+      }
       _purge_expired_agent_active_context: { Args: never; Returns: undefined }
       accept_client_hot_sheet_invite: {
         Args: { _token: string }

@@ -274,7 +274,9 @@ export function useConversation(
           });
         }
 
-        supabase.functions.invoke("kick-email-queue").catch(() => {});
+        // Email queue is drained by service-role producers / process-email-queue
+        // cron / admin kick only (Ground Zero). Do not invoke kick-email-queue
+        // with ordinary user JWTs.
 
         return true;
       } catch (error) {

@@ -1,0 +1,27 @@
+# Local CI fixtures for Email Ground Zero validation
+#
+# Used only by `.github/workflows/email-ground-zero-local-ci.yml`.
+# Never point these values at production.
+
+synthetic_resend_api_key: re_ci_synthetic_do_not_send
+email_sending_paused: "true"
+hot_sheet_emails_paused: "true"
+comms_emails_paused: "true"
+
+forbidden_cli_flags:
+  - "--linked"
+  - "db push"
+  - "supabase link"
+
+forbidden_env_vars:
+  - SUPABASE_ACCESS_TOKEN
+  - DATABASE_URL
+  - SUPABASE_DB_URL
+  - PRODUCTION_PROJECT_ID
+  - PRODUCTION_DB_PASSWORD
+  - RESEND_API_KEY   # real keys must not be present; CI injects synthetic only
+
+notes:
+  - Lovable owns production Supabase deploys.
+  - This CI stack is disposable Docker-only.
+  - After local CI passes, run the same auth matrix against disposable hosted staging — never production.

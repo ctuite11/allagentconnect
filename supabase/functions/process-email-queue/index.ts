@@ -4,16 +4,22 @@ import { sendEmail } from "../_shared/sendEmail.ts";
 import { UNSUPPORTED_TEMPLATE_ERROR_PREFIX } from "../_shared/renderEmailTemplate.ts";
 import {
   assertJobSendable,
-  getClaimableStreams,
-  isGlobalEmailPaused,
   attemptsAfterPauseRaceRequeue,
   isPauseRaceBlock,
 } from "../_shared/emailStreams.ts";
+import { assertEmailWorkerAuthority } from "../_shared/emailFunctionAuth.ts";
+import {
+  assertWorkerSendAllowed,
+  EMAIL_CLAIM_MAX,
+} from "../_shared/emailControlGate.ts";
+
+// @auth-classification: internal-cron
+// Also accepts admin JWT / service-role bearer. Anonymous and ordinary users are rejected.
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+    "authorization, x-client-info, apikey, content-type, x-email-cron-secret",
 };
 
 function json(body: unknown, init: ResponseInit = {}) {
@@ -46,6 +52,11 @@ Deno.serve(async (req) => {
   }
   if (req.method !== "POST") return json({ error: "Method not allowed" }, { status: 405 });
 
+  const auth = await assertEmailWorkerAuthority(req);
+  if (!auth.ok) {
+    return json({ error: auth.error }, { status: auth.status });
+  }
+
   const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
   const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
   const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
@@ -56,6 +67,8 @@ Deno.serve(async (req) => {
   }
 
   const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
+  const workerRequestId = crypto.randomUUID();
+  const claimedAt = new Date().toISOString();
 
   // Best-effort event logger: never throws.
   const logEvent = async (
@@ -134,36 +147,29 @@ Deno.serve(async (req) => {
   };
 
   try {
-    // Channel-aware claim: never claim paused streams (avoids claim/return churn).
-    if (isGlobalEmailPaused()) {
-      console.log("[process-email-queue] EMAIL_SENDING_PAUSED — claiming nothing");
+    // Dual gate: EMAIL_SENDING_PAUSED=false AND database global_paused=false.
+    const sendAllowed = await assertWorkerSendAllowed(supabase);
+    if (sendAllowed.paused) {
+      console.log(
+        `[process-email-queue] paused — ${sendAllowed.switch}: ${sendAllowed.reason}`,
+      );
       return json({
         processed: 0,
         sent: 0,
         failed: 0,
         retried: 0,
         paused: true,
-        switch: "EMAIL_SENDING_PAUSED",
+        switch: sendAllowed.switch,
+        reason: sendAllowed.reason,
         claimable_streams: [],
       });
     }
 
-    const claimableStreams = getClaimableStreams();
-    if (claimableStreams.length === 0) {
-      console.log("[process-email-queue] No claimable streams — claiming nothing");
-      return json({
-        processed: 0,
-        sent: 0,
-        failed: 0,
-        retried: 0,
-        paused: true,
-        claimable_streams: [],
-      });
-    }
+    const claimableStreams = sendAllowed.claimableStreams;
 
     const { data: jobs, error: claimErr } = await supabase.rpc(
       "email_jobs_claim",
-      { p_limit: 50, p_allowed_streams: claimableStreams },
+      { p_limit: EMAIL_CLAIM_MAX, p_allowed_streams: claimableStreams },
     );
 
     if (claimErr) throw claimErr;
@@ -234,6 +240,33 @@ Deno.serve(async (req) => {
           }
 
           // Fail-closed stream / pause gate immediately before send.
+          // Re-check dual pause after claim to guarantee ZERO SENT on mid-run pause.
+          const midRunPause = await assertWorkerSendAllowed(supabase);
+          if (midRunPause.paused) {
+            const runAfter = new Date(Date.now() + 15 * 60_000).toISOString();
+            const restoredAttempts = attemptsAfterPauseRaceRequeue(job.attempts);
+            await safeUpdateJob(
+              job.id,
+              {
+                status: "queued",
+                run_after: runAfter,
+                last_error: midRunPause.reason,
+                attempts: restoredAttempts,
+              },
+              { stage: "pause_after_claim_requeue" },
+            );
+            await logEvent(job.id, "pause_after_claim_requeue", {
+              error: midRunPause.reason,
+              switch: midRunPause.switch,
+              attempts_restored_to: restoredAttempts,
+              template,
+              to,
+              duration_ms: Date.now() - startedAt,
+            });
+            skipped++;
+            return;
+          }
+
           const sendGate = assertJobSendable(job as EmailJob & { stream?: string | null });
           if (!sendGate.ok) {
             if (isPauseRaceBlock(sendGate)) {
@@ -262,18 +295,24 @@ Deno.serve(async (req) => {
               });
               skipped++;
             } else {
-              // Terminal: retired / unknown template / stream mismatch.
+              // Terminal: retired / unknown template / stream mismatch → quarantine + trip.
               await safeUpdateJob(
                 job.id,
-                { status: "failed", last_error: sendGate.error },
-                { stage: "stream_send_gate_blocked" },
+                { status: "quarantined", last_error: sendGate.error },
+                { stage: "stream_send_gate_quarantined" },
               );
-              await logEvent(job.id, "failed", {
+              await logEvent(job.id, "quarantined", {
                 error: sendGate.error,
                 reason: sendGate.reason,
                 template,
                 to,
                 duration_ms: Date.now() - startedAt,
+              });
+              await supabase.rpc("email_safety_evaluate_and_trip", {
+                p_reason: sendGate.reason ?? "unknown_template",
+                p_source_event_id: null,
+                p_worker_error_rate: null,
+                p_force_reason: null,
               });
               failed++;
             }
@@ -317,6 +356,7 @@ Deno.serve(async (req) => {
           }
 
           try {
+            const providerCallAt = new Date().toISOString();
             const { providerMessageId } = await sendEmail(job, RESEND_API_KEY);
 
             await safeUpdateJob(
@@ -329,6 +369,20 @@ Deno.serve(async (req) => {
               },
               { stage: "mark_sent" },
             );
+
+            await supabase.rpc("email_delivery_ledger_append", {
+              p_job_id: job.id,
+              p_recipient_email: String(to),
+              p_template: String(template),
+              p_stream: sendGate.stream,
+              p_source_event_id: null,
+              p_worker_request_id: workerRequestId,
+              p_claimed_at: claimedAt,
+              p_provider_call_at: providerCallAt,
+              p_provider_message_id: providerMessageId,
+              p_result: "sent",
+              p_failure_reason: null,
+            });
 
             await logEvent(job.id, "sent", {
               template,
@@ -349,6 +403,20 @@ Deno.serve(async (req) => {
               `[process-email-queue] Job ${job.id} failed:`,
               msg,
             );
+
+            await supabase.rpc("email_delivery_ledger_append", {
+              p_job_id: job.id,
+              p_recipient_email: String(to ?? ""),
+              p_template: String(template ?? ""),
+              p_stream: sendGate.stream,
+              p_source_event_id: null,
+              p_worker_request_id: workerRequestId,
+              p_claimed_at: claimedAt,
+              p_provider_call_at: new Date().toISOString(),
+              p_provider_message_id: null,
+              p_result: "provider_error",
+              p_failure_reason: msg,
+            });
 
             // Fail-closed: unrenderable template = terminal failure. Never
             // retry (payload is broken, not transient) and never let a
@@ -416,6 +484,24 @@ Deno.serve(async (req) => {
         const wait = Math.max(0, BATCH_WINDOW_MS - elapsed);
         if (wait > 0) await new Promise((r) => setTimeout(r, wait));
       }
+    }
+
+    const processed = jobs.length;
+    const errorRate = processed > 0 ? failed / processed : 0;
+    if (errorRate > 0.2) {
+      await supabase.rpc("email_safety_evaluate_and_trip", {
+        p_reason: null,
+        p_source_event_id: null,
+        p_worker_error_rate: errorRate,
+        p_force_reason: null,
+      });
+    } else {
+      await supabase.rpc("email_safety_evaluate_and_trip", {
+        p_reason: null,
+        p_source_event_id: null,
+        p_worker_error_rate: null,
+        p_force_reason: null,
+      });
     }
 
     console.log(
