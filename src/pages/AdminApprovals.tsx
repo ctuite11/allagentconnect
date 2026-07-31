@@ -2041,17 +2041,9 @@ export default function AdminApprovals() {
                               <span className="font-semibold text-[#0E56F5] hover:underline">
                                 {formatAgentDisplayName(agent) || "—"}
                               </span>
-                              {agent.source === "pending_verification" && (
-                                <span
-                                  className="inline-flex items-center rounded-full bg-indigo-50 px-2 py-0.5 text-[11px] font-medium text-indigo-700 ring-1 ring-indigo-200"
-                                  title="Submitted via the Request Access form"
-                                >
-                                  Request Access
-                                </span>
-                              )}
                               {isNewRequest(agent) && (
                                 <span
-                                  className="inline-flex items-center rounded-full bg-rose-600 px-2 py-0.5 text-[11px] font-semibold text-white"
+                                  className="inline-flex items-center rounded-full border border-[#0E56F5]/30 bg-[#0E56F5]/10 px-2 py-0.5 text-[11px] font-medium text-[#0E56F5]"
                                   title={`Submitted ${new Date(agent.requested_at!).toLocaleString()}`}
                                 >
                                   New request
