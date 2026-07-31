@@ -2036,6 +2036,14 @@ export default function AdminApprovals() {
                                   Request Access
                                 </span>
                               )}
+                              {isNewRequest(agent) && (
+                                <span
+                                  className="inline-flex items-center rounded-full bg-rose-600 px-2 py-0.5 text-[11px] font-semibold text-white"
+                                  title={`Submitted ${new Date(agent.requested_at!).toLocaleString()}`}
+                                >
+                                  New request
+                                </span>
+                              )}
                             </div>
                             <span className="font-mono text-[11px] text-zinc-500">{agent.aac_id}</span>
                           </button>
