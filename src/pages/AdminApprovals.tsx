@@ -616,112 +616,26 @@ export default function AdminApprovals() {
         setLicenseUploadAgentIds(new Set(uploads.map((u: any) => u.user_id)));
       }
 
-      // Fetch pending verifications (backup notifications)
-      const { data: pendingData } = await supabase
-        .from("pending_verifications")
-        .select("*")
-        .eq("processed", false)
-        .order("created_at", { ascending: false });
-
-      if (pendingData) {
-        setPendingVerifications(pendingData);
+      // Lifecycle data (requested_at / rejected_at / lifecycle_status) and
+      // request rows without an agent profile come from the admin edge
+      // function. The browser no longer queries `pending_verifications`
+      // directly — an RLS/permission failure there used to look like
+      // "no requests" instead of an error.
+      setLifecycleDataError(pendingVerificationsError ?? null);
+      if (pendingVerificationsError) {
+        console.error(
+          "[AdminApprovals] pending_verifications load failed:",
+          pendingVerificationsError,
+        );
       }
 
-      // Phase 3: surface Phase 2 "Request Access" leads
-      // (status='pending' AND user_id IS NULL) as first-class rows in the
-      // Unverified/Pending list so admins can Verify them via the new
-      // convert-pending-verification-to-agent flow.
-      const existingEmails = new Set(
-        (agentList ?? []).map((a: Agent) => (a.email || "").toLowerCase())
-      );
-      const phase2Leads: Agent[] = (pendingData ?? [])
-        .filter(
-          (p: any) =>
-            p?.status === "pending" &&
-            !p?.user_id &&
-            !p?.converted_user_id &&
-            p?.processed !== true,
-        )
-        .filter((p: any) => !existingEmails.has(String(p.email || "").toLowerCase()))
-        .map((p: any): Agent => ({
-          id: p.id,
-          aac_id: `REQ-${String(p.id).slice(0, 4).toUpperCase()}`,
-          first_name: p.first_name || "",
-          last_name: p.last_name || "",
-          email: p.email,
-          phone: p.phone ?? null,
-          company: p.company ?? null,
-          bio: null,
-          license_number: p.license_number ?? null,
-          license_state: p.license_state ?? null,
-          agent_status: "pending",
-          verified_at: null,
-          created_at: p.created_at,
-          is_early_access: false,
-          has_auth_account: false,
-          last_sign_in_at: null,
-          account_activated_at: null,
-          invite_email: null,
-          license_verified_email: null,
-          source: "pending_verification",
-          pending_verification_id: p.id,
-        }));
-
-      const merged: Agent[] = [...phase2Leads, ...((agentList ?? []) as Agent[])];
-
-      // Enrich merged rows with email delivery status + historical
-      // request-access signal so the drawer's Lifecycle indicators
-      // reflect reality. Frontend-only, read-only, bounded to the
-      // rendered list.
-      const normEmails = Array.from(
-        new Set(
-          merged
-            .map((a) => (a.email || "").trim().toLowerCase())
-            .filter((e) => e.length > 0),
-        ),
-      );
-
-      const licenseByEmail = new Map<string, EmailStatusInfo>();
-      const inviteByEmail = new Map<string, EmailStatusInfo>();
-      const everRequested = new Map<string, string>(); // email -> earliest created_at
-
-      if (normEmails.length > 0) {
-        // Note: license_verified_email, invite_email and last_reminder are
-        // enriched server-side in admin-list-agents (email_jobs is RLS-locked
-        // to service_role). The browser trusts those fields directly.
-        try {
-          const { data: pvRows } = await supabase
-            .from("pending_verifications")
-            .select("email, created_at")
-            .in("email", normEmails);
-          for (const row of (pvRows ?? []) as any[]) {
-            const em = String(row.email || "").trim().toLowerCase();
-            if (!em) continue;
-            const existing = everRequested.get(em);
-            if (!existing || new Date(row.created_at) < new Date(existing)) {
-              everRequested.set(em, row.created_at);
-            }
-          }
-        } catch (e) {
-          console.warn("[AdminApprovals] pending_verifications enrichment failed:", e);
-        }
-      }
-
-      const enriched: Agent[] = merged.map((a) => {
-        const em = (a.email || "").trim().toLowerCase();
-        const lic = a.license_verified_email ?? licenseByEmail.get(em) ?? null;
-        const inv = a.invite_email ?? inviteByEmail.get(em) ?? null;
-        const reqAt = everRequested.get(em) ?? null;
-        const rem = a.last_reminder ?? null;
-        return {
-          ...a,
-          license_verified_email: lic,
-          invite_email: inv,
-          last_reminder: rem,
-          ever_requested: !!reqAt || a.ever_requested === true,
-          requested_access_at: reqAt ?? a.requested_access_at ?? null,
-        };
-      });
+      const enriched: Agent[] = ((agentList ?? []) as Agent[]).map((a) => ({
+        ...a,
+        // `requested_access_at` mirrors the server value only. It is never
+        // back-filled from profile/auth creation timestamps.
+        requested_access_at: a.requested_at ?? null,
+        ever_requested: !!a.requested_at,
+      }));
 
       setAgents(enriched);
     } catch (error) {
