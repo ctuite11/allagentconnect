@@ -2203,7 +2203,7 @@ export default function AdminApprovals() {
                                 View details
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
-                              {derived === "invited" ? (
+                              {agent.agent_status === "invited" ? (
                                 <>
                                   <DropdownMenuItem
                                     disabled={resendingInviteFor.has(agent.id)}
