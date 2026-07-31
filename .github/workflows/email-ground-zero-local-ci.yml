@@ -13,6 +13,7 @@ on:
       - "scripts/ci/**"
       - ".github/workflows/email-ground-zero-local-ci.yml"
       - "docs/email/ground-zero-*.md"
+      - "docs/database/schema_snapshot.sql"
   push:
     branches:
       - cursor/email-ground-zero-hardening
@@ -48,7 +49,9 @@ jobs:
 
       - name: Refuse production / remote Supabase targeting
         run: |
-          chmod +x scripts/ci/assert-no-production-supabase.sh scripts/ci/run-email-sql-tests.sh
+          chmod +x scripts/ci/assert-no-production-supabase.sh \
+            scripts/ci/run-email-sql-tests.sh \
+            scripts/ci/dump-local-schema-snapshot.sh
           ./scripts/ci/assert-no-production-supabase.sh
 
       - name: Setup Node
@@ -82,6 +85,40 @@ jobs:
           # Destroys/rebuilds ONLY the local database. Never use --linked.
           supabase db reset
           echo "Fresh migration installation: PASS"
+
+      - name: Regenerate schema snapshot from local DB only
+        run: |
+          set -euo pipefail
+          # Unset ambient remote vars before dump (fail-closed host guard inside script).
+          unset DATABASE_URL SUPABASE_DB_URL DIRECT_URL POSTGRES_URL SUPABASE_ACCESS_TOKEN || true
+          DB_URL="$(supabase status -o env | sed -n 's/^DB_URL=//p' | head -1 | tr -d '"')"
+          if [[ -z "$DB_URL" ]]; then
+            DB_URL="postgresql://postgres:postgres@127.0.0.1:54322/postgres"
+          fi
+          ./scripts/ci/dump-local-schema-snapshot.sh "$DB_URL"
+          if ! git diff --quiet -- docs/database/schema_snapshot.sql; then
+            echo "::warning::Committed schema_snapshot.sql differs from local disposable DB dump."
+            echo "Upload artifact and commit the regenerated snapshot to the Ground Zero branch."
+            echo "SCHEMA_SNAPSHOT_DRIFT=1" >> "$GITHUB_ENV"
+          else
+            echo "Schema snapshot matches local disposable DB."
+            echo "SCHEMA_SNAPSHOT_DRIFT=0" >> "$GITHUB_ENV"
+          fi
+
+      - name: Upload regenerated schema snapshot artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: schema-snapshot-local
+          path: docs/database/schema_snapshot.sql
+          if-no-files-found: error
+
+      - name: Fail if schema snapshot is stale
+        run: |
+          if [[ "${SCHEMA_SNAPSHOT_DRIFT:-0}" == "1" ]]; then
+            echo "::error::docs/database/schema_snapshot.sql is stale vs local db reset. Download artifact schema-snapshot-local and commit it."
+            exit 1
+          fi
+          echo "Schema snapshot updated: PASS"
 
       - name: Verify Ground Zero pause posture after reset
         run: |
