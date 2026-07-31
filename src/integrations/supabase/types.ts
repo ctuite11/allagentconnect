@@ -14,24 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      _tmp_lifecycle_test_results: {
-        Row: {
-          id: number
-          result: string | null
-          test: string | null
-        }
-        Insert: {
-          id?: number
-          result?: string | null
-          test?: string | null
-        }
-        Update: {
-          id?: number
-          result?: string | null
-          test?: string | null
-        }
-        Relationships: []
-      }
       ad_clicks: {
         Row: {
           ad_id: string
