@@ -215,6 +215,14 @@ const LIFECYCLE_LABELS: Record<AdminDerivedStatus, string> = {
   rejected: "Rejected",
 };
 
+/** A still-pending access request submitted within the last 72 hours. */
+const NEW_REQUEST_WINDOW_MS = 72 * 60 * 60 * 1000;
+function isNewRequest(a: Agent): boolean {
+  if (!a.requested_at) return false;
+  if (deriveAdminStatus(a) !== "pending") return false;
+  return Date.now() - new Date(a.requested_at).getTime() <= NEW_REQUEST_WINDOW_MS;
+}
+
 function formatAgentDisplayName(a: Pick<Agent, "first_name" | "last_name">): string {
   return [a.first_name, a.last_name]
     .map((part) => (part ?? "").trim())
