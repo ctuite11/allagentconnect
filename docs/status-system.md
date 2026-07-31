@@ -93,6 +93,25 @@ const statusColors = { active: "green", pending: "yellow" };
 - `isPendingAgent(status)` — Is "pending"?
 - `isAgentBlocked(status)` — Is "restricted" or "rejected"?
 
+### Admin Approval Lifecycle
+The Admin Approvals UI exposes exactly four stages, derived from timestamps
+(server-side in `admin-list-agents`, mirrored by `deriveAdminStatus`):
+
+| Stage | Rule | Timestamp column |
+| --- | --- | --- |
+| Pending | not rejected, `verified_at` is null | Requested (earliest `pending_verifications.created_at`) |
+| Verified | not rejected, `verified_at` set, `account_activated_at` null | License Verified |
+| Activated | not rejected, `account_activated_at` set | Account Activated |
+| Rejected | explicitly rejected | Rejected At |
+
+Notes:
+- `restricted` is retired from the UI. Legacy rows fail safe into **Rejected**;
+  the DB enum/constraints are unchanged.
+- Profile completeness, headshots, and invite state are **not** lifecycle stages.
+- `Requested` comes only from `pending_verifications` — never from profile or
+  auth creation dates. If that source fails to load, the UI shows an explicit
+  error instead of an empty bucket.
+
 ### Hot Sheet Helpers
 - `isHotSheetActive(status)` — Is "active"?
 

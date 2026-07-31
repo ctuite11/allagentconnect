@@ -49,6 +49,10 @@ export interface AgentDetailsAgent {
   source?: "profile" | "early_access" | "pending_verification";
   ever_requested?: boolean;
   requested_access_at?: string | null;
+  /** Server-derived lifecycle fields from admin-list-agents. */
+  requested_at?: string | null;
+  rejected_at?: string | null;
+  lifecycle_status?: "pending" | "verified" | "activated" | "rejected" | null;
 }
 
 interface AgentDetailsDrawerProps {
@@ -127,18 +131,23 @@ export function AgentDetailsDrawer({
 }: AgentDetailsDrawerProps) {
   if (!agent) return null;
 
-  const requested =
-    agent.source === "pending_verification" ||
-    agent.is_early_access === true ||
-    agent.ever_requested === true;
-  const verified = agent.agent_status === "verified";
+  // Lifecycle is timestamp-driven: Requested -> License Verified ->
+  // Account Activated, plus an explicit Rejected terminal state. Profile
+  // completeness is deliberately NOT part of the lifecycle.
+  const requestedAt = agent.requested_at ?? agent.requested_access_at ?? null;
+  const requested = !!requestedAt;
+  const rejectedAt = agent.rejected_at ?? null;
+  const isRejected =
+    agent.lifecycle_status === "rejected" ||
+    agent.agent_status === "rejected" ||
+    agent.agent_status === "restricted";
+  const verified = !!agent.verified_at;
+  const activated = !!agent.account_activated_at;
   const setupEmail = agent.license_verified_email || agent.invite_email;
   const setupSent = !!setupEmail || agent.agent_status === "invited";
-  const requestedDetail = agent.requested_access_at || agent.created_at;
   const setupSentDetail = setupEmail
     ? `${setupEmail.status} · ${fmt(setupEmail.event_at ?? setupEmail.created_at) ?? ""}`
     : null;
-  const accountCreated = agent.has_auth_account === true;
   const profileComplete = agent.profile_complete === true;
   const canPasswordReset = !agent.is_early_access && agent.source !== "pending_verification";
 
@@ -217,12 +226,12 @@ export function AgentDetailsDrawer({
             </h4>
             <div className="rounded-md border border-zinc-100 bg-white p-3">
               <LifecycleRow
-                label="Requested Access"
+                label="Requested"
                 yes={requested}
-                detail={requested ? fmt(requestedDetail) : null}
+                detail={requested ? fmt(requestedAt) : "No request on record"}
               />
               <LifecycleRow
-                label="Verified"
+                label="License Verified"
                 yes={verified}
                 detail={verified ? fmt(agent.verified_at) : null}
               />
@@ -232,10 +241,17 @@ export function AgentDetailsDrawer({
                 detail={setupSentDetail}
               />
               <LifecycleRow
-                label="Account Created"
-                yes={accountCreated}
-                detail={fmt(agent.account_activated_at) ?? fmt(agent.last_sign_in_at)}
+                label="Account Activated"
+                yes={activated}
+                detail={activated ? fmt(agent.account_activated_at) : null}
               />
+              {isRejected && (
+                <LifecycleRow
+                  label="Rejected"
+                  yes
+                  detail={fmt(rejectedAt) ?? "Date not recorded"}
+                />
+              )}
               <LifecycleRow label="Profile Complete" yes={profileComplete} />
               <LifecycleRow
                 label="Last Sign-in"

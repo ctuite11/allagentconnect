@@ -122,6 +122,14 @@ interface Agent {
   // Requested Access doesn't flip back to No after verification.
   ever_requested?: boolean;
   requested_access_at?: string | null;
+  /**
+   * Lifecycle fields — server-authoritative (admin-list-agents).
+   * `requested_at` comes ONLY from pending_verifications.created_at.
+   * A profile/auth creation timestamp is never used as a request time.
+   */
+  requested_at?: string | null;
+  rejected_at?: string | null;
+  lifecycle_status?: AdminDerivedStatus;
   // Phase 3: identifies where this row originated so Verify/Reject can
   // branch. Absent = legacy profile row (default behaviour).
   source?: "profile" | "early_access" | "pending_verification";
@@ -180,38 +188,39 @@ function risksForAgent(a: Agent): Risk[] {
   });
 }
 
-// User-facing admin status buckets. There is intentionally no "unverified"
-// label — agents without an auth account are surfaced as Pending. Internal
-// flows may still branch on `!has_auth_account` to decide whether the Verify
-// action needs to create the account first.
-type AdminDerivedStatus =
-  | "invited"
-  | "pending"
-  | "account_created"
-  | "profile_complete"
-  | "rejected"
-  | "restricted";
+// The approval lifecycle has exactly four stages. Profile completeness,
+// headshot, brokerage, preferences, email delivery, invitation state and
+// last sign-in MUST NOT influence lifecycle status or counts.
+//
+// Historical `restricted` values still exist in the database enum, but are
+// invisible here: they fail safe into the blocked (rejected) bucket rather
+// than masquerading as an active stage.
+type AdminDerivedStatus = "pending" | "verified" | "activated" | "rejected";
 
 function deriveAdminStatus(a: Agent): AdminDerivedStatus {
-  if (a.agent_status === "rejected") return "rejected";
-  if (a.agent_status === "restricted") return "restricted";
-  // DB "verified" = admin approved → user-facing "Active".
-  if (a.agent_status === "verified") {
-    // The "Profile Complete" bucket strictly reflects a real completed
-    // profile (names + headshot + brokerage + contact) as computed by the
-    // backend `profile_complete` composite. Do NOT widen this bucket to
-    // "activated OR has headshot" — that conflates account usability with
-    // profile completeness and inflates the Profile Complete count.
-    // Row-level account usability is shown via the separate
-    // `isAccountActive` helper below.
-    if (a.profile_complete) return "profile_complete";
-    return "account_created";
-  }
-  // Admin-created but agent hasn't finished /agent-setup yet.
-  if (a.agent_status === "invited") return "invited";
-  // Everything else (pending, legacy unverified, early-access leads,
-  // approval-queue agents) surfaces as Pending review.
+  // Server-computed value wins — it is derived from the same rules with
+  // full pending_verifications visibility.
+  if (a.lifecycle_status) return a.lifecycle_status;
+  const status = (a.agent_status || "").toLowerCase();
+  if (status === "rejected" || status === "restricted") return "rejected";
+  if (a.account_activated_at) return "activated";
+  if (a.verified_at) return "verified";
   return "pending";
+}
+
+const LIFECYCLE_LABELS: Record<AdminDerivedStatus, string> = {
+  pending: "Pending",
+  verified: "Verified",
+  activated: "Activated",
+  rejected: "Rejected",
+};
+
+/** A still-pending access request submitted within the last 72 hours. */
+const NEW_REQUEST_WINDOW_MS = 72 * 60 * 60 * 1000;
+function isNewRequest(a: Agent): boolean {
+  if (!a.requested_at) return false;
+  if (deriveAdminStatus(a) !== "pending") return false;
+  return Date.now() - new Date(a.requested_at).getTime() <= NEW_REQUEST_WINDOW_MS;
 }
 
 function formatAgentDisplayName(a: Pick<Agent, "first_name" | "last_name">): string {
@@ -224,13 +233,10 @@ function formatAgentDisplayName(a: Pick<Agent, "first_name" | "last_name">): str
 /** Status Select values must match pills / deriveAdminStatus — not raw DB statuses. */
 const ADMIN_STATUS_FILTER_OPTIONS: { value: string; label: string }[] = [
   { value: "pending", label: "Pending" },
-  { value: "invited", label: "Invited" },
-  { value: "account_created", label: "Account Created" },
-  { value: "profile_complete", label: "Profile Complete" },
-  { value: "awaiting_activation", label: "Awaiting Activation" },
+  { value: "verified", label: "Verified" },
   { value: "activated", label: "Activated" },
   { value: "rejected", label: "Rejected" },
-  { value: "restricted", label: "Restricted" },
+  // Utility indicator only — not a lifecycle stage.
   { value: "online", label: "Online" },
 ];
 
@@ -295,6 +301,33 @@ function formatRelativeSignIn(iso: string | null | undefined): string {
   if (diffMs < day) return `${Math.floor(diffMs / hour)}h ago`;
   if (diffMs < 7 * day) return `${Math.floor(diffMs / day)}d ago`;
   return new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
+/**
+ * Lifecycle timestamp cell: absolute date plus a relative hint.
+ * Renders an em dash when the stage has not happened — never a guessed date.
+ */
+function TimestampCell({ iso, emptyLabel = "—" }: { iso?: string | null; emptyLabel?: string }) {
+  if (!iso) {
+    return (
+      <td className="px-3 py-3 align-top text-xs">
+        <span className="text-zinc-400">{emptyLabel}</span>
+      </td>
+    );
+  }
+  const d = new Date(iso);
+  const days = Math.floor((Date.now() - d.getTime()) / 86400000);
+  const rel = days <= 0 ? "today" : days === 1 ? "1 day ago" : `${days} days ago`;
+  return (
+    <td className="px-3 py-3 align-top text-xs" title={d.toLocaleString()}>
+      <div className="flex flex-col gap-0.5">
+        <span className="text-zinc-900">
+          {d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" })}
+        </span>
+        <span className="text-[11px] text-zinc-500">{rel}</span>
+      </div>
+    </td>
+  );
 }
 
 function YesNoCell({
@@ -419,20 +452,12 @@ export default function AdminApprovals() {
     stateCount: null,
   });
   const [processingIds, setProcessingIds] = useState<Set<string>>(new Set());
-  const [pendingVerifications, setPendingVerifications] = useState<Array<{
-    id: string;
-    user_id: string;
-    email: string;
-    first_name: string;
-    last_name: string;
-    license_state: string | null;
-    license_number: string | null;
-    created_at: string;
-  }>>([]);
-  
   // Filters & Search - default to "pending" to show approval queue
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
+  // Explicit failure signal for pending_verifications (lifecycle history).
+  // A load failure must never render as "no request" / zero rows.
+  const [lifecycleDataError, setLifecycleDataError] = useState<string | null>(null);
   
   // Sorting
   const [sortField, setSortField] = useState<SortField>("created_at");
@@ -572,7 +597,19 @@ export default function AdminApprovals() {
         return;
       }
 
-      const { agents: agentList, profilesCount, settingsCount, statusDistribution } = data;
+      const {
+        agents: agentList,
+        profilesCount,
+        settingsCount,
+        statusDistribution,
+        pendingVerificationsError,
+      } = data as {
+        agents?: Agent[];
+        profilesCount?: number;
+        settingsCount?: number;
+        statusDistribution?: Record<string, number>;
+        pendingVerificationsError?: string | null;
+      };
 
       // DIAGNOSTIC: Log results
       console.log("[AdminApprovals] Edge function response:", {
@@ -615,112 +652,26 @@ export default function AdminApprovals() {
         setLicenseUploadAgentIds(new Set(uploads.map((u: any) => u.user_id)));
       }
 
-      // Fetch pending verifications (backup notifications)
-      const { data: pendingData } = await supabase
-        .from("pending_verifications")
-        .select("*")
-        .eq("processed", false)
-        .order("created_at", { ascending: false });
-
-      if (pendingData) {
-        setPendingVerifications(pendingData);
+      // Lifecycle data (requested_at / rejected_at / lifecycle_status) and
+      // request rows without an agent profile come from the admin edge
+      // function. The browser no longer queries `pending_verifications`
+      // directly — an RLS/permission failure there used to look like
+      // "no requests" instead of an error.
+      setLifecycleDataError(pendingVerificationsError ?? null);
+      if (pendingVerificationsError) {
+        console.error(
+          "[AdminApprovals] pending_verifications load failed:",
+          pendingVerificationsError,
+        );
       }
 
-      // Phase 3: surface Phase 2 "Request Access" leads
-      // (status='pending' AND user_id IS NULL) as first-class rows in the
-      // Unverified/Pending list so admins can Verify them via the new
-      // convert-pending-verification-to-agent flow.
-      const existingEmails = new Set(
-        (agentList ?? []).map((a: Agent) => (a.email || "").toLowerCase())
-      );
-      const phase2Leads: Agent[] = (pendingData ?? [])
-        .filter(
-          (p: any) =>
-            p?.status === "pending" &&
-            !p?.user_id &&
-            !p?.converted_user_id &&
-            p?.processed !== true,
-        )
-        .filter((p: any) => !existingEmails.has(String(p.email || "").toLowerCase()))
-        .map((p: any): Agent => ({
-          id: p.id,
-          aac_id: `REQ-${String(p.id).slice(0, 4).toUpperCase()}`,
-          first_name: p.first_name || "",
-          last_name: p.last_name || "",
-          email: p.email,
-          phone: p.phone ?? null,
-          company: p.company ?? null,
-          bio: null,
-          license_number: p.license_number ?? null,
-          license_state: p.license_state ?? null,
-          agent_status: "pending",
-          verified_at: null,
-          created_at: p.created_at,
-          is_early_access: false,
-          has_auth_account: false,
-          last_sign_in_at: null,
-          account_activated_at: null,
-          invite_email: null,
-          license_verified_email: null,
-          source: "pending_verification",
-          pending_verification_id: p.id,
-        }));
-
-      const merged: Agent[] = [...phase2Leads, ...((agentList ?? []) as Agent[])];
-
-      // Enrich merged rows with email delivery status + historical
-      // request-access signal so the drawer's Lifecycle indicators
-      // reflect reality. Frontend-only, read-only, bounded to the
-      // rendered list.
-      const normEmails = Array.from(
-        new Set(
-          merged
-            .map((a) => (a.email || "").trim().toLowerCase())
-            .filter((e) => e.length > 0),
-        ),
-      );
-
-      const licenseByEmail = new Map<string, EmailStatusInfo>();
-      const inviteByEmail = new Map<string, EmailStatusInfo>();
-      const everRequested = new Map<string, string>(); // email -> earliest created_at
-
-      if (normEmails.length > 0) {
-        // Note: license_verified_email, invite_email and last_reminder are
-        // enriched server-side in admin-list-agents (email_jobs is RLS-locked
-        // to service_role). The browser trusts those fields directly.
-        try {
-          const { data: pvRows } = await supabase
-            .from("pending_verifications")
-            .select("email, created_at")
-            .in("email", normEmails);
-          for (const row of (pvRows ?? []) as any[]) {
-            const em = String(row.email || "").trim().toLowerCase();
-            if (!em) continue;
-            const existing = everRequested.get(em);
-            if (!existing || new Date(row.created_at) < new Date(existing)) {
-              everRequested.set(em, row.created_at);
-            }
-          }
-        } catch (e) {
-          console.warn("[AdminApprovals] pending_verifications enrichment failed:", e);
-        }
-      }
-
-      const enriched: Agent[] = merged.map((a) => {
-        const em = (a.email || "").trim().toLowerCase();
-        const lic = a.license_verified_email ?? licenseByEmail.get(em) ?? null;
-        const inv = a.invite_email ?? inviteByEmail.get(em) ?? null;
-        const reqAt = everRequested.get(em) ?? null;
-        const rem = a.last_reminder ?? null;
-        return {
-          ...a,
-          license_verified_email: lic,
-          invite_email: inv,
-          last_reminder: rem,
-          ever_requested: !!reqAt || a.ever_requested === true,
-          requested_access_at: reqAt ?? a.requested_access_at ?? null,
-        };
-      });
+      const enriched: Agent[] = ((agentList ?? []) as Agent[]).map((a) => ({
+        ...a,
+        // `requested_access_at` mirrors the server value only. It is never
+        // back-filled from profile/auth creation timestamps.
+        requested_access_at: a.requested_at ?? null,
+        ever_requested: !!a.requested_at,
+      }));
 
       setAgents(enriched);
     } catch (error) {
@@ -984,36 +935,38 @@ export default function AdminApprovals() {
     // Pending tab with 8 buyer/test accounts. Future backfills MUST filter out users
     // who hold the `buyer` role in `user_roles`.
     const buckets: Record<AdminDerivedStatus, number> = {
-      invited: 0,
       pending: 0,
-      account_created: 0,
-      profile_complete: 0,
+      verified: 0,
+      activated: 0,
       rejected: 0,
-      restricted: 0,
     };
     agents.forEach((a) => {
       buckets[deriveAdminStatus(a)]++;
     });
-    counts.invited = buckets.invited;
     counts.pending = buckets.pending;
-    counts.account_created = buckets.account_created;
-    counts.profile_complete = buckets.profile_complete;
+    counts.verified = buckets.verified;
+    counts.activated = buckets.activated;
     counts.rejected = buckets.rejected;
-    counts.restricted = buckets.restricted;
-    counts.awaiting_activation = agents.filter(isAwaitingActivation).length;
-    counts.activated = agents.filter(isActivatedAgent).length;
     return counts;
   }, [agents]);
+
+  /**
+   * Selecting a lifecycle pill clears the search box (and any stale row
+   * selection) so the pill count can never disagree with the visible rows.
+   */
+  const selectLifecycleFilter = useCallback((next: string) => {
+    setStatusFilter(next);
+    setSearchQuery("");
+    setSelectedIds(new Set());
+  }, []);
 
   // Helper to map status to Pill variant
   const variantForStatus = (status: string): PillVariant => {
     switch (status) {
       case "pending": return "warning";
-      case "invited": return "primary";
-      case "account_created": return "primary";
-      case "profile_complete": return "success";
-      case "rejected":
-      case "restricted": return "danger";
+      case "verified": return "primary";
+      case "activated": return "success";
+      case "rejected": return "danger";
       default: return "neutral";
     }
   };
@@ -1028,10 +981,6 @@ export default function AdminApprovals() {
         result = result.filter(
           (a) => !a.is_early_access && presenceMap.get(a.id)?.isOnline
         );
-      } else if (statusFilter === "awaiting_activation") {
-        result = result.filter(isAwaitingActivation);
-      } else if (statusFilter === "activated") {
-        result = result.filter(isActivatedAgent);
       } else {
         result = result.filter((a) => deriveAdminStatus(a) === statusFilter);
       }
@@ -1122,7 +1071,12 @@ export default function AdminApprovals() {
         }
         case "created_at":
         default:
-          comparison = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+          // In the Pending bucket the meaningful recency signal is when the
+          // access request was submitted, not when a profile row happened to
+          // be created. Falls back to created_at when there is no request.
+          comparison =
+            new Date(a.requested_at ?? a.created_at).getTime() -
+            new Date(b.requested_at ?? b.created_at).getTime();
           break;
       }
       return sortDirection === "asc" ? comparison : -comparison;
@@ -1804,69 +1758,67 @@ export default function AdminApprovals() {
 
         </div>
 
-        {/* Status Count Bar */}
-        <div className="flex flex-wrap gap-2 mb-6">
+        {/* Lifecycle pills — Pending / Verified / Activated / Rejected only.
+            Clicking a pill clears the search so the count always matches the
+            visible rows. Online is a utility indicator, not a lifecycle stage. */}
+        <div className="flex flex-wrap gap-2 mb-2">
           <Pill
             label={`All (${statusCounts.all})`}
             variant="neutral"
             active={statusFilter === "all"}
-            onClick={() => setStatusFilter("all")}
+            onClick={() => selectLifecycleFilter("all")}
           />
           <Pill
             label={`Pending (${statusCounts.pending || 0})`}
-            variant="neutral"
-            active={statusFilter === "pending"}
-            onClick={() => setStatusFilter("pending")}
-          />
-          <Pill
-            label={`Invited (${statusCounts.invited || 0})`}
-            variant="neutral"
-            active={statusFilter === "invited"}
-            onClick={() => setStatusFilter("invited")}
-          />
-          <Pill
-            label={`Account Created (${statusCounts.account_created || 0})`}
-            variant="neutral"
-            active={statusFilter === "account_created"}
-            onClick={() => setStatusFilter("account_created")}
-          />
-          <Pill
-            label={`Profile Complete (${statusCounts.profile_complete || 0})`}
-            variant="neutral"
-            active={statusFilter === "profile_complete"}
-            onClick={() => setStatusFilter("profile_complete")}
-          />
-          <Pill
-            label={`Awaiting Activation (${statusCounts.awaiting_activation || 0})`}
             variant="warning"
-            active={statusFilter === "awaiting_activation"}
-            onClick={() => setStatusFilter("awaiting_activation")}
+            active={statusFilter === "pending"}
+            onClick={() => selectLifecycleFilter("pending")}
+          />
+          <Pill
+            label={`Verified (${statusCounts.verified || 0})`}
+            variant="primary"
+            active={statusFilter === "verified"}
+            onClick={() => selectLifecycleFilter("verified")}
           />
           <Pill
             label={`Activated (${statusCounts.activated || 0})`}
             variant="success"
             active={statusFilter === "activated"}
-            onClick={() => setStatusFilter("activated")}
+            onClick={() => selectLifecycleFilter("activated")}
           />
           <Pill
             label={`Rejected (${statusCounts.rejected || 0})`}
-            variant="neutral"
+            variant="danger"
             active={statusFilter === "rejected"}
-            onClick={() => setStatusFilter("rejected")}
-          />
-          <Pill
-            label={`Restricted (${statusCounts.restricted || 0})`}
-            variant="neutral"
-            active={statusFilter === "restricted"}
-            onClick={() => setStatusFilter("restricted")}
+            onClick={() => selectLifecycleFilter("rejected")}
           />
           <Pill
             label={`Online (${onlineCount})`}
             variant="neutral"
             active={statusFilter === "online"}
-            onClick={() => setStatusFilter("online")}
+            onClick={() => selectLifecycleFilter("online")}
           />
         </div>
+        <div className="mb-6 text-sm text-muted-foreground">
+          {filteredAgents.length} of{" "}
+          {statusFilter === "all"
+            ? statusCounts.all
+            : statusFilter === "online"
+              ? onlineCount
+              : statusCounts[statusFilter] ?? 0}{" "}
+          {statusFilter === "all" ? "agents" : `${statusFilter} rows`}
+        </div>
+        {lifecycleDataError && (
+          <div className="mb-6 flex items-center justify-between gap-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3">
+            <p className="text-sm font-medium text-rose-700">
+              Unable to load access-request history — Requested dates and Rejected
+              rows may be incomplete. This is an error, not an empty result.
+            </p>
+            <Button variant="outline" size="sm" onClick={() => void fetchAgents()}>
+              Retry
+            </Button>
+          </div>
+        )}
 
         {/* Agent Cards */}
         {loading ? (
@@ -2021,29 +1973,21 @@ export default function AdminApprovals() {
                         Agent<SortIcon field="name" />
                       </button>
                     </th>
+                    <th className="px-3 py-2 text-left">Status</th>
+                    <th className="px-3 py-2 text-left">Requested</th>
                     <th className="px-3 py-2 text-left">
-                      <button type="button" onClick={() => handleSort("verified")} className="inline-flex items-center hover:text-zinc-900">
-                        Verified<SortIcon field="verified" />
+                      <button type="button" onClick={() => handleSort("verified_at")} className="inline-flex items-center hover:text-zinc-900">
+                        License Verified<SortIcon field="verified_at" />
                       </button>
                     </th>
                     <th className="px-3 py-2 text-left">
-                      <button type="button" onClick={() => handleSort("verified_at")} className="inline-flex items-center hover:text-zinc-900">
-                        Verified On<SortIcon field="verified_at" />
+                      <button type="button" onClick={() => handleSort("account_created")} className="inline-flex items-center hover:text-zinc-900">
+                        Account Activated<SortIcon field="account_created" />
                       </button>
                     </th>
                     <th className="px-3 py-2 text-left">
                       <button type="button" onClick={() => handleSort("last_reminder")} className="inline-flex items-center hover:text-zinc-900">
                         Last Reminder<SortIcon field="last_reminder" />
-                      </button>
-                    </th>
-                    <th className="px-3 py-2 text-left">
-                      <button type="button" onClick={() => handleSort("account_created")} className="inline-flex items-center hover:text-zinc-900">
-                        Activated<SortIcon field="account_created" />
-                      </button>
-                    </th>
-                    <th className="px-3 py-2 text-left">
-                      <button type="button" onClick={() => handleSort("profile_complete")} className="inline-flex items-center hover:text-zinc-900">
-                        Profile<SortIcon field="profile_complete" />
                       </button>
                     </th>
                     <th className="px-3 py-2 text-left">
@@ -2105,40 +2049,31 @@ export default function AdminApprovals() {
                                   Request Access
                                 </span>
                               )}
+                              {isNewRequest(agent) && (
+                                <span
+                                  className="inline-flex items-center rounded-full bg-rose-600 px-2 py-0.5 text-[11px] font-semibold text-white"
+                                  title={`Submitted ${new Date(agent.requested_at!).toLocaleString()}`}
+                                >
+                                  New request
+                                </span>
+                              )}
                             </div>
                             <span className="font-mono text-[11px] text-zinc-500">{agent.aac_id}</span>
                           </button>
                         </td>
-                        <YesNoCell yes={verified} iso={agent.verified_at} title={yesTitle(agent.verified_at)} />
-                        <td
-                          className="px-3 py-3 align-top text-xs text-zinc-600"
-                          title={agent.verified_at ? new Date(agent.verified_at).toLocaleString() : undefined}
-                        >
-                          {agent.verified_at ? (
-                            <div className="flex flex-col gap-0.5">
-                              <span className="text-zinc-900">
-                                {new Date(agent.verified_at).toLocaleDateString(undefined, {
-                                  year: "numeric",
-                                  month: "short",
-                                  day: "numeric",
-                                })}
-                              </span>
-                              <span className="text-[11px] text-zinc-500">
-                                {(() => {
-                                  const days = Math.floor(
-                                    (Date.now() - new Date(agent.verified_at).getTime()) /
-                                      (1000 * 60 * 60 * 24),
-                                  );
-                                  if (days <= 0) return "today";
-                                  if (days === 1) return "1 day ago";
-                                  return `${days} days ago`;
-                                })()}
-                              </span>
-                            </div>
-                          ) : (
-                            <span className="text-zinc-400">—</span>
-                          )}
+                        <td className="px-3 py-3 align-top">
+                          <Pill
+                            label={LIFECYCLE_LABELS[derived]}
+                            variant={variantForStatus(derived)}
+                          />
                         </td>
+                        <TimestampCell iso={agent.requested_at ?? null} />
+                        <TimestampCell iso={agent.verified_at ?? null} />
+                        {derived === "rejected" ? (
+                          <TimestampCell iso={agent.rejected_at ?? null} emptyLabel="Rejected" />
+                        ) : (
+                          <TimestampCell iso={agent.account_activated_at ?? null} />
+                        )}
                         <td
                           className="px-3 py-3 align-top text-xs text-zinc-600"
                           title={
@@ -2172,11 +2107,6 @@ export default function AdminApprovals() {
                             <span className="text-zinc-400">Never</span>
                           )}
                         </td>
-                        <YesNoCell
-                          yes={activated}
-                          iso={agent.account_activated_at ?? agent.last_sign_in_at ?? null}
-                        />
-                        <YesNoCell yes={profileDone} />
                         <td className="px-3 py-3 align-top">
                           {isOnline ? (
                             <span className="inline-flex items-center gap-1 text-emerald-700">
@@ -2217,7 +2147,7 @@ export default function AdminApprovals() {
                                 View details
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
-                              {derived === "invited" ? (
+                              {agent.agent_status === "invited" ? (
                                 <>
                                   <DropdownMenuItem
                                     disabled={resendingInviteFor.has(agent.id)}
@@ -2359,7 +2289,7 @@ export default function AdminApprovals() {
         open={!!detailsAgent}
         onOpenChange={(open) => !open && setDetailsAgent(null)}
         hasLicenseUpload={detailsAgent ? licenseUploadAgentIds.has(detailsAgent.id) : false}
-        isInvited={detailsAgent ? deriveAdminStatus(detailsAgent) === "invited" : false}
+        isInvited={detailsAgent ? detailsAgent.agent_status === "invited" : false}
         isProcessing={detailsAgent ? processingIds.has(detailsAgent.id) : false}
         isResendingInvite={detailsAgent ? resendingInviteFor.has(detailsAgent.id) : false}
         isSendingSetupLink={detailsAgent ? sendingSetupLinkFor.has(detailsAgent.id) : false}

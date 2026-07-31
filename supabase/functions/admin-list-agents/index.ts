@@ -51,6 +51,38 @@ interface MergedAgent {
   profile_complete?: boolean
   headshot_url?: string | null
   last_reminder?: { sent_at: string; template: string; status: string } | null
+  // Lifecycle (server-authoritative). `requested_at` comes ONLY from
+  // pending_verifications.created_at — never from a profile/auth creation
+  // timestamp. null means "never submitted a request".
+  requested_at?: string | null
+  rejected_at?: string | null
+  lifecycle_status?: LifecycleStatus
+  ever_requested?: boolean
+  source?: 'profile' | 'early_access' | 'pending_verification'
+  pending_verification_id?: string
+}
+
+type LifecycleStatus = 'pending' | 'verified' | 'activated' | 'rejected'
+
+/**
+ * Lifecycle derivation — timestamps + explicit rejection only.
+ * Profile completeness, headshot, brokerage, preferences, email delivery,
+ * invitation state and last sign-in MUST NOT influence this.
+ *
+ * Historical `restricted` agent_status values are treated as blocked
+ * (grouped with rejected) so they can never masquerade as an active stage.
+ */
+function deriveLifecycleStatus(input: {
+  agent_status: string | null | undefined
+  verified_at: string | null | undefined
+  account_activated_at: string | null | undefined
+  explicitly_rejected: boolean
+}): LifecycleStatus {
+  const s = (input.agent_status || '').toLowerCase()
+  if (input.explicitly_rejected || s === 'rejected' || s === 'restricted') return 'rejected'
+  if (input.account_activated_at) return 'activated'
+  if (input.verified_at) return 'verified'
+  return 'pending'
 }
 
 interface EmailStatusInfo {
@@ -308,6 +340,94 @@ Deno.serve(async (req) => {
     // Combine both lists
     const allAgents = [...agents, ...earlyAccessAgents]
 
+    // ---- Lifecycle source of truth: pending_verifications (server-side) ----
+    // The browser must never query this table directly for lifecycle data.
+    // A failure here is surfaced explicitly; it is never silently rendered
+    // as "no request" / zero rows.
+    let pendingVerificationsError: string | null = null
+    const requestedByEmail = new Map<string, string>() // email -> earliest created_at
+    const rejectedByEmail = new Map<string, string | null>() // email -> rejected_at (may be null)
+
+    const { data: pvRows, error: pvError } = await adminClient
+      .from('pending_verifications')
+      .select(
+        'id, email, first_name, last_name, phone, company, license_number, license_state, status, processed, rejected_at, created_at, user_id, converted_user_id',
+      )
+      .order('created_at', { ascending: false })
+
+    if (pvError) {
+      console.error('[admin-list-agents] pending_verifications error:', pvError.message)
+      pendingVerificationsError = pvError.message || 'Failed to load access-request history'
+    } else {
+      for (const row of (pvRows ?? []) as any[]) {
+        const em = String(row.email ?? '').trim().toLowerCase()
+        if (!em) continue
+        const prev = requestedByEmail.get(em)
+        if (!prev || new Date(row.created_at).getTime() < new Date(prev).getTime()) {
+          requestedByEmail.set(em, row.created_at)
+        }
+        if (String(row.status ?? '').toLowerCase() === 'rejected') {
+          // rejected_at is the only acceptable rejection timestamp. When the
+          // column is null we keep null — never substitute updated_at.
+          if (!rejectedByEmail.has(em) || (row.rejected_at && !rejectedByEmail.get(em))) {
+            rejectedByEmail.set(em, row.rejected_at ?? null)
+          }
+        }
+      }
+
+      // Surface request rows that have no agent_profiles row yet — both
+      // actionable pending requests and rejected requests (so the Rejected
+      // bucket actually contains rejected request records).
+      const profileEmails = new Set(allAgents.map((a) => (a.email ?? '').trim().toLowerCase()))
+      for (const row of (pvRows ?? []) as any[]) {
+        const em = String(row.email ?? '').trim().toLowerCase()
+        if (!em || profileEmails.has(em)) continue
+        const status = String(row.status ?? '').toLowerCase()
+        const isRejected = status === 'rejected'
+        const isActionablePending =
+          status === 'pending' && row.processed !== true && !row.user_id && !row.converted_user_id
+        if (!isRejected && !isActionablePending) continue
+        profileEmails.add(em)
+        allAgents.push({
+          id: row.id,
+          aac_id: `REQ-${String(row.id).slice(0, 4).toUpperCase()}`,
+          first_name: row.first_name ?? '',
+          last_name: row.last_name ?? '',
+          email: row.email,
+          phone: row.phone ?? null,
+          company: row.company ?? null,
+          bio: null,
+          license_number: row.license_number ?? null,
+          license_state: row.license_state ?? null,
+          agent_status: isRejected ? 'rejected' : 'pending',
+          verified_at: null,
+          created_at: row.created_at,
+          has_auth_account: authEmails.has(em),
+          last_sign_in_at: lastSignInByEmail.get(em) ?? null,
+          account_activated_at: null,
+          profile_complete: false,
+          source: 'pending_verification',
+          pending_verification_id: row.id,
+        })
+      }
+    }
+
+    for (const a of allAgents) {
+      const em = (a.email ?? '').trim().toLowerCase()
+      const requestedAt = requestedByEmail.get(em) ?? null
+      const explicitlyRejected =
+        rejectedByEmail.has(em) || (a.agent_status ?? '').toLowerCase() === 'rejected'
+      a.requested_at = requestedAt
+      a.ever_requested = !!requestedAt
+      a.rejected_at = rejectedByEmail.get(em) ?? null
+      a.lifecycle_status = deriveLifecycleStatus({
+        agent_status: a.agent_status,
+        verified_at: a.verified_at,
+        account_activated_at: a.account_activated_at,
+        explicitly_rejected: explicitlyRejected,
+      })
+    }
+
     // Sort by "most recently became a real, usable agent" — max of
     // account_activated_at, verified_at, created_at. Keeps late activators
     // (e.g. verified weeks ago, activated today) at the top.
@@ -389,6 +509,12 @@ Deno.serve(async (req) => {
 
     console.log('[admin-list-agents] Combined status distribution:', allStatusCounts)
 
+    const lifecycleCounts = allAgents.reduce((acc, a) => {
+      const k = a.lifecycle_status ?? 'pending'
+      acc[k] = (acc[k] || 0) + 1
+      return acc
+    }, {} as Record<string, number>)
+
     return new Response(
       JSON.stringify({
         agents: allAgents,
@@ -396,6 +522,8 @@ Deno.serve(async (req) => {
         settingsCount: settings?.length ?? 0,
         earlyAccessCount: earlyAccessAgents.length,
         statusDistribution: allStatusCounts,
+        lifecycleCounts,
+        pendingVerificationsError,
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
