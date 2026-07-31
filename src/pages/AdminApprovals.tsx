@@ -417,17 +417,6 @@ export default function AdminApprovals() {
     stateCount: null,
   });
   const [processingIds, setProcessingIds] = useState<Set<string>>(new Set());
-  const [pendingVerifications, setPendingVerifications] = useState<Array<{
-    id: string;
-    user_id: string;
-    email: string;
-    first_name: string;
-    last_name: string;
-    license_state: string | null;
-    license_number: string | null;
-    created_at: string;
-  }>>([]);
-  
   // Filters & Search - default to "pending" to show approval queue
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
