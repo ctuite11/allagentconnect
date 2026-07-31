@@ -4998,6 +4998,7 @@ export type Database = {
         Returns: boolean
       }
       is_account_owner: { Args: never; Returns: boolean }
+      is_api_request: { Args: never; Returns: boolean }
       is_buyer_represented_by_other_agent: {
         Args: {
           p_email: string
