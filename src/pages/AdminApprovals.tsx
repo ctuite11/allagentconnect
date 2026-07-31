@@ -45,6 +45,7 @@ import { DeleteAgentDialog } from "@/components/admin/DeleteAgentDialog";
 import { BulkDeleteAgentsDialog } from "@/components/admin/BulkDeleteAgentsDialog";
 import { EmailAgentDialog } from "@/components/admin/EmailAgentDialog";
 import { CreateAgentDialog } from "@/components/admin/CreateAgentDialog";
+import { SetTempPasswordDialog } from "@/components/admin/SetTempPasswordDialog";
 import { AgentDetailsDrawer } from "@/components/admin/AgentDetailsDrawer";
 import {
   PreviouslyDeletedAgentDialog,
@@ -445,6 +446,7 @@ export default function AdminApprovals() {
   const [deleteAgent, setDeleteAgent] = useState<Agent | null>(null);
   const [emailRecipients, setEmailRecipients] = useState<Array<{ id: string; email: string; name: string }>>([]);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showTempPasswordDialog, setShowTempPasswordDialog] = useState(false);
   const [showBulkDeleteDialog, setShowBulkDeleteDialog] = useState(false);
   // The details drawer is driven by the `?agent=<id>` search param so that
   // opening a card pushes a history entry. Browser Back then simply closes
@@ -1703,6 +1705,14 @@ export default function AdminApprovals() {
             >
               <UserPlus className="h-4 w-4 mr-2" />
               Create Agent
+            </Button>
+            <Button
+              onClick={() => setShowTempPasswordDialog(true)}
+              size="sm"
+              variant="outline"
+              className="w-full justify-start border-slate-300 text-slate-700 hover:bg-slate-100 sm:w-auto sm:justify-center"
+            >
+              Set temp password
             </Button>
             <Button 
               variant="ghost" 
