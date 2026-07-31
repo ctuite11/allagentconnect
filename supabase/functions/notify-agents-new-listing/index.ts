@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { renderHotSheetMatchListingEmailCard } from "../_shared/listingEmailCard.ts";
+import { renderAgentHotSheetListingEmailCard } from "../_shared/listingEmailCard.ts";
+import { enrichListingsWithListingAgentContact } from "../_shared/enrichListingsWithListingAgentContact.ts";
 import { resolveEmailBaseUrl } from "../_shared/aacPublicUrl.ts";
 import {
   getVerifiedAgentAudience,
@@ -215,7 +216,10 @@ serve(async (req) => {
         Deno.env.get("APP_BASE_URL") ||
         Deno.env.get("SITE_URL"),
     );
-    const listingCardHtml = renderHotSheetMatchListingEmailCard(listing, { baseUrl });
+    const [enrichedListing] = await enrichListingsWithListingAgentContact(admin, [listing]);
+    const listingCardHtml = renderAgentHotSheetListingEmailCard(enrichedListing ?? listing, {
+      baseUrl,
+    });
 
     let enqueuedReal = 0;
     let skippedDup = 0;

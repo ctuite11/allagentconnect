@@ -23,7 +23,39 @@ import {
 import { resolveEmailPhotoUrl, rewriteEmailImageUrl } from "./listingPhotoUrl.ts";
 
 const AAC_PRIMARY_BLUE = "#0E56F5";
-const AAC_EMERALD = "#22C55E";
+/** AAC email CTA green (matches buildAacEmail). */
+const AAC_CTA_GREEN = "#50c878";
+
+/** Email-safe AAC-blue icons (inline SVG data URIs — no external fetch / wrong blue). */
+function aacIconDataUri(svgBody: string): string {
+  const svg =
+    `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${AAC_PRIMARY_BLUE}" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round">${svgBody}</svg>`;
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+}
+
+const ICON_BED_SRC = aacIconDataUri(
+  `<path d="M2 4v16"/><path d="M2 8h18a2 2 0 0 1 2 2v10"/><path d="M2 17h20"/><path d="M6 8v9"/>`,
+);
+const ICON_BATH_SRC = aacIconDataUri(
+  `<path d="M9 6 6.5 3.5a1.5 1.5 0 0 0-1-.5C4.683 3 4 3.683 4 4.5V17a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5"/><line x1="10" x2="8" y1="5" y2="7"/><line x1="2" x2="22" y1="12" y2="12"/><line x1="7" x2="7" y1="19" y2="21"/><line x1="17" x2="17" y1="19" y2="21"/>`,
+);
+const ICON_SQFT_SRC = aacIconDataUri(
+  `<path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>`,
+);
+const ICON_MAIL_SRC = aacIconDataUri(
+  `<rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>`,
+);
+const ICON_PHONE_SRC = aacIconDataUri(
+  `<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>`,
+);
+
+function emailIconImg(alt: string): string {
+  return `<img src="${ICON_MAIL_SRC}" width="14" height="14" alt="${alt}" style="display:inline-block;width:14px;height:14px;vertical-align:-2px;margin-right:5px;border:0;outline:none;" />`;
+}
+
+function phoneIconImg(alt: string): string {
+  return `<img src="${ICON_PHONE_SRC}" width="14" height="14" alt="${alt}" style="display:inline-block;width:14px;height:14px;vertical-align:-2px;margin-right:5px;border:0;outline:none;" />`;
+}
 
 function escapeHtml(value: unknown): string {
   return String(value ?? "")
@@ -158,6 +190,11 @@ export interface RenderListingEmailCardOptions {
   ctaLabel?: string;
   /** AAC green accent button (#50c878) instead of primary blue. */
   greenCta?: boolean;
+  /**
+   * When true, show listing agent name + clickable mailto under the stats.
+   * Intended for agent-only hot sheet / new-listing emails.
+   */
+  showListingAgentContact?: boolean;
 }
 
 function formatPropertyTypeLabel(raw: unknown): string {
@@ -224,16 +261,138 @@ function renderStatusBanner(status: unknown): string {
 
 function renderStatsRow(listing: any): string {
   const parts: string[] = [];
-  const bedIcon = `<span style="color:${AAC_PRIMARY_BLUE};font-weight:700;font-size:13px;margin-right:4px;">&#9670;</span>`;
-  const bathIcon = `<span style="color:${AAC_PRIMARY_BLUE};font-weight:700;font-size:13px;margin-right:4px;">&#9670;</span>`;
-  const sqftIcon = `<span style="color:${AAC_PRIMARY_BLUE};font-weight:700;font-size:13px;margin-right:4px;">&#9670;</span>`;
-  if (listing.bedrooms != null) parts.push(`${bedIcon}<span style="color:#171717;font-weight:600;">${escapeHtml(String(listing.bedrooms))}</span> <span style="color:${AAC_PRIMARY_BLUE};font-weight:600;">bd</span>`);
-  if (listing.bathrooms != null) parts.push(`${bathIcon}<span style="color:#171717;font-weight:600;">${escapeHtml(String(listing.bathrooms))}</span> <span style="color:${AAC_PRIMARY_BLUE};font-weight:600;">ba</span>`);
+  const icon = (src: string, alt: string) =>
+    `<img src="${src}" width="14" height="14" alt="${alt}" style="display:inline-block;width:14px;height:14px;vertical-align:-2px;margin-right:4px;border:0;outline:none;" />`;
+  const bedIcon = icon(ICON_BED_SRC, "Beds");
+  const bathIcon = icon(ICON_BATH_SRC, "Baths");
+  const sqftIcon = icon(ICON_SQFT_SRC, "Sq ft");
+  if (listing.bedrooms != null) {
+    parts.push(
+      `${bedIcon}<span style="color:#171717;font-weight:600;">${escapeHtml(String(listing.bedrooms))}</span>`,
+    );
+  }
+  if (listing.bathrooms != null) {
+    parts.push(
+      `${bathIcon}<span style="color:#171717;font-weight:600;">${escapeHtml(String(listing.bathrooms))}</span>`,
+    );
+  }
   const sqft = listing.square_feet ?? listing.squareFeet;
-  if (sqft) parts.push(`${sqftIcon}<span style="color:#171717;font-weight:600;">${escapeHtml(Number(sqft).toLocaleString())}</span> <span style="color:${AAC_PRIMARY_BLUE};font-weight:600;">sqft</span>`);
+  if (sqft) {
+    parts.push(
+      `${sqftIcon}<span style="color:#171717;font-weight:600;">${escapeHtml(Number(sqft).toLocaleString())}</span>`,
+    );
+  }
   if (!parts.length) return "";
   const separator = '<span style="color:#d4d4d4;padding:0 10px;">\u00b7</span>';
   return `<p style="margin:10px 0 0;font-size:14px;line-height:1.4;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${parts.join(separator)}</p>`;
+}
+
+function pickListingAgentName(listing: any): string {
+  for (const key of ["listing_agent_name", "agent_name"]) {
+    const v = listing?.[key];
+    if (v != null && String(v).trim()) return String(v).trim();
+  }
+  return "";
+}
+
+function pickListingAgentEmail(listing: any): string {
+  for (const key of ["listing_agent_email", "agent_email"]) {
+    const v = listing?.[key];
+    if (v != null && String(v).trim()) return String(v).trim();
+  }
+  return "";
+}
+
+function pickListingAgentPhone(listing: any): string {
+  for (const key of ["listing_agent_phone", "agent_phone", "cell_phone", "phone"]) {
+    const v = listing?.[key];
+    if (v != null && String(v).trim()) return String(v).trim();
+  }
+  return "";
+}
+
+function formatListingAgentPhoneDisplay(raw: string): string {
+  const digits = raw.replace(/\D/g, "");
+  if (digits.length === 11 && digits.startsWith("1")) {
+    return `(${digits.slice(1, 4)}) ${digits.slice(4, 7)}-${digits.slice(7)}`;
+  }
+  if (digits.length === 10) {
+    return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+  }
+  return raw.trim();
+}
+
+function formatListingAgentPhoneTelHref(raw: string): string {
+  const digits = raw.replace(/[^\d+]/g, "");
+  if (!digits) return "";
+  if (digits.startsWith("+")) return `tel:${digits}`;
+  if (digits.length === 11 && digits.startsWith("1")) return `tel:+${digits}`;
+  if (digits.length === 10) return `tel:+1${digits}`;
+  return `tel:${digits}`;
+}
+
+/**
+ * Listing agent name + AAC-blue mail/phone icons with clickable mailto/tel.
+ * Agent-facing hot sheet / new-listing emails only.
+ */
+function renderListingAgentContactRow(listing: any): string {
+  const name = pickListingAgentName(listing);
+  const email = pickListingAgentEmail(listing);
+  const phone = pickListingAgentPhone(listing);
+  if (!name && !email && !phone) return "";
+
+  const nameHtml = name
+    ? `<div style="margin:0 0 6px;font-size:13px;line-height:1.4;color:#171717;font-weight:600;">${escapeHtml(name)}</div>`
+    : `<div style="margin:0 0 6px;font-size:12px;line-height:1.4;color:#737373;font-weight:600;">Listing agent</div>`;
+
+  const rows: string[] = [];
+  if (email) {
+    rows.push(
+      `<tr><td style="padding:0 0 4px;font-size:13px;line-height:1.4;">
+        <a href="mailto:${escapeHtml(email)}" style="color:${AAC_PRIMARY_BLUE};text-decoration:none;font-weight:600;">
+          ${emailIconImg("Email")}<span style="text-decoration:underline;">${escapeHtml(email)}</span>
+        </a>
+      </td></tr>`,
+    );
+  }
+  if (phone) {
+    const display = formatListingAgentPhoneDisplay(phone);
+    const tel = formatListingAgentPhoneTelHref(phone);
+    rows.push(
+      `<tr><td style="padding:0;font-size:13px;line-height:1.4;">
+        <a href="${escapeHtml(tel)}" style="color:${AAC_PRIMARY_BLUE};text-decoration:none;font-weight:600;">
+          ${phoneIconImg("Phone")}<span style="text-decoration:underline;">${escapeHtml(display)}</span>
+        </a>
+      </td></tr>`,
+    );
+  }
+
+  return `
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:12px 0 0;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
+      <tr>
+        <td style="padding:10px 12px;background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;">
+          ${nameHtml}
+          ${rows.length ? `<table role="presentation" cellpadding="0" cellspacing="0" border="0">${rows.join("")}</table>` : ""}
+        </td>
+      </tr>
+    </table>`;
+}
+
+function renderListingCta(
+  listingUrl: string,
+  opts: RenderListingEmailCardOptions,
+): string {
+  if (!listingUrl) return "";
+  const label = (opts.ctaLabel || "View listing").trim() || "View listing";
+  const bg = opts.greenCta ? AAC_CTA_GREEN : AAC_PRIMARY_BLUE;
+  return `
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:14px 0 0;">
+      <tr>
+        <td align="left">
+          <a href="${escapeHtml(listingUrl)}" style="display:inline-block;background:${bg};color:#ffffff;text-decoration:none;font-size:14px;font-weight:600;padding:10px 18px;border-radius:8px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${escapeHtml(label)}</a>
+        </td>
+      </tr>
+    </table>`;
 }
 
 /** Canonical email listing card mirroring the in-app SearchListingCard. */
@@ -312,6 +471,13 @@ export function renderSearchStyleListingEmailCard(
        </table>`
     : "";
 
+  const agentContactHtml = opts.showListingAgentContact
+    ? renderListingAgentContactRow(listing)
+    : "";
+  const ctaHtml = opts.ctaLabel || opts.greenCta
+    ? renderListingCta(listingUrl, opts)
+    : "";
+
   return `
     <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 18px;border:1px solid #e5e7eb;border-radius:14px;overflow:hidden;background:#ffffff;box-shadow:0 1px 3px rgba(17,24,39,0.06);">
       ${statusBanner}
@@ -328,6 +494,8 @@ export function renderSearchStyleListingEmailCard(
           ${propertyTypeRow}
           ${addressRow}
           ${statsHtml}
+          ${agentContactHtml}
+          ${ctaHtml}
           ${footerRow}
         </td>
       </tr>
@@ -411,6 +579,13 @@ export function renderCompactListingEmailCard(
        </table>`
     : "";
 
+  const agentContactHtml = opts.showListingAgentContact
+    ? renderListingAgentContactRow(listing)
+    : "";
+  const ctaHtml = opts.ctaLabel || opts.greenCta
+    ? renderListingCta(listingUrl, opts)
+    : "";
+
   return `
     <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 12px;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;background:#ffffff;box-shadow:0 1px 3px rgba(17,24,39,0.06);">
       ${statusBanner}
@@ -426,6 +601,8 @@ export function renderCompactListingEmailCard(
           ${propertyTypeRow}
           ${addressRow}
           ${statsHtml}
+          ${agentContactHtml}
+          ${ctaHtml}
           ${footerRow}
         </td>
       </tr>
@@ -442,7 +619,27 @@ export function renderHotSheetMatchListingEmailCard(
   return renderCompactListingEmailCard(listing, {
     baseUrl,
     listingUrl: id ? `${baseUrl}/consumer-property/${id}` : "",
-    ctaLabel: "View Listing",
+    ctaLabel: "View listing",
     greenCta: true,
+  });
+}
+
+/**
+ * Agent-only Hot Sheet / new-listing alert card.
+ * Uses agent property URLs and shows listing agent name + clickable email.
+ */
+export function renderAgentHotSheetListingEmailCard(
+  listing: any,
+  opts: { baseUrl: string },
+): string {
+  const baseUrl = opts.baseUrl.replace(/\/$/, "");
+  const id = listing?.id ? String(listing.id) : "";
+  return renderCompactListingEmailCard(listing, {
+    baseUrl,
+    listingUrl: id ? `${baseUrl}/property/${id}` : "",
+    ctaLabel: "View listing",
+    // Agent emails use AAC primary blue CTA (not emerald).
+    greenCta: false,
+    showListingAgentContact: true,
   });
 }

@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { renderHotSheetMatchListingEmailCard } from "../_shared/listingEmailCard.ts";
+import { renderAgentHotSheetListingEmailCard, renderHotSheetMatchListingEmailCard } from "../_shared/listingEmailCard.ts";
+import { enrichListingsWithListingAgentContact } from "../_shared/enrichListingsWithListingAgentContact.ts";
 import { resolveEmailBaseUrl } from "../_shared/aacPublicUrl.ts";
 import { getHotSheetStatusCopy, normalizeStatusKey, type HotSheetStatusKey } from "../_shared/hotSheetStatusCopy.ts";
 
@@ -118,12 +119,19 @@ serve(async (req) => {
           Deno.env.get("SITE_URL"),
       );
 
-      const renderCards = (items: any[]) =>
+      const renderBuyerCards = (items: any[]) =>
         items
           .map((listing: any) => renderHotSheetMatchListingEmailCard(listing, { baseUrl: appBaseUrl }))
           .join("");
 
-      const newMatchListingsHtml = renderCards(newMatchListings);
+      const renderAgentCards = async (items: any[]) => {
+        const enriched = await enrichListingsWithListingAgentContact(supabase, items);
+        return enriched
+          .map((listing: any) => renderAgentHotSheetListingEmailCard(listing, { baseUrl: appBaseUrl }))
+          .join("");
+      };
+
+      const newMatchListingsHtml = renderBuyerCards(newMatchListings);
 
       // Group status-change listings by normalized current status so each
       // transition type sends its own tailored email.
@@ -188,7 +196,7 @@ serve(async (req) => {
                   userName: agentName,
                   hotSheetName: hotSheet.name,
                   matchCount: agentNew.length,
-                  listingsHtml: renderCards(agentNew),
+                  listingsHtml: await renderAgentCards(agentNew),
                   hotSheetLink: `${appBaseUrl}/hot-sheets/${hotSheet.id}/review`,
                 },
               },
@@ -219,7 +227,7 @@ serve(async (req) => {
                   hotSheetName: hotSheet.name,
                   statusKey,
                   matchCount: agentGroup.length,
-                  listingsHtml: renderCards(agentGroup),
+                  listingsHtml: await renderAgentCards(agentGroup),
                   hotSheetLink: `${appBaseUrl}/hot-sheets/${hotSheet.id}/review`,
                 },
               },
@@ -324,7 +332,7 @@ serve(async (req) => {
         const recipientNew = filterInitial(newMatchListings);
 
         if (recipientNew.length > 0) {
-          const html = recipientNew === newMatchListings ? newMatchListingsHtml : renderCards(recipientNew);
+          const html = recipientNew === newMatchListings ? newMatchListingsHtml : renderBuyerCards(recipientNew);
           const { error: insertError } = await supabase.from("email_jobs").insert({
             payload: {
               provider: "resend",
@@ -360,7 +368,7 @@ serve(async (req) => {
             .sort()
             .join(",");
           const dedupeKey = `hs:${(recipient.clientId || recipient.email)}:hs:${hotSheet.id}:status:${statusKey}:${sortedIds}`;
-          const html = renderCards(recipientGroup);
+          const html = renderBuyerCards(recipientGroup);
           const { error: insertError } = await supabase.from("email_jobs").insert({
             idempotency_key: dedupeKey,
             payload: {
@@ -438,7 +446,7 @@ serve(async (req) => {
               .sort()
               .join(",");
             const dedupeKey = `hss:${sub.id}:hs:${hotSheet.id}:status:${statusKey}:${sortedIds}`;
-            const html = renderCards(groupListings);
+            const html = renderBuyerCards(groupListings);
             const { error } = await supabase.from("email_jobs").insert({
               idempotency_key: dedupeKey,
               payload: {
