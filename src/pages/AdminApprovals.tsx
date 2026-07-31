@@ -316,6 +316,26 @@ function YesNoCell({
               : "inline-flex w-fit items-center rounded-full bg-zinc-100 px-2 py-0.5 text-[11px] font-medium text-zinc-500"
           }
         >
+  yes,
+  iso,
+  extra,
+  title,
+}: {
+  yes: boolean;
+  iso?: string | null;
+  extra?: string | null;
+  title?: string;
+}) {
+  return (
+    <td className="px-3 py-3 align-top" title={title}>
+      <div className="flex flex-col">
+        <span
+          className={
+            yes
+              ? "inline-flex w-fit items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700 ring-1 ring-emerald-200"
+              : "inline-flex w-fit items-center rounded-full bg-zinc-100 px-2 py-0.5 text-[11px] font-medium text-zinc-500"
+          }
+        >
           {yes ? "Yes" : "No"}
         </span>
         {yes && (iso || extra) && (
