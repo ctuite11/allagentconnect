@@ -431,6 +431,9 @@ export default function AdminApprovals() {
   // Filters & Search - default to "pending" to show approval queue
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
+  // Explicit failure signal for pending_verifications (lifecycle history).
+  // A load failure must never render as "no request" / zero rows.
+  const [lifecycleDataError, setLifecycleDataError] = useState<string | null>(null);
   
   // Sorting
   const [sortField, setSortField] = useState<SortField>("created_at");
