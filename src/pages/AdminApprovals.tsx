@@ -573,7 +573,19 @@ export default function AdminApprovals() {
         return;
       }
 
-      const { agents: agentList, profilesCount, settingsCount, statusDistribution } = data;
+      const {
+        agents: agentList,
+        profilesCount,
+        settingsCount,
+        statusDistribution,
+        pendingVerificationsError,
+      } = data as {
+        agents?: Agent[];
+        profilesCount?: number;
+        settingsCount?: number;
+        statusDistribution?: Record<string, number>;
+        pendingVerificationsError?: string | null;
+      };
 
       // DIAGNOSTIC: Log results
       console.log("[AdminApprovals] Edge function response:", {
