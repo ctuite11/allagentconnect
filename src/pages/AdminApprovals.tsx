@@ -2345,7 +2345,7 @@ export default function AdminApprovals() {
         open={!!detailsAgent}
         onOpenChange={(open) => !open && setDetailsAgent(null)}
         hasLicenseUpload={detailsAgent ? licenseUploadAgentIds.has(detailsAgent.id) : false}
-        isInvited={detailsAgent ? deriveAdminStatus(detailsAgent) === "invited" : false}
+        isInvited={detailsAgent ? detailsAgent.agent_status === "invited" : false}
         isProcessing={detailsAgent ? processingIds.has(detailsAgent.id) : false}
         isResendingInvite={detailsAgent ? resendingInviteFor.has(detailsAgent.id) : false}
         isSendingSetupLink={detailsAgent ? sendingSetupLinkFor.has(detailsAgent.id) : false}
