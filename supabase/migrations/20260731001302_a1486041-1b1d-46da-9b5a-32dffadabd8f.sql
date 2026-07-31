@@ -1,0 +1,1 @@
+DROP TABLE IF EXISTS public._tmp_lifecycle_test_results;
