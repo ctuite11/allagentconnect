@@ -2042,10 +2042,7 @@ export default function AdminApprovals() {
                         </td>
                         <td className="px-3 py-3 align-top">
                           <Pill
-                            label={
-                              ADMIN_STATUS_FILTER_OPTIONS.find((o) => o.value === derived)?.label ??
-                              derived
-                            }
+                            label={LIFECYCLE_LABELS[derived]}
                             variant={variantForStatus(derived)}
                           />
                         </td>
