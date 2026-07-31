@@ -122,6 +122,14 @@ interface Agent {
   // Requested Access doesn't flip back to No after verification.
   ever_requested?: boolean;
   requested_access_at?: string | null;
+  /**
+   * Lifecycle fields — server-authoritative (admin-list-agents).
+   * `requested_at` comes ONLY from pending_verifications.created_at.
+   * A profile/auth creation timestamp is never used as a request time.
+   */
+  requested_at?: string | null;
+  rejected_at?: string | null;
+  lifecycle_status?: AdminDerivedStatus;
   // Phase 3: identifies where this row originated so Verify/Reject can
   // branch. Absent = legacy profile row (default behaviour).
   source?: "profile" | "early_access" | "pending_verification";
