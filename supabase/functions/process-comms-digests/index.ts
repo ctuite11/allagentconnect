@@ -5,6 +5,7 @@ import {
   digestWindowsOpen,
   type DigestCadence,
 } from "../_shared/commsDigest.ts";
+import { assertCommsEnqueueAllowed } from "../_shared/emailStreams.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -32,6 +33,18 @@ serve(async (req) => {
   }
 
   try {
+    const pauseGate = assertCommsEnqueueAllowed();
+    if (pauseGate.paused) {
+      return new Response(
+        JSON.stringify({
+          paused: true,
+          switch: pauseGate.switch,
+          reason: pauseGate.reason,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
@@ -214,6 +227,7 @@ async function processAgentDigest(
   const { data: jobRows, error: jobErr } = await supabase
     .from("email_jobs")
     .insert({
+      stream: "communications",
       idempotency_key: idempotencyKey,
       payload: {
         provider: "resend",

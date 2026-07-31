@@ -57,6 +57,7 @@ const handler = async (req: Request): Promise<Response> => {
       : "";
 
     const { error: insertError } = await supabase.from("email_jobs").insert({
+      stream: "transactional",
       payload: {
         provider: "resend",
         template: "team-invite",
@@ -100,4 +101,4 @@ const handler = async (req: Request): Promise<Response> => {
   }
 };
 
-serve(handler);
+serve(handler);}

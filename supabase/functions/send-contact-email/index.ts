@@ -161,6 +161,7 @@ ${senderPhone ? `<p><strong>Phone:</strong> ${escapeHtml(senderPhone)}</p>` : ""
     const { data: jobRow, error: enqueueError } = await admin
       .from("email_jobs")
       .insert({
+        stream: "transactional",
         payload: {
           provider: "resend",
           template: "listing-contact-inquiry",

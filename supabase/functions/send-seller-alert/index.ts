@@ -11,6 +11,7 @@ import {
   countExistingReminders,
   reserveAndEnqueueMissingOpportunityReminder,
 } from "../_shared/missingOpportunitiesEmail.ts";
+import { assertCommsEnqueueAllowed } from "../_shared/emailStreams.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -27,6 +28,18 @@ serve(async (req: Request) => {
     return new Response(null, { headers: corsHeaders });
   }
   try {
+    const pauseGate = assertCommsEnqueueAllowed();
+    if (pauseGate.paused) {
+      return new Response(
+        JSON.stringify({
+          paused: true,
+          switch: pauseGate.switch,
+          reason: pauseGate.reason,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
@@ -200,6 +213,7 @@ serve(async (req: Request) => {
           : "Email";
 
       emailJobs.push({
+        stream: "communications",
         idempotency_key: `seller-alert:${submission_id}:${r.agent_id}`,
         payload: {
           provider: "resend",

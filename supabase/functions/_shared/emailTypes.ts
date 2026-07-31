@@ -1,3 +1,9 @@
+export type EmailStream =
+  | "hot_sheet"
+  | "communications"
+  | "transactional"
+  | "system";
+
 export interface EmailJob {
   id: string;
   created_at: string;
@@ -6,6 +12,8 @@ export interface EmailJob {
   attempts: number;
   max_attempts: number;
   last_error: string | null;
+  /** Immutable queue stream set at enqueue. */
+  stream?: EmailStream | string | null;
   payload: {
     provider: string;
     template: string;
@@ -14,6 +22,8 @@ export interface EmailJob {
     html?: string;
     reply_to?: string;
     from?: string;
+    category?: string;
+    metadata?: Record<string, unknown>;
     variables?: Record<string, any>;
   };
 }

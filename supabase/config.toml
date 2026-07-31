@@ -155,12 +155,11 @@ verify_jwt = false
 [functions.email-unsubscribe]
 verify_jwt = false
 
-[functions.accept-client-hot-sheet-invite]
-verify_jwt = false
-
-[functions.send-hot-sheet-preview-blast]
-verify_jwt = false
-
 [functions.process-comms-digests]
 verify_jwt = false
 
+[functions.dry-run-hot-sheet-listing]
+verify_jwt = false
+
+[functions.dry-run-comms-broadcast]
+verify_jwt = false

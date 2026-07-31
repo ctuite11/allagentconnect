@@ -110,6 +110,7 @@ serve(async (req) => {
     }
 
     const { error: insertErr } = await admin.from("email_jobs").insert({
+      stream: "transactional",
       payload: {
         provider: "resend",
         template,

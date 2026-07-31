@@ -140,6 +140,7 @@ serve(async (req) => {
   const { error: emailErr } = await supabaseAdmin
     .from("email_jobs")
     .insert({
+      stream: "transactional",
       payload: {
         provider: "resend",
         template: "buyer-workspace-invite",

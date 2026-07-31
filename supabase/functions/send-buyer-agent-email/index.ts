@@ -175,6 +175,7 @@ serve(async (req) => {
     "Your client";
 
   const { error: jobErr } = await supabaseAdmin.from("email_jobs").insert({
+    stream: "transactional",
     payload: {
       provider: "resend",
       template: "client-agent-message",

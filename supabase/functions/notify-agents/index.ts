@@ -166,6 +166,7 @@ serve(async (req) => {
     let realEnqueued = 0;
     if (freshReal.length > 0) {
       const emailJobs = freshReal.map((a) => ({
+        stream: "communications" as const,
         idempotency_key: `client-need:${body.client_need_id}:${a.agent_id}`,
         payload: {
           provider: "resend",

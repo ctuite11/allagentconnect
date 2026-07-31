@@ -2,6 +2,13 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import type { EmailJob } from "../_shared/emailTypes.ts";
 import { sendEmail } from "../_shared/sendEmail.ts";
 import { UNSUPPORTED_TEMPLATE_ERROR_PREFIX } from "../_shared/renderEmailTemplate.ts";
+import {
+  assertJobSendable,
+  getClaimableStreams,
+  isGlobalEmailPaused,
+  attemptsAfterPauseRaceRequeue,
+  isPauseRaceBlock,
+} from "../_shared/emailStreams.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -38,14 +45,6 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
   if (req.method !== "POST") return json({ error: "Method not allowed" }, { status: 405 });
-
-  /* ---- GLOBAL KILL SWITCH ----
-   * Checked before any auth work, any email_jobs_claim call, and any provider call.
-   * Set the EMAIL_SENDING_PAUSED secret to "true" to freeze all outbound email. */
-  if ((Deno.env.get("EMAIL_SENDING_PAUSED") ?? "").trim().toLowerCase() === "true") {
-    console.log("[process-email-queue] EMAIL_SENDING_PAUSED=true — refusing to claim jobs");
-    return json({ paused: true, processed: 0 });
-  }
 
   const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
   const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
@@ -135,17 +134,52 @@ Deno.serve(async (req) => {
   };
 
   try {
+    // Channel-aware claim: never claim paused streams (avoids claim/return churn).
+    if (isGlobalEmailPaused()) {
+      console.log("[process-email-queue] EMAIL_SENDING_PAUSED — claiming nothing");
+      return json({
+        processed: 0,
+        sent: 0,
+        failed: 0,
+        retried: 0,
+        paused: true,
+        switch: "EMAIL_SENDING_PAUSED",
+        claimable_streams: [],
+      });
+    }
+
+    const claimableStreams = getClaimableStreams();
+    if (claimableStreams.length === 0) {
+      console.log("[process-email-queue] No claimable streams — claiming nothing");
+      return json({
+        processed: 0,
+        sent: 0,
+        failed: 0,
+        retried: 0,
+        paused: true,
+        claimable_streams: [],
+      });
+    }
+
     const { data: jobs, error: claimErr } = await supabase.rpc(
       "email_jobs_claim",
-      { p_limit: 50 },
+      { p_limit: 50, p_allowed_streams: claimableStreams },
     );
 
     if (claimErr) throw claimErr;
     if (!jobs || jobs.length === 0) {
-      return json({ processed: 0, sent: 0, failed: 0, retried: 0 });
+      return json({
+        processed: 0,
+        sent: 0,
+        failed: 0,
+        retried: 0,
+        claimable_streams: claimableStreams,
+      });
     }
 
-    console.log(`[process-email-queue] Claimed ${jobs.length} jobs`);
+    console.log(
+      `[process-email-queue] Claimed ${jobs.length} jobs from streams=[${claimableStreams.join(",")}]`,
+    );
 
     let sent = 0;
     let failed = 0;
@@ -196,6 +230,53 @@ Deno.serve(async (req) => {
             });
 
             failed++;
+            return;
+          }
+
+          // Fail-closed stream / pause gate immediately before send.
+          const sendGate = assertJobSendable(job as EmailJob & { stream?: string | null });
+          if (!sendGate.ok) {
+            if (isPauseRaceBlock(sendGate)) {
+              // Paused after claim (rare race with env flip). Put back and
+              // restore the claim attempt so pause races cannot exhaust
+              // max_attempts.
+              const runAfter = new Date(Date.now() + 15 * 60_000).toISOString();
+              const restoredAttempts = attemptsAfterPauseRaceRequeue(job.attempts);
+              await safeUpdateJob(
+                job.id,
+                {
+                  status: "queued",
+                  run_after: runAfter,
+                  last_error: sendGate.error,
+                  attempts: restoredAttempts,
+                },
+                { stage: "stream_paused_requeue" },
+              );
+              await logEvent(job.id, "stream_paused_requeue", {
+                error: sendGate.error,
+                reason: sendGate.reason,
+                attempts_restored_to: restoredAttempts,
+                template,
+                to,
+                duration_ms: Date.now() - startedAt,
+              });
+              skipped++;
+            } else {
+              // Terminal: retired / unknown template / stream mismatch.
+              await safeUpdateJob(
+                job.id,
+                { status: "failed", last_error: sendGate.error },
+                { stage: "stream_send_gate_blocked" },
+              );
+              await logEvent(job.id, "failed", {
+                error: sendGate.error,
+                reason: sendGate.reason,
+                template,
+                to,
+                duration_ms: Date.now() - startedAt,
+              });
+              failed++;
+            }
             return;
           }
 

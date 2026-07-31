@@ -63,6 +63,7 @@ const handler = async (req: Request): Promise<Response> => {
     const { error: insertError } = await supabaseAdmin
       .from("email_jobs")
       .insert({
+        stream: "transactional",
         idempotency_key: idempotencyKey,
         payload: {
           provider: "resend",

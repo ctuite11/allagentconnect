@@ -60,6 +60,7 @@ serve(async (req) => {
     `;
 
     const { error } = await supabase.from("email_jobs").insert({
+      stream: "transactional",
       payload: {
         provider: "resend",
         template: "team-request-notification",

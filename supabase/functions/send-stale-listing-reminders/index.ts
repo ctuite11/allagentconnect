@@ -145,6 +145,7 @@ const handler = async (req: Request): Promise<Response> => {
       ).padStart(2, "0")}`;
 
       const { error: enqueueError } = await admin.from("email_jobs").insert({
+        stream: "transactional",
         idempotency_key: idempotencyKey,
         payload: {
           provider: "resend",

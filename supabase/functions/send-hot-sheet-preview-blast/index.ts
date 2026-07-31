@@ -327,6 +327,7 @@ serve(async (req) => {
 
       const idempotencyKey = `${IDEMPOTENCY_PREFIX}test-${testEmail.replace(/[^a-z0-9@._-]/g, "-")}-${Date.now()}`;
       const { error: insertError } = await admin.from("email_jobs").insert({
+        stream: "hot_sheet",
         idempotency_key: idempotencyKey,
         payload: {
           provider: "resend",
@@ -437,6 +438,7 @@ serve(async (req) => {
 
       const idempotencyKey = `${IDEMPOTENCY_PREFIX}${recipient.agentId}`;
       const { error: insertError } = await admin.from("email_jobs").insert({
+        stream: "hot_sheet",
         idempotency_key: idempotencyKey,
         payload: {
           provider: "resend",

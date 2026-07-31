@@ -122,6 +122,7 @@ serve(async (req: Request): Promise<Response> => {
     const { data: inserted, error: insertError } = await admin
       .from("email_jobs")
       .insert({
+        stream: "transactional",
         idempotency_key: idempotencyKey,
         payload: {
           provider: "resend",

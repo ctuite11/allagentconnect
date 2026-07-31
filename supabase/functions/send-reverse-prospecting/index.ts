@@ -205,6 +205,7 @@ const handler = async (req: Request): Promise<Response> => {
       `;
 
       return {
+        stream: "communications" as const,
         payload: {
           provider: "resend",
           template: "reverse-prospecting",

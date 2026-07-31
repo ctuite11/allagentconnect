@@ -53,6 +53,7 @@ serve(async (req: Request): Promise<Response> => {
     const results: Array<{ email: string; success: boolean; error?: string }> = [];
     for (const email of recipients) {
       const { error } = await admin.from("email_jobs").insert({
+        stream: "transactional",
         payload: {
           provider: "resend",
           template: "personal-forward-invite",

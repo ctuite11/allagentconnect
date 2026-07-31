@@ -140,6 +140,7 @@ serve(async (req) => {
   const { data: jobRow, error: jobErr } = await supabaseAdmin
     .from("email_jobs")
     .insert({
+      stream: "transactional",
       payload: {
         provider: "resend",
         template: "client-agent-message",

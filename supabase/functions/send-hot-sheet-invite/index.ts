@@ -221,7 +221,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Build insert row — include idempotency_key if we have one
-    const insertRow: Record<string, unknown> = { payload: jobPayload };
+    const insertRow: Record<string, unknown> = { stream: "hot_sheet", payload: jobPayload };
     if (idempotencyKey) insertRow.idempotency_key = idempotencyKey;
 
     const { data: jobRow, error: insertError } = await supabase

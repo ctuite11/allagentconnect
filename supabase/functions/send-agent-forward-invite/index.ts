@@ -75,6 +75,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     for (const email of recipients) {
       const { error } = await admin.from("email_jobs").insert({
+        stream: "transactional",
         payload: {
           provider: "resend",
           template: "agent-forward-invite",
