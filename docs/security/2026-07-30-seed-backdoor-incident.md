@@ -185,6 +185,49 @@ only) exists for sensitive attachments. See
 
 ### 4. Queue wording (correction)
 Previous wording "queue drained" was ambiguous. Correct statement:
-**Auth-user deletion queue drained** (0 pending; 36 completed rows).
-**Email queue remains paused and untouched** — the queued backlog was not
-processed, retried, or modified, and `EMAIL_SENDING_PAUSED` remains true.
+**Auth-user deletion queue is empty: 0 pending, 36 completed.**
+
+**The email queue contains 391 queued jobs.** The previously existing jobs were
+not sent, retried, cancelled, or edited; two additional jobs were appended by
+normal application activity while the workers remained paused.
+`EMAIL_SENDING_PAUSED` remains true.
+
+### 5. Anonymous activation bypass (closure item, 2026-07-31)
+The first hardening pass classified `auth.uid() IS NULL` as privileged, which
+includes an anonymous PostgREST request (`role = anon`, no user). The lifecycle
+triggers shared the same unsafe assumption.
+
+Fixes:
+- `public.is_api_request()` distinguishes a PostgREST/GoTrue request (JWT claims
+  or `request.method` present) from a trusted direct-database session.
+- `mark_agent_activated()` now raises `42501 Authentication required` when
+  `role = anon`, or when there is no user and the role is not `service_role` on
+  an API request. Privilege is granted only to `service_role`, an authenticated
+  admin, or a verified direct-DB session — never to a null `auth.uid()` alone.
+- Function-local `app.lifecycle_bypass` allows only this function's own writes
+  past the lifecycle triggers.
+- `guard_agent_settings_lifecycle()` / `..._insert()` apply the same fail-closed
+  rule: anonymous API writes to lifecycle fields raise `42501`.
+- Grants: `REVOKE ALL ... FROM PUBLIC, anon;`
+  `GRANT EXECUTE ... TO authenticated, service_role;`
+
+Verified against the deployed database (state restored after each test):
+
+| Scenario | Result |
+| --- | --- |
+| No Authorization header → RPC | BLOCKED (42501) |
+| Anon key → RPC | BLOCKED (42501) |
+| Pending agent self-activate | BLOCKED |
+| Agent activates another agent | BLOCKED |
+| Verified agent self-activate (canonical setup) | PASS |
+| Invited agent completes setup flow | PASS |
+| Admin activates agent | PASS |
+| Service-role backend activation | PASS |
+| Anonymous lifecycle UPDATE on `agent_settings` | BLOCKED (42501) |
+| Anonymous lifecycle INSERT on `agent_settings` | BLOCKED (42501) |
+| Authenticated non-admin agent self-verify UPDATE | BLOCKED (42501) |
+| Execute grants | anon: no · PUBLIC: no · authenticated: yes · service_role: yes |
+
+### 6. Build guard de-duplication
+`security:guard` ran in both `prebuild` and `build`. The redundant `prebuild`
+entry was removed; `npm run build` still runs the guard first.
