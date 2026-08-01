@@ -18,33 +18,13 @@ const TEXT_DARK = "#0f172a";
 const TEXT_BODY = "#334155";
 const TEXT_MUTED = "#64748b";
 const BORDER = "#e5e7eb";
-const EMERALD_PANEL_BG = "#f0fdf6";
-const EMERALD_PANEL_BORDER = "#bbf7d0";
-/**
- * Authoritative current AAC brand mark.
- * Source of truth: src/components/ui/AACMonogram.tsx (command-style mark), which is
- * the mark rendered in the live production header lockup on https://allagentconnect.com
- * and in the authenticated app shell sidebar. This PNG is the already-deployed,
- * production-approved export of that mark used by every other AAC email template.
- * Do not replace with the deprecated house mark or any reconstructed geometry.
- */
-const BRAND_MARK_URL = "https://allagentconnect.com/email/aac-monogram-green-128.png";
+const MONOGRAM_URL = "https://allagentconnect.com/email/aac-monogram-green-128.png";
 
 const NEXT_STEPS = [
-  "Open the Comms Center to post needs, discover opportunities, and connect with verified agents.",
   "Complete your profile so other agents can find you.",
   "Add or import your listings.",
   "Start sharing listings and building buyer Hot Sheets.",
 ];
-
-/**
- * Current AAC brand mark, rendered at its native square proportions (no crop,
- * stretch, recolor, or redraw). Styled ALT text keeps the navy header legible in
- * Outlook and in any client that blocks images.
- */
-function renderBrandMark(size: number): string {
-  return `<img src="${BRAND_MARK_URL}" width="${size}" height="${size}" alt="All Agent Connect" style="display:block;margin:0 auto;border:0;outline:none;text-decoration:none;color:${EMERALD_ACCENT};font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;font-size:${Math.round(size * 0.42)}px;font-weight:700;line-height:${size}px;text-align:center;" />`;
-}
 
 function renderBullets(items: string[]): string {
   return items
@@ -158,8 +138,8 @@ export function buildLicenseVerifiedEmailHtml(opts: LicenseVerifiedEmailOptions)
       <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:600px;">
 
         <!-- Header -->
-        <tr><td align="center" bgcolor="${NAVY}" style="background-color:${NAVY};border-radius:14px 14px 0 0;padding:36px 40px 28px;">
-          ${renderBrandMark(40)}
+        <tr><td align="center" style="background-color:${NAVY};border-radius:14px 14px 0 0;padding:36px 40px 28px;">
+          <img src="${MONOGRAM_URL}" width="44" height="44" alt="All Agent Connect" style="display:block;margin:0 auto;border:0;outline:none;text-decoration:none;" />
           <p style="margin:14px 0 0;font-size:18px;font-weight:600;letter-spacing:-0.02em;color:#ffffff;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">All Agent Connect</p>
           <div style="width:48px;height:2px;background-color:${EMERALD_ACCENT};margin:18px auto 22px;border-radius:1px;"></div>
           <h1 style="margin:0 0 12px;font-size:26px;line-height:1.25;font-weight:700;letter-spacing:-0.02em;color:#ffffff;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Your license has been verified</h1>
@@ -170,15 +150,6 @@ export function buildLicenseVerifiedEmailHtml(opts: LicenseVerifiedEmailOptions)
         <tr><td style="background-color:#ffffff;border:1px solid ${BORDER};border-top:none;padding:36px 40px 8px;">
           <p style="margin:0 0 18px;font-size:16px;line-height:1.6;color:${TEXT_DARK};font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${greeting}</p>
           <p style="margin:0 0 24px;font-size:15px;line-height:1.65;color:${TEXT_BODY};font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">You now have full access to All Agent Connect — the professional platform built exclusively for licensed real estate agents. Log in to get started.</p>
-
-          <!-- Comms Center feature panel -->
-          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 26px;">
-            <tr><td bgcolor="${EMERALD_PANEL_BG}" style="background-color:${EMERALD_PANEL_BG};border:1px solid ${EMERALD_PANEL_BORDER};border-left:4px solid ${EMERALD_ACCENT};border-radius:10px;padding:20px 22px;">
-              <h2 style="margin:0 0 8px;font-size:17px;font-weight:700;letter-spacing:-0.01em;color:${TEXT_DARK};font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Start with the Comms Center</h2>
-              <p style="margin:0 0 10px;font-size:14.5px;line-height:1.6;color:${TEXT_BODY};font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Post buyer and seller needs, see opportunities shared by verified agents, and start direct conversations — all in one place.</p>
-              <p style="margin:0;font-size:13px;line-height:1.55;color:${TEXT_MUTED};font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Once your account is activated, the Comms Center is the fastest way to plug into the AAC network.</p>
-            </td></tr>
-          </table>
 
           <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 24px;">
             <tr><td style="padding:0 0 14px;">
@@ -206,8 +177,8 @@ export function buildLicenseVerifiedEmailHtml(opts: LicenseVerifiedEmailOptions)
         </td></tr>
 
         <!-- Footer -->
-        <tr><td align="center" bgcolor="${NAVY}" style="background-color:${NAVY};border-radius:0 0 14px 14px;padding:26px 40px 26px;">
-          ${footerAgent ? renderAgentFooter(footerAgent) : `<div style="margin:0 0 10px;">${renderBrandMark(24)}</div><p style="margin:0 0 4px;font-size:13px;font-weight:600;letter-spacing:0.02em;color:#ffffff;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">By Agents. For Agents. All Agents.</p><p style="margin:0;font-size:11px;color:rgba(255,255,255,0.55);font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">All Agent Connect</p>`}
+        <tr><td align="center" style="background-color:${NAVY};border-radius:0 0 14px 14px;padding:26px 40px 26px;">
+          ${footerAgent ? renderAgentFooter(footerAgent) : `<img src="${MONOGRAM_URL}" width="22" height="22" alt="" style="display:block;margin:0 auto 10px;border:0;outline:none;text-decoration:none;" /><p style="margin:0 0 4px;font-size:13px;font-weight:600;letter-spacing:0.02em;color:#ffffff;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">By Agents. For Agents. All Agents.</p><p style="margin:0;font-size:11px;color:rgba(255,255,255,0.55);font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">All Agent Connect</p>`}
         </td></tr>
 
       </table>
