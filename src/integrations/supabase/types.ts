@@ -4978,6 +4978,7 @@ export type Database = {
         Args: { _role: Database["public"]["Enums"]["app_role"] }
         Returns: undefined
       }
+      auth_user_exists_by_email: { Args: { p_email: string }; Returns: boolean }
       auto_activate_listings: { Args: never; Returns: undefined }
       build_activation_email_payload: {
         Args: {
