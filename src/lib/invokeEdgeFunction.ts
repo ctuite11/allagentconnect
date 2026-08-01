@@ -165,15 +165,30 @@ export async function invokeEdgeFunction<T = Record<string, unknown>>(
 
   const functionUrl = `${supabaseUrl}/functions/v1/${name}`;
 
-  const response = await fetch(functionUrl, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      apikey: anonKey,
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(body),
-  });
+  // Bounded request — a hung fetch leaves the caller with no toast and no
+  // spinner, which reads as "nothing happened".
+  const controller = new AbortController();
+  const abortTimer = setTimeout(() => controller.abort(), 30000);
+  let response: Response;
+  try {
+    response = await fetch(functionUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: anonKey,
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    });
+  } catch (err) {
+    if ((err as { name?: string })?.name === "AbortError") {
+      throw new Error("The request timed out. Check the result before retrying.");
+    }
+    throw err;
+  } finally {
+    clearTimeout(abortTimer);
+  }
 
   if (usedFallbackToken) {
     console.info(
