@@ -67,6 +67,20 @@
   path = "/api/auth/request-password-reset"
   function = "request-password-reset"
 
+# Activation: same-origin POST endpoints for the AAC-owned activation token.
+# The token travels in the POST body only — never a query string.
+[[redirects]]
+  from = "/api/activate-redeem"
+  to = "/.netlify/functions/activate-redeem"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/activate-resend"
+  to = "/.netlify/functions/activate-resend"
+  status = 200
+  force = true
+
 [[redirects]]
   from = "/api/send-pending-approval-email"
   to = "/.netlify/functions/send-pending-approval-email"

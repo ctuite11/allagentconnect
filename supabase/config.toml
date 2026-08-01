@@ -164,3 +164,9 @@ verify_jwt = false
 [functions.process-comms-digests]
 verify_jwt = false
 
+
+[functions.redeem-activation-token]
+verify_jwt = false
+
+[functions.resend-activation-link]
+verify_jwt = false

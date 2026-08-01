@@ -46,6 +46,10 @@ export interface LicenseVerifiedEmailOptions {
   preheader?: string;
   agentName?: string | null;
   footerAgent?: FooterAgent | null;
+  /** Overrides the CTA button label (activation flow uses "Activate My Account"). */
+  ctaLabel?: string;
+  /** Small line under the CTA, e.g. the activation link expiry. */
+  ctaNote?: string;
 }
 
 export interface FooterAgent {
@@ -111,6 +115,8 @@ function renderAgentFooter(agent: FooterAgent): string {
 
 export function buildLicenseVerifiedEmailHtml(opts: LicenseVerifiedEmailOptions): string {
   const { ctaUrl, footerAgent } = opts;
+  const ctaLabel = opts.ctaLabel?.trim() || "Log In to All Agent Connect";
+  const ctaNote = opts.ctaNote?.trim() || "Welcome to the network.";
   const preheader =
     opts.preheader ??
     "Your license has been verified. Your All Agent Connect account is ready.";
@@ -161,11 +167,11 @@ export function buildLicenseVerifiedEmailHtml(opts: LicenseVerifiedEmailOptions)
           <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:8px 0 4px;">
             <tr><td align="center" style="padding:8px 0 6px;">
               <table role="presentation" cellspacing="0" cellpadding="0"><tr><td align="center" bgcolor="${CTA_GREEN}" style="border-radius:10px;">
-                <a href="${ctaUrl}" target="_blank" style="display:inline-block;padding:15px 34px;background-color:${CTA_GREEN};color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;letter-spacing:0.01em;border-radius:10px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Log In to All Agent Connect</a>
+                <a href="${ctaUrl}" target="_blank" style="display:inline-block;padding:15px 34px;background-color:${CTA_GREEN};color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;letter-spacing:0.01em;border-radius:10px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${escapeHtml(ctaLabel)}</a>
               </td></tr></table>
             </td></tr>
             <tr><td align="center" style="padding:10px 0 44px;">
-              <p style="margin:0;font-size:12px;color:${TEXT_MUTED};font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Welcome to the network.</p>
+              <p style="margin:0;font-size:12px;color:${TEXT_MUTED};font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${escapeHtml(ctaNote)}</p>
             </td></tr>
           </table>
         </td></tr>

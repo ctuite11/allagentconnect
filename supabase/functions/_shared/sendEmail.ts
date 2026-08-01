@@ -76,9 +76,29 @@ function htmlToPlainText(html: string): string {
   return out.trim();
 }
 
+export interface SendEmailOptions {
+  /**
+   * Value for Resend's HTTP `Idempotency-Key` request header.
+   *
+   * Resend compares the serialized request body for a repeated key and
+   * retains the key for 24 hours; the same key with a DIFFERENT body is
+   * rejected as a conflict. Callers must therefore only supply a key when
+   * the rendered body is byte-stable across retries (see the activation
+   * flow, where the token is a reproducible HMAC).
+   *
+   * This is a real HTTP header on the provider request — NOT an entry in
+   * the email's `headers` object, which Resend would render into the
+   * outgoing MIME message instead of using for deduplication.
+   */
+  providerIdempotencyKey?: string;
+  /** Pre-rendered body supplied by the worker (late-rendered templates). */
+  htmlOverride?: string;
+}
+
 export async function sendEmail(
   job: EmailJob,
   resendApiKey: string,
+  options: SendEmailOptions = {},
 ): Promise<{ providerMessageId: string | null }> {
   const canonicalFrom = buildTransactionalFrom();
 
@@ -129,6 +149,12 @@ export async function sendEmail(
     };
   }
 
+  if (trackingEnabled && options.htmlOverride) {
+    // Tracking rewrites the body per attempt, which would break the
+    // byte-stability the provider idempotency key depends on.
+    throw new Error("htmlOverride cannot be combined with tracking injection");
+  }
+
   if (trackingEnabled) {
     const ctx: TrackingContext = {
       jobId: job.id,
@@ -139,6 +165,7 @@ export async function sendEmail(
     html = await injectTracking(rawHtml, ctx);
   } else {
     html =
+      options.htmlOverride ||
       job.payload.html ||
       renderEmailTemplate(job.payload.template, job.payload.variables || {});
   }
@@ -150,13 +177,9 @@ export async function sendEmail(
     extraHeaders = { ...payloadHeaders, ...extraHeaders };
   }
 
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${resendApiKey}`,
-    },
-    body: JSON.stringify({
+  // Serialize ONCE. The exact same string is replayed on every retry, which
+  // is what Resend's idempotency contract compares against.
+  const requestBody = JSON.stringify({
       // Always use canonical From — never honor payload.from (prevents notify/mail drift
       // and dynamic display-name overrides that damaged reputation).
       from: canonicalFrom,
@@ -166,7 +189,20 @@ export async function sendEmail(
       text: htmlToPlainText(html),
       reply_to: job.payload.reply_to,
       headers: Object.keys(extraHeaders).length ? extraHeaders : undefined,
-    }),
+  });
+
+  const requestHeaders: Record<string, string> = {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${resendApiKey}`,
+  };
+  if (options.providerIdempotencyKey) {
+    requestHeaders["Idempotency-Key"] = options.providerIdempotencyKey;
+  }
+
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: requestHeaders,
+    body: requestBody,
   });
 
   console.log(`[sendEmail] job=${job.id} template=${job.payload.template} from=${canonicalFrom} reply_to=${job.payload.reply_to ?? "(none)"}`);
