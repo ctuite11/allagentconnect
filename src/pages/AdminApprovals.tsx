@@ -776,13 +776,22 @@ export default function AdminApprovals() {
       return false;
     }
 
+    // Show immediate feedback before advisory checks/session preflight. Without
+    // this, Verify can look inert while those asynchronous checks are running.
+    const verifyToastId = newStatus === "verified"
+      ? toast.loading(`Verifying ${agent.email} and preparing the activation email…`)
+      : undefined;
+
     // Phase 4 guardrail — for every verify action, if this email was
     // previously deleted as an agent, require an explicit admin ack before
     // recreating the account and re-sending the License Verified email.
     // Rejection paths are unaffected — they never create or email anyone.
     if (newStatus === "verified" && !acknowledgeDeleted) {
       const proceed = await guardDeletedAgent(agent.email, "verify this agent");
-      if (!proceed) return false;
+      if (!proceed) {
+        if (verifyToastId) toast.dismiss(verifyToastId);
+        return false;
+      }
       acknowledgeDeleted = true;
     }
 
@@ -939,6 +948,7 @@ export default function AdminApprovals() {
       toast.error(error.message || "Failed to update status");
       return false;
     } finally {
+      if (verifyToastId) toast.dismiss(verifyToastId);
       setProcessingIds((prev) => {
         const newSet = new Set(prev);
         newSet.delete(agent.id);
@@ -2390,13 +2400,21 @@ export default function AdminApprovals() {
         isSendingSetupLink={detailsAgent ? sendingSetupLinkFor.has(detailsAgent.id) : false}
         onVerify={() => {
           if (!detailsAgent) return;
-          const risks = risksForAgent(detailsAgent);
-          if (hasRedFlag(risks) && detailsAgent.agent_status !== "verified") {
-            setConfirmText("");
-            setVerifyConfirm({ agent: detailsAgent, risks });
-          } else {
-            handleStatusChange(detailsAgent, "verified");
-          }
+          const agentToVerify = detailsAgent;
+          const risks = risksForAgent(agentToVerify);
+
+          // The details drawer and verification confirmation are both modal
+          // Radix layers. Close the drawer first so its focus trap cannot
+          // swallow the confirmation dialog/button interaction on mobile.
+          setDetailsAgent(null);
+          window.setTimeout(() => {
+            if (hasRedFlag(risks) && agentToVerify.agent_status !== "verified") {
+              setConfirmText("");
+              setVerifyConfirm({ agent: agentToVerify, risks });
+            } else {
+              void handleStatusChange(agentToVerify, "verified");
+            }
+          }, 0);
         }}
         onReject={() => detailsAgent && handleStatusChange(detailsAgent, "rejected")}
         onEdit={() => detailsAgent && setEditAgent(detailsAgent)}
