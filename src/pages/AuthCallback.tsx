@@ -89,6 +89,7 @@ const AuthCallback = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const didNavigate = useRef(false);
+  const routingInFlight = useRef(false);
   const [error, setError] = useState<string | null>(null);
   const [errorKind, setErrorKind] = useState<AuthCallbackErrorKind>("generic");
 
@@ -451,7 +452,9 @@ const AuthCallback = () => {
       // Final callback watchdog. This applies to PKCE query-code links and
       // recovery/setup links as well as legacy hash links.
       timeout = setTimeout(() => {
-        if (!didNavigate.current && !cancelled) {
+        // Never show a timeout error while post-login routing is still
+        // resolving — role resolution can legitimately take several seconds.
+        if (!didNavigate.current && !cancelled && !routingInFlight.current) {
           const setup = isAgentSetupContext(recoveryInfo.isSetup);
           showAuthError(
             setup
@@ -460,7 +463,7 @@ const AuthCallback = () => {
             setup ? "setup" : "generic",
           );
         }
-      }, 10000);
+      }, 20000);
 
       if (!hasAuthHash) {
         checkExistingSession();
@@ -479,7 +482,11 @@ const AuthCallback = () => {
   const resolveRoleWithRetries = async (verifiedUserId: string) => {
     const maxAttempts = 3;
     const retryDelayMs = 500;
-    let resolved = await resolveUserRole(verifiedUserId);
+    let resolved = await withCallbackTimeout(
+      resolveUserRole(verifiedUserId),
+      6000,
+      "resolveUserRole",
+    );
 
     if (import.meta.env.DEV) {
       console.info("[POST_LOGIN] resolveUserRole #1", {
@@ -491,7 +498,11 @@ const AuthCallback = () => {
 
     for (let attempt = 1; attempt < maxAttempts && resolved.role === "unknown"; attempt++) {
       await new Promise((r) => setTimeout(r, retryDelayMs));
-      resolved = await resolveUserRole(verifiedUserId);
+      resolved = await withCallbackTimeout(
+        resolveUserRole(verifiedUserId),
+        6000,
+        "resolveUserRole",
+      );
       if (import.meta.env.DEV) {
         console.info(`[POST_LOGIN] resolveUserRole #${attempt + 1} (retry)`, {
           userId: verifiedUserId,
@@ -506,6 +517,7 @@ const AuthCallback = () => {
 
   const routeUser = async (userId: string) => {
     if (didNavigate.current) return;
+    routingInFlight.current = true;
 
     try {
       authDebug("routeUser start", { userId });
@@ -562,7 +574,12 @@ const AuthCallback = () => {
 
       const returnToMeta = resolvePostAuthRedirectWithMeta(searchParams);
       const target = returnToMeta.value ?? getRouteForRole(resolved);
-      const diagnostics = await getAuthRouteDecisionDiagnostics(verifiedUserId);
+      // Diagnostics are best-effort only — never let them delay routing.
+      const diagnostics = await getAuthRouteDecisionDiagnostics(verifiedUserId).catch(() => ({
+        admin_role_present: null,
+        agent_role_present: null,
+        agent_status: null,
+      }) as Awaited<ReturnType<typeof getAuthRouteDecisionDiagnostics>>);
       // Visitor has now signed in — they're no longer a shared-listing guest.
       clearGuestListing();
 
