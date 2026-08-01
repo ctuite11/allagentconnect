@@ -32,6 +32,18 @@ const corsHeaders = {
 const ADMIN_NOTIFY_EMAIL = "chris@allagentconnect.com";
 const ADMIN_PANEL_URL = "https://allagentconnect.com/admin/approvals";
 
+async function withTimeout<T>(promise: PromiseLike<T>, ms: number): Promise<T> {
+  let timeoutId: number | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(() => reject(new Error("operation_timed_out")), ms);
+  });
+  try {
+    return await Promise.race([Promise.resolve(promise), timeout]);
+  } finally {
+    if (timeoutId !== undefined) clearTimeout(timeoutId);
+  }
+}
+
 const STATE_LICENSE_LOOKUP: Record<string, string> = {
   MA: "https://www.mass.gov/orgs/board-of-registration-of-real-estate-brokers-and-salespersons",
   CT: "https://www.elicense.ct.gov/",
@@ -203,26 +215,18 @@ export async function handleRequest(req: Request): Promise<Response> {
     auth: { autoRefreshToken: false, persistSession: false },
   });
 
-  // Step 4: confirmed auth user already exists?
-  //   listUsers() has no email filter — fall back to a direct auth schema query
-  //   via SQL isn't available, so use the admin.listUsers filter param on newer
-  //   supabase-js; if unsupported, we still safely detect via pending index +
-  //   downstream signup collision. Use email filter if available.
+  // Step 4: use an indexed server-side lookup. Scanning the complete auth user
+  // list made registration exceed the client's 20-second timeout.
   try {
-    // supabase-js v2 supports `.listUsers({ page, perPage })` but not email
-    // filter. Use the paginated search with a page size of 1 and email hint
-    // via generateLink — no, simplest: query auth.users via a security-definer
-    // RPC. We don't have that, so use admin.getUserByEmail if available.
-    // In supabase-js v2 the method is admin.getUserById; email lookup is
-    // performed by scanning listUsers. Cost is acceptable for a public form
-    // gate. Cap at first page (up to 1000).
-    const { data: usersPage, error: listErr } = await admin.auth.admin.listUsers({
-      page: 1,
-      perPage: 1000,
-    });
-    if (listErr) {
-      console.error("[submit-agent-verification-request] listUsers error:", listErr.message);
-    } else if (usersPage?.users?.some((u) => (u.email || "").toLowerCase() === email)) {
+    const { data: accountExists, error: lookupErr } = await withTimeout(
+      admin.rpc("auth_user_exists_by_email", { p_email: email }),
+      4000,
+    );
+    if (lookupErr) {
+      console.error("[submit-agent-verification-request] account lookup error:", lookupErr.message);
+      return json(503, { error: "Could not check account status. Please try again.", code: "lookup_failed" });
+    }
+    if (accountExists === true) {
       return json(200, {
         ok: false,
         code: "account_exists",
@@ -230,7 +234,8 @@ export async function handleRequest(req: Request): Promise<Response> {
       });
     }
   } catch (err) {
-    console.error("[submit-agent-verification-request] listUsers threw:", err);
+    console.error("[submit-agent-verification-request] account lookup threw:", err);
+    return json(503, { error: "Could not check account status. Please try again.", code: "lookup_failed" });
   }
 
   // Step 5+6: insert. Rely on the partial unique index on lower(email)
