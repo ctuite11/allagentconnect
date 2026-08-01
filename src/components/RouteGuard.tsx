@@ -4,6 +4,7 @@ import { useAuthRole } from "@/hooks/useAuthRole";
 import { LoadingScreen } from "./LoadingScreen";
 import { authDebug } from "@/lib/authDebug";
 import { setPostAuthRedirect } from "@/lib/sharedListingGuest";
+import { Button } from "@/components/ui/button";
 
 type AllowedRole = "agent" | "admin" | "buyer";
 
@@ -30,6 +31,19 @@ export const RouteGuard: React.FC<Props> = ({
 
   const [verificationChecked, setVerificationChecked] = useState(!shouldVerify);
   const [isVerified, setIsVerified] = useState(false);
+  const [stuck, setStuck] = useState(false);
+
+  // Last-resort escape hatch: if auth/role resolution never settles (stalled
+  // Supabase auth lock on mobile), show recovery actions instead of an
+  // infinite "Checking your session..." spinner.
+  useEffect(() => {
+    if (!loading) {
+      setStuck(false);
+      return;
+    }
+    const t = window.setTimeout(() => setStuck(true), 10000);
+    return () => window.clearTimeout(t);
+  }, [loading]);
 
   useEffect(() => {
     if (loading) return;
@@ -136,6 +150,21 @@ export const RouteGuard: React.FC<Props> = ({
   }, [loading, user, role, isAdmin, isVerifiedAgent, isDelegate, canAccessSuccessHub, requireAuth, requireRole, shouldVerify, location.pathname, navigate]);
 
   if (loading) {
+    if (stuck) {
+      return (
+        <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-white px-6 text-center">
+          <p className="text-sm text-muted-foreground">
+            We're having trouble confirming your session.
+          </p>
+          <div className="flex gap-2">
+            <Button onClick={() => window.location.reload()}>Reload</Button>
+            <Button variant="outline" onClick={() => window.location.assign("/auth?logout=1")}>
+              Sign in again
+            </Button>
+          </div>
+        </div>
+      );
+    }
     return <LoadingScreen message="Checking your session..." />;
   }
 

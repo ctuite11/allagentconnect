@@ -153,7 +153,7 @@ function useAuthRoleStore(): AuthRoleState {
         initialLoadDone.current = true;
         setLoading(false);
       }
-    }, 12000);
+    }, 7000);
 
     const {
       data: { subscription },
