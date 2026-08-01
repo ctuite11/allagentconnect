@@ -44,7 +44,17 @@ async function tryContinueRecoveryFlow(opts: {
   const { isRecoveryFromUrl, setupFromUrl, navigate, didNavigate } = opts;
   if (!isRecoveryFlowContext(isRecoveryFromUrl)) return false;
 
-  const { data: { session } } = await supabase.auth.getSession();
+  let session: Awaited<ReturnType<typeof supabase.auth.getSession>>["data"]["session"] = null;
+  try {
+    const result = await withCallbackTimeout(
+      supabase.auth.getSession(),
+      3000,
+      "getSession(recovery rescue)",
+    );
+    session = result.data.session;
+  } catch {
+    return false;
+  }
   if (!session?.user) return false;
 
   const agentSetup = isAgentSetupContext(setupFromUrl);
@@ -249,7 +259,11 @@ const AuthCallback = () => {
               if (isAgentSetup) rememberAgentSetupHandoff(setSessionData?.session);
               navigate(isAgentSetup ? "/agent-setup" : "/password-reset", { replace: true });
             } else {
-              const { data: { session: freshSession } } = await supabase.auth.getSession();
+              const { data: { session: freshSession } } = await withCallbackTimeout(
+                supabase.auth.getSession(),
+                3000,
+                "getSession(hash route)",
+              );
               if (freshSession?.user) {
                 didNavigate.current = false;
                 await routeUser(freshSession.user.id);
@@ -311,7 +325,11 @@ const AuthCallback = () => {
               }
               navigate(isAgentSetup ? "/agent-setup" : "/password-reset", { replace: true });
             } else {
-              const { data: { session: freshSession } } = await supabase.auth.getSession();
+              const { data: { session: freshSession } } = await withCallbackTimeout(
+                supabase.auth.getSession(),
+                3000,
+                "getSession(pkce route)",
+              );
               if (freshSession?.user) {
                 didNavigate.current = false;
                 await routeUser(freshSession.user.id);
@@ -414,7 +432,11 @@ const AuthCallback = () => {
           return;
         }
 
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session } } = await withCallbackTimeout(
+          supabase.auth.getSession(),
+          3000,
+          "getSession(existing callback)",
+        );
 
         if (session?.user && !didNavigate.current) {
           await routeUser(session.user.id);
@@ -426,13 +448,21 @@ const AuthCallback = () => {
         }
       };
 
-      if (hasAuthHash) {
-        timeout = setTimeout(() => {
-          if (!didNavigate.current) {
-            setError("Authentication timed out. Please try signing in again.");
-          }
-        }, 5000);
-      } else {
+      // Final callback watchdog. This applies to PKCE query-code links and
+      // recovery/setup links as well as legacy hash links.
+      timeout = setTimeout(() => {
+        if (!didNavigate.current && !cancelled) {
+          const setup = isAgentSetupContext(recoveryInfo.isSetup);
+          showAuthError(
+            setup
+              ? "Account setup timed out. Please reopen the link from your License Verified email."
+              : "Authentication timed out. Please try signing in again.",
+            setup ? "setup" : "generic",
+          );
+        }
+      }, 10000);
+
+      if (!hasAuthHash) {
         checkExistingSession();
       }
     };
@@ -480,7 +510,11 @@ const AuthCallback = () => {
     try {
       authDebug("routeUser start", { userId });
       
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session } } = await withCallbackTimeout(
+        supabase.auth.getSession(),
+        3000,
+        "getSession(route user)",
+      );
       
       // Recovery short-circuit: only when CURRENT URL carries recovery
       // context, or an active setup flag is present. A stale recovery
@@ -504,7 +538,11 @@ const AuthCallback = () => {
 
       // Re-validate session against the auth server so we route on the
       // server-confirmed user id, not a stale localStorage cache.
-      const { data: userData } = await supabase.auth.getUser();
+      const { data: userData } = await withCallbackTimeout(
+        supabase.auth.getUser(),
+        5000,
+        "getUser(route user)",
+      );
       const verifiedUserId = userData?.user?.id ?? userId;
       const verifiedEmail = userData?.user?.email ?? session?.user?.email ?? null;
       const intendedRole = userData?.user?.user_metadata?.intended_role;
