@@ -482,7 +482,11 @@ const AuthCallback = () => {
   const resolveRoleWithRetries = async (verifiedUserId: string) => {
     const maxAttempts = 3;
     const retryDelayMs = 500;
-    let resolved = await resolveUserRole(verifiedUserId);
+    let resolved = await withCallbackTimeout(
+      resolveUserRole(verifiedUserId),
+      6000,
+      "resolveUserRole",
+    );
 
     if (import.meta.env.DEV) {
       console.info("[POST_LOGIN] resolveUserRole #1", {
@@ -494,7 +498,11 @@ const AuthCallback = () => {
 
     for (let attempt = 1; attempt < maxAttempts && resolved.role === "unknown"; attempt++) {
       await new Promise((r) => setTimeout(r, retryDelayMs));
-      resolved = await resolveUserRole(verifiedUserId);
+      resolved = await withCallbackTimeout(
+        resolveUserRole(verifiedUserId),
+        6000,
+        "resolveUserRole",
+      );
       if (import.meta.env.DEV) {
         console.info(`[POST_LOGIN] resolveUserRole #${attempt + 1} (retry)`, {
           userId: verifiedUserId,
@@ -509,6 +517,7 @@ const AuthCallback = () => {
 
   const routeUser = async (userId: string) => {
     if (didNavigate.current) return;
+    routingInFlight.current = true;
 
     try {
       authDebug("routeUser start", { userId });
@@ -565,7 +574,12 @@ const AuthCallback = () => {
 
       const returnToMeta = resolvePostAuthRedirectWithMeta(searchParams);
       const target = returnToMeta.value ?? getRouteForRole(resolved);
-      const diagnostics = await getAuthRouteDecisionDiagnostics(verifiedUserId);
+      // Diagnostics are best-effort only — never let them delay routing.
+      const diagnostics = await getAuthRouteDecisionDiagnostics(verifiedUserId).catch(() => ({
+        admin_role_present: null,
+        agent_role_present: null,
+        agent_status: null,
+      }) as Awaited<ReturnType<typeof getAuthRouteDecisionDiagnostics>>);
       // Visitor has now signed in — they're no longer a shared-listing guest.
       clearGuestListing();
 
