@@ -498,6 +498,51 @@ export type Database = {
         }
         Relationships: []
       }
+      agent_login_tokens: {
+        Row: {
+          created_at: string
+          email_job_id: string | null
+          expires_at: string
+          id: string
+          issuance_key: string
+          redeemed_at: string | null
+          redeeming_at: string | null
+          revoked_at: string | null
+          status: string
+          token_hash: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email_job_id?: string | null
+          expires_at: string
+          id: string
+          issuance_key: string
+          redeemed_at?: string | null
+          redeeming_at?: string | null
+          revoked_at?: string | null
+          status?: string
+          token_hash: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email_job_id?: string | null
+          expires_at?: string
+          id?: string
+          issuance_key?: string
+          redeemed_at?: string | null
+          redeeming_at?: string | null
+          revoked_at?: string | null
+          status?: string
+          token_hash?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       agent_match_deliveries: {
         Row: {
           agent_id: string
@@ -4814,6 +4859,7 @@ export type Database = {
         Args: { p_relationship_id: string }
         Returns: number
       }
+      agent_is_login_eligible: { Args: { _user_id: string }; Returns: boolean }
       agent_reactivate_buyer: {
         Args: { p_crm_client_id: string }
         Returns: Json
@@ -4831,6 +4877,16 @@ export type Database = {
         Returns: undefined
       }
       auto_activate_listings: { Args: never; Returns: undefined }
+      build_login_link_email_payload: {
+        Args: {
+          p_agent_name: string
+          p_reply_to: string
+          p_subject: string
+          p_to_email: string
+          p_token_id: string
+        }
+        Returns: Json
+      }
       build_message_email_payload: {
         Args: { p_message_id: string }
         Returns: Json
@@ -4854,6 +4910,7 @@ export type Database = {
           listing_id: string
         }[]
       }
+      claim_agent_login_token: { Args: { p_token_hash: string }; Returns: Json }
       cleanup_blocking_auth_identity: {
         Args: { _email: string }
         Returns: number
@@ -4864,6 +4921,10 @@ export type Database = {
         Returns: number
       }
       clear_active_owner_context: { Args: never; Returns: undefined }
+      complete_agent_login_token: {
+        Args: { p_token_id: string }
+        Returns: boolean
+      }
       count_matching_agents: {
         Args: {
           p_bathrooms: number
@@ -5098,6 +5159,19 @@ export type Database = {
         Args: { p_owner_user_id: string }
         Returns: boolean
       }
+      issue_agent_login_token: {
+        Args: {
+          p_agent_name?: string
+          p_expires_at: string
+          p_id: string
+          p_issuance_key: string
+          p_reply_to?: string
+          p_subject?: string
+          p_token_hash: string
+          p_user_id: string
+        }
+        Returns: Json
+      }
       jwt_role_text: { Args: never; Returns: string }
       list_account_delegates_for_owner: {
         Args: never
@@ -5184,6 +5258,10 @@ export type Database = {
         Returns: Json
       }
       rate_limits_cleanup: { Args: never; Returns: undefined }
+      release_agent_login_token: {
+        Args: { p_token_id: string }
+        Returns: boolean
+      }
       remove_client_favorite_for_agent: {
         Args: {
           p_buyer_user_id: string
