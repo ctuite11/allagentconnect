@@ -268,6 +268,89 @@ export type Database = {
         }
         Relationships: []
       }
+      agent_activation_resend_handles: {
+        Row: {
+          created_at: string
+          expires_at: string
+          handle_hash: string
+          id: string
+          token_id: string
+          used_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at: string
+          handle_hash: string
+          id?: string
+          token_id: string
+          used_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          handle_hash?: string
+          id?: string
+          token_id?: string
+          used_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_activation_resend_handles_token_id_fkey"
+            columns: ["token_id"]
+            isOneToOne: false
+            referencedRelation: "agent_activation_tokens"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agent_activation_tokens: {
+        Row: {
+          created_at: string
+          email_job_id: string | null
+          expires_at: string
+          id: string
+          issuance_key: string
+          redeemed_at: string | null
+          redeeming_at: string | null
+          revoked_at: string | null
+          status: string
+          token_hash: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email_job_id?: string | null
+          expires_at: string
+          id: string
+          issuance_key: string
+          redeemed_at?: string | null
+          redeeming_at?: string | null
+          revoked_at?: string | null
+          status?: string
+          token_hash: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email_job_id?: string | null
+          expires_at?: string
+          id?: string
+          issuance_key?: string
+          redeemed_at?: string | null
+          redeeming_at?: string | null
+          revoked_at?: string | null
+          status?: string
+          token_hash?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       agent_active_context: {
         Row: {
           active_owner_user_id: string
@@ -4844,6 +4927,20 @@ export type Database = {
             Args: { _agent_id: string; _crm_client_id?: string }
             Returns: string
           }
+      activation_issue_core: {
+        Args: {
+          p_agent_name: string
+          p_allow_replace: boolean
+          p_expires_at: string
+          p_id: string
+          p_issuance_key: string
+          p_reply_to: string
+          p_subject: string
+          p_token_hash: string
+          p_user_id: string
+        }
+        Returns: Json
+      }
       admin_deactivate_buyer: { Args: { p_user_id: string }; Returns: Json }
       admin_delete_agent: { Args: { p_agent_id: string }; Returns: Json }
       admin_delete_client: { Args: { p_client_id: string }; Returns: undefined }
@@ -4859,6 +4956,10 @@ export type Database = {
         Args: { p_relationship_id: string }
         Returns: number
       }
+      agent_is_activation_eligible: {
+        Args: { _user_id: string }
+        Returns: boolean
+      }
       agent_is_login_eligible: { Args: { _user_id: string }; Returns: boolean }
       agent_reactivate_buyer: {
         Args: { p_crm_client_id: string }
@@ -4872,11 +4973,22 @@ export type Database = {
         Args: { p_owner_user_id: string }
         Returns: boolean
       }
+      assert_service_role: { Args: never; Returns: undefined }
       assign_self_role: {
         Args: { _role: Database["public"]["Enums"]["app_role"] }
         Returns: undefined
       }
       auto_activate_listings: { Args: never; Returns: undefined }
+      build_activation_email_payload: {
+        Args: {
+          p_agent_name: string
+          p_reply_to: string
+          p_subject: string
+          p_to_email: string
+          p_token_id: string
+        }
+        Returns: Json
+      }
       build_login_link_email_payload: {
         Args: {
           p_agent_name: string
@@ -4910,6 +5022,10 @@ export type Database = {
           listing_id: string
         }[]
       }
+      claim_agent_activation_token: {
+        Args: { p_token_hash: string }
+        Returns: Json
+      }
       claim_agent_login_token: { Args: { p_token_hash: string }; Returns: Json }
       cleanup_blocking_auth_identity: {
         Args: { _email: string }
@@ -4921,6 +5037,10 @@ export type Database = {
         Returns: number
       }
       clear_active_owner_context: { Args: never; Returns: undefined }
+      complete_agent_activation_token: {
+        Args: { p_token_id: string }
+        Returns: boolean
+      }
       complete_agent_login_token: {
         Args: { p_token_id: string }
         Returns: boolean
@@ -5159,6 +5279,26 @@ export type Database = {
         Args: { p_owner_user_id: string }
         Returns: boolean
       }
+      issue_activation_resend_handle: {
+        Args: {
+          p_expires_at: string
+          p_handle_hash: string
+          p_token_id: string
+        }
+        Returns: boolean
+      }
+      issue_agent_activation_token: {
+        Args: {
+          p_agent_name?: string
+          p_expires_at: string
+          p_id: string
+          p_reply_to?: string
+          p_subject?: string
+          p_token_hash: string
+          p_user_id: string
+        }
+        Returns: Json
+      }
       issue_agent_login_token: {
         Args: {
           p_agent_name?: string
@@ -5258,6 +5398,34 @@ export type Database = {
         Returns: Json
       }
       rate_limits_cleanup: { Args: never; Returns: undefined }
+      redeem_resend_handle_and_issue: {
+        Args: {
+          p_agent_name?: string
+          p_expires_at: string
+          p_handle_hash: string
+          p_new_token_hash: string
+          p_new_token_id: string
+          p_reply_to?: string
+          p_subject?: string
+        }
+        Returns: Json
+      }
+      reissue_agent_activation_token: {
+        Args: {
+          p_agent_name?: string
+          p_expires_at: string
+          p_id: string
+          p_reply_to?: string
+          p_subject?: string
+          p_token_hash: string
+          p_user_id: string
+        }
+        Returns: Json
+      }
+      release_agent_activation_token: {
+        Args: { p_token_id: string }
+        Returns: boolean
+      }
       release_agent_login_token: {
         Args: { p_token_id: string }
         Returns: boolean
