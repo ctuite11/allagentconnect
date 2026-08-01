@@ -20,7 +20,15 @@ const TEXT_MUTED = "#64748b";
 const BORDER = "#e5e7eb";
 const EMERALD_PANEL_BG = "#f0fdf6";
 const EMERALD_PANEL_BORDER = "#bbf7d0";
-const MONOGRAM_URL = "https://allagentconnect.com/email/aac-monogram-green-256.png";
+/**
+ * Authoritative current AAC brand mark.
+ * Source of truth: src/components/ui/AACMonogram.tsx (command-style mark), which is
+ * the mark rendered in the live production header lockup on https://allagentconnect.com
+ * and in the authenticated app shell sidebar. This PNG is the already-deployed,
+ * production-approved export of that mark used by every other AAC email template.
+ * Do not replace with the deprecated house mark or any reconstructed geometry.
+ */
+const BRAND_MARK_URL = "https://allagentconnect.com/email/aac-monogram-green-128.png";
 
 const NEXT_STEPS = [
   "Open the Comms Center to post needs, discover opportunities, and connect with verified agents.",
@@ -30,11 +38,12 @@ const NEXT_STEPS = [
 ];
 
 /**
- * Monogram with an email-safe fallback: styled ALT text renders in Outlook and
- * in any client that blocks images, so the navy header is never blank.
+ * Current AAC brand mark, rendered at its native square proportions (no crop,
+ * stretch, recolor, or redraw). Styled ALT text keeps the navy header legible in
+ * Outlook and in any client that blocks images.
  */
-function renderMonogram(size: number): string {
-  return `<img src="${MONOGRAM_URL}" width="${size}" height="${size}" alt="AAC" style="display:block;margin:0 auto;border:0;outline:none;text-decoration:none;color:${EMERALD_ACCENT};font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;font-size:${Math.round(size * 0.42)}px;font-weight:700;line-height:${size}px;text-align:center;" />`;
+function renderBrandMark(size: number): string {
+  return `<img src="${BRAND_MARK_URL}" width="${size}" height="${size}" alt="All Agent Connect" style="display:block;margin:0 auto;border:0;outline:none;text-decoration:none;color:${EMERALD_ACCENT};font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;font-size:${Math.round(size * 0.42)}px;font-weight:700;line-height:${size}px;text-align:center;" />`;
 }
 
 function renderBullets(items: string[]): string {
@@ -150,7 +159,7 @@ export function buildLicenseVerifiedEmailHtml(opts: LicenseVerifiedEmailOptions)
 
         <!-- Header -->
         <tr><td align="center" bgcolor="${NAVY}" style="background-color:${NAVY};border-radius:14px 14px 0 0;padding:36px 40px 28px;">
-          ${renderMonogram(48)}
+          ${renderBrandMark(40)}
           <p style="margin:14px 0 0;font-size:18px;font-weight:600;letter-spacing:-0.02em;color:#ffffff;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">All Agent Connect</p>
           <div style="width:48px;height:2px;background-color:${EMERALD_ACCENT};margin:18px auto 22px;border-radius:1px;"></div>
           <h1 style="margin:0 0 12px;font-size:26px;line-height:1.25;font-weight:700;letter-spacing:-0.02em;color:#ffffff;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Your license has been verified</h1>
