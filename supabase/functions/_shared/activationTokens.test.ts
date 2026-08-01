@@ -27,9 +27,10 @@ Deno.test("signing is deterministic (retry-safe)", async () => {
   assert(a.startsWith(`v1.${ID}.`));
 });
 
-Deno.test("fixed vector", async () => {
+// Cross-checked against Postgres: translate(encode(extensions.hmac(canonical, secret, 'sha256'),'base64'),'+/','-_')
+Deno.test("fixed vector matches the Postgres hmac() reference", async () => {
   const token = await signActivationToken(SECRET, { id: ID, userId: USER, expiresAtEpoch: EXP });
-  assertEquals(token, "v1.3f1a2b3c-4d5e-6f70-8192-a3b4c5d6e7f8.__VECTOR__");
+  assertEquals(token, "v1.3f1a2b3c-4d5e-6f70-8192-a3b4c5d6e7f8.UoVHBX0Q_PZ1C6TUNgKxaBZmBNsDl3ZgEEnijGj5QYI");
 });
 
 Deno.test("verification rejects a mutated expiry or user", async () => {
