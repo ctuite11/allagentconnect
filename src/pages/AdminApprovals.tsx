@@ -372,7 +372,10 @@ export default function AdminApprovals() {
   const [sendingSetupLinkFor, setSendingSetupLinkFor] = useState<Set<string>>(new Set());
   const [isSendingCommsPreview, setIsSendingCommsPreview] = useState(false);
   const [isSendingForwardInvite, setIsSendingForwardInvite] = useState(false);
-  const [pendingEmailAction, setPendingEmailAction] = useState<null | "forward-invite" | "comms-preview">(null);
+  const [isSendingLicensePreview, setIsSendingLicensePreview] = useState(false);
+  const [pendingEmailAction, setPendingEmailAction] = useState<
+    null | "forward-invite" | "comms-preview" | "license-verified-preview"
+  >(null);
 
   const sendForwardableInvite = async () => {
     if (isSendingForwardInvite) return;
@@ -413,6 +416,29 @@ export default function AdminApprovals() {
       }
     } finally {
       setIsSendingCommsPreview(false);
+    }
+  };
+
+  /**
+   * Sends the EXISTING License Verified email to the signed-in admin only.
+   * Inert CTA, no activation token, no queue row. Verification aid only.
+   */
+  const sendLicenseVerifiedPreview = async (adminEmail?: string | null) => {
+    if (isSendingLicensePreview) return;
+    setIsSendingLicensePreview(true);
+    toast.message("Sending License Verified preview to your inbox…");
+    try {
+      const { data, error } = await supabase.functions.invoke(
+        'send-license-verified-preview',
+        { body: {} },
+      );
+      if (error || !data?.success) {
+        toast.error(`Failed: ${error?.message ?? data?.error ?? 'Unknown error'}`);
+      } else {
+        toast.success(`Preview sent to ${data?.to ?? adminEmail ?? "your inbox"}`);
+      }
+    } finally {
+      setIsSendingLicensePreview(false);
     }
   };
   const [lastSetupLinkSentAt, setLastSetupLinkSentAt] = useState<Map<string, number>>(new Map());
@@ -1663,6 +1689,15 @@ export default function AdminApprovals() {
             >
               {isSendingCommsPreview ? "Sending…" : "Preview Comms guide email"}
             </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={isSendingLicensePreview}
+              onClick={() => setPendingEmailAction("license-verified-preview")}
+              className="w-full justify-start border-slate-300 text-slate-700 hover:bg-slate-100 sm:w-auto sm:justify-center"
+            >
+              {isSendingLicensePreview ? "Sending…" : "Preview License Verified email"}
+            </Button>
             <Button 
               onClick={() => setShowCreateDialog(true)}
               size="sm"
@@ -2372,13 +2407,15 @@ export default function AdminApprovals() {
             <AlertDialogDescription>
               {pendingEmailAction === "forward-invite"
                 ? "The forwardable Join Invitation will be sent to chris@allagentconnect.com."
-                : `The Comms Center guide preview will be sent to ${user?.email ?? "your admin email"}.`}
+                : pendingEmailAction === "license-verified-preview"
+                  ? `A preview of the existing License Verified email will be sent to ${user?.email ?? "your admin email"}. The activation button is inert and no activation link is issued.`
+                  : `The Comms Center guide preview will be sent to ${user?.email ?? "your admin email"}.`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              disabled={isSendingForwardInvite || isSendingCommsPreview}
+              disabled={isSendingForwardInvite || isSendingCommsPreview || isSendingLicensePreview}
               onClick={async (e) => {
                 e.preventDefault();
                 const action = pendingEmailAction;
@@ -2386,11 +2423,13 @@ export default function AdminApprovals() {
                   await sendForwardableInvite();
                 } else if (action === "comms-preview") {
                   await sendCommsGuidePreview(user?.email);
+                } else if (action === "license-verified-preview") {
+                  await sendLicenseVerifiedPreview(user?.email);
                 }
                 setPendingEmailAction(null);
               }}
             >
-              {isSendingForwardInvite || isSendingCommsPreview ? "Sending…" : "Send email"}
+              {isSendingForwardInvite || isSendingCommsPreview || isSendingLicensePreview ? "Sending…" : "Send email"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
