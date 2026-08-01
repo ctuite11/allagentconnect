@@ -14,10 +14,19 @@ export async function checkDeletedAgent(
   const trimmed = email.trim().toLowerCase();
   if (!trimmed) return null;
   try {
-    const { data, error } = await supabase.functions.invoke(
-      "check-deleted-agent",
-      { body: { email: trimmed } },
-    );
+    // Hard timeout — this is an advisory pre-check that runs before the
+    // verify call. If it ever hangs, the admin sees no toast and no spinner,
+    // so bound it and fail open (the server-side guard is authoritative).
+    const lookup = supabase.functions.invoke("check-deleted-agent", {
+      body: { email: trimmed },
+    });
+    const timeout = new Promise<null>((resolve) => setTimeout(() => resolve(null), 6000));
+    const result = await Promise.race([lookup, timeout]);
+    if (!result) {
+      console.warn("[checkDeletedAgent] lookup timed out — proceeding without match");
+      return null;
+    }
+    const { data, error } = result;
     if (error) {
       console.warn("[checkDeletedAgent] lookup error:", error);
       return null;
