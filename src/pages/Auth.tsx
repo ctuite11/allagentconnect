@@ -534,16 +534,13 @@ const Auth = () => {
         return;
       }
 
-      // Password sign-in already returns a server-confirmed session. Route from
-      // that result directly instead of sending the user through /auth/callback,
-      // where a second auth-storage read can stall on mobile browsers.
-      const resolved = await withTimeout(
-        resolveUserRole(data.user.id),
-        8000,
-        "Account access check",
-      );
+      // Password sign-in already returned a server-confirmed session. Do not
+      // block successful login on another network request here: AuthRoleProvider
+      // receives the same SIGNED_IN session and resolves the destination from
+      // the authenticated router. This also avoids competing role RPCs on
+      // mobile browsers immediately after auth storage is updated.
       const returnToMeta = resolvePostAuthRedirectWithMeta(searchParams);
-      const target = returnToMeta.value ?? getRouteForRole(resolved);
+      const target = returnToMeta.value ?? "/dashboard";
       clearGuestListing();
       didNavigate.current = true;
       navigate(target, { replace: true });
