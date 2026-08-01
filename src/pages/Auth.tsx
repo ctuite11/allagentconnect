@@ -1107,10 +1107,24 @@ const Auth = () => {
               )}
 
               {mode === "register" && (
-                <TurnstileField
-                  containerRef={turnstile.containerRef}
-                  error={turnstile.error}
-                />
+                <>
+                  <TurnstileField
+                    containerRef={turnstile.containerRef}
+                    error={turnstile.error}
+                  />
+                  {turnstile.error && !turnstile.isVerified && !IS_PRODUCTION_HOST && (
+                    <p className="text-[12px] text-muted-foreground -mt-2">
+                      Security verification only runs on the live site. Submit this form at{" "}
+                      <a
+                        href="https://allagentconnect.com/auth?mode=register"
+                        className="text-aac hover:underline"
+                      >
+                        allagentconnect.com
+                      </a>
+                      .
+                    </p>
+                  )}
+                </>
               )}
 
               <Button 
