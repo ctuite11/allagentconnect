@@ -1,6 +1,11 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import type { EmailJob } from "../_shared/emailTypes.ts";
 import { sendEmail } from "../_shared/sendEmail.ts";
+import {
+  allowedStreams,
+  isGloballyPaused,
+  preSendBlockReason,
+} from "../_shared/emailStreams.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -40,8 +45,14 @@ Deno.serve(async (req) => {
   /* ---- GLOBAL KILL SWITCH ----
    * Checked before the auth gate, before any email_jobs_claim call, and before any provider call.
    * Set the EMAIL_SENDING_PAUSED secret to "true" to freeze all outbound email. */
-  if ((Deno.env.get("EMAIL_SENDING_PAUSED") ?? "").trim().toLowerCase() === "true") {
+  if (isGloballyPaused()) {
     console.log("[kick-email-queue] EMAIL_SENDING_PAUSED=true — refusing to claim jobs");
+    return json({ paused: true, processed: 0 });
+  }
+
+  const streams = allowedStreams();
+  if (streams.length === 0) {
+    console.log("[kick-email-queue] no unpaused streams — refusing to claim jobs");
     return json({ paused: true, processed: 0 });
   }
 
@@ -126,7 +137,10 @@ Deno.serve(async (req) => {
   };
 
   try {
-    const { data: jobs, error: claimErr } = await supabase.rpc("email_jobs_claim", { p_limit: 5 });
+    const { data: jobs, error: claimErr } = await supabase.rpc("email_jobs_claim", {
+      p_limit: 5,
+      p_streams: streams,
+    });
     if (claimErr) throw claimErr;
 
     if (!jobs || jobs.length === 0) {
@@ -176,6 +190,17 @@ Deno.serve(async (req) => {
         }
 
         try {
+          const blockReason = preSendBlockReason(job as never);
+          if (blockReason) {
+            await safeUpdateJob(
+              job.id,
+              { status: "queued", attempts: Math.max(0, (job.attempts ?? 1) - 1), last_error: `blocked:${blockReason}` },
+              { stage: "pre_send_block" },
+            );
+            await logEvent(job.id, "blocked_before_send", { template, to, reason: blockReason });
+            return;
+          }
+
           await sendEmail(job, RESEND_API_KEY);
 
           await safeUpdateJob(job.id, { status: "sent" }, { stage: "mark_sent" });
