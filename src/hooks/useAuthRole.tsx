@@ -66,6 +66,20 @@ function useAuthRoleStore(): AuthRoleState {
   const [loading, setLoading] = useState<boolean>(true);
   const initialLoadDone = useRef(false);
 
+  /** Never let a stalled auth/role call hang the app on a spinner forever. */
+  const withTimeout = useCallback(async function <T>(
+    promise: PromiseLike<T>,
+    ms: number,
+    label: string,
+  ): Promise<T> {
+    return await Promise.race([
+      Promise.resolve(promise),
+      new Promise<T>((_, reject) =>
+        setTimeout(() => reject(new Error(`[AUTH] ${label} timed out after ${ms}ms`)), ms),
+      ),
+    ]);
+  }, []);
+
   const loadRoleForUser = useCallback(async (userId: string) => {
     let result = await resolveUserRole(userId);
     if (result.role === "unknown") {
@@ -86,10 +100,15 @@ function useAuthRoleStore(): AuthRoleState {
 
   useEffect(() => {
     async function initialLoad() {
-      const {
-        data: { session },
-        error,
-      } = await supabase.auth.getSession();
+      let session: Awaited<ReturnType<typeof supabase.auth.getSession>>["data"]["session"] = null;
+      let error: unknown = null;
+      try {
+        const res = await withTimeout(supabase.auth.getSession(), 6000, "getSession");
+        session = res.data.session;
+        error = res.error;
+      } catch (e) {
+        error = e;
+      }
 
       if (error) {
         console.warn("[AUTH] getSession failed on bootstrap; leaving session for onAuthStateChange:", error);
@@ -116,12 +135,25 @@ function useAuthRoleStore(): AuthRoleState {
       }
 
       setUser(sessionUser);
-      await loadRoleForUser(sessionUser.id);
+      try {
+        await withTimeout(loadRoleForUser(sessionUser.id), 10000, "resolveUserRole");
+      } catch (e) {
+        console.warn("[AUTH] role resolution stalled on bootstrap:", e);
+      }
       setLoading(false);
       initialLoadDone.current = true;
     }
 
     void initialLoad();
+
+    // Hard watchdog: whatever happens, stop showing the global spinner.
+    const watchdog = setTimeout(() => {
+      if (!initialLoadDone.current) {
+        console.warn("[AUTH] bootstrap watchdog fired; releasing loading state");
+        initialLoadDone.current = true;
+        setLoading(false);
+      }
+    }, 12000);
 
     const {
       data: { subscription },
@@ -160,9 +192,10 @@ function useAuthRoleStore(): AuthRoleState {
     });
 
     return () => {
+      clearTimeout(watchdog);
       subscription.unsubscribe();
     };
-  }, [loadRoleForUser]);
+  }, [loadRoleForUser, withTimeout]);
 
   // Re-resolve role after admin approval while the tab stays open (e.g. pending → verified).
   useEffect(() => {
