@@ -194,8 +194,24 @@ serve(async (req: Request) => {
       });
     }
 
-    // Enqueue License Verified BEFORE setting verified.
-    const idempotencyKey = `license-verified:verify:${userId}`;
+    // Order matters: the activation token's issuance key is derived from the
+    // approval event (user_id + verified_at), so the verification stamp must
+    // exist BEFORE issuance. Issuance is idempotent on that key, so a retry
+    // after a transient email failure reuses the same token and job.
+    const { error: settingsError } = await admin.from("agent_settings").upsert(
+      {
+        user_id: userId,
+        agent_status: "verified",
+        verified_at: settings?.verified_at || nowIso,
+        updated_at: nowIso,
+        approval_email_sent: false,
+      },
+      { onConflict: "user_id" },
+    );
+    if (settingsError) {
+      return json(500, { success: false, error: settingsError.message });
+    }
+
     const emailRes = await fetch(`${supabaseUrl}/functions/v1/send-license-verified-email`, {
       method: "POST",
       headers: {
@@ -204,9 +220,8 @@ serve(async (req: Request) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        to: email,
+        user_id: userId,
         agentName: firstName,
-        idempotencyKey,
         ...(acknowledgeDeleted ? { acknowledgeDeleted: true } : {}),
       }),
     });
@@ -221,45 +236,17 @@ serve(async (req: Request) => {
       });
     }
 
-    const jobId =
-      emailData?.results?.[0]?.jobId ||
-      (Array.isArray(emailData?.results)
-        ? emailData.results.find((r: { jobId?: string }) => r.jobId)?.jobId
-        : null);
-    const enqueueOk =
-      emailRes.ok &&
-      emailData?.success === true &&
-      Number(emailData?.successCount || 0) > 0 &&
-      Boolean(jobId);
+    const jobId = emailData?.jobId ?? null;
+    const enqueueOk = emailRes.ok && emailData?.success === true && Boolean(jobId);
 
     if (!enqueueOk) {
       return json(422, {
         success: false,
         error:
           emailData?.error ||
-          emailData?.results?.[0]?.error ||
-          "Activation email was not enqueued — agent was not marked verified",
+          `Agent marked verified but the activation email was not enqueued (${emailData?.status ?? emailRes.status}). Use "Resend setup email".`,
         emailStatus: emailRes.status,
         emailData,
-      });
-    }
-
-    // Only now mark verified.
-    const { error: settingsError } = await admin.from("agent_settings").upsert(
-      {
-        user_id: userId,
-        agent_status: "verified",
-        verified_at: nowIso,
-        updated_at: nowIso,
-        approval_email_sent: false,
-      },
-      { onConflict: "user_id" },
-    );
-    if (settingsError) {
-      return json(500, {
-        success: false,
-        error: `Email enqueued (${jobId}) but failed to mark verified: ${settingsError.message}`,
-        jobId,
       });
     }
 
