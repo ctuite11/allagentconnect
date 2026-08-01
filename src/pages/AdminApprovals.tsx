@@ -1403,6 +1403,46 @@ export default function AdminApprovals() {
   // selected agent that is verified-but-not-activated. Sequential to
   // respect the edge function's rate limits and the per-agent throttle.
   const [bulkRemindingActivation, setBulkRemindingActivation] = useState(false);
+
+  // AAC-owned 7-day sign-in link. The token is minted server-side from the
+  // agent's user id — the admin client never sees the token or a CTA URL.
+  const [sendingLoginLinkFor, setSendingLoginLinkFor] = useState<Set<string>>(new Set());
+  const handleSendLoginLink = async (agent: Agent) => {
+    const ok = window.confirm(
+      `Email a 7-day sign-in link to ${agent.email}? Any previous sign-in link for this agent stops working.`,
+    );
+    if (!ok) return;
+
+    const proceed = await guardDeletedAgent(agent.email, "email a sign-in link to this agent");
+    if (!proceed) return;
+
+    setSendingLoginLinkFor((prev) => new Set(prev).add(agent.id));
+    try {
+      const { data, error } = await supabase.functions.invoke("send-login-link", {
+        body: {
+          user_id: agent.id,
+          agentName: agent.first_name || undefined,
+        },
+      });
+      if (error) {
+        console.error("Send login link failed:", error);
+        toast.error("Could not send sign-in link");
+        return;
+      }
+      const status = (data as { status?: string } | null)?.status;
+      if (status === "deduped") {
+        toast.info(`A sign-in link was just issued for ${agent.email} — not sending a duplicate`);
+        return;
+      }
+      toast.success(`7-day sign-in link emailed to ${agent.email}`);
+    } finally {
+      setSendingLoginLinkFor((prev) => {
+        const next = new Set(prev);
+        next.delete(agent.id);
+        return next;
+      });
+    }
+  };
   const handleBulkActivationReminder = async () => {
     const eligible = filteredAgents.filter(
       (a) => effectiveSelectedIds.has(a.id) && isAwaitingActivation(a),
@@ -2267,6 +2307,16 @@ export default function AdminApprovals() {
                                   >
                                     {sendingSetupLinkFor.has(agent.id) ? "Sending..." : "Email setup link"}
                                   </DropdownMenuItem>
+                                  {agent.source !== "pending_verification" && (
+                                    <DropdownMenuItem
+                                      disabled={sendingLoginLinkFor.has(agent.id)}
+                                      onSelect={() => handleSendLoginLink(agent)}
+                                    >
+                                      {sendingLoginLinkFor.has(agent.id)
+                                        ? "Sending…"
+                                        : "Email 7-day sign-in link"}
+                                    </DropdownMenuItem>
+                                  )}
                                   <DropdownMenuSeparator />
                                   <DropdownMenuItem
                                     disabled={isProcessing || agent.agent_status === "rejected"}
