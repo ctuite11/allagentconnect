@@ -120,23 +120,15 @@ BEGIN
     RETURN false;
   END IF;
 
-  IF EXISTS (
-    SELECT 1
-    FROM public.pending_verifications pv
-    WHERE pv.user_id = _user_id
-    ORDER BY pv.created_at DESC
-    LIMIT 1
-  ) THEN
-    SELECT (pv.status IS DISTINCT FROM 'rejected' AND pv.rejected_at IS NULL)
+  SELECT (pv.status IS DISTINCT FROM 'rejected' AND pv.rejected_at IS NULL)
     INTO _ok
     FROM public.pending_verifications pv
-    WHERE pv.user_id = _user_id
-    ORDER BY pv.created_at DESC
-    LIMIT 1;
+   WHERE pv.user_id = _user_id
+   ORDER BY pv.created_at DESC
+   LIMIT 1;
 
-    IF _ok IS NOT TRUE THEN
-      RETURN false;
-    END IF;
+  IF _ok IS NOT NULL AND _ok IS NOT TRUE THEN
+    RETURN false;
   END IF;
 
   RETURN EXISTS (
