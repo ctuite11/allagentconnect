@@ -8,6 +8,11 @@ import {
   hydrateActivationEmail,
 } from "../_shared/hydrateActivationEmail.ts";
 import {
+  LOGIN_LINK_RETRY_WINDOW_MS,
+  LOGIN_LINK_TEMPLATE,
+  hydrateLoginLinkEmail,
+} from "../_shared/hydrateLoginLinkEmail.ts";
+import {
   allowedStreams,
   isGloballyPaused,
   preSendBlockReason,
@@ -326,6 +331,59 @@ Deno.serve(async (req) => {
 
               if (hydrated.outcome === "error") {
                 throw new Error(`Activation hydration failed: ${hydrated.reason}`);
+              }
+
+              sendOptions.htmlOverride = hydrated.html;
+              sendOptions.providerIdempotencyKey = hydrated.providerIdempotencyKey;
+            }
+
+            // Same late-rendering contract for AAC sign-in links.
+            if (template === LOGIN_LINK_TEMPLATE) {
+              const createdAt = job.created_at ? Date.parse(job.created_at) : Date.now();
+              if (Number.isFinite(createdAt) &&
+                  Date.now() - createdAt > LOGIN_LINK_RETRY_WINDOW_MS) {
+                await safeUpdateJob(
+                  job.id,
+                  { status: "failed", last_error: "login link retry window elapsed" },
+                  { stage: "login_link_retry_window" },
+                );
+                await logEvent(job.id, "failed", {
+                  template,
+                  to,
+                  error: "login link retry window elapsed",
+                });
+                failed++;
+                return;
+              }
+
+              const hydrated = await hydrateLoginLinkEmail(
+                supabase,
+                (job.payload ?? {}) as Record<string, unknown>,
+              );
+
+              if (hydrated.outcome === "skip") {
+                await safeUpdateJob(
+                  job.id,
+                  {
+                    status: "sent",
+                    provider_message_id: "skipped:login-link",
+                    delivery_status: "skipped_login_link",
+                    delivery_status_at: new Date().toISOString(),
+                    last_error: hydrated.reason,
+                  },
+                  { stage: "skip_login_link" },
+                );
+                await logEvent(job.id, "skipped_login_link", {
+                  template,
+                  to,
+                  reason: hydrated.reason,
+                });
+                skipped++;
+                return;
+              }
+
+              if (hydrated.outcome === "error") {
+                throw new Error(`Login link hydration failed: ${hydrated.reason}`);
               }
 
               sendOptions.htmlOverride = hydrated.html;
