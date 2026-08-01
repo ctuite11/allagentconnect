@@ -1,46 +1,47 @@
-## Goal
+## What the database says
 
-Give agents a login link that stays valid for **7 days** instead of the current 1 hour, without changing any global auth setting.
+Read-only query against `auth.users` + `agent_settings` + `agent_activation_tokens` + `deleted_users`, filtering for `agent_status IN ('verified','invited')` AND `account_activated_at IS NULL`.
 
-## Why this works
+Result: **24+ accounts qualify on the three data gates** (verified, activation NULL, zero live tokens, zero tombstones). But almost all of them are **real, third-party agents** — `scott.farrell@compass.com`, `louis@serhant.com`, `deborah.lucci@raveis.com`, etc. Issuing to any of them sends a real activation email to a real person as a side effect of a test. That is not an acceptable test target.
 
-The existing activation flow already solves this exact problem. The AAC-issued token is what lives for 7 days; when the agent finally clicks it, the server mints a **fresh** short-lived auth link right at that moment and signs them in. The 1-hour auth expiry never has a chance to lapse, because the auth link only exists for the few seconds between click and sign-in.
+The two non-real candidates:
+
+| Account | Gates | Usable? |
+|---|---|---|
+| `e2e.verified.agent@allagentconnect.test` | passes all data gates, no agent profile | No — `.test` is a reserved non-routable TLD, so the delivery gate can never be satisfied |
+| `doittuite15@yahoo.com` | passes all data gates (tombstone already removed) | Yes on data, but you just declined it |
+
+So there is no existing account that is both admin-controlled and capable of receiving mail.
+
+## Recommended path
+
+Create one purpose-built test account on an inbox you own, then run the single authorized issuance against it.
 
 ```text
-Email link (AAC token, 7 days)
-      -> agent clicks, any time within 7 days
-          -> server validates token, marks it redeeming
-              -> mints a fresh auth link (valid seconds)
-                  -> agent lands signed in, token marked redeemed
+chris+phase3@allagentconnect.com
+  -> real inbox (plus-addressing delivers to chris@allagentconnect.com)
+  -> brand-new row, so account_activated_at is NULL by construction
+  -> no deleted_users tombstone, no live token
+  -> disposable: purging it afterwards touches no real agent
 ```
 
-## What gets built
+### Steps
 
-**1. Login-link tokens (database)**
-A `agent_login_tokens` table mirroring `agent_activation_tokens`: single-use, 7-day expiry, SHA-256 digest only (never the plaintext), at most one live token per agent, atomic `issued -> redeeming -> redeemed` transition, service-role only with no anon/authenticated access.
+1. **Create the account** through the normal admin path — submit it as a pending verification, then approve it in Admin Approvals. No hand-written SQL against `auth.users`; the account is created the same way a real agent's is, so the test exercises the real code path.
+2. **Confirm pre-state** with one read-only query: `agent_status = 'verified'`, `account_activated_at IS NULL`, zero rows in `agent_activation_tokens`, zero rows in `deleted_users`, zero pending `email_jobs` for that address.
+3. **Single issuance** — you click "Send verification/activation email" exactly once from Admin Approvals while signed in as admin. The service-role boundary rejects any call I make directly, so the click has to come from you.
+4. **Verify issuance** — exactly one `agent_activation_tokens` row, status `issued`, `expires_at` ≈ now + 7 days, hash-only storage with no plaintext anywhere in the row or the job payload.
+5. **Verify delivery** — one `email_jobs` row on the transactional stream, moving to sent; you confirm arrival in the inbox.
+6. **Verify redemption** — click the link once. Expect: token flips `issued -> redeeming -> redeemed`, a fresh short-lived auth link is minted, the agent lands signed in, and `account_activated_at` gets stamped. Then confirm a second click on the same link is refused as already-used.
 
-**2. Redemption endpoint**
-A `redeem-login-token` function that mirrors `redeem-activation-token`: validates the token, claims it atomically, generates a fresh magic link for that user, and returns it. Expired, already-used, or revoked tokens get a clear message plus a self-service "send me a new one" path.
+### Guardrails carried forward
 
-**3. Sign-in page**
-A `/signin-link` page that reads the token from the URL fragment (so it never hits server logs or the referrer header) and shows an explicit **Sign In** button — no auto-redemption on page load, so email scanners and link previewers can't burn the token.
+- Exactly one issuance. If it returns `ineligible` or `already_live`, that is the test result — not permission to retry.
+- No resend, no retry, no re-enqueue, no backfill without separate explicit approval.
+- No email template, wording, branding, or footer changes.
+- Hot Sheet stream stays paused; nothing about the emergency pause flags changes.
+- No issuance to any of the 24 real third-party agents in the qualifying list.
 
-**4. Admin action**
-In Admin Approvals, a **Send login link** action on an agent that issues the 7-day token and enqueues the email on the `transactional` stream.
+## If you'd rather not create an account
 
-**5. Email**
-Reuses the existing template system. Copy states the link is good for 7 days and works once. **No existing email template, wording, layout, branding asset, or footer is modified.**
-
-## Explicit guardrails
-
-- Global auth OTP/link expiry stays at 1 hour — untouched.
-- Existing activation tokens, Hot Sheet streams, pause flags, and queue behavior are untouched.
-- Plaintext tokens are never stored in the database or in `email_jobs`; the link is hydrated only at send time, exactly as activation does.
-- Nothing is sent to a real agent until you preview it yourself and approve.
-
-## Technical notes
-
-- New migration `agent_login_tokens.sql` with `claim_`, `complete_`, and `release_` security-definer functions, modeled on the activation equivalents.
-- `redeem-login-token` carries the `// @auth-classification: token-redemption` declaration so the security guard passes.
-- Redemption uses `auth.admin.generateLink({ type: 'magiclink' })` and returns the hashed-token URL for the client to complete.
-- Rate limiting: one live token per agent, and re-issuing revokes the prior one.
+The only other route is authorizing `doittuite15@yahoo.com` after all — its tombstone is already removed and it passes every data gate today. Say the word and I'll write the plan against that instead.
