@@ -70,6 +70,7 @@ import VendorPackages from "./pages/VendorPackages";
 import VendorDirectory from "./pages/VendorDirectory";
 import PasswordReset from "./pages/PasswordReset";
 import AgentAccountSetup from "./pages/AgentAccountSetup";
+import ActivateAccount from "./pages/ActivateAccount";
 import PendingVerification from "./pages/PendingVerification";
 import NotFound from "./pages/NotFound";
 import AccessError from "./pages/AccessError";
@@ -346,6 +347,7 @@ const App = () => (
                   <Route path="/pending-verification" element={<PendingVerification />} />
                   <Route path="/password-reset" element={<PasswordReset />} />
                   <Route path="/agent-setup" element={<AgentAccountSetup />} />
+                  <Route path="/activate" element={<ActivateAccount />} />
                   <Route path="/access-error" element={<AccessError />} />
                 </Route>
                 
