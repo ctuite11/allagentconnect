@@ -89,6 +89,7 @@ const AuthCallback = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const didNavigate = useRef(false);
+  const routingInFlight = useRef(false);
   const [error, setError] = useState<string | null>(null);
   const [errorKind, setErrorKind] = useState<AuthCallbackErrorKind>("generic");
 
@@ -451,7 +452,9 @@ const AuthCallback = () => {
       // Final callback watchdog. This applies to PKCE query-code links and
       // recovery/setup links as well as legacy hash links.
       timeout = setTimeout(() => {
-        if (!didNavigate.current && !cancelled) {
+        // Never show a timeout error while post-login routing is still
+        // resolving — role resolution can legitimately take several seconds.
+        if (!didNavigate.current && !cancelled && !routingInFlight.current) {
           const setup = isAgentSetupContext(recoveryInfo.isSetup);
           showAuthError(
             setup
@@ -460,7 +463,7 @@ const AuthCallback = () => {
             setup ? "setup" : "generic",
           );
         }
-      }, 10000);
+      }, 20000);
 
       if (!hasAuthHash) {
         checkExistingSession();
