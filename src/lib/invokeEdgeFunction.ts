@@ -63,6 +63,26 @@ function friendlyEdgeFunctionMessage(raw: string, status?: number): string {
   return raw;
 }
 
+async function withAuthTimeout<T>(
+  operation: Promise<T>,
+  timeoutMs: number,
+): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      operation,
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(
+          () => reject(new Error("Your session could not be confirmed. Please sign in again.")),
+          timeoutMs,
+        );
+      }),
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
 async function readResponseBody(response: Response): Promise<string | null> {
   try {
     const text = (await response.clone().text()).trim();
@@ -123,15 +143,17 @@ export async function invokeEdgeFunction<T = Record<string, unknown>>(
   // edge functions to reject with "Invalid session".
   let {
     data: { session },
-  } = await supabase.auth.getSession();
+  } = await withAuthTimeout(supabase.auth.getSession(), 6000);
 
   // Refresh if missing, or expiring within 60s.
   const expiresAt = session?.expires_at ?? 0;
   const nowSec = Math.floor(Date.now() / 1000);
   let usedFallbackToken = false;
   if (!session?.access_token || expiresAt - nowSec < 60) {
-    const { data: refreshed, error: refreshError } =
-      await supabase.auth.refreshSession();
+    const { data: refreshed, error: refreshError } = await withAuthTimeout(
+      supabase.auth.refreshSession(),
+      8000,
+    );
     if (refreshError || !refreshed.session?.access_token) {
       // A failed refresh is not proof the session is dead — e.g. another tab
       // (or the SDK's auto-refresh) may have rotated the refresh token first.
@@ -150,7 +172,10 @@ export async function invokeEdgeFunction<T = Record<string, unknown>>(
     }
   }
 
-  const token = session!.access_token;
+  const token = session?.access_token;
+  if (!token) {
+    throw new Error("Please sign in again.");
+  }
   const supabaseUrl =
     import.meta.env.VITE_SUPABASE_URL ||
     (supabase as unknown as { supabaseUrl?: string }).supabaseUrl;
