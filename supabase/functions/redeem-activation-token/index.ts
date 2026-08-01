@@ -1,4 +1,4 @@
-// @auth-classification: public-unauthenticated (token-bearing, POST-only)
+// @auth-classification: token-redemption (public, token-bearing, POST-only)
 //
 // Redeems an AAC-owned activation token. Invoked ONLY by the same-origin
 // Netlify proxy at /api/activate-redeem after the user clicks "Activate".
