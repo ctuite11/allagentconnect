@@ -197,8 +197,8 @@ export function buildLicenseVerifiedEmailHtml(opts: LicenseVerifiedEmailOptions)
         </td></tr>
 
         <!-- Footer -->
-        <tr><td align="center" style="background-color:${NAVY};border-radius:0 0 14px 14px;padding:26px 40px 26px;">
-          ${footerAgent ? renderAgentFooter(footerAgent) : `<img src="${MONOGRAM_URL}" width="22" height="22" alt="" style="display:block;margin:0 auto 10px;border:0;outline:none;text-decoration:none;" /><p style="margin:0 0 4px;font-size:13px;font-weight:600;letter-spacing:0.02em;color:#ffffff;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">By Agents. For Agents. All Agents.</p><p style="margin:0;font-size:11px;color:rgba(255,255,255,0.55);font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">All Agent Connect</p>`}
+        <tr><td align="center" bgcolor="${NAVY}" style="background-color:${NAVY};border-radius:0 0 14px 14px;padding:26px 40px 26px;">
+          ${footerAgent ? renderAgentFooter(footerAgent) : `<div style="margin:0 0 10px;">${renderMonogram(24)}</div><p style="margin:0 0 4px;font-size:13px;font-weight:600;letter-spacing:0.02em;color:#ffffff;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">By Agents. For Agents. All Agents.</p><p style="margin:0;font-size:11px;color:rgba(255,255,255,0.55);font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">All Agent Connect</p>`}
         </td></tr>
 
       </table>
