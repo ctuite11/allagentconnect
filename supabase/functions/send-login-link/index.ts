@@ -1,4 +1,4 @@
-// @auth-classification: admin-or-internal
+// @auth-classification: admin-jwt
 //
 // Issues an AAC-owned 7-day sign-in link for an agent.
 //
