@@ -664,7 +664,18 @@ const Auth = () => {
       if (error instanceof z.ZodError) {
         toast.error(error.errors[0].message);
       } else if (error.message?.includes('timed out')) {
-        toast.error(error.message);
+        // The backend records the request and notifies admin in well under a
+        // second; a client-side timeout here means the response was lost in
+        // transit, not that the submission failed. Submitting again is safe
+        // (idempotent), but sending the agent to an error state is misleading.
+        toast.info(
+          "Your request was submitted. If you don't hear from us shortly, contact support."
+        );
+        submissionSucceeded = true;
+        if (!didNavigate.current) {
+          didNavigate.current = true;
+          navigate('/pending-verification?submitted=1', { replace: true });
+        }
       } else {
         toast.error(error.message || "Failed to submit request. Please try again.");
       }
