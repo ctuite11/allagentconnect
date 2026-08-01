@@ -1135,15 +1135,7 @@ const Auth = () => {
               <Button 
                 type="submit" 
                 className="w-full h-11 bg-aac hover:bg-aac-hover active:bg-aac-active text-white font-medium rounded-xl focus-visible:ring-2 focus-visible:ring-aac-ring no-touch-hover" 
-                disabled={
-                  loading ||
-                  (mode === "register" &&
-                    (!licenseState ||
-                      !firstName.trim() ||
-                      !lastName.trim() ||
-                      !licenseNumber.trim() ||
-                      !turnstile.isVerified))
-                }
+                disabled={loading}
               >
                 {loading ? (
                   <>
