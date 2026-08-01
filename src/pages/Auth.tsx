@@ -55,6 +55,11 @@ function withTimeout<T>(
 
 const emailSchema = z.string().trim().email("Please enter a valid email address");
 
+/** Turnstile's site key is domain-locked to the live hosts. */
+const IS_PRODUCTION_HOST =
+  typeof window !== "undefined" &&
+  /(^|\.)(allagentconnect\.com|directconnectmls\.com)$/.test(window.location.hostname);
+
 // US States for license dropdown
 const US_STATES = [
   { value: 'AL', label: 'Alabama' }, { value: 'AK', label: 'Alaska' }, { value: 'AZ', label: 'Arizona' },
