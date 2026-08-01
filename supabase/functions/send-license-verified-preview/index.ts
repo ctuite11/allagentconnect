@@ -5,7 +5,7 @@
 //  - Sends ONLY to the calling admin's own auth email.
 //  - CTA is inert ("#") — no activation token is issued or redeemed.
 //  - Never touches email_jobs / the queue / streams / pause flags. Direct Resend call.
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { buildLicenseVerifiedEmailHtml } from "../_shared/buildLicenseVerifiedEmailHtml.ts";
 import { buildTransactionalFrom } from "../_shared/transactionalSender.ts";
 
@@ -31,27 +31,49 @@ Deno.serve(async (req: Request): Promise<Response> => {
     if (!resendApiKey) throw new Error("Server misconfigured: missing RESEND_API_KEY");
 
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) return json({ success: false, error: "Not authenticated" }, 401);
+    if (!authHeader?.startsWith("Bearer ")) {
+      console.error("[send-license-verified-preview] missing bearer token");
+      return json({ success: false, error: "Not authenticated: missing bearer token" }, 401);
+    }
 
     const userClient = createClient(supabaseUrl, anonKey, {
       global: { headers: { Authorization: authHeader } },
     });
 
-    const { data: { user }, error: userError } = await userClient.auth.getUser();
-    if (userError || !user?.email) {
-      return json({ success: false, error: "Not authenticated" }, 401);
+    const token = authHeader.replace("Bearer ", "");
+    const { data: claimsData, error: claimsError } = await userClient.auth.getClaims(token);
+    const claims = claimsData?.claims as { sub?: string; email?: string } | undefined;
+    if (claimsError || !claims?.sub) {
+      console.error("[send-license-verified-preview] invalid token:", claimsError?.message ?? "no claims");
+      return json({ success: false, error: "Not authenticated: invalid session" }, 401);
+    }
+
+    // Recipient must be the caller's own verified auth email.
+    let email = typeof claims.email === "string" ? claims.email : null;
+    if (!email) {
+      const { data: { user } } = await userClient.auth.getUser();
+      email = user?.email ?? null;
+    }
+    if (!email) {
+      console.error("[send-license-verified-preview] no email on authenticated user");
+      return json({ success: false, error: "Your account has no email address" }, 400);
     }
 
     const { data: isAdmin, error: roleError } = await userClient.rpc("has_role", {
-      _user_id: user.id,
+      _user_id: claims.sub,
       _role: "admin",
     });
-    if (roleError || isAdmin !== true) {
+    if (roleError) {
+      console.error("[send-license-verified-preview] has_role failed:", roleError.message);
+      return json({ success: false, error: `Role check failed: ${roleError.message}` }, 403);
+    }
+    if (isAdmin !== true) {
+      console.error("[send-license-verified-preview] non-admin caller:", claims.sub);
       return json({ success: false, error: "Admin access required" }, 403);
     }
 
     // Recipient is always the caller. No arbitrary `to` is accepted.
-    const to = user.email;
+    const to = email;
 
     const html = buildLicenseVerifiedEmailHtml({
       ctaUrl: "#",
