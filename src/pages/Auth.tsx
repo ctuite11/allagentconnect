@@ -27,6 +27,7 @@ import {
   setPostAuthRedirect,
 } from "@/lib/sharedListingGuest";
 import { isVerifiedAgentEmail, VERIFIED_AGENT_SIGNIN_HINT } from "@/lib/agentActivationHint";
+import { clearRecoveryState } from "@/lib/authRecovery";
 
 /** Premium white card — email-template aligned (soft border, subtle shadow). */
 const authCardSurface =
@@ -491,6 +492,11 @@ const Auth = () => {
 
     try {
       const validatedEmail = emailSchema.parse(email);
+
+      // A deliberate password sign-in is always a normal login. Clear any
+      // setup/recovery handoff left in this tab by an older activation link
+      // before SIGNED_IN fires and sends the user through AuthCallback.
+      clearRecoveryState();
 
       const { error } = await supabase.auth.signInWithPassword({
         email: validatedEmail,
