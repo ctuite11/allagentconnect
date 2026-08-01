@@ -2407,13 +2407,15 @@ export default function AdminApprovals() {
             <AlertDialogDescription>
               {pendingEmailAction === "forward-invite"
                 ? "The forwardable Join Invitation will be sent to chris@allagentconnect.com."
-                : `The Comms Center guide preview will be sent to ${user?.email ?? "your admin email"}.`}
+                : pendingEmailAction === "license-verified-preview"
+                  ? `A preview of the existing License Verified email will be sent to ${user?.email ?? "your admin email"}. The activation button is inert and no activation link is issued.`
+                  : `The Comms Center guide preview will be sent to ${user?.email ?? "your admin email"}.`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              disabled={isSendingForwardInvite || isSendingCommsPreview}
+              disabled={isSendingForwardInvite || isSendingCommsPreview || isSendingLicensePreview}
               onClick={async (e) => {
                 e.preventDefault();
                 const action = pendingEmailAction;
@@ -2421,11 +2423,13 @@ export default function AdminApprovals() {
                   await sendForwardableInvite();
                 } else if (action === "comms-preview") {
                   await sendCommsGuidePreview(user?.email);
+                } else if (action === "license-verified-preview") {
+                  await sendLicenseVerifiedPreview(user?.email);
                 }
                 setPendingEmailAction(null);
               }}
             >
-              {isSendingForwardInvite || isSendingCommsPreview ? "Sending…" : "Send email"}
+              {isSendingForwardInvite || isSendingCommsPreview || isSendingLicensePreview ? "Sending…" : "Send email"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
