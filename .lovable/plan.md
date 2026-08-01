@@ -1,29 +1,46 @@
-## What's happening
+## Goal
 
-The new "Preview License Verified email" button fails with *"Edge Function returned a non-2xx status code."*
+Give agents a login link that stays valid for **7 days** instead of the current 1 hour, without changing any global auth setting.
 
-Verified from the live logs, not assumed:
-- `POST /send-license-verified-preview` → **401**, twice (05:09:09 and 05:08:57 UTC). The `OPTIONS` preflight returned 200, so CORS is fine.
-- The function booted on both attempts but logged nothing else. The only paths in it that return without logging are the authentication checks — so it is rejecting the caller, not failing at Resend.
+## Why this works
 
-The likely cause is the Supabase client version used for the auth check. The new function pins `@supabase/supabase-js@2.39.3` from esm.sh, while the admin function that works today (`admin-list-agents`) uses the current `@supabase/supabase-js@2`. This project uses the newer signing-keys auth system, where JWT validation should go through `getClaims()`. The new function's older client and `getUser()` call is the one thing that differs from the known-good admin function.
+The existing activation flow already solves this exact problem. The AAC-issued token is what lives for 7 days; when the agent finally clicks it, the server mints a **fresh** short-lived auth link right at that moment and signs them in. The 1-hour auth expiry never has a chance to lapse, because the auth link only exists for the few seconds between click and sign-in.
 
-## Fix
+```text
+Email link (AAC token, 7 days)
+      -> agent clicks, any time within 7 days
+          -> server validates token, marks it redeeming
+              -> mints a fresh auth link (valid seconds)
+                  -> agent lands signed in, token marked redeemed
+```
 
-1. **Align the preview function's auth with the working admin pattern** — in `supabase/functions/send-license-verified-preview/index.ts`:
-   - Use the current Supabase client (`npm:@supabase/supabase-js@2`) instead of the pinned esm.sh 2.39.3 build.
-   - Validate the bearer token with `getClaims()`, then confirm the admin role with the existing `has_role` check, exactly as `admin-list-agents` does.
-   - Keep the recipient hardcoded to the caller's own email from the verified claims — no client-supplied `to`.
-2. **Add distinct log lines and error strings** for each rejection reason (missing header, invalid token, not an admin) so any remaining failure names itself instead of surfacing as a generic 401.
-3. **Redeploy and confirm** via the edge-function logs that the call returns 200 and a send is recorded.
+## What gets built
 
-## What stays untouched
+**1. Login-link tokens (database)**
+A `agent_login_tokens` table mirroring `agent_activation_tokens`: single-use, 7-day expiry, SHA-256 digest only (never the plaintext), at most one live token per agent, atomic `issued -> redeeming -> redeemed` transition, service-role only with no anon/authenticated access.
 
-- `buildLicenseVerifiedEmailHtml.ts` and every other email template — no edits.
-- All branding assets — no edits.
-- The activation button in the preview stays inert (`#`); no activation token is issued.
-- No queue rows, no stream/pause changes, no Hot Sheet or listing behavior. The preview still calls Resend directly.
+**2. Redemption endpoint**
+A `redeem-login-token` function that mirrors `redeem-activation-token`: validates the token, claims it atomically, generates a fresh magic link for that user, and returns it. Expired, already-used, or revoked tokens get a clear message plus a self-service "send me a new one" path.
 
-## Technical detail
+**3. Sign-in page**
+A `/signin-link` page that reads the token from the URL fragment (so it never hits server logs or the referrer header) and shows an explicit **Sign In** button — no auto-redemption on page load, so email scanners and link previewers can't burn the token.
 
-Only two files are involved: the preview edge function (auth block rewritten, everything below it unchanged) and no frontend change — `AdminApprovals.tsx` already surfaces the returned error text correctly, which is how the 401 became visible in the first place.
+**4. Admin action**
+In Admin Approvals, a **Send login link** action on an agent that issues the 7-day token and enqueues the email on the `transactional` stream.
+
+**5. Email**
+Reuses the existing template system. Copy states the link is good for 7 days and works once. **No existing email template, wording, layout, branding asset, or footer is modified.**
+
+## Explicit guardrails
+
+- Global auth OTP/link expiry stays at 1 hour — untouched.
+- Existing activation tokens, Hot Sheet streams, pause flags, and queue behavior are untouched.
+- Plaintext tokens are never stored in the database or in `email_jobs`; the link is hydrated only at send time, exactly as activation does.
+- Nothing is sent to a real agent until you preview it yourself and approve.
+
+## Technical notes
+
+- New migration `agent_login_tokens.sql` with `claim_`, `complete_`, and `release_` security-definer functions, modeled on the activation equivalents.
+- `redeem-login-token` carries the `// @auth-classification: token-redemption` declaration so the security guard passes.
+- Redemption uses `auth.admin.generateLink({ type: 'magiclink' })` and returns the hashed-token URL for the client to complete.
+- Rate limiting: one live token per agent, and re-issuing revokes the prior one.

@@ -81,6 +81,14 @@
   status = 200
   force = true
 
+# Sign-in links: same-origin POST endpoint for the AAC-owned login token.
+# The token travels in the POST body only — never a query string.
+[[redirects]]
+  from = "/api/login-redeem"
+  to = "/.netlify/functions/login-redeem"
+  status = 200
+  force = true
+
 [[redirects]]
   from = "/api/send-pending-approval-email"
   to = "/.netlify/functions/send-pending-approval-email"
