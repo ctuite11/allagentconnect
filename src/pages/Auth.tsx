@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -795,8 +795,7 @@ const Auth = () => {
       (sessionStorage.getItem("aac_password_setup_flow") === "1" ||
         sessionStorage.getItem("aac_agent_setup_handoff") === "1")
     ) {
-      navigate("/agent-setup", { replace: true });
-      return <AacMonogramLoader variant="fullscreen" message="Setting up your account…" />;
+      return <Navigate to="/agent-setup" replace />;
     }
     const isPending = agentStatus === 'pending_verification' || agentStatus === 'pending_approval';
     const isVerified = agentStatus === 'verified';

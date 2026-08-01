@@ -407,10 +407,9 @@ const AuthCallback = () => {
           didNavigate.current = true;
           window.history.replaceState(null, "", window.location.pathname);
           const isAgentSetup = hasActiveSetup;
-          if (isAgentSetup) {
-            const { data: { session } } = await supabase.auth.getSession();
-            rememberAgentSetupHandoff(session);
-          }
+          // Do not block the setup route on another auth storage read. Mobile
+          // browsers can leave getSession pending while processing the link;
+          // AgentAccountSetup performs its own bounded session validation.
           navigate(isAgentSetup ? "/agent-setup" : "/password-reset", { replace: true });
           return;
         }
