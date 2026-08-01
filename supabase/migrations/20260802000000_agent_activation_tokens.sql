@@ -564,3 +564,45 @@ $$;
 REVOKE ALL ON FUNCTION public.redeem_resend_handle_and_issue(text, uuid, text, timestamptz, text, text, text)
   FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.redeem_resend_handle_and_issue(text, uuid, text, timestamptz, text, text, text) TO service_role;
+
+-- ---------------------------------------------------------------------
+-- 8. Admin-initiated re-issuance ("Resend setup email")
+--
+-- Distinct from the initial approval-event issuance: this DOES create a new
+-- issuance key and revokes the prior live token. Double-clicks inside the
+-- same minute collapse onto one token+job via the minute-bucketed key.
+-- ---------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION public.reissue_agent_activation_token(
+  p_id         uuid,
+  p_user_id    uuid,
+  p_token_hash text,
+  p_expires_at timestamptz,
+  p_subject    text DEFAULT NULL,
+  p_reply_to   text DEFAULT NULL,
+  p_agent_name text DEFAULT NULL
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
+BEGIN
+  PERFORM public.assert_service_role();
+
+  RETURN public.activation_issue_core(
+    p_id,
+    p_user_id,
+    p_token_hash,
+    p_expires_at,
+    'admin-resend:' || p_user_id::text || ':' || to_char(now() AT TIME ZONE 'utc', 'YYYYMMDDHH24MI'),
+    true,
+    p_subject,
+    p_reply_to,
+    p_agent_name
+  );
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.reissue_agent_activation_token(uuid, uuid, text, timestamptz, text, text, text)
+  FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.reissue_agent_activation_token(uuid, uuid, text, timestamptz, text, text, text) TO service_role;

@@ -1340,13 +1340,13 @@ export default function AdminApprovals() {
 
     setSendingSetupLinkFor((prev) => new Set(prev).add(agent.id));
     try {
-      const setupUrl = await generateSetupLink(agent);
-      if (!setupUrl) return false;
+      // The activation link is minted server-side from the agent's user id —
+      // the admin client never sees or supplies a CTA URL.
       const { error } = await supabase.functions.invoke("send-license-verified-email", {
         body: {
-          to: agent.email,
+          user_id: agent.id,
+          mode: "resend",
           agentName: agent.first_name || undefined,
-          ctaUrl: setupUrl,
           // Gate already passed above → allow the send even for a
           // previously-deleted email.
           acknowledgeDeleted: true,

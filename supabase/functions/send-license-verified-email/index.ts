@@ -84,6 +84,9 @@ serve(async (req) => {
     }
     const acknowledgeDeleted = body.acknowledgeDeleted === true;
     const agentName = typeof body.agentName === "string" ? body.agentName.slice(0, 80) : null;
+    // "initial" is idempotent on the approval event; "resend" mints a fresh
+    // token (admin-triggered, minute-bucketed so double-clicks collapse).
+    const mode = body.mode === "resend" ? "resend" : "initial";
 
     // ---- Server-side recipient resolution (never trusted from the caller) ----
     const { data: userRes, error: userErr } = await admin.auth.admin.getUserById(userId);
@@ -116,7 +119,11 @@ serve(async (req) => {
 
     // Token row + transactional email job, one transaction, idempotent on the
     // approval event. The plaintext token never leaves this function.
-    const { data: result, error: rpcErr } = await admin.rpc("issue_agent_activation_token", {
+    const rpcName = mode === "resend"
+      ? "reissue_agent_activation_token"
+      : "issue_agent_activation_token";
+
+    const { data: result, error: rpcErr } = await admin.rpc(rpcName, {
       p_id: tokenId,
       p_user_id: userId,
       p_token_hash: await sha256Hex(token),
