@@ -235,6 +235,16 @@ const Auth = () => {
   useEffect(() => {
     let mounted = true;
 
+    // Mobile watchdog: Supabase's auth lock can stall getSession()/getUser()
+    // indefinitely (backgrounded Safari/Chrome tabs), leaving the page stuck on
+    // the "Checking your session…" spinner. Never let the spinner outlive 8s.
+    const watchdog = window.setTimeout(() => {
+      if (mounted) {
+        console.warn("[AUTH] session check watchdog fired; showing form");
+        setCheckingSession(false);
+      }
+    }, 8000);
+
     const handleSession = async () => {
       // Check for ?reset=success to show password reset success message
       if (searchParams.get("reset") === "success") {
@@ -254,7 +264,11 @@ const Auth = () => {
 
       // If user wants to register, sign out any existing session first
       if (modeParam === "register") {
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session } } = await withTimeout(
+          supabase.auth.getSession(),
+          6000,
+          "Session check"
+        );
         if (session?.user) {
           await supabase.auth.signOut();
         }
@@ -270,7 +284,11 @@ const Auth = () => {
       // This fixes the "Invalid Refresh Token" error after admin creates a user
       // ═══════════════════════════════════════════════════════════════════════
       try {
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        const { data: { session }, error: sessionError } = await withTimeout(
+          supabase.auth.getSession(),
+          6000,
+          "Session check"
+        );
         
         // If there's a session error (like invalid refresh token), force sign out
         if (sessionError) {
@@ -304,7 +322,11 @@ const Auth = () => {
           // STALE AUTH GUARD: getSession() reads localStorage only (no server hit).
           // Validate the token is still live on the server before running role checks.
           // This handles the "deleted user + cached JWT = infinite broken login" case.
-          const { error: userError } = await supabase.auth.getUser();
+          const { error: userError } = await withTimeout(
+            supabase.auth.getUser(),
+            6000,
+            "Session validation"
+          );
           if (userError) {
             console.warn('[AUTH] stale session detected; forcing sign out:', userError.message);
             try {
@@ -399,7 +421,11 @@ const Auth = () => {
       } catch (e: any) {
         // Catch any thrown errors (like network issues) and clear session
         console.error('[AUTH] Session check failed:', e?.message || e);
-        await supabase.auth.signOut();
+        try {
+          await withTimeout(supabase.auth.signOut(), 4000, "Sign out");
+        } catch {
+          /* ignore — never block the form on cleanup */
+        }
         if (mounted) {
           setCheckingSession(false);
           setExistingSession(false);
@@ -411,6 +437,7 @@ const Auth = () => {
 
     return () => {
       mounted = false;
+      window.clearTimeout(watchdog);
     };
   }, [searchParams, modeParam, navigate]);
 
