@@ -55,6 +55,11 @@ function withTimeout<T>(
 
 const emailSchema = z.string().trim().email("Please enter a valid email address");
 
+/** Turnstile's site key is domain-locked to the live hosts. */
+const IS_PRODUCTION_HOST =
+  typeof window !== "undefined" &&
+  /(^|\.)(allagentconnect\.com|directconnectmls\.com)$/.test(window.location.hostname);
+
 // US States for license dropdown
 const US_STATES = [
   { value: 'AL', label: 'Alabama' }, { value: 'AK', label: 'Alaska' }, { value: 'AZ', label: 'Arizona' },
@@ -1107,10 +1112,24 @@ const Auth = () => {
               )}
 
               {mode === "register" && (
-                <TurnstileField
-                  containerRef={turnstile.containerRef}
-                  error={turnstile.error}
-                />
+                <>
+                  <TurnstileField
+                    containerRef={turnstile.containerRef}
+                    error={turnstile.error}
+                  />
+                  {turnstile.error && !turnstile.isVerified && !IS_PRODUCTION_HOST && (
+                    <p className="text-[12px] text-muted-foreground -mt-2">
+                      Security verification only runs on the live site. Submit this form at{" "}
+                      <a
+                        href="https://allagentconnect.com/auth?mode=register"
+                        className="text-aac hover:underline"
+                      >
+                        allagentconnect.com
+                      </a>
+                      .
+                    </p>
+                  )}
+                </>
               )}
 
               <Button 
