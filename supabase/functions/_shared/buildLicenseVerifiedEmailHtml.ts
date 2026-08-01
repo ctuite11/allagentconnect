@@ -18,13 +18,24 @@ const TEXT_DARK = "#0f172a";
 const TEXT_BODY = "#334155";
 const TEXT_MUTED = "#64748b";
 const BORDER = "#e5e7eb";
-const MONOGRAM_URL = "https://allagentconnect.com/email/aac-monogram-green-128.png";
+const EMERALD_PANEL_BG = "#f0fdf6";
+const EMERALD_PANEL_BORDER = "#bbf7d0";
+const MONOGRAM_URL = "https://allagentconnect.com/email/aac-monogram-green-256.png";
 
 const NEXT_STEPS = [
+  "Open the Comms Center to post needs, discover opportunities, and connect with verified agents.",
   "Complete your profile so other agents can find you.",
   "Add or import your listings.",
   "Start sharing listings and building buyer Hot Sheets.",
 ];
+
+/**
+ * Monogram with an email-safe fallback: styled ALT text renders in Outlook and
+ * in any client that blocks images, so the navy header is never blank.
+ */
+function renderMonogram(size: number): string {
+  return `<img src="${MONOGRAM_URL}" width="${size}" height="${size}" alt="AAC" style="display:block;margin:0 auto;border:0;outline:none;text-decoration:none;color:${EMERALD_ACCENT};font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;font-size:${Math.round(size * 0.42)}px;font-weight:700;line-height:${size}px;text-align:center;" />`;
+}
 
 function renderBullets(items: string[]): string {
   return items
