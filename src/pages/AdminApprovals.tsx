@@ -372,7 +372,10 @@ export default function AdminApprovals() {
   const [sendingSetupLinkFor, setSendingSetupLinkFor] = useState<Set<string>>(new Set());
   const [isSendingCommsPreview, setIsSendingCommsPreview] = useState(false);
   const [isSendingForwardInvite, setIsSendingForwardInvite] = useState(false);
-  const [pendingEmailAction, setPendingEmailAction] = useState<null | "forward-invite" | "comms-preview">(null);
+  const [isSendingLicensePreview, setIsSendingLicensePreview] = useState(false);
+  const [pendingEmailAction, setPendingEmailAction] = useState<
+    null | "forward-invite" | "comms-preview" | "license-verified-preview"
+  >(null);
 
   const sendForwardableInvite = async () => {
     if (isSendingForwardInvite) return;
@@ -413,6 +416,29 @@ export default function AdminApprovals() {
       }
     } finally {
       setIsSendingCommsPreview(false);
+    }
+  };
+
+  /**
+   * Sends the EXISTING License Verified email to the signed-in admin only.
+   * Inert CTA, no activation token, no queue row. Verification aid only.
+   */
+  const sendLicenseVerifiedPreview = async (adminEmail?: string | null) => {
+    if (isSendingLicensePreview) return;
+    setIsSendingLicensePreview(true);
+    toast.message("Sending License Verified preview to your inbox…");
+    try {
+      const { data, error } = await supabase.functions.invoke(
+        'send-license-verified-preview',
+        { body: {} },
+      );
+      if (error || !data?.success) {
+        toast.error(`Failed: ${error?.message ?? data?.error ?? 'Unknown error'}`);
+      } else {
+        toast.success(`Preview sent to ${data?.to ?? adminEmail ?? "your inbox"}`);
+      }
+    } finally {
+      setIsSendingLicensePreview(false);
     }
   };
   const [lastSetupLinkSentAt, setLastSetupLinkSentAt] = useState<Map<string, number>>(new Map());
