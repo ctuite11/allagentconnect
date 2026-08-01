@@ -575,7 +575,7 @@ const Auth = () => {
         return;
       }
 
-      const turnstileToken = turnstile.requireToken();
+      const turnstileToken = await turnstile.getFreshToken();
       if (!turnstileToken) {
         toast.error("Please complete the \"Verify you are human\" check.");
         return;
