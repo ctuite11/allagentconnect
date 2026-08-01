@@ -53,16 +53,28 @@ export function useTurnstile(action?: string, enabled = true) {
 
     let cancelled = false;
 
+    const waitForContainer = async (): Promise<HTMLDivElement | null> => {
+      // The form can be hidden (e.g. while the auth session check runs), so the
+      // container may not exist yet when the script finishes loading. Poll for it.
+      for (let i = 0; i < 120; i += 1) {
+        if (cancelled) return null;
+        if (containerRef.current) return containerRef.current;
+        await new Promise((r) => setTimeout(r, 250));
+      }
+      return null;
+    };
+
     loadTurnstileScript()
-      .then(() => {
-        if (cancelled || !containerRef.current || !window.turnstile) return;
+      .then(() => waitForContainer())
+      .then((container) => {
+        if (cancelled || !container || !window.turnstile) return;
 
         if (widgetIdRef.current) {
           window.turnstile.remove(widgetIdRef.current);
           widgetIdRef.current = null;
         }
 
-        widgetIdRef.current = window.turnstile.render(containerRef.current, {
+        widgetIdRef.current = window.turnstile.render(container, {
           sitekey: TURNSTILE_SITE_KEY,
           callback: onVerify,
           "expired-callback": onExpire,
