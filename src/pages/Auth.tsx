@@ -111,6 +111,7 @@ const Auth = () => {
   const [sessionEmail, setSessionEmail] = useState<string | null>(null);
   const didNavigate = useRef(false);
   const isRegistering = useRef(false);
+  const passwordSignInInFlight = useRef(false);
   const cancelledRef = useRef(false);
   const abortRef = useRef<AbortController | null>(null);
   const turnstile = useTurnstile("agent_register", mode === "register");
@@ -473,7 +474,13 @@ const Auth = () => {
         // Don't redirect during register init — sign-out emits events that would strip ?mode=register
         if (suppressAuthRoutingRef.current) return;
         
-        if (event === 'SIGNED_IN' && session?.user && !didNavigate.current && !isRegistering.current) {
+        if (
+          event === 'SIGNED_IN' &&
+          session?.user &&
+          !didNavigate.current &&
+          !isRegistering.current &&
+          !passwordSignInInFlight.current
+        ) {
           didNavigate.current = true;
           navigate('/auth/callback', { replace: true });
         }
@@ -489,6 +496,7 @@ const Auth = () => {
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    passwordSignInInFlight.current = true;
 
     try {
       const validatedEmail = emailSchema.parse(email);
@@ -498,10 +506,14 @@ const Auth = () => {
       // before SIGNED_IN fires and sends the user through AuthCallback.
       clearRecoveryState();
 
-      const { error } = await supabase.auth.signInWithPassword({
-        email: validatedEmail,
-        password,
-      });
+      const { data, error } = await withTimeout(
+        supabase.auth.signInWithPassword({
+          email: validatedEmail,
+          password,
+        }),
+        20000,
+        "Sign in",
+      );
 
       if (error) {
         if (error.message.includes("Invalid login credentials")) {
@@ -514,8 +526,27 @@ const Auth = () => {
         } else {
           toast.error(error.message);
         }
+        return;
       }
-      // Success is handled by onAuthStateChange
+
+      if (!data.user) {
+        toast.error("Sign in did not return an account. Please try again.");
+        return;
+      }
+
+      // Password sign-in already returns a server-confirmed session. Route from
+      // that result directly instead of sending the user through /auth/callback,
+      // where a second auth-storage read can stall on mobile browsers.
+      const resolved = await withTimeout(
+        resolveUserRole(data.user.id),
+        8000,
+        "Account access check",
+      );
+      const returnToMeta = resolvePostAuthRedirectWithMeta(searchParams);
+      const target = returnToMeta.value ?? getRouteForRole(resolved);
+      clearGuestListing();
+      didNavigate.current = true;
+      navigate(target, { replace: true });
     } catch (error: any) {
       if (error instanceof z.ZodError) {
         toast.error(error.errors[0].message);
@@ -523,6 +554,7 @@ const Auth = () => {
         toast.error(error.message || "Failed to sign in");
       }
     } finally {
+      passwordSignInInFlight.current = false;
       setLoading(false);
     }
   };
