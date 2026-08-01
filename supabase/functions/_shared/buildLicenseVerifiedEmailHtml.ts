@@ -163,6 +163,14 @@ export function buildLicenseVerifiedEmailHtml(opts: LicenseVerifiedEmailOptions)
             </td></tr>
           </table>
 
+          <!-- Comms Center highlight -->
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 26px;">
+            <tr><td style="background-color:#ecfdf5;border:1px solid ${EMERALD_ACCENT};border-left:4px solid ${EMERALD_ACCENT};border-radius:10px;padding:18px 20px;">
+              <p style="margin:0 0 6px;font-size:15px;font-weight:700;color:#065f46;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Your Communications Center is crucial to your account</p>
+              <p style="margin:0;font-size:14.5px;line-height:1.6;color:#065f46;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">It controls every alert you receive — buyer needs, listing matches, and agent messages. Set your coverage areas, property types, and price range so you only get what matters to your business.</p>
+            </td></tr>
+          </table>
+
           <!-- CTA -->
           <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:8px 0 4px;">
             <tr><td align="center" style="padding:8px 0 6px;">
