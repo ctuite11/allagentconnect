@@ -1689,6 +1689,15 @@ export default function AdminApprovals() {
             >
               {isSendingCommsPreview ? "Sending…" : "Preview Comms guide email"}
             </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={isSendingLicensePreview}
+              onClick={() => setPendingEmailAction("license-verified-preview")}
+              className="w-full justify-start border-slate-300 text-slate-700 hover:bg-slate-100 sm:w-auto sm:justify-center"
+            >
+              {isSendingLicensePreview ? "Sending…" : "Preview License Verified email"}
+            </Button>
             <Button 
               onClick={() => setShowCreateDialog(true)}
               size="sm"
