@@ -570,7 +570,10 @@ const Auth = () => {
       }
 
       const turnstileToken = turnstile.requireToken();
-      if (!turnstileToken) return;
+      if (!turnstileToken) {
+        toast.error("Please complete the \"Verify you are human\" check.");
+        return;
+      }
 
       // ========== Submit to Phase 1 backend ==========
       // Creates only a pending_verifications row (no auth user, no password).
@@ -1135,15 +1138,7 @@ const Auth = () => {
               <Button 
                 type="submit" 
                 className="w-full h-11 bg-aac hover:bg-aac-hover active:bg-aac-active text-white font-medium rounded-xl focus-visible:ring-2 focus-visible:ring-aac-ring no-touch-hover" 
-                disabled={
-                  loading ||
-                  (mode === "register" &&
-                    (!licenseState ||
-                      !firstName.trim() ||
-                      !lastName.trim() ||
-                      !licenseNumber.trim() ||
-                      !turnstile.isVerified))
-                }
+                disabled={loading}
               >
                 {loading ? (
                   <>
