@@ -116,6 +116,7 @@ async function enqueueAdminNotification(
   try {
     await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/kick-email-queue`, {
       method: "POST",
+      signal: AbortSignal.timeout(1500),
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""}`,
@@ -275,15 +276,18 @@ export async function handleRequest(req: Request): Promise<Response> {
           .limit(1)
           .maybeSingle();
         if (existing?.id) {
-          await enqueueAdminNotification(admin, existing.id, {
-            firstName,
-            lastName,
-            email,
-            phone,
-            company,
-            licenseState,
-            licenseNumber,
-          });
+          await withTimeout(
+            enqueueAdminNotification(admin, existing.id, {
+              firstName,
+              lastName,
+              email,
+              phone,
+              company,
+              licenseState,
+              licenseNumber,
+            }),
+            3000,
+          );
         }
       } catch (e) {
         console.error(
@@ -303,15 +307,18 @@ export async function handleRequest(req: Request): Promise<Response> {
 
   // Fresh insert → notify admin. Never fails the request.
   try {
-    await enqueueAdminNotification(admin, inserted.id, {
-      firstName,
-      lastName,
-      email,
-      phone,
-      company,
-      licenseState,
-      licenseNumber,
-    });
+    await withTimeout(
+      enqueueAdminNotification(admin, inserted.id, {
+        firstName,
+        lastName,
+        email,
+        phone,
+        company,
+        licenseState,
+        licenseNumber,
+      }),
+      3000,
+    );
   } catch (e) {
     console.error(
       "[submit-agent-verification-request] admin notify threw (non-fatal):",
