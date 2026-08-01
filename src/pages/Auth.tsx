@@ -570,7 +570,10 @@ const Auth = () => {
       }
 
       const turnstileToken = turnstile.requireToken();
-      if (!turnstileToken) return;
+      if (!turnstileToken) {
+        toast.error("Please complete the \"Verify you are human\" check.");
+        return;
+      }
 
       // ========== Submit to Phase 1 backend ==========
       // Creates only a pending_verifications row (no auth user, no password).
