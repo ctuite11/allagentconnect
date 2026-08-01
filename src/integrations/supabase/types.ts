@@ -2301,6 +2301,7 @@ export type Database = {
           provider_message_id: string | null
           run_after: string
           status: string
+          stream: string | null
         }
         Insert: {
           attempts?: number
@@ -2315,6 +2316,7 @@ export type Database = {
           provider_message_id?: string | null
           run_after?: string
           status?: string
+          stream?: string | null
         }
         Update: {
           attempts?: number
@@ -2329,6 +2331,7 @@ export type Database = {
           provider_message_id?: string | null
           run_after?: string
           status?: string
+          stream?: string | null
         }
         Relationships: []
       }
@@ -4887,28 +4890,62 @@ export type Database = {
         Returns: Json
       }
       effective_agent_id: { Args: never; Returns: string }
-      email_jobs_claim: {
-        Args: { p_limit: number }
-        Returns: {
-          attempts: number
-          created_at: string
-          delivery_status: string | null
-          delivery_status_at: string | null
-          id: string
-          idempotency_key: string | null
-          last_error: string | null
-          max_attempts: number
-          payload: Json
-          provider_message_id: string | null
-          run_after: string
-          status: string
-        }[]
-        SetofOptions: {
-          from: "*"
-          to: "email_jobs"
-          isOneToOne: false
-          isSetofReturn: true
-        }
+      email_job_is_blocked: {
+        Args: { p_idempotency_key: string; p_template: string }
+        Returns: boolean
+      }
+      email_jobs_claim:
+        | {
+            Args: { p_limit: number }
+            Returns: {
+              attempts: number
+              created_at: string
+              delivery_status: string | null
+              delivery_status_at: string | null
+              id: string
+              idempotency_key: string | null
+              last_error: string | null
+              max_attempts: number
+              payload: Json
+              provider_message_id: string | null
+              run_after: string
+              status: string
+              stream: string | null
+            }[]
+            SetofOptions: {
+              from: "*"
+              to: "email_jobs"
+              isOneToOne: false
+              isSetofReturn: true
+            }
+          }
+        | {
+            Args: { p_limit: number; p_streams: string[] }
+            Returns: {
+              attempts: number
+              created_at: string
+              delivery_status: string | null
+              delivery_status_at: string | null
+              id: string
+              idempotency_key: string | null
+              last_error: string | null
+              max_attempts: number
+              payload: Json
+              provider_message_id: string | null
+              run_after: string
+              status: string
+              stream: string | null
+            }[]
+            SetofOptions: {
+              from: "*"
+              to: "email_jobs"
+              isOneToOne: false
+              isSetofReturn: true
+            }
+          }
+      email_stream_for_template: {
+        Args: { p_template: string }
+        Returns: string
       }
       end_client_relationship: { Args: never; Returns: number }
       ensure_agent_role_for_user: {
