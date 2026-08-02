@@ -311,7 +311,7 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
         <span className="sr-only">Loading agent profile…</span>
         <div className={`${PROFILE_PAGE} pt-5`}>
           <Skeleton className="h-4 w-36 rounded-md bg-neutral-100" />
-          <div className="mt-6 flex flex-col gap-6 border-b border-neutral-100 pb-10 lg:grid lg:grid-cols-[280px_1fr] lg:items-start lg:gap-8">
+          <div className="mt-6 flex flex-col gap-6 border-b border-neutral-100 pb-10 lg:grid lg:grid-cols-[280px_1fr] lg:items-stretch lg:gap-8">
             <Skeleton className="mx-auto h-[360px] w-full max-w-[300px] rounded-lg bg-neutral-100 lg:mx-0 lg:max-w-none" />
             <div className="min-w-0 space-y-3 lg:flex lg:gap-8">
               <div className="flex-1 space-y-3">
