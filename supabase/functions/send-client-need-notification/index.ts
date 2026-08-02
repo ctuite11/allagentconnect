@@ -6,6 +6,7 @@ import {
   type EligibleAgent,
 } from "../_shared/verifiedAgentAudience.ts";
 import { matchesCommunicationPreferences } from "../_shared/communicationPreferencesMatcher.ts";
+import { loadCommsOptIn, type CommsCategoryColumn } from "../_shared/commsOptIn.ts";
 import {
   countExistingReminders,
   reserveAndEnqueueMissingOpportunityReminder,
@@ -167,7 +168,7 @@ const handler = async (req: Request): Promise<Response> => {
     const commsOptIn = await loadCommsOptIn(
       supabase,
       audienceIds,
-      categoryColumnFor(category),
+      categoryColumn as CommsCategoryColumn,
     );
 
     // 3. Preference match via shared independent-dimension matcher.
