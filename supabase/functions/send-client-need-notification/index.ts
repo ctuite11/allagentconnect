@@ -206,6 +206,7 @@ const handler = async (req: Request): Promise<Response> => {
       matchFn,
       user.id,
       optedOut,
+      commsOptIn.allowed,
     );
 
     // 4. Preview short-circuit (no persistence, no send)
