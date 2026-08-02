@@ -17,6 +17,7 @@ import {
   Mail,
   Globe,
   MessageSquare,
+  Building2,
   UserRound,
 } from "lucide-react";
 import { toast } from "sonner";
