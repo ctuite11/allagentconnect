@@ -270,7 +270,7 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
       if (agentError) throw agentError;
       if (!agentData) {
         toast.error("Agent not found");
-        navigate(backTo);
+        goBack();
         return;
       }
 
@@ -410,7 +410,7 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
           back={
             <AacBackButton
               type="button"
-              onClick={() => navigate(backTo)}
+              onClick={goBack}
             />
           }
         />
