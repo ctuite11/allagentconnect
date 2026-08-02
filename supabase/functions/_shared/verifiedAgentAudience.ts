@@ -244,6 +244,7 @@ export function classifyRecipients<T extends EligibleAgent>(
   matches: (agent: T) => boolean,
   senderId: string | null,
   optedOut?: Set<string>,
+  optedIn?: Set<string>,
 ): Array<T & { reason: "preferences_match" | "preferences_unset" }> {
   const out: Array<T & { reason: "preferences_match" | "preferences_unset" }> = [];
   for (const a of audience) {
@@ -251,9 +252,16 @@ export function classifyRecipients<T extends EligibleAgent>(
     if (optedOut && optedOut.has(a.agent_id)) continue;
     // Legacy callers: only consider profile-complete + has-email agents.
     if (!a.profile_complete || !a.has_email) continue;
-    // Opt-in policy (Aug 2026): agents with no personally configured Comms
-    // Center dimensions never enter the broadcast audience.
-    if (!a.preferences_set) continue;
+    // Opt-in policy (Aug 2026, corrected): membership in `optedIn` is the
+    // authoritative explicit opt-in signal (row present + master switches on
+    // + category channel true). When supplied, agents outside it are muted.
+    if (optedIn && !optedIn.has(a.agent_id)) continue;
+    if (!a.preferences_set) {
+      // Explicitly opted in, but no narrowing dimensions ⇒ intentional broad
+      // opt-in for the enabled category. Without a gate set, fail closed.
+      if (optedIn) out.push({ ...a, reason: "preferences_unset" });
+      continue;
+    }
     if (matches(a)) out.push({ ...a, reason: "preferences_match" });
   }
   return out;
@@ -278,8 +286,10 @@ export interface AudiencePartition<T extends EligibleAgent> {
     category_opted_out: number;
     preferences_matched: number;
     preferences_unset_fallback: number;
-    /** Agents skipped because they never configured Comms Center. */
+    /** Agents skipped because they are not explicitly opted in. */
     preferences_unset_skipped: number;
+    /** Agents muted because they are outside the explicit opt-in set. */
+    comms_opt_in_blocked: number;
     non_matching: number;
   };
 }
@@ -299,6 +309,7 @@ export function partitionAudience<T extends EligibleAgent>(
   matches: (agent: T) => boolean,
   senderId: string | null,
   optedOut?: Set<string>,
+  optedIn?: Set<string>,
 ): AudiencePartition<T> {
   const real: Array<T & { reason: PartitionReason }> = [];
   const reminder: T[] = [];
@@ -310,6 +321,8 @@ export function partitionAudience<T extends EligibleAgent>(
   let category_opted_out = 0;
   let preferences_matched = 0;
   let preferences_unset_skipped = 0;
+  let preferences_unset_fallback = 0;
+  let comms_opt_in_blocked = 0;
   let non_matching = 0;
 
   for (const a of audience) {
@@ -327,11 +340,25 @@ export function partitionAudience<T extends EligibleAgent>(
         category_opted_out++;
         continue;
       }
-      // Opt-in policy (Aug 2026): the universal "preferences unset →
-      // everything" fallback is removed. Unconfigured agents are skipped and
-      // only counted for observability.
+      // Opt-in policy (Aug 2026, corrected).
+      //   - `optedIn` (when supplied) is the authoritative explicit opt-in set:
+      //     preference row present, master switches on, category channel true.
+      //   - Agents outside it are muted (missing row / master off / category off).
+      //   - Agents inside it with NO narrowing dimensions receive the enabled
+      //     category broadly — an intentional opt-in, not the old
+      //     "untouched account" fallback.
+      //   - No gate supplied ⇒ fail closed for dimensionless agents.
+      if (optedIn && !optedIn.has(a.agent_id)) {
+        comms_opt_in_blocked++;
+        continue;
+      }
       if (!a.preferences_set) {
-        preferences_unset_skipped++;
+        if (optedIn) {
+          real.push({ ...a, reason: "preferences_unset" });
+          preferences_unset_fallback++;
+        } else {
+          preferences_unset_skipped++;
+        }
         continue;
       }
       if (matches(a)) {
@@ -357,8 +384,9 @@ export function partitionAudience<T extends EligibleAgent>(
       self_excluded,
       category_opted_out,
       preferences_matched,
-      preferences_unset_fallback: 0,
+      preferences_unset_fallback,
       preferences_unset_skipped,
+      comms_opt_in_blocked,
       non_matching,
     },
   };
