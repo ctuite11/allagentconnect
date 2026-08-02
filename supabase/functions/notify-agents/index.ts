@@ -112,13 +112,12 @@ serve(async (req) => {
       audience.map((a) => a.agent_id),
       "buyer_need",
     );
-    for (const id of optIn.blocked.keys()) optedOut.add(id);
-
     const partition = partitionAudience<EligibleAgent>(
       audience,
       (a) => matchesCommunicationPreferences(a.savedPrefs, preferenceEvent).matches,
       user.id,
       optedOut,
+      optIn.allowed,
     );
 
     // Defence in depth: drop anything not explicitly allowed.
