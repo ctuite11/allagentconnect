@@ -359,19 +359,16 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
     agent.cell_phone && {
       icon: Phone,
       label: formatPhoneNumber(agent.cell_phone),
-      sublabel: "Cell",
       href: `tel:${agent.cell_phone}`,
     },
     agent.office_phone && {
-      icon: Phone,
+      icon: Building2,
       label: formatPhoneNumber(agent.office_phone),
-      sublabel: "Office",
       href: `tel:${agent.office_phone}`,
     },
   ].filter(Boolean) as {
     icon: typeof Phone;
     label: string;
-    sublabel: string;
     href: string;
   }[];
 
