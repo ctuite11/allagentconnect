@@ -22,7 +22,6 @@ import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 import { cn } from "@/lib/utils";
 import { getRouteForRole, resolveUserRole } from "@/lib/resolveUserRole";
 import { clearRecoveryState } from "@/lib/authRecovery";
-import { ensureDefaultCommsChannels } from "@/lib/ensureDefaultCommsChannels";
 
 /**
  * Agent Account Setup — final step of the approved-agent "License Verified"
