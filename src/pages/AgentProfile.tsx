@@ -173,6 +173,23 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
   const backTo =
     ((location.state as any)?.from as string | undefined) ??
     (publicMode ? "/our-agents" : "/our-members");
+  /**
+   * Restore the origin state the referring page handed us (e.g. a listing's own
+   * `from` = search results) and mark the return so the listing never uses
+   * browser-history back, which would bounce straight back into this profile.
+   */
+  const goBack = () => {
+    const profileState = location.state as {
+      from?: string;
+      fromState?: Record<string, unknown> | null;
+    } | null;
+    navigate(backTo, {
+      state: {
+        ...(profileState?.fromState ?? {}),
+        returnedFromAgentProfile: true,
+      },
+    });
+  };
   const { user, role } = useAuthRole();
   const [agent, setAgent] = useState<AgentProfileData | null>(null);
   const [listings, setListings] = useState<any[]>([]);
@@ -253,7 +270,7 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
       if (agentError) throw agentError;
       if (!agentData) {
         toast.error("Agent not found");
-        navigate(backTo);
+        goBack();
         return;
       }
 
@@ -393,7 +410,7 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
           back={
             <AacBackButton
               type="button"
-              onClick={() => navigate(backTo)}
+              onClick={goBack}
             />
           }
         />

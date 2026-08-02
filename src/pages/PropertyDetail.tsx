@@ -248,7 +248,11 @@ const PropertyDetail = () => {
    */
   const handlePropertyDetailBack = () => {
     const params = new URLSearchParams(location.search);
-    const st = (location.state as { from?: string } | null)?.from;
+    const locationState = location.state as {
+      from?: string;
+      returnedFromAgentProfile?: boolean;
+    } | null;
+    const st = locationState?.from;
 
     if (params.get("from") === "favorites" || st === "/client/favorites" || st === "/favorites") {
       navigate("/favorites");
@@ -262,7 +266,11 @@ const PropertyDetail = () => {
       navigate(st);
       return;
     }
-    if ((isAgent || isAdmin) && navigationType === "PUSH") {
+    if (
+      (isAgent || isAdmin) &&
+      navigationType === "PUSH" &&
+      !locationState?.returnedFromAgentProfile
+    ) {
       navigate(-1);
       return;
     }
@@ -314,7 +322,9 @@ const PropertyDetail = () => {
           if (data.agent_id) {
             const { data: profile } = await supabase
               .from("agent_profiles")
-              .select("id, first_name, last_name, title, company, headshot_url, logo_url, social_links")
+              .select(
+                "id, first_name, last_name, title, company, headshot_url, logo_url, social_links, email, phone, cell_phone, aac_id",
+              )
               .eq("id", data.agent_id)
               .maybeSingle();
 
@@ -1129,7 +1139,10 @@ const PropertyDetail = () => {
                           type="button"
                           onClick={() =>
                             navigate(`/agent/${agentProfile.id}`, {
-                              state: { from: location.pathname + location.search },
+                              state: {
+                                from: location.pathname + location.search,
+                                fromState: location.state,
+                              },
                             })
                           }
                           className="flex w-full items-center gap-2.5 text-left transition-colors hover:text-neutral-900"
