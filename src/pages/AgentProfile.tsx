@@ -513,44 +513,24 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
               <div className="relative z-[60] mt-4 border-t border-neutral-100 pt-4">
                 <div className="flex w-full flex-col items-center gap-2 lg:w-auto lg:items-start">
                 <div className="flex flex-wrap items-center justify-center gap-2 lg:justify-start">
-                  {(() => {
-                    const isGuestOrPublic = !user || publicMode;
-                    const authedHandler = async () => {
-                      if (!user?.id || !agent.id) return;
-                      setIsStartingChat(true);
-                      try {
-                        const convoId = await findOrCreateConversation(user.id, agent.id);
-                        if (convoId) navigate(messagesPathForRole(convoId, role));
-                      } catch (e) {
-                        toast.error("Could not start conversation");
-                      } finally {
-                        setIsStartingChat(false);
+                  {agent.email ? (
+                    <ContactAgentProfileDialog
+                      agentId={agent.id}
+                      agentName={agentFullName}
+                      agentEmail={agent.email}
+                      initialSender={viewerSender}
+                      trigger={
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-[34px] min-w-[7.75rem] rounded-md border border-neutral-900 bg-neutral-900 px-5 text-[13px] font-medium tracking-wide text-white hover:bg-neutral-800"
+                        >
+                          <Mail className="mr-1.5 h-3.5 w-3.5 text-white" aria-hidden />
+                          Email {agent.first_name}
+                        </Button>
                       }
-                    };
-                    const messageButton = (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-[34px] min-w-[7.75rem] rounded-md border border-neutral-900 bg-neutral-900 px-5 text-[13px] font-medium tracking-wide text-white hover:bg-neutral-800"
-                        disabled={!!user && isStartingChat}
-                        onClick={isGuestOrPublic ? undefined : authedHandler}
-                      >
-                        <MessageSquare className="mr-1.5 h-3.5 w-3.5 text-white" aria-hidden />
-                        Message {agent.first_name}
-                      </Button>
-                    );
-                    return isGuestOrPublic && agent.email ? (
-                      <ContactAgentProfileDialog
-                        agentId={agent.id}
-                        agentName={agentFullName}
-                        agentEmail={agent.email}
-                        initialSender={viewerSender}
-                        trigger={messageButton}
-                      />
-                    ) : (
-                      messageButton
-                    );
-                  })()}
+                    />
+                  ) : null}
                 </div>
 
                 {activeSocials.length > 0 ? (
