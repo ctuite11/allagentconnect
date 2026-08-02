@@ -280,6 +280,8 @@ Deno.test("only Comms Center broadcast paths import the opt-in gate", async () =
     "supabase/functions/notify-agents/index.ts",
     "supabase/functions/notify-agents-client-need/index.ts",
     "supabase/functions/process-comms-digests/index.ts",
+    "supabase/functions/send-client-need-notification/index.ts",
+    "supabase/functions/send-seller-alert/index.ts",
   ];
   const unrelated = [
     "supabase/functions/send-license-verified-email/index.ts",
