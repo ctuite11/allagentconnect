@@ -72,6 +72,13 @@ function fakeSupabase(rows: Array<Record<string, unknown>>, error: unknown = nul
     from: (_t: string) => ({
       select: (_c: string) => ({
         in: (_col: string, _ids: string[]) => Promise.resolve({ data: rows, error }),
+        eq: (_col: string, val: string) => ({
+          maybeSingle: () =>
+            Promise.resolve({
+              data: rows.find((r) => r.user_id === val) ?? null,
+              error,
+            }),
+        }),
       }),
     }),
   };
