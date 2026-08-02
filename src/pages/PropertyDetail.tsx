@@ -1151,17 +1151,17 @@ const PropertyDetail = () => {
                           <span className="font-medium">Profile</span>
                         </button>
                       )}
-                      {agentProfile?.email && (
-                        isAgentView ? (
-                          <button
-                            type="button"
-                            onClick={() => setContactDialogOpen(true)}
-                            className="flex w-full items-center gap-2.5 text-left transition-colors hover:text-neutral-900"
-                          >
-                            <Mail className="h-4 w-4 shrink-0 text-[#0E56F5]" />
-                            <span className="font-medium truncate">{agentProfile.email}</span>
-                          </button>
-                        ) : (
+                      {isAgentView && canMessageListingAgent && (
+                        <button
+                          type="button"
+                          onClick={openListingMessage}
+                          className="flex w-full items-center gap-2.5 text-left transition-colors hover:text-neutral-900"
+                        >
+                          <MessageSquare className="h-4 w-4 shrink-0 text-[#0E56F5]" />
+                          <span className="font-medium">Instant Message</span>
+                        </button>
+                      )}
+                      {!isAgentView && agentProfile?.email && (
                           <a
                             href={`mailto:${agentProfile.email}`}
                             className="flex items-center gap-2.5 transition-colors hover:text-neutral-900"
@@ -1169,7 +1169,6 @@ const PropertyDetail = () => {
                             <Mail className="h-4 w-4 shrink-0 text-neutral-500" />
                             <span className="font-medium truncate">{agentProfile.email}</span>
                           </a>
-                        )
                       )}
                       {!isAgentView && agentProfile?.social_links?.website && (
                         <a
@@ -1192,7 +1191,17 @@ const PropertyDetail = () => {
                       />
                     )}
 
-                    {canMessageListingAgent && (
+                    {isAgentView && agentProfile?.email && (
+                      <Button
+                        className={cn(propertyDetailMessageCtaBase, propertyDetailMessageCta)}
+                        onClick={() => setContactDialogOpen(true)}
+                      >
+                        <Mail />
+                        Email Agent
+                      </Button>
+                    )}
+
+                    {!isAgentView && canMessageListingAgent && (
                       <Button
                         className={cn(propertyDetailMessageCtaBase, propertyDetailMessageCta)}
                         onClick={openListingMessage}
