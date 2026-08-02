@@ -1,7 +1,17 @@
 import { assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
-import { categoryColumnFor, evaluateCommsOptIn, loadCommsOptIn } from "./commsOptIn.ts";
+import {
+  categoryColumnFor,
+  evaluateCommsOptIn,
+  fetchCommsPrefsRow,
+  loadCommsOptIn,
+  reloadCommsOptIn,
+} from "./commsOptIn.ts";
 import { loadCommsSchedules, partitionByCommsSchedule } from "./commsDigest.ts";
-import { partitionAudience, type EligibleAgent } from "./verifiedAgentAudience.ts";
+import {
+  classifyRecipients,
+  partitionAudience,
+  type EligibleAgent,
+} from "./verifiedAgentAudience.ts";
 
 const ON = {
   client_needs_enabled: true,
