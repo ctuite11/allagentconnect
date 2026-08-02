@@ -248,7 +248,11 @@ const PropertyDetail = () => {
    */
   const handlePropertyDetailBack = () => {
     const params = new URLSearchParams(location.search);
-    const st = (location.state as { from?: string } | null)?.from;
+    const locationState = location.state as {
+      from?: string;
+      returnedFromAgentProfile?: boolean;
+    } | null;
+    const st = locationState?.from;
 
     if (params.get("from") === "favorites" || st === "/client/favorites" || st === "/favorites") {
       navigate("/favorites");
@@ -262,7 +266,11 @@ const PropertyDetail = () => {
       navigate(st);
       return;
     }
-    if ((isAgent || isAdmin) && navigationType === "PUSH") {
+    if (
+      (isAgent || isAdmin) &&
+      navigationType === "PUSH" &&
+      !locationState?.returnedFromAgentProfile
+    ) {
       navigate(-1);
       return;
     }
