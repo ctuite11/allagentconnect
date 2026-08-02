@@ -311,7 +311,7 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
         <span className="sr-only">Loading agent profile…</span>
         <div className={`${PROFILE_PAGE} pt-5`}>
           <Skeleton className="h-4 w-36 rounded-md bg-neutral-100" />
-          <div className="mt-6 flex flex-col gap-6 border-b border-neutral-100 pb-10 lg:grid lg:grid-cols-[280px_1fr] lg:items-start lg:gap-8">
+          <div className="mt-6 flex flex-col gap-6 border-b border-neutral-100 pb-10 lg:grid lg:grid-cols-[280px_1fr] lg:items-stretch lg:gap-8">
             <Skeleton className="mx-auto h-[360px] w-full max-w-[300px] rounded-lg bg-neutral-100 lg:mx-0 lg:max-w-none" />
             <div className="min-w-0 space-y-3 lg:flex lg:gap-8">
               <div className="flex-1 space-y-3">
@@ -581,11 +581,11 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
             </div>
 
             {agent.logo_url ? (
-              <div className="mt-6 flex shrink-0 justify-center border-t border-neutral-100 pt-6 lg:mt-0 lg:w-[min(100%,280px)] lg:flex-col lg:items-start lg:justify-start lg:border-l lg:border-t-0 lg:border-neutral-100 lg:pl-8 lg:pt-0 xl:pl-10">
+              <div className="mt-6 flex shrink-0 justify-center border-t border-neutral-100 pt-6 lg:mt-0 lg:w-[min(100%,360px)] lg:self-stretch lg:flex lg:items-center lg:justify-center lg:border-t-0 lg:pl-8 lg:pt-0 xl:pl-10">
                 <img
                   src={agent.logo_url}
                   alt={agent.company || agent.office_name || "Brokerage logo"}
-                  className="max-h-[4.5rem] w-auto max-w-[260px] object-contain object-left lg:max-h-[5.5rem] lg:max-w-[260px]"
+                  className="max-h-[5.5rem] w-auto max-w-[320px] object-contain lg:max-h-[7rem] lg:max-w-[340px]"
                 />
               </div>
             ) : null}
