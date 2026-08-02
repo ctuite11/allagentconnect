@@ -355,16 +355,24 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
     return typeof url === "string" && url.trim().length > 0;
   });
 
+  const mobilePhone = agent.cell_phone?.trim() || null;
+  const officePhoneRaw = agent.office_phone?.trim() || agent.phone?.trim() || null;
+  const digitsOnly = (v: string) => v.replace(/\D/g, "");
+  const officePhone =
+    officePhoneRaw && (!mobilePhone || digitsOnly(officePhoneRaw) !== digitsOnly(mobilePhone))
+      ? officePhoneRaw
+      : null;
+
   const profileContactRows = [
-    agent.cell_phone && {
+    mobilePhone && {
       icon: Phone,
-      label: formatPhoneNumber(agent.cell_phone),
-      href: `tel:${agent.cell_phone}`,
+      label: formatPhoneNumber(mobilePhone),
+      href: `tel:${mobilePhone}`,
     },
-    agent.office_phone && {
+    officePhone && {
       icon: Building2,
-      label: formatPhoneNumber(agent.office_phone),
-      href: `tel:${agent.office_phone}`,
+      label: formatPhoneNumber(officePhone),
+      href: `tel:${officePhone}`,
     },
   ].filter(Boolean) as {
     icon: typeof Phone;
