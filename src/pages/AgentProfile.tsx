@@ -17,6 +17,7 @@ import {
   Mail,
   Globe,
   MessageSquare,
+  Building2,
   UserRound,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -358,19 +359,16 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
     agent.cell_phone && {
       icon: Phone,
       label: formatPhoneNumber(agent.cell_phone),
-      sublabel: "Cell",
       href: `tel:${agent.cell_phone}`,
     },
     agent.office_phone && {
-      icon: Phone,
+      icon: Building2,
       label: formatPhoneNumber(agent.office_phone),
-      sublabel: "Office",
       href: `tel:${agent.office_phone}`,
     },
   ].filter(Boolean) as {
     icon: typeof Phone;
     label: string;
-    sublabel: string;
     href: string;
   }[];
 
@@ -459,56 +457,54 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
                 </p>
               ) : null}
 
-              {(profileContactRows.length > 0 || websiteUrl || agent.email) ? (
-                <ul className="mt-4 space-y-1 text-[14px]">
+              {(profileContactRows.length > 0 || websiteUrl || (!!user && !publicMode)) ? (
+                <ul className="mt-4 space-y-2 text-sm text-neutral-700">
                   {profileContactRows.map((item, i) => (
                     <li key={i}>
                       <a
                         href={item.href}
-                        className="inline-flex max-w-full items-center gap-2.5 leading-tight text-neutral-800 transition-colors hover:text-neutral-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 focus-visible:ring-offset-2"
+                        className="inline-flex max-w-full items-center gap-2.5 transition-colors hover:text-neutral-900"
                       >
-                        <item.icon className="h-3.5 w-3.5 shrink-0 text-neutral-400" aria-hidden />
-                        <span>
-                          <span className="text-neutral-400">{item.sublabel} </span>
-                          {item.label}
-                        </span>
+                        <item.icon className="h-4 w-4 shrink-0 text-neutral-500" aria-hidden />
+                        <span className="font-medium">{item.label}</span>
                       </a>
                     </li>
                   ))}
-                  {agent.email ? (
-                    <li>
-                      <ContactAgentProfileDialog
-                        agentId={agent.id}
-                        agentName={`${agent.first_name} ${agent.last_name}`}
-                        agentEmail={agent.email}
-                        initialSender={viewerSender}
-                        trigger={
-                          <button
-                            type="button"
-                            className="inline-flex max-w-full items-center gap-2.5 leading-tight text-neutral-800 transition-colors hover:text-neutral-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 focus-visible:ring-offset-2"
-                          >
-                            <Mail className="h-3.5 w-3.5 shrink-0 text-aac" aria-hidden />
-                            <span>
-                              {agent.email}
-                            </span>
-                          </button>
-                        }
-                      />
-                    </li>
-                  ) : null}
                   {websiteUrl ? (
                     <li>
                       <a
                         href={websiteUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex max-w-full items-center gap-2.5 leading-tight text-neutral-800 transition-colors hover:text-neutral-950"
+                        className="inline-flex max-w-full items-center gap-2.5 underline-offset-2 transition-colors hover:text-neutral-900 hover:underline"
                       >
-                        <Globe className="h-3.5 w-3.5 shrink-0 text-neutral-400" aria-hidden />
-                        <span className="truncate">
-                          {agent.social_links!.website!.replace(/^https?:\/\//, "").replace(/\/$/, "")}
-                        </span>
+                        <Globe className="h-4 w-4 shrink-0 text-neutral-500" aria-hidden />
+                        <span className="font-medium">Website</span>
                       </a>
+                    </li>
+                  ) : null}
+                  {user && !publicMode ? (
+                    <li>
+                      <button
+                        type="button"
+                        disabled={isStartingChat}
+                        onClick={async () => {
+                          if (!user?.id || !agent.id) return;
+                          setIsStartingChat(true);
+                          try {
+                            const convoId = await findOrCreateConversation(user.id, agent.id);
+                            if (convoId) navigate(messagesPathForRole(convoId, role));
+                          } catch (e) {
+                            toast.error("Could not start conversation");
+                          } finally {
+                            setIsStartingChat(false);
+                          }
+                        }}
+                        className="inline-flex max-w-full items-center gap-2.5 text-left transition-colors hover:text-neutral-900"
+                      >
+                        <MessageSquare className="h-4 w-4 shrink-0 text-[#0E56F5]" aria-hidden />
+                        <span className="font-medium">Instant Message</span>
+                      </button>
                     </li>
                   ) : null}
                 </ul>
@@ -517,44 +513,24 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
               <div className="relative z-[60] mt-4 border-t border-neutral-100 pt-4">
                 <div className="flex w-full flex-col items-center gap-2 lg:w-auto lg:items-start">
                 <div className="flex flex-wrap items-center justify-center gap-2 lg:justify-start">
-                  {(() => {
-                    const isGuestOrPublic = !user || publicMode;
-                    const authedHandler = async () => {
-                      if (!user?.id || !agent.id) return;
-                      setIsStartingChat(true);
-                      try {
-                        const convoId = await findOrCreateConversation(user.id, agent.id);
-                        if (convoId) navigate(messagesPathForRole(convoId, role));
-                      } catch (e) {
-                        toast.error("Could not start conversation");
-                      } finally {
-                        setIsStartingChat(false);
+                  {agent.email ? (
+                    <ContactAgentProfileDialog
+                      agentId={agent.id}
+                      agentName={agentFullName}
+                      agentEmail={agent.email}
+                      initialSender={viewerSender}
+                      trigger={
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-[34px] min-w-[7.75rem] rounded-md border border-neutral-900 bg-neutral-900 px-5 text-[13px] font-medium tracking-wide text-white hover:bg-neutral-800"
+                        >
+                          <Mail className="mr-1.5 h-3.5 w-3.5 text-white" aria-hidden />
+                          Email {agent.first_name}
+                        </Button>
                       }
-                    };
-                    const messageButton = (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-[34px] min-w-[7.75rem] rounded-md border border-neutral-900 bg-neutral-900 px-5 text-[13px] font-medium tracking-wide text-white hover:bg-neutral-800"
-                        disabled={!!user && isStartingChat}
-                        onClick={isGuestOrPublic ? undefined : authedHandler}
-                      >
-                        <MessageSquare className="mr-1.5 h-3.5 w-3.5 text-white" aria-hidden />
-                        Message {agent.first_name}
-                      </Button>
-                    );
-                    return isGuestOrPublic && agent.email ? (
-                      <ContactAgentProfileDialog
-                        agentId={agent.id}
-                        agentName={agentFullName}
-                        agentEmail={agent.email}
-                        initialSender={viewerSender}
-                        trigger={messageButton}
-                      />
-                    ) : (
-                      messageButton
-                    );
-                  })()}
+                    />
+                  ) : null}
                 </div>
 
                 {activeSocials.length > 0 ? (
