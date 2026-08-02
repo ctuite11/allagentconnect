@@ -278,6 +278,8 @@ export interface AudiencePartition<T extends EligibleAgent> {
     category_opted_out: number;
     preferences_matched: number;
     preferences_unset_fallback: number;
+    /** Agents skipped because they never configured Comms Center. */
+    preferences_unset_skipped: number;
     non_matching: number;
   };
 }
