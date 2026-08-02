@@ -6,6 +6,7 @@ import {
   type EligibleAgent,
 } from "../_shared/verifiedAgentAudience.ts";
 import { matchesCommunicationPreferences } from "../_shared/communicationPreferencesMatcher.ts";
+import { loadCommsOptIn, type CommsCategoryColumn } from "../_shared/commsOptIn.ts";
 import {
   countExistingReminders,
   reserveAndEnqueueMissingOpportunityReminder,
@@ -161,6 +162,15 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
+    // Canonical Comms Center opt-in gate (Aug 2026 policy). Missing row,
+    // master switch off, or category channel off ⇒ muted. Agents inside the
+    // allowed set with no narrowing dimensions receive the category broadly.
+    const commsOptIn = await loadCommsOptIn(
+      supabase,
+      audienceIds,
+      categoryColumn as CommsCategoryColumn,
+    );
+
     // 3. Preference match via shared independent-dimension matcher.
     //    Semantics:
     //      - audience_scope="network_wide": every preferences-set agent
@@ -206,6 +216,7 @@ const handler = async (req: Request): Promise<Response> => {
       matchFn,
       user.id,
       optedOut,
+      commsOptIn.allowed,
     );
 
     // 4. Preview short-circuit (no persistence, no send)
