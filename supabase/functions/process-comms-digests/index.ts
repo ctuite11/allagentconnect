@@ -5,7 +5,11 @@ import {
   digestWindowsOpen,
   type DigestCadence,
 } from "../_shared/commsDigest.ts";
-import { categoryColumnFor, reloadCommsOptIn } from "../_shared/commsOptIn.ts";
+import {
+  categoryColumnFor,
+  evaluateCommsOptIn,
+  fetchCommsPrefsRow,
+} from "../_shared/commsOptIn.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -192,36 +196,64 @@ async function processAgentDigest(
     return "skipped";
   }
 
-  // Send-time mute recheck (opt-in policy). Re-read the recipient's CURRENT
-  // preferences immediately before sending. A missing row, a false master
-  // switch, or a false category channel means: do not send. Muted items are
-  // discarded (not retried) so they cannot accumulate into a later burst.
+  // Send-time recheck (opt-in policy). Load the recipient's CURRENT
+  // preference row ONCE. A lookup FAILURE is never treated as a mute: we
+  // fail the send and preserve every item for retry. Only a successful
+  // lookup proving missing row / master off / category off may retire items.
+  const prefsRes = await fetchCommsPrefsRow(supabase, agentId);
+  if (!prefsRes.ok) {
+    console.error(
+      `[process-comms-digests] agent=${agentId} cadence=${cadence} preference lookup failed — items preserved`,
+    );
+    await markSendFailed(supabase, sendId, `preference lookup failed: ${prefsRes.error}`);
+    return "failed";
+  }
+
   const mutedItemIds: string[] = [];
+  const unknownCategoryItemIds: string[] = [];
   const deliverable: DigestItem[] = [];
   for (const item of digestItems) {
-    const decision = await reloadCommsOptIn(
-      supabase,
-      agentId,
-      categoryColumnFor(item.category),
-    );
+    const column = categoryColumnFor(item.category);
+    if (!column) {
+      // Fail closed: an unknown/blank category is never evaluated against
+      // another category's permission. Quarantine so it cannot retry forever.
+      console.error(
+        `[process-comms-digests] unknown digest category — blocked. item_id=${item.id} category=${JSON.stringify(item.category)} agent=${agentId}`,
+      );
+      unknownCategoryItemIds.push(item.id);
+      continue;
+    }
+    const decision = evaluateCommsOptIn(prefsRes.row, column);
     if (decision.allowed) deliverable.push(item);
     else mutedItemIds.push(item.id);
   }
 
-  if (mutedItemIds.length) {
-    // Retire muted items permanently — never delivered, never retried.
-    await supabase
+  const retireIds = [...mutedItemIds, ...unknownCategoryItemIds];
+  if (retireIds.length) {
+    // Retire proven-muted and unknown-category items. If retirement fails we
+    // do NOT proceed to email-job creation.
+    const { error: retireErr } = await supabase
       .from("comms_digest_items")
       .delete()
-      .in("id", mutedItemIds)
+      .in("id", retireIds)
       .is("digest_send_id", null);
+    if (retireErr) {
+      console.error("[process-comms-digests] retirement failed", retireErr);
+      await markSendFailed(supabase, sendId, `item retirement failed: ${retireErr.message}`);
+      return "failed";
+    }
     console.log(
-      `[process-comms-digests] agent=${agentId} cadence=${cadence} muted_items_discarded=${mutedItemIds.length}`,
+      `[process-comms-digests] agent=${agentId} cadence=${cadence} muted_items_discarded=${mutedItemIds.length} unknown_category_items=${unknownCategoryItemIds.length}`,
     );
   }
 
   if (deliverable.length === 0) {
-    await supabase.from("comms_digest_sends").delete().eq("id", sendId).eq("status", "processing");
+    const { error: delErr } = await supabase
+      .from("comms_digest_sends")
+      .delete()
+      .eq("id", sendId)
+      .eq("status", "processing");
+    if (delErr) console.error("[process-comms-digests] send-row cleanup failed", delErr);
     return "skipped";
   }
 
@@ -237,10 +269,11 @@ async function processAgentDigest(
   }
 
   const agentName = (profile.first_name as string) || "Agent";
+  const itemCount = deliverable.length;
   const subject =
     cadence === "daily"
-      ? `Your daily Communications Center digest (${digestItems.length} update${digestItems.length === 1 ? "" : "s"})`
-      : `Your weekly Communications Center digest (${digestItems.length} update${digestItems.length === 1 ? "" : "s"})`;
+      ? `Your daily Communications Center digest (${itemCount} update${itemCount === 1 ? "" : "s"})`
+      : `Your weekly Communications Center digest (${itemCount} update${itemCount === 1 ? "" : "s"})`;
 
   const contentHtml = buildDigestHtml(cadence, agentName, deliverable);
   const idempotencyKey = `comms-digest:${cadence}:${periodKey}:${agentId}`;
