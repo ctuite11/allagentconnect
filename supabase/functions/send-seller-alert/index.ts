@@ -7,6 +7,7 @@ import {
   type EligibleAgent,
 } from "../_shared/verifiedAgentAudience.ts";
 import { matchesCommunicationPreferences } from "../_shared/communicationPreferencesMatcher.ts";
+import { loadCommsOptIn } from "../_shared/commsOptIn.ts";
 import {
   countExistingReminders,
   reserveAndEnqueueMissingOpportunityReminder,
@@ -87,10 +88,16 @@ serve(async (req: Request) => {
     // Sender exclusion: if the seller is a linked agent user
     const senderId: string | null = submission.agent_id || submission.user_id || null;
 
+    // Comms Center opt-in gate (Aug 2026 policy). Seller alerts are a
+    // Comms Center broadcast surface, so they are opt-in only.
+    const optIn = await loadCommsOptIn(supabase, audienceIds, "sales_intel");
+
     const partition = partitionAudience<EligibleAgent>(
       audience,
       (a) => matchesCommunicationPreferences(a.savedPrefs, preferenceEvent).matches,
       senderId,
+      undefined,
+      optIn.allowed,
     );
 
     // Skip agents already notified for this submission (durable dedup)
