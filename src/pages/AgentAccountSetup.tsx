@@ -22,7 +22,6 @@ import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 import { cn } from "@/lib/utils";
 import { getRouteForRole, resolveUserRole } from "@/lib/resolveUserRole";
 import { clearRecoveryState } from "@/lib/authRecovery";
-import { ensureDefaultCommsChannels } from "@/lib/ensureDefaultCommsChannels";
 
 /**
  * Agent Account Setup — final step of the approved-agent "License Verified"
@@ -320,13 +319,10 @@ const AgentAccountSetup = () => {
       clearRecoveryState();
       window.history.replaceState(null, "", "/agent-setup");
 
-      // Default Communications Center channels ON for newly activated agents
-      // (best-effort; respects preferences_set and never overwrites explicit choices).
-      try {
-        await ensureDefaultCommsChannels(data.user.id);
-      } catch (e) {
-        console.warn("[AgentAccountSetup] default comms channels skipped:", e);
-      }
+      // Communications Center is OPT-IN ONLY (policy, Aug 2026).
+      // New agents start with every Comms Center channel off and no
+      // default/sentinel coverage row. Nothing is auto-enrolled here; agents
+      // turn channels on themselves in Communications Center → Preferences.
 
       toast.success("You're all set — welcome to All Agent Connect.");
       setUserId(data.user.id);

@@ -5,6 +5,7 @@ import {
   digestWindowsOpen,
   type DigestCadence,
 } from "../_shared/commsDigest.ts";
+import { categoryColumnFor, reloadCommsOptIn } from "../_shared/commsOptIn.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -191,6 +192,39 @@ async function processAgentDigest(
     return "skipped";
   }
 
+  // Send-time mute recheck (opt-in policy). Re-read the recipient's CURRENT
+  // preferences immediately before sending. A missing row, a false master
+  // switch, or a false category channel means: do not send. Muted items are
+  // discarded (not retried) so they cannot accumulate into a later burst.
+  const mutedItemIds: string[] = [];
+  const deliverable: DigestItem[] = [];
+  for (const item of digestItems) {
+    const decision = await reloadCommsOptIn(
+      supabase,
+      agentId,
+      categoryColumnFor(item.category),
+    );
+    if (decision.allowed) deliverable.push(item);
+    else mutedItemIds.push(item.id);
+  }
+
+  if (mutedItemIds.length) {
+    // Retire muted items permanently — never delivered, never retried.
+    await supabase
+      .from("comms_digest_items")
+      .delete()
+      .in("id", mutedItemIds)
+      .is("digest_send_id", null);
+    console.log(
+      `[process-comms-digests] agent=${agentId} cadence=${cadence} muted_items_discarded=${mutedItemIds.length}`,
+    );
+  }
+
+  if (deliverable.length === 0) {
+    await supabase.from("comms_digest_sends").delete().eq("id", sendId).eq("status", "processing");
+    return "skipped";
+  }
+
   const { data: profile, error: profileErr } = await supabase
     .from("agent_profiles")
     .select("id, first_name, email")
@@ -208,7 +242,7 @@ async function processAgentDigest(
       ? `Your daily Communications Center digest (${digestItems.length} update${digestItems.length === 1 ? "" : "s"})`
       : `Your weekly Communications Center digest (${digestItems.length} update${digestItems.length === 1 ? "" : "s"})`;
 
-  const contentHtml = buildDigestHtml(cadence, agentName, digestItems);
+  const contentHtml = buildDigestHtml(cadence, agentName, deliverable);
   const idempotencyKey = `comms-digest:${cadence}:${periodKey}:${agentId}`;
 
   const { data: jobRows, error: jobErr } = await supabase
@@ -226,13 +260,13 @@ async function processAgentDigest(
           period_key: periodKey,
           agent_id: agentId,
           digest_send_id: sendId,
-          item_count: digestItems.length,
+          item_count: deliverable.length,
         },
         variables: {
           agentName,
           cadence,
           periodKey,
-          itemCount: digestItems.length,
+          itemCount: deliverable.length,
           contentHtml,
           ctaUrl: defaultCommsActionUrl(),
         },
@@ -250,7 +284,7 @@ async function processAgentDigest(
         .eq("idempotency_key", idempotencyKey)
         .maybeSingle();
       if (existingJob?.id) {
-        await finalizeSend(supabase, sendId, existingJob.id, digestItems.map((i) => i.id));
+        await finalizeSend(supabase, sendId, existingJob.id, deliverable.map((i) => i.id));
         return "sent";
       }
     }
@@ -268,7 +302,7 @@ async function processAgentDigest(
     supabase,
     sendId,
     jobId,
-    digestItems.map((i) => i.id),
+    deliverable.map((i) => i.id),
   );
   return "sent";
 }

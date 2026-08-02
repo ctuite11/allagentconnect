@@ -251,11 +251,10 @@ export function classifyRecipients<T extends EligibleAgent>(
     if (optedOut && optedOut.has(a.agent_id)) continue;
     // Legacy callers: only consider profile-complete + has-email agents.
     if (!a.profile_complete || !a.has_email) continue;
-    if (a.preferences_set) {
-      if (matches(a)) out.push({ ...a, reason: "preferences_match" });
-    } else {
-      out.push({ ...a, reason: "preferences_unset" });
-    }
+    // Opt-in policy (Aug 2026): agents with no personally configured Comms
+    // Center dimensions never enter the broadcast audience.
+    if (!a.preferences_set) continue;
+    if (matches(a)) out.push({ ...a, reason: "preferences_match" });
   }
   return out;
 }
@@ -279,6 +278,8 @@ export interface AudiencePartition<T extends EligibleAgent> {
     category_opted_out: number;
     preferences_matched: number;
     preferences_unset_fallback: number;
+    /** Agents skipped because they never configured Comms Center. */
+    preferences_unset_skipped: number;
     non_matching: number;
   };
 }
@@ -308,7 +309,7 @@ export function partitionAudience<T extends EligibleAgent>(
   let self_excluded = 0;
   let category_opted_out = 0;
   let preferences_matched = 0;
-  let preferences_unset_fallback = 0;
+  let preferences_unset_skipped = 0;
   let non_matching = 0;
 
   for (const a of audience) {
@@ -326,16 +327,18 @@ export function partitionAudience<T extends EligibleAgent>(
         category_opted_out++;
         continue;
       }
-      if (a.preferences_set) {
-        if (matches(a)) {
-          real.push({ ...a, reason: "preferences_match" });
-          preferences_matched++;
-        } else {
-          non_matching++;
-        }
+      // Opt-in policy (Aug 2026): the universal "preferences unset →
+      // everything" fallback is removed. Unconfigured agents are skipped and
+      // only counted for observability.
+      if (!a.preferences_set) {
+        preferences_unset_skipped++;
+        continue;
+      }
+      if (matches(a)) {
+        real.push({ ...a, reason: "preferences_match" });
+        preferences_matched++;
       } else {
-        real.push({ ...a, reason: "preferences_unset" });
-        preferences_unset_fallback++;
+        non_matching++;
       }
     } else {
       profile_incomplete++;
@@ -354,7 +357,8 @@ export function partitionAudience<T extends EligibleAgent>(
       self_excluded,
       category_opted_out,
       preferences_matched,
-      preferences_unset_fallback,
+      preferences_unset_fallback: 0,
+      preferences_unset_skipped,
       non_matching,
     },
   };

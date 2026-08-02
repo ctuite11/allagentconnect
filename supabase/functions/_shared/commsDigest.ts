@@ -38,10 +38,12 @@ export function normalizeCommsSchedule(raw: unknown): CommsSchedule {
 
 /**
  * Load client_needs_schedule (+ Comms Center enable flags) for many agents.
- * Missing prefs → immediate (legacy default).
+ * Missing prefs → MUTED (opt-in policy, Aug 2026). There is no legacy
+ * "immediate" fallback: an agent with no notification_preferences row gets
+ * no immediate email and no daily/weekly digest.
  *
  * Both `client_needs_enabled` and `new_matches_enabled` are treated here as
- * agent-side Comms Center master mutes: either === false removes the agent
+ * agent-side Comms Center master switches: either !== true removes the agent
  * from both the immediate and digest paths. These flags are NOT buyer /
  * hot-sheet preferences — buyer hot-sheet delivery is governed by
  * `hot_sheet_subscribers`, not `notification_preferences`.
@@ -64,8 +66,8 @@ export async function loadCommsSchedules(
     .in("user_id", ids);
 
   if (error) {
-    console.warn("[loadCommsSchedules] lookup failed; defaulting all to immediate", error);
-    for (const id of ids) schedules.set(id, "immediate");
+    console.error("[loadCommsSchedules] lookup failed; muting all (fail closed)", error);
+    for (const id of ids) muted.add(id);
     return { schedules, muted };
   }
 
@@ -77,14 +79,15 @@ export async function loadCommsSchedules(
       // Timing changes never write these flags (see
       // ClientNeedsNotificationSettings), so a `false` here is a deliberate
       // agent-side opt-out from an earlier UI surface.
-    if (row.client_needs_enabled === false || row.new_matches_enabled === false) {
+    if (row.client_needs_enabled !== true || row.new_matches_enabled !== true) {
       muted.add(uid);
       continue;
     }
     schedules.set(uid, normalizeCommsSchedule(row.client_needs_schedule));
   }
   for (const id of ids) {
-    if (!found.has(id) && !muted.has(id)) schedules.set(id, "immediate");
+    // Missing row → muted. No universal immediate fallback.
+    if (!found.has(id)) muted.add(id);
   }
   return { schedules, muted };
 }

@@ -6,6 +6,7 @@ import {
   type EligibleAgent,
 } from "../_shared/verifiedAgentAudience.ts";
 import { matchesCommunicationPreferences } from "../_shared/communicationPreferencesMatcher.ts";
+import { loadCommsOptIn } from "../_shared/commsOptIn.ts";
 import {
   countExistingReminders,
   reserveAndEnqueueMissingOpportunityReminder,
@@ -103,12 +104,25 @@ serve(async (req) => {
       if (r.receive_buyer_alerts === false) optedOut.add(r.id);
     }
 
+    // Comms Center opt-in gate (authoritative — never rely on
+    // agent_profiles.receive_buyer_alerts alone). Missing preferences row,
+    // master switch off, or category channel off ⇒ muted.
+    const optIn = await loadCommsOptIn(
+      supabase,
+      audience.map((a) => a.agent_id),
+      "buyer_need",
+    );
+    for (const id of optIn.blocked.keys()) optedOut.add(id);
+
     const partition = partitionAudience<EligibleAgent>(
       audience,
       (a) => matchesCommunicationPreferences(a.savedPrefs, preferenceEvent).matches,
       user.id,
       optedOut,
     );
+
+    // Defence in depth: drop anything not explicitly allowed.
+    partition.real = partition.real.filter((r) => optIn.allowed.has(r.agent_id));
 
     // Durable dedup
     const realIds = partition.real.map((r) => r.agent_id);
@@ -146,7 +160,8 @@ serve(async (req) => {
       profile_incomplete: partition.counts.profile_incomplete,
       no_email: partition.counts.no_email,
       preferences_matched: partition.counts.preferences_matched,
-      preferences_unset_fallback: partition.counts.preferences_unset_fallback,
+      preferences_unset_skipped: partition.counts.preferences_unset_skipped,
+      comms_opt_in_blocked: optIn.blocked.size,
       self_excluded: partition.counts.self_excluded,
       category_opted_out: partition.counts.category_opted_out,
       non_matching: partition.counts.non_matching,
