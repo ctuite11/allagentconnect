@@ -1984,6 +1984,108 @@ export type Database = {
           },
         ]
       }
+      comms_reversal_missing_rows_20260802: {
+        Row: {
+          created_at: string
+          email: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      comms_reversal_rollback_20260802: {
+        Row: {
+          buyer_need: boolean
+          client_needs_enabled: boolean | null
+          client_needs_schedule: string | null
+          created_at: string
+          frequency: string
+          general_discussion: boolean
+          has_no_max: boolean | null
+          has_no_min: boolean | null
+          id: string
+          max_price: number | null
+          min_price: number | null
+          new_matches_enabled: boolean | null
+          price_changes_enabled: boolean | null
+          property_types: Json | null
+          renter_need: boolean
+          sales_intel: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          buyer_need?: boolean
+          client_needs_enabled?: boolean | null
+          client_needs_schedule?: string | null
+          created_at?: string
+          frequency?: string
+          general_discussion?: boolean
+          has_no_max?: boolean | null
+          has_no_min?: boolean | null
+          id?: string
+          max_price?: number | null
+          min_price?: number | null
+          new_matches_enabled?: boolean | null
+          price_changes_enabled?: boolean | null
+          property_types?: Json | null
+          renter_need?: boolean
+          sales_intel?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          buyer_need?: boolean
+          client_needs_enabled?: boolean | null
+          client_needs_schedule?: string | null
+          created_at?: string
+          frequency?: string
+          general_discussion?: boolean
+          has_no_max?: boolean | null
+          has_no_min?: boolean | null
+          id?: string
+          max_price?: number | null
+          min_price?: number | null
+          new_matches_enabled?: boolean | null
+          price_changes_enabled?: boolean | null
+          property_types?: Json | null
+          renter_need?: boolean
+          sales_intel?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      comms_reversal_targets_20260802: {
+        Row: {
+          created_at: string
+          email: string | null
+          had_row: boolean
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          had_row: boolean
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          had_row?: boolean
+          user_id?: string
+        }
+        Relationships: []
+      }
       conversation_messages: {
         Row: {
           body: string
