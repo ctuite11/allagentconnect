@@ -311,8 +311,8 @@ export function partitionAudience<T extends EligibleAgent>(
   audience: T[],
   matches: (agent: T) => boolean,
   senderId: string | null,
-  optedOut?: Set<string>,
-  optedIn?: Set<string>,
+  optedOut: Set<string> | undefined,
+  optedIn: Set<string> | null | undefined,
 ): AudiencePartition<T> {
   const real: Array<T & { reason: PartitionReason }> = [];
   const reminder: T[] = [];
@@ -327,6 +327,11 @@ export function partitionAudience<T extends EligibleAgent>(
   let preferences_unset_fallback = 0;
   let comms_opt_in_blocked = 0;
   let non_matching = 0;
+
+  // MANDATORY GATE: an absent opt-in set yields zero real recipients,
+  // regardless of configured dimensions. Callers must pass the canonical
+  // loadCommsOptIn(...).allowed set.
+  const gate = optedIn ?? new Set<string>();
 
   for (const a of audience) {
     if (senderId && a.agent_id === senderId) {
@@ -351,17 +356,13 @@ export function partitionAudience<T extends EligibleAgent>(
       //     category broadly — an intentional opt-in, not the old
       //     "untouched account" fallback.
       //   - No gate supplied ⇒ fail closed for dimensionless agents.
-      if (optedIn && !optedIn.has(a.agent_id)) {
+      if (!gate.has(a.agent_id)) {
         comms_opt_in_blocked++;
         continue;
       }
       if (!a.preferences_set) {
-        if (optedIn) {
-          real.push({ ...a, reason: "preferences_unset" });
-          preferences_unset_fallback++;
-        } else {
-          preferences_unset_skipped++;
-        }
+        real.push({ ...a, reason: "preferences_unset" });
+        preferences_unset_fallback++;
         continue;
       }
       if (matches(a)) {
