@@ -5,11 +5,8 @@ import {
   digestWindowsOpen,
   type DigestCadence,
 } from "../_shared/commsDigest.ts";
-import {
-  categoryColumnFor,
-  evaluateCommsOptIn,
-  fetchCommsPrefsRow,
-} from "../_shared/commsOptIn.ts";
+import { fetchCommsPrefsRow } from "../_shared/commsOptIn.ts";
+import { planDigestDelivery } from "../_shared/commsDigestPlan.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -201,31 +198,23 @@ async function processAgentDigest(
   // fail the send and preserve every item for retry. Only a successful
   // lookup proving missing row / master off / category off may retire items.
   const prefsRes = await fetchCommsPrefsRow(supabase, agentId);
-  if (!prefsRes.ok) {
+  const plan = planDigestDelivery<DigestItem>(prefsRes, digestItems);
+  if (plan.outcome === "preserve_and_fail") {
     console.error(
       `[process-comms-digests] agent=${agentId} cadence=${cadence} preference lookup failed — items preserved`,
     );
-    await markSendFailed(supabase, sendId, `preference lookup failed: ${prefsRes.error}`);
+    await markSendFailed(supabase, sendId, `preference lookup failed: ${plan.error}`);
     return "failed";
   }
 
-  const mutedItemIds: string[] = [];
-  const unknownCategoryItemIds: string[] = [];
-  const deliverable: DigestItem[] = [];
-  for (const item of digestItems) {
-    const column = categoryColumnFor(item.category);
-    if (!column) {
-      // Fail closed: an unknown/blank category is never evaluated against
-      // another category's permission. Quarantine so it cannot retry forever.
-      console.error(
-        `[process-comms-digests] unknown digest category — blocked. item_id=${item.id} category=${JSON.stringify(item.category)} agent=${agentId}`,
-      );
-      unknownCategoryItemIds.push(item.id);
-      continue;
-    }
-    const decision = evaluateCommsOptIn(prefsRes.row, column);
-    if (decision.allowed) deliverable.push(item);
-    else mutedItemIds.push(item.id);
+  const { deliverable, mutedItemIds, unknownCategoryItemIds } = plan;
+  for (const id of unknownCategoryItemIds) {
+    // Fail closed: an unknown/blank category is never evaluated against
+    // another category's permission. Quarantine so it cannot retry forever.
+    const item = digestItems.find((i) => i.id === id);
+    console.error(
+      `[process-comms-digests] unknown digest category — blocked. item_id=${id} category=${JSON.stringify(item?.category ?? null)} agent=${agentId}`,
+    );
   }
 
   const retireIds = [...mutedItemIds, ...unknownCategoryItemIds];
