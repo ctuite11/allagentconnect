@@ -190,9 +190,28 @@ Deno.test("daily and weekly digests both recheck preferences before delivery", (
 
 /* ---------- 9. unrelated streams unchanged ---------- */
 
-Deno.test("non-Comms-Center streams do not consult the opt-in gate", () => {
-  // Transactional / activation / messaging / Hot Sheet code paths must not
-  // import this module. Guarded by the source scan test below.
-  const commsOnly = ["notify-agents", "notify-agents-client-need", "process-comms-digests"];
-  assertEquals(commsOnly.length, 3);
+Deno.test("only Comms Center broadcast paths import the opt-in gate", async () => {
+  const roots = [
+    "supabase/functions/notify-agents/index.ts",
+    "supabase/functions/notify-agents-client-need/index.ts",
+    "supabase/functions/process-comms-digests/index.ts",
+  ];
+  const unrelated = [
+    "supabase/functions/send-license-verified-email/index.ts",
+    "supabase/functions/send-new-match-notification/index.ts",
+    "supabase/functions/process-email-queue/index.ts",
+  ];
+  for (const f of roots) {
+    const src = await Deno.readTextFile(new URL(`../../../${f}`, import.meta.url));
+    assertEquals(src.includes("commsOptIn.ts"), true, `${f} must enforce the gate`);
+  }
+  for (const f of unrelated) {
+    let src = "";
+    try {
+      src = await Deno.readTextFile(new URL(`../../../${f}`, import.meta.url));
+    } catch {
+      continue; // function not present in this checkout
+    }
+    assertEquals(src.includes("commsOptIn.ts"), false, `${f} must stay unchanged`);
+  }
 });
