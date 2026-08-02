@@ -581,11 +581,11 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
             </div>
 
             {agent.logo_url ? (
-              <div className="mt-6 flex shrink-0 justify-center border-t border-neutral-100 pt-6 lg:mt-0 lg:w-[min(100%,200px)] lg:flex-col lg:items-start lg:justify-start lg:border-l lg:border-t-0 lg:border-neutral-100 lg:pl-8 lg:pt-0 xl:pl-10">
+              <div className="mt-6 flex shrink-0 justify-center border-t border-neutral-100 pt-6 lg:mt-0 lg:w-[min(100%,280px)] lg:flex-col lg:items-start lg:justify-start lg:border-l lg:border-t-0 lg:border-neutral-100 lg:pl-8 lg:pt-0 xl:pl-10">
                 <img
                   src={agent.logo_url}
                   alt={agent.company || agent.office_name || "Brokerage logo"}
-                  className="max-h-[3.25rem] w-auto max-w-[200px] object-contain object-left lg:max-h-[3.75rem] lg:max-w-[180px]"
+                  className="max-h-[4.5rem] w-auto max-w-[260px] object-contain object-left lg:max-h-[5.5rem] lg:max-w-[260px]"
                 />
               </div>
             ) : null}
