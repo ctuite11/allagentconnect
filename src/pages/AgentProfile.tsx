@@ -457,56 +457,54 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
                 </p>
               ) : null}
 
-              {(profileContactRows.length > 0 || websiteUrl || agent.email) ? (
-                <ul className="mt-4 space-y-1 text-[14px]">
+              {(profileContactRows.length > 0 || websiteUrl || (!!user && !publicMode)) ? (
+                <ul className="mt-4 space-y-2 text-sm text-neutral-700">
                   {profileContactRows.map((item, i) => (
                     <li key={i}>
                       <a
                         href={item.href}
-                        className="inline-flex max-w-full items-center gap-2.5 leading-tight text-neutral-800 transition-colors hover:text-neutral-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 focus-visible:ring-offset-2"
+                        className="inline-flex max-w-full items-center gap-2.5 transition-colors hover:text-neutral-900"
                       >
-                        <item.icon className="h-3.5 w-3.5 shrink-0 text-neutral-400" aria-hidden />
-                        <span>
-                          <span className="text-neutral-400">{item.sublabel} </span>
-                          {item.label}
-                        </span>
+                        <item.icon className="h-4 w-4 shrink-0 text-neutral-500" aria-hidden />
+                        <span className="font-medium">{item.label}</span>
                       </a>
                     </li>
                   ))}
-                  {agent.email ? (
-                    <li>
-                      <ContactAgentProfileDialog
-                        agentId={agent.id}
-                        agentName={`${agent.first_name} ${agent.last_name}`}
-                        agentEmail={agent.email}
-                        initialSender={viewerSender}
-                        trigger={
-                          <button
-                            type="button"
-                            className="inline-flex max-w-full items-center gap-2.5 leading-tight text-neutral-800 transition-colors hover:text-neutral-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 focus-visible:ring-offset-2"
-                          >
-                            <Mail className="h-3.5 w-3.5 shrink-0 text-aac" aria-hidden />
-                            <span>
-                              {agent.email}
-                            </span>
-                          </button>
-                        }
-                      />
-                    </li>
-                  ) : null}
                   {websiteUrl ? (
                     <li>
                       <a
                         href={websiteUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex max-w-full items-center gap-2.5 leading-tight text-neutral-800 transition-colors hover:text-neutral-950"
+                        className="inline-flex max-w-full items-center gap-2.5 underline-offset-2 transition-colors hover:text-neutral-900 hover:underline"
                       >
-                        <Globe className="h-3.5 w-3.5 shrink-0 text-neutral-400" aria-hidden />
-                        <span className="truncate">
-                          {agent.social_links!.website!.replace(/^https?:\/\//, "").replace(/\/$/, "")}
-                        </span>
+                        <Globe className="h-4 w-4 shrink-0 text-neutral-500" aria-hidden />
+                        <span className="font-medium">Website</span>
                       </a>
+                    </li>
+                  ) : null}
+                  {user && !publicMode ? (
+                    <li>
+                      <button
+                        type="button"
+                        disabled={isStartingChat}
+                        onClick={async () => {
+                          if (!user?.id || !agent.id) return;
+                          setIsStartingChat(true);
+                          try {
+                            const convoId = await findOrCreateConversation(user.id, agent.id);
+                            if (convoId) navigate(messagesPathForRole(convoId, role));
+                          } catch (e) {
+                            toast.error("Could not start conversation");
+                          } finally {
+                            setIsStartingChat(false);
+                          }
+                        }}
+                        className="inline-flex max-w-full items-center gap-2.5 text-left transition-colors hover:text-neutral-900"
+                      >
+                        <MessageSquare className="h-4 w-4 shrink-0 text-[#0E56F5]" aria-hidden />
+                        <span className="font-medium">Instant Message</span>
+                      </button>
                     </li>
                   ) : null}
                 </ul>
