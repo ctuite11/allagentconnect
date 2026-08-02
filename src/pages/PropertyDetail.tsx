@@ -1121,7 +1121,6 @@ const PropertyDetail = () => {
                         >
                           <Phone className="h-4 w-4 shrink-0 text-neutral-500" />
                           <span className="font-medium">{formatPhoneNumber(agentProfile.cell_phone)}</span>
-                          <span className="ml-auto text-xs text-neutral-500">Mobile</span>
                         </a>
                       )}
                       {agentProfile?.phone && agentProfile.phone !== agentProfile.cell_phone && (
@@ -1131,7 +1130,6 @@ const PropertyDetail = () => {
                         >
                           <Building2 className="h-4 w-4 shrink-0 text-neutral-500" />
                           <span className="font-medium">{formatPhoneNumber(agentProfile.phone)}</span>
-                          <span className="ml-auto text-xs text-neutral-500">Office</span>
                         </a>
                       )}
                       {isAgentView && agentProfile && (
