@@ -161,6 +161,15 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
+    // Canonical Comms Center opt-in gate (Aug 2026 policy). Missing row,
+    // master switch off, or category channel off ⇒ muted. Agents inside the
+    // allowed set with no narrowing dimensions receive the category broadly.
+    const commsOptIn = await loadCommsOptIn(
+      supabase,
+      audienceIds,
+      categoryColumnFor(category),
+    );
+
     // 3. Preference match via shared independent-dimension matcher.
     //    Semantics:
     //      - audience_scope="network_wide": every preferences-set agent
