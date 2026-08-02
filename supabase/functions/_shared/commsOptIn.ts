@@ -118,30 +118,59 @@ export async function loadCommsOptIn(
   return { allowed, blocked, rows };
 }
 
-/** Single-agent re-read used at digest send time. */
-export async function reloadCommsOptIn(
+/**
+ * Single-agent preference row read. Distinguishes a *lookup failure* from a
+ * legitimately missing row so callers can preserve work for retry instead of
+ * treating transient errors as an explicit mute.
+ */
+export async function fetchCommsPrefsRow(
   supabase: SupabaseLike,
   agentId: string,
-  category: CommsCategoryColumn,
-  requireNewMatches = true,
-): Promise<OptInDecision> {
+): Promise<
+  | { ok: true; row: NonNullable<CommsPrefsRow> | null }
+  | { ok: false; error: string }
+> {
   const { data, error } = await supabase
     .from("notification_preferences")
     .select(PREFS_COLUMNS)
     .eq("user_id", agentId)
     .maybeSingle();
   if (error) {
-    console.error("[reloadCommsOptIn] lookup failed — muting (fail closed)", error);
-    return { allowed: false, reason: "missing_row" };
+    console.error("[fetchCommsPrefsRow] lookup failed — preserving work", error);
+    return { ok: false, error: error.message || "notification_preferences lookup failed" };
   }
-  return evaluateCommsOptIn(data ?? null, category, requireNewMatches);
+  return { ok: true, row: (data as NonNullable<CommsPrefsRow>) ?? null };
 }
 
-/** Maps a free-form broadcast category label to its preference column. */
-export function categoryColumnFor(label: string | null | undefined): CommsCategoryColumn {
+/** Single-agent re-read used at digest send time. */
+export async function reloadCommsOptIn(
+  supabase: SupabaseLike,
+  agentId: string,
+  category: CommsCategoryColumn | null | undefined,
+  requireNewMatches = true,
+): Promise<OptInDecision> {
+  const res = await fetchCommsPrefsRow(supabase, agentId);
+  if (!res.ok) {
+    // Fail closed for SENDING, but the reason is explicitly distinguishable so
+    // callers never mistake a transient error for a deliberate mute.
+    return { allowed: false, reason: "lookup_error" };
+  }
+  return evaluateCommsOptIn(res.row, category, requireNewMatches);
+}
+
+/**
+ * Maps a free-form broadcast category label to its preference column.
+ * Returns `null` for blank / unknown labels — callers MUST treat null as
+ * "no delivery" and never substitute another category's permission.
+ */
+export function categoryColumnFor(
+  label: string | null | undefined,
+): CommsCategoryColumn | null {
   const v = (label || "").toLowerCase();
+  if (!v.trim()) return null;
+  if (v.includes("buyer")) return "buyer_need";
   if (v.includes("rent")) return "renter_need";
   if (v.includes("sales") || v.includes("intel")) return "sales_intel";
   if (v.includes("general") || v.includes("discussion")) return "general_discussion";
-  return "buyer_need";
+  return null;
 }
