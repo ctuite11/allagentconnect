@@ -123,7 +123,14 @@ function agent(id: string, preferences_set: boolean): EligibleAgent {
   };
 }
 
-Deno.test("unconfigured agents no longer enter the broadcast audience", () => {
+function withGeo(a: EligibleAgent): EligibleAgent {
+  return {
+    ...a,
+    savedPrefs: { ...a.savedPrefs, geoRows: [{ state: "MA", county: null, city: "Boston", zip_code: null, neighborhood: null }] },
+  };
+}
+
+Deno.test("no opt-in gate supplied → dimensionless agents fail closed", () => {
   const p = partitionAudience(
     [agent("configured-match", true), agent("configured-nomatch", true), agent("unset", false)],
     (a) => a.agent_id === "configured-match",
@@ -133,6 +140,84 @@ Deno.test("unconfigured agents no longer enter the broadcast audience", () => {
   assertEquals(p.counts.preferences_unset_fallback, 0);
   assertEquals(p.counts.preferences_unset_skipped, 1);
   assertEquals(p.counts.non_matching, 1);
+});
+
+/* ---------- 4b. corrected policy: explicit opt-in without filters ---------- */
+
+Deno.test("explicit category opt-in with NO dimensions receives that category broadly", () => {
+  const optedIn = new Set(["broad"]);
+  const p = partitionAudience(
+    [agent("broad", false)],
+    () => false, // no dimension match possible
+    null,
+    undefined,
+    optedIn,
+  );
+  assertEquals(p.real.map((r) => r.agent_id), ["broad"]);
+  assertEquals(p.real[0].reason, "preferences_unset");
+  assertEquals(p.counts.preferences_unset_fallback, 1);
+});
+
+Deno.test("explicit opt-in WITH dimensions receives matching broadcasts only", () => {
+  const optedIn = new Set(["match", "nomatch"]);
+  const p = partitionAudience(
+    [withGeo(agent("match", true)), withGeo(agent("nomatch", true))],
+    (a) => a.agent_id === "match",
+    null,
+    undefined,
+    optedIn,
+  );
+  assertEquals(p.real.map((r) => r.agent_id), ["match"]);
+  assertEquals(p.counts.non_matching, 1);
+  assertEquals(p.counts.preferences_unset_fallback, 0);
+});
+
+Deno.test("missing row / category off / master off are excluded even without dimensions", async () => {
+  const lookup = await loadCommsOptIn(
+    fakeSupabase([
+      { user_id: "in", ...ON },
+      { user_id: "catoff", ...ON, buyer_need: false },
+      { user_id: "masteroff", ...ON, new_matches_enabled: false },
+    ]),
+    ["in", "catoff", "masteroff", "norow"],
+    "buyer_need",
+  );
+  const p = partitionAudience(
+    ["in", "catoff", "masteroff", "norow"].map((id) => agent(id, false)),
+    () => true,
+    null,
+    undefined,
+    lookup.allowed,
+  );
+  assertEquals(p.real.map((r) => r.agent_id), ["in"]);
+  assertEquals(p.counts.comms_opt_in_blocked, 3);
+});
+
+Deno.test("lookup error fails closed even with the broad-opt-in path enabled", async () => {
+  const lookup = await loadCommsOptIn(fakeSupabase([], { message: "boom" }), ["a"], "buyer_need");
+  const p = partitionAudience([agent("a", false)], () => true, null, undefined, lookup.allowed);
+  assertEquals(p.real.length, 0);
+});
+
+Deno.test("immediate and digest paths share identical opt-in semantics", () => {
+  const cases = [
+    { row: null, expected: false },
+    { row: { ...ON, buyer_need: false }, expected: false },
+    { row: { ...ON, client_needs_enabled: false }, expected: false },
+    { row: ON, expected: true },
+  ];
+  for (const c of cases) {
+    // immediate path decision
+    const immediate = evaluateCommsOptIn(c.row as any, "buyer_need").allowed;
+    // digest send-time recheck decision
+    const digest = evaluateCommsOptIn(c.row as any, categoryColumnFor("Buyer Need")).allowed;
+    assertEquals(immediate, c.expected);
+    assertEquals(digest, c.expected);
+    // and a dimensionless opted-in agent survives the partition on both paths
+    const gate = immediate ? new Set(["x"]) : new Set<string>();
+    const p = partitionAudience([agent("x", false)], () => false, null, undefined, gate);
+    assertEquals(p.real.length > 0, c.expected);
+  }
 });
 
 /* ---------- 6. digest scheduling honours the mute ---------- */
