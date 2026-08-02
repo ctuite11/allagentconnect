@@ -37,7 +37,9 @@ export type OptInDecision = {
     | "missing_row"
     | "client_needs_disabled"
     | "new_matches_disabled"
-    | "category_off";
+    | "category_off"
+    | "unknown_category"
+    | "lookup_error";
 };
 
 const PREFS_COLUMNS =
@@ -49,9 +51,12 @@ const PREFS_COLUMNS =
  */
 export function evaluateCommsOptIn(
   row: CommsPrefsRow,
-  category: CommsCategoryColumn,
+  category: CommsCategoryColumn | null | undefined,
   requireNewMatches = true,
 ): OptInDecision {
+  // Fail closed on unknown / unmappable categories — never borrow another
+  // category's permission.
+  if (!category) return { allowed: false, reason: "unknown_category" };
   if (!row) return { allowed: false, reason: "missing_row" };
   if (row.client_needs_enabled !== true) {
     return { allowed: false, reason: "client_needs_disabled" };
