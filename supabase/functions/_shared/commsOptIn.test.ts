@@ -130,16 +130,28 @@ function withGeo(a: EligibleAgent): EligibleAgent {
   };
 }
 
-Deno.test("no opt-in gate supplied → dimensionless agents fail closed", () => {
+Deno.test("no opt-in gate supplied → ZERO recipients, including configured agents", () => {
   const p = partitionAudience(
     [agent("configured-match", true), agent("configured-nomatch", true), agent("unset", false)],
     (a) => a.agent_id === "configured-match",
     null,
+    undefined,
+    undefined,
   );
-  assertEquals(p.real.map((r) => r.agent_id), ["configured-match"]);
+  assertEquals(p.real.length, 0);
   assertEquals(p.counts.preferences_unset_fallback, 0);
-  assertEquals(p.counts.preferences_unset_skipped, 1);
-  assertEquals(p.counts.non_matching, 1);
+  assertEquals(p.counts.comms_opt_in_blocked, 3);
+});
+
+Deno.test("classifyRecipients also yields zero without the opt-in gate", () => {
+  const out = classifyRecipients(
+    [withGeo(agent("configured", true))],
+    () => true,
+    null,
+    undefined,
+    undefined,
+  );
+  assertEquals(out.length, 0);
 });
 
 /* ---------- 4b. corrected policy: explicit opt-in without filters ---------- */
@@ -255,7 +267,31 @@ Deno.test("digest send-time recheck maps category labels correctly", () => {
   assertEquals(categoryColumnFor("Renter Need"), "renter_need");
   assertEquals(categoryColumnFor("Sales Intel"), "sales_intel");
   assertEquals(categoryColumnFor("General Discussion"), "general_discussion");
-  assertEquals(categoryColumnFor(null), "buyer_need");
+  // Fail closed: unknown / blank / null categories never map to buyer_need.
+  assertEquals(categoryColumnFor(null), null);
+  assertEquals(categoryColumnFor(""), null);
+  assertEquals(categoryColumnFor("   "), null);
+  assertEquals(categoryColumnFor("Quantum Leads"), null);
+});
+
+Deno.test("unknown category is blocked, never evaluated as buyer_need", () => {
+  const fullyOptedIn = { ...ON };
+  const decision = evaluateCommsOptIn(fullyOptedIn, categoryColumnFor("Quantum Leads"));
+  assertEquals(decision.allowed, false);
+  assertEquals(decision.reason, "unknown_category");
+});
+
+Deno.test("preference lookup error is distinguishable from a missing row", async () => {
+  const err = await reloadCommsOptIn(fakeSupabase([], { message: "boom" }), "a", "buyer_need");
+  assertEquals(err.allowed, false);
+  assertEquals(err.reason, "lookup_error");
+
+  const missing = await reloadCommsOptIn(fakeSupabase([]), "a", "buyer_need");
+  assertEquals(missing.allowed, false);
+  assertEquals(missing.reason, "missing_row");
+
+  const raw = await fetchCommsPrefsRow(fakeSupabase([], { message: "boom" }), "a");
+  assertEquals(raw.ok, false);
 });
 
 Deno.test("daily and weekly digests both recheck preferences before delivery", () => {
