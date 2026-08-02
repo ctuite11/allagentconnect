@@ -26,13 +26,13 @@ type NotificationPreferenceCardsProps = {
 
 export const NotificationPreferenceCards = ({ onPreferencesChange }: NotificationPreferenceCardsProps = {}) => {
   const [preferences, setPreferences] = useState<NotificationPreferences>({
-    // Default to all-ON to match the DB column defaults. A missing
-    // notification_preferences row (PGRST116) is also treated as all-ON
-    // — agents must deliberately toggle a category off to opt out.
-    buyer_need: true,
-    sales_intel: true,
-    renter_need: true,
-    general_discussion: true,
+    // Opt-in policy (Aug 2026): everything is OFF until the agent explicitly
+    // enables a channel. A missing notification_preferences row and null
+    // category values both render as OFF — never ON.
+    buyer_need: false,
+    sales_intel: false,
+    renter_need: false,
+    general_discussion: false,
   });
   const [loading, setLoading] = useState(true);
   const [openDialog, setOpenDialog] = useState<{
@@ -62,13 +62,13 @@ export const NotificationPreferenceCards = ({ onPreferencesChange }: Notificatio
 
       if (data) {
         setPreferences({
-          buyer_need: (data as any).buyer_need ?? true,
-          sales_intel: (data as any).sales_intel ?? true,
-          renter_need: (data as any).renter_need ?? true,
-          general_discussion: (data as any).general_discussion ?? true,
+          buyer_need: (data as any).buyer_need === true,
+          sales_intel: (data as any).sales_intel === true,
+          renter_need: (data as any).renter_need === true,
+          general_discussion: (data as any).general_discussion === true,
         });
       }
-      // No row yet → keep the all-ON default from useState above.
+      // No row yet → keep the all-OFF default from useState above.
     } catch (error) {
       console.error("Error fetching preferences:", error);
     } finally {
@@ -83,12 +83,18 @@ export const NotificationPreferenceCards = ({ onPreferencesChange }: Notificatio
 
       const newValue = !preferences[key];
       const newPreferences = { ...preferences, [key]: newValue };
+      // Master switches follow the categories: any category on ⇒ both masters
+      // true, so enabling the first channel is a complete, usable opt-in.
+      // All categories off ⇒ both masters false.
+      const anyOn = Object.values(newPreferences).some(Boolean);
 
       const { error } = await supabase
         .from("notification_preferences")
         .upsert({
           user_id: user.id,
           ...newPreferences,
+          client_needs_enabled: anyOn,
+          new_matches_enabled: anyOn,
         }, {
           onConflict: 'user_id'
         });
@@ -129,6 +135,8 @@ export const NotificationPreferenceCards = ({ onPreferencesChange }: Notificatio
         .upsert({
           user_id: user.id,
           ...newPreferences,
+          client_needs_enabled: false,
+          new_matches_enabled: false,
         }, {
           onConflict: 'user_id'
         });
@@ -213,9 +221,9 @@ export const NotificationPreferenceCards = ({ onPreferencesChange }: Notificatio
     <>
       <div>
         <p className="mb-3 text-sm text-neutral-500">
-          Choose which network activity you want to receive. Which opportunities
-          inside each category you get is controlled separately by your
-          targeting preferences below.
+          Email channels stay off until you turn one on. Choose which network
+          activity you want to receive — which opportunities you get inside each
+          category is controlled separately by your targeting preferences below.
         </p>
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-3">
           {cards.map((card) => {
