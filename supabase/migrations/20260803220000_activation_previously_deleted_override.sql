@@ -92,7 +92,9 @@ AS $function$
   SELECT public.agent_is_activation_eligible(_user_id, false);
 $function$;
 
-REVOKE ALL ON FUNCTION public.agent_is_activation_eligible(uuid, boolean) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.agent_is_activation_eligible(uuid, boolean) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.agent_is_activation_eligible(uuid, boolean) FROM anon;
+REVOKE ALL ON FUNCTION public.agent_is_activation_eligible(uuid, boolean) FROM authenticated;
 GRANT EXECUTE ON FUNCTION public.agent_is_activation_eligible(uuid, boolean) TO service_role;
 
 CREATE OR REPLACE FUNCTION public.activation_issue_core(
