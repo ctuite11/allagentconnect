@@ -47,6 +47,7 @@ import {
   ADD_LISTING_CREATE_STATUSES, 
   ADD_LISTING_EDIT_STATUSES 
 } from "@/constants/status";
+import { createAddListingDraftSession } from "@/lib/addListingDraftSession";
 import AddressAutocomplete from "@/components/AddressAutocomplete";
 import { normalizeGooglePlace } from "@/lib/google-address";
 import { checkDuplicateListing, isLiveStatus } from "@/lib/checkDuplicateListing";
@@ -259,7 +260,18 @@ const AddListing = () => {
   const baselineSnapshotRef = useRef<string | null>(null);
   const formSnapshotRef = useRef<string>("");
   const [lastAutoSave, setLastAutoSave] = useState<Date | null>(null);
-  const [draftId, setDraftId] = useState<string | null>(null);
+  /** React state for rendering only — insert-vs-update uses draftSession.getDraftId(). */
+  const [draftId, setDraftIdState] = useState<string | null>(null);
+  const draftSessionRef = useRef<ReturnType<typeof createAddListingDraftSession> | null>(null);
+  if (!draftSessionRef.current) {
+    draftSessionRef.current = createAddListingDraftSession((id) => {
+      setDraftIdState(id);
+    });
+  }
+  const draftSession = draftSessionRef.current;
+  const setDraftId = (id: string | null) => {
+    draftSession.setDraftId(id);
+  };
   const [autoSaving, setAutoSaving] = useState(false);
   const [autoFillLoading, setAutoFillLoading] = useState(false);
   const [isUploadingPhotos, setIsUploadingPhotos] = useState(false);
@@ -542,6 +554,9 @@ const AddListing = () => {
     
     // Debounce autosave to 14 seconds after last change
     const debounceTimeout = setTimeout(() => {
+      // Skip this tick while a save or draft creation is already running
+      if (draftSession.shouldSkipAutosaveTick()) return;
+
       // In edit mode for non-draft listings, use handleSaveChanges to preserve status
       if (listingId && backendStatusRef.current && backendStatusRef.current !== "draft") {
         handleSaveChanges(true); // silent auto-save preserving current status
@@ -1882,7 +1897,7 @@ const AddListing = () => {
     
     // For photos, upload directly with spinner
     if (type === 'photos') {
-      let targetListingId = listingId || draftId;
+      let targetListingId = listingId || draftSession.getDraftId();
       
       // If new listing, ensure draft exists first using helper
       if (!targetListingId) {
@@ -2030,7 +2045,7 @@ const AddListing = () => {
     const updatedPhotos = photos.filter((p) => p.id !== id);
     setPhotos(updatedPhotos);
 
-    const targetListingId = listingId || draftId;
+    const targetListingId = listingId || draftSession.getDraftId();
     if (!targetListingId) return;
 
     const dbPhotos = updatedPhotos
@@ -2244,60 +2259,60 @@ const AddListing = () => {
     };
   };
 
-  // Helper to ensure a draft listing exists before any save/upload operation
+  // Helper to ensure a draft listing exists before any save/upload operation.
+  // Concurrent callers share one in-flight create; decisions use draftSession ref, not React state alone.
   const ensureDraftListing = async (): Promise<string | null> => {
-    if (draftId) return draftId;
-    
-    if (!user) {
-      console.error('ensureDraftListing: Cannot create draft - no user logged in');
-      return null;
-    }
-    
-    const dcmlsSnapshot = dcmlsPublishSnapshot(false);
-    
-    const draftPrice =
-      formData.listing_type === "for_rent"
-        ? (() => {
-            const r = parseFloat(String(formData.monthly_rent ?? "").trim());
-            return Number.isFinite(r) ? r : 0;
-          })()
-        : formData.price
-          ? parseFloat(formData.price)
-          : 0;
+    return draftSession.ensureDraftListing(async () => {
+      if (!user) {
+        console.error('ensureDraftListing: Cannot create draft - no user logged in');
+        return null;
+      }
 
-    const minimalPayload = {
-      agent_id: user.id,
-      status: 'draft',
-      address: formData.address || 'Draft',
-      city: formData.city || 'TBD',
-      state: formData.state || 'MA',
-      zip_code: formData.zip_code || '00000',
-      price: draftPrice,
-      ...dcmlsSnapshot,
-    };
-    
-    console.log('ensureDraftListing: Creating initial draft with payload:', minimalPayload);
-    
-    const { data, error } = await supabase
-      .from('listings')
-      .insert(minimalPayload)
-      .select()
-      .single();
-      
-    if (error) {
-      console.error('ensureDraftListing: Error creating initial draft:', {
-        message: error.message,
-        code: error.code,
-        details: error.details,
-        hint: error.hint,
-        payload: minimalPayload
-      });
-      return null;
-    }
-    
-    console.log('ensureDraftListing: Draft created successfully with id:', data.id);
-    setDraftId(data.id);
-    return data.id;
+      const dcmlsSnapshot = dcmlsPublishSnapshot(false);
+
+      const draftPrice =
+        formData.listing_type === "for_rent"
+          ? (() => {
+              const r = parseFloat(String(formData.monthly_rent ?? "").trim());
+              return Number.isFinite(r) ? r : 0;
+            })()
+          : formData.price
+            ? parseFloat(formData.price)
+            : 0;
+
+      const minimalPayload = {
+        agent_id: user.id,
+        status: 'draft',
+        address: formData.address || 'Draft',
+        city: formData.city || 'TBD',
+        state: formData.state || 'MA',
+        zip_code: formData.zip_code || '00000',
+        price: draftPrice,
+        ...dcmlsSnapshot,
+      };
+
+      console.log('ensureDraftListing: Creating initial draft with payload:', minimalPayload);
+
+      const { data, error } = await supabase
+        .from('listings')
+        .insert(minimalPayload)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('ensureDraftListing: Error creating initial draft:', {
+          message: error.message,
+          code: error.code,
+          details: error.details,
+          hint: error.hint,
+          payload: minimalPayload
+        });
+        return null;
+      }
+
+      console.log('ensureDraftListing: Draft created successfully with id:', data.id);
+      return { id: data.id };
+    });
   };
 
   // Helper to get fresh user from server - single source of truth for identity
@@ -2462,6 +2477,7 @@ const AddListing = () => {
   };
 
   const handleSaveDraft = async (isAutoSave = false) => {
+    draftSession.beginSave();
     try {
       // Get fresh user from server - single source of truth
       const freshUser = await getFreshUserOrRedirect();
@@ -2506,40 +2522,31 @@ const AddListing = () => {
 
       // Remove agent_id from update payload (it's immutable after creation)
       const { agent_id, ...updatePayload } = payload;
-      
-      if (draftId) {
-        const { data: updatedDraft, error } = await supabase
-          .from("listings")
-          .update(updatePayload)
-          .eq("id", draftId)
-          .select("id")
-          .maybeSingle();
-        if (error) {
-          console.error('Error updating draft listing:', error);
-          throw error;
-        }
-        if (!updatedDraft) {
-          throw new Error("Draft update was blocked or not found.");
-        }
-        console.log('Draft updated successfully, id:', draftId);
-      } else {
-        // Let the database generate listing_number using its default/sequence
-        const { data, error } = await supabase
-          .from("listings")
-          .insert(payload)
-          .select()
-          .single();
 
-        if (error) {
-          console.error('Error inserting draft listing:', error);
-          throw error;
-        }
-
-        if (data) {
-          console.log('Draft created successfully, id:', data.id);
-          setDraftId(data.id);
+      // All draft creation goes through ensureDraftListing (shared in-flight lock).
+      // Once an id exists (ref), always update — never insert a second draft.
+      let targetId = listingId || draftSession.getDraftId();
+      if (!targetId) {
+        targetId = await ensureDraftListing();
+        if (!targetId) {
+          throw new Error("Unable to create draft listing");
         }
       }
+
+      const { data: updatedDraft, error } = await supabase
+        .from("listings")
+        .update(updatePayload)
+        .eq("id", targetId)
+        .select("id")
+        .maybeSingle();
+      if (error) {
+        console.error('Error updating draft listing:', error);
+        throw error;
+      }
+      if (!updatedDraft) {
+        throw new Error("Draft update was blocked or not found.");
+      }
+      console.log('Draft updated successfully, id:', targetId);
 
 
       // Mark all items as uploaded to prevent re-uploading on next save
@@ -2568,7 +2575,7 @@ const AddListing = () => {
         code: error.code,
         details: error.details,
         hint: error.hint,
-        draftId: draftId,
+        draftId: draftSession.getDraftId(),
         userId: user?.id,
         payloadSummary: {
           address: formData.address,
@@ -2585,6 +2592,7 @@ const AddListing = () => {
       // Return early on error - don't update state or show success
       return;
     } finally {
+      draftSession.endSave();
       if (isAutoSave) {
         setAutoSaving(false);
       } else {
@@ -2659,12 +2667,13 @@ const AddListing = () => {
       return; // getFreshUserOrRedirect already shows toast and redirects
     }
 
-    const targetId = listingId || draftId;
+    const targetId = listingId || draftSession.getDraftId();
     if (!targetId) {
       if (!isAutoSave) toast.error("No listing to update. Please use Save Draft for new listings.");
       return;
     }
 
+    draftSession.beginSave();
     if (isAutoSave) {
       setAutoSaving(true);
     } else {
@@ -2682,6 +2691,7 @@ const AddListing = () => {
         setValidationErrors(errors);
         window.scrollTo({ top: 0, behavior: 'smooth' });
         validationSummaryRef.current?.scrollIntoView({ behavior: 'smooth' });
+        draftSession.endSave();
         setSubmitting(false);
         return;
       }
@@ -2700,6 +2710,7 @@ const AddListing = () => {
           monthly_rent: formData.monthly_rent,
         })
       ) {
+        draftSession.endSave();
         setAutoSaving(false);
         return;
       }
@@ -2713,13 +2724,14 @@ const AddListing = () => {
         city: formData.city,
         state: formData.state,
         zip: formData.zip_code,
-        excludeListingId: listingId || draftId || undefined,
+        excludeListingId: listingId || draftSession.getDraftId() || undefined,
       });
       if (dupResult.found) {
         const statusLabel = (dupResult.status || "").replace(/_/g, " ");
         toast.error(
           `A listing at this address is already "${statusLabel}". You cannot create a duplicate. If the existing listing is expired, canceled, sold, rented, or withdrawn, you may proceed.`
         );
+        draftSession.endSave();
         setSubmitting(false);
         return;
       }
@@ -2845,6 +2857,7 @@ const AddListing = () => {
         toast.error(`Failed to save changes: ${error.message || 'Unknown error'}`);
       }
     } finally {
+      draftSession.endSave();
       if (isAutoSave) {
         setAutoSaving(false);
       } else {
@@ -2855,7 +2868,7 @@ const AddListing = () => {
 
   // Helper to save form data and navigate to manage photos
   const handleNavigateToManagePhotos = async () => {
-    let targetId = listingId || draftId;
+    let targetId = listingId || draftSession.getDraftId();
     
     // Ensure draft exists
     if (!targetId) {
@@ -2904,7 +2917,7 @@ const AddListing = () => {
 
   // Helper to save form data and navigate to manage floor plans
   const handleNavigateToManageFloorPlans = async () => {
-    let targetId = listingId || draftId;
+    let targetId = listingId || draftSession.getDraftId();
     
     // Ensure draft exists
     if (!targetId) {
@@ -3031,7 +3044,7 @@ const AddListing = () => {
           city: formData.city,
           state: formData.state,
           zip: formData.zip_code,
-          excludeListingId: listingId || draftId || undefined,
+          excludeListingId: listingId || draftSession.getDraftId() || undefined,
         });
         if (dupResult.found) {
           const statusLabel = (dupResult.status || "").replace(/_/g, " ");
@@ -3090,9 +3103,10 @@ const AddListing = () => {
         if (formData.operating_expenses) (listingData as any).operating_expenses = parseFloat(formData.operating_expenses);
       }
 
-      // Determine if we're in edit mode
-      const isEditMode = !!(listingId || draftId);
-      const targetListingId = listingId || draftId;
+      // Determine if we're in edit mode (use sync draft ref, not React state alone)
+      const resolvedDraftId = draftSession.getDraftId();
+      const isEditMode = !!(listingId || resolvedDraftId);
+      const targetListingId = listingId || resolvedDraftId;
 
       let resultListingId: string | null = null;
 
@@ -3208,7 +3222,7 @@ const AddListing = () => {
       }
 
       // Clear draft state on publish success to prevent duplicate re-entries
-      if (draftId) {
+      if (draftSession.getDraftId()) {
         setDraftId(null);
       }
 
