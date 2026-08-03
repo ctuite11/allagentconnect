@@ -131,6 +131,9 @@ serve(async (req) => {
       p_subject: null,
       p_reply_to: null,
       p_agent_name: agentName,
+      // An admin who acknowledged the "previously deleted" warning can pass the
+      // database-side tombstone gate too; every other gate stays enforced.
+      p_allow_previously_deleted: acknowledgeDeleted,
     });
 
     if (rpcErr) {
@@ -159,8 +162,23 @@ serve(async (req) => {
       });
     }
 
-    // ineligible / blocked / already_live / no_recipient
-    return json(422, { success: false, status, successCount: 0 });
+    // previously_deleted / ineligible / blocked / already_live / no_recipient
+    const reasons: Record<string, string> = {
+      previously_deleted:
+        "This address was deleted previously — acknowledge the deletion warning to send anyway.",
+      ineligible:
+        "This agent is not eligible for a setup link (not verified, rejected, or already activated).",
+      blocked: "A setup link for this agent is being redeemed right now. Try again in a few minutes.",
+      already_live: "A setup link is already live for this agent. Use Resend to replace it.",
+      no_recipient: "This agent has no valid email address on file.",
+    };
+    return json(422, {
+      success: false,
+      status,
+      code: status,
+      error: reasons[status] ?? `Could not send setup email (${status}).`,
+      successCount: 0,
+    });
   } catch (err) {
     console.error("[send-license-verified-email] error:", err);
     return json(500, { success: false, error: (err as Error)?.message ?? "Unknown error" });
