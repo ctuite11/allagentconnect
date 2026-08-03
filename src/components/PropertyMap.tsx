@@ -331,6 +331,7 @@ const PropertyMap = ({
           const mapId = resolveGoogleMapId();
           mapInstanceRef.current = new googleMaps.Map(mapRef.current, {
             zoom: 10,
+            mapTypeId: "roadmap",
             mapTypeControl: false,
             streetViewControl: true,
             ...(mapId ? { mapId } : {}),

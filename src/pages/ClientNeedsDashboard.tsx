@@ -465,7 +465,7 @@ const ClientNeedsDashboard = () => {
                     Saving...
                   </span>
                 ) : (
-                  {COMMS_FILTERS_UI.saveFilters}
+                  COMMS_FILTERS_UI.saveFilters
                 )}
               </Button>
             </div>
