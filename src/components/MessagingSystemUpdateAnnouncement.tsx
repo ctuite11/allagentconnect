@@ -16,6 +16,7 @@ import {
   MESSAGING_PREFERENCES_FIX_ANNOUNCEMENT_ID,
   isAnnouncementEligible,
 } from "@/lib/announcements";
+import { COMMS_FILTERS_ROUTE, COMMS_FILTERS_UI } from "@/lib/commsFiltersCopy";
 
 export { MESSAGING_PREFERENCES_FIX_ANNOUNCEMENT_ID };
 
@@ -155,7 +156,7 @@ export function MessagingSystemUpdateAnnouncement() {
     const ok = await acknowledge();
     if (!ok) return;
     setOpen(false);
-    navigate("/communications", { state: { scrollToPreferences: true } });
+    navigate(COMMS_FILTERS_ROUTE);
   };
 
   if (!ready || !open) return null;
@@ -204,11 +205,10 @@ export function MessagingSystemUpdateAnnouncement() {
               </p>
               <p>
                 We’ve identified the issue and have worked to correct it. Your Communications Center
-                channel preferences will now be honored when messages are sent.
+                channel filters will now be honored when messages are sent.
               </p>
               <p>
-                Please review your Communications Center preferences to make sure your channels,
-                coverage area, and notification timing are set the way you want.
+                {COMMS_FILTERS_UI.reviewFiltersBody}
               </p>
               <p>Thank you for your patience as we continue improving All Agent Connect.</p>
             </div>
@@ -221,7 +221,7 @@ export function MessagingSystemUpdateAnnouncement() {
               onClick={() => void handleReviewPreferences()}
               className="h-11 w-full rounded-xl bg-amber-600 text-[14px] font-semibold text-white hover:bg-amber-700 focus-visible:ring-amber-500"
             >
-              Review Communication Preferences
+              {COMMS_FILTERS_UI.reviewFiltersCta}
             </Button>
             <Button
               type="button"

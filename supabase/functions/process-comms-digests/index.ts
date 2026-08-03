@@ -431,7 +431,7 @@ function buildDigestHtml(
     <p style="margin:0 0 12px;">Hi ${escapeHtml(agentName)},</p>
     <p style="margin:0 0 20px;">
       Here is your ${label} Communications Center digest with
-      <strong>${items.length}</strong> update${items.length === 1 ? "" : "s"} matching your preferences.
+      <strong>${items.length}</strong> update${items.length === 1 ? "" : "s"} matching your filters.
     </p>
     ${sections.join("")}
     <p style="margin:24px 0 0;font-size:13px;color:#64748b;">

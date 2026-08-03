@@ -12,6 +12,7 @@ import PriceRangePreferences, { PriceRangeData } from "@/components/PriceRangePr
 import PropertyTypePreferences from "@/components/PropertyTypePreferences";
 import { toast } from "sonner";
 import { hasNotificationTargetingConfigured } from "@/lib/checkAgentCommunicationPreferences";
+import { COMMS_FILTERS_UI } from "@/lib/commsFiltersCopy";
 import { Seo } from "@/components/Seo";
 import {
   AlertDialog,
@@ -57,13 +58,17 @@ const ClientNeedsDashboard = () => {
 
   useEffect(() => {
     const state = location.state as { scrollToPreferences?: boolean } | null;
-    if (!state?.scrollToPreferences) return;
+    const params = new URLSearchParams(location.search);
+    const sectionFilters = params.get("section") === "filters";
+    if (!state?.scrollToPreferences && !sectionFilters) return;
 
     requestAnimationFrame(() => {
       document.querySelector("[data-preferences-section]")?.scrollIntoView({ behavior: "smooth" });
     });
-    navigate(location.pathname, { replace: true, state: null });
-  }, [location.pathname, location.state, navigate]);
+    if (state?.scrollToPreferences) {
+      navigate(location.pathname + location.search, { replace: true, state: null });
+    }
+  }, [location.pathname, location.search, location.state, navigate]);
 
   useEffect(() => {
     if (user?.id) {
@@ -210,7 +215,7 @@ const ClientNeedsDashboard = () => {
         }
       }
 
-      toast.success("Preferences saved successfully");
+      toast.success(COMMS_FILTERS_UI.savedToast);
       setHasUnsavedChanges(false);
       if (await hasNotificationTargetingConfigured(user.id)) {
         await supabase.from("agent_settings").update({ preferences_set: true }).eq("user_id", user.id);
@@ -218,7 +223,7 @@ const ClientNeedsDashboard = () => {
       await checkPreferences();
     } catch (error) {
       console.error("Error saving preferences:", error);
-      toast.error("Failed to save preferences. Please try again.");
+      toast.error(COMMS_FILTERS_UI.saveFailedToast);
     } finally {
       setSaving(false);
     }
@@ -282,7 +287,7 @@ const ClientNeedsDashboard = () => {
     <>
       <Seo
         title="Communications Center | All Agent Connect"
-        description="Agent-to-agent channels, notification preferences, and email alert settings."
+        description={COMMS_FILTERS_UI.seoDescription}
         canonical="https://allagentconnect.com/communications"
         noindex
       />
@@ -390,7 +395,7 @@ const ClientNeedsDashboard = () => {
                         document.querySelector("[data-preferences-section]")?.scrollIntoView({ behavior: "smooth" });
                       }}
                     >
-                      Set Preferences
+                      {COMMS_FILTERS_UI.setFilters}
                     </button>
                     <button
                       type="button"
@@ -408,7 +413,7 @@ const ClientNeedsDashboard = () => {
           <AlertDialog open={showWarningDialog} onOpenChange={setShowWarningDialog}>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>Set your communications preferences</AlertDialogTitle>
+                <AlertDialogTitle>{COMMS_FILTERS_UI.dialogTitle}</AlertDialogTitle>
                 <AlertDialogDescription>
                   To keep Comms Center email aligned with how you work, set at least one filter: price range, property
                   types, or geographic areas. Without filters, you may receive alerts for broad network communications
@@ -443,7 +448,7 @@ const ClientNeedsDashboard = () => {
                     document.querySelector("[data-preferences-section]")?.scrollIntoView({ behavior: "smooth" });
                   }}
                 >
-                  Set Preferences Now
+                  {COMMS_FILTERS_UI.setFiltersNow}
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
@@ -460,7 +465,7 @@ const ClientNeedsDashboard = () => {
                     Saving...
                   </span>
                 ) : (
-                  "Save Preferences"
+                  {COMMS_FILTERS_UI.saveFilters}
                 )}
               </Button>
             </div>

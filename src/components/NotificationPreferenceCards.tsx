@@ -12,6 +12,7 @@ import {
   toggleChannel,
   type CommsChannelState,
 } from "@/lib/commsChannelPrefs";
+import { COMMS_FILTERS_UI } from "@/lib/commsFiltersCopy";
 
 /** Native control — avoids any global `Button` / primary styles bleeding onto channel Send. */
 const channelSendClassName =
@@ -204,9 +205,7 @@ export const NotificationPreferenceCards = ({ onPreferencesChange }: Notificatio
     <>
       <div>
         <p className="mb-3 text-sm text-neutral-500">
-          Email channels stay off until you turn one on. Choose which network
-          activity you want to receive — which opportunities you get inside each
-          category is controlled separately by your targeting preferences below.
+          {COMMS_FILTERS_UI.targetingHint}
         </p>
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-3">
           {cards.map((card) => {

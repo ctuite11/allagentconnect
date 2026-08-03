@@ -13,6 +13,10 @@ import { formatUsPhoneForDisplay } from "./phoneFormat.ts";
 import { AAC_PUBLIC_URL, resolveEmailBaseUrl } from "./aacPublicUrl.ts";
 import { buildAdminVerificationSubmittedEmailHtml } from "./buildAdminVerificationSubmittedEmailHtml.ts";
 import { getHotSheetStatusCopy } from "./hotSheetStatusCopy.ts";
+import {
+  buildCommsFiltersFooterHtml,
+  buildCommsFiltersNoticeHtml,
+} from "./commsFiltersEmail.ts";
 
 /* ------------------------------------------------------------------ */
 /*  Shared helpers for Share Listings emails                           */
@@ -303,6 +307,8 @@ export function renderEmailTemplate(
       return buildAacEmail({
         headline: category,
         preheader: `${senderName}${senderCompany} shared a ${category.toLowerCase()}`,
+        noticeBelowHeadline: buildCommsFiltersNoticeHtml(),
+        contentFooterNote: buildCommsFiltersFooterHtml(),
         body: `
           <p style="margin:0 0 4px;">
             <span style="display:inline-block;padding:3px 10px;font-size:12px;font-weight:600;color:#0E56F5;background:#EEF3FF;border-radius:999px;letter-spacing:0.02em;">${category}</span>
@@ -325,6 +331,8 @@ export function renderEmailTemplate(
           typeof variables.itemCount === "number"
             ? `${variables.itemCount} Communications Center update${variables.itemCount === 1 ? "" : "s"}`
             : "Your Communications Center digest",
+        noticeBelowHeadline: buildCommsFiltersNoticeHtml(),
+        contentFooterNote: buildCommsFiltersFooterHtml(),
         body: variables.contentHtml || "",
         ctaLabel: "Open Communications Center",
         ctaUrl: variables.ctaUrl || `${AAC_PUBLIC_URL}/communications/feed`,

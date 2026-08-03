@@ -262,7 +262,7 @@ function SuccessHubDashboardBody() {
                 ))}
               </div>
               <p className="mt-3 text-xs text-neutral-500">
-                Choose what you want to receive, manage your communication preferences, and view network activity in one place.
+                Choose what you want to receive, manage your communication filters, and view network activity in one place.
               </p>
             </div>
           </div>

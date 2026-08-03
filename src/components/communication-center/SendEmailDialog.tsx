@@ -24,6 +24,7 @@ import {
   Info,
 } from "lucide-react";
 import AACMonogram from "@/components/ui/AACMonogram";
+import { COMMS_FILTERS_UI } from "@/lib/commsFiltersCopy";
 import {
   commsChevron,
   commsCountBadge,
@@ -301,7 +302,7 @@ export function SendEmailDialog({ open, onOpenChange, onSuccess }: SendEmailDial
           <DialogHeader>
             <DialogTitle className={commsDialogTitle}>Send Email</DialogTitle>
             <DialogDescription className={commsDialogDescription}>
-              Send a targeted email to users whose preferences match your selected geography
+              {COMMS_FILTERS_UI.sendDialogAudience}
             </DialogDescription>
           </DialogHeader>
         </div>

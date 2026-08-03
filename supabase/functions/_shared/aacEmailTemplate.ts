@@ -24,6 +24,16 @@ interface AacEmailOptions {
   ctaUrl?: string;
   /** Hidden preheader text shown in inbox preview */
   preheader?: string;
+  /**
+   * Optional HTML placed directly below the headline.
+   * Used by Communications Center broadcast/digest emails only.
+   */
+  noticeBelowHeadline?: string;
+  /**
+   * Optional smaller note above the dark brand footer.
+   * Used by Communications Center broadcast/digest emails only.
+   */
+  contentFooterNote?: string;
   /** Optional tracking + unsubscribe footer (marketing emails only) */
   tracking?: {
     pixelUrl?: string;
@@ -36,7 +46,16 @@ interface AacEmailOptions {
 }
 
 export function buildAacEmail(opts: AacEmailOptions): string {
-  const { headline, body, ctaLabel, preheader, tracking, hideHeadline } = opts;
+  const {
+    headline,
+    body,
+    ctaLabel,
+    preheader,
+    tracking,
+    hideHeadline,
+    noticeBelowHeadline,
+    contentFooterNote,
+  } = opts;
   const documentTitle = opts.documentTitle ?? headline;
   const ctaUrl = tracking?.wrappedCtaUrl || opts.ctaUrl;
 
@@ -110,10 +129,12 @@ export function buildAacEmail(opts: AacEmailOptions): string {
             <!-- Content -->
             <tr><td style="padding:${contentPadding};">
               ${headlineHtml}
+              ${noticeBelowHeadline || ""}
               ${bodyWrapperOpen}
                 ${body}
               </div>
               ${ctaHtml}
+              ${contentFooterNote || ""}
               ${fallbackHtml}
             </td></tr>
           </table>
