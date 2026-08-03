@@ -1,44 +1,34 @@
-# Comms Filters Copy — What the Publish Covered, and What Is Still Missing
+# Christie Xie — why verification never completes
 
-## Short answer
+## What the data shows
 
-Your publish covered the **frontend**. It did **not** cover the **email side**, and redeploying the three edge functions would not fix that either — the email copy was never wired in.
+- Her request (`xie.christie@gmail.com`, MA license 9526583) was submitted Aug 3, 20:23 UTC and is already marked `status = verified`, processed Aug 3, 21:30 UTC.
+- A new auth user + agent profile + `agent` role were created (`5c01fbf0-…`, AAC-0385), and `agent_settings.agent_status = verified`, `verified_at` stamped.
+- But: `account_activated_at` is null, `approval_email_sent = false`, **no activation token row exists for her**, and **no license-verified / activation email job was created today**. Her last activation email was July 19, before her account was deleted.
 
-## Verified now (read-only)
+So she is half-verified: flagged verified in the database, but she never received a setup link, so she can never set a password or activate. Her `last_sign_in_at` is null.
 
-Frontend — live at `allagentconnect.com`:
-- The served bundle changed from `assets/index-D2oVINkt.js` to `assets/index-D8yllcej.js`.
-- The new bundle contains `section=filters`.
-- `src/lib/commsFiltersCopy.ts` ships "Set Filters Now" / "Save Filters", and `src/pages/ClientNeedsDashboard.tsx` uses them.
-- Report checks 1, 2, and 5 are satisfied by this publish.
+## Root cause
 
-Email — the actual gap:
-- `supabase/functions/_shared/commsFiltersEmail.ts` exists and exports the notice block, CTA, and footer reminder.
-- **No edge function imports it.** `send-client-need-notification`, `process-comms-digests`, and `process-email-queue` contain no reference to it.
-- So report checks 3 and 4 are not a deployment problem. The helper is dead code until it is called. Redeploying those functions today would send byte-identical emails.
+She was deleted on July 22 in a bulk admin deletion. That deletion is recorded in `deleted_users` (original user `d302d053-…`) and in `auth_user_deletion_queue`.
 
-Containment (unchanged, not touched by this audit):
-- `COMMS_EMAILS_PAUSED` remains as you set it. No enqueue, retry, send, cron, or migration action was taken or is proposed here.
+`admin-verify-agent` writes the verified stamp first, then calls `send-license-verified-email`. For a previously deleted email that call returns `409 previously_deleted` unless the admin passes `acknowledgeDeleted`. The function then returns a 422 to the admin UI without enqueuing anything — which matches exactly what is in the database: verified stamp present, activation token and email absent.
 
-## Proposed work (approval required)
+This is not a license or eligibility problem. It is the previously-deleted guard blocking the activation email.
 
-Wire the existing helper into the two Comms email builders only:
+## Fix for Christie (one action, no code change needed)
 
-1. `supabase/functions/send-client-need-notification/index.ts`
-   - Insert `buildCommsFiltersNoticeHtml()` directly below the email heading in the broadcast item HTML.
-   - Append `buildCommsFiltersFooterHtml()` at the end of the body.
-2. `supabase/functions/process-comms-digests/index.ts`
-   - Same two insertions in the `comms-digest` template body (once per digest email, not per item).
-3. Deploy those two functions. `process-email-queue` needs no change — it does not build this body.
+In Admin Approvals, open her record and use **Resend setup email**, confirming the "previously deleted" acknowledgement when prompted. That issues an activation token and enqueues the license-verified email on the transactional stream (unaffected by the Comms pause). If the prompt does not appear or the resend errors, I will invoke the resend path directly with the acknowledgement flag.
 
-Explicitly out of scope: pause flags, cron schedules, recipient/opt-in logic, Hot Sheet, transactional, activation, password/account, and direct-message email. No test or live send will be triggered; verification is code-level plus a rendered HTML preview file, never a queue invoke.
+Verification after: an `agent_activation_tokens` row exists for `5c01fbf0-…`, and an `email_jobs` row with template `license-verified` to her address reaches `sent`.
 
-## Note on the report's item 7 and the unpause question
+## Recommended follow-up (separate approval)
 
-This wording change does not make Comms safe to unpause. The permanent recipient opt-in enforcement is still the blocking item, and it stays paused until that ships and is verified separately.
+Today's failure left her stranded in a state the admin list reads as "verified, not activated" with no way for her to proceed and no visible reason. Two small improvements, only if you want them:
 
-## Technical detail
+1. Surface the `previously_deleted` reason in the Admin Approvals error toast instead of the generic enqueue-failure message.
+2. Audit for other agents in the same state — `agent_status = 'verified'`, `account_activated_at` null, no activation token, and an entry in `deleted_users` — and report the list before any resend. No bulk resend without your explicit approval.
 
-- Helper: `COMMS_FILTERS_URL` = `AAC_PUBLIC_URL` + `/communications?section=filters`.
-- Insertion points: `itemHtml` construction in `send-client-need-notification`, and the digest body around line 416 of `process-comms-digests` where `item.item_html` is rendered.
-- Verification after deploy: grep the deployed function sources for `section=filters`, and render a preview HTML to `docs/email/previews/` for visual check.
+## Scope guard
+
+No email queue retries, backfills, cron changes, pause-flag changes, or migrations. Comms and Hot Sheet streams stay untouched.
