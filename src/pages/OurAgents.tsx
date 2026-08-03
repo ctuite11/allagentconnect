@@ -34,6 +34,21 @@ import { matchesAgentName } from "@/lib/agentNameSearch";
 import { agentMatchesNetworkLocation } from "@/lib/agentNetworkLocation";
 import LocationAutocomplete, { type SelectedLocation } from "@/components/agent-directory/LocationAutocomplete";
 
+/**
+ * Sort key for Name A–Z / Z–A: use last name when present, otherwise fall back
+ * to the team/display name so teams (blank last_name) sort under their name.
+ */
+function nameSortKey(agent: {
+  last_name?: string | null;
+  first_name?: string | null;
+  team_name?: string | null;
+}): string {
+  const last = (agent.last_name || "").trim();
+  if (last) return last.toLowerCase();
+  const fallback = (agent.team_name || agent.first_name || "").trim();
+  return fallback.toLowerCase();
+}
+
 interface EnrichedAgent {
   id: string;
   aac_id: string;
