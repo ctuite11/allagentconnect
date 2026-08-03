@@ -1,47 +1,44 @@
-## What the database says
+# Comms Filters Copy — What the Publish Covered, and What Is Still Missing
 
-Read-only query against `auth.users` + `agent_settings` + `agent_activation_tokens` + `deleted_users`, filtering for `agent_status IN ('verified','invited')` AND `account_activated_at IS NULL`.
+## Short answer
 
-Result: **24+ accounts qualify on the three data gates** (verified, activation NULL, zero live tokens, zero tombstones). But almost all of them are **real, third-party agents** — `scott.farrell@compass.com`, `louis@serhant.com`, `deborah.lucci@raveis.com`, etc. Issuing to any of them sends a real activation email to a real person as a side effect of a test. That is not an acceptable test target.
+Your publish covered the **frontend**. It did **not** cover the **email side**, and redeploying the three edge functions would not fix that either — the email copy was never wired in.
 
-The two non-real candidates:
+## Verified now (read-only)
 
-| Account | Gates | Usable? |
-|---|---|---|
-| `e2e.verified.agent@allagentconnect.test` | passes all data gates, no agent profile | No — `.test` is a reserved non-routable TLD, so the delivery gate can never be satisfied |
-| `doittuite15@yahoo.com` | passes all data gates (tombstone already removed) | Yes on data, but you just declined it |
+Frontend — live at `allagentconnect.com`:
+- The served bundle changed from `assets/index-D2oVINkt.js` to `assets/index-D8yllcej.js`.
+- The new bundle contains `section=filters`.
+- `src/lib/commsFiltersCopy.ts` ships "Set Filters Now" / "Save Filters", and `src/pages/ClientNeedsDashboard.tsx` uses them.
+- Report checks 1, 2, and 5 are satisfied by this publish.
 
-So there is no existing account that is both admin-controlled and capable of receiving mail.
+Email — the actual gap:
+- `supabase/functions/_shared/commsFiltersEmail.ts` exists and exports the notice block, CTA, and footer reminder.
+- **No edge function imports it.** `send-client-need-notification`, `process-comms-digests`, and `process-email-queue` contain no reference to it.
+- So report checks 3 and 4 are not a deployment problem. The helper is dead code until it is called. Redeploying those functions today would send byte-identical emails.
 
-## Recommended path
+Containment (unchanged, not touched by this audit):
+- `COMMS_EMAILS_PAUSED` remains as you set it. No enqueue, retry, send, cron, or migration action was taken or is proposed here.
 
-Create one purpose-built test account on an inbox you own, then run the single authorized issuance against it.
+## Proposed work (approval required)
 
-```text
-chris+phase3@allagentconnect.com
-  -> real inbox (plus-addressing delivers to chris@allagentconnect.com)
-  -> brand-new row, so account_activated_at is NULL by construction
-  -> no deleted_users tombstone, no live token
-  -> disposable: purging it afterwards touches no real agent
-```
+Wire the existing helper into the two Comms email builders only:
 
-### Steps
+1. `supabase/functions/send-client-need-notification/index.ts`
+   - Insert `buildCommsFiltersNoticeHtml()` directly below the email heading in the broadcast item HTML.
+   - Append `buildCommsFiltersFooterHtml()` at the end of the body.
+2. `supabase/functions/process-comms-digests/index.ts`
+   - Same two insertions in the `comms-digest` template body (once per digest email, not per item).
+3. Deploy those two functions. `process-email-queue` needs no change — it does not build this body.
 
-1. **Create the account** through the normal admin path — submit it as a pending verification, then approve it in Admin Approvals. No hand-written SQL against `auth.users`; the account is created the same way a real agent's is, so the test exercises the real code path.
-2. **Confirm pre-state** with one read-only query: `agent_status = 'verified'`, `account_activated_at IS NULL`, zero rows in `agent_activation_tokens`, zero rows in `deleted_users`, zero pending `email_jobs` for that address.
-3. **Single issuance** — you click "Send verification/activation email" exactly once from Admin Approvals while signed in as admin. The service-role boundary rejects any call I make directly, so the click has to come from you.
-4. **Verify issuance** — exactly one `agent_activation_tokens` row, status `issued`, `expires_at` ≈ now + 7 days, hash-only storage with no plaintext anywhere in the row or the job payload.
-5. **Verify delivery** — one `email_jobs` row on the transactional stream, moving to sent; you confirm arrival in the inbox.
-6. **Verify redemption** — click the link once. Expect: token flips `issued -> redeeming -> redeemed`, a fresh short-lived auth link is minted, the agent lands signed in, and `account_activated_at` gets stamped. Then confirm a second click on the same link is refused as already-used.
+Explicitly out of scope: pause flags, cron schedules, recipient/opt-in logic, Hot Sheet, transactional, activation, password/account, and direct-message email. No test or live send will be triggered; verification is code-level plus a rendered HTML preview file, never a queue invoke.
 
-### Guardrails carried forward
+## Note on the report's item 7 and the unpause question
 
-- Exactly one issuance. If it returns `ineligible` or `already_live`, that is the test result — not permission to retry.
-- No resend, no retry, no re-enqueue, no backfill without separate explicit approval.
-- No email template, wording, branding, or footer changes.
-- Hot Sheet stream stays paused; nothing about the emergency pause flags changes.
-- No issuance to any of the 24 real third-party agents in the qualifying list.
+This wording change does not make Comms safe to unpause. The permanent recipient opt-in enforcement is still the blocking item, and it stays paused until that ships and is verified separately.
 
-## If you'd rather not create an account
+## Technical detail
 
-The only other route is authorizing `doittuite15@yahoo.com` after all — its tombstone is already removed and it passes every data gate today. Say the word and I'll write the plan against that instead.
+- Helper: `COMMS_FILTERS_URL` = `AAC_PUBLIC_URL` + `/communications?section=filters`.
+- Insertion points: `itemHtml` construction in `send-client-need-notification`, and the digest body around line 416 of `process-comms-digests` where `item.item_html` is rendered.
+- Verification after deploy: grep the deployed function sources for `section=filters`, and render a preview HTML to `docs/email/previews/` for visual check.
