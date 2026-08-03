@@ -5029,20 +5029,36 @@ export type Database = {
             Args: { _agent_id: string; _crm_client_id?: string }
             Returns: string
           }
-      activation_issue_core: {
-        Args: {
-          p_agent_name: string
-          p_allow_replace: boolean
-          p_expires_at: string
-          p_id: string
-          p_issuance_key: string
-          p_reply_to: string
-          p_subject: string
-          p_token_hash: string
-          p_user_id: string
-        }
-        Returns: Json
-      }
+      activation_issue_core:
+        | {
+            Args: {
+              p_agent_name: string
+              p_allow_replace: boolean
+              p_expires_at: string
+              p_id: string
+              p_issuance_key: string
+              p_reply_to: string
+              p_subject: string
+              p_token_hash: string
+              p_user_id: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              p_agent_name: string
+              p_allow_previously_deleted?: boolean
+              p_allow_replace: boolean
+              p_expires_at: string
+              p_id: string
+              p_issuance_key: string
+              p_reply_to: string
+              p_subject: string
+              p_token_hash: string
+              p_user_id: string
+            }
+            Returns: Json
+          }
       admin_deactivate_buyer: { Args: { p_user_id: string }; Returns: Json }
       admin_delete_agent: { Args: { p_agent_id: string }; Returns: Json }
       admin_delete_client: { Args: { p_client_id: string }; Returns: undefined }
@@ -5058,10 +5074,12 @@ export type Database = {
         Args: { p_relationship_id: string }
         Returns: number
       }
-      agent_is_activation_eligible: {
-        Args: { _user_id: string }
-        Returns: boolean
-      }
+      agent_is_activation_eligible:
+        | { Args: { _user_id: string }; Returns: boolean }
+        | {
+            Args: { _allow_previously_deleted: boolean; _user_id: string }
+            Returns: boolean
+          }
       agent_is_login_eligible: { Args: { _user_id: string }; Returns: boolean }
       agent_reactivate_buyer: {
         Args: { p_crm_client_id: string }
@@ -5390,18 +5408,32 @@ export type Database = {
         }
         Returns: boolean
       }
-      issue_agent_activation_token: {
-        Args: {
-          p_agent_name?: string
-          p_expires_at: string
-          p_id: string
-          p_reply_to?: string
-          p_subject?: string
-          p_token_hash: string
-          p_user_id: string
-        }
-        Returns: Json
-      }
+      issue_agent_activation_token:
+        | {
+            Args: {
+              p_agent_name?: string
+              p_expires_at: string
+              p_id: string
+              p_reply_to?: string
+              p_subject?: string
+              p_token_hash: string
+              p_user_id: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              p_agent_name?: string
+              p_allow_previously_deleted?: boolean
+              p_expires_at: string
+              p_id: string
+              p_reply_to?: string
+              p_subject?: string
+              p_token_hash: string
+              p_user_id: string
+            }
+            Returns: Json
+          }
       issue_agent_login_token: {
         Args: {
           p_agent_name?: string
@@ -5513,18 +5545,32 @@ export type Database = {
         }
         Returns: Json
       }
-      reissue_agent_activation_token: {
-        Args: {
-          p_agent_name?: string
-          p_expires_at: string
-          p_id: string
-          p_reply_to?: string
-          p_subject?: string
-          p_token_hash: string
-          p_user_id: string
-        }
-        Returns: Json
-      }
+      reissue_agent_activation_token:
+        | {
+            Args: {
+              p_agent_name?: string
+              p_expires_at: string
+              p_id: string
+              p_reply_to?: string
+              p_subject?: string
+              p_token_hash: string
+              p_user_id: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              p_agent_name?: string
+              p_allow_previously_deleted?: boolean
+              p_expires_at: string
+              p_id: string
+              p_reply_to?: string
+              p_subject?: string
+              p_token_hash: string
+              p_user_id: string
+            }
+            Returns: Json
+          }
       release_agent_activation_token: {
         Args: { p_token_id: string }
         Returns: boolean
