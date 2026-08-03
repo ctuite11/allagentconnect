@@ -1,6 +1,7 @@
 import { Helmet } from 'react-helmet-async';
 import { getListingPublicUrl } from '@/lib/getPublicUrl';
 import { resolveListingPhotoUrl } from '@/lib/resolveListingPhotoUrl';
+import { formatListingPriceDisplay } from '@/lib/formatListingPriceDisplay';
 
 const FALLBACK_OG_IMAGE = "https://allagentconnect.com/og/aac-og-2026-01-22.jpg";
 
@@ -28,6 +29,9 @@ interface PropertyMetaTagsProps {
   /** Pre-formatted price; falls back to numeric `price` when omitted. */
   priceDisplay?: string | null;
   price?: number | null;
+  /** Range endpoints, used when no fixed `price` and no `priceDisplay` is supplied. */
+  priceRangeMin?: number | null;
+  priceRangeMax?: number | null;
   bedrooms: number | null;
   bathrooms: number | null;
   description: string | null;
@@ -42,6 +46,8 @@ export const PropertyMetaTags = ({
   state,
   priceDisplay,
   price,
+  priceRangeMin,
+  priceRangeMax,
   bedrooms,
   bathrooms,
   description,
@@ -52,7 +58,11 @@ export const PropertyMetaTags = ({
   const title = `${address}, ${city}, ${state} - All Agent Connect`;
   const basePrice =
     priceDisplay ??
-    (price != null && price > 0 ? `$${price.toLocaleString()}` : null);
+    formatListingPriceDisplay({
+      price,
+      price_range_min: priceRangeMin,
+      price_range_max: priceRangeMax,
+    });
   const priceText =
     basePrice == null
       ? "Price on request"
