@@ -55,7 +55,7 @@ import {
   checkDeletedAgent,
   logDeletedAgentOverride,
 } from "@/lib/previouslyDeletedAgent";
-import { invokeEdgeFunction } from "@/lib/invokeEdgeFunction";
+import { invokeEdgeFunction, resolveEdgeFunctionErrorMessage } from "@/lib/invokeEdgeFunction";
 import { UserPlus } from "lucide-react";
 import { AgentStatusBadge } from "@/components/ui/status-badge";
 import { AacMonogramLoader } from "@/components/AacMonogramLoader";
@@ -1357,6 +1357,15 @@ export default function AdminApprovals() {
   ): Promise<boolean> => {
     if (sendingSetupLinkFor.has(agent.id)) return false;
 
+    // The edge function resolves the recipient from an auth user id. A row
+    // without one (pending-verification-only) 404s, so refuse up front.
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(agent.id)) {
+      if (!opts?.silent) {
+        toast.error("This agent has no account yet — verify them first to create one.");
+      }
+      return false;
+    }
+
     const lastSent = lastSetupLinkSentAt.get(agent.email.toLowerCase());
     if (lastSent && Date.now() - lastSent < 60 * 60 * 1000) {
       if (opts?.silent) return false;
@@ -1378,7 +1387,7 @@ export default function AdminApprovals() {
     try {
       // The activation link is minted server-side from the agent's user id —
       // the admin client never sees or supplies a CTA URL.
-      const { error } = await supabase.functions.invoke("send-license-verified-email", {
+      const { data, error } = await supabase.functions.invoke("send-license-verified-email", {
         body: {
           user_id: agent.id,
           mode: "resend",
@@ -1388,9 +1397,11 @@ export default function AdminApprovals() {
           acknowledgeDeleted: true,
         },
       });
-      if (error) {
+      if (error || (data && data.success === false)) {
         console.error("Send license-verified email failed:", error);
-        if (!opts?.silent) toast.error("Could not send setup email");
+        // Surface the server's actual reason instead of a fixed string.
+        const reason = await resolveEdgeFunctionErrorMessage(error, data);
+        if (!opts?.silent) toast.error(reason || "Could not send setup email");
         return false;
       }
       setLastSetupLinkSentAt((prev) => {
