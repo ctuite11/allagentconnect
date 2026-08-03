@@ -11,6 +11,29 @@ function deferred<T>() {
   return { promise, resolve, reject };
 }
 
+type FakeTimer = { id: number; ms: number; fn: () => void };
+
+function createFakeScheduler() {
+  let nextId = 1;
+  const timers: FakeTimer[] = [];
+  const schedule = (fn: () => void, ms: number) => {
+    const id = nextId++;
+    timers.push({ id, ms, fn });
+    return id;
+  };
+  const clearSchedule = (handle: unknown) => {
+    const idx = timers.findIndex((t) => t.id === handle);
+    if (idx >= 0) timers.splice(idx, 1);
+  };
+  const flushNext = () => {
+    const t = timers.shift();
+    if (!t) return false;
+    t.fn();
+    return true;
+  };
+  return { schedule, clearSchedule, timers, flushNext };
+}
+
 Deno.test("two simultaneous ensureDraftListing calls create exactly one draft", async () => {
   const session = createAddListingDraftSession();
   let createCount = 0;
@@ -204,4 +227,130 @@ Deno.test("onDraftIdChange stays synchronized with the session ref", async () =>
   const created = await session.ensureDraftListing(async () => ({ id: "new-one" }));
   assertEquals(created, "new-one");
   assertEquals(seen[seen.length - 1], "new-one");
+});
+
+// --- Skipped-autosave re-arm ---
+
+Deno.test("1. autosave skips during an active save", () => {
+  let dirty = true;
+  let autosaveRuns = 0;
+  const fake = createFakeScheduler();
+  const session = createAddListingDraftSession(undefined, {
+    isDirty: () => dirty,
+    runAutosave: () => {
+      autosaveRuns += 1;
+    },
+    retryDelayMs: 1000,
+    schedule: fake.schedule,
+    clearSchedule: fake.clearSchedule,
+  });
+
+  session.beginSave();
+  assertEquals(session.shouldSkipAutosaveTick(), true);
+  session.noteSkippedAutosaveTick();
+  // Still busy — retry must not fire yet.
+  assertEquals(fake.timers.length, 0);
+  assertEquals(autosaveRuns, 0);
+  assertEquals(session.hasPendingAutosaveRetry(), true);
+  session.endSave();
+});
+
+Deno.test("2+3. unsaved changes remain and autosave retries once after active save finishes", () => {
+  let dirty = true;
+  let autosaveRuns = 0;
+  const fake = createFakeScheduler();
+  const session = createAddListingDraftSession(undefined, {
+    isDirty: () => dirty,
+    runAutosave: () => {
+      autosaveRuns += 1;
+      // Retry itself begins a save (as AddListing does).
+      session.beginSave();
+      session.endSave();
+    },
+    retryDelayMs: 1000,
+    schedule: fake.schedule,
+    clearSchedule: fake.clearSchedule,
+  });
+
+  session.beginSave();
+  session.noteSkippedAutosaveTick();
+  assertEquals(dirty, true);
+  assertEquals(autosaveRuns, 0);
+
+  session.endSave();
+  assertEquals(fake.timers.length, 1);
+  assertEquals(fake.timers[0].ms, 1000);
+  assertEquals(autosaveRuns, 0);
+
+  assertEquals(fake.flushNext(), true);
+  assertEquals(autosaveRuns, 1);
+  assertEquals(fake.timers.length, 0);
+});
+
+Deno.test("4. no retry when the completed save cleared the dirty state", () => {
+  let dirty = true;
+  let autosaveRuns = 0;
+  const fake = createFakeScheduler();
+  const session = createAddListingDraftSession(undefined, {
+    isDirty: () => dirty,
+    runAutosave: () => {
+      autosaveRuns += 1;
+    },
+    retryDelayMs: 1000,
+    schedule: fake.schedule,
+    clearSchedule: fake.clearSchedule,
+  });
+
+  session.beginSave();
+  session.noteSkippedAutosaveTick();
+  // Completing save clears dirty (successful persist).
+  dirty = false;
+  session.endSave();
+
+  assertEquals(fake.timers.length, 0);
+  assertEquals(session.hasPendingAutosaveRetry(), false);
+  assertEquals(autosaveRuns, 0);
+});
+
+Deno.test("5. repeated skips do not create duplicate timers or overlapping saves", () => {
+  let dirty = true;
+  let autosaveRuns = 0;
+  let overlapping = 0;
+  let depth = 0;
+  const fake = createFakeScheduler();
+  const session = createAddListingDraftSession(undefined, {
+    isDirty: () => dirty,
+    runAutosave: () => {
+      autosaveRuns += 1;
+      session.beginSave();
+      depth += 1;
+      if (depth > 1) overlapping += 1;
+      session.endSave();
+      depth -= 1;
+    },
+    retryDelayMs: 1000,
+    schedule: fake.schedule,
+    clearSchedule: fake.clearSchedule,
+  });
+
+  session.beginSave();
+  session.noteSkippedAutosaveTick();
+  session.noteSkippedAutosaveTick();
+  session.noteSkippedAutosaveTick();
+  assertEquals(fake.timers.length, 0);
+
+  session.endSave();
+  assertEquals(fake.timers.length, 1);
+
+  // Another skip while timer pending must not stack a second timer.
+  session.beginSave();
+  session.noteSkippedAutosaveTick();
+  assertEquals(fake.timers.length, 1);
+  session.endSave();
+  assertEquals(fake.timers.length, 1);
+
+  assertEquals(fake.flushNext(), true);
+  assertEquals(autosaveRuns, 1);
+  assertEquals(overlapping, 0);
+  assertEquals(fake.timers.length, 0);
 });

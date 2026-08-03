@@ -262,11 +262,19 @@ const AddListing = () => {
   const [lastAutoSave, setLastAutoSave] = useState<Date | null>(null);
   /** React state for rendering only — insert-vs-update uses draftSession.getDraftId(). */
   const [draftId, setDraftIdState] = useState<string | null>(null);
+  const hasUnsavedChangesRef = useRef(false);
+  const runAutosaveRef = useRef<() => void>(() => {});
   const draftSessionRef = useRef<ReturnType<typeof createAddListingDraftSession> | null>(null);
   if (!draftSessionRef.current) {
-    draftSessionRef.current = createAddListingDraftSession((id) => {
-      setDraftIdState(id);
-    });
+    draftSessionRef.current = createAddListingDraftSession(
+      (id) => {
+        setDraftIdState(id);
+      },
+      {
+        isDirty: () => hasUnsavedChangesRef.current,
+        runAutosave: () => runAutosaveRef.current(),
+      },
+    );
   }
   const draftSession = draftSessionRef.current;
   const setDraftId = (id: string | null) => {
@@ -537,6 +545,7 @@ const AddListing = () => {
     if (baselineSnapshotRef.current !== null) return;
     const settleTimeout = setTimeout(() => {
       baselineSnapshotRef.current = formSnapshotRef.current;
+      hasUnsavedChangesRef.current = false;
       setHasUnsavedChanges(false);
     }, 600);
     return () => clearTimeout(settleTimeout);
@@ -548,26 +557,37 @@ const AddListing = () => {
     setHasUnsavedChanges(formSnapshot !== baselineSnapshotRef.current);
   }, [formSnapshot, user]);
 
+  hasUnsavedChangesRef.current = hasUnsavedChanges;
+
   // Auto-save functionality - debounced on changes
   useEffect(() => {
-    if (!user || !hasUnsavedChanges) return;
+    if (!user || !hasUnsavedChanges) {
+      draftSession.clearPendingAutosaveRetry();
+      return;
+    }
     
     // Debounce autosave to 14 seconds after last change
     const debounceTimeout = setTimeout(() => {
-      // Skip this tick while a save or draft creation is already running
-      if (draftSession.shouldSkipAutosaveTick()) return;
-
-      // In edit mode for non-draft listings, use handleSaveChanges to preserve status
-      if (listingId && backendStatusRef.current && backendStatusRef.current !== "draft") {
-        handleSaveChanges(true); // silent auto-save preserving current status
-      } else {
-        handleSaveDraft(true);
+      // Skip this tick while a save or draft creation is already running;
+      // session re-arms one delayed retry after idle if still dirty.
+      if (draftSession.shouldSkipAutosaveTick()) {
+        draftSession.noteSkippedAutosaveTick();
+        return;
       }
+
+      runAutosaveRef.current();
     }, 14000);
     
     return () => clearTimeout(debounceTimeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, hasUnsavedChanges, formData, photos, floorPlans, documents, disclosures, propertyFeatures, amenities]);
+
+  useEffect(() => {
+    return () => {
+      draftSession.clearPendingAutosaveRetry();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Warn before leaving
   useEffect(() => {
@@ -1002,6 +1022,7 @@ const AddListing = () => {
         }
         
         setHasUnsavedChanges(false);
+        hasUnsavedChangesRef.current = false;
         console.log('[AddListing] Listing data loaded successfully');
       }
     } catch (err) {
@@ -2554,7 +2575,9 @@ const AddListing = () => {
 
       // Saving establishes a new clean baseline.
       baselineSnapshotRef.current = formSnapshotRef.current;
+      hasUnsavedChangesRef.current = false;
       setHasUnsavedChanges(false);
+      draftSession.clearPendingAutosaveRetry();
       setLastAutoSave(new Date());
 
       if (isAutoSave) {
@@ -2839,7 +2862,9 @@ const AddListing = () => {
 
       // Saving establishes a new clean baseline.
       baselineSnapshotRef.current = formSnapshotRef.current;
+      hasUnsavedChangesRef.current = false;
       setHasUnsavedChanges(false);
+      draftSession.clearPendingAutosaveRetry();
       if (isAutoSave) {
         setLastAutoSave(new Date());
         toast.success("Auto-saved", {
@@ -2863,6 +2888,15 @@ const AddListing = () => {
       } else {
         setSubmitting(false);
       }
+    }
+  };
+
+  // Keep autosave runner current for skipped-tick re-arm (session options close over this ref).
+  runAutosaveRef.current = () => {
+    if (listingId && backendStatusRef.current && backendStatusRef.current !== "draft") {
+      void handleSaveChanges(true);
+    } else {
+      void handleSaveDraft(true);
     }
   };
 
