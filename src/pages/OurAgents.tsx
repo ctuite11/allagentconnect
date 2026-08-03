@@ -34,6 +34,27 @@ import { matchesAgentName } from "@/lib/agentNameSearch";
 import { agentMatchesNetworkLocation } from "@/lib/agentNetworkLocation";
 import LocationAutocomplete, { type SelectedLocation } from "@/components/agent-directory/LocationAutocomplete";
 
+/**
+ * Name A–Z / Z–A: last name, then first name.
+ * Teams store their title in first_name with an empty last_name — use that
+ * title as the primary key so they interleave (e.g. "Stiles Team" under S)
+ * instead of all floating to the top on "".
+ */
+function compareAgentDirectoryName(
+  a: { first_name?: string | null; last_name?: string | null; team_name?: string | null },
+  b: { first_name?: string | null; last_name?: string | null; team_name?: string | null },
+): number {
+  const aFirst = (a.first_name || "").trim();
+  const aLast = (a.last_name || "").trim();
+  const bFirst = (b.first_name || "").trim();
+  const bLast = (b.last_name || "").trim();
+  const aPrimary = aLast || aFirst || (a.team_name || "").trim();
+  const bPrimary = bLast || bFirst || (b.team_name || "").trim();
+  const byPrimary = aPrimary.localeCompare(bPrimary, undefined, { sensitivity: "base" });
+  if (byPrimary !== 0) return byPrimary;
+  return aFirst.localeCompare(bFirst, undefined, { sensitivity: "base" });
+}
+
 interface EnrichedAgent {
   id: string;
   aac_id: string;
@@ -204,8 +225,7 @@ const OurAgents = ({
       const orderedAgentData = (agentData || [])
         .filter(isVisibleInAgentNetwork)
         .sort((a: any, b: any) => {
-          const byLast = (a.last_name || "").localeCompare(b.last_name || "");
-          return byLast !== 0 ? byLast : (a.first_name || "").localeCompare(b.first_name || "");
+          return compareAgentDirectoryName(a, b);
         });
 
       // Fetch listings for all agents to get counts, plus approved teams so
@@ -457,9 +477,9 @@ function AgentPhotoTileGrid({
         (a, b) => (shuffleRanks.get(a.id) ?? 0) - (shuffleRanks.get(b.id) ?? 0),
       );
     } else if (sortOrder === "a-z") {
-      result.sort((a, b) => (a.last_name || "").localeCompare(b.last_name || ""));
-    } else {
-      result.sort((a, b) => (b.last_name || "").localeCompare(a.last_name || ""));
+      result.sort((a, b) => compareAgentDirectoryName(a, b));
+    } else if (sortOrder === "z-a") {
+      result.sort((a, b) => compareAgentDirectoryName(b, a));
     }
 
     return result;
