@@ -457,9 +457,9 @@ function AgentPhotoTileGrid({
         (a, b) => (shuffleRanks.get(a.id) ?? 0) - (shuffleRanks.get(b.id) ?? 0),
       );
     } else if (sortOrder === "a-z") {
-      result.sort((a, b) => (a.last_name || "").localeCompare(b.last_name || ""));
+      result.sort((a, b) => nameSortKey(a).localeCompare(nameSortKey(b)));
     } else {
-      result.sort((a, b) => (b.last_name || "").localeCompare(a.last_name || ""));
+      result.sort((a, b) => nameSortKey(b).localeCompare(nameSortKey(a)));
     }
 
     return result;
