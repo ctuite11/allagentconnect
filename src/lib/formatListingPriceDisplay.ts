@@ -102,9 +102,10 @@ function truncateUsdForMapPin(v: number): string {
     const m = rounded / 1_000_000;
     return `$${parseFloat(m.toFixed(2)).toString()}M`;
   }
-  if (rounded >= 1_000) {
+  if (rounded >= 100_000) {
     return `$${Math.round(rounded / 1_000)}K`;
   }
+  // Below $100K (rentals, low-priced listings): show the real price, no rounding.
   return usdWhole(rounded);
 }
 
