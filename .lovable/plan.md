@@ -1,34 +1,56 @@
-# Christie Xie — why verification never completes
+# Setup link won't send — root cause found
 
-## What the data shows
+## What is actually failing
 
-- Her request (`xie.christie@gmail.com`, MA license 9526583) was submitted Aug 3, 20:23 UTC and is already marked `status = verified`, processed Aug 3, 21:30 UTC.
-- A new auth user + agent profile + `agent` role were created (`5c01fbf0-…`, AAC-0385), and `agent_settings.agent_status = verified`, `verified_at` stamped.
-- But: `account_activated_at` is null, `approval_email_sent = false`, **no activation token row exists for her**, and **no license-verified / activation email job was created today**. Her last activation email was July 19, before her account was deleted.
+The Resend setup email call returns **422** from `send-license-verified-email`. That status means the database issuance routine refused to mint a token, so no email job is ever created. Confirmed in the edge logs (POST 422 at 21:30:41, plus a POST 404 at 21:36:46 from a row whose id has no auth user).
 
-So she is half-verified: flagged verified in the database, but she never received a setup link, so she can never set a password or activate. Her `last_sign_in_at` is null.
+The chain:
 
-## Root cause
+```text
+Admin clicks "Send setup link"
+  -> send-license-verified-email (acknowledgeDeleted: true, passes the function-level guard)
+  -> issue/reissue_agent_activation_token
+  -> activation_issue_core
+  -> agent_is_activation_eligible(user_id)  ->  FALSE
+  -> status "ineligible" -> 422 -> toast "Could not send setup email"
+```
 
-She was deleted on July 22 in a bulk admin deletion. That deletion is recorded in `deleted_users` (original user `d302d053-…`) and in `auth_user_deletion_queue`.
+`agent_is_activation_eligible` returns false for one reason here:
 
-`admin-verify-agent` writes the verified stamp first, then calls `send-license-verified-email`. For a previously deleted email that call returns `409 previously_deleted` unless the admin passes `acknowledgeDeleted`. The function then returns a 422 to the admin UI without enqueuing anything — which matches exactly what is in the database: verified stamp present, activation token and email absent.
+```sql
+IF EXISTS (SELECT 1 FROM public.deleted_users d WHERE lower(d.email) = _email)
+  THEN RETURN false;
+```
 
-This is not a license or eligibility problem. It is the previously-deleted guard blocking the activation email.
+Christie's address is in `deleted_users` from the July 22 bulk deletion. Her new account is fully valid otherwise: `agent_status = 'verified'`, `account_activated_at` null, `agent` role present, auth user active, pending verification not rejected.
 
-## Fix for Christie (one action, no code change needed)
+So `acknowledgeDeleted` only bypasses the guard inside the edge function. The database gate has no equivalent override, and it wins. Any agent who was ever deleted and later re-verifies is permanently unable to receive a setup link. That is the bug.
 
-In Admin Approvals, open her record and use **Resend setup email**, confirming the "previously deleted" acknowledgement when prompted. That issues an activation token and enqueues the license-verified email on the transactional stream (unaffected by the Comms pause). If the prompt does not appear or the resend errors, I will invoke the resend path directly with the acknowledgement flag.
+## Fix
 
-Verification after: an `agent_activation_tokens` row exists for `5c01fbf0-…`, and an `email_jobs` row with template `license-verified` to her address reaches `sent`.
+Two parts. Part 1 unblocks Christie today; Part 2 stops the next one.
 
-## Recommended follow-up (separate approval)
+**Part 1 — unblock Christie (data, one row)**
+Remove her stale `deleted_users` tombstone for `xie.christie@gmail.com` (original user `d302d053-…`, deleted July 22). That record describes an account that no longer exists and has been legitimately re-registered. After that, click Send setup link in Admin Approvals; it will mint the token and enqueue one transactional email.
 
-Today's failure left her stranded in a state the admin list reads as "verified, not activated" with no way for her to proceed and no visible reason. Two small improvements, only if you want them:
+**Part 2 — make the admin override actually work (migration)**
+Add an explicit override parameter so an acknowledged admin action can pass through the database gate:
 
-1. Surface the `previously_deleted` reason in the Admin Approvals error toast instead of the generic enqueue-failure message.
-2. Audit for other agents in the same state — `agent_status = 'verified'`, `account_activated_at` null, no activation token, and an entry in `deleted_users` — and report the list before any resend. No bulk resend without your explicit approval.
+- `agent_is_activation_eligible(_user_id, _allow_previously_deleted boolean default false)` — skip only the `deleted_users` check when true. Every other gate (deleted/banned auth user, rejected verification, wrong status, already activated) stays enforced.
+- Thread a `p_allow_previously_deleted` argument through `activation_issue_core`, `issue_agent_activation_token`, and `reissue_agent_activation_token`.
+- Pass the already-computed `acknowledgeDeleted` value from `send-license-verified-email` into the RPC, then redeploy that function.
+- Return a distinct reason to the client so a future block reads "previously deleted — acknowledge required" instead of the generic "Could not send setup email".
+
+**Part 3 — small UI fix**
+The 404 attempt came from invoking with an id that has no auth user. Disable the Send setup link action for rows without a resolved auth user id, and show the server's reason in the toast rather than a fixed string.
+
+## Verification
+
+- `agent_activation_tokens` gets one `issued` row for `5c01fbf0-…`.
+- `email_jobs` gets one `license-verified/<token id>` row on the `transactional` stream, reaching `sent`.
+- A second click within the same minute dedupes rather than sending twice.
+- An agent with a rejected verification or an already-activated account still gets refused.
 
 ## Scope guard
 
-No email queue retries, backfills, cron changes, pause-flag changes, or migrations. Comms and Hot Sheet streams stay untouched.
+Transactional stream only. No change to `COMMS_EMAILS_PAUSED`, `HOT_SHEET_EMAILS_PAUSED`, or `EMAIL_SENDING_PAUSED`. No queue retries, backfills, bulk resends, or cron changes. Exactly one email is sent, to Christie, by your click.
