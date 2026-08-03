@@ -6,6 +6,7 @@ import {
   resolveListingPhotoUrl,
   toOgImageUrl,
 } from "../_shared/listingPhotoUrl.ts";
+import { formatListingPriceForShare } from "../_shared/formatListingPriceDisplay.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -101,12 +102,13 @@ serve(async (req) => {
 
     const ogImageType = "image/jpeg";
 
-    // Build title/description
-    const priceText = listing.listing_type === "for_rent"
-      ? `$${Number(listing.price || 0).toLocaleString()}/month`
-      : `$${Number(listing.price || 0).toLocaleString()}`;
-
-    const title = `${priceText} · ${listing.address}, ${listing.city}, ${listing.state}`;
+    // Build title/description. Price may be a fixed amount or a range; when
+    // neither is usable the price segment is omitted entirely (never `$0`).
+    const priceText = formatListingPriceForShare(listing);
+    const addressLine = `${listing.address}, ${listing.city}, ${listing.state}`;
+    const title = priceText
+      ? `${priceText} · ${addressLine}`
+      : `${addressLine} · All Agent Connect`;
 
     const bedsAndBaths = `${listing.bedrooms ?? "?"} bd • ${listing.bathrooms ?? "?"} ba${
       listing.square_feet ? ` • ${Number(listing.square_feet).toLocaleString("en-US")} sq ft` : ""
