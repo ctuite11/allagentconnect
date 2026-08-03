@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import { SquarePen, Search, Trash2 } from "lucide-react";
 import type { ConversationThread } from "@/hooks/useConversationThreads";
@@ -49,7 +49,6 @@ export function ConversationsList({
   emptyStateLabel = "No conversations yet",
   onArchiveThreads,
 }: ConversationsListProps) {
-  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [addressCache, setAddressCache] = useState<Record<string, string>>({});
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
@@ -146,7 +145,7 @@ export function ConversationsList({
   const canDelete = Boolean(onArchiveThreads);
 
   return (
-    <div className="flex h-full flex-col bg-white">
+    <div className="flex w-full flex-col bg-white md:h-full md:min-h-0 md:flex-1">
       {/* Header */}
       <div className="flex-shrink-0 border-b border-neutral-100 p-4 pb-3">
         <div className="mb-3 flex items-center justify-between gap-2">
@@ -218,8 +217,9 @@ export function ConversationsList({
         </div>
       ) : null}
 
-      {/* Thread list */}
-      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-2 py-2">
+      {/* Thread list — mobile: flow in page scroll (no nested overflow).
+          Desktop: internal scroller inside the fixed-height sidebar. */}
+      <div className="px-2 py-2 md:min-h-0 md:flex-1 md:overflow-y-auto md:overscroll-contain">
         {loading ? (
           <div className="space-y-2 px-1">
             {[1, 2, 3, 4, 5].map((i) => (
@@ -273,10 +273,8 @@ export function ConversationsList({
                 ? "Client need thread"
                 : null;
 
-            const openThread = () =>
-              navigate(`${routeBase}/${thread.id}`, {
-                state: { from: routeBase, fromLabel: "Back to Messages" },
-              });
+            const threadHref = `${routeBase}/${thread.id}`;
+            const threadState = { from: routeBase, fromLabel: "Back to Messages" };
 
             return (
               <div
@@ -293,6 +291,7 @@ export function ConversationsList({
                   <div
                     className="flex shrink-0 items-center pl-0.5"
                     onClick={(e) => e.stopPropagation()}
+                    onPointerDown={(e) => e.stopPropagation()}
                   >
                     <Checkbox
                       checked={isChecked}
@@ -303,13 +302,9 @@ export function ConversationsList({
                   </div>
                 ) : null}
 
-                <div
-                  role="button"
-                  tabIndex={0}
-                  onClick={openThread}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") openThread();
-                  }}
+                <Link
+                  to={threadHref}
+                  state={threadState}
                   className="flex min-w-0 flex-1 cursor-pointer items-center gap-3 rounded-lg px-1 outline-none focus-visible:ring-2 focus-visible:ring-zinc-300 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
                 >
                   <UserAvatar
@@ -362,19 +357,19 @@ export function ConversationsList({
                       </p>
                     ) : null}
                   </div>
-                </div>
+                </Link>
 
                 {canDelete ? (
                   <button
                     type="button"
                     onClick={(e) => {
+                      e.preventDefault();
                       e.stopPropagation();
                       openDeleteConfirm([thread.id]);
                     }}
                     className={cn(
-                      "mr-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-zinc-400 opacity-0 transition-opacity hover:bg-zinc-100 hover:text-zinc-700 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-300 focus-visible:ring-offset-2",
-                      "group-hover:opacity-100",
-                      (isChecked || isActiveThread) && "opacity-100",
+                      "mr-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-zinc-400 opacity-100 transition-opacity hover:bg-zinc-100 hover:text-zinc-700 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-300 focus-visible:ring-offset-2 sm:opacity-0 sm:group-hover:opacity-100",
+                      (isChecked || isActiveThread) && "sm:opacity-100",
                     )}
                     aria-label={`Delete conversation with ${thread.otherUserName}`}
                     title="Delete conversation"

@@ -12,7 +12,6 @@ import { ConversationsList } from "@/components/messaging/ConversationsList";
 import { NewConversationDialog } from "@/components/NewConversationDialog";
 import { MessageCenterIntroOverlay } from "@/components/messaging/MessageCenterIntroOverlay";
 import { Seo } from "@/components/Seo";
-import { Button } from "@/components/ui/button";
 import { AacBackButton } from "@/components/layout/AacBackLink";
 import { AgentPageHeader } from "@/components/layout/AgentPageHeader";
 import { AacPageIntro } from "@/components/layout/AacPageIntro";
@@ -93,6 +92,13 @@ function MessagingWorkspaceContent({
   useEffect(() => {
     if (selectedConversationId) {
       void refetchThreads();
+      // Bring the thread panel into view after the inbox list unmounts.
+      document
+        .querySelectorAll<HTMLElement>("[data-app-scroll-root]")
+        .forEach((el) => {
+          el.scrollTop = 0;
+        });
+      window.scrollTo(0, 0);
     }
   }, [selectedConversationId, refetchThreads]);
 
@@ -143,15 +149,14 @@ function MessagingWorkspaceContent({
         onStartMessaging={handleStartMessaging}
       />
       <Seo title={buyerMode ? "Messages" : "Messaging"} />
-      <div
-        className={
-          buyerMode
-            ? "flex min-h-0 flex-1 flex-col bg-white"
-            : "flex min-h-0 flex-1 flex-col bg-[#FFFFFF]"
-        }
-      >
-        <div className="mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col px-4 pb-10 sm:px-6 md:px-8">
-          <div className="mx-auto flex min-h-0 w-full max-w-full flex-1 flex-col">
+      {/*
+        Mobile inbox scrolls with the page (no nested overflow-y-auto). Opening a
+        thread swaps to a viewport-height conversation panel. Desktop keeps the
+        two-column fixed-height layout.
+      */}
+      <div className="flex min-h-0 flex-1 flex-col bg-white">
+        <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-4 pb-6 sm:px-6 md:px-8 md:pb-10">
+          <div className="mx-auto flex w-full max-w-full flex-1 flex-col">
             {!buyerMode ? (
               <AgentPageHeader
                 withTopPadding
@@ -178,15 +183,24 @@ function MessagingWorkspaceContent({
             <div
               className={
                 buyerMode
-                  ? "flex min-h-[360px] w-full flex-1 flex-col gap-4 overflow-hidden h-[calc(100dvh-10rem)] lg:h-[min(560px,calc(100dvh-10rem))] lg:max-h-[calc(100dvh-10rem)] lg:min-h-[360px] lg:flex-row lg:gap-5"
-                  : "flex min-h-[360px] w-full flex-1 flex-col gap-4 overflow-hidden h-[calc(100dvh-11rem)] md:h-[min(560px,calc(100dvh-11rem))] md:max-h-[calc(100dvh-11rem)] md:min-h-[400px] md:flex-row md:gap-5"
+                  ? "flex w-full flex-col gap-4 lg:h-[min(560px,calc(100dvh-10rem))] lg:max-h-[calc(100dvh-10rem)] lg:min-h-[360px] lg:flex-row lg:gap-5 lg:overflow-hidden"
+                  : "flex w-full flex-col gap-4 md:h-[min(560px,calc(100dvh-11rem))] md:max-h-[calc(100dvh-11rem)] md:min-h-[400px] md:flex-row md:gap-5 md:overflow-hidden"
               }
             >
               <div
                 className={cn(
-                  "w-full shrink-0 flex-none md:flex md:h-full md:min-h-0 md:w-[320px]",
-                  selectedConversationId ? "hidden" : "flex h-full min-h-0 flex-1",
-                  buyerMessagingPanel,
+                  "w-full",
+                  selectedConversationId ? "hidden" : "flex",
+                  // Mobile: NO fixed height / NO nested scroller — AppShell page
+                  // scroll owns the inbox. A fixed-height overflow-y-auto list
+                  // inside AppShell freezes pans/taps on iOS/Android (search
+                  // still works because it sits outside that scroller).
+                  "overflow-visible",
+                  buyerMode
+                    ? "lg:flex lg:h-full lg:min-h-0 lg:w-[320px] lg:flex-none lg:overflow-hidden"
+                    : "md:flex md:h-full md:min-h-0 md:w-[320px] md:flex-none md:overflow-hidden",
+                  // Panel chrome without the default overflow-hidden on mobile
+                  "bg-white rounded-2xl border border-neutral-200 shadow-sm flex flex-col",
                 )}
               >
                 <ConversationsList
@@ -209,8 +223,13 @@ function MessagingWorkspaceContent({
 
               <div
                 className={cn(
-                  "w-full flex-col overflow-hidden md:flex md:h-full md:min-h-0 md:w-[560px] md:max-w-[560px] md:flex-none",
-                  selectedConversationId ? "flex h-full min-h-0 flex-1" : "hidden md:flex",
+                  "w-full flex-col",
+                  selectedConversationId
+                    ? "flex h-[calc(100dvh-7.5rem)] min-h-[320px] overflow-hidden"
+                    : "hidden",
+                  buyerMode
+                    ? "lg:flex lg:h-full lg:min-h-0 lg:w-[560px] lg:max-w-[560px] lg:flex-none lg:overflow-hidden"
+                    : "md:flex md:h-full md:min-h-0 md:w-[560px] md:max-w-[560px] md:flex-none md:overflow-hidden",
                   panelShellClass,
                 )}
               >
@@ -223,6 +242,7 @@ function MessagingWorkspaceContent({
                       ? () => navigate(messagesRouteBase)
                       : undefined
                   }
+                  mobileBackHiddenClassName={buyerMode ? "lg:hidden" : "md:hidden"}
                 />
               </div>
             </div>

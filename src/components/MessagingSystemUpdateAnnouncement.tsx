@@ -147,14 +147,15 @@ export function MessagingSystemUpdateAnnouncement() {
   }, [user?.id, saving]);
 
   const handleDismiss = async () => {
-    const ok = await acknowledge();
-    if (ok) setOpen(false);
+    // Close immediately so a failed persist can't trap the agent behind the
+    // modal (backdrop/Escape are intentionally disabled).
+    setOpen(false);
+    void acknowledge();
   };
 
   const handleReviewPreferences = async () => {
-    const ok = await acknowledge();
-    if (!ok) return;
     setOpen(false);
+    void acknowledge();
     navigate("/communications", { state: { scrollToPreferences: true } });
   };
 

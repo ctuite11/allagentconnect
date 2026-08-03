@@ -24,12 +24,18 @@ export function useMessageCenterIntro(user: User | null) {
 
   const dismiss = useCallback(
     (dontShowAgain: boolean) => {
-      if (dontShowAgain && user?.id) {
-        localStorage.setItem(messageCenterIntroDismissedKey(user.id), "true");
-      }
-      sessionStorage.setItem(MESSAGE_CENTER_INTRO_SESSION_KEY, "1");
+      // Always hide first — storage failures must not leave the overlay stuck
+      // over the inbox (blocks scroll + thread open on mobile).
       setSessionDismissed(true);
       setVisible(false);
+      try {
+        if (dontShowAgain && user?.id) {
+          localStorage.setItem(messageCenterIntroDismissedKey(user.id), "true");
+        }
+        sessionStorage.setItem(MESSAGE_CENTER_INTRO_SESSION_KEY, "1");
+      } catch {
+        // ignore quota / private-mode failures
+      }
     },
     [user?.id],
   );
