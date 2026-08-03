@@ -55,7 +55,7 @@ import {
   checkDeletedAgent,
   logDeletedAgentOverride,
 } from "@/lib/previouslyDeletedAgent";
-import { invokeEdgeFunction } from "@/lib/invokeEdgeFunction";
+import { invokeEdgeFunction, resolveEdgeFunctionErrorMessage } from "@/lib/invokeEdgeFunction";
 import { UserPlus } from "lucide-react";
 import { AgentStatusBadge } from "@/components/ui/status-badge";
 import { AacMonogramLoader } from "@/components/AacMonogramLoader";
@@ -1359,7 +1359,7 @@ export default function AdminApprovals() {
 
     // The edge function resolves the recipient from an auth user id. A row
     // without one (pending-verification-only) 404s, so refuse up front.
-    if (!UUID_RE.test(agent.id)) {
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(agent.id)) {
       if (!opts?.silent) {
         toast.error("This agent has no account yet — verify them first to create one.");
       }
@@ -1400,8 +1400,8 @@ export default function AdminApprovals() {
       if (error || (data && data.success === false)) {
         console.error("Send license-verified email failed:", error);
         // Surface the server's actual reason instead of a fixed string.
-        const reason = await readEdgeFunctionErrorMessage(error, data);
-        if (!opts?.silent) toast.error(reason ?? "Could not send setup email");
+        const reason = await resolveEdgeFunctionErrorMessage(error, data);
+        if (!opts?.silent) toast.error(reason || "Could not send setup email");
         return false;
       }
       setLastSetupLinkSentAt((prev) => {
