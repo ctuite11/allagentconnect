@@ -33,14 +33,21 @@ So a terminal `cancelled` state is intended but currently unreachable: the older
 
 Proposed minimal fix, as its own migration: drop only the stale duplicate `email_jobs_status_check`, leaving `chk_email_job_status` as the single source of truth. No column, index, or data change.
 
-## Step 1 — Retire the 194 jobs
+## Step 1B — Retire exactly the inventoried 194 jobs
 
-After the constraint fix, a single guarded statement that aborts unless the target set matches exactly:
+The target set is now a frozen, explicit ID list captured by the completed inventory — not a date filter. 194 unique IDs, MD5 of the sorted list: `6f1fa8f8a598a6bad6d1ca3385d1651e`. The list is written into the migration as a literal array.
 
-- filter: `status = 'queued' AND stream = 'communications' AND created_at::date = '2026-08-04'`
-- pre-check: count must equal 194, and total queued rows outside that filter must be 0
-- action: `UPDATE ... SET status = 'cancelled', last_error = 'retired: old audience logic (2026-08-04 containment)'`
-- audit: one `email_events` row per job with event `retired`
+One transaction, aborting and rolling back if any precondition fails:
+
+- the literal ID array contains exactly 194 unique IDs
+- every ID still has `status = 'queued'`, `stream = 'communications'`, and an Aug 4 containment `created_at`
+- no target ID has been sent, claimed, retried, or otherwise mutated (`attempts = 0`)
+- no queued/processing Communications job exists outside the target set
+- then: `UPDATE ... SET status = 'cancelled', last_error = 'retired: old audience logic (2026-08-04 containment)'` for those IDs only
+- then: exactly one `email_events` row per job with `event = 'retired'` and detail `{source: 'containment_cleanup', previous_status: 'queued', reason: ...}`
+- row counts of both statements must equal 194 or the transaction raises and rolls back
+
+Note from the inventory: one `system`-stream verification email was queued and sent normally at 19:05 UTC during this audit. That is expected — the system/transactional streams are open — and it is outside the target set.
 
 No sends, retries, re-enqueues, recipient edits. No touching sent/historical, Hot Sheet, transactional, or system jobs. No digest-item or preference changes.
 
