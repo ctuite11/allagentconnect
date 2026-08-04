@@ -1439,23 +1439,19 @@ export default function AdminApprovals() {
 
     setSendingLoginLinkFor((prev) => new Set(prev).add(agent.id));
     try {
-      const { data, error } = await supabase.functions.invoke("send-login-link", {
-        body: {
-          user_id: agent.id,
-          agentName: agent.first_name || undefined,
-        },
+      const data = await invokeEdgeFunction<{ status?: string }>("send-login-link", {
+        user_id: agent.id,
+        agentName: agent.first_name || undefined,
       });
-      if (error) {
-        console.error("Send login link failed:", error);
-        toast.error("Could not send sign-in link");
-        return;
-      }
-      const status = (data as { status?: string } | null)?.status;
+      const status = data?.status;
       if (status === "deduped") {
         toast.info(`A sign-in link was just issued for ${agent.email} — not sending a duplicate`);
         return;
       }
       toast.success(`7-day sign-in link emailed to ${agent.email}`);
+    } catch (err) {
+      console.error("Send login link failed:", err);
+      toast.error((err as Error)?.message || "Could not send sign-in link");
     } finally {
       setSendingLoginLinkFor((prev) => {
         const next = new Set(prev);
