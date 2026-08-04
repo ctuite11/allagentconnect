@@ -5,13 +5,15 @@ import {
   digestWindowsOpen,
   type DigestCadence,
 } from "../_shared/commsDigest.ts";
+import { authorizeCommsDigestCron } from "../_shared/commsDigestCronAuth.ts";
 import { fetchCommsPrefsRow } from "../_shared/commsOptIn.ts";
 import { planDigestDelivery } from "../_shared/commsDigestPlan.ts";
 import { loadVerifiedAgentIdSet } from "../_shared/verifiedAgentAudience.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type, x-comms-digest-cron-secret",
 };
 
 type DigestItem = {
@@ -32,6 +34,14 @@ const MAX_AGENTS_PER_RUN = 200;
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  const auth = authorizeCommsDigestCron(req);
+  if (!auth.ok) {
+    return new Response(JSON.stringify({ error: auth.error }), {
+      status: auth.status,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 
   try {
