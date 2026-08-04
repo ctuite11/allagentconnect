@@ -1,54 +1,42 @@
-# Agent Network: require activation (both functions)
+# Speed up the Admin Approvals page
 
-## Blocker: the Cursor commit is not reachable here
+## What is actually slow
 
-`6a675cec3fc69e79ca78e004a4724ccbcbd83725` is not in this workspace's git object store, and `supabase/migrations/20260804090000_agent_network_require_activation.sql` does not exist on disk. I cannot fetch a Cursor-side commit from this environment, so I cannot apply "that exact file unchanged" without its contents.
-
-Two ways forward — pick one:
-
-- **A (preferred, matches your instruction):** paste the full contents of the migration file into chat. I apply it verbatim, no edits.
-- **B:** authorize applying the reconstruction below, which redefines both functions off their live definitions with only the `company` fallback removed.
-
-Everything after this point assumes the SQL applied redefines both functions and nothing else.
-
-## What the migration must do
-
-Both functions today end with:
+Every visit to the admin page triggers one `admin-list-agents` call that takes roughly **6 seconds** end to end. From the live function logs of the most recent load:
 
 ```text
-AND ( account_activated_at IS NOT NULL OR btrim(coalesce(company,'')) <> '' )
+admin caller verified        0.3s
+auth users scanned (321)     0.9s
+agent_profiles (304)         1.4s
+agent_settings (304)         1.9s
+agent_early_access (100)     2.2s
+pending_verifications +
+email_jobs scan              6.5s   <- the bulk of the wait
 ```
 
-Both must become:
+Two confirmed causes:
 
-```text
-AND account_activated_at IS NOT NULL
-```
+1. **The email-status scan dominates.** The function reads `email_jobs` filtered by `payload->>'template'`. There is no index on that expression (checked: zero matching indexes), so Postgres scans the whole table, and the query selects the entire `payload` column — the table is 33 MB and 760 rows match. Both the scan and the payload transfer are wasted work; the function only uses `payload->>'to'` and `payload->>'template'`.
+2. **Everything runs one after another.** The auth user scan and the five table reads are sequential `await`s even though none depends on the previous one.
 
-`public.get_verified_agent_ids()` and `public.get_newest_verified_agents(int)` — all other predicates, the ordering, and the limit clause stay byte-identical.
+On top of that, the page refetches from scratch on every mount with no cache, so going back to the admin page always pays the full cost again with a blank spinner.
 
-## Pre-apply snapshot (read-only)
+## Fix
 
-Recorded before anything runs:
+**1. Index the email-jobs lookup (migration)**
+Add an index on `email_jobs ((payload->>'template'), created_at desc)` so the template filter uses an index instead of a full table scan. Index only — no rows touched, no queue writes, no emails.
 
-- `get_verified_agent_ids()` count
-- Approved team count and the full ID list
-- `email_jobs` row count
-- `agent_settings` row count and `max(updated_at)`
-- `agent_profiles` row count and `max(updated_at)`
+**2. Stop pulling whole payloads**
+In `admin-list-agents`, replace `select(... , payload)` with only the fields used: `to:payload->>to` and `template:payload->>template` alongside the status columns, and bound the read to a recent window instead of `limit(20000)`. Same output, a fraction of the bytes.
 
-## Apply
+**3. Run the independent reads in parallel**
+Wrap the auth user scan, `agent_profiles`, `agent_settings`, `agent_early_access`, `pending_verifications`, and the email-jobs read in a single `Promise.all`. The merge logic afterwards is unchanged; error handling per source is preserved exactly as today (including the explicit `pending_verifications` failure surface).
 
-Run the migration only. It contains no `INSERT` / `UPDATE` / `DELETE`, touches no team tables, writes nothing to queues, and changes no frontend, Comms Center, or Hot Sheet code.
+**4. Cache on the client**
+Move the `AdminApprovals` fetch to React Query with a short `staleTime` and cached previous data, so returning to the page renders the last list immediately and refreshes in the background instead of showing a full-page spinner. The manual Refresh button and all post-action `fetchAgents()` calls keep working by invalidating the query.
 
-## Post-apply verification (read-only)
+Expected result: first load drops to roughly 1–1.5s, and repeat visits render instantly.
 
-- `get_verified_agent_ids()` count is 202
-- Zero returned agents have `account_activated_at IS NULL`
-- Activated agents with a null/empty `headshot_url` are still returned
-- `get_newest_verified_agents(1000)` returns no unactivated agents
-- The 89 company-fallback agents appear in neither function's output
-- Approved team count and IDs identical to the snapshot
-- `email_jobs`, `agent_settings`, `agent_profiles` counts and `max(updated_at)` identical to the snapshot
+## Scope guard
 
-I report all numbers back; nothing else changes.
+No agent records edited, no activations, no purges, no setup links, no emails, no queue writes, no Comms Center or Hot Sheet changes. The only database change is one new index.
