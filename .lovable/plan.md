@@ -96,6 +96,16 @@ Open Communications Center to view details and respond.
 - Weekly: the first run at or after 18:00 ET on a **Friday** — the next one is Fri Aug 7. The two weekly items would sit until then.
 - Separately, `COMMS_EMAILS_PAUSED = true` is still in effect, so even a created `email_jobs` row would not be delivered until that kill switch is lifted. Repairing dispatch alone does not release these emails.
 
+## Cross-check against the emails already delivered (your Resend screenshots)
+
+The "Stager Needed" broadcast did already go out immediately to **63 recipients** (63 `email_jobs` rows, all `sent`, all stamped 2026-08-03 17:48:21 UTC, template `client-need-broadcast`, subject `[General Discussion] Stager Needed`) — that is the list in your screenshots.
+
+**None of the 8 digest recipients is in that list of 63.** Verified by matching each of the 8 addresses (lowercased) against every "Stager" email job: zero matches. The two paths are mutually exclusive by design — an agent set to `immediate` got the email at 17:48; an agent set to `daily`/`weekly` got a digest item instead and no immediate email.
+
+Example from the screenshots: `brendon@serhant.com` and `mackenzie.cormier@serhant.com` were immediate recipients; `anh@serhant.com` (daily digest) was not. Same pattern for the other seven.
+
+Totals for this broadcast: 63 immediate emails already delivered + 8 digest items still pending = 71 intended recipients.
+
 ## Observations for your decision
 
 - The content is thin: a one-line question with no property type, price range, or town. Eight per-recipient emails whose sole content is "Who is your go to South Shore home stager?" may not be worth sending 4+ days late.
