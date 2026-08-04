@@ -320,10 +320,7 @@ Deno.serve(async (req) => {
     console.log('[admin-list-agents] Status distribution:', statusCounts)
 
     // Fetch early access registrations
-    const { data: earlyAccess, error: earlyAccessError } = await adminClient
-      .from('agent_early_access')
-      .select('id, first_name, last_name, email, phone, brokerage, state, license_number, status, created_at')
-      .order('created_at', { ascending: false })
+    const { data: earlyAccess, error: earlyAccessError } = await earlyAccessPromise
 
     if (earlyAccessError) {
       console.error('[admin-list-agents] Early access error:', earlyAccessError.message)
@@ -380,12 +377,7 @@ Deno.serve(async (req) => {
     const requestedByEmail = new Map<string, string>() // email -> earliest created_at
     const rejectedByEmail = new Map<string, string | null>() // email -> rejected_at (may be null)
 
-    const { data: pvRows, error: pvError } = await adminClient
-      .from('pending_verifications')
-      .select(
-        'id, email, first_name, last_name, phone, company, license_number, license_state, status, processed, rejected_at, created_at, user_id, converted_user_id',
-      )
-      .order('created_at', { ascending: false })
+    const { data: pvRows, error: pvError } = await pendingVerificationsPromise
 
     if (pvError) {
       console.error('[admin-list-agents] pending_verifications error:', pvError.message)
@@ -475,21 +467,15 @@ Deno.serve(async (req) => {
       const emailsLower = new Set(allAgents.map(a => (a.email ?? '').toLowerCase()).filter(Boolean))
       const reminderTemplates = ['license-verified', 'agent-invite', 'agent-missing-opportunities']
       const reminderTemplateSet = new Set(reminderTemplates)
-      const templates = ['license-verified', 'admin-created-invite', 'agent-invite', 'agent-missing-opportunities']
-      const { data: jobs, error: jobsErr } = await adminClient
-        .from('email_jobs')
-        .select('id, status, delivery_status, delivery_status_at, created_at, attempts, last_error, payload')
-        .in('payload->>template', templates)
-        .order('created_at', { ascending: false })
-        .limit(20000)
+      const { data: jobs, error: jobsErr } = await emailJobsPromise
       if (jobsErr) {
         console.error('[admin-list-agents] email_jobs error:', jobsErr.message)
       } else if (jobs) {
         const latest = new Map<string, EmailStatusInfo & { template: string }>()
         const latestReminder = new Map<string, { sent_at: string; template: string; status: string }>()
         for (const j of jobs as any[]) {
-          const to = String(j?.payload?.to ?? '').toLowerCase()
-          const template = String(j?.payload?.template ?? '')
+          const to = String(j?.to ?? '').toLowerCase()
+          const template = String(j?.template ?? '')
           if (!to || !template || !emailsLower.has(to)) continue
           const key = `${to}::${template}`
           if (!latest.has(key)) {
