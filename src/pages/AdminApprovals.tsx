@@ -363,6 +363,11 @@ function YesNoCell({
   );
 }
 
+// Module-level cache so returning to the admin page renders instantly while a
+// fresh load runs in the background.
+let adminAgentsCache: { agents: Agent[]; fetchedAt: number } | null = null;
+const ADMIN_AGENTS_CACHE_TTL_MS = 5 * 60 * 1000;
+
 export default function AdminApprovals() {
   const navigate = useNavigate();
   const { user, loading: authLoading, isAdmin } = useAuthRole();
