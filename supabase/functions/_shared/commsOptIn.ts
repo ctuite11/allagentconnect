@@ -102,7 +102,7 @@ export async function loadCommsOptIn(
 
   if (error) {
     console.error("[loadCommsOptIn] lookup failed — muting all (fail closed)", error);
-    for (const id of ids) blocked.set(id, "missing_row");
+    for (const id of ids) blocked.set(id, "lookup_error");
     return { allowed, blocked, rows };
   }
 

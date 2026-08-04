@@ -97,7 +97,7 @@ function agent(
 
 Deno.test("Communications base IDs exactly equal get_verified_agent_ids() IDs", async () => {
   const rpcIds = ["net-1", "net-2", "net-3"];
-  const { audience } = await getVerifiedAgentAudienceWithStats(
+  const { audience, network_rpc_base } = await getVerifiedAgentAudienceWithStats(
     fakeAudienceSupabase({
       rpcIds,
       profiles: rpcIds.map((id) => ({
@@ -109,6 +109,7 @@ Deno.test("Communications base IDs exactly equal get_verified_agent_ids() IDs", 
     }),
   );
   assertEquals(audience.map((a) => a.agent_id).sort(), [...rpcIds].sort());
+  assertEquals(network_rpc_base, 3);
 });
 
 Deno.test("unactivated agent outside the Network RPC is never included", async () => {
@@ -179,7 +180,7 @@ Deno.test("helper does not independently query agent_settings or user_roles for 
 
 Deno.test("sender, opt-in, category, targeting, suppression, and cadence still operate after base load", async () => {
   const rpcIds = ["sender", "opted-in", "cat-off", "suppressed", "daily", "nomatch"];
-  const { audience, globally_suppressed } = await getVerifiedAgentAudienceWithStats(
+  const { audience, globally_suppressed, network_rpc_base } = await getVerifiedAgentAudienceWithStats(
     fakeAudienceSupabase({
       rpcIds,
       profiles: [
@@ -204,6 +205,7 @@ Deno.test("sender, opt-in, category, targeting, suppression, and cadence still o
     }),
   );
 
+  assertEquals(network_rpc_base, 6);
   assertEquals(globally_suppressed, 1);
   assertEquals(audience.some((a) => a.agent_id === "suppressed"), false);
   assertEquals(
@@ -260,11 +262,11 @@ Deno.test("sender, opt-in, category, targeting, suppression, and cadence still o
 });
 
 Deno.test("empty Network RPC yields empty Communications base audience", async () => {
-  const { audience, globally_suppressed } = await getVerifiedAgentAudienceWithStats(
-    fakeAudienceSupabase({ rpcIds: [] }),
-  );
+  const { audience, globally_suppressed, network_rpc_base } =
+    await getVerifiedAgentAudienceWithStats(fakeAudienceSupabase({ rpcIds: [] }));
   assertEquals(audience, []);
   assertEquals(globally_suppressed, 0);
+  assertEquals(network_rpc_base, 0);
 });
 
 Deno.test("partition still excludes sender after Network-aligned base audience", () => {
@@ -278,6 +280,18 @@ Deno.test("partition still excludes sender after Network-aligned base audience",
   );
   assertEquals(p.real.map((r) => r.agent_id), ["peer"]);
   assertEquals(p.counts.self_excluded, 1);
+});
+
+Deno.test("audit SQL has no profile-image eligibility comparison", async () => {
+  const sql = await Deno.readTextFile(
+    new URL(
+      "../../../docs/audits/2026-08-04-comms-audience-vs-network-rpc.sql",
+      import.meta.url,
+    ),
+  );
+  assertEquals(/headshot|profile.?photo/i.test(sql), false);
+  assertEquals(sql.includes("get_verified_agent_ids()"), true);
+  assertEquals(sql.includes("comms_base"), true);
 });
 
 Deno.test("all five Comms Edge consumers use the Network-aligned audience helper", async () => {

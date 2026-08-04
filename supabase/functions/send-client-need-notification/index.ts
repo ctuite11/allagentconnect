@@ -18,6 +18,11 @@ import {
   partitionByCommsSchedule,
   type DigestItemInsert,
 } from "../_shared/commsDigest.ts";
+import {
+  buildDryRunRecipientRoster,
+  cadenceCountsFromPartition,
+  countOptInBlockReasons,
+} from "../_shared/commsBroadcastDryRun.ts";
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -128,9 +133,9 @@ const handler = async (req: Request): Promise<Response> => {
     const senderCompany = senderProfile?.company || "";
     const validReplyTo = senderEmail && isValidEmail(senderEmail) ? senderEmail : undefined;
 
-    // 1. Canonical audience of verified, profile-eligible agents
-    //    (globally unsubscribed / suppressed excluded — count is surfaced).
-    const { audience, globally_suppressed } =
+    // 1. Canonical audience = Agent Network RPC, then delivery annotations.
+    //    network_rpc_base is the raw RPC size before suppression drops.
+    const { audience, network_rpc_base, globally_suppressed } =
       await getVerifiedAgentAudienceWithStats(supabase);
     const audienceIds = audience.map((a) => a.agent_id);
 
@@ -249,7 +254,23 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Dry-run: zero writes (no broadcast row, no email_jobs, no dedup).
     if (dryRun) {
-      const reminderIdsDry = partition.reminder.map((a) => a.agent_id);
+      const { schedules, muted } = await loadCommsSchedules(
+        supabase,
+        partition.real.map((r) => r.agent_id),
+      );
+      const { immediate, digest, skippedMuted } = partitionByCommsSchedule(
+        partition.real,
+        schedules,
+        muted,
+      );
+      const recipients = buildDryRunRecipientRoster(immediate, digest);
+      const cadence_counts = cadenceCountsFromPartition(
+        immediate.length,
+        digest,
+        skippedMuted,
+      );
+      const optInBlocked = countOptInBlockReasons(commsOptIn.blocked);
+
       return new Response(
         JSON.stringify({
           dry_run: true,
@@ -258,6 +279,10 @@ const handler = async (req: Request): Promise<Response> => {
           audience_scope: audienceScope,
           parsed_criteria: parsedCriteria,
           any_criteria_supplied: anyCriteriaSupplied,
+          // Raw Agent Network RPC size BEFORE email-suppression drops.
+          network_rpc_base,
+          globally_suppressed,
+          // Post-suppression audience used for preference / opt-in matching.
           activated_verified_audience: audience.length,
           profile_complete: partition.counts.profile_complete,
           profile_incomplete: partition.counts.profile_incomplete,
@@ -266,12 +291,31 @@ const handler = async (req: Request): Promise<Response> => {
           preferences_unset_fallback: partition.counts.preferences_unset_fallback,
           self_excluded: partition.counts.self_excluded,
           category_opted_out: partition.counts.category_opted_out,
-          globally_suppressed,
           non_matching: partition.counts.non_matching,
+          opt_in_blocked: {
+            missing_row: optInBlocked.missing_row,
+            master_off: optInBlocked.master_off,
+            category_off: optInBlocked.category_off,
+            lookup_error: optInBlocked.lookup_error,
+          },
+          cadence_counts: {
+            immediate: cadence_counts.immediate,
+            daily: cadence_counts.daily,
+            weekly: cadence_counts.weekly,
+            skipped_muted: cadence_counts.skipped_muted,
+          },
           already_received_real: 0,
           reminder_already_recorded: 0,
           final_real_recipients: partition.real.length,
-          final_reminder_recipients: reminderIdsDry.length,
+          final_deliverable_recipients: recipients.length,
+          final_reminder_recipients: partition.reminder.length,
+          recipients: recipients.map((r) => ({
+            user_id: r.user_id,
+            name: r.name,
+            email: r.email,
+            cadence: r.cadence,
+            matching_reason: r.matching_reason,
+          })),
         }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );

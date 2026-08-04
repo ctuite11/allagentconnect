@@ -74,6 +74,8 @@ export async function getVerifiedAgentAudience(
 
 export interface AudienceWithStats {
   audience: EligibleAgent[];
+  /** Raw `get_verified_agent_ids()` size before email-suppression drops. */
+  network_rpc_base: number;
   globally_suppressed: number;
 }
 
@@ -88,7 +90,9 @@ export async function getVerifiedAgentAudienceWithStats(
   // 1) Single canonical base population = Agent Network RPC.
   const idSet = await loadVerifiedAgentIdSet(supabase);
   const eligibleIds = Array.from(idSet);
-  if (!eligibleIds.length) return { audience: [], globally_suppressed: 0 };
+  if (!eligibleIds.length) {
+    return { audience: [], network_rpc_base: 0, globally_suppressed: 0 };
+  }
 
   // 2) Profile fields needed for email delivery only (not eligibility).
   const { data: profiles, error: profilesErr } = await supabase
@@ -202,7 +206,11 @@ export async function getVerifiedAgentAudienceWithStats(
       savedPrefs,
     });
   }
-  return { audience: out, globally_suppressed };
+  return {
+    audience: out,
+    network_rpc_base: eligibleIds.length,
+    globally_suppressed,
+  };
 }
 
 /**
