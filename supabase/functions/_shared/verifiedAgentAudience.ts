@@ -1,13 +1,11 @@
 // Shared canonical eligibility helper for automatic agent notifications.
 //
-// Canonical FULL-ACCESS rule (July 2026):
-//   VERIFIED  AND  role = 'agent'  AND  (ACTIVATED OR HAS_HEADSHOT)
-//     - Verified          : agent_settings.agent_status = 'verified'
-//     - Activated         : agent_settings.account_activated_at IS NOT NULL
-//     - Has headshot      : agent_profiles.headshot_url non-empty
-//   Profile completeness (names, company, bio, phone) no longer gates email
-//   eligibility. hide_from_directory no longer suppresses emails either —
-//   that flag only controls Agent Network visibility, not deliverability.
+// Canonical BASE POPULATION (Aug 2026): `rpc('get_verified_agent_ids')` —
+// exactly the Agent Network. Comms no longer evaluates verification, role,
+// activation or headshot independently; if an agent is in the Network they
+// are in the Comms base population, and vice versa (zero drift).
+// From that base, delivery is narrowed by: sender exclusion, opt-in /
+// category, targeting match, global suppression, cadence and dedupe.
 //
 //   Real content bucket (per-event):
 //     - has_email && (preferences_set ? matches : true)
