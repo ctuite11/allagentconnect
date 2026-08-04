@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Dialog,
   DialogContent,
@@ -82,6 +82,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
   const [noMinPrice, setNoMinPrice] = useState(false);
   const [noMaxPrice, setNoMaxPrice] = useState(false);
   const [propertyTypes, setPropertyTypes] = useState<string[]>([]);
+  const composeRootRef = useRef<HTMLDivElement>(null);
 
   // Use the EXACT same hook pattern as SubmitClientNeed
   const { townsList, expandedCities, toggleCityExpansion } = useTownsPicker({
@@ -405,6 +406,27 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
     onOpenChange(false);
   };
 
+  /**
+   * Return from Confirm & Send to the compose/filters step.
+   * Collapse the towns search picker and clear the name query so Back does not
+   * land on the town "Type Full or Partial Name" search UI.
+   */
+  const handleBackToEdit = () => {
+    setTownsOpen(false);
+    setCitySearch("");
+    setShowConfirmation(false);
+    // Wait for compose DOM to mount after leaving confirmation.
+    window.setTimeout(() => {
+      const root = composeRootRef.current;
+      if (!root) return;
+      const dialog = root.closest('[role="dialog"]');
+      if (dialog instanceof HTMLElement) {
+        dialog.scrollTo({ top: 0, behavior: "smooth" });
+      }
+      root.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 0);
+  };
+
   return (
     <>
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -483,12 +505,12 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setShowConfirmation(false)}
+                onClick={handleBackToEdit}
                 disabled={sending}
                 className="rounded-lg"
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Edit
+                Back to Filters
               </Button>
               <Button
                 type="button"
@@ -512,7 +534,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
             </div>
           </div>
         ) : (
-          <div className={commsDialogBody}>
+          <div ref={composeRootRef} className={commsDialogBody}>
             {/* Recipient Count */}
             <div className={commsRecipientPreview}>
               <div className="flex items-center gap-3">
