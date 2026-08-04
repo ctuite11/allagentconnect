@@ -185,7 +185,6 @@ const handler = async (req: Request): Promise<Response> => {
     //        criteria into one or more per-location events and pass if
     //        the agent's saved prefs accept at least one.
     //    Missing preference rows never reach this stage — they are blocked
-    //    Missing preference rows never reach this stage — they are blocked
     //    by loadCommsOptIn.
     const broadcastEvents: Array<Record<string, unknown>> = [];
     if (audienceScope !== "network_wide" && anyCriteriaSupplied) {
