@@ -1,13 +1,11 @@
 // Shared canonical eligibility helper for automatic agent notifications.
 //
-// Canonical FULL-ACCESS rule (July 2026):
-//   VERIFIED  AND  role = 'agent'  AND  (ACTIVATED OR HAS_HEADSHOT)
-//     - Verified          : agent_settings.agent_status = 'verified'
-//     - Activated         : agent_settings.account_activated_at IS NOT NULL
-//     - Has headshot      : agent_profiles.headshot_url non-empty
-//   Profile completeness (names, company, bio, phone) no longer gates email
-//   eligibility. hide_from_directory no longer suppresses emails either —
-//   that flag only controls Agent Network visibility, not deliverability.
+// Canonical BASE POPULATION (Aug 2026): `rpc('get_verified_agent_ids')` —
+// exactly the Agent Network. Comms no longer evaluates verification, role,
+// activation or headshot independently; if an agent is in the Network they
+// are in the Comms base population, and vice versa (zero drift).
+// From that base, delivery is narrowed by: sender exclusion, opt-in /
+// category, targeting match, global suppression, cadence and dedupe.
 //
 //   Real content bucket (per-event):
 //     - has_email && (preferences_set ? matches : true)
@@ -74,48 +72,31 @@ export interface AudienceWithStats {
 export async function getVerifiedAgentAudienceWithStats(
   supabase: any,
 ): Promise<AudienceWithStats> {
-  // 1) Verified agents. hide_from_directory intentionally NOT filtered —
-  //    directory visibility no longer gates email deliverability.
-  const { data: settings, error: settingsErr } = await supabase
-    .from("agent_settings")
-    .select("user_id, preferences_set, account_activated_at")
-    .eq("agent_status", "verified");
-  if (settingsErr) throw settingsErr;
-  if (!settings?.length) return { audience: [], globally_suppressed: 0 };
+  // 1) Base population = the canonical Agent Network RPC. This is the single
+  //    source of truth for who exists in the network (verified + agent role +
+  //    activated + named). No independent verification / role / activation /
+  //    headshot gates are evaluated here — drift between Comms and the Agent
+  //    Network is impossible by construction.
+  const { data: networkIds, error: rpcErr } = await supabase.rpc(
+    "get_verified_agent_ids",
+  );
+  if (rpcErr) throw rpcErr;
+  const eligibleIds: string[] = Array.from(
+    new Set(
+      ((networkIds || []) as any[])
+        .map((r: any) => (typeof r === "string" ? r : r?.user_id))
+        .filter((id: any): id is string => typeof id === "string" && id.length > 0),
+    ),
+  );
+  if (!eligibleIds.length) return { audience: [], globally_suppressed: 0 };
 
-  const userIds = settings.map((r: any) => r.user_id);
-
-  // 2) Must also have the agent role.
-  const { data: roles } = await supabase
-    .from("user_roles")
-    .select("user_id")
-    .eq("role", "agent")
-    .in("user_id", userIds);
-  const agentRoleIds = new Set((roles || []).map((r: any) => r.user_id));
-
-  const roleFilteredIds = userIds.filter((id: string) => agentRoleIds.has(id));
-  if (!roleFilteredIds.length) return { audience: [], globally_suppressed: 0 };
-
-  // 3) Profile fields needed to evaluate completeness + delivery.
+  // 2) Profile load is delivery data only: email + names.
   const { data: profiles } = await supabase
     .from("agent_profiles")
-    .select("id, email, first_name, last_name, headshot_url, company")
-    .in("id", roleFilteredIds);
+    .select("id, email, first_name, last_name")
+    .in("id", eligibleIds);
   const profileMap = new Map<string, any>();
   for (const p of profiles || []) profileMap.set(p.id, p);
-
-  // Apply canonical full-access gate: activated OR has headshot.
-  const settingsById0 = new Map<string, any>(
-    (settings || []).map((s: any) => [s.user_id, s]),
-  );
-  const eligibleIds = roleFilteredIds.filter((id: string) => {
-    const s = settingsById0.get(id);
-    const p = profileMap.get(id) || {};
-    const activated = s?.account_activated_at != null;
-    const hasHeadshot = isNonEmpty(p.headshot_url);
-    return activated || hasHeadshot;
-  });
-  if (!eligibleIds.length) return { audience: [], globally_suppressed: 0 };
 
   // 4) Preference-source signals — Communications-Center-owned only.
   //    An agent has "Comms Center preferences" iff EITHER:
@@ -170,10 +151,6 @@ export async function getVerifiedAgentAudienceWithStats(
     for (const u of unsubsRes.data || []) suppressed.add(String(u.email).toLowerCase());
     for (const u of suppRes.data || []) suppressed.add(String(u.email).toLowerCase());
   }
-
-  const settingsById = new Map<string, any>(
-    (settings || []).map((s: any) => [s.user_id, s]),
-  );
 
   const out: EligibleAgent[] = [];
   let globally_suppressed = 0;
