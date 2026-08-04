@@ -1,119 +1,34 @@
-# Read-only send preview — 8 pending Comms Center digest items
+# Activated agents are always email-eligible
 
-No code, data, cron, secret, or queue was changed. The digest function was not invoked. Nothing was sent.
+## Policy (as stated)
+Once an agent completes account setup (activated), they have a profile and are eligible for Comms Center emails. A headshot is not required, and a missing profile record must never silently drop them.
 
-## Headline
+This does not change opt-in: eligibility only decides who is *in* the audience. Whether they actually receive an email still depends on their Comms Center switches (missing row = OFF) and the global pause flag. Hot Sheets are untouched.
 
-All 8 pending items are the **same single broadcast**. They are not 8 different communications.
+## What the audit found
+- 210 verified + activated agents with the agent role.
+- 7 of them have **no `agent_profiles` row at all**, so the shared audience builder finds no email for them and excludes them from every Comms Center send:
+  - nataliia.tuite@gmail.com
+  - boo@allagentconnect.com
+  - nataliia@directconnectmls.com
+  - chris.tuite@compass.com
+  - tuite.chris11@gmail.com
+  - mbaltimore@gmail.com
+  - n.lopachak@gmail.com
+- Everyone else with a profile row has a non-empty email.
 
-- Pending database items: **8**
-- Unique source communications: **1** (broadcast `82225ca1-5376-4a5d-974c-2eb25f4990d2`, "Stager Needed")
-- Unique recipients: **8**
-- Digest emails that would be created: **8** (one per recipient)
-- Items per recipient: **1 each**
-- Duplicate / stale / suppressed / ineligible items: **0** found
-- Existing `comms_digest_sends` rows: **0** (nothing half-sent)
+## Changes
 
-## The one communication
+1. **Backfill the 7 missing profile rows** (migration): insert an `agent_profiles` row keyed to the auth user id with the auth email, leaving name/company/headshot blank. Purely additive; no existing rows touched.
 
-| Field | Value |
-|---|---|
-| Source type | broadcast |
-| Source ID | 82225ca1-5376-4a5d-974c-2eb25f4990d2 |
-| Category | General Discussion (maps to `general_discussion`) |
-| Sender | Jarvid Cortes — Keller Williams Realty |
-| Title | Stager Needed |
-| Criteria shown | State: MA (no property type, no price range, no town/area) |
-| Body text | "Who is your go to South Shore home stager?\n\nTahanks!\nJarvid" (sender's typo preserved) |
-| Created | 2026-08-03 17:48:21 UTC (13:48 ET) |
-| Action URL | https://allagentconnect.com/communications/feed |
+2. **Make activation self-sufficient going forward** (migration): ensure the activation RPC (`mark_agent_activated`) creates the profile row if one is missing, so an activated agent can never exist without a profile.
 
-## Per-item detail
+3. **Harden the audience builder** (`supabase/functions/_shared/verifiedAgentAudience.ts`): keep the gate as VERIFIED + agent role + (ACTIVATED OR HAS_HEADSHOT), but fall back to the auth email when the profile row is absent or its email is blank, and drop the implicit "no profile row = excluded" behavior. Update the header comment to state the rule plainly.
 
-All 8 items share the source, category, title, criteria, body, and creation timestamp above.
+## Not in scope
+- No change to opt-in semantics, digests, cadence, templates, or the Comms pause flag.
+- No Hot Sheet changes.
+- No emails sent as part of this work.
 
-| Item ID | Recipient | Email | Cadence | Master switches | general_discussion | Eligible now | Already received elsewhere |
-|---|---|---|---|---|---|---|---|
-| 4ce1a615 | Kate Cleary | kcleary@charlesgate.com | daily | both on | on | Yes | No |
-| bc877ce7 | Emily Dugal | emily@sellboston.com | daily | both on | on | Yes | No |
-| 58a5920c | Alex Genovese | alex@flowrealty.com | daily | both on | on | Yes | No |
-| 33c99d14 | Richard Luc | richard.luc@richardhluc.com | daily | both on | on | Yes | No |
-| b992622b | Anh Nguyen | anh@serhant.com | daily | both on | on | Yes | No |
-| d5459b10 | Sean Packard | seanp@crg123.com | daily | both on | on | Yes | No |
-| 461cb2b6 | Josh Stiles | josh.stiles@compass.com | weekly | both on | on | Yes | No |
-| fbc4e55e | Andrew Stuckey | andrew@keepitrealty.homes | weekly | both on | on | Yes | No |
-
-Eligibility check performed per recipient: all 8 are `agent_status = verified`, activated, hold the `agent` role, and pass the current opt-in gate (`client_needs_enabled` = true, `new_matches_enabled` = true, `general_discussion` = true). None has an `email_jobs` record for this broadcast, and each has exactly one digest item for it — so no recipient has already received it by an immediate or duplicate path.
-
-Note: three items were queued with `summary.reason = "preferences_unset"` (Cleary, Genovese, Nguyen) — those agents have since configured preferences, and the send-time recheck re-evaluates against current values, so they now pass.
-
-## Resulting emails (as the renderer would group them)
-
-Eight separate emails, each containing exactly one communication.
-
-**Daily — 6 emails** (Cleary, Dugal, Genovese, Luc, Nguyen, Packard)
-
-- Subject: `Your daily Communications Center digest (1 update)`
-- Idempotency key: `comms-digest:daily:daily:YYYY-MM-DD:<agent_id>` (period key is the ET calendar date of the run)
-
-**Weekly — 2 emails** (Stiles, Stuckey)
-
-- Subject: `Your weekly Communications Center digest (1 update)`
-- Idempotency key: `comms-digest:weekly:weekly:YYYY-Www:<agent_id>`
-
-Rendered body (same for all 8, first name and "daily"/"weekly" swap):
-
-```text
-Hi <FirstName>,
-
-Here is your daily Communications Center digest with 1 update matching your filters.
-
-General Discussion (1)
---------------------------------
-GENERAL DISCUSSION
-Stager Needed
-Aug 3, 1:48 PM ET
-
-  Stager Needed
-  From: Jarvid Cortes (Keller Williams Realty)
-  Category: General Discussion
-
-  Request Criteria
-  State: MA
-
-  Who is your go to South Shore home stager?
-
-  Tahanks!
-  Jarvid
-
-Open Communications Center to view details and respond.
-[Open Communications Center -> /communications/feed]
-```
-
-## Expected send time (if dispatch is repaired)
-
-- Daily: the first run at or after 18:00 ET on the run day.
-- Weekly: the first run at or after 18:00 ET on a **Friday** — the next one is Fri Aug 7. The two weekly items would sit until then.
-- Separately, `COMMS_EMAILS_PAUSED = true` is still in effect, so even a created `email_jobs` row would not be delivered until that kill switch is lifted. Repairing dispatch alone does not release these emails.
-
-## Cross-check against the emails already delivered (your Resend screenshots)
-
-The "Stager Needed" broadcast did already go out immediately to **63 recipients** (63 `email_jobs` rows, all `sent`, all stamped 2026-08-03 17:48:21 UTC, template `client-need-broadcast`, subject `[General Discussion] Stager Needed`) — that is the list in your screenshots.
-
-**None of the 8 digest recipients is in that list of 63.** Verified by matching each of the 8 addresses (lowercased) against every "Stager" email job: zero matches. The two paths are mutually exclusive by design — an agent set to `immediate` got the email at 17:48; an agent set to `daily`/`weekly` got a digest item instead and no immediate email.
-
-Example from the screenshots: `brendon@serhant.com` and `mackenzie.cormier@serhant.com` were immediate recipients; `anh@serhant.com` (daily digest) was not. Same pattern for the other seven.
-
-Totals for this broadcast: 63 immediate emails already delivered + 8 digest items still pending = 71 intended recipients.
-
-## Observations for your decision
-
-- The content is thin: a one-line question with no property type, price range, or town. Eight per-recipient emails whose sole content is "Who is your go to South Shore home stager?" may not be worth sending 4+ days late.
-- By the time the weekly pair could go out (Aug 7), the item will be four days stale.
-
-## Decisions requested (separately)
-
-1. Release, discard, or leave the 8 pending items in place.
-2. Approve or reject repairing the digest dispatch (the service-role GUC issue) as a separate change.
-
-No action will be taken on either until you say so.
+## Verification
+Re-run the audience count before/after: expect activated+verified agents in the audience to go from 203 to 210, with the 7 named accounts present and their opt-in state unchanged (all still OFF unless they've configured Comms Center).
