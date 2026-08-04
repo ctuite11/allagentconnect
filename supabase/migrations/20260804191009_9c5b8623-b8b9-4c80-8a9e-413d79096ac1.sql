@@ -1,0 +1,1 @@
+ALTER TABLE public.email_jobs DROP CONSTRAINT IF EXISTS email_jobs_status_check;
