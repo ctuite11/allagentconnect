@@ -1,22 +1,23 @@
-// Shared canonical eligibility helper for automatic agent notifications.
+// Shared canonical eligibility helper for automatic Communications Center
+// notifications.
 //
-// Canonical BASE POPULATION (Aug 2026): `rpc('get_verified_agent_ids')` —
-// exactly the Agent Network. Comms no longer evaluates verification, role,
-// activation or headshot independently; if an agent is in the Network they
-// are in the Comms base population, and vice versa (zero drift).
-// From that base, delivery is narrowed by: sender exclusion, opt-in /
-// category, targeting match, global suppression, cadence and dedupe.
+// Canonical BASE population (Aug 2026):
+//   Exactly the individual-agent IDs returned by
+//   public.get_verified_agent_ids() — the Agent Network RPC.
 //
-//   Real content bucket (per-event):
-//     - has_email && (preferences_set ? matches : true)
-//     - Excludes senderId, explicit category opt-out, globally suppressed email
-//   Reminder bucket:
-//     - DEPRECATED. Always empty. The old "You're Missing Opportunities"
-//       automatic reminder has been removed. Agents who are verified but not
-//       activated and without a headshot are simply excluded from the audience;
-//       admins reach them via the manual "Send Setup Link" action.
-//   Never eligible: not verified, not (activated OR has headshot), no email,
-//   globally suppressed.
+// This helper must NOT independently reimplement verified / activated / role /
+// directory-visibility / auth-user / name gates. Eligibility is owned entirely
+// by the Network RPC above.
+//
+// After the base IDs are loaded, Communications delivery still applies:
+//   − sender exclusion
+//   − explicit Communications opt-in (master + category)
+//   − targeting / preference matching
+//   − global email suppression
+//   − cadence (immediate / daily / weekly) + digest deduplication
+//
+// Final recipient count may legitimately be below the Network count because
+// Communications is opt-in only.
 
 import type {
   AgentPreferences,
@@ -29,8 +30,8 @@ export interface EligibleAgent {
   first_name: string | null;
   last_name: string | null;
   preferences_set: boolean;
-  /** Retained for backward compatibility. Always true — inclusion in the
-   *  audience now IS the full-access gate. */
+  /** Retained for backward compatibility. True when the agent has a
+   *  deliverable email address. */
   profile_complete: boolean;
   has_email: boolean;
   /** Saved Comms-Center preferences (empty when none). */
@@ -42,15 +43,27 @@ function isNonEmpty(v: unknown): boolean {
 }
 
 /**
- * Returns the canonical audience of verified, profile-eligible agents,
- * annotated with whether they have configured any preferences and their
- * explicit category opt-in state.
- *
- * "Preferences set" is TRUE when ANY of the following holds:
- *   - `agent_settings.preferences_set = true`
- *   - ≥ 1 row in `agent_buyer_coverage_areas`
- *   - ≥ 1 row in `agent_state_preferences`
- *   - ≥ 1 row in `agent_county_preferences`
+ * Loads the Agent Network ID set from `public.get_verified_agent_ids()`.
+ * Used by enqueue paths and by digest send-time rechecks.
+ */
+export async function loadVerifiedAgentIdSet(
+  supabase: any,
+): Promise<Set<string>> {
+  const { data: rpcRows, error: rpcErr } = await supabase.rpc(
+    "get_verified_agent_ids",
+  );
+  if (rpcErr) throw rpcErr;
+
+  return new Set(
+    (rpcRows || [])
+      .map((r: any) => (typeof r === "string" ? r : r?.user_id))
+      .filter((id: unknown): id is string => typeof id === "string" && id.length > 0),
+  );
+}
+
+/**
+ * Returns the canonical Communications audience: Agent Network RPC IDs
+ * annotated with delivery profile fields and Comms Center preferences.
  */
 export async function getVerifiedAgentAudience(
   supabase: any,
@@ -72,38 +85,26 @@ export interface AudienceWithStats {
 export async function getVerifiedAgentAudienceWithStats(
   supabase: any,
 ): Promise<AudienceWithStats> {
-  // 1) Base population = the canonical Agent Network RPC. This is the single
-  //    source of truth for who exists in the network (verified + agent role +
-  //    activated + named). No independent verification / role / activation /
-  //    headshot gates are evaluated here — drift between Comms and the Agent
-  //    Network is impossible by construction.
-  const { data: networkIds, error: rpcErr } = await supabase.rpc(
-    "get_verified_agent_ids",
-  );
-  if (rpcErr) throw rpcErr;
-  const eligibleIds: string[] = Array.from(
-    new Set(
-      ((networkIds || []) as any[])
-        .map((r: any) => (typeof r === "string" ? r : r?.user_id))
-        .filter((id: any): id is string => typeof id === "string" && id.length > 0),
-    ),
-  );
+  // 1) Single canonical base population = Agent Network RPC.
+  const idSet = await loadVerifiedAgentIdSet(supabase);
+  const eligibleIds = Array.from(idSet);
   if (!eligibleIds.length) return { audience: [], globally_suppressed: 0 };
 
-  // 2) Profile load is delivery data only: email + names.
-  const { data: profiles } = await supabase
+  // 2) Profile fields needed for email delivery only (not eligibility).
+  const { data: profiles, error: profilesErr } = await supabase
     .from("agent_profiles")
     .select("id, email, first_name, last_name")
     .in("id", eligibleIds);
+  if (profilesErr) throw profilesErr;
+
   const profileMap = new Map<string, any>();
   for (const p of profiles || []) profileMap.set(p.id, p);
 
-  // 4) Preference-source signals — Communications-Center-owned only.
+  // 3) Preference-source signals — Communications-Center-owned only.
   //    An agent has "Comms Center preferences" iff EITHER:
   //      (a) ≥1 row in agent_buyer_coverage_areas with source='notifications', OR
   //      (b) explicit price / property-type targeting in notification_preferences
-  //          (property_types non-empty, min_price/max_price non-null, or
-  //           has_no_min/has_no_max = true).
+  //          (property_types non-empty, min_price/max_price non-null).
   //    Do NOT use agent_settings.preferences_set, agent_state_preferences,
   //    agent_county_preferences, profile Buyer Leads rows, or legacy/DCMLS
   //    coverage rows as a preferences-set signal. Agents whose only saved rows
@@ -136,7 +137,7 @@ export async function getVerifiedAgentAudienceWithStats(
   const prefsByAgent = new Map<string, any>();
   for (const p of (notifPrefs.data || []) as any[]) prefsByAgent.set(p.user_id, p);
 
-  // 5) Global suppression — union of email_unsubscribes AND suppressed_emails.
+  // 4) Global suppression — union of email_unsubscribes AND suppressed_emails.
   //    Both sources are authoritative; presence in either drops the agent.
   const emailsForSuppression = eligibleIds
     .map((id: string) => profileMap.get(id)?.email)
@@ -167,8 +168,6 @@ export async function getVerifiedAgentAudienceWithStats(
     }
 
     const has_email = isNonEmpty(emailTrim);
-    // Full-access gate already applied upstream. Retained field for
-    // backward compatibility with existing partition logic.
     const profile_complete = has_email;
 
     // Build saved Comms-Center preferences record for the shared matcher.

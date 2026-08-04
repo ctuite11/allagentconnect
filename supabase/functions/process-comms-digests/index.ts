@@ -7,6 +7,7 @@ import {
 } from "../_shared/commsDigest.ts";
 import { fetchCommsPrefsRow } from "../_shared/commsOptIn.ts";
 import { planDigestDelivery } from "../_shared/commsDigestPlan.ts";
+import { loadVerifiedAgentIdSet } from "../_shared/verifiedAgentAudience.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -95,13 +96,24 @@ async function processCadence(
 
   if (pendingErr) throw pendingErr;
 
+  // Send-time Network membership: digest items may sit for days after enqueue.
+  // Re-read the canonical Agent Network RPC each run so agents who left the
+  // Network never receive a digest email.
+  const networkIds = await loadVerifiedAgentIdSet(supabase);
+
   const agentIds = Array.from(
     new Set((pendingRows || []).map((r: { agent_id: string }) => r.agent_id)),
   ).slice(0, MAX_AGENTS_PER_RUN);
 
   for (const agentId of agentIds) {
     stats.processed++;
-    const result = await processAgentDigest(supabase, agentId, cadence, periodKey);
+    const result = await processAgentDigest(
+      supabase,
+      agentId,
+      cadence,
+      periodKey,
+      networkIds,
+    );
     if (result === "sent") stats.sent++;
     else if (result === "failed") stats.failed++;
     else stats.skipped++;
@@ -115,7 +127,30 @@ async function processAgentDigest(
   agentId: string,
   cadence: DigestCadence,
   periodKey: string,
+  networkIds: Set<string>,
 ): Promise<"sent" | "failed" | "skipped"> {
+  // Outside the Agent Network ⇒ retire pending items (same fail-closed spirit
+  // as muted prefs). Do this before claiming a send row.
+  if (!networkIds.has(agentId)) {
+    const { error: retireErr } = await supabase
+      .from("comms_digest_items")
+      .delete()
+      .eq("agent_id", agentId)
+      .eq("cadence", cadence)
+      .is("digest_send_id", null);
+    if (retireErr) {
+      console.error(
+        `[process-comms-digests] network-exit retirement failed agent=${agentId}`,
+        retireErr,
+      );
+      return "failed";
+    }
+    console.log(
+      `[process-comms-digests] agent=${agentId} cadence=${cadence} retired — not in get_verified_agent_ids()`,
+    );
+    return "skipped";
+  }
+
   // Already successfully sent this period?
   const { data: existing } = await supabase
     .from("comms_digest_sends")
