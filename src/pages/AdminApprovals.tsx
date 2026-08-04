@@ -363,6 +363,11 @@ function YesNoCell({
   );
 }
 
+// Module-level cache so returning to the admin page renders instantly while a
+// fresh load runs in the background.
+let adminAgentsCache: { agents: Agent[]; fetchedAt: number } | null = null;
+const ADMIN_AGENTS_CACHE_TTL_MS = 5 * 60 * 1000;
+
 export default function AdminApprovals() {
   const navigate = useNavigate();
   const { user, loading: authLoading, isAdmin } = useAuthRole();
@@ -607,10 +612,10 @@ export default function AdminApprovals() {
   );
 
   // Fetch all agents via edge function (bypasses RLS issues)
-  const fetchAgents = async () => {
+  const fetchAgents = async (opts?: { background?: boolean }) => {
     if (!isAdmin) return;
 
-    setLoading(true);
+    if (!opts?.background) setLoading(true);
     
     try {
       // Use edge function for bulletproof admin data fetching
@@ -700,6 +705,7 @@ export default function AdminApprovals() {
       }));
 
       setAgents(enriched);
+      adminAgentsCache = { agents: enriched, fetchedAt: Date.now() };
     } catch (error) {
       console.error("Unexpected error:", error);
       toast.error("Failed to load agents");
@@ -710,7 +716,16 @@ export default function AdminApprovals() {
 
   useEffect(() => {
     if (!authLoading && isAdmin) {
-      void fetchAgents();
+      // Repeat visits render the last known list immediately and refresh in
+      // the background instead of showing a full-page spinner.
+      const cached = adminAgentsCache;
+      if (cached && Date.now() - cached.fetchedAt < ADMIN_AGENTS_CACHE_TTL_MS) {
+        setAgents(cached.agents);
+        setLoading(false);
+        void fetchAgents({ background: true });
+      } else {
+        void fetchAgents();
+      }
     }
   }, [authLoading, isAdmin]);
 

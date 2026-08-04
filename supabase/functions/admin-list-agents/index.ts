@@ -171,44 +171,76 @@ Deno.serve(async (req) => {
     // Use service role client to bypass RLS
     const adminClient = createClient(supabaseUrl, supabaseServiceKey)
 
-    // Build maps of auth.users by lowercase email — drives has_auth_account + last_sign_in_at
-    const authEmails = new Set<string>()
-    const lastSignInByEmail = new Map<string, string | null>()
-    try {
-      let page = 1
-      const perPage = 1000
-      // Hard cap to avoid runaway loops
-      while (page <= 50) {
-        const { data: list, error: listErr } = await adminClient.auth.admin.listUsers({ page, perPage })
-        if (listErr) {
-          console.error('[admin-list-agents] auth.admin.listUsers error:', listErr.message)
-          break
-        }
-        const users = list?.users ?? []
-        for (const u of users) {
-          const email = (u.email ?? '').toLowerCase()
-          if (!email) continue
-          authEmails.add(email)
-          const prev = lastSignInByEmail.get(email)
-          const next = u.last_sign_in_at ?? null
-          // Keep most-recent sign-in if duplicate email rows exist
-          if (!prev || (next && new Date(next).getTime() > new Date(prev).getTime())) {
-            lastSignInByEmail.set(email, next)
+    // Kick off every independent read at once. Nothing below depends on the
+    // order these resolve in; awaiting them sequentially was the main reason
+    // this endpoint took several seconds.
+    const authScanPromise = (async () => {
+      const emails = new Set<string>()
+      const lastSignIn = new Map<string, string | null>()
+      try {
+        let page = 1
+        const perPage = 1000
+        // Hard cap to avoid runaway loops
+        while (page <= 50) {
+          const { data: list, error: listErr } = await adminClient.auth.admin.listUsers({ page, perPage })
+          if (listErr) {
+            console.error('[admin-list-agents] auth.admin.listUsers error:', listErr.message)
+            break
           }
+          const users = list?.users ?? []
+          for (const u of users) {
+            const email = (u.email ?? '').toLowerCase()
+            if (!email) continue
+            emails.add(email)
+            const prev = lastSignIn.get(email)
+            const next = u.last_sign_in_at ?? null
+            // Keep most-recent sign-in if duplicate email rows exist
+            if (!prev || (next && new Date(next).getTime() > new Date(prev).getTime())) {
+              lastSignIn.set(email, next)
+            }
+          }
+          if (users.length < perPage) break
+          page++
         }
-        if (users.length < perPage) break
-        page++
+      } catch (e) {
+        console.error('[admin-list-agents] auth listUsers exception:', e)
       }
-      console.log('[admin-list-agents] auth users scanned:', authEmails.size)
-    } catch (e) {
-      console.error('[admin-list-agents] auth listUsers exception:', e)
-    }
+      return { emails, lastSignIn }
+    })()
 
-    // Fetch all profiles
-    const { data: profiles, error: profilesError } = await adminClient
+    const profilesPromise = adminClient
       .from('agent_profiles')
       .select('id, aac_id, first_name, last_name, email, phone, company, bio, headshot_url, created_at')
       .order('created_at', { ascending: false })
+
+    const earlyAccessPromise = adminClient
+      .from('agent_early_access')
+      .select('id, first_name, last_name, email, phone, brokerage, state, license_number, status, created_at')
+      .order('created_at', { ascending: false })
+
+    const pendingVerificationsPromise = adminClient
+      .from('pending_verifications')
+      .select(
+        'id, email, first_name, last_name, phone, company, license_number, license_state, status, processed, rejected_at, created_at, user_id, converted_user_id',
+      )
+      .order('created_at', { ascending: false })
+
+    // Only the two payload keys this endpoint reads are selected — pulling the
+    // whole payload column moved megabytes of email HTML for no reason.
+    const emailJobTemplates = ['license-verified', 'admin-created-invite', 'agent-invite', 'agent-missing-opportunities']
+    const emailJobsPromise = adminClient
+      .from('email_jobs')
+      .select('id, status, delivery_status, delivery_status_at, created_at, attempts, last_error, to:payload->>to, template:payload->>template')
+      .in('payload->>template', emailJobTemplates)
+      .order('created_at', { ascending: false })
+      .limit(20000)
+
+    // Build maps of auth.users by lowercase email — drives has_auth_account + last_sign_in_at
+    const { emails: authEmails, lastSignIn: lastSignInByEmail } = await authScanPromise
+    console.log('[admin-list-agents] auth users scanned:', authEmails.size)
+
+    // Fetch all profiles
+    const { data: profiles, error: profilesError } = await profilesPromise
 
     if (profilesError) {
       console.error('[admin-list-agents] Profiles error:', profilesError.message)
@@ -288,10 +320,7 @@ Deno.serve(async (req) => {
     console.log('[admin-list-agents] Status distribution:', statusCounts)
 
     // Fetch early access registrations
-    const { data: earlyAccess, error: earlyAccessError } = await adminClient
-      .from('agent_early_access')
-      .select('id, first_name, last_name, email, phone, brokerage, state, license_number, status, created_at')
-      .order('created_at', { ascending: false })
+    const { data: earlyAccess, error: earlyAccessError } = await earlyAccessPromise
 
     if (earlyAccessError) {
       console.error('[admin-list-agents] Early access error:', earlyAccessError.message)
@@ -348,12 +377,7 @@ Deno.serve(async (req) => {
     const requestedByEmail = new Map<string, string>() // email -> earliest created_at
     const rejectedByEmail = new Map<string, string | null>() // email -> rejected_at (may be null)
 
-    const { data: pvRows, error: pvError } = await adminClient
-      .from('pending_verifications')
-      .select(
-        'id, email, first_name, last_name, phone, company, license_number, license_state, status, processed, rejected_at, created_at, user_id, converted_user_id',
-      )
-      .order('created_at', { ascending: false })
+    const { data: pvRows, error: pvError } = await pendingVerificationsPromise
 
     if (pvError) {
       console.error('[admin-list-agents] pending_verifications error:', pvError.message)
@@ -443,21 +467,15 @@ Deno.serve(async (req) => {
       const emailsLower = new Set(allAgents.map(a => (a.email ?? '').toLowerCase()).filter(Boolean))
       const reminderTemplates = ['license-verified', 'agent-invite', 'agent-missing-opportunities']
       const reminderTemplateSet = new Set(reminderTemplates)
-      const templates = ['license-verified', 'admin-created-invite', 'agent-invite', 'agent-missing-opportunities']
-      const { data: jobs, error: jobsErr } = await adminClient
-        .from('email_jobs')
-        .select('id, status, delivery_status, delivery_status_at, created_at, attempts, last_error, payload')
-        .in('payload->>template', templates)
-        .order('created_at', { ascending: false })
-        .limit(20000)
+      const { data: jobs, error: jobsErr } = await emailJobsPromise
       if (jobsErr) {
         console.error('[admin-list-agents] email_jobs error:', jobsErr.message)
       } else if (jobs) {
         const latest = new Map<string, EmailStatusInfo & { template: string }>()
         const latestReminder = new Map<string, { sent_at: string; template: string; status: string }>()
         for (const j of jobs as any[]) {
-          const to = String(j?.payload?.to ?? '').toLowerCase()
-          const template = String(j?.payload?.template ?? '')
+          const to = String(j?.to ?? '').toLowerCase()
+          const template = String(j?.template ?? '')
           if (!to || !template || !emailsLower.has(to)) continue
           const key = `${to}::${template}`
           if (!latest.has(key)) {
