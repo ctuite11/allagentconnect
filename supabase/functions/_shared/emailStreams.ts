@@ -29,6 +29,18 @@ export function isPermanentlyBlockedJob(
   );
 }
 
+/** Alias used by Hot Sheet producers / tests. */
+export function isRetiredBroadListingJob(job: {
+  stream?: string | null;
+  idempotency_key?: string | null;
+  payload?: { template?: string } | null;
+}): boolean {
+  return isPermanentlyBlockedJob(
+    job.payload?.template ?? null,
+    job.idempotency_key ?? null,
+  );
+}
+
 function envTrue(name: string): boolean {
   return (Deno.env.get(name) ?? "").trim().toLowerCase() === "true";
 }
@@ -42,6 +54,29 @@ export function isStreamPaused(stream: EmailStream | null | undefined): boolean 
   if (stream === "hot_sheet") return envTrue("HOT_SHEET_EMAILS_PAUSED");
   if (stream === "communications") return envTrue("COMMS_EMAILS_PAUSED");
   return false;
+}
+
+export type PauseGateResult =
+  | { paused: false }
+  | { paused: true; reason: string; switch: string };
+
+/** Producer gate for Hot Sheet enqueue / near-realtime fan-out. */
+export function assertHotSheetEnqueueAllowed(): PauseGateResult {
+  if (isGloballyPaused()) {
+    return {
+      paused: true,
+      reason: "Global email sending is paused",
+      switch: "EMAIL_SENDING_PAUSED",
+    };
+  }
+  if (envTrue("HOT_SHEET_EMAILS_PAUSED")) {
+    return {
+      paused: true,
+      reason: "Hot Sheet emails are paused",
+      switch: "HOT_SHEET_EMAILS_PAUSED",
+    };
+  }
+  return { paused: false };
 }
 
 /** Streams the worker is currently allowed to claim. */
