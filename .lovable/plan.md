@@ -1,56 +1,70 @@
-# Canonical agent onboarding: one activation path, two doors
+# Why only 70 agents match "Massachusetts – All counties"
 
-Goal: access-request onboarding and direct admin invitation must both end in the exact same fully activated account state, and eligibility must never depend on a headshot.
+## What I verified in the database
 
-## What the trace shows today
+Two separate things are shrinking the audience. Only the second one is a bug.
 
-Both paths land on the same page (`/agent-setup`, `src/pages/AgentAccountSetup.tsx`), but that page is not a true finalizer:
+### 1. Opt-in policy (expected, working as designed)
 
-- It **updates** the agent profile (`agent_profiles ... .update().eq(id)`). If no profile row exists — the normal case for a never-registered agent — the update matches nothing and setup **aborts** with "We couldn't save your profile details."
-- It never creates the agent role or the settings row. It only calls `mark_agent_activated`.
-- `mark_agent_activated` returns NULL (no activation) when the user has no `user_roles` row of `agent`, or when a self-calling user's `agent_status` is not `verified`/`invited`. The page logs that as a warning and still shows "You're all set" and navigates on.
-- So a direct-link agent can complete name + password and end up with **no profile, no role, no `account_activated_at`** — password changed, account not activated.
+Starting from 211 verified + eligible agents:
 
-Direct-link generation (`supabase/functions/generate-agent-setup-link/index.ts`) only mints a recovery link for an existing auth email. It provisions nothing, and it fails for an agent who has never existed in the system.
+```text
+211  verified + activated/headshot agents
+-16  no notification_preferences row (opt-in policy: missing = OFF)
+-74  master switch (Client Needs) turned OFF
+-20  Buyer Need category turned OFF
+=101 opted in to Buyer Need email
+-18  globally unsubscribed / suppressed
+= 83 deliverable
+```
 
-Communications Center eligibility (`supabase/functions/_shared/verifiedAgentAudience.ts`) currently gates on `activated OR headshot_url`, and requires an email on the profile row.
+### 2. "All counties" silently drops every agent with a saved coverage area (bug)
+
+```text
+ 83  deliverable
+-12  agents whose saved Comms coverage is city/county level
+ -1  the sender (self-excluded)
+= 70  <- the number shown in the composer
+```
+
+All 216 saved Comms coverage rows are in MA, and every one of them names a specific
+city (216) and/or county (90). None is a bare state-level row.
+
+When "All counties" is selected, the composer sends `state: MA` with `counties: undefined`.
+The edge function then builds a single location event `{ state: "MA" }` with no city or county.
+The matcher requires each populated field on an agent's saved row to equal the event's
+corresponding field — so a saved row for "Newton, Middlesex County, MA" is compared against
+an event with an empty city and fails. The result is backwards: the broadest possible
+geography matches only the agents who saved *no* geography at all, and excludes every agent
+who actually told us they cover Massachusetts.
 
 ## The fix
 
-### 1. One canonical finalization function (database)
+Make a state-only broadcast mean "anywhere in this state" instead of "state field only".
 
-New security-definer RPC, called by both paths and safe to re-run:
+1. `supabase/functions/_shared/communicationPreferencesMatcher.ts`
+   - Add an opt-in event flag (`stateWide: true`). When set, a saved geo row passes location
+     if its state matches the event state, regardless of city / county / zip / neighborhood.
+   - Default behavior for every existing caller (Hot Sheets, new-match, price-change) stays
+     identical — the flag is off unless explicitly passed.
 
-`finalize_agent_account_setup(_user_id, _first_name, _last_name, _company)` idempotently ensures, in one transaction:
+2. `supabase/functions/send-client-need-notification/index.ts`
+   - When the criteria contain a state but no city, county, or neighborhood, emit the
+     state-level event with `stateWide: true`.
+   - Any narrower selection (specific counties or towns) keeps today's exact-match behavior.
 
-- `agent_profiles` row exists (insert or update name/brokerage/email from the auth user)
-- `user_roles` row `agent` exists
-- `agent_settings` row exists with `agent_status = 'verified'` and `verified_at` set
-- `account_activated_at` stamped once (first completion wins)
+3. No change to the opt-in policy, no change to who is opted in, no data writes, no
+   Hot Sheet changes.
 
-It returns the resulting activation timestamp so callers can hard-fail when activation did not happen. Callers may only finalize themselves unless they are admin/service role.
+## Expected result after the fix
 
-### 2. Setup page calls only the canonical function
+"Massachusetts – All counties" would preview 82 recipients instead of 70 (the 12 agents with
+MA coverage areas come back in). The remaining gap from 211 is entirely the opt-in policy,
+which is intentional.
 
-`AgentAccountSetup.tsx`: after the password update succeeds, replace the profile `update` + warning-only `mark_agent_activated` call with a single `finalize_agent_account_setup` call. If it returns no timestamp, show an error and do **not** report success or navigate. Name and brokerage are passed into the function instead of being written separately.
+## Verification
 
-### 3. Direct admin invitation provisions the account shell
-
-`generate-agent-setup-link`: when the target email has no auth user, create one (email-confirmed, no password) before minting the link, and seed the profile/role/`agent_settings` (`invited`) rows so the link works for someone who has never touched AAC. Existing users are untouched apart from missing-row backfill.
-
-### 4. Eligibility rule
-
-`verifiedAgentAudience.ts`: eligibility becomes **agent role AND verified AND `account_activated_at` set**. Remove the `hasHeadshot` fallback entirely. Fall back to the auth user's email when the profile email is blank so a thin profile cannot silently drop an activated agent. Comms Center opt-in settings continue to decide whether an eligible agent actually receives a given email.
-
-## Verification after the change
-
-- Direct-link agent with no prior records completes setup -> auth user, agent role, verified status, profile, `account_activated_at` all present.
-- Access-request agent completes setup -> identical end state.
-- Re-running setup or clicking an old link twice does not duplicate rows or move `account_activated_at`.
-- An activated agent with no headshot is in the Comms Center audience; a verified-but-not-activated agent with a headshot is not.
-
-## Notes
-
-- No email is sent, retried, or re-enqueued by this work.
-- Hot Sheets and email templates are untouched.
-- The old `mark_agent_activated` RPC stays in place for admin tooling; the new function wraps the same activation semantics.
+- Preview the same Buyer Need with "All counties" and confirm the count rises to 82 and the
+  12 coverage-area agents appear in the recipient list.
+- Preview with a single county selected and confirm the count is unchanged from today.
+- Confirm Hot Sheet / new-match matching output is unchanged (flag not passed there).
