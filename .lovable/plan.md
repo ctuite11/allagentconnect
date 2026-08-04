@@ -1,55 +1,109 @@
-# Communications Center — Read-Only Audit (Aug 3, 2026)
+# Read-only send preview — 8 pending Comms Center digest items
 
-Scope: Comms Center only. Hot Sheets and every other system were not touched and are not part of this plan.
+No code, data, cron, secret, or queue was changed. The digest function was not invoked. Nothing was sent.
 
-## How it is set up today
+## Headline
 
-Surfaces
-- `/communications` (ClientNeedsDashboard) — channel switches, coverage area, property type, price range, notification timing.
-- `/communications/feed` (CommunicationsFeed) — in-app network activity list. Both routes are agent-role guarded.
+All 8 pending items are the **same single broadcast**. They are not 8 different communications.
 
-Delivery pipeline
+- Pending database items: **8**
+- Unique source communications: **1** (broadcast `82225ca1-5376-4a5d-974c-2eb25f4990d2`, "Stager Needed")
+- Unique recipients: **8**
+- Digest emails that would be created: **8** (one per recipient)
+- Items per recipient: **1 each**
+- Duplicate / stale / suppressed / ineligible items: **0** found
+- Existing `comms_digest_sends` rows: **0** (nothing half-sent)
+
+## The one communication
+
+| Field | Value |
+|---|---|
+| Source type | broadcast |
+| Source ID | 82225ca1-5376-4a5d-974c-2eb25f4990d2 |
+| Category | General Discussion (maps to `general_discussion`) |
+| Sender | Jarvid Cortes — Keller Williams Realty |
+| Title | Stager Needed |
+| Criteria shown | State: MA (no property type, no price range, no town/area) |
+| Body text | "Who is your go to South Shore home stager?\n\nTahanks!\nJarvid" (sender's typo preserved) |
+| Created | 2026-08-03 17:48:21 UTC (13:48 ET) |
+| Action URL | https://allagentconnect.com/communications/feed |
+
+## Per-item detail
+
+All 8 items share the source, category, title, criteria, body, and creation timestamp above.
+
+| Item ID | Recipient | Email | Cadence | Master switches | general_discussion | Eligible now | Already received elsewhere |
+|---|---|---|---|---|---|---|---|
+| 4ce1a615 | Kate Cleary | kcleary@charlesgate.com | daily | both on | on | Yes | No |
+| bc877ce7 | Emily Dugal | emily@sellboston.com | daily | both on | on | Yes | No |
+| 58a5920c | Alex Genovese | alex@flowrealty.com | daily | both on | on | Yes | No |
+| 33c99d14 | Richard Luc | richard.luc@richardhluc.com | daily | both on | on | Yes | No |
+| b992622b | Anh Nguyen | anh@serhant.com | daily | both on | on | Yes | No |
+| d5459b10 | Sean Packard | seanp@crg123.com | daily | both on | on | Yes | No |
+| 461cb2b6 | Josh Stiles | josh.stiles@compass.com | weekly | both on | on | Yes | No |
+| fbc4e55e | Andrew Stuckey | andrew@keepitrealty.homes | weekly | both on | on | Yes | No |
+
+Eligibility check performed per recipient: all 8 are `agent_status = verified`, activated, hold the `agent` role, and pass the current opt-in gate (`client_needs_enabled` = true, `new_matches_enabled` = true, `general_discussion` = true). None has an `email_jobs` record for this broadcast, and each has exactly one digest item for it — so no recipient has already received it by an immediate or duplicate path.
+
+Note: three items were queued with `summary.reason = "preferences_unset"` (Cleary, Genovese, Nguyen) — those agents have since configured preferences, and the send-time recheck re-evaluates against current values, so they now pass.
+
+## Resulting emails (as the renderer would group them)
+
+Eight separate emails, each containing exactly one communication.
+
+**Daily — 6 emails** (Cleary, Dugal, Genovese, Luc, Nguyen, Packard)
+
+- Subject: `Your daily Communications Center digest (1 update)`
+- Idempotency key: `comms-digest:daily:daily:YYYY-MM-DD:<agent_id>` (period key is the ET calendar date of the run)
+
+**Weekly — 2 emails** (Stiles, Stuckey)
+
+- Subject: `Your weekly Communications Center digest (1 update)`
+- Idempotency key: `comms-digest:weekly:weekly:YYYY-Www:<agent_id>`
+
+Rendered body (same for all 8, first name and "daily"/"weekly" swap):
+
 ```text
-broadcast / client need
-  -> notify-agents-client-need | send-client-need-notification | notify-agents | send-seller-alert
-  -> verifiedAgentAudience  (verified + agent role + (activated OR headshot), suppression list applied)
-  -> commsOptIn             (opt-in gate: missing prefs row = OFF, master switches + category must be true)
-  -> timing split (commsDigest.loadCommsSchedules)
-       immediate -> email_jobs (stream = "communications")
-       daily/weekly -> comms_digest_items -> process-comms-digests -> email_jobs
-  -> process-email-queue (per-stream pause flags: EMAIL_SENDING_PAUSED, COMMS_EMAILS_PAUSED)
+Hi <FirstName>,
+
+Here is your daily Communications Center digest with 1 update matching your filters.
+
+General Discussion (1)
+--------------------------------
+GENERAL DISCUSSION
+Stager Needed
+Aug 3, 1:48 PM ET
+
+  Stager Needed
+  From: Jarvid Cortes (Keller Williams Realty)
+  Category: General Discussion
+
+  Request Criteria
+  State: MA
+
+  Who is your go to South Shore home stager?
+
+  Tahanks!
+  Jarvid
+
+Open Communications Center to view details and respond.
+[Open Communications Center -> /communications/feed]
 ```
 
-Opt-in policy (implemented as specified)
-- Missing `notification_preferences` row = everything off; null values render and evaluate as OFF.
-- `client_needs_enabled` + `new_matches_enabled` are master switches; both must be true.
-- Category column (`buyer_need`, `sales_intel`, `renter_need`, `general_discussion`) must be explicitly true.
-- Unknown/blank category = blocked, never borrows another category's permission.
-- Preference lookup failure fails closed for sending, and for digests preserves items for retry instead of retiring them.
+## Expected send time (if dispatch is repaired)
 
-## Current live state (verified by query)
+- Daily: the first run at or after 18:00 ET on the run day.
+- Weekly: the first run at or after 18:00 ET on a **Friday** — the next one is Fri Aug 7. The two weekly items would sit until then.
+- Separately, `COMMS_EMAILS_PAUSED = true` is still in effect, so even a created `email_jobs` row would not be delivered until that kill switch is lifted. Repairing dispatch alone does not release these emails.
 
-- `notification_preferences`: 194 rows; 120 with both master switches on; per-category on: buyer_need 100, sales_intel 101, renter_need 90, general_discussion 104.
-- Timing: 167 immediate, 18 daily, 9 weekly.
-- Comms email traffic (14 days): 995 `client-need-broadcast` sent (latest Aug 3, 17:48 UTC), 176 `comms-center-guide`, 5 `bulk-email`, 150 failed on Jul 24. No comms jobs currently pending — the queue is clear.
-- Crons: `process-comms-digests` every 15 min (active), `process-email-queue` every minute (active). Hot Sheet match/price/stale crons remain inactive.
+## Observations for your decision
 
-## Confirmed defect: daily and weekly digests never send
+- The content is thin: a one-line question with no property type, price range, or town. Eight per-recipient emails whose sole content is "Who is your go to South Shore home stager?" may not be worth sending 4+ days late.
+- By the time the weekly pair could go out (Aug 7), the item will be four days stale.
 
-- `comms_digest_items` holds 8 unsent rows (6 daily, 2 weekly) created Aug 3 17:48 UTC.
-- `comms_digest_sends` is completely empty — no digest has ever been attempted.
-- The digest send window (after 18:00 ET) has been open since 22:00 UTC and the cron ran successfully at 22:00, 22:15, 22:30, 22:45 and 23:00 UTC.
-- Root cause (confirmed, not inferred): the cron calls `public.invoke_process_comms_digests()`, which reads `current_setting('supabase.service_role_key')`. That GUC is empty (`length = 0`), so the function logs `supabase.service_role_key GUC is empty; skipping` and returns without ever calling the edge function. Postgres logs show that exact warning on the most recent run, and edge logs show zero invocations of `process-comms-digests`.
-- Effect: the 27 agents on daily/weekly timing receive no Comms Center email at all. The immediate path (167 agents) is working normally.
+## Decisions requested (separately)
 
-## Secondary observation (not yet a confirmed bug)
+1. Release, discard, or leave the 8 pending items in place.
+2. Approve or reject repairing the digest dispatch (the service-role GUC issue) as a separate change.
 
-`ClientNeedsDashboard.tsx` line ~434 writes only `client_needs_enabled: false` when muting, while the shared helper `muteAllChannels()` in `src/lib/commsChannelPrefs.ts` clears both master switches and all four categories. Delivery is still correctly muted (either master switch off blocks everything), but the stored row is left inconsistent with the helper's contract.
-
-## Proposed follow-up (no changes made yet — approval required)
-
-1. Fix digest dispatch: replace the empty-GUC dependency in `invoke_process_comms_digests` with a working authorization source (same pattern the other active crons use), via a new dated migration. No re-enqueue or backfill of the 8 existing pending items unless you explicitly approve that separately.
-2. Verify after the fix by watching one digest window and confirming `comms_digest_sends` rows appear.
-3. Optional: align the dashboard mute action with `muteAllChannels()` so stored preference rows stay consistent.
-
-Nothing in this audit changed code, data, secrets, crons, or queues.
+No action will be taken on either until you say so.
