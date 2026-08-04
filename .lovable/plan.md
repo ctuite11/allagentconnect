@@ -7,23 +7,24 @@ This does not change opt-in: eligibility only decides who is *in* the audience. 
 
 ## What the audit found
 - 210 verified + activated agents with the agent role.
-- 7 of them have **no `agent_profiles` row at all**, so the shared audience builder finds no email for them and excludes them from every Comms Center send:
+- 7 of them have **no `agent_profiles` row at all**, so the shared audience builder finds no email for them and excludes them from every Comms Center send.
+- Those 7 are not real gaps — they are leftovers from past deletions. Their auth users and `agent_settings` rows still exist, their `agent_profiles` rows were removed, and none of them has a `deleted_users` tombstone, so the earlier cleanup was partial:
   - nataliia.tuite@gmail.com
   - boo@allagentconnect.com
   - nataliia@directconnectmls.com
   - chris.tuite@compass.com
-  - tuite.chris11@gmail.com
   - mbaltimore@gmail.com
   - n.lopachak@gmail.com
-- Everyone else with a profile row has a non-empty email.
+  - tuite.chris11@gmail.com — same orphan shape (auth user + settings, no profile), not in your list; confirm whether it should be purged too.
+- Every agent with a profile row has a non-empty email, so there is no other silent exclusion.
 
 ## Changes
 
-1. **Backfill the 7 missing profile rows** (migration): insert an `agent_profiles` row keyed to the auth user id with the auth email, leaving name/company/headshot blank. Purely additive; no existing rows touched.
+1. **Purge the orphaned accounts** (not backfill). Run the standard deletion path for the confirmed addresses so auth user, `agent_settings`, roles, and related rows all go, and a `deleted_users` tombstone is written. Nothing is emailed as part of this.
 
-2. **Make activation self-sufficient going forward** (migration): ensure the activation RPC (`mark_agent_activated`) creates the profile row if one is missing, so an activated agent can never exist without a profile.
+2. **Make activation self-sufficient going forward** (migration): ensure the activation RPC (`mark_agent_activated`) creates the `agent_profiles` row if one is missing, so a live activated agent can never exist without a profile.
 
-3. **Harden the audience builder** (`supabase/functions/_shared/verifiedAgentAudience.ts`): keep the gate as VERIFIED + agent role + (ACTIVATED OR HAS_HEADSHOT), but fall back to the auth email when the profile row is absent or its email is blank, and drop the implicit "no profile row = excluded" behavior. Update the header comment to state the rule plainly.
+3. **Harden the audience builder** (`supabase/functions/_shared/verifiedAgentAudience.ts`): keep the gate as VERIFIED + agent role + (ACTIVATED OR HAS_HEADSHOT), fall back to the auth email when the profile row is absent or blank, and update the header comment to state the rule plainly. This makes the "activated = eligible" rule hold even if a profile row goes missing again, rather than failing silently.
 
 ## Not in scope
 - No change to opt-in semantics, digests, cadence, templates, or the Comms pause flag.
@@ -31,4 +32,4 @@ This does not change opt-in: eligibility only decides who is *in* the audience. 
 - No emails sent as part of this work.
 
 ## Verification
-Re-run the audience count before/after: expect activated+verified agents in the audience to go from 203 to 210, with the 7 named accounts present and their opt-in state unchanged (all still OFF unless they've configured Comms Center).
+After the purge, re-run the audit query: expect zero verified+activated agents without a profile row, and the eligible audience total to drop by the number of purged accounts. Opt-in state for everyone else stays unchanged.
