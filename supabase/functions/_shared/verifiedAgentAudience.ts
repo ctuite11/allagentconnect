@@ -112,8 +112,8 @@ export async function getVerifiedAgentAudienceWithStats(
   //    Do NOT use agent_settings.preferences_set, agent_state_preferences,
   //    agent_county_preferences, profile Buyer Leads rows, or legacy/DCMLS
   //    coverage rows as a preferences-set signal. Agents whose only saved rows
-  //    live in those older sources fall into the preferences-unset fallback
-  //    until they deliberately configure Comms Center preferences.
+  //    live in those older sources remain preferences-unset until they
+  //    deliberately configure Comms Center preferences.
   const [cov, notifPrefs] = await Promise.all([
     supabase
       .from("agent_buyer_coverage_areas")
@@ -245,7 +245,7 @@ export function classifyRecipients<T extends EligibleAgent>(
     if (!optedIn.has(a.agent_id)) continue;
     if (!a.preferences_set) {
       // Explicitly opted in, but no narrowing dimensions ⇒ intentional broad
-      // opt-in for the enabled category.
+      // opt-in for the enabled category (not a missing-row path).
       out.push({ ...a, reason: "preferences_unset" });
       continue;
     }
@@ -337,8 +337,7 @@ export function partitionAudience<T extends EligibleAgent>(
       //     preference row present, master switches on, category channel true.
       //   - Agents outside it are muted (missing row / master off / category off).
       //   - Agents inside it with NO narrowing dimensions receive the enabled
-      //     category broadly — an intentional opt-in, not the old
-      //     "untouched account" fallback.
+      //     category broadly — an explicit broad opt-in.
       //   - No gate supplied ⇒ fail closed for dimensionless agents.
       if (!gate.has(a.agent_id)) {
         comms_opt_in_blocked++;

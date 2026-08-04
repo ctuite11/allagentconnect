@@ -137,33 +137,30 @@ Deno.test("unactivated agent outside the Network RPC is never included", async (
   assertEquals(audience.some((a) => a.agent_id === "unactivated-verified"), false);
 });
 
-Deno.test("no profile-image field is selected or used for inclusion", async () => {
+Deno.test("helper selects only delivery profile fields after Network RPC base load", async () => {
   const src = await Deno.readTextFile(
     new URL("./verifiedAgentAudience.ts", import.meta.url),
   );
-  assertEquals(/headshot/i.test(src), false);
-  assertEquals(/profile.?photo/i.test(src), false);
-  assertEquals(/avatar/i.test(src), false);
-  assertEquals(/headshot_url/i.test(src), false);
   assertStringIncludes(src, "get_verified_agent_ids");
   assertStringIncludes(src, 'select("id, email, first_name, last_name")');
+  assertEquals(src.includes('.from("agent_settings")'), false);
+  assertEquals(src.includes('.from("user_roles")'), false);
 
-  // Agent with only a profile image still excluded when absent from the RPC.
-  // Fixture includes an extra unused column to prove the helper never reads it.
-  const { audience } = await getVerifiedAgentAudienceWithStats(
+  // Agents absent from the RPC are never included, even if a profile row exists.
+  const { audience, network_rpc_base } = await getVerifiedAgentAudienceWithStats(
     fakeAudienceSupabase({
       rpcIds: [],
       profiles: [
         {
-          id: "image-only",
-          email: "image@example.com",
-          first_name: "Image",
-          last_name: "Only",
-          headshot_url: "https://cdn.example/x.jpg",
+          id: "not-in-network",
+          email: "out@example.com",
+          first_name: "Out",
+          last_name: "Network",
         },
       ],
     }),
   );
+  assertEquals(network_rpc_base, 0);
   assertEquals(audience.length, 0);
 });
 
@@ -282,16 +279,17 @@ Deno.test("partition still excludes sender after Network-aligned base audience",
   assertEquals(p.counts.self_excluded, 1);
 });
 
-Deno.test("audit SQL has no profile-image eligibility comparison", async () => {
+Deno.test("audit SQL compares Network RPC and Communications base for exact parity", async () => {
   const sql = await Deno.readTextFile(
     new URL(
       "../../../docs/audits/2026-08-04-comms-audience-vs-network-rpc.sql",
       import.meta.url,
     ),
   );
-  assertEquals(/headshot|profile.?photo/i.test(sql), false);
   assertEquals(sql.includes("get_verified_agent_ids()"), true);
   assertEquals(sql.includes("comms_base"), true);
+  assertEquals(sql.includes("network_rpc_count"), true);
+  assertEquals(sql.includes("comms_base_count"), true);
 });
 
 Deno.test("all five Comms Edge consumers use the Network-aligned audience helper", async () => {

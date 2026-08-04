@@ -4,6 +4,12 @@
  *
  * Zero writes — pure summarization of already-loaded audience / opt-in /
  * cadence partitions.
+ *
+ * Public dry-run terminology:
+ *   - `explicit_broad_opt_in` = agent explicitly enabled Communications and
+ *     chose no narrowing criteria (internal partition reason
+ *     `preferences_unset`). Missing preference rows are NEVER this case;
+ *     they are blocked as `missing_row`.
  */
 
 import type { OptInDecision } from "./commsOptIn.ts";
@@ -12,11 +18,14 @@ import type { PartitionReason } from "./verifiedAgentAudience.ts";
 
 export type OptInBlockCounts = {
   missing_row: number;
-  master_off: number;
+  client_needs_disabled: number;
+  new_matches_disabled: number;
   category_off: number;
   lookup_error: number;
-  unknown_category: number;
 };
+
+/** Public dry-run matching reason (maps internal preferences_unset). */
+export type DryRunMatchingReason = "preferences_match" | "explicit_broad_opt_in";
 
 export type DryRunCadenceCounts = {
   immediate: number;
@@ -30,26 +39,33 @@ export type DryRunRecipient = {
   name: string;
   email: string;
   cadence: CommsSchedule;
-  matching_reason: PartitionReason;
+  matching_reason: DryRunMatchingReason;
 };
+
+export function toDryRunMatchingReason(
+  reason: PartitionReason,
+): DryRunMatchingReason {
+  return reason === "preferences_unset" ? "explicit_broad_opt_in" : "preferences_match";
+}
 
 export function countOptInBlockReasons(
   blocked: Map<string, OptInDecision["reason"]>,
 ): OptInBlockCounts {
   const counts: OptInBlockCounts = {
     missing_row: 0,
-    master_off: 0,
+    client_needs_disabled: 0,
+    new_matches_disabled: 0,
     category_off: 0,
     lookup_error: 0,
-    unknown_category: 0,
   };
   for (const reason of blocked.values()) {
     if (reason === "missing_row") counts.missing_row++;
-    else if (reason === "client_needs_disabled" || reason === "new_matches_disabled") {
-      counts.master_off++;
-    } else if (reason === "category_off") counts.category_off++;
+    else if (reason === "client_needs_disabled") counts.client_needs_disabled++;
+    else if (reason === "new_matches_disabled") counts.new_matches_disabled++;
+    else if (reason === "category_off") counts.category_off++;
     else if (reason === "lookup_error") counts.lookup_error++;
-    else if (reason === "unknown_category") counts.unknown_category++;
+    // unknown_category and other reasons are not part of the public contract;
+    // they remain blocked at selection time but are not counted here.
   }
   return counts;
 }
@@ -75,14 +91,14 @@ export function buildDryRunRecipientRoster<
       name: nameOf(r),
       email: r.email,
       cadence: "immediate" as const,
-      matching_reason: r.reason,
+      matching_reason: toDryRunMatchingReason(r.reason),
     })),
     ...digest.map((r) => ({
       user_id: r.agent_id,
       name: nameOf(r),
       email: r.email,
       cadence: r.cadence,
-      matching_reason: r.reason,
+      matching_reason: toDryRunMatchingReason(r.reason),
     })),
   ];
 
@@ -107,4 +123,9 @@ export function cadenceCountsFromPartition(
     weekly,
     skipped_muted: skippedMuted,
   };
+}
+
+/** Deliverable total after schedule muting: immediate + daily + weekly. */
+export function finalTotalRecipients(cadence: DryRunCadenceCounts): number {
+  return cadence.immediate + cadence.daily + cadence.weekly;
 }

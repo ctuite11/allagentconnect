@@ -1,12 +1,10 @@
 -- ============================================================================
 -- READ-ONLY: Communications base audience vs Agent Network RPC
 --
--- After the Comms audience alignment fix, Communications base IDs must equal
--- public.get_verified_agent_ids() exactly. Final email recipients may still
--- be lower after sender / opt-in / category / targeting / suppression /
--- cadence filters.
---
--- No legacy eligibility rules. No profile-image comparisons.
+-- Compares public.get_verified_agent_ids() (Network RPC) with the
+-- Communications base population for exact parity. Final email recipients
+-- may still be lower after sender / opt-in / category / targeting /
+-- suppression / cadence filters.
 -- ============================================================================
 
 -- 1) Counts — Network RPC and corrected Comms base must match with zero drift

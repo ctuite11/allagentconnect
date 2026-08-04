@@ -22,6 +22,7 @@ import {
   buildDryRunRecipientRoster,
   cadenceCountsFromPartition,
   countOptInBlockReasons,
+  finalTotalRecipients,
 } from "../_shared/commsBroadcastDryRun.ts";
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -139,13 +140,9 @@ const handler = async (req: Request): Promise<Response> => {
       await getVerifiedAgentAudienceWithStats(supabase);
     const audienceIds = audience.map((a) => a.agent_id);
 
-    // 2. Category-level opt-out for the current broadcast category ONLY.
-    //    notification_preferences.{buyer_need,renter_need,sales_intel,
-    //    general_discussion} default to TRUE. Missing row => channel On.
-    //    A row with the category column explicitly === false is a deliberate
-    //    opt-out and MUST be excluded from this broadcast. Other categories'
-    //    values are not consulted — an agent who turned off Renter Needs
-    //    still receives Buyer Need / Sales Intel / General Discussion sends.
+    // 2. Legacy category-column false set (still collected for counts).
+    //    Authoritative mute is loadCommsOptIn below: missing preference row,
+    //    either master switch off, or category channel off ⇒ blocked.
     const CATEGORY_COLUMN: Record<Category, "buyer_need" | "renter_need" | "sales_intel" | "general_discussion"> = {
       buyer_need: "buyer_need",
       renter_need: "renter_need",
@@ -169,7 +166,8 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Canonical Comms Center opt-in gate (Aug 2026 policy). Missing row,
     // master switch off, or category channel off ⇒ muted. Agents inside the
-    // allowed set with no narrowing dimensions receive the category broadly.
+    // allowed set with no narrowing dimensions are an explicit broad opt-in
+    // for the enabled category (not a missing-row fallback).
     const commsOptIn = await loadCommsOptIn(
       supabase,
       audienceIds,
@@ -181,12 +179,13 @@ const handler = async (req: Request): Promise<Response> => {
     //      - audience_scope="network_wide": every preferences-set agent
     //        matches (auto-pass regardless of dimensions).
     //      - audience_scope="targeted" + no criteria: match set is empty
-    //        for preferences-set agents; preferences-unset agents still
-    //        receive via partitionAudience fallback.
+    //        for preferences-set agents; explicitly opted-in agents with no
+    //        narrowing dimensions still receive (explicit broad opt-in).
     //      - audience_scope="targeted" + criteria: expand the broadcast
     //        criteria into one or more per-location events and pass if
     //        the agent's saved prefs accept at least one.
-    const broadcastEvents: Array<Record<string, unknown>> = [];
+    //    Missing preference rows never reach this stage — they are blocked
+    //    by loadCommsOptIn. const broadcastEvents: Array<Record<string, unknown>> = [];
     if (audienceScope !== "network_wide" && anyCriteriaSupplied) {
       const basePrice = {
         minPrice: parsedCriteria.min_price ?? null,
@@ -270,6 +269,7 @@ const handler = async (req: Request): Promise<Response> => {
         skippedMuted,
       );
       const optInBlocked = countOptInBlockReasons(commsOptIn.blocked);
+      const final_total_recipients = finalTotalRecipients(cadence_counts);
 
       return new Response(
         JSON.stringify({
@@ -288,13 +288,16 @@ const handler = async (req: Request): Promise<Response> => {
           profile_incomplete: partition.counts.profile_incomplete,
           no_email: partition.counts.no_email,
           preferences_matched: partition.counts.preferences_matched,
-          preferences_unset_fallback: partition.counts.preferences_unset_fallback,
+          // Explicitly opted-in agents with no narrowing criteria.
+          // Missing preference rows are blocked — never counted here.
+          explicit_broad_opt_in: partition.counts.preferences_unset_fallback,
           self_excluded: partition.counts.self_excluded,
           category_opted_out: partition.counts.category_opted_out,
           non_matching: partition.counts.non_matching,
           opt_in_blocked: {
             missing_row: optInBlocked.missing_row,
-            master_off: optInBlocked.master_off,
+            client_needs_disabled: optInBlocked.client_needs_disabled,
+            new_matches_disabled: optInBlocked.new_matches_disabled,
             category_off: optInBlocked.category_off,
             lookup_error: optInBlocked.lookup_error,
           },
@@ -307,7 +310,7 @@ const handler = async (req: Request): Promise<Response> => {
           already_received_real: 0,
           reminder_already_recorded: 0,
           final_real_recipients: partition.real.length,
-          final_deliverable_recipients: recipients.length,
+          final_total_recipients,
           final_reminder_recipients: partition.reminder.length,
           recipients: recipients.map((r) => ({
             user_id: r.user_id,
