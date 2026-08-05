@@ -5066,6 +5066,10 @@ export type Database = {
       admin_delete_early_access:
         | { Args: { p_id: string }; Returns: number }
         | { Args: { p_email?: string; p_id: string }; Returns: number }
+      admin_delete_pending_verification: {
+        Args: { p_email?: string; p_id: string }
+        Returns: Json
+      }
       agent_end_client_relationship: {
         Args: { p_client_id: string }
         Returns: number
