@@ -190,6 +190,10 @@ const ListingSearch = () => {
       listingType: next,
       ...clampListingSearchPrices(filters, next),
       propertyTypes: defaultPropertyTypesForAgentListingSearch(next),
+      statuses:
+        next === "for_rent" && !filters.statuses.includes("active")
+          ? [...filters.statuses, "active"]
+          : filters.statuses,
     };
     setFilters(updated);
     updateUrlParams(updated);
