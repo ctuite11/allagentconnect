@@ -2,10 +2,12 @@ import { assertEquals } from "https://deno.land/std@0.190.0/testing/asserts.ts";
 import {
   agentIdempotencyKey,
   clientListingIdempotencyKey,
+  filterMatchesToRequestedListing,
   hasClientsPendingAcceptance,
   isAgentEligibleForListing,
   isImmediateHotSheet,
   mergeRecipientOutcomes,
+  parseRequiredListingId,
   shouldCloseMatchEvent,
   simulateHotSheetDeliveryPass,
   subscriberListingIdempotencyKey,
@@ -306,4 +308,50 @@ Deno.test("subscriber lookup failure blocks event close even if agent succeeds",
   });
   assertEquals(pass.closedListingIds, []);
   assertEquals(pass.remainingOpenListingIds, ["A"]);
+});
+
+Deno.test("requested listing match keeps only that listing from RPC results", () => {
+  const rpc = [
+    { listing_id: "L-requested" },
+    { listing_id: "L-unrelated-1" },
+    { listing_id: "L-unrelated-2" },
+  ];
+  const scoped = filterMatchesToRequestedListing(rpc, "L-requested");
+  assertEquals(scoped.map((m) => m.listing_id), ["L-requested"]);
+});
+
+Deno.test("RPC with requested listing plus unrelated unsent → unrelated create zero candidates", () => {
+  const rpc = [
+    { listing_id: "L1" },
+    { listing_id: "L2" },
+    { listing_id: "L3" },
+  ];
+  const scoped = filterMatchesToRequestedListing(rpc, "L2");
+  assertEquals(scoped.length, 1);
+  assertEquals(scoped[0].listing_id, "L2");
+  // Unrelated IDs never become delivery candidates / sent-state keys.
+  const candidateIds = new Set(scoped.map((m) => String(m.listing_id)));
+  assertEquals(candidateIds.has("L1"), false);
+  assertEquals(candidateIds.has("L3"), false);
+  assertEquals(
+    [...candidateIds].flatMap((id) => [
+      agentIdempotencyKey("hs-1", id, "active"),
+    ]),
+    [agentIdempotencyKey("hs-1", "L2", "active")],
+  );
+});
+
+Deno.test("requested listing does not match → zero candidates", () => {
+  const rpc = [{ listing_id: "L-other-a" }, { listing_id: "L-other-b" }];
+  assertEquals(filterMatchesToRequestedListing(rpc, "L-requested"), []);
+  assertEquals(filterMatchesToRequestedListing(null, "L-requested"), []);
+  assertEquals(filterMatchesToRequestedListing(undefined, "L-requested"), []);
+});
+
+Deno.test("parseRequiredListingId rejects missing/blank listing_id", () => {
+  assertEquals(parseRequiredListingId(undefined), null);
+  assertEquals(parseRequiredListingId(null), null);
+  assertEquals(parseRequiredListingId(""), null);
+  assertEquals(parseRequiredListingId("   "), null);
+  assertEquals(parseRequiredListingId("abc-123"), "abc-123");
 });

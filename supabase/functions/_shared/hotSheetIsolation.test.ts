@@ -155,3 +155,25 @@ Deno.test("assertHotSheetEnqueueAllowed honors HOT_SHEET_EMAILS_PAUSED", () => {
     else Deno.env.set("HOT_SHEET_EMAILS_PAUSED", prevHs);
   }
 });
+
+Deno.test("near-realtime matcher requires listing_id and scopes RPC matches", async () => {
+  const src = await Deno.readTextFile(
+    new URL("../send-new-match-notification/index.ts", import.meta.url),
+  );
+  const bridge = await Deno.readTextFile(
+    new URL("../notify-matching-buyers/index.ts", import.meta.url),
+  );
+
+  assertEquals(src.includes("parseRequiredListingId"), true);
+  assertEquals(src.includes("filterMatchesToRequestedListing"), true);
+  assertEquals(src.includes('reason: "listing_id required"'), true);
+  assertEquals(src.includes("processed: 0"), true);
+  assertEquals(src.includes("status: 400"), true);
+  // No unauthenticated full-scan fallback.
+  assertEquals(src.includes("cron invocations have no body"), false);
+  assertEquals(src.includes(".in(\"id\", listingIds)"), false);
+  assertEquals(src.includes('.eq("id", triggerListingId)'), true);
+
+  // Bridge continues to pass the triggering listing_id.
+  assertEquals(bridge.includes("listing_id: listing.listing_id"), true);
+});

@@ -7,9 +7,11 @@ import { getHotSheetStatusCopy, normalizeStatusKey, type HotSheetStatusKey } fro
 import {
   agentIdempotencyKey,
   clientListingIdempotencyKey,
+  filterMatchesToRequestedListing,
   hasClientsPendingAcceptance,
   isAgentEligibleForListing,
   mergeRecipientOutcomes,
+  parseRequiredListingId,
   shouldCloseMatchEvent,
   subscriberListingIdempotencyKey,
   type DeliveryOutcome,
@@ -52,22 +54,37 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Optional near-realtime mode: when invoked from a listing trigger with
-    // { trigger: "listing", listing_id }, we still process all active immediate
-    // hot sheets — the canonical matcher dedupes per recipient via email_jobs
-    // idempotency keys, and match/event state via hot_sheet_sent_listings.
+    // Near-realtime path ONLY: a valid listing_id is required. There is no
+    // unauthenticated full-scan fallback — catch-up/backfill must be a separate,
+    // explicitly authorized admin operation.
     let triggerListingId: string | null = null;
     try {
       if (req.headers.get("content-type")?.includes("application/json")) {
         const body = await req.json().catch(() => null);
-        triggerListingId = body?.listing_id ?? null;
-        if (triggerListingId) {
-          console.log(`[send-new-match-notification] near-realtime trigger for listing ${triggerListingId}`);
-        }
+        triggerListingId = parseRequiredListingId(body?.listing_id);
       }
     } catch {
-      // ignore body parse errors — cron invocations have no body
+      triggerListingId = null;
     }
+
+    if (!triggerListingId) {
+      console.log("[send-new-match-notification] skipped: listing_id required");
+      return new Response(
+        JSON.stringify({
+          processed: 0,
+          jobsQueued: 0,
+          reason: "listing_id required",
+        }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
+    }
+
+    console.log(
+      `[send-new-match-notification] near-realtime trigger for listing ${triggerListingId}`,
+    );
 
     // Active Hot Sheets on the near-real-time path only.
     // Digest schedules must not send through this immediate matcher.
@@ -85,12 +102,21 @@ serve(async (req) => {
 
     if (!hotSheets || hotSheets.length === 0) {
       return new Response(
-        JSON.stringify({ message: "No hot sheets to process" }),
+        JSON.stringify({
+          success: true,
+          listing_id: triggerListingId,
+          hotSheetsProcessed: 0,
+          totalMatches: 0,
+          jobsQueued: 0,
+          message: "No hot sheets to process",
+        }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    console.log(`[send-new-match-notification] Processing ${hotSheets.length} hot sheets`);
+    console.log(
+      `[send-new-match-notification] Processing ${hotSheets.length} hot sheets for listing ${triggerListingId}`,
+    );
 
     let totalMatches = 0;
     let jobsQueued = 0;
@@ -103,31 +129,44 @@ serve(async (req) => {
 
     for (const hotSheet of hotSheets) {
       // Check for new matches (uses hot_sheet_sent_listings for match/event state)
-      const { data: matchingListings, error: matchError } = await supabase
+      const { data: rpcMatches, error: matchError } = await supabase
         .rpc("check_hot_sheet_matches", { p_hot_sheet_id: hotSheet.id });
 
-      if (matchError || !matchingListings?.length) continue;
+      if (matchError) continue;
+
+      // Scope to the requested listing only — discard unrelated unsent matches.
+      const matchingListings = filterMatchesToRequestedListing(
+        rpcMatches,
+        triggerListingId,
+      );
+
+      if (!matchingListings.length) continue;
 
       totalMatches += matchingListings.length;
 
-      // Fetch full listing details
-      const listingIds = matchingListings.map((m: any) => m.listing_id);
+      // Fetch only the requested listing (never other RPC candidates).
       const { data: listings } = await supabase
         .from("listings")
         .select("*")
-        .in("id", listingIds);
+        .eq("id", triggerListingId);
 
       if (!listings?.length) continue;
 
+      // Hard scope: never process a row that isn't the requested listing.
+      const scopedListings = listings.filter(
+        (l: any) => String(l.id) === String(triggerListingId),
+      );
+      if (!scopedListings.length) continue;
+
       // Deterministic ordering
-      listings.sort((a: any, b: any) => String(a.id).localeCompare(String(b.id)));
+      scopedListings.sort((a: any, b: any) => String(a.id).localeCompare(String(b.id)));
 
       // Classify each listing as new-match vs status-change based on ALL prior sends
       const { data: priorSends } = await supabase
         .from("hot_sheet_sent_listings")
         .select("listing_id, status_at_send")
         .eq("hot_sheet_id", hotSheet.id)
-        .in("listing_id", listingIds);
+        .eq("listing_id", triggerListingId);
 
       const priorStatusesByListing = new Map<string, Set<string>>();
       for (const row of priorSends || []) {
@@ -139,7 +178,7 @@ serve(async (req) => {
 
       const newMatchListings: any[] = [];
       const statusChangeListings: any[] = [];
-      for (const l of listings) {
+      for (const l of scopedListings) {
         const prior = priorStatusesByListing.get(String(l.id));
         const currentStatus = String(l.status || "active");
         if (!prior || prior.size === 0) {
@@ -795,6 +834,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
+        listing_id: triggerListingId,
         hotSheetsProcessed: hotSheets.length,
         totalMatches,
         jobsQueued,

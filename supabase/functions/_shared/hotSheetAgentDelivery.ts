@@ -55,6 +55,26 @@ export function agentIdempotencyKey(
   return `hs-agent:${hotSheetId}:${listingId}:${status}`;
 }
 
+/**
+ * Near-realtime invocations must scope to one listing. RPC rows for any other
+ * unsent match are discarded so a single controlled call cannot enqueue a
+ * backlog of historical Hot Sheet matches.
+ */
+export function filterMatchesToRequestedListing<T extends { listing_id?: unknown }>(
+  matches: T[] | null | undefined,
+  requestedListingId: string,
+): T[] {
+  const wanted = String(requestedListingId);
+  return (matches || []).filter((m) => String(m.listing_id) === wanted);
+}
+
+/** Normalize / validate the near-realtime listing_id body field. */
+export function parseRequiredListingId(raw: unknown): string | null {
+  if (raw === null || raw === undefined) return null;
+  const id = String(raw).trim();
+  return id.length > 0 ? id : null;
+}
+
 /** Per-recipient / per-listing / per-status client delivery key. */
 export function clientListingIdempotencyKey(
   recipientKey: string,
