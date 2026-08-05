@@ -9,6 +9,7 @@ import {
   agentIdempotencyKey,
   isAgentEligibleForListing,
 } from "./hotSheetAgentDelivery.ts";
+import { ALL_PAUSES_OFF, withEnv } from "./testEnv.ts";
 
 Deno.test("agent Hot Sheet jobs use hot_sheet stream + new-match-notification template", async () => {
   const src = await Deno.readTextFile(
@@ -25,6 +26,9 @@ Deno.test("agent Hot Sheet jobs use hot_sheet stream + new-match-notification te
 });
 
 Deno.test("legitimate agent Hot Sheet jobs are not blocked as retired broad alerts", () => {
+  // Pin every pause switch: preSendBlockReason consults the live environment,
+  // so this assertion must not depend on the ambient pause state.
+  withEnv(ALL_PAUSES_OFF, () => {
   const key = agentIdempotencyKey("hs-1", "listing-1", "active");
   assertEquals(isPermanentlyBlockedJob("new-match-notification", key), false);
   assertEquals(
@@ -54,6 +58,7 @@ Deno.test("legitimate agent Hot Sheet jobs are not blocked as retired broad aler
     }),
     "permanently_retired_listing_alert",
   );
+  });
 });
 
 Deno.test("agents without matching Hot Sheet eligibility receive nothing", () => {
@@ -137,23 +142,21 @@ Deno.test("notify-agents-new-listing remains permanently hard-disabled with 410"
 });
 
 Deno.test("assertHotSheetEnqueueAllowed honors HOT_SHEET_EMAILS_PAUSED", () => {
-  const prevGlobal = Deno.env.get("EMAIL_SENDING_PAUSED");
-  const prevHs = Deno.env.get("HOT_SHEET_EMAILS_PAUSED");
-  try {
-    Deno.env.set("EMAIL_SENDING_PAUSED", "false");
-    Deno.env.set("HOT_SHEET_EMAILS_PAUSED", "true");
+  withEnv(
+    { ...ALL_PAUSES_OFF, HOT_SHEET_EMAILS_PAUSED: "true" },
+    () => {
     const paused = assertHotSheetEnqueueAllowed();
     assertEquals(paused.paused, true);
-    if (paused.paused) assertEquals(paused.switch, "HOT_SHEET_EMAILS_PAUSED");
-
-    Deno.env.set("HOT_SHEET_EMAILS_PAUSED", "false");
+    assertEquals(paused.paused && paused.switch, "HOT_SHEET_EMAILS_PAUSED");
+    },
+  );
+  withEnv(ALL_PAUSES_OFF, () => {
     assertEquals(assertHotSheetEnqueueAllowed().paused, false);
-  } finally {
-    if (prevGlobal === undefined) Deno.env.delete("EMAIL_SENDING_PAUSED");
-    else Deno.env.set("EMAIL_SENDING_PAUSED", prevGlobal);
-    if (prevHs === undefined) Deno.env.delete("HOT_SHEET_EMAILS_PAUSED");
-    else Deno.env.set("HOT_SHEET_EMAILS_PAUSED", prevHs);
-  }
+  });
+  withEnv({ ...ALL_PAUSES_OFF, EMAIL_SENDING_PAUSED: "true" }, () => {
+    const paused = assertHotSheetEnqueueAllowed();
+    assertEquals(paused.paused && paused.switch, "EMAIL_SENDING_PAUSED");
+  });
 });
 
 Deno.test("near-realtime matcher requires listing_id and scopes RPC matches", async () => {

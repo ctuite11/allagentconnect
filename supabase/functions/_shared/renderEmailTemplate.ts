@@ -145,7 +145,9 @@ export function renderEmailTemplate(
       const agentPhone = variables.agentPhone || "";
       const listings: any[] = Array.isArray(variables.listings) ? variables.listings : [];
       const count = variables.listingCount || listings.length;
-      const cardsHtml = listings.map(renderListingShareCard).join("");
+      // Explicit arrow: a bare reference would pass Array#map's index as the
+      // renderer's `opts` argument.
+      const cardsHtml = listings.map((listing) => renderListingShareCard(listing)).join("");
 
       return buildAacEmail({
         headline: count === 1 ? "A Property Has Been Shared With You" : "Properties Shared With You",
