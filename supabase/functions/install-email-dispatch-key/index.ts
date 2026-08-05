@@ -13,6 +13,15 @@ Deno.serve(async (req) => {
     });
   }
 
+  const url = new URL(req.url);
+  if (url.searchParams.get("mode") === "verify") {
+    const pg = createClient(Deno.env.get("SUPABASE_URL")!, serviceKey);
+    const { data, error } = await pg.rpc("probe_email_dispatch_secret");
+    return new Response(JSON.stringify({ probe: data, error: error?.message }), {
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
   const supabase = createClient(Deno.env.get("SUPABASE_URL")!, serviceKey);
   const { data, error } = await supabase.rpc(
     "install_email_dispatch_service_role_key",
