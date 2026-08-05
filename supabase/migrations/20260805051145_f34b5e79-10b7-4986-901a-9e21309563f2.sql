@@ -1,0 +1,1 @@
+SELECT cron.alter_job((SELECT jobid FROM cron.job WHERE jobname='update-listing-statuses-every-1-min'), active := false);
