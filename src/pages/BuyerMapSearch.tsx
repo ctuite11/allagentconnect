@@ -764,6 +764,7 @@ export default function BuyerMapSearch() {
                       propertyTypes: [],
                       minPrice: "",
                       maxPrice: "",
+                      statuses: ["coming_soon", "active", "off_market", "back_on_market"],
                     }))
                   }
                 >
@@ -784,6 +785,7 @@ export default function BuyerMapSearch() {
                       propertyTypes: [],
                       minPrice: "",
                       maxPrice: "",
+                      statuses: ["active"],
                     }))
                   }
                 >
