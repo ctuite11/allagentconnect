@@ -16,9 +16,9 @@ import { sendEmail } from "./sendEmail.ts";
 import { UNSUPPORTED_TEMPLATE_ERROR_PREFIX } from "./renderEmailTemplate.ts";
 import {
   ACTIVATION_RETRY_WINDOW_MS,
-  ACTIVATION_TEMPLATE,
   hydrateActivationEmail,
 } from "./hydrateActivationEmail.ts";
+import { isActivationTemplate } from "./hydrateActivationEmail.ts";
 import {
   LOGIN_LINK_RETRY_WINDOW_MS,
   LOGIN_LINK_TEMPLATE,
@@ -246,7 +246,10 @@ export async function deliverEmailJob(opts: {
       htmlOverride?: string;
     } = {};
 
-    if (template === ACTIVATION_TEMPLATE) {
+    const hasActivationToken =
+      typeof (job.payload as Record<string, unknown> | null)?.activation_token_id === "string";
+
+    if (isActivationTemplate(template) && hasActivationToken) {
       const createdAt = job.created_at ? Date.parse(job.created_at) : Date.now();
       if (
         Number.isFinite(createdAt) &&

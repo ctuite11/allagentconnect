@@ -239,6 +239,8 @@ Deno.serve(async (req) => {
         body: JSON.stringify({
           to: email.trim().toLowerCase(),
           firstName: firstName.trim(),
+          userId,
+          acknowledgeDeleted: acknowledgeDeleted === true,
           idempotencyKey: `admin-created-invite:${userId}`,
         }),
       }).catch((err) => {
