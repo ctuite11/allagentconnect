@@ -10,6 +10,7 @@ import {
   makeSafeUpdateJob,
   toErrorMessage,
 } from "../_shared/emailJobDelivery.ts";
+import { authorizeInternalServiceRole } from "../_shared/internalServiceRoleAuth.ts";
 
 const LOG_PREFIX = "[process-email-queue]";
 
@@ -42,6 +43,16 @@ Deno.serve(async (req) => {
   if (isGloballyPaused()) {
     console.log("[process-email-queue] EMAIL_SENDING_PAUSED=true — refusing to claim jobs");
     return json({ paused: true, processed: 0 });
+  }
+
+  /* ---- INTERNAL-ONLY AUTHORIZATION ----
+   * Runs immediately after the global pause gate and BEFORE allowedStreams(),
+   * Supabase client creation, email_jobs_claim, or any provider access.
+   * Only the exact service-role key is accepted: anon keys, authenticated user
+   * JWTs, missing and malformed bearers all get 401 with zero claims. */
+  const auth = authorizeInternalServiceRole(req);
+  if (!auth.ok) {
+    return json({ error: auth.error }, { status: auth.status });
   }
 
   const streams = allowedStreams();
