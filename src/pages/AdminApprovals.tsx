@@ -2461,6 +2461,12 @@ export default function AdminApprovals() {
         onEdit={() => detailsAgent && setEditAgent(detailsAgent)}
         onEmail={() => detailsAgent && handleEmailAgent(detailsAgent)}
         onResetPassword={() => detailsAgent && handleSendPasswordReset(detailsAgent)}
+        onSetPassword={() => {
+          if (!detailsAgent) return;
+          setTempPasswordEmail(detailsAgent.email ?? "");
+          setDetailsAgent(null);
+          window.setTimeout(() => setShowTempPasswordDialog(true), 0);
+        }}
         onCopySetupLink={() => detailsAgent && handleCopySetupLink(detailsAgent)}
         onEmailSetupLink={() => detailsAgent && handleEmailSetupLink(detailsAgent)}
         onResendInvite={() => detailsAgent && handleResendInvite(detailsAgent)}
