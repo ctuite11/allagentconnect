@@ -12,6 +12,7 @@
 export const SINGLE_SEND_ALLOWED_STREAM = "hot_sheet" as const;
 
 export interface SingleSendAllowlistEntry {
+  job_id: string;
   idempotency_key: string;
   recipient: string;
   template: string;
@@ -24,6 +25,7 @@ export interface SingleSendAllowlistEntry {
  */
 export const SINGLE_SEND_ALLOWLIST: readonly SingleSendAllowlistEntry[] = [
   {
+    job_id: "1d72f81a-b45a-439a-a919-deecc845a8cf",
     idempotency_key:
       "hs-agent:beb483e0-6125-40df-8532-15e53a3b4c59:0775b03d-e774-4dc9-9627-f0d2ec752fd3:active",
     recipient: "chris@allagentconnect.com",
@@ -31,6 +33,25 @@ export const SINGLE_SEND_ALLOWLIST: readonly SingleSendAllowlistEntry[] = [
     stream: SINGLE_SEND_ALLOWED_STREAM,
   },
 ];
+
+/**
+ * Exact-UUID gate, evaluated BEFORE a Supabase client is created or any query
+ * runs. Any UUID other than an allowlisted job_id is rejected outright.
+ */
+export function findAllowlistEntryByJobId(
+  jobId: string,
+  allowlist: readonly SingleSendAllowlistEntry[] = SINGLE_SEND_ALLOWLIST,
+): SingleSendAllowlistEntry | null {
+  const id = jobId.trim().toLowerCase();
+  return allowlist.find((e) => e.job_id.toLowerCase() === id) ?? null;
+}
+
+export function isAllowedJobId(
+  jobId: string,
+  allowlist: readonly SingleSendAllowlistEntry[] = SINGLE_SEND_ALLOWLIST,
+): boolean {
+  return findAllowlistEntryByJobId(jobId, allowlist) !== null;
+}
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -91,6 +112,11 @@ export function validateJobForSingleSend(
   allowlist: readonly SingleSendAllowlistEntry[] = SINGLE_SEND_ALLOWLIST,
 ): ValidationResult {
   if (!job) return { ok: false, error: "job_not_found" };
+  if (typeof job.id !== "string" || !job.id.trim()) {
+    return { ok: false, error: "job_id_missing" };
+  }
+  const entryById = findAllowlistEntryByJobId(job.id, allowlist);
+  if (!entryById) return { ok: false, error: "job_id_not_allowlisted" };
   if (job.status !== "queued") return { ok: false, error: "job_not_queued" };
   if (job.stream !== SINGLE_SEND_ALLOWED_STREAM) {
     return { ok: false, error: "stream_not_allowed" };
@@ -99,6 +125,9 @@ export function validateJobForSingleSend(
   const key = job.idempotency_key ?? "";
   const entry = allowlist.find((e) => e.idempotency_key === key);
   if (!entry) return { ok: false, error: "idempotency_key_not_allowlisted" };
+  if (entry.job_id.toLowerCase() !== job.id.trim().toLowerCase()) {
+    return { ok: false, error: "job_id_mismatch" };
+  }
 
   if (job.stream !== entry.stream) return { ok: false, error: "stream_mismatch" };
 
