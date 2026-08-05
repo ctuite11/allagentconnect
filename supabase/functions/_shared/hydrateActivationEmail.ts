@@ -11,10 +11,18 @@
  */
 import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { buildLicenseVerifiedEmailHtml } from "./buildLicenseVerifiedEmailHtml.ts";
+import { buildAdminCreatedInviteEmailHtml } from "./buildAdminCreatedInviteEmailHtml.ts";
 import { AAC_PUBLIC_URL } from "./aacPublicUrl.ts";
 import { activationUrl, epochSeconds, signActivationToken } from "./activationTokens.ts";
 
 export const ACTIVATION_TEMPLATE = "license-verified";
+/** Admin-created setup invite — same durable 7-day token, different body. */
+export const ADMIN_INVITE_TEMPLATE = "admin-created-invite";
+
+/** Templates whose CTA is a late-rendered AAC activation link. */
+export function isActivationTemplate(template: string): boolean {
+  return template === ACTIVATION_TEMPLATE || template === ADMIN_INVITE_TEMPLATE;
+}
 
 /** Hard ceiling on retries, kept well under Resend's 24h idempotency retention. */
 export const ACTIVATION_RETRY_WINDOW_MS = 12 * 60 * 60 * 1000;
@@ -77,19 +85,28 @@ export async function hydrateActivationEmail(
     expiresAtEpoch: epochSeconds(row.expires_at),
   });
 
-  const html = buildLicenseVerifiedEmailHtml({
-    ctaUrl: activationUrl(AAC_PUBLIC_URL, token),
-    agentName: typeof payload.agent_name === "string" ? payload.agent_name : undefined,
-    footerAgent: FOOTER_AGENT,
-    ctaLabel: "Activate My Account",
-    ctaNote: `This activation link is valid until ${formatActivationExpiry(row.expires_at)}.`,
-  });
+  const ctaUrl = activationUrl(AAC_PUBLIC_URL, token);
+  const template = typeof payload.template === "string" ? payload.template : ACTIVATION_TEMPLATE;
+
+  const html = template === ADMIN_INVITE_TEMPLATE
+    ? buildAdminCreatedInviteEmailHtml({
+      ctaUrl,
+      firstName: typeof payload.first_name === "string" ? payload.first_name : undefined,
+      footerAgent: FOOTER_AGENT,
+    })
+    : buildLicenseVerifiedEmailHtml({
+      ctaUrl,
+      agentName: typeof payload.agent_name === "string" ? payload.agent_name : undefined,
+      footerAgent: FOOTER_AGENT,
+      ctaLabel: "Activate My Account",
+      ctaNote: `This activation link is valid until ${formatActivationExpiry(row.expires_at)}.`,
+    });
 
   return {
     outcome: "ready",
     html,
     // Matches the job's durable idempotency_key, so a worker retry replays the
     // identical provider request instead of creating a second message.
-    providerIdempotencyKey: `license-verified/${row.id}`,
+    providerIdempotencyKey: `${template}/${row.id}`,
   };
 }

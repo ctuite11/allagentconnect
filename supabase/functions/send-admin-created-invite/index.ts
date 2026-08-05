@@ -1,7 +1,12 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.0";
 import { buildAdminCreatedInviteEmailHtml } from "../_shared/buildAdminCreatedInviteEmailHtml.ts";
-import { AAC_PUBLIC_URL, resolveAacCtaUrl, wrapSupabaseActionLinkForAac } from "../_shared/aacPublicUrl.ts";
+import { AAC_PUBLIC_URL, resolveAacCtaUrl } from "../_shared/aacPublicUrl.ts";
+import {
+  ACTIVATION_TOKEN_TTL_DAYS,
+  sha256Hex,
+  signActivationToken,
+} from "../_shared/activationTokens.ts";
 
 /**
  * Admin-created agent setup invite (personal note from Chris).
@@ -27,10 +32,11 @@ interface SendRequest {
   ctaUrl?: string;
   subject?: string;
   idempotencyKey?: string;
+  userId?: string;
+  acknowledgeDeleted?: boolean;
 }
 
 const DEFAULT_SUBJECT = "Chris Tuite invited you to All Agent Connect";
-const SETUP_REDIRECT = `${AAC_PUBLIC_URL}/auth/callback?type=recovery&setup=1`;
 const REPLY_TO = "chris@allagentconnect.com";
 const TEMPLATE_NAME = "admin-created-invite";
 
@@ -97,29 +103,117 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Resolve CTA — recovery link to /auth/setup, matching License Verified flow.
-    let ctaUrl: string;
-    if (body.ctaUrl) {
-      ctaUrl = resolveAacCtaUrl(body.ctaUrl, "/auth");
-    } else {
-      try {
-        const { data, error } = await admin.auth.admin.generateLink({
-          type: "recovery",
-          email,
-          options: { redirectTo: SETUP_REDIRECT },
-        });
-        const actionLink = data?.properties?.action_link;
-        if (error || !actionLink) {
-          console.error("[send-admin-created-invite] generateLink failed:", error);
-          ctaUrl = `${AAC_PUBLIC_URL}/auth`;
-        } else {
-          ctaUrl = wrapSupabaseActionLinkForAac(actionLink);
-        }
-      } catch (err) {
-        console.error("[send-admin-created-invite] generateLink threw:", err);
-        ctaUrl = `${AAC_PUBLIC_URL}/auth`;
-      }
+    // ---------------------------------------------------------------
+    // Preferred path: durable, AAC-owned 7-day activation token.
+    //
+    // The previous implementation embedded a raw Supabase recovery link,
+    // which expires in ~1 hour and can be burned by corporate mail
+    // scanners — invitees reliably hit "email link has expired". The
+    // activation token is POST-redeemed, so neither problem applies.
+    // ---------------------------------------------------------------
+    let userId = typeof body.userId === "string" ? body.userId.trim() : "";
+    if (!userId) {
+      const res = await fetch(
+        `${supabaseUrl}/auth/v1/admin/users?filter=${encodeURIComponent(recipientLc)}`,
+        {
+          headers: {
+            Authorization: `Bearer ${supabaseServiceKey}`,
+            apikey: supabaseServiceKey,
+          },
+        },
+      );
+      const found = await res.json().catch(() => null);
+      const match = (found?.users as Array<{ id: string; email: string }> | undefined)?.find(
+        (u) => u.email?.toLowerCase() === recipientLc,
+      );
+      userId = match?.id ?? "";
     }
+
+    const secret = Deno.env.get("ACTIVATION_TOKEN_SECRET");
+
+    if (!body.ctaUrl && userId && secret) {
+      const tokenId = crypto.randomUUID();
+      const expiresAt = new Date(
+        Math.floor(Date.now() / 1000) * 1000 +
+          ACTIVATION_TOKEN_TTL_DAYS * 24 * 60 * 60 * 1000,
+      );
+      const token = await signActivationToken(secret, {
+        id: tokenId,
+        userId,
+        expiresAtEpoch: Math.floor(expiresAt.getTime() / 1000),
+      });
+
+      const { data: issued, error: issueErr } = await admin.rpc(
+        "reissue_agent_activation_token",
+        {
+          p_id: tokenId,
+          p_user_id: userId,
+          p_token_hash: await sha256Hex(token),
+          p_expires_at: expiresAt.toISOString(),
+          p_subject: subject,
+          p_reply_to: REPLY_TO,
+          p_agent_name: body.firstName ?? null,
+          p_allow_previously_deleted: body.acknowledgeDeleted === true,
+        },
+      );
+
+      const status = (issued as { status?: string } | null)?.status ?? "unknown";
+      const jobId = (issued as { job_id?: string } | null)?.job_id ?? null;
+
+      if (!issueErr && (status === "created" || status === "deduped") && jobId) {
+        // Re-brand the queued job as the personal note from Chris. The CTA URL
+        // itself is still late-rendered by the worker from the token id, so the
+        // plaintext token is never persisted.
+        if (status === "created") {
+          const { data: jobRow } = await admin
+            .from("email_jobs")
+            .select("payload")
+            .eq("id", jobId)
+            .maybeSingle();
+          const basePayload = (jobRow?.payload ?? {}) as Record<string, unknown>;
+          await admin
+            .from("email_jobs")
+            .update({
+              payload: {
+                ...basePayload,
+                template: TEMPLATE_NAME,
+                subject,
+                reply_to: REPLY_TO,
+                first_name: body.firstName ?? null,
+              },
+            })
+            .eq("id", jobId);
+        }
+
+        void fetch(`${supabaseUrl}/functions/v1/kick-email-queue`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${supabaseServiceKey}`,
+            "Content-Type": "application/json",
+          },
+          body: "{}",
+        }).catch(() => {});
+
+        return new Response(
+          JSON.stringify({ success: true, jobId, status, tokenId }),
+          { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } },
+        );
+      }
+
+      console.error(
+        "[send-admin-created-invite] activation issuance unavailable:",
+        issueErr?.message ?? status,
+      );
+      return new Response(
+        JSON.stringify({ success: false, status, error: "Could not issue setup link" }),
+        { status: 409, headers: { "Content-Type": "application/json", ...corsHeaders } },
+      );
+    }
+
+    // Explicit CTA override (admin-supplied) — plain enqueue, no token.
+    const ctaUrl = body.ctaUrl
+      ? resolveAacCtaUrl(body.ctaUrl, "/auth")
+      : `${AAC_PUBLIC_URL}/auth`;
 
     const html = buildAdminCreatedInviteEmailHtml({
       ctaUrl,
