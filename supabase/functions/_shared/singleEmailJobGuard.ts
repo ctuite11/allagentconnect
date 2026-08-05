@@ -142,3 +142,15 @@ export function validateJobForSingleSend(
 
   return { ok: true, entry };
 }
+
+/**
+ * Full re-validation of the row returned by the conditional claim, run before
+ * any provider call. Identical rules to the pre-claim check, except the row is
+ * now expected to be `processing`.
+ */
+export function validateClaimedJobForSingleSend(
+  job: JobShape | null | undefined,
+  allowlist: readonly SingleSendAllowlistEntry[] = SINGLE_SEND_ALLOWLIST,
+): ValidationResult {
+  return validateJobForSingleSend(job, allowlist, "processing");
+}
