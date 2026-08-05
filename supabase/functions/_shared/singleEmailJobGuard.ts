@@ -25,9 +25,9 @@ export interface SingleSendAllowlistEntry {
  */
 export const SINGLE_SEND_ALLOWLIST: readonly SingleSendAllowlistEntry[] = [
   {
-    job_id: "1d72f81a-b45a-439a-a919-deecc845a8cf",
+    job_id: "7ac18a5b-4607-4d52-9a36-03204d920765",
     idempotency_key:
-      "hs-agent:beb483e0-6125-40df-8532-15e53a3b4c59:0775b03d-e774-4dc9-9627-f0d2ec752fd3:active",
+      "hs-agent:7f3a1c62-9d4e-4b18-a0c5-2e6b81f4d900:0775b03d-e774-4dc9-9627-f0d2ec752fd3:active",
     recipient: "chris@allagentconnect.com",
     template: "new-match-notification",
     stream: SINGLE_SEND_ALLOWED_STREAM,
