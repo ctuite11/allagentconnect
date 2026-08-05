@@ -141,7 +141,8 @@ Deno.test("isolation preserved: no Communications fan-out, no retired broadcast"
   assertEquals(src.includes("client_needs"), false);
   // Nothing is unpaused or enqueued by the migration.
   assertEquals(/insert\s+into\s+public\.email_jobs/i.test(src), false);
-  assertEquals(/cron\.alter_job|active\s*=\s*true/i.test(src), false);
+  assertEquals(/cron\.alter_job/i.test(src), false);
+  assertEquals(/UPDATE\s+cron\.job\s+SET\s+active/i.test(src), false);
 });
 
 Deno.test("obsolete anon matcher cron is unscheduled; worker cron keeps its state", async () => {

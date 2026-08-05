@@ -90,7 +90,7 @@ Deno.test("worker: global pause is the first operational guard, auth is next", a
   const src = await workerSource();
   const pauseIdx = src.indexOf("if (isGloballyPaused())");
   const authIdx = src.indexOf("authorizeInternalServiceRole(req)");
-  const streamsIdx = src.indexOf("allowedStreams()");
+  const streamsIdx = src.indexOf("const streams = allowedStreams()");
   assertEquals(pauseIdx > 0, true);
   assertEquals(authIdx > pauseIdx, true);
   assertEquals(streamsIdx > authIdx, true);
@@ -100,7 +100,7 @@ Deno.test("worker: auth occurs before client creation and email_jobs_claim", asy
   const src = await workerSource();
   const authIdx = src.indexOf("authorizeInternalServiceRole(req)");
   const clientIdx = src.indexOf("createClient(SUPABASE_URL");
-  const claimIdx = src.indexOf("email_jobs_claim");
+  const claimIdx = src.indexOf('"email_jobs_claim"');
   const resendIdx = src.indexOf('Deno.env.get("RESEND_API_KEY")');
   assertEquals(authIdx > 0, true);
   assertEquals(clientIdx > authIdx, true);
