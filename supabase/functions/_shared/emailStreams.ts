@@ -80,6 +80,25 @@ export function assertHotSheetEnqueueAllowed(): PauseGateResult {
 }
 
 /** Streams the worker is currently allowed to claim. */
+export function assertCommsEnqueueAllowed(): PauseGateResult {
+  if (isGloballyPaused()) {
+    return {
+      paused: true,
+      reason: "Global email sending is paused",
+      switch: "EMAIL_SENDING_PAUSED",
+    };
+  }
+  if (envTrue("COMMS_EMAILS_PAUSED")) {
+    return {
+      paused: true,
+      reason: "Communications emails are paused",
+      switch: "COMMS_EMAILS_PAUSED",
+    };
+  }
+  return { paused: false };
+}
+
+/** Streams the worker is currently allowed to claim. */
 export function allowedStreams(): EmailStream[] {
   if (isGloballyPaused()) return [];
   return ALL_STREAMS.filter((s) => !isStreamPaused(s));

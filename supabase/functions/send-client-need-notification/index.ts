@@ -24,6 +24,7 @@ import {
   countOptInBlockReasons,
   finalTotalRecipients,
 } from "../_shared/commsBroadcastDryRun.ts";
+import { assertCommsEnqueueAllowed } from "../_shared/emailStreams.ts";
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -346,6 +347,32 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("Failed to persist broadcast");
     }
     const broadcastId = broadcast.id as string;
+
+    // Producer-side pause gate. The in-app broadcast above is preserved (the
+    // feed keeps working), but NOTHING downstream may be written: no
+    // email_jobs, no digest items, no agent_sent_broadcasts dedup rows that
+    // would falsely claim delivery.
+    const commsPause = assertCommsEnqueueAllowed();
+    if (commsPause.paused) {
+      console.log(
+        `[send-client-need-notification] email fan-out skipped (${commsPause.switch}) broadcast=${broadcastId}`,
+      );
+      return new Response(
+        JSON.stringify({
+          success: true,
+          broadcast_id: broadcastId,
+          email_fanout_skipped: true,
+          paused: true,
+          reason: commsPause.reason,
+          switch: commsPause.switch,
+          sent: 0,
+          queued: 0,
+          digest_enqueued: 0,
+          recipientCount: 0,
+        }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
 
     // 6. Durable dedup against agent_sent_broadcasts
     const realIds = partition.real.map((r) => r.agent_id);
