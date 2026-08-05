@@ -14,6 +14,8 @@ import { toast } from "sonner";
 import { hasNotificationTargetingConfigured } from "@/lib/checkAgentCommunicationPreferences";
 import { COMMS_FILTERS_UI } from "@/lib/commsFiltersCopy";
 import { Seo } from "@/components/Seo";
+import { SendEmailDialog } from "@/components/communication-center/SendEmailDialog";
+import { isBuyerNeedComposeRequested, BUYER_NEED_COMPOSE_ROUTE } from "@/lib/buyerNeedCompose";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -45,6 +47,9 @@ const ClientNeedsDashboard = () => {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [saving, setSaving] = useState(false);
   const [channelPreferencesVersion, setChannelPreferencesVersion] = useState(0);
+  // Canonical Buyer Need compose flow. `/submit-client-need` and every
+  // homepage CTA redirect here with ?compose=buyer-need.
+  const [composeOpen, setComposeOpen] = useState(false);
   // Opt-in policy (Aug 2026): channels are OFF until the agent turns one on.
   // The old default-on notice/overlay is retired.
 
@@ -69,6 +74,10 @@ const ClientNeedsDashboard = () => {
       navigate(location.pathname + location.search, { replace: true, state: null });
     }
   }, [location.pathname, location.search, location.state, navigate]);
+
+  useEffect(() => {
+    if (isBuyerNeedComposeRequested(location.search)) setComposeOpen(true);
+  }, [location.search]);
 
   useEffect(() => {
     if (user?.id) {
@@ -302,7 +311,16 @@ const ClientNeedsDashboard = () => {
           />
 
           <section id="comms-channels" className="space-y-2 scroll-mt-6">
-            <h2 className="text-xl font-semibold text-neutral-900">Channels</h2>
+            <div className="flex items-start justify-between gap-4">
+              <h2 className="text-xl font-semibold text-neutral-900">Channels</h2>
+              <Button
+                size="sm"
+                onClick={() => setComposeOpen(true)}
+                data-testid="buyer-need-compose-cta"
+              >
+                Create new
+              </Button>
+            </div>
             <p className="text-sm text-neutral-500">
               Email channels are off until you turn one on. Choose what you send and receive.
             </p>
@@ -471,6 +489,16 @@ const ClientNeedsDashboard = () => {
             </div>
           </div>
         )}
+
+        <SendEmailDialog
+          open={composeOpen}
+          onOpenChange={(next) => {
+            setComposeOpen(next);
+            if (!next && isBuyerNeedComposeRequested(location.search)) {
+              navigate("/communications", { replace: true });
+            }
+          }}
+        />
       </div>
     </>
   );

@@ -1,3 +1,4 @@
+import { BUYER_NEED_COMPOSE_ROUTE } from "@/lib/buyerNeedCompose";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
@@ -29,7 +30,7 @@ const FinalCTA = () => {
             <Button
               variant="outline"
               size="lg"
-              onClick={() => navigate("/submit-client-need")}
+              onClick={() => navigate(BUYER_NEED_COMPOSE_ROUTE)}
               className="border-neutral-700 text-white hover:bg-neutral-800 font-medium px-8 py-6 text-base rounded-full bg-transparent"
             >
               Create a Buyer Need

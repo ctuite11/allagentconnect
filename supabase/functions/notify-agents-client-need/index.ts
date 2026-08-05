@@ -18,6 +18,7 @@ import {
   partitionByCommsSchedule,
   type DigestItemInsert,
 } from "../_shared/commsDigest.ts";
+import { assertCommsEnqueueAllowed } from "../_shared/emailStreams.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -63,6 +64,30 @@ serve(async (req) => {
       throw new Error("client_need_id is required");
     }
     const dryRun: boolean = body?.dry_run === true;
+
+    // Producer-side pause gate: while Communications email is paused this
+    // function writes nothing at all — no email_jobs, no digest items, no
+    // agent_sent_client_needs rows, no reminders.
+    const commsPause = assertCommsEnqueueAllowed();
+    if (commsPause.paused && !dryRun) {
+      console.log(
+        `[notify-agents-client-need] email fan-out skipped (${commsPause.switch}) client_need=${body.client_need_id}`,
+      );
+      return new Response(
+        JSON.stringify({
+          success: true,
+          client_need_id: body.client_need_id,
+          email_fanout_skipped: true,
+          paused: true,
+          reason: commsPause.reason,
+          switch: commsPause.switch,
+          real_enqueued: 0,
+          digest_enqueued: 0,
+          reminder_enqueued: 0,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
 
     // Load canonical event
     const { data: need, error: needErr } = await supabase

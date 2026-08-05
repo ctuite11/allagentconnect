@@ -24,7 +24,10 @@ import MLSPINSearch from "./pages/MLSPINSearch";
 import ListingSearch from "./pages/ListingSearch";
 import ListingSearchResults from "./pages/ListingSearchResults";
 
-import SubmitClientNeed from "./pages/SubmitClientNeed";
+// SubmitClientNeed retired — the standalone page inserted directly into
+// client_needs and triggered a second network email campaign. The canonical
+// path is the Communications Center Buyer Need compose flow.
+import { BUYER_NEED_COMPOSE_ROUTE } from "@/lib/buyerNeedCompose";
 import ClientNeedsDashboard from "./pages/ClientNeedsDashboard";
 import CommunicationsFeed from "./pages/CommunicationsFeed";
 // CommunicationCenter deleted - consolidated into ClientNeedsDashboard as "Communications Center"
@@ -465,7 +468,10 @@ const App = () => (
 
                 {/* Public routes outside AppShell */}
                 <Route path="/buyer/auth" element={<Navigate to="/auth" replace />} />
-                <Route path="/submit-client-need" element={<SubmitClientNeed />} />
+                <Route
+                  path="/submit-client-need"
+                  element={<Navigate to={BUYER_NEED_COMPOSE_ROUTE} replace />}
+                />
                 <Route path="/communication-center" element={<Navigate to="/communications" replace />} />
                 <Route element={<PropertyDetailShell />}>
                   <Route path="/property/:id" element={<PropertyDetail />} />
