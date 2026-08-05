@@ -115,3 +115,28 @@ for (const template of HOT_SHEET_TEMPLATES) {
     }
   });
 }
+
+function renderNewMatch(matchCount: unknown) {
+  return renderEmailTemplate("new-match-notification", {
+    userName: "Chris",
+    matchCount,
+    hotSheetName: "Canary",
+    hotSheetLink: "https://allagentconnect.com/agent/hot-sheets",
+    listingsHtml: card(),
+  });
+}
+
+Deno.test("new-match-notification pluralization: 1 -> new listing", () => {
+  const html = renderNewMatch(1);
+  assertStringIncludes(html, "We found 1 new listing matching");
+  assert(!html.includes("1 new listings"), "incorrectly pluralized singular count");
+});
+
+Deno.test("new-match-notification pluralization: 2 -> new listings", () => {
+  assertStringIncludes(renderNewMatch(2), "We found 2 new listings matching");
+});
+
+Deno.test("new-match-notification pluralization normalizes string counts", () => {
+  assertStringIncludes(renderNewMatch("1"), "We found 1 new listing matching");
+  assertStringIncludes(renderNewMatch("2"), "We found 2 new listings matching");
+});
