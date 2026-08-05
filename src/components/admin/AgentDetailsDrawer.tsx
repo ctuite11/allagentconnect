@@ -52,7 +52,13 @@ export interface AgentDetailsAgent {
   /** Server-derived lifecycle fields from admin-list-agents. */
   requested_at?: string | null;
   rejected_at?: string | null;
-  lifecycle_status?: "pending" | "verified" | "activated" | "rejected" | null;
+  lifecycle_status?:
+    | "pending"
+    | "invited"
+    | "verified"
+    | "activated"
+    | "rejected"
+    | null;
 }
 
 interface AgentDetailsDrawerProps {

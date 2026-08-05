@@ -195,7 +195,12 @@ function risksForAgent(a: Agent): Risk[] {
 // Historical `restricted` values still exist in the database enum, but are
 // invisible here: they fail safe into the blocked (rejected) bucket rather
 // than masquerading as an active stage.
-type AdminDerivedStatus = "pending" | "verified" | "activated" | "rejected";
+type AdminDerivedStatus =
+  | "pending"
+  | "invited"
+  | "verified"
+  | "activated"
+  | "rejected";
 
 function deriveAdminStatus(a: Agent): AdminDerivedStatus {
   // Server-computed value wins — it is derived from the same rules with
@@ -205,11 +210,13 @@ function deriveAdminStatus(a: Agent): AdminDerivedStatus {
   if (status === "rejected" || status === "restricted") return "rejected";
   if (a.account_activated_at) return "activated";
   if (a.verified_at) return "verified";
+  if (status === "invited") return "invited";
   return "pending";
 }
 
 const LIFECYCLE_LABELS: Record<AdminDerivedStatus, string> = {
   pending: "Pending",
+  invited: "Invited",
   verified: "Verified",
   activated: "Activated",
   rejected: "Rejected",
@@ -233,6 +240,7 @@ function formatAgentDisplayName(a: Pick<Agent, "first_name" | "last_name">): str
 /** Status Select values must match pills / deriveAdminStatus — not raw DB statuses. */
 const ADMIN_STATUS_FILTER_OPTIONS: { value: string; label: string }[] = [
   { value: "pending", label: "Pending" },
+  { value: "invited", label: "Invited" },
   { value: "verified", label: "Verified" },
   { value: "activated", label: "Activated" },
   { value: "rejected", label: "Rejected" },
@@ -987,6 +995,7 @@ export default function AdminApprovals() {
     // who hold the `buyer` role in `user_roles`.
     const buckets: Record<AdminDerivedStatus, number> = {
       pending: 0,
+      invited: 0,
       verified: 0,
       activated: 0,
       rejected: 0,
@@ -995,6 +1004,7 @@ export default function AdminApprovals() {
       buckets[deriveAdminStatus(a)]++;
     });
     counts.pending = buckets.pending;
+    counts.invited = buckets.invited;
     counts.verified = buckets.verified;
     counts.activated = buckets.activated;
     counts.rejected = buckets.rejected;
@@ -1015,6 +1025,7 @@ export default function AdminApprovals() {
   const variantForStatus = (status: string): PillVariant => {
     switch (status) {
       case "pending": return "warning";
+      case "invited": return "neutral";
       case "verified": return "primary";
       case "activated": return "success";
       case "rejected": return "danger";
@@ -1892,6 +1903,12 @@ export default function AdminApprovals() {
             variant="warning"
             active={statusFilter === "pending"}
             onClick={() => selectLifecycleFilter("pending")}
+          />
+          <Pill
+            label={`Invited (${statusCounts.invited || 0})`}
+            variant="neutral"
+            active={statusFilter === "invited"}
+            onClick={() => selectLifecycleFilter("invited")}
           />
           <Pill
             label={`Verified (${statusCounts.verified || 0})`}
