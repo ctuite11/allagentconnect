@@ -175,8 +175,12 @@ Deno.test("single-job function never uses the batch claim RPC and claims one row
   const src = await Deno.readTextFile(
     new URL("../send-single-email-job/index.ts", import.meta.url),
   );
-  assertEquals(src.includes("email_jobs_claim"), false);
-  assertEquals(src.includes("p_limit"), false);
+  // strip comments so prose about the rule doesn't count as a violation
+  const code = src
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/^\s*\/\/.*$/gm, "");
+  assertEquals(code.includes("email_jobs_claim"), false);
+  assertEquals(code.includes("p_limit"), false);
   // conditional single-row claim
   assertEquals(src.includes('.eq("id", jobId)'), true);
   assertEquals(src.includes('.eq("status", "queued")'), true);
