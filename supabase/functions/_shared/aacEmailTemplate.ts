@@ -43,6 +43,11 @@ interface AacEmailOptions {
     recipientEmail?: string;
     categoryLabel?: string;
   };
+  /**
+   * Hot Sheet and other alert emails must not offer account removal —
+   * it reads like an account-deletion action. Set true to omit that link.
+   */
+  hideRemoveAccountLink?: boolean;
 }
 
 export function buildAacEmail(opts: AacEmailOptions): string {
@@ -56,6 +61,7 @@ export function buildAacEmail(opts: AacEmailOptions): string {
     noticeBelowHeadline,
     contentFooterNote,
   } = opts;
+  const hideRemoveAccountLink = opts.hideRemoveAccountLink === true;
   const documentTitle = opts.documentTitle ?? headline;
   const ctaUrl = tracking?.wrappedCtaUrl || opts.ctaUrl;
 
@@ -147,9 +153,10 @@ export function buildAacEmail(opts: AacEmailOptions): string {
           <p style="margin:0 0 6px;font-size:12px;color:rgba(255,255,255,0.45);font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
             <a href="mailto:chris@allagentconnect.com" style="color:rgba(255,255,255,0.45);text-decoration:none;">chris@allagentconnect.com</a>
           </p>
-          <p style="margin:0;font-size:11px;color:rgba(255,255,255,0.35);font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
+          ${hideRemoveAccountLink ? "" : `<p style="margin:0;font-size:11px;color:rgba(255,255,255,0.35);font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
             <a href="mailto:chris@allagentconnect.com?subject=Remove%20My%20Account&body=Please%20remove%20my%20account." style="color:rgba(255,255,255,0.35);text-decoration:underline;">Remove my account</a>
-          </p>
+          </p>`}
+          <!--AAC_FOOTER_UNSUB_ANCHOR-->
           ${unsubHtml}
         </td></tr>
 

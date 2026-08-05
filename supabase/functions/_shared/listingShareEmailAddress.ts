@@ -19,6 +19,27 @@ function toTitleCase(str: string): string {
     .join(" ");
 }
 
+/**
+ * Title casing lowercases two-letter state codes ("MA" -> "Ma").
+ * Restore uppercase for the state token that sits between the city comma and
+ * the ZIP code (e.g. ", Ma 02127" -> ", MA 02127").
+ */
+function upperCaseStateToken(formatted: string, state: string): string {
+  const code = (state || "").trim();
+  let out = formatted;
+  if (code.length === 2) {
+    out = out.replace(
+      new RegExp(`(,\\s*)${code}(?=\\b)`, "gi"),
+      (_m, sep: string) => `${sep}${code.toUpperCase()}`,
+    );
+  }
+  // Generic safety net: any ", Xx 12345" tail becomes ", XX 12345".
+  return out.replace(
+    /(,\s*)([A-Za-z]{2})(\s+\d{5}(?:-\d{4})?)\b/g,
+    (_m, sep: string, st: string, zip: string) => `${sep}${st.toUpperCase()}${zip}`,
+  );
+}
+
 function pickUnitFromCondoDetails(details: unknown): string | null {
   if (details == null || typeof details !== "object") return null;
   const d = details as Record<string, unknown>;
@@ -77,7 +98,7 @@ function buildDisplayAddress(listing: ListingEmailAddressSource): string {
   const hasZip = zip && base.includes(zip);
 
   if (hasCity && hasState && hasZip) {
-    return toTitleCase(base);
+    return upperCaseStateToken(toTitleCase(base), state);
   }
 
   if (hasCity) {
@@ -90,7 +111,7 @@ function buildDisplayAddress(listing: ListingEmailAddressSource): string {
     base = `${base}, ${tail}`;
   }
 
-  return toTitleCase(base);
+  return upperCaseStateToken(toTitleCase(base), state);
 }
 
 /** Full formatted address (street + unit + city/state/zip) for compact listing cards. */

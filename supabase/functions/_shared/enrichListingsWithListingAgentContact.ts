@@ -23,7 +23,7 @@ export async function enrichListingsWithListingAgentContact(
 
   const { data: profiles, error } = await supabase
     .from("agent_profiles")
-    .select("id, first_name, last_name, email, company, cell_phone, phone")
+    .select("id, first_name, last_name, email, company, office_name, cell_phone, phone")
     .in("id", agentIds);
 
   if (error) {
@@ -37,6 +37,7 @@ export async function enrichListingsWithListingAgentContact(
     last_name: string | null;
     email: string | null;
     company: string | null;
+    office_name: string | null;
     cell_phone: string | null;
     phone: string | null;
   }>();
@@ -54,6 +55,16 @@ export async function enrichListingsWithListingAgentContact(
     const email = (profile.email ?? "").trim();
     const phone = (profile.cell_phone ?? "").trim() || (profile.phone ?? "").trim();
     const company = (profile.company ?? "").trim();
+    const officeName = (profile.office_name ?? "").trim();
+    // Some profiles store a truncated `company` (e.g. "Donnelly and") while
+    // `office_name` holds the complete stored value ("Donnelly and Co").
+    // Prefer the complete stored value; never invent or expand a name.
+    const brokerage =
+      officeName &&
+        (!company ||
+          officeName.toLowerCase().startsWith(company.toLowerCase()))
+        ? officeName
+        : company;
     return {
       ...listing,
       listing_agent_name: name || listing.listing_agent_name || listing.agent_name || "",
@@ -62,7 +73,7 @@ export async function enrichListingsWithListingAgentContact(
       agent_name: name || listing.agent_name || "",
       agent_email: email || listing.agent_email || "",
       agent_phone: phone || listing.agent_phone || "",
-      brokerage_name: listing.brokerage_name || listing.listing_brokerage || company || "",
+      brokerage_name: listing.brokerage_name || listing.listing_brokerage || brokerage || "",
     };
   });
 }

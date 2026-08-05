@@ -265,10 +265,16 @@ async function injectTracking(html: string, ctx: TrackingContext): Promise<strin
     ctx.category === "hot_sheet_alerts" ? "hot sheet alerts" :
     "marketing emails";
   const unsubBlock = `<p style="margin:10px 0 0;font-size:11px;color:rgba(255,255,255,0.45);font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Sent to <span style="color:rgba(255,255,255,0.6);">${ctx.recipientEmail}</span>. <a href="${unsubUrl}" style="color:rgba(255,255,255,0.6);text-decoration:underline;">Unsubscribe from ${categoryLabel}</a></p>`;
-  // Insert just before the closing </td></tr> of the dark footer (first occurrence after "Remove my account").
-  const removeAcctIdx = out.indexOf("Remove my account");
-  if (removeAcctIdx >= 0) {
-    const closeIdx = out.indexOf("</td></tr>", removeAcctIdx);
+  // Insert just before the closing </td></tr> of the dark footer.
+  // Anchor on the stable footer marker first; fall back to the legacy
+  // "Remove my account" text for templates that still render it.
+  const anchorIdx = (() => {
+    const marker = out.indexOf("<!--AAC_FOOTER_UNSUB_ANCHOR-->");
+    if (marker >= 0) return marker;
+    return out.indexOf("Remove my account");
+  })();
+  if (anchorIdx >= 0) {
+    const closeIdx = out.indexOf("</td></tr>", anchorIdx);
     if (closeIdx >= 0) {
       out = out.slice(0, closeIdx) + unsubBlock + out.slice(closeIdx);
     }
