@@ -511,6 +511,7 @@ export default function AdminApprovals() {
   const [emailRecipients, setEmailRecipients] = useState<Array<{ id: string; email: string; name: string }>>([]);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showTempPasswordDialog, setShowTempPasswordDialog] = useState(false);
+  const [tempPasswordEmail, setTempPasswordEmail] = useState("");
   const [showBulkDeleteDialog, setShowBulkDeleteDialog] = useState(false);
   // The details drawer is driven by the `?agent=<id>` search param so that
   // opening a card pushes a history entry. Browser Back then simply closes
@@ -2423,9 +2424,10 @@ export default function AdminApprovals() {
       />
 
       <SetTempPasswordDialog
+        key={tempPasswordEmail}
         open={showTempPasswordDialog}
         onOpenChange={setShowTempPasswordDialog}
-        defaultEmail="lev.borinski@cbrealty.com"
+        defaultEmail={tempPasswordEmail}
       />
 
       <AgentDetailsDrawer
