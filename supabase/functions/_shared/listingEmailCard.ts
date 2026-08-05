@@ -26,35 +26,13 @@ const AAC_PRIMARY_BLUE = "#0E56F5";
 /** AAC email CTA green (matches buildAacEmail). */
 const AAC_CTA_GREEN = "#50c878";
 
-/** Email-safe AAC-blue icons (inline SVG data URIs — no external fetch / wrong blue). */
-function aacIconDataUri(svgBody: string): string {
-  const svg =
-    `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${AAC_PRIMARY_BLUE}" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round">${svgBody}</svg>`;
-  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
-}
-
-const ICON_BED_SRC = aacIconDataUri(
-  `<path d="M2 4v16"/><path d="M2 8h18a2 2 0 0 1 2 2v10"/><path d="M2 17h20"/><path d="M6 8v9"/>`,
-);
-const ICON_BATH_SRC = aacIconDataUri(
-  `<path d="M9 6 6.5 3.5a1.5 1.5 0 0 0-1-.5C4.683 3 4 3.683 4 4.5V17a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5"/><line x1="10" x2="8" y1="5" y2="7"/><line x1="2" x2="22" y1="12" y2="12"/><line x1="7" x2="7" y1="19" y2="21"/><line x1="17" x2="17" y1="19" y2="21"/>`,
-);
-const ICON_SQFT_SRC = aacIconDataUri(
-  `<path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>`,
-);
-const ICON_MAIL_SRC = aacIconDataUri(
-  `<rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>`,
-);
-const ICON_PHONE_SRC = aacIconDataUri(
-  `<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>`,
-);
-
-function emailIconImg(alt: string): string {
-  return `<img src="${ICON_MAIL_SRC}" width="14" height="14" alt="${alt}" style="display:inline-block;width:14px;height:14px;vertical-align:-2px;margin-right:5px;border:0;outline:none;" />`;
-}
-
-function phoneIconImg(alt: string): string {
-  return `<img src="${ICON_PHONE_SRC}" width="14" height="14" alt="${alt}" style="display:inline-block;width:14px;height:14px;vertical-align:-2px;margin-right:5px;border:0;outline:none;" />`;
+/**
+ * Email-safe inline text labels.
+ * Icons must never be SVG/data-URI/relative/app-bundle assets: Gmail, Outlook
+ * and Apple Mail all strip or break them. Plain text labels always render.
+ */
+function textLabel(label: string): string {
+  return `<span style="color:#737373;font-weight:500;">${label}</span> `;
 }
 
 function escapeHtml(value: unknown): string {
