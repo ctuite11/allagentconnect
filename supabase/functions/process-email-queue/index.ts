@@ -1,22 +1,17 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import type { EmailJob } from "../_shared/emailTypes.ts";
-import { sendEmail } from "../_shared/sendEmail.ts";
-import { UNSUPPORTED_TEMPLATE_ERROR_PREFIX } from "../_shared/renderEmailTemplate.ts";
-import {
-  ACTIVATION_RETRY_WINDOW_MS,
-  ACTIVATION_TEMPLATE,
-  hydrateActivationEmail,
-} from "../_shared/hydrateActivationEmail.ts";
-import {
-  LOGIN_LINK_RETRY_WINDOW_MS,
-  LOGIN_LINK_TEMPLATE,
-  hydrateLoginLinkEmail,
-} from "../_shared/hydrateLoginLinkEmail.ts";
 import {
   allowedStreams,
   isGloballyPaused,
-  preSendBlockReason,
 } from "../_shared/emailStreams.ts";
+import {
+  deliverEmailJob,
+  makeLogEvent,
+  makeSafeUpdateJob,
+  toErrorMessage,
+} from "../_shared/emailJobDelivery.ts";
+
+const LOG_PREFIX = "[process-email-queue]";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -33,19 +28,6 @@ function json(body: unknown, init: ResponseInit = {}) {
       ...(init.headers ?? {}),
     },
   });
-}
-
-function toErrorMessage(err: unknown) {
-  if (err instanceof Error) return err.message;
-  try {
-    return typeof err === "string" ? err : JSON.stringify(err);
-  } catch {
-    return String(err);
-  }
-}
-
-function computeBackoffSeconds(attemptsSoFar: number) {
-  return Math.min(3600, 30 * Math.pow(2, Math.max(0, attemptsSoFar)));
 }
 
 Deno.serve(async (req) => {
