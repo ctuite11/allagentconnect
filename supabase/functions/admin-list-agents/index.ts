@@ -62,7 +62,7 @@ interface MergedAgent {
   pending_verification_id?: string
 }
 
-type LifecycleStatus = 'pending' | 'verified' | 'activated' | 'rejected'
+type LifecycleStatus = 'pending' | 'invited' | 'verified' | 'activated' | 'rejected'
 
 /**
  * Lifecycle derivation — timestamps + explicit rejection only.
@@ -82,6 +82,8 @@ function deriveLifecycleStatus(input: {
   if (input.account_activated_at) return 'activated'
   if (input.verified_at) return 'verified'
   if (input.explicitly_rejected || s === 'rejected' || s === 'restricted') return 'rejected'
+  // Admin-created accounts awaiting setup are NOT approval-queue rows.
+  if (s === 'invited') return 'invited'
   return 'pending'
 }
 
