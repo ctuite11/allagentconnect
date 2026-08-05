@@ -37,12 +37,14 @@ export function CreateAgentDialog({ open, onOpenChange, onSuccess }: CreateAgent
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [deletedMatch, setDeletedMatch] = useState<PreviouslyDeletedAgentMatch | null>(null);
+  const [step, setStep] = useState<"form" | "confirm">("form");
 
   const resetForm = () => {
     setEmail("");
     setFirstName("");
     setLastName("");
     setDeletedMatch(null);
+    setStep("form");
   };
 
   const submitToServer = async (acknowledgeDeleted: boolean) => {
@@ -95,7 +97,7 @@ export function CreateAgentDialog({ open, onOpenChange, onSuccess }: CreateAgent
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleReview = (e: React.FormEvent) => {
     e.preventDefault();
 
     try {
@@ -110,6 +112,10 @@ export function CreateAgentDialog({ open, onOpenChange, onSuccess }: CreateAgent
       return;
     }
 
+    setStep("confirm");
+  };
+
+  const handleConfirmSend = async () => {
     setLoading(true);
     try {
       // Phase 4 pre-check — if this email was previously deleted, open the
@@ -137,10 +143,66 @@ export function CreateAgentDialog({ open, onOpenChange, onSuccess }: CreateAgent
     }
   };
 
+  const handleOpenChange = (next: boolean) => {
+    if (!next) resetForm();
+    onOpenChange(next);
+  };
+
   return (
     <>
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-[440px]">
+        {step === "confirm" ? (
+          <>
+            <DialogHeader>
+              <DialogTitle>Confirm invite</DialogTitle>
+              <DialogDescription>
+                Review the details below. No email is sent until you confirm.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="rounded-lg border border-border bg-muted/40 p-4 space-y-3 text-sm">
+              <div className="flex justify-between gap-4">
+                <span className="text-muted-foreground">Name</span>
+                <span className="font-medium text-right">
+                  {firstName.trim()} {lastName.trim()}
+                </span>
+              </div>
+              <div className="flex justify-between gap-4">
+                <span className="text-muted-foreground">Email</span>
+                <span className="font-medium text-right break-all">
+                  {email.trim().toLowerCase()}
+                </span>
+              </div>
+              <div className="flex justify-between gap-4">
+                <span className="text-muted-foreground">Action</span>
+                <span className="font-medium text-right">Send setup invite email</span>
+              </div>
+            </div>
+
+            <DialogFooter className="pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setStep("form")}
+                disabled={loading}
+              >
+                Back
+              </Button>
+              <Button type="button" onClick={handleConfirmSend} disabled={loading}>
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Sending invite...
+                  </>
+                ) : (
+                  "Confirm & send invite"
+                )}
+              </Button>
+            </DialogFooter>
+          </>
+        ) : (
+        <>
         <DialogHeader>
           <DialogTitle>Create New Agent</DialogTitle>
           <DialogDescription>
@@ -148,7 +210,7 @@ export function CreateAgentDialog({ open, onOpenChange, onSuccess }: CreateAgent
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4 py-2">
+        <form onSubmit={handleReview} className="space-y-4 py-2">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="firstName">First Name *</Label>
@@ -188,23 +250,18 @@ export function CreateAgentDialog({ open, onOpenChange, onSuccess }: CreateAgent
             <Button
               type="button"
               variant="outline"
-              onClick={() => onOpenChange(false)}
+              onClick={() => handleOpenChange(false)}
               disabled={loading}
             >
               Cancel
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Sending invite...
-                </>
-              ) : (
-                "Create Agent"
-              )}
+              Review invite
             </Button>
           </DialogFooter>
         </form>
+        </>
+        )}
       </DialogContent>
     </Dialog>
     <PreviouslyDeletedAgentDialog
