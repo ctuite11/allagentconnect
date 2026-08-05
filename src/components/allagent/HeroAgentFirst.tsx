@@ -64,7 +64,7 @@ const HeroAgentFirst = () => {
             <Button
               variant="outline"
               size="lg"
-              onClick={() => navigate("/submit-client-need")}
+              onClick={() => navigate(BUYER_NEED_COMPOSE_ROUTE)}
               className="border-border text-foreground hover:bg-muted font-medium px-8 py-6 text-base rounded-full"
             >
               Post a Buyer Need
