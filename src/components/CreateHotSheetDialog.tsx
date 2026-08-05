@@ -2071,17 +2071,10 @@ export function CreateHotSheetDialog({
                           min="0"
                         />
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="rooms">Rooms</Label>
-                        <Input
-                          id="rooms"
-                          type="number"
-                          placeholder="Any"
-                          value={rooms}
-                          onChange={(e) => setRooms(e.target.value)}
-                          min="0"
-                        />
-                      </div>
+                      {/* Rooms is intentionally not offered: there is no
+                          listings.rooms column, so the Hot Sheet matcher cannot
+                          enforce it. Existing saved Rooms criteria fail closed
+                          (zero matches) server-side. */}
                       <div className="space-y-2">
                         <Label htmlFor="acres">Acres</Label>
                         <Input

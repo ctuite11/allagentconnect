@@ -133,7 +133,9 @@ export const toCriteriaPayload = (criteria: HotSheetCriteriaCore) => ({
   hasNoMax: criteria.hasNoMax,
   bedrooms: toInteger(criteria.bedrooms),
   bathrooms: toNumber(criteria.bathrooms),
-  rooms: toInteger(criteria.rooms),
+  // `rooms` is deliberately NOT persisted: there is no listings.rooms column,
+  // so the Hot Sheet matcher cannot enforce it and stored values would produce
+  // false-positive emails. Existing saved values fail closed server-side.
   acres: toNumber(criteria.acres),
   minSqft: toInteger(criteria.minSqft),
   maxSqft: toInteger(criteria.maxSqft),
