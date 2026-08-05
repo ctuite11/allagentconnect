@@ -98,7 +98,7 @@ function buildDisplayAddress(listing: ListingEmailAddressSource): string {
   const hasZip = zip && base.includes(zip);
 
   if (hasCity && hasState && hasZip) {
-    return toTitleCase(base);
+    return upperCaseStateToken(toTitleCase(base), state);
   }
 
   if (hasCity) {
@@ -111,7 +111,7 @@ function buildDisplayAddress(listing: ListingEmailAddressSource): string {
     base = `${base}, ${tail}`;
   }
 
-  return toTitleCase(base);
+  return upperCaseStateToken(toTitleCase(base), state);
 }
 
 /** Full formatted address (street + unit + city/state/zip) for compact listing cards. */

@@ -239,25 +239,20 @@ function renderStatusBanner(status: unknown): string {
 
 function renderStatsRow(listing: any): string {
   const parts: string[] = [];
-  const icon = (src: string, alt: string) =>
-    `<img src="${src}" width="14" height="14" alt="${alt}" style="display:inline-block;width:14px;height:14px;vertical-align:-2px;margin-right:4px;border:0;outline:none;" />`;
-  const bedIcon = icon(ICON_BED_SRC, "Beds");
-  const bathIcon = icon(ICON_BATH_SRC, "Baths");
-  const sqftIcon = icon(ICON_SQFT_SRC, "Sq ft");
   if (listing.bedrooms != null) {
     parts.push(
-      `${bedIcon}<span style="color:#171717;font-weight:600;">${escapeHtml(String(listing.bedrooms))}</span>`,
+      `<span style="color:#171717;font-weight:600;">${escapeHtml(String(listing.bedrooms))}</span> <span style="color:#737373;font-weight:500;">bd</span>`,
     );
   }
   if (listing.bathrooms != null) {
     parts.push(
-      `${bathIcon}<span style="color:#171717;font-weight:600;">${escapeHtml(String(listing.bathrooms))}</span>`,
+      `<span style="color:#171717;font-weight:600;">${escapeHtml(String(listing.bathrooms))}</span> <span style="color:#737373;font-weight:500;">ba</span>`,
     );
   }
   const sqft = listing.square_feet ?? listing.squareFeet;
   if (sqft) {
     parts.push(
-      `${sqftIcon}<span style="color:#171717;font-weight:600;">${escapeHtml(Number(sqft).toLocaleString())}</span>`,
+      `<span style="color:#171717;font-weight:600;">${escapeHtml(Number(sqft).toLocaleString())}</span> <span style="color:#737373;font-weight:500;">sq ft</span>`,
     );
   }
   if (!parts.length) return "";
@@ -327,8 +322,8 @@ function renderListingAgentContactRow(listing: any): string {
   if (email) {
     rows.push(
       `<tr><td style="padding:0 0 4px;font-size:13px;line-height:1.4;">
-        <a href="mailto:${escapeHtml(email)}" style="color:${AAC_PRIMARY_BLUE};text-decoration:none;font-weight:600;">
-          ${emailIconImg("Email")}<span style="text-decoration:underline;">${escapeHtml(email)}</span>
+        ${textLabel("Email:")}<a href="mailto:${escapeHtml(email)}" style="color:${AAC_PRIMARY_BLUE};text-decoration:none;font-weight:600;">
+          <span style="text-decoration:underline;">${escapeHtml(email)}</span>
         </a>
       </td></tr>`,
     );
@@ -338,8 +333,8 @@ function renderListingAgentContactRow(listing: any): string {
     const tel = formatListingAgentPhoneTelHref(phone);
     rows.push(
       `<tr><td style="padding:0;font-size:13px;line-height:1.4;">
-        <a href="${escapeHtml(tel)}" style="color:${AAC_PRIMARY_BLUE};text-decoration:none;font-weight:600;">
-          ${phoneIconImg("Phone")}<span style="text-decoration:underline;">${escapeHtml(display)}</span>
+        ${textLabel("Phone:")}<a href="${escapeHtml(tel)}" style="color:${AAC_PRIMARY_BLUE};text-decoration:none;font-weight:600;">
+          <span style="text-decoration:underline;">${escapeHtml(display)}</span>
         </a>
       </td></tr>`,
     );
