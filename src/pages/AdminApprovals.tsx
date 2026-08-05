@@ -2296,6 +2296,14 @@ export default function AdminApprovals() {
                                   <DropdownMenuItem onSelect={() => setEditAgent(agent)}>
                                     Edit
                                   </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onSelect={() => {
+                                      setTempPasswordEmail(agent.email ?? "");
+                                      window.setTimeout(() => setShowTempPasswordDialog(true), 0);
+                                    }}
+                                  >
+                                    Set Password
+                                  </DropdownMenuItem>
                                   <DropdownMenuSeparator />
                                   <DropdownMenuItem
                                     className="text-rose-600 focus:text-rose-700"
@@ -2332,6 +2340,14 @@ export default function AdminApprovals() {
                                   </DropdownMenuItem>
                                   <DropdownMenuItem onSelect={() => handleEmailAgent(agent)}>
                                     Email
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onSelect={() => {
+                                      setTempPasswordEmail(agent.email ?? "");
+                                      window.setTimeout(() => setShowTempPasswordDialog(true), 0);
+                                    }}
+                                  >
+                                    Set Password
                                   </DropdownMenuItem>
                                   {!agent.is_early_access && agent.source !== "pending_verification" && (
                                     <DropdownMenuItem onSelect={() => handleSendPasswordReset(agent)}>
