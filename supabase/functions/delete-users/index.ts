@@ -495,15 +495,17 @@ serve(async (req) => {
     // --- Opportunistic queue drain (also the cron entry point) ---
     const queueStats = await drainQueue(supabase, deletedIds);
 
-    // --- Clear orphaned pending_verifications rows for provided emails ---
+    // --- Remove orphaned pending_verifications rows for provided emails ---
+    // A deleted request/agent must be able to start over cleanly. Leaving a
+    // rejected row behind blocks activation eligibility and caused the
+    // Christie Xie / Alex Mackenzie recurrence.
     let pendingCleared = 0;
     const emailsForCleanup = inputs.map((i) => i.email).filter((e): e is string => Boolean(e));
     if (emailsForCleanup.length > 0) {
       const { data: pvRows, error: pvErr } = await supabase
         .from("pending_verifications")
-        .update({ status: "rejected" })
+        .delete()
         .in("email", emailsForCleanup)
-        .eq("status", "pending")
         .select("id");
       if (pvErr) {
         console.log(`pending_verifications cleanup error: ${pvErr.message}`);

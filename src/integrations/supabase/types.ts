@@ -5066,6 +5066,10 @@ export type Database = {
       admin_delete_early_access:
         | { Args: { p_id: string }; Returns: number }
         | { Args: { p_email?: string; p_id: string }; Returns: number }
+      admin_delete_pending_verification: {
+        Args: { p_email?: string; p_id: string }
+        Returns: Json
+      }
       agent_end_client_relationship: {
         Args: { p_client_id: string }
         Returns: number
@@ -5261,6 +5265,19 @@ export type Database = {
       ensure_conversation_participants_for_caller: {
         Args: { p_conversation_id: string }
         Returns: undefined
+      }
+      find_current_agent_deletion: {
+        Args: { p_email: string }
+        Returns: {
+          deleted_at: string
+          deleted_by: string
+          deletion_reason: string
+          email: string
+          first_name: string
+          id: string
+          last_name: string
+          original_user_id: string
+        }[]
       }
       generate_aac_id: { Args: never; Returns: string }
       generate_listing_number: { Args: never; Returns: string }

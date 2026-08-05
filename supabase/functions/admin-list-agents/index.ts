@@ -79,9 +79,9 @@ function deriveLifecycleStatus(input: {
   explicitly_rejected: boolean
 }): LifecycleStatus {
   const s = (input.agent_status || '').toLowerCase()
-  if (input.explicitly_rejected || s === 'rejected' || s === 'restricted') return 'rejected'
   if (input.account_activated_at) return 'activated'
   if (input.verified_at) return 'verified'
+  if (input.explicitly_rejected || s === 'rejected' || s === 'restricted') return 'rejected'
   return 'pending'
 }
 
@@ -375,7 +375,7 @@ Deno.serve(async (req) => {
     // as "no request" / zero rows.
     let pendingVerificationsError: string | null = null
     const requestedByEmail = new Map<string, string>() // email -> earliest created_at
-    const rejectedByEmail = new Map<string, string | null>() // email -> rejected_at (may be null)
+    const latestRequestByEmail = new Map<string, any>()
 
     const { data: pvRows, error: pvError } = await pendingVerificationsPromise
 
@@ -390,12 +390,9 @@ Deno.serve(async (req) => {
         if (!prev || new Date(row.created_at).getTime() < new Date(prev).getTime()) {
           requestedByEmail.set(em, row.created_at)
         }
-        if (String(row.status ?? '').toLowerCase() === 'rejected') {
-          // rejected_at is the only acceptable rejection timestamp. When the
-          // column is null we keep null — never substitute updated_at.
-          if (!rejectedByEmail.has(em) || (row.rejected_at && !rejectedByEmail.get(em))) {
-            rejectedByEmail.set(em, row.rejected_at ?? null)
-          }
+        const latest = latestRequestByEmail.get(em)
+        if (!latest || new Date(row.created_at).getTime() > new Date(latest.created_at).getTime()) {
+          latestRequestByEmail.set(em, row)
         }
       }
 
@@ -439,11 +436,14 @@ Deno.serve(async (req) => {
     for (const a of allAgents) {
       const em = (a.email ?? '').trim().toLowerCase()
       const requestedAt = requestedByEmail.get(em) ?? null
+      const latestRequest = latestRequestByEmail.get(em)
+      const latestRequestRejected =
+        String(latestRequest?.status ?? '').toLowerCase() === 'rejected'
       const explicitlyRejected =
-        rejectedByEmail.has(em) || (a.agent_status ?? '').toLowerCase() === 'rejected'
+        latestRequestRejected || (a.agent_status ?? '').toLowerCase() === 'rejected'
       a.requested_at = requestedAt
       a.ever_requested = !!requestedAt
-      a.rejected_at = rejectedByEmail.get(em) ?? null
+      a.rejected_at = latestRequestRejected ? (latestRequest?.rejected_at ?? null) : null
       a.lifecycle_status = deriveLifecycleStatus({
         agent_status: a.agent_status,
         verified_at: a.verified_at,

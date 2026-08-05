@@ -38,6 +38,8 @@ interface DeleteAgentDialogProps {
     last_name: string; 
     email: string;
     is_early_access?: boolean;
+    source?: "profile" | "early_access" | "pending_verification";
+    pending_verification_id?: string;
   } | null;
   onDeleted: () => void;
 }
@@ -50,6 +52,36 @@ export function DeleteAgentDialog({ open, onOpenChange, agent, onDeleted }: Dele
 
     setDeleting(true);
     try {
+      // REQUEST-ONLY BRANCH: remove the request and any stale blockers so the
+      // same email can be invited again. Never archive a request-only lead as
+      // a permanently deleted agent.
+      if (agent.source === "pending_verification") {
+        const { data, error } = await supabase.rpc(
+          "admin_delete_pending_verification",
+          {
+            p_id: agent.pending_verification_id ?? agent.id,
+            p_email: agent.email,
+          },
+        );
+        if (error) throw error;
+
+        const result = (data ?? {}) as {
+          deleted_requests?: number;
+          fully_reinvitable?: boolean;
+        };
+        if (!result.deleted_requests) {
+          throw new Error("No verification request was removed. Refresh and try again.");
+        }
+        if (result.fully_reinvitable !== true) {
+          throw new Error("The request was removed, but another account record still blocks a new invitation.");
+        }
+
+        toast.success(`${agent.first_name} ${agent.last_name}'s request was deleted and can be invited again`);
+        onDeleted();
+        onOpenChange(false);
+        return;
+      }
+
       // EARLY ACCESS BRANCH: Simple delete from agent_early_access only
       if (agent.is_early_access) {
         const { data: rowsDeleted, error } = await supabase.rpc(
@@ -186,14 +218,27 @@ export function DeleteAgentDialog({ open, onOpenChange, agent, onDeleted }: Dele
               <br /><br />
               This will permanently remove:
               <ul className="list-disc ml-5 mt-2 space-y-1">
-                <li>Their agent profile and settings</li>
-                <li>All their listings</li>
-                <li>All their clients and hot sheets</li>
-                <li>Their auth account</li>
+                {agent.source === "pending_verification" ? (
+                  <>
+                    <li>Their verification request</li>
+                    <li>Any stale records blocking a new invitation</li>
+                  </>
+                ) : (
+                  <>
+                    <li>Their agent profile and settings</li>
+                    <li>All their listings</li>
+                    <li>All their clients and hot sheets</li>
+                    <li>Their auth account</li>
+                  </>
+                )}
               </ul>
               <br />
-              <span className="text-amber-600 font-medium">The user will be archived in the deleted users database for record keeping.</span>
-              <br />
+              {agent.source !== "pending_verification" && (
+                <>
+                  <span className="text-amber-600 font-medium">The user will be archived in the deleted users database for record keeping.</span>
+                  <br />
+                </>
+              )}
               <span className="text-rose-600 font-medium">This action cannot be undone.</span>
             </div>
           </AlertDialogDescription>
@@ -211,7 +256,7 @@ export function DeleteAgentDialog({ open, onOpenChange, agent, onDeleted }: Dele
             className="rounded-xl bg-rose-600 hover:bg-rose-700 text-white"
           >
             {deleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Delete Agent
+            {agent.source === "pending_verification" ? "Delete Request" : "Delete Agent"}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
