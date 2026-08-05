@@ -17,6 +17,7 @@ import {
   type DeliveryOutcome,
 } from "../_shared/hotSheetAgentDelivery.ts";
 import { assertHotSheetEnqueueAllowed } from "../_shared/emailStreams.ts";
+import { authorizeInternalServiceRole } from "../_shared/internalServiceRoleAuth.ts";
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -34,6 +35,14 @@ function isUniqueViolation(error: { code?: string; message?: string } | null | u
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  const auth = authorizeInternalServiceRole(req);
+  if (!auth.ok) {
+    return new Response(JSON.stringify({ error: auth.error }), {
+      status: auth.status,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 
   try {

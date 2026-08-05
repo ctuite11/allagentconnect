@@ -25,7 +25,10 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.send-new-match-notification]
-verify_jwt = false
+verify_jwt = true
+
+[functions.notify-matching-buyers]
+verify_jwt = true
 
 [functions.send-listing-share]
 verify_jwt = false
