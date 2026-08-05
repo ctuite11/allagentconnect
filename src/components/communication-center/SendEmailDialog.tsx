@@ -585,6 +585,14 @@ export function SendEmailDialog({ open, onOpenChange, onSuccess }: SendEmailDial
             <Switch checked={sendCopyToSelf} onCheckedChange={setSendCopyToSelf} />
           </div>
 
+          <div
+            className="flex items-start gap-3 rounded-2xl border border-neutral-200 bg-neutral-50 p-4"
+            data-testid="buyer-need-disclosure"
+          >
+            <Info className="mt-0.5 h-4 w-4 shrink-0 text-neutral-500" aria-hidden />
+            <p className="text-sm text-neutral-700">{BUYER_NEED_DISCLOSURE}</p>
+          </div>
+
           <div className="flex justify-end gap-3 pt-2">
             <Button
               type="button"
