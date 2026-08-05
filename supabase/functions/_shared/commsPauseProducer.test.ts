@@ -12,25 +12,10 @@ import {
   preSendBlockReason,
 } from "./emailStreams.ts";
 import { evaluateCommsOptIn } from "./commsOptIn.ts";
-
-function withEnv(vals: Record<string, string>, fn: () => void) {
-  const prev: Record<string, string | undefined> = {};
-  for (const [k, v] of Object.entries(vals)) {
-    prev[k] = Deno.env.get(k);
-    Deno.env.set(k, v);
-  }
-  try {
-    fn();
-  } finally {
-    for (const [k, v] of Object.entries(prev)) {
-      if (v === undefined) Deno.env.delete(k);
-      else Deno.env.set(k, v);
-    }
-  }
-}
+import { ALL_PAUSES_OFF, withEnv } from "./testEnv.ts";
 
 Deno.test("comms pause blocks the producer via COMMS_EMAILS_PAUSED", () => {
-  withEnv({ EMAIL_SENDING_PAUSED: "false", COMMS_EMAILS_PAUSED: "true" }, () => {
+  withEnv({ ...ALL_PAUSES_OFF, COMMS_EMAILS_PAUSED: "true" }, () => {
     const gate = assertCommsEnqueueAllowed();
     assertEquals(gate.paused, true);
     assertEquals(gate.paused && gate.switch, "COMMS_EMAILS_PAUSED");
@@ -38,7 +23,7 @@ Deno.test("comms pause blocks the producer via COMMS_EMAILS_PAUSED", () => {
 });
 
 Deno.test("comms pause blocks the producer via the global switch", () => {
-  withEnv({ EMAIL_SENDING_PAUSED: "true", COMMS_EMAILS_PAUSED: "false" }, () => {
+  withEnv({ ...ALL_PAUSES_OFF, EMAIL_SENDING_PAUSED: "true" }, () => {
     const gate = assertCommsEnqueueAllowed();
     assertEquals(gate.paused, true);
     assertEquals(gate.paused && gate.switch, "EMAIL_SENDING_PAUSED");
@@ -46,18 +31,14 @@ Deno.test("comms pause blocks the producer via the global switch", () => {
 });
 
 Deno.test("producer proceeds only when both switches are off", () => {
-  withEnv({ EMAIL_SENDING_PAUSED: "false", COMMS_EMAILS_PAUSED: "false" }, () => {
+  withEnv({ ...ALL_PAUSES_OFF }, () => {
     assertEquals(assertCommsEnqueueAllowed().paused, false);
   });
 });
 
 Deno.test("comms pause leaves Hot Sheet and transactional streams untouched", () => {
   withEnv(
-    {
-      EMAIL_SENDING_PAUSED: "false",
-      COMMS_EMAILS_PAUSED: "true",
-      HOT_SHEET_EMAILS_PAUSED: "false",
-    },
+    { ...ALL_PAUSES_OFF, COMMS_EMAILS_PAUSED: "true" },
     () => {
       assertEquals(assertHotSheetEnqueueAllowed().paused, false);
       assertEquals(preSendBlockReason({ stream: "hot_sheet" }), null);
