@@ -8,10 +8,19 @@ export default defineConfig({
   test: {
     globals: true,
     include: ["src/**/*.{test,spec}.{ts,tsx}"],
-    exclude: ["node_modules/**", "dist/**", "supabase/**", "e2e/**", "tests/**"],
+    exclude: [
+      "node_modules/**",
+      "dist/**",
+      "supabase/**",
+      "e2e/**",
+      "tests/**",
     // Pre-existing Deno-authored suites that live under src/ but import from
     // deno.land. They run with `deno test src/lib` and pass there (22 tests).
     // Vitest cannot resolve their https: imports, so it must not collect them.
+      "src/lib/addListingDraftSession.test.ts",
+      "src/lib/commsFiltersCopy.test.ts",
+      "src/lib/listingPricingValidation.test.ts",
+    ],
   },
   resolve: {
     alias: { "@": path.resolve(__dirname, "./src") },
