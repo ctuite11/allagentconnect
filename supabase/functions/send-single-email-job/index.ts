@@ -24,11 +24,16 @@ import {
 import {
   findAllowlistEntryByJobId,
   parseSingleJobRequest,
-  SINGLE_SEND_ALLOWED_STREAM,
   validateClaimedJobForSingleSend,
   validateJobForSingleSend,
 } from "../_shared/singleEmailJobGuard.ts";
+import type { EmailStream } from "../_shared/emailStreams.ts";
 import { isGloballyPaused, isStreamPaused } from "../_shared/emailStreams.ts";
+
+const STREAM_PAUSE_SWITCH: Record<string, string> = {
+  hot_sheet: "HOT_SHEET_EMAILS_PAUSED",
+  communications: "COMMS_EMAILS_PAUSED",
+};
 
 const LOG_PREFIX = "[send-single-email-job]";
 
@@ -92,10 +97,10 @@ Deno.serve(async (req) => {
       sent: false,
     });
   }
-  if (isStreamPaused(SINGLE_SEND_ALLOWED_STREAM)) {
+  if (isStreamPaused(allowEntry.stream as EmailStream)) {
     return json({
       paused: true,
-      switch: "HOT_SHEET_EMAILS_PAUSED",
+      switch: STREAM_PAUSE_SWITCH[allowEntry.stream] ?? "STREAM_PAUSED",
       job_id: jobId,
       final_status: "queued",
       sent: false,
@@ -151,7 +156,7 @@ Deno.serve(async (req) => {
       })
       .eq("id", jobId)
       .eq("status", "queued")
-      .eq("stream", SINGLE_SEND_ALLOWED_STREAM)
+      .eq("stream", allowEntry.stream)
       .eq("idempotency_key", allowEntry.idempotency_key)
       .select("*");
 
