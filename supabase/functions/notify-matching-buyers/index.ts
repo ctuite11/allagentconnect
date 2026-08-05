@@ -1,6 +1,10 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { assertHotSheetEnqueueAllowed } from "../_shared/emailStreams.ts";
+import {
+  authorizeInternalServiceRole,
+  serviceRoleInvokeHeaders,
+} from "../_shared/internalServiceRoleAuth.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -32,10 +36,19 @@ interface Listing {
  * - Does NOT enqueue legacy client_needs / new-listing-alert emails
  *   (listing events may only notify Hot Sheet recipients).
  * - Does NOT read Communications Center preferences.
+ * - Internal service-role callers only.
  */
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  const auth = authorizeInternalServiceRole(req);
+  if (!auth.ok) {
+    return new Response(JSON.stringify({ error: auth.error }), {
+      status: auth.status,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 
   try {
@@ -60,8 +73,11 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Fan-out to canonical hot-sheet matcher (near-realtime path).
     // Fire-and-forget; cron remains the safety net.
+    // Explicit service-role Authorization + apikey so gateway JWT verify and
+    // the in-function exact-key gate both accept the downstream call.
     try {
       supabase.functions.invoke("send-new-match-notification", {
+        headers: serviceRoleInvokeHeaders(SUPABASE_SERVICE_ROLE_KEY),
         body: { trigger: "listing", listing_id: listing.listing_id },
       }).then(({ error }) => {
         if (error) console.error("[notify-matching-buyers] hot-sheet fanout error:", error);
