@@ -35,6 +35,8 @@ interface Agent {
   last_name: string;
   email: string;
   is_early_access?: boolean;
+  source?: "profile" | "early_access" | "pending_verification";
+  pending_verification_id?: string;
 }
 
 interface BulkDeleteAgentsDialogProps {
@@ -66,8 +68,13 @@ export function BulkDeleteAgentsDialog({
     let failCount = 0;      // nothing removed
     const partialEmails: string[] = [];
 
-    const earlyAccess = agents.filter((a) => a.is_early_access);
-    const realAgents = agents.filter((a) => !a.is_early_access);
+    const pendingRequests = agents.filter((a) => a.source === "pending_verification");
+    const earlyAccess = agents.filter(
+      (a) => a.source !== "pending_verification" && a.is_early_access,
+    );
+    const realAgents = agents.filter(
+      (a) => a.source !== "pending_verification" && !a.is_early_access,
+    );
 
     // Track which agents made it through DB cleanup and should be sent to
     // the batched delete-users edge function.
@@ -119,6 +126,36 @@ export function BulkDeleteAgentsDialog({
     }
 
     setProgress(40);
+
+    // Request-only rows are removed through the canonical cleanup RPC. This
+    // also clears stale blockers only when no real account identity exists.
+    const requestResults = await Promise.allSettled(
+      pendingRequests.map((agent) =>
+        supabase.rpc("admin_delete_pending_verification", {
+          p_id: agent.pending_verification_id ?? agent.id,
+          p_email: agent.email,
+        }),
+      ),
+    );
+    requestResults.forEach((res, idx) => {
+      const agent = pendingRequests[idx];
+      const result = res.status === "fulfilled"
+        ? (res.value.data as { deleted_requests?: number; fully_reinvitable?: boolean } | null)
+        : null;
+      if (
+        res.status === "fulfilled" &&
+        !res.value.error &&
+        result?.deleted_requests &&
+        result.fully_reinvitable === true
+      ) {
+        fullCount++;
+      } else {
+        const err = res.status === "rejected" ? res.reason : res.value.error;
+        console.error(`Error deleting verification request ${agent.email}:`, err);
+        dbFailedEmails.add(agent.email);
+        failCount++;
+      }
+    });
 
     // --- Phase 1b: run all admin_delete_agent RPCs in parallel ---
     const realResults = await Promise.allSettled(

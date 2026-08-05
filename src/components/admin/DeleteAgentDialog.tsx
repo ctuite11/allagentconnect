@@ -38,6 +38,8 @@ interface DeleteAgentDialogProps {
     last_name: string; 
     email: string;
     is_early_access?: boolean;
+    source?: "profile" | "early_access" | "pending_verification";
+    pending_verification_id?: string;
   } | null;
   onDeleted: () => void;
 }
@@ -50,6 +52,36 @@ export function DeleteAgentDialog({ open, onOpenChange, agent, onDeleted }: Dele
 
     setDeleting(true);
     try {
+      // REQUEST-ONLY BRANCH: remove the request and any stale blockers so the
+      // same email can be invited again. Never archive a request-only lead as
+      // a permanently deleted agent.
+      if (agent.source === "pending_verification") {
+        const { data, error } = await supabase.rpc(
+          "admin_delete_pending_verification",
+          {
+            p_id: agent.pending_verification_id ?? agent.id,
+            p_email: agent.email,
+          },
+        );
+        if (error) throw error;
+
+        const result = (data ?? {}) as {
+          deleted_requests?: number;
+          fully_reinvitable?: boolean;
+        };
+        if (!result.deleted_requests) {
+          throw new Error("No verification request was removed. Refresh and try again.");
+        }
+        if (result.fully_reinvitable !== true) {
+          throw new Error("The request was removed, but another account record still blocks a new invitation.");
+        }
+
+        toast.success(`${agent.first_name} ${agent.last_name}'s request was deleted and can be invited again`);
+        onDeleted();
+        onOpenChange(false);
+        return;
+      }
+
       // EARLY ACCESS BRANCH: Simple delete from agent_early_access only
       if (agent.is_early_access) {
         const { data: rowsDeleted, error } = await supabase.rpc(
