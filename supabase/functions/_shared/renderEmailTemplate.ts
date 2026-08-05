@@ -380,17 +380,21 @@ export function renderEmailTemplate(
         hideRemoveAccountLink: true,
       });
 
-    case "new-match-notification":
+    case "new-match-notification": {
+      const matchCount = Number(variables.matchCount);
+      const matchCountLabel = Number.isFinite(matchCount) ? matchCount : variables.matchCount;
+      const matchNoun = matchCount === 1 ? "new listing" : "new listings";
       return buildAacEmail({
         headline: "New matches in your Hot Sheet",
         body: `
           <p style="margin:0 0 12px;">Hi ${variables.userName},</p>
-          <p style="margin:0 0 16px;">We found ${variables.matchCount} new listings matching "${variables.hotSheetName}":</p>
+          <p style="margin:0 0 16px;">We found ${matchCountLabel} ${matchNoun} matching "${variables.hotSheetName}":</p>
           ${variables.listingsHtml || ""}`,
         ctaLabel: variables.hotSheetLink ? "Open Hot Sheet" : undefined,
         ctaUrl: variables.hotSheetLink,
         hideRemoveAccountLink: true,
       });
+    }
 
     case "hot-sheet-status-change":
     case "hot-sheet-subscriber-status-change": {
