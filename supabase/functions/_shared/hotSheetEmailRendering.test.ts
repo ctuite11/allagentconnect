@@ -1,0 +1,76 @@
+import { assert, assertEquals, assertStringIncludes } from "https://deno.land/std@0.224.0/assert/mod.ts";
+import { renderAgentHotSheetListingEmailCard } from "./listingEmailCard.ts";
+import { formatListingShareEmailFullAddress } from "./listingShareEmailAddress.ts";
+import { renderEmailTemplate } from "./renderEmailTemplate.ts";
+
+const listing = {
+  id: "0775b03d-e774-4dc9-9627-f0d2ec752fd3",
+  status: "active",
+  price: 999000,
+  property_type: "condo",
+  address: "309 E Street",
+  unit_number: "43",
+  city: "South Boston",
+  state: "MA",
+  zip_code: "02127",
+  neighborhood: "South Boston",
+  bedrooms: 2,
+  bathrooms: 2,
+  square_feet: 1132,
+  listing_number: "L-1229",
+  listing_agent_name: "Susan Doig",
+  listing_agent_email: "susan.doig@donnellyandco.com",
+  listing_agent_phone: "6175044381",
+  brokerage_name: "Donnelly and Co",
+  photos: ["https://example.com/photo.jpg"],
+};
+
+function card() {
+  return renderAgentHotSheetListingEmailCard(listing, { baseUrl: "https://allagentconnect.com" });
+}
+
+Deno.test("card contains no svg or data-uri icon sources", () => {
+  const html = card();
+  assert(!/data:image\/svg/i.test(html), "data-uri svg icon found");
+  assert(!/<svg/i.test(html), "inline svg found");
+  assert(!/src=["']\/(?!\/)/.test(html), "relative icon src found");
+  assert(!/src=["'](?!https:\/\/)/i.test(html), "non-absolute image src found");
+});
+
+Deno.test("stats render as inline text labels", () => {
+  const html = card();
+  assertStringIncludes(html, ">2</span> <span style=\"color:#737373;font-weight:500;\">bd</span>");
+  assertStringIncludes(html, "ba</span>");
+  assertStringIncludes(html, "sq ft</span>");
+  assertStringIncludes(html, "Email:</span>");
+  assertStringIncludes(html, "Phone:</span>");
+});
+
+Deno.test("state abbreviation stays uppercase", () => {
+  assertEquals(
+    formatListingShareEmailFullAddress(listing),
+    "309 E Street #43, South Boston, MA 02127",
+  );
+  assert(!card().includes(", Ma 02127"));
+});
+
+Deno.test("hot sheet email omits Remove my account and keeps working parts", () => {
+  const html = renderEmailTemplate("new-match-notification", {
+    userName: "Chris",
+    matchCount: 1,
+    hotSheetName: "Canary",
+    hotSheetLink: "https://allagentconnect.com/agent/hot-sheets",
+    listingsHtml: card(),
+  });
+  assert(!html.includes("Remove my account"), "Remove my account present");
+  assertStringIncludes(html, "<!--AAC_FOOTER_UNSUB_ANCHOR-->");
+  assertStringIncludes(html, "Open Hot Sheet");
+  assertStringIncludes(html, "View listing");
+  assertStringIncludes(html, "On MLS");
+  assertStringIncludes(html, "$999,000");
+  assertStringIncludes(html, "Susan Doig");
+  assertStringIncludes(html, "susan.doig@donnellyandco.com");
+  assertStringIncludes(html, "(617) 504-4381");
+  assertStringIncludes(html, "Donnelly and Co");
+  assert(!/data:image\/svg/i.test(html));
+});
