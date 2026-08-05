@@ -110,6 +110,7 @@ function singleRecipient(to: unknown): string | null {
 export function validateJobForSingleSend(
   job: JobShape | null | undefined,
   allowlist: readonly SingleSendAllowlistEntry[] = SINGLE_SEND_ALLOWLIST,
+  expectedStatus: string = "queued",
 ): ValidationResult {
   if (!job) return { ok: false, error: "job_not_found" };
   if (typeof job.id !== "string" || !job.id.trim()) {
@@ -117,7 +118,7 @@ export function validateJobForSingleSend(
   }
   const entryById = findAllowlistEntryByJobId(job.id, allowlist);
   if (!entryById) return { ok: false, error: "job_id_not_allowlisted" };
-  if (job.status !== "queued") return { ok: false, error: "job_not_queued" };
+  if (job.status !== expectedStatus) return { ok: false, error: "job_not_queued" };
   if (job.stream !== SINGLE_SEND_ALLOWED_STREAM) {
     return { ok: false, error: "stream_not_allowed" };
   }
