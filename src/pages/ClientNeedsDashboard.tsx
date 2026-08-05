@@ -489,6 +489,16 @@ const ClientNeedsDashboard = () => {
             </div>
           </div>
         )}
+
+        <SendEmailDialog
+          open={composeOpen}
+          onOpenChange={(next) => {
+            setComposeOpen(next);
+            if (!next && isBuyerNeedComposeRequested(location.search)) {
+              navigate("/communications", { replace: true });
+            }
+          }}
+        />
       </div>
     </>
   );
