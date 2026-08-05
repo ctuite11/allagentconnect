@@ -377,6 +377,7 @@ export function renderEmailTemplate(
           </p>`,
         ctaLabel: "Forward this Hot Sheet",
         ctaUrl: variables.previewLink,
+        hideRemoveAccountLink: true,
       });
 
     case "new-match-notification":

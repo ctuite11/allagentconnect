@@ -74,3 +74,44 @@ Deno.test("hot sheet email omits Remove my account and keeps working parts", () 
   assertStringIncludes(html, "Donnelly and Co");
   assert(!/data:image\/svg/i.test(html));
 });
+
+const HOT_SHEET_TEMPLATES = [
+  "new-match-notification",
+  "hot-sheet-status-change",
+  "hot-sheet-subscriber-update",
+  "hot-sheet-subscriber-status-change",
+] as const;
+
+const SUBSCRIBER_TEMPLATES = new Set<string>([
+  "hot-sheet-subscriber-update",
+  "hot-sheet-subscriber-status-change",
+]);
+
+function renderTemplate(template: string) {
+  return renderEmailTemplate(template, {
+    userName: "Chris",
+    matchCount: 1,
+    hotSheetName: "Canary",
+    statusKey: "price_change",
+    hotSheetLink: "https://allagentconnect.com/agent/hot-sheets",
+    previewLink: "https://allagentconnect.com/hot-sheet/preview",
+    unsubscribeLink: "https://allagentconnect.com/hot-sheet/unsubscribe?token=abc",
+    listingsHtml: card(),
+  });
+}
+
+for (const template of HOT_SHEET_TEMPLATES) {
+  Deno.test(`${template} renders email-safe HTML`, () => {
+    const html = renderTemplate(template);
+    assert(!html.includes("Remove my account"), `${template}: Remove my account present`);
+    assert(!/<svg/i.test(html), `${template}: inline svg found`);
+    assert(!/data:image\/svg/i.test(html), `${template}: data-uri svg found`);
+    for (const m of html.matchAll(/<img[^>]+src=["']([^"']+)["']/gi)) {
+      assert(m[1].startsWith("https://"), `${template}: non-https img src ${m[1]}`);
+    }
+    if (SUBSCRIBER_TEMPLATES.has(template)) {
+      assertStringIncludes(html, "https://allagentconnect.com/hot-sheet/unsubscribe?token=abc");
+      assertStringIncludes(html, "Unsubscribe");
+    }
+  });
+}
