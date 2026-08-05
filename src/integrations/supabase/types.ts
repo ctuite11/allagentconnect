@@ -5191,6 +5191,10 @@ export type Database = {
         Args: { p_crm_client_id: string; p_hot_sheet_id: string }
         Returns: Json
       }
+      dispatch_hot_sheet_listing: {
+        Args: { p_listing_id: string }
+        Returns: number
+      }
       effective_agent_id: { Args: never; Returns: string }
       email_job_is_blocked: {
         Args: { p_idempotency_key: string; p_template: string }
@@ -5332,6 +5336,7 @@ export type Database = {
         Returns: boolean
       }
       invoke_process_comms_digests: { Args: never; Returns: undefined }
+      invoke_process_email_queue: { Args: never; Returns: undefined }
       is_accepted_delegate_for: {
         Args: { p_owner_user_id: string }
         Returns: boolean
