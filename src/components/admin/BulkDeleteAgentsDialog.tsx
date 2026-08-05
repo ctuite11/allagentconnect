@@ -297,7 +297,9 @@ export function BulkDeleteAgentsDialog({
                 ))}
               </div>
               <div className="mt-4 space-y-2">
-                {realAgents.length > 0 && (
+                {agents.some(
+                  (agent) => agent.source !== "pending_verification" && !agent.is_early_access,
+                ) && (
                   <p className="text-amber-600 font-medium text-sm">
                     Existing agents will be archived in the deleted users database.
                   </p>
