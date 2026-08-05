@@ -1,8 +1,7 @@
 /**
- * Phase 4 guardrail helper — looks up the most recent deleted_users row for
- * an email. Used by every admin path that creates, verifies, or emails an
- * agent so we cannot silently rebuild a previously-deleted agent (and
- * re-fire the License Verified email) without an explicit admin override.
+ * Phase 4 guardrail helper — looks up a deletion that still applies to the
+ * current account for an email. Historical tombstones predating a legitimate
+ * replacement account are intentionally ignored.
  *
  * Scope note: `deleted_users` only ever contains agent archives (populated
  * by DeleteAgentDialog / BulkDeleteAgentsDialog). Buyer/consumer flows and
@@ -27,18 +26,12 @@ export async function findDeletedAgent(
 ): Promise<DeletedAgentMatch | null> {
   const target = (email ?? "").trim().toLowerCase();
   if (!target) return null;
-  const { data, error } = await admin
-    .from("deleted_users")
-    .select(
-      "id,original_user_id,email,first_name,last_name,deleted_at,deleted_by,deletion_reason",
-    )
-    .ilike("email", target)
-    .order("deleted_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+  const { data, error } = await admin.rpc("find_current_agent_deletion", {
+    p_email: target,
+  });
   if (error) {
     console.error("[findDeletedAgent] lookup error:", error.message);
     return null;
   }
-  return (data ?? null) as DeletedAgentMatch | null;
+  return ((Array.isArray(data) ? data[0] : data) ?? null) as DeletedAgentMatch | null;
 }
