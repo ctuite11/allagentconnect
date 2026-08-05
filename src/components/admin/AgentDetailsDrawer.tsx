@@ -75,6 +75,7 @@ interface AgentDetailsDrawerProps {
   onEdit: () => void;
   onEmail: () => void;
   onResetPassword: () => void;
+  onSetPassword: () => void;
   onCopySetupLink: () => void;
   onEmailSetupLink: () => void;
   onResendInvite: () => void;
@@ -130,6 +131,7 @@ export function AgentDetailsDrawer({
   onEdit,
   onEmail,
   onResetPassword,
+  onSetPassword,
   onCopySetupLink,
   onEmailSetupLink,
   onResendInvite,
@@ -342,6 +344,9 @@ export function AgentDetailsDrawer({
                   <Button size="sm" variant="outline" onClick={onCopySetupLink}>
                     Copy Setup Link
                   </Button>
+                  <Button size="sm" variant="outline" onClick={onSetPassword}>
+                    Set Password
+                  </Button>
                   <Button size="sm" variant="outline" onClick={onEdit}>
                     Edit
                   </Button>
@@ -375,6 +380,9 @@ export function AgentDetailsDrawer({
                   </Button>
                   <Button size="sm" variant="outline" onClick={onEmail}>
                     Email
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={onSetPassword}>
+                    Set Password
                   </Button>
                   {canPasswordReset && (
                     <Button size="sm" variant="outline" onClick={onResetPassword}>
