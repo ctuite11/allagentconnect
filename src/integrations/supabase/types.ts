@@ -5266,6 +5266,19 @@ export type Database = {
         Args: { p_conversation_id: string }
         Returns: undefined
       }
+      find_current_agent_deletion: {
+        Args: { p_email: string }
+        Returns: {
+          deleted_at: string
+          deleted_by: string
+          deletion_reason: string
+          email: string
+          first_name: string
+          id: string
+          last_name: string
+          original_user_id: string
+        }[]
+      }
       generate_aac_id: { Args: never; Returns: string }
       generate_listing_number: { Args: never; Returns: string }
       get_agent_presence: {
