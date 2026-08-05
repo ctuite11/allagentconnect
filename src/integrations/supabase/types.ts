@@ -5532,6 +5532,7 @@ export type Database = {
         Returns: string
       }
       owns_submission: { Args: { p_submission_id: string }; Returns: boolean }
+      probe_email_dispatch_secret: { Args: never; Returns: Json }
       process_auth_deletion_queue: { Args: never; Returns: undefined }
       process_pending_message_emails: {
         Args: { grace_minutes?: number }
