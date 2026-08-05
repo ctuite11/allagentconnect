@@ -5335,6 +5335,10 @@ export type Database = {
         Args: { p_hot_sheet_id: string }
         Returns: boolean
       }
+      install_email_dispatch_service_role_key: {
+        Args: { p_key: string }
+        Returns: string
+      }
       invoke_process_comms_digests: { Args: never; Returns: undefined }
       invoke_process_email_queue: { Args: never; Returns: undefined }
       is_accepted_delegate_for: {
