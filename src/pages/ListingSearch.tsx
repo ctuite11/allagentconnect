@@ -198,7 +198,9 @@ const ListingSearch = () => {
       statuses:
         next === "for_rent" && !filters.statuses.includes("active")
           ? [...filters.statuses, "active"]
-          : filters.statuses,
+          : next === "for_sale"
+            ? filters.statuses.filter((s) => s !== "active")
+            : filters.statuses,
     };
     setFilters(updated);
     updateUrlParams(updated);
