@@ -249,7 +249,13 @@ export const UnifiedPropertySearch = ({
           type="single"
           value={criteria.listingType || LISTING_TYPE.FOR_SALE}
           onValueChange={(value) => {
-            if (value) updateCriteria({ listingType: value as "for_sale" | "for_rent" });
+            if (!value) return;
+            const listingType = value as "for_sale" | "for_rent";
+            updateCriteria(
+              listingType === LISTING_TYPE.FOR_RENT
+                ? { listingType, statuses: ["active"] }
+                : { listingType, statuses: [...DEFAULT_SEARCH_STATUSES] },
+            );
           }}
           className="justify-start w-full"
         >
