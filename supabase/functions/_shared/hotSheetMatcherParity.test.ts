@@ -1,7 +1,7 @@
 import { assertEquals, assertStringIncludes } from "https://deno.land/std@0.224.0/assert/mod.ts";
 
 const MIGRATION = new URL(
-  "../../migrations/20260805064500_hot_sheet_reopening_dispatchers_and_matcher_parity.sql",
+  "../../migrations/20260805070000_hot_sheet_reopening_dispatchers_and_matcher_parity.sql",
   import.meta.url,
 );
 
@@ -67,8 +67,9 @@ Deno.test("matcher filters on the mapped listing columns", async () => {
 Deno.test("rooms is documented as unsupported, not silently dropped", async () => {
   const src = await sql();
   assertStringIncludes(src, "NOT enforced — `rooms`");
-  // rooms must not appear as a criteria lookup that pretends to filter.
-  assertEquals(matcherBody(src).includes("->>'rooms'"), false);
+  // rooms is read only to fail closed — it must never appear in the SELECT filter.
+  const body = matcherBody(src);
+  assertEquals(body.slice(body.indexOf("RETURN QUERY")).includes("'rooms'"), false);
 });
 
 Deno.test("hasParking supports yes / no / any", async () => {
@@ -76,6 +77,58 @@ Deno.test("hasParking supports yes / no / any", async () => {
   assertStringIncludes(body, "v_has_parking IS NULL");
   assertStringIncludes(body, "v_has_parking = true");
   assertStringIncludes(body, "v_has_parking = false");
+});
+
+Deno.test("dispatchers are revoked from PUBLIC/anon/authenticated and granted only to service_role", async () => {
+  const src = await sql();
+  for (const fn of ["public.invoke_process_email_queue()", "public.dispatch_hot_sheet_listing(uuid)"]) {
+    for (const role of ["PUBLIC", "anon", "authenticated"]) {
+      assertStringIncludes(src, `REVOKE ALL ON FUNCTION ${fn} FROM ${role};`);
+    }
+    assertStringIncludes(src, `GRANT EXECUTE ON FUNCTION ${fn} TO service_role;`);
+  }
+});
+
+Deno.test("listing-event dispatcher verifies the listing row exists first", async () => {
+  const src = await sql();
+  const start = src.indexOf("CREATE OR REPLACE FUNCTION public.dispatch_hot_sheet_listing");
+  const body = src.slice(start, src.indexOf("$fn$;", start));
+  assertStringIncludes(body, "IF NOT EXISTS (SELECT 1 FROM public.listings l WHERE l.id = p_listing_id)");
+});
+
+Deno.test("trigger dispatches on any match-relevant column change, not status alone", async () => {
+  const src = await sql();
+  const start = src.indexOf("CREATE OR REPLACE FUNCTION public.notify_matching_buyers_on_new_listing");
+  const body = src.slice(start, src.indexOf("$fn$;", start));
+  for (
+    const col of [
+      "status", "state", "county", "city", "neighborhood", "property_type", "price",
+      "bedrooms", "bathrooms", "lot_size", "square_feet",
+      "parking_spaces", "garage_spaces", "total_parking_spaces", "agent_id",
+    ]
+  ) {
+    assertStringIncludes(body, `OLD.${col}`);
+    assertStringIncludes(body, `NEW.${col}`);
+  }
+  assertStringIncludes(src, "AFTER INSERT OR UPDATE OF");
+  // Legacy spelling must be dispatchable too.
+  assertStringIncludes(body, "'cancelled'");
+});
+
+Deno.test("matcher fails closed on empty strings, non-array lists, unknown county, unknown parking", async () => {
+  const body = matcherBody(await sql());
+  assertStringIncludes(body, "NULLIF(trim(");
+  assertStringIncludes(body, "jsonb_typeof(v_criteria->'statuses') = 'array'");
+  assertStringIncludes(body, "jsonb_typeof(v_criteria->'cities') = 'array'");
+  assertStringIncludes(body, "jsonb_typeof(v_criteria->'propertyTypes') = 'array'");
+  assertStringIncludes(body, "returning zero matches");
+  assertStringIncludes(body, "l.parking_spaces IS NOT NULL");
+});
+
+Deno.test("rooms fails closed rather than being ignored", async () => {
+  const body = matcherBody(await sql());
+  assertStringIncludes(body, "v_rooms := NULLIF(trim(COALESCE(v_criteria->>'rooms', '')), '');");
+  assertStringIncludes(body, "IF v_rooms IS NOT NULL THEN");
 });
 
 Deno.test("matcher keeps per-status sent-state dedupe", async () => {
@@ -94,9 +147,9 @@ Deno.test("dispatchers send exact service-role Authorization and apikey from Vau
   ) {
     const start = src.indexOf(fn);
     assertEquals(start > 0, true);
-    const body = src.slice(start, src.indexOf("$$;", start));
+    const body = src.slice(start, src.indexOf("$fn$;", start));
     assertStringIncludes(body, "vault.decrypted_secrets");
-    assertStringIncludes(body, "'service_role_key'");
+    assertStringIncludes(body, "'email_dispatch_service_role_key'");
     assertStringIncludes(body, "'Authorization', 'Bearer ' || v_key");
     assertStringIncludes(body, "'apikey', v_key");
     // Fail closed when the secret is absent.
@@ -105,10 +158,10 @@ Deno.test("dispatchers send exact service-role Authorization and apikey from Vau
   assertStringIncludes(src, "'listing_id', p_listing_id::text");
 });
 
-Deno.test("trigger covers the full Hot Sheet status set and only status changes", async () => {
+Deno.test("trigger covers the full Hot Sheet status set, including the legacy cancelled spelling", async () => {
   const src = await sql();
   const start = src.indexOf("CREATE OR REPLACE FUNCTION public.notify_matching_buyers_on_new_listing");
-  const body = src.slice(start, src.indexOf("$$;", start));
+  const body = src.slice(start, src.indexOf("$fn$;", start));
   for (
     const status of [
       "active",
@@ -129,7 +182,7 @@ Deno.test("trigger covers the full Hot Sheet status set and only status changes"
   ) {
     assertStringIncludes(body, `'${status}'`);
   }
-  assertStringIncludes(body, "OLD.status IS NOT DISTINCT FROM NEW.status");
+  assertStringIncludes(body, "OLD.status               IS DISTINCT FROM NEW.status");
   assertStringIncludes(body, "public.dispatch_hot_sheet_listing(NEW.id)");
 });
 
@@ -141,12 +194,17 @@ Deno.test("isolation preserved: no Communications fan-out, no retired broadcast"
   assertEquals(src.includes("client_needs"), false);
   // Nothing is unpaused or enqueued by the migration.
   assertEquals(/insert\s+into\s+public\.email_jobs/i.test(src), false);
-  assertEquals(/cron\.alter_job/i.test(src), false);
-  assertEquals(/UPDATE\s+cron\.job\s+SET\s+active/i.test(src), false);
+  // cron.alter_job is used, but only to rewrite the worker command — never to
+  // activate a job, and never via a direct UPDATE on cron.job.
+  assertEquals(/cron\.alter_job\([^)]*active/is.test(src), false);
+  assertEquals(/UPDATE\s+cron\.job/i.test(src), false);
 });
 
 Deno.test("obsolete anon matcher cron is unscheduled; worker cron keeps its state", async () => {
   const src = await sql();
-  assertStringIncludes(src, "cron.unschedule('send-new-match-notification-every-15-min')");
+  // The obsolete matcher cron row is RETAINED (inactive) for audit history.
+  assertEquals(src.includes("cron.unschedule("), false);
+  assertStringIncludes(src, "cron.alter_job(");
+  assertEquals(/UPDATE\s+cron\.job/i.test(src), false);
   assertStringIncludes(src, "SELECT public.invoke_process_email_queue();");
 });

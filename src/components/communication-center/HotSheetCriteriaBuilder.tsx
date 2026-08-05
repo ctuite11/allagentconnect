@@ -472,10 +472,9 @@ export function HotSheetCriteriaBuilder({ value, onChange }: HotSheetCriteriaBui
                   <Label htmlFor="cc-bathrooms">Total Bathrooms</Label>
                   <Input id="cc-bathrooms" type="number" step="0.5" placeholder="Any" value={value.bathrooms} onChange={(e) => patch({ bathrooms: e.target.value })} min="0" />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="cc-rooms">Rooms</Label>
-                  <Input id="cc-rooms" type="number" placeholder="Any" value={value.rooms} onChange={(e) => patch({ rooms: e.target.value })} min="0" />
-                </div>
+                {/* Rooms is intentionally not offered: there is no listings.rooms
+                    column, so the Hot Sheet matcher cannot enforce it. Existing
+                    saved Rooms criteria fail closed (zero matches) server-side. */}
                 <div className="space-y-2">
                   <Label htmlFor="cc-acres">Acres</Label>
                   <Input id="cc-acres" type="number" step="0.01" placeholder="Any" value={value.acres} onChange={(e) => patch({ acres: e.target.value })} min="0" />
