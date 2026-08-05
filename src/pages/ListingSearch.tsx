@@ -50,6 +50,11 @@ const ListingSearch = () => {
     if (searchParams.get("zipCode")) urlFilters.zipCode = searchParams.get("zipCode") || "";
     parseAdvancedParams(searchParams, urlFilters);
     
+    // For Rent always includes On MLS (active)
+    if (urlFilters.listingType === "for_rent" && !urlFilters.statuses.includes("active")) {
+      urlFilters.statuses = [...urlFilters.statuses, "active"];
+    }
+
     return urlFilters;
   });
   
