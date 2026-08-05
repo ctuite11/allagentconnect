@@ -388,6 +388,7 @@ export function renderEmailTemplate(
           ${variables.listingsHtml || ""}`,
         ctaLabel: variables.hotSheetLink ? "Open Hot Sheet" : undefined,
         ctaUrl: variables.hotSheetLink,
+        hideRemoveAccountLink: true,
       });
 
     case "hot-sheet-status-change":
@@ -412,6 +413,7 @@ export function renderEmailTemplate(
           ? (variables.previewLink ? "Forward this Hot Sheet" : undefined)
           : (variables.hotSheetLink ? "Open Hot Sheet" : undefined),
         ctaUrl: isSubscriber ? variables.previewLink : variables.hotSheetLink,
+        hideRemoveAccountLink: true,
       });
     }
 
