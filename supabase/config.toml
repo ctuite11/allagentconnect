@@ -87,6 +87,9 @@ verify_jwt = false
 [functions.process-email-queue]
 verify_jwt = false
 
+[functions.send-single-email-job]
+verify_jwt = true
+
 [functions.process-hot-sheet]
 verify_jwt = true
 
