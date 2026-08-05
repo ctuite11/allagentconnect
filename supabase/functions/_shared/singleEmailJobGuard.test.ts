@@ -1,7 +1,10 @@
 import { assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
 import {
+  findAllowlistEntryByJobId,
+  isAllowedJobId,
   parseSingleJobRequest,
   SINGLE_SEND_ALLOWLIST,
+  validateClaimedJobForSingleSend,
   validateJobForSingleSend,
 } from "./singleEmailJobGuard.ts";
 import { authorizeInternalServiceRole } from "./internalServiceRoleAuth.ts";
@@ -144,10 +147,101 @@ Deno.test("only queued rows may be claimed — repeated invocation cannot send t
 
 Deno.test("allowlist contains only the reviewed canary job", () => {
   assertEquals(SINGLE_SEND_ALLOWLIST.length, 1);
+  assertEquals(SINGLE_SEND_ALLOWLIST[0].job_id, CANARY_JOB_ID);
   assertEquals(SINGLE_SEND_ALLOWLIST[0].idempotency_key, CANARY_KEY);
   assertEquals(SINGLE_SEND_ALLOWLIST[0].recipient, "chris@allagentconnect.com");
   assertEquals(SINGLE_SEND_ALLOWLIST[0].template, "new-match-notification");
   assertEquals(SINGLE_SEND_ALLOWLIST[0].stream, "hot_sheet");
+  assertEquals(Object.keys(SINGLE_SEND_ALLOWLIST[0]).sort(), [
+    "idempotency_key",
+    "job_id",
+    "recipient",
+    "stream",
+    "template",
+  ]);
+});
+
+/* ---------- exact-UUID gate ---------- */
+
+Deno.test("another UUID is rejected before any database access", async () => {
+  const other = "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee";
+  assertEquals(isAllowedJobId(other), false);
+  assertEquals(findAllowlistEntryByJobId(other), null);
+  assertEquals(isAllowedJobId(CANARY_JOB_ID), true);
+
+  const src = await Deno.readTextFile(
+    new URL("../send-single-email-job/index.ts", import.meta.url),
+  );
+  const gateAt = src.indexOf("findAllowlistEntryByJobId(jobId)");
+  const clientAt = src.indexOf("createClient(SUPABASE_URL");
+  const queryAt = src.indexOf('.from("email_jobs")');
+  assertEquals(gateAt > -1, true);
+  assertEquals(gateAt < clientAt, true);
+  assertEquals(gateAt < queryAt, true);
+});
+
+Deno.test("a row whose id differs from the allowlisted UUID is rejected", () => {
+  assertEquals(
+    validateJobForSingleSend(canaryJob({ id: "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee" })),
+    { ok: false, error: "job_id_not_allowlisted" },
+  );
+  assertEquals(
+    validateJobForSingleSend(canaryJob({ id: null })),
+    { ok: false, error: "job_id_missing" },
+  );
+});
+
+Deno.test("the claim conditions on job id, queued status, stream and approved key", async () => {
+  const src = await Deno.readTextFile(
+    new URL("../send-single-email-job/index.ts", import.meta.url),
+  );
+  assertEquals(src.includes('.eq("id", jobId)'), true);
+  assertEquals(src.includes('.eq("status", "queued")'), true);
+  assertEquals(src.includes('.eq("stream", SINGLE_SEND_ALLOWED_STREAM)'), true);
+  assertEquals(
+    src.includes('.eq("idempotency_key", allowEntry.idempotency_key)'),
+    true,
+  );
+});
+
+Deno.test("the claimed row is fully revalidated before deliverEmailJob", async () => {
+  const src = await Deno.readTextFile(
+    new URL("../send-single-email-job/index.ts", import.meta.url),
+  );
+  const revalidateAt = src.indexOf("validateClaimedJobForSingleSend(");
+  const deliverAt = src.indexOf("await deliverEmailJob(");
+  assertEquals(revalidateAt > -1, true);
+  assertEquals(deliverAt > -1, true);
+  assertEquals(revalidateAt < deliverAt, true);
+
+  // claimed rows are 'processing'; the canary must still validate
+  assertEquals(validateClaimedJobForSingleSend(canaryJob({ status: "processing" })).ok, true);
+  assertEquals(
+    validateClaimedJobForSingleSend(
+      canaryJob({ status: "processing", idempotency_key: "hs-agent:other:other:active" }),
+    ),
+    { ok: false, error: "idempotency_key_not_allowlisted" },
+  );
+  assertEquals(
+    validateClaimedJobForSingleSend(
+      canaryJob({ status: "processing", id: "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee" }),
+    ),
+    { ok: false, error: "job_id_not_allowlisted" },
+  );
+});
+
+Deno.test("claimed-row mismatch makes no provider call and returns the job to queued", async () => {
+  const src = await Deno.readTextFile(
+    new URL("../send-single-email-job/index.ts", import.meta.url),
+  );
+  const start = src.indexOf("validateClaimedJobForSingleSend(");
+  const deliverAt = src.indexOf("await deliverEmailJob(");
+  const branch = src.slice(start, deliverAt);
+  assertEquals(branch.includes('status: "queued"'), true);
+  assertEquals(branch.includes("attempts: row.attempts ?? 0"), true);
+  assertEquals(branch.includes("claimed_row_validation_failed"), true);
+  assertEquals(branch.includes("console.error"), true);
+  assertEquals(branch.includes("deliverEmailJob"), false);
 });
 
 /* ---------- pause behaviour ---------- */
