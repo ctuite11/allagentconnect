@@ -9,7 +9,13 @@
  * Fail closed everywhere: anything not explicitly allowed is rejected.
  */
 
-export const SINGLE_SEND_ALLOWED_STREAM = "hot_sheet" as const;
+/** Streams that may ever be delivered through the single-job path. */
+export const SINGLE_SEND_ALLOWED_STREAMS = [
+  "hot_sheet",
+  "transactional",
+] as const;
+
+export type SingleSendAllowedStream = (typeof SINGLE_SEND_ALLOWED_STREAMS)[number];
 
 export interface SingleSendAllowlistEntry {
   job_id: string;
@@ -25,12 +31,11 @@ export interface SingleSendAllowlistEntry {
  */
 export const SINGLE_SEND_ALLOWLIST: readonly SingleSendAllowlistEntry[] = [
   {
-    job_id: "7ac18a5b-4607-4d52-9a36-03204d920765",
-    idempotency_key:
-      "hs-agent:7f3a1c62-9d4e-4b18-a0c5-2e6b81f4d900:0775b03d-e774-4dc9-9627-f0d2ec752fd3:active",
-    recipient: "chris@allagentconnect.com",
-    template: "new-match-notification",
-    stream: SINGLE_SEND_ALLOWED_STREAM,
+    job_id: "f39cb9a8-4477-425c-98a8-b61efa0e8c1e",
+    idempotency_key: "license-verified/48326c81-cc09-41cb-b80b-85bf45159e3c",
+    recipient: "kate.fallon@gibsonsir.com",
+    template: "license-verified",
+    stream: "transactional",
   },
 ];
 
@@ -119,7 +124,11 @@ export function validateJobForSingleSend(
   const entryById = findAllowlistEntryByJobId(job.id, allowlist);
   if (!entryById) return { ok: false, error: "job_id_not_allowlisted" };
   if (job.status !== expectedStatus) return { ok: false, error: "job_not_queued" };
-  if (job.stream !== SINGLE_SEND_ALLOWED_STREAM) {
+  if (
+    typeof job.stream !== "string" ||
+    !(SINGLE_SEND_ALLOWED_STREAMS as readonly string[]).includes(job.stream) ||
+    job.stream !== entryById.stream
+  ) {
     return { ok: false, error: "stream_not_allowed" };
   }
 
