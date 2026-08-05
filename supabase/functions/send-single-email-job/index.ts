@@ -22,8 +22,10 @@ import {
   toErrorMessage,
 } from "../_shared/emailJobDelivery.ts";
 import {
+  findAllowlistEntryByJobId,
   parseSingleJobRequest,
   SINGLE_SEND_ALLOWED_STREAM,
+  validateClaimedJobForSingleSend,
   validateJobForSingleSend,
 } from "../_shared/singleEmailJobGuard.ts";
 import { isGloballyPaused, isStreamPaused } from "../_shared/emailStreams.ts";
@@ -69,6 +71,16 @@ Deno.serve(async (req) => {
   const parsed = parseSingleJobRequest(rawBody);
   if (!parsed.ok) return json({ error: parsed.error }, { status: 400 });
   const jobId = parsed.jobId;
+
+  // 2b. Exact-UUID allowlist gate — before any Supabase client or query.
+  const allowEntry = findAllowlistEntryByJobId(jobId);
+  if (!allowEntry) {
+    console.log(`${LOG_PREFIX} rejected ${jobId}: job_id_not_allowlisted`);
+    return json(
+      { error: "job_id_not_allowlisted", job_id: jobId, claimed: false, sent: false },
+      { status: 403 },
+    );
+  }
 
   // 3. Pause gate before touching the database at all.
   if (isGloballyPaused()) {
@@ -140,6 +152,7 @@ Deno.serve(async (req) => {
       .eq("id", jobId)
       .eq("status", "queued")
       .eq("stream", SINGLE_SEND_ALLOWED_STREAM)
+      .eq("idempotency_key", allowEntry.idempotency_key)
       .select("*");
 
     if (claimErr) throw claimErr;
@@ -157,6 +170,32 @@ Deno.serve(async (req) => {
     }
 
     const job = claimed[0] as EmailJob;
+
+    // 5b. Re-validate the claimed row before any provider call. Any mismatch
+    //     rolls the row back to queued and returns fail-closed.
+    const claimedVerdict = validateClaimedJobForSingleSend(job as never);
+    if (!claimedVerdict.ok) {
+      console.error(
+        `${LOG_PREFIX} claimed-row mismatch ${jobId}: ${claimedVerdict.error}`,
+      );
+      await supabase
+        .from("email_jobs")
+        .update({ status: "queued", attempts: row.attempts ?? 0 })
+        .eq("id", jobId)
+        .eq("status", "processing");
+      return json(
+        {
+          error: "claimed_row_validation_failed",
+          reason: claimedVerdict.error,
+          job_id: jobId,
+          previous_status: previousStatus,
+          final_status: "queued",
+          claimed: false,
+          sent: false,
+        },
+        { status: 409 },
+      );
+    }
 
     // 6. Deliver through the single shared delivery core (rendering, pre-send
     //    pause recheck, sendEmail, event logging, retry, sent/failed update).
