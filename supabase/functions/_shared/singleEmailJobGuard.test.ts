@@ -8,22 +8,25 @@ import {
   validateJobForSingleSend,
 } from "./singleEmailJobGuard.ts";
 import { authorizeInternalServiceRole } from "./internalServiceRoleAuth.ts";
-import { preSendBlockReason } from "./emailStreams.ts";
+import {
+  isGloballyPaused,
+  isStreamPaused,
+  preSendBlockReason,
+} from "./emailStreams.ts";
 import { ALL_PAUSES_OFF, ALL_PAUSES_ON, withEnv } from "./testEnv.ts";
 
-const CANARY_JOB_ID = "7ac18a5b-4607-4d52-9a36-03204d920765";
-const CANARY_KEY =
-  "hs-agent:7f3a1c62-9d4e-4b18-a0c5-2e6b81f4d900:0775b03d-e774-4dc9-9627-f0d2ec752fd3:active";
+const CANARY_JOB_ID = "f39cb9a8-4477-425c-98a8-b61efa0e8c1e";
+const CANARY_KEY = "license-verified/48326c81-cc09-41cb-b80b-85bf45159e3c";
 
 function canaryJob(over: Record<string, unknown> = {}) {
   return {
     id: CANARY_JOB_ID,
     status: "queued",
-    stream: "hot_sheet",
+    stream: "transactional",
     idempotency_key: CANARY_KEY,
     payload: {
-      to: "chris@allagentconnect.com",
-      template: "new-match-notification",
+      to: "kate.fallon@gibsonsir.com",
+      template: "license-verified",
     },
     ...over,
   } as never;
@@ -95,7 +98,7 @@ Deno.test("wrong stream, recipient, template or idempotency key is rejected", ()
     { ok: false, error: "stream_not_allowed" },
   );
   assertEquals(
-    validateJobForSingleSend(canaryJob({ stream: "transactional" })),
+    validateJobForSingleSend(canaryJob({ stream: "hot_sheet" })),
     { ok: false, error: "stream_not_allowed" },
   );
   assertEquals(
@@ -104,7 +107,7 @@ Deno.test("wrong stream, recipient, template or idempotency key is rejected", ()
   );
   assertEquals(
     validateJobForSingleSend(
-      canaryJob({ payload: { to: "someone@else.com", template: "new-match-notification" } }),
+      canaryJob({ payload: { to: "someone@else.com", template: "license-verified" } }),
     ),
     { ok: false, error: "recipient_mismatch" },
   );
@@ -112,8 +115,8 @@ Deno.test("wrong stream, recipient, template or idempotency key is rejected", ()
     validateJobForSingleSend(
       canaryJob({
         payload: {
-          to: ["chris@allagentconnect.com", "someone@else.com"],
-          template: "new-match-notification",
+          to: ["kate.fallon@gibsonsir.com", "someone@else.com"],
+          template: "license-verified",
         },
       }),
     ),
@@ -121,12 +124,12 @@ Deno.test("wrong stream, recipient, template or idempotency key is rejected", ()
   );
   assertEquals(
     validateJobForSingleSend(
-      canaryJob({ payload: { to: "chris@allagentconnect.com", template: "hot-sheet-status-change" } }),
+      canaryJob({ payload: { to: "kate.fallon@gibsonsir.com", template: "hot-sheet-status-change" } }),
     ),
     { ok: false, error: "template_mismatch" },
   );
   assertEquals(
-    validateJobForSingleSend(canaryJob({ idempotency_key: "hs-agent:other:other:active" })),
+    validateJobForSingleSend(canaryJob({ idempotency_key: "license-verified/other" })),
     { ok: false, error: "idempotency_key_not_allowlisted" },
   );
   assertEquals(
@@ -149,9 +152,9 @@ Deno.test("allowlist contains only the reviewed canary job", () => {
   assertEquals(SINGLE_SEND_ALLOWLIST.length, 1);
   assertEquals(SINGLE_SEND_ALLOWLIST[0].job_id, CANARY_JOB_ID);
   assertEquals(SINGLE_SEND_ALLOWLIST[0].idempotency_key, CANARY_KEY);
-  assertEquals(SINGLE_SEND_ALLOWLIST[0].recipient, "chris@allagentconnect.com");
-  assertEquals(SINGLE_SEND_ALLOWLIST[0].template, "new-match-notification");
-  assertEquals(SINGLE_SEND_ALLOWLIST[0].stream, "hot_sheet");
+  assertEquals(SINGLE_SEND_ALLOWLIST[0].recipient, "kate.fallon@gibsonsir.com");
+  assertEquals(SINGLE_SEND_ALLOWLIST[0].template, "license-verified");
+  assertEquals(SINGLE_SEND_ALLOWLIST[0].stream, "transactional");
   assertEquals(Object.keys(SINGLE_SEND_ALLOWLIST[0]).sort(), [
     "idempotency_key",
     "job_id",
@@ -197,7 +200,7 @@ Deno.test("the claim conditions on job id, queued status, stream and approved ke
   );
   assertEquals(src.includes('.eq("id", jobId)'), true);
   assertEquals(src.includes('.eq("status", "queued")'), true);
-  assertEquals(src.includes('.eq("stream", SINGLE_SEND_ALLOWED_STREAM)'), true);
+  assertEquals(src.includes('.eq("stream", allowEntry.stream)'), true);
   assertEquals(
     src.includes('.eq("idempotency_key", allowEntry.idempotency_key)'),
     true,
@@ -218,7 +221,7 @@ Deno.test("the claimed row is fully revalidated before deliverEmailJob", async (
   assertEquals(validateClaimedJobForSingleSend(canaryJob({ status: "processing" })).ok, true);
   assertEquals(
     validateClaimedJobForSingleSend(
-      canaryJob({ status: "processing", idempotency_key: "hs-agent:other:other:active" }),
+      canaryJob({ status: "processing", idempotency_key: "license-verified/other" }),
     ),
     { ok: false, error: "idempotency_key_not_allowlisted" },
   );
@@ -246,20 +249,32 @@ Deno.test("claimed-row mismatch makes no provider call and returns the job to qu
 
 /* ---------- pause behaviour ---------- */
 
-Deno.test("paused state blocks the send (job stays queued)", () => {
+Deno.test("transactional pause rules: global blocks, Hot Sheet / Comms do not", () => {
   const job = {
-    stream: "hot_sheet",
+    stream: "transactional",
     idempotency_key: CANARY_KEY,
-    payload: { template: "new-match-notification" },
+    payload: { template: "license-verified" },
   };
   withEnv(ALL_PAUSES_ON, () => {
     assertEquals(preSendBlockReason(job), "global_pause");
   });
   withEnv({ ...ALL_PAUSES_OFF, HOT_SHEET_EMAILS_PAUSED: "true" }, () => {
-    assertEquals(preSendBlockReason(job), "stream_paused:hot_sheet");
-  });
-  withEnv(ALL_PAUSES_OFF, () => {
     assertEquals(preSendBlockReason(job), null);
+  });
+  withEnv({ ...ALL_PAUSES_OFF, COMMS_EMAILS_PAUSED: "true" }, () => {
+    assertEquals(preSendBlockReason(job), null);
+  });
+  withEnv(
+    { ...ALL_PAUSES_OFF, HOT_SHEET_EMAILS_PAUSED: "true", COMMS_EMAILS_PAUSED: "true" },
+    () => {
+      assertEquals(preSendBlockReason(job), null);
+      assertEquals(isStreamPaused("transactional"), false);
+      assertEquals(isGloballyPaused(), false);
+    },
+  );
+  withEnv({ ...ALL_PAUSES_OFF, EMAIL_SENDING_PAUSED: "true" }, () => {
+    assertEquals(preSendBlockReason(job), "global_pause");
+    assertEquals(isGloballyPaused(), true);
   });
 });
 
@@ -278,7 +293,7 @@ Deno.test("single-job function never uses the batch claim RPC and claims one row
   // conditional single-row claim
   assertEquals(src.includes('.eq("id", jobId)'), true);
   assertEquals(src.includes('.eq("status", "queued")'), true);
-  assertEquals(src.includes('.eq("stream", SINGLE_SEND_ALLOWED_STREAM)'), true);
+  assertEquals(src.includes('.eq("stream", allowEntry.stream)'), true);
   assertEquals(src.includes("claimed.length !== 1"), true);
   // reuses the one delivery implementation
   assertEquals(src.includes("deliverEmailJob"), true);
