@@ -126,8 +126,9 @@ BEGIN
     RETURN NULL;
   END IF;
 
-  -- Hot Sheet path only. Never calls Communications Center fan-out and never
-  -- calls the retired notify-agents-new-listing broadcast.
+  -- Hot Sheet path only: the single downstream call is notify-matching-buyers,
+  -- which forwards the listing id to the canonical Hot Sheet matcher. No
+  -- Communications Center fan-out, no retired broad listing broadcast.
   SELECT net.http_post(
     url := supabase_url || '/functions/v1/notify-matching-buyers',
     headers := jsonb_build_object(
