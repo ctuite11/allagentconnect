@@ -218,14 +218,27 @@ export function DeleteAgentDialog({ open, onOpenChange, agent, onDeleted }: Dele
               <br /><br />
               This will permanently remove:
               <ul className="list-disc ml-5 mt-2 space-y-1">
-                <li>Their agent profile and settings</li>
-                <li>All their listings</li>
-                <li>All their clients and hot sheets</li>
-                <li>Their auth account</li>
+                {agent.source === "pending_verification" ? (
+                  <>
+                    <li>Their verification request</li>
+                    <li>Any stale records blocking a new invitation</li>
+                  </>
+                ) : (
+                  <>
+                    <li>Their agent profile and settings</li>
+                    <li>All their listings</li>
+                    <li>All their clients and hot sheets</li>
+                    <li>Their auth account</li>
+                  </>
+                )}
               </ul>
               <br />
-              <span className="text-amber-600 font-medium">The user will be archived in the deleted users database for record keeping.</span>
-              <br />
+              {agent.source !== "pending_verification" && (
+                <>
+                  <span className="text-amber-600 font-medium">The user will be archived in the deleted users database for record keeping.</span>
+                  <br />
+                </>
+              )}
               <span className="text-rose-600 font-medium">This action cannot be undone.</span>
             </div>
           </AlertDialogDescription>
@@ -243,7 +256,7 @@ export function DeleteAgentDialog({ open, onOpenChange, agent, onDeleted }: Dele
             className="rounded-xl bg-rose-600 hover:bg-rose-700 text-white"
           >
             {deleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Delete Agent
+            {agent.source === "pending_verification" ? "Delete Request" : "Delete Agent"}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

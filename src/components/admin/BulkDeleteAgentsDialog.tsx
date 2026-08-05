@@ -297,9 +297,11 @@ export function BulkDeleteAgentsDialog({
                 ))}
               </div>
               <div className="mt-4 space-y-2">
-                <p className="text-amber-600 font-medium text-sm">
-                  Users will be archived in the deleted users database.
-                </p>
+                {realAgents.length > 0 && (
+                  <p className="text-amber-600 font-medium text-sm">
+                    Existing agents will be archived in the deleted users database.
+                  </p>
+                )}
                 <p className="text-rose-600 font-medium text-sm">
                   This action cannot be undone.
                 </p>
