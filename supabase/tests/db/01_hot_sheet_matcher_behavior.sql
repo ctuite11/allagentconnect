@@ -228,6 +228,24 @@ BEGIN
     'mixed selection matches when either branch qualifies';
   ASSERT pg_temp.match('{}') = 1, 'empty property type selection stays unrestricted';
 
+  -- apartment + for_rent and condo + for_rent both match the broad RR marker,
+  -- as does any other property_type when the listing is a rental.
+  UPDATE public.listings SET property_type = 'apartment', listing_type = 'for_rent';
+  ASSERT pg_temp.match('{"propertyTypes":["residential_rental"]}') = 1,
+    'apartment + for_rent matches Residential Rental';
+  UPDATE public.listings SET property_type = 'condo';
+  ASSERT pg_temp.match('{"propertyTypes":["residential_rental"]}') = 1,
+    'condo + for_rent matches Residential Rental';
+  UPDATE public.listings SET property_type = 'multi_family';
+  ASSERT pg_temp.match('{"propertyTypes":["residential_rental"]}') = 1,
+    'any other property_type + for_rent matches Residential Rental';
+  UPDATE public.listings SET listing_type = 'for_sale';
+  ASSERT pg_temp.match('{"propertyTypes":["residential_rental"]}') = 0,
+    'for_sale listing never matches Residential Rental alone';
+  ASSERT pg_temp.match('{"propertyTypes":["residential_rental","multi_family"]}') = 1,
+    'mixed selection is OR: the sale property type still matches';
+  UPDATE public.listings SET property_type = 'condo';
+
   UPDATE public.listings SET listing_type = 'for_sale';
 END $$;
 
