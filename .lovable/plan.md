@@ -1,33 +1,40 @@
-# Hot Sheets — corrected incident record accepted, one open item
+# Close the last zero-price listing gap
 
-## Record accepted as final
+## What the audit found
 
-The corrected diagnosis is now the authoritative record:
+The pricing rule is already in place and working. The database constraint
+`listings_non_draft_requires_pricing_check` requires, for any listing that is not a draft:
 
-- Root cause: silent Hot Sheet deactivation (`is_active=false`) during the emergency email-pause work, combined with a results UI that kept showing matches for paused sheets. Not a criteria mismatch.
-- The earlier "no sheet covers Norfolk or Randolph" conclusion is retracted — it only evaluated `WHERE is_active = true`.
-- Listing triggers and dispatcher ran; queue worker healthy; no Hot Sheet email jobs created.
-- Fire-and-forget is fixed, not proposed: `notify-matching-buyers` awaits the downstream matcher, returns its result, and returns 500 on invocation failure. Merged at SHA `d037d1ad2a44c7158cdc5f3fa1ff580fb30b9b90`.
-- No backfill, replay, resend, or manual enqueue for `e552d6d6…` or `daaf7099…`.
+- For Sale: a price greater than 0, or both ends of a price range greater than 0
+- For Rent: a monthly rent greater than 0
 
-## Current state verified just now
+50 Proctor Ave (L-1232) is the single legacy row that predates that rule. It was created
+2026-07-20 17:20 UTC and last edited 17:52 UTC; the rule went live later that evening. It was
+never blocked because the constraint was intentionally added as "not validated" so the deploy
+would not fail on pre-existing rows.
 
-| Hot Sheet | Owner | State |
-|---|---|---|
-| `044322c7…` "boston" (personal) | Chris Tuite | Active |
-| `b41d8741…` "boston" (client-linked duplicate) | Chris Tuite | Paused — stays paused |
-| `rewa`, `Testing mobile`, `rrrrrrr` | Chris Tuite | Paused since 2026-08-02 (bulk deactivation) |
-| `CANARY 2026-08-05`, `CANARY RENDER 2` | Chris Tuite | Paused (temp canaries) |
-| 6 other agents' sheets | Various | Active |
+Current state of zero-price rows:
 
-## One open item
+```text
+L-1232  off_market  for_sale   price 0   <- 50 Proctor Ave (legacy, pre-rule)
+L-1273  draft       for_sale   price 0   <- draft, allowed
+L-1284  draft       for_sale   price 0   <- draft, allowed
+```
 
-Three of your non-canary personal Hot Sheets — `rewa`, `Testing mobile`, `rrrrrrr` — are still paused from the same 2026-08-02 bulk deactivation that caused this incident. They are not part of the corrected record's completed actions.
+No new listing can be published or moved off-draft without a price today.
 
-Proposed handling: leave them paused. They are named like test sheets, and the new **Paused** badge plus Pause/Resume controls now make their state visible in the UI, so you can resume any of them yourself with one click. If you want any reactivated instead, name the specific IDs and I will flip exactly those rows — reactivation alone enqueues and sends nothing.
+## Proposed work
 
-## Explicitly out of scope
+1. Set the real price on 50 Proctor Ave. I need the correct list price from you, or you can
+   open the listing and enter it yourself in the edit form.
+2. Once no non-draft row has a zero price, mark the existing constraint as validated so the
+   rule is enforced retroactively and no legacy row can slip through again.
 
-- No replay, backfill, resend, or manual email enqueue for the two missed listings.
-- No changes to the client-linked duplicate `b41d8741…`.
-- No email template or cron changes.
+Nothing else changes: no Hot Sheets, Communications Center, email, cron, or RLS changes.
+
+## Technical notes
+
+- Step 1 is a single data update on `public.listings` for `be535bee-...` (or a manual edit in the UI).
+- Step 2 is a one-line migration: `ALTER TABLE public.listings VALIDATE CONSTRAINT listings_non_draft_requires_pricing_check;`
+  It takes a brief lock only for the scan and makes no schema change.
+- Drafts remain exempt by design so agents can save work in progress.
