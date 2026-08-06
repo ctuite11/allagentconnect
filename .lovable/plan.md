@@ -1,5 +1,15 @@
 # Close the last zero-price listing gap
 
+## Where this rule came from
+
+You instructed it on 2026-07-20. At 18:42 UTC you asked "tell me why this listing was allowed with
+no price or range?" — that was L-1232, 50 Proctor Ave. At 18:54 UTC you approved the fix, and your
+own message specified that the constraint be added as NOT VALID, that L-1232 must not block the
+deploy, and: "Do NOT run VALIDATE CONSTRAINT until that audit is reviewed and bad rows are cleaned up."
+
+So the requirement was built that evening and has held for every listing since. L-1232 was knowingly
+left as the one exception, pending exactly the cleanup below.
+
 ## What the audit found
 
 The pricing rule is already in place and working. The database constraint
