@@ -1,35 +1,43 @@
-# Hot Sheets incident trace + fire-and-forget fix
+# Site speed: measured audit and targeted fixes
 
-## What the trace found (read-only, no sends, no backfill)
+Incident record is closed as corrected. This plan covers performance only.
 
-**The two newest qualifying listings**
+## What the measurements show
 
-| Listing | Address | Status | Price | Created |
-|---|---|---|---|---|
-| `e552d6d6-e3ab-4f13-9748-23449fb45dae` | 5 Hanover Street, Norfolk MA (single family) | off_market | $1,400,000 | 2026-08-05 22:27 UTC (status set 22:35) |
-| `daaf7099-84f8-474e-9764-4dc8aae71f8a` | 234 Allen Street, Randolph MA | off_market | $765,000 | 2026-08-05 16:48 UTC |
+Ranked by total database time (from live query statistics):
 
-Both statuses are in the dispatchable set.
+| Hot spot | Calls | Mean | Symptom |
+|---|---|---|---|
+| `agent_settings.last_seen_at` heartbeat write | 158,298 | 4.5 ms | Highest total DB time in the project; pure write volume |
+| `conversation_inbox` unfiltered read | 726,585 | 0.5–4.5 ms | Second highest by volume; runs on nearly every authenticated render |
+| `email_jobs` filtered by `payload->>...` | 1,270 | 337–729 ms | Admin/email pages; JSON key scan over a very large table |
+| `clients_with_relationship_status` by agent | 2,476 | 214 ms | CRM/Buyers lists |
+| Same view with 4-column `ilike` search | 30 | 2,698 ms (max 7.8 s) | CRM search box is the single slowest statement |
+| Cron polling reads on `listings` | 166,000+ | ~1 ms | Fine per-call, but frequent full-column pulls |
 
-**Trigger and dispatcher — they did run.** `notify_matching_buyers_trigger` exists and is enabled, covers all 15 relevant columns, and `dispatch_hot_sheet_listing()` finds the Vault secret `email_dispatch_service_role_key` (present). For the Norfolk listing the outbound request is recorded at 22:35:31 UTC with HTTP 200 and body `{"success":true,"queued":0,"hot_sheet_fanout":"invoked",...}`. The Randolph listing falls outside the ~6h pg_net response retention window, so its request row is no longer available.
+Conclusion: the slowness is dominated by (a) chatty client polling and (b) three unindexed access patterns, not by page weight.
 
-**Matching proof — this is the actual reason nothing was delivered.** There are exactly 6 active Hot Sheets, all set to `immediately`. Running `check_hot_sheet_matches` read-only for all 6 returns **zero rows for both listing IDs**. Sample exclusion reasons: the Saugus/Revere/Melrose sheet is limited to those three cities (Norfolk and Randolph are not in it); the Cambridge/Brookline sheet is condo-only, $500k–$1M. No sheet covers Norfolk or Randolph. So: no criteria match, not a suppressed or idempotency-blocked send.
+## Fixes
 
-**Queue.** No Hot Sheet `email_jobs` rows exist for either listing (queued, sent, or failed). Recent queue traffic is transactional/system only. The queue worker cron is running every minute and returning `{"processed":0,...}` — healthy, nothing to do.
+### 1. Reduce polling chatter (frontend)
+- Presence heartbeat: pause the interval when the tab is hidden and skip the write when the last heartbeat is still fresh. Resume on visibility change.
+- Presence reads (`useAgentLastSeen`, batch variant): same visibility gating, and dedupe so one shared poller serves the page instead of one per avatar.
+- `conversation_inbox` reads: route through a single shared React Query key with a sane `staleTime` so the sidebar badge, threads list, and Success Hub reuse one response instead of issuing separate requests.
 
-**Conclusion on the primary question:** the downstream matcher call was made (the bridge returned 200 with the fan-out marker). The fire-and-forget pattern is still a real reliability defect — it makes the outcome unobservable and can drop the call under isolate shutdown — but it is not the cause of these two non-deliveries.
+### 2. Index the three slow access patterns (migration)
+- Expression index on `email_jobs` for the JSON key used by the admin filters, plus a supporting `created_at DESC` ordering index.
+- Index supporting `clients` lookup by owning agent with `created_at DESC` ordering.
+- Trigram indexes on the client name/email/phone columns so the CRM `ilike` search stops scanning every row.
 
-## Proposed change
+### 3. Cheap frontend load wins
+- Verify route-level code splitting covers the heavy admin and listing pages; lazy-load any that are still in the main bundle.
+- Add `loading="lazy"` / explicit dimensions on listing and hot sheet imagery where missing.
 
-Even though the incident resolves to "no matching Hot Sheets", the reliability gap is real and worth closing:
+## Verification
+- Re-run `EXPLAIN (ANALYZE)` on each targeted query before and after the indexes and record the plan change.
+- Re-read query statistics after deploy to confirm total time on the top offenders drops.
+- Confirm presence still flips to Online within the existing 5-minute window after the heartbeat change.
 
-1. `supabase/functions/notify-matching-buyers/index.ts`: `await` the `send-new-match-notification` invocation instead of `.then()`. On invocation error return HTTP 500 with the error; only return `hot_sheet_fanout: "invoked"` when the downstream call succeeded, and include the matcher's summary (hot sheets processed, matches, jobs queued) in the response body so the pg_net response row becomes real evidence.
-2. Preserve exactly: single `listing_id` scope, service-role auth headers, Hot Sheets isolation, pause-gate short-circuit. No cron reactivation, no broad matcher.
-3. Add unit tests covering: downstream success passthrough, downstream error → 500, paused gate still short-circuits without invoking downstream.
-
-## Verification (no sends)
-
-- Read-only replay of `send-new-match-notification` semantics against both listing IDs, expecting 0 matches, and re-confirm the matching roster from `check_hot_sheet_matches`.
-- Optional controlled canary: a temporary Hot Sheet whose criteria match exactly one listing, enqueue-only, then report the recipient roster and idempotency state before any authorization to send.
-
-Nothing is sent, resent, backfilled, or enqueued as part of this plan.
+## Out of scope
+- No email sends, replays, backfills, or queue changes.
+- No visual redesign; existing canonical components stay as they are.
