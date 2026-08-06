@@ -65,6 +65,19 @@ function useAuthRoleStore(): AuthRoleState {
   const [delegateMemberships, setDelegateMemberships] = useState<DelegateMembershipSummary[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const initialLoadDone = useRef(false);
+  const roleResolutionId = useRef(0);
+
+  const clearResolvedAccess = useCallback(() => {
+    setRole(null);
+    setIsAdmin(false);
+    setIsVerifiedAgent(false);
+    setIsLicensedOwner(false);
+    setIsDelegate(false);
+    setActiveOwnerUserId(null);
+    setOwnerDisplayName(null);
+    setCanAccessSuccessHub(false);
+    setDelegateMemberships([]);
+  }, []);
 
   /** Never let a stalled auth/role call hang the app on a spinner forever. */
   const withTimeout = useCallback(async function <T>(
@@ -80,12 +93,13 @@ function useAuthRoleStore(): AuthRoleState {
     ]);
   }, []);
 
-  const loadRoleForUser = useCallback(async (userId: string) => {
+  const loadRoleForUser = useCallback(async (userId: string, resolutionId?: number) => {
     let result = await resolveUserRole(userId);
     if (result.role === "unknown") {
       await new Promise((r) => setTimeout(r, 200));
       result = await resolveUserRole(userId);
     }
+    if (resolutionId !== undefined && roleResolutionId.current !== resolutionId) return;
     const nextRole: Role = result.role === "unknown" ? null : result.role;
     setRole(nextRole);
     setIsAdmin(result.role === "admin");
@@ -120,23 +134,18 @@ function useAuthRoleStore(): AuthRoleState {
       const sessionUser = session?.user ?? null;
       if (!sessionUser) {
         setUser(null);
-        setRole(null);
-        setIsAdmin(false);
-        setIsVerifiedAgent(false);
-        setIsLicensedOwner(false);
-        setIsDelegate(false);
-        setActiveOwnerUserId(null);
-        setOwnerDisplayName(null);
-        setCanAccessSuccessHub(false);
-        setDelegateMemberships([]);
+        clearResolvedAccess();
         setLoading(false);
         initialLoadDone.current = true;
         return;
       }
 
+      const resolutionId = roleResolutionId.current + 1;
+      roleResolutionId.current = resolutionId;
       setUser(sessionUser);
+      clearResolvedAccess();
       try {
-        await withTimeout(loadRoleForUser(sessionUser.id), 10000, "resolveUserRole");
+        await withTimeout(loadRoleForUser(sessionUser.id, resolutionId), 10000, "resolveUserRole");
       } catch (e) {
         console.warn("[AUTH] role resolution stalled on bootstrap:", e);
       }
@@ -161,16 +170,10 @@ function useAuthRoleStore(): AuthRoleState {
       if (!initialLoadDone.current) return;
 
       if (event === "SIGNED_OUT") {
+        roleResolutionId.current += 1;
         setUser(null);
-        setRole(null);
-        setIsAdmin(false);
-        setIsVerifiedAgent(false);
-        setIsLicensedOwner(false);
-        setIsDelegate(false);
-        setActiveOwnerUserId(null);
-        setOwnerDisplayName(null);
-        setCanAccessSuccessHub(false);
-        setDelegateMemberships([]);
+        clearResolvedAccess();
+        setLoading(false);
         return;
       }
 
@@ -186,8 +189,16 @@ function useAuthRoleStore(): AuthRoleState {
 
       const newUser = session?.user ?? null;
       if (newUser) {
+        const resolutionId = roleResolutionId.current + 1;
+        roleResolutionId.current = resolutionId;
         setUser(newUser);
-        void loadRoleForUser(newUser.id);
+        clearResolvedAccess();
+        setLoading(true);
+        void loadRoleForUser(newUser.id, resolutionId).finally(() => {
+          if (roleResolutionId.current === resolutionId) {
+            setLoading(false);
+          }
+        });
       }
     });
 
@@ -195,7 +206,7 @@ function useAuthRoleStore(): AuthRoleState {
       clearTimeout(watchdog);
       subscription.unsubscribe();
     };
-  }, [loadRoleForUser, withTimeout]);
+  }, [clearResolvedAccess, loadRoleForUser, withTimeout]);
 
   // Re-resolve role after admin approval while the tab stays open (e.g. pending → verified).
   useEffect(() => {

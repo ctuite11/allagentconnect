@@ -148,29 +148,27 @@ import { LoadingScreen } from "./components/LoadingScreen";
 import { Skeleton } from "./components/ui/skeleton";
 import { SharedListingGuestProvider } from "./contexts/SharedListingGuestContext";
 import { SharedListingGate } from "./components/SharedListingGate";
+import { decideLegacyDashboardRoute } from "./lib/legacyDashboardRoute";
 
 /** Legacy `/dashboard` → role-appropriate home (buyers must land on `/client/dashboard`). */
 function LegacyDashboardRedirect() {
-  const { role, loading } = useAuthRole();
+  const { user, role, loading } = useAuthRole();
   const navigate = useNavigate();
+  const decision = decideLegacyDashboardRoute({
+    userPresent: Boolean(user),
+    role,
+    loading,
+  });
 
   useEffect(() => {
-    if (loading) return;
-    if (role === "admin") {
-      navigate("/admin/approvals", { replace: true });
-    } else if (role === "agent" || role === "delegate") {
-      navigate("/agent-dashboard", { replace: true });
-    } else if (role === "buyer") {
-      navigate("/client/dashboard", { replace: true });
-    } else {
-      navigate("/auth", { replace: true });
+    if (decision.status === "redirect") {
+      navigate(decision.target, { replace: true });
     }
-  }, [loading, role, navigate]);
+  }, [decision, navigate]);
 
-  if (loading) {
-    return <LoadingScreen message="Redirecting..." />;
-  }
-  return null;
+  return decision.status === "loading"
+    ? <LoadingScreen message="Checking your session..." />
+    : null;
 }
 
 // Legacy redirect for /client-hot-sheet/:token → /client/hotsheet/:token
