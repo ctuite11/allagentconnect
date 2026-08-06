@@ -42,7 +42,7 @@ interface BuyerCollection {
   clientId: string;
   clientName: string;
   clientInitials: string;
-  hotSheets: { id: string; name: string }[];
+  hotSheets: { id: string; name: string; isActive: boolean }[];
   photos: string[];
   collaborators: string[];
   /** False for criteria-only cards (no CRM `clients.id` for `/agent/buyers/:id/favorites`). */
@@ -53,6 +53,7 @@ interface AgentPersonalHotSheet {
   id: string;
   name: string;
   photos: string[];
+  isActive: boolean;
 }
 
 const AAC_PRIMARY_BTN =
@@ -603,14 +604,14 @@ const HotSheets = ({
         const sheetPhotos: string[] = photosPerSheet.get(sheet.id) || [];
 
         if (clients.length === 0) {
-          personal.push({ id: sheet.id, name: sheet.name, photos: sheetPhotos });
+          personal.push({ id: sheet.id, name: sheet.name, photos: sheetPhotos, isActive: !!sheet.is_active });
           continue;
         }
 
         for (const client of clients) {
           const existing = clientMap.get(client.id);
           if (existing) {
-            existing.hotSheets.push({ id: sheet.id, name: sheet.name });
+            existing.hotSheets.push({ id: sheet.id, name: sheet.name, isActive: !!sheet.is_active });
             // Merge photos up to 4
             for (const ph of sheetPhotos) {
               if (existing.photos.length < 4 && !existing.photos.includes(ph)) {
@@ -626,7 +627,7 @@ const HotSheets = ({
               clientId: client.id,
               clientName: [client.first_name, client.last_name].filter(Boolean).join(" ") || "Unnamed Client",
               clientInitials: getInitials(client.first_name, client.last_name),
-              hotSheets: [{ id: sheet.id, name: sheet.name }],
+              hotSheets: [{ id: sheet.id, name: sheet.name, isActive: !!sheet.is_active }],
               photos: sheetPhotos,
               collaborators: collabInitials,
               supportsBuyerFavorites: true,
