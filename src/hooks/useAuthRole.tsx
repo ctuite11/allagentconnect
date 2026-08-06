@@ -66,6 +66,10 @@ function useAuthRoleStore(): AuthRoleState {
   const [loading, setLoading] = useState<boolean>(true);
   const initialLoadDone = useRef(false);
   const roleResolutionId = useRef(0);
+  const currentUserId = useRef<string | null>(null);
+  const currentRole = useRef<Role>(null);
+  currentUserId.current = user?.id ?? null;
+  currentRole.current = role;
 
   const clearResolvedAccess = useCallback(() => {
     setRole(null);
@@ -192,7 +196,7 @@ function useAuthRoleStore(): AuthRoleState {
         // Token refreshes and user metadata updates are common while a tab is
         // open. Do not erase a role that is already resolved for this user or
         // restart the route-level loading screen for those routine events.
-        if (user?.id === newUser.id && role !== null) {
+        if (currentUserId.current === newUser.id && currentRole.current !== null) {
           setUser(newUser);
           return;
         }
@@ -228,7 +232,7 @@ function useAuthRoleStore(): AuthRoleState {
       clearTimeout(watchdog);
       subscription.unsubscribe();
     };
-  }, [clearResolvedAccess, loadRoleForUser, role, user?.id, withTimeout]);
+  }, [clearResolvedAccess, loadRoleForUser, withTimeout]);
 
   // Re-resolve role after admin approval while the tab stays open (e.g. pending → verified).
   useEffect(() => {
