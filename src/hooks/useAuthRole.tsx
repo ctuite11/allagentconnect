@@ -189,16 +189,38 @@ function useAuthRoleStore(): AuthRoleState {
 
       const newUser = session?.user ?? null;
       if (newUser) {
+        // Token refreshes and user metadata updates are common while a tab is
+        // open. Do not erase a role that is already resolved for this user or
+        // restart the route-level loading screen for those routine events.
+        if (user?.id === newUser.id && role !== null) {
+          setUser(newUser);
+          return;
+        }
+
         const resolutionId = roleResolutionId.current + 1;
         roleResolutionId.current = resolutionId;
         setUser(newUser);
         clearResolvedAccess();
         setLoading(true);
-        void loadRoleForUser(newUser.id, resolutionId).finally(() => {
-          if (roleResolutionId.current === resolutionId) {
-            setLoading(false);
-          }
-        });
+
+        // Defer backend work until after the auth callback returns. Starting a
+        // new backend request inside onAuthStateChange can contend with the
+        // auth client's session lock and leave the UI spinning indefinitely.
+        window.setTimeout(() => {
+          void withTimeout(
+            loadRoleForUser(newUser.id, resolutionId),
+            10000,
+            `resolveUserRole:${event}`,
+          )
+            .catch((error) => {
+              console.warn("[AUTH] role resolution failed after auth event:", error);
+            })
+            .finally(() => {
+              if (roleResolutionId.current === resolutionId) {
+                setLoading(false);
+              }
+            });
+        }, 0);
       }
     });
 
@@ -206,7 +228,7 @@ function useAuthRoleStore(): AuthRoleState {
       clearTimeout(watchdog);
       subscription.unsubscribe();
     };
-  }, [clearResolvedAccess, loadRoleForUser, withTimeout]);
+  }, [clearResolvedAccess, loadRoleForUser, role, user?.id, withTimeout]);
 
   // Re-resolve role after admin approval while the tab stays open (e.g. pending → verified).
   useEffect(() => {
