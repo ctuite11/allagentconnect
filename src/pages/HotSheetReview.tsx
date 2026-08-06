@@ -1426,6 +1426,32 @@ const HotSheetReview = () => {
               }
             />
             {listings.length > 0 ? (
+              <></>
+            ) : null}
+            <div className="flex flex-wrap items-center gap-2 pb-2 pt-1">
+              {alertsActive ? (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700 ring-1 ring-inset ring-emerald-200">
+                  <BellRing className="h-3.5 w-3.5" aria-hidden />
+                  Alerts on — new matches are emailed
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-800 ring-1 ring-inset ring-amber-300">
+                  <BellOff className="h-3.5 w-3.5" aria-hidden />
+                  Paused — alerts are not being sent. Matching listings still show below.
+                </span>
+              )}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className={secondaryActionClassName}
+                disabled={togglingActive}
+                onClick={() => void handleToggleAlerts()}
+              >
+                {alertsActive ? "Pause alerts" : "Resume alerts"}
+              </Button>
+            </div>
+            {listings.length > 0 ? (
               <div className="flex justify-end pb-2 pt-1" aria-label="Results summary and controls">
                 <AgentResultsSummaryControls
                   resultsCount={listings.length}
