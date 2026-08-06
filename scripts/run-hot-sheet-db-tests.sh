@@ -11,7 +11,7 @@ if [ "$#" -gt 0 ]; then
 else
   MIGRATIONS=(
     supabase/migrations/20260805070000_hot_sheet_reopening_dispatchers_and_matcher_parity.sql
-    supabase/migrations/20260806020527_hot_sheet_residential_rental_and_listing_type_dispatch.sql
+    supabase/migrations/20260806020524_bb70d48d-66a6-4b4a-87a8-bb92a905f992.sql
   )
 fi
 PGDIR="$(mktemp -d /tmp/hs-pg-XXXXXX)"
