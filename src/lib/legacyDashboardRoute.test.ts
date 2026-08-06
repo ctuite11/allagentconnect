@@ -32,10 +32,11 @@ describe("legacy dashboard auth routing", () => {
     ).toEqual({ status: "redirect", target: "/access-error" });
   });
 
-  it("marks auth as loading before resolving a role after sign-in", () => {
+  it("marks auth as loading and defers bounded role resolution after sign-in", () => {
     const provider = readFileSync("src/hooks/useAuthRole.tsx", "utf8");
-    expect(provider).toMatch(
-      /clearResolvedAccess\(\);\s*setLoading\(true\);\s*void loadRoleForUser\(newUser\.id, resolutionId\)/,
-    );
+    expect(provider).toMatch(/clearResolvedAccess\(\);\s*setLoading\(true\)/);
+    expect(provider).toContain("window.setTimeout(() => {");
+    expect(provider).toContain("loadRoleForUser(newUser.id, resolutionId)");
+    expect(provider).toContain("`resolveUserRole:${event}`");
   });
 });
