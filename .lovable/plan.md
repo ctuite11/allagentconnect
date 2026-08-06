@@ -1,43 +1,33 @@
-# Site speed: measured audit and targeted fixes
+# Hot Sheets — corrected incident record accepted, one open item
 
-Incident record is closed as corrected. This plan covers performance only.
+## Record accepted as final
 
-## What the measurements show
+The corrected diagnosis is now the authoritative record:
 
-Ranked by total database time (from live query statistics):
+- Root cause: silent Hot Sheet deactivation (`is_active=false`) during the emergency email-pause work, combined with a results UI that kept showing matches for paused sheets. Not a criteria mismatch.
+- The earlier "no sheet covers Norfolk or Randolph" conclusion is retracted — it only evaluated `WHERE is_active = true`.
+- Listing triggers and dispatcher ran; queue worker healthy; no Hot Sheet email jobs created.
+- Fire-and-forget is fixed, not proposed: `notify-matching-buyers` awaits the downstream matcher, returns its result, and returns 500 on invocation failure. Merged at SHA `d037d1ad2a44c7158cdc5f3fa1ff580fb30b9b90`.
+- No backfill, replay, resend, or manual enqueue for `e552d6d6…` or `daaf7099…`.
 
-| Hot spot | Calls | Mean | Symptom |
-|---|---|---|---|
-| `agent_settings.last_seen_at` heartbeat write | 158,298 | 4.5 ms | Highest total DB time in the project; pure write volume |
-| `conversation_inbox` unfiltered read | 726,585 | 0.5–4.5 ms | Second highest by volume; runs on nearly every authenticated render |
-| `email_jobs` filtered by `payload->>...` | 1,270 | 337–729 ms | Admin/email pages; JSON key scan over a very large table |
-| `clients_with_relationship_status` by agent | 2,476 | 214 ms | CRM/Buyers lists |
-| Same view with 4-column `ilike` search | 30 | 2,698 ms (max 7.8 s) | CRM search box is the single slowest statement |
-| Cron polling reads on `listings` | 166,000+ | ~1 ms | Fine per-call, but frequent full-column pulls |
+## Current state verified just now
 
-Conclusion: the slowness is dominated by (a) chatty client polling and (b) three unindexed access patterns, not by page weight.
+| Hot Sheet | Owner | State |
+|---|---|---|
+| `044322c7…` "boston" (personal) | Chris Tuite | Active |
+| `b41d8741…` "boston" (client-linked duplicate) | Chris Tuite | Paused — stays paused |
+| `rewa`, `Testing mobile`, `rrrrrrr` | Chris Tuite | Paused since 2026-08-02 (bulk deactivation) |
+| `CANARY 2026-08-05`, `CANARY RENDER 2` | Chris Tuite | Paused (temp canaries) |
+| 6 other agents' sheets | Various | Active |
 
-## Fixes
+## One open item
 
-### 1. Reduce polling chatter (frontend)
-- Presence heartbeat: pause the interval when the tab is hidden and skip the write when the last heartbeat is still fresh. Resume on visibility change.
-- Presence reads (`useAgentLastSeen`, batch variant): same visibility gating, and dedupe so one shared poller serves the page instead of one per avatar.
-- `conversation_inbox` reads: route through a single shared React Query key with a sane `staleTime` so the sidebar badge, threads list, and Success Hub reuse one response instead of issuing separate requests.
+Three of your non-canary personal Hot Sheets — `rewa`, `Testing mobile`, `rrrrrrr` — are still paused from the same 2026-08-02 bulk deactivation that caused this incident. They are not part of the corrected record's completed actions.
 
-### 2. Index the three slow access patterns (migration)
-- Expression index on `email_jobs` for the JSON key used by the admin filters, plus a supporting `created_at DESC` ordering index.
-- Index supporting `clients` lookup by owning agent with `created_at DESC` ordering.
-- Trigram indexes on the client name/email/phone columns so the CRM `ilike` search stops scanning every row.
+Proposed handling: leave them paused. They are named like test sheets, and the new **Paused** badge plus Pause/Resume controls now make their state visible in the UI, so you can resume any of them yourself with one click. If you want any reactivated instead, name the specific IDs and I will flip exactly those rows — reactivation alone enqueues and sends nothing.
 
-### 3. Cheap frontend load wins
-- Verify route-level code splitting covers the heavy admin and listing pages; lazy-load any that are still in the main bundle.
-- Add `loading="lazy"` / explicit dimensions on listing and hot sheet imagery where missing.
+## Explicitly out of scope
 
-## Verification
-- Re-run `EXPLAIN (ANALYZE)` on each targeted query before and after the indexes and record the plan change.
-- Re-read query statistics after deploy to confirm total time on the top offenders drops.
-- Confirm presence still flips to Online within the existing 5-minute window after the heartbeat change.
-
-## Out of scope
-- No email sends, replays, backfills, or queue changes.
-- No visual redesign; existing canonical components stay as they are.
+- No replay, backfill, resend, or manual email enqueue for the two missed listings.
+- No changes to the client-linked duplicate `b41d8741…`.
+- No email template or cron changes.
