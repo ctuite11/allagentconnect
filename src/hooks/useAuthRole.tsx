@@ -93,12 +93,13 @@ function useAuthRoleStore(): AuthRoleState {
     ]);
   }, []);
 
-  const loadRoleForUser = useCallback(async (userId: string) => {
+  const loadRoleForUser = useCallback(async (userId: string, resolutionId?: number) => {
     let result = await resolveUserRole(userId);
     if (result.role === "unknown") {
       await new Promise((r) => setTimeout(r, 200));
       result = await resolveUserRole(userId);
     }
+    if (resolutionId !== undefined && roleResolutionId.current !== resolutionId) return;
     const nextRole: Role = result.role === "unknown" ? null : result.role;
     setRole(nextRole);
     setIsAdmin(result.role === "admin");
@@ -139,9 +140,12 @@ function useAuthRoleStore(): AuthRoleState {
         return;
       }
 
+      const resolutionId = roleResolutionId.current + 1;
+      roleResolutionId.current = resolutionId;
       setUser(sessionUser);
+      clearResolvedAccess();
       try {
-        await withTimeout(loadRoleForUser(sessionUser.id), 10000, "resolveUserRole");
+        await withTimeout(loadRoleForUser(sessionUser.id, resolutionId), 10000, "resolveUserRole");
       } catch (e) {
         console.warn("[AUTH] role resolution stalled on bootstrap:", e);
       }
@@ -190,7 +194,7 @@ function useAuthRoleStore(): AuthRoleState {
         setUser(newUser);
         clearResolvedAccess();
         setLoading(true);
-        void loadRoleForUser(newUser.id).finally(() => {
+        void loadRoleForUser(newUser.id, resolutionId).finally(() => {
           if (roleResolutionId.current === resolutionId) {
             setLoading(false);
           }
