@@ -1286,6 +1286,8 @@ const HotSheetReview = () => {
   const secondaryActionClassName =
     "h-7 rounded-md border-neutral-200 bg-white px-2.5 text-xs font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:bg-neutral-50";
 
+  const alertsActive = hotSheet.is_active !== false;
+
   const renderInviteCtaButton = () => {
     if (!inviteCta) return null;
     const button = (
