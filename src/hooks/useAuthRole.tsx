@@ -65,6 +65,19 @@ function useAuthRoleStore(): AuthRoleState {
   const [delegateMemberships, setDelegateMemberships] = useState<DelegateMembershipSummary[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const initialLoadDone = useRef(false);
+  const roleResolutionId = useRef(0);
+
+  const clearResolvedAccess = useCallback(() => {
+    setRole(null);
+    setIsAdmin(false);
+    setIsVerifiedAgent(false);
+    setIsLicensedOwner(false);
+    setIsDelegate(false);
+    setActiveOwnerUserId(null);
+    setOwnerDisplayName(null);
+    setCanAccessSuccessHub(false);
+    setDelegateMemberships([]);
+  }, []);
 
   /** Never let a stalled auth/role call hang the app on a spinner forever. */
   const withTimeout = useCallback(async function <T>(
@@ -120,15 +133,7 @@ function useAuthRoleStore(): AuthRoleState {
       const sessionUser = session?.user ?? null;
       if (!sessionUser) {
         setUser(null);
-        setRole(null);
-        setIsAdmin(false);
-        setIsVerifiedAgent(false);
-        setIsLicensedOwner(false);
-        setIsDelegate(false);
-        setActiveOwnerUserId(null);
-        setOwnerDisplayName(null);
-        setCanAccessSuccessHub(false);
-        setDelegateMemberships([]);
+        clearResolvedAccess();
         setLoading(false);
         initialLoadDone.current = true;
         return;
@@ -161,16 +166,10 @@ function useAuthRoleStore(): AuthRoleState {
       if (!initialLoadDone.current) return;
 
       if (event === "SIGNED_OUT") {
+        roleResolutionId.current += 1;
         setUser(null);
-        setRole(null);
-        setIsAdmin(false);
-        setIsVerifiedAgent(false);
-        setIsLicensedOwner(false);
-        setIsDelegate(false);
-        setActiveOwnerUserId(null);
-        setOwnerDisplayName(null);
-        setCanAccessSuccessHub(false);
-        setDelegateMemberships([]);
+        clearResolvedAccess();
+        setLoading(false);
         return;
       }
 
@@ -186,8 +185,16 @@ function useAuthRoleStore(): AuthRoleState {
 
       const newUser = session?.user ?? null;
       if (newUser) {
+        const resolutionId = roleResolutionId.current + 1;
+        roleResolutionId.current = resolutionId;
         setUser(newUser);
-        void loadRoleForUser(newUser.id);
+        clearResolvedAccess();
+        setLoading(true);
+        void loadRoleForUser(newUser.id).finally(() => {
+          if (roleResolutionId.current === resolutionId) {
+            setLoading(false);
+          }
+        });
       }
     });
 
@@ -195,7 +202,7 @@ function useAuthRoleStore(): AuthRoleState {
       clearTimeout(watchdog);
       subscription.unsubscribe();
     };
-  }, [loadRoleForUser, withTimeout]);
+  }, [clearResolvedAccess, loadRoleForUser, withTimeout]);
 
   // Re-resolve role after admin approval while the tab stays open (e.g. pending → verified).
   useEffect(() => {
