@@ -1425,9 +1425,6 @@ const HotSheetReview = () => {
                 </Collapsible>
               }
             />
-            {listings.length > 0 ? (
-              <></>
-            ) : null}
             <div className="flex flex-wrap items-center gap-2 pb-2 pt-1">
               {alertsActive ? (
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700 ring-1 ring-inset ring-emerald-200">
