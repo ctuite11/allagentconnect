@@ -11,110 +11,110 @@ import { AppShell } from "@/components/layout/AppShell";
 import { BuyerShell } from "@/components/layout/BuyerShell";
 import { CrossTabSessionGuard } from "@/components/CrossTabSessionGuard";
 import Index from "./pages/Index";
-import Auth from "./pages/Auth";
-import AuthCallback from "./pages/AuthCallback";
-import AuthDiagnostics from "./pages/AuthDiagnostics";
-import AuthSetupRedirect from "./pages/AuthSetupRedirect";
+const Auth = React.lazy(() => import("./pages/Auth"));
+const AuthCallback = React.lazy(() => import("./pages/AuthCallback"));
+const AuthDiagnostics = React.lazy(() => import("./pages/AuthDiagnostics"));
+const AuthSetupRedirect = React.lazy(() => import("./pages/AuthSetupRedirect"));
 import { RouteGuard } from "./components/RouteGuard";
 // AgentSuccessHub archived → AgentSuccessHub.legacy.tsx
-import AgentSuccessHub from "./pages/AgentSuccessHub.legacy";
-import ShowingRequests from "./pages/ShowingRequests";
+const AgentSuccessHub = React.lazy(() => import("./pages/AgentSuccessHub.legacy"));
+const ShowingRequests = React.lazy(() => import("./pages/ShowingRequests"));
 
-import MLSPINSearch from "./pages/MLSPINSearch";
-import ListingSearch from "./pages/ListingSearch";
-import ListingSearchResults from "./pages/ListingSearchResults";
+const MLSPINSearch = React.lazy(() => import("./pages/MLSPINSearch"));
+const ListingSearch = React.lazy(() => import("./pages/ListingSearch"));
+const ListingSearchResults = React.lazy(() => import("./pages/ListingSearchResults"));
 
 // SubmitClientNeed retired — the standalone page inserted directly into
 // client_needs and triggered a second network email campaign. The canonical
 // path is the Communications Center Buyer Need compose flow.
 import { BUYER_NEED_COMPOSE_ROUTE } from "@/lib/buyerNeedCompose";
-import ClientNeedsDashboard from "./pages/ClientNeedsDashboard";
-import CommunicationsFeed from "./pages/CommunicationsFeed";
+const ClientNeedsDashboard = React.lazy(() => import("./pages/ClientNeedsDashboard"));
+const CommunicationsFeed = React.lazy(() => import("./pages/CommunicationsFeed"));
 // CommunicationCenter deleted - consolidated into ClientNeedsDashboard as "Communications Center"
-import ListingIntel from "./pages/ListingIntel";
-import AddListing from "./pages/AddListing";
-import AddRentalListing from "./pages/AddRentalListing";
-import PropertyDetail from "./pages/PropertyDetail";
-import AgentDetailRedirect from "./pages/AgentDetailRedirect";
-import ConsumerPropertyDetail from "./pages/ConsumerPropertyDetail";
-import AgentProfileEditor from "./pages/AgentProfileEditor";
-import ManageTeam from "./pages/ManageTeam";
-import TeamProfile from "./pages/TeamProfile";
-import TeamRequest from "./pages/TeamRequest";
-import TeamInviteAccept from "./pages/TeamInviteAccept";
-import AdminTeamApprovals from "./pages/AdminTeamApprovals";
-import ManageCoverageAreas from "./pages/ManageCoverageAreas";
-import BrowsePropertiesNew from "./pages/BrowsePropertiesNew";
+const ListingIntel = React.lazy(() => import("./pages/ListingIntel"));
+const AddListing = React.lazy(() => import("./pages/AddListing"));
+const AddRentalListing = React.lazy(() => import("./pages/AddRentalListing"));
+const PropertyDetail = React.lazy(() => import("./pages/PropertyDetail"));
+const AgentDetailRedirect = React.lazy(() => import("./pages/AgentDetailRedirect"));
+const ConsumerPropertyDetail = React.lazy(() => import("./pages/ConsumerPropertyDetail"));
+const AgentProfileEditor = React.lazy(() => import("./pages/AgentProfileEditor"));
+const ManageTeam = React.lazy(() => import("./pages/ManageTeam"));
+const TeamProfile = React.lazy(() => import("./pages/TeamProfile"));
+const TeamRequest = React.lazy(() => import("./pages/TeamRequest"));
+const TeamInviteAccept = React.lazy(() => import("./pages/TeamInviteAccept"));
+const AdminTeamApprovals = React.lazy(() => import("./pages/AdminTeamApprovals"));
+const ManageCoverageAreas = React.lazy(() => import("./pages/ManageCoverageAreas"));
+const BrowsePropertiesNew = React.lazy(() => import("./pages/BrowsePropertiesNew"));
 
-import SearchResults from "./pages/SearchResults";
+const SearchResults = React.lazy(() => import("./pages/SearchResults"));
 
 
-import PublicSearchResults from "./pages/PublicSearchResults";
-import OurAgents from "./pages/OurAgents";
-import PublicOurAgents from "./pages/PublicOurAgents";
-import Favorites from "./pages/Favorites";
-import BuyerFavorites from "./pages/BuyerFavorites";
-import MyFavorites from "./pages/MyFavorites";
-import HotSheets from "./pages/HotSheets";
-import BuyerHotSheets from "./pages/BuyerHotSheets";
-import HotSheetReview from "./pages/HotSheetReview";
-import HotSheetBuyerDetail from "./pages/HotSheetBuyerDetail";
-import MyClients from "./pages/MyClients";
-import ClientHotSheet from "./pages/ClientHotSheet";
-import ClientHotsheetPage from "./pages/ClientHotsheetPage";
-import ClientInvitationSetup from "./pages/ClientInvitationSetup";
-import AgentClientFavorites from "./pages/AgentClientFavorites";
-import AgentBuyerNewMatches from "./pages/AgentBuyerNewMatches";
-import ListingAnalytics from "./pages/ListingAnalytics";
-import MarketInsights from "./pages/MarketInsights";
-import VendorDashboard from "./pages/VendorDashboard";
-import VendorSetup from "./pages/VendorSetup";
-import VendorPackages from "./pages/VendorPackages";
-import VendorDirectory from "./pages/VendorDirectory";
-import PasswordReset from "./pages/PasswordReset";
-import AgentAccountSetup from "./pages/AgentAccountSetup";
-import ActivateAccount from "./pages/ActivateAccount";
-import SignInLink from "./pages/SignInLink";
-import PendingVerification from "./pages/PendingVerification";
-import NotFound from "./pages/NotFound";
-import AccessError from "./pages/AccessError";
-import MyListings from "./pages/MyListings";
-import ManageListingPhotos from "./pages/ManageListingPhotos";
-import AdminApprovals from "./pages/AdminApprovals";
-import AdminDebugAuth from "./pages/AdminDebugAuth";
-import AdminMatches from "./pages/AdminMatches";
-import AdminConsumers from "./pages/AdminConsumers";
-import AdminInviteAudit from "./pages/AdminInviteAudit";
-import AdminEmailAnalytics from "./pages/AdminEmailAnalytics";
-import AdminFounderInvite from "./pages/AdminFounderInvite";
-import NetworkIntelligence from "./pages/NetworkIntelligence";
+const PublicSearchResults = React.lazy(() => import("./pages/PublicSearchResults"));
+const OurAgents = React.lazy(() => import("./pages/OurAgents"));
+const PublicOurAgents = React.lazy(() => import("./pages/PublicOurAgents"));
+const Favorites = React.lazy(() => import("./pages/Favorites"));
+const BuyerFavorites = React.lazy(() => import("./pages/BuyerFavorites"));
+const MyFavorites = React.lazy(() => import("./pages/MyFavorites"));
+const HotSheets = React.lazy(() => import("./pages/HotSheets"));
+const BuyerHotSheets = React.lazy(() => import("./pages/BuyerHotSheets"));
+const HotSheetReview = React.lazy(() => import("./pages/HotSheetReview"));
+const HotSheetBuyerDetail = React.lazy(() => import("./pages/HotSheetBuyerDetail"));
+const MyClients = React.lazy(() => import("./pages/MyClients"));
+const ClientHotSheet = React.lazy(() => import("./pages/ClientHotSheet"));
+const ClientHotsheetPage = React.lazy(() => import("./pages/ClientHotsheetPage"));
+const ClientInvitationSetup = React.lazy(() => import("./pages/ClientInvitationSetup"));
+const AgentClientFavorites = React.lazy(() => import("./pages/AgentClientFavorites"));
+const AgentBuyerNewMatches = React.lazy(() => import("./pages/AgentBuyerNewMatches"));
+const ListingAnalytics = React.lazy(() => import("./pages/ListingAnalytics"));
+const MarketInsights = React.lazy(() => import("./pages/MarketInsights"));
+const VendorDashboard = React.lazy(() => import("./pages/VendorDashboard"));
+const VendorSetup = React.lazy(() => import("./pages/VendorSetup"));
+const VendorPackages = React.lazy(() => import("./pages/VendorPackages"));
+const VendorDirectory = React.lazy(() => import("./pages/VendorDirectory"));
+const PasswordReset = React.lazy(() => import("./pages/PasswordReset"));
+const AgentAccountSetup = React.lazy(() => import("./pages/AgentAccountSetup"));
+const ActivateAccount = React.lazy(() => import("./pages/ActivateAccount"));
+const SignInLink = React.lazy(() => import("./pages/SignInLink"));
+const PendingVerification = React.lazy(() => import("./pages/PendingVerification"));
+const NotFound = React.lazy(() => import("./pages/NotFound"));
+const AccessError = React.lazy(() => import("./pages/AccessError"));
+const MyListings = React.lazy(() => import("./pages/MyListings"));
+const ManageListingPhotos = React.lazy(() => import("./pages/ManageListingPhotos"));
+const AdminApprovals = React.lazy(() => import("./pages/AdminApprovals"));
+const AdminDebugAuth = React.lazy(() => import("./pages/AdminDebugAuth"));
+const AdminMatches = React.lazy(() => import("./pages/AdminMatches"));
+const AdminConsumers = React.lazy(() => import("./pages/AdminConsumers"));
+const AdminInviteAudit = React.lazy(() => import("./pages/AdminInviteAudit"));
+const AdminEmailAnalytics = React.lazy(() => import("./pages/AdminEmailAnalytics"));
+const AdminFounderInvite = React.lazy(() => import("./pages/AdminFounderInvite"));
+const NetworkIntelligence = React.lazy(() => import("./pages/NetworkIntelligence"));
 
-import ClientDashboard from "./pages/ClientDashboard";
-import ClientAgentSettings from "./pages/ClientAgentSettings";
-import BuyerMapSearch from "./pages/BuyerMapSearch";
-import ClientCreateHotsheetNew from "./pages/ClientCreateHotsheetNew";
-import ComingSoon from "./pages/ComingSoon";
-import AllAgentConnectHome from "./pages/AllAgentConnectHome";
-import ShareLinkHandler from "./pages/ShareLinkHandler";
-import LandingPage from "./pages/LandingPage";
-import AgentMatch from "./pages/AgentMatch";
-import About from "./pages/About";
-import Contact from "./pages/Contact";
-import Blog from "./pages/Blog";
-import DesignMockup from "./pages/DesignMockup";
-import HomepageV2 from "./pages/HomepageV2";
-import AgentDiagnostics from "./pages/AgentDiagnostics";
-import AcceptBuyerWorkspaceInvite from "./pages/AcceptBuyerWorkspaceInvite";
-import AcceptDelegateInvite from "./pages/AcceptDelegateInvite";
-import UnsubscribeHotSheet from "./pages/UnsubscribeHotSheet";
-import HotSheetPreview from "./pages/HotSheetPreview";
-import DraftListings from "./pages/DraftListings";
-import AgentSettings from "./pages/AgentSettings";
-import SellerListingDetail from "./pages/SellerListingDetail";
-import IDXSearch from "./pages/IDXSearch";
-import IDXSearchBeta from "./pages/IDXSearchBeta";
-import IDXListingDetailBeta from "./pages/IDXListingDetailBeta";
-import SellerDashboard from "./pages/SellerDashboard";
+const ClientDashboard = React.lazy(() => import("./pages/ClientDashboard"));
+const ClientAgentSettings = React.lazy(() => import("./pages/ClientAgentSettings"));
+const BuyerMapSearch = React.lazy(() => import("./pages/BuyerMapSearch"));
+const ClientCreateHotsheetNew = React.lazy(() => import("./pages/ClientCreateHotsheetNew"));
+const ComingSoon = React.lazy(() => import("./pages/ComingSoon"));
+const AllAgentConnectHome = React.lazy(() => import("./pages/AllAgentConnectHome"));
+const ShareLinkHandler = React.lazy(() => import("./pages/ShareLinkHandler"));
+const LandingPage = React.lazy(() => import("./pages/LandingPage"));
+const AgentMatch = React.lazy(() => import("./pages/AgentMatch"));
+const About = React.lazy(() => import("./pages/About"));
+const Contact = React.lazy(() => import("./pages/Contact"));
+const Blog = React.lazy(() => import("./pages/Blog"));
+const DesignMockup = React.lazy(() => import("./pages/DesignMockup"));
+const HomepageV2 = React.lazy(() => import("./pages/HomepageV2"));
+const AgentDiagnostics = React.lazy(() => import("./pages/AgentDiagnostics"));
+const AcceptBuyerWorkspaceInvite = React.lazy(() => import("./pages/AcceptBuyerWorkspaceInvite"));
+const AcceptDelegateInvite = React.lazy(() => import("./pages/AcceptDelegateInvite"));
+const UnsubscribeHotSheet = React.lazy(() => import("./pages/UnsubscribeHotSheet"));
+const HotSheetPreview = React.lazy(() => import("./pages/HotSheetPreview"));
+const DraftListings = React.lazy(() => import("./pages/DraftListings"));
+const AgentSettings = React.lazy(() => import("./pages/AgentSettings"));
+const SellerListingDetail = React.lazy(() => import("./pages/SellerListingDetail"));
+const IDXSearch = React.lazy(() => import("./pages/IDXSearch"));
+const IDXSearchBeta = React.lazy(() => import("./pages/IDXSearchBeta"));
+const IDXListingDetailBeta = React.lazy(() => import("./pages/IDXListingDetailBeta"));
+const SellerDashboard = React.lazy(() => import("./pages/SellerDashboard"));
 import ScrollToTop from "./components/ScrollToTop";
 import ScrollRestoration from "./components/ScrollRestoration";
 import VersionStamp from "./components/VersionStamp";
@@ -122,26 +122,26 @@ import { NewMessageToastListener } from "./components/NewMessageToastListener";
 import CookieConsent from "./components/CookieConsent";
 
 // Success Hub v2
-import SuccessHubDashboard from "./pages/success-hub/SuccessHubDashboard";
-import BuyersList from "./pages/success-hub/BuyersList";
-import BuyerAccount from "./pages/success-hub/BuyerAccount";
-import ListingsList from "./pages/success-hub/ListingsList";
-import ListingPerformance from "./pages/success-hub/ListingPerformance";
+const SuccessHubDashboard = React.lazy(() => import("./pages/success-hub/SuccessHubDashboard"));
+const BuyersList = React.lazy(() => import("./pages/success-hub/BuyersList"));
+const BuyerAccount = React.lazy(() => import("./pages/success-hub/BuyerAccount"));
+const ListingsList = React.lazy(() => import("./pages/success-hub/ListingsList"));
+const ListingPerformance = React.lazy(() => import("./pages/success-hub/ListingPerformance"));
 // Legal pages
-import PrivacyPolicy from "./pages/legal/PrivacyPolicy";
-import TermsOfService from "./pages/legal/TermsOfService";
-import AgentNetworkRules from "./pages/legal/AgentNetworkRules";
-import CookiePolicy from "./pages/legal/CookiePolicy";
-import FairHousing from "./pages/legal/FairHousing";
-import Disclosures from "./pages/legal/Disclosures";
+const PrivacyPolicy = React.lazy(() => import("./pages/legal/PrivacyPolicy"));
+const TermsOfService = React.lazy(() => import("./pages/legal/TermsOfService"));
+const AgentNetworkRules = React.lazy(() => import("./pages/legal/AgentNetworkRules"));
+const CookiePolicy = React.lazy(() => import("./pages/legal/CookiePolicy"));
+const FairHousing = React.lazy(() => import("./pages/legal/FairHousing"));
+const Disclosures = React.lazy(() => import("./pages/legal/Disclosures"));
 
 // Messaging
 // Legacy messaging pages (kept for rollback)
-import Messages from "./pages/Messages";
-import Conversation from "./pages/Conversation";
-import MessagingWorkspace from "./pages/MessagingWorkspace";
-import BuyerMessagingWorkspace from "./pages/BuyerMessagingWorkspace";
-import PublicAgentProfile from "./pages/PublicAgentProfile";
+const Messages = React.lazy(() => import("./pages/Messages"));
+const Conversation = React.lazy(() => import("./pages/Conversation"));
+const MessagingWorkspace = React.lazy(() => import("./pages/MessagingWorkspace"));
+const BuyerMessagingWorkspace = React.lazy(() => import("./pages/BuyerMessagingWorkspace"));
+const PublicAgentProfile = React.lazy(() => import("./pages/PublicAgentProfile"));
 import Footer from "./components/Footer";
 import { AuthRoleProvider, useAuthRole } from "./hooks/useAuthRole";
 import { LoadingScreen } from "./components/LoadingScreen";
@@ -328,6 +328,7 @@ const App = () => (
               <NewMessageToastListener />
               <CrossTabSessionGuard />
               <SharedListingGate>
+              <React.Suspense fallback={<LoadingScreen />}>
               <Routes>
                 <Route path="/" element={<HomepageV2 />} />
                 <Route path="/index" element={<Navigate to="/" replace />} />
@@ -517,6 +518,7 @@ const App = () => (
                 <Route path="/idx/property/:mlsNumber" element={<IDXListingDetailBeta />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
+              </React.Suspense>
               </SharedListingGate>
               <CookieConsent />
             </>
