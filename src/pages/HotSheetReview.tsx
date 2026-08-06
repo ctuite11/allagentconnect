@@ -150,6 +150,7 @@ interface HotSheet {
   criteria: any;
   last_sent_at?: string | null;
   client_id?: string | null;
+  is_active?: boolean | null;
 }
 
 /** Agent Hot Sheets list — canonical back target from review/results. */
@@ -366,7 +367,7 @@ const HotSheetReview = () => {
         await Promise.all([
           supabase
             .from("hot_sheets")
-            .select("id, name, criteria, last_sent_at, client_id")
+            .select("id, name, criteria, last_sent_at, client_id, is_active")
             .eq("id", id)
             .maybeSingle(),
           supabase
