@@ -208,6 +208,43 @@ BEGIN
          'legacy matcher cron row retained and inactive';
 END $$;
 
+-- ---- residential_rental marker matches listing_type = 'for_rent' -----------
+DO $$
+BEGIN
+  INSERT INTO vault.decrypted_secrets VALUES
+    ('email_dispatch_service_role_key','test-service-role-key')
+  ON CONFLICT (name) DO NOTHING;
+
+  UPDATE public.listings SET property_type = 'condo', listing_type = 'for_sale', status = 'active';
+  ASSERT pg_temp.match('{"propertyTypes":["residential_rental"]}') = 0,
+    'for_sale listing must not match the Residential Rental marker';
+
+  UPDATE public.listings SET listing_type = 'for_rent';
+  ASSERT pg_temp.match('{"propertyTypes":["residential_rental"]}') = 1,
+    'for_rent listing matches the Residential Rental marker regardless of property_type';
+  ASSERT pg_temp.match('{"propertyTypes":["single_family"]}') = 0,
+    'other property types still match on property_type only';
+  ASSERT pg_temp.match('{"propertyTypes":["single_family","residential_rental"]}') = 1,
+    'mixed selection matches when either branch qualifies';
+  ASSERT pg_temp.match('{}') = 1, 'empty property type selection stays unrestricted';
+
+  UPDATE public.listings SET listing_type = 'for_sale';
+END $$;
+
+-- ---- listing_type flips must dispatch --------------------------------------
+DO $$
+DECLARE v_id uuid := (SELECT v FROM t_ids WHERE k='listing'); n bigint;
+BEGIN
+  UPDATE public.listings SET status = 'active' WHERE id = v_id;
+  n := pg_temp.dispatch_count();
+  UPDATE public.listings SET listing_type = 'for_rent' WHERE id = v_id;
+  ASSERT pg_temp.dispatch_count() = n + 1, 'listing_type change must dispatch';
+
+  n := pg_temp.dispatch_count();
+  UPDATE public.listings SET listing_type = 'for_rent' WHERE id = v_id;
+  ASSERT pg_temp.dispatch_count() = n, 'no-op listing_type write must not dispatch';
+END $$;
+
 SELECT 'ALL HOT SHEET DB TESTS PASSED' AS result;
 
 ROLLBACK;

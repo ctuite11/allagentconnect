@@ -1,5 +1,5 @@
 import { useState, type MouseEvent } from "react";
-import { Eye, Heart, Pencil } from "lucide-react";
+import { BellOff, BellRing, Eye, Heart, Pencil } from "lucide-react";
 import {
   buyerCollectionCardRoot,
   buyerImageMosaicCell,
@@ -19,6 +19,14 @@ interface BuyerCollectionCardProps {
   nameLabel?: string;
   /** When false, show the name as stored (e.g. hot sheet titles). Default: title-case like buyer names. */
   titleCaseName?: boolean;
+  /** Alert state of the underlying hot sheet(s). Omit to hide alert status entirely. */
+  isActive?: boolean;
+  /** Ownership context, e.g. "Personal Hot Sheet" or "Client: Natay Lopachak". */
+  ownerLabel?: string;
+  /** When set, renders a Pause/Resume alerts control. */
+  onToggleActive?: (next: boolean) => void;
+  /** Disables the Pause/Resume control while a toggle is in flight. */
+  toggleBusy?: boolean;
 }
 
 function titleCaseToken(term: string): string {
@@ -69,6 +77,10 @@ export function BuyerCollectionCard({
   onEditClick,
   nameLabel = "Buyer Name",
   titleCaseName = true,
+  isActive,
+  ownerLabel,
+  onToggleActive,
+  toggleBusy = false,
 }: BuyerCollectionCardProps) {
   const p = [photos[0], photos[1], photos[2], photos[3]];
   const displayName = titleCaseName
@@ -111,10 +123,43 @@ export function BuyerCollectionCard({
 
       <div className="flex min-h-0 w-full flex-1 flex-col bg-white px-4 pb-4 pt-3 text-left">
         <div className="min-w-0 shrink-0">
+          {ownerLabel ? (
+            <p className="truncate text-[11px] font-medium uppercase tracking-wide text-neutral-500">
+              {ownerLabel}
+            </p>
+          ) : null}
           <p className="truncate text-[13px] leading-snug" title={displayName}>
             <span className="text-neutral-500">{nameLabel}: </span>
             <span className="font-medium text-neutral-800">{displayName}</span>
           </p>
+          {typeof isActive === "boolean" ? (
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              {isActive ? (
+                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 ring-1 ring-inset ring-emerald-200">
+                  <BellRing className="h-3 w-3" aria-hidden />
+                  Alerts on
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-800 ring-1 ring-inset ring-amber-300">
+                  <BellOff className="h-3 w-3" aria-hidden />
+                  Paused — alerts are not being sent
+                </span>
+              )}
+              {onToggleActive ? (
+                <button
+                  type="button"
+                  disabled={toggleBusy}
+                  className="pointer-events-auto rounded-md border border-neutral-200 px-2 py-0.5 text-[11px] font-medium text-neutral-700 transition-colors hover:bg-neutral-50 disabled:opacity-50"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onToggleActive(!isActive);
+                  }}
+                >
+                  {isActive ? "Pause alerts" : "Resume alerts"}
+                </button>
+              ) : null}
+            </div>
+          ) : null}
           <div className="mt-2 flex items-center justify-between gap-2">
             <p className="text-sm text-neutral-600">
               {hotSheetCount} hot sheet{hotSheetCount !== 1 ? "s" : ""}

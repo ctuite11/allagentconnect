@@ -5,7 +5,15 @@
 # destroys the cluster. Never touches production and makes no HTTP/provider calls.
 set -euo pipefail
 
-MIGRATION="${1:-supabase/migrations/20260805070000_hot_sheet_reopening_dispatchers_and_matcher_parity.sql}"
+# Migrations applied in order (override by passing paths as arguments).
+if [ "$#" -gt 0 ]; then
+  MIGRATIONS=("$@")
+else
+  MIGRATIONS=(
+    supabase/migrations/20260805070000_hot_sheet_reopening_dispatchers_and_matcher_parity.sql
+    supabase/migrations/20260806020524_bb70d48d-66a6-4b4a-87a8-bb92a905f992.sql
+  )
+fi
 PGDIR="$(mktemp -d /tmp/hs-pg-XXXXXX)"
 SOCK="$PGDIR/sock"; mkdir -p "$SOCK"
 
@@ -22,5 +30,7 @@ export PGHOST="$SOCK" PGUSER=postgres PGDATABASE=hstest
 createdb -h "$SOCK" -U postgres hstest
 
 psql -v ON_ERROR_STOP=1 -q -f supabase/tests/db/00_fixture.sql
-psql -v ON_ERROR_STOP=1 -q -f "$MIGRATION"
+for m in "${MIGRATIONS[@]}"; do
+  psql -v ON_ERROR_STOP=1 -q -f "$m"
+done
 psql -v ON_ERROR_STOP=1 -f supabase/tests/db/01_hot_sheet_matcher_behavior.sql

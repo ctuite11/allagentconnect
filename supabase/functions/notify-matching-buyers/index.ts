@@ -71,26 +71,36 @@ const handler = async (req: Request): Promise<Response> => {
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // Fan-out to canonical hot-sheet matcher (near-realtime path).
-    // Fire-and-forget; cron remains the safety net.
+    // Fan-out to canonical hot-sheet matcher (near-realtime path), AWAITED.
+    // A fire-and-forget call can be dropped on isolate shutdown and makes the
+    // outcome unobservable, so the downstream result is now the response.
     // Explicit service-role Authorization + apikey so gateway JWT verify and
     // the in-function exact-key gate both accept the downstream call.
-    try {
-      supabase.functions.invoke("send-new-match-notification", {
+    const { data: matcherResult, error: fanoutError } = await supabase.functions.invoke(
+      "send-new-match-notification",
+      {
         headers: serviceRoleInvokeHeaders(SUPABASE_SERVICE_ROLE_KEY),
         body: { trigger: "listing", listing_id: listing.listing_id },
-      }).then(({ error }) => {
-        if (error) console.error("[notify-matching-buyers] hot-sheet fanout error:", error);
-      });
-    } catch (e) {
-      console.error("[notify-matching-buyers] hot-sheet fanout invoke threw:", e);
+      },
+    );
+
+    if (fanoutError) {
+      console.error("[notify-matching-buyers] hot-sheet fanout error:", fanoutError);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          hot_sheet_fanout: "failed",
+          error: fanoutError.message ?? String(fanoutError),
+        }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
     }
 
     return new Response(
       JSON.stringify({
         success: true,
-        queued: 0,
         hot_sheet_fanout: "invoked",
+        matcher: matcherResult ?? null,
         legacy_client_needs_emails: "disabled_for_isolation",
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },

@@ -33,6 +33,7 @@ const propertyTypeOptions = [
   { value: "land", label: "Land (LD)" },
   { value: "commercial", label: "Commercial (CI)" },
   { value: "business_opp", label: "Business Opp. (BU)" },
+  { value: "residential_rental", label: "Residential Rental (RR)" },
 ];
 
 export function HotSheetCriteriaBuilder({ value, onChange }: HotSheetCriteriaBuilderProps) {

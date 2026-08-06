@@ -42,7 +42,7 @@ interface BuyerCollection {
   clientId: string;
   clientName: string;
   clientInitials: string;
-  hotSheets: { id: string; name: string }[];
+  hotSheets: { id: string; name: string; isActive: boolean }[];
   photos: string[];
   collaborators: string[];
   /** False for criteria-only cards (no CRM `clients.id` for `/agent/buyers/:id/favorites`). */
@@ -53,6 +53,7 @@ interface AgentPersonalHotSheet {
   id: string;
   name: string;
   photos: string[];
+  isActive: boolean;
 }
 
 const AAC_PRIMARY_BTN =
@@ -169,6 +170,8 @@ const HotSheets = ({
   const [buyerDeleteBusy, setBuyerDeleteBusy] = useState(false);
   /** Agent list: last fetch failed (clears list in catch). */
   const [agentLoadError, setAgentLoadError] = useState(false);
+  /** Hot sheet id whose Pause/Resume alerts toggle is in flight. */
+  const [togglingSheetId, setTogglingSheetId] = useState<string | null>(null);
   const buyerMode = isBuyerMode;
 
   /** Hero / page sections — white surface, subtle border/shadow (matches polished agent surfaces). */
@@ -603,14 +606,14 @@ const HotSheets = ({
         const sheetPhotos: string[] = photosPerSheet.get(sheet.id) || [];
 
         if (clients.length === 0) {
-          personal.push({ id: sheet.id, name: sheet.name, photos: sheetPhotos });
+          personal.push({ id: sheet.id, name: sheet.name, photos: sheetPhotos, isActive: !!sheet.is_active });
           continue;
         }
 
         for (const client of clients) {
           const existing = clientMap.get(client.id);
           if (existing) {
-            existing.hotSheets.push({ id: sheet.id, name: sheet.name });
+            existing.hotSheets.push({ id: sheet.id, name: sheet.name, isActive: !!sheet.is_active });
             // Merge photos up to 4
             for (const ph of sheetPhotos) {
               if (existing.photos.length < 4 && !existing.photos.includes(ph)) {
@@ -626,7 +629,7 @@ const HotSheets = ({
               clientId: client.id,
               clientName: [client.first_name, client.last_name].filter(Boolean).join(" ") || "Unnamed Client",
               clientInitials: getInitials(client.first_name, client.last_name),
-              hotSheets: [{ id: sheet.id, name: sheet.name }],
+              hotSheets: [{ id: sheet.id, name: sheet.name, isActive: !!sheet.is_active }],
               photos: sheetPhotos,
               collaborators: collabInitials,
               supportsBuyerFavorites: true,
@@ -733,6 +736,37 @@ const HotSheets = ({
     navigate(`/hot-sheets/${sheetId}/review`);
   };
 
+  /**
+   * Pause/Resume alerts. `hot_sheets.is_active` is the matcher gate: an inactive
+   * sheet is skipped by `check_hot_sheet_matches`, so no alerts are ever sent.
+   * Toggling only writes the flag — it never enqueues or sends anything.
+   */
+  const handleToggleHotSheetActive = async (sheetId: string, next: boolean) => {
+    setTogglingSheetId(sheetId);
+    try {
+      const { error } = await supabase
+        .from("hot_sheets")
+        .update({ is_active: next })
+        .eq("id", sheetId);
+      if (error) throw error;
+      setPersonalHotSheets((prev) =>
+        prev.map((s) => (s.id === sheetId ? { ...s, isActive: next } : s)),
+      );
+      setCollections((prev) =>
+        prev.map((c) => ({
+          ...c,
+          hotSheets: c.hotSheets.map((s) => (s.id === sheetId ? { ...s, isActive: next } : s)),
+        })),
+      );
+      toast.success(next ? "Alerts resumed for this hot sheet" : "Alerts paused for this hot sheet");
+    } catch (e) {
+      console.error("Error toggling hot sheet alerts:", e);
+      toast.error("Couldn't update alerts for this hot sheet");
+    } finally {
+      setTogglingSheetId(null);
+    }
+  };
+
   const renderMyHotSheetsSection = () => (
     <section className={`${AAC_CARD_SHELL} p-5 md:p-6`} aria-labelledby="agent-my-hot-sheets-heading">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -770,6 +804,10 @@ const HotSheets = ({
                 photos={sheet.photos}
                 nameLabel="Hot Sheet Name"
                 titleCaseName={false}
+                ownerLabel="Personal Hot Sheet"
+                isActive={sheet.isActive}
+                toggleBusy={togglingSheetId === sheet.id}
+                onToggleActive={(next) => void handleToggleHotSheetActive(sheet.id, next)}
                 onClick={() => openPersonalHotSheet(sheet.id)}
                 onEditClick={() => {
                   setEditingHotSheetId(sheet.id);
@@ -821,6 +859,17 @@ const HotSheets = ({
                 clientName={collection.clientName}
                 hotSheetCount={collection.hotSheets.length}
                 photos={collection.photos}
+                ownerLabel={`Client: ${collection.clientName}`}
+                isActive={collection.hotSheets.some((s) => s.isActive)}
+                toggleBusy={
+                  collection.hotSheets.length === 1 &&
+                  togglingSheetId === collection.hotSheets[0].id
+                }
+                onToggleActive={
+                  collection.hotSheets.length === 1
+                    ? (next) => void handleToggleHotSheetActive(collection.hotSheets[0].id, next)
+                    : undefined
+                }
                 onClick={() => handleCardClick(collection)}
                 onFavoritesClick={
                   isAgentMode && collection.supportsBuyerFavorites
