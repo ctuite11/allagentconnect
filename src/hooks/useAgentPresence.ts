@@ -14,6 +14,9 @@ export function useAgentPresence() {
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   // null = not checked yet; cached for the lifetime of the mount.
   const eligibleRef = useRef<boolean | null>(null);
+  // Timestamp of the last successful write, used to throttle bursts caused by
+  // focus + visibilitychange + interval all firing around the same moment.
+  const lastWriteRef = useRef<number>(0);
 
   const checkEligibility = useCallback(async (userId: string): Promise<boolean> => {
     if (eligibleRef.current !== null) return eligibleRef.current;
@@ -43,10 +46,20 @@ export function useAgentPresence() {
   }, []);
 
   const sendHeartbeat = useCallback(async () => {
+    // Never write while the tab is in the background — a hidden tab is not
+    // an online agent, and background timers were the single largest source
+    // of database write volume.
+    if (typeof document !== "undefined" && document.visibilityState === "hidden") return;
+
+    // Throttle: at most one write per 90s regardless of how many triggers fire.
+    const now = Date.now();
+    if (now - lastWriteRef.current < 90 * 1000) return;
+
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
     if (!(await checkEligibility(user.id))) return;
 
+    lastWriteRef.current = Date.now();
     await supabase
       .from("agent_settings")
       .update({ last_seen_at: new Date().toISOString() })
