@@ -65,6 +65,7 @@ CREATE TABLE public.listings (
   city text,
   neighborhood text,
   property_type text,
+  listing_type text DEFAULT 'for_sale',
   price numeric,
   bedrooms int,
   bathrooms numeric,
