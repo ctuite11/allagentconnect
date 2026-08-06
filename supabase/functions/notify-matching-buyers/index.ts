@@ -5,6 +5,7 @@ import {
   authorizeInternalServiceRole,
   serviceRoleInvokeHeaders,
 } from "../_shared/internalServiceRoleAuth.ts";
+import { runListingFanout } from "./fanout.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -58,15 +59,6 @@ const handler = async (req: Request): Promise<Response> => {
     const pauseGate = assertHotSheetEnqueueAllowed();
     if (pauseGate.paused) {
       console.log(`[notify-matching-buyers] paused: ${pauseGate.switch}`);
-      return new Response(
-        JSON.stringify({
-          paused: true,
-          switch: pauseGate.switch,
-          reason: pauseGate.reason,
-          hot_sheet_fanout: "skipped",
-        }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-      );
     }
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
@@ -76,35 +68,24 @@ const handler = async (req: Request): Promise<Response> => {
     // outcome unobservable, so the downstream result is now the response.
     // Explicit service-role Authorization + apikey so gateway JWT verify and
     // the in-function exact-key gate both accept the downstream call.
-    const { data: matcherResult, error: fanoutError } = await supabase.functions.invoke(
-      "send-new-match-notification",
-      {
-        headers: serviceRoleInvokeHeaders(SUPABASE_SERVICE_ROLE_KEY),
-        body: { trigger: "listing", listing_id: listing.listing_id },
-      },
-    );
-
-    if (fanoutError) {
-      console.error("[notify-matching-buyers] hot-sheet fanout error:", fanoutError);
-      return new Response(
-        JSON.stringify({
-          success: false,
-          hot_sheet_fanout: "failed",
-          error: fanoutError.message ?? String(fanoutError),
+    const result = await runListingFanout({
+      listingId: listing.listing_id,
+      pauseGate,
+      invokeMatcher: (listingId) =>
+        supabase.functions.invoke("send-new-match-notification", {
+          headers: serviceRoleInvokeHeaders(SUPABASE_SERVICE_ROLE_KEY),
+          body: { trigger: "listing", listing_id: listingId },
         }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-      );
+    });
+
+    if (result.status === 500) {
+      console.error("[notify-matching-buyers] hot-sheet fanout error:", result.body.error);
     }
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        hot_sheet_fanout: "invoked",
-        matcher: matcherResult ?? null,
-        legacy_client_needs_emails: "disabled_for_isolation",
-      }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-    );
+    return new Response(JSON.stringify(result.body), {
+      status: result.status,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   } catch (error: any) {
     console.error("[notify-matching-buyers] Error:", error);
     return new Response(
