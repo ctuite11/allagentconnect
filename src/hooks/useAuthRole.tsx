@@ -68,10 +68,12 @@ function useAuthRoleStore(): AuthRoleState {
   const roleResolutionId = useRef(0);
   const currentUserId = useRef<string | null>(null);
   const currentRole = useRef<Role>(null);
+  const resolvingUserId = useRef<string | null>(null);
   currentUserId.current = user?.id ?? null;
   currentRole.current = role;
 
   const clearResolvedAccess = useCallback(() => {
+    currentRole.current = null;
     setRole(null);
     setIsAdmin(false);
     setIsVerifiedAgent(false);
@@ -105,6 +107,7 @@ function useAuthRoleStore(): AuthRoleState {
     }
     if (resolutionId !== undefined && roleResolutionId.current !== resolutionId) return;
     const nextRole: Role = result.role === "unknown" ? null : result.role;
+    currentRole.current = nextRole;
     setRole(nextRole);
     setIsAdmin(result.role === "admin");
     setIsVerifiedAgent(result.is_verified_agent);
@@ -130,13 +133,21 @@ function useAuthRoleStore(): AuthRoleState {
 
       if (error) {
         console.warn("[AUTH] getSession failed on bootstrap; leaving session for onAuthStateChange:", error);
-        setLoading(false);
         initialLoadDone.current = true;
+        if (!resolvingUserId.current) setLoading(false);
         return;
       }
 
       const sessionUser = session?.user ?? null;
       if (!sessionUser) {
+        // A SIGNED_IN/INITIAL_SESSION event may have arrived while getSession
+        // was waiting on the browser's auth-storage lock. Never overwrite that
+        // newer, authoritative event with this stale empty bootstrap result.
+        if (currentUserId.current || resolvingUserId.current) {
+          initialLoadDone.current = true;
+          return;
+        }
+        currentUserId.current = null;
         setUser(null);
         clearResolvedAccess();
         setLoading(false);
@@ -144,14 +155,32 @@ function useAuthRoleStore(): AuthRoleState {
         return;
       }
 
+      // onAuthStateChange can deliver the valid session before getSession
+      // settles. Reuse the in-flight resolution instead of starting a second
+      // request that can cancel the first one and leave the route spinning.
+      if (
+        currentUserId.current === sessionUser.id &&
+        (currentRole.current !== null || resolvingUserId.current === sessionUser.id)
+      ) {
+        setUser(sessionUser);
+        initialLoadDone.current = true;
+        return;
+      }
+
       const resolutionId = roleResolutionId.current + 1;
       roleResolutionId.current = resolutionId;
+      currentUserId.current = sessionUser.id;
+      resolvingUserId.current = sessionUser.id;
       setUser(sessionUser);
       clearResolvedAccess();
       try {
         await withTimeout(loadRoleForUser(sessionUser.id, resolutionId), 10000, "resolveUserRole");
       } catch (e) {
         console.warn("[AUTH] role resolution stalled on bootstrap:", e);
+      } finally {
+        if (roleResolutionId.current === resolutionId) {
+          resolvingUserId.current = null;
+        }
       }
       setLoading(false);
       initialLoadDone.current = true;
@@ -171,10 +200,10 @@ function useAuthRoleStore(): AuthRoleState {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
-      if (!initialLoadDone.current) return;
-
       if (event === "SIGNED_OUT") {
         roleResolutionId.current += 1;
+        currentUserId.current = null;
+        resolvingUserId.current = null;
         setUser(null);
         clearResolvedAccess();
         setLoading(false);
@@ -196,13 +225,18 @@ function useAuthRoleStore(): AuthRoleState {
         // Token refreshes and user metadata updates are common while a tab is
         // open. Do not erase a role that is already resolved for this user or
         // restart the route-level loading screen for those routine events.
-        if (currentUserId.current === newUser.id && currentRole.current !== null) {
+        if (
+          currentUserId.current === newUser.id &&
+          (currentRole.current !== null || resolvingUserId.current === newUser.id)
+        ) {
           setUser(newUser);
           return;
         }
 
         const resolutionId = roleResolutionId.current + 1;
         roleResolutionId.current = resolutionId;
+        currentUserId.current = newUser.id;
+        resolvingUserId.current = newUser.id;
         setUser(newUser);
         clearResolvedAccess();
         setLoading(true);
@@ -221,6 +255,7 @@ function useAuthRoleStore(): AuthRoleState {
             })
             .finally(() => {
               if (roleResolutionId.current === resolutionId) {
+                resolvingUserId.current = null;
                 setLoading(false);
               }
             });
