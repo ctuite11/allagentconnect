@@ -10,7 +10,7 @@ import {
 } from "@/lib/listingAgentContact";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { MapPin, ChevronDown, Pencil, Heart, Send, Check } from "lucide-react";
+import { MapPin, ChevronDown, Pencil, Heart, Send, Check, BellOff, BellRing } from "lucide-react";
 import { AacBackButton } from "@/components/layout/AacBackLink";
 import { AacPageIntro } from "@/components/layout/AacPageIntro";
 import { AgentResultsSummaryControls } from "@/components/listing-search/AgentResultsSummaryControls";
@@ -183,6 +183,8 @@ const HotSheetReview = () => {
   const [buyerContextClientId, setBuyerContextClientId] = useState<string | null>(null);
   const [reviewRecipients, setReviewRecipients] = useState<ReviewRecipient[]>([]);
   const [removedListingsOpen, setRemovedListingsOpen] = useState(false);
+  /** Pause/Resume alerts toggle in flight (hot_sheets.is_active). */
+  const [togglingActive, setTogglingActive] = useState(false);
   /** Buyer hot-sheet saves — read-only hearts on shared workspace cards */
   const [buyerHotSheetFavoriteIds, setBuyerHotSheetFavoriteIds] = useState<Set<string>>(new Set());
 
@@ -1287,6 +1289,31 @@ const HotSheetReview = () => {
     "h-7 rounded-md border-neutral-200 bg-white px-2.5 text-xs font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:bg-neutral-50";
 
   const alertsActive = hotSheet.is_active !== false;
+
+  /**
+   * `hot_sheets.is_active` is the matcher gate — an inactive sheet is skipped by
+   * check_hot_sheet_matches, so no alerts go out. Results below stay visible
+   * either way; only notifications are affected. Toggling sends nothing.
+   */
+  const handleToggleAlerts = async () => {
+    if (!hotSheet) return;
+    const next = !alertsActive;
+    setTogglingActive(true);
+    try {
+      const { error } = await supabase
+        .from("hot_sheets")
+        .update({ is_active: next })
+        .eq("id", hotSheet.id);
+      if (error) throw error;
+      setHotSheet((prev) => (prev ? { ...prev, is_active: next } : prev));
+      toast.success(next ? "Alerts resumed for this hot sheet" : "Alerts paused for this hot sheet");
+    } catch (e) {
+      console.error("Error toggling hot sheet alerts:", e);
+      toast.error("Couldn't update alerts for this hot sheet");
+    } finally {
+      setTogglingActive(false);
+    }
+  };
 
   const renderInviteCtaButton = () => {
     if (!inviteCta) return null;
