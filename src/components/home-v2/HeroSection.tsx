@@ -1,25 +1,94 @@
-import React from "react";
+import React, { useLayoutEffect, useState } from "react";
 import AACMonogram from "@/components/ui/AACMonogram";
 
 /**
  * First-party responsive hero assets (Netlify static).
  * Do not use animaapp.com or /__l5e/ — those paths either inflate LCP or 404-as-HTML.
+ *
+ * Keep SRCSET / SIZES / src identical to the homepage preload +
+ * #aac-home-hero-shell in index.html so the browser reuses one transfer.
+ *
+ * On first homepage load the pre-React shell owns the LCP <img>. We must NOT
+ * remove that node (removal clears the early LCP candidate). Instead we hand
+ * off: keep the shell image in the DOM behind React chrome, and skip a second
+ * <img> so there is no duplicate download or accessible double content.
  */
 const HERO_WEBP_SRCSET =
   "/images/home/hero-768.webp 768w, /images/home/hero-1200.webp 1200w, /images/home/hero-1920.webp 1920w";
 const HERO_SIZES = "100vw";
-/** Non-WebP fallback only (legacy browsers); modern browsers use the WebP source. */
-const HERO_JPEG_FALLBACK = "/images/home/hero-1200.jpg";
+/** Default src matches preload href + shell; srcset picks 768/1200/1920 by viewport. */
+const HERO_SRC = "/images/home/hero-768.webp";
+
+function handOffHomeHeroShell() {
+  const shell = document.getElementById("aac-home-hero-shell");
+  if (!shell) return false;
+
+  // Keep the early LCP image mounted; place it behind React content.
+  shell.style.zIndex = "0";
+  shell.setAttribute("data-aac-hero-handoff", "1");
+
+  const root = document.getElementById("root");
+  if (root) {
+    root.style.position = "relative";
+    root.style.zIndex = "1";
+    root.style.backgroundColor = "transparent";
+  }
+
+  // HomepageV2 wrapper is bg-white; make it transparent so the shell shows through
+  // the hero viewport. Below-the-fold sections bring their own backgrounds.
+  const homeWrap = root?.querySelector(":scope > div");
+  if (homeWrap instanceof HTMLElement) {
+    homeWrap.style.backgroundColor = "transparent";
+  }
+
+  return true;
+}
+
+function removeHomeHeroShell() {
+  document.getElementById("aac-home-hero-shell")?.remove();
+  document.getElementById("aac-home-hero-shell-css")?.remove();
+  document.documentElement.classList.remove("aac-home-hero-shell");
+  const root = document.getElementById("root");
+  if (root) {
+    root.style.position = "";
+    root.style.zIndex = "";
+    root.style.backgroundColor = "";
+  }
+}
 
 const HeroSection = () => {
+  // Sync read so the first paint never mounts a second <img> when the shell exists.
+  const [shellBacked] = useState(
+    () => typeof document !== "undefined" && !!document.getElementById("aac-home-hero-shell"),
+  );
+
+  useLayoutEffect(() => {
+    document.documentElement.dataset.aacHeroMounted = "1";
+    if (shellBacked) handOffHomeHeroShell();
+    return () => {
+      delete document.documentElement.dataset.aacHeroMounted;
+      // Defer removal so React StrictMode remount can reclaim the shell.
+      requestAnimationFrame(() => {
+        if (!document.documentElement.dataset.aacHeroMounted) {
+          removeHomeHeroShell();
+        }
+      });
+    };
+  }, [shellBacked]);
+
   return (
-    <section className="relative w-full min-h-screen bg-[#111317] overflow-hidden flex flex-col">
-      {/* Background: full-bleed hero image */}
-      <div className="absolute inset-0">
-        <picture>
-          <source type="image/webp" srcSet={HERO_WEBP_SRCSET} sizes={HERO_SIZES} />
+    <section
+      className={`relative w-full min-h-screen overflow-hidden flex flex-col ${
+        shellBacked ? "bg-transparent" : "bg-[#111317]"
+      }`}
+    >
+      {/* Background image — skipped when pre-React shell already provides it (LCP). */}
+      {!shellBacked && (
+        <div className="absolute inset-0">
           <img
-            src={HERO_JPEG_FALLBACK}
+            src={HERO_SRC}
+            srcSet={HERO_WEBP_SRCSET}
+            sizes={HERO_SIZES}
             alt="Real estate agents collaborating"
             width={1920}
             height={1080}
@@ -28,8 +97,8 @@ const HeroSection = () => {
             className="absolute inset-0 w-full h-full object-cover"
             style={{ objectPosition: "55% center" }}
           />
-        </picture>
-      </div>
+        </div>
+      )}
 
       {/* Lower-left readability wash — soft gradient, not a panel */}
       <div

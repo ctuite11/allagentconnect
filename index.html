@@ -27,26 +27,37 @@
     <meta property="og:locale" content="en_US" />
     <meta property="og:site_name" content="All Agent Connect" />
 
-    <!-- Homepage LCP only: preload hero before SPA JS, but not on other routes.
-         index.html is shared across the SPA; gating avoids downloading the hero
-         on /messages, /hot-sheets, dashboards, etc. High-DPR phones may pick
-         1200w via imagesizes=100vw — that is correct responsive behavior. -->
+    <!-- Homepage LCP preload only (markup shell mounts synchronously at body start).
+         Keep imagesrcset/imagesizes identical to shell + HeroSection img srcset/sizes. -->
     <script>
     (function () {
       var path = (location.pathname || "/").replace(/\/+$/, "") || "/";
       if (path !== "/" && path !== "/index" && path !== "/homepage-v2") return;
+
+      var SRCSET =
+        "/images/home/hero-768.webp 768w, /images/home/hero-1200.webp 1200w, /images/home/hero-1920.webp 1920w";
+      var SIZES = "100vw";
+
       var link = document.createElement("link");
       link.rel = "preload";
       link.as = "image";
       link.type = "image/webp";
       link.href = "/images/home/hero-768.webp";
-      link.setAttribute(
-        "imagesrcset",
-        "/images/home/hero-768.webp 768w, /images/home/hero-1200.webp 1200w, /images/home/hero-1920.webp 1920w"
-      );
-      link.setAttribute("imagesizes", "100vw");
+      link.setAttribute("imagesrcset", SRCSET);
+      link.setAttribute("imagesizes", SIZES);
       link.setAttribute("fetchpriority", "high");
       document.head.appendChild(link);
+
+      var style = document.createElement("style");
+      style.id = "aac-home-hero-shell-css";
+      style.textContent =
+        "html.aac-home-hero-shell,html.aac-home-hero-shell body{background:#111317;}" +
+        "#aac-home-hero-shell{position:fixed;inset:0;z-index:2147483646;width:100%;height:100%;" +
+        "min-height:100dvh;min-height:100vh;background:#111317;overflow:hidden;pointer-events:none;}" +
+        "#aac-home-hero-shell img{position:absolute;inset:0;width:100%;height:100%;" +
+        "object-fit:cover;object-position:55% center;display:block;}";
+      document.head.appendChild(style);
+      document.documentElement.classList.add("aac-home-hero-shell");
     })();
     </script>
 
@@ -110,6 +121,36 @@
   </head>
 
   <body>
+    <!-- Sync: mount shell before deferred module JS so LCP can paint during SPA boot. -->
+    <script>
+    (function () {
+      var path = (location.pathname || "/").replace(/\/+$/, "") || "/";
+      if (path !== "/" && path !== "/index" && path !== "/homepage-v2") return;
+      if (document.getElementById("aac-home-hero-shell")) return;
+
+      var SRCSET =
+        "/images/home/hero-768.webp 768w, /images/home/hero-1200.webp 1200w, /images/home/hero-1920.webp 1920w";
+      var SIZES = "100vw";
+      // Default src must be a WebP candidate (same family as srcset) so modern
+      // browsers do not also fetch the JPEG fallback alongside the selected WebP.
+      var SRC = "/images/home/hero-768.webp";
+
+      var shell = document.createElement("div");
+      shell.id = "aac-home-hero-shell";
+      shell.setAttribute("aria-hidden", "true");
+      var img = document.createElement("img");
+      img.src = SRC;
+      img.srcset = SRCSET;
+      img.sizes = SIZES;
+      img.alt = "";
+      img.width = 1920;
+      img.height = 1080;
+      img.decoding = "async";
+      img.setAttribute("fetchpriority", "high");
+      shell.appendChild(img);
+      document.body.appendChild(shell);
+    })();
+    </script>
     <div id="root" style="min-height: 100dvh; min-height: 100vh; background-color: #ffffff"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
