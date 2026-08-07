@@ -1,58 +1,52 @@
-# Renter Need broadcast: why you didn't get the email
+# Fix: Comms Center emails silently skip agents with saved town coverage
 
-## What actually happened
+## What's happening
 
-The 15:38 UTC "FURNISHED RENTAL OPPORTUNITY | Charlestown Navy Yard" Renter Need broadcast
-(sent by Rachel, 76 recipients) did send correctly:
+Gabrielle Russo is fully eligible — she is in the Agent Network, her Comms Center
+channels are all On, all 8 property types are selected, no price limits, and she
+is not unsubscribed. Yet she has received **zero** of the last six Communications
+broadcasts (Aug 4–7), while 70–81 other agents received each one.
 
-```text
-72  immediate emails queued and sent  (69 delivered, 2 sent/pending, 1 delayed)
- 4  queued as daily-digest items instead of immediate
- 0  failures
-```
+## Verified root cause
 
-So the broadcast pipeline is healthy. The issue is that your account was not in the audience.
+When an agent saves coverage areas in the Comms Center, the app must store a ZIP
+because that column is required and part of a uniqueness rule. It stores a
+**fake placeholder ZIP** instead — a simple counter: `00000`, `00001`, `00002`,
+… one per town. Gabrielle has 346 towns saved, so 346 different fake ZIPs.
 
-## Root cause
+The matching engine ignores only two of those placeholders (`00000` and `00001`)
+and treats every other value as a real ZIP the listing must equal. Since no
+listing ever has ZIP `00002`, every town row past the second one can never match.
+Effectively only her first two towns (Abington, Acton) are live; the other 344 are
+dead, so almost nothing reaches her.
 
-Every Communications Center broadcast builds its audience from the Agent Network function
-`get_verified_agent_ids()`. That function requires, among other things:
+This is not specific to her: **18 agents / 253 saved coverage rows** carry these
+placeholder ZIPs today, and they have been quietly under-receiving.
 
-```text
-hide_from_directory = false
-```
+## The fix
 
-Your account (chris@allagentconnect.com) has `hide_from_directory = true`. Everything else on
-your account is correct: verified, activated, agent role, all four Comms categories on, immediate
-cadence, no price/property-type restriction, no suppression.
+1. **Matcher: ignore ZIP on Comms Center coverage rows.**
+   Comms Center coverage is chosen by town/state, never by ZIP, so the audience
+   builder will drop the placeholder ZIP when it loads `source='notifications'`
+   rows. Matching then happens on state + county + town, which is what the agent
+   actually selected.
+2. **Keep the stored placeholder as-is.** It only exists to satisfy the database's
+   required/unique ZIP rule. No data migration and no risk to existing rows.
+3. **Verify before/after** with a read-only recheck of the six recent broadcasts:
+   confirm Gabrielle (and the other 17 affected agents) now fall inside the
+   matched audience, and confirm no previously-matched agent drops out.
+4. **No back-sending.** Missed broadcasts will not be re-enqueued or re-sent; the
+   fix applies to future sends only, per the standing queue-approval rule.
 
-So a *directory visibility* setting is silently controlling *email eligibility*. Hiding yourself
-from the member directory also removes you from every Comms Center broadcast, with no indication
-anywhere in the UI.
+## Technical detail
 
-## Proposed work
-
-1. Separate the two concerns. Directory visibility should not decide email eligibility.
-   Add a dedicated audience function for Comms Center broadcasts that keeps the verified +
-   activated + agent-role + named-profile gates but drops the `hide_from_directory` condition.
-   The Agent Network directory itself keeps using the existing function unchanged, so hidden
-   agents stay hidden in the member directory.
-2. Point the broadcast audience loader at the new function. No change to opt-in gates, category
-   matching, cadence, suppression, or the email templates.
-3. Verify by re-running the audience calculation for the same Renter Need criteria and confirming
-   your account now appears as a recipient — read-only, with no email sent.
-
-Not in scope: no changes to Hot Sheets, email templates, crons, pause switches, or any re-send of
-the 15:38 broadcast.
-
-## Technical notes
-
-- New `public.get_comms_audience_agent_ids()`, identical to `get_verified_agent_ids()` minus
-  `s.hide_from_directory = false`. Existing function untouched.
-- `supabase/functions/_shared/verifiedAgentAudience.ts` (`loadVerifiedAgentIdSet`) switches to the
-  new function; the rest of the audience/matcher chain is unchanged.
-- Affected functions to redeploy: the Comms Center broadcast senders that import the shared
-  audience module.
-- Alternative if you prefer zero schema change: flip `hide_from_directory` to false on your
-  account only. That fixes your inbox immediately but leaves the same trap for any other hidden
-  agent, so it is a workaround rather than a fix.
+- `supabase/functions/_shared/verifiedAgentAudience.ts` — when building
+  `savedPrefs.geoRows` from `agent_buyer_coverage_areas` (`source='notifications'`),
+  set `zip_code: null`.
+- `supabase/functions/_shared/communicationPreferencesMatcher.ts` unchanged
+  (its `ZIP_SENTINELS` set stays as a defensive fallback).
+- Redeploy the Comms producers that build the audience:
+  `notify-agents-client-need`, `notify-agents-broadcast` / Comms broadcast
+  functions, and the digest processor.
+- Add a unit test covering: town-only coverage row with a placeholder ZIP matches
+  a listing in that town; a genuinely different town still does not match.
