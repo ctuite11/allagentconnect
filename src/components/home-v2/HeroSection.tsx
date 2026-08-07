@@ -1,28 +1,34 @@
 import React from "react";
 import AACMonogram from "@/components/ui/AACMonogram";
 
-// TEMPORARY: /__l5e/assets-v1/ CDN URLs are not proxied on our Netlify-fronted
-// custom domains, so optimized AVIF/WebP variants 404-as-HTML for real visitors.
-// Reverting the hero to the known-public animaapp.com origin until hosting
-// rewrites are in place. Rest of the perf work (lazy sections, reserved
-// dimensions, code splitting) is preserved.
-const HERO_FALLBACK = "https://c.animaapp.com/mmm3cgevnH1M3s/img/group-1707484446.png";
+/**
+ * First-party responsive hero assets (Netlify static).
+ * Do not use animaapp.com or /__l5e/ — those paths either inflate LCP or 404-as-HTML.
+ */
+const HERO_WEBP_SRCSET =
+  "/images/home/hero-768.webp 768w, /images/home/hero-1200.webp 1200w, /images/home/hero-1920.webp 1920w";
+const HERO_SIZES = "100vw";
+/** Non-WebP fallback only (legacy browsers); modern browsers use the WebP source. */
+const HERO_JPEG_FALLBACK = "/images/home/hero-1200.jpg";
 
 const HeroSection = () => {
   return (
     <section className="relative w-full min-h-screen bg-[#111317] overflow-hidden flex flex-col">
       {/* Background: full-bleed hero image */}
       <div className="absolute inset-0">
-        <img
-          src={HERO_FALLBACK}
-          alt="Real estate agents collaborating"
-          width={1920}
-          height={1080}
-          fetchPriority="high"
-          decoding="async"
-          className="absolute inset-0 w-full h-full object-cover"
-          style={{ objectPosition: "55% center" }}
-        />
+        <picture>
+          <source type="image/webp" srcSet={HERO_WEBP_SRCSET} sizes={HERO_SIZES} />
+          <img
+            src={HERO_JPEG_FALLBACK}
+            alt="Real estate agents collaborating"
+            width={1920}
+            height={1080}
+            fetchPriority="high"
+            decoding="async"
+            className="absolute inset-0 w-full h-full object-cover"
+            style={{ objectPosition: "55% center" }}
+          />
+        </picture>
       </div>
 
       {/* Lower-left readability wash — soft gradient, not a panel */}
