@@ -1,64 +1,28 @@
-# Fix Comms Center coverage matching — placeholder ZIPs suppress valid recipients
+# Pre-deployment safety confirmation — will anything send?
 
-## Safety rules (binding)
+## What I verified just now (read-only)
 
-- The six Aug 4–7 Communications broadcasts are **read-only verification data only**.
-- No re-enqueue, retry, recreate, replay, or resend to anyone — including agents who missed them.
-- No changes to sent history, dedup records, idempotency keys, or queue history.
-- The fix applies only to **new** Communications broadcasts created after deployment.
-- All before/after verification is dry-run / read-only. No full-audience test send.
-- Hot Sheets are out of scope and untouched.
+- `email_jobs` contains **zero** queued/pending rows: 10,959 sent, 178 failed, 327 cancelled. Nothing is waiting to go out.
+- Active crons: `process-email-queue-every-minute` (jobid 2), `process-comms-digests` (jobid 9), plus non-email jobs (listing statuses, auth deletion queue). Hot Sheet / price-change / message / stale-listing crons are inactive.
 
-## Confirmed problem
+## Straight answer
 
-Gabrielle Russo is fully eligible (in Agent Network, all Comms channels On, all 8
-property types, no price limits, not unsubscribed) yet received **zero** of the last
-six broadcasts, while 70–81 agents received each.
+Deploying the coverage-matching fix, by itself, sends **no emails**. The change only affects how the audience is computed *at the moment a new broadcast is created*. It:
 
-Cause: `agent_buyer_coverage_areas` requires a ZIP and includes it in its uniqueness
-rule, so the app stores counter placeholders (`00000`, `00001`, `00002`, …) for
-town selections. The matcher treats only `00000`/`00001` as placeholders and enforces
-`00002+` as a real ZIP restriction, which can never match a listing. Gabrielle has
-346 towns saved, so only her first two are live.
+- writes nothing to `email_jobs`,
+- touches no sent history, dedup rows, or digest items,
+- does not replay or reprocess the six Aug 4–7 broadcasts,
+- and with the queue empty there is nothing for the worker to pick up.
 
-Scope measured: **18 agents, 253 coverage rows**.
+One honest caveat: the system is currently **live** (email pauses are off, worker and digest crons active). So after deployment, the *next* Communications broadcast someone creates will send — and it will now correctly reach the ~12 previously suppressed agents. That is the intended fix, not a side effect. Nothing historical goes out.
 
-## Fix
+## Options for deployment
 
-1. **Normalize before matching** — in `supabase/functions/_shared/verifiedAgentAudience.ts`,
-   when building `savedPrefs.geoRows` from `agent_buyer_coverage_areas` rows with
-   `source = 'notifications'`, set `zip_code: null` regardless of the stored value.
-   Comms geography then matches on state / county / town only.
-2. **No data changes** — placeholder ZIPs stay exactly as stored. No migration, no
-   updates, no delete-reinsert. They exist only to satisfy the NOT NULL + unique
-   `(agent_id, zip_code, source)` constraint.
-3. **Matcher untouched** — `communicationPreferencesMatcher.ts` and its `ZIP_SENTINELS`
-   stay as a defensive fallback.
-4. **Regression tests** —
-   - town-only coverage row with placeholder `00002` matches a listing in that town;
-   - higher placeholders (`00045`, `00345`) behave the same;
-   - a listing in a genuinely different town still does not match;
-   - ZIP matching outside the `source='notifications'` path is not weakened;
-   - run existing audience + matcher tests.
-5. **Read-only before/after verification** — re-evaluate the same six Aug 4–7
-   broadcasts with no writes, reporting per broadcast: previous matched count,
-   corrected matched count, whether Gabrielle is now included, how many of the other
-   17 affected agents are newly included, and whether any previously matched
-   recipient drops out. **Acceptance: zero previously matched recipients lost.** If
-   any drop out, stop and investigate before deployment.
-6. **No historical resend** — the six broadcasts are comparison data only.
-7. **Deployment scope** — trace the real import graph of `verifiedAgentAudience.ts`
-   and redeploy only the Communications producers/processors that depend on it
-   (client-need producer, broadcast producer, digest processor as confirmed by the
-   actual graph). No Hot Sheet functions.
+1. **Deploy live (recommended).** No emails fire from the deploy itself. The fix takes effect on the next new broadcast.
+2. **Deploy under pause.** Set the email pause switches on, deploy the five functions, verify with a dry-run, then lift the pauses. Zero possibility of any send during the window, at the cost of briefly holding all outbound email.
 
-## Report before deployment
+## Functions to redeploy (unchanged from the approved plan)
 
-Exact code diff; tests and results; six-broadcast before/after recipient table;
-Gabrielle's result; results for all 18 affected agents; confirmation that zero
-previously matched recipients were lost; exact list of functions needing redeploy.
-**No deployment until this is reported and approved.**
+`notify-agents`, `notify-agents-client-need`, `send-client-need-notification`, `send-seller-alert`, `process-comms-digests`.
 
-After approval: deploy only the affected Communications functions. No full-audience
-test send. Any live canary uses only the approved admin test recipient and must
-confirm exactly one job and one delivery.
+No migration, no data changes, no historical resend.
