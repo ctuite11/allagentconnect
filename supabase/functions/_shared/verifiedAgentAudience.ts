@@ -133,7 +133,13 @@ export async function getVerifiedAgentAudienceWithStats(
       state: r.state ?? null,
       county: r.county ?? null,
       city: r.city ?? null,
-      zip_code: r.zip_code ?? null,
+      // Communications Center coverage is selected by state / county / town.
+      // The agent never picks a ZIP: `agent_buyer_coverage_areas.zip_code` is
+      // NOT NULL and part of UNIQUE (agent_id, zip_code, source), so the UI
+      // writes counter placeholders ("00000", "00001", "00002", ...). Treating
+      // those as real ZIP restrictions silently suppressed every town past the
+      // first two. Drop the ZIP entirely for source='notifications' rows.
+      zip_code: null,
       neighborhood: r.neighborhood ?? null,
     });
     geoByAgent.set(r.agent_id, arr);

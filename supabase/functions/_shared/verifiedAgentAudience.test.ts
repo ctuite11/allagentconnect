@@ -6,6 +6,7 @@ import {
   partitionAudience,
   type EligibleAgent,
 } from "./verifiedAgentAudience.ts";
+import { matchesCommunicationPreferences } from "./communicationPreferencesMatcher.ts";
 
 const ON = {
   client_needs_enabled: true,
@@ -314,4 +315,111 @@ Deno.test("all five Comms Edge consumers use the Network-aligned audience helper
   );
   assertEquals(digestSrc.includes("loadVerifiedAgentIdSet"), true);
   assertEquals(digestSrc.includes("get_verified_agent_ids()"), true);
+});
+
+// ---------------------------------------------------------------------------
+// Placeholder-ZIP normalization (Aug 2026)
+//
+// Comms Center coverage is town/state selected; the agent never picks a ZIP.
+// The table requires a ZIP and uniques on it, so the UI writes counter
+// placeholders ("00000", "00001", "00002", ...). Those must never act as a
+// geographic restriction.
+// ---------------------------------------------------------------------------
+
+function coverageRow(agent_id: string, city: string, zip_code: string) {
+  return {
+    agent_id,
+    state: "MA",
+    county: null,
+    city,
+    zip_code,
+    neighborhood: null,
+  };
+}
+
+async function audienceWithCoverage(coverage: TableRow[]) {
+  const { audience } = await getVerifiedAgentAudienceWithStats(
+    fakeAudienceSupabase({
+      rpcIds: ["a1"],
+      profiles: [{ id: "a1", email: "a1@example.com", first_name: "A", last_name: "One" }],
+      coverage,
+    }),
+  );
+  return audience[0];
+}
+
+Deno.test("notifications coverage rows drop placeholder ZIPs of every value", async () => {
+  const a = await audienceWithCoverage([
+    coverageRow("a1", "Abington", "00000"),
+    coverageRow("a1", "Acton", "00001"),
+    coverageRow("a1", "Boston", "00002"),
+    coverageRow("a1", "Newton", "00045"),
+    coverageRow("a1", "Worcester", "00345"),
+  ]);
+  assertEquals(a.savedPrefs.geoRows.length, 5);
+  assertEquals(a.savedPrefs.geoRows.every((r) => r.zip_code === null), true);
+  assertEquals(a.preferences_set, true);
+});
+
+Deno.test("town saved with placeholder 00002+ now matches a listing in that town", async () => {
+  const a = await audienceWithCoverage([
+    coverageRow("a1", "Abington", "00000"),
+    coverageRow("a1", "Boston", "00002"),
+    coverageRow("a1", "Worcester", "00345"),
+  ]);
+  for (const [city, zip] of [["Boston", "02118"], ["Worcester", "01604"]]) {
+    const res = matchesCommunicationPreferences(a.savedPrefs, {
+      state: "MA",
+      city,
+      zip,
+      price: 750000,
+      propertyTypes: ["condo"],
+    });
+    assertEquals(res.matches, true, `${city} should match`);
+  }
+});
+
+Deno.test("a genuinely different town still does not match", async () => {
+  const a = await audienceWithCoverage([
+    coverageRow("a1", "Boston", "00002"),
+    coverageRow("a1", "Worcester", "00345"),
+  ]);
+  const res = matchesCommunicationPreferences(a.savedPrefs, {
+    state: "MA",
+    city: "Springfield",
+    zip: "01103",
+    price: 500000,
+    propertyTypes: ["single_family"],
+  });
+  assertEquals(res.matches, false);
+  assertEquals(res.failedDimension, "location");
+});
+
+Deno.test("a different state still does not match", async () => {
+  const a = await audienceWithCoverage([coverageRow("a1", "Boston", "00002")]);
+  const res = matchesCommunicationPreferences(a.savedPrefs, {
+    state: "NH",
+    city: "Boston",
+    zip: "03060",
+  });
+  assertEquals(res.matches, false);
+});
+
+Deno.test("matcher still enforces real ZIPs supplied outside the notifications path", () => {
+  const prefs = {
+    geoRows: [{ state: "MA", county: null, city: null, zip_code: "02118", neighborhood: null }],
+    minPrice: null,
+    maxPrice: null,
+    hasNoMin: false,
+    hasNoMax: false,
+    propertyTypes: [] as string[],
+  };
+  assertEquals(
+    matchesCommunicationPreferences(prefs, { state: "MA", city: "Boston", zip: "02118" }).matches,
+    true,
+  );
+  assertEquals(
+    matchesCommunicationPreferences(prefs, { state: "MA", city: "Boston", zip: "02135" }).matches,
+    false,
+  );
 });
