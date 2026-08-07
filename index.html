@@ -27,17 +27,28 @@
     <meta property="og:locale" content="en_US" />
     <meta property="og:site_name" content="All Agent Connect" />
 
-    <!-- Homepage LCP: discover responsive hero before the SPA JS boots.
-         Browser picks one candidate from imagesrcset via imagesizes (100vw). -->
-    <link
-      rel="preload"
-      as="image"
-      type="image/webp"
-      href="/images/home/hero-768.webp"
-      imagesrcset="/images/home/hero-768.webp 768w, /images/home/hero-1200.webp 1200w, /images/home/hero-1920.webp 1920w"
-      imagesizes="100vw"
-      fetchpriority="high"
-    />
+    <!-- Homepage LCP only: preload hero before SPA JS, but not on other routes.
+         index.html is shared across the SPA; gating avoids downloading the hero
+         on /messages, /hot-sheets, dashboards, etc. High-DPR phones may pick
+         1200w via imagesizes=100vw — that is correct responsive behavior. -->
+    <script>
+    (function () {
+      var path = (location.pathname || "/").replace(/\/+$/, "") || "/";
+      if (path !== "/" && path !== "/index" && path !== "/homepage-v2") return;
+      var link = document.createElement("link");
+      link.rel = "preload";
+      link.as = "image";
+      link.type = "image/webp";
+      link.href = "/images/home/hero-768.webp";
+      link.setAttribute(
+        "imagesrcset",
+        "/images/home/hero-768.webp 768w, /images/home/hero-1200.webp 1200w, /images/home/hero-1920.webp 1920w"
+      );
+      link.setAttribute("imagesizes", "100vw");
+      link.setAttribute("fetchpriority", "high");
+      document.head.appendChild(link);
+    })();
+    </script>
 
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@allagentconnect" />
