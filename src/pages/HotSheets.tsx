@@ -963,8 +963,8 @@ const HotSheets = ({
           </div>
         ) : (
           <div className="space-y-6">
-            {renderBuyersSection()}
             {renderMyHotSheetsSection()}
+            {renderBuyersSection()}
           </div>
         )}
       </PageShell>
