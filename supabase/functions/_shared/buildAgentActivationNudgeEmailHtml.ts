@@ -85,8 +85,7 @@ export function buildAgentActivationNudgeEmailHtml(
 
     <div style="height:1px;background:#e2e8f0;margin:34px 0 30px;"></div>
 
-    <h2 style="${h2}">Set it and forget it.</h2>
-    <p style="${p}">Tell AAC what matters to you. We&rsquo;ll do the filtering.</p>
+    <h2 style="${h2}">Set it and forget it &mdash; we&rsquo;ll do the rest.</h2>
 
     <p style="margin:26px 0 0;font-size:15px;line-height:1.6;color:#0f172a;font-weight:600;font-family:${FONT};">All Agent Connect</p>
     <p style="margin:2px 0 0;font-size:14px;line-height:1.6;color:#64748b;font-family:${FONT};">By agents. For agents. All agents.</p>
