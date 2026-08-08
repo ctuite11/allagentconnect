@@ -1,17 +1,22 @@
-# Buyer hot sheets page: the top card is not a hot sheet
+# Delete greg gotti completely
 
-## What you saw
-On the Hot sheets page for buyer **greg gotti**, the white card at the top (initials, name, email, "Searching" pill, and the flame/matches/favorites/comments counters) is the **buyer summary card**, not a hot sheet. The message below it — "No hot sheets linked to this buyer" — is correct.
+## What the records show
+- CRM buyer `greg gotti` (`tuite.alexandra16@gmail.cpom`) still exists as a client record under your account.
+- His agent relationship was ended on Jun 28 and his invite token was revoked the same day — that is why he correctly does not appear in My Buyers.
+- He has no hot sheets, no hot sheet memberships, and no messages. Only two leftover rows reference him: 1 ended relationship row and 1 revoked invite token.
 
-Confirmed in the database: this buyer has **zero** hot sheets linked (no `hot_sheet_clients` rows, no hot sheets assigned to the client). So nothing is missing from your Hot Sheets list.
+## What will be done
+Purge the leftover record so nothing can link to him anymore:
+1. Delete the revoked invite token that points at his client id.
+2. Delete the ended agent relationship row.
+3. Delete the client record itself.
 
-## Why it reads as a hot sheet on mobile
-The buyer summary card is styled like the hot sheet cards (same white rounded card, same counters row), and on a narrow screen it sits directly above the empty-state box, so it looks like a listed item.
-
-## Proposed change (optional, UI only)
-1. Add a small section label above the buyer card, e.g. "Buyer", so it is clearly identity/context rather than a hot sheet.
-2. Add a "Hot sheets" section label directly above the list/empty state so the empty state clearly belongs to that section.
-3. Keep the card visuals unchanged otherwise (no redesign, no logic change).
+Nothing else is touched — no other buyers, no emails, no schema changes, no UI changes.
 
 ### Technical detail
-- File: `src/pages/HotSheetBuyerDetail.tsx` — add the two section labels around `AgentBuyerActivityHeaderCard` and the hot sheet grid/empty state. No data, query, or component changes.
+Data-only deletes (in this order to respect foreign keys):
+- `share_tokens` where `payload->>'client_id' = 'e48b3b67-7752-454d-bd2d-327b3b930a8a'`
+- `client_agent_relationships` where `crm_client_id = 'e48b3b67-...'`
+- `clients` where `id = 'e48b3b67-...'`
+
+Before/after counts will be reported.
