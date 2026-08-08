@@ -7,15 +7,31 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useParams, useLocation, Outlet, useNavigate } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { HelmetProvider } from "react-helmet-async";
-import { AppShell } from "@/components/layout/AppShell";
-import { BuyerShell } from "@/components/layout/BuyerShell";
-import { CrossTabSessionGuard } from "@/components/CrossTabSessionGuard";
-import Index from "./pages/Index";
+
+// Phase 3: keep authenticated/layout chrome out of the homepage main chunk.
+const AppShell = React.lazy(() =>
+  import("@/components/layout/AppShell").then((m) => ({ default: m.AppShell })),
+);
+const BuyerShell = React.lazy(() =>
+  import("@/components/layout/BuyerShell").then((m) => ({ default: m.BuyerShell })),
+);
+const CrossTabSessionGuard = React.lazy(() =>
+  import("@/components/CrossTabSessionGuard").then((m) => ({ default: m.CrossTabSessionGuard })),
+);
+const NewMessageToastListener = React.lazy(() =>
+  import("@/components/NewMessageToastListener").then((m) => ({ default: m.NewMessageToastListener })),
+);
+const Index = React.lazy(() => import("./pages/Index"));
+const Footer = React.lazy(() => import("./components/Footer"));
+const CookieConsent = React.lazy(() => import("./components/CookieConsent"));
+const RouteGuard = React.lazy(() =>
+  import("./components/RouteGuard").then((m) => ({ default: m.RouteGuard })),
+);
+
 const Auth = React.lazy(() => import("./pages/Auth"));
 const AuthCallback = React.lazy(() => import("./pages/AuthCallback"));
 const AuthDiagnostics = React.lazy(() => import("./pages/AuthDiagnostics"));
 const AuthSetupRedirect = React.lazy(() => import("./pages/AuthSetupRedirect"));
-import { RouteGuard } from "./components/RouteGuard";
 // AgentSuccessHub archived → AgentSuccessHub.legacy.tsx
 const AgentSuccessHub = React.lazy(() => import("./pages/AgentSuccessHub.legacy"));
 const ShowingRequests = React.lazy(() => import("./pages/ShowingRequests"));
@@ -102,7 +118,8 @@ const About = React.lazy(() => import("./pages/About"));
 const Contact = React.lazy(() => import("./pages/Contact"));
 const Blog = React.lazy(() => import("./pages/Blog"));
 const DesignMockup = React.lazy(() => import("./pages/DesignMockup"));
-const HomepageV2 = React.lazy(() => import("./pages/HomepageV2"));
+// Eager: ~9 KB / ~3 KB gzip — removes Suspense waterfall on `/` after main evaluates.
+import HomepageV2 from "./pages/HomepageV2";
 const AgentDiagnostics = React.lazy(() => import("./pages/AgentDiagnostics"));
 const AcceptBuyerWorkspaceInvite = React.lazy(() => import("./pages/AcceptBuyerWorkspaceInvite"));
 const AcceptDelegateInvite = React.lazy(() => import("./pages/AcceptDelegateInvite"));
@@ -117,9 +134,6 @@ const IDXListingDetailBeta = React.lazy(() => import("./pages/IDXListingDetailBe
 const SellerDashboard = React.lazy(() => import("./pages/SellerDashboard"));
 import ScrollToTop from "./components/ScrollToTop";
 import ScrollRestoration from "./components/ScrollRestoration";
-import VersionStamp from "./components/VersionStamp";
-import { NewMessageToastListener } from "./components/NewMessageToastListener";
-import CookieConsent from "./components/CookieConsent";
 
 // Success Hub v2
 const SuccessHubDashboard = React.lazy(() => import("./pages/success-hub/SuccessHubDashboard"));
@@ -142,7 +156,6 @@ const Conversation = React.lazy(() => import("./pages/Conversation"));
 const MessagingWorkspace = React.lazy(() => import("./pages/MessagingWorkspace"));
 const BuyerMessagingWorkspace = React.lazy(() => import("./pages/BuyerMessagingWorkspace"));
 const PublicAgentProfile = React.lazy(() => import("./pages/PublicAgentProfile"));
-import Footer from "./components/Footer";
 import { AuthRoleProvider, useAuthRole } from "./hooks/useAuthRole";
 import { LoadingScreen } from "./components/LoadingScreen";
 import { Skeleton } from "./components/ui/skeleton";
@@ -264,12 +277,22 @@ function BrowseEntry() {
 
 /** Layout route: wraps children in AppShell (sidebar + header) */
 function AgentLayout() {
-  return <AppShell><Outlet /></AppShell>;
+  return (
+    <React.Suspense fallback={<LoadingScreen />}>
+      <AppShell>
+        <Outlet />
+      </AppShell>
+    </React.Suspense>
+  );
 }
 
 /** Layout route: wraps buyer-authenticated pages in BuyerShell */
 function BuyerLayout() {
-  return <BuyerShell />;
+  return (
+    <React.Suspense fallback={<LoadingScreen />}>
+      <BuyerShell />
+    </React.Suspense>
+  );
 }
 
 /** Layout route: AAC public/auth pages — white canvas only (no top nav; brand lives in each page) */
@@ -294,13 +317,27 @@ function PropertyDetailShell() {
 
   if (role === "agent" || role === "admin") {
     return (
-      <AppShell>
-        <Outlet />
-      </AppShell>
+      <React.Suspense fallback={<LoadingScreen message="Loading..." />}>
+        <AppShell>
+          <Outlet />
+        </AppShell>
+      </React.Suspense>
     );
   }
 
   return <Outlet />;
+}
+
+/** Message toasts + cross-tab session guard — only when a session exists. */
+function AuthenticatedSessionChrome() {
+  const { user } = useAuthRole();
+  if (!user) return null;
+  return (
+    <React.Suspense fallback={null}>
+      <NewMessageToastListener />
+      <CrossTabSessionGuard />
+    </React.Suspense>
+  );
 }
 
 
@@ -325,8 +362,7 @@ const App = () => (
             <ScrollToTop />
             <ScrollRestoration />
             <>
-              <NewMessageToastListener />
-              <CrossTabSessionGuard />
+              <AuthenticatedSessionChrome />
               <SharedListingGate>
               <React.Suspense fallback={<LoadingScreen />}>
               <Routes>
@@ -334,7 +370,17 @@ const App = () => (
                 <Route path="/index" element={<Navigate to="/" replace />} />
                 <Route path="/register" element={<Navigate to="/auth?mode=register" replace />} />
                 <Route path="/request-access" element={<Navigate to="/auth?mode=register" replace />} />
-                <Route path="/agent-match" element={<><AgentMatch /><Footer /></>} />
+                <Route
+                  path="/agent-match"
+                  element={
+                    <>
+                      <AgentMatch />
+                      <React.Suspense fallback={null}>
+                        <Footer />
+                      </React.Suspense>
+                    </>
+                  }
+                />
                 <Route path="/seller-listing/:id" element={<SellerListingDetail />} />
                 <Route path="/seller/dashboard" element={<SellerDashboard />} />
                 <Route path="/home" element={<Index />} />
@@ -520,7 +566,9 @@ const App = () => (
               </Routes>
               </React.Suspense>
               </SharedListingGate>
-              <CookieConsent />
+              <React.Suspense fallback={null}>
+                <CookieConsent />
+              </React.Suspense>
             </>
             </SharedListingGuestProvider>
             </AuthRoleProvider>
