@@ -1,28 +1,25 @@
-# Hot Sheet notification state — audit first, then decide
+# Reactivate the remaining paused Hot Sheets
 
-## Current state (verified read-only)
-- Email worker cron `process-email-queue-every-minute` — **active**. Anything queued gets delivered.
-- `send-new-match-notification-every-15-min` (jobid 3) — **inactive**, still off from the emergency pause work.
-- `process-comms-digests` — **active**.
-- Also inactive: pending message emails, price-change alerts, stale-listing reminders.
-- Queue: 0 queued/pending. Last hot-sheet-template job was Jul 27; everything since was a manual one-off canary.
+## What the audit found
+Four of your personal Hot Sheets were switched off in one bulk action at **Aug 2, 01:09:49 UTC** (identical `updated_at` to the millisecond) during the emergency email-pause work. Only `044322c7` (boston) was turned back on, on Aug 6 at 02:05 UTC, as part of the missed-listings fix. The two CANARY sheets were deactivated on Aug 5 by design after their test deliveries.
 
-So the scheduled Hot Sheet sweep is paused; the event-driven path (listing insert/update to `notify-matching-buyers`) and the sender are not.
+System-level state is already reopened: email pause lifted, `process-email-queue-every-minute` active, Communications digests active. The scheduled Hot Sheet matcher sweep (cron jobid 3) is still inactive; delivery currently runs on the event-driven path when a listing is created or updated.
 
-## Step 1 — read-only dry run (no changes, no emails)
-Run the matcher in report-only mode over currently active Hot Sheets and recent listings to produce:
-- Which Hot Sheets would match, and how many listings each.
-- The distinct recipient list and total email count the sweep would generate on its first run.
-- Any recipient who would receive a large burst (backlog risk from the paused period).
+## Step 1 — reactivate the real sheets (not the canaries)
+Set `is_active = true` for:
+- `b41d8741` — boston
+- `0b2edc68` — rewa
+- `76b4d628` — Testing mobile
+- `9128adbd` — rrrrrrr
 
-Nothing is enqueued, nothing is sent, no rows are written.
+Leave both CANARY (temp) sheets off — they were disposable test rows.
 
-## Step 2 — decide after seeing the numbers
-Only after you review the dry-run output:
-- If volume is small and correct, reactivate cron jobid 3 with a paused verification pass first, then lift.
-- If the dry run shows a backlog burst, add suppression for the paused window before reactivating.
+If you'd rather delete the throwaway rows (`rrrrrrr`, `Testing mobile`, the two CANARY sheets) instead of reactivating them, say so and the plan narrows to just `b41d8741` and `0b2edc68`.
 
-## Safety rules held for this work
+## Step 2 — confirm no backlog fires
+Reactivation alone sends nothing: alerts are generated only when a new or updated listing arrives after the sheet is active, and already-sent listings are suppressed by `hot_sheet_sent_listings`. After the change, re-check `email_jobs` to confirm zero new queued rows.
+
+## Safety rules held
 - No re-enqueue, retry, replay, or backfill of any existing or historical `email_jobs`.
 - No email template or shared-builder changes.
-- No cron activation in Step 1 — reactivation is a separate, explicitly approved action.
+- No cron reactivation (jobid 3 stays off) unless separately approved.
