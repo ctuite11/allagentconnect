@@ -9,22 +9,24 @@
     <meta name="theme-color" content="#22c55e" />
     <meta name="robots" content="index, follow" />
     
-    <!-- Inter/Poppins: needed for app chrome (body/h* in index.css). Homepage V2 uses Manrope
-         via Helmet, so on / we defer Inter+Poppins until after load/idle to clear the
-         render-blocking critical path. Non-home routes keep an immediate stylesheet. -->
+    <!-- Homepage Manrope: discover from initial HTML (same family/weights as HomepageV2).
+         Inter/Poppins: needed for app chrome (body/h* in index.css). On / we defer them
+         until after load/idle; non-home routes keep an immediate stylesheet. -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <script>
     (function () {
-      var HREF =
-        "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap";
       var path = (location.pathname || "/").replace(/\/+$/, "") || "/";
       var isHome = path === "/" || path === "/index" || path === "/homepage-v2";
+      var INTER_POPPINS =
+        "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap";
+      var MANROPE =
+        "https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap";
 
-      function injectStylesheet(blocking) {
+      function injectStylesheet(href, blocking) {
         var link = document.createElement("link");
         link.rel = "stylesheet";
-        link.href = HREF;
+        link.href = href;
         if (!blocking) {
           link.media = "print";
           link.onload = function () {
@@ -34,8 +36,13 @@
         document.head.appendChild(link);
       }
 
+      if (isHome) {
+        // Immediate — do not wait for React/Helmet; this is the homepage LCP text face.
+        injectStylesheet(MANROPE, true);
+      }
+
       if (!isHome) {
-        injectStylesheet(true);
+        injectStylesheet(INTER_POPPINS, true);
         return;
       }
 
@@ -48,7 +55,7 @@
       }
 
       function loadHomeFonts() {
-        injectStylesheet(false);
+        injectStylesheet(INTER_POPPINS, false);
       }
 
       if (document.readyState === "complete") schedule(loadHomeFonts);

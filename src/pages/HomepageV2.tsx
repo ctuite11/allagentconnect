@@ -1,5 +1,4 @@
 import React, { lazy, Suspense } from "react";
-import { Helmet } from "react-helmet-async";
 import { Seo } from "@/components/Seo";
 import { isDcmlsHost } from "@/lib/host";
 import HeroSection from "@/components/home-v2/HeroSection";
@@ -40,9 +39,6 @@ const HomepageV2 = () => {
         brandType={isDcmls ? "dcmls" : "aac"}
         jsonLd={HOMEPAGE_JSON_LD}
       />
-      <Helmet>
-        <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-      </Helmet>
 
       <div className="bg-white overflow-x-hidden w-full relative flex flex-col">
         <main className="flex flex-col w-full">
