@@ -79,6 +79,7 @@ Deno.serve(async (req) => {
       mode?: Mode;
       to?: string;
       confirm?: string;
+      testKeySuffix?: string;
     };
     const mode: Mode = body.mode ?? "dry_run";
     if (!["dry_run", "test", "send"].includes(mode)) {
@@ -217,8 +218,14 @@ Deno.serve(async (req) => {
       const html = buildAgentActivationNudgeEmailHtml({
         agentFirstName: r.first_name,
       });
+      // Test mode only: allows re-testing a revised email to the same address.
+      // Never applied to a full send — the campaign key stays one-per-address.
+      const key =
+        mode === "test" && body.testKeySuffix
+          ? `${idempotencyKeyFor(r.email)}-${String(body.testKeySuffix).slice(0, 40)}`
+          : idempotencyKeyFor(r.email);
       const { error } = await admin.from("email_jobs").insert({
-        idempotency_key: idempotencyKeyFor(r.email),
+        idempotency_key: key,
         payload: {
           provider: "resend",
           template: AGENT_ACTIVATION_NUDGE_TEMPLATE,
