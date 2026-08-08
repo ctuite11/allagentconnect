@@ -17,6 +17,15 @@ export const AGENT_ACTIVATION_NUDGE_SUBJECT =
 export const HOT_SHEETS_CTA_URL = `${AAC_PUBLIC_URL}/agent/hot-sheets`;
 export const COMMS_CENTER_CTA_URL = `${AAC_PUBLIC_URL}/communications`;
 
+/**
+ * Product screenshots hosted in the public `brand-assets` bucket (stable HTTPS URLs).
+ * Visual support only — the email reads correctly with images blocked.
+ */
+const HOT_SHEETS_SCREENSHOT_URL =
+  "https://qocduqtfbsevnhlgsfka.supabase.co/storage/v1/object/public/brand-assets/email%2Fagent-activation-nudge%2Fhot-sheets-2026-08-08.jpg";
+const COMMS_CENTER_SCREENSHOT_URL =
+  "https://qocduqtfbsevnhlgsfka.supabase.co/storage/v1/object/public/brand-assets/email%2Fagent-activation-nudge%2Fcomms-center-2026-08-08.jpg";
+
 const FONT =
   "system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif";
 
@@ -34,6 +43,8 @@ function renderSection(opts: {
   paragraphs: string[];
   ctaLabel: string;
   ctaUrl: string;
+  imageUrl?: string;
+  imageAlt?: string;
 }): string {
   const paras = opts.paragraphs
     .map(
@@ -41,10 +52,14 @@ function renderSection(opts: {
         `<p style="margin:0 0 10px;font-size:15px;line-height:1.6;color:#334155;font-family:${FONT};">${p}</p>`,
     )
     .join("");
+  const image = opts.imageUrl
+    ? `<a href="${opts.ctaUrl}" style="display:block;margin:14px 0 0;"><img src="${opts.imageUrl}" alt="${escapeHtml(opts.imageAlt ?? "")}" width="560" style="display:block;width:100%;max-width:560px;height:auto;border:1px solid #e2e8f0;border-radius:10px;" /></a>`
+    : "";
   return `
     <tr><td style="padding:26px 0 0;">
       <h2 style="margin:0 0 8px;font-size:19px;font-weight:700;line-height:1.25;color:#0f172a;font-family:${FONT};">${escapeHtml(opts.title)}</h2>
       ${paras}
+      ${image}
       ${renderButton(opts.ctaLabel, opts.ctaUrl)}
     </td></tr>`;
 }
@@ -79,6 +94,9 @@ export function buildAgentActivationNudgeEmailHtml(
         ],
         ctaLabel: "Create a Hot Sheet",
         ctaUrl: hotSheetsUrl,
+        imageUrl: HOT_SHEETS_SCREENSHOT_URL,
+        imageAlt:
+          "The All Agent Connect Hot Sheets page showing saved Hot Sheets with alerts turned on",
       })}
       ${renderSection({
         title: "Communication Center",
@@ -88,6 +106,9 @@ export function buildAgentActivationNudgeEmailHtml(
         ],
         ctaLabel: "Open Communication Center",
         ctaUrl: commsUrl,
+        imageUrl: COMMS_CENTER_SCREENSHOT_URL,
+        imageAlt:
+          "The Communication Center channel controls for Buyer Needs, Sales Intel, Renter Needs and General Discussions",
       })}
     </table>
 
