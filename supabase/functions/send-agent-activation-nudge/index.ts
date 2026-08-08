@@ -56,10 +56,13 @@ Deno.serve(async (req) => {
 
     const authHeader = req.headers.get("Authorization") ?? "";
     const bearer = authHeader.replace(/^Bearer\s+/i, "").trim();
-    if (!bearer) return json({ error: "Unauthorized" }, 401);
+    const opSecret = Deno.env.get("NUDGE_CAMPAIGN_SECRET") ?? "";
+    const providedSecret = req.headers.get("x-campaign-secret") ?? "";
+    const secretOk = !!opSecret && providedSecret === opSecret;
+    if (!bearer && !secretOk) return json({ error: "Unauthorized" }, 401);
 
     // Service-role key is accepted directly; otherwise require an admin JWT.
-    if (bearer !== serviceKey) {
+    if (!secretOk && bearer !== serviceKey) {
       const userClient = createClient(supabaseUrl, anonKey, {
         global: { headers: { Authorization: authHeader } },
       });
