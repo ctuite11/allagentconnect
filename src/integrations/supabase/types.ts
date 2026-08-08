@@ -3660,6 +3660,7 @@ export type Database = {
           has_basement: boolean | null
           has_storage: boolean | null
           heating_types: Json | null
+          hidden_from_market_activity: boolean
           id: string
           is_relisting: boolean | null
           latitude: number | null
@@ -3790,6 +3791,7 @@ export type Database = {
           has_basement?: boolean | null
           has_storage?: boolean | null
           heating_types?: Json | null
+          hidden_from_market_activity?: boolean
           id?: string
           is_relisting?: boolean | null
           latitude?: number | null
@@ -3920,6 +3922,7 @@ export type Database = {
           has_basement?: boolean | null
           has_storage?: boolean | null
           heating_types?: Json | null
+          hidden_from_market_activity?: boolean
           id?: string
           is_relisting?: boolean | null
           latitude?: number | null
