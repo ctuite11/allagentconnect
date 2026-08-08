@@ -128,6 +128,7 @@ export function MarketActivityRow() {
         agent_id
       `)
       .not("status", "in", "(draft,expired)")
+      .eq("hidden_from_market_activity", false)
       .order("updated_at", { ascending: false })
       .limit(FETCH_LISTING_LIMIT);
 
@@ -192,12 +193,16 @@ export function MarketActivityRow() {
           property_type,
           bedrooms, bathrooms, square_feet, neighborhood,
           photos, status, created_at, updated_at, active_date, listing_number, unit_number, condo_details,
-          agent_id
+          agent_id, hidden_from_market_activity
         `)
         .eq("id", listingId)
         .maybeSingle();
 
       if (!data) return;
+      if ((data as any).hidden_from_market_activity === true) {
+        setPoolListings((prev) => prev.filter((l) => l.id !== data.id));
+        return;
+      }
 
       const agentMeta: Record<string, AgentListingMeta> = {};
       const { data: profile } = await supabase
@@ -238,6 +243,7 @@ export function MarketActivityRow() {
         async (payload) => {
           const newRow = payload.new as any;
           if (!newRow || newRow.status === "draft" || newRow.status === "expired") return;
+          if (newRow.hidden_from_market_activity === true) return;
           if (typeof newRow.id !== "string") return;
           await upsertFromListingChange(newRow.id);
         },
@@ -250,6 +256,10 @@ export function MarketActivityRow() {
           const newRow = payload.new as any;
           if (!newRow || newRow.status === "draft" || newRow.status === "expired") return;
           if (typeof newRow.id !== "string") return;
+          if (newRow.hidden_from_market_activity === true) {
+            setPoolListings((prev) => prev.filter((l) => l.id !== newRow.id));
+            return;
+          }
 
           // Avoid re-fetching on unrelated updates; treat only status/type/price changes as meaningful.
           const relevantChanged = ["status", "listing_type", "price", "price_range_min", "price_range_max", "active_date"].some(
