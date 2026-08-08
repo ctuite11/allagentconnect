@@ -9,10 +9,52 @@
     <meta name="theme-color" content="#22c55e" />
     <meta name="robots" content="index, follow" />
     
-    <!-- Modern Fonts -->
+    <!-- Inter/Poppins: needed for app chrome (body/h* in index.css). Homepage V2 uses Manrope
+         via Helmet, so on / we defer Inter+Poppins until after load/idle to clear the
+         render-blocking critical path. Non-home routes keep an immediate stylesheet. -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+    <script>
+    (function () {
+      var HREF =
+        "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap";
+      var path = (location.pathname || "/").replace(/\/+$/, "") || "/";
+      var isHome = path === "/" || path === "/index" || path === "/homepage-v2";
+
+      function injectStylesheet(blocking) {
+        var link = document.createElement("link");
+        link.rel = "stylesheet";
+        link.href = HREF;
+        if (!blocking) {
+          link.media = "print";
+          link.onload = function () {
+            this.media = "all";
+          };
+        }
+        document.head.appendChild(link);
+      }
+
+      if (!isHome) {
+        injectStylesheet(true);
+        return;
+      }
+
+      function schedule(fn) {
+        if (typeof window.requestIdleCallback === "function") {
+          window.requestIdleCallback(fn, { timeout: 2500 });
+        } else {
+          setTimeout(fn, 1);
+        }
+      }
+
+      function loadHomeFonts() {
+        injectStylesheet(false);
+      }
+
+      if (document.readyState === "complete") schedule(loadHomeFonts);
+      else window.addEventListener("load", function () { schedule(loadHomeFonts); });
+    })();
+    </script>
     <!-- Favicon managed dynamically by Seo component via Helmet per route -->
 
     <meta property="og:title" content="All Agent Connect" />
@@ -67,7 +109,7 @@
     <meta name="twitter:description" content="All Agent Connect is a professional collaboration platform for real estate agents to connect, share listings, manage buyers, and close deals faster." />
     <meta name="twitter:image" content="https://allagentconnect.com/og-image.jpg?v=20260404-2" />
 
-    <!-- Meta Pixel Code -->
+    <!-- Meta Pixel Code (deferred until load/idle; AAC hosts only) -->
     <script>
     (function () {
       var h = location.hostname.toLowerCase();
@@ -78,24 +120,39 @@
         h === "localhost" ||
         /^id-preview--.*\.lovable\.app$/.test(h);
       if (!isAacHost) return;
-      !function(f,b,e,v,n,t,s){
-        if(f.fbq)return;
-        n=f.fbq=function(){
-          n.callMethod ? n.callMethod.apply(n,arguments) : n.queue.push(arguments)
-        };
-        if(!f._fbq)f._fbq=n;
-        n.push=n;
-        n.loaded=!0;
-        n.version='2.0';
-        n.queue=[];
-        t=b.createElement(e);
-        t.async=!0;
-        t.src=v;
-        s=b.getElementsByTagName(e)[0];
-        s.parentNode.insertBefore(t,s);
-      }(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
-      fbq('init','1057808070926908');
-      fbq('track','PageView');
+
+      function loadMetaPixel() {
+        if (window.fbq) return;
+        !function(f,b,e,v,n,t,s){
+          if(f.fbq)return;
+          n=f.fbq=function(){
+            n.callMethod ? n.callMethod.apply(n,arguments) : n.queue.push(arguments)
+          };
+          if(!f._fbq)f._fbq=n;
+          n.push=n;
+          n.loaded=!0;
+          n.version='2.0';
+          n.queue=[];
+          t=b.createElement(e);
+          t.async=!0;
+          t.src=v;
+          s=b.getElementsByTagName(e)[0];
+          s.parentNode.insertBefore(t,s);
+        }(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+        fbq('init','1057808070926908');
+        fbq('track','PageView');
+      }
+
+      function schedule(fn) {
+        if (typeof window.requestIdleCallback === "function") {
+          window.requestIdleCallback(fn, { timeout: 3000 });
+        } else {
+          setTimeout(fn, 1);
+        }
+      }
+
+      if (document.readyState === "complete") schedule(loadMetaPixel);
+      else window.addEventListener("load", function () { schedule(loadMetaPixel); });
     })();
     </script>
     <!-- End Meta Pixel Code -->
@@ -118,6 +175,46 @@
     })();
     </script>
     <!-- End Reddit Pixel -->
+
+    <!-- Google Analytics (gtag): deferred until load/idle. ID matches production. -->
+    <script>
+    (function () {
+      var GA_ID = "G-DQW1PMN21K";
+
+      function loadGtag() {
+        if (window.__aacGtagLoaded) return;
+        // Skip if an eager inject (e.g. Netlify snippet) already added gtag.js.
+        if (document.querySelector('script[src*="googletagmanager.com/gtag/js"]')) {
+          window.__aacGtagLoaded = true;
+          return;
+        }
+        window.__aacGtagLoaded = true;
+        window.dataLayer = window.dataLayer || [];
+        if (typeof window.gtag !== "function") {
+          window.gtag = function () {
+            window.dataLayer.push(arguments);
+          };
+        }
+        var s = document.createElement("script");
+        s.async = true;
+        s.src = "https://www.googletagmanager.com/gtag/js?id=" + GA_ID;
+        document.head.appendChild(s);
+        window.gtag("js", new Date());
+        window.gtag("config", GA_ID);
+      }
+
+      function schedule(fn) {
+        if (typeof window.requestIdleCallback === "function") {
+          window.requestIdleCallback(fn, { timeout: 3000 });
+        } else {
+          setTimeout(fn, 1);
+        }
+      }
+
+      if (document.readyState === "complete") schedule(loadGtag);
+      else window.addEventListener("load", function () { schedule(loadGtag); });
+    })();
+    </script>
   </head>
 
   <body>
