@@ -22,6 +22,12 @@ import { Seo } from "@/components/Seo";
 import { AgentAacPage } from "@/components/layout/AgentAacPage";
 import { AgentSectionCard } from "@/components/layout/AgentSectionCard";
 import { agentSectionDesc, agentSectionTitle } from "@/lib/agentUi";
+import { LISTING_STATUS, isComingSoon } from "@/constants/status";
+
+/** Success Hub cards: AAC differentiation only — Off Market / Coming Soon. */
+function isSuccessHubOpportunityListing(status: string): boolean {
+  return status === LISTING_STATUS.OFF_MARKET || isComingSoon(status);
+}
 
 function SectionHeader({
   title,
@@ -182,7 +188,11 @@ function SuccessHubDashboardBody() {
     navigate(ROUTES.ADD_LISTING, { state: { from: ROUTES.SUCCESS_HUB_RETURN } });
 
   const safeBuyers = buyers ?? [];
-  const safeListings = listings ?? [];
+  // Exclude Active / ON MLS (and temporary MLS activity badges). Canonical
+  // market status must be Off Market or Coming Soon for these cards.
+  const safeListings = (listings ?? []).filter((l) =>
+    isSuccessHubOpportunityListing(l.status),
+  );
   const safeCommunications = communications ?? [];
 
   return (
@@ -286,7 +296,7 @@ function SuccessHubDashboardBody() {
                   My listings
                 </h3>
                 <p className="mt-0.5 text-xs leading-snug text-neutral-500">
-                  Your active AAC listings — views and engagement at a glance.
+                  Your Off Market and Coming Soon listings — views and engagement at a glance.
                 </p>
               </div>
               <button
@@ -318,7 +328,9 @@ function SuccessHubDashboardBody() {
               leading={<Home className="h-5 w-5 shrink-0 text-emerald-600" aria-hidden />}
             />
             <div className="rounded-xl border border-dashed border-neutral-200 bg-white px-4 py-4 text-center">
-              <h3 className="text-sm font-semibold text-neutral-900">No active listings yet</h3>
+              <h3 className="text-sm font-semibold text-neutral-900">
+                No Off Market or Coming Soon listings right now
+              </h3>
               <p className="mx-auto mt-1 max-w-sm text-xs text-neutral-500">
                 Add a listing to appear here and in buyer matching.
               </p>
