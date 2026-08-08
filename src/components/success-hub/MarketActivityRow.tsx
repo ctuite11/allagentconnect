@@ -193,7 +193,7 @@ export function MarketActivityRow() {
           property_type,
           bedrooms, bathrooms, square_feet, neighborhood,
           photos, status, created_at, updated_at, active_date, listing_number, unit_number, condo_details,
-          agent_id
+          agent_id, hidden_from_market_activity
         `)
         .eq("id", listingId)
         .maybeSingle();
