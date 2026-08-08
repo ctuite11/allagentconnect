@@ -1,33 +1,17 @@
-# Stop "new listing" alerts for listings that were never live
+# Buyer hot sheets page: the top card is not a hot sheet
 
-## The problem
+## What you saw
+On the Hot sheets page for buyer **greg gotti**, the white card at the top (initials, name, email, "Searching" pill, and the flame/matches/favorites/comments counters) is the **buyer summary card**, not a hot sheet. The message below it — "No hot sheets linked to this buyer" — is correct.
 
-This morning a brand-new listing (59 Court Street, Medford) was created, then moved from draft to off-market. That off-market step was treated as the listing's debut and sent 3 "new match" alerts to Hot Sheet recipients. Five minutes later it moved to coming-soon and sent 3 more "status change" alerts.
+Confirmed in the database: this buyer has **zero** hot sheets linked (no `hot_sheet_clients` rows, no hot sheets assigned to the client). So nothing is missing from your Hot Sheets list.
 
-Recipients were introduced to a listing as off-market, then told it changed status — the opposite of the intended experience. A listing should only be introduced to the network when it is actually marketable.
+## Why it reads as a hot sheet on mobile
+The buyer summary card is styled like the hot sheet cards (same white rounded card, same counters row), and on a narrow screen it sits directly above the empty-state box, so it looks like a listed item.
 
-## What changes
+## Proposed change (optional, UI only)
+1. Add a small section label above the buyer card, e.g. "Buyer", so it is clearly identity/context rather than a hot sheet.
+2. Add a "Hot sheets" section label directly above the list/empty state so the empty state clearly belongs to that section.
+3. Keep the card visuals unchanged otherwise (no redesign, no logic change).
 
-1. First-time announcements only fire for marketable statuses: new, coming soon, active, back on market.
-2. Non-marketable statuses (off-market, draft, cancelled, expired, sold) never produce a "new listing" alert.
-3. If a listing is skipped that way, no dedup record is written, so when it later becomes coming soon or active, that moment becomes the recipient's genuine first introduction — a proper new-listing alert, not a status-change note.
-4. Listings already introduced while live keep behaving exactly as they do now: status changes still send status-change alerts.
-
-## Safety boundaries
-
-- No historical replay, retry, backfill, or resend of any kind.
-- No changes to who is eligible, to Communications Center, or to unsubscribe/suppression logic.
-- The periodic Hot Sheet sweep cron stays paused; this change only affects live listing events.
-
-## Verification
-
-- Walk a test listing through draft to off-market and confirm zero emails are queued.
-- Move that same listing to coming soon and confirm recipients get one new-listing alert (not a status change).
-- Confirm an already-live listing changing status still produces exactly one status-change alert.
-- Confirm the email queue has no leftover or duplicate jobs afterward.
-
-## Technical notes
-
-- Edit `supabase/functions/send-new-match-notification/index.ts`: gate the new-match branch behind an allowlist of `new`, `coming_soon`, `active`, `back_on_market`; return early for other statuses without inserting into `hot_sheet_sent_listings`.
-- Leave the status-change branch untouched — it already requires an existing `hot_sheet_sent_listings` row, so skipped listings cannot fall into it.
-- Redeploy the function; no schema migration required.
+### Technical detail
+- File: `src/pages/HotSheetBuyerDetail.tsx` — add the two section labels around `AgentBuyerActivityHeaderCard` and the hot sheet grid/empty state. No data, query, or component changes.
