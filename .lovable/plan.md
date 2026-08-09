@@ -1,27 +1,26 @@
-# Katie Malin — verification status check
+# Delete duplicate Katie Malin account (bad email)
 
-## What the records show
+## Records confirmed
 
-There are **two** Katie Malin accounts:
+Two accounts exist:
 
-| Account | Email | Created | Verified | Activated |
-|---|---|---|---|---|
-| A (current) | katherine.malin@gmail.**com** | Aug 9, 3:45 AM | Yes, Aug 9 3:45 AM | No |
-| B (old, typo) | katherine.malin@gmail.**con** | Aug 4 | Yes, Aug 4 | No |
+- **Keep** — katherine.malin@gmail.**com**, created Aug 9 3:45 AM, license verified 3:45 AM, welcome/activation email accepted by the provider at 3:46 AM, activation link issued and valid until Aug 16, not yet redeemed. This is why she reads as not-yet-activated: verification is done, setup is not.
+- **Delete** — katherine.malin@gmail.**con** (typo domain), created Aug 4, verified Aug 4, never activated and never can be, since that address cannot receive mail.
 
-For account A, the verification/welcome email was created and accepted by the email provider at 3:46 AM today, and a 7-day activation link was issued (expires Aug 16). It has **not been opened/redeemed** yet.
+## What will be removed for the bad account (user id `0ce2414e-…`)
 
-So nothing failed. She shows "pending" because "pending" in the admin list means *pending activation* — she is license-verified, but hasn't clicked the activation link and set her password yet. Her status flips automatically the moment she does.
+- Pending verification row (Aug 4)
+- Agent profile `AAC-0390`
+- Agent settings row
+- Auth user + role rows, via the existing admin delete path (passing both user id and email so nothing orphans)
 
-Account B is a dead duplicate created from a mistyped email address (`.con`). That address cannot receive mail, so it will never activate and will keep sitting in the list looking unresolved.
+Any leftover tombstone that would block re-inviting that person is cleared as part of the same pass.
 
-## Proposed actions
+## Not touched
 
-1. **Leave account A alone** — the link is valid until Aug 16. If she says she never received it, resend the activation link from her admin card rather than re-verifying.
-2. **Remove the duplicate account B** (`katherine.malin@gmail.con`) — delete its pending verification, agent profile, settings, and auth user so only the real account remains in Admin Approvals and the Agent Network.
+- The good `.com` account, its verified status, and its outstanding activation link
+- No emails re-sent, retried, or backfilled
 
-## Technical notes
+## Verification after the delete
 
-- Activation state lives in `agent_settings.account_activated_at` (null for both) and `agent_activation_tokens` (token `1d111948…`, status `issued`, unredeemed).
-- Deletion of account B would go through the existing admin delete path (`admin_delete_pending_verification` / `delete-users`), passing both the user id `0ce2414e-…` and the email, consistent with prior cleanups.
-- No email retries, backfills, or re-sends would happen without explicit approval.
+Re-query pending verifications, agent profiles, agent settings, and auth users for "malin" and confirm exactly one row remains — the `.com` account, verified, awaiting activation.
