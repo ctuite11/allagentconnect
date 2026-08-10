@@ -17,12 +17,13 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getCurrentSenderProfile } from "@/lib/currentSenderProfile";
-import { formatListingEmailSubjectLocation } from "@/lib/listingEmailSubject";
-import { getPrimaryPhotoUrl } from "@/components/buyer/buyerListingDisplay";
 import { fetchListingPreview } from "@/lib/fetchListingPreview";
 import { ListingPreviewCard } from "@/components/share/ListingPreviewCard";
 import type { ListingPreview } from "@/components/share/ShareListingsDialog";
 import { cn } from "@/lib/utils";
+import type { Database } from "@/integrations/supabase/types";
+
+type ShowingRequestInsert = Database["public"]["Tables"]["showing_requests"]["Insert"];
 
 const showingRequestSchema = z.object({
   requester_name: z.string().trim().min(1, "Please enter your name").max(100),
@@ -120,7 +121,7 @@ const ScheduleShowingDialog = ({
 
       setLoading(true);
 
-      const { error } = await supabase.from("showing_requests").insert([{
+      const showingRow: ShowingRequestInsert = {
         listing_id: listingId,
         requester_name: validatedData.requester_name,
         requester_email: validatedData.requester_email,
@@ -128,45 +129,34 @@ const ScheduleShowingDialog = ({
         preferred_date: validatedData.preferred_date,
         preferred_time: validatedData.preferred_time,
         message: validatedData.message || null,
-      }] as any);
+      };
+      const { error } = await supabase.from("showing_requests").insert([showingRow]);
 
       if (error) throw error;
 
-      const { data: listingData } = await supabase
-        .from("listings")
-        .select("agent_id, address, city, state, photos, unit_number, condo_details, property_type")
-        .eq("id", listingId)
-        .single();
-
-      if (listingData) {
-        const { data: agentData } = await supabase
-          .from("agent_profiles")
-          .select("email, first_name, last_name")
-          .eq("id", listingData.agent_id)
-          .maybeSingle();
-
-        if (agentData) {
-          const fullAddress = formatListingEmailSubjectLocation(listingData);
-          const photoUrl = getPrimaryPhotoUrl(listingData.photos) ?? undefined;
-
-          try {
-            await supabase.functions.invoke("send-showing-request-email", {
-              body: {
-                agentEmail: agentData.email,
-                agentName: `${agentData.first_name} ${agentData.last_name}`,
-                requesterName: validatedData.requester_name,
-                requesterEmail: validatedData.requester_email,
-                listingAddress: fullAddress,
-                preferredDate: validatedData.preferred_date,
-                preferredTime: validatedData.preferred_time,
-                message: validatedData.message,
-                photoUrl,
-              },
-            });
-          } catch (emailError) {
-            console.error("Failed to send email notification:", emailError);
-          }
+      // Authoritative delivery: server resolves listing agent from listingId.
+      // Do not treat a client-supplied agentEmail as the destination.
+      try {
+        const { error: emailError } = await supabase.functions.invoke(
+          "send-showing-request-email",
+          {
+            body: {
+              listingId,
+              requesterName: validatedData.requester_name,
+              requesterEmail: validatedData.requester_email,
+              listingAddress,
+              preferredDate: validatedData.preferred_date,
+              preferredTime: validatedData.preferred_time,
+              message: validatedData.message,
+              photoUrl: listingPreview?.photoUrl,
+            },
+          },
+        );
+        if (emailError) {
+          console.error("Failed to send email notification:", emailError);
         }
+      } catch (emailError) {
+        console.error("Failed to send email notification:", emailError);
       }
 
       toast.success("Showing request submitted successfully! The agent will contact you soon.");

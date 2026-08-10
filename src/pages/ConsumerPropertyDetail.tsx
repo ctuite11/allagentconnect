@@ -84,18 +84,24 @@ import { canMessageListingAgent as viewerCanMessageListingAgent, resolveListingA
 import { useAuthRole } from "@/hooks/useAuthRole";
 import { useSharedListingGuest } from "@/contexts/SharedListingGuestContext";
 import ContactAgentDialog from "@/components/ContactAgentDialog";
+import {
+  fetchPublicListing,
+  fetchPublicListingAgent,
+  resolvePublicAgentPhones,
+  toPublicAgentProfile,
+  toPublicListingViewModel,
+} from "@/lib/publicListing";
 
-// ATTRIBUTION MASKING (BUYER UI)
-// Buyers must NEVER contact listing.agent_id from this page.
+// ATTRIBUTION MASKING (BUYER UI — authenticated buyers only)
+// Logged-in buyers must NEVER contact listing.agent_id from this page.
 // Only the sticky agent is a valid recipient.
+// Exception: unauthenticated shared-listing guests may contact the listing agent
+// (Call / Email / Contact). Do not apply that exception to represented buyers.
 type StickyAgentId = string & { __brand: "StickyAgentId" };
 
 function asStickyAgentId(id: string | null | undefined): StickyAgentId | null {
   return id ? (id as StickyAgentId) : null;
 }
-
-/* ATTRIBUTION MASKING: Primary contact action is in-app messaging only.
-   Do not re-add email form (ContactAgentDialog) as buyer CTA. */
 
 const DEFAULT_BROKERAGE_LOGO_URL = "/placeholder.svg";
 
@@ -149,6 +155,7 @@ interface AgentProfile {
   last_name: string;
   email: string;
   phone: string | null;
+  office_phone?: string | null;
   cell_phone: string | null;
   title: string | null;
   headshot_url: string | null;
@@ -177,20 +184,26 @@ const ConsumerPropertyDetail = () => {
   const [listingContactDialogOpen, setListingContactDialogOpen] = useState(false);
   const [listingMessageOpen, setListingMessageOpen] = useState(false);
   const [listingMessageVariant, setListingMessageVariant] = useState<"agent" | "buyer">("buyer");
-  const { user, role } = useAuthRole();
+  const { user, role, loading: authLoading } = useAuthRole();
   const { registerGuestListing } = useSharedListingGuest();
 
   // Shared-listing guest mode: unauthenticated viewers anchor on this listing.
   useEffect(() => {
+    if (authLoading) return;
     if (user) return;
     if (!id) return;
     registerGuestListing(id);
-  }, [user, id, registerGuestListing]);
+  }, [authLoading, user, id, registerGuestListing]);
 
+  /** Logged-out visitor on a shared listing — may contact the listing agent directly. */
+  const isSharedListingGuest = !authLoading && !user;
   const isAgentView = role === "agent" || role === "admin";
   const viewerId = user?.id;
   const listingAgentId = resolveListingAgentId(listing, agentProfile);
   const canMessageListingAgent = viewerCanMessageListingAgent(viewerId, listingAgentId);
+  const guestAgentPhones = agentProfile
+    ? resolvePublicAgentPhones(agentProfile)
+    : { mobile: null, office: null };
 
   const ensureSignedInForMessage = async (): Promise<boolean> => {
     if (!listing?.id) return false;
@@ -254,12 +267,29 @@ const ConsumerPropertyDetail = () => {
   useListingView(id);
 
   const loadListing = useCallback(async () => {
-    if (!id) return;
+    if (!id || authLoading) return;
     try {
       setLoadError(false);
       setLoading(true);
       setAgentProfile(null);
 
+      // Unauthenticated shared-listing guests: safe RPC path only.
+      // Do not fall back to anonymous listings.select("*").
+      if (!user) {
+        const publicListing = await fetchPublicListing(id);
+        if (!publicListing) {
+          setListing(null);
+          setAgentProfile(null);
+          return;
+        }
+
+        const publicAgent = await fetchPublicListingAgent(id);
+        setListing(toPublicListingViewModel(publicListing, publicAgent));
+        setAgentProfile(publicAgent ? toPublicAgentProfile(publicAgent) : null);
+        return;
+      }
+
+      // Authenticated buyer/agent/admin: existing member data path.
       const { data, error } = await supabase.from("listings").select("*").eq("id", id).maybeSingle();
 
       if (error) throw error;
@@ -294,11 +324,12 @@ const ConsumerPropertyDetail = () => {
     } finally {
       setLoading(false);
     }
-  }, [id]);
+  }, [id, authLoading, user]);
 
   useEffect(() => {
+    if (authLoading) return;
     void loadListing();
-  }, [loadListing]);
+  }, [loadListing, authLoading]);
 
   const handlePrevPhoto = () => {
     if (listing?.photos && listing.photos.length > 0) {
@@ -795,6 +826,122 @@ const ConsumerPropertyDetail = () => {
                     />
                   </CardContent>
                 </Card>
+              ) : isSharedListingGuest && agentProfile ? (
+                <Card className={cn(consumerSectionCard, "shadow-sm")}>
+                  <CardContent className={propertyDetailAgentCardContent}>
+                    <div className="flex items-center gap-4">
+                      <AgentAvatar
+                        name={`${agentProfile.first_name} ${agentProfile.last_name}`}
+                        headshotUrl={agentProfile.headshot_url ?? null}
+                        userId={agentProfile.id}
+                        size="xl"
+                        avatarClassName={propertyDetailAgentAvatar}
+                        fallbackClassName="bg-neutral-100"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className={propertyDetailAgentEyebrow}>Contact Listing Agent</p>
+                        <p className="mt-1 font-bold text-lg leading-tight">
+                          {agentProfile.first_name} {agentProfile.last_name}
+                        </p>
+                        <div className={cn(propertyDetailAgentTitleBlock, "mt-0.5")}>
+                          <p className="text-sm text-neutral-600">
+                            {agentProfile.title || "Realtor"}
+                          </p>
+                          {(agentProfile.company || agentProfile.office_name) && (
+                            <p className="text-sm text-muted-foreground">
+                              {agentProfile.company || agentProfile.office_name}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className={propertyDetailAgentContactRows}>
+                      {guestAgentPhones.mobile && (
+                        <a
+                          href={`tel:${guestAgentPhones.mobile}`}
+                          className="flex items-center gap-2.5 transition-colors hover:text-neutral-900"
+                        >
+                          <Phone className="h-4 w-4 shrink-0 text-neutral-500" />
+                          <span className="font-medium">{formatPhoneNumber(guestAgentPhones.mobile)}</span>
+                          <span className="ml-auto text-xs text-neutral-500">Call</span>
+                        </a>
+                      )}
+                      {guestAgentPhones.office && (
+                        <a
+                          href={`tel:${guestAgentPhones.office}`}
+                          className="flex items-center gap-2.5 transition-colors hover:text-neutral-900"
+                        >
+                          <Building2 className="h-4 w-4 shrink-0 text-neutral-500" />
+                          <span className="font-medium">{formatPhoneNumber(guestAgentPhones.office)}</span>
+                          <span className="ml-auto text-xs text-neutral-500">Office</span>
+                        </a>
+                      )}
+                      {agentProfile.email && (
+                        <a
+                          href={`mailto:${agentProfile.email}`}
+                          className="flex items-center gap-2.5 transition-colors hover:text-neutral-900"
+                        >
+                          <Mail className="h-4 w-4 shrink-0 text-neutral-500" />
+                          <span className="font-medium truncate">{agentProfile.email}</span>
+                          <span className="ml-auto text-xs text-neutral-500">Email</span>
+                        </a>
+                      )}
+                    </div>
+
+                    <div className="flex flex-col gap-2 sm:flex-row">
+                      {guestAgentPhones.mobile || guestAgentPhones.office ? (
+                        <Button asChild size="lg" className="w-full flex-1 gap-2">
+                          <a href={`tel:${guestAgentPhones.mobile || guestAgentPhones.office}`}>
+                            <Phone className="h-4 w-4" />
+                            Call
+                          </a>
+                        </Button>
+                      ) : null}
+                      {agentProfile.email ? (
+                        <Button asChild size="lg" variant="outline" className="w-full flex-1 gap-2 border-neutral-200">
+                          <a href={`mailto:${agentProfile.email}`}>
+                            <Mail className="h-4 w-4" />
+                            Email
+                          </a>
+                        </Button>
+                      ) : null}
+                    </div>
+
+                    <Button
+                      size="lg"
+                      variant="outline"
+                      className="w-full gap-2 border-neutral-200 shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:bg-neutral-50"
+                      onClick={() => setListingContactDialogOpen(true)}
+                    >
+                      <Mail className="h-4 w-4" />
+                      Contact
+                    </Button>
+
+                    {canMessageListingAgent && (
+                      <Button
+                        variant="ghost"
+                        className="w-full gap-2 text-sm text-neutral-600"
+                        onClick={openListingAgentMessage}
+                      >
+                        <MessageSquare className="h-4 w-4" />
+                        Message Agent (sign in)
+                      </Button>
+                    )}
+
+                    <ContactAgentDialog
+                      listingId={listing.id}
+                      agentId={agentProfile.id}
+                      listingAddress={
+                        formatListingEmailSubjectLocation(listing) ||
+                        `${listing.address}, ${listing.city}, ${listing.state}`
+                      }
+                      open={listingContactDialogOpen}
+                      onOpenChange={setListingContactDialogOpen}
+                      hideTrigger
+                    />
+                  </CardContent>
+                </Card>
               ) : stickyAgentProfile ? (
                 <Card className={cn(consumerSectionCard, "shadow-sm")}>
                   <CardContent className={propertyDetailAgentCardContent}>
@@ -1074,9 +1221,9 @@ const ConsumerPropertyDetail = () => {
                 </SectionWrapper>
               )}
 
-              {/* ATTRIBUTION MASKING (BUYER UI):
-                 Do not show "Contact listing agent" fallbacks.
-                 Buyer may only contact sticky agent or support. */}
+              {/* ATTRIBUTION MASKING (authenticated buyers only):
+                 Represented buyers may only contact sticky agent or support.
+                 Unauthenticated shared-listing guests use Contact Listing Agent above. */}
 
               {/* Ad Banner */}
               <AdBanner placementZone="listing_sidebar" className="mt-4" />

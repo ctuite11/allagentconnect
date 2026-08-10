@@ -22,6 +22,9 @@ import type { ListingPreview } from "@/components/share/ShareListingsDialog";
 import { cn } from "@/lib/utils";
 import { TurnstileField } from "@/components/security/TurnstileField";
 import { useTurnstile } from "@/hooks/useTurnstile";
+import type { Database } from "@/integrations/supabase/types";
+
+type AgentMessageInsert = Database["public"]["Tables"]["agent_messages"]["Insert"];
 
 const contactMessageSchema = z.object({
   sender_name: z.string().trim().min(1, "Please enter your name").max(100),
@@ -34,6 +37,11 @@ const INPUT_CLASS =
 
 interface ContactAgentDialogProps {
   listingId: string;
+  /**
+   * Listing-agent id for the local `agent_messages` lead row.
+   * Must come from a trusted listing→agent resolution (e.g. get_public_listing_agent).
+   * Email delivery does NOT use this — the edge function resolves the recipient from listingId.
+   */
   agentId: string;
   listingAddress: string;
   buttonSize?: "sm" | "default" | "lg";
@@ -119,40 +127,37 @@ const ContactAgentDialog = ({
 
       setLoading(true);
 
-      const { error } = await supabase.from("agent_messages").insert([{
-        listing_id: listingId,
-        agent_id: agentId,
-        sender_name: validatedData.sender_name,
-        sender_email: validatedData.sender_email,
-        sender_phone: null,
-        message: validatedData.message,
-      }] as any);
-
-      if (error) throw error;
-
-      const { data: agentData, error: agentError } = await supabase
-        .from("agent_profiles")
-        .select("email, first_name, last_name")
-        .eq("id", agentId)
-        .single();
-
-      if (!agentError && agentData) {
-        try {
-          await supabase.functions.invoke("send-contact-email", {
-            body: {
-              agentEmail: agentData.email,
-              agentName: `${agentData.first_name} ${agentData.last_name}`,
-              senderName: validatedData.sender_name,
-              senderEmail: validatedData.sender_email,
-              message: validatedData.message,
-              listingAddress: listingAddress,
-              turnstile_token: turnstileToken,
-            },
-          });
-        } catch (emailError) {
-          console.error("Failed to send email notification:", emailError);
+      // Best-effort lead row. Current RLS is `WITH CHECK (true)` and does NOT prove
+      // agent_id belongs to listing_id — flagged for Lovable (Phase 3 / follow-up).
+      // Do not treat this insert as the authoritative recipient path.
+      if (agentId) {
+        const leadRow: AgentMessageInsert = {
+          listing_id: listingId,
+          agent_id: agentId,
+          sender_name: validatedData.sender_name,
+          sender_email: validatedData.sender_email,
+          sender_phone: null,
+          message: validatedData.message || "",
+        };
+        const { error: insertError } = await supabase.from("agent_messages").insert([leadRow]);
+        if (insertError) {
+          console.error("agent_messages insert failed:", insertError);
         }
       }
+
+      // Authoritative delivery: server resolves listing agent from listingId.
+      const { error: emailError } = await supabase.functions.invoke("send-contact-email", {
+        body: {
+          listingId,
+          senderName: validatedData.sender_name,
+          senderEmail: validatedData.sender_email,
+          message: validatedData.message || "",
+          listingAddress,
+          turnstile_token: turnstileToken,
+        },
+      });
+
+      if (emailError) throw emailError;
 
       toast.success("Message sent successfully! The agent will get back to you soon.");
       handleOpenChange(false);

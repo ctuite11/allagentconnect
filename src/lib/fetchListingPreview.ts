@@ -1,23 +1,35 @@
-import { supabase } from "@/integrations/supabase/client";
+import { formatListingPriceDisplay } from "@/lib/formatListingPriceDisplay";
+import { fetchPublicListing } from "@/lib/publicListing";
 import { resolveFirstListingPhotoUrl } from "@/lib/resolveListingPhotoUrl";
 import type { ListingPreview } from "@/components/share/ShareListingsDialog";
 
+/**
+ * Listing card preview for share/contact dialogs.
+ * Uses the public marketing RPC so anonymous guests do not need
+ * `listings.select(...)` (and so Phase 3 lockdown will not break previews).
+ */
 export async function fetchListingPreview(listingId: string): Promise<ListingPreview | undefined> {
-  const { data, error } = await supabase
-    .from("listings")
-    .select("address, city, state, zip_code, price, bedrooms, bathrooms, square_feet, photos")
-    .eq("id", listingId)
-    .maybeSingle();
+  try {
+    const data = await fetchPublicListing(listingId);
+    if (!data) return undefined;
 
-  if (error || !data) return undefined;
+    const priceDisplay = formatListingPriceDisplay({
+      price: data.price,
+      price_range_min: data.price_range_min,
+      price_range_max: data.price_range_max,
+    });
 
-  return {
-    address: data.address,
-    cityStateZip: `${data.city}, ${data.state} ${data.zip_code}`,
-    price: data.price ? `$${data.price.toLocaleString()}` : undefined,
-    beds: data.bedrooms ?? undefined,
-    baths: data.bathrooms ?? undefined,
-    sqft: data.square_feet ?? undefined,
-    photoUrl: resolveFirstListingPhotoUrl(data.photos),
-  };
+    return {
+      address: data.address,
+      cityStateZip: `${data.city}, ${data.state} ${data.zip_code}`,
+      price: priceDisplay ?? undefined,
+      beds: data.bedrooms ?? undefined,
+      baths: data.bathrooms ?? undefined,
+      sqft: data.square_feet ?? undefined,
+      photoUrl: resolveFirstListingPhotoUrl(data.photos),
+    };
+  } catch (error) {
+    console.error("fetchListingPreview failed:", error);
+    return undefined;
+  }
 }
