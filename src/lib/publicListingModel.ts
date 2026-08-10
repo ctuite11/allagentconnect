@@ -40,6 +40,10 @@ export function toPublicAgentProfile(agent: PublicListingAgentRow) {
   };
 }
 
+function phoneDigits(value: string | null | undefined): string {
+  return (value || "").replace(/\D/g, "");
+}
+
 /** Prefer cell for mobile; office_phone then phone for office, de-duped. */
 export function resolvePublicAgentPhones(agent: {
   cell_phone?: string | null;
@@ -49,6 +53,9 @@ export function resolvePublicAgentPhones(agent: {
   const mobile = agent.cell_phone?.trim() || null;
   const officeRaw =
     agent.office_phone?.trim() || agent.phone?.trim() || null;
-  const office = officeRaw && officeRaw !== mobile ? officeRaw : null;
+  const office =
+    officeRaw && phoneDigits(officeRaw) !== phoneDigits(mobile)
+      ? officeRaw
+      : null;
   return { mobile, office };
 }

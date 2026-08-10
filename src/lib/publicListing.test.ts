@@ -40,6 +40,19 @@ describe("resolvePublicAgentPhones", () => {
       office: null,
     });
   });
+
+  it("dedupes when office matches mobile ignoring formatting", () => {
+    expect(
+      resolvePublicAgentPhones({
+        cell_phone: "(401) 864-9750",
+        phone: "4018649750",
+        office_phone: "401-864-9750",
+      }),
+    ).toEqual({
+      mobile: "(401) 864-9750",
+      office: null,
+    });
+  });
 });
 
 describe("toPublicAgentProfile", () => {
