@@ -63,12 +63,13 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { data: listing, error } = await supabase
-      .from("listings")
-      .select("*")
-      .eq("id", listingId)
-      .single();
+    // Public-eligibility gated read: draft and other non-public statuses return
+    // no rows, so they never produce an Open Graph preview.
+    const { data: listingRows, error } = await supabase.rpc("get_public_listing", {
+      p_listing_id: listingId,
+    });
 
+    const listing = Array.isArray(listingRows) ? listingRows[0] : listingRows;
     if (error || !listing) {
       console.error("Listing fetch error", error);
       return new Response("Listing not found", { status: 404, headers: corsHeaders });
