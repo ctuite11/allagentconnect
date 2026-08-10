@@ -9,16 +9,57 @@ const corsHeaders = {
 };
 
 interface ShowingRequestEmailRequest {
-  agentEmail: string;
+  /** Preferred: backend resolves the listing agent + email from this ID. */
+  listingId?: string;
+  /** Legacy (deprecated): ignored whenever listingId is supplied. */
+  agentEmail?: string;
   agentName: string;
   requesterName: string;
   requesterEmail: string;
   requesterPhone?: string;
-  listingAddress: string;
+  listingAddress?: string;
   preferredDate: string;
   preferredTime: string;
   message?: string;
   photoUrl?: string;
+}
+
+async function resolveListingRecipient(
+  supabaseUrl: string,
+  serviceKey: string,
+  listingId: string
+): Promise<{ email: string; name: string; address: string } | null> {
+  const admin = createClient(supabaseUrl, serviceKey);
+
+  const [{ data: listingRows, error: listingErr }, { data: agentRows, error: agentErr }] =
+    await Promise.all([
+      admin.rpc("get_public_listing", { p_listing_id: listingId }),
+      admin.rpc("get_public_listing_agent", { p_listing_id: listingId }),
+    ]);
+
+  if (listingErr || agentErr) {
+    console.error("[send-showing-request-email] listing resolve error:", listingErr || agentErr);
+    return null;
+  }
+
+  const listing = Array.isArray(listingRows) ? listingRows[0] : listingRows;
+  const agent = Array.isArray(agentRows) ? agentRows[0] : agentRows;
+  if (!listing || !agent?.email) return null;
+
+  const address = [
+    listing.address,
+    listing.unit_number ? `#${listing.unit_number}` : "",
+    listing.city,
+    listing.state,
+  ]
+    .filter(Boolean)
+    .join(", ");
+
+  return {
+    email: agent.email,
+    name: [agent.first_name, agent.last_name].filter(Boolean).join(" ").trim() || "there",
+    address,
+  };
 }
 
 interface RateLimitResult {
@@ -134,6 +175,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     const {
+      listingId,
       agentEmail,
       agentName,
       requesterName,
@@ -146,10 +188,39 @@ const handler = async (req: Request): Promise<Response> => {
       photoUrl,
     }: ShowingRequestEmailRequest = await req.json();
 
-    console.log("Sending showing request email to agent:", agentEmail);
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    if (!supabaseUrl || !supabaseServiceKey) {
+      throw new Error("Server misconfigured: missing Supabase service credentials");
+    }
+
+    let toEmail = agentEmail;
+    let toName = agentName;
+    let addressLine = listingAddress || "";
+
+    if (listingId) {
+      const resolved = await resolveListingRecipient(supabaseUrl, supabaseServiceKey, listingId);
+      if (!resolved) {
+        return new Response(JSON.stringify({ error: "Listing not available" }), {
+          status: 404,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        });
+      }
+      toEmail = resolved.email;
+      toName = resolved.name;
+      addressLine = resolved.address || addressLine;
+    } else {
+      console.warn("[send-showing-request-email] legacy caller-supplied agentEmail path used");
+    }
+
+    if (!toEmail) {
+      return new Response(JSON.stringify({ error: "Missing recipient" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
 
     const formattedDate = formatPreferredDate(preferredDate);
-    const safeListingAddress = escapeHtml(listingAddress);
+    const safeListingAddress = escapeHtml(addressLine);
     void photoUrl;
 
     const htmlOut = `<!DOCTYPE html>
@@ -165,7 +236,7 @@ ${message ? `<p><strong>Message:</strong></p><p>${escapeHtml(message)}</p>` : ""
 </body></html>`;
 
     const text = [
-      `Showing request: ${listingAddress}`,
+      `Showing request: ${addressLine}`,
       ``,
       `Requester: ${requesterName}`,
       `Email: ${requesterEmail}`,
@@ -181,11 +252,6 @@ ${message ? `<p><strong>Message:</strong></p><p>${escapeHtml(message)}</p>` : ""
     // email_jobs + worker path as AAC Messages and the Listing → Message
     // Agent route (both reliably inboxing). Drop direct Resend SDK call
     // and Reply-To to mirror the proven-inboxing pattern.
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-    if (!supabaseUrl || !supabaseServiceKey) {
-      throw new Error("Server misconfigured: missing Supabase service credentials");
-    }
-
     const admin = createClient(supabaseUrl, supabaseServiceKey);
 
     const { data: jobRow, error: enqueueError } = await admin
@@ -194,8 +260,8 @@ ${message ? `<p><strong>Message:</strong></p><p>${escapeHtml(message)}</p>` : ""
         payload: {
           provider: "resend",
           template: "showing-request",
-          to: agentEmail,
-          subject: `Showing request: ${listingAddress}`,
+          to: toEmail,
+          subject: `Showing request: ${addressLine}`,
           html: htmlOut,
         },
       })
@@ -221,7 +287,7 @@ ${message ? `<p><strong>Message:</strong></p><p>${escapeHtml(message)}</p>` : ""
     // Keep references to avoid TS unused warnings (worker derives text from html).
     void text;
     void RESEND_API_KEY;
-    void agentName;
+    void toName;
 
     console.log("Showing request email enqueued:", jobRow?.id);
 

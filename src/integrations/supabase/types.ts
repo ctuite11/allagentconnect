@@ -5337,6 +5337,116 @@ export type Database = {
           verified_at: string
         }[]
       }
+      get_public_listing: {
+        Args: { p_listing_id: string }
+        Returns: {
+          activation_date: string
+          active_date: string
+          address: string
+          amenities: Json
+          annual_property_tax: number
+          appointment_required: boolean
+          area_amenities: string[]
+          basement_features_list: Json
+          basement_floor_types: Json
+          basement_types: Json
+          bathrooms: number
+          beach_nearby: boolean
+          bedrooms: number
+          building_name: string
+          city: string
+          commercial_details: Json
+          condo_details: Json
+          construction_features: Json
+          cooling_types: Json
+          county: string
+          created_at: string
+          dcmls_status: string
+          description: string
+          entry_only: boolean
+          exterior_features_list: Json
+          floor_plans: Json
+          floors: number
+          foundation_types: Json
+          garage_additional_features_list: Json
+          garage_features_list: Json
+          garage_spaces: number
+          go_live_date: string
+          green_features: Json
+          handicap_access: string
+          handicap_accessible: string
+          has_basement: boolean
+          has_storage: boolean
+          heating_types: Json
+          id: string
+          latitude: number
+          laundry_type: string
+          lender_owned: boolean
+          list_date: string
+          listing_number: string
+          listing_type: string
+          longitude: number
+          lot_size: number
+          multi_family_details: Json
+          neighborhood: string
+          num_fireplaces: number
+          open_houses: Json
+          outdoor_space: Json
+          parking_features_list: Json
+          parking_spaces: number
+          pet_options: Json
+          pets_comment: string
+          photos: Json
+          price: number
+          price_range_max: number
+          price_range_min: number
+          property_features: Json
+          property_styles: Json
+          property_type: string
+          property_website_url: string
+          publish_to_dcmls: boolean
+          rental_fee: number
+          rental_fee_text: string
+          roof_materials: Json
+          short_sale: boolean
+          square_feet: number
+          state: string
+          status: string
+          storage_options: Json
+          tax_year: number
+          total_parking_spaces: number
+          town: string
+          unit_number: string
+          updated_at: string
+          video_url: string
+          virtual_tour_url: string
+          water_view: boolean
+          water_view_type: string
+          waterfront: boolean
+          year_built: number
+          zip_code: string
+        }[]
+      }
+      get_public_listing_agent: {
+        Args: { p_listing_id: string }
+        Returns: {
+          aac_id: string
+          agent_id: string
+          cell_phone: string
+          company: string
+          email: string
+          first_name: string
+          headshot_url: string
+          last_name: string
+          logo_url: string
+          office_city: string
+          office_name: string
+          office_phone: string
+          office_state: string
+          phone: string
+          title: string
+        }[]
+      }
       get_verified_agent_ids: {
         Args: never
         Returns: {
@@ -5401,6 +5511,7 @@ export type Database = {
         Returns: boolean
       }
       is_licensed_owner: { Args: never; Returns: boolean }
+      is_public_listing_status: { Args: { p_status: string }; Returns: boolean }
       is_team_delegate: {
         Args: { _team_id: string; _user_id: string }
         Returns: boolean
