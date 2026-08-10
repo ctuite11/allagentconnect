@@ -1,28 +1,51 @@
-# Comms emails from Aug 8 — sent, but not to you
+# Public shared-listing data & contact boundary (backend only)
 
-## What actually went out yesterday
+## Confirmed by live testing just now
 
-- **Buyer Need broadcast** — "[Buyer Need] ISO off market Multi" (Medford/Malden/Melrose/Salem, multi-family, up to $1.2M), created 12:59 AM. Audience 85: **79 immediate emails** plus **4 daily digests**, all recorded delivered.
-- **Daily digest** — 4 sends (1 at 1:00 AM, 3 at 10:00 PM), all delivered.
-- Totals for the day on the communications stream: 279 delivered, 6 sent-not-yet-confirmed, 6 bounced. No failures, nothing stuck in the queue.
+- Anonymous callers **can** read published listings with `select("*")`. A real anonymous request returned `showing_instructions` ("Call Dan Keating 617-680-7785…") along with `lockbox_code`, `broker_comments`, `commission_rate`, `additional_notes` — currently null on those rows, but readable columns. The exposure is real.
+- The row policy "Anyone can view published listings" is granted to `public` (which includes anonymous) for 13 statuses: active, new, coming_soon, off_market, back_on_market, price_changed, extended, reactivated, under_agreement, pending, contingent, sold, rented. Draft is already excluded.
+- `agent_profiles` is **already** closed to anonymous — a direct anonymous read returns `permission denied`. Its only read policy is authenticated-only. So the logged-out property page currently cannot show agent contact at all.
+- Sensitive listing columns present: `lockbox_code`, `showing_instructions`, `showing_contact_name`, `showing_contact_phone`, `broker_comments`, `additional_notes`, `commission_rate`, `commission_type`, `commission_notes`.
+- `social-preview` fetches `select("*")` by ID with the service role and no status check, so a draft ID does produce a preview.
 
-So the system did send. You were simply not in the audience.
+## 1. Safe public listing payload
 
-## Why you did not receive it
+Add a security-definer function `public.get_public_listing(p_listing_id uuid)` that:
 
-Your agent account is verified and activated, but your Communications Center preferences have **never been saved** (`notifications_set = false`, no towns, no property types, no price range).
+- looks up the listing by ID,
+- returns nothing unless the status is in the public-eligible set (the existing 13 statuses; draft and any non-listed status fail closed),
+- returns only marketing fields: identity/address/geo, price fields, beds/baths/sqft/lot/year, property & listing type, description, photos, public features/amenities, open-house data, status and status dates, listing number, city/county, DCMLS flags.
+- explicitly excludes every column in the sensitive list above, plus internal flags.
 
-Under the current policy — never-configured Comms Center means all Comms Center email is off — the audience builder excludes you by design. That is why 85 other agents got the Buyer Need and you did not. Your Hot Sheet and system emails were unaffected: you received three Hot Sheet match alerts and three status-change alerts on Aug 8, plus the license-verification admin alerts.
+The exact returned column list will be written out in the report.
 
-## Options
+## 2. Public listing-agent contact
 
-1. **Save your preferences in the app** (recommended). Open Communications Center preferences, pick your states/towns, property types and price range, and save. That flips the opt-in flag through the normal path and you start receiving matching broadcasts immediately. No code or data change.
-2. **Opt you in for everything.** Save your preferences with no geographic/type filters so you receive all applicable network broadcasts — useful for admin oversight of what agents are getting.
-3. **Do nothing.** Leave your account out of network broadcast email.
+The same function (or a companion `public.get_public_listing_agent(p_listing_id uuid)`) resolves the agent **through the listing's own `agent_id`** — the caller never supplies an agent ID, so it cannot be used to enumerate the directory. Returns only: first name, last name, company/brokerage, title, headshot URL, business phone/cell per the existing display preference, business email, AAC ID. No change to `agent_profiles` policies; full-table anonymous access stays denied.
 
-No back-fill or resend of yesterday's broadcast is included in any option, per the standing no-replay rule.
+## 3. Lock the columns
 
-## Technical notes
+Replace anonymous whole-row access with column-scoped access on `public.listings` so sensitive columns are unreadable anonymously even with a hand-crafted request. Authenticated agent/owner/admin access is untouched.
 
-- Gate lives in the shared audience builder (`verifiedAgentAudience.ts`): the opt-in flag is mandatory since the "everything on" experiment was reverted.
-- Verification only, no writes were made during this check.
+**Sequencing decision needed.** Once anonymous column access is narrowed, an anonymous `select("*")` fails, and the public property page currently does exactly that. Two ways to run it:
+
+- **A (recommended): ship both together.** Land the safe function now, then apply the column lock as the frontend cutover ships. Shortest exposure window with no broken public page.
+- **B: lock immediately.** Sensitive fields close today, but the logged-out property page breaks until the frontend switches to the new function.
+
+I'll assume A unless told otherwise, and will call out the exact moment the lock is ready to apply.
+
+## 4. Contact form delivery
+
+`send-contact-email` will accept a listing ID instead of an agent email, resolve the listing and its agent server-side, verify public eligibility, and refuse otherwise. Turnstile verification and the existing per-IP rate limit stay; the recipient can no longer be attacker-controlled. `send-showing-request-email` gets the same treatment — it currently takes `agentEmail` from the caller.
+
+## 5. Social preview
+
+`social-preview` will check listing eligibility and return 404 for draft or non-eligible listings before rendering Open Graph tags, and will select only the fields it renders.
+
+## Out of scope (untouched)
+
+RouteGuard, AAC dashboards, Hot Sheets, messaging permissions, Communications, listing ownership, buyer attribution for authenticated buyers, listing status/history. No frontend changes. No emails sent during testing except, if strictly necessary, a single controlled test to the admin address.
+
+## Report back after implementation
+
+Exact public listing fields, exact agent fields, proof sensitive fields are anonymously unreadable, proof `agent_profiles` stays protected, proof draft IDs fail on both the data path and the social preview, proof the contact and showing paths resolve the agent server-side, confirmation no authenticated workflow changed, and the list of migrations/functions/policies touched plus the tests run.
