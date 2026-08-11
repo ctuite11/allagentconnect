@@ -3064,6 +3064,23 @@ const AddListing = () => {
       }
       setValidationErrors([]);
 
+      // First publish only: confirm photo order before the listing goes live.
+      if (publishNow) {
+        const intendedStatus =
+          formData.status === "draft" || !formData.status ? "new" : formData.status;
+        if (needsFirstPublishPhotoConfirm(intendedStatus)) {
+          if (isUploadingPhotos) {
+            toast.error("Photos are still uploading. Please wait a moment and try again.");
+            setSubmitting(false);
+            return;
+          }
+          setSubmitting(false);
+          setPendingPublishAction("publish");
+          setPhotoOrderConfirmOpen(true);
+          return;
+        }
+      }
+
       // Compute auto_activate_on and auto_activate_days
       let computedAutoActivateOn: string | null = null;
       let computedAutoActivateDays: number | null = null;
