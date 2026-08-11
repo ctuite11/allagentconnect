@@ -620,12 +620,14 @@ export default function AdminApprovals() {
     [presenceMap, realAgentIds]
   );
 
-  // Fetch all agents via edge function (bypasses RLS issues)
-  const fetchAgents = async (opts?: { background?: boolean }) => {
-    if (!isAdmin) return;
+  // Fetch all agents via edge function (bypasses RLS issues).
+  // Refreshes are deduped: if one is already in flight, callers join it
+  // instead of firing a second (5–11s) admin-list-agents request.
+  const fetchAgentsInFlight = useRef<Promise<void> | null>(null);
 
+  const runFetchAgents = async (opts?: { background?: boolean }) => {
     if (!opts?.background) setLoading(true);
-    
+
     try {
       // Use edge function for bulletproof admin data fetching
       const { data, error } = await supabase.functions.invoke('admin-list-agents');
@@ -721,6 +723,19 @@ export default function AdminApprovals() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchAgents = (opts?: { background?: boolean }): Promise<void> => {
+    if (!isAdmin) return Promise.resolve();
+    if (fetchAgentsInFlight.current) {
+      if (!opts?.background) setLoading(false);
+      return fetchAgentsInFlight.current;
+    }
+    const p = runFetchAgents(opts).finally(() => {
+      fetchAgentsInFlight.current = null;
+    });
+    fetchAgentsInFlight.current = p;
+    return p;
   };
 
   useEffect(() => {
