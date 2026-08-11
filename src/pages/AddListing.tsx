@@ -2693,6 +2693,19 @@ const AddListing = () => {
     setValidationErrors(prev => prev.filter(err => err.field !== field));
   };
 
+  /**
+   * True when this save takes the listing live for the first time and the
+   * agent has not yet confirmed the photo order for this publish attempt.
+   */
+  const needsFirstPublishPhotoConfirm = (targetStatus: string) => {
+    if (photoOrderConfirmedRef.current) return false;
+    if (!isLiveStatus(targetStatus)) return false;
+    const previousStatus = originalStatusRef.current;
+    // Already published before (any live status) -> never prompt again.
+    if (previousStatus && isLiveStatus(previousStatus)) return false;
+    return photos.length > 0;
+  };
+
   // Handler for "Save Changes" in edit mode - preserves current status (does NOT force draft)
   const handleSaveChanges = async (isAutoSave = false) => {
     // Get fresh user from server - single source of truth
