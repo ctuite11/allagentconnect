@@ -327,6 +327,17 @@ const AddListing = () => {
   const [isRelisting, setIsRelisting] = useState(false);
   const [originalListingId, setOriginalListingId] = useState<string | null>(null);
 
+  /**
+   * First-publish photo-order confirmation.
+   * Shown only when a draft / non-live listing is being taken live for the
+   * very first time, before any listing alert can be generated. Never shown
+   * for edits to an already-published listing, live-to-live status changes,
+   * Save Draft, or autosave.
+   */
+  const [photoOrderConfirmOpen, setPhotoOrderConfirmOpen] = useState(false);
+  const [pendingPublishAction, setPendingPublishAction] = useState<"publish" | "saveChanges" | null>(null);
+  const photoOrderConfirmedRef = useRef(false);
+
   const [formData, setFormData] = useState({
     status: initialStatus,
     listing_type: "for_sale",
@@ -2682,6 +2693,19 @@ const AddListing = () => {
     setValidationErrors(prev => prev.filter(err => err.field !== field));
   };
 
+  /**
+   * True when this save takes the listing live for the first time and the
+   * agent has not yet confirmed the photo order for this publish attempt.
+   */
+  const needsFirstPublishPhotoConfirm = (targetStatus: string) => {
+    if (photoOrderConfirmedRef.current) return false;
+    if (!isLiveStatus(targetStatus)) return false;
+    const previousStatus = originalStatusRef.current;
+    // Already published before (any live status) -> never prompt again.
+    if (previousStatus && isLiveStatus(previousStatus)) return false;
+    return photos.length > 0;
+  };
+
   // Handler for "Save Changes" in edit mode - preserves current status (does NOT force draft)
   const handleSaveChanges = async (isAutoSave = false) => {
     // Get fresh user from server - single source of truth
@@ -2719,6 +2743,21 @@ const AddListing = () => {
         return;
       }
       setValidationErrors([]);
+
+      // First publish only: confirm photo order before the listing goes live.
+      if (needsFirstPublishPhotoConfirm(formData.status)) {
+        if (isUploadingPhotos) {
+          toast.error("Photos are still uploading. Please wait a moment and try again.");
+          draftSession.endSave();
+          setSubmitting(false);
+          return;
+        }
+        draftSession.endSave();
+        setSubmitting(false);
+        setPendingPublishAction("saveChanges");
+        setPhotoOrderConfirmOpen(true);
+        return;
+      }
     } else {
       // Autosave must never persist an invalid non-draft pricing state.
       // Skip silently and keep the last valid saved state (no toast noise).
@@ -3025,6 +3064,23 @@ const AddListing = () => {
       }
       setValidationErrors([]);
 
+      // First publish only: confirm photo order before the listing goes live.
+      if (publishNow) {
+        const intendedStatus =
+          formData.status === "draft" || !formData.status ? "new" : formData.status;
+        if (needsFirstPublishPhotoConfirm(intendedStatus)) {
+          if (isUploadingPhotos) {
+            toast.error("Photos are still uploading. Please wait a moment and try again.");
+            setSubmitting(false);
+            return;
+          }
+          setSubmitting(false);
+          setPendingPublishAction("publish");
+          setPhotoOrderConfirmOpen(true);
+          return;
+        }
+      }
+
       // Compute auto_activate_on and auto_activate_days
       let computedAutoActivateOn: string | null = null;
       let computedAutoActivateDays: number | null = null;
@@ -3272,6 +3328,24 @@ const AddListing = () => {
     } finally {
       setSubmitting(false);
     }
+  };
+
+  /** Confirm photo order, then resume the exact publish path that was interrupted. */
+  const handleConfirmPhotoOrder = () => {
+    const action = pendingPublishAction;
+    setPhotoOrderConfirmOpen(false);
+    setPendingPublishAction(null);
+    photoOrderConfirmedRef.current = true;
+    if (action === "saveChanges") {
+      void handleSaveChanges(false);
+    } else {
+      void handleSubmit({ preventDefault: () => {} } as unknown as React.FormEvent, true);
+    }
+  };
+
+  const handleCancelPhotoOrder = () => {
+    setPhotoOrderConfirmOpen(false);
+    setPendingPublishAction(null);
   };
 
   if (loading || isLoadingListing) {
@@ -5355,6 +5429,48 @@ const AddListing = () => {
           </Card>
         </div>
       </div>
+
+      {/* First-publish photo order confirmation */}
+      <Dialog
+        open={photoOrderConfirmOpen}
+        onOpenChange={(open) => {
+          if (!open) handleCancelPhotoOrder();
+        }}
+      >
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Is your photo order correct?</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            The first photo is used in listing alerts and shared links. Changing it later will not
+            change alerts that have already been sent.
+          </p>
+          <div className="grid grid-cols-3 gap-3 sm:grid-cols-5">
+            {photos.slice(0, 10).map((photo, index) => (
+              <div key={photo.id} className="relative overflow-hidden rounded-md border bg-muted">
+                <img
+                  src={photo.preview || photo.url || ""}
+                  alt={`Listing photo ${index + 1}`}
+                  className="h-20 w-full object-cover"
+                />
+                {index === 0 && (
+                  <span className="absolute inset-x-0 bottom-0 bg-primary px-1 py-0.5 text-center text-[10px] font-medium text-primary-foreground">
+                    Cover photo
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button type="button" variant="outline" onClick={handleCancelPhotoOrder}>
+              Go back and reorder
+            </Button>
+            <Button type="button" onClick={handleConfirmPhotoOrder}>
+              Yes, publish
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* ATTOM Records Selection Modal */}
       <Dialog open={isAttomModalOpen} onOpenChange={setIsAttomModalOpen}>
