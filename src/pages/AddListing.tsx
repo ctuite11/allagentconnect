@@ -2743,6 +2743,21 @@ const AddListing = () => {
         return;
       }
       setValidationErrors([]);
+
+      // First publish only: confirm photo order before the listing goes live.
+      if (needsFirstPublishPhotoConfirm(formData.status)) {
+        if (isUploadingPhotos) {
+          toast.error("Photos are still uploading. Please wait a moment and try again.");
+          draftSession.endSave();
+          setSubmitting(false);
+          return;
+        }
+        draftSession.endSave();
+        setSubmitting(false);
+        setPendingPublishAction("saveChanges");
+        setPhotoOrderConfirmOpen(true);
+        return;
+      }
     } else {
       // Autosave must never persist an invalid non-draft pricing state.
       // Skip silently and keep the last valid saved state (no toast noise).
