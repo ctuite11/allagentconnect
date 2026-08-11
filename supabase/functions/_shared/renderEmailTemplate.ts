@@ -592,7 +592,6 @@ export function renderEmailTemplate(
     }
 
     case "agent-approval-rejected": {
-      // (unchanged)
       const recipientName = variables.recipientName || "Agent";
       return buildAacEmail({
         headline: "Verification Update",
