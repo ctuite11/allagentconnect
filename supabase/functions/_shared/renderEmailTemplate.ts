@@ -12,6 +12,7 @@ import { formatPersonDisplayName } from "./personDisplayName.ts";
 import { formatUsPhoneForDisplay } from "./phoneFormat.ts";
 import { AAC_PUBLIC_URL, resolveEmailBaseUrl } from "./aacPublicUrl.ts";
 import { buildAdminVerificationSubmittedEmailHtml } from "./buildAdminVerificationSubmittedEmailHtml.ts";
+import { buildTempPasswordEmailHtml } from "./buildTempPasswordEmailHtml.ts";
 import { getHotSheetStatusCopy } from "./hotSheetStatusCopy.ts";
 import {
   buildCommsFiltersFooterHtml,
@@ -739,6 +740,15 @@ export function renderEmailTemplate(
         `,
         ctaLabel: requestUrl ? "Update your request" : undefined,
         ctaUrl: requestUrl || undefined,
+      });
+    }
+
+    case "agent-temp-password": {
+      return buildTempPasswordEmailHtml({
+        agentName: variables.recipientName ? String(variables.recipientName) : null,
+        agentEmail: String(variables.agentEmail || ""),
+        password: String(variables.password || ""),
+        signInUrl: variables.signInUrl ? String(variables.signInUrl) : undefined,
       });
     }
 

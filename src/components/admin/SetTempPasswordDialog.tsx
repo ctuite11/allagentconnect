@@ -46,6 +46,8 @@ export function SetTempPasswordDialog({ open, onOpenChange, defaultEmail = "", a
   const [saving, setSaving] = useState(false);
   const [done, setDone] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
 
   const suggestions = useMemo(() => {
     const q = email.trim().toLowerCase();
@@ -77,6 +79,20 @@ export function SetTempPasswordDialog({ open, onOpenChange, defaultEmail = "", a
     }
   };
 
+  const handleSendEmail = async () => {
+    const trimmed = email.trim().toLowerCase();
+    setSending(true);
+    try {
+      await invokeEdgeFunction("send-temp-password-email", { email: trimmed, password });
+      setSent(true);
+      toast.success("Email queued to the agent");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to send email");
+    } finally {
+      setSending(false);
+    }
+  };
+
   const message = `Hi,
 
 Sorry for the trouble resetting your password — I set one for you directly so you can get in right away.
@@ -96,6 +112,7 @@ Chris`;
       onOpenChange={(next) => {
         if (!next) {
           setDone(false);
+          setSent(false);
           setPassword(generatePassword());
         }
         onOpenChange(next);
@@ -176,17 +193,27 @@ Chris`;
                 rows={12}
                 className="w-full rounded-md border border-input bg-background p-3 text-sm"
               />
-              <Button
-                variant="outline"
-                size="sm"
-                type="button"
-                onClick={() => {
-                  navigator.clipboard.writeText(message);
-                  toast.success("Copied");
-                }}
-              >
-                Copy message
-              </Button>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(message);
+                    toast.success("Copied");
+                  }}
+                >
+                  Copy message
+                </Button>
+                <Button
+                  size="sm"
+                  type="button"
+                  onClick={handleSendEmail}
+                  disabled={sending || sent}
+                >
+                  {sent ? "Email sent" : sending ? "Sending…" : "Email it to the agent"}
+                </Button>
+              </div>
             </div>
           )}
         </div>
