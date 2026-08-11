@@ -39,7 +39,7 @@ const DcmlsExclusiveListings = () => {
   useEffect(() => {
     const fetch = async () => {
       let query = supabase
-        .from("listings")
+        .from("listings_public")
         .select("id, address, city, state, price, bedrooms, bathrooms, square_feet, photos, publish_to_dcmls, dcmls_status, status")
         .order("created_at", { ascending: false })
         .limit(6);

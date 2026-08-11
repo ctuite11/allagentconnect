@@ -9,14 +9,12 @@ const corsHeaders = {
 };
 
 interface ShowingRequestEmailRequest {
-  /** Preferred: backend resolves the listing agent + email from this ID. */
-  listingId?: string;
-  /** Legacy (deprecated): ignored whenever listingId is supplied. */
-  agentEmail?: string;
-  agentName: string;
+  /** Required: backend resolves the listing agent + email from this ID. */
+  listingId: string;
   requesterName: string;
   requesterEmail: string;
   requesterPhone?: string;
+  /** Optional display context (not used for recipient resolution). */
   listingAddress?: string;
   preferredDate: string;
   preferredTime: string;
@@ -149,6 +147,9 @@ function formatPreferredDate(dateInput: string): string {
   return trimmed;
 }
 
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -176,8 +177,6 @@ const handler = async (req: Request): Promise<Response> => {
 
     const {
       listingId,
-      agentEmail,
-      agentName,
       requesterName,
       requesterEmail,
       requesterPhone,
@@ -193,31 +192,24 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("Server misconfigured: missing Supabase service credentials");
     }
 
-    let toEmail = agentEmail;
-    let toName = agentName;
-    let addressLine = listingAddress || "";
-
-    if (listingId) {
-      const resolved = await resolveListingRecipient(supabaseUrl, supabaseServiceKey, listingId);
-      if (!resolved) {
-        return new Response(JSON.stringify({ error: "Listing not available" }), {
-          status: 404,
-          headers: { "Content-Type": "application/json", ...corsHeaders },
-        });
-      }
-      toEmail = resolved.email;
-      toName = resolved.name;
-      addressLine = resolved.address || addressLine;
-    } else {
-      console.warn("[send-showing-request-email] legacy caller-supplied agentEmail path used");
+    if (!listingId || !UUID_RE.test(listingId)) {
+      return new Response(
+        JSON.stringify({ error: "listingId is required" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } },
+      );
     }
 
-    if (!toEmail) {
-      return new Response(JSON.stringify({ error: "Missing recipient" }), {
-        status: 400,
+    const resolved = await resolveListingRecipient(supabaseUrl, supabaseServiceKey, listingId);
+    if (!resolved) {
+      return new Response(JSON.stringify({ error: "Listing not available" }), {
+        status: 404,
         headers: { "Content-Type": "application/json", ...corsHeaders },
       });
     }
+
+    const toEmail = resolved.email;
+    const toName = resolved.name;
+    const addressLine = resolved.address || listingAddress || "";
 
     const formattedDate = formatPreferredDate(preferredDate);
     const safeListingAddress = escapeHtml(addressLine);

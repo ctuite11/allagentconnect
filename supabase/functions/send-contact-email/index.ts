@@ -7,16 +7,22 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const SUPPORT_TO_EMAIL = "hello@allagentconnect.com";
+const SUPPORT_TO_NAME = "AAC Support";
+
 interface ContactEmailRequest {
-  /** Preferred: the backend resolves the listing agent + email from this ID. */
+  /** Required for listing inquiries: backend resolves the recipient from this ID. */
   listingId?: string;
-  /** Legacy (deprecated): ignored whenever listingId is supplied. */
-  agentEmail?: string;
-  agentName: string;
+  /**
+   * Access-error / platform support only. Destination is hardcoded server-side;
+   * callers cannot choose the recipient.
+   */
+  purpose?: "support";
   senderName: string;
   senderEmail: string;
   senderPhone?: string;
   message: string;
+  /** Optional display context (not used for recipient resolution). */
   listingAddress?: string;
   turnstile_token?: string;
 }
@@ -118,6 +124,9 @@ function escapeHtml(s: string): string {
     .replaceAll("'", "&#39;");
 }
 
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -145,8 +154,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     const {
       listingId,
-      agentEmail,
-      agentName,
+      purpose,
       senderName,
       senderEmail,
       senderPhone,
@@ -164,20 +172,23 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    console.log("Sending contact email to agent:", agentEmail);
-
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     if (!supabaseUrl || !supabaseServiceKey) {
       throw new Error("Server misconfigured: missing Supabase service credentials");
     }
 
-    // Server-side recipient resolution. The caller can never choose the
-    // destination address when a listing ID is supplied.
-    let toEmail = agentEmail;
-    let toName = agentName;
+    let toEmail: string | undefined;
+    let toName: string | undefined;
     let addressLine = listingAddress || "";
 
-    if (listingId) {
+    if (purpose === "support") {
+      // Access-error / platform support: fixed inbox only. Never trust a
+      // caller-supplied destination address.
+      toEmail = SUPPORT_TO_EMAIL;
+      toName = SUPPORT_TO_NAME;
+      addressLine = addressLine || "Access Error — Support Request";
+      console.log("[send-contact-email] support purpose →", SUPPORT_TO_EMAIL);
+    } else if (listingId && UUID_RE.test(listingId)) {
       const resolved = await resolveListingRecipient(supabaseUrl, supabaseServiceKey, listingId);
       if (!resolved) {
         return new Response(JSON.stringify({ error: "Listing not available" }), {
@@ -188,10 +199,12 @@ const handler = async (req: Request): Promise<Response> => {
       toEmail = resolved.email;
       toName = resolved.name;
       addressLine = resolved.address || addressLine;
+      console.log("[send-contact-email] listingId resolve →", listingId);
     } else {
-      // Legacy path retained until the public property page cuts over to
-      // listingId; removed in the follow-up lockdown phase.
-      console.warn("[send-contact-email] legacy caller-supplied agentEmail path used");
+      return new Response(
+        JSON.stringify({ error: "listingId is required" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } },
+      );
     }
 
     if (!toEmail) {
