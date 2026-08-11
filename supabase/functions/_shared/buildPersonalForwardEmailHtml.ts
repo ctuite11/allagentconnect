@@ -19,13 +19,13 @@ export interface PersonalForwardEmailOptions {
 }
 
 const BULLETS = [
-  "Seller leads",
-  "Buyer leads",
-  "Buyer and renter needs",
+  "Seller and buyer leads",
+  "Buyer and renter needs from other agents",
   "Off-market and coming-soon listings",
-  "New listing activity",
+  "Instant alerts on new listing activity",
   "Referrals and agent-to-agent opportunities",
   "Direct connections with verified agents",
+  "Free for a limited time, licensed agents only",
 ];
 
 function escapeHtml(s: string): string {
