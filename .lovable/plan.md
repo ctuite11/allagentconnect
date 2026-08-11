@@ -1,32 +1,25 @@
-# Confirm photo order before publishing
+# Make the admin invite email come from Chris
 
-## Why
+## What you're seeing
+The invite lands in the inbox as **All Agent Connect <hello@allagentconnect.com>**. Replies already route to chris@allagentconnect.com, but the visible sender is the brand, not you — which reads impersonal for what is a personal note.
 
-A hot sheet alert for 8 Wright St #2 went out with a bedroom as the lead photo. Timeline (Aug 10, UTC): the listing was published at 15:17:22, the alert job was created at 15:17:24, and the photo set was finalized at 15:18:00. The email was correct at that instant — the living-room cover photo simply arrived 36 seconds after the alert was built.
+## What changes
+Only the sender's **display name** on the admin-created invite email:
 
-Fix: make the agent explicitly confirm photo order at the moment of publishing, so the first photo is settled before any alert fires.
+```text
+before:  All Agent Connect <hello@allagentconnect.com>
+after:   Chris Tuite (All Agent Connect) <hello@allagentconnect.com>
+```
 
-## What to build
+The sending address stays `hello@allagentconnect.com`, the verified and reputation-warmed sender. Reply-To stays chris@allagentconnect.com. No template, copy, link, or transport change.
 
-A confirmation step in front of publishing on the Add/Edit Listing page.
+Scope: the admin-created agent invite only. Every other email keeps the current brand sender.
 
-When the agent clicks **Publish Listing** (or saves an existing listing into a live status), instead of publishing immediately, show a dialog:
+## Why not send from chris@ directly
+The canonical sender is deliberately hard-locked to one verified address after past inbox-placement problems on other sender domains. Switching the From address for one email type would split the domain's sending identity and risk placement on exactly the email that matters most. A display name gets the personal feel at no deliverability cost.
 
-- Title: "Is your photo order correct?"
-- A note that the **first photo** is what buyers and agents see in listing alerts and shared links, and that it cannot be changed after the alert goes out.
-- A small thumbnail strip of the current photos in order, with the first one labeled "Cover photo".
-- Buttons: **Go back and reorder** (closes the dialog, no publish) and **Yes, publish** (proceeds with the existing publish flow exactly as it works today).
-
-Behavior details:
-- Only shown for real publishes — never for Save Draft, never for autosave.
-- Runs after existing validation passes (so the agent doesn't confirm photos then get bounced for a missing field).
-- If the listing has no photos, the dialog is skipped (validation already blocks live statuses without photos).
-- No changes to what gets saved, to statuses, to alert sending, or to any email code.
-
-## Technical notes
-
-- Single file changed: `src/pages/AddListing.tsx`.
-- Add local state (`photoOrderConfirmOpen`, plus a pending-submit ref) and a shadcn `Dialog` (already imported in this file).
-- `handleSubmit(e, true)` runs validation first, then opens the dialog and returns; confirming re-enters the same publish path with a flag set so it does not re-prompt.
-- The same gate applies to the manual update path when the target status is live (`isLiveStatus(formData.status)`), so a draft-to-live edit is also covered.
-- Thumbnails come from the existing `photos` state (`FileWithPreview` preview/url), no new upload or storage work.
+## Technical detail
+- `supabase/functions/_shared/transactionalSender.ts`: add a narrow, allowlisted display-name override helper (address still hard-locked; env cannot change the address).
+- `supabase/functions/_shared/sendEmail.ts`: when the job payload carries an approved `from_display_name`, use it in the From header; otherwise keep `CANONICAL_TRANSACTIONAL_FROM` unchanged.
+- `supabase/functions/send-admin-created-invite/index.ts`: set that display name on the queued job payload.
+- Deploy the affected functions, then send one preview invite to chris@allagentconnect.com to confirm the inbox sender line before any real invite goes out.
