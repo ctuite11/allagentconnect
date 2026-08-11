@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,21 +21,45 @@ function generatePassword(): string {
   return `Aac-${core}!7`;
 }
 
+export interface TempPasswordAgentOption {
+  id: string;
+  email: string;
+  first_name?: string | null;
+  last_name?: string | null;
+}
+
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   defaultEmail?: string;
+  /** Admin agent list used for the email typeahead. */
+  agents?: TempPasswordAgentOption[];
 }
 
 /**
  * Admin-only: set a non-expiring password directly on an agent's account.
  * Sends no email — the admin shares the password out of band.
  */
-export function SetTempPasswordDialog({ open, onOpenChange, defaultEmail = "" }: Props) {
+export function SetTempPasswordDialog({ open, onOpenChange, defaultEmail = "", agents = [] }: Props) {
   const [email, setEmail] = useState(defaultEmail);
   const [password, setPassword] = useState(generatePassword());
   const [saving, setSaving] = useState(false);
   const [done, setDone] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
+
+  const suggestions = useMemo(() => {
+    const q = email.trim().toLowerCase();
+    const withEmail = agents.filter((a) => a.email);
+    const scored = q
+      ? withEmail.filter((a) => {
+          const name = `${a.first_name ?? ""} ${a.last_name ?? ""}`.toLowerCase();
+          return a.email.toLowerCase().includes(q) || name.includes(q);
+        })
+      : withEmail;
+    return scored.slice(0, 8);
+  }, [agents, email]);
 
   const handleSubmit = async () => {
     const trimmed = email.trim().toLowerCase();
@@ -52,6 +76,20 @@ export function SetTempPasswordDialog({ open, onOpenChange, defaultEmail = "" }:
       toast.error(err instanceof Error ? err.message : "Failed to set password");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleSendEmail = async () => {
+    const trimmed = email.trim().toLowerCase();
+    setSending(true);
+    try {
+      await invokeEdgeFunction("send-temp-password-email", { email: trimmed, password });
+      setSent(true);
+      toast.success("Email queued to the agent");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to send email");
+    } finally {
+      setSending(false);
     }
   };
 
@@ -74,6 +112,7 @@ Chris`;
       onOpenChange={(next) => {
         if (!next) {
           setDone(false);
+          setSent(false);
           setPassword(generatePassword());
         }
         onOpenChange(next);
@@ -91,13 +130,46 @@ Chris`;
         <div className="space-y-4">
           <div className="space-y-1.5">
             <Label htmlFor="tempPwEmail">Agent email</Label>
-            <Input
-              id="tempPwEmail"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="agent@example.com"
-              disabled={done}
-            />
+            <div className="relative">
+              <Input
+                id="tempPwEmail"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setShowSuggestions(true);
+                }}
+                onFocus={() => setShowSuggestions(true)}
+                onBlur={() => window.setTimeout(() => setShowSuggestions(false), 120)}
+                placeholder="Search agents or type an email"
+                autoComplete="off"
+                disabled={done}
+              />
+              {!done && showSuggestions && suggestions.length > 0 && (
+                <ul className="absolute z-50 mt-1 max-h-60 w-full overflow-y-auto rounded-md border border-border bg-popover p-1 shadow-md">
+                  {suggestions.map((a) => {
+                    const name = `${a.first_name ?? ""} ${a.last_name ?? ""}`.trim();
+                    return (
+                      <li key={a.id}>
+                        <button
+                          type="button"
+                          className="w-full rounded-sm px-2 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground"
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => {
+                            setEmail(a.email);
+                            setShowSuggestions(false);
+                          }}
+                        >
+                          <span className="block truncate font-medium">{name || a.email}</span>
+                          {name && (
+                            <span className="block truncate text-xs text-muted-foreground">{a.email}</span>
+                          )}
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </div>
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="tempPwValue">Password</Label>
@@ -121,17 +193,27 @@ Chris`;
                 rows={12}
                 className="w-full rounded-md border border-input bg-background p-3 text-sm"
               />
-              <Button
-                variant="outline"
-                size="sm"
-                type="button"
-                onClick={() => {
-                  navigator.clipboard.writeText(message);
-                  toast.success("Copied");
-                }}
-              >
-                Copy message
-              </Button>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(message);
+                    toast.success("Copied");
+                  }}
+                >
+                  Copy message
+                </Button>
+                <Button
+                  size="sm"
+                  type="button"
+                  onClick={handleSendEmail}
+                  disabled={sending || sent}
+                >
+                  {sent ? "Email sent" : sending ? "Sending…" : "Email it to the agent"}
+                </Button>
+              </div>
             </div>
           )}
         </div>

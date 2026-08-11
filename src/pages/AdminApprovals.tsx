@@ -2444,6 +2444,12 @@ export default function AdminApprovals() {
         open={showTempPasswordDialog}
         onOpenChange={setShowTempPasswordDialog}
         defaultEmail={tempPasswordEmail}
+        agents={agents.map((a) => ({
+          id: a.id,
+          email: a.email,
+          first_name: a.first_name,
+          last_name: a.last_name,
+        }))}
       />
 
       <AgentDetailsDrawer
