@@ -18,16 +18,6 @@ export interface PersonalForwardEmailOptions {
   preheader?: string;
 }
 
-const BULLETS = [
-  "Seller and buyer leads",
-  "Buyer and renter needs from other agents",
-  "Off-market and coming-soon listings",
-  "Instant alerts on new listing activity",
-  "Referrals and agent-to-agent opportunities",
-  "Direct connections with verified agents",
-  "Free for a limited time, licensed agents only",
-];
-
 function escapeHtml(s: string): string {
   return s
     .replaceAll("&", "&amp;")
@@ -44,11 +34,6 @@ export function buildPersonalForwardEmailHtml(
   const preheader =
     opts.preheader ??
     "A private network built for real estate agents — a personal invitation from Chris Tuite.";
-
-  const bulletHtml = BULLETS.map(
-    (b) =>
-      `<p style="margin:0 0 8px 18px;text-indent:-14px;font-size:14px;line-height:1.6;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;"><span style="color:#64748b;">&bull;</span>&nbsp;&nbsp;${escapeHtml(b)}</p>`,
-  ).join("");
 
   return `<!DOCTYPE html>
 <html lang="en">
