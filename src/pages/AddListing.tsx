@@ -3330,6 +3330,24 @@ const AddListing = () => {
     }
   };
 
+  /** Confirm photo order, then resume the exact publish path that was interrupted. */
+  const handleConfirmPhotoOrder = () => {
+    const action = pendingPublishAction;
+    setPhotoOrderConfirmOpen(false);
+    setPendingPublishAction(null);
+    photoOrderConfirmedRef.current = true;
+    if (action === "saveChanges") {
+      void handleSaveChanges(false);
+    } else {
+      void handleSubmit({ preventDefault: () => {} } as unknown as React.FormEvent, true);
+    }
+  };
+
+  const handleCancelPhotoOrder = () => {
+    setPhotoOrderConfirmOpen(false);
+    setPendingPublishAction(null);
+  };
+
   if (loading || isLoadingListing) {
     return (
       <>
