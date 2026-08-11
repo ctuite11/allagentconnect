@@ -327,6 +327,17 @@ const AddListing = () => {
   const [isRelisting, setIsRelisting] = useState(false);
   const [originalListingId, setOriginalListingId] = useState<string | null>(null);
 
+  /**
+   * First-publish photo-order confirmation.
+   * Shown only when a draft / non-live listing is being taken live for the
+   * very first time, before any listing alert can be generated. Never shown
+   * for edits to an already-published listing, live-to-live status changes,
+   * Save Draft, or autosave.
+   */
+  const [photoOrderConfirmOpen, setPhotoOrderConfirmOpen] = useState(false);
+  const [pendingPublishAction, setPendingPublishAction] = useState<"publish" | "saveChanges" | null>(null);
+  const photoOrderConfirmedRef = useRef(false);
+
   const [formData, setFormData] = useState({
     status: initialStatus,
     listing_type: "for_sale",
