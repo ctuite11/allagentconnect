@@ -5430,6 +5430,48 @@ const AddListing = () => {
         </div>
       </div>
 
+      {/* First-publish photo order confirmation */}
+      <Dialog
+        open={photoOrderConfirmOpen}
+        onOpenChange={(open) => {
+          if (!open) handleCancelPhotoOrder();
+        }}
+      >
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Is your photo order correct?</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            The first photo is used in listing alerts and shared links. Changing it later will not
+            change alerts that have already been sent.
+          </p>
+          <div className="grid grid-cols-3 gap-3 sm:grid-cols-5">
+            {photos.slice(0, 10).map((photo, index) => (
+              <div key={photo.id} className="relative overflow-hidden rounded-md border bg-muted">
+                <img
+                  src={photo.preview || photo.url || ""}
+                  alt={`Listing photo ${index + 1}`}
+                  className="h-20 w-full object-cover"
+                />
+                {index === 0 && (
+                  <span className="absolute inset-x-0 bottom-0 bg-primary px-1 py-0.5 text-center text-[10px] font-medium text-primary-foreground">
+                    Cover photo
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button type="button" variant="outline" onClick={handleCancelPhotoOrder}>
+              Go back and reorder
+            </Button>
+            <Button type="button" onClick={handleConfirmPhotoOrder}>
+              Yes, publish
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* ATTOM Records Selection Modal */}
       <Dialog open={isAttomModalOpen} onOpenChange={setIsAttomModalOpen}>
         <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
