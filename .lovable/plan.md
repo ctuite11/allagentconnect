@@ -1,25 +1,41 @@
-# Make the admin invite email come from Chris
+# Forwardable AAC-branded invite — short, bulleted
 
-## What you're seeing
-The invite lands in the inbox as **All Agent Connect <hello@allagentconnect.com>**. Replies already route to chris@allagentconnect.com, but the visible sender is the brand, not you — which reads impersonal for what is a personal note.
+Send you one copy at chris@allagentconnect.com that you can forward to any agent as-is.
 
-## What changes
-Only the sender's **display name** on the admin-created invite email:
+## Which email
+The existing **personal forward invite** already carries full AAC branding (navy header with the emerald monogram, centered headline, blue CTA, your signature, dark footer). It's the right base — it just runs long. This plan trims the body and leads with bullets.
+
+## Shortened copy
+
+Subject: You're invited to join All Agent Connect
 
 ```text
-before:  All Agent Connect <hello@allagentconnect.com>
-after:   Chris Tuite (All Agent Connect) <hello@allagentconnect.com>
+Hi there,
+
+I'd like to invite you to All Agent Connect — a private network built
+for real estate agents. Here's what you get:
+
+  • Seller and buyer leads
+  • Buyer and renter needs from other agents
+  • Off-market and coming-soon listings
+  • Instant alerts on new listing activity
+  • Referrals and agent-to-agent opportunities
+  • Direct connections with verified agents
+  • Free for a limited time, licensed agents only
+
+[ Create your account → ]
+
+Thanks,
+Chris Tuite
+Founder, All Agent Connect
 ```
 
-The sending address stays `hello@allagentconnect.com`, the verified and reputation-warmed sender. Reply-To stays chris@allagentconnect.com. No template, copy, link, or transport change.
+Three intro paragraphs plus a closing paragraph collapse into one sentence; the highlights carry the message.
 
-Scope: the admin-created agent invite only. Every other email keeps the current brand sender.
-
-## Why not send from chris@ directly
-The canonical sender is deliberately hard-locked to one verified address after past inbox-placement problems on other sender domains. Switching the From address for one email type would split the domain's sending identity and risk placement on exactly the email that matters most. A display name gets the personal feel at no deliverability cost.
+## Delivery
+- One send to chris@allagentconnect.com only. No audience send, no queue backfill, no cron change.
+- The CTA points at the normal sign-up page, so nothing is tied to your account and the link stays valid for whoever you forward it to.
 
 ## Technical detail
-- `supabase/functions/_shared/transactionalSender.ts`: add a narrow, allowlisted display-name override helper (address still hard-locked; env cannot change the address).
-- `supabase/functions/_shared/sendEmail.ts`: when the job payload carries an approved `from_display_name`, use it in the From header; otherwise keep `CANONICAL_TRANSACTIONAL_FROM` unchanged.
-- `supabase/functions/send-admin-created-invite/index.ts`: set that display name on the queued job payload.
-- Deploy the affected functions, then send one preview invite to chris@allagentconnect.com to confirm the inbox sender line before any real invite goes out.
+- Trim the copy in `supabase/functions/_shared/buildPersonalForwardEmailHtml.ts` (bullet list + single intro line); keep the branded shell, colors, and footer untouched.
+- Deploy `send-personal-forward-invite`, invoke it once for chris@allagentconnect.com with a dated idempotency key, and confirm the job reaches `sent` in `email_jobs`.
