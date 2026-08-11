@@ -19,13 +19,13 @@ export interface PersonalForwardEmailOptions {
 }
 
 const BULLETS = [
-  "Seller leads",
-  "Buyer leads",
-  "Buyer and renter needs",
+  "Seller and buyer leads",
+  "Buyer and renter needs from other agents",
   "Off-market and coming-soon listings",
-  "New listing activity",
+  "Instant alerts on new listing activity",
   "Referrals and agent-to-agent opportunities",
   "Direct connections with verified agents",
+  "Free for a limited time, licensed agents only",
 ];
 
 function escapeHtml(s: string): string {
@@ -75,12 +75,10 @@ export function buildPersonalForwardEmailHtml(
         <tr><td style="background-color:#ffffff;border:1px solid #d1d5db;border-top:none;padding:32px 40px 36px;">
           <h1 style="margin:0 0 24px;font-size:24px;font-weight:700;line-height:1.25;color:#0f172a;text-align:center;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${PERSONAL_FORWARD_H1}</h1>
           <p style="margin:0 0 14px;font-size:14px;line-height:1.65;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Hi there,</p>
-          <p style="margin:0 0 14px;font-size:14px;line-height:1.65;color:#334155;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">I&rsquo;d like to invite you to join <strong>All Agent Connect</strong>, a private network built for real estate agents.</p>
-          <p style="margin:0 0 14px;font-size:14px;line-height:1.65;color:#334155;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">AAC helps agents connect around opportunities that often happen before they reach the public market, including:</p>
+          <p style="margin:0 0 14px;font-size:14px;line-height:1.65;color:#334155;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">I&rsquo;d like to invite you to <strong>All Agent Connect</strong> &mdash; a private network built for real estate agents. Here&rsquo;s what you get:</p>
           <div style="margin:0 0 16px;">
             ${bulletHtml}
           </div>
-          <p style="margin:0;font-size:14px;line-height:1.65;color:#334155;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">The goal is simple: give agents one place to see more demand, more listings, and more opportunities from across the network.</p>
           <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
             <tr><td align="center" style="padding:28px 0 0;">
               <a href="${ctaUrl}" style="display:inline-block;padding:14px 28px;background:#0E56F5;color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;border-radius:8px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Create your account &rarr;</a>
