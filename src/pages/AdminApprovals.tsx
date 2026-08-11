@@ -861,7 +861,20 @@ export default function AdminApprovals() {
             next.delete(agent.id);
             return next;
           });
-          await fetchAgents();
+          // Reflect the result immediately; the full list reload (5–11s)
+          // happens in the background so the row stops spinning right away.
+          setAgents((prev) =>
+            prev.map((a) =>
+              a.id === agent.id
+                ? {
+                    ...a,
+                    agent_status: "verified",
+                    verified_at: a.verified_at ?? new Date().toISOString(),
+                  }
+                : a,
+            ),
+          );
+          void fetchAgents({ background: true });
           return true;
         }
         if (newStatus === "rejected") {
