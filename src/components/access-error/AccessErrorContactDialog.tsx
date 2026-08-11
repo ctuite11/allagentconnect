@@ -55,8 +55,8 @@ export default function AccessErrorContactDialog({ open, onOpenChange, defaultEm
     try {
       const { error } = await supabase.functions.invoke("send-contact-email", {
         body: {
-          agentEmail: "hello@allagentconnect.com",
-          agentName: "AAC Support",
+          // Server hardcodes support inbox — never send a caller-chosen destination.
+          purpose: "support",
           senderName: parsed.data.senderName,
           senderEmail: parsed.data.senderEmail,
           message: parsed.data.message,

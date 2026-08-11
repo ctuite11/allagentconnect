@@ -40,7 +40,7 @@ const RecentlySold = () => {
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
       const { data, error } = await supabase
-        .from("listings")
+        .from("listings_public")
         .select(`
           *,
           listing_stats (

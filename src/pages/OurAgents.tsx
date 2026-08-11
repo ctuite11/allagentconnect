@@ -232,7 +232,7 @@ const OurAgents = ({
         { data: teamsData, error: teamsError },
       ] = await Promise.all([
         supabase
-          .from("listings")
+          .from("listings_public")
           .select("agent_id, status, property_type, created_at")
           .in("status", ["active", "coming_soon", "off_market", "sold"]),
         countiesPromise,

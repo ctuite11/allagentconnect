@@ -280,7 +280,7 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
       const agentUuid = agentData.id;
 
       const { data: listingsData, error: listingsError } = await supabase
-        .from("listings")
+        .from("listings_public")
         .select("*")
         .eq("agent_id", agentUuid)
         .in("status", ["active", "coming_soon", "off_market", "sold", "rented"])

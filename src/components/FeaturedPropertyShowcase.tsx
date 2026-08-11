@@ -18,7 +18,7 @@ const FeaturedPropertyShowcase = () => {
   const fetchFeaturedProperty = async () => {
     try {
       const { data, error } = await supabase
-        .from("listings")
+        .from("listings_public")
         .select("*")
         .eq("status", "active")
         .order("created_at", { ascending: false })

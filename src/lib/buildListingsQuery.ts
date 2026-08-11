@@ -60,7 +60,9 @@ export function buildListingsQuery(
   supabase: SupabaseClient,
   rawCriteria: SearchCriteria
 ) {
-  let query = supabase.from("listings").select("*");
+  // Marketing-only public view — anon cannot SELECT public.listings after Phase 3.
+  // Authenticated hot-sheet / browse callers use the same safe column set.
+  let query = supabase.from("listings_public").select("*");
 
   // Normalize criteria
   // Note: honor the caller's statuses array as-is. An empty array is a valid

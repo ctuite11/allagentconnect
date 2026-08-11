@@ -154,7 +154,7 @@ const TeamProfile = () => {
         .filter(Boolean) || [];
       if (memberIds.length > 0) {
         const { data: listingsData, error: listingsError } = await supabase
-          .from("listings")
+          .from("listings_public")
           .select("*")
           .in("agent_id", memberIds)
           .eq("status", "active")
