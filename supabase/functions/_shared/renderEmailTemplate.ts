@@ -743,6 +743,15 @@ export function renderEmailTemplate(
       });
     }
 
+    case "agent-temp-password": {
+      return buildTempPasswordEmailHtml({
+        agentName: variables.recipientName ? String(variables.recipientName) : null,
+        agentEmail: String(variables.agentEmail || ""),
+        password: String(variables.password || ""),
+        signInUrl: variables.signInUrl ? String(variables.signInUrl) : undefined,
+      });
+    }
+
     default:
       // Fail-closed: unknown templates must never render a placeholder body.
       // process-email-queue detects this error and marks the job `failed`
