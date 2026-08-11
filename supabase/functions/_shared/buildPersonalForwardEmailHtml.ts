@@ -75,6 +75,7 @@ export function buildPersonalForwardEmailHtml(
         <tr><td style="background-color:#ffffff;border:1px solid #d1d5db;border-top:none;padding:32px 40px 36px;">
           <h1 style="margin:0 0 24px;font-size:24px;font-weight:700;line-height:1.25;color:#0f172a;text-align:center;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${PERSONAL_FORWARD_H1}</h1>
           <p style="margin:0 0 14px;font-size:14px;line-height:1.65;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Hi there,</p>
+          <p style="margin:0 0 14px;font-size:14px;line-height:1.65;color:#334155;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">You&rsquo;re already in the Facebook agent groups &mdash; now let&rsquo;s step it up.</p>
           <p style="margin:0 0 14px;font-size:14px;line-height:1.65;color:#334155;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">I&rsquo;d like to invite you to <strong>All Agent Connect</strong> &mdash; a private network built for real estate agents. Here&rsquo;s what you get:</p>
           <div style="margin:0 0 16px;">
             ${bulletHtml}
