@@ -1,5 +1,7 @@
 import { cn } from "@/lib/utils";
 import { UserAvatar } from "./UserAvatar";
+import { MessageAttachments } from "./MessageAttachments";
+import type { MessageAttachment } from "@/lib/messageAttachments";
 
 function formatMessageTime(iso: string): string {
   return new Date(iso).toLocaleTimeString([], {
@@ -19,6 +21,7 @@ interface MessageRowProps {
     createdAt: string;
     isOwn: boolean;
     senderIsBuyer?: boolean;
+    attachments?: MessageAttachment[];
   };
   showHeader: boolean;
 }
@@ -26,6 +29,8 @@ interface MessageRowProps {
 export function MessageRow({ message, showHeader }: MessageRowProps) {
   const time = formatMessageTime(message.createdAt);
   const displayName = message.isOwn ? "Me" : message.senderName;
+  const attachments = message.attachments ?? [];
+  const hasBody = message.body.trim().length > 0;
 
   return (
     <div className={cn(
@@ -61,7 +66,14 @@ export function MessageRow({ message, showHeader }: MessageRowProps) {
           </div>
         )}
 
+        {attachments.length > 0 && (
+          <div className={cn("mb-1 w-full", !message.isOwn && "ml-[46px]")}>
+            <MessageAttachments attachments={attachments} isOwn={message.isOwn} />
+          </div>
+        )}
+
         {/* Bubble — sent: AAC blue; inbound: white + hairline border */}
+        {hasBody && (
         <div
           className={cn(
           "w-full rounded-2xl px-3.5 py-2 whitespace-pre-wrap break-words text-[14px] leading-[1.65] shadow-none",
@@ -71,6 +83,7 @@ export function MessageRow({ message, showHeader }: MessageRowProps) {
         )}>
           {message.body}
         </div>
+        )}
       </div>
     </div>
   );
