@@ -338,24 +338,24 @@ const ClientNeedsDashboard = () => {
 
           <div className="space-y-5">
             {!emailAlertNoticeDismissed && (
-              <div className="relative rounded-2xl border border-emerald-100 bg-emerald-50/60 p-5">
+              <div className="relative rounded-xl border border-emerald-300 bg-emerald-100/70 px-4 py-3">
                 <button
                   type="button"
                   onClick={dismissEmailAlertNotice}
                   aria-label="Dismiss notice"
-                  className="absolute right-4 top-4 rounded-md p-1 text-neutral-400 transition-colors hover:bg-emerald-100/80 hover:text-neutral-600"
+                  className="absolute right-3 top-3 rounded-md p-1 text-emerald-700/60 transition-colors hover:bg-emerald-200/80 hover:text-emerald-800"
                 >
                   <X className="h-4 w-4" strokeWidth={2} aria-hidden />
                 </button>
                 <div className="flex gap-3 pr-6">
                   <SlidersHorizontal
-                    className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600"
+                    className="mt-0.5 h-5 w-5 shrink-0 text-emerald-700"
                     strokeWidth={2}
                     aria-hidden
                   />
                   <div>
-                    <h3 className="text-base font-semibold text-neutral-900">Set your email filters</h3>
-                    <p className="mt-1.5 text-sm leading-relaxed text-neutral-600">
+                    <h3 className="text-base font-bold tracking-tight text-emerald-700">Set your email filters</h3>
+                    <p className="mt-1 text-sm leading-snug text-neutral-700">
                       Choose your areas, price ranges, and property types to eliminate unwanted emails and only receive
                       the opportunities that matter to you.
                     </p>
@@ -366,7 +366,7 @@ const ClientNeedsDashboard = () => {
 
             <section data-preferences-section className="space-y-2.5">
             <div>
-              <h2 className="text-xl font-semibold text-neutral-900">Email alert settings</h2>
+              <h2 className="text-xl font-semibold text-neutral-900">Your email filters</h2>
               <p className="mt-1.5 text-sm leading-relaxed text-neutral-600">
                 Set your coverage area to limit unwanted email alerts.
               </p>
