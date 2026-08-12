@@ -44,6 +44,18 @@ export const NotificationPreferenceCards = ({ onPreferencesChange, onMuteAllStat
     fetchPreferences();
   }, []);
 
+  // Publish the current mute-all state (enabled flag + handler) to the parent
+  // so it can render "Mute all" in the Channels heading rather than as an
+  // orphaned footer under the cards.
+  useEffect(() => {
+    if (loading) return;
+    onMuteAllStateChange?.({
+      anyEnabled: Object.values(preferences).some((v) => v),
+      muteAll: deselectAllPreferences,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [preferences, loading]);
+
   const fetchPreferences = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
