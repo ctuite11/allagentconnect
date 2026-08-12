@@ -25,9 +25,10 @@ type NotificationPreferences = CommsChannelState;
 
 type NotificationPreferenceCardsProps = {
   onPreferencesChange?: () => void;
+  onMuteAllStateChange?: (state: { anyEnabled: boolean; muteAll: () => void } | null) => void;
 };
 
-export const NotificationPreferenceCards = ({ onPreferencesChange }: NotificationPreferenceCardsProps = {}) => {
+export const NotificationPreferenceCards = ({ onPreferencesChange, onMuteAllStateChange }: NotificationPreferenceCardsProps = {}) => {
   // Opt-in policy (Aug 2026): everything is OFF until the agent explicitly
   // enables a channel. A missing notification_preferences row and null
   // category values both render as OFF — never ON.
@@ -42,6 +43,18 @@ export const NotificationPreferenceCards = ({ onPreferencesChange }: Notificatio
   useEffect(() => {
     fetchPreferences();
   }, []);
+
+  // Publish the current mute-all state (enabled flag + handler) to the parent
+  // so it can render "Mute all" in the Channels heading rather than as an
+  // orphaned footer under the cards.
+  useEffect(() => {
+    if (loading) return;
+    onMuteAllStateChange?.({
+      anyEnabled: Object.values(preferences).some((v) => v),
+      muteAll: deselectAllPreferences,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [preferences, loading]);
 
   const fetchPreferences = async () => {
     try {
@@ -263,18 +276,7 @@ export const NotificationPreferenceCards = ({ onPreferencesChange }: Notificatio
           })}
         </div>
 
-        {/* Bulk action aligned right */}
-        {anyEnabled && (
-          <div className="mt-3 flex justify-end">
-            <button
-              type="button"
-              onClick={deselectAllPreferences}
-              className="text-sm text-neutral-500 transition-colors hover:text-neutral-900"
-            >
-              Mute all
-            </button>
-          </div>
-        )}
+        {/* "Mute all" lives in the Channels heading in the parent page now. */}
       </div>
 
       {openDialog.category && (
