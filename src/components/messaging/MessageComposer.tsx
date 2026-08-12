@@ -100,17 +100,16 @@ export function MessageComposer({
       ]);
 
       const result = await uploadMessageAttachment({ file, conversationId, userId: currentUserId });
-      if (!result.ok) {
+      if (result.ok === true) {
+        const uploaded = result.attachment;
+        setPending((prev) =>
+          prev.map((p) => (p.localId === localId ? { ...p, uploading: false, attachment: uploaded } : p)),
+        );
+      } else {
         toast.error(result.message);
         setPending((prev) => prev.filter((p) => p.localId !== localId));
         URL.revokeObjectURL(previewUrl);
-        continue;
       }
-      setPending((prev) =>
-        prev.map((p) =>
-          p.localId === localId ? { ...p, uploading: false, attachment: result.attachment } : p,
-        ),
-      );
     }
   };
 
