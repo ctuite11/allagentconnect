@@ -310,20 +310,14 @@ const ClientNeedsDashboard = () => {
             className="mb-0"
           />
 
-          <section id="comms-channels" className="space-y-2 scroll-mt-6">
-            <div className="flex items-start justify-between gap-4">
-              <h2 className="text-xl font-semibold text-neutral-900">Channels</h2>
-              <Button
-                size="sm"
-                onClick={() => setComposeOpen(true)}
-                data-testid="buyer-need-compose-cta"
-              >
-                Create new
-              </Button>
+          <section id="comms-channels" className="space-y-3 scroll-mt-6">
+            <h2 className="text-xl font-semibold text-neutral-900">Channels</h2>
+            <div className="rounded-2xl border border-primary/20 bg-primary/[0.06] p-5">
+              <h3 className="text-lg font-bold text-neutral-900">Turn on your Comms</h3>
+              <p className="mt-1.5 text-sm leading-relaxed text-neutral-600">
+                Choose the conversations you want to be part of and turn on the channels that matter to you.
+              </p>
             </div>
-            <p className="text-sm text-neutral-500">
-              Email channels are off until you turn one on. Choose what you send and receive.
-            </p>
             <NotificationPreferenceCards
               onPreferencesChange={() => setChannelPreferencesVersion((v) => v + 1)}
             />
