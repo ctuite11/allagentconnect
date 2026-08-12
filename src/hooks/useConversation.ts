@@ -4,6 +4,7 @@ import { useAuthRole } from "@/hooks/useAuthRole";
 import { resolveDisplayProfiles } from "@/lib/resolveDisplayProfiles";
 import { unarchiveConversationForUser } from "@/lib/archiveConversationsForUser";
 import { syncHotSheetCommentPreview } from "@/lib/syncHotSheetCommentPreview";
+import { parseMessageAttachments, type MessageAttachment } from "@/lib/messageAttachments";
 
 export type HotSheetCommentPreviewSync = {
   hotSheetId: string;
@@ -19,6 +20,7 @@ export interface Message {
   body: string;
   createdAt: string;
   isOwn: boolean;
+  attachments: MessageAttachment[];
 }
 
 export interface ConversationDetails {
@@ -103,7 +105,7 @@ export function useConversation(
 
       const { data: msgs, error: msgsError } = await supabase
         .from("conversation_messages")
-        .select("id, sender_agent_id, body, created_at")
+        .select("id, sender_agent_id, body, created_at, attachments")
         .eq("conversation_id", normalizedId)
         .order("created_at", { ascending: true });
 
@@ -148,6 +150,7 @@ export function useConversation(
           body: m.body,
           createdAt: m.created_at,
           isOwn: m.sender_agent_id === user.id,
+          attachments: parseMessageAttachments((m as { attachments?: unknown }).attachments),
         };
       });
 
@@ -223,6 +226,7 @@ export function useConversation(
             body: newMsg.body as string,
             createdAt: newMsg.created_at as string,
             isOwn: sid === user.id,
+            attachments: parseMessageAttachments(newMsg.attachments),
           };
 
           setMessages((prev) => (prev.some((m) => m.id === message.id) ? prev : [...prev, message]));
@@ -244,8 +248,9 @@ export function useConversation(
   }, [normalizedId, user]);
 
   const sendMessage = useCallback(
-    async (body: string) => {
+    async (body: string, attachments: MessageAttachment[] = []) => {
       if (!normalizedId || !user || !details || sending) return false;
+      if (!body.trim() && attachments.length === 0) return false;
 
       setSending(true);
       try {
@@ -257,6 +262,7 @@ export function useConversation(
           sender_agent_id: user.id,
           recipient_agent_id: details.otherUserId,
           body,
+          attachments: attachments as unknown as never,
         });
 
         if (error) {
