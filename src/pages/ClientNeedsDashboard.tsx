@@ -313,7 +313,15 @@ const ClientNeedsDashboard = () => {
           <section id="comms-channels" className="space-y-3 scroll-mt-6">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold text-neutral-900">Channels</h2>
-              <MuteAllButton />
+              {muteAllState?.anyEnabled && (
+                <button
+                  type="button"
+                  onClick={muteAllState.muteAll}
+                  className="text-sm font-medium text-neutral-500 transition-colors hover:text-neutral-900"
+                >
+                  Mute all
+                </button>
+              )}
             </div>
             <div className="rounded-xl border border-primary/30 bg-primary/[0.10] px-4 py-3">
               <h3 className="text-base font-bold tracking-tight text-primary">Turn on your Comms</h3>
@@ -323,6 +331,7 @@ const ClientNeedsDashboard = () => {
             </div>
             <NotificationPreferenceCards
               onPreferencesChange={() => setChannelPreferencesVersion((v) => v + 1)}
+              onMuteAllStateChange={setMuteAllState}
             />
           </section>
 
