@@ -263,18 +263,7 @@ export const NotificationPreferenceCards = ({ onPreferencesChange }: Notificatio
           })}
         </div>
 
-        {/* Bulk action aligned right */}
-        {anyEnabled && (
-          <div className="mt-3 flex justify-end">
-            <button
-              type="button"
-              onClick={deselectAllPreferences}
-              className="text-sm text-neutral-500 transition-colors hover:text-neutral-900"
-            >
-              Mute all
-            </button>
-          </div>
-        )}
+        {/* "Mute all" lives in the Channels heading in the parent page now. */}
       </div>
 
       {openDialog.category && (

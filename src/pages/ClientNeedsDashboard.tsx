@@ -311,10 +311,13 @@ const ClientNeedsDashboard = () => {
           />
 
           <section id="comms-channels" className="space-y-3 scroll-mt-6">
-            <h2 className="text-xl font-semibold text-neutral-900">Channels</h2>
-            <div className="rounded-2xl border border-primary/20 bg-primary/[0.06] p-5">
-              <h3 className="text-lg font-bold text-neutral-900">Turn on your Comms</h3>
-              <p className="mt-1.5 text-sm leading-relaxed text-neutral-600">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-neutral-900">Channels</h2>
+              <MuteAllButton />
+            </div>
+            <div className="rounded-xl border border-primary/30 bg-primary/[0.10] px-4 py-3">
+              <h3 className="text-base font-bold tracking-tight text-primary">Turn on your Comms</h3>
+              <p className="mt-1 text-sm leading-snug text-neutral-700">
                 Choose the conversations you want to be part of and turn on the channels that matter to you.
               </p>
             </div>
