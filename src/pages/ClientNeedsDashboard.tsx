@@ -341,10 +341,10 @@ const ClientNeedsDashboard = () => {
                     aria-hidden
                   />
                   <div>
-                    <h3 className="text-base font-semibold text-neutral-900">Set your email alert coverage</h3>
+                    <h3 className="text-base font-semibold text-neutral-900">Set your email filters</h3>
                     <p className="mt-1.5 text-sm leading-relaxed text-neutral-600">
-                      Choose the areas, price ranges, and property types you want to hear about. This helps keep Comms
-                      Center alerts relevant and prevents unwanted emails.
+                      Choose your areas, price ranges, and property types to eliminate unwanted emails and only receive
+                      the opportunities that matter to you.
                     </p>
                   </div>
                 </div>
