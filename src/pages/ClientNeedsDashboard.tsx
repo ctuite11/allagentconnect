@@ -47,6 +47,7 @@ const ClientNeedsDashboard = () => {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [saving, setSaving] = useState(false);
   const [channelPreferencesVersion, setChannelPreferencesVersion] = useState(0);
+  const [muteAllState, setMuteAllState] = useState<{ anyEnabled: boolean; muteAll: () => void } | null>(null);
   // Canonical Buyer Need compose flow. `/submit-client-need` and every
   // homepage CTA redirect here with ?compose=buyer-need.
   const [composeOpen, setComposeOpen] = useState(false);

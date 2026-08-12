@@ -25,9 +25,10 @@ type NotificationPreferences = CommsChannelState;
 
 type NotificationPreferenceCardsProps = {
   onPreferencesChange?: () => void;
+  onMuteAllStateChange?: (state: { anyEnabled: boolean; muteAll: () => void } | null) => void;
 };
 
-export const NotificationPreferenceCards = ({ onPreferencesChange }: NotificationPreferenceCardsProps = {}) => {
+export const NotificationPreferenceCards = ({ onPreferencesChange, onMuteAllStateChange }: NotificationPreferenceCardsProps = {}) => {
   // Opt-in policy (Aug 2026): everything is OFF until the agent explicitly
   // enables a channel. A missing notification_preferences row and null
   // category values both render as OFF — never ON.
