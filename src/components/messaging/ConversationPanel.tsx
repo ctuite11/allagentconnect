@@ -12,6 +12,7 @@ import { UserAvatar } from "./UserAvatar";
 import { isSameDay, formatDistanceToNow } from "date-fns";
 import { cn, formatListingConversationTitle } from "@/lib/utils";
 import { showMessageSentToast } from "@/lib/messageSentFeedback";
+import { useAuthRole } from "@/hooks/useAuthRole";
 
 interface ConversationPanelProps {
   conversationId: string | undefined;
@@ -59,6 +60,7 @@ export function ConversationPanel({
     useConversation(conversationId, { hotSheetPreviewSync });
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [listingAddress, setListingAddress] = useState<string | null>(null);
+  const { user } = useAuthRole();
   const { lastSeenAt, isOnline } = useAgentLastSeen(details?.otherUserId);
 
   const otherUserIsAgent = Boolean(details?.otherUserIsAgent);
@@ -238,8 +240,10 @@ export function ConversationPanel({
 
   const composer = (
     <MessageComposer
-      onSend={async (body) => {
-        const ok = await sendMessage(body);
+      conversationId={conversationId ?? null}
+      currentUserId={user?.id ?? null}
+      onSend={async (body, attachments) => {
+        const ok = await sendMessage(body, attachments);
         if (ok) {
           onInboxInvalidate?.();
           showMessageSentToast();
