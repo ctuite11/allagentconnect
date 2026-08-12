@@ -2095,6 +2095,7 @@ export type Database = {
       }
       conversation_messages: {
         Row: {
+          attachments: Json
           body: string
           conversation_id: string
           created_at: string
@@ -2106,6 +2107,7 @@ export type Database = {
           subject: string | null
         }
         Insert: {
+          attachments?: Json
           body: string
           conversation_id: string
           created_at?: string
@@ -2117,6 +2119,7 @@ export type Database = {
           subject?: string | null
         }
         Update: {
+          attachments?: Json
           body?: string
           conversation_id?: string
           created_at?: string
@@ -5894,6 +5897,10 @@ export type Database = {
       }
       is_buyer_workspace_owner: {
         Args: { p_workspace_id: string }
+        Returns: boolean
+      }
+      is_conversation_member: {
+        Args: { p_conversation_id: string }
         Returns: boolean
       }
       is_delegate: { Args: never; Returns: boolean }
