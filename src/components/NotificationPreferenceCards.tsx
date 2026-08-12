@@ -12,7 +12,7 @@ import {
   toggleChannel,
   type CommsChannelState,
 } from "@/lib/commsChannelPrefs";
-import { COMMS_FILTERS_UI } from "@/lib/commsFiltersCopy";
+
 
 /** Native control — avoids any global `Button` / primary styles bleeding onto channel Send. */
 const channelSendClassName =
@@ -204,9 +204,6 @@ export const NotificationPreferenceCards = ({ onPreferencesChange }: Notificatio
   return (
     <>
       <div>
-        <p className="mb-3 text-sm text-neutral-500">
-          {COMMS_FILTERS_UI.targetingHint}
-        </p>
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-3">
           {cards.map((card) => {
             const IconComponent = card.icon;
@@ -237,7 +234,7 @@ export const NotificationPreferenceCards = ({ onPreferencesChange }: Notificatio
                   >
                     <span className="flex items-center gap-1.5">
                       <Send className="h-3.5 w-3.5 !text-neutral-700" strokeWidth={2} aria-hidden />
-                      Send
+                      Create new
                     </span>
                   </button>
 
