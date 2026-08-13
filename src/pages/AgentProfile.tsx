@@ -518,7 +518,7 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
                 </ul>
               ) : null}
 
-              <div className="relative z-[60] mt-4 border-t border-neutral-100 pt-4">
+              <div className="relative mt-4 border-t border-neutral-100 pt-4">
                 <div className="flex w-full flex-col items-center gap-2 lg:w-auto lg:items-start">
                 <div className="flex flex-wrap items-center justify-center gap-2 lg:justify-start">
                   {agent.email ? (
