@@ -20,7 +20,8 @@ import { validatePassword } from "@/lib/passwordPolicy";
 import AACMonogram from "@/components/ui/AACMonogram";
 import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 import { cn } from "@/lib/utils";
-import { getRouteForRole, resolveUserRole } from "@/lib/resolveUserRole";
+import { resolveUserRole } from "@/lib/resolveUserRole";
+import { resolvePostAuthHomeRoute } from "@/lib/commsOnboardingRedirect";
 import { clearRecoveryState } from "@/lib/authRecovery";
 
 /**
@@ -188,7 +189,12 @@ const AgentAccountSetup = () => {
             const isRecovery = sessionStorage.getItem("aac_recovery_flow") === "1";
             if (settings?.account_activated_at && !isSetup && !isRecovery) {
               const resolved = await resolveUserRole(sessionUserId);
-              navigate(getRouteForRole(resolved), { replace: true });
+              const target = await resolvePostAuthHomeRoute({
+                userId: sessionUserId,
+                resolved,
+                returnTo: null,
+              });
+              navigate(target, { replace: true });
               return;
             }
           }
@@ -327,7 +333,12 @@ const AgentAccountSetup = () => {
       toast.success("You're all set — welcome to All Agent Connect.");
       setUserId(data.user.id);
       const resolved = await resolveUserRole(data.user.id);
-      navigate(getRouteForRole(resolved), { replace: true });
+      const target = await resolvePostAuthHomeRoute({
+        userId: data.user.id,
+        resolved,
+        returnTo: null,
+      });
+      navigate(target, { replace: true });
     } catch (err: unknown) {
       console.error("[AgentAccountSetup] error:", err);
       toast.error(err instanceof Error ? err.message : "Activation failed. Please try again.");

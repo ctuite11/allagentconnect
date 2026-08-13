@@ -5,8 +5,9 @@ import { AlertCircle } from "lucide-react";
 import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 import { Button } from "@/components/ui/button";
 import { authDebug, getAuthRouteDecisionDiagnostics } from "@/lib/authDebug";
-import { resolveUserRole, getRouteForRole } from "@/lib/resolveUserRole";
+import { resolveUserRole } from "@/lib/resolveUserRole";
 import { clearGuestListing, resolvePostAuthRedirectWithMeta } from "@/lib/sharedListingGuest";
+import { resolvePostAuthHomeRoute } from "@/lib/commsOnboardingRedirect";
 import { clearRecoveryState } from "@/lib/authRecovery";
 import { AGENT_ACTIVATION_SUPPORT_EMAIL } from "@/lib/agentActivationHint";
 
@@ -573,7 +574,11 @@ const AuthCallback = () => {
       }
 
       const returnToMeta = resolvePostAuthRedirectWithMeta(searchParams);
-      const target = returnToMeta.value ?? getRouteForRole(resolved);
+      const target = await resolvePostAuthHomeRoute({
+        userId: verifiedUserId,
+        resolved,
+        returnTo: returnToMeta.value,
+      });
       // Diagnostics are best-effort only — never let them delay routing.
       const diagnostics = await getAuthRouteDecisionDiagnostics(verifiedUserId).catch(() => ({
         admin_role_present: null,
