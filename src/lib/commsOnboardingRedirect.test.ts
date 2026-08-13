@@ -1,7 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   COMMS_ONBOARDING_PATH,
+  COMMS_ONBOARDING_SUCCESS_HUB_PATH,
   isEligibleForCommsOnboardingRedirect,
+  resolveCommsPreferencesPostSaveNavigation,
   resolvePostAuthHomeRoute,
 } from "./commsOnboardingRedirect";
 import type { ResolvedRoleResult } from "./resolveUserRole";
@@ -59,6 +61,42 @@ function mockAgentSettings(options: {
   from.mockReturnValue(chain);
   return chain;
 }
+
+describe("resolveCommsPreferencesPostSaveNavigation", () => {
+  it("sends onboarding visit + successful Save to Success Hub", () => {
+    expect(
+      resolveCommsPreferencesPostSaveNavigation({
+        isCommsOnboardingVisit: true,
+        saveSucceeded: true,
+      }),
+    ).toBe(COMMS_ONBOARDING_SUCCESS_HUB_PATH);
+    expect(COMMS_ONBOARDING_SUCCESS_HUB_PATH).toBe("/agent-dashboard");
+  });
+
+  it("keeps manual Communications visit + successful Save on Communications", () => {
+    expect(
+      resolveCommsPreferencesPostSaveNavigation({
+        isCommsOnboardingVisit: false,
+        saveSucceeded: true,
+      }),
+    ).toBeNull();
+  });
+
+  it("does not redirect after a failed Save", () => {
+    expect(
+      resolveCommsPreferencesPostSaveNavigation({
+        isCommsOnboardingVisit: true,
+        saveSucceeded: false,
+      }),
+    ).toBeNull();
+    expect(
+      resolveCommsPreferencesPostSaveNavigation({
+        isCommsOnboardingVisit: false,
+        saveSucceeded: false,
+      }),
+    ).toBeNull();
+  });
+});
 
 describe("isEligibleForCommsOnboardingRedirect", () => {
   it("includes never-configured agents who have never seen onboarding", () => {

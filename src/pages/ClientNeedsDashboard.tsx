@@ -13,7 +13,10 @@ import PropertyTypePreferences from "@/components/PropertyTypePreferences";
 import { toast } from "sonner";
 import { hasNotificationTargetingConfigured } from "@/lib/checkAgentCommunicationPreferences";
 import { COMMS_FILTERS_UI } from "@/lib/commsFiltersCopy";
-import { COMMS_ONBOARDING_QUERY } from "@/lib/commsOnboardingRedirect";
+import {
+  COMMS_ONBOARDING_QUERY,
+  resolveCommsPreferencesPostSaveNavigation,
+} from "@/lib/commsOnboardingRedirect";
 import { Seo } from "@/components/Seo";
 import { SendEmailDialog } from "@/components/communication-center/SendEmailDialog";
 import { isBuyerNeedComposeRequested, BUYER_NEED_COMPOSE_ROUTE } from "@/lib/buyerNeedCompose";
@@ -238,6 +241,16 @@ const ClientNeedsDashboard = () => {
         await supabase.from("agent_settings").update({ preferences_set: true }).eq("user_id", user.id);
       }
       await checkPreferences();
+
+      // One-time onboarding only: after a successful save, continue to Success Hub.
+      // Manual /communications visits must remain on Communications.
+      const nextPath = resolveCommsPreferencesPostSaveNavigation({
+        isCommsOnboardingVisit: showCommsOnboardingWelcome,
+        saveSucceeded: true,
+      });
+      if (nextPath) {
+        navigate(nextPath, { replace: true });
+      }
     } catch (error) {
       console.error("Error saving preferences:", error);
       toast.error(COMMS_FILTERS_UI.saveFailedToast);
