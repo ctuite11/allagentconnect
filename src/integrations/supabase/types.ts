@@ -1125,6 +1125,7 @@ export type Database = {
           account_activated_at: string | null
           agent_status: Database["public"]["Enums"]["agent_status"]
           approval_email_sent: boolean
+          comms_onboarding_seen_at: string | null
           county: string | null
           created_at: string
           dismissed_announcement_ids: string[]
@@ -1164,6 +1165,7 @@ export type Database = {
           account_activated_at?: string | null
           agent_status?: Database["public"]["Enums"]["agent_status"]
           approval_email_sent?: boolean
+          comms_onboarding_seen_at?: string | null
           county?: string | null
           created_at?: string
           dismissed_announcement_ids?: string[]
@@ -1203,6 +1205,7 @@ export type Database = {
           account_activated_at?: string | null
           agent_status?: Database["public"]["Enums"]["agent_status"]
           approval_email_sent?: boolean
+          comms_onboarding_seen_at?: string | null
           county?: string | null
           created_at?: string
           dismissed_announcement_ids?: string[]
