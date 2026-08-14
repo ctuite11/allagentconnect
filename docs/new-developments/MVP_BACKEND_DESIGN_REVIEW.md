@@ -1,7 +1,9 @@
-# New Developments MVP — Backend Design Review Package (Revision 5)
+# New Developments MVP — Backend Design Review Package (Revision 6)
 Status: PROPOSAL ONLY. Nothing applied. No migrations run, no buckets created, no functions deployed, no RLS changed, no secrets set.
 
-Revision 5 closes the final six items raised against Revision 4 (see §12): restored `developments.logo_url` plus the flexible `building_details` and free-text `hoa_fees` fields; `development_units.estimated_delivery` back to `date`; the full frozen media storage contract (`storage_bucket`, `mime_type`, `duration_seconds`, `caption`); `NOT NULL` + `auth.users` FK invariants on every engagement actor id; the composite-FK paragraph corrected to exclude saves/shares; and the initial-owner hole closed with an atomic account-creation RPC plus explicit `development_accounts` RLS.
+Revision 6 closes the seven backend-authority/security items raised against Revision 5 (see §13): submission is Edge Function / service-role only for leads and showing requests (no raw client INSERT); developer lead/showing UPDATE is column-limited to `status` and `assigned_contact_id`; `development_accounts` system fields are protected and `developments.account_id` is immutable (no re-parenting), with `is_active=false` given real enforcement meaning; the incorrect account-delete/cascade-trigger statement is removed in favor of no hard account deletion; saves and shares gain an explicit `development_id → developments(id)` FK; invisible Turnstile plus per-user rate limiting are restored on both submission Edge Functions; and notification idempotency is keyed on stable identities (`sales_contact_id` / `owner_user_id`) with `notified_at` meaning *all* intended jobs were enqueued.
+
+Revision 5 closed the six items raised against Revision 4 (see §12): restored `developments.logo_url` plus the flexible `building_details` and free-text `hoa_fees` fields; `development_units.estimated_delivery` back to `date`; the full frozen media storage contract (`storage_bucket`, `mime_type`, `duration_seconds`, `caption`); `NOT NULL` + `auth.users` FK invariants on every engagement actor id; the composite-FK paragraph corrected to exclude saves/shares; and the initial-owner hole closed with an atomic account-creation RPC plus explicit `development_accounts` RLS.
 
 Revision 4 closed the six items raised against Revision 3: the `tier` typo (`premier` → `premium`), removal of the unapproved `agent_faq` document category, three drifted field decisions (`half_baths` removed, unit `status` defaults to `coming_soon`, `estimated_completion` is a `date`), the controlled sales-contact `role` vocabulary with nullable email/phone, dual-path signed-document authorization (eligible agent + published **or** accepted account member at any publish status), and two integrity/security tightenings (immutable membership `account_id`/`user_id`; composite `(development_id, account_id)` FKs on every child table carrying `account_id`). The `admin_notes` grants contradiction is also resolved with one concrete mechanism.
 
@@ -186,28 +188,57 @@ end $$;
 revoke all on function public.create_development_account(text, text, uuid, text, text) from public, anon;
 grant execute on function public.create_development_account(text, text, uuid, text, text) to authenticated;
 ```
-Both inserts commit or neither does, so an account never exists — even momentarily within another transaction's visible state — without an `owner`. Account deletion cascades its members, and the last-owner trigger is not consulted on account delete (the invariant is about accounts that continue to exist).
+Both inserts commit or neither does, so an account never exists — even momentarily within another transaction's visible state — without an `owner`.
+
+**Correction: there is no hard account deletion in MVP.** Revision 5 claimed that deleting an account cascades member deletion "without consulting" the last-owner trigger. That is wrong: PostgreSQL executes FK cascade deletes as ordinary deletes on the referencing table, and **row triggers on that table fire** — the last-owner trigger would raise and the delete would fail. Rather than invent a deletion-only bypass, MVP removes the case entirely:
+- `DELETE` on `development_accounts` is granted to **no one** (`authenticated` has no DELETE grant, no DELETE policy exists), and a `before delete` trigger raises unconditionally, matching the permanence rule already applied to `developments`.
+- Disabling an account is `is_active = false`. Developments are permanent/archived already, so nothing needs hard removal.
+- If a true purge is ever required, it becomes a deliberate, admin-only, service-role maintenance procedure designed at that time — not an implicit cascade.
+
+**`is_active = false` has enforced meaning** (it is not a decorative flag):
+- Members and admins may still **read** the account and its developments — recovery and billing history remain visible.
+- All **member writes are blocked** across the account: every member-write policy on `development_accounts`, `developments`, and every child table adds `and public.is_development_account_active(<account_id>)`. Owners cannot edit, submit for review, add inventory/media/documents, or update leads/showings while disabled.
+- Its developments are **not agent-visible**: the eligible-agent read policies add the same predicate, so a disabled account's published developments disappear from the agent surface without any `publish_status` change.
+- Lead/showing submission Edge Functions reject a disabled account (400/403) before insert.
+- Only admins/`service_role` may flip `is_active` back to true.
+
+```sql
+create or replace function public.is_development_account_active(_account_id uuid)
+returns boolean language sql stable security definer set search_path = public
+as $$ select exists (select 1 from public.development_accounts a
+                     where a.id = _account_id and a.is_active) $$;
+```
 
 **`development_accounts` RLS — explicit:**
 ```sql
 alter table public.development_accounts enable row level security;
 
 -- no anon grant, no anon policy anywhere on this table
-grant select, update on public.development_accounts to authenticated;   -- no INSERT, no DELETE
+-- system fields (is_active, stripe_customer_id) are NOT owner-writable:
+grant select on public.development_accounts to authenticated;            -- no INSERT, no DELETE
+grant update (name, legal_name, billing_email, slug, updated_at)
+  on public.development_accounts to authenticated;                       -- column-limited UPDATE
 grant all on public.development_accounts to service_role;
 
 create policy "Members read their own account"
 on public.development_accounts for select to authenticated
 using (public.is_development_member(id) or public.has_role(auth.uid(), 'admin'));
 
-create policy "Owners manage their own account"
+create policy "Owners edit their own organization details"
 on public.development_accounts for update to authenticated
-using (public.is_development_member(id, array['owner']) or public.has_role(auth.uid(), 'admin'))
-with check (public.is_development_member(id, array['owner']) or public.has_role(auth.uid(), 'admin'));
+using (
+  (public.is_development_member(id, array['owner']) and is_active)
+  or public.has_role(auth.uid(), 'admin')
+)
+with check (
+  (public.is_development_member(id, array['owner']) and is_active)
+  or public.has_role(auth.uid(), 'admin')
+);
 ```
 - **Read:** any accepted member of the account (`owner|editor|sales|viewer`) plus admins.
-- **Write:** `owner` role and admins only; `slug` changes follow the same permanence rules as development slugs.
-- **Create:** admins, via `create_development_account` only. **Delete:** `service_role` / admin RPC only.
+- **Write:** `owner` role and admins only, **and only the columns `name`, `legal_name`, `billing_email`, `slug`** (plus system `updated_at`). `slug` changes follow the same permanence rules as development slugs.
+- **AAC-controlled system fields:** `is_active` and `stripe_customer_id` are outside the `authenticated` UPDATE grant entirely — they are changed by admins through a `security definer` RPC (`admin_set_development_account_active`) or `service_role` only. RLS restricts rows, not columns, so the column-level grant is the enforcement mechanism; a paired `before update` trigger also raises if either field changes with a non-admin, non-`service_role` `current_request_role()`, as defense in depth.
+- **Create:** admins, via `create_development_account` only. **Delete:** nobody — no grant, no policy, and a `before delete` trigger. Soft-disable via `is_active` is the only removal path in MVP.
 - **Anonymous:** no grant and no policy — unreachable, consistent with the agents-only MVP.
 
 **Admin recovery without a bypass flag:** `admin_replace_development_owner(_account_id uuid, _new_owner_user_id uuid)` is `security definer`, asserts `has_role(auth.uid(),'admin')`, and **promotes/inserts the replacement owner first**. Once a second owner exists, demoting the prior owner satisfies the invariant naturally. `current_setting('aac.admin_owner_recovery')` is removed entirely — a caller-settable GUC is not an authorization boundary.
@@ -286,6 +317,23 @@ admin   | draft|pending_review -> published
 ```
 Anything not in the matrix raises. Explicitly blocked for members: `draft -> paused`, `draft -> published`, `draft -> archived`, `pending_review -> paused`, `pending_review -> published`, `pending_review -> archived`, and every transition out of `published` / `paused` / `archived`. The trigger stamps `published_at`/`published_by` on first publish only, `submitted_at` on `draft -> pending_review`, `paused_at` on entry to `paused`, and `archived_at` on entry to `archived`.
 - **Permanence:** account→developments is `on delete restrict`; archival is a `publish_status` change. `development_id_registry(id pk, created_at)` (insert-only) plus a `before delete` trigger blocking hard deletes guarantees ids are never reused.
+- **`account_id` is immutable after insert — no re-parenting.** Revision 5 described "no re-parenting path in MVP" while still listing `account_id` in the authenticated UPDATE column grant. Corrected two ways: `account_id` is **removed from the `UPDATE` column grant** (it stays in the `SELECT` and `INSERT` lists), and a `before update` trigger raises on any change:
+
+```sql
+create or replace function public.enforce_immutable_development_account()
+returns trigger language plpgsql as $$
+begin
+  if new.account_id is distinct from old.account_id then
+    raise exception 'developments.account_id is immutable; a development cannot be re-parented';
+  end if;
+  return new;
+end $$;
+
+create trigger trg_development_account_immutable
+before update on public.developments
+for each row execute function public.enforce_immutable_development_account();
+```
+  This also makes the `(development_id, account_id)` composite FKs on child tables unconditionally stable: the parent key can never move, so `on update cascade` is dead code kept only as a safety net.
 
 ### 2.3 Inventory — frozen names and uniqueness
 
@@ -511,12 +559,15 @@ Account membership role is never itself a routing signal; it is only the last-re
 ### 2.7 Engagement (agent actions, persist-before-notify)
 
 ```
-development_saves(id pk, development_id,
+development_saves(id pk,
+  development_id uuid not null references public.developments(id) on delete cascade,
   agent_user_id uuid not null references auth.users(id) on delete cascade,
   created_at,
   unique(development_id, agent_user_id))
 
-development_shares(id pk, development_id, unit_id null,
+development_shares(id pk,
+  development_id uuid not null references public.developments(id) on delete cascade,
+  unit_id null,
   agent_user_id uuid not null references auth.users(id) on delete cascade,
   share_type text not null check (share_type in
     ('copy_link','email','facebook','x','linkedin','whatsapp','other')),
@@ -558,9 +609,11 @@ development_showing_requests(
 ```
 - **Frozen engagement vocabularies restored.** Shares: `copy_link | email | facebook | x | linkedin | whatsapp | other` (no `sms`, no generic `social`). Lead source: `development_page | unit_page | share`. Lead status: `new | contacted | closed | spam` — the unapproved CRM states (`qualified`, `tour_scheduled`, `registered`, `archived`) are removed. The showings table is `development_showing_requests` with `pending | confirmed | completed | cancelled | declined`.
 - **No buyer fields.** Buyer registration is not MVP; leads and showings are AAC-agent actions. Name/email/phone are the *agent's*, snapshotted server-side at insert so later profile edits don't rewrite history.
+- **Saves and shares carry an explicit parent FK.** They correctly have no `account_id` and no composite FK, but `development_id` is `NOT NULL REFERENCES public.developments(id) ON DELETE CASCADE`, so a save or share can never reference a nonexistent development. (Hard development deletes are blocked by the permanence trigger; the cascade only matters for a deliberate admin/service purge.)
+- **Rows are created by the server only.** `development_leads` and `development_showing_requests` have **no `INSERT` grant for `authenticated`** — see §3. Inserts happen exclusively inside the submission Edge Functions under `service_role`, which is what makes the `sender_*` / `requester_*` snapshot, the notification path, Turnstile, and rate limiting non-optional rather than merely conventional.
 - **Actor identity is a database invariant, not just a server convention.** `agent_user_id` is `NOT NULL REFERENCES auth.users(id)` on saves, shares, leads, and showing requests. Delete behavior differs by table: saves and shares are ephemeral engagement and use `on delete cascade` (the row disappears with the account); leads and showing requests are business records and use `on delete restrict` so a developer's pipeline cannot be silently erased — the server-snapshotted `sender_*` / `requester_*` fields preserve the contact details regardless.
 - `agent_user_id` always comes from the verified JWT, never the request body; the FK/NOT NULL pair means a forged or missing actor cannot be persisted even if a caller bypasses the Edge Function.
-- `notified_at` is stamped only after the email job is enqueued; the row commits first.
+- `notified_at` means **every intended notification job for that row was successfully enqueued**, not merely that one recipient was queued. The row commits first; if any recipient enqueue fails, `notified_at` stays `null` so the row is retriable and visible as un-notified (§6).
 
 **Aggregate-only engagement exposure — no suppression threshold:**
 ```sql
@@ -579,7 +632,26 @@ Helper functions (all `security definer`, `stable`, `set search_path = public`):
 - `development_account_id(_development_id uuid)`
 - `is_published_development(_development_id uuid)` — `publish_status = 'published'`
 
-**Grants — one mechanism, no contradictions.** For every development table *except* `developments`, grants are table-level: `GRANT SELECT, INSERT, UPDATE, DELETE ON public.<table> TO authenticated; GRANT ALL ON public.<table> TO service_role;` (those tables have no restricted columns).
+- `is_development_account_active(_account_id uuid)` — the `is_active` gate (§2.1)
+
+**Grants — one mechanism, no contradictions.** For every development table *except* `developments`, `development_accounts`, `development_leads`, and `development_showing_requests`, grants are table-level: `GRANT SELECT, INSERT, UPDATE, DELETE ON public.<table> TO authenticated; GRANT ALL ON public.<table> TO service_role;` (those tables have no restricted columns). The four exceptions are column- or verb-restricted and are spelled out below and in §2.1.
+
+**Leads and showing requests — no raw client INSERT, column-limited UPDATE.**
+
+Submission is **Edge Function / service-role only**. Table-level INSERT for `authenticated` would let an agent write arbitrary `sender_name/email/phone`, skip the server snapshot, bypass Turnstile/rate limiting, and never trigger the notification path — so the privilege simply does not exist:
+```sql
+-- development_leads (development_showing_requests is identical in shape)
+GRANT SELECT ON public.development_leads TO authenticated;          -- no INSERT, no DELETE
+GRANT UPDATE (status, assigned_contact_id, updated_at)
+  ON public.development_leads TO authenticated;                     -- developer triage only
+GRANT ALL ON public.development_leads TO service_role;              -- the only writer of new rows
+```
+- **INSERT:** `service_role` only, from `development-lead-submit` / `development-showing-request` after JWT verification, eligibility, publish, account-active, Turnstile, and rate-limit checks. No INSERT policy for `authenticated` is created at all (a policy without a grant would be misleading).
+- **Agent read-back:** agents may `SELECT` their **own** submitted rows (`agent_user_id = auth.uid() and public.current_is_eligible_agent()`), which is what the "my submissions" UI needs. Nothing else.
+- **Developer UPDATE is column-limited to `status` and `assigned_contact_id`** (plus system `updated_at`). RLS chooses *rows*, not *columns*, so the column grant is the real boundary: `owner|editor|sales` cannot rewrite `agent_user_id`, the `sender_*`/`requester_*` snapshots, `message`, `development_id`, `unit_id`, `account_id`, `created_at`, or `notified_at`. `notified_at` is `service_role`-only in every direction.
+- A `before update` trigger additionally raises if any non-triage column changes under a non-`service_role` request (`public.current_request_role()`), as defense in depth against a future grant mistake.
+- `assigned_contact_id` remains constrained by its composite FK to `development_sales_contacts(id, development_id)`, so triage cannot point a lead at another development's contact.
+- `viewer` gets `SELECT` only; the update policy requires `is_development_member(account_id, array['owner','editor','sales'])` **and** `is_development_account_active(account_id)`.
 
 For `public.developments`, which does have a restricted column, there is **no table-level `SELECT`/`INSERT`/`UPDATE` grant to `authenticated`**. Instead:
 ```sql
@@ -596,7 +668,8 @@ GRANT SELECT (id, account_id, name, slug, slug_locked_at, lifecycle_status, publ
               highlights, tier, created_at, updated_at)
   ON public.developments TO authenticated;
 GRANT INSERT (…same safe list, minus published_at/published_by/slug_locked_at…),
-      UPDATE (…same safe list, minus published_at/published_by/slug_locked_at…),
+      UPDATE (…same safe list, minus published_at/published_by/slug_locked_at,
+              and minus account_id — developments are never re-parented…),
       DELETE ON public.developments TO authenticated;   -- DELETE still blocked by the permanence trigger
 GRANT ALL ON public.developments TO service_role;
 ```
@@ -614,8 +687,11 @@ Policy matrix:
 | documents | SELECT where parent published, **both** `access` values (bytes via signed URL) | CRUD | read | read | all |
 | sales_contacts | **SELECT where parent published and `is_active`** (mini-site sales team, phone/email CTAs) | CRUD | read | read | all |
 | saves / shares | insert/select/delete own rows only | **no row access** (aggregate RPC) | no row access | no row access | all |
-| leads / showing_requests | insert own; select own | select + update own account's rows (status, assignment) | **select + update** own account's rows | read | all |
+| leads / showing_requests | **no INSERT** (Edge Function / service-role only); SELECT own submitted rows | select own account's rows; UPDATE **`status` + `assigned_contact_id` only** | select; UPDATE **`status` + `assigned_contact_id` only** | read | all |
 | account_members | — | select own account; owners manage | select own account | select own account | all |
+| accounts | — | read; owners UPDATE **`name`/`legal_name`/`billing_email`/`slug` only** | read | read | all (incl. `is_active`, `stripe_customer_id`) |
+
+Every member-write policy in this matrix additionally requires `public.is_development_account_active(account_id)`, and every eligible-agent read policy requires it too, so a disabled account is read-only for its members and invisible to agents (§2.1).
 
 - **No broad sales UPDATE on units.** Sales-role members have `SELECT` only; all sales-side mutation goes through the narrow RPC in §5.
 - Full AAC agent contact details on leads/showings are visible to owner/editor/sales (decision 2).
@@ -638,7 +714,11 @@ Agent read policies all take the form:
 ```sql
 create policy "Eligible agents read published developments"
 on public.developments for select to authenticated
-using (publish_status = 'published' and public.current_is_eligible_agent());
+using (
+  publish_status = 'published'
+  and public.is_development_account_active(account_id)
+  and public.current_is_eligible_agent()
+);
 ```
 
 ---
@@ -753,8 +833,18 @@ Only `status` and `price` are mutable through this path — no unit number, phas
 
 All follow the same shape: `npm:@supabase/supabase-js@2`, CORS, JWT validated in code (`verify_jwt=false` + explicit `getUser`), Zod validation, service-role client used only after authorization, persist-before-notify.
 
-1. **`development-lead-submit`** — validate body → resolve `agent_user_id` from the JWT (never the body) → assert eligible agent → assert development published → snapshot `sender_name/email/phone` from the agent profile server-side → insert `development_leads` → resolve recipients through the three-tier routing order (flagged active contacts → **primary active contact** → account `owner` members) → enqueue `email_jobs` with idempotency key `dev-lead:{lead_id}:{recipient_email}` → stamp `notified_at`.
-2. **`development-showing-request`** — identical flow against `development_showing_requests` (`preferred_date`, `preferred_time` text, `message`), tier 1 filtered by `receives_showing_requests`, then the same primary-contact and owner fallbacks, key `dev-showing:{showing_request_id}:{recipient_email}`.
+**Abuse controls on both submission functions (restored from the frozen handoff).** `development-lead-submit` and `development-showing-request` are the only write path into leads/showings, so both carry, in this order, before any insert:
+1. **Invisible Cloudflare Turnstile**, using the pattern already in this repo — client obtains a token via `src/hooks/useTurnstile.ts` (managed/invisible widget, `src/components/security/TurnstileField.tsx` where a visible slot is needed); the function verifies it with the existing `supabase/functions/_shared/verifyTurnstile.ts` helper and returns the shared generic 403 `TURNSTILE_GENERIC_ERROR` on failure. No new secret is introduced — `TURNSTILE_SECRET_KEY` already exists.
+2. **Per-user rate limiting** via the existing `public.rate_limit_consume(p_key, p_window_seconds, p_limit)` RPC used by `send-contact-email`, keyed on the authenticated user (not just IP): `route:development-lead-submit|user:{auth_uid}` and `route:development-showing-request|user:{auth_uid}`, with a secondary IP key as a backstop. Proposed limits: **5 per 10 minutes and 20 per 24 hours per user, per development**. Exceeded → `429` with `Retry-After`, no row inserted, no email enqueued.
+
+1. **`development-lead-submit`** — validate body (Zod) → verify Turnstile → rate-limit → resolve `agent_user_id` from the JWT (never the body) → assert eligible agent → assert development `published` **and** its account `is_active` → snapshot `sender_name/email/phone` from the agent profile server-side → insert `development_leads` (service-role; no client INSERT path exists) → resolve recipients through the three-tier routing order (flagged active contacts → **primary active contact** → account `owner` members) → enqueue one `email_jobs` row per resolved recipient → stamp `notified_at` only after **all** enqueues succeed.
+2. **`development-showing-request`** — identical flow against `development_showing_requests` (`preferred_date`, `preferred_time` text, `message`), with the same Turnstile + per-user rate limiting, tier 1 filtered by `receives_showing_requests`, then the same primary-contact and owner fallbacks.
+
+**Notification idempotency uses stable identities, not email addresses.** An email address can change between retries, which would duplicate a notification. Keys are:
+- sales-contact recipient → `dev-lead:{lead_id}:contact:{sales_contact_id}` / `dev-showing:{showing_request_id}:contact:{sales_contact_id}`
+- owner-fallback recipient → `dev-lead:{lead_id}:owner:{owner_user_id}` / `dev-showing:{showing_request_id}:owner:{owner_user_id}`
+
+Resolved email addresses are **deduplicated case-insensitively before enqueue**, so one person holding two roles receives one email; the surviving job keeps the highest-precedence identity key (contact over owner). `notified_at` is stamped in a single update **after every intended job is confirmed enqueued** — a partial failure leaves `notified_at` null so the submission is visibly un-notified and safely retriable (the identity keys make a retry idempotent).
 3. **`development-document-url`** — authorize via **two valid paths**, then mint a 5-minute signed URL and return the URL only. No logging table.
    - **Path A:** eligible AAC agent (verified + activated) **and** the development is `published` — any `access` value.
    - **Path B:** an accepted member of that development's account (`owner | editor | sales | viewer`) — **regardless of publish status**, so developers can preview and download their own documents while `draft` / `pending_review` / `paused` / `archived`.
@@ -769,16 +859,18 @@ Emails reuse the existing `email_jobs` queue with a new dedicated stream (`devel
 
 ## 7. Migration sequence (proposed file names, not applied)
 
-1. `..._new_developments_01_accounts_members.sql` — accounts (frozen fields incl. `legal_name`, `billing_email`, `stripe_customer_id`, `is_active`), members (accepted-only, 4 roles, `accepted_at`), concurrency-safe last-owner trigger, atomic `create_development_account` RPC (no direct account INSERT grant), explicit `development_accounts` grants + RLS.
-2. `..._02_developments_core.sql` — developments with the full frozen field set (incl. `logo_url`, `building_details`, `hoa_fees`), `lifecycle_status` + `publish_status`, id registry, permanence / **full transition-matrix** / slug-lock triggers, `admin_notes` column restriction.
+1. `..._new_developments_01_accounts_members.sql` — accounts (frozen fields incl. `legal_name`, `billing_email`, `stripe_customer_id`, `is_active`), members (accepted-only, 4 roles, `accepted_at`), concurrency-safe last-owner trigger, atomic `create_development_account` RPC (no direct account INSERT grant), **column-limited owner UPDATE grant** (name/legal_name/billing_email/slug), admin-only `is_active`/`stripe_customer_id` + `admin_set_development_account_active` RPC, **no-delete trigger**, `is_development_account_active()` helper, explicit RLS.
+2. `..._02_developments_core.sql` — developments with the full frozen field set (incl. `logo_url`, `building_details`, `hoa_fees`), `lifecycle_status` + `publish_status`, id registry, permanence / **full transition-matrix** / slug-lock / **`account_id` immutability** triggers, `account_id` removed from the UPDATE column grant, `admin_notes` column restriction.
 3. `..._03_inventory.sql` — buildings_phases (auto **Main**), floor_plans (`sqft_min/max`, features, active, sort), units (full product fields + `status_changed_at` / `price_changed_at` trigger), composite FKs with `on delete restrict` on phase.
 4. `..._04_updates.sql` — development_updates (`construction|sales|design|general`, `updated_by`), pinned-unique index, Markdown guard, first-publish stamp.
 5. `..._05_media_documents.sql` — media (XOR ownership, `storage_bucket` + `storage_path` / external, `mime_type`, `duration_seconds`, `caption`, hero unique) and documents (frozen category set, optional floor-plan **or** unit attachment, `is_featured_agent_resource`).
 6. `..._06_sales_contacts.sql` — sales contacts (controlled `role` vocabulary, nullable email/phone with reachability check, headshot, bio, `is_primary` + partial unique indexes), routing indexes, agent read policy for published developments.
-7. `..._07_engagement.sql` — saves, shares (frozen share types, with `unit_id`), leads (frozen source/status), `development_showing_requests`; `agent_user_id NOT NULL REFERENCES auth.users(id)` on all four (cascade on saves/shares, restrict on leads/showings); no `account_id` on saves/shares.
+7. `..._07_engagement.sql` — saves, shares (frozen share types, with `unit_id`), leads (frozen source/status), `development_showing_requests`; `development_id NOT NULL REFERENCES developments(id)` on saves/shares; `agent_user_id NOT NULL REFERENCES auth.users(id)` on all four (cascade on saves/shares, restrict on leads/showings); no `account_id` on saves/shares; **no `INSERT` grant to `authenticated` on leads/showings**, column-limited `UPDATE (status, assigned_contact_id, updated_at)` plus the triage-only guard trigger.
 8. `..._08_helpers_rpcs.sql` — eligibility/membership helpers and grants, sales inventory reader, narrow unit status/price writer (narrow return type + `_clear_price`), aggregate summary RPC, admin owner-replacement RPC.
 9. `..._09_storage_policies.sql` — bucket creation + storage policies.
-10. `..._10_email_stream.sql` — `development_notifications` stream registration only.
+10. `..._10_email_stream.sql` — `development_notifications` stream registration only (identity-keyed idempotency: `contact:{sales_contact_id}` / `owner:{owner_user_id}`).
+
+No migration in this set creates a hard-delete path for `development_accounts`, and none grants `INSERT` on `development_leads` / `development_showing_requests` to `authenticated`.
 
 Each includes an `updated_at` trigger, the `(development_id, account_id)` composite FK for any table carrying `account_id`, and a rollback note. Snapshot (`npm run db:snapshot`) refreshed after apply.
 
@@ -833,3 +925,17 @@ Each includes an `updated_at` trigger, the `(development_id, account_id)` compos
 | 4 | Engagement actor ids are now database invariants: `agent_user_id uuid NOT NULL REFERENCES auth.users(id)` on saves, shares, leads, and showing requests — `on delete cascade` for saves/shares, `on delete restrict` for leads/showing requests. Server-side JWT identity resolution remains authoritative. |
 | 5 | Composite-FK contradiction fixed: saves and shares are removed from the `(development_id, account_id)` sentence and gain no redundant `account_id`; leads, showing requests, and the denormalized content/inventory tables keep the composite protection. |
 | 6 | Initial-owner hole closed: no direct `INSERT` grant on `development_accounts`; creation goes through an atomic `security definer` `create_development_account` RPC that writes the account and its first `owner` in one transaction. `development_accounts` RLS spelled out — members read, owner/admin manage, admin-only create/delete, no anonymous access. |
+
+## 13. Revision 6 change log (against Revision 5)
+
+| # | Correction |
+|---|---|
+| 1 | **No raw client INSERT on leads/showings.** `development_leads` and `development_showing_requests` get no `INSERT` grant and no insert policy for `authenticated`; submission is Edge Function / `service_role` only. Agents may `SELECT` their own submitted rows afterward. This makes the server snapshot, notification path, Turnstile, and rate limiting unbypassable. |
+| 2 | **Developer lead/showing UPDATE is column-limited** to `status` and `assigned_contact_id` (plus system `updated_at`) via a column-level `GRANT UPDATE`, since RLS restricts rows and not columns. Owner/editor/sales cannot rewrite the submitting agent, contact snapshots, message, development/unit, account, or `notified_at`; a guard trigger backs it up. |
+| 3 | **Account system fields protected and re-parenting removed.** `development_accounts` loses its table-level UPDATE grant: owners may edit only `name`, `legal_name`, `billing_email`, `slug`; `is_active` and `stripe_customer_id` are AAC-admin/`service_role` controlled. `developments.account_id` is dropped from the authenticated UPDATE grant and made immutable by trigger. `is_active=false` is given enforced meaning: members/admins may still read for recovery, all member writes are blocked, the account's developments are not agent-visible, and submissions are rejected. |
+| 4 | **Account-delete statement fixed.** The claim that a cascading member delete would not consult the last-owner trigger is removed — PostgreSQL runs FK cascade deletes as ordinary deletes and their row triggers fire. MVP therefore has **no hard account deletion**: no DELETE grant, no DELETE policy, a blocking `before delete` trigger, and `is_active=false` as the only disable path. |
+| 5 | **Saves and shares gain an explicit parent FK:** `development_id NOT NULL REFERENCES public.developments(id) ON DELETE CASCADE`. They remain correctly excluded from the composite `(development_id, account_id)` group and still carry no `account_id`. |
+| 6 | **Abuse controls restored on both submission Edge Functions:** invisible Cloudflare Turnstile using the existing `_shared/verifyTurnstile.ts` + `useTurnstile` pattern (no new secret), plus per-user rate limiting through the existing `rate_limit_consume` RPC keyed on `auth.uid()` (5 / 10 min and 20 / 24 h per user per development, IP as backstop), both evaluated before any insert. |
+| 7 | **Stable notification identities.** Idempotency keys move off `recipient_email` to `contact:{sales_contact_id}` and `owner:{owner_user_id}`; resolved addresses are deduplicated case-insensitively before enqueue; and `notified_at` now means *all* intended notification jobs were successfully enqueued — a partial failure leaves it null and retriable. |
+
+**Still proposal only.** No migrations were written or applied, no RLS or grants changed, no buckets created, no RPCs or Edge Functions created or deployed, and no secrets set.
