@@ -627,7 +627,26 @@ Helper functions (all `security definer`, `stable`, `set search_path = public`):
 - `development_account_id(_development_id uuid)`
 - `is_published_development(_development_id uuid)` — `publish_status = 'published'`
 
-**Grants — one mechanism, no contradictions.** For every development table *except* `developments`, grants are table-level: `GRANT SELECT, INSERT, UPDATE, DELETE ON public.<table> TO authenticated; GRANT ALL ON public.<table> TO service_role;` (those tables have no restricted columns).
+- `is_development_account_active(_account_id uuid)` — the `is_active` gate (§2.1)
+
+**Grants — one mechanism, no contradictions.** For every development table *except* `developments`, `development_accounts`, `development_leads`, and `development_showing_requests`, grants are table-level: `GRANT SELECT, INSERT, UPDATE, DELETE ON public.<table> TO authenticated; GRANT ALL ON public.<table> TO service_role;` (those tables have no restricted columns). The four exceptions are column- or verb-restricted and are spelled out below and in §2.1.
+
+**Leads and showing requests — no raw client INSERT, column-limited UPDATE.**
+
+Submission is **Edge Function / service-role only**. Table-level INSERT for `authenticated` would let an agent write arbitrary `sender_name/email/phone`, skip the server snapshot, bypass Turnstile/rate limiting, and never trigger the notification path — so the privilege simply does not exist:
+```sql
+-- development_leads (development_showing_requests is identical in shape)
+GRANT SELECT ON public.development_leads TO authenticated;          -- no INSERT, no DELETE
+GRANT UPDATE (status, assigned_contact_id, updated_at)
+  ON public.development_leads TO authenticated;                     -- developer triage only
+GRANT ALL ON public.development_leads TO service_role;              -- the only writer of new rows
+```
+- **INSERT:** `service_role` only, from `development-lead-submit` / `development-showing-request` after JWT verification, eligibility, publish, account-active, Turnstile, and rate-limit checks. No INSERT policy for `authenticated` is created at all (a policy without a grant would be misleading).
+- **Agent read-back:** agents may `SELECT` their **own** submitted rows (`agent_user_id = auth.uid() and public.current_is_eligible_agent()`), which is what the "my submissions" UI needs. Nothing else.
+- **Developer UPDATE is column-limited to `status` and `assigned_contact_id`** (plus system `updated_at`). RLS chooses *rows*, not *columns*, so the column grant is the real boundary: `owner|editor|sales` cannot rewrite `agent_user_id`, the `sender_*`/`requester_*` snapshots, `message`, `development_id`, `unit_id`, `account_id`, `created_at`, or `notified_at`. `notified_at` is `service_role`-only in every direction.
+- A `before update` trigger additionally raises if any non-triage column changes under a non-`service_role` request (`public.current_request_role()`), as defense in depth against a future grant mistake.
+- `assigned_contact_id` remains constrained by its composite FK to `development_sales_contacts(id, development_id)`, so triage cannot point a lead at another development's contact.
+- `viewer` gets `SELECT` only; the update policy requires `is_development_member(account_id, array['owner','editor','sales'])` **and** `is_development_account_active(account_id)`.
 
 For `public.developments`, which does have a restricted column, there is **no table-level `SELECT`/`INSERT`/`UPDATE` grant to `authenticated`**. Instead:
 ```sql
@@ -644,7 +663,8 @@ GRANT SELECT (id, account_id, name, slug, slug_locked_at, lifecycle_status, publ
               highlights, tier, created_at, updated_at)
   ON public.developments TO authenticated;
 GRANT INSERT (…same safe list, minus published_at/published_by/slug_locked_at…),
-      UPDATE (…same safe list, minus published_at/published_by/slug_locked_at…),
+      UPDATE (…same safe list, minus published_at/published_by/slug_locked_at
+              **and minus `account_id`** — developments are never re-parented…),
       DELETE ON public.developments TO authenticated;   -- DELETE still blocked by the permanence trigger
 GRANT ALL ON public.developments TO service_role;
 ```
@@ -662,8 +682,11 @@ Policy matrix:
 | documents | SELECT where parent published, **both** `access` values (bytes via signed URL) | CRUD | read | read | all |
 | sales_contacts | **SELECT where parent published and `is_active`** (mini-site sales team, phone/email CTAs) | CRUD | read | read | all |
 | saves / shares | insert/select/delete own rows only | **no row access** (aggregate RPC) | no row access | no row access | all |
-| leads / showing_requests | insert own; select own | select + update own account's rows (status, assignment) | **select + update** own account's rows | read | all |
+| leads / showing_requests | **no INSERT** (Edge Function / service-role only); SELECT own submitted rows | select own account's rows; UPDATE **`status` + `assigned_contact_id` only** | select; UPDATE **`status` + `assigned_contact_id` only** | read | all |
 | account_members | — | select own account; owners manage | select own account | select own account | all |
+| accounts | — | read; owners UPDATE **`name`/`legal_name`/`billing_email`/`slug` only** | read | read | all (incl. `is_active`, `stripe_customer_id`) |
+
+Every member-write policy in this matrix additionally requires `public.is_development_account_active(account_id)`, and every eligible-agent read policy requires it too, so a disabled account is read-only for its members and invisible to agents (§2.1).
 
 - **No broad sales UPDATE on units.** Sales-role members have `SELECT` only; all sales-side mutation goes through the narrow RPC in §5.
 - Full AAC agent contact details on leads/showings are visible to owner/editor/sales (decision 2).
