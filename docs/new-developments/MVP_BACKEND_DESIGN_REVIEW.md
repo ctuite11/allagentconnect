@@ -559,12 +559,15 @@ Account membership role is never itself a routing signal; it is only the last-re
 ### 2.7 Engagement (agent actions, persist-before-notify)
 
 ```
-development_saves(id pk, development_id,
+development_saves(id pk,
+  development_id uuid not null references public.developments(id) on delete cascade,
   agent_user_id uuid not null references auth.users(id) on delete cascade,
   created_at,
   unique(development_id, agent_user_id))
 
-development_shares(id pk, development_id, unit_id null,
+development_shares(id pk,
+  development_id uuid not null references public.developments(id) on delete cascade,
+  unit_id null,
   agent_user_id uuid not null references auth.users(id) on delete cascade,
   share_type text not null check (share_type in
     ('copy_link','email','facebook','x','linkedin','whatsapp','other')),
