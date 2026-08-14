@@ -638,14 +638,14 @@ Emails reuse the existing `email_jobs` queue with a new dedicated stream (`devel
 
 ## 7. Migration sequence (proposed file names, not applied)
 
-1. `..._new_developments_01_accounts_members.sql` — accounts, members (accepted-only, 4 roles), concurrency-safe last-owner trigger, grants, RLS.
-2. `..._02_developments_core.sql` — developments with `lifecycle_status` + `publish_status`, id registry, permanence / publication / slug-lock triggers.
-3. `..._03_inventory.sql` — buildings_phases (auto **Main**), floor_plans, units, composite FKs with `on delete restrict` on phase.
-4. `..._04_updates.sql` — development_updates, pinned-unique index, Markdown guard, first-publish stamp.
-5. `..._05_media_documents.sql` — media (XOR ownership, storage/external, hero unique) and documents (agent-resource categories).
-6. `..._06_sales_contacts.sql` — sales contacts + routing indexes.
-7. `..._07_engagement.sql` — saves, shares (with `unit_id`), leads, showings.
-8. `..._08_helpers_rpcs.sql` — eligibility/membership helpers and grants, sales inventory reader, narrow unit status/price writer, aggregate summary RPC, admin owner-replacement RPC.
+1. `..._new_developments_01_accounts_members.sql` — accounts (frozen fields incl. `legal_name`, `billing_email`, `stripe_customer_id`, `is_active`), members (accepted-only, 4 roles, `accepted_at`), concurrency-safe last-owner trigger, grants, RLS.
+2. `..._02_developments_core.sql` — developments with the full frozen field set, `lifecycle_status` + `publish_status`, id registry, permanence / **full transition-matrix** / slug-lock triggers, `admin_notes` column restriction.
+3. `..._03_inventory.sql` — buildings_phases (auto **Main**), floor_plans (`sqft_min/max`, features, active, sort), units (full product fields + `status_changed_at` / `price_changed_at` trigger), composite FKs with `on delete restrict` on phase.
+4. `..._04_updates.sql` — development_updates (`construction|sales|design|general`, `updated_by`), pinned-unique index, Markdown guard, first-publish stamp.
+5. `..._05_media_documents.sql` — media (XOR ownership, storage/external, hero unique) and documents (frozen category set, optional floor-plan **or** unit attachment, `is_featured_agent_resource`).
+6. `..._06_sales_contacts.sql` — sales contacts (`role`, headshot, bio, `is_primary` + partial unique index), routing indexes, agent read policy for published developments.
+7. `..._07_engagement.sql` — saves, shares (frozen share types, with `unit_id`), leads (frozen source/status), `development_showing_requests`.
+8. `..._08_helpers_rpcs.sql` — eligibility/membership helpers and grants, sales inventory reader, narrow unit status/price writer (narrow return type + `_clear_price`), aggregate summary RPC, admin owner-replacement RPC.
 9. `..._09_storage_policies.sql` — bucket creation + storage policies.
 10. `..._10_email_stream.sql` — `development_notifications` stream registration only.
 
