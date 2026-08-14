@@ -223,9 +223,17 @@ development_buildings_phases(
 development_floor_plans(
   id pk, development_id, account_id,
   name text not null,
-  beds numeric(4,1), baths numeric(4,1), sqft int,
+  description text,
+  beds numeric(4,1), baths numeric(4,1), half_baths int,
+  sqft_min int, sqft_max int,
   price_min numeric(12,2), price_max numeric(12,2),
+  features jsonb not null default '[]',
+  is_active boolean not null default true,
+  sort_order int not null default 0,
+  created_at, updated_at,
   unique(id, development_id),
+  unique(development_id, name),
+  check (sqft_min is null or sqft_max is null or sqft_min <= sqft_max),
   check (price_min is null or price_max is null or price_min <= price_max)
 )
 
@@ -239,11 +247,23 @@ development_units(
   price numeric(12,2) check (price is null or price >= 0),
   status text not null default 'available'
     check (status in ('available','reserved','under_agreement','sold','coming_soon')),
+  description text,
+  views_exposure text,                         -- e.g. "south-facing, harbor view"
+  parking_spaces int, parking_notes text,
+  outdoor_space text,
+  incentives text,
+  estimated_delivery text,                     -- free text: "Q2 2027"
+  is_featured boolean not null default false,
+  sort_order int not null default 0,
+  status_changed_at timestamptz,
+  price_changed_at timestamptz,
   created_at, updated_at,
   unique(id, development_id),
   unique(development_id, building_phase_id, unit_number)   -- Building A/2A ≠ Building B/2A
 )
 ```
+- Floor plans restored to the frozen shape: `sqft_min`/`sqft_max` (not a single `sqft`), plus `description`, `features`, `is_active`, `sort_order`.
+- Units restored to the approved daily-inventory/product shape: `description`, `views_exposure`, parking, `incentives`, `estimated_delivery`, `is_featured`, `sort_order`, and the `status_changed_at` / `price_changed_at` stamps. A `before update` trigger sets `status_changed_at` when `status` changes and `price_changed_at` when `price` changes (including a change to `NULL`), so the narrow sales writer needs no special-casing.
 - **No `held` status.** The frozen five-value vocabulary stands.
 - **Automatic Main phase:** an `after insert` trigger on `developments` creates one `development_buildings_phases` row named `Main` with `is_default = true`, so `building_phase_id` can be `NOT NULL` from the first unit onward. A partial unique index enforces one default phase per development.
 - **Phase deletion is blocked while units reference it:** the composite FK uses `on delete restrict`, not `set null`. The default phase additionally cannot be deleted while it is the only phase.
