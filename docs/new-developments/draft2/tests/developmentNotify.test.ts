@@ -15,12 +15,23 @@ const CONTEXT = {
   submittedAt: "Mon, 01 Sep 2026 12:00:00 GMT",
 };
 
+const CONTACTS = [
+  { id: "c1", name: "Sales Desk", email: "sales@dev.example", is_active: true, is_primary: true, receives_leads: true, receives_showing_requests: true },
+  { id: "c2", name: "Second Desk", email: "second@dev.example", is_active: true, is_primary: false, receives_leads: true, receives_showing_requests: false },
+];
+
+export const RECIPIENTS = [
+  { email: "sales@dev.example", name: "Sales Desk", identityKind: "contact", identityId: "c1" },
+  { email: "second@dev.example", name: "Second Desk", identityKind: "contact", identityId: "c2" },
+];
+
 function fakeSupabase(opts: { existingKeys?: Set<string>; failKeys?: Set<string> } = {}) {
   const inserted: string[] = [];
   const stamped: string[] = [];
-  return {
+  const client: any = {
     inserted,
     stamped,
+    auth: { admin: { getUserById: () => Promise.resolve({ data: null, error: "unused" }) } },
     rpc: () => Promise.resolve({ data: [], error: null }),
     from(table: string) {
       if (table === "email_jobs") {
@@ -38,32 +49,34 @@ function fakeSupabase(opts: { existingKeys?: Set<string>; failKeys?: Set<string>
           },
         };
       }
-      return {
-        update: () => ({
-          eq: (_c: string, id: string) => ({
-            is: () => {
-              stamped.push(id);
-              return Promise.resolve({ error: null });
-            },
+      if (table === "development_sales_contacts") {
+        const builder: any = {
+          select: () => builder,
+          eq: () => builder,
+          then: (resolve: any) => resolve({ data: CONTACTS, error: null }),
+        };
+        return builder;
+      }
+      if (table === "development_leads" || table === "development_showing_requests") {
+        return {
+          update: () => ({
+            eq: (_c: string, id: string) => ({
+              is: () => {
+                stamped.push(id);
+                return Promise.resolve({ error: null });
+              },
+            }),
           }),
-        }),
-        select: () => ({ eq: () => ({ eq: () => ({ maybeSingle: () => Promise.resolve({ data: null }) }) }) }),
+        };
+      }
+      const empty: any = {
+        select: () => empty,
+        eq: () => empty,
+        then: (resolve: any) => resolve({ data: [], error: null }),
       };
+      return empty;
     },
-  } as any;
-}
-
-const RECIPIENTS = [
-  { email: "sales@dev.example", name: "Sales Desk", identityKind: "contact", identityId: "c1" },
-  { email: "owner@dev.example", name: "Owner", identityKind: "owner", identityId: "u1" },
-];
-
-// resolveDevelopmentRecipients is exercised separately; here we stub the DB reads it makes.
-function withRecipients(client: any) {
-  client.rpc = (fn: string) =>
-    fn === "resolve_development_recipients"
-      ? Promise.resolve({ data: RECIPIENTS, error: null })
-      : Promise.resolve({ data: [], error: null });
+  };
   return client;
 }
 
@@ -73,20 +86,20 @@ Deno.test("idempotency keys are per submission AND per recipient identity", () =
     "dev-lead:L1:contact:c1",
   );
   assertEquals(
-    idempotencyKey("showing", "S1", RECIPIENTS[1] as never),
+    idempotencyKey("showing", "S1", { ...RECIPIENTS[1], identityKind: "owner", identityId: "u1" } as never),
     "dev-showing:S1:owner:u1",
   );
 });
 
 Deno.test("re-running the same submission never creates a second send", async () => {
-  const client = withRecipients(fakeSupabase());
+  const client = fakeSupabase();
   const first = await notifySubmission(client, "lead", "L1", CONTEXT, "d1", "a1", CONTEXT.agentEmail);
   assertEquals(first.enqueued, 2);
   assert(first.notified);
 
   // Retry: both keys now exist -> unique violations counted as success, no new rows.
-  const retryClient = withRecipients(
-    fakeSupabase({ existingKeys: new Set(["dev-lead:L1:contact:c1", "dev-lead:L1:owner:u1"]) }),
+  const retryClient = (
+    fakeSupabase({ existingKeys: new Set(["dev-lead:L1:contact:c1", "dev-lead:L1:contact:c2"]) }),
   );
   const second = await notifySubmission(retryClient, "lead", "L1", CONTEXT, "d1", "a1", CONTEXT.agentEmail);
   assertEquals(second.enqueued, 0);
@@ -96,7 +109,7 @@ Deno.test("re-running the same submission never creates a second send", async ()
 });
 
 Deno.test("partial enqueue leaves notified_at unstamped and completes on retry", async () => {
-  const failing = withRecipients(fakeSupabase({ failKeys: new Set(["dev-lead:L2:owner:u1"]) }));
+  const failing = (fakeSupabase({ failKeys: new Set(["dev-lead:L2:contact:c2"]) }));
   const partial = await notifySubmission(failing, "lead", "L2", CONTEXT, "d1", "a1", CONTEXT.agentEmail);
   assertEquals(partial.enqueued, 1);
   assertEquals(partial.failed, 1);
@@ -104,7 +117,7 @@ Deno.test("partial enqueue leaves notified_at unstamped and completes on retry",
   assertEquals(failing.stamped.length, 0);
 
   // Same-row retry: the already-enqueued recipient is skipped, the missing one lands.
-  const retry = withRecipients(fakeSupabase({ existingKeys: new Set(["dev-lead:L2:contact:c1"]) }));
+  const retry = (fakeSupabase({ existingKeys: new Set(["dev-lead:L2:contact:c1"]) }));
   const done = await notifySubmission(retry, "lead", "L2", CONTEXT, "d1", "a1", CONTEXT.agentEmail);
   assertEquals(done.enqueued, 1);
   assertEquals(done.alreadyQueued, 1);
