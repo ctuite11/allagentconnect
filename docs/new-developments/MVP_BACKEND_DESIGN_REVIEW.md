@@ -344,33 +344,46 @@ foreign key (update_id,     development_id) references public.development_update
 development_documents(
   id pk, development_id, account_id,
   title text not null,
+  description text,
   category text not null check (category in (
+    -- marketing / project
+    'brochure',
+    'floor_plan',
+    'site_plan',
+    'spec_sheet',
+    'finish_package',
+    'disclosure',
+    'condo_docs',
+    'deposit_schedule',
+    -- For Agents (seven)
     'broker_registration',
     'buyer_agent_compensation',
     'commission_bonus',
     'showing_tour_procedure',
     'sales_office_hours',
     'offer_submission',
-    'deposit_schedule',
-    'floor_plan_pdf',
-    'price_sheet',
-    'site_plan',
-    'hoa_condo_docs',
-    'offering_plan',
-    'brochure',
+    'agent_faq',
     'other'
   )),
   access text not null default 'agent_only' check (access in ('agent_only','public_marketing')),
-  floor_plan_id uuid,                          -- floor-plan PDFs attach through documents
+  is_featured_agent_resource boolean not null default false,
+  floor_plan_id uuid,                          -- optional floor-plan attachment
+  unit_id uuid,                                -- optional unit attachment
   storage_path text not null, byte_size bigint, mime_type text,
   sort_order int not null default 0,
   created_by, created_at, updated_at,
   unique(development_id, storage_path),
+  check ((floor_plan_id is not null)::int + (unit_id is not null)::int <= 1),
   foreign key (floor_plan_id, development_id)
-    references public.development_floor_plans(id, development_id) on delete set null
+    references public.development_floor_plans(id, development_id) on delete set null,
+  foreign key (unit_id, development_id)
+    references public.development_units(id, development_id) on delete set null
 )
 ```
-This is the agent-resource model: documents exist primarily to answer "how do I register my buyer, what am I paid, how do I tour, how do I submit an offer." `public_marketing` is stored but grants no anonymous access in MVP.
+- **Frozen category set restored exactly.** The invented names `floor_plan_pdf`, `price_sheet`, `hoa_condo_docs`, and `offering_plan` are removed in favor of `floor_plan`, `spec_sheet`, `finish_package`, `disclosure`, and `condo_docs`. The seven For Agents categories are `broker_registration`, `buyer_agent_compensation`, `commission_bonus`, `showing_tour_procedure`, `sales_office_hours`, `offer_submission`, `agent_faq`.
+- **Optional unit attachment restored**, using the same composite-FK parent-consistency model as floor plans; a document may attach to at most one parent (floor plan *or* unit) and otherwise sits at development level.
+- `description` and `is_featured_agent_resource` restored — the latter drives the "For Agents" highlight rail.
+- `public_marketing` is stored and **is readable/downloadable by eligible agents** on a published development. It simply grants no anonymous access in MVP (see §3 and §4).
 
 ### 2.6 Sales contacts (routing SSOT)
 
