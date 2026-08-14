@@ -528,7 +528,7 @@ Path convention (first segment is the development id, so policies parse it):
 Policies on `storage.objects` keyed on `(storage.foldername(name))[1]::uuid`:
 - INSERT/UPDATE/DELETE: `owner`/`editor` member of the account owning that development.
 - SELECT on `development-media`: eligible agents when the development is published; members always; admins always.
-- SELECT on `development-documents`: **no direct client select.** Access is only via a **5-minute** signed URL minted by an Edge Function, one document per call. No access-logging table in MVP.
+- SELECT on `development-documents`: **no direct client select.** Access is only via a **5-minute** signed URL minted by an Edge Function, one document per call, for eligible agents on a published development — for **both** `agent_only` and `public_marketing` documents. Anonymous callers are rejected. No access-logging table in MVP.
 
 ---
 
