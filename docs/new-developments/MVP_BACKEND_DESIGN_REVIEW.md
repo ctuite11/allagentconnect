@@ -424,7 +424,8 @@ development_saves(id pk, development_id, agent_user_id, created_at,
   unique(development_id, agent_user_id))
 
 development_shares(id pk, development_id, unit_id null, agent_user_id,
-  share_type text not null check (share_type in ('email','sms','copy_link','social','other')),
+  share_type text not null check (share_type in
+    ('copy_link','email','facebook','x','linkedin','whatsapp','other')),
   created_at,
   foreign key (unit_id, development_id) references public.development_units(id, development_id) on delete set null)
 
@@ -435,16 +436,16 @@ development_leads(
   sender_email text not null,
   sender_phone text,
   message text,
-  source text not null check (source in ('development_page','unit_page','share_link','document_gate','other')),
+  source text not null check (source in ('development_page','unit_page','share')),
   status text not null default 'new'
-    check (status in ('new','contacted','qualified','tour_scheduled','registered','closed','archived')),
+    check (status in ('new','contacted','closed','spam')),
   assigned_contact_id uuid,                    -- human assignment only; never routing
   notified_at timestamptz, created_at, updated_at,
   foreign key (unit_id, development_id) references public.development_units(id, development_id) on delete set null,
   foreign key (assigned_contact_id, development_id)
     references public.development_sales_contacts(id, development_id) on delete set null)
 
-development_showings(
+development_showing_requests(
   id pk, development_id, account_id, unit_id null,
   agent_user_id uuid not null,
   requester_name text not null,                -- server-snapshotted
@@ -453,14 +454,15 @@ development_showings(
   preferred_date date,
   preferred_time text,                         -- intentionally loose: "afternoon", "after 5"
   message text,
-  status text not null default 'requested'
-    check (status in ('requested','confirmed','declined','cancelled','completed')),
+  status text not null default 'pending'
+    check (status in ('pending','confirmed','completed','cancelled','declined')),
   assigned_contact_id uuid,
   notified_at timestamptz, created_at, updated_at,
   foreign key (unit_id, development_id) references public.development_units(id, development_id) on delete set null,
   foreign key (assigned_contact_id, development_id)
     references public.development_sales_contacts(id, development_id) on delete set null)
 ```
+- **Frozen engagement vocabularies restored.** Shares: `copy_link | email | facebook | x | linkedin | whatsapp | other` (no `sms`, no generic `social`). Lead source: `development_page | unit_page | share`. Lead status: `new | contacted | closed | spam` — the unapproved CRM states (`qualified`, `tour_scheduled`, `registered`, `archived`) are removed. The showings table is `development_showing_requests` with `pending | confirmed | completed | cancelled | declined`.
 - **No buyer fields.** Buyer registration is not MVP; leads and showings are AAC-agent actions. Name/email/phone are the *agent's*, snapshotted server-side at insert so later profile edits don't rewrite history.
 - `agent_user_id` always comes from the verified JWT, never the request body.
 - `notified_at` is stamped only after the email job is enqueued; the row commits first.
