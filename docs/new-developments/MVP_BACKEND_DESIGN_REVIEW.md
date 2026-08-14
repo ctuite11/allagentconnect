@@ -558,16 +558,32 @@ revoke all on function public.get_development_sales_inventory(uuid) from public,
 grant execute on function public.get_development_sales_inventory(uuid) to authenticated;
 ```
 
-**Narrow writer** — the only path by which a sales member changes inventory:
+**Narrow writer** — the only path by which a sales member changes inventory. Two corrections vs Revision 2: the return shape is narrow (not the whole unit row), and "leave unchanged" is distinguishable from "clear the price back to TBD" via an explicit `_clear_price` flag:
 ```sql
+create type public.development_unit_write_result as (
+  unit_id uuid,
+  status text,
+  price numeric,
+  status_changed_at timestamptz,
+  price_changed_at timestamptz,
+  updated_at timestamptz
+);
+
 create or replace function public.set_development_unit_status_price(
   _unit_id uuid,
   _status  text default null,
-  _price   numeric default null
-) returns public.development_units
+  _price   numeric default null,
+  _clear_price boolean default false
+) returns public.development_unit_write_result
 language plpgsql volatile security definer set search_path = public as $$
-declare v_unit public.development_units;
+declare
+  v_unit public.development_units;
+  v_out  public.development_unit_write_result;
 begin
+  if _clear_price and _price is not null then
+    raise exception 'Pass either _price or _clear_price, not both';
+  end if;
+
   select * into v_unit from public.development_units where id = _unit_id for update;
   if not found then raise exception 'Unit not found'; end if;
 
@@ -587,17 +603,22 @@ begin
 
   update public.development_units
      set status = coalesce(_status, status),
-         price  = coalesce(_price, price),
+         price  = case when _clear_price then null
+                       when _price is not null then _price
+                       else price end,
          updated_at = now()
    where id = _unit_id
-  returning * into v_unit;
+  returning id, status, price, status_changed_at, price_changed_at, updated_at
+       into v_out;
 
-  return v_unit;
+  return v_out;
 end $$;
-revoke all on function public.set_development_unit_status_price(uuid, text, numeric) from public, anon;
-grant execute on function public.set_development_unit_status_price(uuid, text, numeric) to authenticated;
+revoke all on function public.set_development_unit_status_price(uuid, text, numeric, boolean)
+  from public, anon;
+grant execute on function public.set_development_unit_status_price(uuid, text, numeric, boolean)
+  to authenticated;
 ```
-Only `status` and `price` are mutable through this path. No unit number, phase, floor plan, or dimension changes.
+Only `status` and `price` are mutable through this path — no unit number, phase, floor plan, or dimension changes — and the caller never receives columns it isn't entitled to mutate. `status_changed_at` / `price_changed_at` are stamped by the unit trigger, so a deliberate clear-to-TBD is recorded as a real price change.
 
 ---
 
