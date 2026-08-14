@@ -495,15 +495,17 @@ Policy matrix:
 | units | SELECT where parent published | **CRUD** | **read + narrow status/price RPC only** | read | all |
 | updates | SELECT where parent published and `is_published` | CRUD | read | read | all |
 | media | SELECT where parent published | CRUD | read | read | all |
-| documents | SELECT where parent published and `access='agent_only'` (bytes via signed URL) | CRUD | read | read | all |
-| sales_contacts | **no access** | CRUD | read | read | all |
+| documents | SELECT where parent published, **both** `access` values (bytes via signed URL) | CRUD | read | read | all |
+| sales_contacts | **SELECT where parent published and `is_active`** (mini-site sales team, phone/email CTAs) | CRUD | read | read | all |
 | saves / shares | insert/select/delete own rows only | **no row access** (aggregate RPC) | no row access | no row access | all |
-| leads / showings | insert own; select own | select + update own account's rows (status, assignment) | **select + update** own account's rows | read | all |
+| leads / showing_requests | insert own; select own | select + update own account's rows (status, assignment) | **select + update** own account's rows | read | all |
 | account_members | — | select own account; owners manage | select own account | select own account | all |
 
 - **No broad sales UPDATE on units.** Sales-role members have `SELECT` only; all sales-side mutation goes through the narrow RPC in §5.
 - Full AAC agent contact details on leads/showings are visible to owner/editor/sales (decision 2).
 - Publication guard: a `WITH CHECK` clause plus trigger blocks members from writing `publish_status='published'`, `published_at`, `published_by`, or a locked `slug`.
+- **`public_marketing` is not a restriction on agents.** Both `agent_only` and `public_marketing` documents are readable by eligible agents on a published development; the flag only marks material that *may later* be shown publicly. `anon` still has no grant and no policy on any development table, so nothing is anonymously reachable in MVP.
+- Agent SELECT on `developments` excludes `admin_notes` via column-restricted exposure; members see all columns of their own account's rows except `admin_notes`.
 
 Agent read policies all take the form:
 ```sql
