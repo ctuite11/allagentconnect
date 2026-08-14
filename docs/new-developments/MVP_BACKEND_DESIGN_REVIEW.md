@@ -188,28 +188,57 @@ end $$;
 revoke all on function public.create_development_account(text, text, uuid, text, text) from public, anon;
 grant execute on function public.create_development_account(text, text, uuid, text, text) to authenticated;
 ```
-Both inserts commit or neither does, so an account never exists — even momentarily within another transaction's visible state — without an `owner`. Account deletion cascades its members, and the last-owner trigger is not consulted on account delete (the invariant is about accounts that continue to exist).
+Both inserts commit or neither does, so an account never exists — even momentarily within another transaction's visible state — without an `owner`.
+
+**Correction: there is no hard account deletion in MVP.** Revision 5 claimed that deleting an account cascades member deletion "without consulting" the last-owner trigger. That is wrong: PostgreSQL executes FK cascade deletes as ordinary deletes on the referencing table, and **row triggers on that table fire** — the last-owner trigger would raise and the delete would fail. Rather than invent a deletion-only bypass, MVP removes the case entirely:
+- `DELETE` on `development_accounts` is granted to **no one** (`authenticated` has no DELETE grant, no DELETE policy exists), and a `before delete` trigger raises unconditionally, matching the permanence rule already applied to `developments`.
+- Disabling an account is `is_active = false`. Developments are permanent/archived already, so nothing needs hard removal.
+- If a true purge is ever required, it becomes a deliberate, admin-only, service-role maintenance procedure designed at that time — not an implicit cascade.
+
+**`is_active = false` has enforced meaning** (it is not a decorative flag):
+- Members and admins may still **read** the account and its developments — recovery and billing history remain visible.
+- All **member writes are blocked** across the account: every member-write policy on `development_accounts`, `developments`, and every child table adds `and public.is_development_account_active(<account_id>)`. Owners cannot edit, submit for review, add inventory/media/documents, or update leads/showings while disabled.
+- Its developments are **not agent-visible**: the eligible-agent read policies add the same predicate, so a disabled account's published developments disappear from the agent surface without any `publish_status` change.
+- Lead/showing submission Edge Functions reject a disabled account (400/403) before insert.
+- Only admins/`service_role` may flip `is_active` back to true.
+
+```sql
+create or replace function public.is_development_account_active(_account_id uuid)
+returns boolean language sql stable security definer set search_path = public
+as $$ select exists (select 1 from public.development_accounts a
+                     where a.id = _account_id and a.is_active) $$;
+```
 
 **`development_accounts` RLS — explicit:**
 ```sql
 alter table public.development_accounts enable row level security;
 
 -- no anon grant, no anon policy anywhere on this table
-grant select, update on public.development_accounts to authenticated;   -- no INSERT, no DELETE
+-- system fields (is_active, stripe_customer_id) are NOT owner-writable:
+grant select on public.development_accounts to authenticated;            -- no INSERT, no DELETE
+grant update (name, legal_name, billing_email, slug, updated_at)
+  on public.development_accounts to authenticated;                       -- column-limited UPDATE
 grant all on public.development_accounts to service_role;
 
 create policy "Members read their own account"
 on public.development_accounts for select to authenticated
 using (public.is_development_member(id) or public.has_role(auth.uid(), 'admin'));
 
-create policy "Owners manage their own account"
+create policy "Owners edit their own organization details"
 on public.development_accounts for update to authenticated
-using (public.is_development_member(id, array['owner']) or public.has_role(auth.uid(), 'admin'))
-with check (public.is_development_member(id, array['owner']) or public.has_role(auth.uid(), 'admin'));
+using (
+  (public.is_development_member(id, array['owner']) and is_active)
+  or public.has_role(auth.uid(), 'admin')
+)
+with check (
+  (public.is_development_member(id, array['owner']) and is_active)
+  or public.has_role(auth.uid(), 'admin')
+);
 ```
 - **Read:** any accepted member of the account (`owner|editor|sales|viewer`) plus admins.
-- **Write:** `owner` role and admins only; `slug` changes follow the same permanence rules as development slugs.
-- **Create:** admins, via `create_development_account` only. **Delete:** `service_role` / admin RPC only.
+- **Write:** `owner` role and admins only, **and only the columns `name`, `legal_name`, `billing_email`, `slug`** (plus system `updated_at`). `slug` changes follow the same permanence rules as development slugs.
+- **AAC-controlled system fields:** `is_active` and `stripe_customer_id` are outside the `authenticated` UPDATE grant entirely — they are changed by admins through a `security definer` RPC (`admin_set_development_account_active`) or `service_role` only. RLS restricts rows, not columns, so the column-level grant is the enforcement mechanism; a paired `before update` trigger also raises if either field changes with a non-admin, non-`service_role` `current_request_role()`, as defense in depth.
+- **Create:** admins, via `create_development_account` only. **Delete:** nobody — no grant, no policy, and a `before delete` trigger. Soft-disable via `is_active` is the only removal path in MVP.
 - **Anonymous:** no grant and no policy — unreachable, consistent with the agents-only MVP.
 
 **Admin recovery without a bypass flag:** `admin_replace_development_owner(_account_id uuid, _new_owner_user_id uuid)` is `security definer`, asserts `has_role(auth.uid(),'admin')`, and **promotes/inserts the replacement owner first**. Once a second owner exists, demoting the prior owner satisfies the invariant naturally. `current_setting('aac.admin_owner_recovery')` is removed entirely — a caller-settable GUC is not an authorization boundary.
