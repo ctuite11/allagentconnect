@@ -859,16 +859,18 @@ Emails reuse the existing `email_jobs` queue with a new dedicated stream (`devel
 
 ## 7. Migration sequence (proposed file names, not applied)
 
-1. `..._new_developments_01_accounts_members.sql` — accounts (frozen fields incl. `legal_name`, `billing_email`, `stripe_customer_id`, `is_active`), members (accepted-only, 4 roles, `accepted_at`), concurrency-safe last-owner trigger, atomic `create_development_account` RPC (no direct account INSERT grant), explicit `development_accounts` grants + RLS.
-2. `..._02_developments_core.sql` — developments with the full frozen field set (incl. `logo_url`, `building_details`, `hoa_fees`), `lifecycle_status` + `publish_status`, id registry, permanence / **full transition-matrix** / slug-lock triggers, `admin_notes` column restriction.
+1. `..._new_developments_01_accounts_members.sql` — accounts (frozen fields incl. `legal_name`, `billing_email`, `stripe_customer_id`, `is_active`), members (accepted-only, 4 roles, `accepted_at`), concurrency-safe last-owner trigger, atomic `create_development_account` RPC (no direct account INSERT grant), **column-limited owner UPDATE grant** (name/legal_name/billing_email/slug), admin-only `is_active`/`stripe_customer_id` + `admin_set_development_account_active` RPC, **no-delete trigger**, `is_development_account_active()` helper, explicit RLS.
+2. `..._02_developments_core.sql` — developments with the full frozen field set (incl. `logo_url`, `building_details`, `hoa_fees`), `lifecycle_status` + `publish_status`, id registry, permanence / **full transition-matrix** / slug-lock / **`account_id` immutability** triggers, `account_id` removed from the UPDATE column grant, `admin_notes` column restriction.
 3. `..._03_inventory.sql` — buildings_phases (auto **Main**), floor_plans (`sqft_min/max`, features, active, sort), units (full product fields + `status_changed_at` / `price_changed_at` trigger), composite FKs with `on delete restrict` on phase.
 4. `..._04_updates.sql` — development_updates (`construction|sales|design|general`, `updated_by`), pinned-unique index, Markdown guard, first-publish stamp.
 5. `..._05_media_documents.sql` — media (XOR ownership, `storage_bucket` + `storage_path` / external, `mime_type`, `duration_seconds`, `caption`, hero unique) and documents (frozen category set, optional floor-plan **or** unit attachment, `is_featured_agent_resource`).
 6. `..._06_sales_contacts.sql` — sales contacts (controlled `role` vocabulary, nullable email/phone with reachability check, headshot, bio, `is_primary` + partial unique indexes), routing indexes, agent read policy for published developments.
-7. `..._07_engagement.sql` — saves, shares (frozen share types, with `unit_id`), leads (frozen source/status), `development_showing_requests`; `agent_user_id NOT NULL REFERENCES auth.users(id)` on all four (cascade on saves/shares, restrict on leads/showings); no `account_id` on saves/shares.
+7. `..._07_engagement.sql` — saves, shares (frozen share types, with `unit_id`), leads (frozen source/status), `development_showing_requests`; `development_id NOT NULL REFERENCES developments(id)` on saves/shares; `agent_user_id NOT NULL REFERENCES auth.users(id)` on all four (cascade on saves/shares, restrict on leads/showings); no `account_id` on saves/shares; **no `INSERT` grant to `authenticated` on leads/showings**, column-limited `UPDATE (status, assigned_contact_id, updated_at)` plus the triage-only guard trigger.
 8. `..._08_helpers_rpcs.sql` — eligibility/membership helpers and grants, sales inventory reader, narrow unit status/price writer (narrow return type + `_clear_price`), aggregate summary RPC, admin owner-replacement RPC.
 9. `..._09_storage_policies.sql` — bucket creation + storage policies.
-10. `..._10_email_stream.sql` — `development_notifications` stream registration only.
+10. `..._10_email_stream.sql` — `development_notifications` stream registration only (identity-keyed idempotency: `contact:{sales_contact_id}` / `owner:{owner_user_id}`).
+
+No migration in this set creates a hard-delete path for `development_accounts`, and none grants `INSERT` on `development_leads` / `development_showing_requests` to `authenticated`.
 
 Each includes an `updated_at` trigger, the `(development_id, account_id)` composite FK for any table carrying `account_id`, and a rollback note. Snapshot (`npm run db:snapshot`) refreshed after apply.
 
