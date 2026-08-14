@@ -317,6 +317,23 @@ admin   | draft|pending_review -> published
 ```
 Anything not in the matrix raises. Explicitly blocked for members: `draft -> paused`, `draft -> published`, `draft -> archived`, `pending_review -> paused`, `pending_review -> published`, `pending_review -> archived`, and every transition out of `published` / `paused` / `archived`. The trigger stamps `published_at`/`published_by` on first publish only, `submitted_at` on `draft -> pending_review`, `paused_at` on entry to `paused`, and `archived_at` on entry to `archived`.
 - **Permanence:** account→developments is `on delete restrict`; archival is a `publish_status` change. `development_id_registry(id pk, created_at)` (insert-only) plus a `before delete` trigger blocking hard deletes guarantees ids are never reused.
+- **`account_id` is immutable after insert — no re-parenting.** Revision 5 described "no re-parenting path in MVP" while still listing `account_id` in the authenticated UPDATE column grant. Corrected two ways: `account_id` is **removed from the `UPDATE` column grant** (it stays in the `SELECT` and `INSERT` lists), and a `before update` trigger raises on any change:
+
+```sql
+create or replace function public.enforce_immutable_development_account()
+returns trigger language plpgsql as $$
+begin
+  if new.account_id is distinct from old.account_id then
+    raise exception 'developments.account_id is immutable; a development cannot be re-parented';
+  end if;
+  return new;
+end $$;
+
+create trigger trg_development_account_immutable
+before update on public.developments
+for each row execute function public.enforce_immutable_development_account();
+```
+  This also makes the `(development_id, account_id)` composite FKs on child tables unconditionally stable: the parent key can never move, so `on update cascade` is dead code kept only as a safety net.
 
 ### 2.3 Inventory — frozen names and uniqueness
 
