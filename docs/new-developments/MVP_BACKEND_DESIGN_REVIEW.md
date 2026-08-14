@@ -626,9 +626,9 @@ Only `status` and `price` are mutable through this path — no unit number, phas
 
 All follow the same shape: `npm:@supabase/supabase-js@2`, CORS, JWT validated in code (`verify_jwt=false` + explicit `getUser`), Zod validation, service-role client used only after authorization, persist-before-notify.
 
-1. **`development-lead-submit`** — validate body → resolve `agent_user_id` from the JWT (never the body) → assert eligible agent → assert development published → snapshot `sender_name/email/phone` from the agent profile server-side → insert `development_leads` → resolve recipients from `development_sales_contacts` where `is_active and receives_leads`, falling back to account `owner` members only if that set is empty → enqueue `email_jobs` with idempotency key `dev-lead:{lead_id}:{recipient_email}` → stamp `notified_at`.
-2. **`development-showing-request`** — identical flow against `development_showings` (`preferred_date`, `preferred_time` text, `message`), recipients filtered by `receives_showing_requests`, key `dev-showing:{showing_id}:{recipient_email}`.
-3. **`development-document-url`** — assert eligible agent + development published + `access='agent_only'` → mint a 5-minute signed URL → return URL only. No logging table.
+1. **`development-lead-submit`** — validate body → resolve `agent_user_id` from the JWT (never the body) → assert eligible agent → assert development published → snapshot `sender_name/email/phone` from the agent profile server-side → insert `development_leads` → resolve recipients through the three-tier routing order (flagged active contacts → **primary active contact** → account `owner` members) → enqueue `email_jobs` with idempotency key `dev-lead:{lead_id}:{recipient_email}` → stamp `notified_at`.
+2. **`development-showing-request`** — identical flow against `development_showing_requests` (`preferred_date`, `preferred_time` text, `message`), tier 1 filtered by `receives_showing_requests`, then the same primary-contact and owner fallbacks, key `dev-showing:{showing_request_id}:{recipient_email}`.
+3. **`development-document-url`** — assert eligible agent + development published (any `access` value; anon rejected) → mint a 5-minute signed URL → return URL only. No logging table.
 
 **`development-member-invite` is removed.** Invites are Phase 2; MVP has no invited-membership state to create.
 
