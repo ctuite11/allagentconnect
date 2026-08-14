@@ -152,13 +152,43 @@ developments(
   publish_status text not null default 'draft'
     check (publish_status in ('draft','pending_review','published','paused','archived')),
   published_at timestamptz, published_by uuid,   -- admin only, first publish stamp
+  submitted_at timestamptz, paused_at timestamptz, archived_at timestamptz,
+
+  -- location
   address, city, state, postal_code, latitude, longitude,
+  neighborhood text, neighborhood_description text,
+
+  -- project team + timeline
+  developer_name text, architect_name text, interior_designer_name text,
+  estimated_completion text,                 -- free text: "Q3 2027"
   delivery_from date, delivery_to date,
+
+  -- building details
+  total_units int, total_buildings int, stories int, year_built int,
+  construction_type text,
+  amenities jsonb not null default '[]',
+  parking_description text, parking_included boolean,
+  pet_policy text,
+  hoa_fee_min numeric(12,2), hoa_fee_max numeric(12,2), hoa_fee_includes text,
+
+  -- commercial terms
+  deposit_structure text,
+  incentives text,
+  buyer_agent_compensation text,
+  buyer_agent_compensation_notes text,
+
+  -- marketing + admin
   description text, highlights jsonb not null default '[]',
+  tier text not null default 'standard' check (tier in ('standard','featured','premier')),
+  admin_notes text,                          -- admin-only column (see RLS note below)
+  created_by uuid, updated_by uuid,
   created_at, updated_at,
   unique(id, account_id)                     -- composite FK target
 )
 ```
+- Full frozen project field set restored: developer/architect/designer, estimated completion, building details, amenities, parking, pets, HOA, deposit structure, incentives, buyer-agent compensation, neighborhood info, tier, lifecycle timestamps (`submitted_at` / `paused_at` / `archived_at`), `admin_notes`, and `created_by` / `updated_by` audit fields.
+- `admin_notes` is never exposed to agents or members: agent/member SELECT goes through a column-restricted view (or explicit column grants) that omits it; only admins and service_role read the base column.
+- `submitted_at` is stamped when a member moves `draft → pending_review`; `paused_at` / `archived_at` are stamped by the admin transition trigger.
 - `lifecycle_status` and `publish_status` are **independent**. Nothing collapses them; a `completed` development can be `paused`, a `now_selling` one can be `draft`.
 - **Slug locking:** a `before update` trigger sets `slug_locked_at = now()` on the first transition to `published`, and rejects any `slug` change once `slug_locked_at is not null` (admins included, to preserve link permanence).
 - **Admin publication:** a `before update` trigger rejects any transition into or out of `published` unless `has_role(auth.uid(),'admin')`, and stamps `published_at`/`published_by` on first publish only. Members may move between `draft` and `pending_review`; `paused` and `archived` are admin transitions.
