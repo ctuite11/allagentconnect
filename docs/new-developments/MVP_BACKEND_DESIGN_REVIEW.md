@@ -394,8 +394,12 @@ development_sales_contacts(
   email text not null,
   phone text,
   title text,
+  role text,                                                  -- e.g. "Sales Director"
+  headshot_url text,
+  bio text,
   user_id uuid references auth.users(id) on delete set null,  -- optional; contacts need not be AAC users
   is_active boolean not null default true,
+  is_primary boolean not null default false,
   receives_leads boolean not null default true,
   receives_showing_requests boolean not null default true,
   sort_order int not null default 0,
@@ -404,7 +408,14 @@ development_sales_contacts(
   unique(development_id, lower(email))
 )
 ```
-**Routing rule (server-side only):** leads go to active contacts with `receives_leads`; showings to active contacts with `receives_showing_requests`. If that set is empty, and only then, fall back to the account's `owner` members. Account membership role is never itself a routing signal.
+- `role`, `headshot_url`, `bio`, and `is_primary` restored. One primary per development: `create unique index ... on development_sales_contacts(development_id) where is_primary and is_active;`
+
+**Routing rule (server-side only) — three ordered tiers:**
+1. Active contacts flagged for the channel (`receives_leads` / `receives_showing_requests`).
+2. If empty → the **primary active contact** (`is_primary and is_active`), regardless of channel flag.
+3. If still empty → the account's `owner` members.
+
+Account membership role is never itself a routing signal; it is only the last-resort safety net.
 
 ### 2.7 Engagement (agent actions, persist-before-notify)
 
