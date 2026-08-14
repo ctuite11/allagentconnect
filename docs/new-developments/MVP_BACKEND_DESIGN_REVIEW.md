@@ -191,7 +191,21 @@ developments(
 - `submitted_at` is stamped when a member moves `draft → pending_review`; `paused_at` / `archived_at` are stamped by the admin transition trigger.
 - `lifecycle_status` and `publish_status` are **independent**. Nothing collapses them; a `completed` development can be `paused`, a `now_selling` one can be `draft`.
 - **Slug locking:** a `before update` trigger sets `slug_locked_at = now()` on the first transition to `published`, and rejects any `slug` change once `slug_locked_at is not null` (admins included, to preserve link permanence).
-- **Admin publication:** a `before update` trigger rejects any transition into or out of `published` unless `has_role(auth.uid(),'admin')`, and stamps `published_at`/`published_by` on first publish only. Members may move between `draft` and `pending_review`; `paused` and `archived` are admin transitions.
+- **Admin publication — explicit transition matrix.** A `before update` trigger enforces the *complete* matrix, not just transitions touching `published`, so a member cannot reach an admin-only state through direct SQL/API access:
+
+```
+Actor   | Allowed publish_status transitions
+--------+--------------------------------------------------------------
+member  | draft -> pending_review
+        | pending_review -> draft
+        | (no other transition, in any direction, from any state)
+admin   | draft|pending_review -> published
+        | published -> paused | archived
+        | paused -> published | archived
+        | archived -> draft | published
+        | pending_review -> draft | archived
+```
+Anything not in the matrix raises. Explicitly blocked for members: `draft -> paused`, `draft -> published`, `draft -> archived`, `pending_review -> paused`, `pending_review -> published`, `pending_review -> archived`, and every transition out of `published` / `paused` / `archived`. The trigger stamps `published_at`/`published_by` on first publish only, `submitted_at` on `draft -> pending_review`, `paused_at` on entry to `paused`, and `archived_at` on entry to `archived`.
 - **Permanence:** account→developments is `on delete restrict`; archival is a `publish_status` change. `development_id_registry(id pk, created_at)` (insert-only) plus a `before delete` trigger blocking hard deletes guarantees ids are never reused.
 
 ### 2.3 Inventory — frozen names and uniqueness
