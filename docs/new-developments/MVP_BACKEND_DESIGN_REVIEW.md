@@ -1,7 +1,7 @@
-# New Developments MVP — Backend Design Review Package (Revision 2)
+# New Developments MVP — Backend Design Review Package (Revision 3)
 Status: PROPOSAL ONLY. Nothing applied. No migrations run, no buckets created, no functions deployed, no RLS changed, no secrets set.
 
-Revision 2 reconciles this package with the frozen SSOT. All 12 divergences flagged in review are corrected, the two backend/security corrections are applied, the four open questions are closed, and `development_document_access` is removed from MVP scope.
+Revision 3 closes the eight remaining mismatches raised against Revision 2: the frozen account/development field set is restored, the full floor-plan/unit foundation is restored, update kinds and document categories return to the frozen vocabularies, sales contacts regain `role`/headshot/bio/`is_primary` and the primary-contact routing fallback plus agent read access, engagement vocabularies return to frozen values, `public_marketing` documents become readable by eligible agents (anon still forbidden), the publish transition matrix is enforced explicitly, and the narrow sales writer gets a narrow return shape with distinguishable "leave unchanged" vs "clear price" semantics.
 
 Frozen SSOT constraints honored:
 - Permanent `development_id` (never reused, never re-keyed).
