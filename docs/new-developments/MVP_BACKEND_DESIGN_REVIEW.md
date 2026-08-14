@@ -1,7 +1,7 @@
-# New Developments MVP — Backend Design Review Package (Revision 3)
+# New Developments MVP — Backend Design Review Package (Revision 4)
 Status: PROPOSAL ONLY. Nothing applied. No migrations run, no buckets created, no functions deployed, no RLS changed, no secrets set.
 
-Revision 3 closes the eight remaining mismatches raised against Revision 2: the frozen account/development field set is restored, the full floor-plan/unit foundation is restored, update kinds and document categories return to the frozen vocabularies, sales contacts regain `role`/headshot/bio/`is_primary` and the primary-contact routing fallback plus agent read access, engagement vocabularies return to frozen values, `public_marketing` documents become readable by eligible agents (anon still forbidden), the publish transition matrix is enforced explicitly, and the narrow sales writer gets a narrow return shape with distinguishable "leave unchanged" vs "clear price" semantics.
+Revision 4 closes the final six items raised against Revision 3: the `tier` typo (`premier` → `premium`), removal of the unapproved `agent_faq` document category, three drifted field decisions (`half_baths` removed, unit `status` defaults to `coming_soon`, `estimated_completion` is a `date`), the controlled sales-contact `role` vocabulary with nullable email/phone, dual-path signed-document authorization (eligible agent + published **or** accepted account member at any publish status), and two integrity/security tightenings (immutable membership `account_id`/`user_id`; composite `(development_id, account_id)` FKs on every child table carrying `account_id`). The `admin_notes` grants contradiction is also resolved with one concrete mechanism.
 
 Frozen SSOT constraints honored:
 - Permanent `development_id` (never reused, never re-keyed).
@@ -93,6 +93,24 @@ development_account_members(
 - **No `invite_status`.** A row in this table means an accepted member. There is no invited/revoked membership state; revocation is a delete.
 - **Pending invites are Phase 2** in a separate `development_account_invites` table, not built in MVP.
 - `user_id` keeps its FK to `auth.users` with `on delete restrict` so membership rows cannot be orphaned.
+- **`account_id` and `user_id` are immutable after insert.** A `before update` trigger raises if either changes. Membership transfer is delete + create, so every transfer necessarily passes the last-owner invariant instead of sidestepping it by re-parenting an `owner` row to another account.
+
+```sql
+create or replace function public.enforce_immutable_development_membership()
+returns trigger language plpgsql as $$
+begin
+  if new.account_id is distinct from old.account_id
+     or new.user_id is distinct from old.user_id then
+    raise exception 'development_account_members.account_id and user_id are immutable; delete and re-create the membership';
+  end if;
+  return new;
+end $$;
+
+create trigger trg_development_membership_immutable
+before update on public.development_account_members
+for each row execute function public.enforce_immutable_development_membership();
+```
+This trigger runs before the last-owner trigger (alphabetical firing order is pinned by naming), so an attempted re-parent fails outright.
 
 Indexes: `(account_id, role)`, `(user_id)`.
 
@@ -160,7 +178,7 @@ developments(
 
   -- project team + timeline
   developer_name text, architect_name text, interior_designer_name text,
-  estimated_completion text,                 -- free text: "Q3 2027"
+  estimated_completion date,                 -- MVP: a date, not free text
   delivery_from date, delivery_to date,
 
   -- building details
@@ -179,7 +197,7 @@ developments(
 
   -- marketing + admin
   description text, highlights jsonb not null default '[]',
-  tier text not null default 'standard' check (tier in ('standard','featured','premier')),
+  tier text not null default 'standard' check (tier in ('standard','featured','premium')),
   admin_notes text,                          -- admin-only column (see RLS note below)
   created_by uuid, updated_by uuid,
   created_at, updated_at,
@@ -187,7 +205,8 @@ developments(
 )
 ```
 - Full frozen project field set restored: developer/architect/designer, estimated completion, building details, amenities, parking, pets, HOA, deposit structure, incentives, buyer-agent compensation, neighborhood info, tier, lifecycle timestamps (`submitted_at` / `paused_at` / `archived_at`), `admin_notes`, and `created_by` / `updated_by` audit fields.
-- `admin_notes` is never exposed to agents or members: agent/member SELECT goes through a column-restricted view (or explicit column grants) that omits it; only admins and service_role read the base column.
+- `admin_notes` is never exposed to agents or members. **One concrete mechanism (chosen):** the base table `public.developments` receives **explicit column-level grants** — `GRANT SELECT (col, col, …) ON public.developments TO authenticated` listing every column *except* `admin_notes` — and **no table-level `GRANT SELECT`**. `GRANT INSERT/UPDATE` is likewise column-scoped to exclude `admin_notes`, `published_at`, `published_by`, and `slug_locked_at`. Admins and `service_role` read/write the full row (`GRANT ALL … TO service_role`; admin reads go through a `security definer` RPC). See §3 for the corrected grant wording — no unrestricted base-table SELECT is granted anywhere that a column restriction is claimed.
+- `estimated_completion` stays a `date` for MVP as approved. If delivery *ranges* are needed later, that is a deliberate extension (the existing `delivery_from` / `delivery_to` date pair already covers ranged messaging).
 - `submitted_at` is stamped when a member moves `draft → pending_review`; `paused_at` / `archived_at` are stamped by the admin transition trigger.
 - `lifecycle_status` and `publish_status` are **independent**. Nothing collapses them; a `completed` development can be `paused`, a `now_selling` one can be `draft`.
 - **Slug locking:** a `before update` trigger sets `slug_locked_at = now()` on the first transition to `published`, and rejects any `slug` change once `slug_locked_at is not null` (admins included, to preserve link permanence).
@@ -224,7 +243,7 @@ development_floor_plans(
   id pk, development_id, account_id,
   name text not null,
   description text,
-  beds numeric(4,1), baths numeric(4,1), half_baths int,
+  beds numeric(4,1), baths numeric(4,1),      -- no separate half_baths; halves ride in baths
   sqft_min int, sqft_max int,
   price_min numeric(12,2), price_max numeric(12,2),
   features jsonb not null default '[]',
@@ -245,7 +264,7 @@ development_units(
   floor text,                                  -- text-capable: 'PH', 'G', '12'
   beds numeric(4,1), baths numeric(4,1), sqft int,
   price numeric(12,2) check (price is null or price >= 0),
-  status text not null default 'available'
+  status text not null default 'coming_soon'
     check (status in ('available','reserved','under_agreement','sold','coming_soon')),
   description text,
   views_exposure text,                         -- e.g. "south-facing, harbor view"
@@ -265,6 +284,8 @@ development_units(
 - Floor plans restored to the frozen shape: `sqft_min`/`sqft_max` (not a single `sqft`), plus `description`, `features`, `is_active`, `sort_order`.
 - Units restored to the approved daily-inventory/product shape: `description`, `views_exposure`, parking, `incentives`, `estimated_delivery`, `is_featured`, `sort_order`, and the `status_changed_at` / `price_changed_at` stamps. A `before update` trigger sets `status_changed_at` when `status` changes and `price_changed_at` when `price` changes (including a change to `NULL`), so the narrow sales writer needs no special-casing.
 - **No `held` status.** The frozen five-value vocabulary stands.
+- **No `half_baths` column** on floor plans or units. `beds` / `baths` are `numeric(4,1)`; a 2.5-bath plan is `baths = 2.5`.
+- **Unit `status` defaults to `coming_soon`**, matching the approved foundation — a newly created unit is not implicitly for sale.
 - **Automatic Main phase:** an `after insert` trigger on `developments` creates one `development_buildings_phases` row named `Main` with `is_default = true`, so `building_phase_id` can be `NOT NULL` from the first unit onward. A partial unique index enforces one default phase per development.
 - **Phase deletion is blocked while units reference it:** the composite FK uses `on delete restrict`, not `set null`. The default phase additionally cannot be deleted while it is the only phase.
 
@@ -355,14 +376,13 @@ development_documents(
     'disclosure',
     'condo_docs',
     'deposit_schedule',
-    -- For Agents (seven)
+    -- For Agents (six)
     'broker_registration',
     'buyer_agent_compensation',
     'commission_bonus',
     'showing_tour_procedure',
     'sales_office_hours',
     'offer_submission',
-    'agent_faq',
     'other'
   )),
   access text not null default 'agent_only' check (access in ('agent_only','public_marketing')),
@@ -380,7 +400,7 @@ development_documents(
     references public.development_units(id, development_id) on delete set null
 )
 ```
-- **Frozen category set restored exactly.** The invented names `floor_plan_pdf`, `price_sheet`, `hoa_condo_docs`, and `offering_plan` are removed in favor of `floor_plan`, `spec_sheet`, `finish_package`, `disclosure`, and `condo_docs`. The seven For Agents categories are `broker_registration`, `buyer_agent_compensation`, `commission_bonus`, `showing_tour_procedure`, `sales_office_hours`, `offer_submission`, `agent_faq`.
+- **Frozen category set, now exact.** The invented names `floor_plan_pdf`, `price_sheet`, `hoa_condo_docs`, `offering_plan`, and `agent_faq` are all removed. The set is the eight marketing/project categories (`brochure`, `floor_plan`, `site_plan`, `spec_sheet`, `finish_package`, `disclosure`, `condo_docs`, `deposit_schedule`), the **six** named For Agents categories (`broker_registration`, `buyer_agent_compensation`, `commission_bonus`, `showing_tour_procedure`, `sales_office_hours`, `offer_submission`), plus `other`.
 - **Optional unit attachment restored**, using the same composite-FK parent-consistency model as floor plans; a document may attach to at most one parent (floor plan *or* unit) and otherwise sits at development level.
 - `description` and `is_featured_agent_resource` restored — the latter drives the "For Agents" highlight rail.
 - `public_marketing` is stored and **is readable/downloadable by eligible agents** on a published development. It simply grants no anonymous access in MVP (see §3 and §4).
@@ -391,10 +411,11 @@ development_documents(
 development_sales_contacts(
   id pk, development_id, account_id,
   name text not null,
-  email text not null,
-  phone text,
+  email text,                                                 -- nullable: a displayed contact may be phone-only
+  phone text,                                                 -- nullable
   title text,
-  role text,                                                  -- e.g. "Sales Director"
+  role text not null default 'sales_associate'
+    check (role in ('sales_director','sales_associate','onsite_concierge','marketing','other')),
   headshot_url text,
   bio text,
   user_id uuid references auth.users(id) on delete set null,  -- optional; contacts need not be AAC users
@@ -405,15 +426,19 @@ development_sales_contacts(
   sort_order int not null default 0,
   created_at, updated_at,
   unique(id, development_id),
-  unique(development_id, lower(email))
+  check (email is not null or phone is not null)              -- a contact must be reachable somehow
 )
 ```
-- `role`, `headshot_url`, `bio`, and `is_primary` restored. One primary per development: `create unique index ... on development_sales_contacts(development_id) where is_primary and is_active;`
+- `role` is a controlled vocabulary (`sales_director | sales_associate | onsite_concierge | marketing | other`), default `sales_associate` — not free text. Display labels live in the frontend.
+- `email` and `phone` are both nullable (an on-site concierge may be phone-only), with a check that at least one is present. Email uniqueness becomes a **partial** index: `create unique index ... on development_sales_contacts(development_id, lower(email)) where email is not null;`
+- One primary per development: `create unique index ... on development_sales_contacts(development_id) where is_primary and is_active;`
 
 **Routing rule (server-side only) — three ordered tiers:**
-1. Active contacts flagged for the channel (`receives_leads` / `receives_showing_requests`).
-2. If empty → the **primary active contact** (`is_primary and is_active`), regardless of channel flag.
+1. Active contacts flagged for the channel (`receives_leads` / `receives_showing_requests`) **that have a non-null email**.
+2. If empty → the **primary active contact** (`is_primary and is_active`) if it has an email, regardless of channel flag.
 3. If still empty → the account's `owner` members.
+
+**Email-less contacts never block routing.** A contact without an email is displayed on the mini-site but is skipped by every routing tier; resolution simply continues down the fallback chain, so a phone-only sales team still results in owner notification.
 
 Account membership role is never itself a routing signal; it is only the last-resort safety net.
 
@@ -484,7 +509,27 @@ Helper functions (all `security definer`, `stable`, `set search_path = public`):
 - `development_account_id(_development_id uuid)`
 - `is_published_development(_development_id uuid)` — `publish_status = 'published'`
 
-Grants per table: `GRANT SELECT, INSERT, UPDATE, DELETE ... TO authenticated; GRANT ALL ... TO service_role;`. **No `anon` grant on any development table** — agents-only MVP.
+**Grants — one mechanism, no contradictions.** For every development table *except* `developments`, grants are table-level: `GRANT SELECT, INSERT, UPDATE, DELETE ON public.<table> TO authenticated; GRANT ALL ON public.<table> TO service_role;` (those tables have no restricted columns).
+
+For `public.developments`, which does have a restricted column, there is **no table-level `SELECT`/`INSERT`/`UPDATE` grant to `authenticated`**. Instead:
+```sql
+-- explicit safe-column grants; admin_notes deliberately absent
+GRANT SELECT (id, account_id, name, slug, slug_locked_at, lifecycle_status, publish_status,
+              published_at, submitted_at, paused_at, archived_at, address, city, state,
+              postal_code, latitude, longitude, neighborhood, neighborhood_description,
+              developer_name, architect_name, interior_designer_name, estimated_completion,
+              delivery_from, delivery_to, total_units, total_buildings, stories, year_built,
+              construction_type, amenities, parking_description, parking_included, pet_policy,
+              hoa_fee_min, hoa_fee_max, hoa_fee_includes, deposit_structure, incentives,
+              buyer_agent_compensation, buyer_agent_compensation_notes, description,
+              highlights, tier, created_at, updated_at)
+  ON public.developments TO authenticated;
+GRANT INSERT (…same safe list, minus published_at/published_by/slug_locked_at…),
+      UPDATE (…same safe list, minus published_at/published_by/slug_locked_at…),
+      DELETE ON public.developments TO authenticated;   -- DELETE still blocked by the permanence trigger
+GRANT ALL ON public.developments TO service_role;
+```
+Admin access to `admin_notes` is via `service_role` / a `security definer` admin RPC, never a broadened base grant. **No `anon` grant on any development table** — agents-only MVP.
 
 Policy matrix:
 
@@ -505,7 +550,16 @@ Policy matrix:
 - Full AAC agent contact details on leads/showings are visible to owner/editor/sales (decision 2).
 - Publication guard: a `WITH CHECK` clause plus trigger blocks members from writing `publish_status='published'`, `published_at`, `published_by`, or a locked `slug`.
 - **`public_marketing` is not a restriction on agents.** Both `agent_only` and `public_marketing` documents are readable by eligible agents on a published development; the flag only marks material that *may later* be shown publicly. `anon` still has no grant and no policy on any development table, so nothing is anonymously reachable in MVP.
-- Agent SELECT on `developments` excludes `admin_notes` via column-restricted exposure; members see all columns of their own account's rows except `admin_notes`.
+- Agent/member SELECT on `developments` excludes `admin_notes` purely through the column grants above — there is no compensating table-level SELECT grant that would defeat them.
+
+**Denormalized `account_id` on child tables — mandatory composite FK.** Every child table that carries `account_id` alongside `development_id` (phases, floor plans, units, updates, media, documents, sales contacts, saves, shares, leads, showing requests) declares:
+```sql
+alter table public.<child>
+  add constraint <child>_development_account_fk
+  foreign key (development_id, account_id)
+  references public.developments(id, account_id) on update cascade on delete cascade;
+```
+This makes it structurally impossible for a child row's `account_id` to disagree with its development's owning account, closing the cross-account authorization gap the denormalization would otherwise create. `developments.unique(id, account_id)` is the FK target. Because `developments.account_id` is effectively immutable (`on delete restrict` to the account; no re-parenting path in MVP), the cascade is a safety net, not a routine path.
 
 Agent read policies all take the form:
 ```sql
@@ -628,7 +682,11 @@ All follow the same shape: `npm:@supabase/supabase-js@2`, CORS, JWT validated in
 
 1. **`development-lead-submit`** — validate body → resolve `agent_user_id` from the JWT (never the body) → assert eligible agent → assert development published → snapshot `sender_name/email/phone` from the agent profile server-side → insert `development_leads` → resolve recipients through the three-tier routing order (flagged active contacts → **primary active contact** → account `owner` members) → enqueue `email_jobs` with idempotency key `dev-lead:{lead_id}:{recipient_email}` → stamp `notified_at`.
 2. **`development-showing-request`** — identical flow against `development_showing_requests` (`preferred_date`, `preferred_time` text, `message`), tier 1 filtered by `receives_showing_requests`, then the same primary-contact and owner fallbacks, key `dev-showing:{showing_request_id}:{recipient_email}`.
-3. **`development-document-url`** — assert eligible agent + development published (any `access` value; anon rejected) → mint a 5-minute signed URL → return URL only. No logging table.
+3. **`development-document-url`** — authorize via **two valid paths**, then mint a 5-minute signed URL and return the URL only. No logging table.
+   - **Path A:** eligible AAC agent (verified + activated) **and** the development is `published` — any `access` value.
+   - **Path B:** an accepted member of that development's account (`owner | editor | sales | viewer`) — **regardless of publish status**, so developers can preview and download their own documents while `draft` / `pending_review` / `paused` / `archived`.
+   - Admins are authorized on either path.
+   - Anonymous callers are always rejected. TTL stays 5 minutes.
 
 **`development-member-invite` is removed.** Invites are Phase 2; MVP has no invited-membership state to create.
 
@@ -643,13 +701,13 @@ Emails reuse the existing `email_jobs` queue with a new dedicated stream (`devel
 3. `..._03_inventory.sql` — buildings_phases (auto **Main**), floor_plans (`sqft_min/max`, features, active, sort), units (full product fields + `status_changed_at` / `price_changed_at` trigger), composite FKs with `on delete restrict` on phase.
 4. `..._04_updates.sql` — development_updates (`construction|sales|design|general`, `updated_by`), pinned-unique index, Markdown guard, first-publish stamp.
 5. `..._05_media_documents.sql` — media (XOR ownership, storage/external, hero unique) and documents (frozen category set, optional floor-plan **or** unit attachment, `is_featured_agent_resource`).
-6. `..._06_sales_contacts.sql` — sales contacts (`role`, headshot, bio, `is_primary` + partial unique index), routing indexes, agent read policy for published developments.
+6. `..._06_sales_contacts.sql` — sales contacts (controlled `role` vocabulary, nullable email/phone with reachability check, headshot, bio, `is_primary` + partial unique indexes), routing indexes, agent read policy for published developments.
 7. `..._07_engagement.sql` — saves, shares (frozen share types, with `unit_id`), leads (frozen source/status), `development_showing_requests`.
 8. `..._08_helpers_rpcs.sql` — eligibility/membership helpers and grants, sales inventory reader, narrow unit status/price writer (narrow return type + `_clear_price`), aggregate summary RPC, admin owner-replacement RPC.
 9. `..._09_storage_policies.sql` — bucket creation + storage policies.
 10. `..._10_email_stream.sql` — `development_notifications` stream registration only.
 
-Each includes an `updated_at` trigger and a rollback note. Snapshot (`npm run db:snapshot`) refreshed after apply.
+Each includes an `updated_at` trigger, the `(development_id, account_id)` composite FK for any table carrying `account_id`, and a rollback note. Snapshot (`npm run db:snapshot`) refreshed after apply.
 
 ---
 
@@ -679,3 +737,15 @@ Each includes an `updated_at` trigger and a rollback note. Snapshot (`npm run db
 | 7 | `public_marketing` documents are readable and signable for eligible agents; anon remains forbidden. |
 | 8 | Publish guard now enforces the complete transition matrix, blocking member paths like `draft → paused` and `pending_review → archived`. |
 | 9 | Narrow sales writer returns a narrow composite type and distinguishes "leave unchanged" from "clear price to TBD" via `_clear_price`. |
+
+## 11. Revision 4 change log (against Revision 3)
+
+| # | Correction |
+|---|---|
+| 1 | `developments.tier` vocabulary corrected: `premier` → **`premium`** (`standard | featured | premium`). |
+| 2 | Removed the never-approved `agent_faq` document category; the For Agents set is the **six** named categories, and the "restored exactly" claim is now accurate. |
+| 3 | Field decisions restored: `half_baths` removed (beds/baths `numeric(4,1)` only), `development_units.status` defaults to **`coming_soon`**, and `estimated_completion` is a **`date`** again rather than free text. |
+| 4 | `development_sales_contacts.role` is a controlled set (`sales_director | sales_associate | onsite_concierge | marketing | other`, default `sales_associate`); `email` and `phone` are nullable with an at-least-one-reachable check, email uniqueness is a partial index, and email-less contacts are skipped by routing rather than blocking it. |
+| 5 | `development-document-url` now authorizes two paths — eligible agent + published, **or** accepted account member at any publish status (admins on either) — preserving the 5-minute TTL and pre-publication developer preview. |
+| 6 | Integrity/security: membership `account_id` and `user_id` are immutable after insert (transfer = delete/create, so the owner invariant cannot be bypassed by re-parenting), and every child table carrying `account_id` gets a composite `(development_id, account_id) → developments(id, account_id)` FK. |
+| 7 | Grants contradiction resolved: `public.developments` gets **explicit safe-column grants only** — no table-level `SELECT` to `authenticated` — so the `admin_notes` column restriction actually holds. |
