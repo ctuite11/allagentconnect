@@ -1,0 +1,44 @@
+--- supabase/functions/_shared/emailStreams.ts	2026-08-14 22:53:49.091936987 +0000
++++ /tmp/es_new.ts	2026-08-14 23:18:41.231484863 +0000
+@@ -9,15 +9,32 @@
+   | "hot_sheet"
+   | "communications"
+   | "transactional"
+-  | "system";
++  | "system"
++  | "development_notifications";
+ 
+ export const ALL_STREAMS: EmailStream[] = [
+   "hot_sheet",
+   "communications",
+   "transactional",
+   "system",
++  "development_notifications",
+ ];
+ 
++/**
++ * Streams the ad-hoc `kick-email-queue` endpoint may claim.
++ *
++ * `kick-email-queue` accepts ANY authenticated user JWT, so a new stream added
++ * to ALL_STREAMS would become claimable by any signed-in user. Until that
++ * endpoint is made internal/service-role-only, development notifications are
++ * explicitly kept off the kick path and are delivered solely by the
++ * service-role `process-email-queue` worker on its cron schedule.
++ */
++export const KICK_EXCLUDED_STREAMS: EmailStream[] = ["development_notifications"];
++
++export function kickAllowedStreams(): EmailStream[] {
++  return allowedStreams().filter((s) => !KICK_EXCLUDED_STREAMS.includes(s));
++}
++
+ /** Permanently retired listing-alert traffic. Never claim, never send. */
+ export function isPermanentlyBlockedJob(
+   template: string | null | undefined,
+@@ -53,6 +70,7 @@
+   if (!stream) return true; // unclassified => fail closed
+   if (stream === "hot_sheet") return envTrue("HOT_SHEET_EMAILS_PAUSED");
+   if (stream === "communications") return envTrue("COMMS_EMAILS_PAUSED");
++  if (stream === "development_notifications") return envTrue("DEVELOPMENT_EMAILS_PAUSED");
+   return false;
+ }
+ 

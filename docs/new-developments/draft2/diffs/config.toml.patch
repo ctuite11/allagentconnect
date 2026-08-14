@@ -1,0 +1,11 @@
+--- a/supabase/config.toml
++++ b/supabase/config.toml
+@@ (append)
++[functions.development-lead-submit]
++verify_jwt = false
++
++[functions.development-showing-request]
++verify_jwt = false
++
++[functions.development-document-url]
++verify_jwt = false
