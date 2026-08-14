@@ -289,17 +289,19 @@ alter table public.development_units
 development_updates(
   id pk, development_id, account_id,
   kind text not null
-    check (kind in ('construction','sales','milestone','pricing','event','general')),
+    check (kind in ('construction','sales','design','general')),
   title text not null,
   body_markdown text not null,                 -- Markdown only; raw HTML rejected by trigger
   posted_at timestamptz not null default now(),
   is_published boolean not null default false,
   published_at timestamptz,                    -- stamped on first publish, never rewritten
   is_pinned boolean not null default false,
-  created_by uuid, created_at, updated_at,
+  created_by uuid, updated_by uuid, created_at, updated_at,
   unique(id, development_id)
 )
 ```
+- **Frozen update vocabulary restored:** exactly `construction | sales | design | general`. `milestone`, `pricing`, and `event` are removed.
+- `updated_by` restored alongside `created_by`.
 - **One pinned update per development:** `create unique index ... on development_updates(development_id) where is_pinned;`
 - **No `sort_override`.** Ordering is pinned-first, then `posted_at desc`.
 - A `before insert/update` trigger rejects `body_markdown` containing HTML tags and stamps `published_at` only on the first `is_published` transition.
