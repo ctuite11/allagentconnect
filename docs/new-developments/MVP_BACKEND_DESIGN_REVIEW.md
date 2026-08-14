@@ -156,6 +156,60 @@ for each row execute function public.enforce_last_development_owner();
 ```
 Two concurrent demotions cannot both succeed: each takes `FOR UPDATE` on the same `development_accounts` row before counting, so the second transaction re-reads post-commit state and fails.
 
+**Initial-owner hole closed — account creation is atomic.** The last-owner trigger can only protect an owner that already exists, so a bare `INSERT` into `development_accounts` would leave an account with zero owners. MVP therefore has **no direct insert path** for accounts: `authenticated` gets no `INSERT` grant on `development_accounts`, and creation goes through one `security definer` RPC that writes both rows in a single transaction.
+
+```sql
+create or replace function public.create_development_account(
+  _name text, _slug text, _owner_user_id uuid,
+  _legal_name text default null, _billing_email text default null)
+returns uuid
+language plpgsql security definer set search_path = public as $$
+declare v_account_id uuid;
+begin
+  if not public.has_role(auth.uid(), 'admin') then
+    raise exception 'admin role required';
+  end if;
+  if _owner_user_id is null then
+    raise exception 'an initial owner is required';
+  end if;
+
+  insert into public.development_accounts (name, legal_name, slug, billing_email)
+  values (_name, _legal_name, _slug, _billing_email)
+  returning id into v_account_id;
+
+  insert into public.development_account_members (account_id, user_id, role, invited_by, accepted_at)
+  values (v_account_id, _owner_user_id, 'owner', auth.uid(), now());
+
+  return v_account_id;
+end $$;
+
+revoke all on function public.create_development_account(text, text, uuid, text, text) from public, anon;
+grant execute on function public.create_development_account(text, text, uuid, text, text) to authenticated;
+```
+Both inserts commit or neither does, so an account never exists — even momentarily within another transaction's visible state — without an `owner`. Account deletion cascades its members, and the last-owner trigger is not consulted on account delete (the invariant is about accounts that continue to exist).
+
+**`development_accounts` RLS — explicit:**
+```sql
+alter table public.development_accounts enable row level security;
+
+-- no anon grant, no anon policy anywhere on this table
+grant select, update on public.development_accounts to authenticated;   -- no INSERT, no DELETE
+grant all on public.development_accounts to service_role;
+
+create policy "Members read their own account"
+on public.development_accounts for select to authenticated
+using (public.is_development_member(id) or public.has_role(auth.uid(), 'admin'));
+
+create policy "Owners manage their own account"
+on public.development_accounts for update to authenticated
+using (public.is_development_member(id, array['owner']) or public.has_role(auth.uid(), 'admin'))
+with check (public.is_development_member(id, array['owner']) or public.has_role(auth.uid(), 'admin'));
+```
+- **Read:** any accepted member of the account (`owner|editor|sales|viewer`) plus admins.
+- **Write:** `owner` role and admins only; `slug` changes follow the same permanence rules as development slugs.
+- **Create:** admins, via `create_development_account` only. **Delete:** `service_role` / admin RPC only.
+- **Anonymous:** no grant and no policy — unreachable, consistent with the agents-only MVP.
+
 **Admin recovery without a bypass flag:** `admin_replace_development_owner(_account_id uuid, _new_owner_user_id uuid)` is `security definer`, asserts `has_role(auth.uid(),'admin')`, and **promotes/inserts the replacement owner first**. Once a second owner exists, demoting the prior owner satisfies the invariant naturally. `current_setting('aac.admin_owner_recovery')` is removed entirely — a caller-settable GUC is not an authorization boundary.
 
 ### 2.2 Developments (permanent id, two independent status fields)
@@ -715,13 +769,13 @@ Emails reuse the existing `email_jobs` queue with a new dedicated stream (`devel
 
 ## 7. Migration sequence (proposed file names, not applied)
 
-1. `..._new_developments_01_accounts_members.sql` — accounts (frozen fields incl. `legal_name`, `billing_email`, `stripe_customer_id`, `is_active`), members (accepted-only, 4 roles, `accepted_at`), concurrency-safe last-owner trigger, grants, RLS.
-2. `..._02_developments_core.sql` — developments with the full frozen field set, `lifecycle_status` + `publish_status`, id registry, permanence / **full transition-matrix** / slug-lock triggers, `admin_notes` column restriction.
+1. `..._new_developments_01_accounts_members.sql` — accounts (frozen fields incl. `legal_name`, `billing_email`, `stripe_customer_id`, `is_active`), members (accepted-only, 4 roles, `accepted_at`), concurrency-safe last-owner trigger, atomic `create_development_account` RPC (no direct account INSERT grant), explicit `development_accounts` grants + RLS.
+2. `..._02_developments_core.sql` — developments with the full frozen field set (incl. `logo_url`, `building_details`, `hoa_fees`), `lifecycle_status` + `publish_status`, id registry, permanence / **full transition-matrix** / slug-lock triggers, `admin_notes` column restriction.
 3. `..._03_inventory.sql` — buildings_phases (auto **Main**), floor_plans (`sqft_min/max`, features, active, sort), units (full product fields + `status_changed_at` / `price_changed_at` trigger), composite FKs with `on delete restrict` on phase.
 4. `..._04_updates.sql` — development_updates (`construction|sales|design|general`, `updated_by`), pinned-unique index, Markdown guard, first-publish stamp.
-5. `..._05_media_documents.sql` — media (XOR ownership, storage/external, hero unique) and documents (frozen category set, optional floor-plan **or** unit attachment, `is_featured_agent_resource`).
+5. `..._05_media_documents.sql` — media (XOR ownership, `storage_bucket` + `storage_path` / external, `mime_type`, `duration_seconds`, `caption`, hero unique) and documents (frozen category set, optional floor-plan **or** unit attachment, `is_featured_agent_resource`).
 6. `..._06_sales_contacts.sql` — sales contacts (controlled `role` vocabulary, nullable email/phone with reachability check, headshot, bio, `is_primary` + partial unique indexes), routing indexes, agent read policy for published developments.
-7. `..._07_engagement.sql` — saves, shares (frozen share types, with `unit_id`), leads (frozen source/status), `development_showing_requests`.
+7. `..._07_engagement.sql` — saves, shares (frozen share types, with `unit_id`), leads (frozen source/status), `development_showing_requests`; `agent_user_id NOT NULL REFERENCES auth.users(id)` on all four (cascade on saves/shares, restrict on leads/showings); no `account_id` on saves/shares.
 8. `..._08_helpers_rpcs.sql` — eligibility/membership helpers and grants, sales inventory reader, narrow unit status/price writer (narrow return type + `_clear_price`), aggregate summary RPC, admin owner-replacement RPC.
 9. `..._09_storage_policies.sql` — bucket creation + storage policies.
 10. `..._10_email_stream.sql` — `development_notifications` stream registration only.
@@ -768,3 +822,14 @@ Each includes an `updated_at` trigger, the `(development_id, account_id)` compos
 | 5 | `development-document-url` now authorizes two paths — eligible agent + published, **or** accepted account member at any publish status (admins on either) — preserving the 5-minute TTL and pre-publication developer preview. |
 | 6 | Integrity/security: membership `account_id` and `user_id` are immutable after insert (transfer = delete/create, so the owner invariant cannot be bypassed by re-parenting), and every child table carrying `account_id` gets a composite `(development_id, account_id) → developments(id, account_id)` FK. |
 | 7 | Grants contradiction resolved: `public.developments` gets **explicit safe-column grants only** — no table-level `SELECT` to `authenticated` — so the `admin_notes` column restriction actually holds. |
+
+## 12. Revision 5 change log (against Revision 4)
+
+| # | Correction |
+|---|---|
+| 1 | Restored three foundation fields on `developments`: `logo_url` (required by the development-branded mini-site), flexible `building_details jsonb`, and free-text `hoa_fees`. Revision 4's structured building/HOA columns stay as additions, not replacements; all three are added to the safe-column grants. |
+| 2 | `development_units.estimated_delivery` reverted from `text` to **`date`**, per the frozen unit schema. |
+| 3 | Media storage contract completed: `storage_bucket` restored alongside `storage_path` (both required for `source_type='storage'`, both null for external), plus the approved `mime_type`, `duration_seconds`, and `caption` metadata; the uniqueness index now covers `(development_id, storage_bucket, storage_path)`. |
+| 4 | Engagement actor ids are now database invariants: `agent_user_id uuid NOT NULL REFERENCES auth.users(id)` on saves, shares, leads, and showing requests — `on delete cascade` for saves/shares, `on delete restrict` for leads/showing requests. Server-side JWT identity resolution remains authoritative. |
+| 5 | Composite-FK contradiction fixed: saves and shares are removed from the `(development_id, account_id)` sentence and gain no redundant `account_id`; leads, showing requests, and the denormalized content/inventory tables keep the composite protection. |
+| 6 | Initial-owner hole closed: no direct `INSERT` grant on `development_accounts`; creation goes through an atomic `security definer` `create_development_account` RPC that writes the account and its first `owner` in one transaction. `development_accounts` RLS spelled out — members read, owner/admin manage, admin-only create/delete, no anonymous access. |
