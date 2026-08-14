@@ -98,9 +98,9 @@ Deno.test("re-running the same submission never creates a second send", async ()
   assert(first.notified);
 
   // Retry: both keys now exist -> unique violations counted as success, no new rows.
-  const retryClient = (
-    fakeSupabase({ existingKeys: new Set(["dev-lead:L1:contact:c1", "dev-lead:L1:contact:c2"]) }),
-  );
+  const retryClient = fakeSupabase({
+    existingKeys: new Set(["dev-lead:L1:contact:c1", "dev-lead:L1:contact:c2"]),
+  });
   const second = await notifySubmission(retryClient, "lead", "L1", CONTEXT, "d1", "a1", CONTEXT.agentEmail);
   assertEquals(second.enqueued, 0);
   assertEquals(second.alreadyQueued, 2);
@@ -109,7 +109,7 @@ Deno.test("re-running the same submission never creates a second send", async ()
 });
 
 Deno.test("partial enqueue leaves notified_at unstamped and completes on retry", async () => {
-  const failing = (fakeSupabase({ failKeys: new Set(["dev-lead:L2:contact:c2"]) }));
+  const failing = fakeSupabase({ failKeys: new Set(["dev-lead:L2:contact:c2"]) });
   const partial = await notifySubmission(failing, "lead", "L2", CONTEXT, "d1", "a1", CONTEXT.agentEmail);
   assertEquals(partial.enqueued, 1);
   assertEquals(partial.failed, 1);
@@ -117,7 +117,7 @@ Deno.test("partial enqueue leaves notified_at unstamped and completes on retry",
   assertEquals(failing.stamped.length, 0);
 
   // Same-row retry: the already-enqueued recipient is skipped, the missing one lands.
-  const retry = (fakeSupabase({ existingKeys: new Set(["dev-lead:L2:contact:c1"]) }));
+  const retry = fakeSupabase({ existingKeys: new Set(["dev-lead:L2:contact:c1"]) });
   const done = await notifySubmission(retry, "lead", "L2", CONTEXT, "d1", "a1", CONTEXT.agentEmail);
   assertEquals(done.enqueued, 1);
   assertEquals(done.alreadyQueued, 1);
