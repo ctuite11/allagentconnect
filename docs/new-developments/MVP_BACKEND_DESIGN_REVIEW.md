@@ -24,7 +24,7 @@ Frozen SSOT constraints honored:
 |---|---|
 | Aggregate suppression threshold | **None.** Exact save/share counts, including 1. Privacy comes from withholding agent identity. |
 | Lead/showing contact visibility | **Full AAC agent contact info** to owner/editor/sales. This is agent contact data, not buyer PII. No claim-before-reveal step. |
-| Logged-out public marketing | **Out of scope.** `public_marketing` remains a forward-looking document flag only; it grants no anonymous access today. No public SECURITY DEFINER surface in MVP. |
+| Logged-out public marketing | **Out of scope.** `public_marketing` remains a forward-looking document flag only: it grants **no anonymous access**, but such documents are fully readable/downloadable by eligible agents on a published development. No public SECURITY DEFINER surface in MVP. |
 | Signed document URL TTL | **5 minutes.** |
 | `development_document_access` | **Removed from MVP.** Analytics/event tracking is deferred; no security requirement forces it. |
 
@@ -663,3 +663,19 @@ Each includes an `updated_at` trigger and a rollback note. Snapshot (`npm run db
 - Buyer registration and any buyer PII.
 - Logged-out public marketing surface and its SECURITY DEFINER reader.
 - `development_document_access` and other analytics/event tracking.
+
+---
+
+## 10. Revision 3 change log (against Revision 2)
+
+| # | Correction |
+|---|---|
+| 1 | Restored frozen `development_accounts` fields (`legal_name`, `billing_email`, `stripe_customer_id`, `is_active`), `accepted_at` on members, and the full frozen `developments` field set (developer/architect, estimated completion, building details, amenities, parking, pets, HOA, deposit structure, incentives, buyer-agent compensation, neighborhood, tier, submitted/paused/archived stamps, admin notes, created/updated-by). |
+| 2 | Restored floor plans to `sqft_min/sqft_max` + description/features/active/sort, and units to the approved product field set incl. `status_changed_at` / `price_changed_at`. |
+| 3 | Update kinds reset to `construction | sales | design | general`; `updated_by` restored. |
+| 4 | Document categories reset to the exact frozen set; optional unit attachment, `description`, and `is_featured_agent_resource` restored; unit parent consistency uses the same composite-FK model as floor plans. |
+| 5 | Sales contacts regained `role`, headshot, bio, `is_primary`; routing is now three-tier with the primary-contact fallback; eligible agents can read active contacts on published developments. |
+| 6 | Engagement vocabularies reset: share types, lead source, lead status, and `development_showing_requests` with `pending|confirmed|completed|cancelled|declined`. |
+| 7 | `public_marketing` documents are readable and signable for eligible agents; anon remains forbidden. |
+| 8 | Publish guard now enforces the complete transition matrix, blocking member paths like `draft → paused` and `pending_review → archived`. |
+| 9 | Narrow sales writer returns a narrow composite type and distinguishes "leave unchanged" from "clear price to TBD" via `_clear_price`. |
