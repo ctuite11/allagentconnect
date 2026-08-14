@@ -66,7 +66,16 @@ Every agent-facing policy calls `public.current_is_eligible_agent()`. Verificati
 ### 2.1 Accounts and membership — accepted members only
 
 ```
-development_accounts(id pk, name, slug uk, status, contact_email, created_at, updated_at)
+development_accounts(
+  id pk,
+  name text not null,
+  legal_name text,
+  slug text unique not null,
+  billing_email text,
+  stripe_customer_id text,          -- reserved for future billing; unused in MVP
+  is_active boolean not null default true,
+  created_at, updated_at
+)
 
 development_account_members(
   id pk,
@@ -74,10 +83,13 @@ development_account_members(
   user_id     uuid not null references auth.users(id) on delete restrict,
   role        text not null check (role in ('owner','editor','sales','viewer')),
   invited_by  uuid,
+  accepted_at timestamptz not null default now(),
   created_at, updated_at,
   unique(account_id, user_id)
 )
 ```
+- Frozen account fields restored: `legal_name`, `billing_email`, forward-looking `stripe_customer_id`, `is_active` (replacing the ad-hoc `status`/`contact_email` pair). `stripe_customer_id` is a column only — no billing logic, no Stripe coupling in MVP.
+- `accepted_at` restored on membership. Because MVP has accepted members only, it defaults to `now()` at insert; Phase 2 invites will set it at acceptance time.
 - **No `invite_status`.** A row in this table means an accepted member. There is no invited/revoked membership state; revocation is a delete.
 - **Pending invites are Phase 2** in a separate `development_account_invites` table, not built in MVP.
 - `user_id` keeps its FK to `auth.users` with `on delete restrict` so membership rows cannot be orphaned.
