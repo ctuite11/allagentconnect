@@ -663,8 +663,8 @@ GRANT SELECT (id, account_id, name, slug, slug_locked_at, lifecycle_status, publ
               highlights, tier, created_at, updated_at)
   ON public.developments TO authenticated;
 GRANT INSERT (…same safe list, minus published_at/published_by/slug_locked_at…),
-      UPDATE (…same safe list, minus published_at/published_by/slug_locked_at
-              **and minus `account_id`** — developments are never re-parented…),
+      UPDATE (…same safe list, minus published_at/published_by/slug_locked_at,
+              and minus account_id — developments are never re-parented…),
       DELETE ON public.developments TO authenticated;   -- DELETE still blocked by the permanence trigger
 GRANT ALL ON public.developments TO service_role;
 ```
@@ -709,7 +709,11 @@ Agent read policies all take the form:
 ```sql
 create policy "Eligible agents read published developments"
 on public.developments for select to authenticated
-using (publish_status = 'published' and public.current_is_eligible_agent());
+using (
+  publish_status = 'published'
+  and public.is_development_account_active(account_id)
+  and public.current_is_eligible_agent()
+);
 ```
 
 ---
