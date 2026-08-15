@@ -6779,6 +6779,30 @@ export type Database = {
         }[]
       }
       get_delegate_invite_preview: { Args: { p_token: string }; Returns: Json }
+      get_development_engagement_summary: {
+        Args: { _development_id: string }
+        Returns: {
+          leads_count: number
+          saves_count: number
+          shares_count: number
+          showings_count: number
+        }[]
+      }
+      get_development_sales_inventory: {
+        Args: { _development_id: string }
+        Returns: {
+          baths: number
+          beds: number
+          floor: string
+          floor_plan_name: string
+          phase_name: string
+          price: number
+          sqft: number
+          status: string
+          unit_id: string
+          unit_number: string
+        }[]
+      }
       get_hot_sheet_by_token: { Args: { _token: string }; Returns: Json }
       get_hot_sheet_for_member: {
         Args: { _hot_sheet_id: string }
@@ -7097,6 +7121,15 @@ export type Database = {
           role_label: string
         }[]
       }
+      list_development_submissions_awaiting_notification: {
+        Args: { _kind: string; _limit?: number }
+        Returns: {
+          account_id: string
+          created_at: string
+          development_id: string
+          id: string
+        }[]
+      }
       list_hot_sheets_for_member: {
         Args: { _hot_sheet_ids: string[] }
         Returns: {
@@ -7234,6 +7267,21 @@ export type Database = {
         Args: { p_owner_user_id: string }
         Returns: Json
       }
+      set_development_unit_status_price: {
+        Args: {
+          _clear_price?: boolean
+          _price?: number
+          _status?: string
+          _unit_id: string
+        }
+        Returns: Database["public"]["CompositeTypes"]["development_unit_write_result"]
+        SetofOptions: {
+          from: "*"
+          to: "development_unit_write_result"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       slugify_text: { Args: { _txt: string }; Returns: string }
       verify_buyer_contact_row: {
         Args: { p_crm_client_id: string }
@@ -7273,7 +7321,14 @@ export type Database = {
         | "invalid"
     }
     CompositeTypes: {
-      [_ in never]: never
+      development_unit_write_result: {
+        unit_id: string | null
+        status: string | null
+        price: number | null
+        status_changed_at: string | null
+        price_changed_at: string | null
+        updated_at: string | null
+      }
     }
   }
 }
