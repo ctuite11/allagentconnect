@@ -6594,6 +6594,14 @@ export type Database = {
         Args: { p_hot_sheet_id: string }
         Returns: boolean
       }
+      can_member_read_development_object: {
+        Args: { _name: string }
+        Returns: boolean
+      }
+      can_write_development_object: {
+        Args: { _name: string }
+        Returns: boolean
+      }
       check_client_has_other_agent: {
         Args: { p_client_email: string }
         Returns: boolean
@@ -6665,6 +6673,10 @@ export type Database = {
       }
       development_account_id: {
         Args: { _development_id: string }
+        Returns: string
+      }
+      development_from_storage_path: {
+        Args: { _name: string }
         Returns: string
       }
       dispatch_hot_sheet_listing: {
@@ -7283,6 +7295,10 @@ export type Database = {
         }
       }
       slugify_text: { Args: { _txt: string }; Returns: string }
+      storage_path_belongs_to_development: {
+        Args: { _development_id: string; _name: string }
+        Returns: boolean
+      }
       verify_buyer_contact_row: {
         Args: { p_crm_client_id: string }
         Returns: Json
