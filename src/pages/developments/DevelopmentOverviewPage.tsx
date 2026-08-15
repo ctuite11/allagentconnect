@@ -1,7 +1,7 @@
 import { useEffect, type ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { ExternalLink, Play } from "lucide-react";
 import { useDevelopmentBundle } from "@/components/developments/DevelopmentLayout";
+import { DevelopmentGalleryPreview } from "@/components/developments/DevelopmentGalleryPreview";
 import { FloorPlanCard } from "@/components/developments/FloorPlanCard";
 import { DocumentRow } from "@/components/developments/DocumentRow";
 import { SalesContactCard } from "@/components/developments/SalesContactCard";
@@ -15,11 +15,7 @@ import {
   formatUsd,
   markdownToPlainBlocks,
 } from "@/lib/developments/format";
-import {
-  floorPlanImageUrl,
-  projectGalleryPhotos,
-  projectGalleryVideos,
-} from "@/lib/developments/mediaScope";
+import { floorPlanImageUrl } from "@/lib/developments/mediaScope";
 import { parseDevelopmentHash, scheduleDevelopmentSectionScroll } from "@/lib/developments/scroll";
 import { Button } from "@/components/ui/button";
 
@@ -57,8 +53,6 @@ export default function DevelopmentOverviewPage() {
   const highlights = asStringList(development.highlights);
   const amenities = asStringList(development.amenities);
   const buildingDetails = asDetailEntries(development.building_details);
-  const photos = projectGalleryPhotos(media);
-  const videos = projectGalleryVideos(media);
   const featuredDocs = documents.filter((d) => d.is_featured_agent_resource).slice(0, 4);
   const availableUnits = units.filter((u) => u.status === "available").slice(0, 6);
   const phaseById = new Map(bundle.phases.map((p) => [p.id, p.name]));
@@ -72,6 +66,15 @@ export default function DevelopmentOverviewPage() {
 
   return (
     <div className="space-y-2">
+      {/* Hero → Photos first — visual experience immediately after branding */}
+      <div className="pb-2">
+        <DevelopmentGalleryPreview
+          developmentName={development.name}
+          media={media}
+          mediaUrls={mediaUrls}
+        />
+      </div>
+
       <Section
         id="overview"
         title="Overview"
@@ -255,68 +258,6 @@ export default function DevelopmentOverviewPage() {
                 ))}
               </tbody>
             </table>
-          </div>
-        )}
-      </Section>
-
-      <Section
-        id="gallery"
-        title="Gallery, video & virtual tours"
-        subtitle="Large photography and immersive media for buyer conversations."
-      >
-        {photos.length === 0 && videos.length === 0 ? (
-          <p className="text-sm text-zinc-500">Media gallery coming soon.</p>
-        ) : (
-          <div className="space-y-6">
-            {photos.length > 0 ? (
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {photos.map((photo) => {
-                  const url = mediaUrls[photo.id];
-                  if (!url) return null;
-                  return (
-                    <figure key={photo.id} className="overflow-hidden rounded-xl bg-zinc-100">
-                      <img
-                        src={url}
-                        alt={photo.alt || development.name}
-                        className="aspect-[4/3] w-full object-cover"
-                        loading="lazy"
-                      />
-                      {photo.caption ? (
-                        <figcaption className="px-3 py-2 text-xs text-zinc-600">{photo.caption}</figcaption>
-                      ) : null}
-                    </figure>
-                  );
-                })}
-              </div>
-            ) : null}
-            {videos.length > 0 ? (
-              <div className="grid gap-3 sm:grid-cols-2">
-                {videos.map((item) => {
-                  const url = mediaUrls[item.id] || item.external_url;
-                  if (!url) return null;
-                  return (
-                    <a
-                      key={item.id}
-                      href={url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-3 rounded-xl border border-zinc-200 bg-white p-4 hover:border-zinc-300"
-                    >
-                      <span className="rounded-full bg-zinc-900 p-2 text-white">
-                        <Play className="h-4 w-4" />
-                      </span>
-                      <span className="min-w-0 flex-1">
-                        <span className="block font-medium text-zinc-900">
-                          {item.kind === "virtual_tour" ? "Virtual tour" : "Video"}
-                        </span>
-                        <span className="block truncate text-sm text-zinc-500">{item.caption || item.alt || "Open media"}</span>
-                      </span>
-                      <ExternalLink className="h-4 w-4 text-zinc-400" />
-                    </a>
-                  );
-                })}
-              </div>
-            ) : null}
           </div>
         )}
       </Section>

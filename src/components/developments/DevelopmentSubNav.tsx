@@ -13,11 +13,11 @@ export type DevelopmentNavItem = {
 export function buildDevelopmentNav(slug: string): DevelopmentNavItem[] {
   const base = `/developments/${slug}`;
   return [
-    { id: "overview", label: "Overview", to: base, end: true },
+    { id: "gallery", label: "Photos", to: `${base}#gallery`, hash: "gallery" },
+    { id: "overview", label: "Overview", to: `${base}#overview`, hash: "overview" },
     { id: "amenities", label: "Amenities", to: `${base}#amenities`, hash: "amenities" },
     { id: "floor-plans", label: "Floor Plans", to: `${base}/floor-plans` },
     { id: "units", label: "Available Units", to: `${base}/units` },
-    { id: "gallery", label: "Gallery", to: `${base}#gallery`, hash: "gallery" },
     { id: "documents", label: "Documents", to: `${base}/documents` },
     { id: "updates", label: "Updates", to: `${base}/updates` },
     { id: "sales", label: "Sales Team", to: `${base}#sales-team`, hash: "sales-team" },

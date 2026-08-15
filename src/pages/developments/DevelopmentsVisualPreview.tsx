@@ -3,9 +3,10 @@
  * Not registered in production routes.
  */
 import { DevelopmentCard } from "@/components/developments/DevelopmentCard";
+import { DevelopmentGalleryPreview } from "@/components/developments/DevelopmentGalleryPreview";
 import { DevelopmentHero } from "@/components/developments/DevelopmentHero";
 import { DevelopmentSubNav } from "@/components/developments/DevelopmentSubNav";
-import type { DevelopmentBrowseCard, DevelopmentDetailBundle } from "@/lib/developments/types";
+import type { DevelopmentBrowseCard, DevelopmentDetailBundle, DevelopmentMediaRow } from "@/lib/developments/types";
 
 const mockDevelopment = {
   id: "00000000-0000-4000-8000-000000000001",
@@ -64,34 +65,37 @@ const mockDevelopment = {
   submitted_at: null,
 } as DevelopmentBrowseCard["development"];
 
-const heroUrl =
-  "data:image/svg+xml," +
-  encodeURIComponent(
-    `<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900">
-      <defs>
-        <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stop-color="#1e293b"/>
-          <stop offset="55%" stop-color="#334155"/>
-          <stop offset="100%" stop-color="#0f172a"/>
-        </linearGradient>
-      </defs>
-      <rect width="1600" height="900" fill="url(#g)"/>
-      <circle cx="1180" cy="220" r="180" fill="#94a3b8" opacity="0.25"/>
-      <text x="80" y="780" fill="#e2e8f0" font-family="Georgia, serif" font-size="54">Harbor House Residences</text>
-    </svg>`,
+function svgUrl(label: string, c1: string, c2: string) {
+  return (
+    "data:image/svg+xml," +
+    encodeURIComponent(
+      `<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000">
+        <defs>
+          <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="${c1}"/>
+            <stop offset="100%" stop-color="${c2}"/>
+          </linearGradient>
+        </defs>
+        <rect width="1600" height="1000" fill="url(#g)"/>
+        <circle cx="1280" cy="240" r="200" fill="#ffffff" opacity="0.12"/>
+        <text x="72" y="880" fill="#f8fafc" font-family="Georgia, serif" font-size="48">${label}</text>
+      </svg>`,
+    )
   );
+}
 
-const browseCard: DevelopmentBrowseCard = {
-  development: mockDevelopment,
-  heroUrl,
-  startingPrice: 1295000,
-  availableUnitCount: 12,
-};
+const heroUrl = svgUrl("Harbor House Residences", "#1e293b", "#0f172a");
+const galleryUrls = [
+  svgUrl("Lobby", "#334155", "#1e293b"),
+  svgUrl("Residence", "#475569", "#334155"),
+  svgUrl("Kitchen", "#64748b", "#475569"),
+  svgUrl("Terrace", "#0f766e", "#115e59"),
+  svgUrl("Amenity", "#1d4ed8", "#1e3a8a"),
+];
 
-const bundle: DevelopmentDetailBundle = {
-  development: mockDevelopment,
-  hero: {
-    id: "hero-1",
+function photo(id: string, url: string, opts?: Partial<DevelopmentMediaRow>): DevelopmentMediaRow {
+  return {
+    id,
     account_id: mockDevelopment.account_id,
     development_id: mockDevelopment.id,
     floor_plan_id: null,
@@ -101,11 +105,11 @@ const bundle: DevelopmentDetailBundle = {
     source_type: "external",
     storage_bucket: null,
     storage_path: null,
-    external_url: heroUrl,
-    is_hero: true,
+    external_url: url,
+    is_hero: false,
     width: 1600,
-    height: 900,
-    alt: "Harbor House Residences",
+    height: 1000,
+    alt: mockDevelopment.name,
     caption: null,
     mime_type: "image/svg+xml",
     duration_seconds: null,
@@ -114,9 +118,33 @@ const bundle: DevelopmentDetailBundle = {
     updated_by: null,
     created_at: mockDevelopment.created_at,
     updated_at: mockDevelopment.updated_at,
-  },
-  media: [],
-  mediaUrls: { "hero-1": heroUrl },
+    ...opts,
+  };
+}
+
+const browseCard: DevelopmentBrowseCard = {
+  development: mockDevelopment,
+  heroUrl,
+  startingPrice: 1295000,
+  availableUnitCount: 12,
+};
+
+const media: DevelopmentMediaRow[] = [
+  photo("hero-1", heroUrl, { is_hero: true, sort_order: 0 }),
+  photo("g1", galleryUrls[0], { sort_order: 1 }),
+  photo("g2", galleryUrls[1], { sort_order: 2 }),
+  photo("g3", galleryUrls[2], { sort_order: 3 }),
+  photo("g4", galleryUrls[3], { sort_order: 4 }),
+  photo("g5", galleryUrls[4], { sort_order: 5 }),
+];
+
+const mediaUrls = Object.fromEntries(media.map((m) => [m.id, m.external_url!]));
+
+const bundle: DevelopmentDetailBundle = {
+  development: mockDevelopment,
+  hero: media[0],
+  media,
+  mediaUrls,
   phases: [],
   floorPlans: [],
   units: [],
@@ -130,10 +158,12 @@ const bundle: DevelopmentDetailBundle = {
 export default function DevelopmentsVisualPreview() {
   return (
     <div className="min-h-screen bg-white">
-      <div className="mx-auto max-w-6xl space-y-10 px-6 py-10 md:px-8">
+      <div className="mx-auto max-w-6xl space-y-8 px-6 py-10 md:px-8">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">DEV preview</p>
-          <h1 className="mt-1 font-display text-2xl font-semibold text-zinc-900">New Developments — Phase 1</h1>
+          <h1 className="mt-1 font-display text-2xl font-semibold text-zinc-900">
+            New Developments — gallery-first overview
+          </h1>
         </div>
 
         <section className="space-y-4" data-preview="browse">
@@ -143,10 +173,20 @@ export default function DevelopmentsVisualPreview() {
           </div>
         </section>
 
-        <section className="space-y-4" data-preview="detail">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500">Detail hero + subnav</h2>
+        <section className="space-y-4" data-preview="detail-gallery">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500">
+            Hero → Photos → subnav
+          </h2>
           <DevelopmentHero bundle={bundle} />
           <DevelopmentSubNav slug={mockDevelopment.slug} />
+          <DevelopmentGalleryPreview
+            developmentName={mockDevelopment.name}
+            media={media}
+            mediaUrls={mediaUrls}
+          />
+          <div id="overview" className="rounded-2xl border border-zinc-200 p-5 text-sm text-zinc-600">
+            Overview section follows photography (placeholder for screenshot framing).
+          </div>
         </section>
       </div>
     </div>

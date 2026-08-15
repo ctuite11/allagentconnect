@@ -4,6 +4,8 @@ import {
   isImageCapableKind,
   isProjectLevelMedia,
   projectGalleryPhotos,
+  projectGalleryPreviewPhotos,
+  projectLevelPhotos,
   selectProjectHero,
   unitImageMedia,
 } from "./mediaScope";
@@ -69,6 +71,19 @@ describe("development media scope", () => {
       media({ id: "unit", kind: "photo", unit_id: "u1" }),
     ];
     expect(projectGalleryPhotos(rows).map((m) => m.id)).toEqual(["gallery"]);
+  });
+
+  it("builds preview tiles from project-level photos only", () => {
+    const rows = [
+      media({ id: "hero", kind: "photo", is_hero: true }),
+      media({ id: "g1", kind: "photo", sort_order: 1 }),
+      media({ id: "g2", kind: "photo", sort_order: 2 }),
+      media({ id: "g3", kind: "photo", sort_order: 3 }),
+      media({ id: "unit", kind: "photo", unit_id: "u1" }),
+      media({ id: "fp", kind: "photo", floor_plan_id: "fp1" }),
+    ];
+    expect(projectGalleryPreviewPhotos(rows, 5).map((m) => m.id)).toEqual(["g1", "g2", "g3"]);
+    expect(projectLevelPhotos(rows).map((m) => m.id)).toEqual(["hero", "g1", "g2", "g3"]);
   });
 
   it("resolves floor-plan and unit images from scoped image-capable media only", () => {

@@ -33,6 +33,31 @@ export function projectGalleryPhotos(media: DevelopmentMediaRow[]): DevelopmentM
   );
 }
 
+/** All project-level photos (including hero), sorted for gallery display. */
+export function projectLevelPhotos(media: DevelopmentMediaRow[]): DevelopmentMediaRow[] {
+  return media
+    .filter((m) => isProjectLevelMedia(m) && m.kind === "photo")
+    .slice()
+    .sort((a, b) => {
+      if (a.is_hero !== b.is_hero) return a.is_hero ? -1 : 1;
+      return (a.sort_order ?? 0) - (b.sort_order ?? 0);
+    });
+}
+
+/**
+ * Photos for the below-hero preview mosaic.
+ * Prefer non-hero gallery shots; if fewer than 3, include hero to keep the strip strong.
+ */
+export function projectGalleryPreviewPhotos(
+  media: DevelopmentMediaRow[],
+  limit = 5,
+): DevelopmentMediaRow[] {
+  const all = projectLevelPhotos(media);
+  const nonHero = all.filter((m) => !m.is_hero);
+  const source = nonHero.length >= 3 ? nonHero : all;
+  return source.slice(0, limit);
+}
+
 export function projectGalleryVideos(media: DevelopmentMediaRow[]): DevelopmentMediaRow[] {
   return media.filter((m) => isProjectLevelMedia(m) && isVideoOrTourKind(m.kind));
 }
