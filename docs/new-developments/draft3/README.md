@@ -13,7 +13,7 @@ unchanged. Draft 3 is Draft 2 plus the seven required corrections below; the pro
 migrations/   01–11  complete SQL, no placeholder or prose SQL (11 = retry dispatcher)
 functions/    four Edge Function sources (3 public + 1 internal retry runner) + shared helpers
 diffs/        exact diffs against existing email infrastructure
-tests/        Deno tests covering stream registry, idempotency, escaping
+tests/        Deno tests covering stream registry, idempotency, escaping, and static schema/classification assertions
 ```
 
 On apply, files relocate as:
@@ -35,7 +35,7 @@ on relocation (noted inline in the file).
 
 | # | Review item | Where it is resolved |
 | --- | --- | --- |
-| 1 | Real code, not prose | All 10 migrations and all 3 functions are complete source here |
+| 1 | Real code, not prose | All 11 migrations and all 4 functions are complete source here |
 | 2 | Stream fully wired | `migrations/10_email_stream.sql` (CHECK + classifier), `diffs/emailStreams.ts.patch` |
 | 2b | `kick-email-queue` before the stream is claimable | `KICK_EXCLUDED_STREAMS` / `kickAllowedStreams()`; `diffs/kick-email-queue.index.ts.patch` — the kick path can never claim `development_notifications`; only the service-role `process-email-queue` worker can |
 | 3 | Email HTML wired + escaped | `functions/_shared/buildDevelopmentNotificationEmailHtml.ts` renders into `payload.html`; the frozen `renderEmailTemplate.ts` is untouched. Escaping proved by `tests/developmentEmailHtml.test.ts` |
@@ -45,7 +45,7 @@ on relocation (noted inline in the file).
 | 7 | Audit/system columns + re-parenting | `stamp_development_child_common()`, `stamp_development_child_audit()`, `stamp_development_unit_changes()`, immutable `development_id`/`account_id` triggers, and column-level grants that exclude `created_by`/`updated_by`/timestamps/`published_at` |
 | 8 | Executable retry/idempotency | `functions/_shared/developmentNotify.ts` (23505 = success, per-recipient keys, `notified_at` stamped only when the full set is accounted for, `retryPendingSubmissions()`); RPC `list_development_submissions_awaiting_notification()`; proved by `tests/developmentNotify.test.ts` |
 | 8b | 24-hour limit vs cleanup | `rate_limits_cleanup()` retention 1h → 25h in `08_helpers_rpcs.sql` |
-| 9 | Repo security controls + honest rollback | `// @auth-classification: user-jwt` on all three functions, no baseline additions, `npm run security:guard` in verification, and an exact restore path for the modified email infrastructure |
+| 9 | Repo security controls + honest rollback | `// @auth-classification: user-jwt` on the three user-facing functions and `internal-cron` on `development-notification-retry`, no baseline additions, `npm run security:guard` in verification, and an exact restore path for the modified email infrastructure |
 
 Guardrails G1 (`is_active` blocks non-admin writes and agent reads/downloads,
 members retain recovery access), G2 (rate-limit keys carry both `auth.uid()` and
@@ -57,9 +57,8 @@ carried through unchanged from the approved package.
 Run locally against the draft files (no infrastructure touched):
 
 ```
-deno test --allow-env --allow-net docs/new-developments/draft2/tests/developmentNotify.test.ts \
-                                  docs/new-developments/draft2/tests/developmentEmailHtml.test.ts
-# 5 passed
+deno test --allow-read --allow-env --allow-net docs/new-developments/draft3/tests/
+# 15 passed, 0 failed
 ```
 
 `tests/emailStreams_development.test.ts` imports the live
@@ -73,10 +72,10 @@ pausable via `DEVELOPMENT_EMAILS_PAUSED`.
 
 1. `npm run security:guard` — must pass with no baseline edits.
 2. `supabase--linter` — zero new findings.
-3. Migrations 01–10 in order; confirm every new public table has GRANTs and RLS enabled.
+3. Migrations 01–11 in order (11 = the notification retry dispatcher; do not create the cron yet); confirm every new public table has GRANTs and RLS enabled.
 4. `select stream, count(*) from email_jobs group by 1` before/after migration 10 — existing rows unchanged.
 5. Classifier parity: assert `email_stream_for_template()` returns the identical value for all pre-existing templates.
-6. Deno tests (all four files, from their applied locations).
+6. Deno tests (all five files, from their applied locations).
 7. Negative RLS matrix: non-member, member of another account, eligible agent, ineligible agent, disabled account, unpublished development — for each of developments/units/media/documents/shares/leads/showings.
 8. Cross-development signing attempt: create a document row under A with a path under B → expect the CHECK to reject the insert, and the function to 403 even if the row is forced in by service role.
 9. Submission functions with `DEVELOPMENT_EMAILS_PAUSED=true`: rows insert, jobs enqueue, provider is never called.
@@ -88,7 +87,7 @@ existing `email_jobs` row is part of this package.
 ## Rollback
 
 Per-migration rollback notes are at the bottom of each SQL file, applied in
-reverse dependency order (10 → 01). Migration 10 is **not** additive: rollback
+reverse dependency order (11 → 01). Migration 10 is **not** additive: rollback
 must restore the prior four-value `email_jobs_stream_check`, restore
 `email_stream_for_template()` verbatim from
 `supabase/migrations/20260811001056_c9a19180-3e28-4e4c-b857-b0ed3571b7b5.sql`,
@@ -115,7 +114,7 @@ excludes rows on disabled accounts) and `diffs/config.toml.patch`
 
 ### Test status
 
-`deno test --allow-net --allow-env tests/` → **11 passed, 0 failed**, including new
+`deno test --allow-read --allow-net --allow-env tests/` → **15 passed, 0 failed**, including new
 coverage for CR/LF subject injection and the developer-workspace CTA.
 `tests/emailStreams_development.test.ts` imports `diffs/emailStreams.ts.proposed.ts`
 (a `.ts` copy of the proposed file) so the package type-checks standalone; on apply
