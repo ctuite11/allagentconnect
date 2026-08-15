@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Download, ExternalLink, FileText, Loader2, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { fetchDevelopmentDocumentUrl } from "@/lib/developments/documentUrl";
+import { openDevelopmentDocument } from "@/lib/developments/documentUrl";
 import {
   AGENT_RESOURCE_CATEGORIES,
   documentCategoryLabel,
@@ -17,13 +17,11 @@ export function DocumentRow({ document }: { document: DevelopmentDocumentRow }) 
 
   const openDocument = async () => {
     setLoading(true);
-    const result = await fetchDevelopmentDocumentUrl(document.id);
+    const result = await openDevelopmentDocument(document.id);
     setLoading(false);
     if (!result.ok) {
       toast.error(result.message);
-      return;
     }
-    window.open(result.url, "_blank", "noopener,noreferrer");
   };
 
   return (

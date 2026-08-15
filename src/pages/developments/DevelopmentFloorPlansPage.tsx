@@ -1,15 +1,10 @@
 import { useDevelopmentBundle } from "@/components/developments/DevelopmentLayout";
 import { FloorPlanCard } from "@/components/developments/FloorPlanCard";
+import { floorPlanImageUrl } from "@/lib/developments/mediaScope";
 
 export default function DevelopmentFloorPlansPage() {
   const bundle = useDevelopmentBundle();
   const { development, floorPlans, units, media, mediaUrls } = bundle;
-  const planImageById = new Map<string, string>();
-  for (const m of media) {
-    if (m.floor_plan_id && mediaUrls[m.id] && !planImageById.has(m.floor_plan_id)) {
-      planImageById.set(m.floor_plan_id, mediaUrls[m.id]);
-    }
-  }
 
   return (
     <div className="space-y-6">
@@ -32,7 +27,7 @@ export default function DevelopmentFloorPlansPage() {
               plan={plan}
               units={units}
               slug={development.slug}
-              imageUrl={planImageById.get(plan.id)}
+              imageUrl={floorPlanImageUrl(media, mediaUrls, plan.id)}
             />
           ))}
         </div>

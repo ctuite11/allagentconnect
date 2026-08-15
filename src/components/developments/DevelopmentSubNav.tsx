@@ -1,10 +1,12 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { parseDevelopmentHash, scheduleDevelopmentSectionScroll } from "@/lib/developments/scroll";
 
 export type DevelopmentNavItem = {
   id: string;
   label: string;
   to: string;
+  hash?: string;
   end?: boolean;
 };
 
@@ -12,13 +14,13 @@ export function buildDevelopmentNav(slug: string): DevelopmentNavItem[] {
   const base = `/developments/${slug}`;
   return [
     { id: "overview", label: "Overview", to: base, end: true },
-    { id: "amenities", label: "Amenities", to: `${base}#amenities` },
+    { id: "amenities", label: "Amenities", to: `${base}#amenities`, hash: "amenities" },
     { id: "floor-plans", label: "Floor Plans", to: `${base}/floor-plans` },
     { id: "units", label: "Available Units", to: `${base}/units` },
-    { id: "gallery", label: "Gallery", to: `${base}#gallery` },
+    { id: "gallery", label: "Gallery", to: `${base}#gallery`, hash: "gallery" },
     { id: "documents", label: "Documents", to: `${base}/documents` },
     { id: "updates", label: "Updates", to: `${base}/updates` },
-    { id: "sales", label: "Sales Team", to: `${base}#sales-team` },
+    { id: "sales", label: "Sales Team", to: `${base}#sales-team`, hash: "sales-team" },
   ];
 }
 
@@ -30,6 +32,19 @@ export function DevelopmentSubNav({
   className?: string;
 }) {
   const items = buildDevelopmentNav(slug);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const overviewPath = `/developments/${slug}`;
+
+  const goToHashSection = (sectionId: string) => {
+    const targetHash = `#${sectionId}`;
+    if (location.pathname === overviewPath && location.hash === targetHash) {
+      scheduleDevelopmentSectionScroll(sectionId);
+      return;
+    }
+    // SPA navigate so overview can mount, then scroll after render.
+    navigate(`${overviewPath}${targetHash}`);
+  };
 
   return (
     <nav
@@ -41,16 +56,24 @@ export function DevelopmentSubNav({
     >
       <ul className="flex gap-1 overflow-x-auto py-2 scrollbar-none">
         {items.map((item) => {
-          const isHash = item.to.includes("#");
-          if (isHash) {
+          if (item.hash) {
+            const active =
+              location.pathname === overviewPath &&
+              parseDevelopmentHash(location.hash) === item.hash;
             return (
               <li key={item.id} className="shrink-0">
-                <a
-                  href={item.to}
-                  className="inline-flex whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900"
+                <button
+                  type="button"
+                  onClick={() => goToHashSection(item.hash!)}
+                  className={cn(
+                    "inline-flex whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                    active
+                      ? "bg-zinc-900 text-white"
+                      : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900",
+                  )}
                 >
                   {item.label}
-                </a>
+                </button>
               </li>
             );
           }

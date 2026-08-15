@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { resolveMediaUrlMap } from "./mediaUrls";
+import { isImageCapableKind, isProjectLevelMedia, selectProjectHero } from "./mediaScope";
 import type {
   DevelopmentBrowseCard,
   DevelopmentDetailBundle,
@@ -64,9 +65,14 @@ export async function fetchDevelopmentBrowseCards(): Promise<{
   const [{ data: heroes }, { data: units }, { data: floorPlans }] = await Promise.all([
     supabase
       .from("development_media")
-      .select("id, development_id, source_type, storage_path, external_url, is_hero, kind, sort_order")
+      .select(
+        "id, development_id, source_type, storage_path, external_url, is_hero, kind, sort_order, floor_plan_id, unit_id, update_id",
+      )
       .in("development_id", ids)
-      .eq("is_hero", true),
+      .eq("is_hero", true)
+      .is("floor_plan_id", null)
+      .is("unit_id", null)
+      .is("update_id", null),
     supabase
       .from("development_units")
       .select("development_id, price, status")
@@ -77,7 +83,9 @@ export async function fetchDevelopmentBrowseCards(): Promise<{
       .in("development_id", ids),
   ]);
 
-  const heroRows = (heroes ?? []) as DevelopmentMediaRow[];
+  const heroRows = ((heroes ?? []) as DevelopmentMediaRow[]).filter(
+    (m) => isProjectLevelMedia(m) && isImageCapableKind(m.kind),
+  );
   const urlMap = await resolveMediaUrlMap(heroRows);
   const heroByDev = new Map(heroRows.map((h) => [h.development_id, h]));
 
@@ -151,6 +159,8 @@ export async function fetchDevelopmentBySlug(slug: string): Promise<{
       .from("development_media")
       .select("*")
       .eq("development_id", id)
+      // Phase 1 detail: exclude update-attached media (not shown on update list yet).
+      .is("update_id", null)
       .order("sort_order", { ascending: true }),
     supabase
       .from("development_buildings_phases")
@@ -207,7 +217,7 @@ export async function fetchDevelopmentBySlug(slug: string): Promise<{
   const mediaUrls = await resolveMediaUrlMap(media);
   const units = (unitsRes.data ?? []) as DevelopmentUnitRow[];
   const floorPlans = (floorPlansRes.data ?? []) as DevelopmentFloorPlanRow[];
-  const hero = media.find((m) => m.is_hero) ?? media.find((m) => m.kind === "photo") ?? null;
+  const hero = selectProjectHero(media);
 
   return {
     bundle: {

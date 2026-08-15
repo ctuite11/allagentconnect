@@ -7,6 +7,7 @@ import {
   formatSqft,
   formatUsd,
 } from "@/lib/developments/format";
+import { unitImageMedia } from "@/lib/developments/mediaScope";
 import { Button } from "@/components/ui/button";
 
 export default function DevelopmentUnitDetailPage() {
@@ -16,7 +17,9 @@ export default function DevelopmentUnitDetailPage() {
   const unit = units.find((u) => u.id === unitId);
   const phase = unit ? phases.find((p) => p.id === unit.building_phase_id) : null;
   const plan = unit?.floor_plan_id ? floorPlans.find((p) => p.id === unit.floor_plan_id) : null;
-  const unitMedia = media.filter((m) => m.unit_id === unitId && mediaUrls[m.id]);
+  const unitMedia = unitId
+    ? unitImageMedia(media, unitId).filter((m) => Boolean(mediaUrls[m.id]))
+    : [];
 
   if (!unit) {
     return (

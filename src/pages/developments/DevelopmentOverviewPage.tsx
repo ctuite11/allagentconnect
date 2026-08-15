@@ -1,5 +1,5 @@
-import type { ReactNode } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, type ReactNode } from "react";
+import { Link, useLocation } from "react-router-dom";
 import { ExternalLink, Play } from "lucide-react";
 import { useDevelopmentBundle } from "@/components/developments/DevelopmentLayout";
 import { FloorPlanCard } from "@/components/developments/FloorPlanCard";
@@ -15,6 +15,12 @@ import {
   formatUsd,
   markdownToPlainBlocks,
 } from "@/lib/developments/format";
+import {
+  floorPlanImageUrl,
+  projectGalleryPhotos,
+  projectGalleryVideos,
+} from "@/lib/developments/mediaScope";
+import { parseDevelopmentHash, scheduleDevelopmentSectionScroll } from "@/lib/developments/scroll";
 import { Button } from "@/components/ui/button";
 
 function Section({
@@ -45,23 +51,24 @@ function Section({
 }
 
 export default function DevelopmentOverviewPage() {
+  const location = useLocation();
   const bundle = useDevelopmentBundle();
   const { development, media, mediaUrls, floorPlans, units, documents, salesContacts, updates } = bundle;
   const highlights = asStringList(development.highlights);
   const amenities = asStringList(development.amenities);
   const buildingDetails = asDetailEntries(development.building_details);
-  const photos = media.filter((m) => m.kind === "photo" && !m.is_hero);
-  const videos = media.filter((m) => m.kind === "video" || m.kind === "virtual_tour");
+  const photos = projectGalleryPhotos(media);
+  const videos = projectGalleryVideos(media);
   const featuredDocs = documents.filter((d) => d.is_featured_agent_resource).slice(0, 4);
   const availableUnits = units.filter((u) => u.status === "available").slice(0, 6);
   const phaseById = new Map(bundle.phases.map((p) => [p.id, p.name]));
   const planById = new Map(floorPlans.map((p) => [p.id, p.name]));
-  const planImageById = new Map<string, string>();
-  for (const m of media) {
-    if (m.floor_plan_id && mediaUrls[m.id] && !planImageById.has(m.floor_plan_id)) {
-      planImageById.set(m.floor_plan_id, mediaUrls[m.id]);
-    }
-  }
+
+  useEffect(() => {
+    const sectionId = parseDevelopmentHash(location.hash);
+    if (!sectionId) return;
+    return scheduleDevelopmentSectionScroll(sectionId);
+  }, [location.hash, location.pathname]);
 
   return (
     <div className="space-y-2">
@@ -192,7 +199,7 @@ export default function DevelopmentOverviewPage() {
                 plan={plan}
                 units={units}
                 slug={development.slug}
-                imageUrl={planImageById.get(plan.id)}
+                imageUrl={floorPlanImageUrl(media, mediaUrls, plan.id)}
               />
             ))}
           </div>

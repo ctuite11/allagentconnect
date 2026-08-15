@@ -37,3 +37,48 @@ export async function fetchDevelopmentDocumentUrl(
 
   return { ok: true, url, expiresIn };
 }
+
+function navigateBlankPopupOrFallback(popup: Window | null, url: string): void {
+  if (popup && !popup.closed) {
+    try {
+      popup.location.replace(url);
+      return;
+    } catch {
+      // Fall through to anchor fallback.
+    }
+  }
+
+  // Popup blocked (common on Safari/iOS after await) — still open without losing the URL.
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.target = "_blank";
+  anchor.rel = "noopener noreferrer";
+  anchor.style.display = "none";
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+}
+
+/**
+ * Open a development document via signed URL without relying on a post-await window.open
+ * (Safari/mobile popup blockers close those). Opens a blank tab synchronously on gesture,
+ * then replaces its location once the Edge Function returns.
+ */
+export async function openDevelopmentDocument(
+  documentId: string,
+): Promise<DevelopmentDocumentUrlResult> {
+  const popup = typeof window !== "undefined" ? window.open("about:blank", "_blank") : null;
+
+  const result = await fetchDevelopmentDocumentUrl(documentId);
+  if (!result.ok) {
+    try {
+      popup?.close();
+    } catch {
+      // ignore
+    }
+    return result;
+  }
+
+  navigateBlankPopupOrFallback(popup, result.url);
+  return result;
+}
