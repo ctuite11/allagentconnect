@@ -208,7 +208,10 @@ export function DevelopmentGalleryPreview({
       ) : null}
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-5xl gap-0 overflow-hidden border-0 bg-zinc-950 p-0 text-white sm:rounded-2xl">
+        <DialogContent
+          hideCloseButton
+          className="max-w-5xl gap-0 overflow-hidden border-0 bg-zinc-950 p-0 text-white sm:rounded-2xl"
+        >
           <DialogHeader className="sr-only">
             <DialogTitle>{developmentName} photo gallery</DialogTitle>
             <DialogDescription>Browse project photography.</DialogDescription>
