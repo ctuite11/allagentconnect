@@ -1,0 +1,24 @@
+--- supabase/functions/kick-email-queue/index.ts	2026-08-14 22:53:49.102456348 +0000
++++ /tmp/kick_new.ts	2026-08-14 23:18:41.272832542 +0000
+@@ -2,8 +2,8 @@
+ import type { EmailJob } from "../_shared/emailTypes.ts";
+ import { sendEmail } from "../_shared/sendEmail.ts";
+ import {
+-  allowedStreams,
+   isGloballyPaused,
++  kickAllowedStreams,
+   preSendBlockReason,
+ } from "../_shared/emailStreams.ts";
+ 
+@@ -50,7 +50,10 @@
+     return json({ paused: true, processed: 0 });
+   }
+ 
+-  const streams = allowedStreams();
++  // Any authenticated user JWT can reach this endpoint, so it may only claim
++  // the streams on the kick allowlist. development_notifications is excluded
++  // until this endpoint is made internal/service-role-only.
++  const streams = kickAllowedStreams();
+   if (streams.length === 0) {
+     console.log("[kick-email-queue] no unpaused streams — refusing to claim jobs");
+     return json({ paused: true, processed: 0 });
