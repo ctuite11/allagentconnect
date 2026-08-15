@@ -12,9 +12,17 @@
 --   {development_id}/{scope}/{scope_id}/{uuid}.{ext}
 -- ============================================================
 
+-- Review item 7 (Draft 3): fail closed on malformed object names. A path whose
+-- first segment is not a UUID returns NULL (=> no policy matches) instead of
+-- raising invalid_text_representation during RLS evaluation.
 create or replace function public.development_from_storage_path(_name text)
 returns uuid language sql immutable set search_path = public as $$
-  select nullif(split_part(_name, '/', 1), '')::uuid
+  select case
+           when split_part(coalesce(_name, ''), '/', 1)
+                ~ '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
+           then split_part(_name, '/', 1)::uuid
+           else null
+         end
 $$;
 revoke all on function public.development_from_storage_path(text) from public, anon;
 grant execute on function public.development_from_storage_path(text) to authenticated, service_role;
@@ -50,7 +58,7 @@ create or replace function public.storage_path_belongs_to_development(_name text
 returns boolean language sql immutable set search_path = public as $$
   select _name is not null
      and _development_id is not null
-     and split_part(_name, '/', 1) = _development_id::text;
+     and public.development_from_storage_path(_name) = _development_id;
 $$;
 revoke all on function public.storage_path_belongs_to_development(text, uuid) from public, anon;
 grant execute on function public.storage_path_belongs_to_development(text, uuid) to authenticated, service_role;

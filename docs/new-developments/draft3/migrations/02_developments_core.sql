@@ -96,7 +96,10 @@ grant select (id, account_id, name, slug, slug_locked_at, lifecycle_status, publ
               created_by, updated_by, created_at, updated_at)
   on public.developments to authenticated;
 
-grant insert (account_id, name, slug, lifecycle_status, publish_status, address, city, state,
+-- Review item 1: `publish_status` is deliberately ABSENT from the INSERT grant.
+-- Every normal development starts at the column default 'draft' and can only
+-- leave it through the BEFORE UPDATE transition matrix below.
+grant insert (account_id, name, slug, lifecycle_status, address, city, state,
               postal_code, latitude, longitude, neighborhood, neighborhood_description, logo_url,
               developer_name, architect_name, interior_designer_name, estimated_completion,
               delivery_from, delivery_to, total_units, total_buildings, stories, year_built,
@@ -156,6 +159,12 @@ begin
     new.created_by := auth.uid();
     new.updated_by := auth.uid();
     if public.current_request_role() <> 'service_role' then
+      -- Review item 1 (defense in depth): a non-service caller can never create
+      -- a development in any state other than draft, even if the column grant
+      -- were widened by mistake. Publishing always goes through the matrix.
+      if new.publish_status is distinct from 'draft' then
+        raise exception 'New developments must be created as draft; publishing requires AAC review';
+      end if;
       new.admin_notes := null;
       new.published_at := null;
       new.published_by := null;
@@ -202,7 +211,9 @@ create or replace function public.register_development_id()
 returns trigger language plpgsql security definer set search_path = public as $$
 begin
   insert into public.development_id_registry (id) values (new.id)
-  on conflict (id) do nothing;
+  ;   -- Review item 5: NO "on conflict do nothing". A previously registered id
+      -- raises unique_violation and rolls back the development insert, so a
+      -- purged development's UUID can never be reused.
   return new;
 end $$;
 revoke all on function public.register_development_id() from public, anon, authenticated;

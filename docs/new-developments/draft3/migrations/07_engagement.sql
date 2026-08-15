@@ -145,6 +145,13 @@ with check (agent_user_id = auth.uid()
             and public.current_is_eligible_agent()
             and public.can_agent_view_development(development_id));
 
+-- Review item 4 (Draft 3): AAC admins retain row-level visibility for abuse
+-- review and analytics. Development members are NOT included here — they stay
+-- aggregate-only via public.get_development_engagement_summary().
+create policy "AAC admins read development saves"
+on public.development_saves for select to authenticated
+using (public.has_role(auth.uid(),'admin'));
+
 -- Review item 5: explicit share policies.
 create policy "Agents record their own development shares"
 on public.development_shares for insert to authenticated
@@ -155,6 +162,10 @@ with check (agent_user_id = auth.uid()
 create policy "Agents read only their own development shares"
 on public.development_shares for select to authenticated
 using (agent_user_id = auth.uid());
+
+create policy "AAC admins read development shares"
+on public.development_shares for select to authenticated
+using (public.has_role(auth.uid(),'admin'));
 -- Developers/admins never read share rows: they use
 -- public.get_development_engagement_summary() (migration 08) for counts only.
 
