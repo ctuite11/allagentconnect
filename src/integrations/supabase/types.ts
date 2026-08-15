@@ -2428,6 +2428,91 @@ export type Database = {
           },
         ]
       }
+      development_documents: {
+        Row: {
+          access: string
+          account_id: string
+          byte_size: number | null
+          category: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          development_id: string
+          floor_plan_id: string | null
+          id: string
+          is_featured_agent_resource: boolean
+          mime_type: string | null
+          sort_order: number
+          storage_path: string
+          title: string
+          unit_id: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          access?: string
+          account_id: string
+          byte_size?: number | null
+          category: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          development_id: string
+          floor_plan_id?: string | null
+          id?: string
+          is_featured_agent_resource?: boolean
+          mime_type?: string | null
+          sort_order?: number
+          storage_path: string
+          title: string
+          unit_id?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          access?: string
+          account_id?: string
+          byte_size?: number | null
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          development_id?: string
+          floor_plan_id?: string | null
+          id?: string
+          is_featured_agent_resource?: boolean
+          mime_type?: string | null
+          sort_order?: number
+          storage_path?: string
+          title?: string
+          unit_id?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "development_documents_development_fk"
+            columns: ["development_id", "account_id"]
+            isOneToOne: false
+            referencedRelation: "developments"
+            referencedColumns: ["id", "account_id"]
+          },
+          {
+            foreignKeyName: "development_documents_floor_plan_fk"
+            columns: ["floor_plan_id", "development_id"]
+            isOneToOne: false
+            referencedRelation: "development_floor_plans"
+            referencedColumns: ["id", "development_id"]
+          },
+          {
+            foreignKeyName: "development_documents_unit_fk"
+            columns: ["unit_id", "development_id"]
+            isOneToOne: false
+            referencedRelation: "development_units"
+            referencedColumns: ["id", "development_id"]
+          },
+        ]
+      }
       development_floor_plans: {
         Row: {
           account_id: string
@@ -2507,6 +2592,113 @@ export type Database = {
           id?: string
         }
         Relationships: []
+      }
+      development_media: {
+        Row: {
+          account_id: string
+          alt: string | null
+          caption: string | null
+          created_at: string
+          created_by: string | null
+          development_id: string
+          duration_seconds: number | null
+          external_url: string | null
+          floor_plan_id: string | null
+          height: number | null
+          id: string
+          is_hero: boolean
+          kind: string
+          mime_type: string | null
+          sort_order: number
+          source_type: string
+          storage_bucket: string | null
+          storage_path: string | null
+          unit_id: string | null
+          update_id: string | null
+          updated_at: string
+          updated_by: string | null
+          width: number | null
+        }
+        Insert: {
+          account_id: string
+          alt?: string | null
+          caption?: string | null
+          created_at?: string
+          created_by?: string | null
+          development_id: string
+          duration_seconds?: number | null
+          external_url?: string | null
+          floor_plan_id?: string | null
+          height?: number | null
+          id?: string
+          is_hero?: boolean
+          kind: string
+          mime_type?: string | null
+          sort_order?: number
+          source_type: string
+          storage_bucket?: string | null
+          storage_path?: string | null
+          unit_id?: string | null
+          update_id?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          width?: number | null
+        }
+        Update: {
+          account_id?: string
+          alt?: string | null
+          caption?: string | null
+          created_at?: string
+          created_by?: string | null
+          development_id?: string
+          duration_seconds?: number | null
+          external_url?: string | null
+          floor_plan_id?: string | null
+          height?: number | null
+          id?: string
+          is_hero?: boolean
+          kind?: string
+          mime_type?: string | null
+          sort_order?: number
+          source_type?: string
+          storage_bucket?: string | null
+          storage_path?: string | null
+          unit_id?: string | null
+          update_id?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          width?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "development_media_development_fk"
+            columns: ["development_id", "account_id"]
+            isOneToOne: false
+            referencedRelation: "developments"
+            referencedColumns: ["id", "account_id"]
+          },
+          {
+            foreignKeyName: "development_media_floor_plan_fk"
+            columns: ["floor_plan_id", "development_id"]
+            isOneToOne: false
+            referencedRelation: "development_floor_plans"
+            referencedColumns: ["id", "development_id"]
+          },
+          {
+            foreignKeyName: "development_media_unit_fk"
+            columns: ["unit_id", "development_id"]
+            isOneToOne: false
+            referencedRelation: "development_units"
+            referencedColumns: ["id", "development_id"]
+          },
+          {
+            foreignKeyName: "development_media_update_fk"
+            columns: ["update_id", "development_id"]
+            isOneToOne: false
+            referencedRelation: "development_updates"
+            referencedColumns: ["id", "development_id"]
+          },
+        ]
       }
       development_units: {
         Row: {
