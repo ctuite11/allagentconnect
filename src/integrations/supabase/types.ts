@@ -6971,6 +6971,7 @@ export type Database = {
         Returns: boolean
       }
       invoke_agent_activation_nudge_once: { Args: never; Returns: undefined }
+      invoke_development_notification_retry: { Args: never; Returns: undefined }
       invoke_process_comms_digests: { Args: never; Returns: undefined }
       invoke_process_email_queue: { Args: never; Returns: undefined }
       is_accepted_delegate_for: {
