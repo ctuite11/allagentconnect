@@ -9,12 +9,8 @@
  *
  * Every interpolated value is user- or developer-controlled and is escaped.
  */
-// NOTE (draft location only): on apply this file moves to
-// supabase/functions/_shared/ and these two imports become
-//   import { buildAacEmail } from "./aacEmailTemplate.ts";
-//   import { AAC_PUBLIC_URL } from "./aacPublicUrl.ts";
-import { buildAacEmail } from "../../../../../supabase/functions/_shared/aacEmailTemplate.ts";
-import { AAC_PUBLIC_URL } from "../../../../../supabase/functions/_shared/aacPublicUrl.ts";
+import { buildAacEmail } from "./aacEmailTemplate.ts";
+import { AAC_PUBLIC_URL } from "./aacPublicUrl.ts";
 
 export const DEVELOPMENT_LEAD_TEMPLATE = "development-lead-notification";
 export const DEVELOPMENT_SHOWING_TEMPLATE = "development-showing-request-notification";
