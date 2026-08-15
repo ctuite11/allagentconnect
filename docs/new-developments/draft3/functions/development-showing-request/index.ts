@@ -112,20 +112,26 @@ Deno.serve(async (req) => {
     unitLabel = unit.unit_number ?? null;
   }
 
-  const { data: profile } = await admin
-    .from("profiles")
-    .select("full_name, email, phone")
-    .eq("id", user.id)
-    .maybeSingle();
-  const { data: settings } = await admin
-    .from("agent_settings")
-    .select("brokerage_name, phone")
+  // Canonical agent identity (review item 2): agent_profiles, not profiles.
+  const { data: agentProfile, error: agentProfileError } = await admin
+    .from("agent_profiles")
+    .select("first_name, last_name, email, phone, cell_phone, company")
     .eq("user_id", user.id)
     .maybeSingle();
+  if (agentProfileError) {
+    console.error(`[${ROUTE}] agent_profiles lookup failed:`, agentProfileError.message);
+    return json({ error: "Unable to load your agent profile" }, 500);
+  }
 
-  const requesterName = (profile?.full_name as string | undefined)?.trim() || user.email || "AAC agent";
-  const requesterEmail = ((profile?.email as string | undefined) || user.email || "").trim().toLowerCase();
-  const requesterPhone = ((settings?.phone as string | undefined) || (profile?.phone as string | undefined) || null);
+  const composedName = [agentProfile?.first_name, agentProfile?.last_name]
+    .map((part) => (part ?? "").toString().trim())
+    .filter(Boolean)
+    .join(" ");
+  const requesterName = composedName || user.email || "AAC agent";
+  const requesterEmail = ((agentProfile?.email as string | undefined) || user.email || "").trim().toLowerCase();
+  const requesterPhone =
+    ((agentProfile?.cell_phone as string | undefined) || (agentProfile?.phone as string | undefined) || null);
+  const requesterBrokerage = ((agentProfile?.company as string | undefined) ?? null);
   if (!requesterEmail) return json({ error: "Your account has no email on file" }, 400);
 
   const { data: showing, error: insertError } = await admin
@@ -158,12 +164,13 @@ Deno.serve(async (req) => {
       showing.id,
       {
         developmentName: development.name,
+        developmentId: development.id,
         developmentSlug: development.slug,
         unitLabel,
         agentName: requesterName,
         agentEmail: requesterEmail,
         agentPhone: requesterPhone,
-        agentBrokerage: (settings?.brokerage_name as string | undefined) ?? null,
+        agentBrokerage: requesterBrokerage,
         message: body.message ?? null,
         preferredDate: body.preferred_date ?? null,
         preferredTime: body.preferred_time ?? null,

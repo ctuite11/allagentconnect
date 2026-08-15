@@ -121,21 +121,27 @@ Deno.serve(async (req) => {
     unitLabel = unit.unit_number ?? null;
   }
 
-  // 7. Server-side identity snapshot (never from the request body).
-  const { data: profile } = await admin
-    .from("profiles")
-    .select("full_name, email, phone")
-    .eq("id", user.id)
-    .maybeSingle();
-  const { data: settings } = await admin
-    .from("agent_settings")
-    .select("brokerage_name, phone")
+  // 7. Server-side identity snapshot from AAC's canonical agent identity table
+  //    (review item 2). `profiles` is the buyer profile fallback and is not used.
+  const { data: agentProfile, error: agentProfileError } = await admin
+    .from("agent_profiles")
+    .select("first_name, last_name, email, phone, cell_phone, company")
     .eq("user_id", user.id)
     .maybeSingle();
+  if (agentProfileError) {
+    console.error(`[${ROUTE}] agent_profiles lookup failed:`, agentProfileError.message);
+    return json({ error: "Unable to load your agent profile" }, 500);
+  }
 
-  const senderName = (profile?.full_name as string | undefined)?.trim() || user.email || "AAC agent";
-  const senderEmail = ((profile?.email as string | undefined) || user.email || "").trim().toLowerCase();
-  const senderPhone = ((settings?.phone as string | undefined) || (profile?.phone as string | undefined) || null);
+  const composedName = [agentProfile?.first_name, agentProfile?.last_name]
+    .map((part) => (part ?? "").toString().trim())
+    .filter(Boolean)
+    .join(" ");
+  const senderName = composedName || user.email || "AAC agent";
+  const senderEmail = ((agentProfile?.email as string | undefined) || user.email || "").trim().toLowerCase();
+  const senderPhone =
+    ((agentProfile?.cell_phone as string | undefined) || (agentProfile?.phone as string | undefined) || null);
+  const senderBrokerage = ((agentProfile?.company as string | undefined) ?? null);
   if (!senderEmail) return json({ error: "Your account has no email on file" }, 400);
 
   // 8. Persist before notifying.
@@ -169,12 +175,13 @@ Deno.serve(async (req) => {
       lead.id,
       {
         developmentName: development.name,
+        developmentId: development.id,
         developmentSlug: development.slug,
         unitLabel,
         agentName: senderName,
         agentEmail: senderEmail,
         agentPhone: senderPhone,
-        agentBrokerage: (settings?.brokerage_name as string | undefined) ?? null,
+        agentBrokerage: senderBrokerage,
         message: body.message ?? null,
         submittedAt: new Date(lead.created_at).toUTCString(),
       },
