@@ -2387,6 +2387,197 @@ export type Database = {
         }
         Relationships: []
       }
+      development_id_registry: {
+        Row: {
+          created_at: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+        }
+        Relationships: []
+      }
+      developments: {
+        Row: {
+          account_id: string
+          address: string | null
+          admin_notes: string | null
+          amenities: Json
+          architect_name: string | null
+          archived_at: string | null
+          building_details: Json
+          buyer_agent_compensation: string | null
+          buyer_agent_compensation_notes: string | null
+          city: string | null
+          construction_type: string | null
+          created_at: string
+          created_by: string | null
+          delivery_from: string | null
+          delivery_to: string | null
+          deposit_structure: string | null
+          description: string | null
+          developer_name: string | null
+          estimated_completion: string | null
+          highlights: Json
+          hoa_fee_includes: string | null
+          hoa_fee_max: number | null
+          hoa_fee_min: number | null
+          hoa_fees: string | null
+          id: string
+          incentives: string | null
+          interior_designer_name: string | null
+          latitude: number | null
+          lifecycle_status: string
+          logo_url: string | null
+          longitude: number | null
+          name: string
+          neighborhood: string | null
+          neighborhood_description: string | null
+          parking_description: string | null
+          parking_included: boolean | null
+          paused_at: string | null
+          pet_policy: string | null
+          postal_code: string | null
+          publish_status: string
+          published_at: string | null
+          published_by: string | null
+          slug: string
+          slug_locked_at: string | null
+          state: string | null
+          stories: number | null
+          submitted_at: string | null
+          tier: string
+          total_buildings: number | null
+          total_units: number | null
+          updated_at: string
+          updated_by: string | null
+          year_built: number | null
+        }
+        Insert: {
+          account_id: string
+          address?: string | null
+          admin_notes?: string | null
+          amenities?: Json
+          architect_name?: string | null
+          archived_at?: string | null
+          building_details?: Json
+          buyer_agent_compensation?: string | null
+          buyer_agent_compensation_notes?: string | null
+          city?: string | null
+          construction_type?: string | null
+          created_at?: string
+          created_by?: string | null
+          delivery_from?: string | null
+          delivery_to?: string | null
+          deposit_structure?: string | null
+          description?: string | null
+          developer_name?: string | null
+          estimated_completion?: string | null
+          highlights?: Json
+          hoa_fee_includes?: string | null
+          hoa_fee_max?: number | null
+          hoa_fee_min?: number | null
+          hoa_fees?: string | null
+          id?: string
+          incentives?: string | null
+          interior_designer_name?: string | null
+          latitude?: number | null
+          lifecycle_status?: string
+          logo_url?: string | null
+          longitude?: number | null
+          name: string
+          neighborhood?: string | null
+          neighborhood_description?: string | null
+          parking_description?: string | null
+          parking_included?: boolean | null
+          paused_at?: string | null
+          pet_policy?: string | null
+          postal_code?: string | null
+          publish_status?: string
+          published_at?: string | null
+          published_by?: string | null
+          slug: string
+          slug_locked_at?: string | null
+          state?: string | null
+          stories?: number | null
+          submitted_at?: string | null
+          tier?: string
+          total_buildings?: number | null
+          total_units?: number | null
+          updated_at?: string
+          updated_by?: string | null
+          year_built?: number | null
+        }
+        Update: {
+          account_id?: string
+          address?: string | null
+          admin_notes?: string | null
+          amenities?: Json
+          architect_name?: string | null
+          archived_at?: string | null
+          building_details?: Json
+          buyer_agent_compensation?: string | null
+          buyer_agent_compensation_notes?: string | null
+          city?: string | null
+          construction_type?: string | null
+          created_at?: string
+          created_by?: string | null
+          delivery_from?: string | null
+          delivery_to?: string | null
+          deposit_structure?: string | null
+          description?: string | null
+          developer_name?: string | null
+          estimated_completion?: string | null
+          highlights?: Json
+          hoa_fee_includes?: string | null
+          hoa_fee_max?: number | null
+          hoa_fee_min?: number | null
+          hoa_fees?: string | null
+          id?: string
+          incentives?: string | null
+          interior_designer_name?: string | null
+          latitude?: number | null
+          lifecycle_status?: string
+          logo_url?: string | null
+          longitude?: number | null
+          name?: string
+          neighborhood?: string | null
+          neighborhood_description?: string | null
+          parking_description?: string | null
+          parking_included?: boolean | null
+          paused_at?: string | null
+          pet_policy?: string | null
+          postal_code?: string | null
+          publish_status?: string
+          published_at?: string | null
+          published_by?: string | null
+          slug?: string
+          slug_locked_at?: string | null
+          state?: string | null
+          stories?: number | null
+          submitted_at?: string | null
+          tier?: string
+          total_buildings?: number | null
+          total_units?: number | null
+          updated_at?: string
+          updated_by?: string | null
+          year_built?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "developments_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "development_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       email_campaigns: {
         Row: {
           agent_id: string
@@ -5556,6 +5747,10 @@ export type Database = {
         Args: { p_email?: string; p_id: string }
         Returns: Json
       }
+      admin_get_development_admin_notes: {
+        Args: { _development_id: string }
+        Returns: string
+      }
       admin_replace_development_owner: {
         Args: { _account_id: string; _new_owner_user_id: string }
         Returns: undefined
@@ -5563,6 +5758,10 @@ export type Database = {
       admin_set_development_account_active: {
         Args: { _account_id: string; _is_active: boolean }
         Returns: boolean
+      }
+      admin_set_development_admin_notes: {
+        Args: { _development_id: string; _notes: string }
+        Returns: string
       }
       agent_end_client_relationship: {
         Args: { p_client_id: string }
@@ -5623,6 +5822,10 @@ export type Database = {
         Returns: Json
       }
       can_act_for_agent: { Args: { p_agent_user_id: string }; Returns: boolean }
+      can_agent_view_development: {
+        Args: { _development_id: string }
+        Returns: boolean
+      }
       can_authenticated_buyer_view_hot_sheet_client: {
         Args: { p_crm_client_id: string; p_hot_sheet_id: string }
         Returns: boolean
@@ -5699,6 +5902,10 @@ export type Database = {
       delete_pending_buyer_hot_sheet: {
         Args: { p_crm_client_id: string; p_hot_sheet_id: string }
         Returns: Json
+      }
+      development_account_id: {
+        Args: { _development_id: string }
+        Returns: string
       }
       dispatch_hot_sheet_listing: {
         Args: { p_listing_id: string }
@@ -6027,6 +6234,10 @@ export type Database = {
       }
       is_licensed_owner: { Args: never; Returns: boolean }
       is_public_listing_status: { Args: { p_status: string }; Returns: boolean }
+      is_published_development: {
+        Args: { _development_id: string }
+        Returns: boolean
+      }
       is_team_delegate: {
         Args: { _team_id: string; _user_id: string }
         Returns: boolean
