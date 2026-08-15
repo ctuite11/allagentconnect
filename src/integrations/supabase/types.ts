@@ -2310,6 +2310,83 @@ export type Database = {
         }
         Relationships: []
       }
+      development_account_members: {
+        Row: {
+          accepted_at: string
+          account_id: string
+          created_at: string
+          id: string
+          invited_by: string | null
+          role: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          accepted_at?: string
+          account_id: string
+          created_at?: string
+          id?: string
+          invited_by?: string | null
+          role: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          accepted_at?: string
+          account_id?: string
+          created_at?: string
+          id?: string
+          invited_by?: string | null
+          role?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "development_account_members_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "development_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      development_accounts: {
+        Row: {
+          billing_email: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          legal_name: string | null
+          name: string
+          slug: string
+          stripe_customer_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          billing_email?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          legal_name?: string | null
+          name: string
+          slug: string
+          stripe_customer_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          billing_email?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          legal_name?: string | null
+          name?: string
+          slug?: string
+          stripe_customer_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       email_campaigns: {
         Row: {
           agent_id: string
@@ -5479,6 +5556,14 @@ export type Database = {
         Args: { p_email?: string; p_id: string }
         Returns: Json
       }
+      admin_replace_development_owner: {
+        Args: { _account_id: string; _new_owner_user_id: string }
+        Returns: undefined
+      }
+      admin_set_development_account_active: {
+        Args: { _account_id: string; _is_active: boolean }
+        Returns: boolean
+      }
       agent_end_client_relationship: {
         Args: { p_client_id: string }
         Returns: number
@@ -5594,7 +5679,18 @@ export type Database = {
         Args: { p_criteria: Json; p_name: string }
         Returns: string
       }
+      create_development_account: {
+        Args: {
+          _billing_email?: string
+          _legal_name?: string
+          _name: string
+          _owner_user_id: string
+          _slug: string
+        }
+        Returns: string
+      }
       current_account_owner_id: { Args: never; Returns: string }
+      current_is_eligible_agent: { Args: never; Returns: boolean }
       current_request_role: { Args: never; Returns: string }
       delete_draft_listing: {
         Args: { p_listing_id: string }
@@ -5907,6 +6003,15 @@ export type Database = {
         Returns: boolean
       }
       is_delegate: { Args: never; Returns: boolean }
+      is_development_account_active: {
+        Args: { _account_id: string }
+        Returns: boolean
+      }
+      is_development_member: {
+        Args: { _account_id: string; _roles?: string[] }
+        Returns: boolean
+      }
+      is_eligible_agent: { Args: { _user_id: string }; Returns: boolean }
       is_email_registered_with_aac: {
         Args: { p_email: string }
         Returns: boolean
