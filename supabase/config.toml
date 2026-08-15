@@ -176,3 +176,15 @@ verify_jwt = false
 
 [functions.resend-activation-link]
 verify_jwt = false
+
+[functions.development-lead-submit]
+verify_jwt = false
+
+[functions.development-showing-request]
+verify_jwt = false
+
+[functions.development-document-url]
+verify_jwt = false
+
+[functions.development-notification-retry]
+verify_jwt = false

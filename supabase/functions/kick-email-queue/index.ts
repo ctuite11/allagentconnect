@@ -2,8 +2,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import type { EmailJob } from "../_shared/emailTypes.ts";
 import { sendEmail } from "../_shared/sendEmail.ts";
 import {
-  allowedStreams,
   isGloballyPaused,
+  kickAllowedStreams,
   preSendBlockReason,
 } from "../_shared/emailStreams.ts";
 
@@ -50,7 +50,10 @@ Deno.serve(async (req) => {
     return json({ paused: true, processed: 0 });
   }
 
-  const streams = allowedStreams();
+  // Any authenticated user JWT can reach this endpoint, so it may only claim
+  // the streams on the kick allowlist. development_notifications is excluded
+  // until this endpoint is made internal/service-role-only.
+  const streams = kickAllowedStreams();
   if (streams.length === 0) {
     console.log("[kick-email-queue] no unpaused streams — refusing to claim jobs");
     return json({ paused: true, processed: 0 });
