@@ -41,22 +41,21 @@ export async function fetchDevelopmentDocumentUrl(
 function navigateBlankPopupOrFallback(popup: Window | null, url: string): void {
   if (popup && !popup.closed) {
     try {
+      try {
+        popup.opener = null;
+      } catch {
+        // Some browsers may ignore opener clearing; navigation still proceeds.
+      }
       popup.location.replace(url);
       return;
     } catch {
-      // Fall through to anchor fallback.
+      // Fall through to guaranteed same-tab navigation.
     }
   }
 
-  // Popup blocked (common on Safari/iOS after await) — still open without losing the URL.
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.target = "_blank";
-  anchor.rel = "noopener noreferrer";
-  anchor.style.display = "none";
-  document.body.appendChild(anchor);
-  anchor.click();
-  anchor.remove();
+  // Popup blocked/closed (common on Safari/iOS) — same-tab assign cannot be blocked
+  // the way a post-await target=_blank click can.
+  window.location.assign(url);
 }
 
 /**
