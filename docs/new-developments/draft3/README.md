@@ -1,17 +1,17 @@
-# New Developments MVP — Draft 2 (UNAPPLIED CODE PACKAGE)
+# New Developments MVP — Draft 3 (UNAPPLIED CODE PACKAGE)
 
 Status: **review only. Nothing in this folder has been run, applied, or deployed.**
 No migration executed, no bucket created, no RLS/grant changed, no Edge Function
 deployed, no secret modified, no email sent, no frontend deployed.
 
 The approved domain design (`../MVP_BACKEND_DESIGN_REVIEW.md`, Revision 6) is
-unchanged. Draft 2 converts the Draft 1 plan into the actual files that would run.
+unchanged. Draft 3 is Draft 2 plus the seven required corrections below; the product design is untouched.
 
 ## Contents
 
 ```
-migrations/   01–10  complete SQL, no placeholder or prose SQL
-functions/    the three Edge Function sources + shared helpers
+migrations/   01–11  complete SQL, no placeholder or prose SQL (11 = retry dispatcher)
+functions/    four Edge Function sources (3 public + 1 internal retry runner) + shared helpers
 diffs/        exact diffs against existing email infrastructure
 tests/        Deno tests covering stream registry, idempotency, escaping
 ```
@@ -95,3 +95,31 @@ must restore the prior four-value `email_jobs_stream_check`, restore
 and revert `emailStreams.ts` + `kick-email-queue/index.ts` using the diffs in
 `diffs/`. Queued `development_notifications` rows must be settled (not replayed)
 before the CHECK can be narrowed.
+
+
+## Draft 3 corrections (review verdict on Draft 2)
+
+| # | Item | Where it is fixed |
+| --- | --- | --- |
+| 1 | BLOCKER — `publish_status` removed from the authenticated INSERT grant; developments must start `draft` | `migrations/02_developments_core.sql` — column grant no longer lists `publish_status`, and the BEFORE INSERT trigger raises for any non-service caller attempting a non-draft insert. Publishing stays on the admin-reviewed UPDATE matrix. |
+| 2 | BLOCKER — identity snapshots must use canonical `agent_profiles` | `functions/development-lead-submit/index.ts`, `functions/development-showing-request/index.ts` — snapshot reads `first_name`, `last_name`, `email`, `cell_phone` → `phone`, `company` from `agent_profiles`; the buyer `profiles` / `agent_settings` reads are gone; a lookup error returns 500 instead of silently degrading. |
+| 3 | BLOCKER — `retryPendingSubmissions()` needs a real runner | New internal function `functions/development-notification-retry/index.ts` (service-role bearer only, via `internalServiceRoleAuth.ts`) + `migrations/11_notification_retry_runner.sql` (Vault-keyed `public.invoke_development_notification_retry()`, cron creation deliberately left as a post-canary rollout step). The runner rebuilds context from persisted rows, re-checks account state, and relies on the unique `idempotency_key` so retries never duplicate a send. |
+| 4 | AAC-admin SELECT on saves/shares | `migrations/07_engagement.sql` — added admin-only SELECT policies on `development_saves` and `development_shares`. Developers remain aggregate-only. |
+| 5 | Registry must reject reuse | `migrations/02_developments_core.sql` — `ON CONFLICT DO NOTHING` removed; a reused UUID raises `unique_violation` and rolls back the insert. |
+| 6 | CTA → developer workspace; sanitize subjects | `functions/_shared/buildDevelopmentNotificationEmailHtml.ts` — CTA is `/developer/developments/:id/{leads,showings}` (id-keyed, slug-change safe) and `sanitizeSubject()` flattens all CR/LF before the subject is returned. |
+| 7 | `development_from_storage_path` must fail safely | `migrations/09_storage_policies.sql` — UUID-shaped regex guard returns NULL for malformed names (no cast exception during RLS); `storage_path_belongs_to_development` now routes through it. |
+
+Also updated: `migrations/08_helpers_rpcs.sql` (the awaiting-notification RPC now
+excludes rows on disabled accounts) and `diffs/config.toml.patch`
+(`development-notification-retry`, `verify_jwt = false`, JWT/service-role checked in code).
+
+### Test status
+
+`deno test --allow-net --allow-env tests/` → **11 passed, 0 failed**, including new
+coverage for CR/LF subject injection and the developer-workspace CTA.
+`tests/emailStreams_development.test.ts` imports `diffs/emailStreams.ts.proposed.ts`
+(a `.ts` copy of the proposed file) so the package type-checks standalone; on apply
+the import points at `supabase/functions/_shared/emailStreams.ts` and the copy is deleted.
+
+Nothing here has been applied: no migration executed, no function deployed, no cron
+scheduled, no bucket or secret touched, no email sent.
