@@ -126,7 +126,7 @@ Deno.serve(async (req) => {
   const { data: agentProfile, error: agentProfileError } = await admin
     .from("agent_profiles")
     .select("first_name, last_name, email, phone, cell_phone, company")
-    .eq("user_id", user.id)
+    .eq("id", user.id)
     .maybeSingle();
   if (agentProfileError) {
     console.error(`[${ROUTE}] agent_profiles lookup failed:`, agentProfileError.message);

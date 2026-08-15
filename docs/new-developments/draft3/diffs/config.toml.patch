@@ -9,6 +9,6 @@
 +
 +[functions.development-document-url]
 +verify_jwt = false
-++
++
 +[functions.development-notification-retry]
 +verify_jwt = false
