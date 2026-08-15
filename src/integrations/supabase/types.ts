@@ -2614,6 +2614,65 @@ export type Database = {
           },
         ]
       }
+      development_updates: {
+        Row: {
+          account_id: string
+          body_markdown: string
+          created_at: string
+          created_by: string | null
+          development_id: string
+          id: string
+          is_pinned: boolean
+          is_published: boolean
+          kind: string
+          posted_at: string
+          published_at: string | null
+          title: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          account_id: string
+          body_markdown: string
+          created_at?: string
+          created_by?: string | null
+          development_id: string
+          id?: string
+          is_pinned?: boolean
+          is_published?: boolean
+          kind: string
+          posted_at?: string
+          published_at?: string | null
+          title: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          account_id?: string
+          body_markdown?: string
+          created_at?: string
+          created_by?: string | null
+          development_id?: string
+          id?: string
+          is_pinned?: boolean
+          is_published?: boolean
+          kind?: string
+          posted_at?: string
+          published_at?: string | null
+          title?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "development_updates_development_fk"
+            columns: ["development_id", "account_id"]
+            isOneToOne: false
+            referencedRelation: "developments"
+            referencedColumns: ["id", "account_id"]
+          },
+        ]
+      }
       developments: {
         Row: {
           account_id: string
