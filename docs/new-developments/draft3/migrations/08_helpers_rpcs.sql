@@ -114,14 +114,18 @@ begin
     return query
       select l.id, l.development_id, l.account_id, l.created_at
       from public.development_leads l
+      join public.development_accounts a on a.id = l.account_id
       where l.notified_at is null
+        and a.is_active   -- Review item 3 (Draft 3): never notify for a disabled account
       order by l.created_at
       limit greatest(1, least(_limit, 200));
   elsif _kind = 'showing' then
     return query
       select r.id, r.development_id, r.account_id, r.created_at
       from public.development_showing_requests r
+      join public.development_accounts a on a.id = r.account_id
       where r.notified_at is null
+        and a.is_active
       order by r.created_at
       limit greatest(1, least(_limit, 200));
   else

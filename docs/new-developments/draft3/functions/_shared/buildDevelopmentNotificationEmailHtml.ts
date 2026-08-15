@@ -37,6 +37,8 @@ export interface DevelopmentNotificationInput {
   kind: DevelopmentNotificationKind;
   recipientName?: string | null;
   developmentName: string;
+  /** Developer workspace routing key (review item 6): the development UUID. */
+  developmentId: string;
   developmentSlug: string;
   unitLabel?: string | null;
   agentName: string;
@@ -62,11 +64,17 @@ function paragraph(text: string): string {
   return escapeHtml(text).replaceAll("\r\n", "\n").split("\n").join("<br />");
 }
 
+/** Review item 6: no CR/LF may ever reach a mail header. */
+export function sanitizeSubject(value: string): string {
+  return value.replace(/[\r\n]+/g, " ").replace(/\s{2,}/g, " ").trim();
+}
+
 export function buildDevelopmentNotificationSubject(input: DevelopmentNotificationInput): string {
   const unit = input.unitLabel ? ` — Unit ${input.unitLabel}` : "";
-  return input.kind === "lead"
+  const subject = input.kind === "lead"
     ? `New agent inquiry: ${input.developmentName}${unit}`
     : `New showing request: ${input.developmentName}${unit}`;
+  return sanitizeSubject(subject);
 }
 
 export function buildDevelopmentNotificationEmailHtml(
@@ -74,7 +82,9 @@ export function buildDevelopmentNotificationEmailHtml(
 ): string {
   const isLead = input.kind === "lead";
   const headline = isLead ? "New agent inquiry" : "New showing request";
-  const ctaUrl = `${AAC_PUBLIC_URL}/developments/${encodeURIComponent(input.developmentSlug)}/${isLead ? "leads" : "showings"}`;
+  // Review item 6: developer workspace inbox, not the agent-facing
+  // /developments/:slug surface. Keyed by id so the CTA survives slug changes.
+  const ctaUrl = `${AAC_PUBLIC_URL}/developer/developments/${encodeURIComponent(input.developmentId)}/${isLead ? "leads" : "showings"}`;
 
   const greeting = input.recipientName?.trim()
     ? `<p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#334155;font-family:${FONT};">Hi ${escapeHtml(input.recipientName.trim())},</p>`
