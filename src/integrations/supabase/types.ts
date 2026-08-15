@@ -2700,6 +2700,77 @@ export type Database = {
           },
         ]
       }
+      development_sales_contacts: {
+        Row: {
+          account_id: string
+          bio: string | null
+          created_at: string
+          development_id: string
+          email: string | null
+          headshot_url: string | null
+          id: string
+          is_active: boolean
+          is_primary: boolean
+          name: string
+          phone: string | null
+          receives_leads: boolean
+          receives_showing_requests: boolean
+          role: string
+          sort_order: number
+          title: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          account_id: string
+          bio?: string | null
+          created_at?: string
+          development_id: string
+          email?: string | null
+          headshot_url?: string | null
+          id?: string
+          is_active?: boolean
+          is_primary?: boolean
+          name: string
+          phone?: string | null
+          receives_leads?: boolean
+          receives_showing_requests?: boolean
+          role?: string
+          sort_order?: number
+          title?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          account_id?: string
+          bio?: string | null
+          created_at?: string
+          development_id?: string
+          email?: string | null
+          headshot_url?: string | null
+          id?: string
+          is_active?: boolean
+          is_primary?: boolean
+          name?: string
+          phone?: string | null
+          receives_leads?: boolean
+          receives_showing_requests?: boolean
+          role?: string
+          sort_order?: number
+          title?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "development_sales_contacts_development_fk"
+            columns: ["development_id", "account_id"]
+            isOneToOne: false
+            referencedRelation: "developments"
+            referencedColumns: ["id", "account_id"]
+          },
+        ]
+      }
       development_units: {
         Row: {
           account_id: string
