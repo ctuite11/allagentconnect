@@ -1,12 +1,15 @@
 // DRAFT 3 — not deployed. On apply, move to
 // supabase/functions/_shared/emailStreams_development.test.ts
+// NOTE: tests import ../diffs/emailStreams.ts.proposed.ts (a .ts copy of the proposed
+// file) so Draft 3 type-checks standalone; on apply the import becomes
+// ../../../../supabase/functions/_shared/emailStreams.ts and this copy is deleted.
 import { assert, assertEquals, assertFalse } from "https://deno.land/std@0.224.0/assert/mod.ts";
 import {
   ALL_STREAMS,
   allowedStreams,
   kickAllowedStreams,
   preSendBlockReason,
-} from "../../../../supabase/functions/_shared/emailStreams.ts";
+} from "../diffs/emailStreams.ts.proposed.ts";
 
 Deno.test("development_notifications is a registered stream", () => {
   assert(ALL_STREAMS.includes("development_notifications" as never));
