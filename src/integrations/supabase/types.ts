@@ -2310,6 +2310,1034 @@ export type Database = {
         }
         Relationships: []
       }
+      development_account_members: {
+        Row: {
+          accepted_at: string
+          account_id: string
+          created_at: string
+          id: string
+          invited_by: string | null
+          role: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          accepted_at?: string
+          account_id: string
+          created_at?: string
+          id?: string
+          invited_by?: string | null
+          role: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          accepted_at?: string
+          account_id?: string
+          created_at?: string
+          id?: string
+          invited_by?: string | null
+          role?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "development_account_members_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "development_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      development_accounts: {
+        Row: {
+          billing_email: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          legal_name: string | null
+          name: string
+          slug: string
+          stripe_customer_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          billing_email?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          legal_name?: string | null
+          name: string
+          slug: string
+          stripe_customer_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          billing_email?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          legal_name?: string | null
+          name?: string
+          slug?: string
+          stripe_customer_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      development_buildings_phases: {
+        Row: {
+          account_id: string
+          created_at: string
+          development_id: string
+          id: string
+          is_default: boolean
+          name: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          development_id: string
+          id?: string
+          is_default?: boolean
+          name: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          development_id?: string
+          id?: string
+          is_default?: boolean
+          name?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "development_phases_development_fk"
+            columns: ["development_id", "account_id"]
+            isOneToOne: false
+            referencedRelation: "developments"
+            referencedColumns: ["id", "account_id"]
+          },
+        ]
+      }
+      development_documents: {
+        Row: {
+          access: string
+          account_id: string
+          byte_size: number | null
+          category: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          development_id: string
+          floor_plan_id: string | null
+          id: string
+          is_featured_agent_resource: boolean
+          mime_type: string | null
+          sort_order: number
+          storage_path: string
+          title: string
+          unit_id: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          access?: string
+          account_id: string
+          byte_size?: number | null
+          category: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          development_id: string
+          floor_plan_id?: string | null
+          id?: string
+          is_featured_agent_resource?: boolean
+          mime_type?: string | null
+          sort_order?: number
+          storage_path: string
+          title: string
+          unit_id?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          access?: string
+          account_id?: string
+          byte_size?: number | null
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          development_id?: string
+          floor_plan_id?: string | null
+          id?: string
+          is_featured_agent_resource?: boolean
+          mime_type?: string | null
+          sort_order?: number
+          storage_path?: string
+          title?: string
+          unit_id?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "development_documents_development_fk"
+            columns: ["development_id", "account_id"]
+            isOneToOne: false
+            referencedRelation: "developments"
+            referencedColumns: ["id", "account_id"]
+          },
+          {
+            foreignKeyName: "development_documents_floor_plan_fk"
+            columns: ["floor_plan_id", "development_id"]
+            isOneToOne: false
+            referencedRelation: "development_floor_plans"
+            referencedColumns: ["id", "development_id"]
+          },
+          {
+            foreignKeyName: "development_documents_unit_fk"
+            columns: ["unit_id", "development_id"]
+            isOneToOne: false
+            referencedRelation: "development_units"
+            referencedColumns: ["id", "development_id"]
+          },
+        ]
+      }
+      development_floor_plans: {
+        Row: {
+          account_id: string
+          baths: number | null
+          beds: number | null
+          created_at: string
+          description: string | null
+          development_id: string
+          features: Json
+          id: string
+          is_active: boolean
+          name: string
+          price_max: number | null
+          price_min: number | null
+          sort_order: number
+          sqft_max: number | null
+          sqft_min: number | null
+          updated_at: string
+        }
+        Insert: {
+          account_id: string
+          baths?: number | null
+          beds?: number | null
+          created_at?: string
+          description?: string | null
+          development_id: string
+          features?: Json
+          id?: string
+          is_active?: boolean
+          name: string
+          price_max?: number | null
+          price_min?: number | null
+          sort_order?: number
+          sqft_max?: number | null
+          sqft_min?: number | null
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string
+          baths?: number | null
+          beds?: number | null
+          created_at?: string
+          description?: string | null
+          development_id?: string
+          features?: Json
+          id?: string
+          is_active?: boolean
+          name?: string
+          price_max?: number | null
+          price_min?: number | null
+          sort_order?: number
+          sqft_max?: number | null
+          sqft_min?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "development_floor_plans_development_fk"
+            columns: ["development_id", "account_id"]
+            isOneToOne: false
+            referencedRelation: "developments"
+            referencedColumns: ["id", "account_id"]
+          },
+        ]
+      }
+      development_id_registry: {
+        Row: {
+          created_at: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+        }
+        Relationships: []
+      }
+      development_leads: {
+        Row: {
+          account_id: string
+          agent_user_id: string
+          assigned_contact_id: string | null
+          created_at: string
+          development_id: string
+          id: string
+          message: string | null
+          notified_at: string | null
+          sender_email: string
+          sender_name: string
+          sender_phone: string | null
+          source: string
+          status: string
+          unit_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          account_id: string
+          agent_user_id: string
+          assigned_contact_id?: string | null
+          created_at?: string
+          development_id: string
+          id?: string
+          message?: string | null
+          notified_at?: string | null
+          sender_email: string
+          sender_name: string
+          sender_phone?: string | null
+          source: string
+          status?: string
+          unit_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string
+          agent_user_id?: string
+          assigned_contact_id?: string | null
+          created_at?: string
+          development_id?: string
+          id?: string
+          message?: string | null
+          notified_at?: string | null
+          sender_email?: string
+          sender_name?: string
+          sender_phone?: string | null
+          source?: string
+          status?: string
+          unit_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "development_leads_contact_fk"
+            columns: ["assigned_contact_id", "development_id"]
+            isOneToOne: false
+            referencedRelation: "development_sales_contacts"
+            referencedColumns: ["id", "development_id"]
+          },
+          {
+            foreignKeyName: "development_leads_development_fk"
+            columns: ["development_id", "account_id"]
+            isOneToOne: false
+            referencedRelation: "developments"
+            referencedColumns: ["id", "account_id"]
+          },
+          {
+            foreignKeyName: "development_leads_unit_fk"
+            columns: ["unit_id", "development_id"]
+            isOneToOne: false
+            referencedRelation: "development_units"
+            referencedColumns: ["id", "development_id"]
+          },
+        ]
+      }
+      development_media: {
+        Row: {
+          account_id: string
+          alt: string | null
+          caption: string | null
+          created_at: string
+          created_by: string | null
+          development_id: string
+          duration_seconds: number | null
+          external_url: string | null
+          floor_plan_id: string | null
+          height: number | null
+          id: string
+          is_hero: boolean
+          kind: string
+          mime_type: string | null
+          sort_order: number
+          source_type: string
+          storage_bucket: string | null
+          storage_path: string | null
+          unit_id: string | null
+          update_id: string | null
+          updated_at: string
+          updated_by: string | null
+          width: number | null
+        }
+        Insert: {
+          account_id: string
+          alt?: string | null
+          caption?: string | null
+          created_at?: string
+          created_by?: string | null
+          development_id: string
+          duration_seconds?: number | null
+          external_url?: string | null
+          floor_plan_id?: string | null
+          height?: number | null
+          id?: string
+          is_hero?: boolean
+          kind: string
+          mime_type?: string | null
+          sort_order?: number
+          source_type: string
+          storage_bucket?: string | null
+          storage_path?: string | null
+          unit_id?: string | null
+          update_id?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          width?: number | null
+        }
+        Update: {
+          account_id?: string
+          alt?: string | null
+          caption?: string | null
+          created_at?: string
+          created_by?: string | null
+          development_id?: string
+          duration_seconds?: number | null
+          external_url?: string | null
+          floor_plan_id?: string | null
+          height?: number | null
+          id?: string
+          is_hero?: boolean
+          kind?: string
+          mime_type?: string | null
+          sort_order?: number
+          source_type?: string
+          storage_bucket?: string | null
+          storage_path?: string | null
+          unit_id?: string | null
+          update_id?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          width?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "development_media_development_fk"
+            columns: ["development_id", "account_id"]
+            isOneToOne: false
+            referencedRelation: "developments"
+            referencedColumns: ["id", "account_id"]
+          },
+          {
+            foreignKeyName: "development_media_floor_plan_fk"
+            columns: ["floor_plan_id", "development_id"]
+            isOneToOne: false
+            referencedRelation: "development_floor_plans"
+            referencedColumns: ["id", "development_id"]
+          },
+          {
+            foreignKeyName: "development_media_unit_fk"
+            columns: ["unit_id", "development_id"]
+            isOneToOne: false
+            referencedRelation: "development_units"
+            referencedColumns: ["id", "development_id"]
+          },
+          {
+            foreignKeyName: "development_media_update_fk"
+            columns: ["update_id", "development_id"]
+            isOneToOne: false
+            referencedRelation: "development_updates"
+            referencedColumns: ["id", "development_id"]
+          },
+        ]
+      }
+      development_sales_contacts: {
+        Row: {
+          account_id: string
+          bio: string | null
+          created_at: string
+          development_id: string
+          email: string | null
+          headshot_url: string | null
+          id: string
+          is_active: boolean
+          is_primary: boolean
+          name: string
+          phone: string | null
+          receives_leads: boolean
+          receives_showing_requests: boolean
+          role: string
+          sort_order: number
+          title: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          account_id: string
+          bio?: string | null
+          created_at?: string
+          development_id: string
+          email?: string | null
+          headshot_url?: string | null
+          id?: string
+          is_active?: boolean
+          is_primary?: boolean
+          name: string
+          phone?: string | null
+          receives_leads?: boolean
+          receives_showing_requests?: boolean
+          role?: string
+          sort_order?: number
+          title?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          account_id?: string
+          bio?: string | null
+          created_at?: string
+          development_id?: string
+          email?: string | null
+          headshot_url?: string | null
+          id?: string
+          is_active?: boolean
+          is_primary?: boolean
+          name?: string
+          phone?: string | null
+          receives_leads?: boolean
+          receives_showing_requests?: boolean
+          role?: string
+          sort_order?: number
+          title?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "development_sales_contacts_development_fk"
+            columns: ["development_id", "account_id"]
+            isOneToOne: false
+            referencedRelation: "developments"
+            referencedColumns: ["id", "account_id"]
+          },
+        ]
+      }
+      development_saves: {
+        Row: {
+          agent_user_id: string
+          created_at: string
+          development_id: string
+          id: string
+        }
+        Insert: {
+          agent_user_id: string
+          created_at?: string
+          development_id: string
+          id?: string
+        }
+        Update: {
+          agent_user_id?: string
+          created_at?: string
+          development_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "development_saves_development_id_fkey"
+            columns: ["development_id"]
+            isOneToOne: false
+            referencedRelation: "developments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      development_shares: {
+        Row: {
+          agent_user_id: string
+          created_at: string
+          development_id: string
+          id: string
+          share_type: string
+          unit_id: string | null
+        }
+        Insert: {
+          agent_user_id: string
+          created_at?: string
+          development_id: string
+          id?: string
+          share_type: string
+          unit_id?: string | null
+        }
+        Update: {
+          agent_user_id?: string
+          created_at?: string
+          development_id?: string
+          id?: string
+          share_type?: string
+          unit_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "development_shares_development_id_fkey"
+            columns: ["development_id"]
+            isOneToOne: false
+            referencedRelation: "developments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "development_shares_unit_id_development_id_fkey"
+            columns: ["unit_id", "development_id"]
+            isOneToOne: false
+            referencedRelation: "development_units"
+            referencedColumns: ["id", "development_id"]
+          },
+        ]
+      }
+      development_showing_requests: {
+        Row: {
+          account_id: string
+          agent_user_id: string
+          assigned_contact_id: string | null
+          created_at: string
+          development_id: string
+          id: string
+          message: string | null
+          notified_at: string | null
+          preferred_date: string | null
+          preferred_time: string | null
+          requester_email: string
+          requester_name: string
+          requester_phone: string | null
+          status: string
+          unit_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          account_id: string
+          agent_user_id: string
+          assigned_contact_id?: string | null
+          created_at?: string
+          development_id: string
+          id?: string
+          message?: string | null
+          notified_at?: string | null
+          preferred_date?: string | null
+          preferred_time?: string | null
+          requester_email: string
+          requester_name: string
+          requester_phone?: string | null
+          status?: string
+          unit_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string
+          agent_user_id?: string
+          assigned_contact_id?: string | null
+          created_at?: string
+          development_id?: string
+          id?: string
+          message?: string | null
+          notified_at?: string | null
+          preferred_date?: string | null
+          preferred_time?: string | null
+          requester_email?: string
+          requester_name?: string
+          requester_phone?: string | null
+          status?: string
+          unit_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "development_showings_contact_fk"
+            columns: ["assigned_contact_id", "development_id"]
+            isOneToOne: false
+            referencedRelation: "development_sales_contacts"
+            referencedColumns: ["id", "development_id"]
+          },
+          {
+            foreignKeyName: "development_showings_development_fk"
+            columns: ["development_id", "account_id"]
+            isOneToOne: false
+            referencedRelation: "developments"
+            referencedColumns: ["id", "account_id"]
+          },
+          {
+            foreignKeyName: "development_showings_unit_fk"
+            columns: ["unit_id", "development_id"]
+            isOneToOne: false
+            referencedRelation: "development_units"
+            referencedColumns: ["id", "development_id"]
+          },
+        ]
+      }
+      development_units: {
+        Row: {
+          account_id: string
+          baths: number | null
+          beds: number | null
+          building_phase_id: string
+          created_at: string
+          description: string | null
+          development_id: string
+          estimated_delivery: string | null
+          floor: string | null
+          floor_plan_id: string | null
+          id: string
+          incentives: string | null
+          is_featured: boolean
+          outdoor_space: string | null
+          parking_notes: string | null
+          parking_spaces: number | null
+          price: number | null
+          price_changed_at: string | null
+          sort_order: number
+          sqft: number | null
+          status: string
+          status_changed_at: string | null
+          unit_number: string
+          updated_at: string
+          views_exposure: string | null
+        }
+        Insert: {
+          account_id: string
+          baths?: number | null
+          beds?: number | null
+          building_phase_id: string
+          created_at?: string
+          description?: string | null
+          development_id: string
+          estimated_delivery?: string | null
+          floor?: string | null
+          floor_plan_id?: string | null
+          id?: string
+          incentives?: string | null
+          is_featured?: boolean
+          outdoor_space?: string | null
+          parking_notes?: string | null
+          parking_spaces?: number | null
+          price?: number | null
+          price_changed_at?: string | null
+          sort_order?: number
+          sqft?: number | null
+          status?: string
+          status_changed_at?: string | null
+          unit_number: string
+          updated_at?: string
+          views_exposure?: string | null
+        }
+        Update: {
+          account_id?: string
+          baths?: number | null
+          beds?: number | null
+          building_phase_id?: string
+          created_at?: string
+          description?: string | null
+          development_id?: string
+          estimated_delivery?: string | null
+          floor?: string | null
+          floor_plan_id?: string | null
+          id?: string
+          incentives?: string | null
+          is_featured?: boolean
+          outdoor_space?: string | null
+          parking_notes?: string | null
+          parking_spaces?: number | null
+          price?: number | null
+          price_changed_at?: string | null
+          sort_order?: number
+          sqft?: number | null
+          status?: string
+          status_changed_at?: string | null
+          unit_number?: string
+          updated_at?: string
+          views_exposure?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "development_units_development_fk"
+            columns: ["development_id", "account_id"]
+            isOneToOne: false
+            referencedRelation: "developments"
+            referencedColumns: ["id", "account_id"]
+          },
+          {
+            foreignKeyName: "development_units_floor_plan_fk"
+            columns: ["floor_plan_id", "development_id"]
+            isOneToOne: false
+            referencedRelation: "development_floor_plans"
+            referencedColumns: ["id", "development_id"]
+          },
+          {
+            foreignKeyName: "development_units_phase_fk"
+            columns: ["building_phase_id", "development_id"]
+            isOneToOne: false
+            referencedRelation: "development_buildings_phases"
+            referencedColumns: ["id", "development_id"]
+          },
+        ]
+      }
+      development_updates: {
+        Row: {
+          account_id: string
+          body_markdown: string
+          created_at: string
+          created_by: string | null
+          development_id: string
+          id: string
+          is_pinned: boolean
+          is_published: boolean
+          kind: string
+          posted_at: string
+          published_at: string | null
+          title: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          account_id: string
+          body_markdown: string
+          created_at?: string
+          created_by?: string | null
+          development_id: string
+          id?: string
+          is_pinned?: boolean
+          is_published?: boolean
+          kind: string
+          posted_at?: string
+          published_at?: string | null
+          title: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          account_id?: string
+          body_markdown?: string
+          created_at?: string
+          created_by?: string | null
+          development_id?: string
+          id?: string
+          is_pinned?: boolean
+          is_published?: boolean
+          kind?: string
+          posted_at?: string
+          published_at?: string | null
+          title?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "development_updates_development_fk"
+            columns: ["development_id", "account_id"]
+            isOneToOne: false
+            referencedRelation: "developments"
+            referencedColumns: ["id", "account_id"]
+          },
+        ]
+      }
+      developments: {
+        Row: {
+          account_id: string
+          address: string | null
+          admin_notes: string | null
+          amenities: Json
+          architect_name: string | null
+          archived_at: string | null
+          building_details: Json
+          buyer_agent_compensation: string | null
+          buyer_agent_compensation_notes: string | null
+          city: string | null
+          construction_type: string | null
+          created_at: string
+          created_by: string | null
+          delivery_from: string | null
+          delivery_to: string | null
+          deposit_structure: string | null
+          description: string | null
+          developer_name: string | null
+          estimated_completion: string | null
+          highlights: Json
+          hoa_fee_includes: string | null
+          hoa_fee_max: number | null
+          hoa_fee_min: number | null
+          hoa_fees: string | null
+          id: string
+          incentives: string | null
+          interior_designer_name: string | null
+          latitude: number | null
+          lifecycle_status: string
+          logo_url: string | null
+          longitude: number | null
+          name: string
+          neighborhood: string | null
+          neighborhood_description: string | null
+          parking_description: string | null
+          parking_included: boolean | null
+          paused_at: string | null
+          pet_policy: string | null
+          postal_code: string | null
+          publish_status: string
+          published_at: string | null
+          published_by: string | null
+          slug: string
+          slug_locked_at: string | null
+          state: string | null
+          stories: number | null
+          submitted_at: string | null
+          tier: string
+          total_buildings: number | null
+          total_units: number | null
+          updated_at: string
+          updated_by: string | null
+          year_built: number | null
+        }
+        Insert: {
+          account_id: string
+          address?: string | null
+          admin_notes?: string | null
+          amenities?: Json
+          architect_name?: string | null
+          archived_at?: string | null
+          building_details?: Json
+          buyer_agent_compensation?: string | null
+          buyer_agent_compensation_notes?: string | null
+          city?: string | null
+          construction_type?: string | null
+          created_at?: string
+          created_by?: string | null
+          delivery_from?: string | null
+          delivery_to?: string | null
+          deposit_structure?: string | null
+          description?: string | null
+          developer_name?: string | null
+          estimated_completion?: string | null
+          highlights?: Json
+          hoa_fee_includes?: string | null
+          hoa_fee_max?: number | null
+          hoa_fee_min?: number | null
+          hoa_fees?: string | null
+          id?: string
+          incentives?: string | null
+          interior_designer_name?: string | null
+          latitude?: number | null
+          lifecycle_status?: string
+          logo_url?: string | null
+          longitude?: number | null
+          name: string
+          neighborhood?: string | null
+          neighborhood_description?: string | null
+          parking_description?: string | null
+          parking_included?: boolean | null
+          paused_at?: string | null
+          pet_policy?: string | null
+          postal_code?: string | null
+          publish_status?: string
+          published_at?: string | null
+          published_by?: string | null
+          slug: string
+          slug_locked_at?: string | null
+          state?: string | null
+          stories?: number | null
+          submitted_at?: string | null
+          tier?: string
+          total_buildings?: number | null
+          total_units?: number | null
+          updated_at?: string
+          updated_by?: string | null
+          year_built?: number | null
+        }
+        Update: {
+          account_id?: string
+          address?: string | null
+          admin_notes?: string | null
+          amenities?: Json
+          architect_name?: string | null
+          archived_at?: string | null
+          building_details?: Json
+          buyer_agent_compensation?: string | null
+          buyer_agent_compensation_notes?: string | null
+          city?: string | null
+          construction_type?: string | null
+          created_at?: string
+          created_by?: string | null
+          delivery_from?: string | null
+          delivery_to?: string | null
+          deposit_structure?: string | null
+          description?: string | null
+          developer_name?: string | null
+          estimated_completion?: string | null
+          highlights?: Json
+          hoa_fee_includes?: string | null
+          hoa_fee_max?: number | null
+          hoa_fee_min?: number | null
+          hoa_fees?: string | null
+          id?: string
+          incentives?: string | null
+          interior_designer_name?: string | null
+          latitude?: number | null
+          lifecycle_status?: string
+          logo_url?: string | null
+          longitude?: number | null
+          name?: string
+          neighborhood?: string | null
+          neighborhood_description?: string | null
+          parking_description?: string | null
+          parking_included?: boolean | null
+          paused_at?: string | null
+          pet_policy?: string | null
+          postal_code?: string | null
+          publish_status?: string
+          published_at?: string | null
+          published_by?: string | null
+          slug?: string
+          slug_locked_at?: string | null
+          state?: string | null
+          stories?: number | null
+          submitted_at?: string | null
+          tier?: string
+          total_buildings?: number | null
+          total_units?: number | null
+          updated_at?: string
+          updated_by?: string | null
+          year_built?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "developments_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "development_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       email_campaigns: {
         Row: {
           agent_id: string
@@ -5479,6 +6507,22 @@ export type Database = {
         Args: { p_email?: string; p_id: string }
         Returns: Json
       }
+      admin_get_development_admin_notes: {
+        Args: { _development_id: string }
+        Returns: string
+      }
+      admin_replace_development_owner: {
+        Args: { _account_id: string; _new_owner_user_id: string }
+        Returns: undefined
+      }
+      admin_set_development_account_active: {
+        Args: { _account_id: string; _is_active: boolean }
+        Returns: boolean
+      }
+      admin_set_development_admin_notes: {
+        Args: { _development_id: string; _notes: string }
+        Returns: string
+      }
       agent_end_client_relationship: {
         Args: { p_client_id: string }
         Returns: number
@@ -5538,12 +6582,24 @@ export type Database = {
         Returns: Json
       }
       can_act_for_agent: { Args: { p_agent_user_id: string }; Returns: boolean }
+      can_agent_view_development: {
+        Args: { _development_id: string }
+        Returns: boolean
+      }
       can_authenticated_buyer_view_hot_sheet_client: {
         Args: { p_crm_client_id: string; p_hot_sheet_id: string }
         Returns: boolean
       }
       can_authenticated_user_delete_hot_sheet: {
         Args: { p_hot_sheet_id: string }
+        Returns: boolean
+      }
+      can_member_read_development_object: {
+        Args: { _name: string }
+        Returns: boolean
+      }
+      can_write_development_object: {
+        Args: { _name: string }
         Returns: boolean
       }
       check_client_has_other_agent: {
@@ -5594,7 +6650,18 @@ export type Database = {
         Args: { p_criteria: Json; p_name: string }
         Returns: string
       }
+      create_development_account: {
+        Args: {
+          _billing_email?: string
+          _legal_name?: string
+          _name: string
+          _owner_user_id: string
+          _slug: string
+        }
+        Returns: string
+      }
       current_account_owner_id: { Args: never; Returns: string }
+      current_is_eligible_agent: { Args: never; Returns: boolean }
       current_request_role: { Args: never; Returns: string }
       delete_draft_listing: {
         Args: { p_listing_id: string }
@@ -5603,6 +6670,14 @@ export type Database = {
       delete_pending_buyer_hot_sheet: {
         Args: { p_crm_client_id: string; p_hot_sheet_id: string }
         Returns: Json
+      }
+      development_account_id: {
+        Args: { _development_id: string }
+        Returns: string
+      }
+      development_from_storage_path: {
+        Args: { _name: string }
+        Returns: string
       }
       dispatch_hot_sheet_listing: {
         Args: { p_listing_id: string }
@@ -5716,6 +6791,30 @@ export type Database = {
         }[]
       }
       get_delegate_invite_preview: { Args: { p_token: string }; Returns: Json }
+      get_development_engagement_summary: {
+        Args: { _development_id: string }
+        Returns: {
+          leads_count: number
+          saves_count: number
+          shares_count: number
+          showings_count: number
+        }[]
+      }
+      get_development_sales_inventory: {
+        Args: { _development_id: string }
+        Returns: {
+          baths: number
+          beds: number
+          floor: string
+          floor_plan_name: string
+          phase_name: string
+          price: number
+          sqft: number
+          status: string
+          unit_id: string
+          unit_number: string
+        }[]
+      }
       get_hot_sheet_by_token: { Args: { _token: string }; Returns: Json }
       get_hot_sheet_for_member: {
         Args: { _hot_sheet_id: string }
@@ -5872,6 +6971,7 @@ export type Database = {
         Returns: boolean
       }
       invoke_agent_activation_nudge_once: { Args: never; Returns: undefined }
+      invoke_development_notification_retry: { Args: never; Returns: undefined }
       invoke_process_comms_digests: { Args: never; Returns: undefined }
       invoke_process_email_queue: { Args: never; Returns: undefined }
       is_accepted_delegate_for: {
@@ -5907,6 +7007,15 @@ export type Database = {
         Returns: boolean
       }
       is_delegate: { Args: never; Returns: boolean }
+      is_development_account_active: {
+        Args: { _account_id: string }
+        Returns: boolean
+      }
+      is_development_member: {
+        Args: { _account_id: string; _roles?: string[] }
+        Returns: boolean
+      }
+      is_eligible_agent: { Args: { _user_id: string }; Returns: boolean }
       is_email_registered_with_aac: {
         Args: { p_email: string }
         Returns: boolean
@@ -5922,6 +7031,10 @@ export type Database = {
       }
       is_licensed_owner: { Args: never; Returns: boolean }
       is_public_listing_status: { Args: { p_status: string }; Returns: boolean }
+      is_published_development: {
+        Args: { _development_id: string }
+        Returns: boolean
+      }
       is_team_delegate: {
         Args: { _team_id: string; _user_id: string }
         Returns: boolean
@@ -6019,6 +7132,15 @@ export type Database = {
           owner_last_name: string
           owner_user_id: string
           role_label: string
+        }[]
+      }
+      list_development_submissions_awaiting_notification: {
+        Args: { _kind: string; _limit?: number }
+        Returns: {
+          account_id: string
+          created_at: string
+          development_id: string
+          id: string
         }[]
       }
       list_hot_sheets_for_member: {
@@ -6158,7 +7280,26 @@ export type Database = {
         Args: { p_owner_user_id: string }
         Returns: Json
       }
+      set_development_unit_status_price: {
+        Args: {
+          _clear_price?: boolean
+          _price?: number
+          _status?: string
+          _unit_id: string
+        }
+        Returns: Database["public"]["CompositeTypes"]["development_unit_write_result"]
+        SetofOptions: {
+          from: "*"
+          to: "development_unit_write_result"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       slugify_text: { Args: { _txt: string }; Returns: string }
+      storage_path_belongs_to_development: {
+        Args: { _development_id: string; _name: string }
+        Returns: boolean
+      }
       verify_buyer_contact_row: {
         Args: { p_crm_client_id: string }
         Returns: Json
@@ -6197,7 +7338,14 @@ export type Database = {
         | "invalid"
     }
     CompositeTypes: {
-      [_ in never]: never
+      development_unit_write_result: {
+        unit_id: string | null
+        status: string | null
+        price: number | null
+        status_changed_at: string | null
+        price_changed_at: string | null
+        updated_at: string | null
+      }
     }
   }
 }
