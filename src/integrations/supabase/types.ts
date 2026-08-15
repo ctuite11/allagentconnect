@@ -2387,6 +2387,112 @@ export type Database = {
         }
         Relationships: []
       }
+      development_buildings_phases: {
+        Row: {
+          account_id: string
+          created_at: string
+          development_id: string
+          id: string
+          is_default: boolean
+          name: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          development_id: string
+          id?: string
+          is_default?: boolean
+          name: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          development_id?: string
+          id?: string
+          is_default?: boolean
+          name?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "development_phases_development_fk"
+            columns: ["development_id", "account_id"]
+            isOneToOne: false
+            referencedRelation: "developments"
+            referencedColumns: ["id", "account_id"]
+          },
+        ]
+      }
+      development_floor_plans: {
+        Row: {
+          account_id: string
+          baths: number | null
+          beds: number | null
+          created_at: string
+          description: string | null
+          development_id: string
+          features: Json
+          id: string
+          is_active: boolean
+          name: string
+          price_max: number | null
+          price_min: number | null
+          sort_order: number
+          sqft_max: number | null
+          sqft_min: number | null
+          updated_at: string
+        }
+        Insert: {
+          account_id: string
+          baths?: number | null
+          beds?: number | null
+          created_at?: string
+          description?: string | null
+          development_id: string
+          features?: Json
+          id?: string
+          is_active?: boolean
+          name: string
+          price_max?: number | null
+          price_min?: number | null
+          sort_order?: number
+          sqft_max?: number | null
+          sqft_min?: number | null
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string
+          baths?: number | null
+          beds?: number | null
+          created_at?: string
+          description?: string | null
+          development_id?: string
+          features?: Json
+          id?: string
+          is_active?: boolean
+          name?: string
+          price_max?: number | null
+          price_min?: number | null
+          sort_order?: number
+          sqft_max?: number | null
+          sqft_min?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "development_floor_plans_development_fk"
+            columns: ["development_id", "account_id"]
+            isOneToOne: false
+            referencedRelation: "developments"
+            referencedColumns: ["id", "account_id"]
+          },
+        ]
+      }
       development_id_registry: {
         Row: {
           created_at: string
@@ -2401,6 +2507,112 @@ export type Database = {
           id?: string
         }
         Relationships: []
+      }
+      development_units: {
+        Row: {
+          account_id: string
+          baths: number | null
+          beds: number | null
+          building_phase_id: string
+          created_at: string
+          description: string | null
+          development_id: string
+          estimated_delivery: string | null
+          floor: string | null
+          floor_plan_id: string | null
+          id: string
+          incentives: string | null
+          is_featured: boolean
+          outdoor_space: string | null
+          parking_notes: string | null
+          parking_spaces: number | null
+          price: number | null
+          price_changed_at: string | null
+          sort_order: number
+          sqft: number | null
+          status: string
+          status_changed_at: string | null
+          unit_number: string
+          updated_at: string
+          views_exposure: string | null
+        }
+        Insert: {
+          account_id: string
+          baths?: number | null
+          beds?: number | null
+          building_phase_id: string
+          created_at?: string
+          description?: string | null
+          development_id: string
+          estimated_delivery?: string | null
+          floor?: string | null
+          floor_plan_id?: string | null
+          id?: string
+          incentives?: string | null
+          is_featured?: boolean
+          outdoor_space?: string | null
+          parking_notes?: string | null
+          parking_spaces?: number | null
+          price?: number | null
+          price_changed_at?: string | null
+          sort_order?: number
+          sqft?: number | null
+          status?: string
+          status_changed_at?: string | null
+          unit_number: string
+          updated_at?: string
+          views_exposure?: string | null
+        }
+        Update: {
+          account_id?: string
+          baths?: number | null
+          beds?: number | null
+          building_phase_id?: string
+          created_at?: string
+          description?: string | null
+          development_id?: string
+          estimated_delivery?: string | null
+          floor?: string | null
+          floor_plan_id?: string | null
+          id?: string
+          incentives?: string | null
+          is_featured?: boolean
+          outdoor_space?: string | null
+          parking_notes?: string | null
+          parking_spaces?: number | null
+          price?: number | null
+          price_changed_at?: string | null
+          sort_order?: number
+          sqft?: number | null
+          status?: string
+          status_changed_at?: string | null
+          unit_number?: string
+          updated_at?: string
+          views_exposure?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "development_units_development_fk"
+            columns: ["development_id", "account_id"]
+            isOneToOne: false
+            referencedRelation: "developments"
+            referencedColumns: ["id", "account_id"]
+          },
+          {
+            foreignKeyName: "development_units_floor_plan_fk"
+            columns: ["floor_plan_id", "development_id"]
+            isOneToOne: false
+            referencedRelation: "development_floor_plans"
+            referencedColumns: ["id", "development_id"]
+          },
+          {
+            foreignKeyName: "development_units_phase_fk"
+            columns: ["building_phase_id", "development_id"]
+            isOneToOne: false
+            referencedRelation: "development_buildings_phases"
+            referencedColumns: ["id", "development_id"]
+          },
+        ]
       }
       developments: {
         Row: {
