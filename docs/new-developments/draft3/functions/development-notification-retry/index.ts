@@ -1,4 +1,4 @@
-// @auth-classification: service-role-internal
+// @auth-classification: internal-cron
 /**
  * development-notification-retry (DRAFT 3 — NOT DEPLOYED).
  *
