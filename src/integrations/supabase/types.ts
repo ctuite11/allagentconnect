@@ -2593,6 +2593,82 @@ export type Database = {
         }
         Relationships: []
       }
+      development_leads: {
+        Row: {
+          account_id: string
+          agent_user_id: string
+          assigned_contact_id: string | null
+          created_at: string
+          development_id: string
+          id: string
+          message: string | null
+          notified_at: string | null
+          sender_email: string
+          sender_name: string
+          sender_phone: string | null
+          source: string
+          status: string
+          unit_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          account_id: string
+          agent_user_id: string
+          assigned_contact_id?: string | null
+          created_at?: string
+          development_id: string
+          id?: string
+          message?: string | null
+          notified_at?: string | null
+          sender_email: string
+          sender_name: string
+          sender_phone?: string | null
+          source: string
+          status?: string
+          unit_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string
+          agent_user_id?: string
+          assigned_contact_id?: string | null
+          created_at?: string
+          development_id?: string
+          id?: string
+          message?: string | null
+          notified_at?: string | null
+          sender_email?: string
+          sender_name?: string
+          sender_phone?: string | null
+          source?: string
+          status?: string
+          unit_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "development_leads_contact_fk"
+            columns: ["assigned_contact_id", "development_id"]
+            isOneToOne: false
+            referencedRelation: "development_sales_contacts"
+            referencedColumns: ["id", "development_id"]
+          },
+          {
+            foreignKeyName: "development_leads_development_fk"
+            columns: ["development_id", "account_id"]
+            isOneToOne: false
+            referencedRelation: "developments"
+            referencedColumns: ["id", "account_id"]
+          },
+          {
+            foreignKeyName: "development_leads_unit_fk"
+            columns: ["unit_id", "development_id"]
+            isOneToOne: false
+            referencedRelation: "development_units"
+            referencedColumns: ["id", "development_id"]
+          },
+        ]
+      }
       development_media: {
         Row: {
           account_id: string
@@ -2768,6 +2844,156 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "developments"
             referencedColumns: ["id", "account_id"]
+          },
+        ]
+      }
+      development_saves: {
+        Row: {
+          agent_user_id: string
+          created_at: string
+          development_id: string
+          id: string
+        }
+        Insert: {
+          agent_user_id: string
+          created_at?: string
+          development_id: string
+          id?: string
+        }
+        Update: {
+          agent_user_id?: string
+          created_at?: string
+          development_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "development_saves_development_id_fkey"
+            columns: ["development_id"]
+            isOneToOne: false
+            referencedRelation: "developments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      development_shares: {
+        Row: {
+          agent_user_id: string
+          created_at: string
+          development_id: string
+          id: string
+          share_type: string
+          unit_id: string | null
+        }
+        Insert: {
+          agent_user_id: string
+          created_at?: string
+          development_id: string
+          id?: string
+          share_type: string
+          unit_id?: string | null
+        }
+        Update: {
+          agent_user_id?: string
+          created_at?: string
+          development_id?: string
+          id?: string
+          share_type?: string
+          unit_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "development_shares_development_id_fkey"
+            columns: ["development_id"]
+            isOneToOne: false
+            referencedRelation: "developments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "development_shares_unit_id_development_id_fkey"
+            columns: ["unit_id", "development_id"]
+            isOneToOne: false
+            referencedRelation: "development_units"
+            referencedColumns: ["id", "development_id"]
+          },
+        ]
+      }
+      development_showing_requests: {
+        Row: {
+          account_id: string
+          agent_user_id: string
+          assigned_contact_id: string | null
+          created_at: string
+          development_id: string
+          id: string
+          message: string | null
+          notified_at: string | null
+          preferred_date: string | null
+          preferred_time: string | null
+          requester_email: string
+          requester_name: string
+          requester_phone: string | null
+          status: string
+          unit_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          account_id: string
+          agent_user_id: string
+          assigned_contact_id?: string | null
+          created_at?: string
+          development_id: string
+          id?: string
+          message?: string | null
+          notified_at?: string | null
+          preferred_date?: string | null
+          preferred_time?: string | null
+          requester_email: string
+          requester_name: string
+          requester_phone?: string | null
+          status?: string
+          unit_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string
+          agent_user_id?: string
+          assigned_contact_id?: string | null
+          created_at?: string
+          development_id?: string
+          id?: string
+          message?: string | null
+          notified_at?: string | null
+          preferred_date?: string | null
+          preferred_time?: string | null
+          requester_email?: string
+          requester_name?: string
+          requester_phone?: string | null
+          status?: string
+          unit_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "development_showings_contact_fk"
+            columns: ["assigned_contact_id", "development_id"]
+            isOneToOne: false
+            referencedRelation: "development_sales_contacts"
+            referencedColumns: ["id", "development_id"]
+          },
+          {
+            foreignKeyName: "development_showings_development_fk"
+            columns: ["development_id", "account_id"]
+            isOneToOne: false
+            referencedRelation: "developments"
+            referencedColumns: ["id", "account_id"]
+          },
+          {
+            foreignKeyName: "development_showings_unit_fk"
+            columns: ["unit_id", "development_id"]
+            isOneToOne: false
+            referencedRelation: "development_units"
+            referencedColumns: ["id", "development_id"]
           },
         ]
       }
