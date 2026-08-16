@@ -19,7 +19,7 @@ export function DocumentRow({ document }: { document: DevelopmentDocumentRow }) 
     setLoading(true);
     const result = await openDevelopmentDocument(document.id);
     setLoading(false);
-    if (!result.ok) {
+    if (result.ok === false) {
       toast.error(result.message);
     }
   };
