@@ -87,6 +87,19 @@ const VendorDashboard = React.lazy(() => import("./pages/VendorDashboard"));
 const VendorSetup = React.lazy(() => import("./pages/VendorSetup"));
 const VendorPackages = React.lazy(() => import("./pages/VendorPackages"));
 const VendorDirectory = React.lazy(() => import("./pages/VendorDirectory"));
+const DevelopmentsBrowsePage = React.lazy(() => import("./pages/developments/DevelopmentsBrowsePage"));
+const DevelopmentLayout = React.lazy(() =>
+  import("./components/developments/DevelopmentLayout").then((m) => ({ default: m.DevelopmentLayout })),
+);
+const DevelopmentOverviewPage = React.lazy(() => import("./pages/developments/DevelopmentOverviewPage"));
+const DevelopmentFloorPlansPage = React.lazy(() => import("./pages/developments/DevelopmentFloorPlansPage"));
+const DevelopmentUnitsPage = React.lazy(() => import("./pages/developments/DevelopmentUnitsPage"));
+const DevelopmentUnitDetailPage = React.lazy(() => import("./pages/developments/DevelopmentUnitDetailPage"));
+const DevelopmentDocumentsPage = React.lazy(() => import("./pages/developments/DevelopmentDocumentsPage"));
+const DevelopmentUpdatesPage = React.lazy(() => import("./pages/developments/DevelopmentUpdatesPage"));
+const DevelopmentsVisualPreview = import.meta.env.DEV
+  ? React.lazy(() => import("./pages/developments/DevelopmentsVisualPreview"))
+  : null;
 const PasswordReset = React.lazy(() => import("./pages/PasswordReset"));
 const AgentAccountSetup = React.lazy(() => import("./pages/AgentAccountSetup"));
 const ActivateAccount = React.lazy(() => import("./pages/ActivateAccount"));
@@ -485,6 +498,27 @@ const App = () => (
                   <Route path="/vendor/setup" element={<RouteGuard requireRole="agent"><VendorSetup /></RouteGuard>} />
                   <Route path="/vendor/packages" element={<RouteGuard requireRole="agent"><VendorPackages /></RouteGuard>} />
                   <Route path="/vendor/directory" element={<RouteGuard requireRole="agent"><VendorDirectory /></RouteGuard>} />
+
+                  {/* New Developments — agent-facing Phase 1 */}
+                  <Route path="/developments" element={<RouteGuard requireRole="agent"><DevelopmentsBrowsePage /></RouteGuard>} />
+                  <Route
+                    path="/developments/:slug"
+                    element={
+                      <RouteGuard requireRole="agent">
+                        <DevelopmentLayout />
+                      </RouteGuard>
+                    }
+                  >
+                    <Route index element={<DevelopmentOverviewPage />} />
+                    <Route path="floor-plans" element={<DevelopmentFloorPlansPage />} />
+                    <Route path="units" element={<DevelopmentUnitsPage />} />
+                    <Route path="units/:unitId" element={<DevelopmentUnitDetailPage />} />
+                    <Route path="documents" element={<DevelopmentDocumentsPage />} />
+                    <Route path="updates" element={<DevelopmentUpdatesPage />} />
+                  </Route>
+                  {import.meta.env.DEV && DevelopmentsVisualPreview ? (
+                    <Route path="/dev/developments-preview" element={<DevelopmentsVisualPreview />} />
+                  ) : null}
                   <Route path="/admin/approvals" element={<AdminApprovals />} />
                   <Route path="/admin/matches" element={<AdminMatches />} />
                   <Route path="/admin/consumers" element={<AdminConsumers />} />
