@@ -18,6 +18,11 @@ import {
 } from "../_shared/hotSheetAgentDelivery.ts";
 import { assertHotSheetEnqueueAllowed } from "../_shared/emailStreams.ts";
 import { authorizeInternalServiceRole } from "../_shared/internalServiceRoleAuth.ts";
+import {
+  countsAsQueued,
+  enqueueHotSheetDelivery,
+  isSettled,
+} from "../_shared/hotSheetDeliveryClaim.ts";
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -26,11 +31,6 @@ const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
-
-function isUniqueViolation(error: { code?: string; message?: string } | null | undefined): boolean {
-  if (!error) return false;
-  return error.code === "23505" || Boolean(error.message?.toLowerCase().includes("duplicate"));
-}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
