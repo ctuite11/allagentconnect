@@ -326,8 +326,8 @@ serve(async (req) => {
               audience: "agent",
               recipientKey: agentEmail,
               idempotencyKey,
-              paused: pauseGate.paused,
-              pauseReason: pauseGate.paused ? pauseGate.switch : null,
+              paused: false, // provably false here: the pause gate returns early above
+              pauseReason: null,
               payload: {
                 provider: "resend",
                 template: "new-match-notification",
@@ -378,8 +378,8 @@ serve(async (req) => {
               audience: "agent",
               recipientKey: agentEmail,
               idempotencyKey,
-              paused: pauseGate.paused,
-              pauseReason: pauseGate.paused ? pauseGate.switch : null,
+              paused: false, // provably false here: the pause gate returns early above
+              pauseReason: null,
               payload: {
                 provider: "resend",
                 template: "hot-sheet-status-change",
@@ -582,8 +582,8 @@ serve(async (req) => {
               audience: "client",
               recipientKey,
               idempotencyKey: dedupeKey,
-              paused: pauseGate.paused,
-              pauseReason: pauseGate.paused ? pauseGate.switch : null,
+              paused: false, // provably false here: the pause gate returns early above
+              pauseReason: null,
               payload: {
                 provider: "resend",
                 template: "new-match-notification",
@@ -639,8 +639,8 @@ serve(async (req) => {
                 audience: "client",
                 recipientKey,
                 idempotencyKey: dedupeKey,
-                paused: pauseGate.paused,
-                pauseReason: pauseGate.paused ? pauseGate.switch : null,
+                paused: false, // provably false here: the pause gate returns early above
+                pauseReason: null,
                 payload: {
                   provider: "resend",
                   template: "hot-sheet-status-change",
@@ -727,8 +727,8 @@ serve(async (req) => {
               audience: "subscriber",
               recipientKey: subId,
               idempotencyKey: dedupeKey,
-              paused: pauseGate.paused,
-              pauseReason: pauseGate.paused ? pauseGate.switch : null,
+              paused: false, // provably false here: the pause gate returns early above
+              pauseReason: null,
               payload: {
                 provider: "resend",
                 template: "hot-sheet-subscriber-update",
@@ -785,8 +785,8 @@ serve(async (req) => {
                 audience: "subscriber",
                 recipientKey: subId,
                 idempotencyKey: dedupeKey,
-                paused: pauseGate.paused,
-                pauseReason: pauseGate.paused ? pauseGate.switch : null,
+                paused: false, // provably false here: the pause gate returns early above
+                pauseReason: null,
                 payload: {
                   provider: "resend",
                   template: "hot-sheet-subscriber-status-change",
@@ -820,7 +820,7 @@ serve(async (req) => {
               } else {
                 console.error(
                   `[send-new-match-notification] subscriber status-change (${statusKey}) enqueue failed:`,
-                  error,
+                  outcome.error,
                 );
                 pushOutcome(subscriberPerListing, [listing], "failed");
               }
