@@ -7208,6 +7208,7 @@ export type Database = {
       invoke_development_notification_retry: { Args: never; Returns: undefined }
       invoke_process_comms_digests: { Args: never; Returns: undefined }
       invoke_process_email_queue: { Args: never; Returns: undefined }
+      invoke_process_hot_sheet_events: { Args: never; Returns: undefined }
       is_accepted_delegate_for: {
         Args: { p_owner_user_id: string }
         Returns: boolean
