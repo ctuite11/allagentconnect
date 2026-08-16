@@ -15,7 +15,10 @@ Deno.test("agent Hot Sheet jobs use hot_sheet stream + new-match-notification te
   const src = await Deno.readTextFile(
     new URL("../send-new-match-notification/index.ts", import.meta.url),
   );
-  assertEquals(src.includes('stream: "hot_sheet"'), true);
+  // The hot_sheet stream is now stamped inside enqueue_hot_sheet_delivery, in
+  // the same transaction as the delivery claim, instead of by the caller.
+  assertEquals(src.includes("enqueueHotSheetDelivery"), true);
+  assertEquals(src.includes('from("email_jobs")'), false);
   assertEquals(src.includes('template: "new-match-notification"'), true);
   assertEquals(src.includes('audience: "agent"'), true);
   assertEquals(src.includes("agent-new-listing-alert"), false);
