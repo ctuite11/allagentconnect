@@ -67,13 +67,21 @@ serve(async (req) => {
     // unauthenticated full-scan fallback — catch-up/backfill must be a separate,
     // explicitly authorized admin operation.
     let triggerListingId: string | null = null;
+    let triggerEventId: string | null = null;
     try {
       if (req.headers.get("content-type")?.includes("application/json")) {
         const body = await req.json().catch(() => null);
         triggerListingId = parseRequiredListingId(body?.listing_id);
+        // Present only on the durable-outbox path. The legacy pg_net kick sends
+        // no event_id; it is purely an optional breadcrumb for claim rows and
+        // is NEVER used to mark an outbox event terminal — only the worker that
+        // holds the lease may complete or fail an event.
+        const rawEventId = typeof body?.event_id === "string" ? body.event_id.trim() : "";
+        triggerEventId = rawEventId.length > 0 ? rawEventId : null;
       }
     } catch {
       triggerListingId = null;
+      triggerEventId = null;
     }
 
     if (!triggerListingId) {
