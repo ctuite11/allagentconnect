@@ -123,12 +123,20 @@ Deno.test("Hot Sheets do not write or send through client_needs", async () => {
   const bridge = await Deno.readTextFile(
     new URL("../notify-matching-buyers/index.ts", import.meta.url),
   );
+  // The bridge's response construction now lives in its extracted fanout core.
+  const fanout = await Deno.readTextFile(
+    new URL("../notify-matching-buyers/fanout.ts", import.meta.url),
+  );
   assertEquals(matcher.includes("client_needs"), false);
   assertEquals(bridge.includes('.from("client_needs")'), false);
   // No legacy fan-out enqueue (comment mentions are fine; live template enqueue is not).
   assertEquals(bridge.includes('template: "new-listing-alert"'), false);
   assertEquals(bridge.includes("payload: { template: \"new-listing-alert\""), false);
-  assertEquals(bridge.includes('legacy_client_needs_emails: "disabled_for_isolation"'), true);
+  assertEquals(fanout.includes('template: "new-listing-alert"'), false);
+  assertEquals(
+    fanout.includes('legacy_client_needs_emails: "disabled_for_isolation"'),
+    true,
+  );
   assertEquals(bridge.includes("send-new-match-notification"), true);
   assertEquals(bridge.includes('functions.invoke("notify-agents-new-listing"'), false);
 });
@@ -178,5 +186,5 @@ Deno.test("near-realtime matcher requires listing_id and scopes RPC matches", as
   assertEquals(src.includes('.eq("id", triggerListingId)'), true);
 
   // Bridge continues to pass the triggering listing_id.
-  assertEquals(bridge.includes("listing_id: listing.listing_id"), true);
+  assertEquals(bridge.includes("listingId: listing.listing_id"), true);
 });
