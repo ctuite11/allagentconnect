@@ -3992,6 +3992,118 @@ export type Database = {
           },
         ]
       }
+      hot_sheet_delivery_claims: {
+        Row: {
+          audience: string
+          created_at: string
+          email_job_id: string | null
+          event_id: string
+          hot_sheet_id: string
+          id: string
+          listing_id: string
+          reason: string | null
+          recipient_key: string
+          state: string
+          status_at_send: string
+          updated_at: string
+        }
+        Insert: {
+          audience: string
+          created_at?: string
+          email_job_id?: string | null
+          event_id: string
+          hot_sheet_id: string
+          id?: string
+          listing_id: string
+          reason?: string | null
+          recipient_key: string
+          state: string
+          status_at_send: string
+          updated_at?: string
+        }
+        Update: {
+          audience?: string
+          created_at?: string
+          email_job_id?: string | null
+          event_id?: string
+          hot_sheet_id?: string
+          id?: string
+          listing_id?: string
+          reason?: string | null
+          recipient_key?: string
+          state?: string
+          status_at_send?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hot_sheet_delivery_claims_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "hot_sheet_listing_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hot_sheet_delivery_claims_hot_sheet_id_fkey"
+            columns: ["hot_sheet_id"]
+            isOneToOne: false
+            referencedRelation: "hot_sheets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hot_sheet_delivery_claims_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hot_sheet_delivery_claims_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hot_sheet_event_stage_log: {
+        Row: {
+          created_at: string
+          detail: Json
+          event_id: string | null
+          id: string
+          listing_id: string | null
+          outcome: string
+          stage: string
+        }
+        Insert: {
+          created_at?: string
+          detail?: Json
+          event_id?: string | null
+          id?: string
+          listing_id?: string | null
+          outcome: string
+          stage: string
+        }
+        Update: {
+          created_at?: string
+          detail?: Json
+          event_id?: string | null
+          id?: string
+          listing_id?: string | null
+          outcome?: string
+          stage?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hot_sheet_event_stage_log_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "hot_sheet_listing_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       hot_sheet_favorites: {
         Row: {
           created_at: string | null
@@ -4028,6 +4140,75 @@ export type Database = {
           },
           {
             foreignKeyName: "hot_sheet_favorites_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hot_sheet_listing_events: {
+        Row: {
+          attempts: number
+          claimed_at: string | null
+          claimed_by: string | null
+          created_at: string
+          dedupe_key: string
+          id: string
+          last_error: string | null
+          lease_expires_at: string | null
+          listing_id: string
+          new_status: string
+          next_attempt_at: string | null
+          old_status: string | null
+          state: string
+          trigger_op: string
+          updated_at: string
+        }
+        Insert: {
+          attempts?: number
+          claimed_at?: string | null
+          claimed_by?: string | null
+          created_at?: string
+          dedupe_key: string
+          id?: string
+          last_error?: string | null
+          lease_expires_at?: string | null
+          listing_id: string
+          new_status: string
+          next_attempt_at?: string | null
+          old_status?: string | null
+          state?: string
+          trigger_op: string
+          updated_at?: string
+        }
+        Update: {
+          attempts?: number
+          claimed_at?: string | null
+          claimed_by?: string | null
+          created_at?: string
+          dedupe_key?: string
+          id?: string
+          last_error?: string | null
+          lease_expires_at?: string | null
+          listing_id?: string
+          new_status?: string
+          next_attempt_at?: string | null
+          old_status?: string | null
+          state?: string
+          trigger_op?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hot_sheet_listing_events_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hot_sheet_listing_events_listing_id_fkey"
             columns: ["listing_id"]
             isOneToOne: false
             referencedRelation: "listings_public"
