@@ -318,9 +318,16 @@ serve(async (req) => {
             const status = String(listing.status || "active");
             const idempotencyKey = agentIdempotencyKey(hotSheet.id, listing.id, status);
             const html = await renderAgentCards([listing]);
-            const { error: insertError } = await supabase.from("email_jobs").insert({
-              stream: "hot_sheet",
-              idempotency_key: idempotencyKey,
+            const outcome = await enqueueHotSheetDelivery(supabase, {
+              eventId: triggerEventId,
+              listingId: listing.id,
+              status,
+              hotSheetId: hotSheet.id,
+              audience: "agent",
+              recipientKey: agentEmail,
+              idempotencyKey,
+              paused: pauseGate.paused,
+              pauseReason: pauseGate.paused ? pauseGate.switch : null,
               payload: {
                 provider: "resend",
                 template: "new-match-notification",
@@ -343,8 +350,8 @@ serve(async (req) => {
               },
             });
 
-            if (!insertError || isUniqueViolation(insertError)) {
-              if (!insertError) {
+            if (isSettled(outcome.result)) {
+              if (countsAsQueued(outcome.result)) {
                 jobsQueued++;
                 queuedForHotSheet++;
               }
@@ -352,7 +359,7 @@ serve(async (req) => {
             } else {
               console.error(
                 `[send-new-match-notification] agent new-match enqueue failed for ${agentEmail}:`,
-                insertError,
+                outcome.error,
               );
               markAgentOutcome([listing], "failed");
             }
@@ -363,9 +370,16 @@ serve(async (req) => {
             const status = String(listing.status || "active");
             const idempotencyKey = agentIdempotencyKey(hotSheet.id, listing.id, status);
             const html = await renderAgentCards([listing]);
-            const { error: insertError } = await supabase.from("email_jobs").insert({
-              stream: "hot_sheet",
-              idempotency_key: idempotencyKey,
+            const outcome = await enqueueHotSheetDelivery(supabase, {
+              eventId: triggerEventId,
+              listingId: listing.id,
+              status,
+              hotSheetId: hotSheet.id,
+              audience: "agent",
+              recipientKey: agentEmail,
+              idempotencyKey,
+              paused: pauseGate.paused,
+              pauseReason: pauseGate.paused ? pauseGate.switch : null,
               payload: {
                 provider: "resend",
                 template: "hot-sheet-status-change",
@@ -390,8 +404,8 @@ serve(async (req) => {
               },
             });
 
-            if (!insertError || isUniqueViolation(insertError)) {
-              if (!insertError) {
+            if (isSettled(outcome.result)) {
+              if (countsAsQueued(outcome.result)) {
                 jobsQueued++;
                 queuedForHotSheet++;
               }
@@ -399,7 +413,7 @@ serve(async (req) => {
             } else {
               console.error(
                 `[send-new-match-notification] agent status-change (${statusKey}) enqueue failed for ${agentEmail}:`,
-                insertError,
+                outcome.error,
               );
               markAgentOutcome([listing], "failed");
             }
