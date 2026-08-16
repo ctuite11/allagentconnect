@@ -7,9 +7,6 @@ export const COMMS_ONBOARDING_QUERY = "comms_onboarding";
 /** Destination used only after successfully marking `comms_onboarding_seen_at`. */
 export const COMMS_ONBOARDING_PATH = `/communications?${COMMS_ONBOARDING_QUERY}=1`;
 
-/** Canonical Success Hub destination after one-time Comms onboarding save. */
-export const COMMS_ONBOARDING_SUCCESS_HUB_PATH = "/agent-dashboard";
-
 export function isEligibleForCommsOnboardingRedirect(settings: {
   preferences_set?: boolean | null;
   comms_onboarding_seen_at?: string | null;
@@ -17,21 +14,6 @@ export function isEligibleForCommsOnboardingRedirect(settings: {
   if (settings.preferences_set === true) return false;
   if (settings.comms_onboarding_seen_at != null) return false;
   return true;
-}
-
-/**
- * After Save Preferences succeeds on Communications:
- * - one-time onboarding visit (`?comms_onboarding=1`) → Success Hub
- * - manual Communications visit → stay put (null)
- * - failed save → stay put (null)
- */
-export function resolveCommsPreferencesPostSaveNavigation(options: {
-  isCommsOnboardingVisit: boolean;
-  saveSucceeded: boolean;
-}): string | null {
-  if (!options.saveSucceeded) return null;
-  if (!options.isCommsOnboardingVisit) return null;
-  return COMMS_ONBOARDING_SUCCESS_HUB_PATH;
 }
 
 /**
