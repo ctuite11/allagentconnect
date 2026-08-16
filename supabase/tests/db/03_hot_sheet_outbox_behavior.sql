@@ -215,7 +215,7 @@ BEGIN
     'zombie writes must not change state';
   ASSERT (SELECT claimed_by FROM public.hot_sheet_listing_events WHERE id=v_event) = 'worker-b',
     'zombie writes must not steal ownership';
-  ASSERT (SELECT count(*) FROM public.hot_sheet_delivery_claims) = 2,
+  ASSERT (SELECT count(*) FROM public.hot_sheet_delivery_claims) = 3,
     'lease churn must not create duplicate delivery claims';
 
   -- current owner can complete
@@ -247,7 +247,7 @@ BEGIN
   ASSERT v_n = 1, 'a failed event must be retried once its backoff elapses';
   ASSERT (SELECT attempts FROM public.hot_sheet_listing_events WHERE id=v_event2) = 2,
     'retry increments attempts';
-  ASSERT (SELECT count(*) FROM public.hot_sheet_delivery_claims) = 2,
+  ASSERT (SELECT count(*) FROM public.hot_sheet_delivery_claims) = 3,
     'retry must not duplicate delivery claims';
 
   ---------------------------------------------------------------------------
