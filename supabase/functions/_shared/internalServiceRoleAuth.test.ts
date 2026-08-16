@@ -110,6 +110,9 @@ Deno.test("authorized request while paused still returns pause semantics (source
   const bridge = await Deno.readTextFile(
     new URL("../notify-matching-buyers/index.ts", import.meta.url),
   );
+  const fanout = await Deno.readTextFile(
+    new URL("../notify-matching-buyers/fanout.ts", import.meta.url),
+  );
   const authIdx = matcher.indexOf("authorizeInternalServiceRole(req)");
   const pauseIdx = matcher.indexOf("assertHotSheetEnqueueAllowed()");
   const jobsQueuedIdx = matcher.indexOf("jobsQueued: 0");
@@ -119,7 +122,10 @@ Deno.test("authorized request while paused still returns pause semantics (source
   const bridgeAuth = bridge.indexOf("authorizeInternalServiceRole(req)");
   const bridgePause = bridge.indexOf("assertHotSheetEnqueueAllowed()");
   assertEquals(bridgeAuth > 0 && bridgePause > bridgeAuth, true);
-  assertEquals(bridge.includes('hot_sheet_fanout: "skipped"'), true);
+  // Pause short-circuit response is produced by the extracted fanout core, and
+  // the bridge must reach it only after the auth gate.
+  assertEquals(bridge.indexOf("runListingFanout(") > bridgePause, true);
+  assertEquals(fanout.includes('hot_sheet_fanout: "skipped"'), true);
 });
 
 Deno.test("serviceRoleInvokeHeaders carries Authorization + apikey", () => {
@@ -169,7 +175,7 @@ Deno.test("Hot Sheet producers enforce service-role auth before work", async () 
   assertEquals(matcherSent > matcherAuth, true);
 
   // Bridge still passes listing_id + explicit service-role headers downstream.
-  assertEquals(bridge.includes("listing_id: listing.listing_id"), true);
+  assertEquals(bridge.includes("listingId: listing.listing_id"), true);
   assertEquals(bridge.includes("serviceRoleInvokeHeaders"), true);
   assertEquals(bridge.includes("Authorization"), true);
   assertEquals(bridge.includes("apikey"), true);
