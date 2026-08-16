@@ -168,7 +168,9 @@ Deno.test("Hot Sheet producers enforce service-role auth before work", async () 
   // (gate is first executable auth call after OPTIONS).
   const matcherAuth = matcher.indexOf("authorizeInternalServiceRole(req)");
   const matcherRpc = matcher.indexOf("check_hot_sheet_matches");
-  const matcherJobs = matcher.indexOf('.from("email_jobs")');
+  // Enqueues now go through the atomic delivery-claim helper rather than a
+  // direct email_jobs insert; the auth-before-work guarantee is unchanged.
+  const matcherJobs = matcher.indexOf("enqueueHotSheetDelivery(supabase");
   const matcherSent = matcher.indexOf('.from("hot_sheet_sent_listings")');
   assertEquals(matcherRpc > matcherAuth, true);
   assertEquals(matcherJobs > matcherAuth, true);
