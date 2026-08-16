@@ -3992,6 +3992,118 @@ export type Database = {
           },
         ]
       }
+      hot_sheet_delivery_claims: {
+        Row: {
+          audience: string
+          created_at: string
+          email_job_id: string | null
+          event_id: string
+          hot_sheet_id: string
+          id: string
+          listing_id: string
+          reason: string | null
+          recipient_key: string
+          state: string
+          status_at_send: string
+          updated_at: string
+        }
+        Insert: {
+          audience: string
+          created_at?: string
+          email_job_id?: string | null
+          event_id: string
+          hot_sheet_id: string
+          id?: string
+          listing_id: string
+          reason?: string | null
+          recipient_key: string
+          state: string
+          status_at_send: string
+          updated_at?: string
+        }
+        Update: {
+          audience?: string
+          created_at?: string
+          email_job_id?: string | null
+          event_id?: string
+          hot_sheet_id?: string
+          id?: string
+          listing_id?: string
+          reason?: string | null
+          recipient_key?: string
+          state?: string
+          status_at_send?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hot_sheet_delivery_claims_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "hot_sheet_listing_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hot_sheet_delivery_claims_hot_sheet_id_fkey"
+            columns: ["hot_sheet_id"]
+            isOneToOne: false
+            referencedRelation: "hot_sheets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hot_sheet_delivery_claims_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hot_sheet_delivery_claims_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hot_sheet_event_stage_log: {
+        Row: {
+          created_at: string
+          detail: Json
+          event_id: string | null
+          id: string
+          listing_id: string | null
+          outcome: string
+          stage: string
+        }
+        Insert: {
+          created_at?: string
+          detail?: Json
+          event_id?: string | null
+          id?: string
+          listing_id?: string | null
+          outcome: string
+          stage: string
+        }
+        Update: {
+          created_at?: string
+          detail?: Json
+          event_id?: string | null
+          id?: string
+          listing_id?: string | null
+          outcome?: string
+          stage?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hot_sheet_event_stage_log_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "hot_sheet_listing_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       hot_sheet_favorites: {
         Row: {
           created_at: string | null
@@ -4028,6 +4140,75 @@ export type Database = {
           },
           {
             foreignKeyName: "hot_sheet_favorites_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hot_sheet_listing_events: {
+        Row: {
+          attempts: number
+          claimed_at: string | null
+          claimed_by: string | null
+          created_at: string
+          dedupe_key: string
+          id: string
+          last_error: string | null
+          lease_expires_at: string | null
+          listing_id: string
+          new_status: string
+          next_attempt_at: string | null
+          old_status: string | null
+          state: string
+          trigger_op: string
+          updated_at: string
+        }
+        Insert: {
+          attempts?: number
+          claimed_at?: string | null
+          claimed_by?: string | null
+          created_at?: string
+          dedupe_key: string
+          id?: string
+          last_error?: string | null
+          lease_expires_at?: string | null
+          listing_id: string
+          new_status: string
+          next_attempt_at?: string | null
+          old_status?: string | null
+          state?: string
+          trigger_op: string
+          updated_at?: string
+        }
+        Update: {
+          attempts?: number
+          claimed_at?: string | null
+          claimed_by?: string | null
+          created_at?: string
+          dedupe_key?: string
+          id?: string
+          last_error?: string | null
+          lease_expires_at?: string | null
+          listing_id?: string
+          new_status?: string
+          next_attempt_at?: string | null
+          old_status?: string | null
+          state?: string
+          trigger_op?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hot_sheet_listing_events_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hot_sheet_listing_events_listing_id_fkey"
             columns: ["listing_id"]
             isOneToOne: false
             referencedRelation: "listings_public"
@@ -6617,6 +6798,36 @@ export type Database = {
         Returns: Json
       }
       claim_agent_login_token: { Args: { p_token_hash: string }; Returns: Json }
+      claim_hot_sheet_events: {
+        Args: {
+          p_lease_seconds?: number
+          p_limit?: number
+          p_worker_id?: string
+        }
+        Returns: {
+          attempts: number
+          claimed_at: string | null
+          claimed_by: string | null
+          created_at: string
+          dedupe_key: string
+          id: string
+          last_error: string | null
+          lease_expires_at: string | null
+          listing_id: string
+          new_status: string
+          next_attempt_at: string | null
+          old_status: string | null
+          state: string
+          trigger_op: string
+          updated_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "hot_sheet_listing_events"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       cleanup_blocking_auth_identity: {
         Args: { _email: string }
         Returns: number
@@ -6633,6 +6844,10 @@ export type Database = {
       }
       complete_agent_login_token: {
         Args: { p_token_id: string }
+        Returns: boolean
+      }
+      complete_hot_sheet_event: {
+        Args: { p_event_id: string; p_state?: string; p_worker_id: string }
         Returns: boolean
       }
       count_matching_agents: {
@@ -6742,6 +6957,21 @@ export type Database = {
         Returns: string
       }
       end_client_relationship: { Args: never; Returns: number }
+      enqueue_hot_sheet_delivery: {
+        Args: {
+          p_audience: string
+          p_event_id: string
+          p_hot_sheet_id: string
+          p_idempotency_key: string
+          p_listing_id: string
+          p_pause_reason?: string
+          p_paused?: boolean
+          p_payload: Json
+          p_recipient_key: string
+          p_status: string
+        }
+        Returns: Json
+      }
       ensure_agent_role_for_user: {
         Args: { _user_id: string }
         Returns: undefined
@@ -6749,6 +6979,10 @@ export type Database = {
       ensure_conversation_participants_for_caller: {
         Args: { p_conversation_id: string }
         Returns: undefined
+      }
+      fail_hot_sheet_event: {
+        Args: { p_error: string; p_event_id: string; p_worker_id: string }
+        Returns: boolean
       }
       find_current_agent_deletion: {
         Args: { p_email: string }
@@ -7182,6 +7416,16 @@ export type Database = {
         Returns: {
           listing_id: string
         }[]
+      }
+      log_hot_sheet_event_stage: {
+        Args: {
+          p_detail?: Json
+          p_event_id: string
+          p_listing_id: string
+          p_outcome: string
+          p_stage: string
+        }
+        Returns: undefined
       }
       mark_agent_activated: { Args: { _user_id: string }; Returns: string }
       matches_current_account: {
