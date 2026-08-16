@@ -719,9 +719,16 @@ serve(async (req) => {
               status,
             );
             const html = renderBuyerCards([listing]);
-            const { error } = await supabase.from("email_jobs").insert({
-              stream: "hot_sheet",
-              idempotency_key: dedupeKey,
+            const outcome = await enqueueHotSheetDelivery(supabase, {
+              eventId: triggerEventId,
+              listingId: listing.id,
+              status,
+              hotSheetId: hotSheet.id,
+              audience: "subscriber",
+              recipientKey: subId,
+              idempotencyKey: dedupeKey,
+              paused: pauseGate.paused,
+              pauseReason: pauseGate.paused ? pauseGate.switch : null,
               payload: {
                 provider: "resend",
                 template: "hot-sheet-subscriber-update",
@@ -744,8 +751,8 @@ serve(async (req) => {
                 },
               },
             });
-            if (!error || isUniqueViolation(error)) {
-              if (!error) {
+            if (isSettled(outcome.result)) {
+              if (countsAsQueued(outcome.result)) {
                 jobsQueued++;
                 queuedForHotSheet++;
               }
@@ -753,7 +760,7 @@ serve(async (req) => {
             } else {
               console.error(
                 `[send-new-match-notification] subscriber new-match enqueue failed:`,
-                error,
+                outcome.error,
               );
               pushOutcome(subscriberPerListing, [listing], "failed");
             }
@@ -770,9 +777,16 @@ serve(async (req) => {
                 status,
               );
               const html = renderBuyerCards([listing]);
-              const { error } = await supabase.from("email_jobs").insert({
-                stream: "hot_sheet",
-                idempotency_key: dedupeKey,
+              const outcome = await enqueueHotSheetDelivery(supabase, {
+                eventId: triggerEventId,
+                listingId: listing.id,
+                status,
+                hotSheetId: hotSheet.id,
+                audience: "subscriber",
+                recipientKey: subId,
+                idempotencyKey: dedupeKey,
+                paused: pauseGate.paused,
+                pauseReason: pauseGate.paused ? pauseGate.switch : null,
                 payload: {
                   provider: "resend",
                   template: "hot-sheet-subscriber-status-change",
@@ -797,8 +811,8 @@ serve(async (req) => {
                   },
                 },
               });
-              if (!error || isUniqueViolation(error)) {
-                if (!error) {
+              if (isSettled(outcome.result)) {
+                if (countsAsQueued(outcome.result)) {
                   jobsQueued++;
                   queuedForHotSheet++;
                 }
