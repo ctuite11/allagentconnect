@@ -108,6 +108,8 @@ const DeveloperCreateDevelopmentPage = React.lazy(
   () => import("./pages/developer/DeveloperCreateDevelopmentPage"),
 );
 const DeveloperLoginPage = React.lazy(() => import("./pages/DeveloperLoginPage"));
+const RequestAccessPage = React.lazy(() => import("./pages/RequestAccessPage"));
+const DeveloperAccessPage = React.lazy(() => import("./pages/DeveloperAccessPage"));
 const DeveloperDevelopmentLayout = React.lazy(() =>
   import("./components/developments/DeveloperDevelopmentLayout").then((m) => ({
     default: m.DeveloperDevelopmentLayout,
@@ -420,8 +422,9 @@ const App = () => (
               <Routes>
                 <Route path="/" element={<HomepageV2 />} />
                 <Route path="/index" element={<Navigate to="/" replace />} />
-                <Route path="/register" element={<Navigate to="/auth?mode=register" replace />} />
-                <Route path="/request-access" element={<Navigate to="/auth?mode=register" replace />} />
+                <Route path="/register" element={<Navigate to="/request-access" replace />} />
+                <Route path="/request-access" element={<RequestAccessPage />} />
+                <Route path="/developer-access" element={<DeveloperAccessPage />} />
                 <Route
                   path="/agent-match"
                   element={

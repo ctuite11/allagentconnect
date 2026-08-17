@@ -128,7 +128,7 @@ const HeroSection = () => {
         </div>
         <div className="flex items-center gap-2 sm:gap-4 md:gap-5 shrink-0">
           <a
-            href="/auth?mode=register&source=home_nav"
+            href="/request-access"
             className="font-['Manrope'] font-semibold text-white bg-transparent border border-white/40 hover:bg-white/10 hover:border-white/70 transition-colors h-9 sm:h-11 px-3 sm:px-6 rounded-full inline-flex items-center text-xs sm:text-sm whitespace-nowrap"
           >
             Request Access
@@ -178,7 +178,7 @@ const HeroSection = () => {
           {/* CTA */}
           <div className="flex items-center gap-4 mt-8 flex-wrap">
             <a
-              href="/auth?mode=register&source=home_hero"
+              href="/request-access"
               className="h-14 px-8 inline-flex items-center gap-2 bg-[#50C878] rounded-full hover:bg-[#45b96d] transition-colors font-['Manrope'] font-semibold text-black text-base shadow-sm"
             >
               Request access
