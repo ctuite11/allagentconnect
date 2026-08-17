@@ -19,6 +19,7 @@ import {
   Search,
   Home,
   Building2,
+  HardHat,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { isAgentHotSheetsNavActive } from "@/lib/sidebarNavActive";
@@ -45,6 +46,7 @@ const baseMainMenu: Omit<SidebarItem, "badge">[] = [
   { label: "Success Hub", icon: LayoutDashboard, route: "/agent-dashboard" },
   { label: "Search", icon: Search, route: "/listing-search" },
   { label: "Developments", icon: Building2, route: "/developments" },
+  { label: "Developer", icon: HardHat, route: "/developer" },
   { label: "Communications Center", icon: Radio, route: "/communications" },
   { label: "Messages", icon: MessageSquare, route: "/agent/messages" },
   { label: "Buyers", icon: Home, route: "/agent/buyers" },
@@ -56,6 +58,11 @@ const baseMainMenu: Omit<SidebarItem, "badge">[] = [
 ];
 
 const adminItem: SidebarItem = { label: "Admin", icon: ShieldCheck, route: "/admin/approvals" };
+const adminDevelopmentsItem: SidebarItem = {
+  label: "Dev reviews",
+  icon: Building2,
+  route: "/admin/developments",
+};
 
 const otherTools: SidebarItem[] = [
   { label: "Calendar", icon: Calendar, route: null },
@@ -183,7 +190,11 @@ export function DashboardSidebar({
 
   const resolvedActive = activeItem ?? (() => {
     const path = location.pathname;
-    const allItems = [...mainMenu, ...(isAdmin ? [adminItem] : []), ...otherTools];
+    const allItems = [
+      ...mainMenu,
+      ...(isAdmin ? [adminItem, adminDevelopmentsItem] : []),
+      ...otherTools,
+    ];
     const exact = allItems.find((item) => item.route && item.route === path);
     if (exact) return exact.label;
     const prefix = allItems.find((item) => item.route && item.route !== "/" && path.startsWith(item.route));
@@ -272,12 +283,20 @@ export function DashboardSidebar({
           ))}
 
           {isAdmin && (
-            <SidebarRow
-              item={adminItem}
-              active={resolvedActive === "Admin"}
-              collapsed={showCollapsed}
-              onClick={() => handleNav(adminItem)}
-            />
+            <>
+              <SidebarRow
+                item={adminItem}
+                active={resolvedActive === "Admin"}
+                collapsed={showCollapsed}
+                onClick={() => handleNav(adminItem)}
+              />
+              <SidebarRow
+                item={adminDevelopmentsItem}
+                active={resolvedActive === "Dev reviews"}
+                collapsed={showCollapsed}
+                onClick={() => handleNav(adminDevelopmentsItem)}
+              />
+            </>
           )}
 
           <div className="mt-4">

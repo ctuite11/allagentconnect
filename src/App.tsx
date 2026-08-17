@@ -100,6 +100,32 @@ const DevelopmentUpdatesPage = React.lazy(() => import("./pages/developments/Dev
 const DevelopmentsVisualPreview = import.meta.env.DEV
   ? React.lazy(() => import("./pages/developments/DevelopmentsVisualPreview"))
   : null;
+const DeveloperDashboardPage = React.lazy(() => import("./pages/developer/DeveloperDashboardPage"));
+const DeveloperCreateDevelopmentPage = React.lazy(
+  () => import("./pages/developer/DeveloperCreateDevelopmentPage"),
+);
+const DeveloperDevelopmentLayout = React.lazy(() =>
+  import("./components/developments/DeveloperDevelopmentLayout").then((m) => ({
+    default: m.DeveloperDevelopmentLayout,
+  })),
+);
+const DeveloperDetailsPage = React.lazy(() => import("./pages/developer/DeveloperDetailsPage"));
+const DeveloperPhotosPage = React.lazy(() => import("./pages/developer/DeveloperPhotosPage"));
+const DeveloperFloorPlansManagePage = React.lazy(
+  () => import("./pages/developer/DeveloperFloorPlansPage"),
+);
+const DeveloperUnitsManagePage = React.lazy(() => import("./pages/developer/DeveloperUnitsPage"));
+const DeveloperDocumentsManagePage = React.lazy(
+  () => import("./pages/developer/DeveloperDocumentsPage"),
+);
+const DeveloperUpdatesManagePage = React.lazy(() => import("./pages/developer/DeveloperUpdatesPage"));
+const DeveloperTeamPage = React.lazy(() => import("./pages/developer/DeveloperTeamPage"));
+const AdminDevelopmentsListPage = React.lazy(() =>
+  import("./pages/admin/AdminDevelopmentsPages").then((m) => ({ default: m.AdminDevelopmentsListPage })),
+);
+const AdminDevelopmentReviewPage = React.lazy(() =>
+  import("./pages/admin/AdminDevelopmentsPages").then((m) => ({ default: m.AdminDevelopmentReviewPage })),
+);
 const PasswordReset = React.lazy(() => import("./pages/PasswordReset"));
 const AgentAccountSetup = React.lazy(() => import("./pages/AgentAccountSetup"));
 const ActivateAccount = React.lazy(() => import("./pages/ActivateAccount"));
@@ -519,7 +545,33 @@ const App = () => (
                   {import.meta.env.DEV && DevelopmentsVisualPreview ? (
                     <Route path="/dev/developments-preview" element={<DevelopmentsVisualPreview />} />
                   ) : null}
+
+                  {/* New Developments — Phase 2 developer workspace */}
+                  <Route path="/developer" element={<RouteGuard requireAuth><DeveloperDashboardPage /></RouteGuard>} />
+                  <Route
+                    path="/developer/developments/new"
+                    element={<RouteGuard requireAuth><DeveloperCreateDevelopmentPage /></RouteGuard>}
+                  />
+                  <Route
+                    path="/developer/developments/:developmentId"
+                    element={
+                      <RouteGuard requireAuth>
+                        <DeveloperDevelopmentLayout />
+                      </RouteGuard>
+                    }
+                  >
+                    <Route index element={<DeveloperDetailsPage />} />
+                    <Route path="photos" element={<DeveloperPhotosPage />} />
+                    <Route path="floor-plans" element={<DeveloperFloorPlansManagePage />} />
+                    <Route path="units" element={<DeveloperUnitsManagePage />} />
+                    <Route path="documents" element={<DeveloperDocumentsManagePage />} />
+                    <Route path="updates" element={<DeveloperUpdatesManagePage />} />
+                    <Route path="team" element={<DeveloperTeamPage />} />
+                  </Route>
+
                   <Route path="/admin/approvals" element={<AdminApprovals />} />
+                  <Route path="/admin/developments" element={<RouteGuard requireRole="admin"><AdminDevelopmentsListPage /></RouteGuard>} />
+                  <Route path="/admin/developments/:developmentId" element={<RouteGuard requireRole="admin"><AdminDevelopmentReviewPage /></RouteGuard>} />
                   <Route path="/admin/matches" element={<AdminMatches />} />
                   <Route path="/admin/consumers" element={<AdminConsumers />} />
                   <Route path="/admin/invites" element={<AdminInviteAudit />} />
