@@ -547,15 +547,15 @@ const App = () => (
                   ) : null}
 
                   {/* New Developments — Phase 2 developer workspace */}
-                  <Route path="/developer" element={<RouteGuard requireAuth><DeveloperDashboardPage /></RouteGuard>} />
+                  <Route path="/developer" element={<RouteGuard requireRole={["developer", "admin"]}><DeveloperDashboardPage /></RouteGuard>} />
                   <Route
                     path="/developer/developments/new"
-                    element={<RouteGuard requireAuth><DeveloperCreateDevelopmentPage /></RouteGuard>}
+                    element={<RouteGuard requireRole={["developer", "admin"]}><DeveloperCreateDevelopmentPage /></RouteGuard>}
                   />
                   <Route
                     path="/developer/developments/:developmentId"
                     element={
-                      <RouteGuard requireAuth>
+                      <RouteGuard requireRole={["developer", "admin"]}>
                         <DeveloperDevelopmentLayout />
                       </RouteGuard>
                     }
