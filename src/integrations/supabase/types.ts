@@ -6948,6 +6948,10 @@ export type Database = {
         Args: { _name: string }
         Returns: boolean
       }
+      can_write_listing_storage_folder: {
+        Args: { _folder: string }
+        Returns: boolean
+      }
       check_client_has_other_agent: {
         Args: { p_client_email: string }
         Returns: boolean
