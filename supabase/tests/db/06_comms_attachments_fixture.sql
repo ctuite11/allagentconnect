@@ -16,3 +16,20 @@ CREATE TABLE public.comms_broadcasts (
   sender_id uuid NOT NULL,
   created_at timestamptz NOT NULL DEFAULT now()
 );
+
+-- Canonical eligibility helpers, stubbed to a table the tests can control.
+CREATE TABLE public.test_eligible_agents (user_id uuid PRIMARY KEY);
+CREATE TABLE public.test_admins (user_id uuid PRIMARY KEY);
+
+CREATE FUNCTION public.current_is_eligible_agent() RETURNS boolean
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path TO 'public' AS $$
+  SELECT EXISTS (SELECT 1 FROM public.test_eligible_agents WHERE user_id = auth.uid());
+$$;
+
+CREATE TYPE public.app_role AS ENUM ('buyer','agent','admin','developer');
+
+CREATE FUNCTION public.has_role(_user_id uuid, _role app_role) RETURNS boolean
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path TO 'public' AS $$
+  SELECT _role = 'admin'::app_role
+     AND EXISTS (SELECT 1 FROM public.test_admins WHERE user_id = _user_id);
+$$;

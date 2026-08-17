@@ -9,6 +9,9 @@ BEGIN;
 INSERT INTO public.comms_broadcasts (id, sender_id)
 VALUES ('aaaaaaaa-0000-0000-0000-000000000001', :'alice');
 
+-- Alice and Bob are verified+activated agents; Carol is a signed-in non-agent.
+INSERT INTO public.test_eligible_agents (user_id) VALUES (:'alice'), (:'bob');
+
 -- Alice attaches to her own broadcast: allowed.
 SET LOCAL ROLE authenticated;
 SET LOCAL request.jwt.claim.sub = '11111111-1111-1111-1111-111111111111';
@@ -38,8 +41,14 @@ WITH d AS (
 )
 SELECT 'bob_delete_denied' AS assertion, count(*) = 0 AS passed FROM d;
 
--- Bob (authenticated agent) can read the network-wide feed.
-SELECT 'authenticated_read_ok' AS assertion, count(*) = 1 AS passed
+-- Bob (verified + activated agent) can read the network-wide feed.
+SELECT 'eligible_agent_read_ok' AS assertion, count(*) = 1 AS passed
+FROM public.comms_broadcast_attachments;
+
+-- A signed-in NON-agent (e.g. a buyer account) cannot read Comms media even
+-- when the storage path / row id is known.
+SET LOCAL request.jwt.claim.sub = '33333333-3333-3333-3333-333333333333';
+SELECT 'non_agent_read_denied' AS assertion, count(*) = 0 AS passed
 FROM public.comms_broadcast_attachments;
 
 -- Anonymous users get nothing.

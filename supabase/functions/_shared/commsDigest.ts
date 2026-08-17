@@ -156,6 +156,16 @@ export function defaultCommsActionUrl(): string {
   return DEFAULT_ACTION_URL;
 }
 
+/**
+ * Deep link to a single broadcast in the Communications Feed. Falls back to the
+ * general feed URL when no broadcast id is available.
+ */
+export function commsBroadcastActionUrl(broadcastId?: string | null): string {
+  const id = typeof broadcastId === "string" ? broadcastId.trim() : "";
+  if (!id) return DEFAULT_ACTION_URL;
+  return `${DEFAULT_ACTION_URL}?broadcast=${encodeURIComponent(id)}`;
+}
+
 /* ------------------------------------------------------------------ */
 /*  Eastern period helpers (no per-agent TZ yet)                       */
 /* ------------------------------------------------------------------ */

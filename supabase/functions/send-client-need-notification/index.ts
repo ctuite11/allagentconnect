@@ -13,6 +13,7 @@ import {
 } from "../_shared/missingOpportunitiesEmail.ts";
 import {
   defaultCommsActionUrl,
+  commsBroadcastActionUrl,
   insertDigestItems,
   loadCommsSchedules,
   partitionByCommsSchedule,
@@ -448,7 +449,7 @@ const handler = async (req: Request): Promise<Response> => {
             ${criteriaText ? `<div style="background:#ffffff;border:1px solid #e5e7eb;padding:16px;border-radius:8px;margin:12px 0;"><h3 style="margin:0 0 8px;font-size:14px;">Request Criteria</h3>${criteriaText}</div>` : ""}
             <div style="background:#ffffff;border:1px solid #e5e7eb;padding:16px;border-radius:8px;">
               <p style="white-space: pre-wrap;margin:0;font-size:14px;color:#334155;">${message}</p>
-            </div>${buildAttachmentCtaHtml(attachments, senderName, defaultCommsActionUrl())}`;
+            </div>${buildAttachmentCtaHtml(attachments, senderName, commsBroadcastActionUrl(broadcastId))}`;
 
     const { schedules, muted } = await loadCommsSchedules(
       supabase,
