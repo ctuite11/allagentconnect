@@ -44,8 +44,15 @@ FROM public.comms_broadcast_attachments;
 
 -- Anonymous users get nothing.
 SET LOCAL ROLE anon;
-SELECT 'anon_read_denied' AS assertion, count(*) = 0 AS passed
-FROM public.comms_broadcast_attachments;
+DO $$
+DECLARE n int;
+BEGIN
+  SELECT count(*) INTO n FROM public.comms_broadcast_attachments;
+  IF n > 0 THEN RAISE EXCEPTION 'FAIL: anon read % rows', n; END IF;
+  RAISE NOTICE 'PASS: anon_read_returns_nothing';
+EXCEPTION WHEN insufficient_privilege THEN
+  RAISE NOTICE 'PASS: anon_read_denied (no grant)';
+END $$;
 
 RESET ROLE;
 ROLLBACK;
