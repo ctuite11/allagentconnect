@@ -15,6 +15,9 @@ const AppShell = React.lazy(() =>
 const BuyerShell = React.lazy(() =>
   import("@/components/layout/BuyerShell").then((m) => ({ default: m.BuyerShell })),
 );
+const DeveloperShell = React.lazy(() =>
+  import("@/components/layout/DeveloperShell").then((m) => ({ default: m.DeveloperShell })),
+);
 const CrossTabSessionGuard = React.lazy(() =>
   import("@/components/CrossTabSessionGuard").then((m) => ({ default: m.CrossTabSessionGuard })),
 );
@@ -104,6 +107,7 @@ const DeveloperDashboardPage = React.lazy(() => import("./pages/developer/Develo
 const DeveloperCreateDevelopmentPage = React.lazy(
   () => import("./pages/developer/DeveloperCreateDevelopmentPage"),
 );
+const DeveloperLoginPage = React.lazy(() => import("./pages/DeveloperLoginPage"));
 const DeveloperDevelopmentLayout = React.lazy(() =>
   import("./components/developments/DeveloperDevelopmentLayout").then((m) => ({
     default: m.DeveloperDevelopmentLayout,
@@ -334,6 +338,15 @@ function BuyerLayout() {
   );
 }
 
+/** Layout route: developer portal shell (no agent navigation) */
+function DeveloperLayout() {
+  return (
+    <React.Suspense fallback={<LoadingScreen />}>
+      <DeveloperShell />
+    </React.Suspense>
+  );
+}
+
 /** Layout route: AAC public/auth pages — white canvas only (no top nav; brand lives in each page) */
 function PublicLayout() {
   return (
@@ -429,6 +442,7 @@ const App = () => (
                 {/* Auth routes */}
                 <Route element={<PublicLayout />}>
                   <Route path="/auth" element={<Auth />} />
+                  <Route path="/developer-login" element={<DeveloperLoginPage />} />
                   <Route path="/auth/callback" element={<AuthCallback />} />
                   <Route path="/auth/setup" element={<AuthSetupRedirect />} />
                   <Route path="/auth/diagnostics" element={<AuthDiagnostics />} />
@@ -546,11 +560,35 @@ const App = () => (
                     <Route path="/dev/developments-preview" element={<DevelopmentsVisualPreview />} />
                   ) : null}
 
-                  {/* New Developments — Phase 2 developer workspace */}
-                  <Route path="/developer" element={<RouteGuard requireRole={["developer", "admin"]}><DeveloperDashboardPage /></RouteGuard>} />
+                  <Route path="/admin/approvals" element={<AdminApprovals />} />
+                  <Route path="/admin/developments" element={<RouteGuard requireRole="admin"><AdminDevelopmentsListPage /></RouteGuard>} />
+                  <Route path="/admin/developments/:developmentId" element={<RouteGuard requireRole="admin"><AdminDevelopmentReviewPage /></RouteGuard>} />
+                  <Route path="/admin/matches" element={<AdminMatches />} />
+                  <Route path="/admin/consumers" element={<AdminConsumers />} />
+                  <Route path="/admin/invites" element={<AdminInviteAudit />} />
+                  <Route path="/admin/email-analytics" element={<AdminEmailAnalytics />} />
+                  <Route path="/admin/founder-invite" element={<AdminFounderInvite />} />
+                  <Route path="/admin/debug-auth" element={<AdminDebugAuth />} />
+                  <Route path="/settings" element={<RouteGuard requireRole="agent"><AgentSettings /></RouteGuard>} />
+                </Route>
+
+                {/* Developer portal — dedicated shell, not AppShell */}
+                <Route element={<DeveloperLayout />}>
+                  <Route
+                    path="/developer"
+                    element={
+                      <RouteGuard requireRole={["developer", "admin"]}>
+                        <DeveloperDashboardPage />
+                      </RouteGuard>
+                    }
+                  />
                   <Route
                     path="/developer/developments/new"
-                    element={<RouteGuard requireRole={["developer", "admin"]}><DeveloperCreateDevelopmentPage /></RouteGuard>}
+                    element={
+                      <RouteGuard requireRole={["developer", "admin"]}>
+                        <DeveloperCreateDevelopmentPage />
+                      </RouteGuard>
+                    }
                   />
                   <Route
                     path="/developer/developments/:developmentId"
@@ -568,17 +606,6 @@ const App = () => (
                     <Route path="updates" element={<DeveloperUpdatesManagePage />} />
                     <Route path="team" element={<DeveloperTeamPage />} />
                   </Route>
-
-                  <Route path="/admin/approvals" element={<AdminApprovals />} />
-                  <Route path="/admin/developments" element={<RouteGuard requireRole="admin"><AdminDevelopmentsListPage /></RouteGuard>} />
-                  <Route path="/admin/developments/:developmentId" element={<RouteGuard requireRole="admin"><AdminDevelopmentReviewPage /></RouteGuard>} />
-                  <Route path="/admin/matches" element={<AdminMatches />} />
-                  <Route path="/admin/consumers" element={<AdminConsumers />} />
-                  <Route path="/admin/invites" element={<AdminInviteAudit />} />
-                  <Route path="/admin/email-analytics" element={<AdminEmailAnalytics />} />
-                  <Route path="/admin/founder-invite" element={<AdminFounderInvite />} />
-                  <Route path="/admin/debug-auth" element={<AdminDebugAuth />} />
-                  <Route path="/settings" element={<RouteGuard requireRole="agent"><AgentSettings /></RouteGuard>} />
                 </Route>
                 {/* Buyer authenticated routes — wrapped in BuyerShell */}
                 <Route element={<BuyerLayout />}>

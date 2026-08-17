@@ -19,7 +19,6 @@ import {
   Search,
   Home,
   Building2,
-  HardHat,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { isAgentHotSheetsNavActive } from "@/lib/sidebarNavActive";
@@ -46,7 +45,6 @@ const baseMainMenu: Omit<SidebarItem, "badge">[] = [
   { label: "Success Hub", icon: LayoutDashboard, route: "/agent-dashboard" },
   { label: "Search", icon: Search, route: "/listing-search" },
   { label: "Developments", icon: Building2, route: "/developments" },
-  { label: "Developer", icon: HardHat, route: "/developer" },
   { label: "Communications Center", icon: Radio, route: "/communications" },
   { label: "Messages", icon: MessageSquare, route: "/agent/messages" },
   { label: "Buyers", icon: Home, route: "/agent/buyers" },

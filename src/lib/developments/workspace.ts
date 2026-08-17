@@ -232,16 +232,24 @@ export async function createDevelopment(input: {
   accountId: string;
   name: string;
   slug: string;
+  address?: string | null;
   city?: string | null;
   state?: string | null;
+  postalCode?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
   developerName?: string | null;
 }): Promise<{ development: DevelopmentRow | null; error: string | null }> {
   const payload: DevelopmentInsert = {
     account_id: input.accountId,
     name: input.name.trim(),
     slug: input.slug.trim(),
+    address: input.address ?? null,
     city: input.city ?? null,
     state: input.state ?? null,
+    postal_code: input.postalCode ?? null,
+    latitude: input.latitude ?? null,
+    longitude: input.longitude ?? null,
     developer_name: input.developerName ?? null,
   };
 

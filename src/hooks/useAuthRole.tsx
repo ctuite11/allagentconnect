@@ -13,8 +13,8 @@ import {
   resolveUserRole,
   type DelegateMembershipSummary,
   type DeveloperAccountSummary,
+  type ResolvedRole,
 } from "@/lib/resolveUserRole";
-import type { ResolvedRole } from "@/lib/resolveUserRole";
 import type { User } from "@supabase/supabase-js";
 
 type Role = ResolvedRole | null;
@@ -27,10 +27,6 @@ export interface AuthRoleState {
   isVerifiedAgent: boolean;
   isLicensedOwner: boolean;
   isDelegate: boolean;
-  activeOwnerUserId: string | null;
-  ownerDisplayName: string | null;
-  canAccessSuccessHub: boolean;
-  delegateMemberships: import("@/lib/resolveUserRole").DelegateMembershipSummary[];
   /** Developer product shell access (AAC account type = developer). */
   isDeveloper: boolean;
   /** Development companies this user belongs to (development_account_members). */
@@ -38,6 +34,10 @@ export interface AuthRoleState {
   developerAccountCount: number;
   /** Set only when the developer manages exactly one company. */
   primaryDeveloperAccountId: string | null;
+  activeOwnerUserId: string | null;
+  ownerDisplayName: string | null;
+  canAccessSuccessHub: boolean;
+  delegateMemberships: DelegateMembershipSummary[];
   refreshRole: () => Promise<void>;
 }
 
@@ -70,14 +70,14 @@ function useAuthRoleStore(): AuthRoleState {
   const [isVerifiedAgent, setIsVerifiedAgent] = useState(false);
   const [isLicensedOwner, setIsLicensedOwner] = useState(false);
   const [isDelegate, setIsDelegate] = useState(false);
-  const [activeOwnerUserId, setActiveOwnerUserId] = useState<string | null>(null);
-  const [ownerDisplayName, setOwnerDisplayName] = useState<string | null>(null);
-  const [canAccessSuccessHub, setCanAccessSuccessHub] = useState(false);
-  const [delegateMemberships, setDelegateMemberships] = useState<DelegateMembershipSummary[]>([]);
   const [isDeveloper, setIsDeveloper] = useState(false);
   const [developerAccounts, setDeveloperAccounts] = useState<DeveloperAccountSummary[]>([]);
   const [developerAccountCount, setDeveloperAccountCount] = useState(0);
   const [primaryDeveloperAccountId, setPrimaryDeveloperAccountId] = useState<string | null>(null);
+  const [activeOwnerUserId, setActiveOwnerUserId] = useState<string | null>(null);
+  const [ownerDisplayName, setOwnerDisplayName] = useState<string | null>(null);
+  const [canAccessSuccessHub, setCanAccessSuccessHub] = useState(false);
+  const [delegateMemberships, setDelegateMemberships] = useState<DelegateMembershipSummary[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const initialLoadDone = useRef(false);
   const roleResolutionId = useRef(0);
@@ -94,14 +94,14 @@ function useAuthRoleStore(): AuthRoleState {
     setIsVerifiedAgent(false);
     setIsLicensedOwner(false);
     setIsDelegate(false);
-    setActiveOwnerUserId(null);
-    setOwnerDisplayName(null);
-    setCanAccessSuccessHub(false);
-    setDelegateMemberships([]);
     setIsDeveloper(false);
     setDeveloperAccounts([]);
     setDeveloperAccountCount(0);
     setPrimaryDeveloperAccountId(null);
+    setActiveOwnerUserId(null);
+    setOwnerDisplayName(null);
+    setCanAccessSuccessHub(false);
+    setDelegateMemberships([]);
   }, []);
 
   /** Never let a stalled auth/role call hang the app on a spinner forever. */
@@ -132,14 +132,14 @@ function useAuthRoleStore(): AuthRoleState {
     setIsVerifiedAgent(result.is_verified_agent);
     setIsLicensedOwner(result.is_licensed_owner ?? false);
     setIsDelegate(result.is_delegate ?? false);
-    setActiveOwnerUserId(result.active_owner_user_id ?? null);
-    setOwnerDisplayName(result.owner_display_name ?? null);
-    setCanAccessSuccessHub(result.can_access_success_hub ?? false);
-    setDelegateMemberships(result.delegate_memberships ?? []);
     setIsDeveloper(result.is_developer ?? result.role === "developer");
     setDeveloperAccounts(result.developer_accounts ?? []);
     setDeveloperAccountCount(result.developer_account_count ?? 0);
     setPrimaryDeveloperAccountId(result.primary_developer_account_id ?? null);
+    setActiveOwnerUserId(result.active_owner_user_id ?? null);
+    setOwnerDisplayName(result.owner_display_name ?? null);
+    setCanAccessSuccessHub(result.can_access_success_hub ?? false);
+    setDelegateMemberships(result.delegate_memberships ?? []);
   }, []);
 
   useEffect(() => {
@@ -163,9 +163,6 @@ function useAuthRoleStore(): AuthRoleState {
 
       const sessionUser = session?.user ?? null;
       if (!sessionUser) {
-        // A SIGNED_IN/INITIAL_SESSION event may have arrived while getSession
-        // was waiting on the browser's auth-storage lock. Never overwrite that
-        // newer, authoritative event with this stale empty bootstrap result.
         if (currentUserId.current || resolvingUserId.current) {
           initialLoadDone.current = true;
           return;
@@ -178,9 +175,6 @@ function useAuthRoleStore(): AuthRoleState {
         return;
       }
 
-      // onAuthStateChange can deliver the valid session before getSession
-      // settles. Reuse the in-flight resolution instead of starting a second
-      // request that can cancel the first one and leave the route spinning.
       if (
         currentUserId.current === sessionUser.id &&
         (currentRole.current !== null || resolvingUserId.current === sessionUser.id)
@@ -211,7 +205,6 @@ function useAuthRoleStore(): AuthRoleState {
 
     void initialLoad();
 
-    // Hard watchdog: whatever happens, stop showing the global spinner.
     const watchdog = setTimeout(() => {
       if (!initialLoadDone.current) {
         console.warn("[AUTH] bootstrap watchdog fired; releasing loading state");
@@ -233,10 +226,6 @@ function useAuthRoleStore(): AuthRoleState {
         return;
       }
 
-      // After a password update succeeds anywhere in the app, scrub any
-      // recovery/setup markers. This guarantees a remount of AuthCallback
-      // (or any other listener) cannot bounce a freshly-activated agent
-      // back into a password form.
       if (event === "USER_UPDATED") {
         void import("@/lib/authRecovery").then(({ clearRecoveryState }) => {
           clearRecoveryState();
@@ -245,9 +234,6 @@ function useAuthRoleStore(): AuthRoleState {
 
       const newUser = session?.user ?? null;
       if (newUser) {
-        // Token refreshes and user metadata updates are common while a tab is
-        // open. Do not erase a role that is already resolved for this user or
-        // restart the route-level loading screen for those routine events.
         if (
           currentUserId.current === newUser.id &&
           (currentRole.current !== null || resolvingUserId.current === newUser.id)
@@ -264,9 +250,6 @@ function useAuthRoleStore(): AuthRoleState {
         clearResolvedAccess();
         setLoading(true);
 
-        // Defer backend work until after the auth callback returns. Starting a
-        // new backend request inside onAuthStateChange can contend with the
-        // auth client's session lock and leave the UI spinning indefinitely.
         window.setTimeout(() => {
           void withTimeout(
             loadRoleForUser(newUser.id, resolutionId),
@@ -292,7 +275,6 @@ function useAuthRoleStore(): AuthRoleState {
     };
   }, [clearResolvedAccess, loadRoleForUser, withTimeout]);
 
-  // Re-resolve role after admin approval while the tab stays open (e.g. pending → verified).
   useEffect(() => {
     const onFocus = () => {
       if (user?.id && role === "agent" && !isVerifiedAgent) {
@@ -312,14 +294,14 @@ function useAuthRoleStore(): AuthRoleState {
       isVerifiedAgent,
       isLicensedOwner,
       isDelegate,
-      activeOwnerUserId,
-      ownerDisplayName,
-      canAccessSuccessHub,
-      delegateMemberships,
       isDeveloper,
       developerAccounts,
       developerAccountCount,
       primaryDeveloperAccountId,
+      activeOwnerUserId,
+      ownerDisplayName,
+      canAccessSuccessHub,
+      delegateMemberships,
       refreshRole: async () => {
         if (user?.id) await loadRoleForUser(user.id);
       },
@@ -332,14 +314,14 @@ function useAuthRoleStore(): AuthRoleState {
       isVerifiedAgent,
       isLicensedOwner,
       isDelegate,
-      activeOwnerUserId,
-      ownerDisplayName,
-      canAccessSuccessHub,
-      delegateMemberships,
       isDeveloper,
       developerAccounts,
       developerAccountCount,
       primaryDeveloperAccountId,
+      activeOwnerUserId,
+      ownerDisplayName,
+      canAccessSuccessHub,
+      delegateMemberships,
       loadRoleForUser,
     ],
   );
