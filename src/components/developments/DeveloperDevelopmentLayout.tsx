@@ -74,17 +74,17 @@ export function DeveloperAccessGate({ children }: { children: React.ReactNode })
     return <AacMonogramLoader variant="fullscreen" message="Loading developer workspace…" />;
   }
 
-  if (!user) return <Navigate to="/auth?returnTo=%2Fdeveloper" replace />;
+  if (!user) return <Navigate to="/developer-login?returnTo=%2Fdeveloper" replace />;
 
   if (!isAdmin && (memberships?.length ?? 0) === 0) {
     return (
       <AgentAacPage>
         <PageHeader
           title="Developer workspace"
-          subtitle="You are not a member of any development account yet."
+          subtitle="Your company projects will appear here once AAC links your account."
         />
         <p className="max-w-xl text-sm text-zinc-600">
-          AAC admins create development accounts and assign an owner. Once you are added, your
+          AAC admins create development companies and assign owners. Once you are added, your
           projects will appear here.
         </p>
       </AgentAacPage>

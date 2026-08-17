@@ -11,6 +11,7 @@ describe("legacy dashboard auth routing", () => {
 
   it.each([
     ["admin", "/admin/approvals"],
+    ["developer", "/developer"],
     ["agent", "/agent-dashboard"],
     ["delegate", "/agent-dashboard"],
     ["buyer", "/client/dashboard"],

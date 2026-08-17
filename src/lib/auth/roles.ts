@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
  * App roles that can be checked via the has_role RPC.
  * SECURITY DEFINER function bypasses RLS safely.
  */
-export type AppRole = "admin" | "agent" | "buyer";
+export type AppRole = "admin" | "agent" | "buyer" | "developer";
 
 /**
  * Single source of truth for role checks.

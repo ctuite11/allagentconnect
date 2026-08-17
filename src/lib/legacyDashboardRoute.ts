@@ -26,6 +26,8 @@ export function decideLegacyDashboardRoute({
   switch (role) {
     case "admin":
       return { status: "redirect", target: "/admin/approvals" };
+    case "developer":
+      return { status: "redirect", target: "/developer" };
     case "agent":
     case "delegate":
       return { status: "redirect", target: "/agent-dashboard" };

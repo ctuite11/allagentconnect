@@ -361,9 +361,11 @@ const Auth = () => {
             is_verified_agent: resolved.is_verified_agent,
           });
 
-          // Admin, buyer, and verified agents route immediately — no Welcome Back interstitial.
+          // Admin, developer, buyer, and verified agents route immediately — no Welcome Back interstitial.
+          // Developers never enter agent verification / Success Hub flows.
           const shouldRouteImmediately =
             resolved.role === "admin" ||
+            resolved.role === "developer" ||
             resolved.role === "buyer" ||
             resolved.role === "delegate" ||
             (resolved.role === "agent" && resolved.is_verified_agent);

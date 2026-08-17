@@ -1,6 +1,12 @@
 import { supabase } from "@/integrations/supabase/client";
 
-export type ResolvedRole = "admin" | "agent" | "buyer" | "delegate" | "developer" | "unknown";
+export type ResolvedRole =
+  | "admin"
+  | "agent"
+  | "buyer"
+  | "delegate"
+  | "developer"
+  | "unknown";
 
 export type DelegateMembershipSummary = {
   owner_user_id: string;
@@ -8,6 +14,7 @@ export type DelegateMembershipSummary = {
   role_label: string | null;
 };
 
+/** Development companies from resolve_user_role (development_account_members). */
 export type DeveloperAccountSummary = {
   account_id: string;
   name: string | null;
@@ -35,7 +42,7 @@ export interface ResolvedRoleResult {
 /**
  * Single authoritative role resolver.
  * Calls the SECURITY DEFINER resolve_user_role RPC — one round-trip, no UI guessing.
- * Priority order (enforced server-side): admin > verified agent > delegate > agent > buyer > unknown
+ * Priority order (enforced server-side): admin > developer > verified agent > delegate > agent > buyer > unknown
  */
 export async function resolveUserRole(userId: string): Promise<ResolvedRoleResult> {
   const { data, error } = await supabase.rpc("resolve_user_role", {
@@ -69,24 +76,4 @@ export async function resolveUserRole(userId: string): Promise<ResolvedRoleResul
   };
 }
 
-/**
- * Deterministic router: one decision, one redirect, no retries.
- */
-export function getRouteForRole(result: ResolvedRoleResult): string {
-  switch (result.role) {
-    case "admin":
-      return "/admin/approvals";
-    case "developer":
-      return "/developer";
-    case "delegate":
-      return "/agent-dashboard";
-    case "buyer":
-      return "/client/dashboard";
-    case "agent":
-      return result.is_verified_agent || result.can_access_success_hub
-        ? "/agent-dashboard"
-        : "/pending-verification";
-    default:
-      return "/access-error";
-  }
-}
+export { getRouteForRole } from "@/lib/getRouteForRole";

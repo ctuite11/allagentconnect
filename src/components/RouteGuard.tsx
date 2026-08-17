@@ -4,6 +4,7 @@ import { useAuthRole } from "@/hooks/useAuthRole";
 import { LoadingScreen } from "./LoadingScreen";
 import { authDebug } from "@/lib/authDebug";
 import { setPostAuthRedirect } from "@/lib/sharedListingGuest";
+import { getRouteForRole, type ResolvedRole } from "@/lib/resolveUserRole";
 import { Button } from "@/components/ui/button";
 
 type AllowedRole = "agent" | "admin" | "buyer" | "developer";
@@ -15,6 +16,15 @@ type Props = {
   requireVerified?: boolean;
 };
 
+function homeForRole(role: ResolvedRole | null): string {
+  if (!role || role === "unknown") return "/auth";
+  return getRouteForRole({
+    role,
+    is_verified_agent: false,
+    can_access_success_hub: role === "agent" || role === "delegate",
+  });
+}
+
 export const RouteGuard: React.FC<Props> = ({
   children,
   requireAuth = true,
@@ -22,7 +32,8 @@ export const RouteGuard: React.FC<Props> = ({
   /** Agent routes require verified license status unless explicitly disabled. */
   requireVerified = true,
 }) => {
-  const { user, role, loading, isAdmin, isVerifiedAgent, isDelegate, canAccessSuccessHub } = useAuthRole();
+  const { user, role, loading, isAdmin, isVerifiedAgent, isDelegate, canAccessSuccessHub } =
+    useAuthRole();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -61,13 +72,16 @@ export const RouteGuard: React.FC<Props> = ({
 
     // Route requires auth but no user → login
     if (requireAuth && !user) {
-      if (location.pathname !== "/auth") {
+      if (location.pathname !== "/auth" && location.pathname !== "/developer-login") {
         // Preserve the full intended destination (path + query, e.g. the
         // stale-listing reminder's ?ref=stale-reminder&confirm=1) so /auth
         // returns the agent to the editor instead of the default dashboard.
         const intended = `${location.pathname}${location.search}`;
         setPostAuthRedirect(intended);
-        navigate(`/auth?returnTo=${encodeURIComponent(intended)}`, {
+        const loginPath = location.pathname.startsWith("/developer")
+          ? `/developer-login?returnTo=${encodeURIComponent(intended)}`
+          : `/auth?returnTo=${encodeURIComponent(intended)}`;
+        navigate(loginPath, {
           replace: true,
           state: { from: intended },
         });
@@ -83,7 +97,13 @@ export const RouteGuard: React.FC<Props> = ({
       return;
     }
 
-    // Role mismatch → route to correct dashboard
+    // Developers never enter agent verification / Success Hub flows.
+    if (role === "developer" && requireRole === "agent") {
+      navigate("/developer", { replace: true });
+      return;
+    }
+
+    // Role mismatch → route to correct product home
     const agentAccess = requireRole === "agent" && (role === "agent" || role === "delegate");
     const roleAllowed = agentAccess
       ? true
@@ -91,15 +111,7 @@ export const RouteGuard: React.FC<Props> = ({
         ? requireRole.includes(role as AllowedRole)
         : role === requireRole;
     if (user && requireRole && role && !roleAllowed && role !== "admin") {
-      if (role === "agent" || role === "delegate") {
-        navigate("/agent-dashboard", { replace: true });
-      } else if (role === "buyer") {
-        navigate("/client/dashboard", { replace: true });
-      } else if (role === "developer") {
-        navigate("/developer", { replace: true });
-      } else {
-        navigate("/auth", { replace: true });
-      }
+      navigate(homeForRole(role), { replace: true });
       return;
     }
 
@@ -149,7 +161,21 @@ export const RouteGuard: React.FC<Props> = ({
       setVerificationChecked(true);
       setIsVerified(true);
     }
-  }, [loading, user, role, isAdmin, isVerifiedAgent, isDelegate, canAccessSuccessHub, requireAuth, requireRole, shouldVerify, location.pathname, navigate]);
+  }, [
+    loading,
+    user,
+    role,
+    isAdmin,
+    isVerifiedAgent,
+    isDelegate,
+    canAccessSuccessHub,
+    requireAuth,
+    requireRole,
+    shouldVerify,
+    location.pathname,
+    location.search,
+    navigate,
+  ]);
 
   if (loading) {
     if (stuck) {
@@ -172,7 +198,7 @@ export const RouteGuard: React.FC<Props> = ({
 
   // loading is false + no user → effect fired navigate("/auth"); show neutral placeholder, not a blank white screen
   if (requireAuth && !user) {
-    if (location.pathname !== "/auth") {
+    if (location.pathname !== "/auth" && location.pathname !== "/developer-login") {
       return <LoadingScreen message="Redirecting..." />;
     }
     return null;
