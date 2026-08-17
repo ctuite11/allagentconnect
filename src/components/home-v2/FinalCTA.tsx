@@ -35,7 +35,7 @@ const FinalCTA = () => {
             Join licensed professionals sharing inventory, buyer demand, and real opportunity.
           </p>
           <a
-            href="/auth?mode=register&source=home_final"
+            href="/request-access"
             className="mt-2 h-14 px-8 inline-flex items-center gap-2 bg-[#50C878] rounded-full hover:bg-[#45b96d] transition-colors font-['Manrope'] font-semibold text-black text-base shadow-sm"
           >
             Request access

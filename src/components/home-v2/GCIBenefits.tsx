@@ -60,7 +60,7 @@ const GCIBenefits = () => {
           </p>
           <div className="flex flex-wrap justify-center items-center gap-4 pt-2">
             <a
-              href="/auth?mode=register&source=home_gci"
+              href="/request-access"
               className="h-14 px-8 inline-flex items-center gap-2 bg-[#50C878] rounded-full hover:bg-[#45b96d] transition-colors font-['Manrope'] font-semibold text-black text-base shadow-sm"
             >
               Request access
