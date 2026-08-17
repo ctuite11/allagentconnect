@@ -1830,6 +1830,53 @@ export type Database = {
         }
         Relationships: []
       }
+      comms_broadcast_attachments: {
+        Row: {
+          broadcast_id: string
+          created_at: string
+          file_name: string
+          id: string
+          kind: string
+          mime_type: string
+          path: string
+          sender_id: string
+          size_bytes: number
+          sort_order: number
+        }
+        Insert: {
+          broadcast_id: string
+          created_at?: string
+          file_name?: string
+          id?: string
+          kind: string
+          mime_type?: string
+          path: string
+          sender_id: string
+          size_bytes?: number
+          sort_order?: number
+        }
+        Update: {
+          broadcast_id?: string
+          created_at?: string
+          file_name?: string
+          id?: string
+          kind?: string
+          mime_type?: string
+          path?: string
+          sender_id?: string
+          size_bytes?: number
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comms_broadcast_attachments_broadcast_id_fkey"
+            columns: ["broadcast_id"]
+            isOneToOne: false
+            referencedRelation: "comms_broadcasts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       comms_broadcasts: {
         Row: {
           category: string
