@@ -178,6 +178,25 @@ export default function CommunicationsFeed() {
     });
   }, [rows, query, filter]);
 
+  const focusedExists = !!focusedId && rows.some((r) => r.id === focusedId);
+  const focusedVisible = !!focusedId && filtered.some((r) => r.id === focusedId);
+
+  // Deep link from an email/digest attachment CTA: make sure the linked
+  // broadcast is visible, then scroll to and highlight it once.
+  useEffect(() => {
+    if (!focusedId || !focusedExists) return;
+    if (!focusedVisible) {
+      setFilter("all");
+      setQuery("");
+      return;
+    }
+    if (scrolledToRef.current === focusedId) return;
+    const el = rowRefs.current[focusedId];
+    if (!el) return;
+    scrolledToRef.current = focusedId;
+    el.scrollIntoView({ block: "center", behavior: "smooth" });
+  }, [focusedId, focusedExists, focusedVisible]);
+
   return (
     <PageShell className="pb-12">
       <Seo title="Communications · All Messages" description="All Communications Center activity on AAC" noindex />
@@ -194,6 +213,27 @@ export default function CommunicationsFeed() {
       <p className="-mt-3 mb-4 text-sm text-neutral-500">
         All Communications Center broadcasts across the network.
       </p>
+
+      {focusedId && (
+        <div className="mb-2 flex flex-wrap items-center gap-2 rounded-xl border border-[#0E56F5]/30 bg-[#0E56F5]/5 px-4 py-2.5 text-[13px] text-neutral-700">
+          <span>
+            {focusedExists
+              ? "Showing the message you opened from your email."
+              : "That message is no longer available."}
+          </span>
+          <button
+            type="button"
+            onClick={() => {
+              const next = new URLSearchParams(params);
+              next.delete("broadcast");
+              setParams(next, { replace: true });
+            }}
+            className="font-medium text-[#0E56F5] hover:underline"
+          >
+            View all messages
+          </button>
+        </div>
+      )}
 
       <div className="mt-6 mb-4 flex flex-wrap items-center gap-2">
         <div className="relative flex-1 min-w-[240px] max-w-xl">
