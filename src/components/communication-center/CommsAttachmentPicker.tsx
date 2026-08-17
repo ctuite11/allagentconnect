@@ -59,7 +59,7 @@ export function CommsAttachmentPicker({ attachments, onChange, disabled }: Props
       setUploadingCount((c) => c + 1);
       const res = await uploadCommsAttachment({ file, userId: user.id });
       setUploadingCount((c) => c - 1);
-      if (!res.ok) {
+      if (res.ok === false) {
         toast.error(res.message);
         continue;
       }

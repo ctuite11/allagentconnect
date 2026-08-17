@@ -284,8 +284,7 @@ export function SendEmailDialog({ open, onOpenChange, onSuccess }: SendEmailDial
       toast.success("Message sent", {
         description: `Delivered to ${count} agent${count === 1 ? "" : "s"}.${copyMsg}`,
       });
-      setAttachments([]);
-      handleClose();
+      handleClose({ discardAttachments: false });
       onSuccess?.();
     } catch (error: any) {
       console.error("Error sending email:", error);
@@ -295,11 +294,12 @@ export function SendEmailDialog({ open, onOpenChange, onSuccess }: SendEmailDial
     }
   };
 
-  const handleClose = () => {
-    // Discard any uploads that were never attached to a broadcast.
+  const handleClose = (opts?: { discardAttachments?: boolean }) => {
+    const discard = opts?.discardAttachments !== false;
     attachments.forEach((a) => {
       URL.revokeObjectURL(a.previewUrl);
-      void removeCommsAttachment(a.path);
+      // Only orphaned uploads are purged; sent broadcasts keep their media.
+      if (discard) void removeCommsAttachment(a.path);
     });
     setAttachments([]);
     setTemplate("custom");
