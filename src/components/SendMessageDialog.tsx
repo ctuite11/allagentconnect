@@ -45,6 +45,11 @@ import { TownsPicker } from "@/components/TownsPicker";
 import { getAreasForCity, hasNeighborhoodData } from "@/data/usNeighborhoodsData";
 import { formatCriteriaDisplayLabels } from "@/lib/formatCriteriaDisplay";
 import { RecipientListDialog, type RecipientRow } from "@/components/communication-center/RecipientListDialog";
+import {
+  CommsAttachmentPicker,
+  type PendingCommsAttachment,
+} from "@/components/communication-center/CommsAttachmentPicker";
+import { removeCommsAttachment } from "@/lib/commsAttachments";
 
 interface SendMessageDialogProps {
   open: boolean;
@@ -63,6 +68,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [recipientList, setRecipientList] = useState<RecipientRow[]>([]);
   const [recipientListOpen, setRecipientListOpen] = useState(false);
+  const [attachments, setAttachments] = useState<PendingCommsAttachment[]>([]);
   
   // Geographic selection state - EXACTLY like SubmitClientNeed
   const [state, setState] = useState("MA");
@@ -337,6 +343,13 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
         category,
         subject,
         message,
+        attachments: attachments.map(({ path, kind, mimeType, name, size }) => ({
+          path,
+          kind,
+          mimeType,
+          name,
+          size,
+        })),
       };
 
       if (showLocationFields) {
@@ -373,7 +386,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
 
       if (data.success) {
         toast.success(data.message || "Message sent successfully!");
-        handleClose();
+        handleClose({ discardAttachments: false });
       } else {
         throw new Error(data.error || "Failed to send message");
       }
@@ -385,7 +398,14 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
     }
   };
 
-  const handleClose = () => {
+  const handleClose = (opts?: { discardAttachments?: boolean }) => {
+    const discard = opts?.discardAttachments !== false;
+    attachments.forEach((a) => {
+      URL.revokeObjectURL(a.previewUrl);
+      // Only orphaned uploads are purged; sent broadcasts keep their media.
+      if (discard) void removeCommsAttachment(a.path);
+    });
+    setAttachments([]);
     setSubject("");
     setMessage("");
     setState("MA");
@@ -429,7 +449,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
 
   return (
     <>
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(next) => { if (!next) handleClose(); else onOpenChange(true); }}>
       <DialogContent className={commsDialogContent}>
         <div className={commsDialogHeaderPad}>
           <DialogHeader>
@@ -932,6 +952,15 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
                   onChange={(e) => setMessage(e.target.value)}
                   placeholder="Enter your message..."
                   className={commsTextarea}
+                />
+              </div>
+
+              <div className="space-y-2.5">
+                <Label className={commsFieldLabel}>Photos or video</Label>
+                <CommsAttachmentPicker
+                  attachments={attachments}
+                  onChange={setAttachments}
+                  disabled={sending}
                 />
               </div>
             </div>
