@@ -317,7 +317,7 @@ export function SendEmailDialog({ open, onOpenChange, onSuccess }: SendEmailDial
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(next) => { if (!next) handleClose(); else onOpenChange(true); }}>
       <DialogContent className={commsDialogContent}>
         <div className={commsDialogHeaderPad}>
           <DialogHeader>
@@ -627,7 +627,7 @@ export function SendEmailDialog({ open, onOpenChange, onSuccess }: SendEmailDial
             <Button
               type="button"
               variant="outline"
-              onClick={handleClose}
+              onClick={() => handleClose()}
               disabled={sending}
               className={commsOutlineButton}
             >
