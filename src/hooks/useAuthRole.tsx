@@ -316,6 +316,10 @@ function useAuthRoleStore(): AuthRoleState {
       ownerDisplayName,
       canAccessSuccessHub,
       delegateMemberships,
+      isDeveloper,
+      developerAccounts,
+      developerAccountCount,
+      primaryDeveloperAccountId,
       refreshRole: async () => {
         if (user?.id) await loadRoleForUser(user.id);
       },
