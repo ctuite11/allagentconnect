@@ -277,7 +277,19 @@ export default function CommunicationsFeed() {
           ) : (
             <ul className="divide-y divide-neutral-200">
               {filtered.map((r) => (
-                <li key={r.id} className="px-6 py-6">
+                <li
+                  key={r.id}
+                  ref={(el) => {
+                    rowRefs.current[r.id] = el;
+                  }}
+                  data-broadcast-id={r.id}
+                  data-focused={focusedId === r.id ? "true" : undefined}
+                  className={
+                    focusedId === r.id
+                      ? "px-6 py-6 bg-[#0E56F5]/5 ring-2 ring-inset ring-[#0E56F5]/40"
+                      : "px-6 py-6"
+                  }
+                >
                   <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-medium text-neutral-500">
                     {CATEGORY_META[r.category].icon}
                     <span>{CATEGORY_META[r.category].title}</span>
