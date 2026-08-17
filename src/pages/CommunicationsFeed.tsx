@@ -64,9 +64,10 @@ function relativeTime(iso: string) {
 
 /** Communications Center > Feed — single searchable list of all broadcasts, filterable by message type. */
 export default function CommunicationsFeed() {
-  const [params] = useSearchParams();
+  const [params, setParams] = useSearchParams();
   const location = useLocation();
   const channelParam = params.get("channel");
+  const focusedId = parseBroadcastParam(params.get("broadcast"));
   const initialFilter: Filter = (FILTER_ORDER as string[]).includes(channelParam ?? "")
     ? (channelParam as Filter)
     : "all";
@@ -79,6 +80,8 @@ export default function CommunicationsFeed() {
   const [attachmentsByBroadcast, setAttachmentsByBroadcast] = useState<Record<string, FeedAttachment[]>>({});
   const [lightbox, setLightbox] = useState<FeedAttachment | null>(null);
   const returnState = { from: `${location.pathname}${location.search}` };
+  const rowRefs = useRef<Record<string, HTMLLIElement | null>>({});
+  const scrolledToRef = useRef<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
