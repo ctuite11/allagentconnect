@@ -2310,6 +2310,80 @@ export type Database = {
         }
         Relationships: []
       }
+      developer_access_requests: {
+        Row: {
+          company_name: string
+          created_at: string
+          email: string
+          first_name: string
+          id: string
+          last_name: string
+          market: string | null
+          note: string | null
+          phone: string | null
+          project_name: string | null
+          provisioned_account_id: string | null
+          provisioned_user_id: string | null
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          source: string | null
+          status: string
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          company_name: string
+          created_at?: string
+          email: string
+          first_name: string
+          id?: string
+          last_name: string
+          market?: string | null
+          note?: string | null
+          phone?: string | null
+          project_name?: string | null
+          provisioned_account_id?: string | null
+          provisioned_user_id?: string | null
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source?: string | null
+          status?: string
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          company_name?: string
+          created_at?: string
+          email?: string
+          first_name?: string
+          id?: string
+          last_name?: string
+          market?: string | null
+          note?: string | null
+          phone?: string | null
+          project_name?: string | null
+          provisioned_account_id?: string | null
+          provisioned_user_id?: string | null
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source?: string | null
+          status?: string
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "developer_access_requests_provisioned_account_id_fkey"
+            columns: ["provisioned_account_id"]
+            isOneToOne: false
+            referencedRelation: "development_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       development_account_members: {
         Row: {
           accepted_at: string
@@ -6677,7 +6751,47 @@ export type Database = {
             }
             Returns: Json
           }
+      admin_approve_developer_access_request: {
+        Args: {
+          _account_name?: string
+          _account_slug?: string
+          _notes?: string
+          _owner_user_id: string
+          _request_id: string
+        }
+        Returns: string
+      }
       admin_deactivate_buyer: { Args: { p_user_id: string }; Returns: Json }
+      admin_decide_developer_access_request: {
+        Args: { _decision: string; _notes?: string; _request_id: string }
+        Returns: {
+          company_name: string
+          created_at: string
+          email: string
+          first_name: string
+          id: string
+          last_name: string
+          market: string | null
+          note: string | null
+          phone: string | null
+          project_name: string | null
+          provisioned_account_id: string | null
+          provisioned_user_id: string | null
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          source: string | null
+          status: string
+          updated_at: string
+          website: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "developer_access_requests"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       admin_delete_agent: { Args: { p_agent_id: string }; Returns: Json }
       admin_delete_client: { Args: { p_client_id: string }; Returns: undefined }
       admin_delete_consumer: { Args: { p_user_id: string }; Returns: undefined }
