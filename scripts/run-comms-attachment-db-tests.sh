@@ -13,5 +13,5 @@ export PGHOST="$SOCK" PGUSER=postgres PGDATABASE=commstest
 createdb -h "$SOCK" -U postgres commstest
 psql -v ON_ERROR_STOP=1 -q -f supabase/tests/db/06_comms_attachments_fixture.sql
 # Storage policies are skipped locally (no storage schema in the disposable cluster).
-grep -v -i "storage" "$MIGRATION" | psql -v ON_ERROR_STOP=1 -q -f -
+sed '/-- Storage policies/,$d' "$MIGRATION" | psql -v ON_ERROR_STOP=1 -q -f -
 psql -v ON_ERROR_STOP=1 -f supabase/tests/db/07_comms_attachments_rls.sql
