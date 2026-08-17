@@ -25,6 +25,10 @@ import {
   finalTotalRecipients,
 } from "../_shared/commsBroadcastDryRun.ts";
 import { assertCommsEnqueueAllowed } from "../_shared/emailStreams.ts";
+import {
+  buildAttachmentCtaHtml,
+  normalizeCommsAttachments,
+} from "../_shared/commsBroadcastAttachments.ts";
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -44,6 +48,13 @@ interface SendNotificationRequest {
   dry_run?: boolean;
   sendCopyToSelf?: boolean;
   audience_scope?: "targeted" | "network_wide";
+  attachments?: Array<{
+    path: string;
+    kind: "image" | "video";
+    mimeType?: string;
+    name?: string;
+    size?: number;
+  }>;
   criteria?: {
     state?: string;
     counties?: string[];
@@ -348,6 +359,36 @@ const handler = async (req: Request): Promise<Response> => {
     }
     const broadcastId = broadcast.id as string;
 
+    // 5b. Attachments (photos/video). Purely additive: failures here never
+    //     affect audience, email eligibility, or delivery mechanics.
+    const normalizedAttachments = normalizeCommsAttachments(body?.attachments, user.id);
+    if (!normalizedAttachments.ok) {
+      return new Response(
+        JSON.stringify({ error: normalizedAttachments.error, success: false }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+    const attachments = normalizedAttachments.attachments;
+    if (attachments.length > 0) {
+      const { error: attachError } = await supabase
+        .from("comms_broadcast_attachments")
+        .insert(
+          attachments.map((a) => ({
+            broadcast_id: broadcastId,
+            sender_id: user.id,
+            path: a.path,
+            kind: a.kind,
+            mime_type: a.mime_type,
+            file_name: a.file_name,
+            size_bytes: a.size_bytes,
+            sort_order: a.sort_order,
+          })),
+        );
+      if (attachError) {
+        console.error("[send-client-need-notification] attachment persist failed:", attachError);
+      }
+    }
+
     // Producer-side pause gate. The in-app broadcast above is preserved (the
     // feed keeps working), but NOTHING downstream may be written: no
     // email_jobs, no digest items, no agent_sent_broadcasts dedup rows that
@@ -407,7 +448,7 @@ const handler = async (req: Request): Promise<Response> => {
             ${criteriaText ? `<div style="background:#ffffff;border:1px solid #e5e7eb;padding:16px;border-radius:8px;margin:12px 0;"><h3 style="margin:0 0 8px;font-size:14px;">Request Criteria</h3>${criteriaText}</div>` : ""}
             <div style="background:#ffffff;border:1px solid #e5e7eb;padding:16px;border-radius:8px;">
               <p style="white-space: pre-wrap;margin:0;font-size:14px;color:#334155;">${message}</p>
-            </div>`;
+            </div>${buildAttachmentCtaHtml(attachments, senderName, defaultCommsActionUrl())}`;
 
     const { schedules, muted } = await loadCommsSchedules(
       supabase,

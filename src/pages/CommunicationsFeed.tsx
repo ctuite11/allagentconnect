@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Seo } from "@/components/Seo";
 import { AgentEmailQuickDialog } from "@/components/agent-search/AgentEmailQuickDialog";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
+import { createCommsAttachmentSignedUrls } from "@/lib/commsAttachments";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 type Category = "buyer_need" | "sales_intel" | "renter_need" | "general_discussion";
 type Filter = "all" | Category;
@@ -39,6 +41,13 @@ interface BroadcastRow {
   sender: { id: string; name: string; email: string | null; phone: string | null; company: string | null } | null;
 }
 
+interface FeedAttachment {
+  path: string;
+  kind: "image" | "video";
+  name: string;
+  url: string;
+}
+
 function relativeTime(iso: string) {
   const diff = Date.now() - new Date(iso).getTime();
   const mins = Math.floor(diff / 60_000);
@@ -66,6 +75,8 @@ export default function CommunicationsFeed() {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<Filter>(initialFilter);
   const [emailTarget, setEmailTarget] = useState<{ name: string; email: string } | null>(null);
+  const [attachmentsByBroadcast, setAttachmentsByBroadcast] = useState<Record<string, FeedAttachment[]>>({});
+  const [lightbox, setLightbox] = useState<FeedAttachment | null>(null);
   const returnState = { from: `${location.pathname}${location.search}` };
 
   useEffect(() => {
@@ -115,6 +126,32 @@ export default function CommunicationsFeed() {
 
       setRows(mapped);
       setLoading(false);
+
+      // Attachments (photos/video) — private bucket, signed for viewing.
+      const ids = mapped.map((m) => m.id);
+      if (ids.length) {
+        const { data: atts } = await supabase
+          .from("comms_broadcast_attachments" as any)
+          .select("broadcast_id, path, kind, file_name, sort_order")
+          .in("broadcast_id", ids)
+          .order("sort_order", { ascending: true });
+        if (!cancelled && atts?.length) {
+          const signed = await createCommsAttachmentSignedUrls((atts as any[]).map((a) => a.path));
+          if (cancelled) return;
+          const grouped: Record<string, FeedAttachment[]> = {};
+          (atts as any[]).forEach((a) => {
+            const url = signed.get(a.path);
+            if (!url) return;
+            (grouped[a.broadcast_id] ||= []).push({
+              path: a.path,
+              kind: a.kind === "video" ? "video" : "image",
+              name: a.file_name ?? "attachment",
+              url,
+            });
+          });
+          setAttachmentsByBroadcast(grouped);
+        }
+      }
     })();
     return () => {
       cancelled = true;
@@ -210,6 +247,32 @@ export default function CommunicationsFeed() {
                       {r.message}
                     </p>
                   )}
+                  {(attachmentsByBroadcast[r.id]?.length ?? 0) > 0 && (
+                    <ul className="mt-3 flex flex-wrap gap-2">
+                      {attachmentsByBroadcast[r.id].map((a) =>
+                        a.kind === "image" ? (
+                          <li key={a.path}>
+                            <button
+                              type="button"
+                              onClick={() => setLightbox(a)}
+                              className="block h-28 w-28 overflow-hidden rounded-lg border border-neutral-200"
+                            >
+                              <img src={a.url} alt={a.name} className="h-full w-full object-cover" loading="lazy" />
+                            </button>
+                          </li>
+                        ) : (
+                          <li key={a.path} className="w-64">
+                            <video
+                              src={a.url}
+                              controls
+                              preload="metadata"
+                              className="w-full rounded-lg border border-neutral-200"
+                            />
+                          </li>
+                        ),
+                      )}
+                    </ul>
+                  )}
                   {r.sender && (
                     <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-neutral-600">
                       <Link
@@ -250,6 +313,13 @@ export default function CommunicationsFeed() {
         agentName={emailTarget?.name ?? ""}
         agentEmail={emailTarget?.email ?? ""}
       />
+      <Dialog open={!!lightbox} onOpenChange={(open) => !open && setLightbox(null)}>
+        <DialogContent className="max-w-4xl bg-white p-2">
+          {lightbox && (
+            <img src={lightbox.url} alt={lightbox.name} className="max-h-[80vh] w-full object-contain" />
+          )}
+        </DialogContent>
+      </Dialog>
     </PageShell>
   );
 }

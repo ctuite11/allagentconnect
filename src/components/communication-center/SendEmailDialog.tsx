@@ -56,6 +56,11 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Switch } from "@/components/ui/switch";
+import {
+  CommsAttachmentPicker,
+  type PendingCommsAttachment,
+} from "@/components/communication-center/CommsAttachmentPicker";
+import { removeCommsAttachment } from "@/lib/commsAttachments";
 
 interface SendEmailDialogProps {
   open: boolean;
@@ -113,6 +118,7 @@ export function SendEmailDialog({ open, onOpenChange, onSuccess }: SendEmailDial
   // Send copy to self
   const [sendCopyToSelf, setSendCopyToSelf] = useState(false);
   const [priceExpanded, setPriceExpanded] = useState(false);
+  const [attachments, setAttachments] = useState<PendingCommsAttachment[]>([]);
 
   const { townsList, expandedCities, toggleCityExpansion } = useTownsPicker({
     state: state,
@@ -260,6 +266,13 @@ export function SendEmailDialog({ open, onOpenChange, onSuccess }: SendEmailDial
             message,
             criteria,
             sendCopyToSelf,
+            attachments: attachments.map(({ path, kind, mimeType, name, size }) => ({
+              path,
+              kind,
+              mimeType,
+              name,
+              size,
+            })),
           }
         }
       );
@@ -271,7 +284,7 @@ export function SendEmailDialog({ open, onOpenChange, onSuccess }: SendEmailDial
       toast.success("Message sent", {
         description: `Delivered to ${count} agent${count === 1 ? "" : "s"}.${copyMsg}`,
       });
-      handleClose();
+      handleClose({ discardAttachments: false });
       onSuccess?.();
     } catch (error: any) {
       console.error("Error sending email:", error);
@@ -281,7 +294,14 @@ export function SendEmailDialog({ open, onOpenChange, onSuccess }: SendEmailDial
     }
   };
 
-  const handleClose = () => {
+  const handleClose = (opts?: { discardAttachments?: boolean }) => {
+    const discard = opts?.discardAttachments !== false;
+    attachments.forEach((a) => {
+      URL.revokeObjectURL(a.previewUrl);
+      // Only orphaned uploads are purged; sent broadcasts keep their media.
+      if (discard) void removeCommsAttachment(a.path);
+    });
+    setAttachments([]);
     setTemplate("custom");
     setSubject("");
     setMessage("");
@@ -297,7 +317,7 @@ export function SendEmailDialog({ open, onOpenChange, onSuccess }: SendEmailDial
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(next) => { if (!next) handleClose(); else onOpenChange(true); }}>
       <DialogContent className={commsDialogContent}>
         <div className={commsDialogHeaderPad}>
           <DialogHeader>
@@ -567,6 +587,15 @@ export function SendEmailDialog({ open, onOpenChange, onSuccess }: SendEmailDial
               />
               <p className="text-right text-xs text-neutral-500">{message.length}/5000</p>
             </div>
+
+            <div className="space-y-2.5">
+              <Label className={commsFieldLabel}>Photos or video</Label>
+              <CommsAttachmentPicker
+                attachments={attachments}
+                onChange={setAttachments}
+                disabled={sending}
+              />
+            </div>
           </div>
 
           <div className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4">
@@ -598,7 +627,7 @@ export function SendEmailDialog({ open, onOpenChange, onSuccess }: SendEmailDial
             <Button
               type="button"
               variant="outline"
-              onClick={handleClose}
+              onClick={() => handleClose()}
               disabled={sending}
               className={commsOutlineButton}
             >
