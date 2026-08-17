@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
 import { Search, ArrowLeft, Home, MessageSquare, TrendingUp, Users, Phone, Mail } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Seo } from "@/components/Seo";
 import { AgentEmailQuickDialog } from "@/components/agent-search/AgentEmailQuickDialog";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
+import { parseBroadcastParam, COMMS_FEED_PATH } from "@/lib/commsFeedDeepLink";
 import { createCommsAttachmentSignedUrls } from "@/lib/commsAttachments";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 
