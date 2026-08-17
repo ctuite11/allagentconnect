@@ -41,8 +41,8 @@ WITH d AS (
 )
 SELECT 'bob_delete_denied' AS assertion, count(*) = 0 AS passed FROM d;
 
--- Bob (authenticated agent) can read the network-wide feed.
-SELECT 'authenticated_read_ok' AS assertion, count(*) = 1 AS passed
+-- Bob (verified + activated agent) can read the network-wide feed.
+SELECT 'eligible_agent_read_ok' AS assertion, count(*) = 1 AS passed
 FROM public.comms_broadcast_attachments;
 
 -- A signed-in NON-agent (e.g. a buyer account) cannot read Comms media even

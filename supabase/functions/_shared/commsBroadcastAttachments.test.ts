@@ -62,3 +62,17 @@ Deno.test("summary + CTA copy", () => {
   assertEquals(html.includes("View attachments"), true);
   assertEquals(html.includes("https://aac/communications"), true);
 });
+
+Deno.test("CTA deep-links to the specific broadcast", async () => {
+  const { commsBroadcastActionUrl, defaultCommsActionUrl } = await import("./commsDigest.ts");
+  const id = "3f6c1c2a-8f1b-4c8e-9b5a-1d2e3f4a5b6c";
+  const url = commsBroadcastActionUrl(id);
+  assertEquals(url, `${defaultCommsActionUrl()}?broadcast=${id}`);
+  assertEquals(url.includes("/communications/feed?broadcast="), true);
+  // No id => unchanged general feed URL.
+  assertEquals(commsBroadcastActionUrl(undefined), defaultCommsActionUrl());
+  assertEquals(commsBroadcastActionUrl(""), defaultCommsActionUrl());
+
+  const html = buildAttachmentCtaHtml([{ kind: "image" }], "Chris", url);
+  assertEquals(html.includes(`href="${url}"`), true);
+});
