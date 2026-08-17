@@ -261,16 +261,30 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Fetch all settings
+    // Fetch all settings.
+    // The roster outgrew a single `.in(...)` request: one URL carrying every
+    // agent id exceeded the transport limit and the whole query failed, which
+    // previously degraded silently into `unknown` status for every agent
+    // (rendered as a bogus wall of "Pending"). Chunk the lookup, and treat any
+    // chunk failure as a hard load error instead of returning unknown statuses.
     const userIds = profiles.map(p => p.id)
-    const { data: settings, error: settingsError } = await adminClient
-      .from('agent_settings')
-      .select('user_id, agent_status, license_number, license_state, verified_at, account_activated_at, approval_email_sent')
-      .in('user_id', userIds)
+    const SETTINGS_CHUNK_SIZE = 200
+    const settings: AgentSettings[] = []
+    for (let i = 0; i < userIds.length; i += SETTINGS_CHUNK_SIZE) {
+      const chunk = userIds.slice(i, i + SETTINGS_CHUNK_SIZE)
+      const { data: chunkRows, error: settingsError } = await adminClient
+        .from('agent_settings')
+        .select('user_id, agent_status, license_number, license_state, verified_at, account_activated_at, approval_email_sent')
+        .in('user_id', chunk)
 
-    if (settingsError) {
-      console.error('[admin-list-agents] Settings error:', settingsError.message)
-      // Continue anyway - we'll just show unknown status
+      if (settingsError) {
+        console.error('[admin-list-agents] Settings error:', settingsError.message)
+        return new Response(
+          JSON.stringify({ error: 'Failed to fetch agent settings' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+      if (chunkRows) settings.push(...(chunkRows as AgentSettings[]))
     }
 
     console.log('[admin-list-agents] Settings fetched:', settings?.length ?? 0)
