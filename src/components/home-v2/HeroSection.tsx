@@ -134,16 +134,10 @@ const HeroSection = () => {
             Request Access
           </a>
           <a
-            href="/auth"
+            href="/login"
             className="font-['Manrope'] font-medium text-white/85 hover:text-white text-xs sm:text-sm transition-colors whitespace-nowrap"
           >
-            Agent Login
-          </a>
-          <a
-            href="/developer-login"
-            className="font-['Manrope'] font-medium text-white/85 hover:text-white text-xs sm:text-sm transition-colors whitespace-nowrap"
-          >
-            Developer Login
+            Login
           </a>
         </div>
       </div>

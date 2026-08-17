@@ -4,16 +4,16 @@ import { AuthShell } from "@/components/auth/AuthShell";
 import { Seo } from "@/components/Seo";
 
 /**
- * Public chooser: new visitors pick Agent vs Developer before requesting access.
- * Existing users should use /login instead.
+ * Public chooser: existing users pick Agent vs Developer login.
+ * Auth destinations (/auth, /developer-login) are unchanged.
  */
-export default function RequestAccessPage() {
+export default function LoginPage() {
   return (
     <>
       <Seo
-        title="Request Access | All Agent Connect"
-        description="Choose agent or developer access to All Agent Connect."
-        canonical="https://allagentconnect.com/request-access"
+        title="Login | All Agent Connect"
+        description="Choose agent or developer login for All Agent Connect."
+        canonical="https://allagentconnect.com/login"
       />
       <AuthShell maxWidth="720px">
         <div className="space-y-8">
@@ -22,11 +22,10 @@ export default function RequestAccessPage() {
               className="text-2xl font-semibold tracking-tight text-zinc-900 sm:text-[28px]"
               style={{ fontFamily: "Manrope, system-ui, sans-serif" }}
             >
-              Request Access
+              Login
             </h1>
             <p className="mt-3 text-sm leading-relaxed text-zinc-500 sm:text-base">
-              Tell us how you work so we can send you to the right path. Existing users should sign
-              in via Login.
+              Choose the portal that matches your account. New to AAC? Request access first.
             </p>
           </div>
 
@@ -39,17 +38,17 @@ export default function RequestAccessPage() {
                 className="text-lg font-semibold text-zinc-900"
                 style={{ fontFamily: "Manrope, system-ui, sans-serif" }}
               >
-                I’m a Real Estate Agent
+                Agent Login
               </h2>
               <p className="mt-2 flex-1 text-sm leading-relaxed text-zinc-600">
-                Join AAC’s verified agent network to share off-market inventory, see buyer demand,
-                and collaborate with licensed professionals before deals hit the public market.
+                Sign in to the AAC agent network to manage listings, buyers, Hot Sheets, and
+                collaboration with verified agents.
               </p>
               <Link
-                to="/auth?mode=register&source=request_access_agent"
+                to="/auth"
                 className="mt-6 inline-flex h-11 items-center justify-center rounded-xl bg-zinc-900 px-4 text-sm font-semibold text-white transition-colors hover:bg-zinc-800"
               >
-                Request Agent Access
+                Continue to Agent Login
               </Link>
             </section>
 
@@ -61,25 +60,28 @@ export default function RequestAccessPage() {
                 className="text-lg font-semibold text-zinc-900"
                 style={{ fontFamily: "Manrope, system-ui, sans-serif" }}
               >
-                I’m a Developer
+                Developer Login
               </h2>
               <p className="mt-2 flex-1 text-sm leading-relaxed text-zinc-600">
-                Manage and promote new developments for AAC’s agent network—projects, photos, floor
-                plans, units, documents, updates, and a dedicated Developer portal.
+                Sign in to the Developer portal to manage projects, media, units, documents, and
+                publishing for AAC’s agent network.
               </p>
               <Link
-                to="/developer-access"
+                to="/developer-login"
                 className="mt-6 inline-flex h-11 items-center justify-center rounded-xl border border-zinc-300 bg-white px-4 text-sm font-semibold text-zinc-900 transition-colors hover:bg-zinc-50"
               >
-                Request Developer Access
+                Continue to Developer Login
               </Link>
             </section>
           </div>
 
           <p className="text-center text-sm text-zinc-500">
-            Already have an account?{" "}
-            <Link to="/login" className="font-medium text-zinc-900 underline-offset-2 hover:underline">
-              Login
+            Need access?{" "}
+            <Link
+              to="/request-access"
+              className="font-medium text-zinc-900 underline-offset-2 hover:underline"
+            >
+              Request Access
             </Link>
           </p>
         </div>
