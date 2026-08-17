@@ -9,7 +9,11 @@ import {
   type ReactNode,
 } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { resolveUserRole, type DelegateMembershipSummary } from "@/lib/resolveUserRole";
+import {
+  resolveUserRole,
+  type DelegateMembershipSummary,
+  type DeveloperAccountSummary,
+} from "@/lib/resolveUserRole";
 import type { ResolvedRole } from "@/lib/resolveUserRole";
 import type { User } from "@supabase/supabase-js";
 
@@ -27,6 +31,13 @@ export interface AuthRoleState {
   ownerDisplayName: string | null;
   canAccessSuccessHub: boolean;
   delegateMemberships: import("@/lib/resolveUserRole").DelegateMembershipSummary[];
+  /** Developer product shell access (AAC account type = developer). */
+  isDeveloper: boolean;
+  /** Development companies this user belongs to (development_account_members). */
+  developerAccounts: DeveloperAccountSummary[];
+  developerAccountCount: number;
+  /** Set only when the developer manages exactly one company. */
+  primaryDeveloperAccountId: string | null;
   refreshRole: () => Promise<void>;
 }
 
@@ -63,6 +74,10 @@ function useAuthRoleStore(): AuthRoleState {
   const [ownerDisplayName, setOwnerDisplayName] = useState<string | null>(null);
   const [canAccessSuccessHub, setCanAccessSuccessHub] = useState(false);
   const [delegateMemberships, setDelegateMemberships] = useState<DelegateMembershipSummary[]>([]);
+  const [isDeveloper, setIsDeveloper] = useState(false);
+  const [developerAccounts, setDeveloperAccounts] = useState<DeveloperAccountSummary[]>([]);
+  const [developerAccountCount, setDeveloperAccountCount] = useState(0);
+  const [primaryDeveloperAccountId, setPrimaryDeveloperAccountId] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const initialLoadDone = useRef(false);
   const roleResolutionId = useRef(0);
@@ -83,6 +98,10 @@ function useAuthRoleStore(): AuthRoleState {
     setOwnerDisplayName(null);
     setCanAccessSuccessHub(false);
     setDelegateMemberships([]);
+    setIsDeveloper(false);
+    setDeveloperAccounts([]);
+    setDeveloperAccountCount(0);
+    setPrimaryDeveloperAccountId(null);
   }, []);
 
   /** Never let a stalled auth/role call hang the app on a spinner forever. */
@@ -117,6 +136,10 @@ function useAuthRoleStore(): AuthRoleState {
     setOwnerDisplayName(result.owner_display_name ?? null);
     setCanAccessSuccessHub(result.can_access_success_hub ?? false);
     setDelegateMemberships(result.delegate_memberships ?? []);
+    setIsDeveloper(result.is_developer ?? result.role === "developer");
+    setDeveloperAccounts(result.developer_accounts ?? []);
+    setDeveloperAccountCount(result.developer_account_count ?? 0);
+    setPrimaryDeveloperAccountId(result.primary_developer_account_id ?? null);
   }, []);
 
   useEffect(() => {
@@ -293,6 +316,10 @@ function useAuthRoleStore(): AuthRoleState {
       ownerDisplayName,
       canAccessSuccessHub,
       delegateMemberships,
+      isDeveloper,
+      developerAccounts,
+      developerAccountCount,
+      primaryDeveloperAccountId,
       refreshRole: async () => {
         if (user?.id) await loadRoleForUser(user.id);
       },
@@ -309,6 +336,10 @@ function useAuthRoleStore(): AuthRoleState {
       ownerDisplayName,
       canAccessSuccessHub,
       delegateMemberships,
+      isDeveloper,
+      developerAccounts,
+      developerAccountCount,
+      primaryDeveloperAccountId,
       loadRoleForUser,
     ],
   );

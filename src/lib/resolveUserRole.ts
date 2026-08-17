@@ -1,11 +1,19 @@
 import { supabase } from "@/integrations/supabase/client";
 
-export type ResolvedRole = "admin" | "agent" | "buyer" | "delegate" | "unknown";
+export type ResolvedRole = "admin" | "agent" | "buyer" | "delegate" | "developer" | "unknown";
 
 export type DelegateMembershipSummary = {
   owner_user_id: string;
   display_name: string | null;
   role_label: string | null;
+};
+
+export type DeveloperAccountSummary = {
+  account_id: string;
+  name: string | null;
+  slug: string | null;
+  member_role: string | null;
+  is_active: boolean | null;
 };
 
 export interface ResolvedRoleResult {
@@ -18,6 +26,10 @@ export interface ResolvedRoleResult {
   owner_display_name?: string | null;
   can_access_success_hub?: boolean;
   delegate_memberships?: DelegateMembershipSummary[];
+  is_developer?: boolean;
+  developer_accounts?: DeveloperAccountSummary[];
+  developer_account_count?: number;
+  primary_developer_account_id?: string | null;
 }
 
 /**
@@ -50,6 +62,10 @@ export async function resolveUserRole(userId: string): Promise<ResolvedRoleResul
     owner_display_name: result.owner_display_name ?? null,
     can_access_success_hub: result.can_access_success_hub ?? false,
     delegate_memberships: result.delegate_memberships ?? [],
+    is_developer: result.is_developer ?? result.role === "developer",
+    developer_accounts: result.developer_accounts ?? [],
+    developer_account_count: result.developer_account_count ?? 0,
+    primary_developer_account_id: result.primary_developer_account_id ?? null,
   };
 }
 
@@ -60,6 +76,8 @@ export function getRouteForRole(result: ResolvedRoleResult): string {
   switch (result.role) {
     case "admin":
       return "/admin/approvals";
+    case "developer":
+      return "/developer";
     case "delegate":
       return "/agent-dashboard";
     case "buyer":

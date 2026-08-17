@@ -6,7 +6,7 @@ import { authDebug } from "@/lib/authDebug";
 import { setPostAuthRedirect } from "@/lib/sharedListingGuest";
 import { Button } from "@/components/ui/button";
 
-type AllowedRole = "agent" | "admin" | "buyer";
+type AllowedRole = "agent" | "admin" | "buyer" | "developer";
 
 type Props = {
   children: React.ReactElement;
@@ -95,6 +95,8 @@ export const RouteGuard: React.FC<Props> = ({
         navigate("/agent-dashboard", { replace: true });
       } else if (role === "buyer") {
         navigate("/client/dashboard", { replace: true });
+      } else if (role === "developer") {
+        navigate("/developer", { replace: true });
       } else {
         navigate("/auth", { replace: true });
       }
