@@ -126,15 +126,24 @@ const HeroSection = () => {
             Massachusetts
           </span>
         </div>
-        <div className="flex items-center gap-2 sm:gap-5 shrink-0">
+        <div className="flex items-center gap-2 sm:gap-4 md:gap-5 shrink-0">
           <a
             href="/auth?mode=register&source=home_nav"
             className="font-['Manrope'] font-semibold text-white bg-transparent border border-white/40 hover:bg-white/10 hover:border-white/70 transition-colors h-9 sm:h-11 px-3 sm:px-6 rounded-full inline-flex items-center text-xs sm:text-sm whitespace-nowrap"
           >
             Request Access
           </a>
-          <a href="/auth" className="font-['Manrope'] font-medium text-white/85 hover:text-white text-xs sm:text-sm transition-colors whitespace-nowrap">
-            Sign in
+          <a
+            href="/auth"
+            className="font-['Manrope'] font-medium text-white/85 hover:text-white text-xs sm:text-sm transition-colors whitespace-nowrap"
+          >
+            Agent Login
+          </a>
+          <a
+            href="/developer-login"
+            className="font-['Manrope'] font-medium text-white/85 hover:text-white text-xs sm:text-sm transition-colors whitespace-nowrap"
+          >
+            Developer Login
           </a>
         </div>
       </div>
