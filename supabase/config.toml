@@ -188,3 +188,6 @@ verify_jwt = false
 
 [functions.development-notification-retry]
 verify_jwt = false
+
+[functions.submit-developer-access-request]
+verify_jwt = false
