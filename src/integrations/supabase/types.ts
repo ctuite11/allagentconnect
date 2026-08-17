@@ -6696,6 +6696,10 @@ export type Database = {
         Args: { _account_id: string; _new_owner_user_id: string }
         Returns: undefined
       }
+      admin_set_developer_role: {
+        Args: { _enabled?: boolean; _user_id: string }
+        Returns: boolean
+      }
       admin_set_development_account_active: {
         Args: { _account_id: string; _is_active: boolean }
         Returns: boolean
@@ -7242,6 +7246,7 @@ export type Database = {
         Returns: boolean
       }
       is_delegate: { Args: never; Returns: boolean }
+      is_developer: { Args: { _user_id: string }; Returns: boolean }
       is_development_account_active: {
         Args: { _account_id: string }
         Returns: boolean
