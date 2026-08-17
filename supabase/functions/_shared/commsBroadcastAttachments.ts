@@ -37,10 +37,6 @@ export function normalizeCommsAttachments(
 
   const out: NormalizedCommsAttachment[] = [];
   const seen = new Set<string>();
-  raw.forEach((item, index) => {
-    if (out === null) return;
-  });
-
   for (let i = 0; i < raw.length; i++) {
     const item = raw[i];
     if (!item || typeof item !== "object") return { ok: false, error: "invalid attachment entry" };
