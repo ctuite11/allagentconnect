@@ -18,6 +18,22 @@ export {
 export type DeveloperAccessRequestRow =
   Database["public"]["Tables"]["developer_access_requests"]["Row"];
 
+/** Row shape returned by the admin listing RPC (adds derived activation state). */
+export type DeveloperApplicantRow = DeveloperAccessRequestRow & {
+  activated_at: string | null;
+};
+
+/** Canonical UI status buckets derived from existing backend state. */
+export type DeveloperApplicantStatus = "requested" | "verified" | "activated" | "rejected";
+
+export function deriveDeveloperApplicantStatus(
+  row: Pick<DeveloperApplicantRow, "status" | "activated_at">,
+): DeveloperApplicantStatus {
+  if (row.status === "declined") return "rejected";
+  if (row.status === "approved") return row.activated_at ? "activated" : "verified";
+  return "requested";
+}
+
 export type DeveloperAccessRequestPayload = {
   first_name: string;
   last_name: string;
@@ -73,6 +89,23 @@ export async function fetchDeveloperAccessRequests(status: string = "pending"): 
   const { data, error } = await query;
   if (error) return { requests: [], error: friendlyAdminRpcError(error.message) };
   return { requests: (data ?? []) as DeveloperAccessRequestRow[], error: null };
+}
+
+/**
+ * Admin listing of every developer applicant, including derived activation state
+ * (whether the provisioned user has redeemed their setup link).
+ */
+export async function fetchDeveloperApplicants(
+  bucket: DeveloperApplicantStatus | "all" = "all",
+): Promise<{ requests: DeveloperApplicantRow[]; error: string | null }> {
+  const { data, error } = await supabase.rpc("admin_list_developer_access_requests", {
+    _status: "all",
+  });
+  if (error) return { requests: [], error: friendlyAdminRpcError(error.message) };
+  const rows = (data ?? []) as DeveloperApplicantRow[];
+  const filtered =
+    bucket === "all" ? rows : rows.filter((r) => deriveDeveloperApplicantStatus(r) === bucket);
+  return { requests: filtered, error: null };
 }
 
 export async function declineDeveloperAccessRequest(input: {

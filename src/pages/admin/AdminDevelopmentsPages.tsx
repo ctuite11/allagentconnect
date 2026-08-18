@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import { AgentAacPage } from "@/components/layout/AgentAacPage";
 import { PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -22,12 +21,10 @@ import {
   PUBLISH_STATUSES,
   adminPublishTransitions,
   publishStatusLabel,
-  slugifyDevelopmentName,
   type DevelopmentPublishStatus,
 } from "@/lib/developments/publishStatus";
 import type { DevelopmentRow } from "@/lib/developments/types";
 import {
-  adminCreateDevelopmentAccount,
   adminGetDevelopmentNotes,
   adminSetDevelopmentNotes,
   fetchAdminDevelopments,
@@ -43,12 +40,6 @@ export function AdminDevelopmentsListPage() {
   const [filter, setFilter] = useState<DevelopmentPublishStatus | "all">("pending_review");
   const [rows, setRows] = useState<DevelopmentRow[] | null>(null);
   const [error, setError] = useState<string | null>(null);
-
-  // Admin create-account form
-  const [accountName, setAccountName] = useState("");
-  const [accountSlug, setAccountSlug] = useState("");
-  const [ownerUserId, setOwnerUserId] = useState("");
-  const [creatingAccount, setCreatingAccount] = useState(false);
 
   useEffect(() => {
     if (!isAdmin) return;
@@ -67,25 +58,6 @@ export function AdminDevelopmentsListPage() {
   if (loading) return <AacMonogramLoader variant="fullscreen" message="Loading…" />;
   if (!isAdmin) return <Navigate to="/agent-dashboard" replace />;
 
-  const onCreateAccount = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setCreatingAccount(true);
-    const { accountId, error: err } = await adminCreateDevelopmentAccount({
-      name: accountName,
-      slug: accountSlug || slugifyDevelopmentName(accountName),
-      ownerUserId,
-    });
-    setCreatingAccount(false);
-    if (err || !accountId) {
-      toast.error(err ?? "Could not create account.");
-      return;
-    }
-    toast.success(`Development account created (${accountId}).`);
-    setAccountName("");
-    setAccountSlug("");
-    setOwnerUserId("");
-  };
-
   return (
     <AgentAacPage>
       <Seo title="Admin Developments | All Agent Connect" noindex />
@@ -96,36 +68,7 @@ export function AdminDevelopmentsListPage() {
 
       <DeveloperAccessRequestsPanel />
 
-      <section className="mb-8 space-y-3 rounded-2xl border border-zinc-200 bg-white p-5">
-        <h2 className="text-base font-semibold text-zinc-900">Create development account</h2>
-        <p className="text-sm text-zinc-500">
-          Admin-only RPC. Assigns the first owner; developers then create projects in their workspace.
-        </p>
-        <form onSubmit={onCreateAccount} className="grid gap-3 sm:grid-cols-3">
-          <div className="space-y-1">
-            <Label>Account name</Label>
-            <Input value={accountName} onChange={(e) => setAccountName(e.target.value)} required />
-          </div>
-          <div className="space-y-1">
-            <Label>Slug</Label>
-            <Input
-              value={accountSlug}
-              onChange={(e) => setAccountSlug(slugifyDevelopmentName(e.target.value))}
-              placeholder="auto from name"
-            />
-          </div>
-          <div className="space-y-1">
-            <Label>Owner user ID</Label>
-            <Input value={ownerUserId} onChange={(e) => setOwnerUserId(e.target.value)} required />
-          </div>
-          <div>
-            <Button type="submit" disabled={creatingAccount}>
-              {creatingAccount ? "Creating…" : "Create account"}
-            </Button>
-          </div>
-        </form>
-      </section>
-
+      <h2 className="mb-2 text-base font-semibold text-zinc-900">Development / project review</h2>
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <Label className="text-sm text-zinc-600">Filter</Label>
         <Select value={filter} onValueChange={(v) => setFilter(v as DevelopmentPublishStatus | "all")}>
