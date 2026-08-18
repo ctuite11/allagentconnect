@@ -201,8 +201,8 @@ export function DeveloperAccessRequestsPanel() {
         <div>
           <h2 className="text-base font-semibold text-zinc-900">Developer Access Requests</h2>
           <p className="mt-1 text-sm text-zinc-500">
-            Review public Developer portal requests. Approval provisions an account only when an
-            existing AAC user ID is supplied.
+            Verify who the developer is, then approve. Verifying provisions their Developer account
+            and sends a setup link — no existing AAC account required.
           </p>
         </div>
         <div className="space-y-1">
