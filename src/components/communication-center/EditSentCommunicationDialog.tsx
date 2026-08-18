@@ -174,7 +174,7 @@ export function EditSentCommunicationDialog({ open, broadcast, onOpenChange, onS
           </div>
 
           <div className="flex justify-end gap-3 pt-2">
-            <Button type="button" variant="outline" className={commsOutlineButton} onClick={handleClose} disabled={saving}>
+            <Button type="button" variant="outline" className={commsOutlineButton} onClick={() => handleClose()} disabled={saving}>
               Cancel
             </Button>
             <Button

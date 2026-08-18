@@ -104,7 +104,7 @@ export async function fetchSentBroadcastAttachments(
   }));
 }
 
-export function toRpcAttachments(attachments: CommsAttachment[]): CommsAttachment[] {
+export function toRpcAttachments(attachments: CommsAttachment[]): Record<string, string | number | null>[] {
   return attachments.map(({ path, kind, mimeType, name, size }) => ({
     path,
     kind,
