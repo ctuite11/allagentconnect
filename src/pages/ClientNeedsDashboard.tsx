@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { Loader2, AlertTriangle, SlidersHorizontal, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NotificationPreferenceCards } from "@/components/NotificationPreferenceCards";
+import { SentCommunicationsSection } from "@/components/communication-center/SentCommunicationsSection";
 import { ClientNeedsNotificationSettings } from "@/components/ClientNeedsNotificationSettings";
 import GeographicPreferencesManager, { GeographicData } from "@/components/GeographicPreferencesManager";
 import PriceRangePreferences, { PriceRangeData } from "@/components/PriceRangePreferences";
@@ -335,6 +336,8 @@ const ClientNeedsDashboard = () => {
               onMuteAllStateChange={setMuteAllState}
             />
           </section>
+
+          <SentCommunicationsSection />
 
           <div className="space-y-5">
             {!emailAlertNoticeDismissed && (

@@ -19,6 +19,8 @@ interface Props {
   attachments: PendingCommsAttachment[];
   onChange: (next: PendingCommsAttachment[]) => void;
   disabled?: boolean;
+  /** When false, removing a tile only updates local state (edit flow). Default true for compose. */
+  purgeOnRemove?: boolean;
 }
 
 /**
@@ -26,7 +28,12 @@ interface Props {
  * conversation-scoped Messages attachment picker — uploads go to the private
  * `comms-attachments` bucket under the sender's own folder.
  */
-export function CommsAttachmentPicker({ attachments, onChange, disabled }: Props) {
+export function CommsAttachmentPicker({
+  attachments,
+  onChange,
+  disabled,
+  purgeOnRemove = true,
+}: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploadingCount, setUploadingCount] = useState(0);
   const previewsRef = useRef<string[]>([]);
@@ -72,7 +79,7 @@ export function CommsAttachmentPicker({ attachments, onChange, disabled }: Props
     const target = attachments.find((a) => a.path === path);
     if (target) URL.revokeObjectURL(target.previewUrl);
     onChange(attachments.filter((a) => a.path !== path));
-    await removeCommsAttachment(path);
+    if (purgeOnRemove) await removeCommsAttachment(path);
   };
 
   return (
