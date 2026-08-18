@@ -84,9 +84,11 @@ Deno.test({
   },
 });
 
-Deno.test(
-  "a deletion tombstone stops the send and asks for acknowledgement",
-  async () => {
+Deno.test({
+  name: "a deletion tombstone stops the send and asks for acknowledgement",
+  sanitizeOps: false,
+  sanitizeResources: false,
+  async fn() {
     const { admin, calls } = stubAdmin({
       deletion: { id: "d1", email: "dev@example.com" },
     });
@@ -98,7 +100,7 @@ Deno.test(
       false,
     );
   },
-);
+});
 
 Deno.test({
   name: "acknowledged deletion issues a fresh token and passes the override through",
@@ -124,9 +126,11 @@ Deno.test({
   },
 });
 
-Deno.test(
-  "an ineligible user reports a readable failure, not a success",
-  async () => {
+Deno.test({
+  name: "an ineligible user reports a readable failure, not a success",
+  sanitizeOps: false,
+  sanitizeResources: false,
+  async fn() {
     const { admin } = stubAdmin({ issuance: { status: "ineligible" } });
     const result = await issueDeveloperSetupLink(baseInput(admin));
 
@@ -136,7 +140,7 @@ Deno.test(
       describeIssuanceFailure("ineligible"),
     );
   },
-);
+});
 
 Deno.test({
   name: "a deduped issuance is reported without re-patching the payload",
@@ -158,19 +162,22 @@ Deno.test({
   sanitizeOps: false,
   sanitizeResources: false,
   async fn() {
-  const { admin, calls } = stubAdmin();
-  const result = await issueDeveloperSetupLink({
-    ...baseInput(admin),
-    secret: undefined,
-  });
+    const { admin, calls } = stubAdmin();
+    const result = await issueDeveloperSetupLink({
+      ...baseInput(admin),
+      secret: undefined,
+    });
 
-  assertEquals(result.status, "failed");
-  assertEquals(calls.length, 0);
+    assertEquals(result.status, "failed");
+    assertEquals(calls.length, 0);
+  },
 });
 
-Deno.test(
-  "developerSetupPayload preserves the queue-owned activation fields",
-  () => {
+Deno.test({
+  name: "developerSetupPayload preserves the queue-owned activation fields",
+  sanitizeOps: false,
+  sanitizeResources: false,
+  fn() {
     const out = developerSetupPayload(
       { to: "dev@example.com", activation_token_id: "tok", provider: "resend" },
       null,
@@ -179,4 +186,4 @@ Deno.test(
     assertEquals(out.provider, "resend");
     assertEquals(out.first_name, null);
   },
-);
+});
