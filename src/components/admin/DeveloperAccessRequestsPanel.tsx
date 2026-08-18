@@ -15,7 +15,6 @@ import {
   approveDeveloperAccessRequest,
   declineDeveloperAccessRequest,
   fetchDeveloperAccessRequests,
-  findProfileUserIdByEmail,
   type DeveloperAccessRequestRow,
 } from "@/lib/developments/developerAccessRequest";
 import { slugifyDevelopmentName } from "@/lib/developments/publishStatus";
@@ -31,33 +30,9 @@ function RequestCard({
   onChanged: () => void;
 }) {
   const [notes, setNotes] = useState(request.review_notes ?? "");
-  const [ownerUserId, setOwnerUserId] = useState("");
   const [accountName, setAccountName] = useState(request.company_name);
   const [accountSlug, setAccountSlug] = useState(slugifyDevelopmentName(request.company_name));
-  const [lookupState, setLookupState] = useState<"idle" | "loading" | "found" | "missing">("idle");
   const [busy, setBusy] = useState<"decline" | "approve" | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    void (async () => {
-      setLookupState("loading");
-      const { userId, error } = await findProfileUserIdByEmail(request.email);
-      if (cancelled) return;
-      if (error) {
-        setLookupState("missing");
-        return;
-      }
-      if (userId) {
-        setOwnerUserId(userId);
-        setLookupState("found");
-      } else {
-        setLookupState("missing");
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [request.email, request.id]);
 
   const onDecline = async () => {
     setBusy("decline");
@@ -75,15 +50,9 @@ function RequestCard({
   };
 
   const onApprove = async () => {
-    const trimmedOwner = ownerUserId.trim();
-    if (!trimmedOwner) {
-      toast.error("An existing AAC user ID is required to approve.");
-      return;
-    }
     setBusy("approve");
-    const { error } = await approveDeveloperAccessRequest({
+    const { error, emailStatus } = await approveDeveloperAccessRequest({
       requestId: request.id,
-      ownerUserId: trimmedOwner,
       accountName,
       accountSlug,
       notes,
@@ -93,7 +62,11 @@ function RequestCard({
       toast.error(error);
       return;
     }
-    toast.success("Request approved. Development account provisioned.");
+    toast.success(
+      emailStatus === "queued" || emailStatus === "deduped"
+        ? "Developer verified. Setup link emailed."
+        : "Developer verified. Account provisioned.",
+    );
     onChanged();
   };
 
