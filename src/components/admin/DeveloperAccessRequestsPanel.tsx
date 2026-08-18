@@ -122,34 +122,12 @@ function RequestCard({
             <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} />
           </div>
 
-          <div className="space-y-2 rounded-lg border border-amber-200 bg-amber-50/80 p-3 text-sm text-amber-950">
-            <p className="font-medium">Approval requires an existing AAC user</p>
-            {lookupState === "loading" ? (
-              <p>Checking whether {request.email} already has an AAC account…</p>
-            ) : null}
-            {lookupState === "found" ? (
-              <p>
-                A profile matching this email was found. Confirm the owner user ID below, then
-                approve.
-              </p>
-            ) : null}
-            {lookupState === "missing" ? (
-              <p>
-                No AAC profile was found for this email. Complete the existing admin create-user /
-                setup-link process first, then paste that user’s ID here to approve.
-              </p>
-            ) : null}
-          </div>
+          <p className="rounded-lg border border-zinc-200 bg-white p-3 text-sm text-zinc-600">
+            Verifying creates the Developer account and emails a 7-day setup link so they can
+            create their own login. No existing AAC account is needed.
+          </p>
 
           <div className="grid gap-3 sm:grid-cols-3">
-            <div className="space-y-1.5 sm:col-span-3">
-              <Label>Owner user ID</Label>
-              <Input
-                value={ownerUserId}
-                onChange={(e) => setOwnerUserId(e.target.value)}
-                placeholder="Existing auth user UUID"
-              />
-            </div>
             <div className="space-y-1.5">
               <Label>Account name</Label>
               <Input
@@ -176,14 +154,14 @@ function RequestCard({
               disabled={busy !== null}
               onClick={() => void onDecline()}
             >
-              {busy === "decline" ? "Declining…" : "Decline"}
+              {busy === "decline" ? "Rejecting…" : "Reject"}
             </Button>
             <Button
               type="button"
-              disabled={busy !== null || !ownerUserId.trim()}
+              disabled={busy !== null}
               onClick={() => void onApprove()}
             >
-              {busy === "approve" ? "Approving…" : "Approve & provision"}
+              {busy === "approve" ? "Verifying…" : "Verify Developer"}
             </Button>
           </div>
         </div>
