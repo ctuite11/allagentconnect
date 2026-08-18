@@ -191,3 +191,6 @@ verify_jwt = false
 
 [functions.submit-developer-access-request]
 verify_jwt = false
+
+[functions.admin-approve-developer-request]
+verify_jwt = false

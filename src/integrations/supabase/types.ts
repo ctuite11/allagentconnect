@@ -6903,6 +6903,17 @@ export type Database = {
         Args: { _development_id: string }
         Returns: string
       }
+      admin_provision_developer_access: {
+        Args: {
+          _account_name?: string
+          _account_slug?: string
+          _notes?: string
+          _owner_user_id: string
+          _request_id: string
+          _reviewer_id?: string
+        }
+        Returns: Json
+      }
       admin_replace_development_owner: {
         Args: { _account_id: string; _new_owner_user_id: string }
         Returns: undefined
@@ -7104,6 +7115,10 @@ export type Database = {
       delete_pending_buyer_hot_sheet: {
         Args: { p_crm_client_id: string; p_hot_sheet_id: string }
         Returns: Json
+      }
+      developer_is_activation_eligible: {
+        Args: { _user_id: string }
+        Returns: boolean
       }
       development_account_id: {
         Args: { _development_id: string }
