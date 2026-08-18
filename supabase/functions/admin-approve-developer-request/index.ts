@@ -164,92 +164,45 @@ Deno.serve(async (req) => {
   }
 
   // ── Setup / activation email (same durable token as agents) ────────────
-  const secret = Deno.env.get("ACTIVATION_TOKEN_SECRET");
-  if (!secret) {
-    return json({
-      success: true,
-      status: alreadyApproved ? "already_approved" : "approved",
-      requestId,
-      userId,
-      accountId,
-      userExisted,
-      email: { status: "unavailable", reason: "activation secret not configured" },
-    });
-  }
-
-  const tokenId = crypto.randomUUID();
-  const expiresAt = new Date(
-    Math.floor(Date.now() / 1000) * 1000 + ACTIVATION_TOKEN_TTL_DAYS * 24 * 60 * 60 * 1000,
-  );
-  const activationToken = await signActivationToken(secret, {
-    id: tokenId,
+  // Provisioning above already succeeded and is idempotent. The email is a
+  // SEPARATE outcome: a failure here must never roll back or re-run
+  // provisioning — it is reported as a partial success so the admin can use
+  // Send Setup Link from the Developer Approvals table.
+  const issued = await issueDeveloperSetupLink({
+    admin,
+    supabaseUrl: SUPABASE_URL,
+    serviceKey: SERVICE_KEY,
+    secret: Deno.env.get("ACTIVATION_TOKEN_SECRET"),
     userId,
-    expiresAtEpoch: Math.floor(expiresAt.getTime() / 1000),
+    email,
+    firstName: request.first_name ?? null,
+    acknowledgeDeleted: body.acknowledgeDeleted === true,
   });
 
-  const { data: issued, error: issueErr } = await admin.rpc("reissue_agent_activation_token", {
-    p_id: tokenId,
-    p_user_id: userId,
-    p_token_hash: await sha256Hex(activationToken),
-    p_expires_at: expiresAt.toISOString(),
-    p_subject: SUBJECT,
-    p_reply_to: REPLY_TO,
-    p_agent_name: request.first_name ?? null,
-  });
-
-  const issueStatus = (issued as { status?: string } | null)?.status ?? "unknown";
-  const jobId = (issued as { job_id?: string } | null)?.job_id ?? null;
-
-  if (issueErr || !jobId || !(issueStatus === "created" || issueStatus === "deduped")) {
-    console.error(
-      "[admin-approve-developer-request] activation issuance unavailable:",
-      issueErr?.message ?? issueStatus,
-    );
-    return json({
-      success: true,
-      status: alreadyApproved ? "already_approved" : "approved",
-      requestId,
-      userId,
-      accountId,
-      userExisted,
-      email: { status: "failed", reason: issueStatus },
-    });
-  }
-
-  if (issueStatus === "created") {
-    const { data: jobRow } = await admin
-      .from("email_jobs")
-      .select("payload")
-      .eq("id", jobId)
-      .maybeSingle();
-    const basePayload = (jobRow?.payload ?? {}) as Record<string, unknown>;
-    await admin
-      .from("email_jobs")
-      .update({
-        payload: {
-          ...basePayload,
-          template: TEMPLATE_NAME,
-          subject: SUBJECT,
-          reply_to: REPLY_TO,
-          first_name: request.first_name ?? null,
-        },
-      })
-      .eq("id", jobId);
-  }
-
-  void fetch(`${SUPABASE_URL}/functions/v1/kick-email-queue`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${SERVICE_KEY}`, "Content-Type": "application/json" },
-    body: "{}",
-  }).catch(() => {});
-
-  return json({
+  const approvalEnvelope = {
     success: true,
+    approved: true,
     status: alreadyApproved ? "already_approved" : "approved",
     requestId,
     userId,
     accountId,
     userExisted,
-    email: { status: issueStatus === "deduped" ? "deduped" : "queued", jobId },
+  };
+
+  if (issued.status === "previously_deleted") {
+    return json({
+      ...approvalEnvelope,
+      email: { status: "previously_deleted", reason: issued.reason, match: issued.match },
+    });
+  }
+
+  if (issued.status === "failed") {
+    console.error("[admin-approve-developer-request] setup email failed:", issued.reason);
+    return json({ ...approvalEnvelope, email: { status: "failed", reason: issued.reason } });
+  }
+
+  return json({
+    ...approvalEnvelope,
+    email: { status: issued.status, jobId: issued.jobId },
   });
 });
