@@ -3,61 +3,89 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 import {
   approveDeveloperAccessRequest,
   declineDeveloperAccessRequest,
-  fetchDeveloperAccessRequests,
-  type DeveloperAccessRequestRow,
+  deriveDeveloperApplicantStatus,
+  fetchDeveloperApplicants,
+  type DeveloperApplicantRow,
+  type DeveloperApplicantStatus,
 } from "@/lib/developments/developerAccessRequest";
 import { slugifyDevelopmentName } from "@/lib/developments/publishStatus";
 import { toast } from "sonner";
 
-type StatusFilter = "pending" | "approved" | "declined" | "all";
+type Bucket = DeveloperApplicantStatus | "all";
 
-function RequestCard({
+const BUCKETS: Array<{ key: Bucket; label: string }> = [
+  { key: "all", label: "All" },
+  { key: "requested", label: "Requested" },
+  { key: "verified", label: "Verified" },
+  { key: "activated", label: "Activated" },
+  { key: "rejected", label: "Rejected" },
+];
+
+const STATUS_STYLES: Record<DeveloperApplicantStatus, string> = {
+  requested: "border-amber-200 bg-amber-50 text-amber-700",
+  verified: "border-aac/20 bg-aac/10 text-aac",
+  activated: "border-emerald-200 bg-emerald-50 text-emerald-700",
+  rejected: "border-zinc-200 bg-zinc-100 text-zinc-600",
+};
+
+const STATUS_LABELS: Record<DeveloperApplicantStatus, string> = {
+  requested: "Requested",
+  verified: "Verified",
+  activated: "Activated",
+  rejected: "Rejected",
+};
+
+function formatDate(value: string | null | undefined) {
+  if (!value) return "—";
+  return new Date(value).toLocaleDateString();
+}
+
+function VerifyDialog({
   request,
+  open,
+  onOpenChange,
   onChanged,
 }: {
-  request: DeveloperAccessRequestRow;
+  request: DeveloperApplicantRow;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   onChanged: () => void;
 }) {
   const [notes, setNotes] = useState(request.review_notes ?? "");
   const [accountName, setAccountName] = useState(request.company_name);
   const [accountSlug, setAccountSlug] = useState(slugifyDevelopmentName(request.company_name));
-  const [busy, setBusy] = useState<"decline" | "approve" | null>(null);
-
-  const onDecline = async () => {
-    setBusy("decline");
-    const { error } = await declineDeveloperAccessRequest({
-      requestId: request.id,
-      notes,
-    });
-    setBusy(null);
-    if (error) {
-      toast.error(error);
-      return;
-    }
-    toast.success("Request declined.");
-    onChanged();
-  };
+  const [busy, setBusy] = useState(false);
 
   const onApprove = async () => {
-    setBusy("approve");
+    setBusy(true);
     const { error, emailStatus } = await approveDeveloperAccessRequest({
       requestId: request.id,
       accountName,
       accountSlug,
       notes,
     });
-    setBusy(null);
+    setBusy(false);
     if (error) {
       toast.error(error);
       return;
@@ -67,125 +95,198 @@ function RequestCard({
         ? "Developer verified. Setup link emailed."
         : "Developer verified. Account provisioned.",
     );
+    onOpenChange(false);
     onChanged();
   };
 
   return (
-    <li className="space-y-4 px-5 py-5">
-      <div className="flex flex-wrap items-start justify-between gap-2">
-        <div className="min-w-0 space-y-1">
-          <p className="font-semibold text-zinc-900">
-            {request.first_name} {request.last_name}
-            <span className="ml-2 text-sm font-normal text-zinc-500">· {request.company_name}</span>
-          </p>
-          <p className="text-sm text-zinc-600">
-            {request.email}
-            {request.phone ? ` · ${request.phone}` : ""}
-          </p>
-          <p className="text-xs text-zinc-400">
-            Submitted {new Date(request.created_at).toLocaleString()} · Status: {request.status}
-          </p>
-        </div>
-      </div>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>
+            Verify {request.first_name} {request.last_name}
+          </DialogTitle>
+          <DialogDescription>
+            Verifying creates the Developer account and emails a 7-day setup link so they can create
+            their own login. No existing AAC account is needed.
+          </DialogDescription>
+        </DialogHeader>
 
-      <dl className="grid gap-2 text-sm sm:grid-cols-2">
-        {request.website ? (
+        <dl className="grid gap-2 rounded-xl border border-zinc-200 bg-zinc-50/80 p-3 text-sm sm:grid-cols-2">
           <div>
-            <dt className="text-zinc-500">Website</dt>
-            <dd className="break-all text-zinc-800">{request.website}</dd>
+            <dt className="text-zinc-500">Company</dt>
+            <dd className="text-zinc-900">{request.company_name}</dd>
           </div>
-        ) : null}
-        {request.project_name ? (
           <div>
-            <dt className="text-zinc-500">Project</dt>
-            <dd className="text-zinc-800">{request.project_name}</dd>
+            <dt className="text-zinc-500">Email</dt>
+            <dd className="break-all text-zinc-900">{request.email}</dd>
           </div>
-        ) : null}
-        {request.market ? (
-          <div>
-            <dt className="text-zinc-500">City / Market</dt>
-            <dd className="text-zinc-800">{request.market}</dd>
-          </div>
-        ) : null}
-        {request.note ? (
-          <div className="sm:col-span-2">
-            <dt className="text-zinc-500">Note</dt>
-            <dd className="whitespace-pre-wrap text-zinc-800">{request.note}</dd>
-          </div>
-        ) : null}
-      </dl>
+          {request.phone ? (
+            <div>
+              <dt className="text-zinc-500">Phone</dt>
+              <dd className="text-zinc-900">{request.phone}</dd>
+            </div>
+          ) : null}
+          {request.website ? (
+            <div>
+              <dt className="text-zinc-500">Website</dt>
+              <dd className="break-all text-zinc-900">{request.website}</dd>
+            </div>
+          ) : null}
+          {request.project_name ? (
+            <div>
+              <dt className="text-zinc-500">Project</dt>
+              <dd className="text-zinc-900">{request.project_name}</dd>
+            </div>
+          ) : null}
+          {request.market ? (
+            <div>
+              <dt className="text-zinc-500">City / Market</dt>
+              <dd className="text-zinc-900">{request.market}</dd>
+            </div>
+          ) : null}
+          {request.note ? (
+            <div className="sm:col-span-2">
+              <dt className="text-zinc-500">Note</dt>
+              <dd className="whitespace-pre-wrap text-zinc-900">{request.note}</dd>
+            </div>
+          ) : null}
+        </dl>
 
-      {request.status === "pending" ? (
-        <div className="space-y-3 rounded-xl border border-zinc-100 bg-zinc-50/80 p-4">
+        <div className="grid gap-3 sm:grid-cols-2">
           <div className="space-y-1.5">
-            <Label>Review notes (optional)</Label>
-            <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} />
+            <Label>Account name</Label>
+            <Input
+              value={accountName}
+              onChange={(e) => {
+                setAccountName(e.target.value);
+                setAccountSlug(slugifyDevelopmentName(e.target.value));
+              }}
+            />
           </div>
-
-          <p className="rounded-lg border border-zinc-200 bg-white p-3 text-sm text-zinc-600">
-            Verifying creates the Developer account and emails a 7-day setup link so they can
-            create their own login. No existing AAC account is needed.
-          </p>
-
-          <div className="grid gap-3 sm:grid-cols-3">
-            <div className="space-y-1.5">
-              <Label>Account name</Label>
-              <Input
-                value={accountName}
-                onChange={(e) => {
-                  setAccountName(e.target.value);
-                  setAccountSlug(slugifyDevelopmentName(e.target.value));
-                }}
-              />
-            </div>
-            <div className="space-y-1.5 sm:col-span-2">
-              <Label>Account slug</Label>
-              <Input
-                value={accountSlug}
-                onChange={(e) => setAccountSlug(slugifyDevelopmentName(e.target.value))}
-              />
-            </div>
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              disabled={busy !== null}
-              onClick={() => void onDecline()}
-            >
-              {busy === "decline" ? "Rejecting…" : "Reject"}
-            </Button>
-            <Button
-              type="button"
-              disabled={busy !== null}
-              onClick={() => void onApprove()}
-            >
-              {busy === "approve" ? "Verifying…" : "Verify Developer"}
-            </Button>
+          <div className="space-y-1.5">
+            <Label>Account slug</Label>
+            <Input
+              value={accountSlug}
+              onChange={(e) => setAccountSlug(slugifyDevelopmentName(e.target.value))}
+            />
           </div>
         </div>
-      ) : null}
-    </li>
+
+        <div className="space-y-1.5">
+          <Label>Review notes (optional)</Label>
+          <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} />
+        </div>
+
+        <DialogFooter>
+          <Button type="button" variant="outline" disabled={busy} onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button type="button" disabled={busy} onClick={() => void onApprove()}>
+            {busy ? "Verifying…" : "Verify Developer"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function ApplicantRow({
+  request,
+  onChanged,
+}: {
+  request: DeveloperApplicantRow;
+  onChanged: () => void;
+}) {
+  const [verifyOpen, setVerifyOpen] = useState(false);
+  const [rejecting, setRejecting] = useState(false);
+  const bucket = deriveDeveloperApplicantStatus(request);
+
+  const onReject = async () => {
+    setRejecting(true);
+    const { error } = await declineDeveloperAccessRequest({ requestId: request.id });
+    setRejecting(false);
+    if (error) {
+      toast.error(error);
+      return;
+    }
+    toast.success("Request rejected.");
+    onChanged();
+  };
+
+  return (
+    <TableRow>
+      <TableCell className="font-medium text-zinc-900">
+        {request.first_name} {request.last_name}
+      </TableCell>
+      <TableCell className="text-zinc-700">{request.company_name}</TableCell>
+      <TableCell className="break-all text-zinc-700">{request.email}</TableCell>
+      <TableCell className="whitespace-nowrap text-zinc-700">{request.phone || "—"}</TableCell>
+      <TableCell className="max-w-[180px] truncate text-zinc-700">
+        {request.website ? (
+          <a
+            href={request.website.startsWith("http") ? request.website : `https://${request.website}`}
+            target="_blank"
+            rel="noreferrer"
+            className="text-aac hover:underline"
+          >
+            {request.website}
+          </a>
+        ) : (
+          "—"
+        )}
+      </TableCell>
+      <TableCell className="whitespace-nowrap text-zinc-600">{formatDate(request.created_at)}</TableCell>
+      <TableCell>
+        <Badge variant="outline" className={STATUS_STYLES[bucket]}>
+          {STATUS_LABELS[bucket]}
+        </Badge>
+      </TableCell>
+      <TableCell className="whitespace-nowrap text-zinc-600">
+        {formatDate(request.activated_at ?? request.reviewed_at)}
+      </TableCell>
+      <TableCell className="text-right">
+        {bucket === "requested" ? (
+          <div className="flex justify-end gap-2">
+            <Button size="sm" variant="outline" disabled={rejecting} onClick={() => void onReject()}>
+              {rejecting ? "Rejecting…" : "Reject"}
+            </Button>
+            <Button size="sm" onClick={() => setVerifyOpen(true)}>
+              Verify Developer
+            </Button>
+            {verifyOpen ? (
+              <VerifyDialog
+                request={request}
+                open={verifyOpen}
+                onOpenChange={setVerifyOpen}
+                onChanged={onChanged}
+              />
+            ) : null}
+          </div>
+        ) : (
+          <span className="text-xs text-zinc-400">—</span>
+        )}
+      </TableCell>
+    </TableRow>
   );
 }
 
 export function DeveloperAccessRequestsPanel() {
-  const [filter, setFilter] = useState<StatusFilter>("pending");
-  const [rows, setRows] = useState<DeveloperAccessRequestRow[] | null>(null);
+  const [bucket, setBucket] = useState<Bucket>("all");
+  const [rows, setRows] = useState<DeveloperApplicantRow[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const reload = useCallback(async () => {
-    const { requests, error: err } = await fetchDeveloperAccessRequests(filter);
+  const load = useCallback(async () => {
+    const { requests, error: err } = await fetchDeveloperApplicants(bucket);
     setError(err);
     setRows(requests);
-  }, [filter]);
+  }, [bucket]);
 
   useEffect(() => {
     let cancelled = false;
     void (async () => {
       setRows(null);
-      const { requests, error: err } = await fetchDeveloperAccessRequests(filter);
+      const { requests, error: err } = await fetchDeveloperApplicants(bucket);
       if (cancelled) return;
       setError(err);
       setRows(requests);
@@ -193,48 +294,68 @@ export function DeveloperAccessRequestsPanel() {
     return () => {
       cancelled = true;
     };
-  }, [filter]);
+  }, [bucket]);
 
   return (
-    <section className="mb-8 space-y-3 rounded-2xl border border-zinc-200 bg-white p-5">
+    <section className="mb-8 space-y-4 rounded-2xl border border-zinc-200 bg-white p-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h2 className="text-base font-semibold text-zinc-900">Developer Access Requests</h2>
+          <h2 className="text-base font-semibold text-zinc-900">Developer approvals</h2>
           <p className="mt-1 text-sm text-zinc-500">
             Verify who the developer is, then approve. Verifying provisions their Developer account
             and sends a setup link — no existing AAC account required.
           </p>
         </div>
-        <div className="space-y-1">
-          <Label className="text-xs text-zinc-500">Status</Label>
-          <Select value={filter} onValueChange={(v) => setFilter(v as StatusFilter)}>
-            <SelectTrigger className="w-40">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="approved">Approved</SelectItem>
-              <SelectItem value="declined">Declined</SelectItem>
-              <SelectItem value="all">All</SelectItem>
-            </SelectContent>
-          </Select>
+        <div className="flex flex-wrap gap-1.5">
+          {BUCKETS.map((b) => (
+            <Button
+              key={b.key}
+              type="button"
+              size="sm"
+              variant={bucket === b.key ? "default" : "outline"}
+              onClick={() => setBucket(b.key)}
+            >
+              {b.label}
+            </Button>
+          ))}
         </div>
       </div>
 
       {error ? <p className="text-sm text-red-600">{error}</p> : null}
 
       {rows === null ? (
-        <AacMonogramLoader message="Loading requests…" />
+        <AacMonogramLoader message="Loading developers…" />
       ) : (
-        <ul className="divide-y divide-zinc-200 overflow-hidden rounded-xl border border-zinc-200">
-          {rows.length === 0 ? (
-            <li className="px-5 py-8 text-center text-sm text-zinc-500">
-              No {filter === "all" ? "" : `${filter} `}requests.
-            </li>
-          ) : (
-            rows.map((req) => <RequestCard key={req.id} request={req} onChanged={() => void reload()} />)
-          )}
-        </ul>
+        <div className="overflow-x-auto rounded-xl border border-zinc-200">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Developer</TableHead>
+                <TableHead>Company</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Phone</TableHead>
+                <TableHead>Website</TableHead>
+                <TableHead>Submitted</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Verified / activated</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {rows.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={9} className="py-8 text-center text-sm text-zinc-500">
+                    No developers in this filter.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                rows.map((req) => (
+                  <ApplicantRow key={req.id} request={req} onChanged={() => void load()} />
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
       )}
     </section>
   );
