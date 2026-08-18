@@ -683,7 +683,6 @@ export function renderEmailTemplate(
     }
 
     case "agent-new-listing-alert": {
-      // (see developer-access-request-submitted below for the admin dev alert)
       const userName = String(variables.userName || "there").trim() || "there";
       const listingsHtml = variables.listingsHtml || "";
       const ctaUrl = String(variables.hotSheetLink || "");
@@ -751,6 +750,33 @@ export function renderEmailTemplate(
         agentEmail: String(variables.agentEmail || ""),
         password: String(variables.password || ""),
         signInUrl: variables.signInUrl ? String(variables.signInUrl) : undefined,
+      });
+    }
+
+    case "developer-access-request-submitted": {
+      const submittedAt = String(variables.submittedAt || new Date().toISOString());
+      const submittedDisplay = (() => {
+        try {
+          return new Date(submittedAt).toLocaleString("en-US", {
+            timeZone: "America/New_York",
+            dateStyle: "full",
+            timeStyle: "short",
+          }) + " ET";
+        } catch {
+          return submittedAt;
+        }
+      })();
+      return buildAdminDeveloperRequestEmailHtml({
+        fullName: String(variables.fullName || "Unknown"),
+        email: String(variables.email || ""),
+        phone: variables.phone ? String(variables.phone) : "",
+        companyName: String(variables.companyName || ""),
+        website: variables.website ? String(variables.website) : "",
+        projectName: variables.projectName ? String(variables.projectName) : "",
+        market: variables.market ? String(variables.market) : "",
+        note: variables.note ? String(variables.note) : "",
+        submittedDisplay,
+        adminUrl: String(variables.adminUrl || "https://allagentconnect.com/admin/developments"),
       });
     }
 
