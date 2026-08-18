@@ -10,20 +10,12 @@
 // Developer-specific: development_accounts + owner membership + developer role,
 // and the developer_access_requests row transition to `approved`.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
-import {
-  ACTIVATION_TOKEN_TTL_DAYS,
-  sha256Hex,
-  signActivationToken,
-} from "../_shared/activationTokens.ts";
+import { issueDeveloperSetupLink } from "../_shared/developerSetupLink.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
-
-const TEMPLATE_NAME = "admin-created-invite";
-const SUBJECT = "Your All Agent Connect Developer account is ready";
-const REPLY_TO = "chris@allagentconnect.com";
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -39,6 +31,8 @@ interface Body {
   notes?: string;
   /** Verification / dry-run switch: provision only, never queue an email. */
   sendEmail?: boolean;
+  /** Explicit admin acknowledgement of a previous deletion tombstone. */
+  acknowledgeDeleted?: boolean;
 }
 
 Deno.serve(async (req) => {
