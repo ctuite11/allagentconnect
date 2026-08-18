@@ -163,3 +163,33 @@ export async function approveDeveloperAccessRequest(input: {
     return { accountId: null, userId: null, emailStatus: null, error: message };
   }
 }
+
+export type DeveloperSetupLinkOutcome =
+  | { kind: "sent"; status: string }
+  /** A prior deletion tombstone exists; admin must explicitly acknowledge it. */
+  | { kind: "previously_deleted"; message: string }
+  | { kind: "failure"; message: string };
+
+/**
+ * Admin recovery action: issue (or re-issue) a Verified developer's durable
+ * 7-day setup link. Provisioning and role assignment are never touched.
+ */
+export async function sendDeveloperSetupLink(input: {
+  requestId: string;
+  acknowledgeDeleted?: boolean;
+}): Promise<DeveloperSetupLinkOutcome> {
+  try {
+    const result = await invokeEdgeFunction<{ status?: string }>("send-developer-setup-link", {
+      requestId: input.requestId,
+      ...(input.acknowledgeDeleted ? { acknowledgeDeleted: true } : {}),
+    });
+    return { kind: "sent", status: result.status ?? "queued" };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Failed to send the setup link.";
+    const code = (err as { code?: string } | null)?.code;
+    if (code === "previously_deleted") {
+      return { kind: "previously_deleted", message };
+    }
+    return { kind: "failure", message };
+  }
+}
