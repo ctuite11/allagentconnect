@@ -158,6 +158,7 @@ export function EditSentCommunicationDialog({ open, broadcast, onOpenChange, onS
       return;
     }
     cleanupSessionUploads(new Set(attachments.map((a) => a.path)));
+    setSessionNewPaths(new Set());
     onSaved();
     if (result.kind === "duplicate") {
       setResendOutcome("duplicate");

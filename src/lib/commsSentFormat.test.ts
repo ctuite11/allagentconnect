@@ -96,6 +96,31 @@ describe("Sent Communications edit guard", () => {
     expect(sent).not.toContain("Updated message");
     expect(editor).not.toContain("send-client-need-notification");
   });
+
+  it("clears session-new paths after a successful resend so close cannot delete saved attachments", () => {
+    const editor = readFileSync(
+      "src/components/communication-center/EditSentCommunicationDialog.tsx",
+      "utf8",
+    );
+    const resendFn = editor.slice(
+      editor.indexOf("const handleResend"),
+      editor.indexOf("const busy"),
+    );
+    const failIdx = resendFn.indexOf("if (result.ok === false)");
+    const clearIdx = resendFn.indexOf("setSessionNewPaths(new Set())");
+    expect(failIdx).toBeGreaterThan(-1);
+    expect(clearIdx).toBeGreaterThan(failIdx);
+    const failBlock = resendFn.slice(failIdx, clearIdx);
+    expect(failBlock).toContain("return;");
+    expect(failBlock).not.toContain("setSessionNewPaths");
+
+    const saveFn = editor.slice(
+      editor.indexOf("const handleSave"),
+      editor.indexOf("const handleResend"),
+    );
+    expect(saveFn).toContain("handleClose({ discardSession: false })");
+    expect(saveFn).not.toContain("setSessionNewPaths");
+  });
 });
 
 describe("formatResendAudienceMessage", () => {
