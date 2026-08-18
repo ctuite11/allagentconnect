@@ -531,7 +531,7 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
                         <Button
                           size="sm"
                           variant="outline"
-                          className="h-[34px] min-w-[7.75rem] rounded-md border border-neutral-900 bg-neutral-900 px-5 text-[13px] font-medium tracking-wide text-white hover:bg-neutral-800"
+                          className="h-[34px] min-w-[7.75rem] rounded-md border border-neutral-900 bg-neutral-900 px-5 text-[13px] font-medium tracking-wide text-white hover:bg-neutral-800 hover:text-white focus-visible:bg-neutral-800 focus-visible:text-white [&_svg]:text-white hover:[&_svg]:text-white focus-visible:[&_svg]:text-white"
                         >
                           <Mail className="mr-1.5 h-3.5 w-3.5 text-white" aria-hidden />
                           Email {agent.first_name}
