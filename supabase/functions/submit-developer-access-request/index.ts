@@ -166,6 +166,49 @@ Deno.serve(async (req) => {
   }
 
   console.log(`[developer-access-request] created request ${data.id}`);
+
+  // Best-effort admin alert (never blocks or fails the submission).
+  try {
+    const fullName = `${first_name} ${last_name}`.trim();
+    const { error: notifyError } = await supabase.from('email_jobs').insert({
+      idempotency_key: `developer-access-request:${data.id}`,
+      payload: {
+        provider: 'resend',
+        template: 'developer-access-request-submitted',
+        to: 'chris@allagentconnect.com',
+        subject: `New Developer Access Request — ${fullName}`,
+        reply_to: email,
+        variables: {
+          fullName,
+          email,
+          phone,
+          companyName: company_name,
+          website: normalizedWebsite ?? '',
+          projectName: project_name,
+          market,
+          note,
+          submittedAt: new Date().toISOString(),
+          adminUrl: 'https://allagentconnect.com/admin/developments',
+        },
+      },
+    });
+    if (notifyError && notifyError.code !== '23505') {
+      console.error('[developer-access-request] admin notify enqueue failed:', notifyError.message);
+    } else if (!notifyError) {
+      await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/kick-email-queue`, {
+        method: 'POST',
+        signal: AbortSignal.timeout(1500),
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''}`,
+        },
+        body: '{}',
+      }).catch(() => {});
+    }
+  } catch (e) {
+    console.warn('[developer-access-request] admin notify skipped:', e instanceof Error ? e.message : String(e));
+  }
+
   return json({
     success: true,
     duplicate: false,
