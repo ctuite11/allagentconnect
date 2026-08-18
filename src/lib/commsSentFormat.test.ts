@@ -1,9 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import {
+  formatResendAudienceMessage,
   formatSentDateTime,
+  friendlyResendCommsError,
   friendlyUpdateCommsError,
   previewSentMessage,
+  RESEND_PAUSED_MESSAGE,
   sentCategoryLabel,
 } from "./commsSentFormat";
 
@@ -70,5 +73,81 @@ describe("Sent Communications edit guard", () => {
     expect(sent).not.toContain("email_jobs");
     expect(editor).not.toContain("send-client-need-notification");
     expect(editor).toContain("Save changes");
+  });
+
+  it("Send Again confirms then calls resend-comms-broadcast with a session token", () => {
+    const sent = readFileSync("src/lib/commsSent.ts", "utf8");
+    const editor = readFileSync(
+      "src/components/communication-center/EditSentCommunicationDialog.tsx",
+      "utf8",
+    );
+    expect(editor).toContain("Cancel");
+    expect(editor).toContain("Save changes");
+    expect(editor).toContain("Send Again");
+    expect(editor).toContain("This emails the original audience again.");
+    expect(editor).toContain("Sent again");
+    expect(editor).toContain("Already resent");
+    expect(editor).toContain("crypto.randomUUID()");
+    expect(sent).toContain('functions.invoke("resend-comms-broadcast"');
+    expect(sent).toContain("broadcast_id:");
+    expect(sent).toContain("resend_token:");
+    expect(sent).toContain("duplicate_suppressed");
+    expect(sent).toContain("paused");
+    expect(sent).not.toContain("Updated message");
+    expect(editor).not.toContain("send-client-need-notification");
+  });
+
+  it("clears session-new paths after a successful resend so close cannot delete saved attachments", () => {
+    const editor = readFileSync(
+      "src/components/communication-center/EditSentCommunicationDialog.tsx",
+      "utf8",
+    );
+    const resendFn = editor.slice(
+      editor.indexOf("const handleResend"),
+      editor.indexOf("const busy"),
+    );
+    const failIdx = resendFn.indexOf("if (result.ok === false)");
+    const clearIdx = resendFn.indexOf("setSessionNewPaths(new Set())");
+    expect(failIdx).toBeGreaterThan(-1);
+    expect(clearIdx).toBeGreaterThan(failIdx);
+    const failBlock = resendFn.slice(failIdx, clearIdx);
+    expect(failBlock).toContain("return;");
+    expect(failBlock).not.toContain("setSessionNewPaths");
+
+    const saveFn = editor.slice(
+      editor.indexOf("const handleSave"),
+      editor.indexOf("const handleResend"),
+    );
+    expect(saveFn).toContain("handleClose({ discardSession: false })");
+    expect(saveFn).not.toContain("setSessionNewPaths");
+  });
+});
+
+describe("formatResendAudienceMessage", () => {
+  it("reports ineligible originals without treating that as failure", () => {
+    expect(formatResendAudienceMessage(37, 3)).toBe(
+      "Sent to 37 recipients; 3 no longer eligible.",
+    );
+    expect(formatResendAudienceMessage(12, 0)).toBeNull();
+  });
+});
+
+describe("friendlyResendCommsError", () => {
+  it("maps ownership and auth errors without raw postgres text", () => {
+    expect(friendlyResendCommsError("You can only edit Communications you sent")).toBe(
+      "You can only resend Communications you sent.",
+    );
+    expect(friendlyResendCommsError("Unauthorized")).toBe("Please sign in again.");
+    expect(friendlyResendCommsError("duplicate key value violates unique constraint")).toBe(
+      "Couldn't send this Communication again. Please try again.",
+    );
+  });
+});
+
+describe("resend paused copy", () => {
+  it("explains that AAC was saved but no email went out", () => {
+    expect(RESEND_PAUSED_MESSAGE).toBe(
+      "Changes saved, but email sending is currently paused. No resend was sent.",
+    );
   });
 });

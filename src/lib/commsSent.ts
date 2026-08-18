@@ -2,7 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import type { CommsAttachment } from "@/lib/commsAttachments";
 import { createCommsAttachmentSignedUrls, MAX_COMMS_ATTACHMENTS } from "@/lib/commsAttachments";
-import { friendlyUpdateCommsError } from "@/lib/commsSentFormat";
+import { friendlyResendCommsError, friendlyUpdateCommsError } from "@/lib/commsSentFormat";
 
 type BroadcastRow = Database["public"]["Tables"]["comms_broadcasts"]["Row"];
 type AttachmentRow = Database["public"]["Tables"]["comms_broadcast_attachments"]["Row"];
@@ -137,4 +137,78 @@ export async function saveCommsBroadcastEdit(input: {
 
   if (error) return { ok: false, message: friendlyUpdateCommsError(error.message) };
   return { ok: true };
+}
+
+export type ResendCommsBroadcastResult =
+  | { ok: true; kind: "sent"; recipientCount: number; droppedIneligible: number }
+  | { ok: true; kind: "duplicate" }
+  | { ok: true; kind: "paused" }
+  | { ok: false; message: string };
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return !!value && typeof value === "object" && !Array.isArray(value);
+}
+
+function asNonNegInt(value: unknown): number {
+  return typeof value === "number" && Number.isFinite(value) && value >= 0 ? Math.floor(value) : 0;
+}
+
+async function readInvokeRecord(
+  data: unknown,
+  error: { message?: string; context?: Response } | null,
+): Promise<Record<string, unknown> | null> {
+  if (isRecord(data)) return data;
+  const response = error?.context instanceof Response ? error.context : null;
+  if (!response) return null;
+  try {
+    const parsed: unknown = JSON.parse(await response.clone().text());
+    return isRecord(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function resendCommsBroadcast(input: {
+  broadcastId: string;
+  resendToken: string;
+  subject: string;
+  message: string;
+  attachments: CommsAttachment[];
+}): Promise<ResendCommsBroadcastResult> {
+  const subject = input.subject.trim();
+  const message = input.message.trim();
+  if (!subject) return { ok: false, message: "Please enter a subject." };
+  if (!message) return { ok: false, message: "Please enter a message." };
+  if (!input.resendToken) return { ok: false, message: "Couldn't send this Communication again. Please try again." };
+  if (input.attachments.length > MAX_COMMS_ATTACHMENTS) {
+    return { ok: false, message: "You can attach up to 10 photos or videos." };
+  }
+
+  const { data, error } = await supabase.functions.invoke("resend-comms-broadcast", {
+    body: {
+      broadcast_id: input.broadcastId,
+      resend_token: input.resendToken,
+      subject,
+      message,
+      attachments: toRpcAttachments(input.attachments),
+    },
+  });
+
+  const body = await readInvokeRecord(data, error);
+  if (body?.duplicate_suppressed === true) return { ok: true, kind: "duplicate" };
+  if (body?.paused === true) return { ok: true, kind: "paused" };
+  if (body?.success === true) {
+    return {
+      ok: true,
+      kind: "sent",
+      recipientCount: asNonNegInt(body.recipient_count),
+      droppedIneligible: asNonNegInt(body.dropped_ineligible),
+    };
+  }
+
+  const raw =
+    (typeof body?.error === "string" && body.error) ||
+    error?.message ||
+    "Couldn't send this Communication again. Please try again.";
+  return { ok: false, message: friendlyResendCommsError(raw) };
 }
