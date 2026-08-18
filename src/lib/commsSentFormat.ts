@@ -50,3 +50,44 @@ export function friendlyUpdateCommsError(raw: string | null | undefined): string
   if (message.includes("not authenticated")) return "Please sign in again.";
   return "Couldn't save your changes. Please try again.";
 }
+
+export const RESEND_PAUSED_MESSAGE =
+  "Changes saved, but email sending is currently paused. No resend was sent.";
+
+/** Optional success line when some original recipients can no longer be emailed. */
+export function formatResendAudienceMessage(
+  recipientCount: number,
+  droppedIneligible: number,
+): string | null {
+  if (droppedIneligible <= 0) return null;
+  return `Sent to ${recipientCount} recipients; ${droppedIneligible} no longer eligible.`;
+}
+
+/** Map resend-comms-broadcast errors. Never surface raw Postgres / edge text. */
+export function friendlyResendCommsError(raw: string | null | undefined): string {
+  const message = (raw ?? "").toLowerCase();
+  if (message.includes("unauthorized") || message.includes("not authenticated")) {
+    return "Please sign in again.";
+  }
+  if (message.includes("only edit communications you sent") || message.includes("not owner")) {
+    return "You can only resend Communications you sent.";
+  }
+  if (message.includes("subject is required") || message.includes("please enter a subject")) {
+    return "Please enter a subject.";
+  }
+  if (message.includes("message is required") || message.includes("please enter a message")) {
+    return "Please enter a message.";
+  }
+  if (message.includes("at most 10") || message.includes("10 attachments")) {
+    return "You can attach up to 10 photos or videos.";
+  }
+  if (
+    message.includes("attachment kind") ||
+    message.includes("attachment path") ||
+    message.includes("attachments must be an array")
+  ) {
+    return "One of the attachments is invalid. Remove it and try again.";
+  }
+  if (message.includes("not found")) return "That Communication is no longer available.";
+  return "Couldn't send this Communication again. Please try again.";
+}
