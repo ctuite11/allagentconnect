@@ -1877,11 +1877,55 @@ export type Database = {
           },
         ]
       }
+      comms_broadcast_revisions: {
+        Row: {
+          attachments: Json
+          broadcast_id: string
+          created_at: string
+          edited_by: string | null
+          id: string
+          message: string
+          revision_number: number
+          subject: string
+        }
+        Insert: {
+          attachments?: Json
+          broadcast_id: string
+          created_at?: string
+          edited_by?: string | null
+          id?: string
+          message: string
+          revision_number: number
+          subject: string
+        }
+        Update: {
+          attachments?: Json
+          broadcast_id?: string
+          created_at?: string
+          edited_by?: string | null
+          id?: string
+          message?: string
+          revision_number?: number
+          subject?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comms_broadcast_revisions_broadcast_id_fkey"
+            columns: ["broadcast_id"]
+            isOneToOne: false
+            referencedRelation: "comms_broadcasts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       comms_broadcasts: {
         Row: {
           category: string
           created_at: string
           criteria: Json | null
+          edit_count: number
+          edited_at: string | null
+          edited_by: string | null
           id: string
           message: string
           recipient_count: number
@@ -1892,6 +1936,9 @@ export type Database = {
           category: string
           created_at?: string
           criteria?: Json | null
+          edit_count?: number
+          edited_at?: string | null
+          edited_by?: string | null
           id?: string
           message: string
           recipient_count?: number
@@ -1902,6 +1949,9 @@ export type Database = {
           category?: string
           created_at?: string
           criteria?: Json | null
+          edit_count?: number
+          edited_at?: string | null
+          edited_by?: string | null
           id?: string
           message?: string
           recipient_count?: number
@@ -7714,6 +7764,15 @@ export type Database = {
       storage_path_belongs_to_development: {
         Args: { _development_id: string; _name: string }
         Returns: boolean
+      }
+      update_comms_broadcast: {
+        Args: {
+          _attachments?: Json
+          _broadcast_id: string
+          _message: string
+          _subject: string
+        }
+        Returns: string
       }
       verify_buyer_contact_row: {
         Args: { p_crm_client_id: string }
