@@ -186,7 +186,8 @@ export async function sendDeveloperSetupLink(input: {
     return { kind: "sent", status: result.status ?? "queued" };
   } catch (err) {
     const message = err instanceof Error ? err.message : "Failed to send the setup link.";
-    if (/previously deleted|previously_deleted/i.test(message)) {
+    const code = (err as { code?: string } | null)?.code;
+    if (code === "previously_deleted") {
       return { kind: "previously_deleted", message };
     }
     return { kind: "failure", message };
