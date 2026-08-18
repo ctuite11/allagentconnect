@@ -15,7 +15,6 @@ import {
   approveDeveloperAccessRequest,
   declineDeveloperAccessRequest,
   fetchDeveloperAccessRequests,
-  findProfileUserIdByEmail,
   type DeveloperAccessRequestRow,
 } from "@/lib/developments/developerAccessRequest";
 import { slugifyDevelopmentName } from "@/lib/developments/publishStatus";
@@ -31,33 +30,9 @@ function RequestCard({
   onChanged: () => void;
 }) {
   const [notes, setNotes] = useState(request.review_notes ?? "");
-  const [ownerUserId, setOwnerUserId] = useState("");
   const [accountName, setAccountName] = useState(request.company_name);
   const [accountSlug, setAccountSlug] = useState(slugifyDevelopmentName(request.company_name));
-  const [lookupState, setLookupState] = useState<"idle" | "loading" | "found" | "missing">("idle");
   const [busy, setBusy] = useState<"decline" | "approve" | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    void (async () => {
-      setLookupState("loading");
-      const { userId, error } = await findProfileUserIdByEmail(request.email);
-      if (cancelled) return;
-      if (error) {
-        setLookupState("missing");
-        return;
-      }
-      if (userId) {
-        setOwnerUserId(userId);
-        setLookupState("found");
-      } else {
-        setLookupState("missing");
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [request.email, request.id]);
 
   const onDecline = async () => {
     setBusy("decline");
@@ -75,15 +50,9 @@ function RequestCard({
   };
 
   const onApprove = async () => {
-    const trimmedOwner = ownerUserId.trim();
-    if (!trimmedOwner) {
-      toast.error("An existing AAC user ID is required to approve.");
-      return;
-    }
     setBusy("approve");
-    const { error } = await approveDeveloperAccessRequest({
+    const { error, emailStatus } = await approveDeveloperAccessRequest({
       requestId: request.id,
-      ownerUserId: trimmedOwner,
       accountName,
       accountSlug,
       notes,
@@ -93,7 +62,11 @@ function RequestCard({
       toast.error(error);
       return;
     }
-    toast.success("Request approved. Development account provisioned.");
+    toast.success(
+      emailStatus === "queued" || emailStatus === "deduped"
+        ? "Developer verified. Setup link emailed."
+        : "Developer verified. Account provisioned.",
+    );
     onChanged();
   };
 
@@ -149,34 +122,12 @@ function RequestCard({
             <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} />
           </div>
 
-          <div className="space-y-2 rounded-lg border border-amber-200 bg-amber-50/80 p-3 text-sm text-amber-950">
-            <p className="font-medium">Approval requires an existing AAC user</p>
-            {lookupState === "loading" ? (
-              <p>Checking whether {request.email} already has an AAC account…</p>
-            ) : null}
-            {lookupState === "found" ? (
-              <p>
-                A profile matching this email was found. Confirm the owner user ID below, then
-                approve.
-              </p>
-            ) : null}
-            {lookupState === "missing" ? (
-              <p>
-                No AAC profile was found for this email. Complete the existing admin create-user /
-                setup-link process first, then paste that user’s ID here to approve.
-              </p>
-            ) : null}
-          </div>
+          <p className="rounded-lg border border-zinc-200 bg-white p-3 text-sm text-zinc-600">
+            Verifying creates the Developer account and emails a 7-day setup link so they can
+            create their own login. No existing AAC account is needed.
+          </p>
 
           <div className="grid gap-3 sm:grid-cols-3">
-            <div className="space-y-1.5 sm:col-span-3">
-              <Label>Owner user ID</Label>
-              <Input
-                value={ownerUserId}
-                onChange={(e) => setOwnerUserId(e.target.value)}
-                placeholder="Existing auth user UUID"
-              />
-            </div>
             <div className="space-y-1.5">
               <Label>Account name</Label>
               <Input
@@ -203,14 +154,14 @@ function RequestCard({
               disabled={busy !== null}
               onClick={() => void onDecline()}
             >
-              {busy === "decline" ? "Declining…" : "Decline"}
+              {busy === "decline" ? "Rejecting…" : "Reject"}
             </Button>
             <Button
               type="button"
-              disabled={busy !== null || !ownerUserId.trim()}
+              disabled={busy !== null}
               onClick={() => void onApprove()}
             >
-              {busy === "approve" ? "Approving…" : "Approve & provision"}
+              {busy === "approve" ? "Verifying…" : "Verify Developer"}
             </Button>
           </div>
         </div>
@@ -250,8 +201,8 @@ export function DeveloperAccessRequestsPanel() {
         <div>
           <h2 className="text-base font-semibold text-zinc-900">Developer Access Requests</h2>
           <p className="mt-1 text-sm text-zinc-500">
-            Review public Developer portal requests. Approval provisions an account only when an
-            existing AAC user ID is supplied.
+            Verify who the developer is, then approve. Verifying provisions their Developer account
+            and sends a setup link — no existing AAC account required.
           </p>
         </div>
         <div className="space-y-1">

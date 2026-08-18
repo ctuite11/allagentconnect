@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
+import { invokeEdgeFunction } from "@/lib/invokeEdgeFunction";
 import {
   friendlyAdminRpcError,
   parseSubmitDeveloperAccessResponse,
@@ -56,31 +57,6 @@ export async function submitDeveloperAccessRequest(
   }
 }
 
-/** Resolve an existing AAC profile id by email (admin SELECT on profiles). */
-export async function findProfileUserIdByEmail(email: string): Promise<{
-  userId: string | null;
-  error: string | null;
-}> {
-  const trimmed = email.trim();
-  if (!trimmed) return { userId: null, error: null };
-
-  const { data: exact, error: exactErr } = await supabase
-    .from("profiles")
-    .select("id")
-    .eq("email", trimmed)
-    .maybeSingle();
-  if (exactErr) return { userId: null, error: friendlyAdminRpcError(exactErr.message) };
-  if (exact?.id) return { userId: String(exact.id), error: null };
-
-  const { data: loose, error: looseErr } = await supabase
-    .from("profiles")
-    .select("id")
-    .ilike("email", trimmed.toLowerCase())
-    .maybeSingle();
-  if (looseErr) return { userId: null, error: friendlyAdminRpcError(looseErr.message) };
-  return { userId: loose?.id ? String(loose.id) : null, error: null };
-}
-
 export async function fetchDeveloperAccessRequests(status: string = "pending"): Promise<{
   requests: DeveloperAccessRequestRow[];
   error: string | null;
@@ -112,20 +88,45 @@ export async function declineDeveloperAccessRequest(input: {
   return { request: (data as DeveloperAccessRequestRow) ?? null, error: null };
 }
 
+/**
+ * Verify (approve) a developer request.
+ *
+ * No pre-existing AAC account is required: the edge function creates the auth
+ * user when needed, provisions the development account + `developer` role, and
+ * (unless `sendEmail: false`) issues the 7-day setup/activation email.
+ */
 export async function approveDeveloperAccessRequest(input: {
   requestId: string;
-  ownerUserId: string;
   accountName?: string;
   accountSlug?: string;
   notes?: string;
-}): Promise<{ accountId: string | null; error: string | null }> {
-  const { data, error } = await supabase.rpc("admin_approve_developer_access_request", {
-    _request_id: input.requestId,
-    _owner_user_id: input.ownerUserId,
-    _account_name: input.accountName?.trim() || undefined,
-    _account_slug: input.accountSlug?.trim() || undefined,
-    _notes: input.notes?.trim() || undefined,
-  });
-  if (error) return { accountId: null, error: friendlyAdminRpcError(error.message) };
-  return { accountId: data ? String(data) : null, error: null };
+  sendEmail?: boolean;
+}): Promise<{
+  accountId: string | null;
+  userId: string | null;
+  emailStatus: string | null;
+  error: string | null;
+}> {
+  try {
+    const result = await invokeEdgeFunction<{
+      accountId?: string | null;
+      userId?: string | null;
+      email?: { status?: string } | null;
+    }>("admin-approve-developer-request", {
+      requestId: input.requestId,
+      accountName: input.accountName?.trim() || undefined,
+      accountSlug: input.accountSlug?.trim() || undefined,
+      notes: input.notes?.trim() || undefined,
+      ...(input.sendEmail === false ? { sendEmail: false } : {}),
+    });
+    return {
+      accountId: result.accountId ? String(result.accountId) : null,
+      userId: result.userId ? String(result.userId) : null,
+      emailStatus: result.email?.status ?? null,
+      error: null,
+    };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Failed to approve request.";
+    return { accountId: null, userId: null, emailStatus: null, error: message };
+  }
 }
