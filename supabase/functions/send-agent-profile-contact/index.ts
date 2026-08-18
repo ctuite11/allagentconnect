@@ -201,7 +201,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Profile contact email enqueued:", job.id);
 
-    return new Response(JSON.stringify({ enqueued: true, jobId: job.id }), {
+    return new Response(JSON.stringify({ success: true, enqueued: true, jobId: job.id }), {
       status: 200,
       headers: { "Content-Type": "application/json", ...corsHeaders },
     });
