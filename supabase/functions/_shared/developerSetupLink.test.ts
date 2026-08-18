@@ -25,7 +25,11 @@ function stubAdmin(opts: StubOptions = {}) {
         return Promise.resolve({ data: opts.deletion ?? null, error: null });
       }
       return Promise.resolve({
-        data: opts.issuance ?? { status: "created", job_id: "job-1", token_id: "tok-1" },
+        data: opts.issuance ?? {
+          status: "created",
+          job_id: "job-1",
+          token_id: "tok-1",
+        },
         error: null,
       });
     },
@@ -33,7 +37,8 @@ function stubAdmin(opts: StubOptions = {}) {
       const chain = {
         select: () => chain,
         eq: () => chain,
-        maybeSingle: () => Promise.resolve({ data: { payload: { to: "dev@example.com" } } }),
+        maybeSingle: () =>
+          Promise.resolve({ data: { payload: { to: "dev@example.com" } } }),
         update: (values: Record<string, unknown>) => {
           updates.push(values);
           return { eq: () => Promise.resolve({ error: null }) };
@@ -60,87 +65,114 @@ Deno.test({
   sanitizeOps: false,
   sanitizeResources: false,
   async fn() {
-  const { admin, calls, updates } = stubAdmin();
-  const result = await issueDeveloperSetupLink(baseInput(admin));
+    const { admin, calls, updates } = stubAdmin();
+    const result = await issueDeveloperSetupLink(baseInput(admin));
 
-  assertEquals(result.status, "queued");
-  const issuance = calls.find((c) => c.fn === "reissue_agent_activation_token");
-  assertEquals(issuance?.args.p_subject, DEVELOPER_SETUP_SUBJECT);
-  assertEquals(issuance?.args.p_allow_previously_deleted, false);
-  assertEquals(updates[0].payload, {
-    to: "dev@example.com",
-    template: DEVELOPER_SETUP_TEMPLATE,
-    subject: DEVELOPER_SETUP_SUBJECT,
-    reply_to: "chris@allagentconnect.com",
-    first_name: "Dana",
-  });
+    assertEquals(result.status, "queued");
+    const issuance = calls.find(
+      (c) => c.fn === "reissue_agent_activation_token",
+    );
+    assertEquals(issuance?.args.p_subject, DEVELOPER_SETUP_SUBJECT);
+    assertEquals(issuance?.args.p_allow_previously_deleted, false);
+    assertEquals(updates[0].payload, {
+      to: "dev@example.com",
+      template: DEVELOPER_SETUP_TEMPLATE,
+      subject: DEVELOPER_SETUP_SUBJECT,
+      reply_to: "chris@allagentconnect.com",
+      first_name: "Dana",
+    });
+  },
 });
 
-Deno.test("a deletion tombstone stops the send and asks for acknowledgement", async () => {
-  const { admin, calls } = stubAdmin({ deletion: { id: "d1", email: "dev@example.com" } });
-  const result = await issueDeveloperSetupLink(baseInput(admin));
+Deno.test(
+  "a deletion tombstone stops the send and asks for acknowledgement",
+  async () => {
+    const { admin, calls } = stubAdmin({
+      deletion: { id: "d1", email: "dev@example.com" },
+    });
+    const result = await issueDeveloperSetupLink(baseInput(admin));
 
-  assertEquals(result.status, "previously_deleted");
-  assertEquals(calls.some((c) => c.fn === "reissue_agent_activation_token"), false);
-});
+    assertEquals(result.status, "previously_deleted");
+    assertEquals(
+      calls.some((c) => c.fn === "reissue_agent_activation_token"),
+      false,
+    );
+  },
+);
 
 Deno.test({
   name: "acknowledged deletion issues a fresh token and passes the override through",
   sanitizeOps: false,
   sanitizeResources: false,
   async fn() {
-  const { admin, calls } = stubAdmin({ deletion: { id: "d1" } });
-  const result = await issueDeveloperSetupLink({
-    ...baseInput(admin),
-    acknowledgeDeleted: true,
-  });
+    const { admin, calls } = stubAdmin({ deletion: { id: "d1" } });
+    const result = await issueDeveloperSetupLink({
+      ...baseInput(admin),
+      acknowledgeDeleted: true,
+    });
 
-  assertEquals(result.status, "queued");
-  const issuance = calls.find((c) => c.fn === "reissue_agent_activation_token");
-  assertEquals(issuance?.args.p_allow_previously_deleted, true);
-  // The tombstone lookup is skipped entirely once acknowledged.
-  assertEquals(calls.some((c) => c.fn === "find_current_agent_deletion"), false);
+    assertEquals(result.status, "queued");
+    const issuance = calls.find(
+      (c) => c.fn === "reissue_agent_activation_token",
+    );
+    assertEquals(issuance?.args.p_allow_previously_deleted, true);
+    // The tombstone lookup is skipped entirely once acknowledged.
+    assertEquals(
+      calls.some((c) => c.fn === "find_current_agent_deletion"),
+      false,
+    );
+  },
 });
 
-Deno.test("an ineligible user reports a readable failure, not a success", async () => {
-  const { admin } = stubAdmin({ issuance: { status: "ineligible" } });
-  const result = await issueDeveloperSetupLink(baseInput(admin));
+Deno.test(
+  "an ineligible user reports a readable failure, not a success",
+  async () => {
+    const { admin } = stubAdmin({ issuance: { status: "ineligible" } });
+    const result = await issueDeveloperSetupLink(baseInput(admin));
 
-  assertEquals(result.status, "failed");
-  assertEquals(
-    result.status === "failed" ? result.reason : "",
-    describeIssuanceFailure("ineligible"),
-  );
-});
+    assertEquals(result.status, "failed");
+    assertEquals(
+      result.status === "failed" ? result.reason : "",
+      describeIssuanceFailure("ineligible"),
+    );
+  },
+);
 
 Deno.test({
   name: "a deduped issuance is reported without re-patching the payload",
   sanitizeOps: false,
   sanitizeResources: false,
   async fn() {
-  const { admin, updates } = stubAdmin({
-    issuance: { status: "deduped", job_id: "job-9", token_id: "tok-9" },
-  });
-  const result = await issueDeveloperSetupLink(baseInput(admin));
+    const { admin, updates } = stubAdmin({
+      issuance: { status: "deduped", job_id: "job-9", token_id: "tok-9" },
+    });
+    const result = await issueDeveloperSetupLink(baseInput(admin));
 
-  assertEquals(result.status, "deduped");
-  assertEquals(updates.length, 0);
+    assertEquals(result.status, "deduped");
+    assertEquals(updates.length, 0);
+  },
 });
 
 Deno.test("missing signing secret fails closed", async () => {
   const { admin, calls } = stubAdmin();
-  const result = await issueDeveloperSetupLink({ ...baseInput(admin), secret: undefined });
+  const result = await issueDeveloperSetupLink({
+    ...baseInput(admin),
+    secret: undefined,
+  });
 
   assertEquals(result.status, "failed");
   assertEquals(calls.length, 0);
 });
 
-Deno.test("developerSetupPayload preserves the queue-owned activation fields", () => {
-  const out = developerSetupPayload(
-    { to: "dev@example.com", activation_token_id: "tok", provider: "resend" },
-    null,
-  );
-  assertEquals(out.activation_token_id, "tok");
-  assertEquals(out.provider, "resend");
-  assertEquals(out.first_name, null);
-});
+Deno.test(
+  "developerSetupPayload preserves the queue-owned activation fields",
+  () => {
+    const out = developerSetupPayload(
+      { to: "dev@example.com", activation_token_id: "tok", provider: "resend" },
+      null,
+    );
+    assertEquals(out.activation_token_id, "tok");
+    assertEquals(out.provider, "resend");
+    assertEquals(out.first_name, null);
+  },
+);
