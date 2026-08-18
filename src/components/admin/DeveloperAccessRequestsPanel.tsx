@@ -26,7 +26,6 @@ import {
   declineDeveloperAccessRequest,
   deriveDeveloperApplicantStatus,
   fetchDeveloperApplicants,
-  sendDeveloperSetupLink,
   type DeveloperApplicantRow,
   type DeveloperApplicantStatus,
 } from "@/lib/developments/developerAccessRequest";
@@ -91,15 +90,11 @@ function VerifyDialog({
       toast.error(error);
       return;
     }
-    // Provisioning and email are separate outcomes — never imply the setup
-    // email went out when only provisioning succeeded.
-    if (emailStatus === "queued" || emailStatus === "deduped") {
-      toast.success("Developer verified. Setup link emailed.");
-    } else {
-      toast.warning(
-        "Developer verified, but the setup email was not sent. Send a setup link from the Developer Approvals table.",
-      );
-    }
+    toast.success(
+      emailStatus === "queued" || emailStatus === "deduped"
+        ? "Developer verified. Setup link emailed."
+        : "Developer verified. Account provisioned.",
+    );
     onOpenChange(false);
     onChanged();
   };
@@ -205,34 +200,7 @@ function ApplicantRow({
 }) {
   const [verifyOpen, setVerifyOpen] = useState(false);
   const [rejecting, setRejecting] = useState(false);
-  const [sending, setSending] = useState(false);
-  const [sentOnce, setSentOnce] = useState(false);
-  const [deletedPrompt, setDeletedPrompt] = useState<string | null>(null);
   const bucket = deriveDeveloperApplicantStatus(request);
-  const setupLinkLabel = sentOnce ? "Resend setup link" : "Send setup link";
-
-  const issueSetupLink = async (acknowledgeDeleted = false) => {
-    setSending(true);
-    const outcome = await sendDeveloperSetupLink({
-      requestId: request.id,
-      acknowledgeDeleted,
-    });
-    setSending(false);
-
-    if (outcome.kind === "previously_deleted") {
-      // Never bypass a deletion tombstone silently — require an explicit ack.
-      setDeletedPrompt(outcome.message);
-      return;
-    }
-    if (outcome.kind === "failure") {
-      toast.error(outcome.message);
-      return;
-    }
-    setDeletedPrompt(null);
-    setSentOnce(true);
-    toast.success("Setup link emailed.");
-    onChanged();
-  };
 
   const onReject = async () => {
     setRejecting(true);
@@ -294,48 +262,6 @@ function ApplicantRow({
                 onChanged={onChanged}
               />
             ) : null}
-          </div>
-        ) : bucket === "verified" ? (
-          <div className="flex justify-end">
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={sending}
-              onClick={() => void issueSetupLink()}
-            >
-              {sending ? "Sending…" : setupLinkLabel}
-            </Button>
-            <Dialog
-              open={deletedPrompt !== null}
-              onOpenChange={(open) => !open && setDeletedPrompt(null)}
-            >
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Previously deleted account</DialogTitle>
-                  <DialogDescription>
-                    {deletedPrompt} Confirm you want to issue a fresh 7-day setup link to{" "}
-                    {request.email} anyway.
-                  </DialogDescription>
-                </DialogHeader>
-                <DialogFooter>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    disabled={sending}
-                    onClick={() => setDeletedPrompt(null)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="button"
-                    disabled={sending}
-                    onClick={() => void issueSetupLink(true)}
-                  >
-                    {sending ? "Sending…" : "Send anyway"}
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
           </div>
         ) : (
           <span className="text-xs text-zinc-400">—</span>

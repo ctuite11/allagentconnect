@@ -194,6 +194,3 @@ verify_jwt = false
 
 [functions.admin-approve-developer-request]
 verify_jwt = false
-
-[functions.send-developer-setup-link]
-verify_jwt = false
