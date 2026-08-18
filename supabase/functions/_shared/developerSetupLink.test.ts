@@ -153,7 +153,11 @@ Deno.test({
   },
 });
 
-Deno.test("missing signing secret fails closed", async () => {
+Deno.test({
+  name: "missing signing secret fails closed",
+  sanitizeOps: false,
+  sanitizeResources: false,
+  async fn() {
   const { admin, calls } = stubAdmin();
   const result = await issueDeveloperSetupLink({
     ...baseInput(admin),
