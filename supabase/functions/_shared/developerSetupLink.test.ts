@@ -59,7 +59,7 @@ Deno.test({
   name: "eligible developer gets a queued setup link with developer wording",
   sanitizeOps: false,
   sanitizeResources: false,
-  async fn() => {
+  async fn() {
   const { admin, calls, updates } = stubAdmin();
   const result = await issueDeveloperSetupLink(baseInput(admin));
 
@@ -88,7 +88,7 @@ Deno.test({
   name: "acknowledged deletion issues a fresh token and passes the override through",
   sanitizeOps: false,
   sanitizeResources: false,
-  async fn() => {
+  async fn() {
   const { admin, calls } = stubAdmin({ deletion: { id: "d1" } });
   const result = await issueDeveloperSetupLink({
     ...baseInput(admin),
@@ -117,7 +117,7 @@ Deno.test({
   name: "a deduped issuance is reported without re-patching the payload",
   sanitizeOps: false,
   sanitizeResources: false,
-  async fn() => {
+  async fn() {
   const { admin, updates } = stubAdmin({
     issuance: { status: "deduped", job_id: "job-9", token_id: "tok-9" },
   });
