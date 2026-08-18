@@ -969,7 +969,7 @@ export const SendMessageDialog = ({ open, onOpenChange, category, categoryTitle,
               <Button
                 type="button"
                 variant="outline"
-                onClick={handleClose}
+                onClick={() => handleClose()}
                 className={commsOutlineButton}
               >
                 Cancel
