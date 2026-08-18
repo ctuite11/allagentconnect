@@ -1877,6 +1877,50 @@ export type Database = {
           },
         ]
       }
+      comms_broadcast_resends: {
+        Row: {
+          broadcast_id: string
+          created_at: string
+          id: string
+          recipient_count: number
+          resend_number: number
+          resend_token: string
+          sent_by: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          broadcast_id: string
+          created_at?: string
+          id?: string
+          recipient_count?: number
+          resend_number: number
+          resend_token: string
+          sent_by: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          broadcast_id?: string
+          created_at?: string
+          id?: string
+          recipient_count?: number
+          resend_number?: number
+          resend_token?: string
+          sent_by?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comms_broadcast_resends_broadcast_id_fkey"
+            columns: ["broadcast_id"]
+            isOneToOne: false
+            referencedRelation: "comms_broadcasts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       comms_broadcast_revisions: {
         Row: {
           attachments: Json
@@ -6964,6 +7008,10 @@ export type Database = {
       }
       auth_user_exists_by_email: { Args: { p_email: string }; Returns: boolean }
       auto_activate_listings: { Args: never; Returns: undefined }
+      begin_comms_broadcast_resend: {
+        Args: { _broadcast_id: string; _resend_token: string }
+        Returns: Json
+      }
       build_activation_email_payload: {
         Args: {
           p_agent_name: string
