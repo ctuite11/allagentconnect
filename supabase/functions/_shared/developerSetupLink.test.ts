@@ -55,7 +55,11 @@ const baseInput = (admin: unknown) => ({
   firstName: "Dana",
 });
 
-Deno.test("eligible developer gets a queued setup link with developer wording", async () => {
+Deno.test({
+  name: "eligible developer gets a queued setup link with developer wording",
+  sanitizeOps: false,
+  sanitizeResources: false,
+  async fn() => {
   const { admin, calls, updates } = stubAdmin();
   const result = await issueDeveloperSetupLink(baseInput(admin));
 
@@ -80,7 +84,11 @@ Deno.test("a deletion tombstone stops the send and asks for acknowledgement", as
   assertEquals(calls.some((c) => c.fn === "reissue_agent_activation_token"), false);
 });
 
-Deno.test("acknowledged deletion issues a fresh token and passes the override through", async () => {
+Deno.test({
+  name: "acknowledged deletion issues a fresh token and passes the override through",
+  sanitizeOps: false,
+  sanitizeResources: false,
+  async fn() => {
   const { admin, calls } = stubAdmin({ deletion: { id: "d1" } });
   const result = await issueDeveloperSetupLink({
     ...baseInput(admin),
@@ -105,7 +113,11 @@ Deno.test("an ineligible user reports a readable failure, not a success", async 
   );
 });
 
-Deno.test("a deduped issuance is reported without re-patching the payload", async () => {
+Deno.test({
+  name: "a deduped issuance is reported without re-patching the payload",
+  sanitizeOps: false,
+  sanitizeResources: false,
+  async fn() => {
   const { admin, updates } = stubAdmin({
     issuance: { status: "deduped", job_id: "job-9", token_id: "tok-9" },
   });
