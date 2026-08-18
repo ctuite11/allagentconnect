@@ -6947,6 +6947,28 @@ export type Database = {
         Args: { _development_id: string }
         Returns: string
       }
+      admin_list_developer_access_requests: {
+        Args: { _status?: string }
+        Returns: {
+          activated_at: string
+          company_name: string
+          created_at: string
+          email: string
+          first_name: string
+          id: string
+          last_name: string
+          market: string
+          note: string
+          phone: string
+          project_name: string
+          provisioned_account_id: string
+          provisioned_user_id: string
+          review_notes: string
+          reviewed_at: string
+          status: string
+          website: string
+        }[]
+      }
       admin_provision_developer_access: {
         Args: {
           _account_name?: string
