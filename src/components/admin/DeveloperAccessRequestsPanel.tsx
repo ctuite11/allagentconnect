@@ -26,6 +26,7 @@ import {
   declineDeveloperAccessRequest,
   deriveDeveloperApplicantStatus,
   fetchDeveloperApplicants,
+  sendDeveloperSetupLink,
   type DeveloperApplicantRow,
   type DeveloperApplicantStatus,
 } from "@/lib/developments/developerAccessRequest";
@@ -95,6 +96,13 @@ function VerifyDialog({
         ? "Developer verified. Setup link emailed."
         : "Developer verified. Account provisioned.",
     );
+    if (emailStatus !== "queued" && emailStatus !== "deduped") {
+      // Provisioning and email are separate outcomes — never imply the setup
+      // email went out when only provisioning succeeded.
+      toast.warning(
+        "Developer verified, but the setup email was not sent. Send a setup link from the Developer Approvals table.",
+      );
+    }
     onOpenChange(false);
     onChanged();
   };
