@@ -12,6 +12,7 @@ import { formatPersonDisplayName } from "./personDisplayName.ts";
 import { formatUsPhoneForDisplay } from "./phoneFormat.ts";
 import { AAC_PUBLIC_URL, resolveEmailBaseUrl } from "./aacPublicUrl.ts";
 import { buildAdminVerificationSubmittedEmailHtml } from "./buildAdminVerificationSubmittedEmailHtml.ts";
+import { buildAdminDeveloperRequestEmailHtml } from "./buildAdminDeveloperRequestEmailHtml.ts";
 import { buildTempPasswordEmailHtml } from "./buildTempPasswordEmailHtml.ts";
 import { getHotSheetStatusCopy } from "./hotSheetStatusCopy.ts";
 import {
@@ -682,6 +683,7 @@ export function renderEmailTemplate(
     }
 
     case "agent-new-listing-alert": {
+      // (see developer-access-request-submitted below for the admin dev alert)
       const userName = String(variables.userName || "there").trim() || "there";
       const listingsHtml = variables.listingsHtml || "";
       const ctaUrl = String(variables.hotSheetLink || "");
