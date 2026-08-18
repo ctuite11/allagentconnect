@@ -127,6 +127,12 @@ Deno.serve(async (req) => {
     }
     userId = created.user.id;
     userExisted = false;
+
+    // The generic signup trigger seeds every new auth user as an agent.
+    // A Developer account is not an agent — strip the seeded agent artifacts
+    // for this freshly created user only. Existing users are never touched.
+    await admin.from("user_roles").delete().eq("user_id", userId).eq("role", "agent");
+    await admin.from("agent_settings").delete().eq("user_id", userId);
   }
 
   // ── Provision account + membership + role + request status (idempotent) ─
