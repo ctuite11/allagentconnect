@@ -85,7 +85,7 @@ export function buildDeveloperApprovedEmailHtml(opts: DeveloperApprovedEmailOpti
 
           <p style="margin:0 0 14px;font-size:15px;line-height:1.65;color:${TEXT_BODY};font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Welcome to All Agent Connect.</p>
           <p style="margin:0;font-size:15px;line-height:1.5;color:${TEXT_DARK};font-weight:600;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Chris Tuite</p>
-          <p style="margin:2px 0 34px;font-size:13.5px;line-height:1.5;color:${TEXT_MUTED};font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Founder, All Agent Connect</p>
+          <p style="margin:2px 0 34px;font-size:13.5px;line-height:1.5;color:${TEXT_MUTED};font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Founder</p>
         </td></tr>
 
         <!-- Footer -->
