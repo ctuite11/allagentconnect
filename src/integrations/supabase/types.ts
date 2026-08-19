@@ -7186,10 +7186,12 @@ export type Database = {
         Args: { p_crm_client_id: string; p_hot_sheet_id: string }
         Returns: Json
       }
-      developer_is_activation_eligible: {
-        Args: { _user_id: string }
-        Returns: boolean
-      }
+      developer_is_activation_eligible:
+        | { Args: { _user_id: string }; Returns: boolean }
+        | {
+            Args: { _allow_previously_deleted: boolean; _user_id: string }
+            Returns: boolean
+          }
       development_account_id: {
         Args: { _development_id: string }
         Returns: string
