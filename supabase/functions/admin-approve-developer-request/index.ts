@@ -15,6 +15,7 @@ import {
   sha256Hex,
   signActivationToken,
 } from "../_shared/activationTokens.ts";
+import { findDeletedAgent } from "../_shared/checkDeletedAgent.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -39,6 +40,11 @@ interface Body {
   notes?: string;
   /** Verification / dry-run switch: provision only, never queue an email. */
   sendEmail?: boolean;
+  /**
+   * Admin explicitly acknowledged a `deleted_users` tombstone for this email
+   * and chose to continue (same guardrail agents use).
+   */
+  acknowledgeDeleted?: boolean;
 }
 
 Deno.serve(async (req) => {
@@ -76,6 +82,7 @@ Deno.serve(async (req) => {
     return json({ success: false, error: "requestId is required" }, 400);
   }
   const sendEmail = body.sendEmail !== false;
+  const acknowledgeDeleted = body.acknowledgeDeleted === true;
 
   // ── Load the request ───────────────────────────────────────────────────
   const { data: request, error: reqErr } = await admin
@@ -201,6 +208,7 @@ Deno.serve(async (req) => {
     p_subject: SUBJECT,
     p_reply_to: REPLY_TO,
     p_agent_name: request.first_name ?? null,
+    p_allow_previously_deleted: acknowledgeDeleted,
   });
 
   const issueStatus = (issued as { status?: string } | null)?.status ?? "unknown";
@@ -211,15 +219,41 @@ Deno.serve(async (req) => {
       "[admin-approve-developer-request] activation issuance unavailable:",
       issueErr?.message ?? issueStatus,
     );
-    return json({
-      success: true,
-      status: alreadyApproved ? "already_approved" : "approved",
-      requestId,
-      userId,
-      accountId,
-      userExisted,
-      email: { status: "failed", reason: issueStatus },
-    });
+
+    // The account IS provisioned — but the setup email never left the building.
+    // Report that honestly so the admin can recover instead of assuming success.
+    if (!acknowledgeDeleted && issueStatus === "ineligible") {
+      const match = await findDeletedAgent(admin, email);
+      if (match) {
+        return json(
+          {
+            success: false,
+            error: "This email was previously deleted. Confirm before sending a setup link.",
+            code: "previously_deleted",
+            match,
+            provisioned: true,
+            requestId,
+            userId,
+            accountId,
+          },
+          409,
+        );
+      }
+    }
+
+    return json(
+      {
+        success: false,
+        error: `Account provisioned, but the setup email could not be sent (${issueStatus}).`,
+        code: "email_failed",
+        reason: issueStatus,
+        provisioned: true,
+        requestId,
+        userId,
+        accountId,
+      },
+      409,
+    );
   }
 
   if (issueStatus === "created") {
