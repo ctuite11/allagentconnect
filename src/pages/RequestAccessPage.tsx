@@ -38,7 +38,7 @@ export default function RequestAccessPage() {
             </p>
           </div>
 
-          <div className="mt-8 grid gap-5 sm:grid-cols-2">
+          <div className="mt-12 grid gap-5 sm:grid-cols-2">
             <Link
               to="/auth?mode=register&source=request_access_agent"
               className={cn(agentSectionCard, portalCard)}

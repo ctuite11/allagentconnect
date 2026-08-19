@@ -33,7 +33,7 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <div className="mt-8 grid gap-5 sm:grid-cols-2">
+        <div className="mt-12 grid gap-5 sm:grid-cols-2">
           <Link
             to="/auth"
             className={cn(
