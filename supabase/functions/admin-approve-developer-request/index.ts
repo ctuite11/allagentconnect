@@ -22,8 +22,8 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const TEMPLATE_NAME = "admin-created-invite";
-const SUBJECT = "Your All Agent Connect Developer account is ready";
+const TEMPLATE_NAME = "developer-account-approved";
+const SUBJECT = "Your All Agent Connect Developer account is approved";
 const REPLY_TO = "chris@allagentconnect.com";
 
 function json(body: unknown, status = 200) {
