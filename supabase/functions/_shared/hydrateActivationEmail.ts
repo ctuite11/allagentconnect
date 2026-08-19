@@ -12,16 +12,21 @@
 import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { buildLicenseVerifiedEmailHtml } from "./buildLicenseVerifiedEmailHtml.ts";
 import { buildAdminCreatedInviteEmailHtml } from "./buildAdminCreatedInviteEmailHtml.ts";
+import { buildDeveloperApprovedEmailHtml } from "./buildDeveloperApprovedEmailHtml.ts";
 import { AAC_PUBLIC_URL } from "./aacPublicUrl.ts";
 import { activationUrl, epochSeconds, signActivationToken } from "./activationTokens.ts";
 
 export const ACTIVATION_TEMPLATE = "license-verified";
 /** Admin-created setup invite — same durable 7-day token, different body. */
 export const ADMIN_INVITE_TEMPLATE = "admin-created-invite";
+/** Developer approval / setup invite — same durable 7-day token, Developer copy. */
+export const DEVELOPER_INVITE_TEMPLATE = "developer-account-approved";
 
 /** Templates whose CTA is a late-rendered AAC activation link. */
 export function isActivationTemplate(template: string): boolean {
-  return template === ACTIVATION_TEMPLATE || template === ADMIN_INVITE_TEMPLATE;
+  return template === ACTIVATION_TEMPLATE ||
+    template === ADMIN_INVITE_TEMPLATE ||
+    template === DEVELOPER_INVITE_TEMPLATE;
 }
 
 /** Hard ceiling on retries, kept well under Resend's 24h idempotency retention. */
@@ -88,7 +93,14 @@ export async function hydrateActivationEmail(
   const ctaUrl = activationUrl(AAC_PUBLIC_URL, token);
   const template = typeof payload.template === "string" ? payload.template : ACTIVATION_TEMPLATE;
 
-  const html = template === ADMIN_INVITE_TEMPLATE
+  const html = template === DEVELOPER_INVITE_TEMPLATE
+    ? buildDeveloperApprovedEmailHtml({
+      ctaUrl,
+      firstName: typeof payload.first_name === "string" ? payload.first_name : undefined,
+      ctaNote: `This setup link is valid until ${formatActivationExpiry(row.expires_at)}.`,
+      footerAgent: FOOTER_AGENT,
+    })
+    : template === ADMIN_INVITE_TEMPLATE
     ? buildAdminCreatedInviteEmailHtml({
       ctaUrl,
       firstName: typeof payload.first_name === "string" ? payload.first_name : undefined,
