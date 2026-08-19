@@ -22,6 +22,10 @@ import {
 } from "@/components/ui/table";
 import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 import {
+  PreviouslyDeletedAgentDialog,
+  type PreviouslyDeletedAgentMatch,
+} from "@/components/admin/PreviouslyDeletedAgentDialog";
+import {
   approveDeveloperAccessRequest,
   declineDeveloperAccessRequest,
   deriveDeveloperApplicantStatus,
@@ -200,7 +204,34 @@ function ApplicantRow({
 }) {
   const [verifyOpen, setVerifyOpen] = useState(false);
   const [rejecting, setRejecting] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [deletedMatch, setDeletedMatch] = useState<PreviouslyDeletedAgentMatch | null>(null);
   const bucket = deriveDeveloperApplicantStatus(request);
+  const hasSentSetupLink = Boolean(request.reviewed_at);
+
+  const sendSetupLink = async (acknowledgeDeleted = false) => {
+    setSending(true);
+    const { error, emailStatus, code, deletedMatch: match } = await approveDeveloperAccessRequest({
+      requestId: request.id,
+      acknowledgeDeleted,
+    });
+    setSending(false);
+    if (error) {
+      if (code === "previously_deleted" && match) {
+        setDeletedMatch(match as PreviouslyDeletedAgentMatch);
+        return;
+      }
+      toast.error(error);
+      return;
+    }
+    setDeletedMatch(null);
+    toast.success(
+      emailStatus === "deduped"
+        ? "A setup link was already queued for this developer."
+        : "Setup link emailed.",
+    );
+    onChanged();
+  };
 
   const onReject = async () => {
     setRejecting(true);
@@ -262,6 +293,29 @@ function ApplicantRow({
                 onChanged={onChanged}
               />
             ) : null}
+          </div>
+        ) : bucket === "verified" ? (
+          <div className="flex justify-end gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={sending}
+              onClick={() => void sendSetupLink()}
+            >
+              {sending
+                ? "Sending…"
+                : hasSentSetupLink
+                  ? "Resend setup link"
+                  : "Send setup link"}
+            </Button>
+            <PreviouslyDeletedAgentDialog
+              open={Boolean(deletedMatch)}
+              match={deletedMatch}
+              actionLabel="Send setup link anyway"
+              loading={sending}
+              onCancel={() => setDeletedMatch(null)}
+              onContinue={() => void sendSetupLink(true)}
+            />
           </div>
         ) : (
           <span className="text-xs text-zinc-400">—</span>
