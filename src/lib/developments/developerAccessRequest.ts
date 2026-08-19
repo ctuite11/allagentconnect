@@ -134,11 +134,15 @@ export async function approveDeveloperAccessRequest(input: {
   accountSlug?: string;
   notes?: string;
   sendEmail?: boolean;
+  /** Admin acknowledged a previously-deleted tombstone for this email. */
+  acknowledgeDeleted?: boolean;
 }): Promise<{
   accountId: string | null;
   userId: string | null;
   emailStatus: string | null;
   error: string | null;
+  code?: string;
+  deletedMatch?: unknown;
 }> {
   try {
     const result = await invokeEdgeFunction<{
@@ -151,6 +155,7 @@ export async function approveDeveloperAccessRequest(input: {
       accountSlug: input.accountSlug?.trim() || undefined,
       notes: input.notes?.trim() || undefined,
       ...(input.sendEmail === false ? { sendEmail: false } : {}),
+      ...(input.acknowledgeDeleted ? { acknowledgeDeleted: true } : {}),
     });
     return {
       accountId: result.accountId ? String(result.accountId) : null,
@@ -160,6 +165,14 @@ export async function approveDeveloperAccessRequest(input: {
     };
   } catch (err) {
     const message = err instanceof Error ? err.message : "Failed to approve request.";
-    return { accountId: null, userId: null, emailStatus: null, error: message };
+    const extra = err as { code?: string; match?: unknown };
+    return {
+      accountId: null,
+      userId: null,
+      emailStatus: null,
+      error: message,
+      code: extra?.code,
+      deletedMatch: extra?.match,
+    };
   }
 }
