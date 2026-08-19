@@ -241,6 +241,12 @@ function ApplicantRow({
         setDeletedMatch(match as PreviouslyDeletedAgentMatch);
         return;
       }
+      if (code && EMAIL_ONLY_FAILURE_CODES.has(code)) {
+        setDeletedMatch(null);
+        toast.warning("Developer is verified, but the setup link was not sent.");
+        onChanged();
+        return;
+      }
       toast.error(error);
       return;
     }
