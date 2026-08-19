@@ -143,6 +143,8 @@ export async function approveDeveloperAccessRequest(input: {
   error: string | null;
   code?: string;
   deletedMatch?: unknown;
+  /** True when the account was provisioned but the setup email leg failed. */
+  provisioned?: boolean;
 }> {
   try {
     const result = await invokeEdgeFunction<{
@@ -162,10 +164,11 @@ export async function approveDeveloperAccessRequest(input: {
       userId: result.userId ? String(result.userId) : null,
       emailStatus: result.email?.status ?? null,
       error: null,
+      provisioned: true,
     };
   } catch (err) {
     const message = err instanceof Error ? err.message : "Failed to approve request.";
-    const extra = err as { code?: string; match?: unknown };
+    const extra = err as { code?: string; match?: unknown; provisioned?: boolean };
     return {
       accountId: null,
       userId: null,
@@ -173,6 +176,7 @@ export async function approveDeveloperAccessRequest(input: {
       error: message,
       code: extra?.code,
       deletedMatch: extra?.match,
+      provisioned: extra?.provisioned === true,
     };
   }
 }
