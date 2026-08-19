@@ -22,6 +22,7 @@ export default function LoginPage() {
         canonical="https://allagentconnect.com/login"
       />
       <AuthShell maxWidth="1000px">
+        <div className="pt-6 sm:pt-10">
         <div className="flex flex-col items-center text-center">
           <h1 className="font-sans text-4xl font-semibold tracking-tight text-zinc-900 sm:text-5xl">
             Welcome back
@@ -81,6 +82,7 @@ export default function LoginPage() {
             Request Access
           </Link>
         </p>
+        </div>
       </AuthShell>
     </>
   );

@@ -1,11 +1,21 @@
 import { Link } from "react-router-dom";
-import { Building2, BadgeCheck } from "lucide-react";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { Seo } from "@/components/Seo";
+import { AacTitleAccent } from "@/components/layout/AacTitleAccent";
+import { agentSectionCard } from "@/lib/agentUi";
+import { cn } from "@/lib/utils";
+
+/** Same primary action as `Button` default / `bg-aac` in-app CTAs. */
+const portalCta =
+  "mt-auto inline-flex h-14 w-full items-center justify-center gap-2 rounded-full bg-aac px-8 font-sans text-base font-semibold text-white shadow-sm transition-colors group-hover:bg-aac-hover";
+
+const portalCard =
+  "group flex min-h-[340px] flex-col rounded-3xl p-8 text-left outline-none sm:p-10 hover:border-zinc-300/90 hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] focus-visible:ring-2 focus-visible:ring-neutral-300 focus-visible:ring-offset-2";
 
 /**
  * Public chooser: new visitors pick Agent vs Developer before requesting access.
  * Existing users should use /login instead.
+ * Destinations (/auth register, /developer-access) are unchanged.
  */
 export default function RequestAccessPage() {
   return (
@@ -15,70 +25,57 @@ export default function RequestAccessPage() {
         description="Choose agent or developer access to All Agent Connect."
         canonical="https://allagentconnect.com/request-access"
       />
-      <AuthShell maxWidth="720px">
-        <div className="space-y-8">
-          <div className="text-center">
-            <h1
-              className="text-2xl font-semibold tracking-tight text-zinc-900 sm:text-[28px]"
-              style={{ fontFamily: "Manrope, system-ui, sans-serif" }}
-            >
+      <AuthShell maxWidth="1000px">
+        <div className="pt-6 sm:pt-10">
+          <div className="flex flex-col items-center text-center">
+            <h1 className="font-sans text-4xl font-semibold tracking-tight text-zinc-900 sm:text-5xl">
               Request Access
             </h1>
-            <p className="mt-3 text-sm leading-relaxed text-zinc-500 sm:text-base">
+            <AacTitleAccent className="mx-auto mt-3" />
+            <p className="mt-3 max-w-2xl font-sans text-lg font-medium leading-relaxed text-zinc-600 sm:text-xl">
               Tell us how you work so we can send you to the right path. Existing users should sign
               in via Login.
             </p>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <section className="flex flex-col rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
-              <div className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-100 text-zinc-800">
-                <BadgeCheck className="h-5 w-5" aria-hidden />
-              </div>
-              <h2
-                className="text-lg font-semibold text-zinc-900"
-                style={{ fontFamily: "Manrope, system-ui, sans-serif" }}
-              >
-                I’m a Real Estate Agent
+          <div className="mt-8 grid gap-5 sm:grid-cols-2">
+            <Link
+              to="/auth?mode=register&source=request_access_agent"
+              className={cn(agentSectionCard, portalCard)}
+            >
+              <h2 className="font-sans text-3xl font-semibold leading-tight tracking-tight text-zinc-900">
+                Agent
               </h2>
-              <p className="mt-2 flex-1 text-sm leading-relaxed text-zinc-600">
+              <AacTitleAccent className="mt-3" />
+              <p className="mt-4 flex-1 font-sans text-lg leading-relaxed text-zinc-700">
                 Join AAC’s verified agent network to share off-market inventory, see buyer demand,
                 and collaborate with licensed professionals before deals hit the public market.
               </p>
-              <Link
-                to="/auth?mode=register&source=request_access_agent"
-                className="mt-6 inline-flex h-11 items-center justify-center rounded-xl bg-zinc-900 px-4 text-sm font-semibold text-white transition-colors hover:bg-zinc-800"
-              >
-                Request Agent Access
-              </Link>
-            </section>
+              <span className={portalCta}>Request Agent Access</span>
+            </Link>
 
-            <section className="flex flex-col rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
-              <div className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-100 text-zinc-800">
-                <Building2 className="h-5 w-5" aria-hidden />
-              </div>
-              <h2
-                className="text-lg font-semibold text-zinc-900"
-                style={{ fontFamily: "Manrope, system-ui, sans-serif" }}
-              >
-                I’m a Developer
+            <Link
+              to="/developer-access"
+              className={cn(agentSectionCard, portalCard)}
+            >
+              <h2 className="font-sans text-3xl font-semibold leading-tight tracking-tight text-zinc-900">
+                Developer
               </h2>
-              <p className="mt-2 flex-1 text-sm leading-relaxed text-zinc-600">
+              <AacTitleAccent className="mt-3" />
+              <p className="mt-4 flex-1 font-sans text-lg leading-relaxed text-zinc-700">
                 Manage and promote new developments for AAC’s agent network—projects, photos, floor
                 plans, units, documents, updates, and a dedicated Developer portal.
               </p>
-              <Link
-                to="/developer-access"
-                className="mt-6 inline-flex h-11 items-center justify-center rounded-xl border border-zinc-300 bg-white px-4 text-sm font-semibold text-zinc-900 transition-colors hover:bg-zinc-50"
-              >
-                Request Developer Access
-              </Link>
-            </section>
+              <span className={portalCta}>Request Developer Access</span>
+            </Link>
           </div>
 
-          <p className="text-center text-sm text-zinc-500">
+          <p className="mt-8 text-center font-sans text-sm text-zinc-500 sm:text-base">
             Already have an account?{" "}
-            <Link to="/login" className="font-medium text-zinc-900 underline-offset-2 hover:underline">
+            <Link
+              to="/login"
+              className="font-medium text-zinc-900 underline-offset-2 hover:underline"
+            >
               Login
             </Link>
           </p>
