@@ -244,6 +244,7 @@ export async function invokeEdgeFunction<T = Record<string, unknown>>(
     throw Object.assign(new Error(message), {
       code: typeof payload.code === "string" ? payload.code : undefined,
       match: "match" in payload ? payload.match : undefined,
+      provisioned: payload.provisioned === true,
       status: response.status,
     });
   }
