@@ -308,6 +308,7 @@ export type Database = {
       }
       agent_activation_tokens: {
         Row: {
+          allow_previously_deleted: boolean
           created_at: string
           email_job_id: string | null
           expires_at: string
@@ -322,6 +323,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          allow_previously_deleted?: boolean
           created_at?: string
           email_job_id?: string | null
           expires_at: string
@@ -336,6 +338,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          allow_previously_deleted?: boolean
           created_at?: string
           email_job_id?: string | null
           expires_at?: string

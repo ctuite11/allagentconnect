@@ -55,7 +55,7 @@ const COPY: Record<
   },
   ineligible: {
     title: "We can't activate this account",
-    body: "This account isn't eligible for activation right now. Reply to your License Verified email and we'll sort it out.",
+    body: "This account isn't eligible for activation right now. Please contact All Agent Connect and we'll help you get set up.",
     tone: "warn",
   },
   invalid: {
@@ -70,7 +70,7 @@ const COPY: Record<
   },
   resend_unavailable: {
     title: "We couldn't send a new link",
-    body: "This request has expired. Open your original License Verified email and try the link again.",
+    body: "This request has expired. Open your original account setup email and try the link again.",
     tone: "warn",
   },
   error: {
@@ -130,8 +130,8 @@ export default function ActivateAccount() {
               Activate your account
             </h1>
             <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-              Your license has been verified. Press the button below to activate your All Agent
-              Connect account and choose your password.
+              Your All Agent Connect account is ready. Continue below to activate your account and
+              choose your password.
             </p>
 
             {/* Real form POST — the token travels in the request body only. */}
