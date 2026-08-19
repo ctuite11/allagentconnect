@@ -60,6 +60,16 @@ const STATUS_LABELS: Record<DeveloperApplicantStatus, string> = {
   rejected: "Rejected",
 };
 
+/**
+ * Codes the backend returns when provisioning succeeded but the setup-email
+ * leg was blocked. These are partial successes, never verification failures.
+ */
+const EMAIL_ONLY_FAILURE_CODES = new Set([
+  "previously_deleted",
+  "email_failed",
+  "email_unavailable",
+]);
+
 function formatDate(value: string | null | undefined) {
   if (!value) return "—";
   return new Date(value).toLocaleDateString();
@@ -83,7 +93,7 @@ function VerifyDialog({
 
   const onApprove = async () => {
     setBusy(true);
-    const { error, emailStatus } = await approveDeveloperAccessRequest({
+    const { error, emailStatus, code, provisioned } = await approveDeveloperAccessRequest({
       requestId: request.id,
       accountName,
       accountSlug,
@@ -91,6 +101,16 @@ function VerifyDialog({
     });
     setBusy(false);
     if (error) {
+      // Provisioning succeeded; only the setup email was blocked. Treat as
+      // verified so the admin does not re-run Verify Developer.
+      if (provisioned && code && EMAIL_ONLY_FAILURE_CODES.has(code)) {
+        onOpenChange(false);
+        onChanged();
+        toast.warning("Developer verified, but the setup link was not sent.", {
+          description: "Use Send setup link on the row to retry.",
+        });
+        return;
+      }
       toast.error(error);
       return;
     }
