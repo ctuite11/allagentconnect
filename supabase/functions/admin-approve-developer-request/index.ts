@@ -179,15 +179,19 @@ Deno.serve(async (req) => {
   // ── Setup / activation email (same durable token as agents) ────────────
   const secret = Deno.env.get("ACTIVATION_TOKEN_SECRET");
   if (!secret) {
-    return json({
-      success: true,
-      status: alreadyApproved ? "already_approved" : "approved",
-      requestId,
-      userId,
-      accountId,
-      userExisted,
-      email: { status: "unavailable", reason: "activation secret not configured" },
-    });
+    return json(
+      {
+        success: false,
+        error: "Account provisioned, but the setup email is unavailable (activation secret missing).",
+        code: "email_unavailable",
+        reason: "activation secret not configured",
+        provisioned: true,
+        requestId,
+        userId,
+        accountId,
+      },
+      409,
+    );
   }
 
   const tokenId = crypto.randomUUID();
