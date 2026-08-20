@@ -59,17 +59,17 @@ export function buildPersonalForwardEmailHtml(
         <!-- White content body -->
         <tr><td style="background-color:#ffffff;border:1px solid #d1d5db;border-top:none;padding:32px 40px 36px;">
           <h1 style="margin:0 0 24px;font-size:24px;font-weight:700;line-height:1.25;color:#0f172a;text-align:center;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${PERSONAL_FORWARD_H1}</h1>
-          <p style="margin:0 0 14px;font-size:14px;line-height:1.65;color:#334155;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Hi there,</p>
-          <p style="margin:0 0 14px;font-size:14px;line-height:1.65;color:#334155;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">I'd like to invite you to All Agent Connect &mdash; a private network built for real estate agents. Here's what you get:</p>
-          <ul style="margin:0 0 20px;padding-left:24px;font-size:14px;line-height:1.65;color:#334155;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
-            <li>Seller and buyer leads</li>
-            <li>Buyer and renter needs from other agents</li>
-            <li>Off-market and coming-soon listings</li>
-            <li>Instant alerts on new listing activity</li>
-            <li>Referrals and agent-to-agent opportunities</li>
-            <li>Direct connections with verified agents</li>
-            <li>Free for a limited time, licensed agents only</li>
-          </ul>
+          <p style="margin:0 0 16px;font-size:15px;line-height:1.7;color:#0f172a;font-weight:700;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Hi, my name is Chris Tuite. I&rsquo;m a Massachusetts real estate broker with more than 30 years in the business, and I know firsthand the value of a strong network &mdash; and having the inside scoop &mdash; when it comes to best serving my clients.</p>
+          <p style="margin:0 0 8px;font-size:14px;line-height:1.65;color:#334155;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Amid the ongoing battles with Zillow and others over who controls the real estate industry, I felt the need to build something different: <strong style="color:#0f172a;">All Agent Connect.</strong></p>
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+            <tr><td align="center" style="padding:24px 0 26px;">
+              <p style="margin:0;font-size:28px;line-height:1.2;font-weight:800;letter-spacing:0.01em;text-transform:uppercase;color:#22C55E;text-align:center;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">One Network. All Agents.</p>
+            </td></tr>
+          </table>
+          <p style="margin:0 0 14px;font-size:14px;line-height:1.65;color:#334155;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">AAC was built around a simple idea: <strong style="color:#0f172a;">agents are stronger when we&rsquo;re connected directly.</strong></p>
+          <p style="margin:0 0 14px;font-size:14px;line-height:1.65;color:#334155;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">A place where agents can share opportunities, buyer demand, off-market and coming-soon inventory, referrals and information that helps us better serve our clients &mdash; without another company standing between us.</p>
+          <p style="margin:0 0 14px;font-size:14px;line-height:1.65;color:#334155;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">All Agent Connect is about putting the network back in the hands of the people actually doing the business.</p>
+          <p style="margin:0 0 4px;font-size:15px;line-height:1.65;color:#0f172a;font-weight:700;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">The agents.</p>
           <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
             <tr><td align="center" style="padding:28px 0 0;">
               <a href="${ctaUrl}" style="display:inline-block;padding:14px 28px;background:#0E56F5;color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;border-radius:8px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Create your account &rarr;</a>
