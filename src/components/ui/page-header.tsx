@@ -29,6 +29,8 @@ interface PageHeaderProps {
   className?: string;
   /** Optional right-side actions */
   actions?: ReactNode;
+  /** Optional className for the actions container */
+  actionsClassName?: string;
   /** Optional icon to display before title (title-only layout; not combined with back) */
   icon?: ReactNode;
   /** @deprecated Back is always above the title when `backTo` is set. */
@@ -48,6 +50,7 @@ export function PageHeader({
   backTo,
   className,
   actions,
+  actionsClassName,
   icon,
   withTopPadding = false,
 }: PageHeaderProps) {
@@ -100,7 +103,7 @@ export function PageHeader({
           ) : null}
         </div>
         {actions ? (
-          <div className="flex shrink-0 flex-wrap items-center gap-2 sm:mt-0.5">{actions}</div>
+          <div className={cn("flex shrink-0 flex-wrap items-center gap-2 sm:mt-0.5", actionsClassName)}>{actions}</div>
         ) : null}
       </div>
     </header>
