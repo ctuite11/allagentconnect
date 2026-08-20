@@ -103,7 +103,7 @@ export function PageHeader({
           ) : null}
         </div>
         {actions ? (
-          <div className="flex shrink-0 flex-wrap items-center gap-2 sm:mt-0.5">{actions}</div>
+          <div className={cn("flex shrink-0 flex-wrap items-center gap-2 sm:mt-0.5", actionsClassName)}>{actions}</div>
         ) : null}
       </div>
     </header>
