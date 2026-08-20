@@ -59,13 +59,20 @@ export function buildPersonalForwardEmailHtml(
         <!-- White content body -->
         <tr><td style="background-color:#ffffff;border:1px solid #d1d5db;border-top:none;padding:32px 40px 36px;">
           <h1 style="margin:0 0 24px;font-size:24px;font-weight:700;line-height:1.25;color:#0f172a;text-align:center;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${PERSONAL_FORWARD_H1}</h1>
-          <p style="margin:0 0 14px;font-size:14px;line-height:1.65;color:#334155;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">You&rsquo;re already part of the All Agent Connect community on Facebook. Now I&rsquo;d like to personally invite you to join us on AllAgentConnect.com.</p>
-          <p style="margin:0 0 14px;font-size:14px;line-height:1.65;color:#334155;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">I built AAC to take what we&rsquo;ve created on Facebook and make it far more useful &mdash; buyer needs, off-market and coming-soon listings, Hot Sheet alerts, and direct agent-to-agent connections all in one place.</p>
-          <p style="margin:0 0 14px;font-size:14px;line-height:1.65;color:#334155;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">My mission is to build the largest agent-to-agent network across all brokerages.</p>
-          <p style="margin:0 0 14px;font-size:14px;line-height:1.65;color:#334155;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Your account is free, and I&rsquo;d love to have you be part of what we&rsquo;re building.</p>
+          <p style="margin:0 0 14px;font-size:14px;line-height:1.65;color:#334155;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Hi there,</p>
+          <p style="margin:0 0 14px;font-size:14px;line-height:1.65;color:#334155;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">I'd like to invite you to All Agent Connect &mdash; a private network built for real estate agents. Here's what you get:</p>
+          <ul style="margin:0 0 20px;padding-left:24px;font-size:14px;line-height:1.65;color:#334155;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
+            <li>Seller and buyer leads</li>
+            <li>Buyer and renter needs from other agents</li>
+            <li>Off-market and coming-soon listings</li>
+            <li>Instant alerts on new listing activity</li>
+            <li>Referrals and agent-to-agent opportunities</li>
+            <li>Direct connections with verified agents</li>
+            <li>Free for a limited time, licensed agents only</li>
+          </ul>
           <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
             <tr><td align="center" style="padding:28px 0 0;">
-              <a href="${ctaUrl}" style="display:inline-block;padding:14px 28px;background:#0E56F5;color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;border-radius:8px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Create your free account &rarr;</a>
+              <a href="${ctaUrl}" style="display:inline-block;padding:14px 28px;background:#0E56F5;color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;border-radius:8px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Create your account &rarr;</a>
             </td></tr>
           </table>
           <p style="margin:32px 0 4px;font-size:14px;color:#0f172a;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Thanks,</p>
