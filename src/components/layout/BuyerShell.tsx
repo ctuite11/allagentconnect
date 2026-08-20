@@ -56,24 +56,35 @@ export function BuyerShell() {
       {/* ── Top navigation bar ─────────────────────────────────────────── */}
       <header className="sticky top-0 z-50 w-full overflow-visible border-b border-neutral-100 bg-white shadow-none">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 overflow-visible px-4 pr-6 sm:px-6">
-          {/* Brand */}
-          <button
-            onClick={() => navigate("/client/dashboard")}
-            className="flex min-w-0 flex-shrink-0 items-center gap-2.5 text-left"
-            aria-label="Dashboard"
-          >
-            <AACMonogram className="h-9 w-9 flex-shrink-0 text-[#16A34A]" />
-            <div className="min-w-0">
-              <div className="flex items-center gap-2.5">
-                <span className="truncate text-[15px] font-bold tracking-tight text-zinc-900">
-                  All Agent Connect
-                </span>
+          <div className="flex items-center gap-3">
+            {/* Hamburger — mobile */}
+            <button
+              onClick={() => setMobileOpen((v) => !v)}
+              className="sm:hidden p-2 rounded-lg text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 transition-colors"
+              aria-label="Toggle menu"
+            >
+              {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
+
+            {/* Brand */}
+            <button
+              onClick={() => navigate("/client/dashboard")}
+              className="flex min-w-0 flex-shrink-0 items-center gap-2.5 text-left"
+              aria-label="Dashboard"
+            >
+              <AACMonogram className="h-9 w-9 flex-shrink-0 text-[#16A34A]" />
+              <div className="min-w-0">
+                <div className="flex items-center gap-2.5">
+                  <span className="truncate text-[15px] font-bold tracking-tight text-zinc-900">
+                    All Agent Connect
+                  </span>
+                </div>
+                <div className="mt-1 hidden items-center sm:flex text-[11px] leading-none">
+                  <span className="font-medium tracking-[0.02em] text-zinc-500">Buyer Portal</span>
+                </div>
               </div>
-              <div className="mt-1 hidden items-center sm:flex text-[11px] leading-none">
-                <span className="font-medium tracking-[0.02em] text-zinc-500">Buyer Portal</span>
-              </div>
-            </div>
-          </button>
+            </button>
+          </div>
 
           {/* Desktop nav */}
           <nav className="hidden items-center gap-1 overflow-visible sm:flex">
@@ -118,26 +129,14 @@ export function BuyerShell() {
             })}
           </nav>
 
-          {/* Right actions */}
-          <div className="flex items-center gap-2">
-            {/* Logout — desktop */}
-            <button
-              onClick={handleLogout}
-              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 transition-colors"
-            >
-              <LogOut className="h-4 w-4" />
-              Logout
-            </button>
-
-            {/* Hamburger — mobile */}
-            <button
-              onClick={() => setMobileOpen((v) => !v)}
-              className="sm:hidden p-2 rounded-lg text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 transition-colors"
-              aria-label="Toggle menu"
-            >
-              {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </button>
-          </div>
+          {/* Logout — desktop */}
+          <button
+            onClick={handleLogout}
+            className="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 transition-colors"
+          >
+            <LogOut className="h-4 w-4" />
+            Logout
+          </button>
         </div>
 
         {/* Mobile menu */}
