@@ -50,6 +50,7 @@ export function PageHeader({
   backTo,
   className,
   actions,
+  actionsClassName,
   icon,
   withTopPadding = false,
 }: PageHeaderProps) {
