@@ -33,7 +33,7 @@ function DeveloperDashboardInner() {
   }, []);
 
   if (developments === null) {
-    return <AacMonogramLoader variant="fullscreen" message="Loading your developments…" />;
+    return <AacMonogramLoader variant="fullscreen" message="Loading your projects…" />;
   }
 
   const canCreate = developments.some((d) => canMemberEditContent(d.member_role));
@@ -43,13 +43,13 @@ function DeveloperDashboardInner() {
       <Seo title="Developer workspace | All Agent Connect" noindex />
       <PageHeader
         title="Developer workspace"
-        subtitle="Build and manage development mini-sites, then submit them to AAC for review."
+        subtitle="Build and manage your projects, then submit them to AAC for review."
         actions={
           canCreate || developments.length === 0 ? (
             <Button asChild size="sm">
               <Link to="/developer/developments/new">
                 <Plus className="mr-1.5 h-4 w-4" />
-                New development
+                Create project
               </Link>
             </Button>
           ) : null
@@ -60,14 +60,10 @@ function DeveloperDashboardInner() {
 
       {developments.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-zinc-300 bg-zinc-50 px-6 py-12 text-center">
-          <h2 className="text-lg font-semibold text-zinc-900">No developments yet</h2>
+          <h2 className="text-lg font-semibold text-zinc-900">No projects yet</h2>
           <p className="mx-auto mt-2 max-w-md text-sm text-zinc-600">
-            Create your first project to start adding photos, floor plans, units, documents, and
-            updates.
+            Create your first project to add photos, floor plans, units, documents, and updates.
           </p>
-          <Button asChild className="mt-5">
-            <Link to="/developer/developments/new">Create development</Link>
-          </Button>
         </div>
       ) : (
         <ul className="divide-y divide-zinc-200 rounded-2xl border border-zinc-200 bg-white">
