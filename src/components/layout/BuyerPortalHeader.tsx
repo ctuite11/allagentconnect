@@ -112,14 +112,6 @@ export function BuyerPortalHeader() {
           <LogOut className="h-4 w-4" />
           Logout
         </button>
-
-        <button
-          onClick={() => setMobileOpen((v) => !v)}
-          className="sm:hidden ml-auto p-2 rounded-lg text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 transition-colors"
-          aria-label="Toggle menu"
-        >
-          {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-        </button>
       </div>
 
       {mobileOpen && (
