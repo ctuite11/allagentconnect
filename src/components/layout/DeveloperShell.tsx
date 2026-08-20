@@ -33,22 +33,33 @@ export function DeveloperShell() {
     <div className="flex min-h-screen flex-col bg-white">
       <header className="sticky top-0 z-50 border-b border-zinc-200 bg-white">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
-          <button
-            type="button"
-            onClick={() => navigate("/developer")}
-            className="flex min-w-0 items-center gap-2.5 text-left"
-            aria-label="Developer portal home"
-          >
-            <AACMonogram className="h-8 w-8 shrink-0 text-[#16A34A]" />
-            <div className="min-w-0">
-              <div className="truncate text-[15px] font-bold tracking-tight text-zinc-900">
-                All Agent Connect
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-zinc-200 text-zinc-700 sm:hidden"
+              aria-label={mobileOpen ? "Close menu" : "Open menu"}
+              onClick={() => setMobileOpen((v) => !v)}
+            >
+              {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => navigate("/developer")}
+              className="flex min-w-0 items-center gap-2.5 text-left"
+              aria-label="Developer portal home"
+            >
+              <AACMonogram className="h-8 w-8 shrink-0 text-[#16A34A]" />
+              <div className="min-w-0">
+                <div className="truncate text-[15px] font-bold tracking-tight text-zinc-900">
+                  All Agent Connect
+                </div>
+                <div className="hidden text-[11px] font-medium tracking-[0.02em] text-zinc-500 sm:block">
+                  Developer Portal{companyName ? ` · ${companyName}` : ""}
+                </div>
               </div>
-              <div className="hidden text-[11px] font-medium tracking-[0.02em] text-zinc-500 sm:block">
-                Developer Portal{companyName ? ` · ${companyName}` : ""}
-              </div>
-            </div>
-          </button>
+            </button>
+          </div>
 
           <nav className="hidden items-center gap-1 sm:flex">
             {NAV_ITEMS.map(({ to, label, icon: Icon, end }) => (
@@ -78,15 +89,6 @@ export function DeveloperShell() {
               Sign out
             </button>
           </nav>
-
-          <button
-            type="button"
-            className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-zinc-200 text-zinc-700 sm:hidden"
-            aria-label={mobileOpen ? "Close menu" : "Open menu"}
-            onClick={() => setMobileOpen((v) => !v)}
-          >
-            {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </button>
         </div>
 
         {mobileOpen ? (

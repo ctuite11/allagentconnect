@@ -37,6 +37,14 @@ export function BuyerPortalHeader() {
     <header className="sticky top-0 z-50 w-full overflow-visible bg-white/96 shadow-[0_1px_0_rgba(15,23,42,0.06)] backdrop-blur supports-[backdrop-filter]:bg-white/90">
       <div className="mx-auto flex h-14 max-w-6xl items-center overflow-visible px-4 pr-6 sm:px-6">
         <button
+          onClick={() => setMobileOpen((v) => !v)}
+          className="sm:hidden mr-2 p-2 rounded-lg text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 transition-colors"
+          aria-label="Toggle menu"
+        >
+          {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+        </button>
+
+        <button
           onClick={() => navigate("/client/dashboard")}
           className="flex min-w-0 flex-shrink-0 items-center gap-2.5 text-left"
           aria-label="Dashboard"
@@ -103,14 +111,6 @@ export function BuyerPortalHeader() {
         >
           <LogOut className="h-4 w-4" />
           Logout
-        </button>
-
-        <button
-          onClick={() => setMobileOpen((v) => !v)}
-          className="sm:hidden ml-auto p-2 rounded-lg text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 transition-colors"
-          aria-label="Toggle menu"
-        >
-          {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
       </div>
 
