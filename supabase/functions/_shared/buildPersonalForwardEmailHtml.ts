@@ -1,7 +1,8 @@
 /* ------------------------------------------------------------------ */
 /*  Personal Forward Invitation — personal founder letter from Chris   */
-/*  Tuite. Simple AAC branding, comfortable whitespace, understated  */
-/*  emerald accents, refined dark CTA, and a personal signature.       */
+/*  Tuite. Simple AAC branding, comfortable whitespace, no separate    */
+/*  headline, and a restrained dark CTA. The opening statement is the  */
+/*  only emphasized line in the body.                                  */
 /*  Used for the "forward from my personal inbox" admin tool.          */
 /* ------------------------------------------------------------------ */
 
@@ -58,21 +59,24 @@ export function buildPersonalForwardEmailHtml(
 
         <!-- Personal letter body -->
         <tr><td style="background-color:#ffffff;border:1px solid #e5e7eb;border-top:none;padding:48px 56px;">
-          <p style="margin:0 0 24px;font-size:16px;line-height:1.7;color:#1f2937;font-weight:600;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Hi, my name is Chris Tuite. I&rsquo;m a Massachusetts real estate broker with more than 30 years in the business, and I know firsthand the value of a strong network &mdash; and having the inside scoop &mdash; when it comes to best serving my clients.</p>
+          <!-- Opening statement -->
+          <p style="margin:0 0 40px;font-size:18px;line-height:1.5;font-weight:600;letter-spacing:0.02em;color:#111317;text-align:center;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">ONE NETWORK. ALL AGENTS.</p>
 
-          <p style="margin:0 0 24px;font-size:16px;line-height:1.7;color:#4b5563;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Amid the ongoing battles with Zillow and others over who controls the real estate industry, I felt the need to build something different: <strong style="color:#1f2937;">All Agent Connect.</strong></p>
+          <p style="margin:0 0 22px;font-size:16px;line-height:1.7;color:#1f2937;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">I built All Agent Connect because, after more than 30 years in real estate, I believe the strength of this business has always been the relationships between agents.</p>
 
-          <!-- Understated brand statement -->
-          <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
-            <tr><td align="center" style="padding:18px 0;border-top:1px solid #d1fae5;border-bottom:1px solid #d1fae5;">
-              <p style="margin:0;font-size:18px;line-height:1.4;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#22C55E;text-align:center;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">ONE NETWORK. ALL AGENTS.</p>
-            </td></tr>
-          </table>
+          <p style="margin:0 0 22px;font-size:16px;line-height:1.7;color:#1f2937;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">The agents with the strongest networks — the ones who knew what was coming, what buyers were looking for, and who to call — were often the ones best positioned to help their clients.</p>
 
-          <p style="margin:24px 0 16px;font-size:16px;line-height:1.7;color:#4b5563;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">AAC was built around a simple idea: <strong style="color:#1f2937;">agents are stronger when we&rsquo;re connected directly.</strong></p>
-          <p style="margin:0 0 16px;font-size:16px;line-height:1.7;color:#4b5563;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">A place where agents can share opportunities, buyer demand, off-market and coming-soon inventory, referrals and information that helps us better serve our clients &mdash; without another company standing between us.</p>
-          <p style="margin:0 0 16px;font-size:16px;line-height:1.7;color:#4b5563;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">All Agent Connect is about putting the network back in the hands of the people actually doing the business.</p>
-          <p style="margin:0 0 36px;font-size:16px;line-height:1.7;color:#1f2937;font-weight:600;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">The agents.</p>
+          <p style="margin:0 0 22px;font-size:16px;line-height:1.7;color:#1f2937;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Technology was supposed to make that easier. Instead, much of our industry has become more fragmented, and more of the information and relationships we create are being controlled by companies outside the transaction.</p>
+
+          <p style="margin:0 0 22px;font-size:16px;line-height:1.7;color:#1f2937;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">I believe there should be another way.</p>
+
+          <p style="margin:0 0 22px;font-size:16px;line-height:1.7;color:#1f2937;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">A place where agents can connect directly, share buyer demand, off-market and coming-soon opportunities, referrals and information that helps all of us do a better job for our clients.</p>
+
+          <p style="margin:0 0 22px;font-size:16px;line-height:1.7;color:#1f2937;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Not another closed group. Not another network available only to a select few.</p>
+
+          <p style="margin:0 0 22px;font-size:16px;line-height:1.7;color:#1f2937;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">That is the idea behind All Agent Connect.</p>
+
+          <p style="margin:0 0 40px;font-size:16px;line-height:1.7;color:#1f2937;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">I hope you&rsquo;ll be part of it.</p>
 
           <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
             <tr><td align="center" style="padding:0;">
@@ -80,8 +84,7 @@ export function buildPersonalForwardEmailHtml(
             </td></tr>
           </table>
 
-          <p style="margin:40px 0 4px;font-size:14px;color:#1f2937;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Thanks,</p>
-          <p style="margin:0 0 4px;font-size:14px;color:#1f2937;font-weight:600;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Chris Tuite</p>
+          <p style="margin:40px 0 4px;font-size:14px;color:#1f2937;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Chris Tuite</p>
           <p style="margin:0;font-size:13px;color:#6b7280;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Founder, All Agent Connect</p>
         </td></tr>
 
