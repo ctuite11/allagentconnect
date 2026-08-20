@@ -29,6 +29,8 @@ interface PageHeaderProps {
   className?: string;
   /** Optional right-side actions */
   actions?: ReactNode;
+  /** Optional className for the actions container */
+  actionsClassName?: string;
   /** Optional icon to display before title (title-only layout; not combined with back) */
   icon?: ReactNode;
   /** @deprecated Back is always above the title when `backTo` is set. */
