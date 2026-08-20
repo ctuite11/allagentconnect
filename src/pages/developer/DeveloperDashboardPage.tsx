@@ -39,11 +39,13 @@ function DeveloperDashboardInner() {
   const canCreate = developments.some((d) => canMemberEditContent(d.member_role));
 
   return (
-    <AgentAacPage>
+    <AgentAacPage className="pt-6 sm:pt-0">
       <Seo title="Developer workspace | All Agent Connect" noindex />
       <PageHeader
         title="Developer workspace"
         subtitle="Build and manage your projects, then submit them to AAC for review."
+        subtitleClassName="!mt-2"
+        actionsClassName="mt-4 sm:mt-0"
         actions={
           canCreate || developments.length === 0 ? (
             <Button asChild size="sm">
@@ -59,7 +61,7 @@ function DeveloperDashboardInner() {
       {error ? <p className="text-sm text-red-600">{error}</p> : null}
 
       {developments.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-zinc-300 bg-zinc-50 px-6 py-12 text-center">
+        <div className="!mt-10 sm:!mt-0 rounded-2xl border border-dashed border-zinc-300 bg-zinc-50 px-6 py-12 text-center">
           <h2 className="text-lg font-semibold text-zinc-900">No projects yet</h2>
           <p className="mx-auto mt-2 max-w-md text-sm text-zinc-600">
             Create your first project to add photos, floor plans, units, documents, and updates.
