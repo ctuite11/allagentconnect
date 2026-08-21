@@ -9,6 +9,9 @@
 const AAC_LOGO_URL =
   "https://allagentconnect.com/email/aac-monogram-green-128.png";
 
+const CHRIS_HEADSHOT_URL =
+  "https://qocduqtfbsevnhlgsfka.supabase.co/storage/v1/object/public/agent-headshots/1fc50da1-2664-4931-8cab-64e24dc5ed8c/headshot-1773973124574.jpg";
+
 const AAC_SCREENSHOT_URL =
   "https://qocduqtfbsevnhlgsfka.supabase.co/storage/v1/object/public/brand-assets/email%2Finvite-hero-2026-08-21.jpg";
 
@@ -52,11 +55,21 @@ export function buildPersonalForwardEmailHtml(
     <tr><td align="center" style="padding:40px 16px;">
       <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:600px;">
 
-        <!-- Simple AAC branded header -->
-        <tr><td align="center" style="background-color:#111317;border-radius:12px 12px 0 0;padding:32px 40px 0;">
-          <img src="${AAC_LOGO_URL}" width="40" height="40" alt="All Agent Connect" style="display:block;border:0;outline:none;text-decoration:none;" />
-          <p style="margin:12px 0 0;font-size:18px;font-weight:600;letter-spacing:-0.02em;color:#ffffff;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">All Agent Connect</p>
-          <div style="width:48px;height:2px;background-color:#50c878;margin:16px auto 0;border-radius:1px;"></div>
+        <!-- Personal letterhead -->
+        <tr><td style="background-color:#111317;border-radius:12px 12px 0 0;padding:32px 40px 0;">
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+            <tr>
+              <td width="64" valign="top" style="padding:0 16px 0 0;">
+                <img src="${CHRIS_HEADSHOT_URL}" width="64" height="64" alt="Chris Tuite" style="display:block;width:64px;height:64px;border:0;border-radius:50%;object-fit:cover;outline:none;text-decoration:none;" />
+              </td>
+              <td valign="middle" style="padding:0;">
+                <p style="margin:0 0 4px;font-size:18px;font-weight:600;letter-spacing:-0.02em;color:#ffffff;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Chris Tuite</p>
+                <p style="margin:0 0 2px;font-size:16px;font-weight:500;letter-spacing:-0.01em;color:#f3f4f6;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">All Agent Connect</p>
+                <p style="margin:0;font-size:12px;font-weight:500;letter-spacing:0.12em;color:#9ca3af;text-transform:uppercase;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">MASSACHUSETTS</p>
+              </td>
+            </tr>
+          </table>
+          <div style="width:48px;height:2px;background-color:#50c878;margin:20px 0 0;border-radius:1px;"></div>
           <div style="height:24px;"></div>
         </td></tr>
 
