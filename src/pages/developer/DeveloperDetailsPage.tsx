@@ -35,11 +35,7 @@ function parseStringList(value: string): string[] {
 }
 
 const NONE = "__none__";
-const QUARTERS = [1, 2, 3, 4];
-const MONTHS = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
-];
+const SEASONS = ["Winter", "Spring", "Summer", "Fall"];
 
 function completionYears(current: number | null): number[] {
   const start = new Date().getFullYear();
