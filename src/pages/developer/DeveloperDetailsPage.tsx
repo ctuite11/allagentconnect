@@ -192,20 +192,6 @@ export default function DeveloperDetailsPage() {
             <Input id="architect_name" value={form.architect_name} disabled={!canEdit} onChange={(e) => set("architect_name", e.target.value)} />
           </div>
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="description">Description</Label>
-          <Textarea
-            id="description"
-            rows={5}
-            value={form.description}
-            disabled={!canEdit}
-            onChange={(e) => set("description", e.target.value)}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="highlights">Highlights (one per line)</Label>
-          <Textarea id="highlights" rows={4} value={form.highlights} disabled={!canEdit} onChange={(e) => set("highlights", e.target.value)} />
-        </div>
       </section>
 
       <section className="space-y-4 rounded-2xl border border-zinc-200 bg-white p-5">
@@ -229,10 +215,45 @@ export default function DeveloperDetailsPage() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="neighborhood">Neighborhood</Label>
-            <Input id="neighborhood" value={form.neighborhood} disabled={!canEdit} onChange={(e) => set("neighborhood", e.target.value)} />
+            {neighborhoodOptions.length > 0 ? (
+              <Select
+                value={form.neighborhood || NONE}
+                disabled={!canEdit}
+                onValueChange={(v) => set("neighborhood", v === NONE ? "" : v)}
+              >
+                <SelectTrigger id="neighborhood">
+                  <SelectValue placeholder="Not set" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={NONE}>Not set</SelectItem>
+                  {neighborhoodOptions.map((n) => (
+                    <SelectItem key={n} value={n}>
+                      {n}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <Input id="neighborhood" value={form.neighborhood} disabled={!canEdit} onChange={(e) => set("neighborhood", e.target.value)} />
+            )}
           </div>
         </div>
       </section>
+
+      <section className="space-y-4 rounded-2xl border border-zinc-200 bg-white p-5">
+        <h2 className="text-base font-semibold text-zinc-900">About</h2>
+        <div className="space-y-2">
+          <Label htmlFor="description">About this project</Label>
+          <Textarea
+            id="description"
+            rows={5}
+            value={form.description}
+            disabled={!canEdit}
+            onChange={(e) => set("description", e.target.value)}
+          />
+        </div>
+      </section>
+
 
       <section className="space-y-4 rounded-2xl border border-zinc-200 bg-white p-5">
         <div>
