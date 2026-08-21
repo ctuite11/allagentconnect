@@ -9,6 +9,9 @@
 const AAC_LOGO_URL =
   "https://allagentconnect.com/email/aac-monogram-green-128.png";
 
+const AAC_SCREENSHOT_URL =
+  "https://qocduqtfbsevnhlgsfka.supabase.co/storage/v1/object/public/brand-assets/email%2Finvite-hero-2026-08-21.jpg";
+
 export const PERSONAL_FORWARD_H1 =
   "You\u2019re invited to join All Agent Connect";
 
