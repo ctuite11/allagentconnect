@@ -67,22 +67,37 @@ export function formatDateLabel(value: string | null | undefined, fallback = "TB
 
 export function lifecycleLabel(status: string | null | undefined): string {
   const map: Record<DevelopmentLifecycleStatus, string> = {
-    coming_soon: "Coming Soon",
+    planning: "Planning",
     pre_construction: "Pre-Construction",
     under_construction: "Under Construction",
-    now_selling: "Now Selling",
     completed: "Completed",
   };
   return map[status as DevelopmentLifecycleStatus] ?? "In Progress";
 }
 
+export function stageLabel(status: string | null | undefined): string {
+  return lifecycleLabel(status);
+}
+
+export function salesStatusLabel(status: string | null | undefined): string {
+  const map: Record<string, string> = {
+    not_yet_released: "Not Yet Released",
+    coming_soon: "Coming Soon",
+    now_selling: "Now Selling",
+    final_units: "Final Units",
+    sold_out: "Sold Out",
+  };
+  return map[status ?? ""] ?? "—";
+}
+
 export function unitStatusLabel(status: string | null | undefined): string {
   const map: Record<DevelopmentUnitStatus, string> = {
+    not_released: "Not Released",
+    coming_soon: "Coming Soon",
     available: "Available",
     reserved: "Reserved",
     under_agreement: "Under Agreement",
     sold: "Sold",
-    coming_soon: "Coming Soon",
   };
   return map[status as DevelopmentUnitStatus] ?? "Unknown";
 }
