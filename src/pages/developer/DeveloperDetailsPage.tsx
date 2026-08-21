@@ -417,14 +417,6 @@ export default function DeveloperDetailsPage() {
             <Label htmlFor="comp">Buyer-agent compensation</Label>
             <Input id="comp" value={form.buyer_agent_compensation} disabled={!canEdit} onChange={(e) => set("buyer_agent_compensation", e.target.value)} />
           </div>
-          <div className="space-y-2 sm:col-span-2">
-            <Label htmlFor="parking">Parking</Label>
-            <Input id="parking" value={form.parking_description} disabled={!canEdit} onChange={(e) => set("parking_description", e.target.value)} />
-          </div>
-          <div className="space-y-2 sm:col-span-2">
-            <Label htmlFor="pets">Pet policy</Label>
-            <Input id="pets" value={form.pet_policy} disabled={!canEdit} onChange={(e) => set("pet_policy", e.target.value)} />
-          </div>
         </div>
       </section>
 
