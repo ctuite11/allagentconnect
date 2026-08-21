@@ -34,9 +34,11 @@ export type DeveloperWorkspaceDevelopment = DevelopmentRow & {
 };
 
 const DEVELOPMENT_EDITOR_SELECT = `
-  id, account_id, name, slug, stage, publish_status, logo_url,
+  id, account_id, name, slug, stage, sales_status, publish_status, logo_url,
   address, city, state, postal_code, neighborhood, neighborhood_description,
   developer_name, architect_name, interior_designer_name, estimated_completion,
+  expected_completion_year, expected_completion_quarter, expected_completion_month,
+  actual_completion_date, building_type, building_amenities,
   delivery_from, delivery_to, total_units, total_buildings, stories, year_built,
   construction_type, building_details, amenities, parking_description, parking_included,
   pet_policy, hoa_fees, hoa_fee_min, hoa_fee_max, hoa_fee_includes, deposit_structure,
@@ -45,6 +47,7 @@ const DEVELOPMENT_EDITOR_SELECT = `
   submitted_at, paused_at, archived_at, slug_locked_at, created_by, updated_by,
   published_by
 `;
+
 
 function asError(error: { message: string } | null): string | null {
   return error?.message ?? null;
