@@ -99,7 +99,7 @@ export function buildPersonalForwardEmailHtml(
               </td>
               <td valign="middle" style="padding:0;">
                 <p style="margin:0 0 4px;font-size:14px;color:#1f2937;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Chris Tuite</p>
-                <p style="margin:0;font-size:13px;color:#6b7280;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Founder, All Agent Connect</p>
+                <p style="margin:0;font-size:13px;color:#6b7280;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Founder</p>
               </td>
             </tr>
           </table>
