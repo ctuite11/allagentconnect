@@ -47,7 +47,45 @@ try {
   // Best-effort; never block app boot.
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Stale-bundle recovery.
+// When a new deploy replaces hashed asset files, a browser tab still running the
+// previous build can request a chunk that no longer exists. React.lazy() then
+// rejects with "Failed to fetch dynamically imported module" and the route
+// renders as a blank screen (e.g. /login). Reload once (guarded by a session
+// flag so we can never loop) to pick up the current index.html + asset hashes.
+// ─────────────────────────────────────────────────────────────────────────────
+const CHUNK_RELOAD_KEY = "aac_chunk_reloaded_at";
+
+const isStaleChunkError = (message: string) =>
+  /Failed to fetch dynamically imported module|Importing a module script failed|error loading dynamically imported module|ChunkLoadError/i.test(
+    message
+  );
+
+const recoverFromStaleChunk = (message: string) => {
+  if (!isStaleChunkError(message)) return;
+  try {
+    const last = Number(sessionStorage.getItem(CHUNK_RELOAD_KEY) || 0);
+    // Only one automatic reload per minute per tab.
+    if (Date.now() - last < 60_000) return;
+    sessionStorage.setItem(CHUNK_RELOAD_KEY, String(Date.now()));
+  } catch {
+    // sessionStorage unavailable — still attempt a single reload.
+  }
+  window.location.reload();
+};
+
+window.addEventListener("error", (event) => {
+  recoverFromStaleChunk(String(event?.message ?? ""));
+});
+
+window.addEventListener("unhandledrejection", (event) => {
+  const reason = event?.reason;
+  recoverFromStaleChunk(String(reason?.message ?? reason ?? ""));
+});
+
 const root = document.getElementById("root");
+
 
 if (!root) {
   throw new Error("Root element not found");
