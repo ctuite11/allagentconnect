@@ -5,9 +5,11 @@ import {
   formatBedsBaths,
   formatDateLabel,
   formatSqft,
-  formatUsd,
   formatPriceRange,
+  unitFeatureLabel,
+  unitTypeLabel,
 } from "@/lib/developments/format";
+import { asStringList } from "@/lib/developments/format";
 import { unitImageMedia } from "@/lib/developments/mediaScope";
 import { Button } from "@/components/ui/button";
 
@@ -61,6 +63,7 @@ export default function DevelopmentUnitDetailPage() {
 
       <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[
+          { label: "Unit type", value: unitTypeLabel(unit.unit_type) || "—" },
           { label: "Beds / baths", value: formatBedsBaths(unit.beds, unit.baths) },
           { label: "Square feet", value: formatSqft(unit.sqft) || "—" },
           { label: "Floor", value: unit.floor || "—" },
@@ -82,6 +85,19 @@ export default function DevelopmentUnitDetailPage() {
           </div>
         ))}
       </dl>
+
+      {asStringList(unit.unit_features).length > 0 ? (
+        <section className="space-y-3">
+          <h3 className="font-semibold text-zinc-900">Unit features</h3>
+          <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {asStringList(unit.unit_features).map((feature) => (
+              <li key={feature} className="rounded-xl border border-zinc-200 px-4 py-3 text-sm text-zinc-800">
+                {unitFeatureLabel(feature)}
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       {unit.description ? (
         <section className="space-y-2">
