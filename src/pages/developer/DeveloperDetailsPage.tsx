@@ -123,7 +123,6 @@ export default function DeveloperDetailsPage() {
       developer_name: form.developer_name || null,
       architect_name: form.architect_name || null,
       amenities: parseStringList(form.amenities_notes),
-      highlights: parseStringList(form.highlights),
       total_units: form.total_units ? Number(form.total_units) : null,
       stories: form.stories ? Number(form.stories) : null,
       expected_completion_year: form.expected_completion_year
@@ -132,14 +131,10 @@ export default function DeveloperDetailsPage() {
       expected_completion_quarter: form.expected_completion_quarter
         ? Number(form.expected_completion_quarter)
         : null,
-      expected_completion_month: form.expected_completion_month
-        ? Number(form.expected_completion_month)
-        : null,
+      expected_completion_month: null,
       actual_completion_date:
         form.stage === "completed" ? form.actual_completion_date || null : null,
       buyer_agent_compensation: form.buyer_agent_compensation || null,
-      pet_policy: form.pet_policy || null,
-      parking_description: form.parking_description || null,
     });
     setSaving(false);
     if (error) {
