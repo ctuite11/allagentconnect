@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -68,8 +69,8 @@ export default function DeveloperDocumentsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-base font-semibold text-zinc-900">Documents</h2>
-        <p className="text-sm text-zinc-500">
+        <h2 className="text-lg font-semibold text-zinc-900">Documents</h2>
+        <p className="mt-1 text-sm text-zinc-500">
           Private storage only — agents open files through signed URLs.
         </p>
       </div>
@@ -132,6 +133,10 @@ export default function DeveloperDocumentsPage() {
           ))
         )}
       </div>
+
+      <Button type="button" variant="outline" asChild>
+        <Link to={`/developer/developments/${development.id}/team`}>Continue to Sales / Contacts</Link>
+      </Button>
     </div>
   );
 }

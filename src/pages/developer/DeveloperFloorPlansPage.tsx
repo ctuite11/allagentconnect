@@ -1,8 +1,17 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useDeveloperEditor } from "@/components/developments/DeveloperDevelopmentLayout";
+import { UNIT_TYPE_OPTIONS, unitTypeLabel } from "@/lib/developments/contractLabels";
 import { formatBedsBaths, formatUsd } from "@/lib/developments/format";
 import { deleteFloorPlan, upsertFloorPlan } from "@/lib/developments/workspace";
 import { toast } from "sonner";
@@ -10,6 +19,7 @@ import { toast } from "sonner";
 export default function DeveloperFloorPlansPage() {
   const { development, canEdit, bundle, reload } = useDeveloperEditor();
   const [name, setName] = useState("");
+  const [unitType, setUnitType] = useState("");
   const [beds, setBeds] = useState("");
   const [baths, setBaths] = useState("");
   const [sqftMin, setSqftMin] = useState("");
@@ -24,6 +34,7 @@ export default function DeveloperFloorPlansPage() {
       development_id: development.id,
       account_id: development.account_id,
       name: name.trim(),
+      unit_type: unitType || null,
       beds: beds ? Number(beds) : null,
       baths: baths ? Number(baths) : null,
       sqft_min: sqftMin ? Number(sqftMin) : null,
@@ -35,6 +46,7 @@ export default function DeveloperFloorPlansPage() {
       return;
     }
     setName("");
+    setUnitType("");
     setBeds("");
     setBaths("");
     setSqftMin("");
@@ -55,8 +67,8 @@ export default function DeveloperFloorPlansPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-base font-semibold text-zinc-900">Floor plans</h2>
-        <p className="text-sm text-zinc-500">Define plan types agents will browse on the mini-site.</p>
+        <h2 className="text-lg font-semibold text-zinc-900">Floor plans</h2>
+        <p className="mt-1 text-sm text-zinc-500">Define plan types agents will browse on the mini-site.</p>
       </div>
 
       {canEdit ? (
@@ -64,6 +76,21 @@ export default function DeveloperFloorPlansPage() {
           <div className="space-y-1 sm:col-span-2">
             <Label>Name</Label>
             <Input value={name} onChange={(e) => setName(e.target.value)} required />
+          </div>
+          <div className="space-y-1 sm:col-span-2">
+            <Label>Unit type</Label>
+            <Select value={unitType || undefined} onValueChange={setUnitType}>
+              <SelectTrigger>
+                <SelectValue placeholder="Optional" />
+              </SelectTrigger>
+              <SelectContent>
+                {UNIT_TYPE_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="space-y-1">
             <Label>Beds</Label>
@@ -98,6 +125,7 @@ export default function DeveloperFloorPlansPage() {
               <div>
                 <p className="font-medium text-zinc-900">{plan.name}</p>
                 <p className="text-sm text-zinc-500">
+                  {plan.unit_type ? `${unitTypeLabel(plan.unit_type)} · ` : ""}
                   {formatBedsBaths(plan.beds, plan.baths)}
                   {plan.price_min != null ? ` · From ${formatUsd(plan.price_min)}` : ""}
                 </p>
@@ -111,6 +139,10 @@ export default function DeveloperFloorPlansPage() {
           ))
         )}
       </ul>
+
+      <Button type="button" variant="outline" asChild>
+        <Link to={`/developer/developments/${development.id}/units`}>Continue to Units</Link>
+      </Button>
     </div>
   );
 }

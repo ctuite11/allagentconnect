@@ -150,7 +150,7 @@ function CreateInner() {
       <Seo title="New development | All Agent Connect" noindex />
       <PageHeader
         title="Create development"
-        subtitle="Starts as a draft until you submit for AAC review."
+        subtitle="Starts as a draft. You’ll walk through Basics → Building → Amenities → inventory → Review — similar to Add Listing."
         backTo="/developer"
       />
 

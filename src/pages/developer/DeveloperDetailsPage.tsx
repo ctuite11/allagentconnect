@@ -1,4 +1,8 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import AddressAutocomplete from "@/components/AddressAutocomplete";
+import { ExpectedCompletionFields, inferCompletionMode, type CompletionMode } from "@/components/developments/ExpectedCompletionFields";
+import { useDeveloperEditor } from "@/components/developments/DeveloperDevelopmentLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,25 +14,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useDeveloperEditor } from "@/components/developments/DeveloperDevelopmentLayout";
-import { LIFECYCLE_STATUSES } from "@/lib/developments/publishStatus";
-import { lifecycleLabel } from "@/lib/developments/format";
+import {
+  BUILDING_TYPE_OPTIONS,
+  SALES_STATUS_OPTIONS,
+  STAGE_OPTIONS,
+} from "@/lib/developments/contractLabels";
 import { updateDevelopmentDetails } from "@/lib/developments/workspace";
+import { normalizeGooglePlace } from "@/lib/google-address";
 import { toast } from "sonner";
-
-function parseStringList(value: string): string[] {
-  return value
-    .split(/\n|,/)
-    .map((s) => s.trim())
-    .filter(Boolean);
-}
 
 export default function DeveloperDetailsPage() {
   const { development, canEdit, reload } = useDeveloperEditor();
   const [form, setForm] = useState({
     name: development.name,
     slug: development.slug,
-    stage: development.stage,
+    stage: development.stage || "planning",
+    sales_status: development.sales_status || "not_yet_released",
+    building_type: development.building_type || "",
     address: development.address ?? "",
     city: development.city ?? "",
     state: development.state ?? "",
@@ -36,43 +38,69 @@ export default function DeveloperDetailsPage() {
     neighborhood: development.neighborhood ?? "",
     description: development.description ?? "",
     developer_name: development.developer_name ?? "",
-    architect_name: development.architect_name ?? "",
-    amenities: Array.isArray(development.amenities)
-      ? (development.amenities as string[]).join("\n")
-      : "",
-    highlights: Array.isArray(development.highlights)
-      ? (development.highlights as string[]).join("\n")
-      : "",
-    total_units: development.total_units?.toString() ?? "",
-    stories: development.stories?.toString() ?? "",
-    estimated_completion: development.estimated_completion ?? "",
-    buyer_agent_compensation: development.buyer_agent_compensation ?? "",
-    pet_policy: development.pet_policy ?? "",
-    parking_description: development.parking_description ?? "",
+    expected_completion_year: development.expected_completion_year,
+    expected_completion_quarter: development.expected_completion_quarter,
+    expected_completion_month: development.expected_completion_month,
+    actual_completion_date: development.actual_completion_date ?? "",
   });
+  const [completionMode, setCompletionMode] = useState<CompletionMode>(() =>
+    inferCompletionMode(development),
+  );
   const [saving, setSaving] = useState(false);
   const slugLocked = Boolean(development.slug_locked_at);
 
   useEffect(() => {
-    setForm((prev) => ({
-      ...prev,
+    setForm({
       name: development.name,
       slug: development.slug,
-      stage: development.stage,
-    }));
+      stage: development.stage || "planning",
+      sales_status: development.sales_status || "not_yet_released",
+      building_type: development.building_type || "",
+      address: development.address ?? "",
+      city: development.city ?? "",
+      state: development.state ?? "",
+      postal_code: development.postal_code ?? "",
+      neighborhood: development.neighborhood ?? "",
+      description: development.description ?? "",
+      developer_name: development.developer_name ?? "",
+      expected_completion_year: development.expected_completion_year,
+      expected_completion_quarter: development.expected_completion_quarter,
+      expected_completion_month: development.expected_completion_month,
+      actual_completion_date: development.actual_completion_date ?? "",
+    });
+    setCompletionMode(inferCompletionMode(development));
   }, [development.id, development.updated_at]);
 
-  const set = (key: keyof typeof form, value: string) =>
+  const set = <K extends keyof typeof form>(key: K, value: (typeof form)[K]) =>
     setForm((prev) => ({ ...prev, [key]: value }));
+
+  const onPlaceSelect = (place: unknown) => {
+    const normalized = normalizeGooglePlace(place as never);
+    set("address", normalized.address_line1 || "");
+    set("city", normalized.city || "");
+    set("state", normalized.state || "");
+    set("postal_code", normalized.zip || "");
+  };
 
   const onSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!canEdit) return;
+    if (!form.name.trim()) {
+      toast.error("Development name is required.");
+      return;
+    }
+
+    const quarter =
+      completionMode === "quarter" ? form.expected_completion_quarter : null;
+    const month = completionMode === "month" ? form.expected_completion_month : null;
+
     setSaving(true);
     const { error } = await updateDevelopmentDetails(development.id, {
       name: form.name.trim(),
       slug: slugLocked ? undefined : form.slug.trim(),
       stage: form.stage,
+      sales_status: form.sales_status,
+      building_type: form.building_type || null,
       address: form.address || null,
       city: form.city || null,
       state: form.state || null,
@@ -80,27 +108,30 @@ export default function DeveloperDetailsPage() {
       neighborhood: form.neighborhood || null,
       description: form.description || null,
       developer_name: form.developer_name || null,
-      architect_name: form.architect_name || null,
-      amenities: parseStringList(form.amenities),
-      highlights: parseStringList(form.highlights),
-      total_units: form.total_units ? Number(form.total_units) : null,
-      stories: form.stories ? Number(form.stories) : null,
-      estimated_completion: form.estimated_completion || null,
-      buyer_agent_compensation: form.buyer_agent_compensation || null,
-      pet_policy: form.pet_policy || null,
-      parking_description: form.parking_description || null,
+      expected_completion_year: form.expected_completion_year,
+      expected_completion_quarter: quarter,
+      expected_completion_month: month,
+      actual_completion_date:
+        form.stage === "completed" ? form.actual_completion_date || null : null,
     });
     setSaving(false);
     if (error) {
       toast.error(error);
       return;
     }
-    toast.success("Details saved.");
+    toast.success("Basics saved.");
     await reload();
   };
 
   return (
     <form onSubmit={onSave} className="max-w-3xl space-y-6">
+      <div>
+        <h2 className="text-lg font-semibold text-zinc-900">Basics</h2>
+        <p className="mt-1 text-sm text-zinc-500">
+          Core project identity — name, location, type, construction stage, and sales status.
+        </p>
+      </div>
+
       {!canEdit ? (
         <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
           Your role is view-only for this account.
@@ -108,14 +139,40 @@ export default function DeveloperDetailsPage() {
       ) : null}
 
       <section className="space-y-4 rounded-2xl border border-zinc-200 bg-white p-5">
-        <h2 className="text-base font-semibold text-zinc-900">Project</h2>
+        <h3 className="text-sm font-semibold uppercase tracking-wide text-zinc-500">Project</h3>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2 sm:col-span-2">
-            <Label htmlFor="name">Name</Label>
-            <Input id="name" value={form.name} disabled={!canEdit} onChange={(e) => set("name", e.target.value)} />
+            <Label htmlFor="name">Development name</Label>
+            <Input
+              id="name"
+              value={form.name}
+              disabled={!canEdit}
+              onChange={(e) => set("name", e.target.value)}
+              required
+            />
+          </div>
+          <div className="space-y-2 sm:col-span-2">
+            <Label htmlFor="developer_name">Developer / Company</Label>
+            <Input
+              id="developer_name"
+              value={form.developer_name}
+              disabled={!canEdit}
+              onChange={(e) => set("developer_name", e.target.value)}
+            />
+          </div>
+          <div className="space-y-2 sm:col-span-2">
+            <Label htmlFor="description">Description</Label>
+            <Textarea
+              id="description"
+              rows={5}
+              value={form.description}
+              disabled={!canEdit}
+              onChange={(e) => set("description", e.target.value)}
+              placeholder="Tell agents what makes this project special."
+            />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="slug">Slug</Label>
+            <Label htmlFor="slug">URL slug</Label>
             <Input
               id="slug"
               value={form.slug}
@@ -123,23 +180,23 @@ export default function DeveloperDetailsPage() {
               onChange={(e) => set("slug", e.target.value)}
             />
             {slugLocked ? (
-              <p className="text-xs text-zinc-500">Slug locked after first publish.</p>
+              <p className="text-xs text-zinc-500">Locked after first publish.</p>
             ) : null}
           </div>
           <div className="space-y-2">
-            <Label>Lifecycle</Label>
+            <Label>Building type</Label>
             <Select
-              value={form.stage}
+              value={form.building_type || undefined}
               disabled={!canEdit}
-              onValueChange={(v) => set("stage", v)}
+              onValueChange={(v) => set("building_type", v)}
             >
               <SelectTrigger>
-                <SelectValue />
+                <SelectValue placeholder="Select building type" />
               </SelectTrigger>
               <SelectContent>
-                {LIFECYCLE_STATUSES.map((s) => (
-                  <SelectItem key={s} value={s}>
-                    {lifecycleLabel(s)}
+                {BUILDING_TYPE_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -149,11 +206,21 @@ export default function DeveloperDetailsPage() {
       </section>
 
       <section className="space-y-4 rounded-2xl border border-zinc-200 bg-white p-5">
-        <h2 className="text-base font-semibold text-zinc-900">Location</h2>
+        <h3 className="text-sm font-semibold uppercase tracking-wide text-zinc-500">Address</h3>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2 sm:col-span-2">
-            <Label htmlFor="address">Address</Label>
-            <Input id="address" value={form.address} disabled={!canEdit} onChange={(e) => set("address", e.target.value)} />
+            <Label htmlFor="address">Street address</Label>
+            {canEdit ? (
+              <AddressAutocomplete
+                value={form.address}
+                onChange={(v) => set("address", v)}
+                onPlaceSelect={onPlaceSelect}
+                placeholder="Start typing the street address"
+                className="w-full"
+              />
+            ) : (
+              <Input id="address" value={form.address} disabled />
+            )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="city">City</Label>
@@ -165,81 +232,109 @@ export default function DeveloperDetailsPage() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="postal">Postal code</Label>
-            <Input id="postal" value={form.postal_code} disabled={!canEdit} onChange={(e) => set("postal_code", e.target.value)} />
+            <Input
+              id="postal"
+              value={form.postal_code}
+              disabled={!canEdit}
+              onChange={(e) => set("postal_code", e.target.value)}
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="neighborhood">Neighborhood</Label>
-            <Input id="neighborhood" value={form.neighborhood} disabled={!canEdit} onChange={(e) => set("neighborhood", e.target.value)} />
+            <Input
+              id="neighborhood"
+              value={form.neighborhood}
+              disabled={!canEdit}
+              onChange={(e) => set("neighborhood", e.target.value)}
+            />
           </div>
         </div>
       </section>
 
       <section className="space-y-4 rounded-2xl border border-zinc-200 bg-white p-5">
-        <h2 className="text-base font-semibold text-zinc-900">Overview</h2>
-        <div className="space-y-2">
-          <Label htmlFor="description">Description</Label>
-          <Textarea
-            id="description"
-            rows={5}
-            value={form.description}
+        <h3 className="text-sm font-semibold uppercase tracking-wide text-zinc-500">
+          Stage & sales
+        </h3>
+        <p className="text-xs text-zinc-500">
+          Stage is construction only. Sales status is marketing. Publish status stays separate (Draft /
+          Pending Review / Published…).
+        </p>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label>Stage</Label>
+            <Select
+              value={form.stage}
+              disabled={!canEdit}
+              onValueChange={(v) => set("stage", v)}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {STAGE_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label>Sales status</Label>
+            <Select
+              value={form.sales_status}
+              disabled={!canEdit}
+              onValueChange={(v) => set("sales_status", v)}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {SALES_STATUS_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        {form.stage === "completed" ? (
+          <div className="space-y-2">
+            <Label htmlFor="actual_completion_date">Actual completion date</Label>
+            <Input
+              id="actual_completion_date"
+              type="date"
+              value={form.actual_completion_date}
+              disabled={!canEdit}
+              onChange={(e) => set("actual_completion_date", e.target.value)}
+            />
+          </div>
+        ) : (
+          <ExpectedCompletionFields
+            mode={completionMode}
+            onModeChange={setCompletionMode}
+            year={form.expected_completion_year}
+            quarter={form.expected_completion_quarter}
+            month={form.expected_completion_month}
+            onYearChange={(y) => set("expected_completion_year", y)}
+            onQuarterChange={(q) => set("expected_completion_quarter", q)}
+            onMonthChange={(m) => set("expected_completion_month", m)}
             disabled={!canEdit}
-            onChange={(e) => set("description", e.target.value)}
           />
-        </div>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="amenities">Amenities (one per line)</Label>
-            <Textarea id="amenities" rows={4} value={form.amenities} disabled={!canEdit} onChange={(e) => set("amenities", e.target.value)} />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="highlights">Highlights (one per line)</Label>
-            <Textarea id="highlights" rows={4} value={form.highlights} disabled={!canEdit} onChange={(e) => set("highlights", e.target.value)} />
-          </div>
-        </div>
-      </section>
-
-      <section className="space-y-4 rounded-2xl border border-zinc-200 bg-white p-5">
-        <h2 className="text-base font-semibold text-zinc-900">Building & developer</h2>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="developer_name">Developer</Label>
-            <Input id="developer_name" value={form.developer_name} disabled={!canEdit} onChange={(e) => set("developer_name", e.target.value)} />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="architect_name">Architect</Label>
-            <Input id="architect_name" value={form.architect_name} disabled={!canEdit} onChange={(e) => set("architect_name", e.target.value)} />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="total_units">Total units</Label>
-            <Input id="total_units" value={form.total_units} disabled={!canEdit} onChange={(e) => set("total_units", e.target.value)} />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="stories">Stories</Label>
-            <Input id="stories" value={form.stories} disabled={!canEdit} onChange={(e) => set("stories", e.target.value)} />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="estimated_completion">Estimated completion</Label>
-            <Input id="estimated_completion" value={form.estimated_completion} disabled={!canEdit} onChange={(e) => set("estimated_completion", e.target.value)} />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="comp">Buyer-agent compensation</Label>
-            <Input id="comp" value={form.buyer_agent_compensation} disabled={!canEdit} onChange={(e) => set("buyer_agent_compensation", e.target.value)} />
-          </div>
-          <div className="space-y-2 sm:col-span-2">
-            <Label htmlFor="parking">Parking</Label>
-            <Input id="parking" value={form.parking_description} disabled={!canEdit} onChange={(e) => set("parking_description", e.target.value)} />
-          </div>
-          <div className="space-y-2 sm:col-span-2">
-            <Label htmlFor="pets">Pet policy</Label>
-            <Input id="pets" value={form.pet_policy} disabled={!canEdit} onChange={(e) => set("pet_policy", e.target.value)} />
-          </div>
-        </div>
+        )}
       </section>
 
       {canEdit ? (
-        <Button type="submit" disabled={saving}>
-          {saving ? "Saving…" : "Save details"}
-        </Button>
+        <div className="flex flex-wrap items-center gap-3">
+          <Button type="submit" disabled={saving}>
+            {saving ? "Saving…" : "Save basics"}
+          </Button>
+          <Button type="button" variant="outline" asChild>
+            <Link to={`/developer/developments/${development.id}/building`}>Continue to Building</Link>
+          </Button>
+        </div>
       ) : null}
     </form>
   );

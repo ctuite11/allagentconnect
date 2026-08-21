@@ -117,6 +117,9 @@ const DeveloperDevelopmentLayout = React.lazy(() =>
   })),
 );
 const DeveloperDetailsPage = React.lazy(() => import("./pages/developer/DeveloperDetailsPage"));
+const DeveloperBuildingPage = React.lazy(() => import("./pages/developer/DeveloperBuildingPage"));
+const DeveloperAmenitiesPage = React.lazy(() => import("./pages/developer/DeveloperAmenitiesPage"));
+const DeveloperReviewPage = React.lazy(() => import("./pages/developer/DeveloperReviewPage"));
 const DeveloperPhotosPage = React.lazy(() => import("./pages/developer/DeveloperPhotosPage"));
 const DeveloperFloorPlansManagePage = React.lazy(
   () => import("./pages/developer/DeveloperFloorPlansPage"),
@@ -604,12 +607,15 @@ const App = () => (
                     }
                   >
                     <Route index element={<DeveloperDetailsPage />} />
+                    <Route path="building" element={<DeveloperBuildingPage />} />
+                    <Route path="amenities" element={<DeveloperAmenitiesPage />} />
                     <Route path="photos" element={<DeveloperPhotosPage />} />
                     <Route path="floor-plans" element={<DeveloperFloorPlansManagePage />} />
                     <Route path="units" element={<DeveloperUnitsManagePage />} />
                     <Route path="documents" element={<DeveloperDocumentsManagePage />} />
                     <Route path="updates" element={<DeveloperUpdatesManagePage />} />
                     <Route path="team" element={<DeveloperTeamPage />} />
+                    <Route path="review" element={<DeveloperReviewPage />} />
                   </Route>
                 </Route>
                 {/* Buyer authenticated routes — wrapped in BuyerShell */}
