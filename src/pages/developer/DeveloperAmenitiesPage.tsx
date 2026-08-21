@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { CheckboxOptionGrid } from "@/components/developments/CheckboxOptionGrid";
 import { useDeveloperEditor } from "@/components/developments/DeveloperDevelopmentLayout";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { updateDevelopmentDetails } from "@/lib/developments/workspace";
 import { toast } from "sonner";
 
 export default function DeveloperAmenitiesPage() {
+  const navigate = useNavigate();
   const { development, canEdit, reload } = useDeveloperEditor();
   const [amenities, setAmenities] = useState<string[]>(
     Array.isArray(development.building_amenities) ? development.building_amenities : [],
@@ -22,9 +23,8 @@ export default function DeveloperAmenitiesPage() {
     setNotes(development.amenities_notes ?? "");
   }, [development.id, development.updated_at]);
 
-  const onSave = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!canEdit) return;
+  const saveAmenities = async (): Promise<boolean> => {
+    if (!canEdit) return false;
     setSaving(true);
     const { error } = await updateDevelopmentDetails(development.id, {
       building_amenities: amenities,
@@ -33,10 +33,21 @@ export default function DeveloperAmenitiesPage() {
     setSaving(false);
     if (error) {
       toast.error(error);
-      return;
+      return false;
     }
     toast.success("Amenities saved.");
     await reload();
+    return true;
+  };
+
+  const onSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await saveAmenities();
+  };
+
+  const onSaveAndContinue = async () => {
+    const ok = await saveAmenities();
+    if (ok) navigate(`/developer/developments/${development.id}/floor-plans`);
   };
 
   return (
@@ -71,13 +82,11 @@ export default function DeveloperAmenitiesPage() {
 
       {canEdit ? (
         <div className="flex flex-wrap items-center gap-3">
-          <Button type="submit" disabled={saving}>
-            {saving ? "Saving…" : "Save amenities"}
+          <Button type="button" disabled={saving} onClick={() => void onSaveAndContinue()}>
+            {saving ? "Saving…" : "Save & Continue"}
           </Button>
-          <Button type="button" variant="outline" asChild>
-            <Link to={`/developer/developments/${development.id}/floor-plans`}>
-              Continue to Floor Plans
-            </Link>
+          <Button type="submit" variant="outline" disabled={saving}>
+            Save
           </Button>
         </div>
       ) : null}

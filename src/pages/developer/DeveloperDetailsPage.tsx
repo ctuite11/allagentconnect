@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import AddressAutocomplete from "@/components/AddressAutocomplete";
 import { ExpectedCompletionFields, inferCompletionMode, type CompletionMode } from "@/components/developments/ExpectedCompletionFields";
 import { useDeveloperEditor } from "@/components/developments/DeveloperDevelopmentLayout";
@@ -24,6 +24,7 @@ import { normalizeGooglePlace } from "@/lib/google-address";
 import { toast } from "sonner";
 
 export default function DeveloperDetailsPage() {
+  const navigate = useNavigate();
   const { development, canEdit, reload } = useDeveloperEditor();
   const [form, setForm] = useState({
     name: development.name,
@@ -82,12 +83,11 @@ export default function DeveloperDetailsPage() {
     set("postal_code", normalized.zip || "");
   };
 
-  const onSave = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!canEdit) return;
+  const saveBasics = async (): Promise<boolean> => {
+    if (!canEdit) return false;
     if (!form.name.trim()) {
       toast.error("Development name is required.");
-      return;
+      return false;
     }
 
     const quarter =
@@ -117,10 +117,21 @@ export default function DeveloperDetailsPage() {
     setSaving(false);
     if (error) {
       toast.error(error);
-      return;
+      return false;
     }
     toast.success("Basics saved.");
     await reload();
+    return true;
+  };
+
+  const onSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await saveBasics();
+  };
+
+  const onSaveAndContinue = async () => {
+    const ok = await saveBasics();
+    if (ok) navigate(`/developer/developments/${development.id}/building`);
   };
 
   return (
@@ -328,11 +339,11 @@ export default function DeveloperDetailsPage() {
 
       {canEdit ? (
         <div className="flex flex-wrap items-center gap-3">
-          <Button type="submit" disabled={saving}>
-            {saving ? "Saving…" : "Save basics"}
+          <Button type="button" disabled={saving} onClick={() => void onSaveAndContinue()}>
+            {saving ? "Saving…" : "Save & Continue"}
           </Button>
-          <Button type="button" variant="outline" asChild>
-            <Link to={`/developer/developments/${development.id}/building`}>Continue to Building</Link>
+          <Button type="submit" variant="outline" disabled={saving}>
+            Save
           </Button>
         </div>
       ) : null}

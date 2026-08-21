@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useDeveloperEditor } from "@/components/developments/DeveloperDevelopmentLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,6 +45,7 @@ function parseOptionalInt(value: string): number | null {
 }
 
 export default function DeveloperBuildingPage() {
+  const navigate = useNavigate();
   const { development, canEdit, reload } = useDeveloperEditor();
   const [form, setForm] = useState<BuildingFormState>(() => toForm(development));
   const [saving, setSaving] = useState(false);
@@ -56,9 +57,8 @@ export default function DeveloperBuildingPage() {
   const set = <K extends keyof BuildingFormState>(key: K, value: BuildingFormState[K]) =>
     setForm((prev) => ({ ...prev, [key]: value }));
 
-  const onSubmit = async (event: FormEvent) => {
-    event.preventDefault();
-    if (!canEdit) return;
+  const saveBuilding = async (): Promise<boolean> => {
+    if (!canEdit) return false;
 
     setSaving(true);
     const { error } = await updateDevelopmentDetails(development.id, {
@@ -74,10 +74,21 @@ export default function DeveloperBuildingPage() {
 
     if (error) {
       toast.error(error);
-      return;
+      return false;
     }
     toast.success("Building details saved.");
     await reload();
+    return true;
+  };
+
+  const onSubmit = async (event: FormEvent) => {
+    event.preventDefault();
+    await saveBuilding();
+  };
+
+  const onSaveAndContinue = async () => {
+    const ok = await saveBuilding();
+    if (ok) navigate(`/developer/developments/${development.id}/amenities`);
   };
 
   return (
@@ -169,11 +180,11 @@ export default function DeveloperBuildingPage() {
 
       {canEdit ? (
         <div className="flex flex-wrap items-center gap-3">
-          <Button type="submit" disabled={saving}>
-            {saving ? "Saving…" : "Save building"}
+          <Button type="button" disabled={saving} onClick={() => void onSaveAndContinue()}>
+            {saving ? "Saving…" : "Save & Continue"}
           </Button>
-          <Button asChild type="button" variant="outline">
-            <Link to={`/developer/developments/${development.id}/amenities`}>Continue to Amenities</Link>
+          <Button type="submit" variant="outline" disabled={saving}>
+            Save
           </Button>
         </div>
       ) : null}
