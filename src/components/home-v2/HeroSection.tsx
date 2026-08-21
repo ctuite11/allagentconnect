@@ -78,7 +78,7 @@ const HeroSection = () => {
 
   return (
     <section
-      className={`relative w-full min-h-screen overflow-hidden flex flex-col ${
+      className={`relative w-full max-w-full min-h-[100svh] overflow-hidden flex flex-col ${
         shellBacked ? "bg-transparent" : "bg-[#111317]"
       }`}
     >
@@ -116,8 +116,8 @@ const HeroSection = () => {
       <div className="absolute top-1/3 left-0 w-[560px] h-[560px] rounded-full bg-aac opacity-[0.07] blur-[140px] pointer-events-none" />
 
       {/* Top access row */}
-      <div className="relative z-10 flex items-center justify-between gap-3 w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-[100px] py-5">
-        <div className="inline-grid grid-cols-[auto_auto] items-center gap-x-2.5 gap-y-0.5 min-w-0 flex-1">
+      <div className="relative z-10 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-[100px] py-5">
+        <div className="inline-grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-2.5 gap-y-0.5 min-w-0">
           <AACMonogram className="w-7 h-7 sm:w-9 sm:h-9 text-[#50c878] row-span-2 self-center shrink-0" />
           <span className="font-['Manrope'] font-semibold text-white text-[13px] sm:text-xl tracking-[-0.4px] truncate">
             All Agent Connect
@@ -135,7 +135,7 @@ const HeroSection = () => {
           </a>
           <a
             href="/login"
-            className="font-['Manrope'] font-semibold text-zinc-900 bg-white border border-white shadow-sm hover:bg-white/90 transition-colors h-9 sm:h-11 px-4 sm:px-6 rounded-full inline-flex items-center text-[11px] sm:text-sm whitespace-nowrap"
+            className="font-['Manrope'] font-semibold text-white bg-white/15 border border-white/25 backdrop-blur-md hover:bg-white/25 hover:border-white/50 transition-colors h-9 sm:h-11 px-3 sm:px-6 rounded-full inline-flex items-center text-[11px] sm:text-sm whitespace-nowrap"
           >
             Login
           </a>
