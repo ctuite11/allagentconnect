@@ -86,6 +86,15 @@ export function buildPersonalForwardEmailHtml(
 
           <p style="margin:40px 0 4px;font-size:14px;color:#1f2937;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Chris Tuite</p>
           <p style="margin:0;font-size:13px;color:#6b7280;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Founder, All Agent Connect</p>
+
+          <!-- Product screenshot -->
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:32px 0 0;">
+            <tr><td align="center" style="padding:0;">
+              <a href="${ctaUrl}" style="display:block;text-decoration:none;">
+                <img src="${AAC_SCREENSHOT_URL}" width="488" alt="All Agent Connect" style="display:block;width:100%;max-width:488px;height:auto;border:1px solid #e5e7eb;border-radius:10px;outline:none;text-decoration:none;" />
+              </a>
+            </td></tr>
+          </table>
         </td></tr>
 
         <!-- Dark footer -->
