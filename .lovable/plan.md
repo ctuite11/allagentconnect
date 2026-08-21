@@ -1,27 +1,16 @@
-# Redo the All Agent Connect lockup images (correct artwork)
+# Correct AAC Lockup JPEG
 
-The lockups I delivered used the wrong treatment (blue/green wordmark on white). The correct lockup, matching the screenshot and the live site, is: green command-square monogram above a white "All Agent Connect" wordmark on a near-black background, with a short green rule underneath.
+## Deliverable
+Create one **1024 × 1024 JPEG** for an email profile photo on a solid white background, using the exact current lockup shown in the uploaded reference:
 
-## Source of truth
+- Current green AAC monogram centered above the name
+- “All Agent Connect” as one line, matching the reference typography and proportions
+- Thin green underline centered beneath the name
+- Black wordmark on white for contrast
+- Generous square-safe spacing so email platforms do not crop the mark or text
 
-- Monogram: the in-app `AACMonogram` vector (34x34 command-square, five rounded nodes) — the same mark used in the site header, loaders and emails. No regenerated or AI-drawn artwork.
-- Wordmark: Manrope Semibold, tight tracking (-0.4px), pure white — same as the site header.
-- Colors: monogram green `#50C878`, background `#0A0A0A`, accent rule green `#22C55E`.
+## Source fidelity
+Use the uploaded screenshot as the authoritative visual reference. Do not use, reconstruct from, or recolor the previously exported old lockup treatment. Match the monogram shape, vertical arrangement, underline, scale, and spacing shown in the screenshot.
 
-## Deliverables (written to the generated-files area)
-
-1. `aac-lockup-dark-square-1024x1024.jpg` — monogram centered above wordmark plus green rule, dark background. For profile photos.
-2. `aac-lockup-dark-wide-1600x400.jpg` — same lockup, horizontal framing for email signatures and banners.
-3. `aac-lockup-light-square-1024x1024.jpg` — identical layout on solid white with a near-black wordmark, for light-background use.
-
-Previously delivered wrong lockups stay in place unless you want them removed; say the word and I'll delete them.
-
-## Technical notes
-
-- Render via a headless-browser HTML page that inlines the exact `AACMonogram` SVG paths and loads Manrope from Google Fonts, then screenshot at 2x and downscale for crisp edges.
-- No project source files change; this is asset generation only.
-- Each output is inspected as an image before delivery (correct mark, no clipping, correct colors).
-
-## Open question
-
-If the screenshot came from a specific surface (splash screen, email header) rather than the site header, tell me which one and I'll match that surface exactly.
+## Validation
+Render and inspect the final JPEG at full size and as a circular profile-photo crop, confirming it is centered, sharp, unclipped, and legible.
