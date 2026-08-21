@@ -79,6 +79,22 @@ export default function DeveloperDetailsPage() {
   const [saving, setSaving] = useState(false);
   const slugLocked = Boolean(development.slug_locked_at);
 
+  const neighborhoodOptions = useMemo(() => {
+    const rawState = (form.state || "").trim();
+    const stateKey =
+      rawState.length > 2
+        ? US_STATES.find((s) => s.name.toLowerCase() === rawState.toLowerCase())?.code ?? rawState
+        : rawState.toUpperCase();
+    const city = (form.city || "").trim();
+    if (!city || !stateKey) return [] as string[];
+    const areas = hasNeighborhoodData(city, stateKey) ? getAreasForCity(city, stateKey) : [];
+    const list = Array.from(new Set(areas.filter(Boolean)));
+    if (form.neighborhood && list.length > 0 && !list.includes(form.neighborhood)) {
+      list.push(form.neighborhood);
+    }
+    return list;
+  }, [form.state, form.city, form.neighborhood]);
+
   useEffect(() => {
     setForm((prev) => ({
       ...prev,
