@@ -196,3 +196,133 @@ export function markdownToPlainBlocks(markdown: string): string[] {
     )
     .filter(Boolean);
 }
+
+function humanizeToken(token: string): string {
+  return token
+    .split("_")
+    .map((part) => (part.length ? part[0].toUpperCase() + part.slice(1) : part))
+    .join(" ");
+}
+
+const BUILDING_TYPE_LABELS: Record<string, string> = {
+  high_rise: "High Rise",
+  mid_rise: "Mid Rise",
+  low_rise: "Low Rise",
+  garden_style: "Garden Style",
+  three_family: "3 Family",
+  two_family: "2 Family",
+  single_family: "Single Family",
+  townhomes: "Townhomes",
+  condo_community: "Condo Community",
+  loft_conversion: "Loft Conversion",
+  brownstone: "Brownstone",
+  mixed_use: "Mixed Use",
+  other: "Other",
+};
+
+const BUILDING_AMENITY_LABELS: Record<string, string> = {
+  concierge_doorman: "Concierge / Doorman",
+  elevator: "Elevator",
+  fitness_center: "Fitness Center",
+  pool: "Pool",
+  roof_deck: "Roof Deck",
+  resident_lounge: "Resident Lounge",
+  business_center: "Business Center",
+  package_room: "Package Room",
+  bike_storage: "Bike Storage",
+  garage_parking: "Garage Parking",
+  ev_charging: "EV Charging",
+  storage: "Storage",
+  pet_friendly: "Pet Friendly",
+  dog_wash_pet_spa: "Dog Wash / Pet Spa",
+  common_outdoor_space: "Common Outdoor Space",
+  security: "Security",
+  other: "Other",
+};
+
+const UNIT_FEATURE_LABELS: Record<string, string> = {
+  balcony: "Balcony",
+  terrace: "Terrace",
+  private_roof_deck: "Private Roof Deck",
+  in_unit_laundry: "In-Unit Laundry",
+  central_air: "Central Air",
+  fireplace: "Fireplace",
+  walk_in_closet: "Walk-In Closet",
+  floor_to_ceiling_windows: "Floor-to-Ceiling Windows",
+  water_views: "Water Views",
+  city_views: "City Views",
+  garage_parking: "Garage Parking",
+  ev_charging: "EV Charging",
+  private_elevator: "Private Elevator",
+  smart_home: "Smart Home",
+  storage: "Storage",
+  other: "Other",
+};
+
+const UNIT_TYPE_LABELS: Record<string, string> = {
+  studio: "Studio",
+  flat: "Flat",
+  duplex: "Duplex",
+  triplex: "Triplex",
+  loft: "Loft",
+  penthouse: "Penthouse",
+  townhome: "Townhome",
+  live_work: "Live / Work",
+  commercial: "Commercial",
+};
+
+export function buildingTypeLabel(value: string | null | undefined): string | null {
+  if (!value) return null;
+  return BUILDING_TYPE_LABELS[value] ?? humanizeToken(value);
+}
+
+export function buildingAmenityLabel(value: string): string {
+  return BUILDING_AMENITY_LABELS[value] ?? humanizeToken(value);
+}
+
+export function unitFeatureLabel(value: string): string {
+  return UNIT_FEATURE_LABELS[value] ?? humanizeToken(value);
+}
+
+export function unitTypeLabel(value: string | null | undefined): string | null {
+  if (!value) return null;
+  return UNIT_TYPE_LABELS[value] ?? humanizeToken(value);
+}
+
+const MONTH_NAMES = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
+
+/** Structured expected completion: "Q3 2027", "March 2027", or "2027". */
+export function formatExpectedCompletion(parts: {
+  expected_completion_year?: number | null;
+  expected_completion_quarter?: number | null;
+  expected_completion_month?: number | null;
+  estimated_completion?: string | null;
+}): string | null {
+  const year = parts.expected_completion_year;
+  if (year) {
+    const month = parts.expected_completion_month;
+    if (month && month >= 1 && month <= 12) return `${MONTH_NAMES[month - 1]} ${year}`;
+    const quarter = parts.expected_completion_quarter;
+    if (quarter && quarter >= 1 && quarter <= 4) return `Q${quarter} ${year}`;
+    return String(year);
+  }
+  if (parts.estimated_completion) return formatDateLabel(parts.estimated_completion, "");
+  return null;
+}
+
+/** Price display for a unit or plan that may carry a range. */
+export function formatPriceRange(
+  min: number | null | undefined,
+  max: number | null | undefined,
+  fallback?: number | null,
+): string {
+  const lo = min != null && !Number.isNaN(Number(min)) ? Number(min) : null;
+  const hi = max != null && !Number.isNaN(Number(max)) ? Number(max) : null;
+  if (lo != null && hi != null && hi > lo) return `${formatUsd(lo)} – ${formatUsd(hi)}`;
+  if (lo != null) return formatUsd(lo);
+  if (hi != null) return formatUsd(hi);
+  return formatUsd(fallback ?? null);
+}
