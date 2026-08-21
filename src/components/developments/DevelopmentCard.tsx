@@ -9,6 +9,7 @@ import {
   formatStartingFrom,
   isElevatedTier,
 } from "@/lib/developments/format";
+import { formatExpectedCompletion } from "@/lib/developments/contractLabels";
 import { LifecycleBadge, TierBadge } from "./DevelopmentBadges";
 
 export function DevelopmentCard({ card }: { card: DevelopmentBrowseCard }) {
@@ -80,7 +81,7 @@ export function DevelopmentCard({ card }: { card: DevelopmentBrowseCard }) {
           </div>
           <div>
             <dt className="text-[11px] font-semibold uppercase tracking-wide text-zinc-400">Est. completion</dt>
-            <dd className="mt-0.5 text-zinc-800">{formatDateLabel(development.estimated_completion)}</dd>
+            <dd className="mt-0.5 text-zinc-800">{formatExpectedCompletion(development)}</dd>
           </div>
           <div className="col-span-2">
             <dt className="text-[11px] font-semibold uppercase tracking-wide text-zinc-400">Starting</dt>

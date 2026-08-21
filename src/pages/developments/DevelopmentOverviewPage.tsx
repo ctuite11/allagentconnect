@@ -15,6 +15,10 @@ import {
   formatUsd,
   markdownToPlainBlocks,
 } from "@/lib/developments/format";
+import {
+  buildingAmenityLabel,
+  formatExpectedCompletion,
+} from "@/lib/developments/contractLabels";
 import { floorPlanImageUrl } from "@/lib/developments/mediaScope";
 import { parseDevelopmentHash, scheduleDevelopmentSectionScroll } from "@/lib/developments/scroll";
 import { Button } from "@/components/ui/button";
@@ -51,7 +55,10 @@ export default function DevelopmentOverviewPage() {
   const bundle = useDevelopmentBundle();
   const { development, media, mediaUrls, floorPlans, units, documents, salesContacts, updates } = bundle;
   const highlights = asStringList(development.highlights);
-  const amenities = asStringList(development.amenities);
+  const amenities =
+    Array.isArray(development.building_amenities) && development.building_amenities.length > 0
+      ? development.building_amenities.map(buildingAmenityLabel)
+      : asStringList(development.amenities);
   const buildingDetails = asDetailEntries(development.building_details);
   const featuredDocs = documents.filter((d) => d.is_featured_agent_resource).slice(0, 4);
   const availableUnits = units.filter((u) => u.status === "available").slice(0, 6);
@@ -103,7 +110,13 @@ export default function DevelopmentOverviewPage() {
             { label: "Total units", value: development.total_units != null ? String(development.total_units) : "—" },
             { label: "Stories", value: development.stories != null ? String(development.stories) : "—" },
             { label: "Construction", value: development.construction_type || "—" },
-            { label: "Est. completion", value: formatDateLabel(development.estimated_completion) },
+            {
+              label: "Est. completion",
+              value:
+                development.stage === "completed" && development.actual_completion_date
+                  ? formatDateLabel(development.actual_completion_date)
+                  : formatExpectedCompletion(development),
+            },
             { label: "Delivery window", value: [formatDateLabel(development.delivery_from, ""), formatDateLabel(development.delivery_to, "")].filter(Boolean).join(" – ") || "—" },
             { label: "Interior design", value: development.interior_designer_name || "—" },
             { label: "HOA", value: development.hoa_fees || (development.hoa_fee_min != null ? formatUsd(development.hoa_fee_min) : "—") },

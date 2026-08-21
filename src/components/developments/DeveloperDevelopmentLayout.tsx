@@ -42,13 +42,16 @@ export function useDeveloperEditor() {
 }
 
 const SUBNAV: Array<{ label: string; path: string }> = [
-  { label: "Details", path: "" },
-  { label: "Photos", path: "photos" },
-  { label: "Floor plans", path: "floor-plans" },
+  { label: "Basics", path: "" },
+  { label: "Building", path: "building" },
+  { label: "Amenities", path: "amenities" },
+  { label: "Floor Plans", path: "floor-plans" },
   { label: "Units", path: "units" },
+  { label: "Media", path: "photos" },
   { label: "Documents", path: "documents" },
+  { label: "Sales / Contacts", path: "team" },
+  { label: "Review", path: "review" },
   { label: "Updates", path: "updates" },
-  { label: "Team", path: "team" },
 ];
 
 export function DeveloperAccessGate({ children }: { children: React.ReactNode }) {

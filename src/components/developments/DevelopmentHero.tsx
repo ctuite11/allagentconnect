@@ -2,10 +2,10 @@ import { MapPin } from "lucide-react";
 import type { DevelopmentDetailBundle } from "@/lib/developments/types";
 import {
   formatAddressLine,
-  formatDateLabel,
   formatLocation,
   formatStartingFrom,
 } from "@/lib/developments/format";
+import { formatExpectedCompletion } from "@/lib/developments/contractLabels";
 import { LifecycleBadge, TierBadge } from "./DevelopmentBadges";
 
 export function DevelopmentHero({ bundle }: { bundle: DevelopmentDetailBundle }) {
@@ -74,7 +74,7 @@ export function DevelopmentHero({ bundle }: { bundle: DevelopmentDetailBundle })
             </div>
             <div>
               <dt className="text-[11px] font-semibold uppercase tracking-wide text-white/55">Est. completion</dt>
-              <dd className="mt-0.5 font-medium">{formatDateLabel(development.estimated_completion)}</dd>
+              <dd className="mt-0.5 font-medium">{formatExpectedCompletion(development)}</dd>
             </div>
             {fromPrice ? (
               <div className="col-span-2 sm:col-span-3">
