@@ -82,7 +82,7 @@ function DeveloperDashboardInner() {
                   <PublishStatusBadge status={dev.publish_status} />
                 </div>
                 <p className="text-sm text-zinc-500">
-                  {formatLocation(dev)} · {lifecycleLabel(dev.lifecycle_status)}
+                  {formatLocation(dev)} · {lifecycleLabel(dev.stage)}
                   {dev.account_name ? ` · ${dev.account_name}` : ""}
                 </p>
               </div>

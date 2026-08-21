@@ -14,7 +14,7 @@ import { formatBedsBaths, formatUsd, unitStatusLabel } from "@/lib/developments/
 import { deleteUnit, upsertUnit } from "@/lib/developments/workspace";
 import { toast } from "sonner";
 
-const UNIT_STATUSES = ["available", "reserved", "under_agreement", "sold", "coming_soon"] as const;
+const UNIT_STATUSES = ["not_released", "coming_soon", "available", "reserved", "under_agreement", "sold"] as const;
 
 export default function DeveloperUnitsPage() {
   const { development, canEdit, bundle, reload } = useDeveloperEditor();

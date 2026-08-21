@@ -37,7 +37,7 @@ export function DevelopmentHero({ bundle }: { bundle: DevelopmentDetailBundle })
       <div className="relative flex min-h-[min(68vh,560px)] flex-col justify-end p-6 md:p-10 lg:p-12">
         <div className="mb-4 flex flex-wrap items-center gap-2">
           <TierBadge tier={development.tier} />
-          <LifecycleBadge status={development.lifecycle_status} className="bg-white/15 text-white ring-white/20" />
+          <LifecycleBadge status={development.stage} className="bg-white/15 text-white ring-white/20" />
         </div>
 
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">

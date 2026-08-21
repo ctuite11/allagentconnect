@@ -18,13 +18,101 @@ export const PUBLISH_STATUSES: DevelopmentPublishStatus[] = [
   "archived",
 ];
 
-export const LIFECYCLE_STATUSES: DevelopmentLifecycleStatus[] = [
-  "coming_soon",
+/** Physical construction stages (developments.stage). */
+export const DEVELOPMENT_STAGES: DevelopmentLifecycleStatus[] = [
+  "planning",
   "pre_construction",
   "under_construction",
-  "now_selling",
   "completed",
 ];
+
+/** @deprecated use DEVELOPMENT_STAGES */
+export const LIFECYCLE_STATUSES = DEVELOPMENT_STAGES;
+
+/** Marketing sales states (developments.sales_status). */
+export const DEVELOPMENT_SALES_STATUSES = [
+  "not_yet_released",
+  "coming_soon",
+  "now_selling",
+  "final_units",
+  "sold_out",
+] as const;
+
+export const DEVELOPMENT_BUILDING_TYPES = [
+  "high_rise",
+  "mid_rise",
+  "low_rise",
+  "garden_style",
+  "three_family",
+  "two_family",
+  "single_family",
+  "townhomes",
+  "condo_community",
+  "loft_conversion",
+  "brownstone",
+  "mixed_use",
+  "other",
+] as const;
+
+export const DEVELOPMENT_BUILDING_AMENITIES = [
+  "concierge_doorman",
+  "elevator",
+  "fitness_center",
+  "pool",
+  "roof_deck",
+  "resident_lounge",
+  "business_center",
+  "package_room",
+  "bike_storage",
+  "garage_parking",
+  "ev_charging",
+  "storage",
+  "pet_friendly",
+  "dog_wash_pet_spa",
+  "common_outdoor_space",
+  "security",
+  "other",
+] as const;
+
+export const DEVELOPMENT_UNIT_FEATURES = [
+  "balcony",
+  "terrace",
+  "private_roof_deck",
+  "in_unit_laundry",
+  "central_air",
+  "fireplace",
+  "walk_in_closet",
+  "floor_to_ceiling_windows",
+  "water_views",
+  "city_views",
+  "garage_parking",
+  "ev_charging",
+  "private_elevator",
+  "smart_home",
+  "storage",
+  "other",
+] as const;
+
+export const DEVELOPMENT_UNIT_TYPES = [
+  "studio",
+  "flat",
+  "duplex",
+  "triplex",
+  "loft",
+  "penthouse",
+  "townhome",
+  "live_work",
+  "commercial",
+] as const;
+
+export const DEVELOPMENT_UNIT_STATUSES = [
+  "not_released",
+  "coming_soon",
+  "available",
+  "reserved",
+  "under_agreement",
+  "sold",
+] as const;
 
 export function publishStatusLabel(status: string | null | undefined): string {
   const map: Record<DevelopmentPublishStatus, string> = {

@@ -9,21 +9,58 @@ export type DevelopmentSalesContactRow = Database["public"]["Tables"]["developme
 export type DevelopmentUpdateRow = Database["public"]["Tables"]["development_updates"]["Row"];
 export type DevelopmentBuildingPhaseRow = Database["public"]["Tables"]["development_buildings_phases"]["Row"];
 
-export type DevelopmentLifecycleStatus =
-  | "coming_soon"
+/** Physical construction stage only. Marketing states live on sales_status. */
+export type DevelopmentStage =
+  | "planning"
   | "pre_construction"
   | "under_construction"
-  | "now_selling"
   | "completed";
+
+/** @deprecated use DevelopmentStage */
+export type DevelopmentLifecycleStatus = DevelopmentStage;
+
+export type DevelopmentSalesStatus =
+  | "not_yet_released"
+  | "coming_soon"
+  | "now_selling"
+  | "final_units"
+  | "sold_out";
 
 export type DevelopmentTier = "standard" | "featured" | "premium";
 
 export type DevelopmentUnitStatus =
+  | "not_released"
+  | "coming_soon"
   | "available"
   | "reserved"
   | "under_agreement"
-  | "sold"
-  | "coming_soon";
+  | "sold";
+
+export type DevelopmentBuildingType =
+  | "high_rise"
+  | "mid_rise"
+  | "low_rise"
+  | "garden_style"
+  | "three_family"
+  | "two_family"
+  | "single_family"
+  | "townhomes"
+  | "condo_community"
+  | "loft_conversion"
+  | "brownstone"
+  | "mixed_use"
+  | "other";
+
+export type DevelopmentUnitType =
+  | "studio"
+  | "flat"
+  | "duplex"
+  | "triplex"
+  | "loft"
+  | "penthouse"
+  | "townhome"
+  | "live_work"
+  | "commercial";
 
 export type DevelopmentDocumentCategory =
   | "brochure"
