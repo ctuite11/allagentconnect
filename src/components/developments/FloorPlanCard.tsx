@@ -1,7 +1,9 @@
 import { Link } from "react-router-dom";
 import { BedDouble, Bath, Ruler } from "lucide-react";
 import type { DevelopmentFloorPlanRow, DevelopmentUnitRow } from "@/lib/developments/types";
-import { formatBedsBaths, formatStartingFrom, formatSqft, formatUsd } from "@/lib/developments/format";
+import { formatBedsBaths, formatStartingFrom, formatSqft, formatUsd,
+  formatPriceRange,
+} from "@/lib/developments/format";
 import { inventoryForFloorPlan } from "@/lib/developments/queries";
 import { cn } from "@/lib/utils";
 
@@ -104,7 +106,7 @@ export function UnitCard({
             {[phaseName, floorPlanName].filter(Boolean).join(" · ") || "Floor plan TBD"}
           </p>
         </div>
-        <span className="text-base font-semibold text-zinc-900">{formatUsd(unit.price)}</span>
+        <span className="text-base font-semibold text-zinc-900">{formatPriceRange(unit.price_min, unit.price_max, unit.price)}</span>
       </div>
       <p className="mt-3 text-sm text-zinc-600">
         {formatBedsBaths(unit.beds, unit.baths)}

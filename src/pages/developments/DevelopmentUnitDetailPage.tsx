@@ -6,6 +6,7 @@ import {
   formatDateLabel,
   formatSqft,
   formatUsd,
+  formatPriceRange,
 } from "@/lib/developments/format";
 import { unitImageMedia } from "@/lib/developments/mediaScope";
 import { Button } from "@/components/ui/button";
@@ -53,7 +54,7 @@ export default function DevelopmentUnitDetailPage() {
           </div>
           <div className="text-right">
             <div className="text-[11px] font-semibold uppercase tracking-wide text-zinc-400">Price</div>
-            <div className="text-2xl font-semibold text-zinc-900">{formatUsd(unit.price)}</div>
+            <div className="text-2xl font-semibold text-zinc-900">{formatPriceRange(unit.price_min, unit.price_max, unit.price)}</div>
           </div>
         </div>
       </header>

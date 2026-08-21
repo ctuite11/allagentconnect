@@ -8,6 +8,7 @@ import {
   formatSqft,
   formatUsd,
   unitStatusLabel,
+  formatPriceRange,
 } from "@/lib/developments/format";
 import type { DevelopmentUnitStatus } from "@/lib/developments/types";
 import { cn } from "@/lib/utils";
@@ -116,7 +117,7 @@ export default function DevelopmentUnitsPage() {
                   </td>
                   <td className="px-4 py-3 text-zinc-700">{formatBedsBaths(unit.beds, unit.baths)}</td>
                   <td className="px-4 py-3 text-zinc-700">{formatSqft(unit.sqft) || "—"}</td>
-                  <td className="px-4 py-3 font-medium text-zinc-900">{formatUsd(unit.price)}</td>
+                  <td className="px-4 py-3 font-medium text-zinc-900">{formatPriceRange(unit.price_min, unit.price_max, unit.price)}</td>
                   <td className="px-4 py-3">
                     <UnitStatusBadge status={unit.status} />
                   </td>
