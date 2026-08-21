@@ -2748,6 +2748,8 @@ export type Database = {
           sort_order: number
           sqft_max: number | null
           sqft_min: number | null
+          unit_features: string[]
+          unit_type: string | null
           updated_at: string
         }
         Insert: {
@@ -2766,6 +2768,8 @@ export type Database = {
           sort_order?: number
           sqft_max?: number | null
           sqft_min?: number | null
+          unit_features?: string[]
+          unit_type?: string | null
           updated_at?: string
         }
         Update: {
@@ -2784,6 +2788,8 @@ export type Database = {
           sort_order?: number
           sqft_max?: number | null
           sqft_min?: number | null
+          unit_features?: string[]
+          unit_type?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -3235,11 +3241,15 @@ export type Database = {
           parking_spaces: number | null
           price: number | null
           price_changed_at: string | null
+          price_max: number | null
+          price_min: number | null
           sort_order: number
           sqft: number | null
           status: string
           status_changed_at: string | null
+          unit_features: string[]
           unit_number: string
+          unit_type: string | null
           updated_at: string
           views_exposure: string | null
         }
@@ -3262,11 +3272,15 @@ export type Database = {
           parking_spaces?: number | null
           price?: number | null
           price_changed_at?: string | null
+          price_max?: number | null
+          price_min?: number | null
           sort_order?: number
           sqft?: number | null
           status?: string
           status_changed_at?: string | null
+          unit_features?: string[]
           unit_number: string
+          unit_type?: string | null
           updated_at?: string
           views_exposure?: string | null
         }
@@ -3289,11 +3303,15 @@ export type Database = {
           parking_spaces?: number | null
           price?: number | null
           price_changed_at?: string | null
+          price_max?: number | null
+          price_min?: number | null
           sort_order?: number
           sqft?: number | null
           status?: string
           status_changed_at?: string | null
+          unit_features?: string[]
           unit_number?: string
+          unit_type?: string | null
           updated_at?: string
           views_exposure?: string | null
         }
@@ -3383,12 +3401,16 @@ export type Database = {
       developments: {
         Row: {
           account_id: string
+          actual_completion_date: string | null
           address: string | null
           admin_notes: string | null
           amenities: Json
+          amenities_notes: string | null
           architect_name: string | null
           archived_at: string | null
+          building_amenities: string[]
           building_details: Json
+          building_type: string | null
           buyer_agent_compensation: string | null
           buyer_agent_compensation_notes: string | null
           city: string | null
@@ -3401,6 +3423,9 @@ export type Database = {
           description: string | null
           developer_name: string | null
           estimated_completion: string | null
+          expected_completion_month: number | null
+          expected_completion_quarter: number | null
+          expected_completion_year: number | null
           highlights: Json
           hoa_fee_includes: string | null
           hoa_fee_max: number | null
@@ -3410,7 +3435,6 @@ export type Database = {
           incentives: string | null
           interior_designer_name: string | null
           latitude: number | null
-          lifecycle_status: string
           logo_url: string | null
           longitude: number | null
           name: string
@@ -3424,8 +3448,10 @@ export type Database = {
           publish_status: string
           published_at: string | null
           published_by: string | null
+          sales_status: string
           slug: string
           slug_locked_at: string | null
+          stage: string
           state: string | null
           stories: number | null
           submitted_at: string | null
@@ -3438,12 +3464,16 @@ export type Database = {
         }
         Insert: {
           account_id: string
+          actual_completion_date?: string | null
           address?: string | null
           admin_notes?: string | null
           amenities?: Json
+          amenities_notes?: string | null
           architect_name?: string | null
           archived_at?: string | null
+          building_amenities?: string[]
           building_details?: Json
+          building_type?: string | null
           buyer_agent_compensation?: string | null
           buyer_agent_compensation_notes?: string | null
           city?: string | null
@@ -3456,6 +3486,9 @@ export type Database = {
           description?: string | null
           developer_name?: string | null
           estimated_completion?: string | null
+          expected_completion_month?: number | null
+          expected_completion_quarter?: number | null
+          expected_completion_year?: number | null
           highlights?: Json
           hoa_fee_includes?: string | null
           hoa_fee_max?: number | null
@@ -3465,7 +3498,6 @@ export type Database = {
           incentives?: string | null
           interior_designer_name?: string | null
           latitude?: number | null
-          lifecycle_status?: string
           logo_url?: string | null
           longitude?: number | null
           name: string
@@ -3479,8 +3511,10 @@ export type Database = {
           publish_status?: string
           published_at?: string | null
           published_by?: string | null
+          sales_status?: string
           slug: string
           slug_locked_at?: string | null
+          stage?: string
           state?: string | null
           stories?: number | null
           submitted_at?: string | null
@@ -3493,12 +3527,16 @@ export type Database = {
         }
         Update: {
           account_id?: string
+          actual_completion_date?: string | null
           address?: string | null
           admin_notes?: string | null
           amenities?: Json
+          amenities_notes?: string | null
           architect_name?: string | null
           archived_at?: string | null
+          building_amenities?: string[]
           building_details?: Json
+          building_type?: string | null
           buyer_agent_compensation?: string | null
           buyer_agent_compensation_notes?: string | null
           city?: string | null
@@ -3511,6 +3549,9 @@ export type Database = {
           description?: string | null
           developer_name?: string | null
           estimated_completion?: string | null
+          expected_completion_month?: number | null
+          expected_completion_quarter?: number | null
+          expected_completion_year?: number | null
           highlights?: Json
           hoa_fee_includes?: string | null
           hoa_fee_max?: number | null
@@ -3520,7 +3561,6 @@ export type Database = {
           incentives?: string | null
           interior_designer_name?: string | null
           latitude?: number | null
-          lifecycle_status?: string
           logo_url?: string | null
           longitude?: number | null
           name?: string
@@ -3534,8 +3574,10 @@ export type Database = {
           publish_status?: string
           published_at?: string | null
           published_by?: string | null
+          sales_status?: string
           slug?: string
           slug_locked_at?: string | null
+          stage?: string
           state?: string | null
           stories?: number | null
           submitted_at?: string | null
