@@ -10,11 +10,24 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useDeveloperEditor } from "@/components/developments/DeveloperDevelopmentLayout";
-import { formatBedsBaths, formatUsd, unitStatusLabel } from "@/lib/developments/format";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  formatBedsBaths,
+  formatPriceRange,
+  unitFeatureLabel,
+  unitStatusLabel,
+  unitTypeLabel,
+} from "@/lib/developments/format";
+import {
+  DEVELOPMENT_UNIT_FEATURES,
+  DEVELOPMENT_UNIT_STATUSES,
+  DEVELOPMENT_UNIT_TYPES,
+} from "@/lib/developments/publishStatus";
 import { deleteUnit, upsertUnit } from "@/lib/developments/workspace";
 import { toast } from "sonner";
 
-const UNIT_STATUSES = ["not_released", "coming_soon", "available", "reserved", "under_agreement", "sold"] as const;
+const UNIT_STATUSES = DEVELOPMENT_UNIT_STATUSES;
+const NONE = "__none__";
 
 export default function DeveloperUnitsPage() {
   const { development, canEdit, bundle, reload } = useDeveloperEditor();
@@ -26,7 +39,16 @@ export default function DeveloperUnitsPage() {
   const [baths, setBaths] = useState("");
   const [sqft, setSqft] = useState("");
   const [price, setPrice] = useState("");
+  const [priceMin, setPriceMin] = useState("");
+  const [priceMax, setPriceMax] = useState("");
+  const [unitType, setUnitType] = useState<string>(NONE);
+  const [features, setFeatures] = useState<string[]>([]);
   const [status, setStatus] = useState<string>("available");
+
+  const toggleFeature = (value: string, checked: boolean) =>
+    setFeatures((prev) =>
+      checked ? Array.from(new Set([...prev, value])) : prev.filter((v) => v !== value),
+    );
   const [saving, setSaving] = useState(false);
 
   const onCreate = async (e: React.FormEvent) => {
@@ -48,6 +70,10 @@ export default function DeveloperUnitsPage() {
       baths: baths ? Number(baths) : null,
       sqft: sqft ? Number(sqft) : null,
       price: price ? Number(price) : null,
+      price_min: priceMin ? Number(priceMin) : null,
+      price_max: priceMax ? Number(priceMax) : null,
+      unit_type: unitType === NONE ? null : unitType,
+      unit_features: features,
       status,
     });
     setSaving(false);
@@ -56,6 +82,10 @@ export default function DeveloperUnitsPage() {
       return;
     }
     setUnitNumber("");
+    setPrice("");
+    setPriceMin("");
+    setPriceMax("");
+    setFeatures([]);
     toast.success("Unit added.");
     await reload();
   };
@@ -126,8 +156,32 @@ export default function DeveloperUnitsPage() {
             <Input value={sqft} onChange={(e) => setSqft(e.target.value)} />
           </div>
           <div className="space-y-1">
+            <Label>Unit type</Label>
+            <Select value={unitType} onValueChange={setUnitType}>
+              <SelectTrigger>
+                <SelectValue placeholder="Not set" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={NONE}>Not set</SelectItem>
+                {DEVELOPMENT_UNIT_TYPES.map((t) => (
+                  <SelectItem key={t} value={t}>
+                    {unitTypeLabel(t)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1">
             <Label>Price</Label>
             <Input value={price} onChange={(e) => setPrice(e.target.value)} />
+          </div>
+          <div className="space-y-1">
+            <Label>Price min (range)</Label>
+            <Input value={priceMin} onChange={(e) => setPriceMin(e.target.value)} />
+          </div>
+          <div className="space-y-1">
+            <Label>Price max (range)</Label>
+            <Input value={priceMax} onChange={(e) => setPriceMax(e.target.value)} />
           </div>
           <div className="space-y-1">
             <Label>Status</Label>
@@ -144,6 +198,23 @@ export default function DeveloperUnitsPage() {
               </SelectContent>
             </Select>
           </div>
+          <div className="space-y-2 sm:col-span-3">
+            <Label>Unit features</Label>
+            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              {DEVELOPMENT_UNIT_FEATURES.map((feature) => (
+                <label
+                  key={feature}
+                  className="flex cursor-pointer items-center gap-2 rounded-lg border border-zinc-200 px-3 py-2 text-sm text-zinc-800"
+                >
+                  <Checkbox
+                    checked={features.includes(feature)}
+                    onCheckedChange={(v) => toggleFeature(feature, v === true)}
+                  />
+                  {unitFeatureLabel(feature)}
+                </label>
+              ))}
+            </div>
+          </div>
           <div className="flex items-end">
             <Button type="submit" disabled={saving}>
               {saving ? "Adding…" : "Add unit"}
@@ -157,6 +228,7 @@ export default function DeveloperUnitsPage() {
           <thead className="border-b border-zinc-200 bg-zinc-50 text-xs uppercase tracking-wide text-zinc-500">
             <tr>
               <th className="px-4 py-3 font-semibold">Unit</th>
+              <th className="px-4 py-3 font-semibold">Type</th>
               <th className="px-4 py-3 font-semibold">Beds/Baths</th>
               <th className="px-4 py-3 font-semibold">Price</th>
               <th className="px-4 py-3 font-semibold">Status</th>
@@ -166,7 +238,7 @@ export default function DeveloperUnitsPage() {
           <tbody className="divide-y divide-zinc-100">
             {bundle.units.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-zinc-500">
+                <td colSpan={6} className="px-4 py-8 text-center text-zinc-500">
                   No units yet.
                 </td>
               </tr>
@@ -174,8 +246,11 @@ export default function DeveloperUnitsPage() {
               bundle.units.map((unit) => (
                 <tr key={unit.id}>
                   <td className="px-4 py-3 font-medium text-zinc-900">{unit.unit_number}</td>
+                  <td className="px-4 py-3 text-zinc-600">{unitTypeLabel(unit.unit_type) ?? "—"}</td>
                   <td className="px-4 py-3 text-zinc-600">{formatBedsBaths(unit.beds, unit.baths)}</td>
-                  <td className="px-4 py-3 text-zinc-600">{formatUsd(unit.price)}</td>
+                  <td className="px-4 py-3 text-zinc-600">
+                    {formatPriceRange(unit.price_min, unit.price_max, unit.price)}
+                  </td>
                   <td className="px-4 py-3 text-zinc-600">{unitStatusLabel(unit.status)}</td>
                   <td className="px-4 py-3 text-right">
                     {canEdit ? (
