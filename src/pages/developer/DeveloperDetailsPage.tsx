@@ -61,9 +61,6 @@ export default function DeveloperDetailsPage() {
     description: development.description ?? "",
     developer_name: development.developer_name ?? "",
     architect_name: development.architect_name ?? "",
-    highlights: Array.isArray(development.highlights)
-      ? (development.highlights as string[]).join("\n")
-      : "",
     amenities_notes: Array.isArray(development.amenities)
       ? (development.amenities as string[]).join("\n")
       : "",
@@ -71,11 +68,8 @@ export default function DeveloperDetailsPage() {
     stories: development.stories?.toString() ?? "",
     expected_completion_year: development.expected_completion_year?.toString() ?? "",
     expected_completion_quarter: development.expected_completion_quarter?.toString() ?? "",
-    expected_completion_month: development.expected_completion_month?.toString() ?? "",
     actual_completion_date: development.actual_completion_date ?? "",
     buyer_agent_compensation: development.buyer_agent_compensation ?? "",
-    pet_policy: development.pet_policy ?? "",
-    parking_description: development.parking_description ?? "",
   });
   const [buildingAmenities, setBuildingAmenities] = useState<string[]>(
     Array.isArray(development.building_amenities)
