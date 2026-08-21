@@ -14,6 +14,7 @@ import PropertyTypePreferences from "@/components/PropertyTypePreferences";
 import { toast } from "sonner";
 import { hasNotificationTargetingConfigured } from "@/lib/checkAgentCommunicationPreferences";
 import { COMMS_FILTERS_UI } from "@/lib/commsFiltersCopy";
+import { COMMS_ONBOARDING_QUERY } from "@/lib/commsOnboardingRedirect";
 import { Seo } from "@/components/Seo";
 import { SendEmailDialog } from "@/components/communication-center/SendEmailDialog";
 import { isBuyerNeedComposeRequested, BUYER_NEED_COMPOSE_ROUTE } from "@/lib/buyerNeedCompose";
@@ -54,6 +55,12 @@ const ClientNeedsDashboard = () => {
   const [composeOpen, setComposeOpen] = useState(false);
   // Opt-in policy (Aug 2026): channels are OFF until the agent turns one on.
   // The old default-on notice/overlay is retired.
+  // Welcome banner only for the one-time login redirect (?comms_onboarding=1).
+  // Manual visits must not set agent_settings.comms_onboarding_seen_at.
+  const [showCommsOnboardingWelcome] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get(COMMS_ONBOARDING_QUERY) === "1";
+  });
 
   const priceDataRef = useRef<PriceRangeData | null>(null);
   const geoDataRef = useRef<GeographicData | null>(null);
@@ -311,6 +318,24 @@ const ClientNeedsDashboard = () => {
             subtitleClassName="text-neutral-500"
             className="mb-0"
           />
+
+          {showCommsOnboardingWelcome && (
+            <section
+              className="rounded-2xl border border-neutral-200 bg-neutral-50 px-5 py-5 sm:px-6"
+              data-testid="comms-onboarding-welcome"
+            >
+              <h2 className="text-2xl font-semibold tracking-tight text-neutral-900 sm:text-[1.75rem]">
+                Welcome to All Agent Connect
+              </h2>
+              <p className="mt-1 text-lg font-medium text-neutral-800">
+                Start by setting up your Comms.
+              </p>
+              <p className="mt-2 max-w-2xl text-sm leading-relaxed text-neutral-600">
+                Choose the conversations you want to be part of, then set your email filters so you
+                only receive the opportunities that matter to you.
+              </p>
+            </section>
+          )}
 
           <section id="comms-channels" className="space-y-3 scroll-mt-6">
             <div className="flex items-center justify-between">

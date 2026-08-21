@@ -208,10 +208,12 @@ import { Skeleton } from "./components/ui/skeleton";
 import { SharedListingGuestProvider } from "./contexts/SharedListingGuestContext";
 import { SharedListingGate } from "./components/SharedListingGate";
 import { decideLegacyDashboardRoute } from "./lib/legacyDashboardRoute";
+import { resolveUserRole } from "./lib/resolveUserRole";
+import { resolvePostAuthHomeRoute } from "./lib/commsOnboardingRedirect";
 
 /** Legacy `/dashboard` → role-appropriate home (buyers must land on `/client/dashboard`). */
 function LegacyDashboardRedirect() {
-  const { user, role, loading } = useAuthRole();
+  const { user, role, loading, isVerifiedAgent, canAccessSuccessHub } = useAuthRole();
   const navigate = useNavigate();
   const decision = decideLegacyDashboardRoute({
     userPresent: Boolean(user),
@@ -220,10 +222,35 @@ function LegacyDashboardRedirect() {
   });
 
   useEffect(() => {
-    if (decision.status === "redirect") {
+    if (decision.status !== "redirect") return;
+
+    let cancelled = false;
+
+    const run = async () => {
+      // Agent Success Hub home may be replaced by one-time Comms onboarding.
+      if (decision.target === "/agent-dashboard" && user?.id && role === "agent") {
+        const resolved = await resolveUserRole(user.id);
+        const target = await resolvePostAuthHomeRoute({
+          userId: user.id,
+          resolved: {
+            ...resolved,
+            is_verified_agent: resolved.is_verified_agent || isVerifiedAgent,
+            can_access_success_hub: resolved.can_access_success_hub || canAccessSuccessHub,
+          },
+          returnTo: null,
+        });
+        if (!cancelled) navigate(target, { replace: true });
+        return;
+      }
+
       navigate(decision.target, { replace: true });
-    }
-  }, [decision, navigate]);
+    };
+
+    void run();
+    return () => {
+      cancelled = true;
+    };
+  }, [decision, navigate, user?.id, role, isVerifiedAgent, canAccessSuccessHub]);
 
   return decision.status === "loading"
     ? <LoadingScreen message="Checking your session..." />

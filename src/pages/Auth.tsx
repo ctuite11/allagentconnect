@@ -14,7 +14,8 @@ import BrandMonogram from "@/components/home-v2/Monogram";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { cn } from "@/lib/utils";
 import { authDebug, getAuthRouteDecisionDiagnostics } from "@/lib/authDebug";
-import { resolveUserRole, getRouteForRole } from "@/lib/resolveUserRole";
+import { resolveUserRole } from "@/lib/resolveUserRole";
+import { resolvePostAuthHomeRoute } from "@/lib/commsOnboardingRedirect";
 import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 import { validateAgentSignup } from "@/lib/agentSignupValidation";
 import { TurnstileField } from "@/components/security/TurnstileField";
@@ -371,7 +372,11 @@ const Auth = () => {
             (resolved.role === "agent" && resolved.is_verified_agent);
           if (shouldRouteImmediately) {
             const returnToMeta = resolvePostAuthRedirectWithMeta(searchParams);
-            const target = returnToMeta.value ?? getRouteForRole(resolved);
+            const target = await resolvePostAuthHomeRoute({
+              userId: session.user.id,
+              resolved,
+              returnTo: returnToMeta.value,
+            });
             const diagnostics = await getAuthRouteDecisionDiagnostics(session.user.id);
             clearGuestListing();
             authDebug("handleSession terminal_redirect", { role: resolved.role, target });
