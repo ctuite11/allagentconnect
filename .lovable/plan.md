@@ -16,4 +16,4 @@ Shared specs:
 Use the uploaded screenshot as the authoritative visual reference for the monogram shape, wordmark, underline, scale, and spacing. Do not use, reconstruct from, or recolor the previously exported old lockup treatment. The only intentional departures from the reference are the horizontal arrangement and the white background with black text.
 
 ## Validation
-Render and inspect the final JPEG at full size and as a circular profile-photo crop, confirming it is centered, sharp, unclipped, and legible.
+Render and inspect both JPEGs at full size, and the square one as a circular profile-photo crop, confirming they are centered, sharp, unclipped, and legible.
