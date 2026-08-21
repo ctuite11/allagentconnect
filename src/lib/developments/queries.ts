@@ -11,7 +11,7 @@ import type {
 } from "./types";
 
 const DEVELOPMENT_LIST_SELECT = `
-  id, account_id, name, slug, lifecycle_status, publish_status, logo_url,
+  id, account_id, name, slug, stage, publish_status, logo_url,
   address, city, state, postal_code, neighborhood, neighborhood_description,
   developer_name, architect_name, interior_designer_name, estimated_completion,
   delivery_from, delivery_to, total_units, total_buildings, stories, year_built,

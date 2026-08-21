@@ -46,7 +46,7 @@ export function DevelopmentCard({ card }: { card: DevelopmentBrowseCard }) {
         <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
         <div className="absolute left-3 top-3 flex flex-wrap gap-2">
           <TierBadge tier={development.tier} />
-          <LifecycleBadge status={development.lifecycle_status} />
+          <LifecycleBadge status={development.stage} />
         </div>
         {development.logo_url ? (
           <div className="absolute bottom-3 left-3 rounded-lg bg-white/95 p-1.5 shadow-sm ring-1 ring-black/5">

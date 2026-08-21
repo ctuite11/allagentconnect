@@ -28,7 +28,7 @@ export default function DeveloperDetailsPage() {
   const [form, setForm] = useState({
     name: development.name,
     slug: development.slug,
-    lifecycle_status: development.lifecycle_status,
+    stage: development.stage,
     address: development.address ?? "",
     city: development.city ?? "",
     state: development.state ?? "",
@@ -58,7 +58,7 @@ export default function DeveloperDetailsPage() {
       ...prev,
       name: development.name,
       slug: development.slug,
-      lifecycle_status: development.lifecycle_status,
+      stage: development.stage,
     }));
   }, [development.id, development.updated_at]);
 
@@ -72,7 +72,7 @@ export default function DeveloperDetailsPage() {
     const { error } = await updateDevelopmentDetails(development.id, {
       name: form.name.trim(),
       slug: slugLocked ? undefined : form.slug.trim(),
-      lifecycle_status: form.lifecycle_status,
+      stage: form.stage,
       address: form.address || null,
       city: form.city || null,
       state: form.state || null,
@@ -129,9 +129,9 @@ export default function DeveloperDetailsPage() {
           <div className="space-y-2">
             <Label>Lifecycle</Label>
             <Select
-              value={form.lifecycle_status}
+              value={form.stage}
               disabled={!canEdit}
-              onValueChange={(v) => set("lifecycle_status", v)}
+              onValueChange={(v) => set("stage", v)}
             >
               <SelectTrigger>
                 <SelectValue />

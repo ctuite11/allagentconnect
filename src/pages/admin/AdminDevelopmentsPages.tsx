@@ -108,7 +108,7 @@ export function AdminDevelopmentsListPage() {
                     <PublishStatusBadge status={dev.publish_status} />
                   </div>
                   <p className="text-sm text-zinc-500">
-                    {formatLocation(dev)} · {lifecycleLabel(dev.lifecycle_status)}
+                    {formatLocation(dev)} · {lifecycleLabel(dev.stage)}
                     {dev.submitted_at
                       ? ` · Submitted ${new Date(dev.submitted_at).toLocaleDateString()}`
                       : ""}
@@ -234,7 +234,7 @@ export function AdminDevelopmentReviewPage() {
             </div>
             <div className="flex justify-between gap-3">
               <dt className="text-zinc-500">Lifecycle</dt>
-              <dd className="text-zinc-900">{lifecycleLabel(development.lifecycle_status)}</dd>
+              <dd className="text-zinc-900">{lifecycleLabel(development.stage)}</dd>
             </div>
             <div className="flex justify-between gap-3">
               <dt className="text-zinc-500">Photos</dt>

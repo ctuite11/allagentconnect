@@ -13,7 +13,7 @@ const mockDevelopment = {
   account_id: "00000000-0000-4000-8000-000000000010",
   name: "Harbor House Residences",
   slug: "harbor-house-residences",
-  lifecycle_status: "under_construction",
+  stage: "under_construction",
   publish_status: "published",
   logo_url: null,
   address: "100 Atlantic Ave",
