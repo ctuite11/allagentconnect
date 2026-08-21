@@ -1,4 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { getAreasForCity, hasNeighborhoodData } from "@/data/usNeighborhoodsData";
+import { US_STATES } from "@/data/usStatesCountiesData";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -35,11 +37,7 @@ function parseStringList(value: string): string[] {
 }
 
 const NONE = "__none__";
-const QUARTERS = [1, 2, 3, 4];
-const MONTHS = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
-];
+const SEASONS = ["Winter", "Spring", "Summer", "Fall"];
 
 function completionYears(current: number | null): number[] {
   const start = new Date().getFullYear();
@@ -65,9 +63,6 @@ export default function DeveloperDetailsPage() {
     description: development.description ?? "",
     developer_name: development.developer_name ?? "",
     architect_name: development.architect_name ?? "",
-    highlights: Array.isArray(development.highlights)
-      ? (development.highlights as string[]).join("\n")
-      : "",
     amenities_notes: Array.isArray(development.amenities)
       ? (development.amenities as string[]).join("\n")
       : "",
@@ -75,11 +70,8 @@ export default function DeveloperDetailsPage() {
     stories: development.stories?.toString() ?? "",
     expected_completion_year: development.expected_completion_year?.toString() ?? "",
     expected_completion_quarter: development.expected_completion_quarter?.toString() ?? "",
-    expected_completion_month: development.expected_completion_month?.toString() ?? "",
     actual_completion_date: development.actual_completion_date ?? "",
     buyer_agent_compensation: development.buyer_agent_compensation ?? "",
-    pet_policy: development.pet_policy ?? "",
-    parking_description: development.parking_description ?? "",
   });
   const [buildingAmenities, setBuildingAmenities] = useState<string[]>(
     Array.isArray(development.building_amenities)
@@ -88,6 +80,22 @@ export default function DeveloperDetailsPage() {
   );
   const [saving, setSaving] = useState(false);
   const slugLocked = Boolean(development.slug_locked_at);
+
+  const neighborhoodOptions = useMemo(() => {
+    const rawState = (form.state || "").trim();
+    const stateKey =
+      rawState.length > 2
+        ? US_STATES.find((s) => s.name.toLowerCase() === rawState.toLowerCase())?.code ?? rawState
+        : rawState.toUpperCase();
+    const city = (form.city || "").trim();
+    if (!city || !stateKey) return [] as string[];
+    const areas = hasNeighborhoodData(city, stateKey) ? getAreasForCity(city, stateKey) : [];
+    const list = Array.from(new Set(areas.filter(Boolean)));
+    if (form.neighborhood && list.length > 0 && !list.includes(form.neighborhood)) {
+      list.push(form.neighborhood);
+    }
+    return list;
+  }, [form.state, form.city, form.neighborhood]);
 
   useEffect(() => {
     setForm((prev) => ({
@@ -133,7 +141,6 @@ export default function DeveloperDetailsPage() {
       developer_name: form.developer_name || null,
       architect_name: form.architect_name || null,
       amenities: parseStringList(form.amenities_notes),
-      highlights: parseStringList(form.highlights),
       total_units: form.total_units ? Number(form.total_units) : null,
       stories: form.stories ? Number(form.stories) : null,
       expected_completion_year: form.expected_completion_year
@@ -142,14 +149,10 @@ export default function DeveloperDetailsPage() {
       expected_completion_quarter: form.expected_completion_quarter
         ? Number(form.expected_completion_quarter)
         : null,
-      expected_completion_month: form.expected_completion_month
-        ? Number(form.expected_completion_month)
-        : null,
+      expected_completion_month: null,
       actual_completion_date:
         form.stage === "completed" ? form.actual_completion_date || null : null,
       buyer_agent_compensation: form.buyer_agent_compensation || null,
-      pet_policy: form.pet_policy || null,
-      parking_description: form.parking_description || null,
     });
     setSaving(false);
     if (error) {
@@ -196,20 +199,6 @@ export default function DeveloperDetailsPage() {
             <Input id="architect_name" value={form.architect_name} disabled={!canEdit} onChange={(e) => set("architect_name", e.target.value)} />
           </div>
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="description">Description</Label>
-          <Textarea
-            id="description"
-            rows={5}
-            value={form.description}
-            disabled={!canEdit}
-            onChange={(e) => set("description", e.target.value)}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="highlights">Highlights (one per line)</Label>
-          <Textarea id="highlights" rows={4} value={form.highlights} disabled={!canEdit} onChange={(e) => set("highlights", e.target.value)} />
-        </div>
       </section>
 
       <section className="space-y-4 rounded-2xl border border-zinc-200 bg-white p-5">
@@ -233,10 +222,45 @@ export default function DeveloperDetailsPage() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="neighborhood">Neighborhood</Label>
-            <Input id="neighborhood" value={form.neighborhood} disabled={!canEdit} onChange={(e) => set("neighborhood", e.target.value)} />
+            {neighborhoodOptions.length > 0 ? (
+              <Select
+                value={form.neighborhood || NONE}
+                disabled={!canEdit}
+                onValueChange={(v) => set("neighborhood", v === NONE ? "" : v)}
+              >
+                <SelectTrigger id="neighborhood">
+                  <SelectValue placeholder="Not set" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={NONE}>Not set</SelectItem>
+                  {neighborhoodOptions.map((n) => (
+                    <SelectItem key={n} value={n}>
+                      {n}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <Input id="neighborhood" value={form.neighborhood} disabled={!canEdit} onChange={(e) => set("neighborhood", e.target.value)} />
+            )}
           </div>
         </div>
       </section>
+
+      <section className="space-y-4 rounded-2xl border border-zinc-200 bg-white p-5">
+        <h2 className="text-base font-semibold text-zinc-900">About</h2>
+        <div className="space-y-2">
+          <Label htmlFor="description">About this project</Label>
+          <Textarea
+            id="description"
+            rows={5}
+            value={form.description}
+            disabled={!canEdit}
+            onChange={(e) => set("description", e.target.value)}
+          />
+        </div>
+      </section>
+
 
       <section className="space-y-4 rounded-2xl border border-zinc-200 bg-white p-5">
         <div>
@@ -303,7 +327,7 @@ export default function DeveloperDetailsPage() {
             </Select>
           </div>
           <div className="space-y-2">
-            <Label>Expected completion — quarter</Label>
+            <Label>Expected completion — season</Label>
             <Select
               value={form.expected_completion_quarter || NONE}
               disabled={!canEdit || !form.expected_completion_year}
@@ -314,34 +338,15 @@ export default function DeveloperDetailsPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value={NONE}>Not set</SelectItem>
-                {QUARTERS.map((q) => (
-                  <SelectItem key={q} value={String(q)}>
-                    {`Q${q}`}
+                {SEASONS.map((season, i) => (
+                  <SelectItem key={season} value={String(i + 1)}>
+                    {season}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-2">
-            <Label>Expected completion — month (optional)</Label>
-            <Select
-              value={form.expected_completion_month || NONE}
-              disabled={!canEdit || !form.expected_completion_year}
-              onValueChange={(v) => set("expected_completion_month", v === NONE ? "" : v)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Not set" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={NONE}>Not set</SelectItem>
-                {MONTHS.map((m, i) => (
-                  <SelectItem key={m} value={String(i + 1)}>
-                    {m}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+
           {form.stage === "completed" ? (
             <div className="space-y-2">
               <Label htmlFor="actual_completion_date">Completion date</Label>
@@ -429,14 +434,6 @@ export default function DeveloperDetailsPage() {
           <div className="space-y-2">
             <Label htmlFor="comp">Buyer-agent compensation</Label>
             <Input id="comp" value={form.buyer_agent_compensation} disabled={!canEdit} onChange={(e) => set("buyer_agent_compensation", e.target.value)} />
-          </div>
-          <div className="space-y-2 sm:col-span-2">
-            <Label htmlFor="parking">Parking</Label>
-            <Input id="parking" value={form.parking_description} disabled={!canEdit} onChange={(e) => set("parking_description", e.target.value)} />
-          </div>
-          <div className="space-y-2 sm:col-span-2">
-            <Label htmlFor="pets">Pet policy</Label>
-            <Input id="pets" value={form.pet_policy} disabled={!canEdit} onChange={(e) => set("pet_policy", e.target.value)} />
           </div>
         </div>
       </section>

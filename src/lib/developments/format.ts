@@ -294,7 +294,9 @@ const MONTH_NAMES = [
   "July", "August", "September", "October", "November", "December",
 ];
 
-/** Structured expected completion: "Q3 2027", "March 2027", or "2027". */
+export const COMPLETION_SEASON_LABELS = ["Winter", "Spring", "Summer", "Fall"];
+
+/** Structured expected completion: "Spring 2027", "March 2027", or "2027". */
 export function formatExpectedCompletion(parts: {
   expected_completion_year?: number | null;
   expected_completion_quarter?: number | null;
@@ -303,10 +305,12 @@ export function formatExpectedCompletion(parts: {
 }): string | null {
   const year = parts.expected_completion_year;
   if (year) {
+    const quarter = parts.expected_completion_quarter;
+    if (quarter && quarter >= 1 && quarter <= 4) {
+      return `${COMPLETION_SEASON_LABELS[quarter - 1]} ${year}`;
+    }
     const month = parts.expected_completion_month;
     if (month && month >= 1 && month <= 12) return `${MONTH_NAMES[month - 1]} ${year}`;
-    const quarter = parts.expected_completion_quarter;
-    if (quarter && quarter >= 1 && quarter <= 4) return `Q${quarter} ${year}`;
     return String(year);
   }
   if (parts.estimated_completion) return formatDateLabel(parts.estimated_completion, "");
