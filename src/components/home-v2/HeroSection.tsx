@@ -135,10 +135,11 @@ const HeroSection = () => {
           </a>
           <a
             href="/login"
-            className="font-['Manrope'] font-semibold text-white bg-white/15 border border-white/25 backdrop-blur-md hover:bg-white/25 hover:border-white/50 transition-colors h-9 sm:h-11 px-3 sm:px-6 rounded-full inline-flex items-center text-[11px] sm:text-sm whitespace-nowrap"
+            className="font-['Manrope'] font-semibold text-zinc-900 bg-white border border-white shadow-sm hover:bg-white/90 transition-colors h-9 sm:h-11 px-4 sm:px-6 rounded-full inline-flex items-center text-[11px] sm:text-sm whitespace-nowrap"
           >
             Login
           </a>
+
         </div>
 
       </div>
