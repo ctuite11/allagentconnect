@@ -117,29 +117,30 @@ const HeroSection = () => {
 
       {/* Top access row */}
       <div className="relative z-10 flex items-center justify-between gap-3 w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-[100px] py-5">
-        <div className="inline-grid grid-cols-[auto_auto] items-center gap-x-2.5 gap-y-0.5 min-w-0">
-          <AACMonogram className="w-8 h-8 sm:w-9 sm:h-9 text-[#50c878] row-span-2 self-center" />
-          <span className="font-['Manrope'] font-semibold text-white text-base sm:text-xl tracking-[-0.4px] whitespace-nowrap">
+        <div className="inline-grid grid-cols-[auto_auto] items-center gap-x-2.5 gap-y-0.5 min-w-0 flex-1">
+          <AACMonogram className="w-7 h-7 sm:w-9 sm:h-9 text-[#50c878] row-span-2 self-center shrink-0" />
+          <span className="font-['Manrope'] font-semibold text-white text-[13px] sm:text-xl tracking-[-0.4px] truncate">
             All Agent Connect
           </span>
-          <span className="font-['Manrope'] font-light text-[10px] sm:text-[11px] tracking-[0.2em] text-neutral-400 whitespace-nowrap">
+          <span className="font-['Manrope'] font-light text-[9px] sm:text-[11px] tracking-[0.2em] text-neutral-400 truncate">
             Massachusetts
           </span>
         </div>
         <div className="flex items-center gap-2 sm:gap-4 md:gap-5 shrink-0">
           <a
             href="/request-access"
-            className="font-['Manrope'] font-semibold text-white bg-transparent border border-white/40 hover:bg-white/10 hover:border-white/70 transition-colors h-9 sm:h-11 px-3 sm:px-6 rounded-full inline-flex items-center text-xs sm:text-sm whitespace-nowrap"
+            className="font-['Manrope'] font-semibold text-white bg-transparent border border-white/40 hover:bg-white/10 hover:border-white/70 transition-colors h-9 sm:h-11 px-2.5 sm:px-6 rounded-full inline-flex items-center text-[11px] sm:text-sm whitespace-nowrap"
           >
             Request Access
           </a>
           <a
             href="/login"
-            className="font-['Manrope'] font-semibold text-white bg-white/15 border border-white/25 backdrop-blur-md hover:bg-white/25 hover:border-white/50 transition-colors h-9 sm:h-11 px-3 sm:px-6 rounded-full inline-flex items-center text-xs sm:text-sm whitespace-nowrap"
+            className="font-['Manrope'] font-semibold text-white bg-white/15 border border-white/25 backdrop-blur-md hover:bg-white/25 hover:border-white/50 transition-colors h-9 sm:h-11 px-3 sm:px-6 rounded-full inline-flex items-center text-[11px] sm:text-sm whitespace-nowrap"
           >
             Login
           </a>
         </div>
+
       </div>
 
       {/* Hero content */}
