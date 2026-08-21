@@ -1,16 +1,19 @@
-# Correct AAC Lockup JPEG
+# Correct AAC Lockup JPEGs
 
-## Deliverable
-Create one **1024 × 1024 JPEG** for an email profile photo on a solid white background, using the exact current lockup shown in the uploaded reference:
+## Deliverables
+Two JPEGs on a solid white background, both using the current green AAC monogram from the uploaded reference:
 
-- Current green AAC monogram centered above the name
-- “All Agent Connect” as one line, matching the reference typography and proportions
-- Thin green underline centered beneath the name
+1. **Horizontal lockup (primary)** — monogram in front of (to the left of) “All Agent Connect” on a single line, vertically centered with the text. Wide format suited to signatures and headers.
+2. **Square 1024 × 1024** — same horizontal monogram-then-text lockup, centered within a square canvas for use as an email profile photo.
+
+Shared specs:
+- “All Agent Connect” on one line, matching the reference typography and proportions
+- Thin green underline beneath the wordmark, matching the reference
 - Black wordmark on white for contrast
-- Generous square-safe spacing so email platforms do not crop the mark or text
+- Generous padding so email platforms do not crop the mark or text
 
 ## Source fidelity
-Use the uploaded screenshot as the authoritative visual reference. Do not use, reconstruct from, or recolor the previously exported old lockup treatment. Match the monogram shape, vertical arrangement, underline, scale, and spacing shown in the screenshot.
+Use the uploaded screenshot as the authoritative visual reference for the monogram shape, wordmark, underline, scale, and spacing. Do not use, reconstruct from, or recolor the previously exported old lockup treatment. The only intentional departures from the reference are the horizontal arrangement and the white background with black text.
 
 ## Validation
-Render and inspect the final JPEG at full size and as a circular profile-photo crop, confirming it is centered, sharp, unclipped, and legible.
+Render and inspect both JPEGs at full size, and the square one as a circular profile-photo crop, confirming they are centered, sharp, unclipped, and legible.
