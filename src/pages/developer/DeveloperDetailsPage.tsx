@@ -320,7 +320,7 @@ export default function DeveloperDetailsPage() {
             </Select>
           </div>
           <div className="space-y-2">
-            <Label>Expected completion — quarter</Label>
+            <Label>Expected completion — season</Label>
             <Select
               value={form.expected_completion_quarter || NONE}
               disabled={!canEdit || !form.expected_completion_year}
@@ -331,34 +331,15 @@ export default function DeveloperDetailsPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value={NONE}>Not set</SelectItem>
-                {QUARTERS.map((q) => (
-                  <SelectItem key={q} value={String(q)}>
-                    {`Q${q}`}
+                {SEASONS.map((season, i) => (
+                  <SelectItem key={season} value={String(i + 1)}>
+                    {season}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-2">
-            <Label>Expected completion — month (optional)</Label>
-            <Select
-              value={form.expected_completion_month || NONE}
-              disabled={!canEdit || !form.expected_completion_year}
-              onValueChange={(v) => set("expected_completion_month", v === NONE ? "" : v)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Not set" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={NONE}>Not set</SelectItem>
-                {MONTHS.map((m, i) => (
-                  <SelectItem key={m} value={String(i + 1)}>
-                    {m}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+
           {form.stage === "completed" ? (
             <div className="space-y-2">
               <Label htmlFor="actual_completion_date">Completion date</Label>
