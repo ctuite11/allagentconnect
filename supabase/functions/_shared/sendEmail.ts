@@ -175,6 +175,18 @@ export async function sendEmail(
       renderEmailTemplate(job.payload.template, job.payload.variables || {});
   }
 
+  // Footer opt-out row — subscription mail only, injected once, using the
+  // same signed URL as the List-Unsubscribe header.
+  if (isSubscription && unsubUrl) {
+    html = injectOptOutFooter(html, {
+      unsubscribeUrl: unsubUrl,
+      recipientEmail: toList[0],
+      category: category!,
+    });
+  }
+
+
+
   // Allow the enqueuing function to pass additional headers (merged after
   // List-Unsubscribe so callers cannot accidentally drop compliance headers).
   const payloadHeaders = (job.payload as { headers?: Record<string, string> }).headers;
