@@ -311,31 +311,31 @@ const ClientNeedsDashboard = () => {
             className="mb-0"
           />
 
-          <section id="comms-channels" className="space-y-4 scroll-mt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-xl font-semibold text-neutral-900">Channels</h2>
-                <p className="mt-1 text-sm text-neutral-500">
-                  Your hub for buyer demand, rentals, market intel, and network conversation.
-                </p>
-              </div>
-              {muteAllState?.anyEnabled && (
+          <section id="comms-channels" className="scroll-mt-6 space-y-3 border-b border-neutral-200 pb-8">
+            <div>
+              <h2 className="text-xl font-semibold text-neutral-900">Channels</h2>
+              <p className="mt-1 text-sm text-neutral-500">
+                Your hub for buyer demand, rentals, market intel, and network conversation.
+              </p>
+            </div>
+            {muteAllState?.anyEnabled && (
+              <div className="flex justify-end">
                 <button
                   type="button"
                   onClick={muteAllState.muteAll}
-                  className="text-sm font-medium text-neutral-500 transition-colors hover:text-neutral-900"
+                  className="text-xs font-medium text-neutral-500 transition-colors hover:text-neutral-800 sm:text-sm"
                 >
-                  Mute all
+                  Mute all email alerts
                 </button>
-              )}
-            </div>
+              </div>
+            )}
             <CommsChannelHubCards
               onPreferencesChange={() => setChannelPreferencesVersion((v) => v + 1)}
               onMuteAllStateChange={setMuteAllState}
             />
           </section>
 
-          <div className="space-y-5">
+          <div className="space-y-5 pt-6">
             {!emailAlertNoticeDismissed && (
               <div className="relative rounded-xl border border-emerald-300 bg-emerald-100/70 px-4 py-3">
                 <button
@@ -363,11 +363,14 @@ const ClientNeedsDashboard = () => {
               </div>
             )}
 
-            <section data-preferences-section className="space-y-2.5">
+            <section
+              data-preferences-section
+              className="space-y-2.5 rounded-2xl border border-neutral-200 bg-neutral-50/50 p-5"
+            >
             <div>
               <h2 className="text-xl font-semibold text-neutral-900">Your email filters</h2>
               <p className="mt-1.5 text-sm leading-relaxed text-neutral-600">
-                Set your coverage area to limit unwanted email alerts.
+                Limit which email alerts you receive by coverage area, property type, and price range.
               </p>
             </div>
 
@@ -480,8 +483,9 @@ const ClientNeedsDashboard = () => {
         </main>
 
         {hasUnsavedChanges && (
-          <div className="sticky bottom-0 z-40 border-t border-neutral-200 bg-white">
-            <div className="mx-auto flex max-w-7xl items-center justify-end px-6 py-4">
+          <div className="sticky bottom-0 z-40 border-t border-neutral-200 bg-neutral-50">
+            <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-3">
+              <p className="text-sm text-neutral-600">Unsaved email filter changes</p>
               <Button type="button" onClick={handleSavePreferences} disabled={saving}>
                 {saving ? (
                   <span className="flex items-center gap-2">

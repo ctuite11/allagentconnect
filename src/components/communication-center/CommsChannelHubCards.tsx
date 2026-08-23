@@ -155,10 +155,11 @@ export function CommsChannelHubCards({
     return (
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
-            <Skeleton className="h-5 w-32 rounded bg-neutral-100" />
-            <Skeleton className="mt-2 h-4 w-full rounded bg-neutral-100" />
-            <Skeleton className="mt-6 h-24 w-full rounded bg-neutral-100" />
+          <div key={i} className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm">
+            <Skeleton className="h-4 w-28 rounded bg-neutral-100" />
+            <Skeleton className="mt-1.5 h-3 w-full rounded bg-neutral-100" />
+            <Skeleton className="mt-4 h-12 w-full rounded bg-neutral-100" />
+            <Skeleton className="mt-3 h-9 w-full rounded bg-neutral-100" />
           </div>
         ))}
       </div>

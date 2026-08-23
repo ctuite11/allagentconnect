@@ -18,7 +18,7 @@ export const COMMS_CHANNELS: CommsChannelMeta[] = [
   {
     key: "buyer_need",
     title: "Buyer Needs",
-    tagline: "Connect buyer demand with opportunities across the AAC network.",
+    tagline: "Connect buyer demand with opportunities.",
     searchPlaceholder: "Search Buyer Needs…",
     sendLabel: "Send Buyer Need",
     icon: Users,
@@ -27,7 +27,7 @@ export const COMMS_CHANNELS: CommsChannelMeta[] = [
   {
     key: "renter_need",
     title: "Renter Needs",
-    tagline: "Share rental demand and find tenants across the AAC network.",
+    tagline: "Share rental demand and find tenants.",
     searchPlaceholder: "Search Renter Needs…",
     sendLabel: "Send Renter Need",
     icon: Home,
@@ -36,7 +36,7 @@ export const COMMS_CHANNELS: CommsChannelMeta[] = [
   {
     key: "sales_intel",
     title: "Sales Intel",
-    tagline: "Market activity, listings, and insights from agents on AAC.",
+    tagline: "Market activity, listings, and agent insights.",
     searchPlaceholder: "Search Sales Intel…",
     sendLabel: "Send Sales Intel",
     icon: TrendingUp,
@@ -45,7 +45,7 @@ export const COMMS_CHANNELS: CommsChannelMeta[] = [
   {
     key: "general_discussion",
     title: "General Discussion",
-    tagline: "Referrals, questions, and conversation with the agent network.",
+    tagline: "Referrals, questions, and network conversation.",
     searchPlaceholder: "Search General Discussion…",
     sendLabel: "Send Discussion",
     icon: MessageSquare,
