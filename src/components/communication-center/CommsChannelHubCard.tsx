@@ -7,8 +7,8 @@ import type { CommsChannelMeta } from "@/lib/commsChannels";
 import { commsChannelPath, previewMessageLines } from "@/lib/commsChannels";
 import type { LatestReceivedPreview } from "@/lib/commsChannelPreview";
 
-const footerAction =
-  "inline-flex h-10 min-w-0 flex-1 items-center justify-center whitespace-nowrap rounded-lg px-1 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0E56F5]/30 focus-visible:ring-offset-2 sm:px-2 sm:text-sm";
+const footerBase =
+  "inline-flex h-9 min-w-0 flex-1 items-center justify-center whitespace-nowrap rounded-lg px-1 text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0E56F5]/30 focus-visible:ring-offset-2 sm:px-2 sm:text-sm";
 
 type CommsChannelHubCardProps = {
   channel: CommsChannelMeta;
@@ -32,17 +32,20 @@ export function CommsChannelHubCard({
   const sentTo = commsChannelPath(channel.key, "sent");
 
   return (
-    <article className="flex min-h-[320px] flex-col overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm">
-      <header className="flex items-start justify-between gap-3 border-b border-neutral-100 px-5 pb-4 pt-5">
+    <article className="flex flex-col overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm">
+      <header className="flex items-start justify-between gap-3 px-4 pb-2 pt-3.5">
         <div className="min-w-0">
-          <div className="flex items-center gap-2.5">
-            <Icon className={cn("h-5 w-5 shrink-0", channel.iconClassName)} strokeWidth={2} aria-hidden />
-            <h3 className="text-[17px] font-semibold text-neutral-900">{channel.title}</h3>
+          <div className="flex items-center gap-2">
+            <Icon className={cn("h-[18px] w-[18px] shrink-0", channel.iconClassName)} strokeWidth={2} aria-hidden />
+            <h3 className="text-base font-semibold text-neutral-900">{channel.title}</h3>
           </div>
-          <p className="mt-1.5 text-sm leading-snug text-neutral-500">{channel.tagline}</p>
+          <p className="mt-1 line-clamp-2 text-[13px] leading-snug text-neutral-500">{channel.tagline}</p>
         </div>
-        <div className="flex shrink-0 items-center gap-2" onClick={(e) => e.stopPropagation()}>
-          <span className="text-xs font-medium text-neutral-500">{channelOn ? "On" : "Off"}</span>
+        <div
+          className="flex shrink-0 items-center gap-1.5 pt-0.5"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <span className="text-xs font-medium text-neutral-500">Email</span>
           <Switch
             checked={channelOn}
             onCheckedChange={onToggleChannel}
@@ -54,60 +57,54 @@ export function CommsChannelHubCard({
 
       <Link
         to={receivedTo}
-        className="group flex flex-1 flex-col px-5 py-4 text-left transition-colors hover:bg-neutral-50/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#0E56F5]/30"
+        className="group flex flex-col px-4 py-2.5 text-left transition-colors hover:bg-neutral-50/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#0E56F5]/30"
       >
-        <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-400">Latest received</p>
-
         {loading ? (
-          <div className="mt-3 space-y-2">
-            <Skeleton className="h-4 w-3/4 rounded bg-neutral-100" />
+          <div className="space-y-1.5">
+            <Skeleton className="h-3.5 w-4/5 rounded bg-neutral-100" />
             <Skeleton className="h-3 w-full rounded bg-neutral-100" />
-            <Skeleton className="h-3 w-5/6 rounded bg-neutral-100" />
-            <Skeleton className="mt-2 h-3 w-1/3 rounded bg-neutral-100" />
+            <Skeleton className="h-2.5 w-1/3 rounded bg-neutral-100" />
           </div>
         ) : preview ? (
-          <div className="mt-2 min-h-[120px]">
-            <p className="line-clamp-1 text-[15px] font-semibold text-neutral-900">{preview.subject}</p>
+          <>
+            <p className="line-clamp-1 text-sm font-semibold text-neutral-900">{preview.subject}</p>
             {preview.message ? (
-              <p className="mt-1.5 line-clamp-2 whitespace-pre-wrap text-sm leading-relaxed text-neutral-600">
-                {previewMessageLines(preview.message)}
+              <p className="mt-0.5 line-clamp-1 whitespace-pre-wrap text-[13px] leading-snug text-neutral-600">
+                {previewMessageLines(preview.message, 1)}
               </p>
             ) : null}
-            <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-neutral-500">
-              <span className="font-medium text-neutral-700">{preview.agentName}</span>
-              <span aria-hidden>·</span>
+            <p className="mt-1.5 text-xs italic text-neutral-500">
+              <span className="not-italic font-medium text-neutral-600">{preview.agentName}</span>
+              <span aria-hidden> · </span>
               <span>{preview.timestamp}</span>
               {preview.hasAttachment ? (
                 <>
-                  <span aria-hidden>·</span>
-                  <span className="inline-flex items-center gap-1">
+                  <span aria-hidden> · </span>
+                  <span className="inline-flex items-center gap-0.5 not-italic">
                     <Paperclip className="h-3 w-3" aria-hidden />
                     Attachment
                   </span>
                 </>
               ) : null}
-            </div>
-          </div>
-        ) : (
-          <div className="mt-3 flex min-h-[120px] flex-col justify-center">
-            <p className="text-sm font-medium text-neutral-600">Nothing here yet</p>
-            <p className="mt-1 text-sm leading-relaxed text-neutral-500">
-              When another agent posts in this channel, you&apos;ll see the latest message here.
             </p>
-          </div>
+          </>
+        ) : (
+          <p className="text-[13px] leading-snug text-neutral-500">
+            No messages from other agents yet.
+          </p>
         )}
       </Link>
 
-      <footer className="grid grid-cols-3 gap-0.5 border-t border-neutral-100 bg-neutral-50/60 p-1.5 sm:gap-1 sm:p-2">
+      <footer className="grid grid-cols-3 gap-0.5 border-t border-neutral-100 bg-neutral-50/50 p-1.5">
         <Link
           to={receivedTo}
-          className={cn(footerAction, "text-neutral-800 hover:bg-white hover:text-neutral-900")}
+          className={cn(footerBase, "font-semibold text-neutral-900 hover:bg-white")}
         >
-          Received
+          View Received
         </Link>
         <Link
           to={sentTo}
-          className={cn(footerAction, "text-neutral-800 hover:bg-white hover:text-neutral-900")}
+          className={cn(footerBase, "font-medium text-neutral-500 hover:bg-white hover:text-neutral-700")}
         >
           Sent
         </Link>
@@ -115,11 +112,11 @@ export function CommsChannelHubCard({
           type="button"
           onClick={onSend}
           className={cn(
-            footerAction,
-            "gap-1 text-[#0E56F5] hover:bg-white hover:text-[#0E56F5]",
+            footerBase,
+            "gap-0.5 font-semibold text-[#0E56F5] hover:bg-[#0E56F5]/[0.06]",
           )}
         >
-          <Plus className="h-4 w-4" aria-hidden />
+          <Plus className="h-3.5 w-3.5" aria-hidden />
           Send
         </button>
       </footer>
