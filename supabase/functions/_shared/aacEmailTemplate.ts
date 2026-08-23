@@ -34,18 +34,18 @@ interface AacEmailOptions {
    * Used by Communications Center broadcast/digest emails only.
    */
   contentFooterNote?: string;
-  /** Optional tracking + unsubscribe footer (marketing emails only) */
+  /** Optional tracking (marketing emails only) */
   tracking?: {
     pixelUrl?: string;
     /** Wrapped redirector URL — replaces ctaUrl when provided */
     wrappedCtaUrl?: string;
-    unsubscribeUrl?: string;
     recipientEmail?: string;
     categoryLabel?: string;
   };
   /**
-   * Hot Sheet and other alert emails must not offer account removal —
-   * it reads like an account-deletion action. Set true to omit that link.
+   * @deprecated No-op. The old "Remove my account" footer link has been
+   * removed from every template; opt-out links are injected at send time and
+   * only for subscription-style mail. Kept so existing callers keep compiling.
    */
   hideRemoveAccountLink?: boolean;
 }
