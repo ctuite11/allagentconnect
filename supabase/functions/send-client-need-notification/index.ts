@@ -469,6 +469,8 @@ const handler = async (req: Request): Promise<Response> => {
         to: r.email,
         subject: `[${categoryLabel}] ${subject}`,
         reply_to: validReplyTo,
+        // Opt-in broadcast stream -> footer opt-out links + List-Unsubscribe.
+        category: "comms_broadcast",
         metadata: { audience: "agent", reason: r.reason, broadcast_id: broadcastId, category },
         variables: {
           agentName: r.first_name,

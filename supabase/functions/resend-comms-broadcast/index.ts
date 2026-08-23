@@ -229,6 +229,8 @@ serve(async (req: Request): Promise<Response> => {
         to: r.email,
         subject: RESEND_SUBJECT,
         reply_to: validReplyTo,
+        // Opt-in broadcast stream -> footer opt-out links + List-Unsubscribe.
+        category: "comms_broadcast",
         metadata: {
           audience: "agent",
           reason: "resend",

@@ -6,7 +6,21 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "*",
 };
 
-const VALID_CATEGORIES = new Set(["listing_shares", "hot_sheet_alerts", "marketing", "all"]);
+// Streams that can be unsubscribed from. Subscription-style categories plus
+// the legacy `listing_shares` value (kept so previously-issued links keep
+// working) and the catch-all `all`.
+const VALID_CATEGORIES = new Set([
+  "hot_sheet_alerts",
+  "marketing",
+  "account_reminders",
+  "comms_broadcast",
+  "comms_digest",
+  "member_updates",
+  "development_notifications",
+  "listing_broadcast",
+  "listing_shares",
+  "all",
+]);
 
 function htmlPage(title: string, body: string, status = 200) {
   return new Response(
@@ -75,6 +89,11 @@ Deno.serve(async (req) => {
     c === "listing_shares" ? "listing share emails" :
     c === "hot_sheet_alerts" ? "hot sheet alert emails" :
     c === "marketing" ? "marketing emails" :
+    c === "account_reminders" ? "account reminder emails" :
+    c === "comms_broadcast" || c === "comms_digest" ? "Communications Center emails" :
+    c === "member_updates" ? "member update emails" :
+    c === "development_notifications" ? "new development update emails" :
+    c === "listing_broadcast" ? "listing notification emails" :
     "all marketing emails from All Agent Connect";
 
   if (!success) {
@@ -83,6 +102,6 @@ Deno.serve(async (req) => {
 
   return htmlPage(
     "Unsubscribed",
-    `<h1 class="ok">You're unsubscribed</h1><p><strong>${email}</strong> will no longer receive ${label}.</p><p style="margin-top:14px;font-size:12px;color:#94a3b8">Account, security, and other essential messages will still be delivered.</p>`,
+    `<h1 class="ok">You're unsubscribed</h1><p><strong>${email}</strong> will no longer receive ${label}.</p><p style="margin-top:14px;font-size:12px;color:#94a3b8">Account, security, and other essential messages will still be delivered.</p><p style="margin-top:14px;font-size:12px"><a href="https://allagentconnect.com/communications?prefs=1" style="color:#0E56F5;text-decoration:underline;">Manage email preferences</a></p>`,
   );
 });

@@ -66,7 +66,9 @@ const ClientNeedsDashboard = () => {
     const state = location.state as { scrollToPreferences?: boolean } | null;
     const params = new URLSearchParams(location.search);
     const sectionFilters = params.get("section") === "filters";
-    if (!state?.scrollToPreferences && !sectionFilters) return;
+    // Deep link used by email footers: /communications?prefs=1
+    const prefsParam = params.get("prefs") === "1";
+    if (!state?.scrollToPreferences && !sectionFilters && !prefsParam) return;
 
     requestAnimationFrame(() => {
       document.querySelector("[data-preferences-section]")?.scrollIntoView({ behavior: "smooth" });

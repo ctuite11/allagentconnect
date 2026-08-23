@@ -117,8 +117,6 @@ function buildListingShareText(opts: {
     "All Agent Connect",
     "",
     "chris@allagentconnect.com (mailto:chris@allagentconnect.com)",
-    "",
-    "Remove my account (mailto:chris@allagentconnect.com?subject=Remove%20My%20Account&body=Please%20remove%20my%20account.)",
   ].join("\n");
 }
 

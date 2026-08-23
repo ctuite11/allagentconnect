@@ -321,6 +321,8 @@ async function processAgentDigest(
         template: "comms-digest",
         to: profile.email,
         subject,
+        // Opt-in digest stream -> footer opt-out links + List-Unsubscribe.
+        category: "comms_digest",
         metadata: {
           audience: "agent",
           cadence,

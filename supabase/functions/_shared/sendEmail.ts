@@ -10,7 +10,47 @@ import {
   isMarketingCategory,
   type TrackingContext,
 } from "./tracking.ts";
+import {
+  buildListUnsubscribeHeaders,
+  isSubscriptionCategory,
+  MANAGE_EMAIL_PREFERENCES_URL,
+  unsubscribeCategoryLabel,
+} from "./emailCategories.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+
+/**
+ * Render the "Manage email preferences · Unsubscribe" row and place it inside
+ * the dark brand footer. Anchored on the stable footer marker; falls back to
+ * appending before </body> for templates that predate the marker.
+ */
+export function injectOptOutFooter(
+  html: string,
+  opts: { unsubscribeUrl: string; recipientEmail: string; category: string },
+): string {
+  const label = unsubscribeCategoryLabel(opts.category);
+  const block =
+    `<p style="margin:10px 0 0;font-size:11px;line-height:1.5;color:rgba(255,255,255,0.45);font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">` +
+    `Sent to <span style="color:rgba(255,255,255,0.6);">${opts.recipientEmail}</span>.<br />` +
+    `<a href="${MANAGE_EMAIL_PREFERENCES_URL}" style="color:rgba(255,255,255,0.6);text-decoration:underline;">Manage email preferences</a>` +
+    ` &nbsp;·&nbsp; ` +
+    `<a href="${opts.unsubscribeUrl}" style="color:rgba(255,255,255,0.6);text-decoration:underline;">Unsubscribe from ${label}</a>` +
+    `</p>`;
+
+  const anchorIdx = html.indexOf("<!--AAC_FOOTER_UNSUB_ANCHOR-->");
+  if (anchorIdx >= 0) {
+    const closeIdx = html.indexOf("</td></tr>", anchorIdx);
+    if (closeIdx >= 0) {
+      return html.slice(0, closeIdx) + block + html.slice(closeIdx);
+    }
+  }
+  if (html.includes("</body>")) {
+    return html.replace(
+      "</body>",
+      `<div style="text-align:center;background-color:#111317;padding:0 40px 20px;">${block}</div></body>`,
+    );
+  }
+  return html + block;
+}
 
 /**
  * Derive a plaintext version of an HTML email body.
@@ -113,23 +153,26 @@ export async function sendEmail(
 
   if (toList.length === 0) throw new Error("No valid recipients");
 
-  // Marketing emails (single recipient) get tracking + unsubscribe injected.
   const category = (job.payload as { category?: string }).category;
-  const isSingleMarketing =
-    isMarketingCategory(category) && toList.length === 1;
-  // Pixel + click-wrapping only runs when we render the template ourselves.
-  const trackingEnabled = isSingleMarketing && !job.payload.html;
+
+  // Subscription-style (opted-in / broadcast) mail is the ONLY traffic that
+  // gets suppression checks, footer opt-out links and List-Unsubscribe
+  // headers. Direct 1:1 shares and transactional/security mail get none.
+  const isSubscription = isSubscriptionCategory(category) && toList.length === 1;
+
+  // Pixel + click-wrapping only runs when we render the template ourselves,
+  // and only for the marketing/broadcast categories that already had it.
+  const trackingEnabled =
+    isSubscription && isMarketingCategory(category) && !job.payload.html;
 
   let html: string;
-  // Baseline List-Unsubscribe (mailto fallback) on every send.
-  // Marketing single-recipient path below overrides with the richer one-click URL header.
-  let extraHeaders: Record<string, string> = {
-    "List-Unsubscribe": "<mailto:unsubscribe@allagentconnect.com>",
-  };
+  let extraHeaders: Record<string, string> = {};
+  // The single signed, category-specific unsubscribe URL. The visible footer
+  // link and the RFC 8058 one-click header use this exact same value, so both
+  // paths produce identical suppression behaviour.
+  let unsubUrl: string | null = null;
 
-  if (isSingleMarketing) {
-    // Suppression check — applies for any single-recipient marketing send,
-    // including pre-rendered HTML (bulk outreach).
+  if (isSubscription) {
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supa = createClient(SUPABASE_URL, SERVICE_KEY);
@@ -142,12 +185,10 @@ export async function sendEmail(
       return { providerMessageId: `suppressed:${category}` };
     }
 
-    const unsubUrl = await buildUnsubUrl(toList[0], category!);
-    extraHeaders = {
-      "List-Unsubscribe": `<${unsubUrl}>, <mailto:hello@allagentconnect.com?subject=unsubscribe>`,
-      "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
-    };
+    unsubUrl = await buildUnsubUrl(toList[0], category!);
+    extraHeaders = buildListUnsubscribeHeaders(unsubUrl);
   }
+
 
   if (trackingEnabled && options.htmlOverride) {
     // Tracking rewrites the body per attempt, which would break the
@@ -169,6 +210,18 @@ export async function sendEmail(
       job.payload.html ||
       renderEmailTemplate(job.payload.template, job.payload.variables || {});
   }
+
+  // Footer opt-out row — subscription mail only, injected once, using the
+  // same signed URL as the List-Unsubscribe header.
+  if (isSubscription && unsubUrl) {
+    html = injectOptOutFooter(html, {
+      unsubscribeUrl: unsubUrl,
+      recipientEmail: toList[0],
+      category: category!,
+    });
+  }
+
+
 
   // Allow the enqueuing function to pass additional headers (merged after
   // List-Unsubscribe so callers cannot accidentally drop compliance headers).
@@ -258,27 +311,10 @@ async function injectTracking(html: string, ctx: TrackingContext): Promise<strin
     }
   }
 
-  // 2. Append unsubscribe footer inside dark footer table cell
-  const unsubUrl = await buildUnsubUrl(ctx.recipientEmail, ctx.category);
-  const categoryLabel =
-    ctx.category === "listing_shares" ? "listing emails" :
-    ctx.category === "hot_sheet_alerts" ? "hot sheet alerts" :
-    "marketing emails";
-  const unsubBlock = `<p style="margin:10px 0 0;font-size:11px;color:rgba(255,255,255,0.45);font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Sent to <span style="color:rgba(255,255,255,0.6);">${ctx.recipientEmail}</span>. <a href="${unsubUrl}" style="color:rgba(255,255,255,0.6);text-decoration:underline;">Unsubscribe from ${categoryLabel}</a></p>`;
-  // Insert just before the closing </td></tr> of the dark footer.
-  // Anchor on the stable footer marker first; fall back to the legacy
-  // "Remove my account" text for templates that still render it.
-  const anchorIdx = (() => {
-    const marker = out.indexOf("<!--AAC_FOOTER_UNSUB_ANCHOR-->");
-    if (marker >= 0) return marker;
-    return out.indexOf("Remove my account");
-  })();
-  if (anchorIdx >= 0) {
-    const closeIdx = out.indexOf("</td></tr>", anchorIdx);
-    if (closeIdx >= 0) {
-      out = out.slice(0, closeIdx) + unsubBlock + out.slice(closeIdx);
-    }
-  }
+  // 2. (Opt-out footer is injected by sendEmail for every subscription email —
+  //     tracking no longer renders its own, so the two can never diverge.)
+
+
 
   // 3. Inject pixel before </body>
   const pixelUrl = await buildOpenPixelUrl(ctx);

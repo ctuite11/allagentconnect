@@ -335,11 +335,6 @@ function renderEmailTemplate(template: string, variables: Record<string, any>): 
                       All Agent Connect &mdash; Private Agent Network<br>
                       Questions? <a href="mailto:hello@notify.allagentconnect.com" style="color:#0E56F5; font-weight:700;">hello@notify.allagentconnect.com</a>
                     </div>
-                    <div style="text-align:center; margin-top:10px;">
-                      <a href="mailto:hello@notify.allagentconnect.com?subject=Remove%20my%20account" style="font-size:11px; color:#94a3b8; text-decoration:underline;">
-                        Remove my account
-                      </a>
-                    </div>
                   </td>
                 </tr>
 
