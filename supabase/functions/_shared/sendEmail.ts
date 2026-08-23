@@ -113,23 +113,26 @@ export async function sendEmail(
 
   if (toList.length === 0) throw new Error("No valid recipients");
 
-  // Marketing emails (single recipient) get tracking + unsubscribe injected.
   const category = (job.payload as { category?: string }).category;
-  const isSingleMarketing =
-    isMarketingCategory(category) && toList.length === 1;
-  // Pixel + click-wrapping only runs when we render the template ourselves.
-  const trackingEnabled = isSingleMarketing && !job.payload.html;
+
+  // Subscription-style (opted-in / broadcast) mail is the ONLY traffic that
+  // gets suppression checks, footer opt-out links and List-Unsubscribe
+  // headers. Direct 1:1 shares and transactional/security mail get none.
+  const isSubscription = isSubscriptionCategory(category) && toList.length === 1;
+
+  // Pixel + click-wrapping only runs when we render the template ourselves,
+  // and only for the marketing/broadcast categories that already had it.
+  const trackingEnabled =
+    isSubscription && isMarketingCategory(category) && !job.payload.html;
 
   let html: string;
-  // Baseline List-Unsubscribe (mailto fallback) on every send.
-  // Marketing single-recipient path below overrides with the richer one-click URL header.
-  let extraHeaders: Record<string, string> = {
-    "List-Unsubscribe": "<mailto:unsubscribe@allagentconnect.com>",
-  };
+  let extraHeaders: Record<string, string> = {};
+  // The single signed, category-specific unsubscribe URL. The visible footer
+  // link and the RFC 8058 one-click header use this exact same value, so both
+  // paths produce identical suppression behaviour.
+  let unsubUrl: string | null = null;
 
-  if (isSingleMarketing) {
-    // Suppression check — applies for any single-recipient marketing send,
-    // including pre-rendered HTML (bulk outreach).
+  if (isSubscription) {
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supa = createClient(SUPABASE_URL, SERVICE_KEY);
@@ -142,12 +145,14 @@ export async function sendEmail(
       return { providerMessageId: `suppressed:${category}` };
     }
 
-    const unsubUrl = await buildUnsubUrl(toList[0], category!);
+    unsubUrl = await buildUnsubUrl(toList[0], category!);
     extraHeaders = {
       "List-Unsubscribe": `<${unsubUrl}>, <mailto:hello@allagentconnect.com?subject=unsubscribe>`,
+      // Only ever present alongside the HTTPS one-click URL above.
       "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
     };
   }
+
 
   if (trackingEnabled && options.htmlOverride) {
     // Tracking rewrites the body per attempt, which would break the
