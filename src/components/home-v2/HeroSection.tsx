@@ -157,11 +157,11 @@ const HeroSection = () => {
 
           {/* Headline */}
           <h1
-            className="mt-6 font-['Manrope'] font-semibold text-white text-4xl sm:text-5xl md:text-6xl tracking-tight leading-[1.05]"
+            className="mt-6 font-['Manrope'] font-semibold text-4xl sm:text-5xl md:text-6xl tracking-tight leading-[1.05]"
             style={{ textShadow: "0 2px 12px rgba(0,0,0,0.35)" }}
           >
-            <span className="block whitespace-nowrap">ONE NETWORK.</span>
-            <span className="block whitespace-nowrap">ALL AGENTS.</span>
+            <span className="block whitespace-nowrap text-white">ONE NETWORK.</span>
+            <span className="block whitespace-nowrap text-[#50C878]">ALL AGENTS.</span>
           </h1>
 
           {/* Sub-headline */}
@@ -170,7 +170,7 @@ const HeroSection = () => {
             style={{ textShadow: "0 1px 10px rgba(0,0,0,0.45)" }}
           >
             Connecting verified agents across{" "}
-            <span className="font-bold text-[#50C878] not-italic no-underline">all brokerages</span>{" "}
+            <span className="font-bold text-white not-italic no-underline">all brokerages</span>{" "}
             to share off-market and coming-soon opportunities, buyer demand, and market
             intelligence that creates a competitive advantage for their clients.
           </p>
