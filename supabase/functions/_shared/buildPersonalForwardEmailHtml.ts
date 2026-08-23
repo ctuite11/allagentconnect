@@ -12,9 +12,6 @@ const AAC_LOGO_URL =
 const CHRIS_HEADSHOT_URL =
   "https://qocduqtfbsevnhlgsfka.supabase.co/storage/v1/object/public/agent-headshots/1fc50da1-2664-4931-8cab-64e24dc5ed8c/headshot-1773973124574.jpg";
 
-const AAC_SCREENSHOT_URL =
-  "https://qocduqtfbsevnhlgsfka.supabase.co/storage/v1/object/public/brand-assets/email%2Finvite-hero-2026-08-21.jpg";
-
 export const PERSONAL_FORWARD_H1 =
   "You\u2019re invited to join All Agent Connect";
 
@@ -23,6 +20,8 @@ export interface PersonalForwardEmailOptions {
   ctaUrl: string;
   /** Optional short preheader text (hidden inbox preview). */
   preheader?: string;
+  /** Postal address shown in the footer (CAN-SPAM requirement). */
+  mailingAddress?: string;
 }
 
 function escapeHtml(s: string): string {
@@ -41,6 +40,8 @@ export function buildPersonalForwardEmailHtml(
   const preheader =
     opts.preheader ??
     "A private network built for real estate agents — a personal invitation from Chris Tuite.";
+  const mailingAddress =
+    opts.mailingAddress ?? "All Agent Connect, Inc. \u00b7 Massachusetts, USA";
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -104,25 +105,23 @@ export function buildPersonalForwardEmailHtml(
             </tr>
           </table>
 
-          <!-- Product screenshot -->
-          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:32px 0 0;">
-            <tr><td align="center" style="padding:0;">
-              <a href="${ctaUrl}" style="display:block;text-decoration:none;">
-                <img src="${AAC_SCREENSHOT_URL}" width="488" alt="All Agent Connect" style="display:block;width:100%;max-width:488px;height:auto;border:1px solid #e5e7eb;border-radius:10px;outline:none;text-decoration:none;" />
-              </a>
-            </td></tr>
-          </table>
         </td></tr>
 
-        <!-- Dark footer -->
-        <tr><td align="center" style="background-color:#111317;border-top:2px solid #50c878;border-radius:0 0 12px 12px;padding:24px 40px 20px;text-align:center;">
-          <img src="${AAC_LOGO_URL}" width="24" height="24" alt="All Agent Connect" style="display:block;margin:0 auto 12px;border:0;outline:none;text-decoration:none;" />
-          <p style="margin:0 0 4px;font-size:12px;color:rgba(255,255,255,0.6);font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">All Agent Connect</p>
-          <p style="margin:0 0 6px;font-size:12px;color:rgba(255,255,255,0.45);font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
-            <a href="mailto:chris@allagentconnect.com" style="color:rgba(255,255,255,0.45);text-decoration:none;">chris@allagentconnect.com</a>
+        <!-- Footer -->
+        <tr><td align="center" style="background-color:#111317;border-top:2px solid #50c878;border-radius:0 0 12px 12px;padding:28px 40px 24px;text-align:center;">
+          <img src="${AAC_LOGO_URL}" width="24" height="24" alt="All Agent Connect" style="display:block;margin:0 auto 10px;border:0;outline:none;text-decoration:none;" />
+          <p style="margin:0 0 2px;font-size:13px;font-weight:600;color:#ffffff;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">All Agent Connect</p>
+          <p style="margin:0 0 12px;font-size:11px;font-weight:500;letter-spacing:0.1em;color:rgba(255,255,255,0.45);text-transform:uppercase;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Massachusetts</p>
+          <p style="margin:0 0 10px;font-size:12px;line-height:1.6;color:rgba(255,255,255,0.55);font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
+            ${escapeHtml(mailingAddress)}
           </p>
-          <p style="margin:0;font-size:11px;color:rgba(255,255,255,0.35);font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
-            <a href="mailto:chris@allagentconnect.com?subject=Remove%20My%20Account&body=Please%20remove%20my%20account." style="color:rgba(255,255,255,0.35);text-decoration:underline;">Remove my account</a>
+          <p style="margin:0 0 10px;font-size:12px;line-height:1.6;color:rgba(255,255,255,0.45);font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
+            You received this one-time invitation because you are a licensed real estate professional in our market area.
+          </p>
+          <p style="margin:0;font-size:12px;color:rgba(255,255,255,0.45);font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
+            <a href="mailto:chris@allagentconnect.com" style="color:rgba(255,255,255,0.55);text-decoration:underline;">chris@allagentconnect.com</a>
+            &nbsp;&middot;&nbsp;
+            <a href="mailto:chris@allagentconnect.com?subject=Unsubscribe&body=Please%20do%20not%20contact%20me%20again." style="color:rgba(255,255,255,0.55);text-decoration:underline;">Unsubscribe</a>
           </p>
         </td></tr>
 
