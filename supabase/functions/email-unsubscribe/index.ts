@@ -6,7 +6,21 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "*",
 };
 
-const VALID_CATEGORIES = new Set(["listing_shares", "hot_sheet_alerts", "marketing", "all"]);
+// Streams that can be unsubscribed from. Subscription-style categories plus
+// the legacy `listing_shares` value (kept so previously-issued links keep
+// working) and the catch-all `all`.
+const VALID_CATEGORIES = new Set([
+  "hot_sheet_alerts",
+  "marketing",
+  "account_reminders",
+  "comms_broadcast",
+  "comms_digest",
+  "member_updates",
+  "development_notifications",
+  "listing_broadcast",
+  "listing_shares",
+  "all",
+]);
 
 function htmlPage(title: string, body: string, status = 200) {
   return new Response(
