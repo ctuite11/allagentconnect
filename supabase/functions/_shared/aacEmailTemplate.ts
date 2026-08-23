@@ -61,7 +61,6 @@ export function buildAacEmail(opts: AacEmailOptions): string {
     noticeBelowHeadline,
     contentFooterNote,
   } = opts;
-  const hideRemoveAccountLink = opts.hideRemoveAccountLink === true;
   const documentTitle = opts.documentTitle ?? headline;
   const ctaUrl = tracking?.wrappedCtaUrl || opts.ctaUrl;
 
@@ -96,12 +95,6 @@ export function buildAacEmail(opts: AacEmailOptions): string {
     ? `<div>`
     : `<div style="font-size:15px;line-height:1.6;color:#334155;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">`;
 
-  const unsubHtml = tracking?.unsubscribeUrl
-    ? `<p style="margin:10px 0 0;font-size:11px;color:rgba(255,255,255,0.45);font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
-         ${tracking.recipientEmail ? `Sent to <span style="color:rgba(255,255,255,0.6);">${escapeHtml(tracking.recipientEmail)}</span>. ` : ""}
-         <a href="${tracking.unsubscribeUrl}" style="color:rgba(255,255,255,0.6);text-decoration:underline;">Unsubscribe${tracking.categoryLabel ? ` from ${escapeHtml(tracking.categoryLabel)}` : ""}</a>
-       </p>`
-    : "";
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -153,11 +146,7 @@ export function buildAacEmail(opts: AacEmailOptions): string {
           <p style="margin:0 0 6px;font-size:12px;color:rgba(255,255,255,0.45);font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
             <a href="mailto:chris@allagentconnect.com" style="color:rgba(255,255,255,0.45);text-decoration:none;">chris@allagentconnect.com</a>
           </p>
-          ${hideRemoveAccountLink ? "" : `<p style="margin:0;font-size:11px;color:rgba(255,255,255,0.35);font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
-            <a href="mailto:chris@allagentconnect.com?subject=Remove%20My%20Account&body=Please%20remove%20my%20account." style="color:rgba(255,255,255,0.35);text-decoration:underline;">Remove my account</a>
-          </p>`}
           <!--AAC_FOOTER_UNSUB_ANCHOR-->
-          ${unsubHtml}
         </td></tr>
 
       </table>
