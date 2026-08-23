@@ -172,7 +172,7 @@ const HeroSection = () => {
             Connecting verified agents across{" "}
             <span className="font-bold text-white not-italic no-underline">all brokerages</span>{" "}
             to share off-market and coming-soon opportunities, buyer demand, and market
-            intelligence that creates a competitive advantage for their clients.
+            intelligence — giving their clients a competitive edge.
           </p>
 
           {/* CTA */}
