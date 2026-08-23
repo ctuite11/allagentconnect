@@ -12,9 +12,6 @@ const AAC_LOGO_URL =
 const CHRIS_HEADSHOT_URL =
   "https://qocduqtfbsevnhlgsfka.supabase.co/storage/v1/object/public/agent-headshots/1fc50da1-2664-4931-8cab-64e24dc5ed8c/headshot-1773973124574.jpg";
 
-const SIGNATURE_IMAGE_URL =
-  "https://qocduqtfbsevnhlgsfka.supabase.co/storage/v1/object/public/brand-assets/email/invite-hero-signature.jpg";
-
 export const PERSONAL_FORWARD_H1 =
   "You\u2019re invited to join All Agent Connect";
 
@@ -106,15 +103,6 @@ export function buildPersonalForwardEmailHtml(
                 <p style="margin:0;font-size:13px;color:#6b7280;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Founder</p>
               </td>
             </tr>
-          </table>
-
-          <!-- Signature image (small, alt-texted, linked) -->
-          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:24px 0 0;">
-            <tr><td align="center" style="padding:0;">
-              <a href="${ctaUrl}" style="text-decoration:none;">
-                <img src="${SIGNATURE_IMAGE_URL}" width="440" alt="All Agent Connect — the private listing network where agents share pre-market intelligence" style="display:block;width:100%;max-width:440px;height:auto;border:1px solid #e5e7eb;border-radius:8px;outline:none;text-decoration:none;" />
-              </a>
-            </td></tr>
           </table>
 
 
