@@ -10,7 +10,46 @@ import {
   isMarketingCategory,
   type TrackingContext,
 } from "./tracking.ts";
+import {
+  isSubscriptionCategory,
+  MANAGE_EMAIL_PREFERENCES_URL,
+  unsubscribeCategoryLabel,
+} from "./emailCategories.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+
+/**
+ * Render the "Manage email preferences · Unsubscribe" row and place it inside
+ * the dark brand footer. Anchored on the stable footer marker; falls back to
+ * appending before </body> for templates that predate the marker.
+ */
+export function injectOptOutFooter(
+  html: string,
+  opts: { unsubscribeUrl: string; recipientEmail: string; category: string },
+): string {
+  const label = unsubscribeCategoryLabel(opts.category);
+  const block =
+    `<p style="margin:10px 0 0;font-size:11px;line-height:1.5;color:rgba(255,255,255,0.45);font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">` +
+    `Sent to <span style="color:rgba(255,255,255,0.6);">${opts.recipientEmail}</span>.<br />` +
+    `<a href="${MANAGE_EMAIL_PREFERENCES_URL}" style="color:rgba(255,255,255,0.6);text-decoration:underline;">Manage email preferences</a>` +
+    ` &nbsp;·&nbsp; ` +
+    `<a href="${opts.unsubscribeUrl}" style="color:rgba(255,255,255,0.6);text-decoration:underline;">Unsubscribe from ${label}</a>` +
+    `</p>`;
+
+  const anchorIdx = html.indexOf("<!--AAC_FOOTER_UNSUB_ANCHOR-->");
+  if (anchorIdx >= 0) {
+    const closeIdx = html.indexOf("</td></tr>", anchorIdx);
+    if (closeIdx >= 0) {
+      return html.slice(0, closeIdx) + block + html.slice(closeIdx);
+    }
+  }
+  if (html.includes("</body>")) {
+    return html.replace(
+      "</body>",
+      `<div style="text-align:center;background-color:#111317;padding:0 40px 20px;">${block}</div></body>`,
+    );
+  }
+  return html + block;
+}
 
 /**
  * Derive a plaintext version of an HTML email body.
