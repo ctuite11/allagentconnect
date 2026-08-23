@@ -49,6 +49,7 @@ const ListingSearchResults = React.lazy(() => import("./pages/ListingSearchResul
 import { BUYER_NEED_COMPOSE_ROUTE } from "@/lib/buyerNeedCompose";
 const ClientNeedsDashboard = React.lazy(() => import("./pages/ClientNeedsDashboard"));
 const CommunicationsFeed = React.lazy(() => import("./pages/CommunicationsFeed"));
+const CommsChannelWorkspace = React.lazy(() => import("./pages/CommsChannelWorkspace"));
 // CommunicationCenter deleted - consolidated into ClientNeedsDashboard as "Communications Center"
 const ListingIntel = React.lazy(() => import("./pages/ListingIntel"));
 const AddListing = React.lazy(() => import("./pages/AddListing"));
@@ -498,6 +499,7 @@ const App = () => (
                   <Route path="/success-hub/buyers/:buyerId" element={<LegacySuccessHubBuyerAccountToAgent />} />
                   <Route path="/success-hub/listings" element={<RouteGuard requireRole="agent"><ListingsList /></RouteGuard>} />
                   <Route path="/success-hub/listings/:listingId" element={<RouteGuard requireRole="agent"><ListingPerformance /></RouteGuard>} />
+                  <Route path="/communications/channel/:category" element={<RouteGuard requireRole="agent"><CommsChannelWorkspace /></RouteGuard>} />
                   <Route path="/communications" element={<RouteGuard requireRole="agent"><ClientNeedsDashboard /></RouteGuard>} />
                   <Route path="/communications/feed" element={<RouteGuard requireRole="agent"><CommunicationsFeed /></RouteGuard>} />
 

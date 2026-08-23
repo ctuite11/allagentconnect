@@ -5,8 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/ui/page-header";
 import { Loader2, AlertTriangle, SlidersHorizontal, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { NotificationPreferenceCards } from "@/components/NotificationPreferenceCards";
-import { SentCommunicationsSection } from "@/components/communication-center/SentCommunicationsSection";
+import { CommsChannelHubCards } from "@/components/communication-center/CommsChannelHubCards";
 import { ClientNeedsNotificationSettings } from "@/components/ClientNeedsNotificationSettings";
 import GeographicPreferencesManager, { GeographicData } from "@/components/GeographicPreferencesManager";
 import PriceRangePreferences, { PriceRangeData } from "@/components/PriceRangePreferences";
@@ -312,9 +311,14 @@ const ClientNeedsDashboard = () => {
             className="mb-0"
           />
 
-          <section id="comms-channels" className="space-y-3 scroll-mt-6">
+          <section id="comms-channels" className="space-y-4 scroll-mt-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-neutral-900">Channels</h2>
+              <div>
+                <h2 className="text-xl font-semibold text-neutral-900">Channels</h2>
+                <p className="mt-1 text-sm text-neutral-500">
+                  Your hub for buyer demand, rentals, market intel, and network conversation.
+                </p>
+              </div>
               {muteAllState?.anyEnabled && (
                 <button
                   type="button"
@@ -325,19 +329,11 @@ const ClientNeedsDashboard = () => {
                 </button>
               )}
             </div>
-            <div className="rounded-xl border border-primary/30 bg-primary/[0.10] px-4 py-3">
-              <h3 className="text-base font-bold tracking-tight text-primary">Turn on your Comms</h3>
-              <p className="mt-1 text-sm leading-snug text-neutral-700">
-                Choose the conversations you want to be part of and turn on the channels that matter to you.
-              </p>
-            </div>
-            <NotificationPreferenceCards
+            <CommsChannelHubCards
               onPreferencesChange={() => setChannelPreferencesVersion((v) => v + 1)}
               onMuteAllStateChange={setMuteAllState}
             />
           </section>
-
-          <SentCommunicationsSection />
 
           <div className="space-y-5">
             {!emailAlertNoticeDismissed && (
