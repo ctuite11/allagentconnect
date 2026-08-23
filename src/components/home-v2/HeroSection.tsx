@@ -157,18 +157,22 @@ const HeroSection = () => {
 
           {/* Headline */}
           <h1
-            className="mt-6 font-['Manrope'] font-semibold text-white text-5xl md:text-6xl tracking-tight leading-[1.05]"
-            style={{ textShadow: "0 2px 12px rgba(0,0,0,0.35)", textWrap: "balance" as any }}
+            className="mt-6 font-['Manrope'] font-semibold text-white text-4xl sm:text-5xl md:text-6xl tracking-tight leading-[1.05]"
+            style={{ textShadow: "0 2px 12px rgba(0,0,0,0.35)" }}
           >
-            The private listing network where agents share pre-market intelligence.
+            <span className="block whitespace-nowrap">ONE NETWORK.</span>
+            <span className="block whitespace-nowrap">ALL AGENTS.</span>
           </h1>
 
           {/* Sub-headline */}
           <p
-            className="mt-5 font-['Manrope'] font-medium text-white/90 text-lg md:text-xl leading-relaxed max-w-2xl"
+            className="mt-5 font-['Manrope'] font-medium text-white/90 text-base sm:text-lg md:text-xl leading-relaxed max-w-[34rem]"
             style={{ textShadow: "0 1px 10px rgba(0,0,0,0.45)" }}
           >
-            See buyer demand and pre-market opportunities before they hit the public market.
+            Connecting verified agents across{" "}
+            <span className="font-bold text-[#50C878] not-italic no-underline">all brokerages</span>{" "}
+            to share off-market and coming-soon opportunities, buyer demand, and market
+            intelligence that creates a competitive advantage for their clients.
           </p>
 
           {/* CTA */}
