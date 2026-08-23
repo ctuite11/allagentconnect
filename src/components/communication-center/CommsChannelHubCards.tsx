@@ -115,7 +115,9 @@ export function CommsChannelHubCards({
       anyEnabled: Object.values(preferences).some((v) => v),
       muteAll: deselectAllPreferences,
     });
-  }, [preferences, prefsLoading, onMuteAllStateChange, deselectAllPreferences]);
+    // Parent passes inline callbacks; only re-publish when prefs change (matches NotificationPreferenceCards).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [preferences, prefsLoading]);
 
   const togglePreference = async (key: CommsChannelKey) => {
     try {
