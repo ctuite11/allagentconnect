@@ -11,6 +11,7 @@ import {
   type TrackingContext,
 } from "./tracking.ts";
 import {
+  buildListUnsubscribeHeaders,
   isSubscriptionCategory,
   MANAGE_EMAIL_PREFERENCES_URL,
   unsubscribeCategoryLabel,
@@ -185,11 +186,7 @@ export async function sendEmail(
     }
 
     unsubUrl = await buildUnsubUrl(toList[0], category!);
-    extraHeaders = {
-      "List-Unsubscribe": `<${unsubUrl}>, <mailto:hello@allagentconnect.com?subject=unsubscribe>`,
-      // Only ever present alongside the HTTPS one-click URL above.
-      "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
-    };
+    extraHeaders = buildListUnsubscribeHeaders(unsubUrl);
   }
 
 

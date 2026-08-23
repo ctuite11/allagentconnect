@@ -72,3 +72,19 @@ export function unsubscribeCategoryLabel(category: string): string {
 /** Deep link to the signed-in Communications preferences area. */
 export const MANAGE_EMAIL_PREFERENCES_URL =
   "https://allagentconnect.com/communications?prefs=1";
+
+/**
+ * RFC 8058 headers. `List-Unsubscribe-Post` is emitted ONLY when an HTTPS
+ * one-click URL is present, and that URL is the same signed, category-specific
+ * link rendered in the visible footer.
+ */
+export function buildListUnsubscribeHeaders(
+  unsubscribeUrl: string | null | undefined,
+): Record<string, string> {
+  if (!unsubscribeUrl) return {};
+  return {
+    "List-Unsubscribe":
+      `<${unsubscribeUrl}>, <mailto:hello@allagentconnect.com?subject=unsubscribe>`,
+    "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+  };
+}
