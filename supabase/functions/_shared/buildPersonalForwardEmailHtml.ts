@@ -108,6 +108,17 @@ export function buildPersonalForwardEmailHtml(
             </tr>
           </table>
 
+          <!-- Signature image (small, alt-texted, linked) -->
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:24px 0 0;">
+            <tr><td align="center" style="padding:0;">
+              <a href="${ctaUrl}" style="text-decoration:none;">
+                <img src="${SIGNATURE_IMAGE_URL}" width="440" alt="All Agent Connect — the private listing network where agents share pre-market intelligence" style="display:block;width:100%;max-width:440px;height:auto;border:1px solid #e5e7eb;border-radius:8px;outline:none;text-decoration:none;" />
+              </a>
+            </td></tr>
+          </table>
+
+
+
         </td></tr>
 
         <!-- Footer -->
