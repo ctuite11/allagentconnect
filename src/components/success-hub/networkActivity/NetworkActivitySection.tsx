@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { Home, MessageSquare, Radio, TrendingUp, UserCheck, Users } from "lucide-react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { AgentAvatar } from "@/components/ui/AgentAvatar";
-import { ROUTES } from "@/constants/routes";
 import { initialsFromDisplayName } from "@/lib/initials";
 import { NetworkActivityCard } from "./NetworkActivityCard";
 import { ChannelPreviewCard } from "./ChannelPreviewCard";
@@ -15,7 +14,7 @@ import {
   useSalesIntelPreview,
 } from "./useChannelPreviews";
 
-const channelLink = (channel: string) => `${ROUTES.COMMUNICATIONS}/feed?channel=${channel}`;
+import { commsChannelPath } from "@/lib/commsChannels";
 
 type ComposeCategory = "buyer_need" | "sales_intel" | "renter_need" | "general_discussion";
 
@@ -26,7 +25,7 @@ function BuyerNeedsChannel({ onCreate }: { onCreate: () => void }) {
       title="Buyer Needs"
       description="Latest buyer demand on AAC"
       icon={<Users className="h-4 w-4 shrink-0 text-emerald-600" aria-hidden />}
-      viewAllTo={channelLink("buyer_need")}
+      viewAllTo={commsChannelPath("buyer_need")}
       items={items}
       loading={loading}
       emptyLabel="No recent buyer needs"
@@ -42,7 +41,7 @@ function SalesIntelChannel({ onCreate }: { onCreate: () => void }) {
       title="Sales Intel"
       description="Newest for-sale listings"
       icon={<TrendingUp className="h-4 w-4 shrink-0 text-[#0E56F5]" aria-hidden />}
-      viewAllTo={channelLink("sales_intel")}
+      viewAllTo={commsChannelPath("sales_intel")}
       items={items}
       loading={loading}
       emptyLabel="No recent listings"
@@ -58,7 +57,7 @@ function RenterNeedsChannel({ onCreate }: { onCreate: () => void }) {
       title="Renter Needs"
       description="Latest rental demand"
       icon={<Home className="h-4 w-4 shrink-0 text-amber-600" aria-hidden />}
-      viewAllTo={channelLink("renter_need")}
+      viewAllTo={commsChannelPath("renter_need")}
       items={items}
       loading={loading}
       emptyLabel="No recent renter needs"
@@ -74,7 +73,7 @@ function GeneralDiscussionsChannel({ onCreate }: { onCreate: () => void }) {
       title="General Discussions"
       description="Referrals & agent conversation"
       icon={<MessageSquare className="h-4 w-4 shrink-0 text-indigo-600" aria-hidden />}
-      viewAllTo={channelLink("general_discussion")}
+      viewAllTo={commsChannelPath("general_discussion")}
       items={items}
       loading={loading}
       emptyLabel="No recent discussions"
