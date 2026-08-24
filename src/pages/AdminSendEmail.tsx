@@ -28,6 +28,8 @@ export default function AdminSendEmail() {
   const navigate = useNavigate();
   const [authChecked, setAuthChecked] = useState(false);
   const [allowed, setAllowed] = useState(false);
+  const [senderLine, setSenderLine] = useState<string | null>(null);
+
 
   const [to, setTo] = useState("");
   const [subject, setSubject] = useState("");
