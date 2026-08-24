@@ -150,6 +150,7 @@ const AdminConsumers = React.lazy(() => import("./pages/AdminConsumers"));
 const AdminInviteAudit = React.lazy(() => import("./pages/AdminInviteAudit"));
 const AdminEmailAnalytics = React.lazy(() => import("./pages/AdminEmailAnalytics"));
 const AdminFounderInvite = React.lazy(() => import("./pages/AdminFounderInvite"));
+const AdminSendEmail = React.lazy(() => import("./pages/AdminSendEmail"));
 const NetworkIntelligence = React.lazy(() => import("./pages/NetworkIntelligence"));
 
 const ClientDashboard = React.lazy(() => import("./pages/ClientDashboard"));
@@ -575,6 +576,7 @@ const App = () => (
                   <Route path="/admin/invites" element={<AdminInviteAudit />} />
                   <Route path="/admin/email-analytics" element={<AdminEmailAnalytics />} />
                   <Route path="/admin/founder-invite" element={<AdminFounderInvite />} />
+                  <Route path="/admin/send-email" element={<AdminSendEmail />} />
                   <Route path="/admin/debug-auth" element={<AdminDebugAuth />} />
                   <Route path="/settings" element={<RouteGuard requireRole="agent"><AgentSettings /></RouteGuard>} />
                 </Route>
