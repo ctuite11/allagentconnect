@@ -75,8 +75,8 @@ export default function AdminSendEmail() {
         ctaUrl: ctaUrl.trim() || undefined,
         replyTo: replyTo.trim() || undefined,
       });
-      toast.success(`Email queued for ${trimmed}`);
-      setLastResult(`Queued for ${trimmed}`);
+      toast.success(`Email sent successfully to ${trimmed}`);
+      setLastResult(`Sent successfully to ${trimmed}`);
       if (!isInvite) setMessage("");
     } catch (e) {
       const msg = (e as Error)?.message || "Failed to send";
