@@ -125,6 +125,17 @@ export default function AdminSendEmail() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
+            <Label>From</Label>
+            <div className="rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-700">
+              {senderLine ?? "Resolving your sender identity…"}
+            </div>
+            <p className="text-xs text-neutral-500">
+              Sent as you, not as the automated All Agent Connect sender.
+            </p>
+          </div>
+
+          <div className="space-y-2">
+
             <Label htmlFor="admin-email-to">Recipient email</Label>
             <Input
               id="admin-email-to"
