@@ -127,6 +127,44 @@ Deno.serve(async (req) => {
       return json({ error: "Admin access required" }, 403);
     }
 
+    /* ---- PERSONAL SENDER IDENTITY (fail-closed) ----
+     * Hand-composed admin email goes out as the admin themselves, never as
+     * the automated `hello@` company sender. If we cannot resolve a valid
+     * @allagentconnect.com identity for the caller, refuse the send rather
+     * than silently falling back to the company sender. */
+    const { data: profile, error: profileError } = await admin
+      .from("profiles")
+      .select("first_name, last_name, email")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    const senderEmail = (profile?.email ?? user.email ?? "").trim().toLowerCase();
+    const senderName = [profile?.first_name, profile?.last_name]
+      .filter((part) => typeof part === "string" && part.trim())
+      .join(" ")
+      .trim();
+
+    if (profileError) {
+      console.error("[admin-send-email] sender profile lookup failed:", profileError.message);
+      return json({ error: "Could not resolve your sender identity" }, 500);
+    }
+    if (!senderEmail.endsWith("@allagentconnect.com") || !senderName) {
+      console.warn(
+        "[admin-send-email] refusing send — incomplete sender identity:",
+        senderEmail || "(no email)",
+        senderName || "(no name)",
+      );
+      return json(
+        {
+          error:
+            "Your admin profile is missing a name or an @allagentconnect.com address, so this email cannot be sent as you.",
+        },
+        400,
+      );
+    }
+    const fromOverride = `${senderName} <${senderEmail}>`;
+
+
 
     const body = (await req.json().catch(() => ({}))) as AdminSendEmailRequest;
     const to = (body.to ?? "").trim().toLowerCase();
