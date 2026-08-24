@@ -1810,6 +1810,15 @@ export default function AdminApprovals() {
             >
               {isSendingLicensePreview ? "Sending…" : "Preview License Verified email"}
             </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate('/admin/send-email')}
+              className="w-full justify-start border-slate-300 text-slate-700 hover:bg-slate-100 sm:w-auto sm:justify-center"
+            >
+              <Mail className="h-4 w-4 mr-2" />
+              Send email
+            </Button>
             <Button 
               onClick={() => setShowCreateDialog(true)}
               size="sm"
