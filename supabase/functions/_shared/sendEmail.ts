@@ -277,9 +277,10 @@ export async function sendEmail(
   // Serialize ONCE. The exact same string is replayed on every retry, which
   // is what Resend's idempotency contract compares against.
   const requestBody = JSON.stringify({
-      // Always use canonical From — never honor payload.from (prevents notify/mail drift
-      // and dynamic display-name overrides that damaged reputation).
+      // Canonical company From, unless resolveFrom() authorized a personal
+      // admin sender for an admin-composed email type. Never honors payload.from.
       from: canonicalFrom,
+
       to: toList,
       subject: job.payload.subject,
       html,
