@@ -48,10 +48,25 @@ export default function AdminSendEmail() {
         navigate("/auth");
         return;
       }
-      setAllowed(await hasRole(user.id, "admin"));
+      const isAdmin = await hasRole(user.id, "admin");
+      setAllowed(isAdmin);
+      if (isAdmin) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("first_name, last_name, email")
+          .eq("id", user.id)
+          .maybeSingle();
+        const name = [profile?.first_name, profile?.last_name]
+          .filter(Boolean)
+          .join(" ")
+          .trim();
+        const email = (profile?.email || user.email || "").trim();
+        setSenderLine(name && email ? `${name} <${email}>` : email || null);
+      }
       setAuthChecked(true);
     })();
   }, [navigate]);
+
 
   const isInvite = template === "personal-forward-invite";
 
