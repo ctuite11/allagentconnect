@@ -73,23 +73,60 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
 
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) return json({ error: "Unauthorized" }, 401);
+    console.log("[admin-send-email] auth header present:", Boolean(authHeader));
+    if (!authHeader) {
+      return json({ error: "Session expired, please sign in again" }, 401);
+    }
 
-    const userClient = createClient(supabaseUrl, anonKey, {
-      global: { headers: { Authorization: authHeader } },
-    });
-    const { data: { user }, error: userError } = await userClient.auth.getUser();
-    if (userError || !user) return json({ error: "Unauthorized" }, 401);
+    const token = authHeader.replace(/^Bearer\s+/i, "").trim();
+    if (!token) {
+      console.warn("[admin-send-email] authorization header had no bearer token");
+      return json({ error: "Session expired, please sign in again" }, 401);
+    }
 
     const admin = createClient(supabaseUrl, serviceKey);
+
+    // Authoritative identity check: verify the bearer token with the
+    // service-role client. An authentication rejection is final — we do not
+    // fall back to another verification path, only surface it.
+    let user: { id: string; email?: string | null } | null = null;
+    try {
+      const { data, error } = await admin.auth.getUser(token);
+      if (error) {
+        console.warn("[admin-send-email] token verification rejected:", error.message);
+        return json({ error: "Session expired, please sign in again" }, 401);
+      }
+      user = data.user ?? null;
+    } catch (verifyErr) {
+      // Infrastructure/client failure (not an auth rejection).
+      console.error(
+        "[admin-send-email] token verification failed (infrastructure):",
+        (verifyErr as Error)?.message,
+      );
+      return json({ error: "Could not verify session. Please try again." }, 503);
+    }
+
+    if (!user) {
+      console.warn("[admin-send-email] token verified but no user returned");
+      return json({ error: "Session expired, please sign in again" }, 401);
+    }
+    console.log("[admin-send-email] caller:", user.email ?? "(no email)", user.id);
+
     const { data: isAdmin, error: roleError } = await admin.rpc("has_role", {
       _user_id: user.id,
       _role: "admin",
     });
-    if (roleError || isAdmin !== true) return json({ error: "Forbidden" }, 403);
+    console.log(
+      "[admin-send-email] admin role check:",
+      isAdmin === true ? "granted" : "denied",
+      roleError ? `error=${roleError.message}` : "",
+    );
+    if (roleError || isAdmin !== true) {
+      return json({ error: "Admin access required" }, 403);
+    }
+
 
     const body = (await req.json().catch(() => ({}))) as AdminSendEmailRequest;
     const to = (body.to ?? "").trim().toLowerCase();
