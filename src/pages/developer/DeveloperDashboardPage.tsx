@@ -61,14 +61,14 @@ function DeveloperDashboardInner() {
       {error ? <p className="text-sm text-red-600">{error}</p> : null}
 
       {developments.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-zinc-300 bg-zinc-50 px-6 py-10 text-center">
+        <div className="max-w-5xl rounded-2xl border border-dashed border-zinc-300 bg-zinc-50 px-6 py-10 text-center">
           <h2 className="text-lg font-semibold text-zinc-900">No projects yet</h2>
           <p className="mx-auto mt-2 max-w-md text-sm text-zinc-600">
             Create your first project to add photos, floor plans, units, documents, and updates.
           </p>
         </div>
       ) : (
-        <ul className="divide-y divide-zinc-200 rounded-xl border border-zinc-200 bg-white">
+        <ul className="max-w-5xl divide-y divide-zinc-200 rounded-xl border border-zinc-200 bg-white">
           {developments.map((dev) => (
             <li
               key={dev.id}
