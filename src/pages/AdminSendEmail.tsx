@@ -28,6 +28,8 @@ export default function AdminSendEmail() {
   const navigate = useNavigate();
   const [authChecked, setAuthChecked] = useState(false);
   const [allowed, setAllowed] = useState(false);
+  const [senderLine, setSenderLine] = useState<string | null>(null);
+
 
   const [to, setTo] = useState("");
   const [subject, setSubject] = useState("");
@@ -46,10 +48,25 @@ export default function AdminSendEmail() {
         navigate("/auth");
         return;
       }
-      setAllowed(await hasRole(user.id, "admin"));
+      const isAdmin = await hasRole(user.id, "admin");
+      setAllowed(isAdmin);
+      if (isAdmin) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("first_name, last_name, email")
+          .eq("id", user.id)
+          .maybeSingle();
+        const name = [profile?.first_name, profile?.last_name]
+          .filter(Boolean)
+          .join(" ")
+          .trim();
+        const email = (profile?.email || user.email || "").trim();
+        setSenderLine(name && email ? `${name} <${email}>` : email || null);
+      }
       setAuthChecked(true);
     })();
   }, [navigate]);
+
 
   const isInvite = template === "personal-forward-invite";
 
@@ -108,6 +125,17 @@ export default function AdminSendEmail() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
+            <Label>From</Label>
+            <div className="rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-700">
+              {senderLine ?? "Resolving your sender identity…"}
+            </div>
+            <p className="text-xs text-neutral-500">
+              Sent as you, not as the automated All Agent Connect sender.
+            </p>
+          </div>
+
+          <div className="space-y-2">
+
             <Label htmlFor="admin-email-to">Recipient email</Label>
             <Input
               id="admin-email-to"
