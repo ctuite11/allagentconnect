@@ -201,7 +201,8 @@ Deno.serve(async (req) => {
         : buildPlainHtml(message, subject);
     }
 
-    const replyTo = (body.replyTo ?? "").trim() || "chris@allagentconnect.com";
+    // Blank Reply-To defaults to the sending admin; an explicit value wins.
+    const replyTo = (body.replyTo ?? "").trim() || senderEmail;
 
     const { data: job, error: insertError } = await admin
       .from("email_jobs")
@@ -215,8 +216,10 @@ Deno.serve(async (req) => {
           subject,
           html,
           reply_to: replyTo,
+          from_override: fromOverride,
         },
       })
+
       .select("id")
       .single();
 
