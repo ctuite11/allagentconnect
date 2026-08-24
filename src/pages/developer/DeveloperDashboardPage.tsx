@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Plus } from "lucide-react";
-import { AgentAacPage } from "@/components/layout/AgentAacPage";
+import { DeveloperPortalPage } from "@/components/layout/DeveloperPortalPage";
 import { PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
 import { AacMonogramLoader } from "@/components/AacMonogramLoader";
@@ -39,7 +39,7 @@ function DeveloperDashboardInner() {
   const canCreate = developments.some((d) => canMemberEditContent(d.member_role));
 
   return (
-    <AgentAacPage className="pt-6 sm:pt-0">
+    <DeveloperPortalPage>
       <Seo title="Developer workspace | All Agent Connect" noindex />
       <PageHeader
         title="Developer workspace"
@@ -61,21 +61,24 @@ function DeveloperDashboardInner() {
       {error ? <p className="text-sm text-red-600">{error}</p> : null}
 
       {developments.length === 0 ? (
-        <div className="!mt-10 sm:!mt-0 rounded-2xl border border-dashed border-zinc-300 bg-zinc-50 px-6 py-12 text-center">
+        <div className="rounded-2xl border border-dashed border-zinc-300 bg-zinc-50 px-6 py-10 text-center">
           <h2 className="text-lg font-semibold text-zinc-900">No projects yet</h2>
           <p className="mx-auto mt-2 max-w-md text-sm text-zinc-600">
             Create your first project to add photos, floor plans, units, documents, and updates.
           </p>
         </div>
       ) : (
-        <ul className="divide-y divide-zinc-200 rounded-2xl border border-zinc-200 bg-white">
+        <ul className="divide-y divide-zinc-200 rounded-xl border border-zinc-200 bg-white">
           {developments.map((dev) => (
-            <li key={dev.id} className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="min-w-0 space-y-1">
+            <li
+              key={dev.id}
+              className="flex flex-col gap-2.5 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
+            >
+              <div className="min-w-0 space-y-0.5">
                 <div className="flex flex-wrap items-center gap-2">
                   <Link
                     to={`/developer/developments/${dev.id}`}
-                    className="truncate text-base font-semibold text-zinc-900 hover:text-aac"
+                    className="truncate text-[15px] font-semibold text-zinc-900 hover:text-aac"
                   >
                     {dev.name}
                   </Link>
@@ -86,14 +89,14 @@ function DeveloperDashboardInner() {
                   {dev.account_name ? ` · ${dev.account_name}` : ""}
                 </p>
               </div>
-              <Button asChild variant="outline" size="sm" className="shrink-0">
+              <Button asChild variant="outline" size="sm" className="shrink-0 self-start sm:self-auto">
                 <Link to={`/developer/developments/${dev.id}`}>Manage</Link>
               </Button>
             </li>
           ))}
         </ul>
       )}
-    </AgentAacPage>
+    </DeveloperPortalPage>
   );
 }
 

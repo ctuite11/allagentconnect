@@ -1,6 +1,6 @@
 import { Link, Navigate, Outlet, useLocation, useParams } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
-import { AgentAacPage } from "@/components/layout/AgentAacPage";
+import { DeveloperPortalPage } from "@/components/layout/DeveloperPortalPage";
 import { PageHeader } from "@/components/ui/page-header";
 import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 import { Button } from "@/components/ui/button";
@@ -78,7 +78,7 @@ export function DeveloperAccessGate({ children }: { children: React.ReactNode })
 
   if (!isAdmin && (memberships?.length ?? 0) === 0) {
     return (
-      <AgentAacPage>
+      <DeveloperPortalPage>
         <PageHeader
           title="Developer workspace"
           subtitle="Your company projects will appear here once AAC links your account."
@@ -87,7 +87,7 @@ export function DeveloperAccessGate({ children }: { children: React.ReactNode })
           AAC admins create development companies and assign owners. Once you are added, your
           projects will appear here.
         </p>
-      </AgentAacPage>
+      </DeveloperPortalPage>
     );
   }
 
@@ -140,10 +140,10 @@ export function DeveloperDevelopmentLayout() {
 
   if (bundle.error || !bundle.development) {
     return (
-      <AgentAacPage>
+      <DeveloperPortalPage>
         <PageHeader title="Development not found" backTo="/developer" />
         <p className="text-sm text-zinc-600">{bundle.error ?? "This development is not available."}</p>
-      </AgentAacPage>
+      </DeveloperPortalPage>
     );
   }
 
@@ -167,7 +167,7 @@ export function DeveloperDevelopmentLayout() {
     <DeveloperEditorContext.Provider
       value={{ development, membership, role, canEdit, bundle, reload }}
     >
-      <AgentAacPage>
+      <DeveloperPortalPage>
         <PageHeader
           title={development.name}
           subtitle={development.slug}
@@ -230,7 +230,7 @@ export function DeveloperDevelopmentLayout() {
         </nav>
 
         <Outlet />
-      </AgentAacPage>
+      </DeveloperPortalPage>
     </DeveloperEditorContext.Provider>
   );
 }

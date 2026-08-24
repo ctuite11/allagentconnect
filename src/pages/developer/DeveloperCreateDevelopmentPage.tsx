@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AddressAutocomplete from "@/components/AddressAutocomplete";
-import { AgentAacPage } from "@/components/layout/AgentAacPage";
+import { DeveloperPortalPage } from "@/components/layout/DeveloperPortalPage";
 import { PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -146,7 +146,7 @@ function CreateInner() {
   };
 
   return (
-    <AgentAacPage>
+    <DeveloperPortalPage>
       <Seo title="New development | All Agent Connect" noindex />
       <PageHeader
         title="Create development"
@@ -215,7 +215,7 @@ function CreateInner() {
           </Button>
         </form>
       )}
-    </AgentAacPage>
+    </DeveloperPortalPage>
   );
 }
 

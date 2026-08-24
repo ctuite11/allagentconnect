@@ -1,14 +1,14 @@
 import { useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
-import { Building2, LogOut, Menu, Plus, X } from "lucide-react";
+import { Building2, LogOut, Menu, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import AACMonogram from "@/components/ui/AACMonogram";
 import { useAuthRole } from "@/hooks/useAuthRole";
+import { DEVELOPER_PORTAL_COLUMN } from "@/components/layout/DeveloperPortalPage";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
   { to: "/developer", label: "Developments", icon: Building2, end: true },
-  { to: "/developer/developments/new", label: "Create Development", icon: Plus, end: false },
 ] as const;
 
 /**
@@ -32,7 +32,7 @@ export function DeveloperShell() {
   return (
     <div className="flex min-h-screen flex-col bg-white">
       <header className="sticky top-0 z-50 border-b border-zinc-200 bg-white">
-        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
+        <div className={cn(DEVELOPER_PORTAL_COLUMN, "flex h-14 items-center justify-between gap-3")}>
           <div className="flex items-center gap-3">
             <button
               type="button"
