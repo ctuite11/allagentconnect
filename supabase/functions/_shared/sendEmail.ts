@@ -135,12 +135,56 @@ export interface SendEmailOptions {
   htmlOverride?: string;
 }
 
+/**
+ * Email types that may carry a personal sender identity (`payload.from_override`).
+ * These are produced ONLY by trusted server-side admin code that has already
+ * authenticated the human composing the message. Every other template ignores
+ * sender overrides and keeps the canonical company From.
+ */
+const ADMIN_MANUAL_TEMPLATES = new Set([
+  "admin-adhoc",
+  "personal-forward-invite",
+]);
+
+const PERSONAL_SENDER_DOMAIN = "@allagentconnect.com";
+
+/**
+ * Resolve the From header. Canonical company identity by default; a personal
+ * `Name <admin@allagentconnect.com>` only for explicitly authorized
+ * admin-composed email types. Fail-closed: a malformed or unauthorized
+ * override throws instead of silently downgrading to the company sender.
+ */
+function resolveFrom(job: EmailJob): string {
+  const canonicalFrom = buildTransactionalFrom();
+  const override = (job.payload as { from_override?: unknown }).from_override;
+  if (override === undefined || override === null || override === "") {
+    return canonicalFrom;
+  }
+
+  if (typeof override !== "string") {
+    throw new Error("Invalid from_override: expected a string");
+  }
+  if (!ADMIN_MANUAL_TEMPLATES.has(job.payload.template)) {
+    throw new Error(
+      `from_override is not permitted for template "${job.payload.template}"`,
+    );
+  }
+
+  const match = override.match(/^(?:(.*)<\s*([^<>\s]+)\s*>|([^<>\s]+))$/);
+  const address = (match?.[2] ?? match?.[3] ?? "").trim().toLowerCase();
+  if (!address.endsWith(PERSONAL_SENDER_DOMAIN)) {
+    throw new Error("from_override must be an @allagentconnect.com address");
+  }
+  return override;
+}
+
 export async function sendEmail(
   job: EmailJob,
   resendApiKey: string,
   options: SendEmailOptions = {},
 ): Promise<{ providerMessageId: string | null }> {
-  const canonicalFrom = buildTransactionalFrom();
+  const canonicalFrom = resolveFrom(job);
+
 
   const toList: string[] = Array.isArray(job.payload.to)
     ? job.payload.to
