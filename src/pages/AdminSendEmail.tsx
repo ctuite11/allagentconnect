@@ -26,6 +26,8 @@ type TemplateKind = "plain" | "branded" | "personal-forward-invite";
  */
 export default function AdminSendEmail() {
   const navigate = useNavigate();
+  // The form paints immediately; authorization + sender identity resolve in
+  // the background and gate the Send button (fail-closed).
   const [authChecked, setAuthChecked] = useState(false);
   const [allowed, setAllowed] = useState(false);
   const [senderLine, setSenderLine] = useState<string | null>(null);
@@ -42,20 +44,27 @@ export default function AdminSendEmail() {
   const [lastResult, setLastResult] = useState<string | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
     (async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      // Cached session — avoids a network round trip just to learn the user id.
+      const { data: { session } } = await supabase.auth.getSession();
+      const user = session?.user ?? null;
       if (!user) {
         navigate("/auth");
         return;
       }
-      const isAdmin = await hasRole(user.id, "admin");
-      setAllowed(isAdmin);
-      if (isAdmin) {
-        const { data: profile } = await supabase
+      const [isAdmin, profileResult] = await Promise.all([
+        hasRole(user.id, "admin"),
+        supabase
           .from("profiles")
           .select("first_name, last_name, email")
           .eq("id", user.id)
-          .maybeSingle();
+          .maybeSingle(),
+      ]);
+      if (cancelled) return;
+      setAllowed(isAdmin);
+      if (isAdmin) {
+        const profile = profileResult.data;
         const name = [profile?.first_name, profile?.last_name]
           .filter(Boolean)
           .join(" ")
@@ -65,7 +74,11 @@ export default function AdminSendEmail() {
       }
       setAuthChecked(true);
     })();
+    return () => {
+      cancelled = true;
+    };
   }, [navigate]);
+
 
 
   const isInvite = template === "personal-forward-invite";
