@@ -176,39 +176,29 @@ Deno.serve(async (req) => {
     // Kick off every independent read at once. Nothing below depends on the
     // order these resolve in; awaiting them sequentially was the main reason
     // this endpoint took several seconds.
+    // Targeted read-only RPC (service_role only) replaces the paged
+    // auth.admin.listUsers scan — same email -> last_sign_in_at semantics.
     const authScanPromise = (async () => {
       const emails = new Set<string>()
       const lastSignIn = new Map<string, string | null>()
       try {
-        let page = 1
-        const perPage = 1000
-        // Hard cap to avoid runaway loops
-        while (page <= 50) {
-          const { data: list, error: listErr } = await adminClient.auth.admin.listUsers({ page, perPage })
-          if (listErr) {
-            console.error('[admin-list-agents] auth.admin.listUsers error:', listErr.message)
-            break
-          }
-          const users = list?.users ?? []
-          for (const u of users) {
-            const email = (u.email ?? '').toLowerCase()
+        const { data, error } = await adminClient.rpc('admin_auth_user_signin_map')
+        if (error) {
+          console.error('[admin-list-agents] admin_auth_user_signin_map error:', error.message)
+        } else {
+          for (const row of (data ?? []) as { email: string; last_sign_in_at: string | null }[]) {
+            const email = (row.email ?? '').toLowerCase()
             if (!email) continue
             emails.add(email)
-            const prev = lastSignIn.get(email)
-            const next = u.last_sign_in_at ?? null
-            // Keep most-recent sign-in if duplicate email rows exist
-            if (!prev || (next && new Date(next).getTime() > new Date(prev).getTime())) {
-              lastSignIn.set(email, next)
-            }
+            lastSignIn.set(email, row.last_sign_in_at ?? null)
           }
-          if (users.length < perPage) break
-          page++
         }
       } catch (e) {
-        console.error('[admin-list-agents] auth listUsers exception:', e)
+        console.error('[admin-list-agents] auth signin map exception:', e)
       }
       return { emails, lastSignIn }
     })()
+
 
     const profilesPromise = adminClient
       .from('agent_profiles')
@@ -269,14 +259,22 @@ Deno.serve(async (req) => {
     // chunk failure as a hard load error instead of returning unknown statuses.
     const userIds = profiles.map(p => p.id)
     const SETTINGS_CHUNK_SIZE = 200
-    const settings: AgentSettings[] = []
+    const settingsChunks: string[][] = []
     for (let i = 0; i < userIds.length; i += SETTINGS_CHUNK_SIZE) {
-      const chunk = userIds.slice(i, i + SETTINGS_CHUNK_SIZE)
-      const { data: chunkRows, error: settingsError } = await adminClient
-        .from('agent_settings')
-        .select('user_id, agent_status, license_number, license_state, verified_at, account_activated_at, approval_email_sent')
-        .in('user_id', chunk)
-
+      settingsChunks.push(userIds.slice(i, i + SETTINGS_CHUNK_SIZE))
+    }
+    // Chunks are independent — run them concurrently, but any chunk failure is
+    // still a hard load error (never a silent fallback to unknown statuses).
+    const settingsResults = await Promise.all(
+      settingsChunks.map(chunk =>
+        adminClient
+          .from('agent_settings')
+          .select('user_id, agent_status, license_number, license_state, verified_at, account_activated_at, approval_email_sent')
+          .in('user_id', chunk)
+      )
+    )
+    const settings: AgentSettings[] = []
+    for (const { data: chunkRows, error: settingsError } of settingsResults) {
       if (settingsError) {
         console.error('[admin-list-agents] Settings error:', settingsError.message)
         return new Response(
@@ -286,6 +284,7 @@ Deno.serve(async (req) => {
       }
       if (chunkRows) settings.push(...(chunkRows as AgentSettings[]))
     }
+
 
     console.log('[admin-list-agents] Settings fetched:', settings?.length ?? 0)
 

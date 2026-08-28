@@ -372,9 +372,37 @@ function YesNoCell({
 }
 
 // Module-level cache so returning to the admin page renders instantly while a
-// fresh load runs in the background.
-let adminAgentsCache: { agents: Agent[]; fetchedAt: number } | null = null;
+// fresh load runs in the background. Mirrored into sessionStorage (scoped to
+// the signed-in admin's user id) so a reload is instant too.
+let adminAgentsCache: { agents: Agent[]; fetchedAt: number; userId: string } | null = null;
 const ADMIN_AGENTS_CACHE_TTL_MS = 5 * 60 * 1000;
+const adminAgentsCacheKey = (userId: string) => `aac.adminAgents.${userId}`;
+
+function readAdminAgentsCache(userId: string): { agents: Agent[]; fetchedAt: number } | null {
+  const fresh = (c: { agents: Agent[]; fetchedAt: number; userId: string } | null) =>
+    c && c.userId === userId && Date.now() - c.fetchedAt < ADMIN_AGENTS_CACHE_TTL_MS ? c : null;
+  const inMemory = fresh(adminAgentsCache);
+  if (inMemory) return inMemory;
+  try {
+    const raw = sessionStorage.getItem(adminAgentsCacheKey(userId));
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as { agents: Agent[]; fetchedAt: number; userId: string };
+    return fresh(parsed);
+  } catch {
+    return null;
+  }
+}
+
+function writeAdminAgentsCache(userId: string, agents: Agent[]) {
+  const entry = { agents, fetchedAt: Date.now(), userId };
+  adminAgentsCache = entry;
+  try {
+    sessionStorage.setItem(adminAgentsCacheKey(userId), JSON.stringify(entry));
+  } catch {
+    // Quota/serialization failures are non-fatal — the in-memory cache stands.
+  }
+}
+
 
 /** Warm the lazy Send Email chunk before the admin clicks through. */
 const prefetchSendEmailRoute = () => {
@@ -722,7 +750,8 @@ export default function AdminApprovals() {
       }));
 
       setAgents(enriched);
-      adminAgentsCache = { agents: enriched, fetchedAt: Date.now() };
+      if (user?.id) writeAdminAgentsCache(user.id, enriched);
+
     } catch (error) {
       console.error("Unexpected error:", error);
       toast.error("Failed to load agents");
@@ -746,10 +775,11 @@ export default function AdminApprovals() {
 
   useEffect(() => {
     if (!authLoading && isAdmin) {
-      // Repeat visits render the last known list immediately and refresh in
-      // the background instead of showing a full-page spinner.
-      const cached = adminAgentsCache;
-      if (cached && Date.now() - cached.fetchedAt < ADMIN_AGENTS_CACHE_TTL_MS) {
+      // Repeat visits / reloads render the last known list immediately and
+      // refresh in the background instead of showing a full-page spinner.
+      // The cache is only read once the current admin identity is known.
+      const cached = user?.id ? readAdminAgentsCache(user.id) : null;
+      if (cached) {
         setAgents(cached.agents);
         setLoading(false);
         void fetchAgents({ background: true });
@@ -757,7 +787,8 @@ export default function AdminApprovals() {
         void fetchAgents();
       }
     }
-  }, [authLoading, isAdmin]);
+  }, [authLoading, isAdmin, user?.id]);
+
 
   // DIAGNOSTIC: Log when agents state changes and update debug panel
   useEffect(() => {
