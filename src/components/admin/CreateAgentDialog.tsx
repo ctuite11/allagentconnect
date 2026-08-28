@@ -146,9 +146,8 @@ export function CreateAgentDialog({ open, onOpenChange, onSuccess }: CreateAgent
       return;
     }
 
+    // The debounced lookup already reflects the current email — no re-check.
     setStep("confirm");
-    // Re-run the lookup so the confirm step reflects the current email.
-    void runCheckNow();
   };
 
 
