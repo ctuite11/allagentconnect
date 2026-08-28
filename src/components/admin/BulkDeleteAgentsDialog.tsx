@@ -43,7 +43,8 @@ interface BulkDeleteAgentsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   agents: Agent[];
-  onDeleted: () => void;
+  /** Receives the ids whose application records were removed. */
+  onDeleted: (removedIds?: string[]) => void;
 }
 
 export function BulkDeleteAgentsDialog({ 
@@ -61,12 +62,18 @@ export function BulkDeleteAgentsDialog({
     setDeleting(true);
     setProgress(0);
 
+    // Ids whose DB rows were removed — used to drop them from the list
+    // immediately, even if a later step throws.
+    const removedIds: string[] = [];
+
+    try {
     const { data: { user: currentUser } } = await supabase.auth.getUser();
 
     let fullCount = 0;      // DB + auth both removed
     let partialCount = 0;   // DB removed, auth deletion queued for retry
     let failCount = 0;      // nothing removed
     const partialEmails: string[] = [];
+
 
     const pendingRequests = agents.filter((a) => a.source === "pending_verification");
     const earlyAccess = agents.filter(
