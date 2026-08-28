@@ -376,6 +376,12 @@ function YesNoCell({
 let adminAgentsCache: { agents: Agent[]; fetchedAt: number } | null = null;
 const ADMIN_AGENTS_CACHE_TTL_MS = 5 * 60 * 1000;
 
+/** Warm the lazy Send Email chunk before the admin clicks through. */
+const prefetchSendEmailRoute = () => {
+  void import("./AdminSendEmail");
+};
+
+
 export default function AdminApprovals() {
   const navigate = useNavigate();
   const { user, loading: authLoading, isAdmin } = useAuthRole();
