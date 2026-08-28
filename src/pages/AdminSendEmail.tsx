@@ -258,7 +258,7 @@ export default function AdminSendEmail() {
             <p className="text-xs text-neutral-500">
               Logged in <code>email_jobs</code> and trackable from Admin → Email Analytics.
             </p>
-            <Button onClick={handleSend} disabled={sending || !to.trim()}>
+            <Button onClick={handleSend} disabled={sending || !identityReady || !to.trim()}>
               {sending ? "Sending…" : "Send Email"}
             </Button>
           </div>
