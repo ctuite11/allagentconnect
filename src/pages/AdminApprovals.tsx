@@ -2537,7 +2537,7 @@ export default function AdminApprovals() {
         open={!!deleteAgent}
         onOpenChange={(open) => !open && setDeleteAgent(null)}
         agent={deleteAgent}
-        onDeleted={fetchAgents}
+        onDeleted={() => refreshAfterDeletion(deleteAgent ? [deleteAgent.id] : undefined)}
       />
 
       <EmailAgentDialog
