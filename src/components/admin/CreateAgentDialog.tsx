@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Dialog,
@@ -50,26 +50,6 @@ export function CreateAgentDialog({ open, onOpenChange, onSuccess }: CreateAgent
   const normalizedEmail = email.trim().toLowerCase();
   const emailValid = emailSchema.safeParse(email).success;
 
-  // Debounced lookup once a valid email has been entered.
-  useEffect(() => {
-    if (!open || !emailValid) {
-      setEmailCheck(null);
-      return;
-    }
-    let cancelled = false;
-    setChecking(true);
-    const timer = setTimeout(async () => {
-      const result = await checkAgentEmail(normalizedEmail, firstName, lastName);
-      if (cancelled) return;
-      setEmailCheck(result && result.email === normalizedEmail ? result : null);
-      setChecking(false);
-    }, 500);
-    return () => {
-      cancelled = true;
-      clearTimeout(timer);
-      setChecking(false);
-    };
-  }, [open, emailValid, normalizedEmail, firstName, lastName]);
 
 
   const resetForm = () => {
@@ -132,7 +112,7 @@ export function CreateAgentDialog({ open, onOpenChange, onSuccess }: CreateAgent
     }
   };
 
-  const handleReview = (e: React.FormEvent) => {
+  const handleReview = async (e: React.FormEvent) => {
     e.preventDefault();
 
     try {
@@ -147,7 +127,13 @@ export function CreateAgentDialog({ open, onOpenChange, onSuccess }: CreateAgent
       return;
     }
 
-    // The debounced lookup already reflects the current email — no re-check.
+    setChecking(true);
+    try {
+      const result = await checkAgentEmail(normalizedEmail, firstName, lastName);
+      setEmailCheck(result && result.email === normalizedEmail ? result : null);
+    } finally {
+      setChecking(false);
+    }
     setStep("confirm");
   };
 
