@@ -403,6 +403,21 @@ function writeAdminAgentsCache(userId: string, agents: Agent[]) {
   }
 }
 
+/**
+ * Drop the cached agent list. Called after any deletion so a reload (or a
+ * background refresh racing the delete) can never resurrect removed rows.
+ */
+function clearAdminAgentsCache(userId?: string | null) {
+  adminAgentsCache = null;
+  if (!userId) return;
+  try {
+    sessionStorage.removeItem(adminAgentsCacheKey(userId));
+  } catch {
+    // Non-fatal.
+  }
+}
+
+
 
 /** Warm the lazy Send Email chunk before the admin clicks through. */
 const prefetchSendEmailRoute = () => {
@@ -760,9 +775,11 @@ export default function AdminApprovals() {
     }
   };
 
-  const fetchAgents = (opts?: { background?: boolean }): Promise<void> => {
+  const fetchAgents = (opts?: { background?: boolean; force?: boolean }): Promise<void> => {
     if (!isAdmin) return Promise.resolve();
-    if (fetchAgentsInFlight.current) {
+    // `force` skips joining an in-flight request: after a delete, the running
+    // request may have read the list before the rows were removed.
+    if (fetchAgentsInFlight.current && !opts?.force) {
       if (!opts?.background) setLoading(false);
       return fetchAgentsInFlight.current;
     }
@@ -772,6 +789,26 @@ export default function AdminApprovals() {
     fetchAgentsInFlight.current = p;
     return p;
   };
+
+  /**
+   * Post-deletion refresh: remove the rows locally, clear the cache, then
+   * force a fresh load. A second delayed load lets the backend finish purging
+   * login accounts before the final list is drawn.
+   */
+  const refreshAfterDeletion = (removedIds?: string[]) => {
+    if (removedIds?.length) {
+      const gone = new Set(removedIds);
+      setAgents((prev) => prev.filter((a) => !gone.has(a.id)));
+    }
+    clearAdminAgentsCache(user?.id);
+    void fetchAgents({ force: true, background: true }).then(() => {
+      window.setTimeout(() => {
+        clearAdminAgentsCache(user?.id);
+        void fetchAgents({ force: true, background: true });
+      }, 6000);
+    });
+  };
+
 
   useEffect(() => {
     if (!authLoading && isAdmin) {
@@ -2500,7 +2537,7 @@ export default function AdminApprovals() {
         open={!!deleteAgent}
         onOpenChange={(open) => !open && setDeleteAgent(null)}
         agent={deleteAgent}
-        onDeleted={fetchAgents}
+        onDeleted={() => refreshAfterDeletion(deleteAgent ? [deleteAgent.id] : undefined)}
       />
 
       <EmailAgentDialog
@@ -2605,9 +2642,9 @@ export default function AdminApprovals() {
         open={showBulkDeleteDialog}
         onOpenChange={setShowBulkDeleteDialog}
         agents={filteredAgents.filter((a) => effectiveSelectedIds.has(a.id))}
-        onDeleted={() => {
+        onDeleted={(removedIds) => {
           setSelectedIds(new Set());
-          fetchAgents();
+          refreshAfterDeletion(removedIds);
         }}
       />
 

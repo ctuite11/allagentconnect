@@ -43,7 +43,8 @@ interface BulkDeleteAgentsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   agents: Agent[];
-  onDeleted: () => void;
+  /** Receives the ids whose application records were removed. */
+  onDeleted: (removedIds?: string[]) => void;
 }
 
 export function BulkDeleteAgentsDialog({ 
@@ -61,12 +62,18 @@ export function BulkDeleteAgentsDialog({
     setDeleting(true);
     setProgress(0);
 
+    // Ids whose DB rows were removed — used to drop them from the list
+    // immediately, even if a later step throws.
+    const removedIds: string[] = [];
+
+    try {
     const { data: { user: currentUser } } = await supabase.auth.getUser();
 
     let fullCount = 0;      // DB + auth both removed
     let partialCount = 0;   // DB removed, auth deletion queued for retry
     let failCount = 0;      // nothing removed
     const partialEmails: string[] = [];
+
 
     const pendingRequests = agents.filter((a) => a.source === "pending_verification");
     const earlyAccess = agents.filter(
@@ -148,6 +155,7 @@ export function BulkDeleteAgentsDialog({
         result?.deleted_requests &&
         result.fully_reinvitable === true
       ) {
+        removedIds.push(agent.id);
         fullCount++;
       } else {
         const err = res.status === "rejected" ? res.reason : res.value.error;
@@ -167,6 +175,7 @@ export function BulkDeleteAgentsDialog({
       const agent = realAgents[idx];
       if (res.status === "fulfilled" && !res.value.error) {
         const handoff = (res.value.data ?? {}) as { auth_user_id?: string | null };
+        removedIds.push(agent.id);
         authTargets.push({
           userId: handoff.auth_user_id ?? agent.id,
           email: agent.email,
@@ -196,6 +205,7 @@ export function BulkDeleteAgentsDialog({
         res.value.data &&
         (res.value.data as number) > 0
       ) {
+        removedIds.push(agent.id);
         authTargets.push({ userId: agent.id, email: agent.email });
       } else {
         const err =
@@ -245,9 +255,6 @@ export function BulkDeleteAgentsDialog({
 
     setProgress(100);
 
-    setDeleting(false);
-    setProgress(0);
-
     if (failCount === 0 && partialCount === 0) {
       toast.success(`Successfully deleted ${fullCount} agent(s)`);
     } else if (failCount === 0) {
@@ -261,10 +268,23 @@ export function BulkDeleteAgentsDialog({
         { duration: 15000 },
       );
     }
-
-    onDeleted();
-    onOpenChange(false);
+    } catch (err) {
+      console.error("Bulk delete failed:", err);
+      toast.error(
+        "Bulk delete did not complete: " +
+          (err instanceof Error ? err.message : String(err)),
+        { duration: 15000 },
+      );
+    } finally {
+      setDeleting(false);
+      setProgress(0);
+      // Always clear the selection and refresh, even on a partial failure,
+      // so no stale ticked rows are left behind.
+      onDeleted(removedIds);
+      onOpenChange(false);
+    }
   };
+
 
   if (agents.length === 0) return null;
 
