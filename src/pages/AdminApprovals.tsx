@@ -1813,7 +1813,10 @@ export default function AdminApprovals() {
             <Button
               variant="outline"
               size="sm"
+              onMouseEnter={prefetchSendEmailRoute}
+              onFocus={prefetchSendEmailRoute}
               onClick={() => navigate('/admin/send-email')}
+
               className="w-full justify-start border-slate-300 text-slate-700 hover:bg-slate-100 sm:w-auto sm:justify-center"
             >
               <Mail className="h-4 w-4 mr-2" />
