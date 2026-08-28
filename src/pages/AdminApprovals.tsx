@@ -403,6 +403,21 @@ function writeAdminAgentsCache(userId: string, agents: Agent[]) {
   }
 }
 
+/**
+ * Drop the cached agent list. Called after any deletion so a reload (or a
+ * background refresh racing the delete) can never resurrect removed rows.
+ */
+function clearAdminAgentsCache(userId?: string | null) {
+  adminAgentsCache = null;
+  if (!userId) return;
+  try {
+    sessionStorage.removeItem(adminAgentsCacheKey(userId));
+  } catch {
+    // Non-fatal.
+  }
+}
+
+
 
 /** Warm the lazy Send Email chunk before the admin clicks through. */
 const prefetchSendEmailRoute = () => {
