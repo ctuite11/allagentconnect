@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Dialog,
@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { z } from "zod";
 import {
   PreviouslyDeletedAgentDialog,
@@ -22,6 +22,11 @@ import {
   checkDeletedAgent,
   logDeletedAgentOverride,
 } from "@/lib/previouslyDeletedAgent";
+import {
+  checkAgentEmail,
+  formatMatchLine,
+  type AgentEmailCheck,
+} from "@/lib/adminCheckAgentEmail";
 
 interface CreateAgentDialogProps {
   open: boolean;
@@ -38,14 +43,54 @@ export function CreateAgentDialog({ open, onOpenChange, onSuccess }: CreateAgent
   const [lastName, setLastName] = useState("");
   const [deletedMatch, setDeletedMatch] = useState<PreviouslyDeletedAgentMatch | null>(null);
   const [step, setStep] = useState<"form" | "confirm">("form");
+  const [emailCheck, setEmailCheck] = useState<AgentEmailCheck | null>(null);
+  const [checking, setChecking] = useState(false);
+
+  const normalizedEmail = email.trim().toLowerCase();
+  const emailValid = emailSchema.safeParse(email).success;
+
+  // Debounced lookup once a valid email has been entered.
+  useEffect(() => {
+    if (!open || !emailValid) {
+      setEmailCheck(null);
+      return;
+    }
+    let cancelled = false;
+    setChecking(true);
+    const timer = setTimeout(async () => {
+      const result = await checkAgentEmail(normalizedEmail);
+      if (cancelled) return;
+      setEmailCheck(result && result.email === normalizedEmail ? result : null);
+      setChecking(false);
+    }, 500);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+      setChecking(false);
+    };
+  }, [open, emailValid, normalizedEmail]);
+
+  const runCheckNow = async () => {
+    if (!emailValid) return null;
+    setChecking(true);
+    try {
+      const result = await checkAgentEmail(normalizedEmail);
+      setEmailCheck(result);
+      return result;
+    } finally {
+      setChecking(false);
+    }
+  };
 
   const resetForm = () => {
     setEmail("");
     setFirstName("");
     setLastName("");
     setDeletedMatch(null);
+    setEmailCheck(null);
     setStep("form");
   };
+
 
   const submitToServer = async (acknowledgeDeleted: boolean) => {
     const normalizedEmail = email.trim().toLowerCase();
@@ -113,7 +158,10 @@ export function CreateAgentDialog({ open, onOpenChange, onSuccess }: CreateAgent
     }
 
     setStep("confirm");
+    // Re-run the lookup so the confirm step reflects the current email.
+    void runCheckNow();
   };
+
 
   const handleConfirmSend = async () => {
     setLoading(true);
@@ -148,7 +196,49 @@ export function CreateAgentDialog({ open, onOpenChange, onSuccess }: CreateAgent
     onOpenChange(next);
   };
 
+  const blocked = Boolean(emailCheck?.hasActiveAccount);
+
+  const renderEmailCheck = () => {
+    if (!emailValid) return null;
+    if (checking) {
+      return (
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          Checking existing records...
+        </div>
+      );
+    }
+    if (!emailCheck) return null;
+    if (!emailCheck.found) {
+      return (
+        <div className="flex items-start gap-2 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-800">
+          <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
+          <span>No existing record for this email.</span>
+        </div>
+      );
+    }
+    return (
+      <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
+        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+        <div className="space-y-1">
+          <p className="font-medium">This email is already known to us</p>
+          <ul className="list-disc space-y-0.5 pl-4">
+            {emailCheck.matches.map((m, i) => (
+              <li key={`${m.source}-${i}`}>{formatMatchLine(m)}</li>
+            ))}
+          </ul>
+          {blocked && (
+            <p className="pt-1 font-medium">
+              This agent already has an account — a new invite cannot be created.
+            </p>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   return (
+
     <>
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-[440px]">
@@ -180,6 +270,8 @@ export function CreateAgentDialog({ open, onOpenChange, onSuccess }: CreateAgent
               </div>
             </div>
 
+            <div className="pt-3">{renderEmailCheck()}</div>
+
             <DialogFooter className="pt-2">
               <Button
                 type="button"
@@ -189,7 +281,11 @@ export function CreateAgentDialog({ open, onOpenChange, onSuccess }: CreateAgent
               >
                 Back
               </Button>
-              <Button type="button" onClick={handleConfirmSend} disabled={loading}>
+              <Button
+                type="button"
+                onClick={handleConfirmSend}
+                disabled={loading || blocked || checking}
+              >
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -200,6 +296,7 @@ export function CreateAgentDialog({ open, onOpenChange, onSuccess }: CreateAgent
                 )}
               </Button>
             </DialogFooter>
+
           </>
         ) : (
         <>
@@ -244,7 +341,9 @@ export function CreateAgentDialog({ open, onOpenChange, onSuccess }: CreateAgent
               placeholder="agent@example.com"
               disabled={loading}
             />
+            {renderEmailCheck()}
           </div>
+
 
           <DialogFooter className="pt-2">
             <Button
