@@ -70,17 +70,6 @@ export function CreateAgentDialog({ open, onOpenChange, onSuccess }: CreateAgent
     };
   }, [open, emailValid, normalizedEmail]);
 
-  const runCheckNow = async () => {
-    if (!emailValid) return null;
-    setChecking(true);
-    try {
-      const result = await checkAgentEmail(normalizedEmail);
-      setEmailCheck(result);
-      return result;
-    } finally {
-      setChecking(false);
-    }
-  };
 
   const resetForm = () => {
     setEmail("");
@@ -157,9 +146,8 @@ export function CreateAgentDialog({ open, onOpenChange, onSuccess }: CreateAgent
       return;
     }
 
+    // The debounced lookup already reflects the current email — no re-check.
     setStep("confirm");
-    // Re-run the lookup so the confirm step reflects the current email.
-    void runCheckNow();
   };
 
 
