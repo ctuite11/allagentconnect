@@ -2642,9 +2642,9 @@ export default function AdminApprovals() {
         open={showBulkDeleteDialog}
         onOpenChange={setShowBulkDeleteDialog}
         agents={filteredAgents.filter((a) => effectiveSelectedIds.has(a.id))}
-        onDeleted={() => {
+        onDeleted={(removedIds) => {
           setSelectedIds(new Set());
-          fetchAgents();
+          refreshAfterDeletion(removedIds);
         }}
       />
 
