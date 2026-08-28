@@ -196,7 +196,49 @@ export function CreateAgentDialog({ open, onOpenChange, onSuccess }: CreateAgent
     onOpenChange(next);
   };
 
+  const blocked = Boolean(emailCheck?.hasActiveAccount);
+
+  const renderEmailCheck = () => {
+    if (!emailValid) return null;
+    if (checking) {
+      return (
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          Checking existing records...
+        </div>
+      );
+    }
+    if (!emailCheck) return null;
+    if (!emailCheck.found) {
+      return (
+        <div className="flex items-start gap-2 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-800">
+          <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
+          <span>No existing record for this email.</span>
+        </div>
+      );
+    }
+    return (
+      <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
+        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+        <div className="space-y-1">
+          <p className="font-medium">This email is already known to us</p>
+          <ul className="list-disc space-y-0.5 pl-4">
+            {emailCheck.matches.map((m, i) => (
+              <li key={`${m.source}-${i}`}>{formatMatchLine(m)}</li>
+            ))}
+          </ul>
+          {blocked && (
+            <p className="pt-1 font-medium">
+              This agent already has an account — a new invite cannot be created.
+            </p>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   return (
+
     <>
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-[440px]">
