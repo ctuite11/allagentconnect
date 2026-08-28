@@ -1,46 +1,40 @@
-# Pre-check for duplicate/existing agents in Admin Create Agent
+# Speed up Admin → Send Email
 
-## Goal
+Three separate delays are in play: opening the screen, sending, and getting back to Admin.
 
-When you create a new agent in Admin (Create Agent dialog), warn you **before** the invite is sent if that email is already known to us — already registered, already invited, has an early-access request, or has a verification application in progress — so you don't double-invite.
+## 1. Opening the Send Email screen
 
-## Current state (verified)
+Today the page waits on three sequential round trips before rendering anything (get user → admin role check → profile lookup), and only then paints the form. The route chunk also downloads on click.
 
-- `CreateAgentDialog.tsx` → review step → `admin-create-user` edge function.
-- `admin-create-user` already 409s on "already been registered" (auth) and on previously-deleted tombstones — but only **after** you confirm, and it does **not** check early-access signups, pending verification applications, or prior invite records.
-- Table counts: `profiles` 416, `pending_verifications` 266, `agent_early_access` 100, `agent_invites` 0 (the agent-to-agent invite table is unused so far).
+Changes:
+- Render the form immediately; resolve the admin/sender identity in the background. The From line keeps its "Resolving…" state, and the Send button stays disabled until the check clears.
+- Fetch the role check and the profile row in parallel instead of one after the other, and use the already-cached session rather than a fresh network user fetch.
+- Prefetch the Send Email route chunk when the admin hovers/focuses the "Send email" button on the Admin page so the screen is already loaded on click.
 
-## What we'll build
+## 2. Sending
 
-### 1. New admin-only lookup edge function: `admin-check-agent-email`
+The click path currently forces a session refresh and waits on it before the request even leaves the browser, then waits for the server to verify the token, check the role, look up the profile, build the HTML and insert the job.
 
-Mirrors the existing `check-deleted-agent` pattern (admin role gate via `has_role`, service-role reads, no mutations). Given an email, it returns a structured report of every place that email already exists:
+Changes:
+- Skip the forced token refresh when the current access token is comfortably valid, so the request fires immediately.
+- On the server, run the role check and the sender-profile lookup in parallel (both are keyed to the same user) instead of sequentially.
+- No change to how the email is queued or sent: the job is still inserted into the normal queue and the queue is still kicked in the background.
 
-| Source | Meaning shown in dialog |
-|---|---|
-| `auth.users` / `profiles` | "Already has an account" (+ agent status if an agent profile exists) |
-| `agent_invites` | "Invited before" (+ date, status, who invited) |
-| `agent_early_access` | "Requested early access" (+ date, status) |
-| `pending_verifications` | "Verification application in progress" (+ status) |
-| `deleted_users` | Reuse existing tombstone match (already handled today) |
+## 3. Returning to Admin
 
-### 2. Create Agent dialog: inline pre-check on the review step
+There is no back control on the Send Email screen, so returning means a fresh full load of the Admin Approvals page and all of its data.
 
-- When you reach the **Confirm invite** step (and again live as you finish typing the email on the form step), call `admin-check-agent-email`.
-- Results render as an inline panel under the email field / above the confirm summary:
-  - **Nothing found** → green-tinted "No existing record for this email" note.
-  - **Matches found** → amber warning card listing each hit (e.g. "Registered account — agent status: invited", "Requested early access on Aug 3, 2026").
-- **Blocking rule:** if the email is already registered as an active (non-deleted) account, the Confirm button is disabled — that send would fail anyway.
-- **Non-blocking:** early-access requests, pending applications, and prior invites show as warnings only; you can still choose to send.
-- Existing previously-deleted-agent flow stays exactly as is.
+Changes:
+- Add a "Back to Admin" control that navigates in-app (no reload).
+- Keep the Admin page's data in cache briefly so an immediate return renders from cache while refreshing in the background, instead of showing a full loading state again.
 
-### 3. Server-side safety net
+## Out of scope
 
-`admin-create-user` keeps its existing 409 guards unchanged (registered email, previously deleted). No schema changes; no emails are sent or modified by this work.
+No changes to email templates, the sending queue, sender-identity security rules, or what actually gets delivered. The `@allagentconnect.com` sender enforcement and admin-only gating stay exactly as they are.
 
-## Technical details
+## Technical notes
 
-- New file: `supabase/functions/admin-check-agent-email/index.ts` (admin gate: `has_role(auth, 'admin')`; service-role client for reads).
-- Edited: `src/components/admin/CreateAgentDialog.tsx` — debounced lookup + warning panel + confirm-button gating.
-- Deploy the new edge function; no database migration needed.
-- No emails sent as part of this change.
+- `src/pages/AdminSendEmail.tsx`: non-blocking auth/identity resolution, parallel `hasRole` + `profiles` fetch, session-based user read, back navigation.
+- `src/pages/AdminApprovals.tsx`: prefetch of the lazy route on hover/focus of the Send email button; cached-render on return.
+- `src/lib/invokeEdgeFunction.ts`: only refresh when the token is near expiry (keep the existing fallback and 401 handling).
+- `supabase/functions/admin-send-email/index.ts`: `Promise.all` the `has_role` RPC and the profile lookup; redeploy. Behaviour and error codes unchanged.
