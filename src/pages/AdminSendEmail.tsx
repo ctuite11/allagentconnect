@@ -117,21 +117,30 @@ export default function AdminSendEmail() {
     }
   };
 
-  if (!authChecked) {
-    return <div className="p-8 text-sm text-neutral-500">Loading…</div>;
-  }
-  if (!allowed) {
+  if (authChecked && !allowed) {
     return <div className="p-8 text-sm text-destructive">Admin access required.</div>;
   }
 
+  const identityReady = authChecked && allowed && Boolean(senderLine);
+
   return (
     <div className="mx-auto max-w-2xl p-6">
+      <Button
+        variant="ghost"
+        size="sm"
+        className="mb-3 -ml-2 text-neutral-600"
+        onClick={() => navigate("/admin/approvals")}
+      >
+        <ArrowLeft className="mr-2 h-4 w-4" />
+        Back to Admin
+      </Button>
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
             <Mail className="h-5 w-5 text-[#22C55E]" />
             <CardTitle>Send Email</CardTitle>
           </div>
+
           <CardDescription>
             Send a one-off email to a single recipient through the normal email queue.
           </CardDescription>
