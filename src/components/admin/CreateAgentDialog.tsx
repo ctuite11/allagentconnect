@@ -270,6 +270,8 @@ export function CreateAgentDialog({ open, onOpenChange, onSuccess }: CreateAgent
               </div>
             </div>
 
+            <div className="pt-3">{renderEmailCheck()}</div>
+
             <DialogFooter className="pt-2">
               <Button
                 type="button"
@@ -279,7 +281,11 @@ export function CreateAgentDialog({ open, onOpenChange, onSuccess }: CreateAgent
               >
                 Back
               </Button>
-              <Button type="button" onClick={handleConfirmSend} disabled={loading}>
+              <Button
+                type="button"
+                onClick={handleConfirmSend}
+                disabled={loading || blocked || checking}
+              >
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -290,6 +296,7 @@ export function CreateAgentDialog({ open, onOpenChange, onSuccess }: CreateAgent
                 )}
               </Button>
             </DialogFooter>
+
           </>
         ) : (
         <>
