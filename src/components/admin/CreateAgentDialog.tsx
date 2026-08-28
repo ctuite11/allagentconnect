@@ -70,17 +70,6 @@ export function CreateAgentDialog({ open, onOpenChange, onSuccess }: CreateAgent
     };
   }, [open, emailValid, normalizedEmail]);
 
-  const runCheckNow = async () => {
-    if (!emailValid) return null;
-    setChecking(true);
-    try {
-      const result = await checkAgentEmail(normalizedEmail);
-      setEmailCheck(result);
-      return result;
-    } finally {
-      setChecking(false);
-    }
-  };
 
   const resetForm = () => {
     setEmail("");
