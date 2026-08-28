@@ -343,21 +343,26 @@ export function CreateAgentDialog({ open, onOpenChange, onSuccess }: CreateAgent
               placeholder="agent@example.com"
               disabled={loading}
             />
-            {renderEmailCheck()}
           </div>
-
 
           <DialogFooter className="pt-2">
             <Button
               type="button"
               variant="outline"
               onClick={() => handleOpenChange(false)}
-              disabled={loading}
+              disabled={loading || checking}
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={loading}>
-              Review invite
+            <Button type="submit" disabled={loading || checking}>
+              {checking ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Checking…
+                </>
+              ) : (
+                "Review invite"
+              )}
             </Button>
           </DialogFooter>
         </form>
