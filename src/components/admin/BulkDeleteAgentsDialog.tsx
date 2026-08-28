@@ -155,6 +155,7 @@ export function BulkDeleteAgentsDialog({
         result?.deleted_requests &&
         result.fully_reinvitable === true
       ) {
+        removedIds.push(agent.id);
         fullCount++;
       } else {
         const err = res.status === "rejected" ? res.reason : res.value.error;
