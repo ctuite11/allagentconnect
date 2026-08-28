@@ -341,7 +341,9 @@ export function CreateAgentDialog({ open, onOpenChange, onSuccess }: CreateAgent
               placeholder="agent@example.com"
               disabled={loading}
             />
+            {renderEmailCheck()}
           </div>
+
 
           <DialogFooter className="pt-2">
             <Button
