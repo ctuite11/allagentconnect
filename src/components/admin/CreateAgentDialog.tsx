@@ -24,6 +24,7 @@ import {
 } from "@/lib/previouslyDeletedAgent";
 import {
   checkAgentEmail,
+  formatNameMatchLine,
   formatMatchLine,
   type AgentEmailCheck,
 } from "@/lib/adminCheckAgentEmail";
@@ -58,7 +59,7 @@ export function CreateAgentDialog({ open, onOpenChange, onSuccess }: CreateAgent
     let cancelled = false;
     setChecking(true);
     const timer = setTimeout(async () => {
-      const result = await checkAgentEmail(normalizedEmail);
+      const result = await checkAgentEmail(normalizedEmail, firstName, lastName);
       if (cancelled) return;
       setEmailCheck(result && result.email === normalizedEmail ? result : null);
       setChecking(false);
@@ -68,7 +69,7 @@ export function CreateAgentDialog({ open, onOpenChange, onSuccess }: CreateAgent
       clearTimeout(timer);
       setChecking(false);
     };
-  }, [open, emailValid, normalizedEmail]);
+  }, [open, emailValid, normalizedEmail, firstName, lastName]);
 
 
   const resetForm = () => {
@@ -197,30 +198,57 @@ export function CreateAgentDialog({ open, onOpenChange, onSuccess }: CreateAgent
       );
     }
     if (!emailCheck) return null;
+
+    const nameMatches = emailCheck.nameMatches ?? [];
+    const namePanel = nameMatches.length > 0 && (
+      <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
+        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+        <div className="space-y-1">
+          <p className="font-medium">
+            Same name already on file — {nameMatches[0].name}
+          </p>
+          <ul className="list-disc space-y-0.5 pl-4">
+            {nameMatches.map((m, i) => (
+              <li key={`name-${m.source}-${i}`}>{formatNameMatchLine(m)}</li>
+            ))}
+          </ul>
+          <p className="pt-1">
+            This is a warning only — a different person may share this name.
+          </p>
+        </div>
+      </div>
+    );
+
     if (!emailCheck.found) {
       return (
-        <div className="flex items-start gap-2 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-800">
-          <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
-          <span>No existing record for this email.</span>
+        <div className="space-y-2">
+          <div className="flex items-start gap-2 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-800">
+            <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
+            <span>No existing record for this email.</span>
+          </div>
+          {namePanel}
         </div>
       );
     }
     return (
-      <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
-        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-        <div className="space-y-1">
-          <p className="font-medium">This email is already known to us</p>
-          <ul className="list-disc space-y-0.5 pl-4">
-            {emailCheck.matches.map((m, i) => (
-              <li key={`${m.source}-${i}`}>{formatMatchLine(m)}</li>
-            ))}
-          </ul>
-          {blocked && (
-            <p className="pt-1 font-medium">
-              This agent already has an account — a new invite cannot be created.
-            </p>
-          )}
+      <div className="space-y-2">
+        <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+          <div className="space-y-1">
+            <p className="font-medium">This email is already known to us</p>
+            <ul className="list-disc space-y-0.5 pl-4">
+              {emailCheck.matches.map((m, i) => (
+                <li key={`${m.source}-${i}`}>{formatMatchLine(m)}</li>
+              ))}
+            </ul>
+            {blocked && (
+              <p className="pt-1 font-medium">
+                This agent already has an account — a new invite cannot be created.
+              </p>
+            )}
+          </div>
         </div>
+        {namePanel}
       </div>
     );
   };
