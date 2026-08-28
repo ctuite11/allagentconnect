@@ -175,6 +175,7 @@ export function BulkDeleteAgentsDialog({
       const agent = realAgents[idx];
       if (res.status === "fulfilled" && !res.value.error) {
         const handoff = (res.value.data ?? {}) as { auth_user_id?: string | null };
+        removedIds.push(agent.id);
         authTargets.push({
           userId: handoff.auth_user_id ?? agent.id,
           email: agent.email,
