@@ -197,3 +197,7 @@ verify_jwt = false
 
 [functions.admin-send-email]
 verify_jwt = false
+
+[functions.system-health]
+verify_jwt = false
+

@@ -7544,6 +7544,7 @@ export type Database = {
           title: string
         }[]
       }
+      get_system_health: { Args: never; Returns: Json }
       get_verified_agent_ids: {
         Args: never
         Returns: {
