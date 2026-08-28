@@ -750,7 +750,8 @@ export default function AdminApprovals() {
       }));
 
       setAgents(enriched);
-      adminAgentsCache = { agents: enriched, fetchedAt: Date.now() };
+      if (user?.id) writeAdminAgentsCache(user.id, enriched);
+
     } catch (error) {
       console.error("Unexpected error:", error);
       toast.error("Failed to load agents");
