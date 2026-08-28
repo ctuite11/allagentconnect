@@ -158,7 +158,10 @@ export function CreateAgentDialog({ open, onOpenChange, onSuccess }: CreateAgent
     }
 
     setStep("confirm");
+    // Re-run the lookup so the confirm step reflects the current email.
+    void runCheckNow();
   };
+
 
   const handleConfirmSend = async () => {
     setLoading(true);
