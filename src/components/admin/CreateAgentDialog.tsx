@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Dialog,
@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { z } from "zod";
 import {
   PreviouslyDeletedAgentDialog,
@@ -22,6 +22,11 @@ import {
   checkDeletedAgent,
   logDeletedAgentOverride,
 } from "@/lib/previouslyDeletedAgent";
+import {
+  checkAgentEmail,
+  formatMatchLine,
+  type AgentEmailCheck,
+} from "@/lib/adminCheckAgentEmail";
 
 interface CreateAgentDialogProps {
   open: boolean;
@@ -38,14 +43,54 @@ export function CreateAgentDialog({ open, onOpenChange, onSuccess }: CreateAgent
   const [lastName, setLastName] = useState("");
   const [deletedMatch, setDeletedMatch] = useState<PreviouslyDeletedAgentMatch | null>(null);
   const [step, setStep] = useState<"form" | "confirm">("form");
+  const [emailCheck, setEmailCheck] = useState<AgentEmailCheck | null>(null);
+  const [checking, setChecking] = useState(false);
+
+  const normalizedEmail = email.trim().toLowerCase();
+  const emailValid = emailSchema.safeParse(email).success;
+
+  // Debounced lookup once a valid email has been entered.
+  useEffect(() => {
+    if (!open || !emailValid) {
+      setEmailCheck(null);
+      return;
+    }
+    let cancelled = false;
+    setChecking(true);
+    const timer = setTimeout(async () => {
+      const result = await checkAgentEmail(normalizedEmail);
+      if (cancelled) return;
+      setEmailCheck(result && result.email === normalizedEmail ? result : null);
+      setChecking(false);
+    }, 500);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+      setChecking(false);
+    };
+  }, [open, emailValid, normalizedEmail]);
+
+  const runCheckNow = async () => {
+    if (!emailValid) return null;
+    setChecking(true);
+    try {
+      const result = await checkAgentEmail(normalizedEmail);
+      setEmailCheck(result);
+      return result;
+    } finally {
+      setChecking(false);
+    }
+  };
 
   const resetForm = () => {
     setEmail("");
     setFirstName("");
     setLastName("");
     setDeletedMatch(null);
+    setEmailCheck(null);
     setStep("form");
   };
+
 
   const submitToServer = async (acknowledgeDeleted: boolean) => {
     const normalizedEmail = email.trim().toLowerCase();
