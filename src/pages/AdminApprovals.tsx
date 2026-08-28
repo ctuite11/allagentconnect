@@ -775,10 +775,11 @@ export default function AdminApprovals() {
 
   useEffect(() => {
     if (!authLoading && isAdmin) {
-      // Repeat visits render the last known list immediately and refresh in
-      // the background instead of showing a full-page spinner.
-      const cached = adminAgentsCache;
-      if (cached && Date.now() - cached.fetchedAt < ADMIN_AGENTS_CACHE_TTL_MS) {
+      // Repeat visits / reloads render the last known list immediately and
+      // refresh in the background instead of showing a full-page spinner.
+      // The cache is only read once the current admin identity is known.
+      const cached = user?.id ? readAdminAgentsCache(user.id) : null;
+      if (cached) {
         setAgents(cached.agents);
         setLoading(false);
         void fetchAgents({ background: true });
@@ -786,7 +787,8 @@ export default function AdminApprovals() {
         void fetchAgents();
       }
     }
-  }, [authLoading, isAdmin]);
+  }, [authLoading, isAdmin, user?.id]);
+
 
   // DIAGNOSTIC: Log when agents state changes and update debug panel
   useEffect(() => {
