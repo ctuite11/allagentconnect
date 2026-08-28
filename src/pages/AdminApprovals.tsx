@@ -775,9 +775,11 @@ export default function AdminApprovals() {
     }
   };
 
-  const fetchAgents = (opts?: { background?: boolean }): Promise<void> => {
+  const fetchAgents = (opts?: { background?: boolean; force?: boolean }): Promise<void> => {
     if (!isAdmin) return Promise.resolve();
-    if (fetchAgentsInFlight.current) {
+    // `force` skips joining an in-flight request: after a delete, the running
+    // request may have read the list before the rows were removed.
+    if (fetchAgentsInFlight.current && !opts?.force) {
       if (!opts?.background) setLoading(false);
       return fetchAgentsInFlight.current;
     }
@@ -787,6 +789,26 @@ export default function AdminApprovals() {
     fetchAgentsInFlight.current = p;
     return p;
   };
+
+  /**
+   * Post-deletion refresh: remove the rows locally, clear the cache, then
+   * force a fresh load. A second delayed load lets the backend finish purging
+   * login accounts before the final list is drawn.
+   */
+  const refreshAfterDeletion = (removedIds?: string[]) => {
+    if (removedIds?.length) {
+      const gone = new Set(removedIds);
+      setAgents((prev) => prev.filter((a) => !gone.has(a.id)));
+    }
+    clearAdminAgentsCache(user?.id);
+    void fetchAgents({ force: true, background: true }).then(() => {
+      window.setTimeout(() => {
+        clearAdminAgentsCache(user?.id);
+        void fetchAgents({ force: true, background: true });
+      }, 6000);
+    });
+  };
+
 
   useEffect(() => {
     if (!authLoading && isAdmin) {
