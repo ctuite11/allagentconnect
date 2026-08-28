@@ -255,9 +255,6 @@ export function BulkDeleteAgentsDialog({
 
     setProgress(100);
 
-    setDeleting(false);
-    setProgress(0);
-
     if (failCount === 0 && partialCount === 0) {
       toast.success(`Successfully deleted ${fullCount} agent(s)`);
     } else if (failCount === 0) {
@@ -271,10 +268,23 @@ export function BulkDeleteAgentsDialog({
         { duration: 15000 },
       );
     }
-
-    onDeleted();
-    onOpenChange(false);
+    } catch (err) {
+      console.error("Bulk delete failed:", err);
+      toast.error(
+        "Bulk delete did not complete: " +
+          (err instanceof Error ? err.message : String(err)),
+        { duration: 15000 },
+      );
+    } finally {
+      setDeleting(false);
+      setProgress(0);
+      // Always clear the selection and refresh, even on a partial failure,
+      // so no stale ticked rows are left behind.
+      onDeleted(removedIds);
+      onOpenChange(false);
+    }
   };
+
 
   if (agents.length === 0) return null;
 
