@@ -259,7 +259,128 @@ Deno.serve(async (req: Request): Promise<Response> => {
     });
   }
 
+  /* ---- Exact normalized first + last name matches (warning only) ---- */
+  const nameMatches: NameMatch[] = [];
+  if (firstNorm && lastNorm) {
+    const sameName = (f: unknown, l: unknown) =>
+      normalizeName(f) === firstNorm && normalizeName(l) === lastNorm;
+    const sameEmail = (e: unknown) =>
+      typeof e === "string" && e.trim().toLowerCase() === email;
+
+    try {
+      const [profilesRes, earlyRes, pendingRes, deletedRes] = await Promise.all([
+        admin
+          .from("profiles")
+          .select("id, first_name, last_name, email, deactivated_at")
+          .ilike("first_name", (rawFirst ?? "").trim())
+          .ilike("last_name", (rawLast ?? "").trim())
+          .limit(10),
+        admin
+          .from("agent_early_access")
+          .select("first_name, last_name, email, status, brokerage, created_at")
+          .ilike("first_name", (rawFirst ?? "").trim())
+          .ilike("last_name", (rawLast ?? "").trim())
+          .order("created_at", { ascending: false })
+          .limit(10),
+        admin
+          .from("pending_verifications")
+          .select("first_name, last_name, email, status, processed, company, created_at")
+          .ilike("first_name", (rawFirst ?? "").trim())
+          .ilike("last_name", (rawLast ?? "").trim())
+          .order("created_at", { ascending: false })
+          .limit(10),
+        admin
+          .from("deleted_users")
+          .select("first_name, last_name, email, company, deleted_at")
+          .ilike("first_name", (rawFirst ?? "").trim())
+          .ilike("last_name", (rawLast ?? "").trim())
+          .order("deleted_at", { ascending: false })
+          .limit(10),
+      ]);
+
+      const profileRows = (profilesRes.data ?? []).filter(
+        (r) => sameName(r.first_name, r.last_name) && !sameEmail(r.email),
+      );
+      // Enrich account name matches with agent status + brokerage.
+      const ids = profileRows.map((r) => r.id as string);
+      let statusById = new Map<string, string | null>();
+      let companyById = new Map<string, string | null>();
+      if (ids.length > 0) {
+        const [settingsRes, agentProfRes] = await Promise.all([
+          admin.from("agent_settings").select("user_id, agent_status").in("user_id", ids),
+          admin.from("agent_profiles").select("user_id, company, office_name").in("user_id", ids),
+        ]);
+        for (const s of settingsRes.data ?? []) {
+          statusById.set(s.user_id as string, (s.agent_status as string | null) ?? null);
+        }
+        for (const p of agentProfRes.data ?? []) {
+          companyById.set(
+            p.user_id as string,
+            ((p.company as string | null) || (p.office_name as string | null)) ?? null,
+          );
+        }
+      }
+      for (const r of profileRows) {
+        const id = r.id as string;
+        const agentStatus = statusById.get(id) ?? null;
+        nameMatches.push({
+          source: "account",
+          sourceLabel: "Existing account",
+          name: `${r.first_name ?? ""} ${r.last_name ?? ""}`.trim(),
+          email: (r.email as string | null) ?? null,
+          status: r.deactivated_at
+            ? `deactivated${agentStatus ? ` · ${agentStatus}` : ""}`
+            : agentStatus,
+          brokerage: companyById.get(id) ?? null,
+          date: null,
+        });
+      }
+
+      for (const r of earlyRes.data ?? []) {
+        if (!sameName(r.first_name, r.last_name) || sameEmail(r.email)) continue;
+        nameMatches.push({
+          source: "early_access",
+          sourceLabel: "Early access request",
+          name: `${r.first_name ?? ""} ${r.last_name ?? ""}`.trim(),
+          email: (r.email as string | null) ?? null,
+          status: (r.status as string | null) ?? null,
+          brokerage: (r.brokerage as string | null) ?? null,
+          date: (r.created_at as string | null) ?? null,
+        });
+      }
+
+      for (const r of pendingRes.data ?? []) {
+        if (!sameName(r.first_name, r.last_name) || sameEmail(r.email)) continue;
+        nameMatches.push({
+          source: "pending_verification",
+          sourceLabel: "Verification application",
+          name: `${r.first_name ?? ""} ${r.last_name ?? ""}`.trim(),
+          email: (r.email as string | null) ?? null,
+          status: (r.status as string | null) ?? (r.processed ? "processed" : "pending"),
+          brokerage: (r.company as string | null) ?? null,
+          date: (r.created_at as string | null) ?? null,
+        });
+      }
+
+      for (const r of deletedRes.data ?? []) {
+        if (!sameName(r.first_name, r.last_name) || sameEmail(r.email)) continue;
+        nameMatches.push({
+          source: "deleted",
+          sourceLabel: "Previously deleted agent",
+          name: `${r.first_name ?? ""} ${r.last_name ?? ""}`.trim(),
+          email: (r.email as string | null) ?? null,
+          status: "deleted",
+          brokerage: (r.company as string | null) ?? null,
+          date: (r.deleted_at as string | null) ?? null,
+        });
+      }
+    } catch (err) {
+      console.error("[admin-check-agent-email] name lookup failed:", err);
+    }
+  }
+
   // Blocking only when there is a live (non-deleted) registered account.
+  // Name matches are advisory and NEVER contribute to blocking.
   const hasActiveAccount = matches.some((m) => m.source === "account") &&
     !(deletedMatch && !accountUserId);
 
@@ -268,5 +389,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
     found: matches.length > 0,
     hasActiveAccount,
     matches,
+    nameMatches,
   });
+
 });
