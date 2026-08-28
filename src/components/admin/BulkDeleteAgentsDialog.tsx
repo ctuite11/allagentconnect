@@ -205,6 +205,7 @@ export function BulkDeleteAgentsDialog({
         res.value.data &&
         (res.value.data as number) > 0
       ) {
+        removedIds.push(agent.id);
         authTargets.push({ userId: agent.id, email: agent.email });
       } else {
         const err =
