@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Mail } from "lucide-react";
+import { ArrowLeft, Mail } from "lucide-react";
 import { invokeEdgeFunction } from "@/lib/invokeEdgeFunction";
 
 type TemplateKind = "plain" | "branded" | "personal-forward-invite";
@@ -26,6 +26,8 @@ type TemplateKind = "plain" | "branded" | "personal-forward-invite";
  */
 export default function AdminSendEmail() {
   const navigate = useNavigate();
+  // The form paints immediately; authorization + sender identity resolve in
+  // the background and gate the Send button (fail-closed).
   const [authChecked, setAuthChecked] = useState(false);
   const [allowed, setAllowed] = useState(false);
   const [senderLine, setSenderLine] = useState<string | null>(null);
@@ -42,20 +44,27 @@ export default function AdminSendEmail() {
   const [lastResult, setLastResult] = useState<string | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
     (async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      // Cached session — avoids a network round trip just to learn the user id.
+      const { data: { session } } = await supabase.auth.getSession();
+      const user = session?.user ?? null;
       if (!user) {
         navigate("/auth");
         return;
       }
-      const isAdmin = await hasRole(user.id, "admin");
-      setAllowed(isAdmin);
-      if (isAdmin) {
-        const { data: profile } = await supabase
+      const [isAdmin, profileResult] = await Promise.all([
+        hasRole(user.id, "admin"),
+        supabase
           .from("profiles")
           .select("first_name, last_name, email")
           .eq("id", user.id)
-          .maybeSingle();
+          .maybeSingle(),
+      ]);
+      if (cancelled) return;
+      setAllowed(isAdmin);
+      if (isAdmin) {
+        const profile = profileResult.data;
         const name = [profile?.first_name, profile?.last_name]
           .filter(Boolean)
           .join(" ")
@@ -65,7 +74,11 @@ export default function AdminSendEmail() {
       }
       setAuthChecked(true);
     })();
+    return () => {
+      cancelled = true;
+    };
   }, [navigate]);
+
 
 
   const isInvite = template === "personal-forward-invite";
@@ -104,21 +117,30 @@ export default function AdminSendEmail() {
     }
   };
 
-  if (!authChecked) {
-    return <div className="p-8 text-sm text-neutral-500">Loading…</div>;
-  }
-  if (!allowed) {
+  if (authChecked && !allowed) {
     return <div className="p-8 text-sm text-destructive">Admin access required.</div>;
   }
 
+  const identityReady = authChecked && allowed && Boolean(senderLine);
+
   return (
     <div className="mx-auto max-w-2xl p-6">
+      <Button
+        variant="ghost"
+        size="sm"
+        className="mb-3 -ml-2 text-neutral-600"
+        onClick={() => navigate("/admin/approvals")}
+      >
+        <ArrowLeft className="mr-2 h-4 w-4" />
+        Back to Admin
+      </Button>
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
             <Mail className="h-5 w-5 text-[#22C55E]" />
             <CardTitle>Send Email</CardTitle>
           </div>
+
           <CardDescription>
             Send a one-off email to a single recipient through the normal email queue.
           </CardDescription>
@@ -236,7 +258,7 @@ export default function AdminSendEmail() {
             <p className="text-xs text-neutral-500">
               Logged in <code>email_jobs</code> and trackable from Admin → Email Analytics.
             </p>
-            <Button onClick={handleSend} disabled={sending || !to.trim()}>
+            <Button onClick={handleSend} disabled={sending || !identityReady || !to.trim()}>
               {sending ? "Sending…" : "Send Email"}
             </Button>
           </div>

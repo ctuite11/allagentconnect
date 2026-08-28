@@ -114,10 +114,20 @@ Deno.serve(async (req) => {
     }
     console.log("[admin-send-email] caller:", user.email ?? "(no email)", user.id);
 
-    const { data: isAdmin, error: roleError } = await admin.rpc("has_role", {
-      _user_id: user.id,
-      _role: "admin",
-    });
+    /* Role check and sender-profile lookup are independent reads keyed to the
+     * same user — run them concurrently. Gating order/semantics unchanged. */
+    const [
+      { data: isAdmin, error: roleError },
+      { data: profile, error: profileError },
+    ] = await Promise.all([
+      admin.rpc("has_role", { _user_id: user.id, _role: "admin" }),
+      admin
+        .from("profiles")
+        .select("first_name, last_name, email")
+        .eq("id", user.id)
+        .maybeSingle(),
+    ]);
+
     console.log(
       "[admin-send-email] admin role check:",
       isAdmin === true ? "granted" : "denied",
@@ -132,12 +142,6 @@ Deno.serve(async (req) => {
      * the automated `hello@` company sender. If we cannot resolve a valid
      * @allagentconnect.com identity for the caller, refuse the send rather
      * than silently falling back to the company sender. */
-    const { data: profile, error: profileError } = await admin
-      .from("profiles")
-      .select("first_name, last_name, email")
-      .eq("id", user.id)
-      .maybeSingle();
-
     const senderEmail = (profile?.email ?? user.email ?? "").trim().toLowerCase();
     const senderName = [profile?.first_name, profile?.last_name]
       .filter((part) => typeof part === "string" && part.trim())
@@ -148,6 +152,7 @@ Deno.serve(async (req) => {
       console.error("[admin-send-email] sender profile lookup failed:", profileError.message);
       return json({ error: "Could not resolve your sender identity" }, 500);
     }
+
     if (!senderEmail.endsWith("@allagentconnect.com") || !senderName) {
       console.warn(
         "[admin-send-email] refusing send — incomplete sender identity:",

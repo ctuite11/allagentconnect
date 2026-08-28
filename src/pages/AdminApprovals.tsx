@@ -376,6 +376,12 @@ function YesNoCell({
 let adminAgentsCache: { agents: Agent[]; fetchedAt: number } | null = null;
 const ADMIN_AGENTS_CACHE_TTL_MS = 5 * 60 * 1000;
 
+/** Warm the lazy Send Email chunk before the admin clicks through. */
+const prefetchSendEmailRoute = () => {
+  void import("./AdminSendEmail");
+};
+
+
 export default function AdminApprovals() {
   const navigate = useNavigate();
   const { user, loading: authLoading, isAdmin } = useAuthRole();
@@ -1813,7 +1819,10 @@ export default function AdminApprovals() {
             <Button
               variant="outline"
               size="sm"
+              onMouseEnter={prefetchSendEmailRoute}
+              onFocus={prefetchSendEmailRoute}
               onClick={() => navigate('/admin/send-email')}
+
               className="w-full justify-start border-slate-300 text-slate-700 hover:bg-slate-100 sm:w-auto sm:justify-center"
             >
               <Mail className="h-4 w-4 mr-2" />
