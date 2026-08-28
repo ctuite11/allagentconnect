@@ -94,14 +94,21 @@ Deno.serve(async (req: Request): Promise<Response> => {
   if (isAdmin !== true) return json(403, { error: "Admin access required" });
 
   let rawEmail: string | null = null;
+  let rawFirst: string | null = null;
+  let rawLast: string | null = null;
   try {
     const body = await req.json();
     if (typeof body?.email === "string") rawEmail = body.email;
+    if (typeof body?.firstName === "string") rawFirst = body.firstName;
+    if (typeof body?.lastName === "string") rawLast = body.lastName;
   } catch {
     return json(400, { error: "Invalid JSON body" });
   }
   const email = (rawEmail ?? "").trim().toLowerCase();
   if (!email) return json(400, { error: "email is required" });
+  const firstNorm = normalizeName(rawFirst);
+  const lastNorm = normalizeName(rawLast);
+
 
   const admin = createClient(supabaseUrl, serviceKey, {
     auth: { autoRefreshToken: false, persistSession: false },
