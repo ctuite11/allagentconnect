@@ -35,6 +35,33 @@ interface EmailMatch {
   date?: string | null;
 }
 
+/**
+ * Exact-normalized name match (warning only — never blocking).
+ * Email remains the only authoritative duplicate identifier.
+ */
+interface NameMatch {
+  source: "account" | "early_access" | "pending_verification" | "deleted";
+  sourceLabel: string;
+  name: string;
+  email: string | null;
+  status: string | null;
+  brokerage: string | null;
+  date: string | null;
+}
+
+function normalizeName(value: unknown): string {
+  if (typeof value !== "string") return "";
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "")
+    .replace(/['’`]/g, "")
+    .replace(/[^\p{L}\p{N}\s]/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+
 Deno.serve(async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
