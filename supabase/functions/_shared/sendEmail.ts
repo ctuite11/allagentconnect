@@ -144,6 +144,9 @@ export interface SendEmailOptions {
 const ADMIN_MANUAL_TEMPLATES = new Set([
   "admin-adhoc",
   "personal-forward-invite",
+  // Admin-composed test copies of the Facebook-community invite, sent only
+  // through admin-send-email (caller is an authenticated admin).
+  "admin-created-invite",
 ]);
 
 const PERSONAL_SENDER_DOMAIN = "@allagentconnect.com";
