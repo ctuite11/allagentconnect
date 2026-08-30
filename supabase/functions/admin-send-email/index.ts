@@ -190,6 +190,13 @@ Deno.serve(async (req) => {
     if (template === "personal-forward-invite") {
       subject = subject || "You\u2019re invited to join All Agent Connect";
       html = buildPersonalForwardEmailHtml({ ctaUrl });
+    } else if (template === "admin-created-invite") {
+      // Facebook-community invite: exact production template with a
+      // placeholder activate link (test copies only — no real token).
+      subject = subject || "Chris Tuite invited you to All Agent Connect";
+      html = buildAdminCreatedInviteEmailHtml({
+        ctaUrl: `${AAC_PUBLIC_URL}/activate`,
+      });
     } else {
       const message = (body.message ?? "").trim();
       if (!subject) return json({ error: "Subject is required" }, 400);
