@@ -224,6 +224,8 @@ Deno.serve(async (req) => {
           provider: "resend",
           template: template === "personal-forward-invite"
             ? "personal-forward-invite"
+            : template === "admin-created-invite"
+            ? "admin-created-invite"
             : "admin-adhoc",
           to,
           subject,
