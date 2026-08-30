@@ -4,7 +4,8 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.0";
 import { buildAacEmail } from "../_shared/aacEmailTemplate.ts";
 import { buildPersonalForwardEmailHtml } from "../_shared/buildPersonalForwardEmailHtml.ts";
-import { resolveAacCtaUrl } from "../_shared/aacPublicUrl.ts";
+import { buildAdminCreatedInviteEmailHtml } from "../_shared/buildAdminCreatedInviteEmailHtml.ts";
+import { resolveAacCtaUrl, AAC_PUBLIC_URL } from "../_shared/aacPublicUrl.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -12,7 +13,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-type TemplateKind = "plain" | "branded" | "personal-forward-invite";
+type TemplateKind = "plain" | "branded" | "personal-forward-invite" | "admin-created-invite";
 
 interface AdminSendEmailRequest {
   to?: string;
