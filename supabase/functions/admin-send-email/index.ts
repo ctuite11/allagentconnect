@@ -4,7 +4,8 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.0";
 import { buildAacEmail } from "../_shared/aacEmailTemplate.ts";
 import { buildPersonalForwardEmailHtml } from "../_shared/buildPersonalForwardEmailHtml.ts";
-import { resolveAacCtaUrl } from "../_shared/aacPublicUrl.ts";
+import { buildAdminCreatedInviteEmailHtml } from "../_shared/buildAdminCreatedInviteEmailHtml.ts";
+import { resolveAacCtaUrl, AAC_PUBLIC_URL } from "../_shared/aacPublicUrl.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -12,7 +13,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-type TemplateKind = "plain" | "branded" | "personal-forward-invite";
+type TemplateKind = "plain" | "branded" | "personal-forward-invite" | "admin-created-invite";
 
 interface AdminSendEmailRequest {
   to?: string;
@@ -189,6 +190,13 @@ Deno.serve(async (req) => {
     if (template === "personal-forward-invite") {
       subject = subject || "You\u2019re invited to join All Agent Connect";
       html = buildPersonalForwardEmailHtml({ ctaUrl });
+    } else if (template === "admin-created-invite") {
+      // Facebook-community invite: exact production template with a
+      // placeholder activate link (test copies only — no real token).
+      subject = subject || "Chris Tuite invited you to All Agent Connect";
+      html = buildAdminCreatedInviteEmailHtml({
+        ctaUrl: `${AAC_PUBLIC_URL}/activate`,
+      });
     } else {
       const message = (body.message ?? "").trim();
       if (!subject) return json({ error: "Subject is required" }, 400);
@@ -216,6 +224,8 @@ Deno.serve(async (req) => {
           provider: "resend",
           template: template === "personal-forward-invite"
             ? "personal-forward-invite"
+            : template === "admin-created-invite"
+            ? "admin-created-invite"
             : "admin-adhoc",
           to,
           subject,
