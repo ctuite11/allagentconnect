@@ -96,13 +96,13 @@ serve(async (req: Request): Promise<Response> => {
       });
     }
 
-    // Canonical activation write — idempotent, agent-role-scoped, and
-    // flips invited → verified in one place.
-    const { error: rpcErr } = await admin.rpc("mark_agent_activated", {
+    // Admin-issued credentials are usable now, but the agent has NOT activated
+    // the account — only a real first sign-in does that.
+    const { error: rpcErr } = await admin.rpc("mark_agent_credentials_issued", {
       _user_id: userId,
     });
     if (rpcErr) {
-      console.warn("[admin-set-user-password] mark_agent_activated warn:", rpcErr.message);
+      console.warn("[admin-set-user-password] mark_agent_credentials_issued warn:", rpcErr.message);
     }
 
     return new Response(

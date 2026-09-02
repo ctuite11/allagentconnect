@@ -44,6 +44,7 @@ export interface AgentDetailsAgent {
   profile_complete?: boolean;
   last_sign_in_at?: string | null;
   account_activated_at?: string | null;
+  credentials_issued_at?: string | null;
   invite_email?: EmailStatusInfo | null;
   license_verified_email?: EmailStatusInfo | null;
   source?: "profile" | "early_access" | "pending_verification";
@@ -150,7 +151,9 @@ export function AgentDetailsDrawer({
     agent.agent_status === "rejected" ||
     agent.agent_status === "restricted";
   const verified = !!agent.verified_at;
-  const activated = !!agent.account_activated_at;
+  // Activated only counts when the owner has actually signed in.
+  const activated = !!agent.last_sign_in_at;
+  const credentialsIssued = !!agent.credentials_issued_at;
   const setupEmail = agent.license_verified_email || agent.invite_email;
   const setupSent = !!setupEmail || agent.agent_status === "invited";
   const setupSentDetail = setupEmail
@@ -249,9 +252,20 @@ export function AgentDetailsDrawer({
                 detail={setupSentDetail}
               />
               <LifecycleRow
+                label="Credentials Issued"
+                yes={credentialsIssued}
+                detail={credentialsIssued ? fmt(agent.credentials_issued_at) : null}
+              />
+              <LifecycleRow
                 label="Account Activated"
                 yes={activated}
-                detail={activated ? fmt(agent.account_activated_at) : null}
+                detail={
+                  activated
+                    ? fmt(agent.account_activated_at ?? agent.last_sign_in_at)
+                    : credentialsIssued
+                      ? "Ready to sign in — never signed in"
+                      : null
+                }
               />
               {isRejected && (
                 <LifecycleRow
