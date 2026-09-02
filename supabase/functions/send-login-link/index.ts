@@ -1,6 +1,6 @@
 // @auth-classification: admin-jwt
 //
-// Issues an AAC-owned 7-day sign-in link for an agent.
+// Issues an AAC-owned 30-day sign-in link for an agent.
 //
 // Hard bindings (no caller may influence any of these):
 //   * recipient — resolved server-side from auth.users for the given user_id

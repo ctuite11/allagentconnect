@@ -4,7 +4,7 @@
 //
 // Reuses the agent onboarding primitives:
 //   * auth.admin.createUser (no password, email pre-confirmed) — same as admin-create-user
-//   * reissue_agent_activation_token → durable 7-day AAC activation token
+//   * reissue_agent_activation_token → durable 30-day AAC activation token
 //   * the same POST-redeemed /activate flow and recovery handoff
 //
 // Developer-specific: development_accounts + owner membership + developer role,

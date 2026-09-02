@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------ */
-/*  Sign-in link email (AAC-owned, 7-day token)                        */
+/*  Sign-in link email (AAC-owned, 30-day token)                        */
 /*  New template. Does not modify any existing email builder.          */
 /* ------------------------------------------------------------------ */
 
@@ -29,7 +29,7 @@ export interface LoginLinkEmailOptions {
 
 export function buildLoginLinkEmailHtml(opts: LoginLinkEmailOptions): string {
   const preheader = opts.preheader ??
-    "Your sign-in link for All Agent Connect. Valid for 7 days, single use.";
+    "Your sign-in link for All Agent Connect. Valid for 30 days, single use.";
   const greeting = opts.agentName
     ? `Hi ${escapeHtml(opts.agentName)},`
     : "Hi there,";

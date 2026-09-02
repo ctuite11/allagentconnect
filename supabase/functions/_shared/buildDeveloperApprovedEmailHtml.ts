@@ -38,7 +38,7 @@ export function buildDeveloperApprovedEmailHtml(opts: DeveloperApprovedEmailOpti
   const greetingName = first ? escapeHtml(first) : "there";
   const preheader = opts.preheader ??
     "Your Developer account is approved. Set up your password to get started.";
-  const ctaNote = opts.ctaNote?.trim() || "This setup link is valid for 7 days.";
+  const ctaNote = opts.ctaNote?.trim() || "This setup link is valid for 30 days.";
 
   return `<!DOCTYPE html>
 <html lang="en">

@@ -17,9 +17,9 @@ import { AAC_PUBLIC_URL } from "./aacPublicUrl.ts";
 import { activationUrl, epochSeconds, signActivationToken } from "./activationTokens.ts";
 
 export const ACTIVATION_TEMPLATE = "license-verified";
-/** Admin-created setup invite — same durable 7-day token, different body. */
+/** Admin-created setup invite — same durable 30-day token, different body. */
 export const ADMIN_INVITE_TEMPLATE = "admin-created-invite";
-/** Developer approval / setup invite — same durable 7-day token, Developer copy. */
+/** Developer approval / setup invite — same durable 30-day token, Developer copy. */
 export const DEVELOPER_INVITE_TEMPLATE = "developer-account-approved";
 
 /** Templates whose CTA is a late-rendered AAC activation link. */

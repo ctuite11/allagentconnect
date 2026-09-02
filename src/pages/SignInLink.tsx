@@ -36,7 +36,7 @@ const COPY: Record<Exclude<LinkState, "ready">, { title: string; body: string; t
   },
   expired: {
     title: "This sign-in link has expired",
-    body: "Sign-in links are valid for 7 days. Head to the login page to sign in, or ask us for a fresh link.",
+    body: "Sign-in links are valid for 30 days. Head to the login page to sign in, or ask us for a fresh link.",
     tone: "warn",
   },
   in_progress: {
@@ -128,7 +128,7 @@ export default function SignInLink() {
 
             <p className="mt-4 flex items-center gap-1.5 text-xs text-muted-foreground">
               <Clock className="h-3.5 w-3.5" aria-hidden />
-              This link is valid for 7 days and can be used once.
+              This link is valid for 30 days and can be used once.
             </p>
           </>
         ) : (

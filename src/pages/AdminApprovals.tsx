@@ -1563,12 +1563,12 @@ export default function AdminApprovals() {
   // respect the edge function's rate limits and the per-agent throttle.
   const [bulkRemindingActivation, setBulkRemindingActivation] = useState(false);
 
-  // AAC-owned 7-day sign-in link. The token is minted server-side from the
+  // AAC-owned 30-day sign-in link. The token is minted server-side from the
   // agent's user id — the admin client never sees the token or a CTA URL.
   const [sendingLoginLinkFor, setSendingLoginLinkFor] = useState<Set<string>>(new Set());
   const handleSendLoginLink = async (agent: Agent) => {
     const ok = window.confirm(
-      `Email a 7-day sign-in link to ${agent.email}? Any previous sign-in link for this agent stops working.`,
+      `Email a 30-day sign-in link to ${agent.email}? Any previous sign-in link for this agent stops working.`,
     );
     if (!ok) return;
 
@@ -1586,7 +1586,7 @@ export default function AdminApprovals() {
         toast.info(`A sign-in link was just issued for ${agent.email} — not sending a duplicate`);
         return;
       }
-      toast.success(`7-day sign-in link emailed to ${agent.email}`);
+      toast.success(`30-day sign-in link emailed to ${agent.email}`);
     } catch (err) {
       console.error("Send login link failed:", err);
       toast.error((err as Error)?.message || "Could not send sign-in link");
@@ -2516,7 +2516,7 @@ export default function AdminApprovals() {
                                     >
                                       {sendingLoginLinkFor.has(agent.id)
                                         ? "Sending…"
-                                        : "Email 7-day sign-in link"}
+                                        : "Email 30-day sign-in link"}
                                     </DropdownMenuItem>
                                   )}
                                   <DropdownMenuSeparator />
