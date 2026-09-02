@@ -104,7 +104,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // ---------------------------------------------------------------
-    // Preferred path: durable, AAC-owned 7-day activation token.
+    // Preferred path: durable, AAC-owned 30-day activation token.
     //
     // The previous implementation embedded a raw Supabase recovery link,
     // which expires in ~1 hour and can be burned by corporate mail

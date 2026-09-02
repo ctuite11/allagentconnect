@@ -1,6 +1,6 @@
 // @auth-classification: token-redemption (public, token-bearing, POST-only)
 //
-// Redeems an AAC-owned 7-day login token and returns a freshly minted,
+// Redeems an AAC-owned 30-day login token and returns a freshly minted,
 // short-lived Supabase magic link. Invoked ONLY by the same-origin Netlify
 // proxy at /api/login-redeem after the user presses "Sign In".
 //

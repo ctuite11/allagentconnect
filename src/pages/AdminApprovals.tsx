@@ -1563,7 +1563,7 @@ export default function AdminApprovals() {
   // respect the edge function's rate limits and the per-agent throttle.
   const [bulkRemindingActivation, setBulkRemindingActivation] = useState(false);
 
-  // AAC-owned 7-day sign-in link. The token is minted server-side from the
+  // AAC-owned 30-day sign-in link. The token is minted server-side from the
   // agent's user id — the admin client never sees the token or a CTA URL.
   const [sendingLoginLinkFor, setSendingLoginLinkFor] = useState<Set<string>>(new Set());
   const handleSendLoginLink = async (agent: Agent) => {
