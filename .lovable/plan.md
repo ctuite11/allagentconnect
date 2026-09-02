@@ -1,49 +1,33 @@
-# Reconcile Agent Network count with Admin "Activated"
+# Verification email link + 30-day setup token
 
-## What the numbers actually are (verified by query)
+## What's actually true today
 
-Admin page (matches your screen): Verified 47, Invited 138, Activated 284.
-Agent Network currently returns **267** profiles.
+- The License Verified email **does still contain a link** — a CTA button ("Activate My Account") plus a line reading "This activation link is valid until <date>". It is rendered at send time from the stored token, so the link only appears if the token still exists, is unused, and is unexpired. If the token expired before the queue sent the email, the send is skipped entirely — that's the case where an agent gets nothing usable.
+- The token lifetime was **never raised to 30 days**. It is still 7 days in three places:
+  - activation tokens (License Verified, admin-created invite, developer approval): 7 days
+  - login-link tokens: 7 days
+  - the database itself rejects any expiry more than **8 days** in the future
 
-The 17-agent gap breaks down exactly:
+So the "we increased it to 30" change does not exist in the system.
 
-| Reason an activated agent is missing from the Network | Count |
-|---|---|
-| Signed in, status `verified`, but no `account_activated_at` stamp | 14 |
-| Signed in, but status is not `verified` (pending/invited) | 2 |
-| Verified + activated but `hide_from_directory = true` | 1 |
+## Proposed change: 30-day setup links
 
-284 - 14 - 2 - 1 = 267.
+1. Raise the activation token lifetime from 7 to 30 days.
+2. Raise the login-link token lifetime from 7 to 30 days (same email family — keep them consistent unless you want login links to stay short).
+3. Update the database guard that currently caps expiry at 8 days so it allows up to 31 days. Both the activation and login-token issuing functions need this.
+4. Email copy: the "valid until <date>" line is generated from the real expiry, so it updates automatically. Any hard-coded "7 days" wording in admin UI/toasts gets updated to 30.
 
-Root cause: the two surfaces use different definitions of "activated".
-Admin now derives Activated from a real `auth.users.last_sign_in_at` (the
-lifecycle fix we shipped). The Network RPC `get_verified_agent_ids()` still
-requires the older `agent_settings.account_activated_at` stamp. The 14 agents
-signed in before sign-in-time stamping existed, so they have a real sign-in but
-no stamp, and the directory silently drops them.
+Existing tokens already issued keep their original 7-day expiry; only newly issued links get 30 days.
 
-No agent is missing for a name, profile, or buyer-alerts reason — those filters
-currently exclude nobody.
+## Questions before I build
 
-## Changes
+- Should **login links** also go to 30 days, or keep those short (7 days) and only extend the account-setup/activation links?
+- Longer-lived setup links are a mild security tradeoff (a forwarded email stays redeemable for a month). Tokens are still single-use and revoked on redemption, so this is generally acceptable — confirming you're fine with it.
 
-1. **Backfill (migration, data only):** for `agent_settings` rows where the user
-   has a non-null `last_sign_in_at` and `account_activated_at` is null, set
-   `account_activated_at = last_sign_in_at`. Affects the 14 rows above. Nothing
-   else is touched — no status, verification, password, or email change.
+## Technical detail
 
-2. **Harden `get_verified_agent_ids()`:** treat an agent as activated when
-   `account_activated_at IS NOT NULL` **OR** `auth.users.last_sign_in_at IS NOT
-   NULL`, so the directory can never drift from the admin definition again. All
-   other conditions (verified status, agent role, profile row, non-blank name,
-   `hide_from_directory = false`) stay exactly as they are.
-
-3. **No UI changes.** `AgentSearch.tsx` and the admin page keep their current
-   behavior; the counts converge because the underlying rule converges.
-
-## Expected result
-
-Agent Network goes from 267 to **281**. The remaining 3 of the 284 stay out on
-purpose: 2 accounts whose status is not `verified`, and 1 agent who has opted
-out of the directory. I will report the before/after counts and name those 3
-after the migration runs.
+- `supabase/functions/_shared/activationTokens.ts` — `ACTIVATION_TOKEN_TTL_DAYS` 7 → 30
+- `supabase/functions/_shared/loginTokens.ts` — `LOGIN_TOKEN_TTL_DAYS` 7 → 30 (pending answer above)
+- Migration replacing `activation_issue_core` and `issue_agent_login_token` expiry range check `now() + interval '8 days'` → `interval '31 days'`
+- Redeploy: `send-license-verified-email`, `resend-activation-link`, `send-login-link`, `send-admin-created-invite`, `admin-approve-developer-request`, and the email queue worker
+- No emails sent as part of this work.
