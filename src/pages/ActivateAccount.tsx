@@ -40,7 +40,7 @@ const COPY: Record<
   },
   expired: {
     title: "This activation link has expired",
-    body: "Activation links are valid for 7 days. Request a new one and we'll email it to the address on your account.",
+    body: "Activation links are valid for 30 days. Request a new one and we'll email it to the address on your account.",
     tone: "warn",
   },
   in_progress: {
@@ -150,7 +150,7 @@ export default function ActivateAccount() {
 
             <p className="mt-4 flex items-center gap-1.5 text-xs text-muted-foreground">
               <Clock className="h-3.5 w-3.5" aria-hidden />
-              This link is valid for 7 days and can be used once.
+              This link is valid for 30 days and can be used once.
             </p>
           </>
         ) : (

@@ -14,7 +14,7 @@
 
 const enc = new TextEncoder();
 
-export const LOGIN_TOKEN_TTL_DAYS = 7;
+export const LOGIN_TOKEN_TTL_DAYS = 30;
 
 export interface LoginTokenParts {
   id: string;

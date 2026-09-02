@@ -17,7 +17,7 @@
 
 const enc = new TextEncoder();
 
-export const ACTIVATION_TOKEN_TTL_DAYS = 7;
+export const ACTIVATION_TOKEN_TTL_DAYS = 30;
 
 export interface ActivationTokenParts {
   id: string;
