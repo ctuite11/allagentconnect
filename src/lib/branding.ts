@@ -25,7 +25,7 @@ export const AAC_BRAND: BrandConfig = {
   description: 'All Agent Connect is a professional collaboration platform for real estate agents to connect, share listings, manage buyers, and close deals faster.',
   siteName: 'All Agent Connect',
   siteUrl: 'https://allagentconnect.com',
-  ogImage: 'https://allagentconnect.com/og-image.jpg?v=20260404-2',
+  ogImage: 'https://allagentconnect.com/og-image.jpg?v=20260902',
 };
 
 export const DCMLS_BRAND: BrandConfig = {
