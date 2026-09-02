@@ -126,7 +126,7 @@ export async function declineDeveloperAccessRequest(input: {
  *
  * No pre-existing AAC account is required: the edge function creates the auth
  * user when needed, provisions the development account + `developer` role, and
- * (unless `sendEmail: false`) issues the 7-day setup/activation email.
+ * (unless `sendEmail: false`) issues the 30-day setup/activation email.
  */
 export async function approveDeveloperAccessRequest(input: {
   requestId: string;

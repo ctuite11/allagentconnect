@@ -131,7 +131,7 @@ function VerifyDialog({
             Verify {request.first_name} {request.last_name}
           </DialogTitle>
           <DialogDescription>
-            Verifying creates the Developer account and emails a 7-day setup link so they can create
+            Verifying creates the Developer account and emails a 30-day setup link so they can create
             their own login. No existing AAC account is needed.
           </DialogDescription>
         </DialogHeader>
