@@ -24,6 +24,7 @@ interface AgentSettings {
   license_state: string | null
   verified_at: string | null
   account_activated_at: string | null
+  credentials_issued_at: string | null
   approval_email_sent: boolean | null
 }
 
@@ -45,6 +46,7 @@ interface MergedAgent {
   has_auth_account?: boolean
   last_sign_in_at?: string | null
   account_activated_at?: string | null
+  credentials_issued_at?: string | null
   approval_email_sent?: boolean | null
   invite_email?: EmailStatusInfo | null
   license_verified_email?: EmailStatusInfo | null
@@ -62,7 +64,13 @@ interface MergedAgent {
   pending_verification_id?: string
 }
 
-type LifecycleStatus = 'pending' | 'invited' | 'verified' | 'activated' | 'rejected'
+type LifecycleStatus =
+  | 'pending'
+  | 'invited'
+  | 'verified'
+  | 'credentials_issued'
+  | 'activated'
+  | 'rejected'
 
 /**
  * Lifecycle derivation — timestamps + explicit rejection only.
@@ -76,10 +84,15 @@ function deriveLifecycleStatus(input: {
   agent_status: string | null | undefined
   verified_at: string | null | undefined
   account_activated_at: string | null | undefined
+  credentials_issued_at: string | null | undefined
+  last_sign_in_at: string | null | undefined
   explicitly_rejected: boolean
 }): LifecycleStatus {
   const s = (input.agent_status || '').toLowerCase()
-  if (input.account_activated_at) return 'activated'
+  // Activated means the owner actually signed in — an activation stamp on a
+  // never-signed-in account is not enough.
+  if (input.last_sign_in_at) return 'activated'
+  if (input.credentials_issued_at) return 'credentials_issued'
   if (input.verified_at) return 'verified'
   if (input.explicitly_rejected || s === 'rejected' || s === 'restricted') return 'rejected'
   // Admin-created accounts awaiting setup are NOT approval-queue rows.
@@ -269,7 +282,7 @@ Deno.serve(async (req) => {
       settingsChunks.map(chunk =>
         adminClient
           .from('agent_settings')
-          .select('user_id, agent_status, license_number, license_state, verified_at, account_activated_at, approval_email_sent')
+          .select('user_id, agent_status, license_number, license_state, verified_at, account_activated_at, credentials_issued_at, approval_email_sent')
           .in('user_id', chunk)
       )
     )
@@ -320,6 +333,7 @@ Deno.serve(async (req) => {
         has_auth_account: authEmails.has(emailKey),
         last_sign_in_at: lastSignInByEmail.get(emailKey) ?? null,
         account_activated_at: s?.account_activated_at ?? null,
+        credentials_issued_at: s?.credentials_issued_at ?? null,
         approval_email_sent: s?.approval_email_sent ?? null,
         profile_complete: profileComplete,
         headshot_url: headshotUrl ?? null,
@@ -377,6 +391,7 @@ Deno.serve(async (req) => {
       has_auth_account: authEmails.has(emailKey),
       last_sign_in_at: lastSignInByEmail.get(emailKey) ?? null,
       account_activated_at: null,
+      credentials_issued_at: null,
       profile_complete: false,
       }
     })
@@ -441,6 +456,7 @@ Deno.serve(async (req) => {
           has_auth_account: authEmails.has(em),
           last_sign_in_at: lastSignInByEmail.get(em) ?? null,
           account_activated_at: null,
+          credentials_issued_at: null,
           profile_complete: false,
           source: 'pending_verification',
           pending_verification_id: row.id,
@@ -463,6 +479,8 @@ Deno.serve(async (req) => {
         agent_status: a.agent_status,
         verified_at: a.verified_at,
         account_activated_at: a.account_activated_at,
+        credentials_issued_at: a.credentials_issued_at,
+        last_sign_in_at: a.last_sign_in_at,
         explicitly_rejected: explicitlyRejected,
       })
     }
@@ -472,7 +490,13 @@ Deno.serve(async (req) => {
     // (e.g. verified weeks ago, activated today) at the top.
     const recency = (a: MergedAgent) => {
       const t = (v: string | null | undefined) => (v ? new Date(v).getTime() : 0)
-      return Math.max(t(a.account_activated_at), t(a.verified_at), t(a.created_at))
+      return Math.max(
+        t(a.last_sign_in_at),
+        t(a.account_activated_at),
+        t(a.credentials_issued_at),
+        t(a.verified_at),
+        t(a.created_at),
+      )
     }
     allAgents.sort((a, b) => recency(b) - recency(a))
 
