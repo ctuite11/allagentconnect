@@ -1131,6 +1131,7 @@ export type Database = {
           comms_onboarding_seen_at: string | null
           county: string | null
           created_at: string
+          credentials_issued_at: string | null
           dismissed_announcement_ids: string[]
           early_access: boolean
           email_frequency: string
@@ -1171,6 +1172,7 @@ export type Database = {
           comms_onboarding_seen_at?: string | null
           county?: string | null
           created_at?: string
+          credentials_issued_at?: string | null
           dismissed_announcement_ids?: string[]
           early_access?: boolean
           email_frequency?: string
@@ -1211,6 +1213,7 @@ export type Database = {
           comms_onboarding_seen_at?: string | null
           county?: string | null
           created_at?: string
+          credentials_issued_at?: string | null
           dismissed_announcement_ids?: string[]
           early_access?: boolean
           email_frequency?: string
@@ -7789,6 +7792,10 @@ export type Database = {
         Returns: undefined
       }
       mark_agent_activated: { Args: { _user_id: string }; Returns: string }
+      mark_agent_credentials_issued: {
+        Args: { _user_id: string }
+        Returns: string
+      }
       matches_current_account: {
         Args: { p_agent_user_id: string }
         Returns: boolean

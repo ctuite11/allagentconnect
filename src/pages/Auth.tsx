@@ -541,7 +541,16 @@ const Auth = () => {
       // receives the same SIGNED_IN session and resolves the destination from
       // the authenticated router. This also avoids competing role RPCs on
       // mobile browsers immediately after auth storage is updated.
+      // First successful sign-in is the real activation moment. Idempotent and
+      // fire-and-forget so login is never blocked on it.
+      void supabase
+        .rpc("mark_agent_activated", { _user_id: data.user.id })
+        .then(({ error: rpcErr }) => {
+          if (rpcErr) console.warn("[Auth] mark_agent_activated warn:", rpcErr.message);
+        });
+
       const returnToMeta = resolvePostAuthRedirectWithMeta(searchParams);
+
       const target = returnToMeta.value ?? "/dashboard";
       clearGuestListing();
       didNavigate.current = true;

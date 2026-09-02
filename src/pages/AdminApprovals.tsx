@@ -107,6 +107,7 @@ interface Agent {
   has_auth_account?: boolean;
   last_sign_in_at?: string | null;
   account_activated_at?: string | null;
+  credentials_issued_at?: string | null;
   approval_email_sent?: boolean | null;
   invite_email?: EmailStatusInfo | null;
   license_verified_email?: EmailStatusInfo | null;
@@ -199,6 +200,7 @@ type AdminDerivedStatus =
   | "pending"
   | "invited"
   | "verified"
+  | "credentials_issued"
   | "activated"
   | "rejected";
 
@@ -208,7 +210,9 @@ function deriveAdminStatus(a: Agent): AdminDerivedStatus {
   if (a.lifecycle_status) return a.lifecycle_status;
   const status = (a.agent_status || "").toLowerCase();
   if (status === "rejected" || status === "restricted") return "rejected";
-  if (a.account_activated_at) return "activated";
+  // Activated requires a real sign-in — an activation stamp alone is not enough.
+  if (a.last_sign_in_at) return "activated";
+  if (a.credentials_issued_at) return "credentials_issued";
   if (a.verified_at) return "verified";
   if (status === "invited") return "invited";
   return "pending";
@@ -218,6 +222,7 @@ const LIFECYCLE_LABELS: Record<AdminDerivedStatus, string> = {
   pending: "Pending",
   invited: "Invited",
   verified: "Verified",
+  credentials_issued: "Ready to sign in",
   activated: "Activated",
   rejected: "Rejected",
 };
@@ -242,6 +247,7 @@ const ADMIN_STATUS_FILTER_OPTIONS: { value: string; label: string }[] = [
   { value: "pending", label: "Pending" },
   { value: "invited", label: "Invited" },
   { value: "verified", label: "Verified" },
+  { value: "credentials_issued", label: "Ready to sign in" },
   { value: "activated", label: "Activated" },
   { value: "rejected", label: "Rejected" },
   // Utility indicator only — not a lifecycle stage.
@@ -254,7 +260,7 @@ const ADMIN_STATUS_FILTER_OPTIONS: { value: string; label: string }[] = [
 function isAccountActive(a: Agent): boolean {
   if (a.agent_status !== "verified") return false;
   const hasHeadshot = !!(a.headshot_url && String(a.headshot_url).trim());
-  const hasActivation = !!a.account_activated_at;
+  const hasActivation = !!a.account_activated_at || !!a.last_sign_in_at;
   return hasActivation || hasHeadshot;
 }
 
@@ -263,7 +269,7 @@ function isAccountActive(a: Agent): boolean {
 // activation reminder email.
 function isAwaitingActivation(a: Agent): boolean {
   if (!a.verified_at) return false;
-  if (a.account_activated_at) return false;
+  if (a.account_activated_at || a.last_sign_in_at) return false;
   if (a.agent_status === "rejected" || a.agent_status === "restricted") return false;
   return true;
 }
@@ -271,7 +277,7 @@ function isAwaitingActivation(a: Agent): boolean {
 // Strictly activated: agent completed activation/password setup, regardless
 // of profile completeness. Excludes rejected/restricted accounts.
 function isActivatedAgent(a: Agent): boolean {
-  if (!a.account_activated_at) return false;
+  if (!a.account_activated_at && !a.last_sign_in_at) return false;
   if (a.agent_status === "rejected" || a.agent_status === "restricted") return false;
   return true;
 }
@@ -1100,6 +1106,7 @@ export default function AdminApprovals() {
       pending: 0,
       invited: 0,
       verified: 0,
+      credentials_issued: 0,
       activated: 0,
       rejected: 0,
     };
@@ -1109,6 +1116,7 @@ export default function AdminApprovals() {
     counts.pending = buckets.pending;
     counts.invited = buckets.invited;
     counts.verified = buckets.verified;
+    counts.credentials_issued = buckets.credentials_issued;
     counts.activated = buckets.activated;
     counts.rejected = buckets.rejected;
     return counts;
@@ -1130,6 +1138,7 @@ export default function AdminApprovals() {
       case "pending": return "warning";
       case "invited": return "neutral";
       case "verified": return "primary";
+      case "credentials_issued": return "neutral";
       case "activated": return "success";
       case "rejected": return "danger";
       default: return "neutral";
@@ -2037,6 +2046,12 @@ export default function AdminApprovals() {
             }
           />
           <Pill
+            label={`Ready to sign in (${statusCounts.credentials_issued || 0})`}
+            variant="neutral"
+            active={statusFilter === "credentials_issued"}
+            onClick={() => selectLifecycleFilter("credentials_issued")}
+          />
+          <Pill
             label={`Activated (${statusCounts.activated || 0})`}
             variant="success"
             active={statusFilter === "activated"}
@@ -2321,7 +2336,14 @@ export default function AdminApprovals() {
                         {derived === "rejected" ? (
                           <TimestampCell iso={agent.rejected_at ?? null} emptyLabel="Rejected" />
                         ) : (
-                          <TimestampCell iso={agent.account_activated_at ?? null} />
+                          <TimestampCell
+                            iso={
+                              agent.account_activated_at ??
+                              (derived === "credentials_issued"
+                                ? agent.credentials_issued_at ?? null
+                                : null)
+                            }
+                          />
                         )}
                         <td
                           className="px-3 py-3 align-top text-xs text-zinc-600"
