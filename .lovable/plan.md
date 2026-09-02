@@ -1,42 +1,49 @@
-# Truthful agent lifecycle: Invited / Ready to sign in / Activated
+# Reconcile Agent Network count with Admin "Activated"
 
-## Verified current state
+## What the numbers actually are (verified by query)
 
-- `agent_settings` has `account_activated_at` and `verified_at`; there is no `credentials_issued_at` column anywhere in the schema or code today.
-- Lifecycle is derived in two places with identical rules that check `account_activated_at` first: `src/pages/AdminApprovals.tsx` (`deriveAdminStatus`) and `supabase/functions/admin-list-agents/index.ts` (`deriveLifecycleStatus`). Neither uses `last_sign_in_at`, though the function already returns it per agent.
-- `supabase/functions/admin-set-user-password/index.ts` sets the password, confirms the email, then calls `mark_agent_activated` — that RPC is what stamped Irina.
-- `mark_agent_activated` is also called by the real owner paths: `src/pages/AgentAccountSetup.tsx` and `src/pages/PasswordReset.tsx`.
-- `AgentDetailsDrawer.tsx` renders a fixed "Account Activated" row from `account_activated_at`.
+Admin page (matches your screen): Verified 47, Invited 138, Activated 284.
+Agent Network currently returns **267** profiles.
 
-Scope of the bad data (queried against all 502 agent accounts):
+The 17-agent gap breaks down exactly:
 
-- signed in at least once: 302
-- activation stamp but never signed in: **1** (Irina, `irina@irinaspiegel.com`, stamped 2026-09-02 18:09:14 UTC, email confirmed the same second, `last_sign_in_at` null)
-- no stamp, never signed in: 199
+| Reason an activated agent is missing from the Network | Count |
+|---|---|
+| Signed in, status `verified`, but no `account_activated_at` stamp | 14 |
+| Signed in, but status is not `verified` (pending/invited) | 2 |
+| Verified + activated but `hide_from_directory = true` | 1 |
 
-So the correction touches exactly one row.
+284 - 14 - 2 - 1 = 267.
+
+Root cause: the two surfaces use different definitions of "activated".
+Admin now derives Activated from a real `auth.users.last_sign_in_at` (the
+lifecycle fix we shipped). The Network RPC `get_verified_agent_ids()` still
+requires the older `agent_settings.account_activated_at` stamp. The 14 agents
+signed in before sign-in-time stamping existed, so they have a real sign-in but
+no stamp, and the directory silently drops them.
+
+No agent is missing for a name, profile, or buyer-alerts reason — those filters
+currently exclude nobody.
 
 ## Changes
 
-1. **Schema**: add `credentials_issued_at timestamptz` to `agent_settings`, plus a `mark_agent_credentials_issued(_user_id)` security-definer RPC (idempotent, agent-scoped, same shape as `mark_agent_activated`).
+1. **Backfill (migration, data only):** for `agent_settings` rows where the user
+   has a non-null `last_sign_in_at` and `account_activated_at` is null, set
+   `account_activated_at = last_sign_in_at`. Affects the 14 rows above. Nothing
+   else is touched — no status, verification, password, or email change.
 
-2. **Admin set-password function**: replace the `mark_agent_activated` call with `mark_agent_credentials_issued`. Password setting and `email_confirm: true` stay exactly as they are. No email is sent.
+2. **Harden `get_verified_agent_ids()`:** treat an agent as activated when
+   `account_activated_at IS NOT NULL` **OR** `auth.users.last_sign_in_at IS NOT
+   NULL`, so the directory can never drift from the admin definition again. All
+   other conditions (verified status, agent role, profile row, non-blank name,
+   `hide_from_directory = false`) stay exactly as they are.
 
-3. **Real activation**: keep `mark_agent_activated` on the owner setup and password-reset paths, and add a one-time call after a successful first sign-in so the stamp always has a real sign-in behind it. Display never trusts the stamp alone.
+3. **No UI changes.** `AgentSearch.tsx` and the admin page keep their current
+   behavior; the counts converge because the underlying rule converges.
 
-4. **One-time data correction** (single row, Irina, and any row matching the same signature at run time): set `credentials_issued_at` to the existing `account_activated_at` value and clear `account_activated_at`, scoped to rows where the stamp exists and `auth.users.last_sign_in_at` is null. Passwords, identities, verification status, and every signed-in account are untouched.
+## Expected result
 
-5. **Identical derivation in both places** (`AdminApprovals.tsx` and `admin-list-agents/index.ts`):
-   - `last_sign_in_at` present → Activated
-   - else `credentials_issued_at` present → Ready to sign in
-   - else verified/invited/pending/rejected as today
-
-6. **Admin UI**: add the "Ready to sign in" state to lifecycle counts, filter pills, the status filter dropdown, and roster labels. `AgentDetailsDrawer.tsx` shows a "Credentials Issued" row when applicable and only shows "Account Activated" for accounts that have actually signed in.
-
-## Reporting before deploy
-
-After the migration runs I will report Invited / Ready to sign in / Activated counts before and after. Expected from current data: Activated drops from the stamp-based figure to 302 (sign-in backed), Ready to sign in becomes 1 (Irina), the rest unchanged.
-
-## Guardrails honored
-
-No emails, no password resets, no auth recreation, no verified-status changes, nothing outside this lifecycle correction. Irina's password stays valid; she shows "Ready to sign in" until her first sign-in, then flips to "Activated" automatically.
+Agent Network goes from 267 to **281**. The remaining 3 of the 284 stay out on
+purpose: 2 accounts whose status is not `verified`, and 1 agent who has opted
+out of the directory. I will report the before/after counts and name those 3
+after the migration runs.
