@@ -4,9 +4,11 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { resolveEmailBaseUrl } from "../_shared/aacPublicUrl.ts";
 import {
   assertDelegatesFeatureEnabled,
+  canManageTeamAssistants,
   isLicensedOwner,
   kickEmailQueue,
   resolveAuthUserEmail,
+  resolveTeamLeadUserId,
 } from "../_shared/agentDelegatesGate.ts";
 import { formatPersonDisplayName } from "../_shared/personDisplayName.ts";
 
@@ -73,10 +75,13 @@ async function enqueueDelegateInviteEmail(
   inviteToken: string,
   displayName: string | null,
   roleLabel: string | null,
+  isTeamInvite: boolean,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   const { ownerName, ownerBrokerage } = await loadOwnerInviteContext(supabaseAdmin, ownerUserId);
   const inviteLink = `${appUrl}/accept-delegate-invite?token=${inviteToken}`;
-  const subject = `${ownerName} invited you to their All Agent Connect account`;
+  const subject = isTeamInvite
+    ? `${ownerName} invited you to help manage their team on All Agent Connect`
+    : `${ownerName} invited you to their All Agent Connect account`;
 
   const { error: emailErr } = await supabaseAdmin.from("email_jobs").insert({
     payload: {
@@ -87,7 +92,7 @@ async function enqueueDelegateInviteEmail(
       variables: {
         ownerName,
         ownerBrokerage,
-        roleLabel: roleLabel || "",
+        roleLabel: roleLabel || (isTeamInvite ? "Team assistant" : ""),
         inviteeName: displayName || "",
         inviteLink,
       },
@@ -142,18 +147,22 @@ async function loadSupersededTokens(
 async function findPendingInvite(
   supabaseAdmin: SupabaseAdmin,
   ownerUserId: string,
-  opts: { memberId?: string; inviteEmail?: string },
+  opts: { memberId?: string; inviteEmail?: string; teamId?: string | null },
 ): Promise<PendingInviteRow | null> {
   const selectFields = "id, invite_token, invite_email, display_name, role_label";
+  const teamId = opts.teamId ?? null;
 
   if (opts.memberId) {
-    const { data, error } = await supabaseAdmin
+    let query = supabaseAdmin
       .from("agent_account_members")
       .select(selectFields)
       .eq("id", opts.memberId)
       .eq("owner_user_id", ownerUserId)
-      .eq("status", "invited")
-      .maybeSingle();
+      .eq("status", "invited");
+
+    query = teamId ? query.eq("team_id", teamId) : query.is("team_id", null);
+
+    const { data, error } = await query.maybeSingle();
 
     if (error) {
       console.error("[invite-account-delegate] pending lookup by member_id failed:", error);
@@ -163,13 +172,16 @@ async function findPendingInvite(
   }
 
   if (opts.inviteEmail) {
-    const { data, error } = await supabaseAdmin
+    let query = supabaseAdmin
       .from("agent_account_members")
       .select(selectFields)
       .eq("owner_user_id", ownerUserId)
       .eq("invite_email", opts.inviteEmail)
-      .eq("status", "invited")
-      .maybeSingle();
+      .eq("status", "invited");
+
+    query = teamId ? query.eq("team_id", teamId) : query.is("team_id", null);
+
+    const { data, error } = await query.maybeSingle();
 
     if (error) {
       console.error("[invite-account-delegate] pending lookup by email failed:", error);
@@ -189,6 +201,7 @@ async function resendPendingInvite(
   ownerUserId: string,
   pendingInvite: PendingInviteRow,
   input: { display_name?: string; role_label?: string },
+  isTeamInvite: boolean,
 ): Promise<Response> {
   const newToken = generateInviteToken();
   const supersededTokens = [
@@ -248,6 +261,7 @@ async function resendPendingInvite(
     updatedRow.invite_token,
     updatedRow.display_name,
     updatedRow.role_label,
+    isTeamInvite,
   );
 
   if (!emailResult.ok) {
@@ -288,30 +302,42 @@ serve(async (req) => {
   const { data: { user }, error: userErr } = await supabaseUser.auth.getUser(jwt);
   if (userErr || !user) return json({ success: false, error: "Unauthorized" }, 401);
 
-  const ownerUserId = user.id;
+  const callerId = user.id;
   const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
-
-  const flag = await assertDelegatesFeatureEnabled(supabaseAdmin, {
-    userId: ownerUserId,
-    ownerUserId,
-  });
-  if (!flag.ok) return json({ success: false, error: flag.error }, flag.status);
-
-  if (!(await isLicensedOwner(supabaseAdmin, ownerUserId))) {
-    return json({ success: false, error: "Only verified account owners can invite delegates" }, 403);
-  }
 
   let input: {
     invite_email?: string;
     member_id?: string;
     display_name?: string;
     role_label?: string;
+    team_id?: string;
   };
   try {
     input = await req.json();
   } catch {
     return json({ success: false, error: "Invalid JSON" }, 400);
   }
+
+  const teamId = input.team_id?.trim() || null;
+  let ownerUserId: string;
+
+  if (teamId) {
+    if (!(await canManageTeamAssistants(supabaseAdmin, teamId, callerId))) {
+      return json({ success: false, error: "Not authorized to manage team assistants" }, 403);
+    }
+    ownerUserId = (await resolveTeamLeadUserId(supabaseAdmin, teamId)) ?? callerId;
+  } else {
+    if (!(await isLicensedOwner(supabaseAdmin, callerId))) {
+      return json({ success: false, error: "Only verified account owners can invite delegates" }, 403);
+    }
+    ownerUserId = callerId;
+  }
+
+  const flag = await assertDelegatesFeatureEnabled(supabaseAdmin, {
+    userId: callerId,
+    ownerUserId,
+  });
+  if (!flag.ok) return json({ success: false, error: flag.error }, flag.status);
 
   const memberId = input.member_id?.trim();
   const inviteEmail = input.invite_email?.trim().toLowerCase();
@@ -328,10 +354,54 @@ serve(async (req) => {
 
   const displayName = input.display_name?.trim() || null;
   const roleLabel = input.role_label?.trim() || null;
+  const isTeamInvite = !!teamId;
+  const updateOnly = (input as { update_only?: boolean }).update_only === true;
+
+  // Manage Assistant: update display name / role label without resending.
+  if (updateOnly && memberId) {
+    let existingQuery = supabaseAdmin
+      .from("agent_account_members")
+      .select("id, status, invite_email")
+      .eq("id", memberId)
+      .eq("owner_user_id", ownerUserId)
+      .in("status", ["invited", "accepted"]);
+
+    existingQuery = teamId
+      ? existingQuery.eq("team_id", teamId)
+      : existingQuery.is("team_id", null);
+
+    const { data: existingMember } = await existingQuery.maybeSingle();
+    if (!existingMember) {
+      return json({ success: false, error: "Assistant not found" }, 404);
+    }
+
+    const { error: metaErr } = await supabaseAdmin
+      .from("agent_account_members")
+      .update({
+        display_name: displayName,
+        role_label: roleLabel,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", existingMember.id);
+
+    if (metaErr) {
+      console.error("[invite-account-delegate] metadata update failed:", metaErr);
+      return json({ success: false, error: "Failed to update assistant" }, 500);
+    }
+
+    return json({
+      success: true,
+      member_id: existingMember.id,
+      invite_email: existingMember.invite_email,
+      resent: false,
+      updated: true,
+    });
+  }
 
   const pendingInvite = await findPendingInvite(supabaseAdmin, ownerUserId, {
     memberId,
     inviteEmail,
+    teamId,
   });
 
   if (pendingInvite) {
@@ -343,6 +413,7 @@ serve(async (req) => {
       ownerUserId,
       pendingInvite,
       input,
+      isTeamInvite,
     );
   }
 
@@ -350,13 +421,18 @@ serve(async (req) => {
     return json({ success: false, error: "Pending invite not found for this member" }, 404);
   }
 
-  const { data: acceptedMembership } = await supabaseAdmin
+  let acceptedQuery = supabaseAdmin
     .from("agent_account_members")
     .select("id, delegate_user_id")
     .eq("owner_user_id", ownerUserId)
     .eq("invite_email", inviteEmail)
-    .eq("status", "accepted")
-    .maybeSingle();
+    .eq("status", "accepted");
+
+  acceptedQuery = teamId
+    ? acceptedQuery.eq("team_id", teamId)
+    : acceptedQuery.is("team_id", null);
+
+  const { data: acceptedMembership } = await acceptedQuery.maybeSingle();
 
   if (acceptedMembership) {
     return json({ success: false, error: "This person is already a delegate on your account." }, 400);
@@ -370,8 +446,9 @@ serve(async (req) => {
       display_name: displayName,
       role_label: roleLabel,
       status: "invited",
-      invited_by: ownerUserId,
+      invited_by: callerId,
       invite_expires_at: inviteExpiresAt(),
+      team_id: teamId,
     })
     .select("id, invite_token, display_name, role_label, invite_email")
     .single();
@@ -380,7 +457,10 @@ serve(async (req) => {
     console.error("[invite-account-delegate] insert failed:", insertErr);
 
     if (insertErr?.code === "23505") {
-      const existingPending = await findPendingInvite(supabaseAdmin, ownerUserId, { inviteEmail });
+      const existingPending = await findPendingInvite(supabaseAdmin, ownerUserId, {
+        inviteEmail,
+        teamId,
+      });
       if (existingPending) {
         return await resendPendingInvite(
           supabaseAdmin,
@@ -390,6 +470,7 @@ serve(async (req) => {
           ownerUserId,
           existingPending,
           input,
+          isTeamInvite,
         );
       }
     }
@@ -407,6 +488,7 @@ serve(async (req) => {
     memberRow.invite_token,
     memberRow.display_name,
     memberRow.role_label,
+    isTeamInvite,
   );
 
   if (emailResult.ok) {

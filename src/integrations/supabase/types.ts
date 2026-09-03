@@ -222,6 +222,7 @@ export type Database = {
           role_label: string | null
           status: Database["public"]["Enums"]["agent_delegate_status"]
           superseded_invite_tokens: string[]
+          team_id: string | null
           updated_at: string
         }
         Insert: {
@@ -243,6 +244,7 @@ export type Database = {
           role_label?: string | null
           status?: Database["public"]["Enums"]["agent_delegate_status"]
           superseded_invite_tokens?: string[]
+          team_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -264,6 +266,7 @@ export type Database = {
           role_label?: string | null
           status?: Database["public"]["Enums"]["agent_delegate_status"]
           superseded_invite_tokens?: string[]
+          team_id?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -7575,6 +7578,10 @@ export type Database = {
         Args: { p_owner_user_id: string }
         Returns: boolean
       }
+      is_accepted_team_assistant: {
+        Args: { p_team_id: string; p_user_id?: string }
+        Returns: boolean
+      }
       is_account_owner: { Args: never; Returns: boolean }
       is_api_request: { Args: never; Returns: boolean }
       is_buyer_represented_by_other_agent: {
@@ -7708,6 +7715,21 @@ export type Database = {
       jwt_role_text: { Args: never; Returns: string }
       list_account_delegates_for_owner: {
         Args: never
+        Returns: {
+          accepted_at: string
+          delegate_user_id: string
+          display_name: string
+          invite_email: string
+          invited_at: string
+          is_online: boolean
+          last_active_at: string
+          member_id: string
+          role_label: string
+          status: Database["public"]["Enums"]["agent_delegate_status"]
+        }[]
+      }
+      list_account_delegates_for_team: {
+        Args: { p_team_id: string }
         Returns: {
           accepted_at: string
           delegate_user_id: string
