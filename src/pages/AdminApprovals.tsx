@@ -116,6 +116,11 @@ interface Agent {
     template: string;
     status: string;
   } | null;
+  last_activation_reminder?: {
+    sent_at: string;
+    template: string;
+    status: string;
+  } | null;
   profile_complete?: boolean;
   headshot_url?: string | null;
   // Historical signal — this email ever had a pending_verifications row,
