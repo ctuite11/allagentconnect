@@ -2280,6 +2280,11 @@ export default function AdminApprovals() {
                       </button>
                     </th>
                     <th className="px-3 py-2 text-left">
+                      <button type="button" onClick={() => handleSort("last_activation_reminder")} className="inline-flex items-center hover:text-zinc-900">
+                        Last Activation Reminder<SortIcon field="last_activation_reminder" />
+                      </button>
+                    </th>
+                    <th className="px-3 py-2 text-left">
                       <button type="button" onClick={() => handleSort("online")} className="inline-flex items-center hover:text-zinc-900">
                         Online<SortIcon field="online" />
                       </button>
