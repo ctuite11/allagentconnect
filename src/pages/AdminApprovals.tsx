@@ -1260,6 +1260,19 @@ export default function AdminApprovals() {
           comparison = at - bt;
           break;
         }
+        case "last_activation_reminder": {
+          const at = a.last_activation_reminder?.sent_at
+            ? new Date(a.last_activation_reminder.sent_at).getTime()
+            : null;
+          const bt = b.last_activation_reminder?.sent_at
+            ? new Date(b.last_activation_reminder.sent_at).getTime()
+            : null;
+          if (at === null && bt === null) { comparison = 0; break; }
+          if (at === null) return 1;
+          if (bt === null) return -1;
+          comparison = at - bt;
+          break;
+        }
         case "created_at":
         default:
           // In the Pending bucket the meaningful recency signal is when the
