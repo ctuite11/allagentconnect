@@ -53,6 +53,7 @@ interface MergedAgent {
   profile_complete?: boolean
   headshot_url?: string | null
   last_reminder?: { sent_at: string; template: string; status: string } | null
+  last_activation_reminder?: { sent_at: string; template: string; status: string } | null
   // Lifecycle (server-authoritative). `requested_at` comes ONLY from
   // pending_verifications.created_at — never from a profile/auth creation
   // timestamp. null means "never submitted a request".
