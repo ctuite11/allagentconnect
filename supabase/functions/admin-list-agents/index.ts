@@ -507,12 +507,14 @@ Deno.serve(async (req) => {
       const emailsLower = new Set(allAgents.map(a => (a.email ?? '').toLowerCase()).filter(Boolean))
       const reminderTemplates = ['license-verified', 'agent-invite', 'agent-missing-opportunities']
       const reminderTemplateSet = new Set(reminderTemplates)
+      const activationReminderTemplates = new Set(['agent-missing-opportunities'])
       const { data: jobs, error: jobsErr } = await emailJobsPromise
       if (jobsErr) {
         console.error('[admin-list-agents] email_jobs error:', jobsErr.message)
       } else if (jobs) {
         const latest = new Map<string, EmailStatusInfo & { template: string }>()
         const latestReminder = new Map<string, { sent_at: string; template: string; status: string }>()
+        const latestActivationReminder = new Map<string, { sent_at: string; template: string; status: string }>()
         for (const j of jobs as any[]) {
           const to = String(j?.to ?? '').toLowerCase()
           const template = String(j?.template ?? '')
@@ -537,6 +539,13 @@ Deno.serve(async (req) => {
               status: deriveEmailStatus(j),
             })
           }
+          if (activationReminderTemplates.has(template) && !latestActivationReminder.has(to)) {
+            latestActivationReminder.set(to, {
+              sent_at: j.created_at,
+              template,
+              status: deriveEmailStatus(j),
+            })
+          }
         }
         for (const a of allAgents) {
           const key = (a.email ?? '').toLowerCase()
@@ -553,6 +562,8 @@ Deno.serve(async (req) => {
           }
           const rem = latestReminder.get(key)
           a.last_reminder = rem ?? null
+          const activationRem = latestActivationReminder.get(key)
+          a.last_activation_reminder = activationRem ?? null
         }
       }
     } catch (e) {
