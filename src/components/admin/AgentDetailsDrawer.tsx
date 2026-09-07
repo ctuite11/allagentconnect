@@ -285,6 +285,15 @@ export function AgentDetailsDrawer({
                 yes={!!agent.last_sign_in_at}
                 detail={fmt(agent.last_sign_in_at) ?? "Never"}
               />
+              <LifecycleRow
+                label="Last Activation Reminder"
+                yes={!!agent.last_activation_reminder}
+                detail={
+                  agent.last_activation_reminder
+                    ? `${agent.last_activation_reminder.template} • ${agent.last_activation_reminder.status} • ${fmt(agent.last_activation_reminder.sent_at)}`
+                    : "Never"
+                }
+              />
             </div>
           </section>
 
