@@ -47,6 +47,11 @@ export interface AgentDetailsAgent {
   credentials_issued_at?: string | null;
   invite_email?: EmailStatusInfo | null;
   license_verified_email?: EmailStatusInfo | null;
+  last_activation_reminder?: {
+    sent_at: string;
+    template: string;
+    status: string;
+  } | null;
   source?: "profile" | "early_access" | "pending_verification";
   ever_requested?: boolean;
   requested_access_at?: string | null;
