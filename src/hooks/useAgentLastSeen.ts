@@ -71,14 +71,23 @@ export function useAgentPresenceBatch(userIds: string[]): Map<string, LastSeenRe
       const next = new Map<string, LastSeenResult>();
       const now = Date.now();
 
+      // Index the RPC result once (O(n)) instead of scanning the whole
+      // result array for every agent (O(n^2) on a several-hundred-row list).
+      const byUserId = new Map<string, string | null>();
+      if (Array.isArray(data)) {
+        for (const row of data) {
+          byUserId.set(row.user_id, row.last_seen_at ?? null);
+        }
+      }
+
       for (const id of userIds) {
-        const row = Array.isArray(data) ? data.find((r) => r.user_id === id) : undefined;
-        const ls = row?.last_seen_at ?? null;
+        const ls = byUserId.get(id) ?? null;
         next.set(id, {
           lastSeenAt: ls,
           isOnline: ls != null && now - new Date(ls).getTime() < ONLINE_THRESHOLD_MS,
         });
       }
+
 
       setMap(next);
     };

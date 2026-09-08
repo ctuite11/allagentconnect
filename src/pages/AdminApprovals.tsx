@@ -1316,6 +1316,33 @@ export default function AdminApprovals() {
     setSelectedIds(effectiveSelectedIds);
   }, [effectiveSelectedIds, selectedIds]);
 
+  // ---- Render paging -------------------------------------------------
+  // Rendering ~800 rows at once is what makes this page crawl on a phone.
+  // Only the current page is drawn; search, filters, sort, Select All,
+  // bulk actions and exports all keep operating on `filteredAgents`.
+  const PAGE_SIZE = 50;
+  const [page, setPage] = useState(1);
+
+  const pageCount = Math.max(1, Math.ceil(filteredAgents.length / PAGE_SIZE));
+
+  // Back to page 1 whenever the result set is re-scoped or re-ordered.
+  useEffect(() => {
+    setPage(1);
+  }, [statusFilter, searchQuery, sortField, sortDirection]);
+
+  // Never leave the view on a page that no longer exists.
+  useEffect(() => {
+    setPage((p) => Math.min(Math.max(1, p), pageCount));
+  }, [pageCount]);
+
+  const pagedAgents = useMemo(() => {
+    const start = (Math.min(page, pageCount) - 1) * PAGE_SIZE;
+    return filteredAgents.slice(start, start + PAGE_SIZE);
+  }, [filteredAgents, page, pageCount]);
+
+  const pageStart = filteredAgents.length === 0 ? 0 : (Math.min(page, pageCount) - 1) * PAGE_SIZE + 1;
+  const pageEnd = Math.min(filteredAgents.length, Math.min(page, pageCount) * PAGE_SIZE);
+
   // Column sort handler
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -2281,7 +2308,7 @@ export default function AdminApprovals() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-100">
-                  {filteredAgents.map((agent) => {
+                  {pagedAgents.map((agent) => {
                     const isProcessing = processingIds.has(agent.id);
                     const derived = deriveAdminStatus(agent);
                     const isSelected = selectedIds.has(agent.id);
@@ -2542,6 +2569,29 @@ export default function AdminApprovals() {
                   })}
                 </tbody>
               </table>
+            </div>
+            <div className="flex items-center justify-between gap-3 border-t border-zinc-100 px-3 py-3 text-sm text-zinc-600">
+              <span>
+                Showing {pageStart}–{pageEnd} of {filteredAgents.length}
+              </span>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page <= 1}
+                >
+                  Previous
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage((p) => Math.min(pageCount, p + 1))}
+                  disabled={page >= pageCount}
+                >
+                  Next
+                </Button>
+              </div>
             </div>
           </div>
         )}

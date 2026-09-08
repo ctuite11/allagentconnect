@@ -231,15 +231,11 @@ Deno.serve(async (req) => {
       )
       .order('created_at', { ascending: false })
 
-    // Only the two payload keys this endpoint reads are selected — pulling the
-    // whole payload column moved megabytes of email HTML for no reason.
-    // No template filter: the "Last Email" column reports the newest email of
-    // ANY template per recipient. Total email_jobs rows are well under the cap.
-    const emailJobsPromise = adminClient
-      .from('email_jobs')
-      .select('id, status, delivery_status, delivery_status_at, created_at, attempts, last_error, to:payload->>to, template:payload->>template')
-      .order('created_at', { ascending: false })
-      .limit(20000)
+    // Per-recipient email lookup happens later via a targeted RPC
+    // (admin_agent_email_summary) once the recipient list is known — the old
+    // "read the whole email_jobs table and reduce in JS" approach moved ~14k
+    // rows per admin page load.
+
 
 
     // Build maps of auth.users by lowercase email — drives has_auth_account + last_sign_in_at
@@ -502,62 +498,60 @@ Deno.serve(async (req) => {
     }
     allAgents.sort((a, b) => recency(b) - recency(a))
 
-    // Fetch per-recipient email status. Read-only surfacing — no template,
-    // sender, or Resend config is touched here.
+    // Fetch per-recipient email status through a targeted, read-only RPC.
+    // It returns at most 3 rows per recipient (newest email of any template,
+    // newest admin-created-invite, newest license-verified) instead of the
+    // entire email_jobs history. No template, sender, or Resend config is
+    // touched here.
     try {
-      const emailsLower = new Set(allAgents.map(a => (a.email ?? '').toLowerCase()).filter(Boolean))
-      const { data: jobs, error: jobsErr } = await emailJobsPromise
-      if (jobsErr) {
-        console.error('[admin-list-agents] email_jobs error:', jobsErr.message)
-      } else if (jobs) {
-        const latest = new Map<string, EmailStatusInfo & { template: string }>()
-        const latestAny = new Map<string, { sent_at: string; template: string | null; status: string | null }>()
-        for (const j of jobs as any[]) {
-          const to = String(j?.to ?? '').toLowerCase()
-          const template = String(j?.template ?? '')
-          if (!to || !emailsLower.has(to)) continue
-          // Rows are ordered by created_at desc, so the first row per recipient
-          // is the newest email of any template.
-          if (!latestAny.has(to)) {
-            latestAny.set(to, {
-              sent_at: j.created_at,
-              template: template || null,
-              status: deriveEmailStatus(j) ?? null,
-            })
+      const recipients = Array.from(
+        new Set(allAgents.map(a => (a.email ?? '').toLowerCase()).filter(Boolean)),
+      )
+      if (recipients.length > 0) {
+        const { data: rows, error: jobsErr } = await adminClient.rpc('admin_agent_email_summary', {
+          _emails: recipients,
+          _templates: ['admin-created-invite', 'license-verified'],
+        })
+        if (jobsErr) {
+          console.error('[admin-list-agents] admin_agent_email_summary error:', jobsErr.message)
+        } else if (rows) {
+          const latest = new Map<string, EmailStatusInfo>()
+          const latestAny = new Map<string, { sent_at: string; template: string | null; status: string | null }>()
+          for (const j of rows as any[]) {
+            const to = String(j?.email ?? '').toLowerCase()
+            if (!to) continue
+            const template = String(j?.template ?? '')
+            if (j.kind === 'latest') {
+              latestAny.set(to, {
+                sent_at: j.created_at,
+                template: template || null,
+                status: deriveEmailStatus(j) ?? null,
+              })
+            } else if (template) {
+              latest.set(`${to}::${template}`, {
+                status: deriveEmailStatus(j),
+                created_at: j.created_at,
+                event_at: j.delivery_status_at ?? null,
+                attempts: j.attempts ?? null,
+                last_error: j.last_error ?? null,
+              })
+            }
           }
-          if (!template) continue
-          const key = `${to}::${template}`
-          if (!latest.has(key)) {
-            latest.set(key, {
-              template,
-              status: deriveEmailStatus(j),
-              created_at: j.created_at,
-              event_at: j.delivery_status_at ?? null,
-              attempts: j.attempts ?? null,
-              last_error: j.last_error ?? null,
-            })
+          for (const a of allAgents) {
+            const key = (a.email ?? '').toLowerCase()
+            if (!key) continue
+            const inv = latest.get(`${key}::admin-created-invite`)
+            const lic = latest.get(`${key}::license-verified`)
+            if (inv) a.invite_email = inv
+            if (lic) a.license_verified_email = lic
+            a.last_email = latestAny.get(key) ?? null
           }
-        }
-        for (const a of allAgents) {
-          const key = (a.email ?? '').toLowerCase()
-          if (!key) continue
-          const inv = latest.get(`${key}::admin-created-invite`)
-          const lic = latest.get(`${key}::license-verified`)
-          if (inv) {
-            const { template: _t, ...rest } = inv
-            a.invite_email = rest
-          }
-          if (lic) {
-            const { template: _t, ...rest } = lic
-            a.license_verified_email = rest
-          }
-          a.last_email = latestAny.get(key) ?? null
         }
       }
-
     } catch (e) {
-      console.error('[admin-list-agents] email_jobs exception:', e)
+      console.error('[admin-list-agents] email summary exception:', e)
     }
+
 
     // Recalculate status distribution with early access included
     const allStatusCounts = allAgents.reduce((acc, a) => {
