@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState, useMemo, useRef } from "react";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
+import { emailTemplateLabel, relativeDayAge, lastEmailTooltip } from "@/lib/emailTemplateLabels";
+
 import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthRole } from "@/hooks/useAuthRole";
@@ -2260,15 +2262,11 @@ export default function AdminApprovals() {
                       </button>
                     </th>
                     <th className="px-3 py-2 text-left">
-                      <button type="button" onClick={() => handleSort("last_reminder")} className="inline-flex items-center hover:text-zinc-900">
-                        Last Reminder<SortIcon field="last_reminder" />
+                      <button type="button" onClick={() => handleSort("last_email")} className="inline-flex items-center hover:text-zinc-900">
+                        Last Email<SortIcon field="last_email" />
                       </button>
                     </th>
-                    <th className="px-3 py-2 text-left">
-                      <button type="button" onClick={() => handleSort("last_activation_reminder")} className="inline-flex items-center hover:text-zinc-900">
-                        Last Activation Reminder<SortIcon field="last_activation_reminder" />
-                      </button>
-                    </th>
+
                     <th className="px-3 py-2 text-left">
                       <button type="button" onClick={() => handleSort("online")} className="inline-flex items-center hover:text-zinc-900">
                         Online<SortIcon field="online" />
