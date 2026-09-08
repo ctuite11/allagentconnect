@@ -231,15 +231,11 @@ Deno.serve(async (req) => {
       )
       .order('created_at', { ascending: false })
 
-    // Only the two payload keys this endpoint reads are selected — pulling the
-    // whole payload column moved megabytes of email HTML for no reason.
-    // No template filter: the "Last Email" column reports the newest email of
-    // ANY template per recipient. Total email_jobs rows are well under the cap.
-    const emailJobsPromise = adminClient
-      .from('email_jobs')
-      .select('id, status, delivery_status, delivery_status_at, created_at, attempts, last_error, to:payload->>to, template:payload->>template')
-      .order('created_at', { ascending: false })
-      .limit(20000)
+    // Per-recipient email lookup happens later via a targeted RPC
+    // (admin_agent_email_summary) once the recipient list is known — the old
+    // "read the whole email_jobs table and reduce in JS" approach moved ~14k
+    // rows per admin page load.
+
 
 
     // Build maps of auth.users by lowercase email — drives has_auth_account + last_sign_in_at
