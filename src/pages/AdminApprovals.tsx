@@ -2570,6 +2570,29 @@ export default function AdminApprovals() {
                 </tbody>
               </table>
             </div>
+            <div className="flex items-center justify-between gap-3 border-t border-zinc-100 px-3 py-3 text-sm text-zinc-600">
+              <span>
+                Showing {pageStart}–{pageEnd} of {filteredAgents.length}
+              </span>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page <= 1}
+                >
+                  Previous
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage((p) => Math.min(pageCount, p + 1))}
+                  disabled={page >= pageCount}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
           </div>
         )}
       </div>
