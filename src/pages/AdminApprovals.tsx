@@ -111,16 +111,12 @@ interface Agent {
   approval_email_sent?: boolean | null;
   invite_email?: EmailStatusInfo | null;
   license_verified_email?: EmailStatusInfo | null;
-  last_reminder?: {
+  last_email?: {
     sent_at: string;
-    template: string;
-    status: string;
+    template: string | null;
+    status: string | null;
   } | null;
-  last_activation_reminder?: {
-    sent_at: string;
-    template: string;
-    status: string;
-  } | null;
+
   profile_complete?: boolean;
   headshot_url?: string | null;
   // Historical signal — this email ever had a pending_verifications row,
