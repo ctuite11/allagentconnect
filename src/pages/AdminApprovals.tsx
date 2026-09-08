@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState, useMemo, useRef } from "react";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
+import { emailTemplateLabel, relativeDayAge, lastEmailTooltip } from "@/lib/emailTemplateLabels";
+
 import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthRole } from "@/hooks/useAuthRole";
@@ -111,16 +113,12 @@ interface Agent {
   approval_email_sent?: boolean | null;
   invite_email?: EmailStatusInfo | null;
   license_verified_email?: EmailStatusInfo | null;
-  last_reminder?: {
+  last_email?: {
     sent_at: string;
-    template: string;
-    status: string;
+    template: string | null;
+    status: string | null;
   } | null;
-  last_activation_reminder?: {
-    sent_at: string;
-    template: string;
-    status: string;
-  } | null;
+
   profile_complete?: boolean;
   headshot_url?: string | null;
   // Historical signal — this email ever had a pending_verifications row,
@@ -179,8 +177,8 @@ type SortField =
   | "account_created"
   | "profile_complete"
   | "online"
-  | "last_reminder"
-  | "last_activation_reminder";
+  | "last_email";
+
 type SortDirection = "asc" | "desc";
 
 function risksForAgent(a: Agent): Risk[] {
@@ -1246,27 +1244,14 @@ export default function AdminApprovals() {
           comparison = av - bv;
           break;
         }
-        case "last_reminder": {
-          // Nulls always last in both directions so "Never" surfaces as the
-          // most-overdue bucket when the admin flips to ascending.
-          const at = a.last_reminder?.sent_at
-            ? new Date(a.last_reminder.sent_at).getTime()
+        case "last_email": {
+          // Nulls always last in both directions so "Never" stays at the bottom
+          // regardless of sort direction (early return bypasses the flip).
+          const at = a.last_email?.sent_at
+            ? new Date(a.last_email.sent_at).getTime()
             : null;
-          const bt = b.last_reminder?.sent_at
-            ? new Date(b.last_reminder.sent_at).getTime()
-            : null;
-          if (at === null && bt === null) { comparison = 0; break; }
-          if (at === null) return 1;
-          if (bt === null) return -1;
-          comparison = at - bt;
-          break;
-        }
-        case "last_activation_reminder": {
-          const at = a.last_activation_reminder?.sent_at
-            ? new Date(a.last_activation_reminder.sent_at).getTime()
-            : null;
-          const bt = b.last_activation_reminder?.sent_at
-            ? new Date(b.last_activation_reminder.sent_at).getTime()
+          const bt = b.last_email?.sent_at
+            ? new Date(b.last_email.sent_at).getTime()
             : null;
           if (at === null && bt === null) { comparison = 0; break; }
           if (at === null) return 1;
@@ -1274,6 +1259,7 @@ export default function AdminApprovals() {
           comparison = at - bt;
           break;
         }
+
         case "created_at":
         default:
           // In the Pending bucket the meaningful recency signal is when the
@@ -2276,15 +2262,11 @@ export default function AdminApprovals() {
                       </button>
                     </th>
                     <th className="px-3 py-2 text-left">
-                      <button type="button" onClick={() => handleSort("last_reminder")} className="inline-flex items-center hover:text-zinc-900">
-                        Last Reminder<SortIcon field="last_reminder" />
+                      <button type="button" onClick={() => handleSort("last_email")} className="inline-flex items-center hover:text-zinc-900">
+                        Last Email<SortIcon field="last_email" />
                       </button>
                     </th>
-                    <th className="px-3 py-2 text-left">
-                      <button type="button" onClick={() => handleSort("last_activation_reminder")} className="inline-flex items-center hover:text-zinc-900">
-                        Last Activation Reminder<SortIcon field="last_activation_reminder" />
-                      </button>
-                    </th>
+
                     <th className="px-3 py-2 text-left">
                       <button type="button" onClick={() => handleSort("online")} className="inline-flex items-center hover:text-zinc-900">
                         Online<SortIcon field="online" />
@@ -2372,69 +2354,30 @@ export default function AdminApprovals() {
                         <td
                           className="px-3 py-3 align-top text-xs text-zinc-600"
                           title={
-                            agent.last_reminder
-                              ? `${agent.last_reminder.template} • ${agent.last_reminder.status} • ${new Date(agent.last_reminder.sent_at).toLocaleString()}`
-                              : "No reminder email on record"
+                            agent.last_email
+                              ? lastEmailTooltip(agent.last_email)
+                              : "No email on record"
                           }
                         >
-                          {agent.last_reminder ? (
+                          {agent.last_email ? (
                             <div className="flex flex-col gap-0.5">
                               <span className="text-zinc-900">
-                                {new Date(agent.last_reminder.sent_at).toLocaleDateString(undefined, {
+                                {emailTemplateLabel(agent.last_email.template)}
+                              </span>
+                              <span className="text-[11px] text-zinc-500">
+                                {new Date(agent.last_email.sent_at).toLocaleDateString(undefined, {
                                   year: "numeric",
                                   month: "short",
                                   day: "numeric",
-                                })}
-                              </span>
-                              <span className="text-[11px] text-zinc-500">
-                                {(() => {
-                                  const days = Math.floor(
-                                    (Date.now() - new Date(agent.last_reminder.sent_at).getTime()) /
-                                      (1000 * 60 * 60 * 24),
-                                  );
-                                  if (days <= 0) return "today";
-                                  if (days === 1) return "1 day ago";
-                                  return `${days} days ago`;
-                                })()}
+                                })}{" "}
+                                · {relativeDayAge(agent.last_email.sent_at)}
                               </span>
                             </div>
                           ) : (
                             <span className="text-zinc-400">Never</span>
                           )}
                         </td>
-                        <td
-                          className="px-3 py-3 align-top text-xs text-zinc-600"
-                          title={
-                            agent.last_activation_reminder
-                              ? `${agent.last_activation_reminder.template} • ${agent.last_activation_reminder.status} • ${new Date(agent.last_activation_reminder.sent_at).toLocaleString()}`
-                              : "No activation reminder email on record"
-                          }
-                        >
-                          {agent.last_activation_reminder ? (
-                            <div className="flex flex-col gap-0.5">
-                              <span className="text-zinc-900">
-                                {new Date(agent.last_activation_reminder.sent_at).toLocaleDateString(undefined, {
-                                  year: "numeric",
-                                  month: "short",
-                                  day: "numeric",
-                                })}
-                              </span>
-                              <span className="text-[11px] text-zinc-500">
-                                {(() => {
-                                  const days = Math.floor(
-                                    (Date.now() - new Date(agent.last_activation_reminder.sent_at).getTime()) /
-                                      (1000 * 60 * 60 * 24),
-                                  );
-                                  if (days <= 0) return "today";
-                                  if (days === 1) return "1 day ago";
-                                  return `${days} days ago`;
-                                })()}
-                              </span>
-                            </div>
-                          ) : (
-                            <span className="text-zinc-400">Never</span>
-                          )}
-                        </td>
+
                         <td className="px-3 py-3 align-top">
                           {isOnline ? (
                             <span className="inline-flex items-center gap-1 text-emerald-700">
