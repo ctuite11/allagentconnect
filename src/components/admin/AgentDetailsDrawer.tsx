@@ -1,5 +1,7 @@
 import { Check, FileText, Mail, ExternalLink } from "lucide-react";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
+import { emailTemplateLabel } from "@/lib/emailTemplateLabels";
+
 import {
   Sheet,
   SheetContent,
@@ -47,11 +49,12 @@ export interface AgentDetailsAgent {
   credentials_issued_at?: string | null;
   invite_email?: EmailStatusInfo | null;
   license_verified_email?: EmailStatusInfo | null;
-  last_activation_reminder?: {
+  last_email?: {
     sent_at: string;
-    template: string;
-    status: string;
+    template: string | null;
+    status: string | null;
   } | null;
+
   source?: "profile" | "early_access" | "pending_verification";
   ever_requested?: boolean;
   requested_access_at?: string | null;
@@ -286,14 +289,15 @@ export function AgentDetailsDrawer({
                 detail={fmt(agent.last_sign_in_at) ?? "Never"}
               />
               <LifecycleRow
-                label="Last Activation Reminder"
-                yes={!!agent.last_activation_reminder}
+                label="Last Email"
+                yes={!!agent.last_email}
                 detail={
-                  agent.last_activation_reminder
-                    ? `${agent.last_activation_reminder.template} • ${agent.last_activation_reminder.status} • ${fmt(agent.last_activation_reminder.sent_at)}`
+                  agent.last_email
+                    ? `${emailTemplateLabel(agent.last_email.template)} • ${agent.last_email.status ?? "unknown"} • ${fmt(agent.last_email.sent_at)}`
                     : "Never"
                 }
               />
+
             </div>
           </section>
 
