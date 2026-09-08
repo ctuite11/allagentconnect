@@ -175,8 +175,8 @@ type SortField =
   | "account_created"
   | "profile_complete"
   | "online"
-  | "last_reminder"
-  | "last_activation_reminder";
+  | "last_email";
+
 type SortDirection = "asc" | "desc";
 
 function risksForAgent(a: Agent): Risk[] {
