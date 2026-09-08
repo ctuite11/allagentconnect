@@ -52,8 +52,8 @@ interface MergedAgent {
   license_verified_email?: EmailStatusInfo | null
   profile_complete?: boolean
   headshot_url?: string | null
-  last_reminder?: { sent_at: string; template: string; status: string } | null
-  last_activation_reminder?: { sent_at: string; template: string; status: string } | null
+  last_email?: { sent_at: string; template: string | null; status: string | null } | null
+
   // Lifecycle (server-authoritative). `requested_at` comes ONLY from
   // pending_verifications.created_at — never from a profile/auth creation
   // timestamp. null means "never submitted a request".
@@ -233,13 +233,14 @@ Deno.serve(async (req) => {
 
     // Only the two payload keys this endpoint reads are selected — pulling the
     // whole payload column moved megabytes of email HTML for no reason.
-    const emailJobTemplates = ['license-verified', 'admin-created-invite', 'agent-invite', 'agent-missing-opportunities']
+    // No template filter: the "Last Email" column reports the newest email of
+    // ANY template per recipient. Total email_jobs rows are well under the cap.
     const emailJobsPromise = adminClient
       .from('email_jobs')
       .select('id, status, delivery_status, delivery_status_at, created_at, attempts, last_error, to:payload->>to, template:payload->>template')
-      .in('payload->>template', emailJobTemplates)
       .order('created_at', { ascending: false })
       .limit(20000)
+
 
     // Build maps of auth.users by lowercase email — drives has_auth_account + last_sign_in_at
     const { emails: authEmails, lastSignIn: lastSignInByEmail } = await authScanPromise
