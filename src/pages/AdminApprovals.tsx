@@ -1242,27 +1242,14 @@ export default function AdminApprovals() {
           comparison = av - bv;
           break;
         }
-        case "last_reminder": {
-          // Nulls always last in both directions so "Never" surfaces as the
-          // most-overdue bucket when the admin flips to ascending.
-          const at = a.last_reminder?.sent_at
-            ? new Date(a.last_reminder.sent_at).getTime()
+        case "last_email": {
+          // Nulls always last in both directions so "Never" stays at the bottom
+          // regardless of sort direction (early return bypasses the flip).
+          const at = a.last_email?.sent_at
+            ? new Date(a.last_email.sent_at).getTime()
             : null;
-          const bt = b.last_reminder?.sent_at
-            ? new Date(b.last_reminder.sent_at).getTime()
-            : null;
-          if (at === null && bt === null) { comparison = 0; break; }
-          if (at === null) return 1;
-          if (bt === null) return -1;
-          comparison = at - bt;
-          break;
-        }
-        case "last_activation_reminder": {
-          const at = a.last_activation_reminder?.sent_at
-            ? new Date(a.last_activation_reminder.sent_at).getTime()
-            : null;
-          const bt = b.last_activation_reminder?.sent_at
-            ? new Date(b.last_activation_reminder.sent_at).getTime()
+          const bt = b.last_email?.sent_at
+            ? new Date(b.last_email.sent_at).getTime()
             : null;
           if (at === null && bt === null) { comparison = 0; break; }
           if (at === null) return 1;
@@ -1270,6 +1257,7 @@ export default function AdminApprovals() {
           comparison = at - bt;
           break;
         }
+
         case "created_at":
         default:
           // In the Pending bucket the meaningful recency signal is when the
