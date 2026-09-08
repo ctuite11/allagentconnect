@@ -1316,6 +1316,33 @@ export default function AdminApprovals() {
     setSelectedIds(effectiveSelectedIds);
   }, [effectiveSelectedIds, selectedIds]);
 
+  // ---- Render paging -------------------------------------------------
+  // Rendering ~800 rows at once is what makes this page crawl on a phone.
+  // Only the current page is drawn; search, filters, sort, Select All,
+  // bulk actions and exports all keep operating on `filteredAgents`.
+  const PAGE_SIZE = 50;
+  const [page, setPage] = useState(1);
+
+  const pageCount = Math.max(1, Math.ceil(filteredAgents.length / PAGE_SIZE));
+
+  // Back to page 1 whenever the result set is re-scoped or re-ordered.
+  useEffect(() => {
+    setPage(1);
+  }, [statusFilter, searchQuery, sortField, sortDirection]);
+
+  // Never leave the view on a page that no longer exists.
+  useEffect(() => {
+    setPage((p) => Math.min(Math.max(1, p), pageCount));
+  }, [pageCount]);
+
+  const pagedAgents = useMemo(() => {
+    const start = (Math.min(page, pageCount) - 1) * PAGE_SIZE;
+    return filteredAgents.slice(start, start + PAGE_SIZE);
+  }, [filteredAgents, page, pageCount]);
+
+  const pageStart = filteredAgents.length === 0 ? 0 : (Math.min(page, pageCount) - 1) * PAGE_SIZE + 1;
+  const pageEnd = Math.min(filteredAgents.length, Math.min(page, pageCount) * PAGE_SIZE);
+
   // Column sort handler
   const handleSort = (field: SortField) => {
     if (sortField === field) {
