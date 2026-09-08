@@ -2308,7 +2308,7 @@ export default function AdminApprovals() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-100">
-                  {filteredAgents.map((agent) => {
+                  {pagedAgents.map((agent) => {
                     const isProcessing = processingIds.has(agent.id);
                     const derived = deriveAdminStatus(agent);
                     const isSelected = selectedIds.has(agent.id);
