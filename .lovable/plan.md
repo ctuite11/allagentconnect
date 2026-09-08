@@ -1,32 +1,33 @@
-# Simplify to one "Last Email" column in Admin → Approvals
+# Make the Admin page load fast (especially on phones)
 
-## Goal
-Replace the two confusing columns ("Last Reminder" and "Last Activation Reminder") with a single, plain column that answers one question: what was the last email we sent this agent, and when.
+## What's slow right now
 
-## What the column shows
-- The friendly name of the most recent email of **any** type sent to that agent (not just reminders) — e.g. "License Verified", "Invitation", "Don't miss opportunities", "Temporary password", etc.
-- The date, plus a short relative age ("today", "3 days ago").
-- Hovering shows the exact time, the delivery status (sent / delivered / bounced / failed), and the raw template name.
-- "Never" when no email is on record.
-- Sorting by this column keeps "Never" at the bottom in both directions.
+Three confirmed causes, measured against the live project:
 
-Full per-agent email history stays available in the agent's detail panel, so nothing is lost.
+1. **The page pulls the entire email history on every load.** To show the "Last Email" column, the admin data call reads every row in the email queue — 13,984 rows today, growing daily — sorts them, and keeps only the newest one per agent (at most ~478 rows are ever used). Everything else is thrown away after being read and transferred.
+2. **Everything is sent to the phone in one big response.** 478 agent profiles, 226 access requests and 88 early-access leads arrive in a single payload before anything appears.
+3. **Every row is drawn at once.** The list has no paging — roughly 790 rows, each with badges, buttons and tooltips, are all rendered immediately. On a phone this is the difference between "loaded" and "usable".
 
-## Technical changes
+## The fix
 
-### Backend — `supabase/functions/admin-list-agents/index.ts`
-- Replace `last_reminder` / `last_activation_reminder` with a single `last_email: { sent_at, template, status } | null`.
-- Drop the reminder-template allow-list: take the newest `email_jobs` row per recipient regardless of template (jobs are already fetched newest-first).
-- Note: the existing `email_jobs` fetch is currently filtered to a template list — widen it to all templates for that recipient set, still capped/ordered as today.
-- Redeploy the function.
+**1. Ask the database for just the last email per agent**
+Add a small read-only database function that returns one row per recipient (the newest email, its template and status), using the index that already exists for exactly this lookup. The admin data call uses that instead of downloading 14,000 rows. The Last Email column, its tooltip and sorting behave exactly as they do now.
 
-### Frontend — `src/pages/AdminApprovals.tsx`
-- Remove both reminder columns, headers, sort cases, and interface fields.
-- Add one sortable "Last Email" column rendering the label + relative age with the tooltip described above.
-- Add a small template-key → friendly-label map for display; unknown templates fall back to the raw key.
+**2. Show the list in pages**
+Render a page of agents at a time (default 50) with simple next/previous controls and a count, instead of drawing all ~790 rows. Filters, search, sorting, selection and bulk actions keep working across the full list, not just the visible page — only what gets drawn changes.
 
-### Frontend — `src/components/admin/AgentDetailsDrawer.tsx`
-- Replace the two lifecycle rows with a single "Last Email" row using the same label and formatting.
+**3. Trim per-row work**
+The online-dot lookup currently rescans the whole agent list once per agent on every refresh; switch it to a direct lookup. No visual change.
 
-## Out of scope
-- No emails sent, no schema changes, no changes to what triggers any email.
+Expected result: the admin data call drops from seconds to well under a second, and the page becomes interactive on a phone almost immediately instead of after a long freeze.
+
+## Technical notes
+
+- New migration: `SECURITY DEFINER`, `STABLE` function returning `DISTINCT ON (payload->>'to')` newest job per recipient (`sent_at`, `template`, `status`), executable by `service_role` only. It backs the existing `last_email` contract — no schema or data change to `email_jobs`.
+- `supabase/functions/admin-list-agents/index.ts`: replace the unfiltered 20,000-row `email_jobs` select with the new RPC; keep the existing per-template map used for `invite_email` / `license_verified_email` by sourcing it from the same targeted lookup. Redeploy this function only.
+- `src/pages/AdminApprovals.tsx`: add paging state over the already-filtered/sorted array; keep "select all" and exports operating on the full filtered set.
+- `src/hooks/useAgentLastSeen.ts`: index the RPC result by `user_id` instead of `Array.find` per agent.
+
+## Guardrails
+
+No emails sent, queued, retried or modified. No changes to templates, agent records, statuses, verification, or any other page.
