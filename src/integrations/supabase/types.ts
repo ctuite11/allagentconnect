@@ -6940,39 +6940,24 @@ export type Database = {
             }
             Returns: Json
           }
-      admin_agent_email_summary:
-        | {
-            Args: { _emails: string[]; _templates?: string[] }
-            Returns: {
-              attempts: number
-              created_at: string
-              delivery_status: string
-              delivery_status_at: string
-              email: string
-              kind: string
-              last_error: string
-              status: string
-              template: string
-            }[]
-          }
-        | {
-            Args: {
-              _emails: string[]
-              _latest_templates?: string[]
-              _templates?: string[]
-            }
-            Returns: {
-              attempts: number
-              created_at: string
-              delivery_status: string
-              delivery_status_at: string
-              email: string
-              kind: string
-              last_error: string
-              status: string
-              template: string
-            }[]
-          }
+      admin_agent_email_summary: {
+        Args: {
+          _emails: string[]
+          _latest_templates?: string[]
+          _templates?: string[]
+        }
+        Returns: {
+          attempts: number
+          created_at: string
+          delivery_status: string
+          delivery_status_at: string
+          email: string
+          kind: string
+          last_error: string
+          status: string
+          template: string
+        }[]
+      }
       admin_approve_developer_access_request: {
         Args: {
           _account_name?: string
