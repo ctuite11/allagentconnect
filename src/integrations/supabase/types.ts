@@ -6941,7 +6941,11 @@ export type Database = {
             Returns: Json
           }
       admin_agent_email_summary: {
-        Args: { _emails: string[]; _templates?: string[] }
+        Args: {
+          _emails: string[]
+          _latest_templates?: string[]
+          _templates?: string[]
+        }
         Returns: {
           attempts: number
           created_at: string
