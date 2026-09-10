@@ -30,6 +30,11 @@ type Props = {
    * grid tiles are unchanged.
    */
   interactive?: boolean;
+  /**
+   * When the current search matched this agent because of a team name, show it
+   * so the match is obvious. Ignored when it is already the brokerage line.
+   */
+  matchedTeamName?: string | null;
 };
 
 function titleCase(s: string) {
