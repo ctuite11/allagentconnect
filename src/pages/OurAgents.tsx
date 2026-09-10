@@ -766,6 +766,7 @@ function AgentPhotoTileGrid({
                   onViewProfile={handleViewProfile}
                   hideDirectContact={effectivePublicMode}
                   showPresence={effectiveAgentMode}
+                  searchQuery={searchQuery}
                 />
 
                 {/* Pagination Controls */}
