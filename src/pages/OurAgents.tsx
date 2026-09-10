@@ -251,6 +251,32 @@ const OurAgents = ({
           .eq("status", "approved"),
       ]);
 
+      // Accepted memberships for the approved teams — search only. An agent may
+      // belong to more than one team; keep every canonical name.
+      const approvedTeamIds = (teamsData || []).map((t: any) => t.id);
+      const agentTeamNames = new Map<string, string[]>();
+      if (approvedTeamIds.length > 0) {
+        const { data: membershipData, error: membershipError } = await supabase
+          .from("team_members")
+          .select("team_id, agent_id")
+          .eq("status", "accepted")
+          .in("team_id", approvedTeamIds);
+        if (membershipError) {
+          console.warn("[our-agents] team members fetch failed:", membershipError.message);
+        } else {
+          const teamNameById = new Map<string, string>(
+            (teamsData || []).map((t: any) => [t.id, (t.name || "").trim()]),
+          );
+          (membershipData || []).forEach((m: any) => {
+            const name = teamNameById.get(m.team_id);
+            if (!name || !m.agent_id) return;
+            const list = agentTeamNames.get(m.agent_id) ?? [];
+            if (!list.some((n) => n.toLowerCase() === name.toLowerCase())) list.push(name);
+            agentTeamNames.set(m.agent_id, list);
+          });
+        }
+      }
+
       if (listingsError) throw listingsError;
       if (countyError) throw countyError;
       if (teamsError) console.warn("[our-agents] teams fetch failed:", teamsError.message);
@@ -333,6 +359,7 @@ const OurAgents = ({
           serviceAreas,
           specialties,
           entity_type: "agent" as const,
+          teamNames: agentTeamNames.get(agent.id) ?? [],
         };
       });
 
@@ -390,11 +417,13 @@ function AgentPhotoTileGrid({
   onViewProfile,
   hideDirectContact = false,
   showPresence = false,
+  searchQuery = "",
 }: {
   agents: EnrichedAgent[];
   onViewProfile: (id: string) => void;
   hideDirectContact?: boolean;
   showPresence?: boolean;
+  searchQuery?: string;
 }) {
   const userIds = useMemo(() => (showPresence ? agents.map((a) => a.id) : []), [agents, showPresence]);
   const presenceMap = useAgentPresenceBatch(userIds);
@@ -409,6 +438,9 @@ function AgentPhotoTileGrid({
           showPresenceBadge={showPresence}
           isOnline={showPresence ? presenceMap.get(agent.id)?.isOnline === true : false}
           hideDirectContact={hideDirectContact}
+          matchedTeamName={
+            searchQuery.trim() ? getMatchedTeamName(agent, searchQuery) : null
+          }
         />
       ))}
     </div>
