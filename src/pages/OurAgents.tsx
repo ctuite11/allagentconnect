@@ -30,7 +30,10 @@ import {
   hasUsableHeadshot,
   isVisibleInAgentNetwork,
 } from "@/lib/agentNetworkVisibility";
-import { matchesAgentName } from "@/lib/agentNameSearch";
+import {
+  matchesAgentDirectorySearch,
+  matchedTeamName as getMatchedTeamName,
+} from "@/lib/agentDirectorySearch";
 import { agentMatchesNetworkLocation } from "@/lib/agentNetworkLocation";
 import LocationAutocomplete, { type SelectedLocation } from "@/components/agent-directory/LocationAutocomplete";
 
@@ -73,7 +76,11 @@ interface EnrichedAgent {
   specialties: string[];
   entity_type?: "agent" | "team";
   team_slug?: string;
+  /** All accepted canonical team names — search only, not display. */
+  teamNames?: string[];
 }
+
+type EntityFilter = "all" | "agents" | "teams";
 
 const DEFAULT_PAGE_SIZE: AgentDirectoryPageSize = 48;
 
@@ -119,6 +126,7 @@ const OurAgents = ({
   const [showBuyerIncentivesOnly, setShowBuyerIncentivesOnly] = useState(false);
   const [showListingAgentsOnly, setShowListingAgentsOnly] = useState(false);
   const [sortOrder, setSortOrder] = useState<AgentDirectorySortOrder>("featured");
+  const [entityFilter, setEntityFilter] = useState<EntityFilter>("all");
   // Stable per-visit shuffle ranks — assigned once per agent id, never reshuffled
   // on filter/pagination/re-render. Refreshing the page generates new ranks.
   const [shuffleRanks, setShuffleRanks] = useState<Map<string, number>>(() => new Map());
@@ -244,6 +252,32 @@ const OurAgents = ({
           .eq("status", "approved"),
       ]);
 
+      // Accepted memberships for the approved teams — search only. An agent may
+      // belong to more than one team; keep every canonical name.
+      const approvedTeamIds = (teamsData || []).map((t: any) => t.id);
+      const agentTeamNames = new Map<string, string[]>();
+      if (approvedTeamIds.length > 0) {
+        const { data: membershipData, error: membershipError } = await supabase
+          .from("team_members")
+          .select("team_id, agent_id")
+          .eq("status", "accepted")
+          .in("team_id", approvedTeamIds);
+        if (membershipError) {
+          console.warn("[our-agents] team members fetch failed:", membershipError.message);
+        } else {
+          const teamNameById = new Map<string, string>(
+            (teamsData || []).map((t: any) => [t.id, (t.name || "").trim()]),
+          );
+          (membershipData || []).forEach((m: any) => {
+            const name = teamNameById.get(m.team_id);
+            if (!name || !m.agent_id) return;
+            const list = agentTeamNames.get(m.agent_id) ?? [];
+            if (!list.some((n) => n.toLowerCase() === name.toLowerCase())) list.push(name);
+            agentTeamNames.set(m.agent_id, list);
+          });
+        }
+      }
+
       if (listingsError) throw listingsError;
       if (countyError) throw countyError;
       if (teamsError) console.warn("[our-agents] teams fetch failed:", teamsError.message);
@@ -326,6 +360,7 @@ const OurAgents = ({
           serviceAreas,
           specialties,
           entity_type: "agent" as const,
+          teamNames: agentTeamNames.get(agent.id) ?? [],
         };
       });
 
@@ -383,11 +418,13 @@ function AgentPhotoTileGrid({
   onViewProfile,
   hideDirectContact = false,
   showPresence = false,
+  searchQuery = "",
 }: {
   agents: EnrichedAgent[];
   onViewProfile: (id: string) => void;
   hideDirectContact?: boolean;
   showPresence?: boolean;
+  searchQuery?: string;
 }) {
   const userIds = useMemo(() => (showPresence ? agents.map((a) => a.id) : []), [agents, showPresence]);
   const presenceMap = useAgentPresenceBatch(userIds);
@@ -402,6 +439,9 @@ function AgentPhotoTileGrid({
           showPresenceBadge={showPresence}
           isOnline={showPresence ? presenceMap.get(agent.id)?.isOnline === true : false}
           hideDirectContact={hideDirectContact}
+          matchedTeamName={
+            searchQuery.trim() ? getMatchedTeamName(agent, searchQuery) : null
+          }
         />
       ))}
     </div>
@@ -414,12 +454,17 @@ function AgentPhotoTileGrid({
       (a) => a.entity_type === "team" || isVisibleInAgentNetwork(a),
     );
 
-    // Name-only text search (first / last). Teams are excluded — the box is
-    // for agent names, and team display names are stuffed into first_name.
+    // Entity filter — All / Agents / Teams.
+    if (entityFilter === "agents") {
+      result = result.filter((a) => a.entity_type !== "team");
+    } else if (entityFilter === "teams") {
+      result = result.filter((a) => a.entity_type === "team");
+    }
+
+    // Text search: agent name, brokerage/company and team name(s).
+    // Team tiles match on team name and brokerage.
     if (searchQuery.trim()) {
-      result = result.filter(
-        (agent) => agent.entity_type !== "team" && matchesAgentName(agent, searchQuery),
-      );
+      result = result.filter((agent) => matchesAgentDirectorySearch(agent, searchQuery));
     }
 
     // Location filter — Google Places selection matched against service areas.
@@ -478,7 +523,7 @@ function AgentPhotoTileGrid({
     }
 
     return result;
-  }, [agents, searchQuery, selectedState, selectedCounties, selectedLocation, counties, showBuyerIncentivesOnly, showListingAgentsOnly, sortOrder, shuffleRanks]);
+  }, [agents, searchQuery, entityFilter, selectedState, selectedCounties, selectedLocation, counties, showBuyerIncentivesOnly, showListingAgentsOnly, sortOrder, shuffleRanks]);
 
   // Keep header count + pager in sync with the filtered set.
   useEffect(() => {
@@ -488,7 +533,7 @@ function AgentPhotoTileGrid({
   // Reset to page 1 whenever the filtered result changes.
   useEffect(() => {
     setPage(1);
-  }, [searchQuery, selectedState, selectedCounties, selectedLocation, showBuyerIncentivesOnly, showListingAgentsOnly, pageSize]);
+  }, [searchQuery, entityFilter, selectedState, selectedCounties, selectedLocation, showBuyerIncentivesOnly, showListingAgentsOnly, pageSize]);
 
   // Client-side pagination over the filtered set.
   const paginatedAgents = useMemo(() => {
@@ -629,7 +674,7 @@ function AgentPhotoTileGrid({
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" aria-hidden />
                 <Input
                   type="text"
-                  placeholder="Search by first or last name"
+                  placeholder="Search agents, teams, brokerages..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="h-10 rounded-lg border-neutral-200 bg-white pl-10 pr-3 text-sm shadow-none focus-visible:border-neutral-900 focus-visible:ring-1 focus-visible:ring-neutral-300/80 md:h-11 md:text-[15px]"
@@ -641,6 +686,33 @@ function AgentPhotoTileGrid({
                 placeholder="Search city, state, or area"
               />
             </div>
+
+            {/* All | Agents | Teams */}
+            <div
+              role="group"
+              aria-label="Filter results by type"
+              className="mt-3 inline-flex rounded-lg border border-neutral-200 bg-white p-0.5"
+            >
+              {([
+                { value: "all", label: "All" },
+                { value: "agents", label: "Agents" },
+                { value: "teams", label: "Teams" },
+              ] as { value: EntityFilter; label: string }[]).map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  aria-pressed={entityFilter === option.value}
+                  onClick={() => setEntityFilter(option.value)}
+                  className={`rounded-[6px] px-3 py-1.5 text-[13px] font-medium transition-colors ${
+                    entityFilter === option.value
+                      ? "bg-neutral-900 text-white"
+                      : "text-neutral-600 hover:text-neutral-900"
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
           </div>
         </section>
 
@@ -650,7 +722,7 @@ function AgentPhotoTileGrid({
           setSortOrder={setSortOrder}
           resultCount={totalCount}
           searchQuery={searchQuery}
-          itemLabel="Agents"
+          itemLabel={entityFilter === "teams" ? "Teams" : "Agents"}
           loading={loading}
           pageSize={pageSize}
           onPageSizeChange={(size) => {
@@ -694,6 +766,7 @@ function AgentPhotoTileGrid({
                   onViewProfile={handleViewProfile}
                   hideDirectContact={effectivePublicMode}
                   showPresence={effectiveAgentMode}
+                  searchQuery={searchQuery}
                 />
 
                 {/* Pagination Controls */}

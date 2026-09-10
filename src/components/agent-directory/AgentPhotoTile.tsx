@@ -30,6 +30,11 @@ type Props = {
    * grid tiles are unchanged.
    */
   interactive?: boolean;
+  /**
+   * When the current search matched this agent because of a team name, show it
+   * so the match is obvious. Ignored when it is already the brokerage line.
+   */
+  matchedTeamName?: string | null;
 };
 
 function titleCase(s: string) {
@@ -58,12 +63,17 @@ export default function AgentPhotoTile({
   isOnline = false,
   hideDirectContact = false,
   interactive = true,
+  matchedTeamName = null,
 }: Props) {
   const isTeam = agent.entity_type === "team";
   const rawName = [agent.first_name, agent.last_name].filter(Boolean).join(" ");
   const fullName = formatAgentCardName(rawName, isTeam);
 
   const brokerage = agent.company || agent.office_name || agent.team_name || "";
+  const showTeamMatch =
+    !isTeam &&
+    Boolean(matchedTeamName) &&
+    (matchedTeamName as string).trim().toLowerCase() !== brokerage.trim().toLowerCase();
 
   const card = (
       <div
@@ -122,6 +132,11 @@ export default function AgentPhotoTile({
           <div className="mt-1.5 truncate text-[13px] leading-snug text-neutral-600 md:text-[14px]">
             {brokerage || <span className="text-transparent">.</span>}
           </div>
+          {showTeamMatch ? (
+            <div className="mt-1 truncate text-[12px] leading-snug text-neutral-500 md:text-[13px]">
+              Team: {matchedTeamName}
+            </div>
+          ) : null}
           {hideDirectContact ? (
             <div className="mt-3 text-[13px] font-medium text-neutral-900">View profile</div>
           ) : (
