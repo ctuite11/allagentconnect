@@ -63,6 +63,7 @@ export default function AgentPhotoTile({
   isOnline = false,
   hideDirectContact = false,
   interactive = true,
+  matchedTeamName = null,
 }: Props) {
   const isTeam = agent.entity_type === "team";
   const rawName = [agent.first_name, agent.last_name].filter(Boolean).join(" ");
