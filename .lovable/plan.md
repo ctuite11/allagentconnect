@@ -1,33 +1,46 @@
-# Make the Admin page load fast (especially on phones)
+# Agent Network: find teams by name
 
-## What's slow right now
+## Audit findings (verified)
 
-Three confirmed causes, measured against the live project:
+- The Agent Network / Find an Agent directory is `src/pages/OurAgents.tsx` (routes `/our-agents`, `/our-members`). It loads eligible agent ids via the `get_verified_agent_ids` RPC, then reads `agent_profiles`, and separately reads approved rows from `teams`.
+- Teams already exist as a real model and already appear in the directory as tiles: approved teams are mapped into the same card shape with `entity_type: "team"` and link to `/team/<slug>` (the existing Team Profile page). No new team system is needed.
+- Team name is stored in two places: the canonical `teams.name` (4 approved teams today), and a free-text `agent_profiles.team_name` on agent records (70 agents filled in). Membership lives in `team_members` (accepted rows).
+- The search box today is name-only: it uses `matchesAgentName` (first/last name only) and explicitly excludes team tiles from results. So typing "Tuite Group" returns nothing even though the team tile exists.
+- Reading approved teams and accepted members is already permitted by existing policies. No schema change and no permission change is required.
 
-1. **The page pulls the entire email history on every load.** To show the "Last Email" column, the admin data call reads every row in the email queue — 13,984 rows today, growing daily — sorts them, and keeps only the newest one per agent (at most ~478 rows are ever used). Everything else is thrown away after being read and transferred.
-2. **Everything is sent to the phone in one big response.** 478 agent profiles, 226 access requests and 88 early-access leads arrive in a single payload before anything appears.
-3. **Every row is drawn at once.** The list has no paging — roughly 790 rows, each with badges, buttons and tooltips, are all rendered immediately. On a phone this is the difference between "loaded" and "usable".
+## What will change
 
-## The fix
+1. Search box matches more than agent names
+   - Placeholder becomes `Search agents, teams, brokerages...`
+   - A query matches an agent when it matches their name, their brokerage/company, or their team name.
+   - A query matches a team tile when it matches the team name or the team's brokerage.
+   - Location search stays in its own separate box, unchanged.
 
-**1. Ask the database for just the last email per agent**
-Add a small read-only database function that returns one row per recipient (the newest email, its template and status), using the index that already exists for exactly this lookup. The admin data call uses that instead of downloading 14,000 rows. The Last Email column, its tooltip and sorting behave exactly as they do now.
+2. New All | Agents | Teams filter
+   - Placed next to the search bar, default **All**.
+   - All: agents and teams together (current behaviour plus team-name matches).
+   - Agents: agent tiles only.
+   - Teams: approved team tiles only.
+   - Changing the filter resets to page 1; result count and the "Agents" label update to reflect what's being shown.
 
-**2. Show the list in pages**
-Render a page of agents at a time (default 50) with simple next/previous controls and a count, instead of drawing all ~790 rows. Filters, search, sorting, selection and bulk actions keep working across the full list, not just the visible page — only what gets drawn changes.
+3. Make a team match visible
+   - When an agent tile is surfaced because of a team-name match and the card is currently showing a brokerage instead, the card shows the team name so it's obvious why the agent matched.
 
-**3. Trim per-row work**
-The online-dot lookup currently rescans the whole agent list once per agent on every refresh; switch it to a direct lookup. No visual change.
-
-Expected result: the admin data call drops from seconds to well under a second, and the page becomes interactive on a phone almost immediately instead of after a long freeze.
+Everything else — sorting, page size, pagination, location/state/county filters, incentives and listing filters, cards, profiles, contact flows — stays exactly as it is.
 
 ## Technical notes
 
-- New migration: `SECURITY DEFINER`, `STABLE` function returning `DISTINCT ON (payload->>'to')` newest job per recipient (`sent_at`, `template`, `status`), executable by `service_role` only. It backs the existing `last_email` contract — no schema or data change to `email_jobs`.
-- `supabase/functions/admin-list-agents/index.ts`: replace the unfiltered 20,000-row `email_jobs` select with the new RPC; keep the existing per-template map used for `invite_email` / `license_verified_email` by sourcing it from the same targeted lookup. Redeploy this function only.
-- `src/pages/AdminApprovals.tsx`: add paging state over the already-filtered/sorted array; keep "select all" and exports operating on the full filtered set.
-- `src/hooks/useAgentLastSeen.ts`: index the RPC result by `user_id` instead of `Array.find` per agent.
+- New matcher module (e.g. `src/lib/agentDirectorySearch.ts`) built on the existing `normalizeSearchText` helpers: token-based match across name, `company`/`office_name`, and team name; team entities match on `name` + company. `matchesAgentName` stays in place for any other caller.
+- Attach canonical team names to agents by reading accepted `team_members` rows for the approved teams already being fetched, and fall back to `agent_profiles.team_name` when there is no membership row. One extra lightweight query in the existing parallel fetch.
+- `entityFilter` state (`all` | `agents` | `teams`) added in `OurAgents.tsx`, applied inside the existing `filteredAgents` memo before the other filters, and added to the page-reset effect dependencies.
+- Filter control rendered as a small segmented control next to the search inputs; `AgentDirectoryFilters` receives an `itemLabel` matching the active mode.
+- No migration, no RPC change, no RLS change, no writes to agent or team records, no emails.
 
-## Guardrails
+## Verification before review
 
-No emails sent, queued, retried or modified. No changes to templates, agent records, statuses, verification, or any other page.
+- Search "Tuite Group" style team names: the team tile appears, and its members appear under All.
+- Search an agent name: unchanged results.
+- Teams filter: only the 4 approved teams show; Agents filter excludes them.
+- Count, pagination and sorting stay correct across each mode.
+
+Stop after verification; no publish.
