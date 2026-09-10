@@ -126,6 +126,7 @@ const OurAgents = ({
   const [showBuyerIncentivesOnly, setShowBuyerIncentivesOnly] = useState(false);
   const [showListingAgentsOnly, setShowListingAgentsOnly] = useState(false);
   const [sortOrder, setSortOrder] = useState<AgentDirectorySortOrder>("featured");
+  const [entityFilter, setEntityFilter] = useState<EntityFilter>("all");
   // Stable per-visit shuffle ranks — assigned once per agent id, never reshuffled
   // on filter/pagination/re-render. Refreshing the page generates new ranks.
   const [shuffleRanks, setShuffleRanks] = useState<Map<string, number>>(() => new Map());
@@ -453,12 +454,17 @@ function AgentPhotoTileGrid({
       (a) => a.entity_type === "team" || isVisibleInAgentNetwork(a),
     );
 
-    // Name-only text search (first / last). Teams are excluded — the box is
-    // for agent names, and team display names are stuffed into first_name.
+    // Entity filter — All / Agents / Teams.
+    if (entityFilter === "agents") {
+      result = result.filter((a) => a.entity_type !== "team");
+    } else if (entityFilter === "teams") {
+      result = result.filter((a) => a.entity_type === "team");
+    }
+
+    // Text search: agent name, brokerage/company and team name(s).
+    // Team tiles match on team name and brokerage.
     if (searchQuery.trim()) {
-      result = result.filter(
-        (agent) => agent.entity_type !== "team" && matchesAgentName(agent, searchQuery),
-      );
+      result = result.filter((agent) => matchesAgentDirectorySearch(agent, searchQuery));
     }
 
     // Location filter — Google Places selection matched against service areas.
