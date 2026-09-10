@@ -523,7 +523,7 @@ function AgentPhotoTileGrid({
     }
 
     return result;
-  }, [agents, searchQuery, selectedState, selectedCounties, selectedLocation, counties, showBuyerIncentivesOnly, showListingAgentsOnly, sortOrder, shuffleRanks]);
+  }, [agents, searchQuery, entityFilter, selectedState, selectedCounties, selectedLocation, counties, showBuyerIncentivesOnly, showListingAgentsOnly, sortOrder, shuffleRanks]);
 
   // Keep header count + pager in sync with the filtered set.
   useEffect(() => {
@@ -533,7 +533,7 @@ function AgentPhotoTileGrid({
   // Reset to page 1 whenever the filtered result changes.
   useEffect(() => {
     setPage(1);
-  }, [searchQuery, selectedState, selectedCounties, selectedLocation, showBuyerIncentivesOnly, showListingAgentsOnly, pageSize]);
+  }, [searchQuery, entityFilter, selectedState, selectedCounties, selectedLocation, showBuyerIncentivesOnly, showListingAgentsOnly, pageSize]);
 
   // Client-side pagination over the filtered set.
   const paginatedAgents = useMemo(() => {
@@ -674,7 +674,7 @@ function AgentPhotoTileGrid({
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" aria-hidden />
                 <Input
                   type="text"
-                  placeholder="Search by first or last name"
+                  placeholder="Search agents, teams, brokerages..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="h-10 rounded-lg border-neutral-200 bg-white pl-10 pr-3 text-sm shadow-none focus-visible:border-neutral-900 focus-visible:ring-1 focus-visible:ring-neutral-300/80 md:h-11 md:text-[15px]"
@@ -686,6 +686,33 @@ function AgentPhotoTileGrid({
                 placeholder="Search city, state, or area"
               />
             </div>
+
+            {/* All | Agents | Teams */}
+            <div
+              role="group"
+              aria-label="Filter results by type"
+              className="mt-3 inline-flex rounded-lg border border-neutral-200 bg-white p-0.5"
+            >
+              {([
+                { value: "all", label: "All" },
+                { value: "agents", label: "Agents" },
+                { value: "teams", label: "Teams" },
+              ] as { value: EntityFilter; label: string }[]).map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  aria-pressed={entityFilter === option.value}
+                  onClick={() => setEntityFilter(option.value)}
+                  className={`rounded-[6px] px-3 py-1.5 text-[13px] font-medium transition-colors ${
+                    entityFilter === option.value
+                      ? "bg-neutral-900 text-white"
+                      : "text-neutral-600 hover:text-neutral-900"
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
           </div>
         </section>
 
@@ -695,7 +722,7 @@ function AgentPhotoTileGrid({
           setSortOrder={setSortOrder}
           resultCount={totalCount}
           searchQuery={searchQuery}
-          itemLabel="Agents"
+          itemLabel={entityFilter === "teams" ? "Teams" : "Agents"}
           loading={loading}
           pageSize={pageSize}
           onPageSizeChange={(size) => {
