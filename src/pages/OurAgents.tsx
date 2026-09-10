@@ -30,7 +30,10 @@ import {
   hasUsableHeadshot,
   isVisibleInAgentNetwork,
 } from "@/lib/agentNetworkVisibility";
-import { matchesAgentName } from "@/lib/agentNameSearch";
+import {
+  matchesAgentDirectorySearch,
+  matchedTeamName as getMatchedTeamName,
+} from "@/lib/agentDirectorySearch";
 import { agentMatchesNetworkLocation } from "@/lib/agentNetworkLocation";
 import LocationAutocomplete, { type SelectedLocation } from "@/components/agent-directory/LocationAutocomplete";
 
@@ -73,7 +76,11 @@ interface EnrichedAgent {
   specialties: string[];
   entity_type?: "agent" | "team";
   team_slug?: string;
+  /** All accepted canonical team names — search only, not display. */
+  teamNames?: string[];
 }
+
+type EntityFilter = "all" | "agents" | "teams";
 
 const DEFAULT_PAGE_SIZE: AgentDirectoryPageSize = 48;
 
