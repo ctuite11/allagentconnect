@@ -1,17 +1,16 @@
-# Add 34 new agent emails to the "not in database" spreadsheet
+# Resolve the current login spinner
 
-## Goal
-Append the 34 emails from the user's latest list to `/mnt/documents/aac-agents-not-in-database.xlsx` (or the email-matched workbook, as directed), keeping the existing format.
+## Confirmed diagnosis
+- The live Lovable Cloud health check is timing out between authentication and the database.
+- The browser logs do not show an application error responsible for the spinner.
+- This currently points to a backend/auth availability incident, not invalid credentials or a newly confirmed frontend regression.
 
-## Status check result
-All 34 emails were checked against accounts, agent profiles, early-access leads, invites, and pending verifications — zero matches. All are new.
+## Plan
+1. Recheck Lovable Cloud health to determine whether the outage is transient or persistent.
+2. If health recovers, verify login end-to-end and confirm the account reaches its normal destination.
+3. If health remains unavailable, report the infrastructure outage and stop without changing application code.
+4. Only if Cloud is healthy but login still spins, reproduce the flow and trace the exact session/role request before proposing a narrowly scoped frontend correction.
 
-## Steps
-1. Load the existing workbook (currently 669 agent entries).
-2. Append the 34 new emails with name (blank if unknown), email, domain, and source columns matching existing format.
-3. Deduplicate against existing entries.
-4. Save the updated workbook to `/mnt/documents/` for download.
-5. Report the new total.
-
-## No changes
-- No database writes, no emails sent, no app code changes.
+## Guardrails
+- No password, account, role, database, email, or configuration changes.
+- Do not restart the backend unless a later health signal specifically supports that action and it is separately approved.
