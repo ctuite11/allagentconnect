@@ -105,7 +105,7 @@ const OurAgents = ({
 }: OurAgentsProps) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useAuthRole();
+  const { user, isAdmin } = useAuthRole();
   const effectiveAgentMode = isAgentMode || defaultAgentMode;
   const {
     visible: showAgentNetworkIntro,
@@ -725,6 +725,7 @@ function AgentPhotoTileGrid({
           itemLabel={entityFilter === "teams" ? "Teams" : "Agents"}
           loading={loading}
           pageSize={pageSize}
+          showResultCount={!effectiveAgentMode || isAdmin}
           onPageSizeChange={(size) => {
             setPageSize(size);
             setPage(1);
