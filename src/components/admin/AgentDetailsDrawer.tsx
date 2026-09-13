@@ -328,7 +328,7 @@ export function AgentDetailsDrawer({
                 <dd className="text-zinc-800">License Verified</dd>
                 <dt className="text-zinc-500">Link type</dt>
                 <dd className="text-zinc-800">
-                  Fresh Supabase recovery / setup link (single-use, ~1 hr)
+                  AAC activation/setup link (30 days, single-use)
                 </dd>
                 <dt className="text-zinc-500">Last sent</dt>
                 <dd className="text-zinc-800">
