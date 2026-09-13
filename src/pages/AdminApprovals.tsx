@@ -1497,14 +1497,17 @@ export default function AdminApprovals() {
     }
   };
 
-  // Generate a one-time password setup link via the service-role edge function.
+  // Generate a 30-day AAC setup/sign-in link via the service-role edge
+  // function. This issues an AAC-owned token and sends NO email — the admin
+  // shares the copied link themselves.
   const generateSetupLink = async (agent: Agent): Promise<string | null> => {
     const { data, error } = await supabase.functions.invoke("generate-agent-setup-link", {
       body: { userId: agent.is_early_access ? undefined : agent.id, email: agent.email },
     });
     if (error || !data?.setupUrl) {
       console.error("Setup link generation failed:", error);
-      toast.error("Could not generate setup link");
+      const reason = await resolveEdgeFunctionErrorMessage(error, data);
+      toast.error(reason || "Could not generate setup link");
       return null;
     }
     return data.setupUrl as string;

@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1789325554904,
+      "tag": "0000_issue_setup_tokens_without_email",
+      "breakpoints": true
+    }
+  ]
+}

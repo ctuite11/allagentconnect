@@ -7710,6 +7710,16 @@ export type Database = {
             }
             Returns: Json
           }
+      issue_agent_activation_token_no_email: {
+        Args: {
+          p_allow_previously_deleted?: boolean
+          p_expires_at: string
+          p_id: string
+          p_token_hash: string
+          p_user_id: string
+        }
+        Returns: Json
+      }
       issue_agent_login_token: {
         Args: {
           p_agent_name?: string
@@ -7718,6 +7728,15 @@ export type Database = {
           p_issuance_key: string
           p_reply_to?: string
           p_subject?: string
+          p_token_hash: string
+          p_user_id: string
+        }
+        Returns: Json
+      }
+      issue_agent_login_token_no_email: {
+        Args: {
+          p_expires_at: string
+          p_id: string
           p_token_hash: string
           p_user_id: string
         }
