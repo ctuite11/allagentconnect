@@ -283,25 +283,35 @@ Deno.serve(async (req) => {
     const settingsColumns =
       'user_id, agent_status, license_number, license_state, verified_at, account_activated_at, credentials_issued_at, approval_email_sent'
 
+    // Each chunk is read with an exact count and range paging. The row count
+    // we assemble must equal the count the server reports for the same
+    // filter; anything less means the read was truncated and we fail closed.
     const fetchSettingsChunk = async (
       chunk: string[],
     ): Promise<{ rows: AgentSettings[]; error: string | null }> => {
       const rows: AgentSettings[] = []
+      let expected: number | null = null
       let from = 0
-      // Guard against an unbounded loop if the server ever returns a full page
-      // without advancing; the chunk can never hold more rows than ids.
+      // The chunk can never contain more rows than ids (user_id is the PK).
       while (from < chunk.length) {
-        const to = from + SETTINGS_PAGE_SIZE - 1
-        const { data, error } = await adminClient
+        const { data, error, count } = await adminClient
           .from('agent_settings')
-          .select(settingsColumns)
+          .select(settingsColumns, { count: 'exact' })
           .in('user_id', chunk)
-          .range(from, to)
+          .range(from, from + SETTINGS_PAGE_SIZE - 1)
         if (error) return { rows, error: error.message }
+        if (typeof count === 'number') expected = count
         const page = (data ?? []) as AgentSettings[]
         rows.push(...page)
-        if (page.length < SETTINGS_PAGE_SIZE) break
+        if (page.length === 0) break
         from += page.length
+        if (expected !== null && rows.length >= expected) break
+      }
+      if (expected !== null && rows.length < expected) {
+        return {
+          rows,
+          error: `incomplete settings read: got ${rows.length} of ${expected} rows for a ${chunk.length}-id chunk`,
+        }
       }
       return { rows, error: null }
     }
@@ -319,39 +329,6 @@ Deno.serve(async (req) => {
       settings.push(...chunkRows)
     }
 
-    // Completeness check: every settings row we read must belong to a
-    // requested id, and a truncated read (fewer distinct ids than the DB
-    // actually holds for this roster) must fail closed rather than render
-    // agents as "unknown"/Pending.
-    const distinctSettingsIds = new Set(settings.map(s => s.user_id))
-    const { count: expectedSettingsCount, error: settingsCountError } = await adminClient
-      .from('agent_settings')
-      .select('user_id', { count: 'exact', head: true })
-    if (settingsCountError) {
-      console.error('[admin-list-agents] Settings count error:', settingsCountError.message)
-      return new Response(
-        JSON.stringify({ error: 'Failed to verify agent settings completeness' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
-    // Settings rows can exist for users without a profile, so the expected
-    // total is an upper bound; what must hold is that we never read fewer
-    // distinct rows than the number of profiles that actually have settings.
-    if (
-      typeof expectedSettingsCount === 'number' &&
-      distinctSettingsIds.size > expectedSettingsCount
-    ) {
-      console.error(
-        `[admin-list-agents] Settings completeness check failed: read ${distinctSettingsIds.size} of ${expectedSettingsCount}`,
-      )
-      return new Response(
-        JSON.stringify({ error: 'Agent settings read was incomplete' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
-    if (distinctSettingsIds.size !== settings.length) {
-      console.error('[admin-list-agents] Duplicate settings rows detected')
-    }
 
 
     console.log('[admin-list-agents] Settings fetched:', settings?.length ?? 0)
