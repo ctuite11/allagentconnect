@@ -2770,7 +2770,12 @@ const AddListing = () => {
 
   // Handler for "Save Changes" in edit mode - preserves current status (does NOT force draft)
   const handleSaveChanges = async (isAutoSave = false) => {
+    if (isConciergeMode) {
+      // Concierge listings are draft-only: route every save to Save Draft.
+      return handleSaveDraft(isAutoSave);
+    }
     // Get fresh user from server - single source of truth
+
     const freshUser = await getFreshUserOrRedirect();
     if (!freshUser) {
       return; // getFreshUserOrRedirect already shows toast and redirects
@@ -2994,12 +2999,13 @@ const AddListing = () => {
 
   // Keep autosave runner current for skipped-tick re-arm (session options close over this ref).
   runAutosaveRef.current = () => {
-    if (listingId && backendStatusRef.current && backendStatusRef.current !== "draft") {
+    if (!isConciergeMode && listingId && backendStatusRef.current && backendStatusRef.current !== "draft") {
       void handleSaveChanges(true);
     } else {
       void handleSaveDraft(true);
     }
   };
+
 
   // Helper to save form data and navigate to manage photos
   const handleNavigateToManagePhotos = async () => {
@@ -3102,7 +3108,13 @@ const AddListing = () => {
 
   const handleSubmit = async (e: React.FormEvent, publishNow: boolean = true) => {
     e.preventDefault();
+    if (isConciergeMode) {
+      // AAC staff can never publish on a member's behalf.
+      toast.error("Concierge listings are saved as a draft for the member to publish.");
+      return;
+    }
     setSubmitting(true);
+
 
     try {
       // Get fresh user from server FIRST - single source of truth for identity
