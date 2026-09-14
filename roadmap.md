@@ -26,4 +26,4 @@
 - [ ] Admin "Send to Agent for Review" action
 
 ## Read-only verification: Copy setup link (30-day, silent)
-- [ ] Confirm token paths, no-email variants, 30-day TTL, hash-only persistence, token replacement, email flows unchanged, wording, type-check + build — no tokens issued
+- [x] Confirm token paths, no-email variants, 30-day TTL, hash-only persistence, token replacement, email flows unchanged, wording, type-check + build — no tokens issued
