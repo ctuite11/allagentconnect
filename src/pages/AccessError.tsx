@@ -18,20 +18,34 @@ const AccessError = () => {
 
   const resetSession = async () => {
     setResetting(true);
+    // Clear the browser-held session first. During a backend outage the auth
+    // client's internal lock can stall signOut(), which previously left this
+    // button spinning forever and trapped the user on this page.
     try {
-      await supabase.auth.signOut({ scope: "local" });
-    } catch {
-      // ignore — we clear storage below regardless
-    }
-    try {
-      for (const key of Object.keys(window.localStorage)) {
-        if (key.startsWith("sb-") && key.endsWith("-auth-token")) {
-          window.localStorage.removeItem(key);
+      for (const storage of [window.localStorage, window.sessionStorage]) {
+        for (const key of Object.keys(storage)) {
+          if (
+            (key.startsWith("sb-") && key.endsWith("-auth-token")) ||
+            key.startsWith("aac_")
+          ) {
+            storage.removeItem(key);
+          }
         }
       }
     } catch {
       // storage may be unavailable
     }
+
+    const fallback = window.setTimeout(() => window.location.replace("/auth"), 750);
+    try {
+      await Promise.race([
+        supabase.auth.signOut({ scope: "local" }),
+        new Promise<void>((resolve) => window.setTimeout(resolve, 500)),
+      ]);
+    } catch {
+      // Browser storage is already clear; never block navigation on sign-out.
+    }
+    window.clearTimeout(fallback);
     window.location.replace("/auth");
   };
 
