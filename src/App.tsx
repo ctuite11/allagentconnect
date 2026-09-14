@@ -213,6 +213,7 @@ import { Skeleton } from "./components/ui/skeleton";
 import { SharedListingGuestProvider } from "./contexts/SharedListingGuestContext";
 import { SharedListingGate } from "./components/SharedListingGate";
 import { decideLegacyDashboardRoute } from "./lib/legacyDashboardRoute";
+import { CONCIERGE_LISTINGS_ENABLED } from "./config/featureFlags";
 
 /** Legacy `/dashboard` → role-appropriate home (buyers must land on `/client/dashboard`). */
 function LegacyDashboardRedirect() {
