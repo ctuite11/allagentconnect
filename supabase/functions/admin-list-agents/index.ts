@@ -124,6 +124,8 @@ function deriveEmailStatus(row: {
 }
 
 Deno.serve(async (req) => {
+  const requestStartedAt = Date.now()
+
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
@@ -360,7 +362,7 @@ Deno.serve(async (req) => {
         email: p.email,
         phone: p.phone,
         company: p.company,
-        bio: p.bio,
+        bio: null,
         license_number: s?.license_number ?? null,
         license_state: s?.license_state ?? null,
         agent_status: s?.agent_status ?? 'unknown',
