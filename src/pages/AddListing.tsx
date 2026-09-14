@@ -3642,27 +3642,38 @@ const AddListing = () => {
                       <AddListingStatusHelp />
                     </div>
                     <Select 
-                      value={formData.status} 
+                      value={isConciergeMode ? "draft" : formData.status} 
                       onValueChange={handleStatusChange}
-                      disabled={formData.status === LISTING_STATUS.CANCELLED || formData.status === LISTING_STATUS.SOLD}
+                      disabled={isConciergeMode || formData.status === LISTING_STATUS.CANCELLED || formData.status === LISTING_STATUS.SOLD}
                     >
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {(!listingId ? ADD_LISTING_CREATE_STATUSES : ADD_LISTING_EDIT_STATUSES).map((opt) => (
-                          <SelectItem key={opt.value} value={opt.value}>
-                            {opt.label}
-                          </SelectItem>
-                        ))}
+                        {isConciergeMode ? (
+                          <SelectItem value="draft">Draft</SelectItem>
+                        ) : (
+                          (!listingId ? ADD_LISTING_CREATE_STATUSES : ADD_LISTING_EDIT_STATUSES).map((opt) => (
+                            <SelectItem key={opt.value} value={opt.value}>
+                              {opt.label}
+                            </SelectItem>
+                          ))
+                        )}
                       </SelectContent>
                     </Select>
+                    {isConciergeMode && (
+                      <p className="mt-1 flex items-center gap-1 text-xs text-neutral-600">
+                        <Lock className="h-3 w-3" />
+                        Saved as a draft — the member publishes it from their own account.
+                      </p>
+                    )}
                     {(formData.status === LISTING_STATUS.CANCELLED || formData.status === LISTING_STATUS.SOLD) && (
                       <p className="mt-1 flex items-center gap-1 text-xs text-amber-600">
                         <AlertCircle className="h-3 w-3" />
                         Final state — status and price cannot be changed.
                       </p>
                     )}
+
                   </div>
 
                   <div className="space-y-2">
