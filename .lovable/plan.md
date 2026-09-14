@@ -10,7 +10,7 @@ Extends the concierge feature so the prepared draft is handed off entirely throu
 
 ## Admin workflow
 
-1. Admin picks a verified, activated member and prepares the draft (already built).
+1. Admin picks a **verified** member — activated or not yet activated — and prepares the draft. Non-verified people are never eligible. (The admin member picker shows verified members, including not-yet-activated ones.)
 2. When ready, admin presses **Send to Agent for Review** on that draft.
 3. A confirmation appears naming the member and the email address it will go to.
 4. The email is queued and sent. The draft page then shows "Review email sent to <name> on <date>", plus a "Send again" option.
@@ -45,7 +45,7 @@ Nothing publishes from an email click. Both buttons are navigation only; mail sc
 
 - Already signed in: the link lands directly on the review (or edit) screen for that draft.
 - Not signed in: the existing secure sign-in-link flow runs, then delivers them to that same screen. The member presses one "Sign In" button; the link is single-use and never exposes credentials or account information.
-- Never activated their account: the existing activation/setup flow runs first, then delivers them to the draft.
+- Never activated their account: the review email carries the existing 30-day AAC activation/setup token; after they complete activation they land directly on the draft's Review or Edit screen — never the dashboard. This is intentional: seeing their listing already prepared gives not-yet-activated members a concrete reason to activate.
 
 No dashboard navigation, no searching, no "find my drafts".
 
@@ -67,7 +67,7 @@ Email opens/clicks use only the tracking the AAC email system already does. No n
 **Deep links and auth**
 - Email buttons point at `/agent/listings/review/<id>` and `/agent/listings/edit/<id>`.
 - For unauthenticated recipients the buttons point at the existing `/signin-link#t=<token>` page with a `returnTo` value carried to the destination; `AuthCallback` already honours `returnTo` via `resolvePostAuthRedirectWithMeta`, and `sanitizePostAuthRedirectCandidate` keeps it internal-only. `redeem-login-token` / `redeem-activation-token` stay POST-only and must thread the destination through the generated `redirectTo` rather than accepting it from a GET.
-- Tokens are issued with the existing 30-day AAC token RPCs. The review email needs a token issued *with* the email (the emailing RPCs), unlike the admin copy-link path which uses the `_no_email` variants.
+- Tokens are issued with the existing 30-day AAC token RPCs, chosen by the member's actual activation state at send time: activated member → login token; not-yet-activated member → activation/setup token. Activation state is read from `agent_settings.account_activated_at` only. The review email needs a token issued *with* the email (the emailing RPCs), unlike the admin copy-link path which uses the `_no_email` variants.
 
 **Email**
 - New shared builder `buildConciergeReviewEmailHtml.ts` reusing `renderSearchStyleListingEmailCard` from `_shared/listingEmailCard.ts` and the AAC unified template wrapper, so branding and the unsubscribe/category handling stay identical.
@@ -75,14 +75,15 @@ Email opens/clicks use only the tracking the AAC email system already does. No n
 - Individual, person-to-person send — it should appear in the admin "Last Email" column and be excluded from all bulk paths.
 
 **Edge functions**
-- New `send-concierge-review-email` (admin JWT + `has_role('admin')` gate): loads the draft, confirms `creation_source='admin_concierge'` and `status='draft'`, confirms the target agent is verified + activated, issues the token, enqueues the job, stamps the sent metadata. Sends nothing else.
+- New `send-concierge-review-email` (admin JWT + `has_role('admin')` gate): loads the draft, confirms `creation_source='admin_concierge'` and `status='draft'`, confirms the target agent is **verified** (`agent_status='verified'`, regardless of `account_activated_at`), issues the login or activation token by activation state, enqueues the job, stamps the sent metadata. Sends nothing else.
+- `admin-create-listing-for-agent` and `admin-manage-concierge-listing` eligibility changes to match: target must be a **verified** member, activated or not — so staff can prepare drafts for not-yet-activated members.
 - `admin-create-listing-for-agent` and `admin-manage-concierge-listing` are unchanged and remain silent.
 
 **Storage of send metadata**
 - Sent timestamp / recipient / sender recorded through the existing `listing_audit_events` trail, avoiding any schema migration. If a column-backed indicator is preferred on the admin list, that would be an additive nullable column — flag before doing it.
 
 **Unchanged**
-- No RLS changes, no impersonation, no credentials, no existing template edits, no changes to listing status rules, alerts, Hot Sheets or Comms. Concierge drafts remain draft-only for staff; only the member can publish.
+- No RLS changes, no impersonation, no credentials, no existing template edits, no changes to listing status rules, alerts, Hot Sheets or Comms. Concierge drafts remain draft-only for staff; only the member can publish. Eligibility is verified-only (activated or not); non-verified people remain ineligible everywhere.
 
 ## Testing
 
