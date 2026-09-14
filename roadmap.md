@@ -32,3 +32,5 @@
 
 ## Read-only verification: Copy setup link (30-day, silent)
 - [x] Confirm token paths, no-email variants, 30-day TTL, hash-only persistence, token replacement, email flows unchanged, wording, type-check + build — no tokens issued
+
+- [ ] Urgent: resolve post-login spinning “no access” state after Cloud outage
