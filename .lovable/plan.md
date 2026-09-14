@@ -1,71 +1,89 @@
-# Admin "Create Listing for Agent" (Concierge)
+# Concierge Handoff: "Send to Agent for Review" Email
 
-AAC staff enter a listing on behalf of an existing member. No sign-in as the agent, no impersonation, no access to passwords or account credentials.
+Extends the concierge feature so the prepared draft is handed off entirely through one email. The member sees the listing we prepared, then either publishes it or edits it — with no hunting inside AAC.
 
-## What the audit found
+## Answers to your two questions
 
-- Every listing already stores an owner (`agent_id`) plus internal creation fields that are perfect for this: who entered it, what source it came from, which function created it, and a request ID. There is also a separate internal audit log that records every listing creation, update and deletion with the acting person and timestamp.
-- Today the rules only allow someone to save a listing under their own name. An admin cannot save a listing under another member's name from the browser — so this needs a small server-side action instead of loosening those rules.
-- The system already accepts an admin-entered listing at the database level and records it as an admin action, so no security rules need to be weakened.
-- Statuses in use: Draft, Coming Soon, Active, Pending, Under Contract, Sold, Cancelled, Withdrawn, Temporarily Withdrawn, Off Market, Expired, Back on Market. All existing status rules and validations stay exactly as they are.
+**Does this need new email template / queue work?** Yes, but only additive. It needs one new email template (the listing-preview handoff email) added to the existing AAC unified email system, and one new queue entry type so the email is sent through the same queue every other AAC email already uses. No changes to any existing template, and no changes to how the queue works.
 
-## Will this send any emails or alerts?
+**Does creating a draft stay silent?** Yes. Creating and editing a concierge draft sends nothing. The only thing that ever sends an email is an admin explicitly pressing "Send to Agent for Review". That is a deliberate, separate action with a confirmation step.
 
-- **Draft sends nothing.** New listing alerts and Hot Sheet matching only fire for live statuses (Active, Coming Soon, Off Market, etc.). A draft is completely silent.
-- **Any live status sends the normal alerts** — exactly the same ones a member's own listing would send. Nothing new is added.
+## Admin workflow
 
-Because of that, concierge listings are **created as Draft**. The member reviews and publishes it themselves, at which point normal alerts fire as usual. An admin can still publish directly, but only through an explicit "publish now" confirmation that warns alerts will go out.
+1. Admin picks a verified, activated member and prepares the draft (already built).
+2. When ready, admin presses **Send to Agent for Review** on that draft.
+3. A confirmation appears naming the member and the email address it will go to.
+4. The email is queued and sent. The draft page then shows "Review email sent to <name> on <date>", plus a "Send again" option.
 
-Testing safety: all testing is done with Draft listings only, and the email queue is checked before and after to confirm zero new rows. No test listing is published.
+## The email the member receives
 
-## Workflow
+Branded as AAC, with a preview built from the actual draft:
 
-1. Admin opens **Create Listing for Agent** from the Admin area.
-2. Admin searches the member directory by name, email or brokerage and selects the member. Only verified, activated members are selectable. No account or login information is shown — name, brokerage, public email only.
-3. Admin fills in the same listing form used by the normal Add Listing flow (same fields, same validation, same address verification, same photo handling).
-4. Saving creates the listing owned by the selected member, as a Draft.
-5. The member signs in and sees it in their listings like any other — edit, publish, or remove, with normal public attribution as the listing agent.
+- Main listing photo
+- Address
+- Price (or price range)
+- Intended status (Draft / Coming Soon / Off Market) where applicable
+- Beds / baths / square feet / property type
+- Short description
+- Framing line: "We prepared this listing for you. Review it below, then publish it as-is or make any changes first."
 
-## Audit trail
+Then two large buttons:
 
-Stored internally on the listing and in the listing audit log, never shown publicly:
+- **Review & Publish Listing**
+- **Edit / Update Listing**
 
-- owning member
-- admin who entered it (user ID)
-- created timestamp
-- source marked `admin_concierge`
+Wording never implies AAC accessed their account. No "we added this to your account", no "we logged in for you".
 
-Visible only inside Admin (a small "Entered by AAC staff" note on the admin view of that listing).
+## Publish safety
 
-## Technical changes
+Nothing publishes from an email click. Both buttons are navigation only; mail scanners that auto-open links cannot publish, edit, or consume a sign-in token.
 
-**No schema migration required.** `listings.created_by_user_id`, `creation_source`, `created_via_function`, `creation_request_id` and `listing_audit_events` already exist and already capture this. `listings_enforce_eligible_creator` already stamps them on insert.
+- "Review & Publish" lands on a new review screen for that draft where the member sees the full listing and presses Publish themselves.
+- Publishing only ever happens from that explicit in-app confirmation.
 
-**No RLS changes.** Existing policies stay byte-for-byte:
-- `Verified agents can create listings` (own account only) unchanged — normal agents still cannot assign listings to anyone else.
-- Owner read/update/delete policies unchanged, so the member controls the listing normally.
+## Getting them straight to the listing
 
-**New Edge Function `admin-create-listing-for-agent`**
-- Verifies the caller's JWT and `has_role(uid,'admin')`; rejects everyone else.
-- Validates the target is an existing verified + activated agent.
-- Inserts with the service role: `agent_id = target`, `status = 'draft'`, `created_by_user_id = admin uid`, `creation_source = 'admin_concierge'`, `created_via_function = 'admin-create-listing-for-agent'`, plus a request ID for idempotency.
-- Returns the new listing ID. Sends no email and enqueues no job.
-- A second action `admin-update-listing-for-agent` (same gate) so an admin can keep editing the draft before handing it off, since admins cannot read another member's draft directly.
+- Already signed in: the link lands directly on the review (or edit) screen for that draft.
+- Not signed in: the existing secure sign-in-link flow runs, then delivers them to that same screen. The member presses one "Sign In" button; the link is single-use and never exposes credentials or account information.
+- Never activated their account: the existing activation/setup flow runs first, then delivers them to the draft.
 
-**Frontend**
-- New route `/admin/create-listing` (admin-guarded like other admin pages).
-- Step 1: agent picker (reuses the existing admin agent list; no auth data).
-- Step 2: reuses the existing Add Listing form in a "concierge" mode — same fields and validation, but saves through the Edge Function instead of a direct write, and the status selector is locked to Draft unless the admin explicitly confirms publishing.
-- Admin listing view shows the internal "Entered by AAC staff on <date> by <admin>" note.
-- Nothing in the member-facing or public UI changes.
+No dashboard navigation, no searching, no "find my drafts".
 
-## Out of scope
+## What gets recorded
 
-No scraping or automated import. No changes to emails, notifications, Hot Sheets, Comms, listing alerts, status rules, validations, or existing RLS. No migrations applied and nothing deployed until you approve.
+Using systems already in place:
 
-## Verification before handing back
+- Draft created (owner, admin who entered it, timestamp, source) — already recorded.
+- Review email sent: timestamp, recipient, listing ID, admin who sent it.
+- Publish: recorded by the existing listing audit system when the member publishes.
 
-- Create a concierge draft for a test member: confirm owner is the member, admin is recorded as creator, source is `admin_concierge`.
-- Confirm the member can see, edit and delete it; confirm a non-admin cannot call the new action.
-- Confirm `email_jobs` count is identical before and after, and no Hot Sheet event rows are created.
-- Type-check and production build pass. Deploy the Edge Functions only; frontend publish waits for your go-ahead.
+Email opens/clicks use only the tracking the AAC email system already does. No new invasive tracking is added.
+
+## Technical section
+
+**New review screen**
+- Route `/agent/listings/review/:id` (agent-guarded), read-only summary of the draft plus "Publish listing" and "Edit listing" actions. Publish reuses the existing AddListing publish path (status transition, first-publish photo-order confirmation, normal alert/Hot Sheet triggers) — no new publish logic, no new status rules.
+
+**Deep links and auth**
+- Email buttons point at `/agent/listings/review/<id>` and `/agent/listings/edit/<id>`.
+- For unauthenticated recipients the buttons point at the existing `/signin-link#t=<token>` page with a `returnTo` value carried to the destination; `AuthCallback` already honours `returnTo` via `resolvePostAuthRedirectWithMeta`, and `sanitizePostAuthRedirectCandidate` keeps it internal-only. `redeem-login-token` / `redeem-activation-token` stay POST-only and must thread the destination through the generated `redirectTo` rather than accepting it from a GET.
+- Tokens are issued with the existing 30-day AAC token RPCs. The review email needs a token issued *with* the email (the emailing RPCs), unlike the admin copy-link path which uses the `_no_email` variants.
+
+**Email**
+- New shared builder `buildConciergeReviewEmailHtml.ts` reusing `renderSearchStyleListingEmailCard` from `_shared/listingEmailCard.ts` and the AAC unified template wrapper, so branding and the unsubscribe/category handling stay identical.
+- New template name (e.g. `concierge-listing-review`) enqueued into `email_jobs` with the correct category; the plaintext token is never stored — the job carries the token id and the worker re-derives it at send time, matching `hydrateLoginLinkEmail`.
+- Individual, person-to-person send — it should appear in the admin "Last Email" column and be excluded from all bulk paths.
+
+**Edge functions**
+- New `send-concierge-review-email` (admin JWT + `has_role('admin')` gate): loads the draft, confirms `creation_source='admin_concierge'` and `status='draft'`, confirms the target agent is verified + activated, issues the token, enqueues the job, stamps the sent metadata. Sends nothing else.
+- `admin-create-listing-for-agent` and `admin-manage-concierge-listing` are unchanged and remain silent.
+
+**Storage of send metadata**
+- Sent timestamp / recipient / sender recorded through the existing `listing_audit_events` trail, avoiding any schema migration. If a column-backed indicator is preferred on the admin list, that would be an additive nullable column — flag before doing it.
+
+**Unchanged**
+- No RLS changes, no impersonation, no credentials, no existing template edits, no changes to listing status rules, alerts, Hot Sheets or Comms. Concierge drafts remain draft-only for staff; only the member can publish.
+
+## Testing
+
+Draft-only test listing, sent to an AAC-controlled address; verify a single queued email, correct preview content, both links landing on the right screens signed-out and signed-in, no publish possible from a link fetch, no Hot Sheet rows before the member publishes, then delete the test listing.
