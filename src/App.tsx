@@ -145,6 +145,8 @@ const MyListings = React.lazy(() => import("./pages/MyListings"));
 const ManageListingPhotos = React.lazy(() => import("./pages/ManageListingPhotos"));
 const AdminApprovals = React.lazy(() => import("./pages/AdminApprovals"));
 const AdminDebugAuth = React.lazy(() => import("./pages/AdminDebugAuth"));
+const AdminConciergeListings = React.lazy(() => import("./pages/AdminConciergeListings"));
+
 const AdminMatches = React.lazy(() => import("./pages/AdminMatches"));
 const AdminConsumers = React.lazy(() => import("./pages/AdminConsumers"));
 const AdminInviteAudit = React.lazy(() => import("./pages/AdminInviteAudit"));
