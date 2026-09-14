@@ -21,6 +21,13 @@ The whole roster (about 800 people, including bios) is then sent to the browser 
 
 Nothing about what the page shows changes: same people, same counts, same statuses, same columns, same actions. No emails are sent or queued.
 
+## Last Email column - what it counts
+
+Today that column shows the newest email of any type from an allowed list, and that list still includes mass sends: `bulk-email` (1,284 rows), plus the scheduled campaign emails `agent-activation-nudge` and `agent-missing-opportunities`. So a blast can hide the last personal email you sent that agent.
+
+Fix: restrict the column to individual, person-to-person sends - invites and setup/login links, the ad-hoc admin email, the founder/forward invites, License Verified, verification submitted, approval accepted, account removed, delegate invite, team approved/requested. Mass sends (`bulk-email`, hot sheet blasts, listing alerts, client-need broadcasts, digests, match/message notifications) stay excluded. If an agent has only ever received blasts, the column reads "-".
+
+
 ## Technical details
 
 - `supabase/functions/admin-list-agents/index.ts`: remove the trailing `admin_agent_email_summary` call from the main response; issue profiles / settings / early access / pending_verifications concurrently; replace the chunked `.in(user_id)` settings reads with one full-table select (501 rows); omit `bio` from the select list.
