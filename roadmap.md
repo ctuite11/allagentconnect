@@ -24,3 +24,6 @@
 - [ ] returnTo carried through /signin-link (login token) and /activate (activation token)
 - [ ] Agent review/publish screen at /agent/listings/review/:id
 - [ ] Admin "Send to Agent for Review" action
+
+## Read-only verification: Copy setup link (30-day, silent)
+- [x] Confirm token paths, no-email variants, 30-day TTL, hash-only persistence, token replacement, email flows unchanged, wording, type-check + build — no tokens issued
