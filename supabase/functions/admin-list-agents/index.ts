@@ -498,59 +498,12 @@ Deno.serve(async (req) => {
     }
     allAgents.sort((a, b) => recency(b) - recency(a))
 
-    // Fetch per-recipient email status through a targeted, read-only RPC.
-    // It returns at most 3 rows per recipient (newest email of any template,
-    // newest admin-created-invite, newest license-verified) instead of the
-    // entire email_jobs history. No template, sender, or Resend config is
-    // touched here.
-    try {
-      const recipients = Array.from(
-        new Set(allAgents.map(a => (a.email ?? '').toLowerCase()).filter(Boolean)),
-      )
-      if (recipients.length > 0) {
-        const { data: rows, error: jobsErr } = await adminClient.rpc('admin_agent_email_summary', {
-          _emails: recipients,
-          _templates: ['admin-created-invite', 'license-verified'],
-        })
-        if (jobsErr) {
-          console.error('[admin-list-agents] admin_agent_email_summary error:', jobsErr.message)
-        } else if (rows) {
-          const latest = new Map<string, EmailStatusInfo>()
-          const latestAny = new Map<string, { sent_at: string; template: string | null; status: string | null }>()
-          for (const j of rows as any[]) {
-            const to = String(j?.email ?? '').toLowerCase()
-            if (!to) continue
-            const template = String(j?.template ?? '')
-            if (j.kind === 'latest') {
-              latestAny.set(to, {
-                sent_at: j.created_at,
-                template: template || null,
-                status: deriveEmailStatus(j) ?? null,
-              })
-            } else if (template) {
-              latest.set(`${to}::${template}`, {
-                status: deriveEmailStatus(j),
-                created_at: j.created_at,
-                event_at: j.delivery_status_at ?? null,
-                attempts: j.attempts ?? null,
-                last_error: j.last_error ?? null,
-              })
-            }
-          }
-          for (const a of allAgents) {
-            const key = (a.email ?? '').toLowerCase()
-            if (!key) continue
-            const inv = latest.get(`${key}::admin-created-invite`)
-            const lic = latest.get(`${key}::license-verified`)
-            if (inv) a.invite_email = inv
-            if (lic) a.license_verified_email = lic
-            a.last_email = latestAny.get(key) ?? null
-          }
-        }
-      }
-    } catch (e) {
-      console.error('[admin-list-agents] email summary exception:', e)
-    }
+    // Per-recipient email status (Last Email / Invite / License Verified) is
+    // NOT fetched here any more — it was ~3s of a ~6-7s admin page load. The
+    // page calls the dedicated `admin-agent-email-summary` function right
+    // after this response lands and merges the columns in.
+
+
 
 
     // Recalculate status distribution with early access included
