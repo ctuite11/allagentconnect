@@ -69,6 +69,11 @@ verify_jwt = false
 [functions.admin-list-agents]
 verify_jwt = false
 
+[functions.admin-agent-email-summary]
+verify_jwt = false
+
+
+
 [functions.convert-early-access-to-account]
 verify_jwt = true
 

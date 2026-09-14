@@ -777,6 +777,10 @@ export default function AdminApprovals() {
       setAgents(enriched);
       if (user?.id) writeAdminAgentsCache(user.id, enriched);
 
+      // Email columns (Last Email / Invite / License Verified) load right
+      // after the table so they never delay the roster.
+      void fetchEmailSummary(enriched);
+
     } catch (error) {
       console.error("Unexpected error:", error);
       toast.error("Failed to load agents");
@@ -784,6 +788,63 @@ export default function AdminApprovals() {
       setLoading(false);
     }
   };
+
+  /**
+   * Second-stage load: per-recipient email status. Merged into the rendered
+   * agents; a failure leaves the columns blank and is logged, never fatal.
+   */
+  const fetchEmailSummary = async (loaded: Agent[]) => {
+    const emails = Array.from(
+      new Set(
+        loaded
+          .map((a) => (a.email ?? "").trim().toLowerCase())
+          .filter(Boolean),
+      ),
+    );
+    if (emails.length === 0) return;
+    try {
+      const { data, error } = await supabase.functions.invoke(
+        "admin-agent-email-summary",
+        { body: { emails } },
+      );
+      if (error) {
+        console.error("[AdminApprovals] email summary error:", error);
+        return;
+      }
+      const summaries = (data as {
+        summaries?: Record<
+          string,
+          {
+            last_email?: Agent["last_email"];
+            invite_email?: Agent["invite_email"];
+            license_verified_email?: Agent["license_verified_email"];
+          }
+        >;
+      })?.summaries;
+      if (!summaries) return;
+
+      const merge = (list: Agent[]) =>
+        list.map((a) => {
+          const s = summaries[(a.email ?? "").trim().toLowerCase()];
+          if (!s) return a;
+          return {
+            ...a,
+            last_email: s.last_email ?? null,
+            invite_email: s.invite_email ?? null,
+            license_verified_email: s.license_verified_email ?? null,
+          };
+        });
+
+      setAgents((prev) => {
+        const merged = merge(prev);
+        if (user?.id) writeAdminAgentsCache(user.id, merged);
+        return merged;
+      });
+    } catch (e) {
+      console.error("[AdminApprovals] email summary exception:", e);
+    }
+  };
+
 
   const fetchAgents = (opts?: { background?: boolean; force?: boolean }): Promise<void> => {
     if (!isAdmin) return Promise.resolve();

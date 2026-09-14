@@ -124,6 +124,8 @@ function deriveEmailStatus(row: {
 }
 
 Deno.serve(async (req) => {
+  const requestStartedAt = Date.now()
+
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
@@ -214,10 +216,13 @@ Deno.serve(async (req) => {
     })()
 
 
+    // `bio` is deliberately not selected — the admin table never renders it
+    // and it is the largest text column on agent_profiles.
     const profilesPromise = adminClient
       .from('agent_profiles')
-      .select('id, aac_id, first_name, last_name, email, phone, company, bio, headshot_url, created_at')
+      .select('id, aac_id, first_name, last_name, email, phone, company, headshot_url, created_at')
       .order('created_at', { ascending: false })
+
 
     const earlyAccessPromise = adminClient
       .from('agent_early_access')
@@ -268,36 +273,71 @@ Deno.serve(async (req) => {
     // previously degraded silently into `unknown` status for every agent
     // (rendered as a bogus wall of "Pending"). Chunk the lookup, and treat any
     // chunk failure as a hard load error instead of returning unknown statuses.
+    //
+    // Each chunk is also range-paged: PostgREST caps rows per response, so a
+    // chunk that returns exactly the requested size is re-read from the next
+    // offset until it is exhausted. A chunk that still looks truncated after
+    // paging is a hard error — never a silent fallback to unknown statuses.
     const userIds = profiles.map(p => p.id)
     const SETTINGS_CHUNK_SIZE = 200
+    const SETTINGS_PAGE_SIZE = 1000
     const settingsChunks: string[][] = []
     for (let i = 0; i < userIds.length; i += SETTINGS_CHUNK_SIZE) {
       settingsChunks.push(userIds.slice(i, i + SETTINGS_CHUNK_SIZE))
     }
-    // Chunks are independent — run them concurrently, but any chunk failure is
-    // still a hard load error (never a silent fallback to unknown statuses).
-    const settingsResults = await Promise.all(
-      settingsChunks.map(chunk =>
-        adminClient
+    const settingsColumns =
+      'user_id, agent_status, license_number, license_state, verified_at, account_activated_at, credentials_issued_at, approval_email_sent'
+
+    // Each chunk is read with an exact count and range paging. The row count
+    // we assemble must equal the count the server reports for the same
+    // filter; anything less means the read was truncated and we fail closed.
+    const fetchSettingsChunk = async (
+      chunk: string[],
+    ): Promise<{ rows: AgentSettings[]; error: string | null }> => {
+      const rows: AgentSettings[] = []
+      let expected: number | null = null
+      let from = 0
+      // The chunk can never contain more rows than ids (user_id is the PK).
+      while (from < chunk.length) {
+        const { data, error, count } = await adminClient
           .from('agent_settings')
-          .select('user_id, agent_status, license_number, license_state, verified_at, account_activated_at, credentials_issued_at, approval_email_sent')
+          .select(settingsColumns, { count: 'exact' })
           .in('user_id', chunk)
-      )
-    )
+          .range(from, from + SETTINGS_PAGE_SIZE - 1)
+        if (error) return { rows, error: error.message }
+        if (typeof count === 'number') expected = count
+        const page = (data ?? []) as AgentSettings[]
+        rows.push(...page)
+        if (page.length === 0) break
+        from += page.length
+        if (expected !== null && rows.length >= expected) break
+      }
+      if (expected !== null && rows.length < expected) {
+        return {
+          rows,
+          error: `incomplete settings read: got ${rows.length} of ${expected} rows for a ${chunk.length}-id chunk`,
+        }
+      }
+      return { rows, error: null }
+    }
+
+    const settingsResults = await Promise.all(settingsChunks.map(fetchSettingsChunk))
     const settings: AgentSettings[] = []
-    for (const { data: chunkRows, error: settingsError } of settingsResults) {
+    for (const { rows: chunkRows, error: settingsError } of settingsResults) {
       if (settingsError) {
-        console.error('[admin-list-agents] Settings error:', settingsError.message)
+        console.error('[admin-list-agents] Settings error:', settingsError)
         return new Response(
           JSON.stringify({ error: 'Failed to fetch agent settings' }),
           { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
       }
-      if (chunkRows) settings.push(...(chunkRows as AgentSettings[]))
+      settings.push(...chunkRows)
     }
 
 
+
     console.log('[admin-list-agents] Settings fetched:', settings?.length ?? 0)
+
 
     // Merge profiles with settings
     const settingsByUser = new Map<string, AgentSettings>(
@@ -322,7 +362,7 @@ Deno.serve(async (req) => {
         email: p.email,
         phone: p.phone,
         company: p.company,
-        bio: p.bio,
+        bio: null,
         license_number: s?.license_number ?? null,
         license_state: s?.license_state ?? null,
         agent_status: s?.agent_status ?? 'unknown',
@@ -498,59 +538,12 @@ Deno.serve(async (req) => {
     }
     allAgents.sort((a, b) => recency(b) - recency(a))
 
-    // Fetch per-recipient email status through a targeted, read-only RPC.
-    // It returns at most 3 rows per recipient (newest email of any template,
-    // newest admin-created-invite, newest license-verified) instead of the
-    // entire email_jobs history. No template, sender, or Resend config is
-    // touched here.
-    try {
-      const recipients = Array.from(
-        new Set(allAgents.map(a => (a.email ?? '').toLowerCase()).filter(Boolean)),
-      )
-      if (recipients.length > 0) {
-        const { data: rows, error: jobsErr } = await adminClient.rpc('admin_agent_email_summary', {
-          _emails: recipients,
-          _templates: ['admin-created-invite', 'license-verified'],
-        })
-        if (jobsErr) {
-          console.error('[admin-list-agents] admin_agent_email_summary error:', jobsErr.message)
-        } else if (rows) {
-          const latest = new Map<string, EmailStatusInfo>()
-          const latestAny = new Map<string, { sent_at: string; template: string | null; status: string | null }>()
-          for (const j of rows as any[]) {
-            const to = String(j?.email ?? '').toLowerCase()
-            if (!to) continue
-            const template = String(j?.template ?? '')
-            if (j.kind === 'latest') {
-              latestAny.set(to, {
-                sent_at: j.created_at,
-                template: template || null,
-                status: deriveEmailStatus(j) ?? null,
-              })
-            } else if (template) {
-              latest.set(`${to}::${template}`, {
-                status: deriveEmailStatus(j),
-                created_at: j.created_at,
-                event_at: j.delivery_status_at ?? null,
-                attempts: j.attempts ?? null,
-                last_error: j.last_error ?? null,
-              })
-            }
-          }
-          for (const a of allAgents) {
-            const key = (a.email ?? '').toLowerCase()
-            if (!key) continue
-            const inv = latest.get(`${key}::admin-created-invite`)
-            const lic = latest.get(`${key}::license-verified`)
-            if (inv) a.invite_email = inv
-            if (lic) a.license_verified_email = lic
-            a.last_email = latestAny.get(key) ?? null
-          }
-        }
-      }
-    } catch (e) {
-      console.error('[admin-list-agents] email summary exception:', e)
-    }
+    // Per-recipient email status (Last Email / Invite / License Verified) is
+    // NOT fetched here any more — it was ~3s of a ~6-7s admin page load. The
+    // page calls the dedicated `admin-agent-email-summary` function right
+    // after this response lands and merges the columns in.
+
+
 
 
     // Recalculate status distribution with early access included
@@ -566,6 +559,13 @@ Deno.serve(async (req) => {
       acc[k] = (acc[k] || 0) + 1
       return acc
     }, {} as Record<string, number>)
+
+    console.log('[admin-list-agents] Lifecycle counts:', lifecycleCounts)
+    console.log(
+      `[admin-list-agents] roster=${allAgents.length} total_ms=${Date.now() - requestStartedAt}`,
+    )
+
+
 
     return new Response(
       JSON.stringify({
