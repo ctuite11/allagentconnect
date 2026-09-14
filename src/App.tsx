@@ -585,9 +585,13 @@ const App = () => (
                   <Route path="/admin/send-email" element={<AdminSendEmail />} />
                   <Route path="/admin/debug-auth" element={<AdminDebugAuth />} />
                   {/* Admin concierge: create/edit a draft listing on behalf of a member */}
-                  <Route path="/admin/concierge-listings" element={<RouteGuard requireRole="admin"><AdminConciergeListings /></RouteGuard>} />
-                  <Route path="/admin/concierge-listings/new" element={<RouteGuard requireRole="admin"><AddListing /></RouteGuard>} />
-                  <Route path="/admin/concierge-listings/:id" element={<RouteGuard requireRole="admin"><AddListing /></RouteGuard>} />
+                  {CONCIERGE_LISTINGS_ENABLED && (
+                    <>
+                      <Route path="/admin/concierge-listings" element={<RouteGuard requireRole="admin"><AdminConciergeListings /></RouteGuard>} />
+                      <Route path="/admin/concierge-listings/new" element={<RouteGuard requireRole="admin"><AddListing /></RouteGuard>} />
+                      <Route path="/admin/concierge-listings/:id" element={<RouteGuard requireRole="admin"><AddListing /></RouteGuard>} />
+                    </>
+                  )}
 
                   <Route path="/settings" element={<RouteGuard requireRole="agent"><AgentSettings /></RouteGuard>} />
                 </Route>
