@@ -2357,6 +2357,25 @@ const AddListing = () => {
         ...dcmlsSnapshot,
       };
 
+      if (isConciergeMode) {
+        // Admin concierge: owner is the selected member, created server-side.
+        if (!conciergeAgentId) {
+          console.error('ensureDraftListing: concierge mode without a selected member');
+          toast.error('Select a member before saving this listing.');
+          return null;
+        }
+        try {
+          const { agent_id: _ignoredAgentId, status: _ignoredStatus, ...conciergePayload } = minimalPayload;
+          const created = await createConciergeDraft(conciergeAgentId, conciergePayload);
+          console.log('ensureDraftListing: concierge draft created', created.id);
+          return { id: created.id };
+        } catch (err: any) {
+          console.error('ensureDraftListing: concierge create failed', err);
+          toast.error(err?.message || 'Unable to create draft listing');
+          return null;
+        }
+      }
+
       console.log('ensureDraftListing: Creating initial draft with payload:', minimalPayload);
 
       const { data, error } = await supabase
@@ -2380,6 +2399,7 @@ const AddListing = () => {
       return { id: data.id };
     });
   };
+
 
   // Helper to get fresh user from server - single source of truth for identity
   // Uses auth.getUser() which is server-verified, NOT cached state
