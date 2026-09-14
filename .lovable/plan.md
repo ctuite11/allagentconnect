@@ -1,38 +1,46 @@
-# Pending (unpublished) frontend work — inventory and publish decision
-
-Backend for Copy setup link is already live. The question is what else is sitting in the unpublished frontend.
+# Option B — test the review email, then publish
 
 ## What is already live
 
-The last publish was made right after the Admin Approvals speed work. The drawer wording change ("AAC activation/setup link (30 days, single-use)") landed **before** that publish, so production almost certainly already shows the new wording. I could not fetch the live site from here to confirm byte-for-byte, so treat this as high-confidence but unverified.
-
-The Admin Approvals speed pass (faster roster load, Last Email = personal sends only) and the Agent Network team search are both in that same published state.
+The last publish came after the Admin Approvals speed work, and the drawer wording change ("AAC activation/setup link (30 days, single-use)") landed before it — so production almost certainly already shows the new wording. The Admin Approvals speed pass and the Agent Network team search are live too.
 
 ## What is pending and would go live on the next publish
 
-Everything below is concierge-listing work; nothing else is waiting.
+Concierge listing work only — nothing else is waiting:
 
-1. **Create a listing for a member (admin page)** — new admin screen to pick a verified member, prepare a Draft listing for them, reopen drafts, and press "Send to agent for review".
-2. **Listing form in concierge mode** — the existing Add Listing form, saved through the admin-only server path, locked to Draft, no publish button for staff.
-3. **Review & Publish screen for members** — new page showing the prepared draft with Publish and Edit actions; Publish runs the normal publish flow.
-4. **Sign-in and activation links can return to a specific listing** — small additions so a member who follows the review email lands on that listing instead of the dashboard.
+1. Create-a-listing-for-a-member admin page (pick a verified member, prepare a Draft, reopen drafts, "Send to agent for review").
+2. Listing form in concierge mode — same form, locked to Draft, no publish button for staff.
+3. Review & Publish screen for members.
+4. Sign-in and activation links can return the member to a specific listing.
 
-Files: `AdminConciergeListings.tsx`, `ListingReview.tsx`, `conciergeListing.ts` (new); `AddListing.tsx`, `App.tsx`, `SignInLink.tsx`, `ActivateAccount.tsx`, `AgentAccountSetup.tsx` (modified). Nothing outside these.
+Files: `AdminConciergeListings.tsx`, `ListingReview.tsx`, `conciergeListing.ts` (new); `AddListing.tsx`, `App.tsx`, `SignInLink.tsx`, `ActivateAccount.tsx`, `AgentAccountSetup.tsx` (modified). The matching backend is already deployed, so the live site currently has no way to reach any of it.
 
-Note: the matching concierge backend functions are already deployed, so today the live site simply has no way to reach them. Publishing turns the feature on for admins; it changes nothing for members until staff actually send a review email.
+## Controlled end-to-end email test (before publishing)
 
-## Known open item before publishing the concierge feature
+Needs a test email address you control, and an AAC member account for the draft. No real member account is used or altered unless you name one.
 
-No live end-to-end test of the review email has been run — that would deliver a real email. A test address is needed first.
+Test steps:
+1. Create a concierge Draft against the designated test account with clearly fake property data.
+2. Press "Send to agent for review" and confirm exactly one email job is created.
+3. Confirm the email is delivered to the test address.
+4. Confirm the email shows the correct address, price, status, beds/baths and description for that draft, and the correct member name.
+5. Confirm both buttons point at the correct listing, and that fetching the links does not redeem the token or publish anything.
+6. Signed-out path: follow the link, complete sign-in (or activation), confirm landing directly on that listing — not the dashboard.
+7. Signed-in path: follow the link while already signed in, confirm direct landing.
+8. Confirm the Review & Publish screen loads the correct draft, and Edit opens the correct listing editor.
+9. Confirm Publish runs the existing normal member publish flow (validation, photo order, normal alerts) — run this only if you want the publish leg tested live, since publishing triggers real buyer alerts.
+10. Confirm no other listing, member, or email job changed; email queue count before and after recorded; test draft deleted afterwards.
 
-## Wording cleanup (separate, cosmetic)
+## Cosmetic cleanup (included)
 
-One admin tooltip in the email history panel still says "setup/recovery link". A one-word change to "setup link". Not functional; can ride along with any publish.
+`src/components/admin/AgentEmailHistory.tsx` line 165 tooltip: "setup/recovery link" to "setup link". One word, no behavior change.
 
-## Options
+## Not in scope
 
-- **A — Publish everything now.** Concierge feature becomes usable by admins; review email still untested end-to-end.
-- **B — Test the review email first, then publish everything.** Needs a test address.
-- **C — Hold the concierge feature; publish nothing.** The drawer wording is already live, so there is nothing urgent to isolate.
+No other frontend or backend changes. No publish until the email test passes and you approve.
 
-Recommendation: B, with the tooltip cleanup included.
+## What I need from you
+
+- The test email address.
+- Whether that address already belongs to an AAC member account, or whether I should use a designated test member you name.
+- Whether to include step 9 (a real publish, which fires real buyer alerts) or stop at the confirmation screen.
