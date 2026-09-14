@@ -1,26 +1,28 @@
-# Verify Copy setup link (30-day, silent)
+# Verify Copy setup link (30-day, silent) — read-only
 
-The change is already built and deployed. This is a live verification pass only — no code changes, no publishing.
+Verification only. No real member account is touched, no token is issued or revoked, no email sent or queued, no code changes, no migrations, no redeploys, no publish.
 
-## What gets checked
+## Checks (read-only)
 
-1. Pick one verified member who has **not** activated, and one who **has**.
-2. Record the email queue count before starting.
-3. Call the Copy setup link action as an admin for each of the two members.
-4. Confirm:
-   - unactivated member gets a link of the form `/activate#t=...`
-   - activated member gets a link of the form `/signin-link#t=...`
-   - both expire roughly 30 days out
-   - the email queue count is unchanged — nothing sent or queued by either action
-   - only the hashed token is stored; no plaintext link is saved anywhere
-5. Confirm the Email setup link action and the License Verified email are untouched (code unchanged, no new queue rows created during the test).
-6. Confirm the drawer wording reads "AAC activation/setup link (30 days, single-use)" with no "~1 hr" or recovery wording anywhere.
-7. Run the type check and production build.
+From the deployed function source and the database function definitions:
 
-## Side effects
+1. Unactivated members take the 30-day activation path and produce `/activate#t=...`.
+2. Activated members take the 30-day login path and produce `/signin-link#t=...`.
+3. Copy setup link calls only the no-email issuance variants.
+4. The no-email variants create no email queue row.
+5. Token expiry is 30 days on both paths.
+6. Only the token hash is persisted; the plaintext link never leaves the function.
+7. Issuing a token revokes/replaces any previous live token for that member, as designed.
+8. Email setup link behavior unchanged.
+9. License Verified email behavior unchanged.
+10. Drawer wording is exactly "AAC activation/setup link (30 days, single-use)".
+11. No "~1 hr" or Supabase-recovery wording remains in current source.
 
-Each check issues one real single-use token for that member and revokes any earlier live token for them. No email is sent. If you'd rather I avoid touching a real member's live token, say so and I'll limit the test to a single account of your choosing.
+## Also run
+
+- Type check
+- Production build
 
 ## Out of scope
 
-No code changes, no migrations, no deployments, no frontend publish.
+Issuing tokens, calling Copy setup link for a real agent, sending or queueing email, code changes, migrations, deployments, publishing.
