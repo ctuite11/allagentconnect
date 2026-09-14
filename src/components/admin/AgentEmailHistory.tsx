@@ -162,7 +162,7 @@ export function AgentEmailHistory({ email }: { email: string | null | undefined 
                 </dd>
                 <dt
                   className="text-zinc-500"
-                  title="The setup/recovery link is minted in the same request that enqueues the email."
+                  title="The setup link is minted in the same request that enqueues the email."
                 >
                   Link generated at
                 </dt>
