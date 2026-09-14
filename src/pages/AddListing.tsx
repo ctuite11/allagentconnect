@@ -2619,20 +2619,27 @@ const AddListing = () => {
         }
       }
 
-      const { data: updatedDraft, error } = await supabase
-        .from("listings")
-        .update(updatePayload)
-        .eq("id", targetId)
-        .select("id")
-        .maybeSingle();
-      if (error) {
-        console.error('Error updating draft listing:', error);
-        throw error;
+      if (isConciergeMode) {
+        // Draft-only, admin-gated server update. Never changes owner or status.
+        await updateConciergeDraft(targetId, updatePayload as Record<string, unknown>);
+        console.log('Concierge draft updated, id:', targetId);
+      } else {
+        const { data: updatedDraft, error } = await supabase
+          .from("listings")
+          .update(updatePayload)
+          .eq("id", targetId)
+          .select("id")
+          .maybeSingle();
+        if (error) {
+          console.error('Error updating draft listing:', error);
+          throw error;
+        }
+        if (!updatedDraft) {
+          throw new Error("Draft update was blocked or not found.");
+        }
+        console.log('Draft updated successfully, id:', targetId);
       }
-      if (!updatedDraft) {
-        throw new Error("Draft update was blocked or not found.");
-      }
-      console.log('Draft updated successfully, id:', targetId);
+
 
 
       // Mark all items as uploaded to prevent re-uploading on next save
