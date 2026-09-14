@@ -18,12 +18,17 @@
 - [ ] BLOCKED: live authenticated click-through smoke test — admin test session was declined
 - Frontend NOT published yet (awaiting review)
 
-## Concierge review email handoff
-- [ ] Eligibility: verified members (activated or not) for concierge create/manage/send
-- [ ] send-concierge-review-email edge function + listing-preview template
-- [ ] returnTo carried through /signin-link (login token) and /activate (activation token)
-- [ ] Agent review/publish screen at /agent/listings/review/:id
-- [ ] Admin "Send to Agent for Review" action
+## Concierge review email handoff (backend deployed, frontend built, NOT published)
+- [x] Eligibility: verified members (activated or not) for concierge create/manage/send
+- [x] send-concierge-review-email edge function + listing-preview template
+- [x] returnTo carried through /signin-link (login token) and /activate (activation token)
+- [x] Agent review/publish screen at /agent/listings/review/:id
+- [x] Admin "Send to Agent for Review" action
+- [ ] BLOCKED: controlled live email test — awaiting user's designated test address/account
+- [ ] Publish concierge frontend after email test passes (stop before Publish in test; no buyer alerts)
+
+## Tooltip cleanup (pending publish)
+- [x] AgentEmailHistory.tsx: "setup/recovery link" -> "setup link"
 
 ## Read-only verification: Copy setup link (30-day, silent)
 - [x] Confirm token paths, no-email variants, 30-day TTL, hash-only persistence, token replacement, email flows unchanged, wording, type-check + build — no tokens issued
