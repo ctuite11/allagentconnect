@@ -17,3 +17,10 @@
 - [x] Drawer copy -> "AAC activation/setup link (30 days, single-use)"
 - [ ] BLOCKED: live authenticated click-through smoke test — admin test session was declined
 - Frontend NOT published yet (awaiting review)
+
+## Concierge review email handoff
+- [ ] Eligibility: verified members (activated or not) for concierge create/manage/send
+- [ ] send-concierge-review-email edge function + listing-preview template
+- [ ] returnTo carried through /signin-link (login token) and /activate (activation token)
+- [ ] Agent review/publish screen at /agent/listings/review/:id
+- [ ] Admin "Send to Agent for Review" action
