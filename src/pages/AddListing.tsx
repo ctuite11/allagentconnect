@@ -2662,8 +2662,9 @@ const AddListing = () => {
 
       if (!isAutoSave) {
         toast.success("Draft saved successfully!");
-        navigate(`${ROUTES.MY_LISTINGS}?status=draft`);
+        navigate(isConciergeMode ? CONCIERGE_BASE_PATH : `${ROUTES.MY_LISTINGS}?status=draft`);
       }
+
     } catch (error: any) {
       console.error("Error saving draft listing:", {
         message: error.message,
