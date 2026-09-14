@@ -22,6 +22,7 @@ import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 import { cn } from "@/lib/utils";
 import { getRouteForRole, resolveUserRole } from "@/lib/resolveUserRole";
 import { clearRecoveryState } from "@/lib/authRecovery";
+import { consumePostAuthRedirect } from "@/lib/sharedListingGuest";
 
 /**
  * Agent Account Setup — final step of the approved-agent "License Verified"
@@ -187,6 +188,11 @@ const AgentAccountSetup = () => {
             const isSetup = sessionStorage.getItem("aac_password_setup_flow") === "1";
             const isRecovery = sessionStorage.getItem("aac_recovery_flow") === "1";
             if (settings?.account_activated_at && !isSetup && !isRecovery) {
+              const stashed = consumePostAuthRedirect();
+              if (stashed) {
+                navigate(stashed, { replace: true });
+                return;
+              }
               const resolved = await resolveUserRole(sessionUserId);
               navigate(getRouteForRole(resolved), { replace: true });
               return;
@@ -326,6 +332,14 @@ const AgentAccountSetup = () => {
 
       toast.success("You're all set — welcome to All Agent Connect.");
       setUserId(data.user.id);
+      // A stashed internal destination (e.g. a concierge draft the member was
+      // emailed about) wins over the generic role home, so the member lands
+      // exactly where the email promised instead of on a dashboard.
+      const stashed = consumePostAuthRedirect();
+      if (stashed) {
+        navigate(stashed, { replace: true });
+        return;
+      }
       const resolved = await resolveUserRole(data.user.id);
       navigate(getRouteForRole(resolved), { replace: true });
     } catch (err: unknown) {
