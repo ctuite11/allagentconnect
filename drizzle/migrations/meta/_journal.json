@@ -15,6 +15,13 @@
       "when": 1789351562501,
       "tag": "0001_admin_agent_email_summary_personal_only",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1789351797726,
+      "tag": "0002_admin_agent_email_summary_index_friendly",
+      "breakpoints": true
     }
   ]
 }
