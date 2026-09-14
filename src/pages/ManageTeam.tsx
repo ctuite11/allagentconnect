@@ -41,6 +41,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { PageHeader } from "@/components/ui/page-header";
 import { useAuthRole } from "@/hooks/useAuthRole";
+import { AssistantSection } from "@/components/AssistantSection";
 
 const ManageTeam = () => {
   const navigate = useNavigate();
@@ -52,7 +53,9 @@ const ManageTeam = () => {
   const [members, setMembers] = useState<any[]>([]);
   const [allAgents, setAllAgents] = useState<any[]>([]);
   const [isOwner, setIsOwner] = useState(false);
+  const [isTeamAssistant, setIsTeamAssistant] = useState(false);
   const [redirectToRequest, setRedirectToRequest] = useState(false);
+  const canEditTeam = isOwner || isAdmin || isTeamAssistant;
   
   // Team form fields
   const [teamName, setTeamName] = useState("");
@@ -159,11 +162,18 @@ const ManageTeam = () => {
           twitter: "",
           instagram: "",
         });
-        // Manager = lead OR accepted delegate; treat both as editors.
-        setIsOwner(
+        // Manager = lead OR accepted team_members.delegate; treat both as editors.
+        const owner =
           membership.role === "lead" ||
-            (membership.role === "delegate" && membership.status === "accepted"),
-        );
+          (membership.role === "delegate" && membership.status === "accepted");
+        setIsOwner(owner);
+
+        // Account-delegate team assistants (agent_account_members.team_id) may
+        // edit operationally but cannot manage assistants or own the team.
+        const { data: teamAssistant } = await supabase.rpc("is_accepted_team_assistant", {
+          p_team_id: teamData.id,
+        });
+        setIsTeamAssistant(teamAssistant === true);
 
         // Load team members ordered by display_order (no nested join to avoid FK requirement)
         const { data: teamMembers, error: membersError } = await supabase
@@ -486,6 +496,16 @@ const ManageTeam = () => {
               )}
             </div>
           </div>
+
+          {team?.id ? (
+            <div className="mb-6">
+              <AssistantSection
+                scope={{ kind: "team", teamId: team.id }}
+                requireLicensedOwner={false}
+                canManage={isOwner || isAdmin}
+              />
+            </div>
+          ) : null}
 
           {/* Team Information */}
           <Card className="mb-6">
