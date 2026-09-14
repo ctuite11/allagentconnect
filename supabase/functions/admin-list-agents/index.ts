@@ -214,10 +214,13 @@ Deno.serve(async (req) => {
     })()
 
 
+    // `bio` is deliberately not selected — the admin table never renders it
+    // and it is the largest text column on agent_profiles.
     const profilesPromise = adminClient
       .from('agent_profiles')
-      .select('id, aac_id, first_name, last_name, email, phone, company, bio, headshot_url, created_at')
+      .select('id, aac_id, first_name, last_name, email, phone, company, headshot_url, created_at')
       .order('created_at', { ascending: false })
+
 
     const earlyAccessPromise = adminClient
       .from('agent_early_access')
