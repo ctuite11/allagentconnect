@@ -24,6 +24,11 @@ import {
   LOGIN_LINK_TEMPLATE,
   hydrateLoginLinkEmail,
 } from "./hydrateLoginLinkEmail.ts";
+import {
+  CONCIERGE_REVIEW_RETRY_WINDOW_MS,
+  CONCIERGE_REVIEW_TEMPLATE,
+  hydrateConciergeReviewEmail,
+} from "./hydrateConciergeReviewEmail.ts";
 import { preSendBlockReason } from "./emailStreams.ts";
 
 // deno-lint-ignore no-explicit-any
