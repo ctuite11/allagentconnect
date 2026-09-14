@@ -4,6 +4,13 @@ import { agentSectionTitle } from "@/lib/agentUi";
 import { useNavigate, useParams, useSearchParams, useLocation } from "react-router-dom";
 import { ROUTES } from "@/constants/routes";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  CONCIERGE_BASE_PATH,
+  createConciergeDraft,
+  loadConciergeDraft,
+  updateConciergeDraft,
+} from "@/lib/conciergeListing";
+
 // Navigation removed - rendered globally in App.tsx
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Card, CardContent } from "@/components/ui/card";
@@ -246,7 +253,17 @@ const AddListing = () => {
     [location, searchParams],
   );
   const initialStatus = searchParams.get("status") || "new";
+  /**
+   * Admin concierge mode ("Create Listing for Agent").
+   * Draft-only: the listing is owned by the selected member, saved through
+   * admin-only server actions, and can never be published from here.
+   */
+  const isConciergeMode = location.pathname.startsWith(CONCIERGE_BASE_PATH);
+  const [conciergeAgentId, setConciergeAgentId] = useState<string | null>(
+    searchParams.get("agent"),
+  );
   const [user, setUser] = useState<any>(null);
+
   const { introVisible, showComingSoonRow, handleGotIt } = useAddListingDcmlsIntro(user);
   const { introVisible: statusIntroVisible, handleGotIt: handleStatusGotIt } =
     useAddListingStatusIntro(user);
@@ -753,18 +770,35 @@ const AddListing = () => {
     setIsLoadingListing(true);
     try {
       console.log('[AddListing] Loading existing listing:', id);
-      const { data, error } = await supabase
-        .from('listings')
-        .select('*')
-        .eq('id', id)
-        .single();
-      
+      let data: any = null;
+      let error: any = null;
+      if (isConciergeMode) {
+        // Admin concierge: admins cannot read another member's draft through
+        // normal listing access (deliberately unchanged) — use the gated
+        // admin-only server action instead.
+        try {
+          data = await loadConciergeDraft(id);
+          setConciergeAgentId(data?.agent_id ?? null);
+        } catch (err: any) {
+          error = err;
+        }
+      } else {
+        const res = await supabase
+          .from('listings')
+          .select('*')
+          .eq('id', id)
+          .single();
+        data = res.data;
+        error = res.error;
+      }
+
       if (error) {
         console.error('[AddListing] Error loading listing:', error);
         toast.error('Failed to load listing data');
         setIsLoadingListing(false);
         return;
       }
+
       
       if (data) {
         const photosArray = Array.isArray(data.photos) ? data.photos : [];
@@ -2323,6 +2357,25 @@ const AddListing = () => {
         ...dcmlsSnapshot,
       };
 
+      if (isConciergeMode) {
+        // Admin concierge: owner is the selected member, created server-side.
+        if (!conciergeAgentId) {
+          console.error('ensureDraftListing: concierge mode without a selected member');
+          toast.error('Select a member before saving this listing.');
+          return null;
+        }
+        try {
+          const { agent_id: _ignoredAgentId, status: _ignoredStatus, ...conciergePayload } = minimalPayload;
+          const created = await createConciergeDraft(conciergeAgentId, conciergePayload);
+          console.log('ensureDraftListing: concierge draft created', created.id);
+          return { id: created.id };
+        } catch (err: any) {
+          console.error('ensureDraftListing: concierge create failed', err);
+          toast.error(err?.message || 'Unable to create draft listing');
+          return null;
+        }
+      }
+
       console.log('ensureDraftListing: Creating initial draft with payload:', minimalPayload);
 
       const { data, error } = await supabase
@@ -2346,6 +2399,7 @@ const AddListing = () => {
       return { id: data.id };
     });
   };
+
 
   // Helper to get fresh user from server - single source of truth for identity
   // Uses auth.getUser() which is server-verified, NOT cached state
@@ -2565,20 +2619,27 @@ const AddListing = () => {
         }
       }
 
-      const { data: updatedDraft, error } = await supabase
-        .from("listings")
-        .update(updatePayload)
-        .eq("id", targetId)
-        .select("id")
-        .maybeSingle();
-      if (error) {
-        console.error('Error updating draft listing:', error);
-        throw error;
+      if (isConciergeMode) {
+        // Draft-only, admin-gated server update. Never changes owner or status.
+        await updateConciergeDraft(targetId, updatePayload as Record<string, unknown>);
+        console.log('Concierge draft updated, id:', targetId);
+      } else {
+        const { data: updatedDraft, error } = await supabase
+          .from("listings")
+          .update(updatePayload)
+          .eq("id", targetId)
+          .select("id")
+          .maybeSingle();
+        if (error) {
+          console.error('Error updating draft listing:', error);
+          throw error;
+        }
+        if (!updatedDraft) {
+          throw new Error("Draft update was blocked or not found.");
+        }
+        console.log('Draft updated successfully, id:', targetId);
       }
-      if (!updatedDraft) {
-        throw new Error("Draft update was blocked or not found.");
-      }
-      console.log('Draft updated successfully, id:', targetId);
+
 
 
       // Mark all items as uploaded to prevent re-uploading on next save
@@ -2601,8 +2662,9 @@ const AddListing = () => {
 
       if (!isAutoSave) {
         toast.success("Draft saved successfully!");
-        navigate(`${ROUTES.MY_LISTINGS}?status=draft`);
+        navigate(isConciergeMode ? CONCIERGE_BASE_PATH : `${ROUTES.MY_LISTINGS}?status=draft`);
       }
+
     } catch (error: any) {
       console.error("Error saving draft listing:", {
         message: error.message,
@@ -2708,7 +2770,12 @@ const AddListing = () => {
 
   // Handler for "Save Changes" in edit mode - preserves current status (does NOT force draft)
   const handleSaveChanges = async (isAutoSave = false) => {
+    if (isConciergeMode) {
+      // Concierge listings are draft-only: route every save to Save Draft.
+      return handleSaveDraft(isAutoSave);
+    }
     // Get fresh user from server - single source of truth
+
     const freshUser = await getFreshUserOrRedirect();
     if (!freshUser) {
       return; // getFreshUserOrRedirect already shows toast and redirects
@@ -2932,12 +2999,13 @@ const AddListing = () => {
 
   // Keep autosave runner current for skipped-tick re-arm (session options close over this ref).
   runAutosaveRef.current = () => {
-    if (listingId && backendStatusRef.current && backendStatusRef.current !== "draft") {
+    if (!isConciergeMode && listingId && backendStatusRef.current && backendStatusRef.current !== "draft") {
       void handleSaveChanges(true);
     } else {
       void handleSaveDraft(true);
     }
   };
+
 
   // Helper to save form data and navigate to manage photos
   const handleNavigateToManagePhotos = async () => {
@@ -3040,7 +3108,13 @@ const AddListing = () => {
 
   const handleSubmit = async (e: React.FormEvent, publishNow: boolean = true) => {
     e.preventDefault();
+    if (isConciergeMode) {
+      // AAC staff can never publish on a member's behalf.
+      toast.error("Concierge listings are saved as a draft for the member to publish.");
+      return;
+    }
     setSubmitting(true);
+
 
     try {
       // Get fresh user from server FIRST - single source of truth for identity
@@ -3427,8 +3501,30 @@ const AddListing = () => {
                 {showComingSoonRow ? <DcmlsLaunchingSoonReminder /> : null}
 
                 <div className="flex flex-wrap items-center gap-2">
-              {/* Edit mode: Preview + Save Changes only */}
-              {listingId ? (
+              {/* Concierge mode: staff can only save a draft for the member */}
+              {isConciergeMode ? (
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={() => handleSaveDraft(false)}
+                  type="button"
+                  disabled={savingDraft || submitting}
+                  className="gap-1.5"
+                >
+                  {savingDraft ? (
+                    <>
+                      <Loader2 className="h-4 w-4 shrink-0 animate-spin" aria-hidden />
+                      Saving…
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-4 w-4 shrink-0" />
+                      Save Draft for Member
+                    </>
+                  )}
+                </Button>
+              ) : listingId ? (
+
                 <>
                   <Button
                     variant="outline"
@@ -3546,27 +3642,38 @@ const AddListing = () => {
                       <AddListingStatusHelp />
                     </div>
                     <Select 
-                      value={formData.status} 
+                      value={isConciergeMode ? "draft" : formData.status} 
                       onValueChange={handleStatusChange}
-                      disabled={formData.status === LISTING_STATUS.CANCELLED || formData.status === LISTING_STATUS.SOLD}
+                      disabled={isConciergeMode || formData.status === LISTING_STATUS.CANCELLED || formData.status === LISTING_STATUS.SOLD}
                     >
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {(!listingId ? ADD_LISTING_CREATE_STATUSES : ADD_LISTING_EDIT_STATUSES).map((opt) => (
-                          <SelectItem key={opt.value} value={opt.value}>
-                            {opt.label}
-                          </SelectItem>
-                        ))}
+                        {isConciergeMode ? (
+                          <SelectItem value="draft">Draft</SelectItem>
+                        ) : (
+                          (!listingId ? ADD_LISTING_CREATE_STATUSES : ADD_LISTING_EDIT_STATUSES).map((opt) => (
+                            <SelectItem key={opt.value} value={opt.value}>
+                              {opt.label}
+                            </SelectItem>
+                          ))
+                        )}
                       </SelectContent>
                     </Select>
+                    {isConciergeMode && (
+                      <p className="mt-1 flex items-center gap-1 text-xs text-neutral-600">
+                        <Lock className="h-3 w-3" />
+                        Saved as a draft — the member publishes it from their own account.
+                      </p>
+                    )}
                     {(formData.status === LISTING_STATUS.CANCELLED || formData.status === LISTING_STATUS.SOLD) && (
                       <p className="mt-1 flex items-center gap-1 text-xs text-amber-600">
                         <AlertCircle className="h-3 w-3" />
                         Final state — status and price cannot be changed.
                       </p>
                     )}
+
                   </div>
 
                   <div className="space-y-2">

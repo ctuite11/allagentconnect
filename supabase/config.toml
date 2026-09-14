@@ -72,6 +72,13 @@ verify_jwt = false
 [functions.admin-agent-email-summary]
 verify_jwt = false
 
+[functions.admin-create-listing-for-agent]
+verify_jwt = false
+
+[functions.admin-manage-concierge-listing]
+verify_jwt = false
+
+
 
 
 [functions.convert-early-access-to-account]

@@ -145,6 +145,8 @@ const MyListings = React.lazy(() => import("./pages/MyListings"));
 const ManageListingPhotos = React.lazy(() => import("./pages/ManageListingPhotos"));
 const AdminApprovals = React.lazy(() => import("./pages/AdminApprovals"));
 const AdminDebugAuth = React.lazy(() => import("./pages/AdminDebugAuth"));
+const AdminConciergeListings = React.lazy(() => import("./pages/AdminConciergeListings"));
+
 const AdminMatches = React.lazy(() => import("./pages/AdminMatches"));
 const AdminConsumers = React.lazy(() => import("./pages/AdminConsumers"));
 const AdminInviteAudit = React.lazy(() => import("./pages/AdminInviteAudit"));
@@ -578,6 +580,11 @@ const App = () => (
                   <Route path="/admin/founder-invite" element={<AdminFounderInvite />} />
                   <Route path="/admin/send-email" element={<AdminSendEmail />} />
                   <Route path="/admin/debug-auth" element={<AdminDebugAuth />} />
+                  {/* Admin concierge: create/edit a draft listing on behalf of a member */}
+                  <Route path="/admin/concierge-listings" element={<RouteGuard requireRole="admin"><AdminConciergeListings /></RouteGuard>} />
+                  <Route path="/admin/concierge-listings/new" element={<RouteGuard requireRole="admin"><AddListing /></RouteGuard>} />
+                  <Route path="/admin/concierge-listings/:id" element={<RouteGuard requireRole="admin"><AddListing /></RouteGuard>} />
+
                   <Route path="/settings" element={<RouteGuard requireRole="agent"><AgentSettings /></RouteGuard>} />
                 </Route>
 
