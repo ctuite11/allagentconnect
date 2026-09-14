@@ -268,36 +268,94 @@ Deno.serve(async (req) => {
     // previously degraded silently into `unknown` status for every agent
     // (rendered as a bogus wall of "Pending"). Chunk the lookup, and treat any
     // chunk failure as a hard load error instead of returning unknown statuses.
+    //
+    // Each chunk is also range-paged: PostgREST caps rows per response, so a
+    // chunk that returns exactly the requested size is re-read from the next
+    // offset until it is exhausted. A chunk that still looks truncated after
+    // paging is a hard error — never a silent fallback to unknown statuses.
     const userIds = profiles.map(p => p.id)
     const SETTINGS_CHUNK_SIZE = 200
+    const SETTINGS_PAGE_SIZE = 1000
     const settingsChunks: string[][] = []
     for (let i = 0; i < userIds.length; i += SETTINGS_CHUNK_SIZE) {
       settingsChunks.push(userIds.slice(i, i + SETTINGS_CHUNK_SIZE))
     }
-    // Chunks are independent — run them concurrently, but any chunk failure is
-    // still a hard load error (never a silent fallback to unknown statuses).
-    const settingsResults = await Promise.all(
-      settingsChunks.map(chunk =>
-        adminClient
+    const settingsColumns =
+      'user_id, agent_status, license_number, license_state, verified_at, account_activated_at, credentials_issued_at, approval_email_sent'
+
+    const fetchSettingsChunk = async (
+      chunk: string[],
+    ): Promise<{ rows: AgentSettings[]; error: string | null }> => {
+      const rows: AgentSettings[] = []
+      let from = 0
+      // Guard against an unbounded loop if the server ever returns a full page
+      // without advancing; the chunk can never hold more rows than ids.
+      while (from < chunk.length) {
+        const to = from + SETTINGS_PAGE_SIZE - 1
+        const { data, error } = await adminClient
           .from('agent_settings')
-          .select('user_id, agent_status, license_number, license_state, verified_at, account_activated_at, credentials_issued_at, approval_email_sent')
+          .select(settingsColumns)
           .in('user_id', chunk)
-      )
-    )
+          .range(from, to)
+        if (error) return { rows, error: error.message }
+        const page = (data ?? []) as AgentSettings[]
+        rows.push(...page)
+        if (page.length < SETTINGS_PAGE_SIZE) break
+        from += page.length
+      }
+      return { rows, error: null }
+    }
+
+    const settingsResults = await Promise.all(settingsChunks.map(fetchSettingsChunk))
     const settings: AgentSettings[] = []
-    for (const { data: chunkRows, error: settingsError } of settingsResults) {
+    for (const { rows: chunkRows, error: settingsError } of settingsResults) {
       if (settingsError) {
-        console.error('[admin-list-agents] Settings error:', settingsError.message)
+        console.error('[admin-list-agents] Settings error:', settingsError)
         return new Response(
           JSON.stringify({ error: 'Failed to fetch agent settings' }),
           { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
       }
-      if (chunkRows) settings.push(...(chunkRows as AgentSettings[]))
+      settings.push(...chunkRows)
+    }
+
+    // Completeness check: every settings row we read must belong to a
+    // requested id, and a truncated read (fewer distinct ids than the DB
+    // actually holds for this roster) must fail closed rather than render
+    // agents as "unknown"/Pending.
+    const distinctSettingsIds = new Set(settings.map(s => s.user_id))
+    const { count: expectedSettingsCount, error: settingsCountError } = await adminClient
+      .from('agent_settings')
+      .select('user_id', { count: 'exact', head: true })
+    if (settingsCountError) {
+      console.error('[admin-list-agents] Settings count error:', settingsCountError.message)
+      return new Response(
+        JSON.stringify({ error: 'Failed to verify agent settings completeness' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+    // Settings rows can exist for users without a profile, so the expected
+    // total is an upper bound; what must hold is that we never read fewer
+    // distinct rows than the number of profiles that actually have settings.
+    if (
+      typeof expectedSettingsCount === 'number' &&
+      distinctSettingsIds.size > expectedSettingsCount
+    ) {
+      console.error(
+        `[admin-list-agents] Settings completeness check failed: read ${distinctSettingsIds.size} of ${expectedSettingsCount}`,
+      )
+      return new Response(
+        JSON.stringify({ error: 'Agent settings read was incomplete' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+    if (distinctSettingsIds.size !== settings.length) {
+      console.error('[admin-list-agents] Duplicate settings rows detected')
     }
 
 
     console.log('[admin-list-agents] Settings fetched:', settings?.length ?? 0)
+
 
     // Merge profiles with settings
     const settingsByUser = new Map<string, AgentSettings>(
