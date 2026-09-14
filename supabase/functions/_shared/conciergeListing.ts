@@ -87,11 +87,30 @@ export async function requireAdmin(req: Request): Promise<AdminContext | Respons
   }
 }
 
-/** Target must be an existing verified + activated AAC member. */
+/**
+ * Target must be an existing VERIFIED AAC member. Activation state is
+ * deliberately NOT required: staff may prepare a draft for a verified member
+ * who has not activated yet, and the review email then carries the existing
+ * 30-day activation/setup link instead of a sign-in link.
+ */
 export async function assertEligibleAgent(
   service: SupabaseClient,
   agentId: string,
 ): Promise<Response | null> {
+  const state = await getAgentEligibility(service, agentId)
+  if (state instanceof Response) return state
+  return null
+}
+
+export interface AgentEligibility {
+  /** Canonical activation state — `agent_settings.account_activated_at` only. */
+  isActivated: boolean
+}
+
+export async function getAgentEligibility(
+  service: SupabaseClient,
+  agentId: string,
+): Promise<AgentEligibility | Response> {
   const { data, error } = await service
     .from('agent_settings')
     .select('user_id, agent_status, account_activated_at')
@@ -99,13 +118,10 @@ export async function assertEligibleAgent(
     .maybeSingle()
 
   if (error) return jsonResponse({ error: 'Failed to verify member eligibility' }, 500)
-  if (!data || data.agent_status !== 'verified' || !data.account_activated_at) {
-    return jsonResponse(
-      { error: 'Selected member is not a verified, activated agent' },
-      422,
-    )
+  if (!data || data.agent_status !== 'verified') {
+    return jsonResponse({ error: 'Selected member is not a verified agent' }, 422)
   }
-  return null
+  return { isActivated: !!data.account_activated_at }
 }
 
 export function isUuid(value: unknown): value is string {
