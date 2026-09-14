@@ -3501,8 +3501,30 @@ const AddListing = () => {
                 {showComingSoonRow ? <DcmlsLaunchingSoonReminder /> : null}
 
                 <div className="flex flex-wrap items-center gap-2">
-              {/* Edit mode: Preview + Save Changes only */}
-              {listingId ? (
+              {/* Concierge mode: staff can only save a draft for the member */}
+              {isConciergeMode ? (
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={() => handleSaveDraft(false)}
+                  type="button"
+                  disabled={savingDraft || submitting}
+                  className="gap-1.5"
+                >
+                  {savingDraft ? (
+                    <>
+                      <Loader2 className="h-4 w-4 shrink-0 animate-spin" aria-hidden />
+                      Saving…
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-4 w-4 shrink-0" />
+                      Save Draft for Member
+                    </>
+                  )}
+                </Button>
+              ) : listingId ? (
+
                 <>
                   <Button
                     variant="outline"
