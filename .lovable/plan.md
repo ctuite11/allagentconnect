@@ -1,41 +1,40 @@
-# What was sent to Barbara — and preventing the misclick
+# Password reset: automatic sending, visible afterwards
 
-## What actually happened
+## What was sent to Barbara (answer)
 
-At 6:59pm ET today, the admin menu action **Reset Password** ran for barbara.mihalko@gibsonsir.com. It sends immediately — no dialog, no confirmation.
+At 6:59pm ET today the admin menu action **Reset Password** ran for barbara.mihalko@gibsonsir.com. It sends instantly — no dialog, no confirmation — and it sits directly under **Set Password** in the same menu.
 
-In the agent row menu, the two items sit next to each other:
+The email she got: from All Agent Connect (hello@allagentconnect.com), subject "Reset your password", body "We received a request to reset your password. Click below to choose a new one." with a **Reset Password** button and a note that the link expires in 1 hour and can be ignored if she didn't request it. No password, no account details. Delivered. The 1-hour link has since expired.
 
-```text
-Set Password      <- opens the dialog you expected
-Reset Password    <- sends instantly, no dialog
-```
+It never showed in Email History because this email path sends directly through the provider instead of being recorded like every other AAC email.
 
-## The exact email she received
+## Audit of the two paths
 
-- From: All Agent Connect (hello@allagentconnect.com)
-- Subject: "Reset your password"
-- Body: "We received a request to reset your password. Click below to choose a new one." plus a **Reset Password** button, and a note that the link expires in 1 hour and can be ignored if she didn't request it.
-- No password, no account details, nothing sensitive. Delivered successfully.
-- The 1-hour link has already expired, so it now does nothing.
+Both already send immediately, with no approval step anywhere:
 
-It also does not appear in her email history in Admin, because this one email path sends directly instead of going through the normal email queue — which is why it looked invisible.
+- **Member self-service** — Forgot password on the agent login page, plus the buyer, consumer and DCMLS login pages. All four call the same reset function and it sends right away.
+- **Admin** — the Reset Password menu item and the agent details drawer call that same function directly, with no confirmation.
 
-## Proposed fixes
+So nothing is queued or waiting. The only real problems are the misclick risk and the invisibility.
 
-1. **Confirmation step** — "Reset Password" asks "Send a password-reset email to <email>?" before sending, so a stray click can't send anything.
-2. **Clearer labels** — rename to "Set password (no email)" and "Email password reset", and separate them with a divider so they're not adjacent look-alikes.
-3. **Visible record** — record this reset email so it shows in the agent's email history and the Last Email column like every other personal send.
+## Changes
 
-Note: this reset email uses the old ~1-hour link, not AAC's 30-day system. I'd leave that as-is for now and raise it separately if you want it converted.
+1. **Member self-service: unchanged.** Still immediate, no admin involvement.
+2. **Admin action renamed** to **Email password reset**, with a confirmation first: "Send a password-reset email to <agent email>?" — send immediately on confirm. Same confirmation in the agent details drawer.
+3. **Separate the look-alikes.** The other action becomes **Set password (no email)**, with a divider between them so they are no longer adjacent twins.
+4. **Record every reset email** — from both the member and admin paths — in the normal AAC email audit right after the provider accepts it, using template key `password-reset` and label `Password Reset`. Recording happens after sending and never blocks or delays delivery; if recording fails, the email still went out.
+5. **Show it** in the agent's Email History and make it eligible for the **Last Email** column.
+6. **Link lifetime stays at 1 hour.** No conversion to the 30-day activation/setup tokens.
 
-## Next step for Barbara
+## Guardrails
 
-Nothing is broken on her account. Use **Set Password** to set one and send her the details, or **Email 30-day sign-in link**.
+No change to activation links, 30-day setup links, temporary-password behavior, or any other email. No approval workflow anywhere. No new sending behavior — only a confirmation on the admin click and an after-the-fact record.
 
 ## Technical notes
 
-- Trigger: `handleSendPasswordReset` in `src/pages/AdminApprovals.tsx` → `send-password-reset` edge function (confirmed in its logs at 22:59 UTC, Resend message id `09b7f360…`).
-- Fix 1 and 2 are frontend-only changes in `AdminApprovals.tsx` (plus the details drawer's `onResetPassword`).
-- Fix 3 adds an `email_jobs` audit row from the `send-password-reset` function (or a queued send) with template `password-reset`, plus its template-label and Last Email allowlist entry. No schema change.
-- No changes to the temp-password dialog, token system, or any other email template.
+- `supabase/functions/send-password-reset/index.ts`: after the Resend call succeeds, insert an `email_jobs` audit row with `status='sent'`, `delivery_status` from the response, `provider_message_id`, payload `{template:'password-reset', to, subject}` and an idempotency key of `password-reset:<email>:<timestamp-bucket>`. Insert is wrapped in try/catch and logged only on failure — the 200 response does not depend on it. `status='sent'` means the queue worker never claims it, so no double-send.
+- Function-body-only migration: add `'password-reset' → 'transactional'` to `email_stream_for_template` (otherwise the enforce-stream trigger nulls the stream) and add `'password-reset'` to the `_latest_templates` default of `admin_agent_email_summary`. No table, column, RLS or grant changes.
+- `src/lib/emailTemplateLabels.ts`: add `"password-reset": "Password Reset"`.
+- `src/pages/AdminApprovals.tsx`: rename the two menu items, add a `DropdownMenuSeparator`, add the confirm in `handleSendPasswordReset` (covers the drawer's `onResetPassword` too).
+- Unchanged callers: `Auth.tsx`, `BuyerAuth.tsx`, `ConsumerAuth.tsx`, `DcmlsAuth.tsx`, `AuthDiagnostics.tsx`.
+- Verify: type-check and build; one reset to a test address appears in Email History as Password Reset with delivery status; email_jobs gains exactly one row per send; no other template affected. Stop for review before publishing.
