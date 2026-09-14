@@ -34,3 +34,5 @@
 - [x] Confirm token paths, no-email variants, 30-day TTL, hash-only persistence, token replacement, email flows unchanged, wording, type-check + build — no tokens issued
 
 - [ ] Urgent: resolve post-login spinning “no access” state after Cloud outage
+
+- [ ] Re-enable concierge frontend: set CONCIERGE_LISTINGS_ENABLED = true in src/config/featureFlags.ts after the review-email test is approved.
