@@ -24,6 +24,11 @@ import {
   LOGIN_LINK_TEMPLATE,
   hydrateLoginLinkEmail,
 } from "./hydrateLoginLinkEmail.ts";
+import {
+  CONCIERGE_REVIEW_RETRY_WINDOW_MS,
+  CONCIERGE_REVIEW_TEMPLATE,
+  hydrateConciergeReviewEmail,
+} from "./hydrateConciergeReviewEmail.ts";
 import { preSendBlockReason } from "./emailStreams.ts";
 
 // deno-lint-ignore no-explicit-any
@@ -350,6 +355,59 @@ export async function deliverEmailJob(opts: {
 
       if (hydrated.outcome === "error") {
         throw new Error(`Login link hydration failed: ${hydrated.reason}`);
+      }
+
+      sendOptions.htmlOverride = hydrated.html;
+      sendOptions.providerIdempotencyKey = hydrated.providerIdempotencyKey;
+    }
+
+    // Same late-rendering contract for the concierge listing review email.
+    if (template === CONCIERGE_REVIEW_TEMPLATE) {
+      const createdAt = job.created_at ? Date.parse(job.created_at) : Date.now();
+      if (
+        Number.isFinite(createdAt) &&
+        Date.now() - createdAt > CONCIERGE_REVIEW_RETRY_WINDOW_MS
+      ) {
+        await updateJob(
+          job.id,
+          { status: "failed", last_error: "concierge review retry window elapsed" },
+          { stage: "concierge_review_retry_window" },
+        );
+        await logEvent(job.id, "failed", {
+          template,
+          to,
+          error: "concierge review retry window elapsed",
+        });
+        return { outcome: "failed", error: "concierge review retry window elapsed" };
+      }
+
+      const hydrated = await hydrateConciergeReviewEmail(
+        supabase,
+        (job.payload ?? {}) as Record<string, unknown>,
+      );
+
+      if (hydrated.outcome === "skip") {
+        await updateJob(
+          job.id,
+          {
+            status: "sent",
+            provider_message_id: "skipped:concierge-review",
+            delivery_status: "skipped_concierge_review",
+            delivery_status_at: new Date().toISOString(),
+            last_error: hydrated.reason,
+          },
+          { stage: "skip_concierge_review" },
+        );
+        await logEvent(job.id, "skipped_concierge_review", {
+          template,
+          to,
+          reason: hydrated.reason,
+        });
+        return { outcome: "skipped", reason: hydrated.reason };
+      }
+
+      if (hydrated.outcome === "error") {
+        throw new Error(`Concierge review hydration failed: ${hydrated.reason}`);
       }
 
       sendOptions.htmlOverride = hydrated.html;

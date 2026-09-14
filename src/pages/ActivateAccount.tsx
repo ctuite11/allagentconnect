@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, Clock, ShieldAlert } from "lucide-react";
+import { setPostAuthRedirect } from "@/lib/sharedListingGuest";
 
 /**
  * AAC-owned activation landing page.
@@ -94,7 +95,12 @@ export default function ActivateAccount() {
     // Read the fragment once, then scrub it from the address bar and history
     // so the token is not left behind in a shared screen or back-button state.
     const raw = window.location.hash.startsWith("#") ? window.location.hash.slice(1) : "";
-    const found = new URLSearchParams(raw).get("t");
+    const params = new URLSearchParams(raw);
+    const found = params.get("t");
+    // Optional internal destination carried by the link (e.g. a listing we
+    // prepared). Sanitized to internal-only paths by setPostAuthRedirect.
+    const returnTo = params.get("r");
+    if (returnTo) setPostAuthRedirect(returnTo);
     if (found) {
       setToken(found);
       window.history.replaceState(

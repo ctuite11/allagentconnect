@@ -1,12 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { listConciergeDrafts, type ConciergeDraftSummary } from "@/lib/conciergeListing";
+import {
+  listConciergeDrafts,
+  sendConciergeReviewEmail,
+  type ConciergeDraftSummary,
+} from "@/lib/conciergeListing";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Plus, Search } from "lucide-react";
+import { Loader2, Plus, Search, Send } from "lucide-react";
 import { toast } from "sonner";
 
 /**
@@ -37,6 +41,21 @@ const AdminConciergeListings = () => {
   const [drafts, setDrafts] = useState<ConciergeDraftSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [sendingId, setSendingId] = useState<string | null>(null);
+  const [sentIds, setSentIds] = useState<string[]>([]);
+
+  const handleSendForReview = async (draftId: string) => {
+    setSendingId(draftId);
+    try {
+      const res = await sendConciergeReviewEmail(draftId);
+      setSentIds((prev) => [...prev, draftId]);
+      toast.success(`Review email sent to ${res.email}`);
+    } catch (err: any) {
+      toast.error(err?.message || "Could not send the review email");
+    } finally {
+      setSendingId(null);
+    }
+  };
 
   useEffect(() => {
     let active = true;
@@ -49,8 +68,9 @@ const AdminConciergeListings = () => {
         if (!active) return;
         if (rosterRes.error) throw rosterRes.error;
         const all = ((rosterRes.data as { agents?: EligibleAgent[] })?.agents ?? []).filter(
-          (a) =>
-            (a.agent_status || "").toLowerCase() === "verified" && !!a.account_activated_at,
+          // Verified members are eligible whether or not they have activated
+          // their account — the review email carries the right link type.
+          (a) => (a.agent_status || "").toLowerCase() === "verified",
         );
         setAgents(all);
         setDrafts(draftRows);
@@ -153,6 +173,19 @@ const AdminConciergeListings = () => {
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge variant="secondary">Draft</Badge>
+                    <Button
+                      size="sm"
+                      className="gap-1.5"
+                      disabled={sendingId === d.id}
+                      onClick={() => handleSendForReview(d.id)}
+                    >
+                      {sendingId === d.id ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Send className="h-4 w-4" />
+                      )}
+                      {sentIds.includes(d.id) ? "Send again" : "Send to agent for review"}
+                    </Button>
                     <Button
                       size="sm"
                       variant="outline"

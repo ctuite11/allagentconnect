@@ -75,6 +75,9 @@ verify_jwt = false
 [functions.admin-create-listing-for-agent]
 verify_jwt = false
 
+[functions.send-concierge-review-email]
+verify_jwt = false
+
 [functions.admin-manage-concierge-listing]
 verify_jwt = false
 
