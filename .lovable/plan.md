@@ -1,47 +1,37 @@
-# Make admin setup links consistently 30 days
+# Speed up the admin page
 
-## Goal
-Remove the stale "~1 hour" Supabase recovery link from the admin **Copy setup link** action and from the **Activation Reminder Details** drawer copy. Admin-generated setup links will use the same 30-day AAC token system as the License Verified / Email setup link flow.
+## What's happening now
 
-## What will change
+A single admin page load currently takes about 6-7 seconds before anything appears. Measured from the live server logs for the last real load:
 
-1. **Edge Function `generate-agent-setup-link`** will stop calling `supabase.auth.admin.generateLink({ type: "recovery" })` and instead issue an AAC-owned token:
-   - Not-yet-activated agents → 30-day activation token (`/activate#t=<token>`).
-   - Already-activated agents → 30-day login token (`/signin-link#t=<token>`).
-   - The returned `setupUrl` will be a 30-day link in both cases.
-2. **AgentDetailsDrawer** "Activation Reminder Details" section will show "AAC activation/setup link (30 days, single-use)" instead of the current "Fresh Supabase recovery / setup link (single-use, ~1 hr)" hard-coded line.
-3. The edge function will be redeployed.
+- about 1s to confirm the signed-in admin
+- about 1s to read sign-in history
+- about 2s to read agent records, settings, and early-access rows
+- about 3s at the end purely to look up each agent's most recent emails (Last Email, Invite, License Verified columns) - roughly 1,500 separate lookups across 800 people
 
-## Out of scope
-- `send-license-verified-email` and **Email setup link** already use the 30-day activation token; no change.
-- **Set Password** sets a permanent password directly; no link involved; no change.
-- No database schema, RPC, RLS, or email-queue changes.
-- No emails will be sent or queued.
-- No publish to production until separately approved.
+The whole roster (about 800 people, including bios) is then sent to the browser in one response, even though the table only shows 50 rows at a time.
+
+## The fix
+
+1. Show the table as soon as the roster is ready, and fill the email columns in right after. The email columns are the single biggest cost; splitting them out gets the list on screen in roughly 2 seconds instead of 6-7. The columns show a brief "-" placeholder and then populate.
+2. Make the email lookup itself cheaper: one pass over the email history instead of three separate passes per person, using the indexes that already exist.
+3. Read agent records, settings, early-access and access-request rows all at the same time instead of one after another, and stop splitting the settings read into batches.
+4. Trim the response: drop the long bio text from the list payload (it isn't shown in the table), which cuts the download noticeably.
+5. Keep the existing 5-minute cache, so moving away and back to the admin page stays instant.
+
+Nothing about what the page shows changes: same people, same counts, same statuses, same columns, same actions. No emails are sent or queued.
 
 ## Technical details
 
-### `supabase/functions/generate-agent-setup-link/index.ts`
-- Keep existing admin-gate and email/userId resolution.
-- After resolving the `user_id`, check activation state via `auth.users.last_sign_in_at` / `account_activated_at` to decide token type.
-- For not-yet-activated agents: call existing `issue_agent_activation_token` RPC (used by `send-license-verified-email`), then build the URL with `activationUrl(AAC_PUBLIC_URL, token)` from `_shared/activationTokens.ts`.
-- For already-activated agents: call existing `issue_agent_login_token` RPC (used by `send-login-link`), then build the URL with `loginLinkUrl(AAC_PUBLIC_URL, token)` from `_shared/loginTokens.ts`.
-- Return `{ setupUrl, email, tokenType, expiresAt }` to the caller. The plaintext token is never persisted; only its hash is stored by the RPC.
-- Preserve existing error shapes and CORS headers.
-
-### `src/components/admin/AgentDetailsDrawer.tsx`
-- Change line ~331 hard-coded link type text:
-  ```
-  AAC activation/setup link (30 days, single-use)
-  ```
-- No other drawer behavior changes.
-
-### `src/pages/AdminApprovals.tsx`
-- The `handleCopySetupLink` caller only copies the returned `setupUrl`; no logic change required unless the returned shape changes. The toast text "Setup link copied to clipboard" remains accurate.
+- `supabase/functions/admin-list-agents/index.ts`: remove the trailing `admin_agent_email_summary` call from the main response; issue profiles / settings / early access / pending_verifications concurrently; replace the chunked `.in(user_id)` settings reads with one full-table select (501 rows); omit `bio` from the select list.
+- New edge function `admin-agent-email-summary` (same admin JWT + `has_role('admin')` gate) returning `{ email, last_email, invite_email, license_verified_email }` for the roster, called by the page immediately after the agent list resolves.
+- Replace the three lateral legs in `admin_agent_email_summary` with a single `DISTINCT ON (lower(payload->>'to'), template-bucket)` scan over `idx_email_jobs_lower_to_template_created_at`, preserving the existing allowlist semantics and the identical return shape. This is a function-body change only - no table, column, RLS or grant changes.
+- `src/pages/AdminApprovals.tsx`: merge the email summary into agent state when it arrives; cache both parts under the existing `aac.adminAgents.<userId>` key; keep the 50-row paging and `clearAdminAgentsCache` behaviour untouched.
 
 ## Verification
-- Type-check and build the project.
-- Deploy only the `generate-agent-setup-link` edge function.
-- Smoke-test in preview: open an unactivated agent, press **Copy setup link**, verify the copied URL starts with `/activate#t=` and contains a 30-day token payload.
-- Smoke-test with an activated agent: verify the copied URL starts with `/signin-link#t=`.
-- Confirm the drawer no longer mentions "~1 hr" or "Supabase recovery".
+
+- Compare agent count, lifecycle counts and status distribution before/after - must match exactly.
+- Time both requests from the server logs and report the new numbers.
+- Spot-check Last Email / Invite / License Verified values for several agents against the database.
+- Confirm zero new `email_jobs` rows.
+- Type-check and build; deploy only the two named functions; frontend publish left for your approval.
