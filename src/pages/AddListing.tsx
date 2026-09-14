@@ -753,18 +753,35 @@ const AddListing = () => {
     setIsLoadingListing(true);
     try {
       console.log('[AddListing] Loading existing listing:', id);
-      const { data, error } = await supabase
-        .from('listings')
-        .select('*')
-        .eq('id', id)
-        .single();
-      
+      let data: any = null;
+      let error: any = null;
+      if (isConciergeMode) {
+        // Admin concierge: admins cannot read another member's draft through
+        // normal listing access (deliberately unchanged) — use the gated
+        // admin-only server action instead.
+        try {
+          data = await loadConciergeDraft(id);
+          setConciergeAgentId(data?.agent_id ?? null);
+        } catch (err: any) {
+          error = err;
+        }
+      } else {
+        const res = await supabase
+          .from('listings')
+          .select('*')
+          .eq('id', id)
+          .single();
+        data = res.data;
+        error = res.error;
+      }
+
       if (error) {
         console.error('[AddListing] Error loading listing:', error);
         toast.error('Failed to load listing data');
         setIsLoadingListing(false);
         return;
       }
+
       
       if (data) {
         const photosArray = Array.isArray(data.photos) ? data.photos : [];
