@@ -22,6 +22,13 @@
       "when": 1789351797726,
       "tag": "0002_admin_agent_email_summary_index_friendly",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1789355050662,
+      "tag": "0003_concierge_listing_review_email",
+      "breakpoints": true
     }
   ]
 }
