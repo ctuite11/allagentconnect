@@ -213,6 +213,7 @@ import { Skeleton } from "./components/ui/skeleton";
 import { SharedListingGuestProvider } from "./contexts/SharedListingGuestContext";
 import { SharedListingGate } from "./components/SharedListingGate";
 import { decideLegacyDashboardRoute } from "./lib/legacyDashboardRoute";
+import { CONCIERGE_LISTINGS_ENABLED } from "./config/featureFlags";
 
 /** Legacy `/dashboard` → role-appropriate home (buyers must land on `/client/dashboard`). */
 function LegacyDashboardRedirect() {
@@ -513,7 +514,9 @@ const App = () => (
                   <Route path="/agent/listings/:id/photos" element={<RouteGuard requireRole="agent"><ManageListingPhotos /></RouteGuard>} />
                   <Route path="/agent/listings/:id/floor-plans" element={<RouteGuard requireRole="agent"><ManageListingPhotos mode="floorPlans" /></RouteGuard>} />
                   <Route path="/agent/listings/edit/:id" element={<RouteGuard requireRole="agent"><AddListing /></RouteGuard>} />
-                  <Route path="/agent/listings/review/:id" element={<RouteGuard requireRole="agent"><ListingReview /></RouteGuard>} />
+                  {CONCIERGE_LISTINGS_ENABLED && (
+                    <Route path="/agent/listings/review/:id" element={<RouteGuard requireRole="agent"><ListingReview /></RouteGuard>} />
+                  )}
                   <Route path="/agent/listings/:id" element={<RouteGuard requireRole="agent"><AgentDetailRedirect /></RouteGuard>} />
                   <Route path="/client-needs" element={<RouteGuard requireRole="agent"><ClientNeedsDashboard /></RouteGuard>} />
                   <Route path="/listing-intel" element={<RouteGuard requireRole="agent"><ListingIntel /></RouteGuard>} />
@@ -583,9 +586,13 @@ const App = () => (
                   <Route path="/admin/send-email" element={<AdminSendEmail />} />
                   <Route path="/admin/debug-auth" element={<AdminDebugAuth />} />
                   {/* Admin concierge: create/edit a draft listing on behalf of a member */}
-                  <Route path="/admin/concierge-listings" element={<RouteGuard requireRole="admin"><AdminConciergeListings /></RouteGuard>} />
-                  <Route path="/admin/concierge-listings/new" element={<RouteGuard requireRole="admin"><AddListing /></RouteGuard>} />
-                  <Route path="/admin/concierge-listings/:id" element={<RouteGuard requireRole="admin"><AddListing /></RouteGuard>} />
+                  {CONCIERGE_LISTINGS_ENABLED && (
+                    <>
+                      <Route path="/admin/concierge-listings" element={<RouteGuard requireRole="admin"><AdminConciergeListings /></RouteGuard>} />
+                      <Route path="/admin/concierge-listings/new" element={<RouteGuard requireRole="admin"><AddListing /></RouteGuard>} />
+                      <Route path="/admin/concierge-listings/:id" element={<RouteGuard requireRole="admin"><AddListing /></RouteGuard>} />
+                    </>
+                  )}
 
                   <Route path="/settings" element={<RouteGuard requireRole="agent"><AgentSettings /></RouteGuard>} />
                 </Route>
