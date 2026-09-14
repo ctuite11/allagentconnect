@@ -4,6 +4,13 @@ import { agentSectionTitle } from "@/lib/agentUi";
 import { useNavigate, useParams, useSearchParams, useLocation } from "react-router-dom";
 import { ROUTES } from "@/constants/routes";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  CONCIERGE_BASE_PATH,
+  createConciergeDraft,
+  loadConciergeDraft,
+  updateConciergeDraft,
+} from "@/lib/conciergeListing";
+
 // Navigation removed - rendered globally in App.tsx
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Card, CardContent } from "@/components/ui/card";
@@ -246,7 +253,17 @@ const AddListing = () => {
     [location, searchParams],
   );
   const initialStatus = searchParams.get("status") || "new";
+  /**
+   * Admin concierge mode ("Create Listing for Agent").
+   * Draft-only: the listing is owned by the selected member, saved through
+   * admin-only server actions, and can never be published from here.
+   */
+  const isConciergeMode = location.pathname.startsWith(CONCIERGE_BASE_PATH);
+  const [conciergeAgentId, setConciergeAgentId] = useState<string | null>(
+    searchParams.get("agent"),
+  );
   const [user, setUser] = useState<any>(null);
+
   const { introVisible, showComingSoonRow, handleGotIt } = useAddListingDcmlsIntro(user);
   const { introVisible: statusIntroVisible, handleGotIt: handleStatusGotIt } =
     useAddListingStatusIntro(user);
