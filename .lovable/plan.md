@@ -1,46 +1,41 @@
-# Option B — test the review email, then publish
+# What was sent to Barbara — and preventing the misclick
 
-## What is already live
+## What actually happened
 
-The last publish came after the Admin Approvals speed work, and the drawer wording change ("AAC activation/setup link (30 days, single-use)") landed before it — so production almost certainly already shows the new wording. The Admin Approvals speed pass and the Agent Network team search are live too.
+At 6:59pm ET today, the admin menu action **Reset Password** ran for barbara.mihalko@gibsonsir.com. It sends immediately — no dialog, no confirmation.
 
-## What is pending and would go live on the next publish
+In the agent row menu, the two items sit next to each other:
 
-Concierge listing work only — nothing else is waiting:
+```text
+Set Password      <- opens the dialog you expected
+Reset Password    <- sends instantly, no dialog
+```
 
-1. Create-a-listing-for-a-member admin page (pick a verified member, prepare a Draft, reopen drafts, "Send to agent for review").
-2. Listing form in concierge mode — same form, locked to Draft, no publish button for staff.
-3. Review & Publish screen for members.
-4. Sign-in and activation links can return the member to a specific listing.
+## The exact email she received
 
-Files: `AdminConciergeListings.tsx`, `ListingReview.tsx`, `conciergeListing.ts` (new); `AddListing.tsx`, `App.tsx`, `SignInLink.tsx`, `ActivateAccount.tsx`, `AgentAccountSetup.tsx` (modified). The matching backend is already deployed, so the live site currently has no way to reach any of it.
+- From: All Agent Connect (hello@allagentconnect.com)
+- Subject: "Reset your password"
+- Body: "We received a request to reset your password. Click below to choose a new one." plus a **Reset Password** button, and a note that the link expires in 1 hour and can be ignored if she didn't request it.
+- No password, no account details, nothing sensitive. Delivered successfully.
+- The 1-hour link has already expired, so it now does nothing.
 
-## Controlled end-to-end email test (before publishing)
+It also does not appear in her email history in Admin, because this one email path sends directly instead of going through the normal email queue — which is why it looked invisible.
 
-Needs a test email address you control, and an AAC member account for the draft. No real member account is used or altered unless you name one.
+## Proposed fixes
 
-Test steps:
-1. Create a concierge Draft against the designated test account with clearly fake property data.
-2. Press "Send to agent for review" and confirm exactly one email job is created.
-3. Confirm the email is delivered to the test address.
-4. Confirm the email shows the correct address, price, status, beds/baths and description for that draft, and the correct member name.
-5. Confirm both buttons point at the correct listing, and that fetching the links does not redeem the token or publish anything.
-6. Signed-out path: follow the link, complete sign-in (or activation), confirm landing directly on that listing — not the dashboard.
-7. Signed-in path: follow the link while already signed in, confirm direct landing.
-8. Confirm the Review & Publish screen loads the correct draft, and Edit opens the correct listing editor.
-9. Confirm Publish runs the existing normal member publish flow (validation, photo order, normal alerts) — run this only if you want the publish leg tested live, since publishing triggers real buyer alerts.
-10. Confirm no other listing, member, or email job changed; email queue count before and after recorded; test draft deleted afterwards.
+1. **Confirmation step** — "Reset Password" asks "Send a password-reset email to <email>?" before sending, so a stray click can't send anything.
+2. **Clearer labels** — rename to "Set password (no email)" and "Email password reset", and separate them with a divider so they're not adjacent look-alikes.
+3. **Visible record** — record this reset email so it shows in the agent's email history and the Last Email column like every other personal send.
 
-## Cosmetic cleanup (included)
+Note: this reset email uses the old ~1-hour link, not AAC's 30-day system. I'd leave that as-is for now and raise it separately if you want it converted.
 
-`src/components/admin/AgentEmailHistory.tsx` line 165 tooltip: "setup/recovery link" to "setup link". One word, no behavior change.
+## Next step for Barbara
 
-## Not in scope
+Nothing is broken on her account. Use **Set Password** to set one and send her the details, or **Email 30-day sign-in link**.
 
-No other frontend or backend changes. No publish until the email test passes and you approve.
+## Technical notes
 
-## What I need from you
-
-- The test email address.
-- Whether that address already belongs to an AAC member account, or whether I should use a designated test member you name.
-- Whether to include step 9 (a real publish, which fires real buyer alerts) or stop at the confirmation screen.
+- Trigger: `handleSendPasswordReset` in `src/pages/AdminApprovals.tsx` → `send-password-reset` edge function (confirmed in its logs at 22:59 UTC, Resend message id `09b7f360…`).
+- Fix 1 and 2 are frontend-only changes in `AdminApprovals.tsx` (plus the details drawer's `onResetPassword`).
+- Fix 3 adds an `email_jobs` audit row from the `send-password-reset` function (or a queued send) with template `password-reset`, plus its template-label and Last Email allowlist entry. No schema change.
+- No changes to the temp-password dialog, token system, or any other email template.
