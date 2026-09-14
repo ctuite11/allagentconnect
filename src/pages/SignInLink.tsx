@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
 import { Clock, LogIn, ShieldAlert } from "lucide-react";
+import { setPostAuthRedirect } from "@/lib/sharedListingGuest";
 
 /**
  * AAC-owned sign-in link landing page.
@@ -80,7 +81,12 @@ export default function SignInLink() {
 
   useEffect(() => {
     const raw = window.location.hash.startsWith("#") ? window.location.hash.slice(1) : "";
-    const found = new URLSearchParams(raw).get("t");
+    const params = new URLSearchParams(raw);
+    const found = params.get("t");
+    // Optional internal destination carried by the link (e.g. a listing we
+    // prepared). Sanitized to internal-only paths by setPostAuthRedirect.
+    const returnTo = params.get("r");
+    if (returnTo) setPostAuthRedirect(returnTo);
     if (found) {
       setToken(found);
       window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}`);
