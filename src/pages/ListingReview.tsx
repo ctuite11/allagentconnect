@@ -15,7 +15,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { AacMonogramLoader } from "@/components/AacMonogramLoader";
-import { resolveListingPhotoUrls } from "@/lib/listingPhotos";
+import { resolveFirstListingPhotoUrl } from "@/lib/resolveListingPhotoUrl";
 import { Bath, BedDouble, Pencil, Ruler, Rocket } from "lucide-react";
 
 /**
@@ -92,7 +92,7 @@ export default function ListingReview() {
   }, [id, navigate]);
 
   const photoUrl = useMemo(
-    () => (listing ? resolveListingPhotoUrls(listing.photos)[0] ?? null : null),
+    () => (listing ? resolveFirstListingPhotoUrl(listing.photos) ?? null : null),
     [listing],
   );
 
@@ -232,7 +232,6 @@ export default function ListingReview() {
               Yes, publish
             </AlertDialogAction>
           </AlertDialogFooter>
-        </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
     </div>
