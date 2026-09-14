@@ -560,6 +560,13 @@ Deno.serve(async (req) => {
       return acc
     }, {} as Record<string, number>)
 
+    console.log('[admin-list-agents] Lifecycle counts:', lifecycleCounts)
+    console.log(
+      `[admin-list-agents] roster=${allAgents.length} total_ms=${Date.now() - requestStartedAt}`,
+    )
+
+
+
     return new Response(
       JSON.stringify({
         agents: allAgents,
