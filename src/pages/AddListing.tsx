@@ -3404,6 +3404,26 @@ const AddListing = () => {
     }
   };
 
+  /**
+   * Publish intent handed off from the draft review screen.
+   *
+   * The member already pressed Publish (and confirmed) on /agent/listings/review/:id.
+   * We resume the normal publish path here so validation, photo-order confirmation,
+   * status rules and listing alerts behave exactly as they always have. The intent
+   * is cleared immediately so a refresh or back navigation can never republish.
+   */
+  const autoPublishRequested =
+    (location.state as { autoPublish?: boolean } | null)?.autoPublish === true;
+  const autoPublishFiredRef = useRef(false);
+  useEffect(() => {
+    if (!autoPublishRequested || isConciergeMode) return;
+    if (loading || !listingId || autoPublishFiredRef.current) return;
+    autoPublishFiredRef.current = true;
+    window.history.replaceState({}, "", window.location.pathname);
+    void handleSubmit({ preventDefault: () => {} } as unknown as React.FormEvent, true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoPublishRequested, isConciergeMode, loading, listingId]);
+
   /** Confirm photo order, then resume the exact publish path that was interrupted. */
   const handleConfirmPhotoOrder = () => {
     const action = pendingPublishAction;

@@ -56,6 +56,7 @@ const AddListing = React.lazy(() => import("./pages/AddListing"));
 const AddRentalListing = React.lazy(() => import("./pages/AddRentalListing"));
 const PropertyDetail = React.lazy(() => import("./pages/PropertyDetail"));
 const AgentDetailRedirect = React.lazy(() => import("./pages/AgentDetailRedirect"));
+const ListingReview = React.lazy(() => import("./pages/ListingReview"));
 const ConsumerPropertyDetail = React.lazy(() => import("./pages/ConsumerPropertyDetail"));
 const AgentProfileEditor = React.lazy(() => import("./pages/AgentProfileEditor"));
 const ManageTeam = React.lazy(() => import("./pages/ManageTeam"));
@@ -512,6 +513,7 @@ const App = () => (
                   <Route path="/agent/listings/:id/photos" element={<RouteGuard requireRole="agent"><ManageListingPhotos /></RouteGuard>} />
                   <Route path="/agent/listings/:id/floor-plans" element={<RouteGuard requireRole="agent"><ManageListingPhotos mode="floorPlans" /></RouteGuard>} />
                   <Route path="/agent/listings/edit/:id" element={<RouteGuard requireRole="agent"><AddListing /></RouteGuard>} />
+                  <Route path="/agent/listings/review/:id" element={<RouteGuard requireRole="agent"><ListingReview /></RouteGuard>} />
                   <Route path="/agent/listings/:id" element={<RouteGuard requireRole="agent"><AgentDetailRedirect /></RouteGuard>} />
                   <Route path="/client-needs" element={<RouteGuard requireRole="agent"><ClientNeedsDashboard /></RouteGuard>} />
                   <Route path="/listing-intel" element={<RouteGuard requireRole="agent"><ListingIntel /></RouteGuard>} />

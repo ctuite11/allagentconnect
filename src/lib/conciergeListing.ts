@@ -85,3 +85,16 @@ export async function listConciergeDrafts(): Promise<ConciergeDraftSummary[]> {
   );
   return res.listings ?? [];
 }
+
+/**
+ * Ask the member to review the prepared draft.
+ *
+ * Sends the branded listing-preview email with "Review & Publish" and
+ * "Edit / Update" buttons. This is the only concierge action that sends
+ * anything — creating and editing a draft stays completely silent.
+ */
+export async function sendConciergeReviewEmail(
+  listingId: string,
+): Promise<{ sent: boolean; email: string; tokenType: string; expiresAt: string }> {
+  return invoke("send-concierge-review-email", { listing_id: listingId });
+}
