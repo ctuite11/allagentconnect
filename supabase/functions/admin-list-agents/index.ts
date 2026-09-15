@@ -263,7 +263,13 @@ Deno.serve(async (req) => {
 
 
     // Build maps of auth.users by lowercase email — drives has_auth_account + last_sign_in_at
-    const { emails: authEmails, lastSignIn: lastSignInByEmail } = await authScanPromise
+    const {
+      emails: authEmails,
+      lastSignIn: lastSignInByEmail,
+      idSet: authUserIds,
+      lastSignInById,
+    } = await authScanPromise
+
     console.log('[admin-list-agents] auth users scanned:', authEmails.size)
 
     // Fetch all profiles
