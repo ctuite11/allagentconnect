@@ -6975,6 +6975,14 @@ export type Database = {
           last_sign_in_at: string
         }[]
       }
+      admin_auth_user_signin_map_v2: {
+        Args: never
+        Returns: {
+          email: string
+          last_sign_in_at: string
+          user_id: string
+        }[]
+      }
       admin_deactivate_buyer: { Args: { p_user_id: string }; Returns: Json }
       admin_decide_developer_access_request: {
         Args: { _decision: string; _notes?: string; _request_id: string }
