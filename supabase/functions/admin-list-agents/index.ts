@@ -387,8 +387,13 @@ Deno.serve(async (req) => {
         agent_status: s?.agent_status ?? 'unknown',
         verified_at: s?.verified_at ?? null,
         created_at: p.created_at || new Date().toISOString(),
-        has_auth_account: authEmails.has(emailKey),
-        last_sign_in_at: lastSignInByEmail.get(emailKey) ?? null,
+        // Auth user id wins; email is only a fallback (profile email and
+        // sign-in email can legitimately differ).
+        has_auth_account: authUserIds.has(p.id) || authEmails.has(emailKey),
+        last_sign_in_at: authUserIds.has(p.id)
+          ? (lastSignInById.get(p.id) ?? null)
+          : (lastSignInByEmail.get(emailKey) ?? null),
+
         account_activated_at: s?.account_activated_at ?? null,
         credentials_issued_at: s?.credentials_issued_at ?? null,
         approval_email_sent: s?.approval_email_sent ?? null,
