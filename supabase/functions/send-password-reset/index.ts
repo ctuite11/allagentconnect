@@ -156,6 +156,33 @@ const handler = async (req: Request): Promise<Response> => {
     const emailResult = await emailResponse.json();
     console.log("Password reset email sent successfully:", emailResult);
 
+    // Audit-only record so the reset shows in Email History / Last Email.
+    // Written AFTER the provider accepted the message, with status 'sent' so
+    // the queue worker never claims it. The immediate provider response is
+    // acceptance, not delivery — delivery_status is left for the existing
+    // webhook/delivery-event flow. Never blocks or delays the send.
+    try {
+      const providerMessageId: string | null =
+        typeof emailResult?.id === "string" ? emailResult.id : null;
+      const { error: auditError } = await supabaseAdmin.from("email_jobs").insert({
+        status: "sent",
+        provider_message_id: providerMessageId,
+        idempotency_key: `password-reset:${providerMessageId ?? crypto.randomUUID()}`,
+        payload: {
+          provider: "resend",
+          template: "password-reset",
+          to: email,
+          subject: "Reset your password",
+          reply_to: "hello@allagentconnect.com",
+        },
+      });
+      if (auditError) {
+        console.error("[send-password-reset] audit insert failed:", auditError.message);
+      }
+    } catch (auditErr) {
+      console.error("[send-password-reset] audit insert threw:", (auditErr as Error).message);
+    }
+
     return new Response(JSON.stringify({ success: true }), {
       status: 200,
       headers: { "Content-Type": "application/json", ...corsHeaders },
