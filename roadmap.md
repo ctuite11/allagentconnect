@@ -36,3 +36,12 @@
 - [ ] Urgent: resolve post-login spinning “no access” state after Cloud outage
 
 - [ ] Re-enable concierge frontend: set CONCIERGE_LISTINGS_ENABLED = true in src/config/featureFlags.ts after the review-email test is approved.
+
+## Password reset visibility + misclick guard (2026-09-15, backend deployed, frontend NOT published)
+- [x] Audited both paths: member Forgot Password (agent/buyer/consumer/DCMLS) and admin both already send immediately, no approval step
+- [x] Admin action renamed "Email password reset" with confirm; "Set password (no email)" separated by dividers (menu + details drawer)
+- [x] send-password-reset writes an audit-only email_jobs row after provider acceptance (status 'sent', provider_message_id, key password-reset:<message-id>, no delivery_status set)
+- [x] Migration 0004: email_stream_for_template 'password-reset' -> transactional; admin_agent_email_summary latest-templates includes 'password-reset'
+- [x] Label "Password Reset" in emailTemplateLabels
+- [x] Link lifetime unchanged (1 hour); no activation/setup/temp-password changes
+- [x] Live test to christuitet11@gmail.com: exactly one email, exactly one audit row, webhook updated delivery to delivered
