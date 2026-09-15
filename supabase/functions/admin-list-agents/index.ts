@@ -193,27 +193,46 @@ Deno.serve(async (req) => {
     // order these resolve in; awaiting them sequentially was the main reason
     // this endpoint took several seconds.
     // Targeted read-only RPC (service_role only) replaces the paged
-    // auth.admin.listUsers scan — same email -> last_sign_in_at semantics.
+    // auth.admin.listUsers scan. Identity resolution is auth-user-id first,
+    // email only as a fallback — a member whose sign-in email differs from
+    // their profile email must still resolve to their own auth record.
     const authScanPromise = (async () => {
       const emails = new Set<string>()
       const lastSignIn = new Map<string, string | null>()
+      const lastSignInById = new Map<string, string | null>()
+      const idSet = new Set<string>()
+      const takeLatest = (prev: string | null | undefined, next: string | null) => {
+        if (!prev) return next
+        if (!next) return prev
+        return new Date(next).getTime() > new Date(prev).getTime() ? next : prev
+      }
       try {
-        const { data, error } = await adminClient.rpc('admin_auth_user_signin_map')
+        const { data, error } = await adminClient.rpc('admin_auth_user_signin_map_v2')
         if (error) {
-          console.error('[admin-list-agents] admin_auth_user_signin_map error:', error.message)
+          console.error('[admin-list-agents] admin_auth_user_signin_map_v2 error:', error.message)
         } else {
-          for (const row of (data ?? []) as { email: string; last_sign_in_at: string | null }[]) {
+          for (const row of (data ?? []) as {
+            user_id: string | null
+            email: string
+            last_sign_in_at: string | null
+          }[]) {
             const email = (row.email ?? '').toLowerCase()
+            const signIn = row.last_sign_in_at ?? null
+            if (row.user_id) {
+              idSet.add(row.user_id)
+              lastSignInById.set(row.user_id, takeLatest(lastSignInById.get(row.user_id), signIn))
+            }
             if (!email) continue
             emails.add(email)
-            lastSignIn.set(email, row.last_sign_in_at ?? null)
+            lastSignIn.set(email, takeLatest(lastSignIn.get(email), signIn))
           }
         }
       } catch (e) {
         console.error('[admin-list-agents] auth signin map exception:', e)
       }
-      return { emails, lastSignIn }
+      return { emails, lastSignIn, idSet, lastSignInById }
     })()
+
 
 
     // `bio` is deliberately not selected — the admin table never renders it
