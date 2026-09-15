@@ -193,27 +193,46 @@ Deno.serve(async (req) => {
     // order these resolve in; awaiting them sequentially was the main reason
     // this endpoint took several seconds.
     // Targeted read-only RPC (service_role only) replaces the paged
-    // auth.admin.listUsers scan — same email -> last_sign_in_at semantics.
+    // auth.admin.listUsers scan. Identity resolution is auth-user-id first,
+    // email only as a fallback — a member whose sign-in email differs from
+    // their profile email must still resolve to their own auth record.
     const authScanPromise = (async () => {
       const emails = new Set<string>()
       const lastSignIn = new Map<string, string | null>()
+      const lastSignInById = new Map<string, string | null>()
+      const idSet = new Set<string>()
+      const takeLatest = (prev: string | null | undefined, next: string | null) => {
+        if (!prev) return next
+        if (!next) return prev
+        return new Date(next).getTime() > new Date(prev).getTime() ? next : prev
+      }
       try {
-        const { data, error } = await adminClient.rpc('admin_auth_user_signin_map')
+        const { data, error } = await adminClient.rpc('admin_auth_user_signin_map_v2')
         if (error) {
-          console.error('[admin-list-agents] admin_auth_user_signin_map error:', error.message)
+          console.error('[admin-list-agents] admin_auth_user_signin_map_v2 error:', error.message)
         } else {
-          for (const row of (data ?? []) as { email: string; last_sign_in_at: string | null }[]) {
+          for (const row of (data ?? []) as {
+            user_id: string | null
+            email: string
+            last_sign_in_at: string | null
+          }[]) {
             const email = (row.email ?? '').toLowerCase()
+            const signIn = row.last_sign_in_at ?? null
+            if (row.user_id) {
+              idSet.add(row.user_id)
+              lastSignInById.set(row.user_id, takeLatest(lastSignInById.get(row.user_id), signIn))
+            }
             if (!email) continue
             emails.add(email)
-            lastSignIn.set(email, row.last_sign_in_at ?? null)
+            lastSignIn.set(email, takeLatest(lastSignIn.get(email), signIn))
           }
         }
       } catch (e) {
         console.error('[admin-list-agents] auth signin map exception:', e)
       }
-      return { emails, lastSignIn }
+      return { emails, lastSignIn, idSet, lastSignInById }
     })()
+
 
 
     // `bio` is deliberately not selected — the admin table never renders it
@@ -244,7 +263,13 @@ Deno.serve(async (req) => {
 
 
     // Build maps of auth.users by lowercase email — drives has_auth_account + last_sign_in_at
-    const { emails: authEmails, lastSignIn: lastSignInByEmail } = await authScanPromise
+    const {
+      emails: authEmails,
+      lastSignIn: lastSignInByEmail,
+      idSet: authUserIds,
+      lastSignInById,
+    } = await authScanPromise
+
     console.log('[admin-list-agents] auth users scanned:', authEmails.size)
 
     // Fetch all profiles
@@ -368,8 +393,13 @@ Deno.serve(async (req) => {
         agent_status: s?.agent_status ?? 'unknown',
         verified_at: s?.verified_at ?? null,
         created_at: p.created_at || new Date().toISOString(),
-        has_auth_account: authEmails.has(emailKey),
-        last_sign_in_at: lastSignInByEmail.get(emailKey) ?? null,
+        // Auth user id wins; email is only a fallback (profile email and
+        // sign-in email can legitimately differ).
+        has_auth_account: authUserIds.has(p.id) || authEmails.has(emailKey),
+        last_sign_in_at: authUserIds.has(p.id)
+          ? (lastSignInById.get(p.id) ?? null)
+          : (lastSignInByEmail.get(emailKey) ?? null),
+
         account_activated_at: s?.account_activated_at ?? null,
         credentials_issued_at: s?.credentials_issued_at ?? null,
         approval_email_sent: s?.approval_email_sent ?? null,
