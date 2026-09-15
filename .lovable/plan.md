@@ -1,40 +1,59 @@
-# Password reset: automatic sending, visible afterwards
+# Fix: Allison Avramovich shows as "Verified" instead of "Activated"
 
-## What was sent to Barbara (answer)
+## What's actually happening
 
-At 6:59pm ET today the admin menu action **Reset Password** ran for barbara.mihalko@gibsonsir.com. It sends instantly — no dialog, no confirmation — and it sits directly under **Set Password** in the same menu.
+Allison has genuinely activated and signed in:
 
-The email she got: from All Agent Connect (hello@allagentconnect.com), subject "Reset your password", body "We received a request to reset your password. Click below to choose a new one." with a **Reset Password** button and a note that the link expires in 1 hour and can be ignored if she didn't request it. No password, no account details. Delivered. The 1-hour link has since expired.
+- Account set up: Sep 14, 18:37 UTC
+- Last sign-in: Sep 14, 19:16 UTC
+- Last seen: Sep 15, 02:39 UTC
+- One listing (220 Dorset Road, currently Off Market)
 
-It never showed in Email History because this email path sends directly through the provider instead of being recorded like every other AAC email.
+The admin roster still labels her **Verified** because her sign-in email and her
+AAC profile email are different:
 
-## Audit of the two paths
+- Sign-in (account) email: `aavramovich@gmail.com`
+- Profile email shown in Admin: `allison@sumnerrealtyma.com`
 
-Both already send immediately, with no approval step anywhere:
+The admin roster decides "Activated" by matching accounts to members **by email
+address**. Since the two addresses don't match, the system can't see her
+sign-in, so she stays at the previous stage.
 
-- **Member self-service** — Forgot password on the agent login page, plus the buyer, consumer and DCMLS login pages. All four call the same reset function and it sends right away.
-- **Admin** — the Reset Password menu item and the agent details drawer call that same function directly, with no confirmation.
+She is the only member in the whole roster (488 records) whose two addresses
+differ, so this affects exactly one row today — but it will silently happen
+again for anyone who signs in with a personal address.
 
-So nothing is queued or waiting. The only real problems are the misclick risk and the invisibility.
+## The fix
 
-## Changes
+Match sign-ins to members by their **account identifier** first, and fall back
+to email only when there is no identifier match. Nothing else about the
+lifecycle rules changes: "Activated" still requires a real sign-in, and the
+Pending / Invited / Verified / Ready to sign in / Rejected stages are untouched.
 
-1. **Member self-service: unchanged.** Still immediate, no admin involvement.
-2. **Admin action renamed** to **Email password reset**, with a confirmation first: "Send a password-reset email to <agent email>?" — send immediately on confirm. Same confirmation in the agent details drawer.
-3. **Separate the look-alikes.** The other action becomes **Set password (no email)**, with a divider between them so they are no longer adjacent twins.
-4. **Record every reset email** — from both the member and admin paths — in the normal AAC email audit right after the provider accepts it, using template key `password-reset` and label `Password Reset`. Recording happens after sending and never blocks or delays delivery; if recording fails, the email still went out.
-5. **Show it** in the agent's Email History and make it eligible for the **Last Email** column.
-6. **Link lifetime stays at 1 hour.** No conversion to the 30-day activation/setup tokens.
+Result: Allison moves to **Activated**, her "Account Activated" date shows,
+and the Activated count goes up by one. No other row changes.
 
-## Guardrails
+## Technical detail
 
-No change to activation links, 30-day setup links, temporary-password behavior, or any other email. No approval workflow anywhere. No new sending behavior — only a confirmation on the admin click and an after-the-fact record.
+- Function-body-only migration to `admin_auth_user_signin_map`: also return
+  `auth.users.id` alongside the existing `email` / `last_sign_in_at`. No table,
+  column, RLS, or grant changes.
+- `supabase/functions/admin-list-agents/index.ts`: build a second map keyed by
+  user id. For profile-derived rows (whose `agent_profiles.id` is the auth user
+  id), resolve `last_sign_in_at` and `has_auth_account` from the id map first,
+  then fall back to the existing email map. Early-access and
+  pending-verification rows keep email matching, since they have no auth id.
+- No change to `deriveLifecycleStatus`, `deriveAdminStatus`, the pills, filters,
+  counts logic, email columns, or any other function.
 
-## Technical notes
+## Verification
 
-- `supabase/functions/send-password-reset/index.ts`: after the Resend call succeeds, insert an `email_jobs` audit row with `status='sent'`, `delivery_status` from the response, `provider_message_id`, payload `{template:'password-reset', to, subject}` and an idempotency key of `password-reset:<email>:<timestamp-bucket>`. Insert is wrapped in try/catch and logged only on failure — the 200 response does not depend on it. `status='sent'` means the queue worker never claims it, so no double-send.
-- Function-body-only migration: add `'password-reset' → 'transactional'` to `email_stream_for_template` (otherwise the enforce-stream trigger nulls the stream) and add `'password-reset'` to the `_latest_templates` default of `admin_agent_email_summary`. No table, column, RLS or grant changes.
-- `src/lib/emailTemplateLabels.ts`: add `"password-reset": "Password Reset"`.
-- `src/pages/AdminApprovals.tsx`: rename the two menu items, add a `DropdownMenuSeparator`, add the confirm in `handleSendPasswordReset` (covers the drawer's `onResetPassword` too).
-- Unchanged callers: `Auth.tsx`, `BuyerAuth.tsx`, `ConsumerAuth.tsx`, `DcmlsAuth.tsx`, `AuthDiagnostics.tsx`.
-- Verify: type-check and build; one reset to a test address appears in Email History as Password Reset with delivery status; email_jobs gains exactly one row per send; no other template affected. Stop for review before publishing.
+- Roster total and each lifecycle count before/after: only `verified` −1 and
+  `activated` +1.
+- Allison's row shows Activated with her activation date.
+- Spot-check three members whose emails match — status unchanged.
+- No emails sent or queued (`email_jobs` count identical).
+- Type-check and production build pass.
+
+Deploy `admin-list-agents` and apply the one function-body migration. Frontend
+publish only on your approval.
