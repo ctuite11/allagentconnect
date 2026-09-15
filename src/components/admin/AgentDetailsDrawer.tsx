@@ -377,7 +377,7 @@ export function AgentDetailsDrawer({
                     Copy Setup Link
                   </Button>
                   <Button size="sm" variant="outline" onClick={onSetPassword}>
-                    Set Password
+                    Set password (no email)
                   </Button>
                   <Button size="sm" variant="outline" onClick={onEdit}>
                     Edit
@@ -414,11 +414,16 @@ export function AgentDetailsDrawer({
                     Email
                   </Button>
                   <Button size="sm" variant="outline" onClick={onSetPassword}>
-                    Set Password
+                    Set password (no email)
                   </Button>
                   {canPasswordReset && (
-                    <Button size="sm" variant="outline" onClick={onResetPassword}>
-                      Reset Password
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="ml-2 border-slate-300"
+                      onClick={onResetPassword}
+                    >
+                      Email password reset
                     </Button>
                   )}
                   <Button size="sm" variant="outline" onClick={onCopySetupLink}>
