@@ -1535,8 +1535,11 @@ export default function AdminApprovals() {
     setEmailRecipients([{ id: agent.id, email: agent.email, name: `${agent.first_name} ${agent.last_name}` }]);
   };
 
-  // Send password reset email
+  // Send password reset email. Sends immediately once the admin confirms —
+  // there is no approval queue; the confirm only guards against a misclick.
   const handleSendPasswordReset = async (agent: Agent) => {
+    const ok = window.confirm(`Send a password-reset email to ${agent.email}?`);
+    if (!ok) return;
     try {
       const { error } = await supabase.functions.invoke("send-password-reset", {
         body: { 
@@ -2574,12 +2577,16 @@ export default function AdminApprovals() {
                                       window.setTimeout(() => setShowTempPasswordDialog(true), 0);
                                     }}
                                   >
-                                    Set Password
+                                    Set password (no email)
                                   </DropdownMenuItem>
                                   {!agent.is_early_access && agent.source !== "pending_verification" && (
-                                    <DropdownMenuItem onSelect={() => handleSendPasswordReset(agent)}>
-                                      Reset Password
-                                    </DropdownMenuItem>
+                                    <>
+                                      <DropdownMenuSeparator />
+                                      <DropdownMenuItem onSelect={() => handleSendPasswordReset(agent)}>
+                                        Email password reset
+                                      </DropdownMenuItem>
+                                      <DropdownMenuSeparator />
+                                    </>
                                   )}
                                   <DropdownMenuItem onSelect={() => handleCopySetupLink(agent)}>
                                     Copy setup link
