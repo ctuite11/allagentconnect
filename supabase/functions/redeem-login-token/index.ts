@@ -119,5 +119,21 @@ Deno.serve(async (req) => {
     return json({ status: "used" });
   }
 
+  // A successfully redeemed sign-in link IS a proven authentication, so it is
+  // the activation moment for a member who never went through the setup
+  // screen. `mark_agent_activated` is idempotent (writes only when
+  // account_activated_at IS NULL) and agent-role gated. Best-effort: never
+  // block or fail the sign-in on it.
+  try {
+    const { error: activateErr } = await admin.rpc("mark_agent_activated", {
+      _user_id: userId,
+    });
+    if (activateErr) {
+      console.warn("[redeem-login-token] mark_agent_activated warn:", activateErr.message);
+    }
+  } catch (err) {
+    console.warn("[redeem-login-token] mark_agent_activated threw:", (err as Error).message);
+  }
+
   return json({ status: "ok", redirect: wrapSupabaseActionLinkForAac(actionLink) });
 });
