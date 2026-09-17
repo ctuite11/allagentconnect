@@ -1,59 +1,41 @@
-# Fix: Allison Avramovich shows as "Verified" instead of "Activated"
+# Brigid Murphy — "my link is expired"
 
-## What's actually happening
+## What I found (read-only)
 
-Allison has genuinely activated and signed in:
+Brigid Murphy (brigid@findyouraccess.com) is a real, approved member with a working account:
 
-- Account set up: Sep 14, 18:37 UTC
-- Last sign-in: Sep 14, 19:16 UTC
-- Last seen: Sep 15, 02:39 UTC
-- One listing (220 Dorset Road, currently Off Market)
+- Approved Jul 30
+- Account created Jul 30, password already set
+- She used a sign-in link on Aug 18 and successfully signed in that day
 
-The admin roster still labels her **Verified** because her sign-in email and her
-AAC profile email are different:
+Her complaint is accurate: every link we ever sent her has since expired.
 
-- Sign-in (account) email: `aavramovich@gmail.com`
-- Profile email shown in Admin: `allison@sumnerrealtyma.com`
+| Link sent | Expired |
+| --- | --- |
+| Setup link, Aug 6 | Aug 13 |
+| Sign-in link, Aug 18 | Aug 25 (already used once on Aug 18) |
 
-The admin roster decides "Activated" by matching accounts to members **by email
-address**. Since the two addresses don't match, the system can't see her
-sign-in, so she stays at the previous stage.
+Both were issued under the old 7-day rule, before the 30-day link system. Links are also single-use, so the Aug 18 one was spent the moment she signed in. Nothing is wrong with her account — she simply has no live link, and her email is not on any blocked/deleted list.
 
-She is the only member in the whole roster (488 records) whose two addresses
-differ, so this affects exactly one row today — but it will silently happen
-again for anyone who signs in with a personal address.
+One inconsistency worth noting: although she signed in on Aug 18, her record still shows no "account activated" date. That means Admin still lists her as approved-but-not-activated, and a new link would be issued as an activation/setup link rather than a sign-in link. She would land on the account-setup screen and be asked to set a password she already has.
 
-## The fix
+## Proposed fix
 
-Match sign-ins to members by their **account identifier** first, and fall back
-to email only when there is no identifier match. Nothing else about the
-lifecycle rules changes: "Activated" still requires a real sign-in, and the
-Pending / Invited / Verified / Ready to sign in / Rejected stages are untouched.
+1. Send Brigid a fresh 30-day link from Admin so she can get in today.
+2. Decide how to handle the missing activation date:
+   - Option A (recommended): investigate why signing in through a sign-in link does not record the activation date, then correct it for her and for anyone else in the same position. This is the underlying bug.
+   - Option B: send the link as-is now; she completes the setup screen, which records activation, and we look at the bug separately.
+3. Tell her simply: her old link expired, here is a new one, valid 30 days.
 
-Result: Allison moves to **Activated**, her "Account Activated" date shows,
-and the Activated count goes up by one. No other row changes.
+## Technical notes
 
-## Technical detail
+- Account: auth user 84a61e00-c8f0-4d2d-b690-11c192ab49e9, `agent_settings.agent_status = 'verified'`, `account_activated_at = NULL`, `auth.users.last_sign_in_at = 2026-08-18`.
+- Token rows: one activation token (issued Aug 6, expired Aug 13, never redeemed) and one login token (issued Aug 18, redeemed Aug 18).
+- No `deleted_users` rows for this address, so issuance is not blocked.
+- Because `generate-agent-setup-link` and `send-login-link` branch strictly on `account_activated_at`, she currently routes to `/activate#t=...`.
+- Suspected root cause for Option A: `mark_agent_activated` runs on the account-setup screen; a login-token redemption that goes straight to the dashboard never stamps it. Needs confirmation before any change.
 
-- Function-body-only migration to `admin_auth_user_signin_map`: also return
-  `auth.users.id` alongside the existing `email` / `last_sign_in_at`. No table,
-  column, RLS, or grant changes.
-- `supabase/functions/admin-list-agents/index.ts`: build a second map keyed by
-  user id. For profile-derived rows (whose `agent_profiles.id` is the auth user
-  id), resolve `last_sign_in_at` and `has_auth_account` from the id map first,
-  then fall back to the existing email map. Early-access and
-  pending-verification rows keep email matching, since they have no auth id.
-- No change to `deriveLifecycleStatus`, `deriveAdminStatus`, the pills, filters,
-  counts logic, email columns, or any other function.
+## Guardrails
 
-## Verification
-
-- Roster total and each lifecycle count before/after: only `verified` −1 and
-  `activated` +1.
-- Allison's row shows Activated with her activation date.
-- Spot-check three members whose emails match — status unchanged.
-- No emails sent or queued (`email_jobs` count identical).
-- Type-check and production build pass.
-
-Deploy `admin-list-agents` and apply the one function-body migration. Frontend
-publish only on your approval.
+- No emails sent, no tokens issued, no data changed until you approve.
+- No RLS, schema, or template changes.
