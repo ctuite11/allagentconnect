@@ -290,7 +290,7 @@ export function MarketActivityRow() {
       </div>
       <button
         type="button"
-        onClick={() => navigate("/browse")}
+        onClick={() => navigate("/listing-search")}
         className="shrink-0 rounded-sm text-sm font-medium text-neutral-700 underline-offset-2 transition-colors hover:text-neutral-900 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40 focus-visible:ring-offset-2"
       >
         Search
@@ -330,7 +330,7 @@ export function MarketActivityRow() {
           <p className="text-sm text-neutral-600">No new market activity yet.</p>
           <button
             type="button"
-            onClick={() => navigate("/browse")}
+            onClick={() => navigate("/listing-search")}
             className="mt-2 rounded-sm text-sm font-medium text-neutral-700 underline-offset-2 transition-colors hover:text-neutral-900 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40 focus-visible:ring-offset-2"
           >
             Search listings
