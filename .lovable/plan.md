@@ -1,41 +1,63 @@
-# Brigid Murphy — "my link is expired"
+# Option A — fix the missing "Activated" stamp (Brigid Murphy + 22 others)
 
-## What I found (read-only)
+## 1. Root cause — confirmed, read-only
 
-Brigid Murphy (brigid@findyouraccess.com) is a real, approved member with a working account:
+Activation is recorded by one database routine, `mark_agent_activated`. Today only three places call it:
 
-- Approved Jul 30
-- Account created Jul 30, password already set
-- She used a sign-in link on Aug 18 and successfully signed in that day
+- the account-setup screen, when a member finishes setting a password
+- the normal email + password sign-in form
+- the password-reset screen
 
-Her complaint is accurate: every link we ever sent her has since expired.
+Signing in through a **sign-in link** goes through none of them. The link-redemption path claims the token, marks it redeemed, hands back a one-time sign-in and drops the member on the dashboard — it never records activation. So a member can be fully authenticated with `account_activated_at` still empty. That is exactly what happened to Brigid on Aug 18.
 
-| Link sent | Expired |
-| --- | --- |
-| Setup link, Aug 6 | Aug 13 |
-| Sign-in link, Aug 18 | Aug 25 (already used once on Aug 18) |
+## 2. Audit — 23 affected members
 
-Both were issued under the old 7-day rule, before the 30-day link system. Links are also single-use, so the Aug 18 one was spent the moment she signed in. Nothing is wrong with her account — she simply has no live link, and her email is not on any blocked/deleted list.
+Approved members who have an account, have genuinely signed in, but show no activation date:
 
-One inconsistency worth noting: although she signed in on Aug 18, her record still shows no "account activated" date. That means Admin still lists her as approved-but-not-activated, and a new link would be issued as an activation/setup link rather than a sign-in link. She would land on the account-setup screen and be asked to set a password she already has.
+| Group | Count | Evidence of sign-in |
+| --- | --- | --- |
+| Signed in via a redeemed sign-in link | 18 | redeemed login token + recorded sign-in |
+| Redeemed a setup link, signed in, never finished the setup screen | 5 | redeemed activation token + recorded sign-in |
 
-## Proposed fix
+Group 1 includes Brigid Murphy, Jason Niles, Carolyn Pimental, Jenna Taylor, Tracy Shea, Jessica Witter-Aladesanmi, Gayle Winters, Robyn Nasuti, Franklin Knotts, Steve Facelle, Ryan Drowne, Donald Cranley, Deanna Salemme, Margaret Belmonte, Joanne Adduci, Tony Nenopoulos, Anne Mahon, Lauren O'Brien. Every one of these is showing in Admin as "Verified" when they are actually active members.
 
-1. Send Brigid a fresh 30-day link from Admin so she can get in today.
-2. Decide how to handle the missing activation date:
-   - Option A (recommended): investigate why signing in through a sign-in link does not record the activation date, then correct it for her and for anyone else in the same position. This is the underlying bug.
-   - Option B: send the link as-is now; she completes the setup screen, which records activation, and we look at the bug separately.
-3. Tell her simply: her old link expired, here is a new one, valid 30 days.
+Note: all 23 have a stored password, but that alone is not proof they chose one — accounts are created with a password. Only the recorded sign-in is treated as proof here.
+
+## 3. Permanent fix (narrow)
+
+Record activation at the moment a sign-in link is successfully redeemed. In the redemption function, after the token is confirmed redeemed and the one-time sign-in has been issued, call the existing `mark_agent_activated` routine for that member with server-level rights.
+
+- It is already idempotent: it only writes when no activation date exists.
+- It is already restricted to members with the agent role.
+- Nothing changes for anyone who has never authenticated — no token, no sign-in, no stamp.
+- Failure to stamp never blocks the sign-in (best-effort, logged only).
+
+No change to the definition of activation anywhere else, no change to the setup screen, the password sign-in path, lifecycle rules, pills, filters or counts.
+
+## 4. Backfill (proof-based only)
+
+One data update, restricted to exactly the 23 rows above: approved members who have both a real recorded sign-in and a redeemed link. Activation date is set to their **first proven authentication** (their redeemed token time), not today, so history reads correctly. No blanket update of approved members.
+
+## 5. Brigid
+
+Once her activation date is corrected, she is an activated member, so Admin issues her a **30-day sign-in link** — not a setup link. She keeps her existing password and lands straight in her dashboard. Nothing else about her record changes.
 
 ## Technical notes
 
-- Account: auth user 84a61e00-c8f0-4d2d-b690-11c192ab49e9, `agent_settings.agent_status = 'verified'`, `account_activated_at = NULL`, `auth.users.last_sign_in_at = 2026-08-18`.
-- Token rows: one activation token (issued Aug 6, expired Aug 13, never redeemed) and one login token (issued Aug 18, redeemed Aug 18).
-- No `deleted_users` rows for this address, so issuance is not blocked.
-- Because `generate-agent-setup-link` and `send-login-link` branch strictly on `account_activated_at`, she currently routes to `/activate#t=...`.
-- Suspected root cause for Option A: `mark_agent_activated` runs on the account-setup screen; a login-token redemption that goes straight to the dashboard never stamps it. Needs confirmation before any change.
+- Confirmed callers of `mark_agent_activated`: `AgentAccountSetup.tsx:315`, `Auth.tsx:547`, `PasswordReset.tsx:131`. Absent from `redeem-login-token/index.ts` and from `complete_agent_login_token`.
+- Fix location: `supabase/functions/redeem-login-token/index.ts`, after `complete_agent_login_token` returns true, `await admin.rpc('mark_agent_activated', { _user_id: userId })` inside try/catch. Service-role client already present; `mark_agent_activated` already permits service_role.
+- Optional follow-up (not in this change): the 5 members who abandoned the setup screen would be covered by the same rule if `redeem-activation-token` stamped on completion — flagged, not proposed here.
+- Backfill statement scope: `agent_settings` rows where `account_activated_at IS NULL`, `agent_status = 'verified'`, `auth.users.last_sign_in_at IS NOT NULL`, and a redeemed login or activation token exists; set to the earliest redeemed-token time.
+- Deploy: `redeem-login-token` only. No schema, RLS, grant, template or migration changes. Frontend untouched, no publish needed.
+
+## Verification before/after
+
+- Count of affected rows before (23) and after (0).
+- Roster lifecycle counts: Verified −23, Activated +23, total unchanged.
+- Brigid's row reads Activated with Aug 18.
+- `email_jobs` count identical — no email sent or queued by any step.
+- Type-check and production build pass.
 
 ## Guardrails
 
-- No emails sent, no tokens issued, no data changed until you approve.
-- No RLS, schema, or template changes.
+Nothing is sent, issued, changed or deployed until you approve this plan.
