@@ -45,3 +45,9 @@
 - [x] Label "Password Reset" in emailTemplateLabels
 - [x] Link lifetime unchanged (1 hour); no activation/setup/temp-password changes
 - [x] Live test to christuitet11@gmail.com: exactly one email, exactly one audit row, webhook updated delivery to delivered
+
+## Activation status identity join (done)
+- admin_auth_user_signin_map_v2 returns auth user id + email + last_sign_in_at (service_role only).
+- admin-list-agents resolves has_auth_account / last_sign_in_at by auth user id first, email fallback.
+- Fixes Allison Avramovich (profile email != sign-in email) showing Verified instead of Activated.
+- Deployed; no frontend publish needed (response contract unchanged).
