@@ -92,6 +92,7 @@ export interface AgentFooterInfo {
   email?: string | null;
   phone?: string | null;
   headshotUrl?: string | null;
+  logoUrl?: string | null;
   websiteUrl?: string | null;
 }
 
@@ -104,6 +105,9 @@ function renderAgentFooter(agent: AgentFooterInfo, layout: "inline" | "stacked" 
   const avatarCell = agent.headshotUrl
     ? `<img src="${escapeHtml(agent.headshotUrl)}" width="72" height="72" alt="${escapeHtml(fullName)}" style="display:block;width:72px;height:72px;border-radius:50%;object-fit:cover;border:1px solid ${EMERALD_ACCENT};" />`
     : `<div style="width:72px;height:72px;border-radius:50%;background:${EMERALD_ACCENT};color:#fff;font-weight:700;font-size:24px;line-height:72px;text-align:center;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${escapeHtml(initials || "AA")}</div>`;
+  const logoCell = agent.logoUrl
+    ? `<td valign="middle" style="padding-left:18px;"><div style="width:72px;height:72px;border-radius:8px;background:#ffffff;padding:6px;box-sizing:border-box;"><img src="${escapeHtml(agent.logoUrl)}" width="60" height="60" alt="${escapeHtml(agent.company ? `${agent.company} logo` : "Brokerage logo")}" style="display:block;width:60px;height:60px;border-radius:4px;object-fit:contain;" /></div></td>`
+    : "";
 
   const lines: string[] = [];
   if (fullName) {
@@ -157,6 +161,7 @@ function renderAgentFooter(agent: AgentFooterInfo, layout: "inline" | "stacked" 
   return `<table role="presentation" cellspacing="0" cellpadding="0" align="center"><tr>
     <td valign="middle" style="padding-right:18px;">${avatarCell}</td>
     <td valign="middle" align="left">${lines.join("")}</td>
+    ${logoCell}
   </tr></table>
   <p style="margin:18px 0 0;font-size:10.5px;color:rgba(255,255,255,0.45);font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Shared via All Agent Connect &middot; By Agents. For Agents. All Agents.</p>`;
 }

@@ -51,3 +51,9 @@
 - admin-list-agents resolves has_auth_account / last_sign_in_at by auth user id first, email fallback.
 - Fixes Allison Avramovich (profile email != sign-in email) showing Verified instead of Activated.
 - Deployed; no frontend publish needed (response contract unchanged).
+
+## Darcy Bento forwardable AAC invitation (2026-09-18)
+- [x] Source Darcy's official headshot and Bento Real Estate logo.
+- [ ] Add both images and Darcy's contact details to the agent-forward invitation.
+- [ ] Deploy the invitation sender and send one copy to chris@allagentconnect.com.
+- [ ] Confirm exactly one email job reaches sent or delivered status.
