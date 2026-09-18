@@ -13,6 +13,7 @@ interface ForwardInviteRequest {
   ctaUrl?: string;
   subject?: string;
   agentId?: string;
+  idempotencyKey?: string;
 }
 
 const DEFAULT_SUBJECT = "All Agent Connect — A professional platform built for agents";
@@ -50,7 +51,7 @@ const handler = async (req: Request): Promise<Response> => {
     if (body.agentId) {
       const { data: ap } = await admin
         .from("agent_profiles")
-        .select("first_name,last_name,title,company,email,phone,cell_phone,headshot_url,social_links")
+        .select("first_name,last_name,title,company,email,phone,cell_phone,headshot_url,logo_url,social_links")
         .eq("id", body.agentId)
         .maybeSingle();
       if (ap) {
@@ -63,6 +64,7 @@ const handler = async (req: Request): Promise<Response> => {
           email: ap.email,
           phone: ap.phone || ap.cell_phone,
           headshotUrl: ap.headshot_url,
+          logoUrl: ap.logo_url,
           websiteUrl: website,
         };
         if (ap.email) replyTo = ap.email;
@@ -74,7 +76,11 @@ const handler = async (req: Request): Promise<Response> => {
     const results: Array<{ email: string; success: boolean; error?: string }> = [];
 
     for (const email of recipients) {
+      const idempotencyKey = body.idempotencyKey?.trim()
+        ? `${body.idempotencyKey.trim()}:${email.toLowerCase()}`
+        : null;
       const { error } = await admin.from("email_jobs").insert({
+        idempotency_key: idempotencyKey,
         payload: {
           provider: "resend",
           template: "agent-forward-invite",
