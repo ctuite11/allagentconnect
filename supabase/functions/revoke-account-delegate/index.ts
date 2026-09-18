@@ -3,6 +3,8 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import {
   assertDelegatesFeatureEnabled,
+  canManageTeamAssistants,
+  hasAdminRole,
   isLicensedOwner,
 } from "../_shared/agentDelegatesGate.ts";
 
@@ -41,18 +43,8 @@ serve(async (req) => {
   const { data: { user }, error: userErr } = await supabaseUser.auth.getUser(jwt);
   if (userErr || !user) return json({ success: false, error: "Unauthorized" }, 401);
 
-  const ownerUserId = user.id;
+  const callerId = user.id;
   const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
-
-  const flag = await assertDelegatesFeatureEnabled(supabaseAdmin, {
-    userId: ownerUserId,
-    ownerUserId,
-  });
-  if (!flag.ok) return json({ success: false, error: flag.error }, flag.status);
-
-  if (!(await isLicensedOwner(supabaseAdmin, ownerUserId))) {
-    return json({ success: false, error: "Only verified account owners can revoke delegates" }, 403);
-  }
 
   let input: { member_id?: string };
   try {
@@ -66,7 +58,7 @@ serve(async (req) => {
 
   const { data: member, error: memberErr } = await supabaseAdmin
     .from("agent_account_members")
-    .select("id, owner_user_id, delegate_user_id, status")
+    .select("id, owner_user_id, delegate_user_id, status, team_id")
     .eq("id", memberId)
     .maybeSingle();
 
@@ -74,8 +66,29 @@ serve(async (req) => {
     return json({ success: false, error: "Delegate membership not found" }, 404);
   }
 
-  if (member.owner_user_id !== ownerUserId) {
-    return json({ success: false, error: "Not authorized for this delegate" }, 403);
+  const flag = await assertDelegatesFeatureEnabled(supabaseAdmin, {
+    userId: callerId,
+    ownerUserId: member.owner_user_id,
+  });
+  if (!flag.ok) return json({ success: false, error: flag.error }, flag.status);
+
+  if (member.team_id) {
+    if (!(await canManageTeamAssistants(supabaseAdmin, member.team_id, callerId))) {
+      return json({ success: false, error: "Not authorized for this delegate" }, 403);
+    }
+  } else {
+    const isAdmin = await hasAdminRole(supabaseAdmin, callerId);
+    if (!isAdmin) {
+      if (!(await isLicensedOwner(supabaseAdmin, callerId))) {
+        return json({
+          success: false,
+          error: "Only verified account owners can revoke delegates",
+        }, 403);
+      }
+      if (member.owner_user_id !== callerId) {
+        return json({ success: false, error: "Not authorized for this delegate" }, 403);
+      }
+    }
   }
 
   if (member.status === "revoked") {
@@ -87,23 +100,24 @@ serve(async (req) => {
     .update({
       status: "revoked",
       revoked_at: new Date().toISOString(),
-      revoked_by: ownerUserId,
+      revoked_by: callerId,
       updated_at: new Date().toISOString(),
     })
-    .eq("id", memberId)
-    .eq("owner_user_id", ownerUserId);
+    .eq("id", memberId);
 
   if (updateErr) {
     console.error("[revoke-account-delegate] update failed:", updateErr);
     return json({ success: false, error: "Failed to revoke delegate" }, 500);
   }
 
-  if (member.delegate_user_id) {
+  // Personal delegates may have been impersonating via agent_active_context;
+  // team assistants must never receive that context, so only clear on personal revoke.
+  if (!member.team_id && member.delegate_user_id) {
     const { error: contextErr } = await supabaseAdmin
       .from("agent_active_context")
       .delete()
       .eq("user_id", member.delegate_user_id)
-      .eq("active_owner_user_id", ownerUserId);
+      .eq("active_owner_user_id", member.owner_user_id);
 
     if (contextErr) {
       console.error("[revoke-account-delegate] context clear failed:", contextErr);
