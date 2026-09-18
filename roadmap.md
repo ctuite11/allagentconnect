@@ -54,6 +54,6 @@
 
 ## Darcy Bento forwardable AAC invitation (2026-09-18)
 - [x] Source Darcy's official headshot and Bento Real Estate logo.
-- [ ] Add both images and Darcy's contact details to the agent-forward invitation.
-- [ ] Deploy the invitation sender and send one copy to chris@allagentconnect.com.
-- [ ] Confirm exactly one email job reaches sent or delivered status.
+- [x] Add both images and Darcy's contact details to the agent-forward invitation.
+- [x] Deploy the invitation sender and send one copy to chris@allagentconnect.com.
+- [x] Confirm exactly one email job reaches sent and delivered status.
