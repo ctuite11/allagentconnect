@@ -63,11 +63,9 @@ import {
 } from "@/components/property/propertyTokens";
 import { cn } from "@/lib/utils";
 import { BuyerAgentShowcase } from "@/components/BuyerAgentShowcase";
-// ContactAgentDialog removed — buyer CTA is in-app messaging only
 import PhotoGalleryDialog from "@/components/PhotoGalleryDialog";
 import FavoriteButton from "@/components/FavoriteButton";
 import ScheduleShowingDialog from "@/components/ScheduleShowingDialog";
-// SaveToHotSheetDialog removed — requires search context props not available on single listing view
 import PropertyMap from "@/components/PropertyMap";
 import AdBanner from "@/components/AdBanner";
 import SocialShareMenu from "@/components/SocialShareMenu";
@@ -84,6 +82,9 @@ import { canMessageListingAgent as viewerCanMessageListingAgent, resolveListingA
 import { useAuthRole } from "@/hooks/useAuthRole";
 import { useSharedListingGuest } from "@/contexts/SharedListingGuestContext";
 import ContactAgentDialog from "@/components/ContactAgentDialog";
+import DcmlsConsumerHeader from "@/components/dcmls/DcmlsConsumerHeader";
+import Footer from "@/components/Footer";
+import { isDcmlsHost } from "@/lib/host";
 import {
   fetchPublicListing,
   fetchPublicListingAgent,
@@ -92,11 +93,17 @@ import {
   toPublicListingViewModel,
 } from "@/lib/publicListing";
 
-// ATTRIBUTION MASKING (BUYER UI — authenticated buyers only)
-// Logged-in buyers must NEVER contact listing.agent_id from this page.
+// ATTRIBUTION MASKING (BUYER UI — authenticated buyers only on AAC)
+// Logged-in buyers on AAC must NEVER contact listing.agent_id from this page.
 // Only the sticky agent is a valid recipient.
 // Exception: unauthenticated shared-listing guests may contact the listing agent
-// (Call / Email / Contact). Do not apply that exception to represented buyers.
+// (Call / Email / Contact). Do not apply that exception to represented buyers on AAC.
+// DCMLS host: always keep direct listing-agent access (logged in or out).
+
+const DCMLS_INQUIRY_DISCLOSURE =
+  "Your name, email and message will be sent directly to the listing agent for this property.";
+const DCMLS_TOUR_DISCLOSURE =
+  "Your request and contact information will be sent to the listing agent for this property.";
 type StickyAgentId = string & { __brand: "StickyAgentId" };
 
 function asStickyAgentId(id: string | null | undefined): StickyAgentId | null {
@@ -182,10 +189,12 @@ const ConsumerPropertyDetail = () => {
   const [stickyAgentId, setStickyAgentId] = useState<string | null>(null);
   const [stickyAgentProfile, setStickyAgentProfile] = useState<AgentProfile | null>(null);
   const [listingContactDialogOpen, setListingContactDialogOpen] = useState(false);
+  const [listingContactMode, setListingContactMode] = useState<"contact" | "info">("contact");
   const [listingMessageOpen, setListingMessageOpen] = useState(false);
   const [listingMessageVariant, setListingMessageVariant] = useState<"agent" | "buyer">("buyer");
   const { user, role, loading: authLoading } = useAuthRole();
   const { registerGuestListing } = useSharedListingGuest();
+  const isDcmls = isDcmlsHost();
 
   // Shared-listing guest mode: unauthenticated viewers anchor on this listing.
   useEffect(() => {
@@ -452,7 +461,8 @@ const ConsumerPropertyDetail = () => {
     );
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white flex flex-col">
+      {isDcmls ? <DcmlsConsumerHeader /> : null}
       <PropertyMetaTags
         address={listing.address}
         city={listing.city}
@@ -468,7 +478,7 @@ const ConsumerPropertyDetail = () => {
       />
 
       {/* Back Button Row */}
-      <div className="mx-auto max-w-6xl px-4 pt-5 pb-3">
+      <div className="mx-auto max-w-6xl w-full px-4 pt-5 pb-3">
         <AacBackButton
           type="button"
           onClick={() => {
@@ -485,6 +495,10 @@ const ConsumerPropertyDetail = () => {
             }
             if (typeof st === "string" && st.startsWith("/") && !st.startsWith("//")) {
               navigate(st);
+              return;
+            }
+            if (isDcmls) {
+              navigate("/browse?dcmls=1");
               return;
             }
             const lastSearch = sessionStorage.getItem("buyer_last_search_url");
@@ -700,7 +714,7 @@ const ConsumerPropertyDetail = () => {
                 premiumNeutralSurfaces
               />
 
-              {stickyAgentProfile && agentProfile && agentProfile.id !== stickyAgentProfile.id && (
+              {stickyAgentProfile && !isDcmls && agentProfile && agentProfile.id !== stickyAgentProfile.id && (
                 <p className="px-1 text-xs text-neutral-500">
                   Listing courtesy of {agentProfile.first_name} {agentProfile.last_name}
                   {agentProfile.company ? ` • ${agentProfile.company}` : ""}
@@ -730,8 +744,123 @@ const ConsumerPropertyDetail = () => {
             >
 
               <div className={propertyDetailRailActionGroup}>
-              {/* Agent/admin: listing agent contact via AAC email (no buyer CTAs) */}
-              {isAgentView && (agentProfile || listing?.agent_id) ? (
+              {/* DCMLS: always show listing agent first — never inherit AAC sticky-agent masking */}
+              {isDcmls && !isAgentView && agentProfile ? (
+                <Card className={cn(consumerSectionCard, "shadow-sm")}>
+                  <CardContent className={propertyDetailAgentCardContent}>
+                    <div className="flex items-center gap-4">
+                      <AgentAvatar
+                        name={`${agentProfile.first_name} ${agentProfile.last_name}`}
+                        headshotUrl={agentProfile.headshot_url ?? null}
+                        userId={agentProfile.id}
+                        size="xl"
+                        avatarClassName={propertyDetailAgentAvatar}
+                        fallbackClassName="bg-neutral-100"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className={propertyDetailAgentEyebrow}>Listing Agent</p>
+                        <p className="mt-1 font-bold text-lg leading-tight">
+                          {agentProfile.first_name} {agentProfile.last_name}
+                        </p>
+                        <div className={cn(propertyDetailAgentTitleBlock, "mt-0.5")}>
+                          <p className="text-sm text-neutral-600">
+                            {agentProfile.title || "Realtor"}
+                          </p>
+                          {(agentProfile.company || agentProfile.office_name) && (
+                            <p className="text-sm text-muted-foreground">
+                              {agentProfile.company || agentProfile.office_name}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className={propertyDetailAgentContactRows}>
+                      {agentProfile.cell_phone && (
+                        <a href={`tel:${agentProfile.cell_phone}`} className="flex items-center gap-2.5 transition-colors hover:text-neutral-900">
+                          <Phone className="h-4 w-4 shrink-0 text-neutral-500" />
+                          <span className="font-medium">{formatPhoneNumber(agentProfile.cell_phone)}</span>
+                          <span className="ml-auto text-xs text-neutral-500">Mobile</span>
+                        </a>
+                      )}
+                      {agentProfile.phone && agentProfile.phone !== agentProfile.cell_phone && (
+                        <a href={`tel:${agentProfile.phone}`} className="flex items-center gap-2.5 transition-colors hover:text-neutral-900">
+                          <Building2 className="h-4 w-4 shrink-0 text-neutral-500" />
+                          <span className="font-medium">{formatPhoneNumber(agentProfile.phone)}</span>
+                          <span className="ml-auto text-xs text-neutral-500">Office</span>
+                        </a>
+                      )}
+                      {agentProfile.email && (
+                        <span className="flex items-center gap-2.5 text-sm text-neutral-700">
+                          <Mail className="h-4 w-4 shrink-0 text-neutral-500" />
+                          <span className="font-medium truncate">{agentProfile.email}</span>
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex flex-col gap-2 pt-1">
+                      <Button
+                        className="w-full"
+                        onClick={() => {
+                          setListingContactMode("contact");
+                          setListingContactDialogOpen(true);
+                        }}
+                      >
+                        Contact Listing Agent
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="w-full border-neutral-200"
+                        onClick={() => {
+                          setListingContactMode("info");
+                          setListingContactDialogOpen(true);
+                        }}
+                      >
+                        Request Information
+                      </Button>
+                      <ScheduleShowingDialog
+                        listingId={listing.id}
+                        listingAddress={
+                          formatListingEmailSubjectLocation(listing) ||
+                          `${listing.address}, ${listing.city}, ${listing.state}`
+                        }
+                        triggerLabel="Request a Tour"
+                        triggerVariant="outline"
+                        triggerClassName={cn(propertyDetailScheduleCtaBase, propertyDetailScheduleCta)}
+                        disclosure={DCMLS_TOUR_DISCLOSURE}
+                      />
+                    </div>
+
+                    <FavoriteButton
+                      listingId={listing.id}
+                      size="sm"
+                      variant="outline"
+                      className="h-9 w-full rounded-lg border-neutral-200 text-[13px] font-medium shadow-none hover:bg-neutral-50"
+                      labels={{
+                        signIn: "Sign In to Save Home",
+                        default: "Save Home",
+                        saved: "Saved Home",
+                      }}
+                    />
+
+                    <ContactAgentDialog
+                      listingId={listing.id}
+                      agentId={agentProfile.id}
+                      listingAddress={
+                        formatListingEmailSubjectLocation(listing) ||
+                        `${listing.address}, ${listing.city}, ${listing.state}`
+                      }
+                      open={listingContactDialogOpen}
+                      onOpenChange={setListingContactDialogOpen}
+                      hideTrigger
+                      dialogTitle={
+                        listingContactMode === "info" ? "Request Information" : "Contact Listing Agent"
+                      }
+                      disclosure={DCMLS_INQUIRY_DISCLOSURE}
+                    />
+                  </CardContent>
+                </Card>
+              ) : isAgentView && (agentProfile || listing?.agent_id) ? (
                 <Card className={cn(consumerSectionCard, "shadow-sm")}>
                   <CardContent className={propertyDetailAgentCardContent}>
                     <div className="flex items-center gap-4">
@@ -1108,7 +1237,7 @@ const ConsumerPropertyDetail = () => {
                 </Card>
               )}
 
-              {!isAgentView && (
+              {!isAgentView && !isDcmls && (
                 <div className="px-6">
                   <ScheduleShowingDialog
                     listingId={listing.id}
@@ -1123,12 +1252,12 @@ const ConsumerPropertyDetail = () => {
               {buyerCompensationCard}
 
               <div className="space-y-6 pt-2">
-              {/* Buyer Agent Showcase — only when buyer is unrepresented.
-                  Represented buyers already have a sticky agent. */}
-              {!stickyAgentProfile && (
+              {/* Buyer representation: always on DCMLS; on AAC only when unrepresented */}
+              {(isDcmls || !stickyAgentProfile) && (
                 <BuyerAgentShowcase
                   listingZip={listing.zip_code}
                   listingId={listing.id}
+                  title={isDcmls ? "I'd like buyer representation" : undefined}
                 />
               )}
 
@@ -1255,6 +1384,7 @@ const ConsumerPropertyDetail = () => {
           returnState={buildMessageReturnState(location.pathname, location.search)}
         />
       )}
+      {isDcmls ? <Footer /> : null}
     </div>
   );
 };

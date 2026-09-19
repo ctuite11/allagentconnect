@@ -53,18 +53,13 @@ const DcmlsFooter: React.FC = () => {
                 </Link>
               </li>
               <li>
-                <Link to="/saved" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Saved Homes
+                <Link to="/our-agents" className="text-muted-foreground hover:text-foreground transition-colors">
+                  Our Agents
                 </Link>
               </li>
               <li>
-                <Link to="/searches" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Hot Sheets
-                </Link>
-              </li>
-              <li>
-                <Link to="/account" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Account
+                <Link to="/consumer/auth?mode=signin" className="text-muted-foreground hover:text-foreground transition-colors">
+                  Sign In
                 </Link>
               </li>
             </ul>

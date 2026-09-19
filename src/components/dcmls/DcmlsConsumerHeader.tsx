@@ -18,12 +18,10 @@ const PUBLIC_ITEMS: NavItem[] = [
   { label: "Browse", to: "/browse?dcmls=1" },
   { label: "Our Agents", to: "/our-agents" },
 ];
+/** V1: only link destinations that are routed and functional. */
 const AUTHED_ITEMS: NavItem[] = [
   { label: "Browse", to: "/browse?dcmls=1" },
   { label: "Our Agents", to: "/our-agents" },
-  { label: "Saved Homes", to: "/saved", authed: true },
-  { label: "Hot Sheets", to: "/searches", authed: true },
-  { label: "Account", to: "/account", authed: true },
 ];
 
 interface PageLink {

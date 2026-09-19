@@ -49,6 +49,12 @@ interface ContactAgentDialogProps {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   hideTrigger?: boolean;
+  /** Optional dialog title (defaults to Listing Inquiry). */
+  dialogTitle?: string;
+  /** Optional trigger label when hideTrigger is false. */
+  triggerLabel?: string;
+  /** Optional disclosure shown immediately above the submit button. */
+  disclosure?: string;
 }
 
 const ContactAgentDialog = ({
@@ -60,6 +66,9 @@ const ContactAgentDialog = ({
   open: controlledOpen,
   onOpenChange: controlledOnOpenChange,
   hideTrigger = false,
+  dialogTitle = "Listing Inquiry",
+  triggerLabel = "Contact",
+  disclosure,
 }: ContactAgentDialogProps) => {
   const [internalOpen, setInternalOpen] = useState(false);
   const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
@@ -190,7 +199,7 @@ const ContactAgentDialog = ({
             onClick={(e) => e.stopPropagation()}
           >
             <Mail className={buttonSize === "sm" ? "h-3.5 w-3.5" : "h-5 w-5"} />
-            Contact
+            {triggerLabel}
           </Button>
         </DialogTrigger>
       )}
@@ -198,7 +207,7 @@ const ContactAgentDialog = ({
         <div className="shrink-0 border-b border-neutral-200 bg-white px-4 py-3 sm:px-5">
           <DialogHeader className="space-y-0.5 pr-8">
             <DialogTitle className="text-base font-semibold tracking-tight text-neutral-900 sm:text-[17px]">
-              Listing Inquiry
+              {dialogTitle}
             </DialogTitle>
             <DialogDescription className="text-[13px] leading-snug text-neutral-600">
               Send a message about {listingAddress}
@@ -268,15 +277,20 @@ const ContactAgentDialog = ({
             <TurnstileField containerRef={turnstile.containerRef} error={turnstile.error} />
           </div>
 
-          <div className="flex shrink-0 items-center justify-end gap-2 border-t border-neutral-200 bg-white px-4 py-3 sm:px-5">
-            <DialogClose asChild>
-              <Button type="button" variant="ghost" size="sm" disabled={loading} className="h-9 rounded-lg text-[13px]">
-                Cancel
+          <div className="flex shrink-0 flex-col gap-2 border-t border-neutral-200 bg-white px-4 py-3 sm:px-5">
+            {disclosure ? (
+              <p className="text-xs leading-relaxed text-neutral-600">{disclosure}</p>
+            ) : null}
+            <div className="flex items-center justify-end gap-2">
+              <DialogClose asChild>
+                <Button type="button" variant="ghost" size="sm" disabled={loading} className="h-9 rounded-lg text-[13px]">
+                  Cancel
+                </Button>
+              </DialogClose>
+              <Button type="submit" size="sm" disabled={loading} className="h-9 rounded-lg text-[13px]">
+                {loading ? "Sending..." : "Send Message"}
               </Button>
-            </DialogClose>
-            <Button type="submit" size="sm" disabled={loading} className="h-9 rounded-lg text-[13px]">
-              {loading ? "Sending..." : "Send Message"}
-            </Button>
+            </div>
           </div>
         </form>
       </DialogContent>

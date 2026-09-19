@@ -24,9 +24,10 @@ const DcmlsHome: React.FC = () => {
   return (
     <>
       <Seo
-        title="Direct Connect MLS — Homes You Won't Find Anywhere Else"
-        description="Direct Connect MLS is a network of agent-published listings, including off-market and coming-soon homes you won't find on the public MLS."
+        title="Direct Connect MLS — The property. The listing agent. Your choice."
+        description="Browse agent-published homes on Direct Connect MLS. Contact the listing agent directly, or choose buyer representation — your choice."
         canonical="https://directconnectmls.com"
+        brandType="dcmls"
         jsonLd={DCMLS_JSON_LD}
       />
 
@@ -37,7 +38,6 @@ const DcmlsHome: React.FC = () => {
           {/* Hero */}
           <section className="border-b border-border/60">
             <div className="max-w-5xl mx-auto px-6 py-24 md:py-32 text-center">
-              {/* Eyebrow with luxury green accent dot */}
               <div className="inline-flex items-center gap-2 mb-8">
                 <span
                   className="inline-block w-1.5 h-1.5 rounded-full"
@@ -50,30 +50,31 @@ const DcmlsHome: React.FC = () => {
               </div>
 
               <h1 className="text-4xl md:text-6xl font-semibold tracking-tight text-foreground mb-6 leading-[1.05]">
-                Homes you won't find{" "}
-                <span style={{ color: AAC_BLUE }}>anywhere else</span>.
+                The property. The listing agent.{" "}
+                <span style={{ color: AAC_BLUE }}>Your choice.</span>
               </h1>
 
               <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
-                A private network of agent-published listings — off-market,
-                coming-soon, and exclusives outside the public MLS.
+                Browse agent-published homes — including off-market and coming-soon listings — then
+                contact the listing agent directly, or work with a buyer&apos;s agent.
               </p>
 
-              <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <Button asChild size="lg" className="text-white" style={{ backgroundColor: AAC_BLUE }}>
-                  <Link to="/consumer/auth?mode=signup">Create Account</Link>
-                </Button>
-                <Button asChild size="lg" variant="outline">
-                  <Link to="/consumer/auth?mode=signin">Sign In</Link>
-                </Button>
-                <Button asChild size="lg" variant="ghost">
+              <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+                <Button asChild size="lg" className="text-white min-w-[180px]" style={{ backgroundColor: AAC_BLUE }}>
                   <Link to="/browse?dcmls=1">Browse Listings</Link>
                 </Button>
+                <div className="flex gap-2">
+                  <Button asChild size="lg" variant="outline">
+                    <Link to="/consumer/auth?mode=signin">Sign In</Link>
+                  </Button>
+                  <Button asChild size="lg" variant="ghost">
+                    <Link to="/consumer/auth?mode=signup">Create Account</Link>
+                  </Button>
+                </div>
               </div>
             </div>
           </section>
 
-          {/* Opportunity callout strip — restrained, with green as luxury accent */}
           <section className="border-b border-border/60 bg-muted/30">
             <div className="max-w-5xl mx-auto px-6 py-10 grid grid-cols-1 md:grid-cols-3 gap-8">
               {[
@@ -100,14 +101,12 @@ const DcmlsHome: React.FC = () => {
             </div>
           </section>
 
-          {/* Exclusive listings */}
           <section className="py-16 md:py-20">
             <div className="max-w-6xl mx-auto px-6">
               <DcmlsExclusiveListings />
             </div>
           </section>
 
-          {/* What's Inside — value of creating an account */}
           <DcmlsWhatsInside />
         </main>
 

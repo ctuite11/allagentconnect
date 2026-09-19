@@ -56,10 +56,25 @@ const DCMLS_ROUTES = [
   "/search",
   "/consumer-property",
   "/consumer",
+  "/saved",
+  "/searches",
+  "/account",
 ];
 
 /** Shared paths whose brand follows the active hostname (AAC vs DCMLS). */
-const HOST_BRANDED_ROUTES = ["/", "/homepage-v2"];
+const HOST_BRANDED_ROUTES = [
+  "/",
+  "/homepage-v2",
+  "/property",
+  "/our-agents",
+  "/agents",
+  "/find-agent",
+  "/privacy",
+  "/terms",
+  "/cookies",
+  "/fair-housing",
+  "/disclosures",
+];
 
 /**
  * Routes that are considered AAC agent-facing
@@ -107,7 +122,10 @@ export function isDcmlsRoute(pathname: string): boolean {
     return isDcmlsHost();
   }
 
-  if (HOST_BRANDED_ROUTES.includes(pathname)) {
+  const isHostBranded = HOST_BRANDED_ROUTES.some(
+    (route) => pathname === route || (route !== "/" && pathname.startsWith(`${route}/`)),
+  );
+  if (isHostBranded || HOST_BRANDED_ROUTES.includes(pathname)) {
     return isDcmlsHost();
   }
 
