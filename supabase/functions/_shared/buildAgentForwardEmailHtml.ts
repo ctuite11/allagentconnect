@@ -182,8 +182,9 @@ export function buildAgentForwardEmailHtml(opts: AgentForwardEmailOptions): stri
 
           <!-- Product preview -->
           <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:2px 0 30px;">
-            <tr><td style="padding:0 0 8px;">
-              <p style="margin:0;font-size:12px;font-weight:700;letter-spacing:0.08em;color:${TEXT_DARK};font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">SEE THE NETWORK IN ACTION</p>
+            <tr><td style="padding:0 0 14px;">
+              <h2 style="margin:0;font-size:18px;font-weight:700;letter-spacing:-0.01em;color:${TEXT_DARK};font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Homes You May Be Missing</h2>
+              <div style="width:32px;height:2px;background-color:${EMERALD_ACCENT};margin:8px 0 0;border-radius:1px;"></div>
             </td></tr>
             <tr><td style="padding:0 0 16px;font-size:15px;line-height:1.55;color:${TEXT_BODY};font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
               See opportunities before they reach the public market.
