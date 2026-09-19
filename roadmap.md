@@ -61,5 +61,5 @@
 ## Short Darcy Bento forwardable invitation (2026-09-19)
 - [x] Replace the brochure-length agent-forward copy with the approved concise membership invitation.
 - [x] Preserve Darcy's headshot, Bento Real Estate logo, contact details, reply-to, and forwardable registration link.
-- [ ] Deploy only the agent-forward invitation sender.
-- [ ] Send exactly one replacement copy to chris@allagentconnect.com and confirm delivery.
+- [x] Deploy only the agent-forward invitation sender.
+- [x] Send exactly one replacement copy to chris@allagentconnect.com and confirm delivery.
