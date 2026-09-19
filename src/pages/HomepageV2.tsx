@@ -1,4 +1,4 @@
-import React, { lazy, Suspense } from "react";
+import React, { lazy, Suspense, useLayoutEffect } from "react";
 import { Seo } from "@/components/Seo";
 import { isDcmlsHost } from "@/lib/host";
 import HeroSection from "@/components/home-v2/HeroSection";
@@ -23,8 +23,34 @@ const HOMEPAGE_JSON_LD = {
   sameAs: [],
 };
 
+/**
+ * After HeroSection LCP handoff, the pre-React shell stays mounted (required so
+ * the early LCP image is not discarded) but remains `position:fixed` from
+ * index.html. That makes the hero photo stick behind scrolling sections.
+ * Convert it to document-absolute so it scrolls away with the page without
+ * changing preload, shell markup, or HeroSection.tsx.
+ */
+function pinHomeHeroShellToDocumentScroll() {
+  const shell = document.getElementById("aac-home-hero-shell");
+  if (!shell || shell.getAttribute("data-aac-hero-handoff") !== "1") return;
+
+  shell.style.position = "absolute";
+  shell.style.top = "0";
+  shell.style.left = "0";
+  shell.style.right = "0";
+  shell.style.bottom = "auto";
+  shell.style.width = "100%";
+  shell.style.height = "100vh";
+  shell.style.minHeight = "100dvh";
+  shell.style.zIndex = "0";
+}
+
 const HomepageV2 = () => {
   const isDcmls = isDcmlsHost();
+
+  useLayoutEffect(() => {
+    pinHomeHeroShellToDocumentScroll();
+  }, []);
 
   return (
     <>
@@ -44,7 +70,14 @@ const HomepageV2 = () => {
         <main className="flex flex-col w-full">
           <HeroSection />
           <ProofStrip />
-          <Suspense fallback={<div style={{ minHeight: 400 }} />}>
+          <Suspense
+            fallback={
+              <div
+                aria-hidden
+                style={{ minHeight: 400, backgroundColor: "#ffffff" }}
+              />
+            }
+          >
             <NetworkIntelligence />
             <EcosystemSection />
             <HowAgentsUseAAC />
