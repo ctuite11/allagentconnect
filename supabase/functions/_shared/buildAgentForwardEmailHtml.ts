@@ -108,36 +108,44 @@ function renderAgentFooter(agent: AgentFooterInfo, layout: "inline" | "stacked" 
       `<p style="margin:2px 0 0;font-size:12px;color:rgba(255,255,255,0.72);font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${escapeHtml(agent.company)}</p>`,
     );
   }
-  const contactParts: string[] = [];
-  if (agent.phone) {
-    contactParts.push(
-      `<a href="tel:${escapeHtml(agent.phone.replace(/[^0-9+]/g, ""))}" style="color:#fff;text-decoration:none;">${escapeHtml(agent.phone)}</a>`,
-    );
-  }
-  if (agent.email) {
-    contactParts.push(
-      `<a href="mailto:${escapeHtml(agent.email)}" style="color:#fff;text-decoration:none;">${escapeHtml(agent.email)}</a>`,
-    );
-  }
-  if (agent.websiteUrl) {
-    const display = agent.websiteUrl.replace(/^https?:\/\//, "");
-    const href = agent.websiteUrl.startsWith("http") ? agent.websiteUrl : `https://${agent.websiteUrl}`;
-    contactParts.push(
-      `<a href="${escapeHtml(href)}" style="color:#fff;text-decoration:none;">${escapeHtml(display)}</a>`,
-    );
-  }
-  if (contactParts.length) {
+  const phonePart = agent.phone
+    ? `<a href="tel:${escapeHtml(agent.phone.replace(/[^0-9+]/g, ""))}" style="color:#fff;text-decoration:none;">${escapeHtml(agent.phone)}</a>`
+    : "";
+  const emailPart = agent.email
+    ? `<a href="mailto:${escapeHtml(agent.email)}" style="color:#fff;text-decoration:none;">${escapeHtml(agent.email)}</a>`
+    : "";
+  const websiteDisplay = agent.websiteUrl
+    ? agent.websiteUrl
+        .replace(/^https?:\/\//, "")
+        .replace(/\/$/, "")
+    : "";
+  const websiteHref = agent.websiteUrl?.startsWith("http")
+    ? agent.websiteUrl
+    : `https://${agent.websiteUrl}`;
+  const websitePart = agent.websiteUrl
+    ? `<a href="${escapeHtml(websiteHref)}" style="color:#fff;text-decoration:none;">${escapeHtml(websiteDisplay)}</a>`
+    : "";
+
+  if (phonePart || emailPart || websitePart) {
     if (layout === "stacked") {
-      contactParts.forEach((part, idx) => {
+      [phonePart, emailPart, websitePart].filter(Boolean).forEach((part, idx) => {
         const mt = idx === 0 ? 8 : 2;
         lines.push(
           `<p style="margin:${mt}px 0 0;font-size:12.5px;color:#fff;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${part}</p>`,
         );
       });
     } else {
-      lines.push(
-        `<p style="margin:8px 0 0;font-size:12.5px;color:#fff;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${contactParts.join(' &nbsp;·&nbsp; ')}</p>`,
-      );
+      const primaryContact = [phonePart, emailPart].filter(Boolean).join(' &nbsp;·&nbsp; ');
+      if (primaryContact) {
+        lines.push(
+          `<p style="margin:8px 0 0;font-size:12.5px;color:#fff;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${primaryContact}</p>`,
+        );
+      }
+      if (websitePart) {
+        lines.push(
+          `<p style="margin:2px 0 0;font-size:12.5px;color:#fff;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${websitePart}</p>`,
+        );
+      }
     }
   }
 
