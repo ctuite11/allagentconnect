@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import footerLogo from "@/assets/home/vuesax-bold-command.svg";
+import footerSocial from "@/assets/home/group-1261153741.png";
 
 const platformLinks = [
   { label: "How It Works", href: "#how-it-works" },
@@ -59,7 +61,7 @@ const FooterV2 = () => {
           {/* Brand */}
           <div className="flex flex-col gap-6 max-w-[320px]">
             <div className="flex items-center gap-3">
-              <img src="https://c.animaapp.com/mmm3cgevnH1M3s/img/vuesax-bold-command.svg" alt="Logo" className="w-8 h-8" />
+              <img src={footerLogo} alt="Logo" className="w-8 h-8" />
               <span className="font-['Manrope'] font-extrabold text-white text-xl tracking-[-0.8px] whitespace-nowrap">
                 All Agent Connect
               </span>
@@ -67,7 +69,7 @@ const FooterV2 = () => {
             <p className="font-['Manrope'] font-medium text-[#edeff7a6] text-base leading-[1.6]">
               Private agent network for off-market and early-stage real estate intelligence.
             </p>
-            <img src="https://c.animaapp.com/mmm3cgevnH1M3s/img/group-1261153741.png" alt="Social icons" className="w-[200px] h-auto" />
+            <img src={footerSocial} alt="Social icons" className="w-[200px] h-auto" />
           </div>
 
           {/* Platform */}

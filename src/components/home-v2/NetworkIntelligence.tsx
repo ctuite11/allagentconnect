@@ -1,12 +1,16 @@
 import React from "react";
 import { TILES } from "./heroImages";
+import iconChart from "@/assets/home/vuesax-bold-chart-1.svg";
+import iconShield from "@/assets/home/vuesax-bold-shield-tick.svg";
+import iconArchive from "@/assets/home/vuesax-bold-archive-tick.svg";
+import iconStar from "@/assets/home/vuesax-bold-star.svg";
 
 const NetworkIntelligence = () => {
   return (
     <section className="w-full bg-white flex flex-col items-center py-20 md:py-24 px-6">
       {/* Section label pill */}
       <div className="mb-6 inline-flex items-center gap-2 pl-3.5 pr-5 py-2 bg-[#2537ff0f] border border-[#2537ff26] rounded-full">
-        <img src="https://c.animaapp.com/mmm3cgevnH1M3s/img/vuesax-bold-chart-1.svg" alt="" className="w-4 h-4 shrink-0" />
+        <img src={iconChart} alt="" className="w-4 h-4 shrink-0" />
         <span className="font-['Manrope'] font-semibold text-[#2537ff] text-[14px] tracking-[0.28px]">Our network values</span>
       </div>
 
@@ -52,7 +56,7 @@ const NetworkIntelligence = () => {
             className="hidden md:flex absolute z-30 items-center gap-2.5 bg-white/90 backdrop-blur-md border border-white/60 rounded-full px-4 py-2.5 shadow-xl"
             style={{ top: "10%", left: "0%", transform: "translateX(-52%)" }}
           >
-            <img src="https://c.animaapp.com/mmm3cgevnH1M3s/img/vuesax-bold-shield-tick.svg" alt="" className="w-[18px] h-[18px] shrink-0" />
+            <img src={iconShield} alt="" className="w-[18px] h-[18px] shrink-0" />
             <span className="font-['Manrope'] font-semibold text-slate-900 text-[13px] leading-[1.4] whitespace-nowrap">For those clients looking for privacy</span>
           </div>
 
@@ -60,7 +64,7 @@ const NetworkIntelligence = () => {
             className="hidden md:flex absolute z-30 items-center gap-2.5 bg-white rounded-full px-4 py-2.5 shadow-[0_8px_20px_rgba(0,0,0,0.08)]"
             style={{ top: "60%", left: "0%", transform: "translateX(-52%)" }}
           >
-            <img src="https://c.animaapp.com/mmm3cgevnH1M3s/img/vuesax-bold-chart-1.svg" alt="" className="w-[18px] h-[18px] shrink-0" />
+            <img src={iconChart} alt="" className="w-[18px] h-[18px] shrink-0" />
             <span className="font-['Manrope'] font-semibold text-[#292d32] text-[13px] leading-[1.4] whitespace-nowrap">Increased agent production / GCI</span>
           </div>
 
@@ -68,7 +72,7 @@ const NetworkIntelligence = () => {
             className="hidden md:flex absolute z-30 items-center gap-2.5 bg-white rounded-full px-4 py-2.5 shadow-[0_8px_20px_rgba(0,0,0,0.08)]"
             style={{ top: "10%", right: "0%", transform: "translateX(52%)" }}
           >
-            <img src="https://c.animaapp.com/mmm3cgevnH1M3s/img/vuesax-bold-archive-tick.svg" alt="" className="w-[18px] h-[18px] shrink-0" />
+            <img src={iconArchive} alt="" className="w-[18px] h-[18px] shrink-0" />
             <span className="font-['Manrope'] font-semibold text-[#292d32] text-[13px] leading-[1.4] whitespace-nowrap">Access the Unlisted</span>
           </div>
 
@@ -76,7 +80,7 @@ const NetworkIntelligence = () => {
             className="hidden md:flex absolute z-30 items-center gap-2.5 bg-white/90 backdrop-blur-md border border-white/60 rounded-full px-4 py-2.5 shadow-xl"
             style={{ top: "60%", right: "4%", transform: "translateX(52%)" }}
           >
-            <img src="https://c.animaapp.com/mmm3cgevnH1M3s/img/vuesax-bold-star.svg" alt="" className="w-[18px] h-[18px] shrink-0" />
+            <img src={iconStar} alt="" className="w-[18px] h-[18px] shrink-0" />
             <span className="font-['Manrope'] font-semibold text-slate-900 text-[13px] leading-[1.4] whitespace-nowrap">Direct seller + buyer-agent opportunities</span>
           </div>
         </div>
@@ -86,21 +90,21 @@ const NetworkIntelligence = () => {
       <div className="md:hidden w-full max-w-[900px] mx-auto mt-6 grid grid-cols-2 gap-3 px-2">
         <div className="flex flex-col gap-3">
           <div className="flex items-center gap-2.5 bg-white/90 backdrop-blur-md border border-white/60 rounded-full px-4 py-2.5 shadow-xl">
-            <img src="https://c.animaapp.com/mmm3cgevnH1M3s/img/vuesax-bold-shield-tick.svg" alt="" className="w-4 h-4 shrink-0" />
+            <img src={iconShield} alt="" className="w-4 h-4 shrink-0" />
             <span className="font-['Manrope'] font-semibold text-slate-900 text-[12px] leading-[1.4]">For those clients looking for privacy</span>
           </div>
           <div className="flex items-center gap-2.5 bg-white rounded-full px-4 py-2.5 shadow-[0_4px_16px_rgba(41,45,50,0.16)]">
-            <img src="https://c.animaapp.com/mmm3cgevnH1M3s/img/vuesax-bold-chart-1.svg" alt="" className="w-4 h-4 shrink-0" />
+            <img src={iconChart} alt="" className="w-4 h-4 shrink-0" />
             <span className="font-['Manrope'] font-semibold text-[#292d32] text-[12px] leading-[1.4]">Increased agent production / GCI</span>
           </div>
         </div>
         <div className="flex flex-col gap-3">
           <div className="flex items-center gap-2.5 bg-white rounded-full px-4 py-2.5 shadow-[0_4px_16px_rgba(41,45,50,0.16)]">
-            <img src="https://c.animaapp.com/mmm3cgevnH1M3s/img/vuesax-bold-archive-tick.svg" alt="" className="w-4 h-4 shrink-0" />
+            <img src={iconArchive} alt="" className="w-4 h-4 shrink-0" />
             <span className="font-['Manrope'] font-semibold text-[#292d32] text-[12px] leading-[1.4]">Access the Unlisted</span>
           </div>
           <div className="flex items-center gap-2.5 bg-white/90 backdrop-blur-md border border-white/60 rounded-full px-4 py-2.5 shadow-xl">
-            <img src="https://c.animaapp.com/mmm3cgevnH1M3s/img/vuesax-bold-star.svg" alt="" className="w-4 h-4 shrink-0" />
+            <img src={iconStar} alt="" className="w-4 h-4 shrink-0" />
             <span className="font-['Manrope'] font-semibold text-slate-900 text-[12px] leading-[1.4]">Direct seller + buyer-agent opportunities</span>
           </div>
         </div>
