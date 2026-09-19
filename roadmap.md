@@ -68,4 +68,4 @@
 - [x] Split the hero headline between white and AAC green.
 - [x] Crop and host the supplied listing-search screenshot for email delivery.
 - [x] Add the single product-preview section with the approved copy and caption.
-- [ ] Deploy and verify only the agent-forward invitation sender; do not send an email.
+- [x] Deploy and verify only the agent-forward invitation sender; no email sent or queued.
