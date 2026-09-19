@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useLayoutEffect } from "react";
 import { Link } from "react-router-dom";
 import { Seo } from "@/components/Seo";
 import { Button } from "@/components/ui/button";
@@ -20,7 +20,17 @@ const DCMLS_JSON_LD = {
     "Direct Connect MLS — a network of agent-published listings you won't find anywhere else.",
 };
 
+function clearAacHomeHeroShell() {
+  document.getElementById("aac-home-hero-shell")?.remove();
+  document.getElementById("aac-home-hero-shell-css")?.remove();
+  document.documentElement.classList.remove("aac-home-hero-shell");
+}
+
 const DcmlsHome: React.FC = () => {
+  useLayoutEffect(() => {
+    clearAacHomeHeroShell();
+  }, []);
+
   return (
     <>
       <Seo

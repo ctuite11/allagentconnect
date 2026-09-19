@@ -82,6 +82,11 @@
     (function () {
       var path = (location.pathname || "/").replace(/\/+$/, "") || "/";
       if (path !== "/" && path !== "/index" && path !== "/homepage-v2") return;
+      var host = (location.hostname || "").toLowerCase();
+      var isDcmlsHost =
+        host === "directconnectmls.com" || host === "www.directconnectmls.com";
+      var params = new URLSearchParams(location.search || "");
+      if (isDcmlsHost || params.get("dcmls") === "1") return;
 
       var SRCSET =
         "/images/home/hero-768.webp 768w, /images/home/hero-1200.webp 1200w, /images/home/hero-1920.webp 1920w";
@@ -230,6 +235,12 @@
     (function () {
       var path = (location.pathname || "/").replace(/\/+$/, "") || "/";
       if (path !== "/" && path !== "/index" && path !== "/homepage-v2") return;
+      // DCMLS consumer homepage must not inherit the AAC LCP hero shell.
+      var host = (location.hostname || "").toLowerCase();
+      var isDcmlsHost =
+        host === "directconnectmls.com" || host === "www.directconnectmls.com";
+      var params = new URLSearchParams(location.search || "");
+      if (isDcmlsHost || params.get("dcmls") === "1") return;
       if (document.getElementById("aac-home-hero-shell")) return;
 
       var SRCSET =
