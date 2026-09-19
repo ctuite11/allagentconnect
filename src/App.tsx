@@ -363,8 +363,16 @@ function AgentLayout() {
   );
 }
 
-/** Layout route: wraps buyer-authenticated pages in BuyerShell */
+/** Layout route: wraps buyer-authenticated pages in BuyerShell.
+ *  On the DCMLS consumer host, skip AAC Buyer Portal chrome. */
 function BuyerLayout() {
+  if (isDcmlsHost()) {
+    return (
+      <React.Suspense fallback={<LoadingScreen />}>
+        <Outlet />
+      </React.Suspense>
+    );
+  }
   return (
     <React.Suspense fallback={<LoadingScreen />}>
       <BuyerShell />
