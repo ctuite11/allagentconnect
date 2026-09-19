@@ -1,34 +1,29 @@
-// TEMPORARY FALLBACK MANIFEST
-//
-// The optimized AVIF/WebP variants live at `/__l5e/assets-v1/…`, which is
-// only proxied on Lovable-hosted `.lovable.app` origins. Our production
-// custom domain (allagentconnect.com) is fronted by Netlify and does NOT
-// proxy that prefix, so every optimized image 404s to the SPA fallback
-// (HTML), leaving homepage images blank for real visitors.
-//
-// Until a Netlify rewrite for `/__l5e/*` is in place, this manifest returns
-// the known-public `c.animaapp.com` PNG URLs for every variant. Every
-// `<picture>` `<source>` and `<img>` therefore resolves to the same working
-// PNG. Type mismatch (source labeled `image/avif` but responding with
-// `image/png`) is harmless — browsers use the response's actual Content-Type
-// to decode. The `.asset.json` pointer files remain in the repo so we can
-// flip back to optimized delivery in one commit once hosting is fixed.
-
-const A = "https://c.animaapp.com/mmm3cgevnH1M3s/img";
-const TILE = (n: number) => `${A}/mask-group-${n}.png`;
+/**
+ * Homepage below-the-fold imagery — Vite-imported so production emits
+ * hashed `/assets/*` URLs with the existing immutable cache policy.
+ *
+ * Hero imagery lives in `public/images/home/` and is intentionally separate.
+ */
+import maskGroup1 from "@/assets/home/mask-group-1.webp";
+import maskGroup2 from "@/assets/home/mask-group-2.webp";
+import maskGroup3 from "@/assets/home/mask-group-3.webp";
+import maskGroup4 from "@/assets/home/mask-group-4.webp";
+import maskGroup5 from "@/assets/home/mask-group-5.webp";
+import maskGroup7 from "@/assets/home/mask-group-7.webp";
+import maskGroup8 from "@/assets/home/mask-group-8.webp";
+import maskGroup9 from "@/assets/home/mask-group-9.webp";
+import maskGroup10 from "@/assets/home/mask-group-10.webp";
 
 type Tile = { url: string };
 
-const tile = (n: number): Tile => ({ url: TILE(n) });
-
 export const TILES: Record<string, Tile> = {
-  m1: tile(1),
-  m2: tile(2),
-  m3: tile(3),
-  m4: tile(4),
-  m5: tile(5),
-  m7: tile(7),
-  m8: tile(8),
-  m9: tile(9),
-  m10: tile(10),
+  m1: { url: maskGroup1 },
+  m2: { url: maskGroup2 },
+  m3: { url: maskGroup3 },
+  m4: { url: maskGroup4 },
+  m5: { url: maskGroup5 },
+  m7: { url: maskGroup7 },
+  m8: { url: maskGroup8 },
+  m9: { url: maskGroup9 },
+  m10: { url: maskGroup10 },
 };

@@ -1,8 +1,5 @@
 import React from "react";
-
-// TEMPORARY: revert globe background to public animaapp.com PNG until
-// the /__l5e/assets-v1/ prefix is proxied on the custom domain.
-const GCI_GLOBE_FALLBACK = "https://c.animaapp.com/mmm3cgevnH1M3s/img/mask-group.png";
+import gciGlobe from "@/assets/home/gci-globe.webp";
 
 const features = [
   {
@@ -30,7 +27,7 @@ const GCIBenefits = () => {
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
-          backgroundImage: `url("${GCI_GLOBE_FALLBACK}")`,
+          backgroundImage: `url("${gciGlobe}")`,
           backgroundSize: "118%",
           backgroundPosition: "center 38%",
           opacity: 0.92,
