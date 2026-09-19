@@ -20,6 +20,7 @@ const TEXT_BODY = "#334155";
 const TEXT_MUTED = "#64748b";
 const BORDER = "#e5e7eb";
 const MONOGRAM_URL = "https://allagentconnect.com/email/aac-monogram-green-128.png";
+const PRODUCT_PREVIEW_URL = "https://qocduqtfbsevnhlgsfka.supabase.co/storage/v1/object/public/brand-assets/email%2Fagent-forward%2Faac-listing-search-preview.jpg";
 
 const MEMBER_BENEFITS = [
   "Discover <strong>Off-Market &amp; Coming Soon</strong> opportunities",
@@ -171,13 +172,29 @@ export function buildAgentForwardEmailHtml(opts: AgentForwardEmailOptions): stri
           <img src="${MONOGRAM_URL}" width="44" height="44" alt="All Agent Connect" style="display:block;margin:0 auto;border:0;outline:none;text-decoration:none;" />
           <p style="margin:14px 0 0;font-size:18px;font-weight:600;letter-spacing:-0.02em;color:#ffffff;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">All Agent Connect</p>
           <div style="width:48px;height:2px;background-color:${EMERALD_ACCENT};margin:18px auto 22px;border-radius:1px;"></div>
-           <h1 style="margin:0 0 12px;font-size:25px;line-height:1.25;font-weight:700;letter-spacing:0;color:#ffffff;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">ONE NETWORK. ALL AGENTS.</h1>
+           <h1 style="margin:0 0 12px;font-size:25px;line-height:1.25;font-weight:700;letter-spacing:0;color:#ffffff;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">ONE NETWORK. <span style="color:${EMERALD_ACCENT};">ALL AGENTS.</span></h1>
            <p style="margin:0;font-size:15px;line-height:1.55;color:rgba(255,255,255,0.78);font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;"><strong>The newest, most robust Agent Success Hub</strong> &mdash; built exclusively for real estate professionals.</p>
         </td></tr>
 
         <!-- Body -->
         <tr><td style="background-color:#ffffff;border:1px solid ${BORDER};border-top:none;padding:36px 40px 8px;">
           ${renderSection("Why become a member?", MEMBER_BENEFITS)}
+
+          <!-- Product preview -->
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:2px 0 30px;">
+            <tr><td style="padding:0 0 8px;">
+              <p style="margin:0;font-size:12px;font-weight:700;letter-spacing:0.08em;color:${TEXT_DARK};font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">SEE THE NETWORK IN ACTION</p>
+            </td></tr>
+            <tr><td style="padding:0 0 16px;font-size:15px;line-height:1.55;color:${TEXT_BODY};font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
+              See opportunities before they reach the public market.
+            </td></tr>
+            <tr><td style="padding:0 0 13px;">
+              <img src="${PRODUCT_PREVIEW_URL}" width="518" alt="All Agent Connect listing search with map and listing cards" style="display:block;width:100%;max-width:518px;height:auto;border:0;border-radius:10px;box-shadow:0 8px 22px rgba(15,23,42,0.14);outline:none;text-decoration:none;" />
+            </td></tr>
+            <tr><td style="font-size:13px;line-height:1.55;color:${TEXT_MUTED};font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
+              Search Off-Market and Coming Soon listings, see buyer demand, and connect directly with verified agents.
+            </td></tr>
+          </table>
 
           <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:2px 0 24px;">
             <tr><td style="padding:0 0 10px;">

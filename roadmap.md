@@ -63,3 +63,9 @@
 - [x] Preserve Darcy's headshot, Bento Real Estate logo, contact details, reply-to, and forwardable registration link.
 - [x] Deploy only the agent-forward invitation sender.
 - [x] Send exactly one replacement copy to chris@allagentconnect.com and confirm delivery.
+
+## Agent invitation visual refresh (2026-09-19)
+- [x] Split the hero headline between white and AAC green.
+- [x] Crop and host the supplied listing-search screenshot for email delivery.
+- [x] Add the single product-preview section with the approved copy and caption.
+- [ ] Deploy and verify only the agent-forward invitation sender; do not send an email.
