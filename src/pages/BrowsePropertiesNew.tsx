@@ -111,7 +111,8 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
   const searchMode = role === "agent" ? "agent" : "consumer";
 
   const buyerListingDetailTo = useMemo(() => {
-    if (!forceBuyer) return undefined;
+    // AAC buyer portal + DCMLS consumer browse both use the consumer detail surface.
+    if (!forceBuyer && !isDcmlsHost()) return undefined;
     const returnTo = `${location.pathname}${location.search}`;
     return (listingId: string) => {
       const q = new URLSearchParams({ returnTo });

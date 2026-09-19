@@ -69,7 +69,7 @@ const DcmlsExclusiveListings = () => {
               <div
                 key={listing.id}
                 className="rounded-2xl border bg-card overflow-hidden cursor-pointer hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200"
-                onClick={() => navigate(`/property/${listing.id}`)}
+                onClick={() => navigate(`/consumer-property/${listing.id}`)}
               >
                 <div className="relative aspect-[4/3] bg-muted">
                   {photo ? (
