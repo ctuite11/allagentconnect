@@ -181,7 +181,7 @@ export function buildAgentForwardEmailHtml(opts: AgentForwardEmailOptions): stri
           <p style="margin:14px 0 0;font-size:18px;font-weight:600;letter-spacing:-0.02em;color:#ffffff;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">All Agent Connect</p>
           <div style="width:48px;height:2px;background-color:${EMERALD_ACCENT};margin:18px auto 22px;border-radius:1px;"></div>
            <h1 style="margin:0 0 12px;font-size:25px;line-height:1.25;font-weight:700;letter-spacing:0;color:#ffffff;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">ONE NETWORK. <span style="color:${EMERALD_ACCENT};">ALL AGENTS.</span></h1>
-           <p style="margin:0;font-size:15px;line-height:1.55;color:rgba(255,255,255,0.78);font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;"><strong>The newest, most robust Agent Success Hub</strong> &mdash; built exclusively for real estate professionals.</p>
+           <p style="margin:0;font-size:15px;line-height:1.55;color:rgba(255,255,255,0.78);font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">The newest, most robust hub for agent success.</p>
         </td></tr>
 
         <!-- Body -->
