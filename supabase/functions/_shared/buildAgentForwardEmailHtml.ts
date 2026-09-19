@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------ */
-/*  Agent Forward Invitation — premium platform overview email        */
+/*  Agent Forward Invitation — concise membership invitation          */
 /*  Stand-alone HTML; no sender/Founding Member references.           */
 /* ------------------------------------------------------------------ */
 
@@ -21,31 +21,13 @@ const TEXT_MUTED = "#64748b";
 const BORDER = "#e5e7eb";
 const MONOGRAM_URL = "https://allagentconnect.com/email/aac-monogram-green-128.png";
 
-const GROW = [
-  "Generate seller and buyer opportunities.",
-  "Add and manage your listings.",
-  "Share listings with buyers, clients, and other agents.",
-  "Search private, off-market, coming soon, and on-market listings.",
-  "Create personalized buyer Hot Sheets.",
-  "Receive instant notifications when matching listings become available.",
-  "Match buyers with listings more efficiently.",
-  "Send and receive referrals.",
-  "Message agents directly within the platform.",
-  "Share listings to social media with professional property previews.",
-  "Manage your contacts, conversations, listings, and activity from one dashboard.",
-];
-
-const NETWORK = [
-  "Connect with verified real estate professionals.",
-  "Build trusted referral relationships.",
-  "Collaborate with agents across Massachusetts.",
-  "Expand your reach and grow your business.",
-];
-
-const MEMBERSHIP = [
-  "Free for a limited time.",
-  "Exclusively for licensed real estate professionals.",
-  "Secure verification helps maintain a trusted professional community.",
+const MEMBER_BENEFITS = [
+  "Discover <strong>Off-Market &amp; Coming Soon</strong> opportunities",
+  "See <strong>buyer demand</strong> before the rest of the market",
+  "Connect and collaborate with <strong>verified agents</strong>",
+  "Create <strong>Hot Sheets</strong> for your buyers",
+  "Send and receive <strong>referrals</strong>",
+  "Share listings, manage clients, and grow your business &mdash; <strong>all in one place</strong>",
 ];
 
 function renderBullets(items: string[]): string {
@@ -56,7 +38,7 @@ function renderBullets(items: string[]): string {
           <td valign="top" width="18" style="padding:9px 10px 0 0;line-height:0;">
             <div style="width:6px;height:6px;border-radius:2px;background-color:${EMERALD_ACCENT};"></div>
           </td>
-          <td valign="top" style="font-size:15px;line-height:1.55;color:${TEXT_BODY};font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${escapeHtml(label)}</td>
+          <td valign="top" style="font-size:15px;line-height:1.55;color:${TEXT_BODY};font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">${label}</td>
         </tr></table>
       </td></tr>`,
     )
@@ -162,15 +144,14 @@ function renderAgentFooter(agent: AgentFooterInfo, layout: "inline" | "stacked" 
     <td valign="middle" style="padding-right:18px;">${avatarCell}</td>
     <td valign="middle" align="left">${lines.join("")}</td>
     ${logoCell}
-  </tr></table>
-  <p style="margin:18px 0 0;font-size:10.5px;color:rgba(255,255,255,0.45);font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Shared via All Agent Connect &middot; By Agents. For Agents. All Agents.</p>`;
+  </tr></table>`;
 }
 
 export function buildAgentForwardEmailHtml(opts: AgentForwardEmailOptions): string {
   const { ctaUrl, agent, contactLayout } = opts;
   const preheader =
     opts.preheader ??
-    "A professional platform built exclusively for licensed real estate agents.";
+    "A special invitation to activate your free All Agent Connect membership.";
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -190,25 +171,36 @@ export function buildAgentForwardEmailHtml(opts: AgentForwardEmailOptions): stri
           <img src="${MONOGRAM_URL}" width="44" height="44" alt="All Agent Connect" style="display:block;margin:0 auto;border:0;outline:none;text-decoration:none;" />
           <p style="margin:14px 0 0;font-size:18px;font-weight:600;letter-spacing:-0.02em;color:#ffffff;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">All Agent Connect</p>
           <div style="width:48px;height:2px;background-color:${EMERALD_ACCENT};margin:18px auto 22px;border-radius:1px;"></div>
-          <h1 style="margin:0 0 12px;font-size:24px;line-height:1.25;font-weight:700;letter-spacing:-0.02em;color:#ffffff;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Everything you need to grow your real estate business&mdash;all in one platform.</h1>
-          <p style="margin:0;font-size:14px;line-height:1.55;color:rgba(255,255,255,0.72);font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">A professional platform built exclusively for licensed real estate agents.</p>
+           <h1 style="margin:0 0 12px;font-size:25px;line-height:1.25;font-weight:700;letter-spacing:0;color:#ffffff;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">ONE NETWORK. ALL AGENTS.</h1>
+           <p style="margin:0;font-size:15px;line-height:1.55;color:rgba(255,255,255,0.78);font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;"><strong>The newest, most robust Agent Success Hub</strong> &mdash; built exclusively for real estate professionals.</p>
         </td></tr>
 
         <!-- Body -->
         <tr><td style="background-color:#ffffff;border:1px solid ${BORDER};border-top:none;padding:36px 40px 8px;">
-          ${renderSection("Grow Your Business", GROW)}
-          ${renderSection("Build Your Professional Network", NETWORK)}
-          ${renderSection("Membership", MEMBERSHIP)}
+          ${renderSection("Why become a member?", MEMBER_BENEFITS)}
+
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:2px 0 24px;">
+            <tr><td style="padding:0 0 10px;">
+              <h2 style="margin:0;font-size:18px;font-weight:700;letter-spacing:0;color:${TEXT_DARK};font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">A Special Invitation</h2>
+              <div style="width:32px;height:2px;background-color:${EMERALD_ACCENT};margin:8px 0 0;border-radius:1px;"></div>
+            </td></tr>
+            <tr><td style="font-size:15px;line-height:1.65;color:${TEXT_BODY};font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
+              You&rsquo;ve been invited to join <strong>All Agent Connect</strong> with a <strong>FREE MEMBERSHIP for a limited time</strong>, available to select licensed real estate professionals.
+            </td></tr>
+          </table>
 
           <!-- CTA -->
           <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:8px 0 4px;">
+            <tr><td align="center" style="padding:0 0 10px;">
+              <p style="margin:0;font-size:13px;font-weight:700;letter-spacing:0.08em;color:${TEXT_DARK};font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">JOIN TODAY</p>
+            </td></tr>
             <tr><td align="center" style="padding:8px 0 6px;">
               <table role="presentation" cellspacing="0" cellpadding="0"><tr><td align="center" bgcolor="${CTA_GREEN}" style="border-radius:10px;">
-                <a href="${ctaUrl}" target="_blank" style="display:inline-block;padding:15px 34px;background-color:${CTA_GREEN};color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;letter-spacing:0.01em;border-radius:10px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Create Your Free Account</a>
+                <a href="${ctaUrl}" target="_blank" style="display:inline-block;padding:15px 34px;background-color:${CTA_GREEN};color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;letter-spacing:0;border-radius:10px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Activate Your Free Membership</a>
               </td></tr></table>
             </td></tr>
             <tr><td align="center" style="padding:10px 0 24px;">
-              <p style="margin:0;font-size:12px;color:${TEXT_MUTED};font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">Free for a limited time.</p>
+              <p style="margin:0;font-size:12px;font-weight:600;color:${TEXT_MUTED};font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">By Agents. For Agents. All Agents.</p>
             </td></tr>
           </table>
         </td></tr>
