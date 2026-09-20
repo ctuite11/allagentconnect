@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ADD_LISTING_EDIT_STATUSES, LISTING_STATUS } from "@/constants/status";
 import { dcmlsPublishSnapshot } from "@/lib/dcmlsPublishPayload";
 import { DcmlsPublishControl } from "@/components/listing/DcmlsPublishControl";
+import type { DcmlsParticipationState } from "@/components/listing/DcmlsPublishControl";
 import { fetchDcmlsParticipation } from "@/lib/dcmlsListing";
 
 const EditListing: React.FC = () => {
@@ -66,7 +67,8 @@ const EditListing: React.FC = () => {
   const [publishToDcmls, setPublishToDcmls] = useState(false);
   const [dcmlsStatus, setDcmlsStatus] = useState<string>('not_published');
   const [dcmlsError, setDcmlsError] = useState<string | null>(null);
-  const [dcmlsParticipating, setDcmlsParticipating] = useState(false);
+  const [dcmlsParticipation, setDcmlsParticipation] =
+    useState<DcmlsParticipationState>("loading");
   const [dcmlsPublishedAt, setDcmlsPublishedAt] = useState<string | null>(null);
 
   useEffect(() => {
@@ -74,12 +76,14 @@ const EditListing: React.FC = () => {
 
     const loadListing = async () => {
       setLoading(true);
+      setDcmlsParticipation("loading");
       try {
         const participating = await fetchDcmlsParticipation(user.id);
-        setDcmlsParticipating(participating);
+        setDcmlsParticipation(participating ? "on" : "off");
       } catch (err) {
         console.error("Error loading DCMLS participation", err);
-        setDcmlsParticipating(false);
+        // Unknown — never treat as opted-out; save must preserve DB DCMLS fields.
+        setDcmlsParticipation("unknown");
       }
 
       const { data, error } = await supabase
@@ -256,8 +260,12 @@ const EditListing: React.FC = () => {
       go_live_date: goLiveDate || null,
       auto_activate_days: status === LISTING_STATUS.NEW && typeof autoActivateDays === "number" ? autoActivateDays : null,
       auto_activate_on: computedAutoActivateOn,
-      // DCMLS: honor listing checkbox only when agent participates.
-      ...dcmlsPublishSnapshot(dcmlsParticipating && publishToDcmls),
+      // Only rewrite DCMLS fields when participation is known. Lookup failure must not unpublish.
+      ...(dcmlsParticipation === "on"
+        ? dcmlsPublishSnapshot(publishToDcmls)
+        : dcmlsParticipation === "off"
+          ? dcmlsPublishSnapshot(false)
+          : {}),
     };
 
     // Add type-specific fields
@@ -705,7 +713,7 @@ const EditListing: React.FC = () => {
                     onCheckedChange={setPublishToDcmls}
                     dcmlsStatus={dcmlsStatus}
                     dcmlsError={dcmlsError}
-                    participationEnabled={dcmlsParticipating}
+                    participation={dcmlsParticipation}
                   />
                 </div>
 

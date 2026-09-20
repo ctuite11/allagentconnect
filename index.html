@@ -83,10 +83,23 @@
       var path = (location.pathname || "/").replace(/\/+$/, "") || "/";
       if (path !== "/" && path !== "/index" && path !== "/homepage-v2") return;
       var host = (location.hostname || "").toLowerCase();
-      var isDcmlsHost =
+      var isLiveDcmls =
         host === "directconnectmls.com" || host === "www.directconnectmls.com";
+      var isAacProduction =
+        host === "allagentconnect.com" || host === "www.allagentconnect.com";
       var params = new URLSearchParams(location.search || "");
-      if (isDcmlsHost || params.get("dcmls") === "1") return;
+      var previewOverride =
+        !isAacProduction &&
+        !isLiveDcmls &&
+        params.get("dcmls") === "1" &&
+        (host === "localhost" ||
+          host === "127.0.0.1" ||
+          host === "[::1]" ||
+          host.indexOf(".localhost", host.length - 10) !== -1 ||
+          host.slice(-12) === ".netlify.app" ||
+          host.slice(-12) === ".lovable.app" ||
+          host.slice(-19) === ".lovableproject.com");
+      if (isLiveDcmls || previewOverride) return;
 
       var SRCSET =
         "/images/home/hero-768.webp 768w, /images/home/hero-1200.webp 1200w, /images/home/hero-1920.webp 1920w";
@@ -237,10 +250,23 @@
       if (path !== "/" && path !== "/index" && path !== "/homepage-v2") return;
       // DCMLS consumer homepage must not inherit the AAC LCP hero shell.
       var host = (location.hostname || "").toLowerCase();
-      var isDcmlsHost =
+      var isLiveDcmls =
         host === "directconnectmls.com" || host === "www.directconnectmls.com";
+      var isAacProduction =
+        host === "allagentconnect.com" || host === "www.allagentconnect.com";
       var params = new URLSearchParams(location.search || "");
-      if (isDcmlsHost || params.get("dcmls") === "1") return;
+      var previewOverride =
+        !isAacProduction &&
+        !isLiveDcmls &&
+        params.get("dcmls") === "1" &&
+        (host === "localhost" ||
+          host === "127.0.0.1" ||
+          host === "[::1]" ||
+          host.indexOf(".localhost", host.length - 10) !== -1 ||
+          host.slice(-12) === ".netlify.app" ||
+          host.slice(-12) === ".lovable.app" ||
+          host.slice(-19) === ".lovableproject.com");
+      if (isLiveDcmls || previewOverride) return;
       if (document.getElementById("aac-home-hero-shell")) return;
 
       var SRCSET =

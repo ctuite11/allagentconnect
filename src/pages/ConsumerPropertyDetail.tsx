@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { LoadingScreen } from "@/components/LoadingScreen";
@@ -195,7 +195,11 @@ const ConsumerPropertyDetail = () => {
   const [listingMessageVariant, setListingMessageVariant] = useState<"agent" | "buyer">("buyer");
   const { user, role, loading: authLoading } = useAuthRole();
   const { registerGuestListing } = useSharedListingGuest();
-  const isDcmls = isDcmlsHost();
+  // Explicit DCMLS mode — must track search so ?dcmls=1 changes force a gated reload.
+  const isDcmls = useMemo(
+    () => isDcmlsHost(),
+    [location.pathname, location.search],
+  );
 
   // Shared-listing guest mode: unauthenticated viewers anchor on this listing.
   useEffect(() => {
@@ -281,10 +285,12 @@ const ConsumerPropertyDetail = () => {
     try {
       setLoadError(false);
       setLoading(true);
+      // Clear immediately so AAC data never remains visible after entering DCMLS mode.
+      setListing(null);
       setAgentProfile(null);
 
       // DCMLS host: gated lookup only — never fall back to AAC public/listings paths.
-      if (isDcmlsHost()) {
+      if (isDcmls) {
         const dcmlsListing = await fetchDcmlsListing(id);
         if (!dcmlsListing) {
           setListing(null);
@@ -348,7 +354,7 @@ const ConsumerPropertyDetail = () => {
     } finally {
       setLoading(false);
     }
-  }, [id, authLoading, user]);
+  }, [id, authLoading, user, isDcmls]);
 
   useEffect(() => {
     if (authLoading) return;

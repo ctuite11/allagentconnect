@@ -110,19 +110,25 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
   const { role } = useUserRole(user);
   const searchMode = role === "agent" ? "agent" : "consumer";
 
+  // Explicit DCMLS mode — include in fetch deps so source switches force a gated reload.
+  const isDcmls = useMemo(
+    () => !forceBuyer && isDcmlsHost(),
+    [forceBuyer, location.pathname, location.search],
+  );
+
   const buyerListingDetailTo = useMemo(() => {
     // AAC buyer portal + DCMLS consumer browse both use the consumer detail surface.
-    if (!forceBuyer && !isDcmlsHost()) return undefined;
+    if (!forceBuyer && !isDcmls) return undefined;
     const returnTo = `${location.pathname}${location.search}`;
     return (listingId: string) => {
       // Preview (?dcmls=1) must keep dcmls on the property URL; live DCMLS stays clean.
-      if (isDcmlsHost()) {
+      if (isDcmls) {
         return getDcmlsConsumerPropertyPath(listingId, { returnTo });
       }
       const q = new URLSearchParams({ returnTo });
       return `/consumer-property/${listingId}?${q.toString()}`;
     };
-  }, [forceBuyer, location.pathname, location.search]);
+  }, [forceBuyer, isDcmls, location.pathname, location.search]);
 
   const [criteria, setCriteria] = useState<SearchCriteria>(() => defaultSaleToolbarCriteria());
   const isRentSearch = criteria.listingType === "for_rent";
@@ -181,6 +187,8 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
     try {
       setFetchError(false);
       setLoading(true);
+      // Clear immediately so AAC rows never remain visible after entering DCMLS mode.
+      setListings([]);
 
       // Convert SearchCriteria to buildListingsQuery format with proper types
       const queryParams: any = {
@@ -201,8 +209,8 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
       if (criteria.minLivingArea) queryParams.minSqft = parseFloat(criteria.minLivingArea);
       if (criteria.maxLivingArea) queryParams.maxSqft = parseFloat(criteria.maxLivingArea);
 
-      // Force DCMLS-only filter on directconnectmls.com (skipped in buyer mode)
-      if (!forceBuyer && isDcmlsHost()) queryParams.dcmlsOnly = true;
+      // DCMLS host/preview: gated source via buildListingsQuery(dcmlsOnly)
+      if (isDcmls) queryParams.dcmlsOnly = true;
 
       const query = buildListingsQuery(supabase, queryParams).limit(200);
       const { data, error } = await query;
@@ -233,7 +241,7 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
     } finally {
       setLoading(false);
     }
-  }, [criteria, forceBuyer]);
+  }, [criteria, forceBuyer, isDcmls]);
 
   // Fetch listings when criteria changes
   useEffect(() => {
@@ -362,8 +370,6 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
     setPropertyTypeOpen(false);
   };
 
-  const dcmls = !forceBuyer && isDcmlsHost();
-
   const retryFetch = () => {
     void fetchListings();
   };
@@ -373,17 +379,17 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
   );
 
   return (
-    <div className={cn("flex flex-col bg-white", forceBuyer ? buyerPageShell : "min-h-screen", !dcmls && "pt-20")}>
-      {dcmls ? <DcmlsConsumerHeader /> : null}
+    <div className={cn("flex flex-col bg-white", forceBuyer ? buyerPageShell : "min-h-screen", !isDcmls && "pt-20")}>
+      {isDcmls ? <DcmlsConsumerHeader /> : null}
 
       <main className="flex-1 bg-white">
         <div className={forceBuyer ? buyerPageMain : "container mx-auto max-w-[1800px] px-4 py-6 md:px-6 md:py-8"}>
           {/* Header — hidden in buyer mode */}
           {!forceBuyer && (
             <div className="mb-5 md:mb-6">
-              <PageTitle className="mb-2">{dcmls ? "Browse Listings" : "Property Search"}</PageTitle>
+              <PageTitle className="mb-2">{isDcmls ? "Browse Listings" : "Property Search"}</PageTitle>
               <p className="text-[13px] leading-relaxed text-neutral-500 md:text-sm">
-                {dcmls
+                {isDcmls
                   ? "Off-market and coming-soon listings shared by network agents"
                   : "Advanced search with comprehensive filters"}
               </p>

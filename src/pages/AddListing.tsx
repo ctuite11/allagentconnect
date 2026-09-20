@@ -62,6 +62,7 @@ import { formHasValidListingPricing } from "@/lib/listingPricingValidation";
 import { dcmlsPublishSnapshot, dcmlsShowOnFromRecord } from "@/lib/dcmlsPublishPayload";
 import { fetchDcmlsParticipation } from "@/lib/dcmlsListing";
 import { DcmlsPublishControl } from "@/components/listing/DcmlsPublishControl";
+import type { DcmlsParticipationState } from "@/components/listing/DcmlsPublishControl";
 import { Seo } from "@/components/Seo";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DcmlsPublishingIntroOverlay } from "@/components/add-listing/DcmlsPublishingIntroOverlay";
@@ -269,7 +270,8 @@ const AddListing = () => {
   const { introVisible, handleGotIt } = useAddListingDcmlsIntro(user);
   const { introVisible: statusIntroVisible, handleGotIt: handleStatusGotIt } =
     useAddListingStatusIntro(user);
-  const [dcmlsParticipating, setDcmlsParticipating] = useState(false);
+  const [dcmlsParticipation, setDcmlsParticipation] =
+    useState<DcmlsParticipationState>("loading");
   const [loading, setLoading] = useState(true);
   const [isLoadingListing, setIsLoadingListing] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -644,11 +646,13 @@ const AddListing = () => {
         return;
       }
       setUser(session.user);
+      setDcmlsParticipation("loading");
       try {
-        setDcmlsParticipating(await fetchDcmlsParticipation(session.user.id));
+        const participating = await fetchDcmlsParticipation(session.user.id);
+        setDcmlsParticipation(participating ? "on" : "off");
       } catch (err) {
         console.error("Error loading DCMLS participation", err);
-        setDcmlsParticipating(false);
+        setDcmlsParticipation("unknown");
       }
       
       // If we have a listingId in URL, load that listing's data
@@ -2343,9 +2347,12 @@ const AddListing = () => {
         return null;
       }
 
-      const dcmlsSnapshot = dcmlsPublishSnapshot(
-        dcmlsParticipating && formData.show_on_dcmls === true,
-      );
+      const dcmlsSnapshot =
+        dcmlsParticipation === "on"
+          ? dcmlsPublishSnapshot(formData.show_on_dcmls === true)
+          : dcmlsParticipation === "off"
+            ? dcmlsPublishSnapshot(false)
+            : null;
 
       const draftPrice =
         formData.listing_type === "for_rent"
@@ -2365,7 +2372,7 @@ const AddListing = () => {
         state: formData.state || 'MA',
         zip_code: formData.zip_code || '00000',
         price: draftPrice,
-        ...dcmlsSnapshot,
+        ...((dcmlsSnapshot ?? {}) as Record<string, unknown>),
       };
 
       if (isConciergeMode) {
@@ -2563,7 +2570,12 @@ const AddListing = () => {
     } : {}),
 
     // DCMLS: listing-level selection only when the agent participates.
-    ...dcmlsPublishSnapshot(dcmlsParticipating && formData.show_on_dcmls === true),
+    // Only rewrite DCMLS fields when participation is known.
+    ...(dcmlsParticipation === "on"
+      ? dcmlsPublishSnapshot(formData.show_on_dcmls === true)
+      : dcmlsParticipation === "off"
+        ? dcmlsPublishSnapshot(false)
+        : {}),
 
     // Clone / relisting metadata (only set when cloning from an expired/cancelled listing)
     ...(isRelisting ? {
@@ -3809,9 +3821,11 @@ const AddListing = () => {
                         setFormData((prev) => ({ ...prev, show_on_dcmls: checked }))
                       }
                       dcmlsStatus={
-                        formData.show_on_dcmls && dcmlsParticipating ? "published" : "not_published"
+                        formData.show_on_dcmls && dcmlsParticipation === "on"
+                          ? "published"
+                          : "not_published"
                       }
-                      participationEnabled={dcmlsParticipating}
+                      participation={dcmlsParticipation}
                     />
                   </div>
                 )}
