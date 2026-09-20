@@ -3,7 +3,7 @@ import { Check, FileText, Mail, ExternalLink, Globe, Loader2 } from "lucide-reac
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { emailTemplateLabel } from "@/lib/emailTemplateLabels";
 import { supabase } from "@/integrations/supabase/client";
-import { fetchDcmlsParticipation } from "@/lib/dcmlsListing";
+import { fetchDcmlsParticipationRow, updateDcmlsParticipation } from "@/lib/dcmlsListing";
 import { toast } from "sonner";
 
 import {
@@ -170,8 +170,14 @@ function AgentDcmlsParticipationSection({
     setParticipation("loading");
     void (async () => {
       try {
-        const participating = await fetchDcmlsParticipation(agentId);
-        if (!cancelled) setParticipation(participating ? "on" : "off");
+        const row = await fetchDcmlsParticipationRow(agentId);
+        if (cancelled) return;
+        if (row.status === "missing") {
+          // Missing settings row is not "Not Participating" — control unavailable.
+          setParticipation("unknown");
+          return;
+        }
+        setParticipation(row.status);
       } catch (err) {
         console.error("[AgentDetailsDrawer] DCMLS participation load failed:", err);
         if (!cancelled) setParticipation("unknown");
@@ -185,22 +191,18 @@ function AgentDcmlsParticipationSection({
   const applyParticipation = async (next: boolean) => {
     setSaving(true);
     try {
-      const { error } = await supabase
-        .from("agent_settings")
-        .update({
-          dcmls_participation: next,
-          dcmls_participation_at: next ? new Date().toISOString() : null,
-        })
-        .eq("user_id", agentId);
-      if (error) throw error;
-      setParticipation(next ? "on" : "off");
+      // Write participation only; DB trigger owns dcmls_participation_at.
+      // Require a returned row so a zero-match UPDATE cannot look like success.
+      const updated = await updateDcmlsParticipation(agentId, next);
+      setParticipation(updated.status);
       toast.success(
-        next
+        updated.status === "on"
           ? "Agent joined Direct Connect MLS (no listings published)"
           : "Agent removed from Direct Connect MLS",
       );
     } catch (err) {
       console.error("[AgentDetailsDrawer] DCMLS participation update failed:", err);
+      setParticipation("unknown");
       toast.error("Could not update DCMLS participation");
     } finally {
       setSaving(false);
@@ -269,7 +271,8 @@ function AgentDcmlsParticipationSection({
         )}
         {enabled && participation === "unknown" && (
           <p className="text-[11px] text-amber-800">
-            Could not load participation. Refresh and try again — no change was made.
+            No agent settings record found, or participation could not be loaded. Refresh and try
+            again — no change was made. This control does not create settings rows.
           </p>
         )}
       </div>
