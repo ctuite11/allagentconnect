@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { applyDcmlsFilter } from "@/lib/dcmlsFilter";
+import { getDcmlsConsumerPropertyPath } from "@/lib/host";
 import { Bed, Bath, Home } from "lucide-react";
 
 interface DcmlsListing {
@@ -69,7 +70,7 @@ const DcmlsExclusiveListings = () => {
               <div
                 key={listing.id}
                 className="rounded-2xl border bg-card overflow-hidden cursor-pointer hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200"
-                onClick={() => navigate(`/consumer-property/${listing.id}`)}
+                onClick={() => navigate(getDcmlsConsumerPropertyPath(listing.id))}
               >
                 <div className="relative aspect-[4/3] bg-muted">
                   {photo ? (

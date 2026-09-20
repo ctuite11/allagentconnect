@@ -33,3 +33,36 @@ export function isDcmlsHost(): boolean {
 
   return false;
 }
+
+/**
+ * True when DCMLS UX is active only via `?dcmls=1` (Netlify/local preview),
+ * not on the live directconnectmls.com hostname.
+ */
+export function isDcmlsPreviewOverride(): boolean {
+  return isDcmlsHost() && !isLiveDcmlsHost();
+}
+
+/**
+ * Consumer property path for DCMLS navigation.
+ * Preview override → `/consumer-property/:id?dcmls=1&…`
+ * Live DCMLS host → clean `/consumer-property/:id` (plus any extra params).
+ */
+export function getDcmlsConsumerPropertyPath(
+  listingId: string,
+  extra?: Record<string, string>,
+): string {
+  const params = new URLSearchParams();
+  // Preview override first so URLs read `?dcmls=1&returnTo=…`.
+  if (isDcmlsPreviewOverride()) {
+    params.set("dcmls", "1");
+  }
+  if (extra) {
+    for (const [key, value] of Object.entries(extra)) {
+      params.set(key, value);
+    }
+  }
+  const q = params.toString();
+  return q
+    ? `/consumer-property/${listingId}?${q}`
+    : `/consumer-property/${listingId}`;
+}

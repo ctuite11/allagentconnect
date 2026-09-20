@@ -18,7 +18,7 @@ import { toast } from "sonner";
 import { UnifiedPropertySearch, SearchCriteria } from "@/components/search/UnifiedPropertySearch";
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
 import { useUserRole } from "@/hooks/useUserRole";
-import { isDcmlsHost } from "@/lib/host";
+import { getDcmlsConsumerPropertyPath, isDcmlsHost } from "@/lib/host";
 import {
   RENT_PRICE_STEP_VALUES,
   defaultRentToolbarCriteria,
@@ -115,6 +115,10 @@ const BrowsePropertiesNew = ({ forceBuyer = false }: BrowsePropertiesNewProps = 
     if (!forceBuyer && !isDcmlsHost()) return undefined;
     const returnTo = `${location.pathname}${location.search}`;
     return (listingId: string) => {
+      // Preview (?dcmls=1) must keep dcmls on the property URL; live DCMLS stays clean.
+      if (isDcmlsHost()) {
+        return getDcmlsConsumerPropertyPath(listingId, { returnTo });
+      }
       const q = new URLSearchParams({ returnTo });
       return `/consumer-property/${listingId}?${q.toString()}`;
     };
