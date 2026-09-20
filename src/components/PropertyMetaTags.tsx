@@ -2,8 +2,10 @@ import { Helmet } from 'react-helmet-async';
 import { getListingPublicUrl } from '@/lib/getPublicUrl';
 import { resolveListingPhotoUrl } from '@/lib/resolveListingPhotoUrl';
 import { formatListingPriceDisplay } from '@/lib/formatListingPriceDisplay';
+import { AAC_BRAND, DCMLS_BRAND } from '@/lib/branding';
+import { isDcmlsHost } from '@/lib/host';
 
-const FALLBACK_OG_IMAGE = "https://allagentconnect.com/og/aac-og-2026-01-22.jpg";
+const AAC_FALLBACK_OG_IMAGE = "https://allagentconnect.com/og/aac-og-2026-01-22.jpg";
 
 /**
  * Convert a public listing-photos URL into a Supabase Storage
@@ -55,7 +57,8 @@ export const PropertyMetaTags = ({
   listingType,
   listingId,
 }: PropertyMetaTagsProps) => {
-  const title = `${address}, ${city}, ${state} - All Agent Connect`;
+  const brand = isDcmlsHost() ? DCMLS_BRAND : AAC_BRAND;
+  const title = `${address}, ${city}, ${state} - ${brand.siteName}`;
   const basePrice =
     priceDisplay ??
     formatListingPriceDisplay({
@@ -75,7 +78,8 @@ export const PropertyMetaTags = ({
     : `${priceText} - ${bedrooms} bed, ${bathrooms} bath property in ${city}, ${state}`;
 
   const resolvedPhoto = resolveListingPhotoUrl(photo);
-  const imageUrl = resolvedPhoto ? toOgImageUrl(resolvedPhoto) : FALLBACK_OG_IMAGE;
+  const fallbackOg = isDcmlsHost() ? brand.ogImage : AAC_FALLBACK_OG_IMAGE;
+  const imageUrl = resolvedPhoto ? toOgImageUrl(resolvedPhoto) : fallbackOg;
   const imageType = "image/jpeg";
   const canonicalUrl = getListingPublicUrl(listingId);
 
@@ -96,7 +100,7 @@ export const PropertyMetaTags = ({
       <meta property="og:image:width" content="1200" />
       <meta property="og:image:height" content="630" />
       <meta property="og:image:alt" content={`Photo of ${address}`} />
-      <meta property="og:site_name" content="All Agent Connect" />
+      <meta property="og:site_name" content={brand.siteName} />
       <meta property="og:locale" content="en_US" />
       
       {/* Twitter */}

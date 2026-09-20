@@ -1,6 +1,5 @@
 import { SupabaseClient } from "@supabase/supabase-js";
 import { applyLocationFilter } from "./buildLocationFilter";
-import { applyDcmlsFilter } from "./dcmlsFilter";
 import { applyListingPriceOverlapFilter } from "./applyListingPriceOverlapFilter";
 
 interface SearchCriteria {
@@ -60,9 +59,12 @@ export function buildListingsQuery(
   supabase: SupabaseClient,
   rawCriteria: SearchCriteria
 ) {
-  // Marketing-only public view — anon cannot SELECT public.listings after Phase 3.
-  // Authenticated hot-sheet / browse callers use the same safe column set.
-  let query = supabase.from("listings_public").select("*");
+  // AAC marketing view vs gated DCMLS source. Server enforces DCMLS eligibility
+  // on `dcmls_listings_public` — do not re-apply participation/publication filters here.
+  const dcmlsOnly = rawCriteria.dcmlsOnly === true;
+  let query = dcmlsOnly
+    ? supabase.from("dcmls_listings_public").select("*")
+    : supabase.from("listings_public").select("*");
 
   // Normalize criteria
   // Note: honor the caller's statuses array as-is. An empty array is a valid
@@ -89,7 +91,7 @@ export function buildListingsQuery(
     onlyBrokerTours: rawCriteria.onlyBrokerTours || false,
     brokerTourDays: rawCriteria.brokerTourDays || "",
     maxPricePerSqft: rawCriteria.maxPricePerSqft || 0,
-    dcmlsOnly: rawCriteria.dcmlsOnly || false,
+    dcmlsOnly,
   };
 
   // Listing type filter (for_sale / for_rent)
@@ -225,11 +227,6 @@ export function buildListingsQuery(
     // For now, we'll add a filter that checks if the listing has square_feet
     query = query.not("square_feet", "is", null);
     query = query.gt("square_feet", 0);
-  }
-
-  // DCMLS-only filter: restrict to published DCMLS listings
-  if (criteria.dcmlsOnly) {
-    query = applyDcmlsFilter(query);
   }
 
   // Default ordering

@@ -31,9 +31,15 @@ interface BuyerAgent {
 interface BuyerAgentShowcaseProps {
   listingZip: string;
   listingId: string;
+  /** Override card heading (e.g. DCMLS consumer copy). */
+  title?: string;
 }
 
-export const BuyerAgentShowcase = ({ listingZip, listingId }: BuyerAgentShowcaseProps) => {
+export const BuyerAgentShowcase = ({
+  listingZip,
+  listingId,
+  title = "Buyer's Agents in This Area",
+}: BuyerAgentShowcaseProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [agents, setAgents] = useState<BuyerAgent[]>([]);
@@ -108,7 +114,7 @@ export const BuyerAgentShowcase = ({ listingZip, listingId }: BuyerAgentShowcase
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-lg">
           <Users className="w-5 h-5" />
-          Buyer's Agents in This Area
+          {title}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">

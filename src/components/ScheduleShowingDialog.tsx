@@ -42,6 +42,8 @@ interface ScheduleShowingDialogProps {
   triggerLabel?: string;
   triggerClassName?: string;
   triggerVariant?: "default" | "outline" | "secondary";
+  /** Optional disclosure shown immediately above the submit button. */
+  disclosure?: string;
 }
 
 const TIME_OPTIONS = [
@@ -56,6 +58,7 @@ const ScheduleShowingDialog = ({
   triggerLabel = "Schedule Showing",
   triggerClassName,
   triggerVariant = "default",
+  disclosure,
 }: ScheduleShowingDialogProps) => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -307,15 +310,20 @@ const ScheduleShowingDialog = ({
             </div>
           </div>
 
-          <div className="flex shrink-0 items-center justify-end gap-2 border-t border-neutral-200 bg-white px-4 py-3 sm:px-5">
-            <DialogClose asChild>
-              <Button type="button" variant="ghost" size="sm" disabled={loading} className="h-9 rounded-lg text-[13px]">
-                Cancel
+          <div className="flex shrink-0 flex-col gap-2 border-t border-neutral-200 bg-white px-4 py-3 sm:px-5">
+            {disclosure ? (
+              <p className="text-xs leading-relaxed text-neutral-600">{disclosure}</p>
+            ) : null}
+            <div className="flex items-center justify-end gap-2">
+              <DialogClose asChild>
+                <Button type="button" variant="ghost" size="sm" disabled={loading} className="h-9 rounded-lg text-[13px]">
+                  Cancel
+                </Button>
+              </DialogClose>
+              <Button type="submit" size="sm" disabled={loading} className="h-9 rounded-lg text-[13px]">
+                {loading ? "Submitting..." : "Submit Request"}
               </Button>
-            </DialogClose>
-            <Button type="submit" size="sm" disabled={loading} className="h-9 rounded-lg text-[13px]">
-              {loading ? "Submitting..." : "Submit Request"}
-            </Button>
+            </div>
           </div>
         </form>
       </DialogContent>

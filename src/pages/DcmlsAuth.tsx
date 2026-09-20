@@ -12,6 +12,29 @@ import { z } from "zod";
 
 const AAC_BLUE = "#0E56F5";
 
+/** V1 default after auth — Account / Saved / Hot Sheets are not live yet. */
+const DCMLS_V1_POST_AUTH = "/browse?dcmls=1";
+
+/** Paths intentionally not exposed on DCMLS V1. */
+const DCMLS_V1_BLOCKED_REDIRECTS = new Set([
+  "/account",
+  "/saved",
+  "/searches",
+]);
+
+/**
+ * Prefer an explicit `from`/`redirect` when it is a safe relative path and not a
+ * hidden V1 surface; otherwise send buyers to browse.
+ */
+function resolveDcmlsAuthRedirect(from: string | null, redirect: string | null): string {
+  const raw = (from || redirect || "").trim();
+  if (!raw) return DCMLS_V1_POST_AUTH;
+  if (!raw.startsWith("/") || raw.startsWith("//")) return DCMLS_V1_POST_AUTH;
+  const pathOnly = raw.split("?")[0] || "";
+  if (DCMLS_V1_BLOCKED_REDIRECTS.has(pathOnly)) return DCMLS_V1_POST_AUTH;
+  return raw;
+}
+
 const signUpSchema = z.object({
   email: z.string().trim().email("Enter a valid email").max(255),
   password: z
@@ -33,8 +56,7 @@ const loginSchema = z.object({
 const DcmlsAuth = () => {
   const navigate = useNavigate();
   const [params] = useSearchParams();
-  // Accept both `redirect` (legacy) and `from` (new). Default destination is /account on DCMLS.
-  const redirectTo = params.get("from") || params.get("redirect") || "/account";
+  const redirectTo = resolveDcmlsAuthRedirect(params.get("from"), params.get("redirect"));
   // Accept `mode=signup|signin` (new) and legacy `mode=register`. Default = signin.
   const modeParam = params.get("mode");
   const initialIsLogin = modeParam !== "register" && modeParam !== "signup";
@@ -73,7 +95,9 @@ const DcmlsAuth = () => {
       const { data: authData, error } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
-        options: { emailRedirectTo: `${window.location.origin}/account` },
+        options: {
+          emailRedirectTo: `${window.location.origin}${DCMLS_V1_POST_AUTH}`,
+        },
       });
       if (error) throw error;
       if (authData.user) {
@@ -140,7 +164,7 @@ const DcmlsAuth = () => {
     <>
       <Seo
         title={isLogin ? "Sign In — Direct Connect MLS" : "Create Account — Direct Connect MLS"}
-        description="Sign in to save homes and create saved searches on Direct Connect MLS."
+        description="Sign in to Direct Connect MLS to browse listings and connect with listing agents."
         canonical="https://directconnectmls.com/auth"
       />
       <div className="min-h-screen flex flex-col bg-background">
@@ -172,8 +196,8 @@ const DcmlsAuth = () => {
                 {isForgot
                   ? "Enter your email and we'll send a reset link."
                   : isLogin
-                  ? "Sign in to access your saved homes and searches."
-                  : "Save homes and get notified when new matches hit the network."}
+                  ? "Sign in to continue browsing Direct Connect MLS."
+                  : "Create an account to browse listings and contact listing agents."}
               </p>
             </div>
 
@@ -271,25 +295,6 @@ const DcmlsAuth = () => {
                 </button>
               )}
             </div>
-
-            {/* Buyer benefits — only on signup mode */}
-            {!isLogin && !isForgot && (
-              <div className="mt-10 pt-8 border-t border-border/50">
-                <p className="text-xs uppercase tracking-wider text-muted-foreground mb-4 text-center">
-                  What your account unlocks
-                </p>
-                <ul className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm text-foreground/80">
-                  <li>· Save homes</li>
-                  <li>· Favorites</li>
-                  <li>· Hot Sheets</li>
-                  <li>· New listing alerts</li>
-                  <li>· Invite your agent</li>
-                  <li>· Showing requests</li>
-                </ul>
-              </div>
-            )}
-
-            {/* Secondary agent link — never primary */}
           </div>
         </main>
       </div>

@@ -71,6 +71,7 @@ const SearchResults = React.lazy(() => import("./pages/SearchResults"));
 
 
 const PublicSearchResults = React.lazy(() => import("./pages/PublicSearchResults"));
+const DcmlsAuth = React.lazy(() => import("./pages/DcmlsAuth"));
 const OurAgents = React.lazy(() => import("./pages/OurAgents"));
 const PublicOurAgents = React.lazy(() => import("./pages/PublicOurAgents"));
 const Favorites = React.lazy(() => import("./pages/Favorites"));
@@ -171,6 +172,8 @@ const Blog = React.lazy(() => import("./pages/Blog"));
 const DesignMockup = React.lazy(() => import("./pages/DesignMockup"));
 // Eager: ~9 KB / ~3 KB gzip — removes Suspense waterfall on `/` after main evaluates.
 import HomepageV2 from "./pages/HomepageV2";
+import DcmlsHome from "./pages/DcmlsHome";
+import { isDcmlsHost } from "./lib/host";
 const AgentDiagnostics = React.lazy(() => import("./pages/AgentDiagnostics"));
 const AcceptBuyerWorkspaceInvite = React.lazy(() => import("./pages/AcceptBuyerWorkspaceInvite"));
 const AcceptDelegateInvite = React.lazy(() => import("./pages/AcceptDelegateInvite"));
@@ -323,8 +326,30 @@ function MessagesEntry() {
 function BrowseEntry() {
   const { role, loading } = useAuthRole();
   if (loading) return null;
-  if (role === "buyer") return <Navigate to="/client/search" replace />;
+  // DCMLS consumers stay on public browse — never send them into the AAC buyer portal.
+  if (role === "buyer" && !isDcmlsHost()) return <Navigate to="/client/search" replace />;
   return <BrowsePropertiesNew />;
+}
+
+/** DCMLS `/` uses the consumer homepage; AAC keeps HomepageV2. */
+function HomeEntry() {
+  return isDcmlsHost() ? <DcmlsHome /> : <HomepageV2 />;
+}
+
+/** On DCMLS, `/search` is the same DCMLS-filtered browse experience. */
+function PublicSearchEntry() {
+  if (isDcmlsHost()) {
+    return <Navigate to="/browse?dcmls=1" replace />;
+  }
+  return <PublicSearchResults />;
+}
+
+/** DCMLS consumer auth surface; AAC keeps the shared `/auth` redirect. */
+function ConsumerAuthEntry() {
+  if (isDcmlsHost()) {
+    return <DcmlsAuth />;
+  }
+  return <Navigate to="/auth" replace />;
 }
 
 /** Layout route: wraps children in AppShell (sidebar + header) */
@@ -338,8 +363,16 @@ function AgentLayout() {
   );
 }
 
-/** Layout route: wraps buyer-authenticated pages in BuyerShell */
+/** Layout route: wraps buyer-authenticated pages in BuyerShell.
+ *  On the DCMLS consumer host, skip AAC Buyer Portal chrome. */
 function BuyerLayout() {
+  if (isDcmlsHost()) {
+    return (
+      <React.Suspense fallback={<LoadingScreen />}>
+        <Outlet />
+      </React.Suspense>
+    );
+  }
   return (
     <React.Suspense fallback={<LoadingScreen />}>
       <BuyerShell />
@@ -427,7 +460,7 @@ const App = () => (
               <SharedListingGate>
               <React.Suspense fallback={<LoadingScreen />}>
               <Routes>
-                <Route path="/" element={<HomepageV2 />} />
+                <Route path="/" element={<HomeEntry />} />
                 <Route path="/index" element={<Navigate to="/" replace />} />
                 <Route path="/register" element={<Navigate to="/request-access" replace />} />
                 <Route path="/request-access" element={<RequestAccessPage />} />
@@ -662,7 +695,7 @@ const App = () => (
                 <Route path="/team/:id" element={<TeamProfile />} />
                 <Route path="/browse" element={<BrowseEntry />} />
                 <Route path="/dashboard" element={<LegacyDashboardRedirect />} />
-                <Route path="/search" element={<PublicSearchResults />} />
+                <Route path="/search" element={<PublicSearchEntry />} />
                 <Route path="/our-agents" element={<PublicOurAgents />} />
                 <Route path="/agents" element={<PublicOurAgents />} />
                 <Route path="/find-agent" element={<PublicOurAgents />} />
@@ -675,7 +708,7 @@ const App = () => (
                 {/* Legacy consumer routes */}
                 <Route path="/consumer/home" element={<Navigate to="/auth" replace />} />
                 <Route path="/consumer/dashboard" element={<Navigate to="/auth" replace />} />
-                <Route path="/consumer/auth" element={<Navigate to="/auth" replace />} />
+                <Route path="/consumer/auth" element={<ConsumerAuthEntry />} />
                 <Route path="/client-agent-settings" element={<Navigate to="/client/account" replace />} />
                 <Route path="/client/hotsheets/new" element={<Navigate to="/hot-sheets/new" replace />} />
                 <Route path="/client/create-hotsheet" element={<Navigate to="/hot-sheets/new" replace />} />

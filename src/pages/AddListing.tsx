@@ -60,9 +60,12 @@ import { normalizeGooglePlace } from "@/lib/google-address";
 import { checkDuplicateListing, isLiveStatus } from "@/lib/checkDuplicateListing";
 import { formHasValidListingPricing } from "@/lib/listingPricingValidation";
 import { dcmlsPublishSnapshot, dcmlsShowOnFromRecord } from "@/lib/dcmlsPublishPayload";
+import { fetchDcmlsParticipation } from "@/lib/dcmlsListing";
+import { DcmlsPublishControl } from "@/components/listing/DcmlsPublishControl";
+import type { DcmlsParticipationState } from "@/components/listing/DcmlsPublishControl";
 import { Seo } from "@/components/Seo";
 import { Skeleton } from "@/components/ui/skeleton";
-import { DcmlsPublishingIntroOverlay, DcmlsLaunchingSoonReminder } from "@/components/add-listing/DcmlsPublishingIntroOverlay";
+import { DcmlsPublishingIntroOverlay } from "@/components/add-listing/DcmlsPublishingIntroOverlay";
 import { AddListingStatusHelp } from "@/components/add-listing/AddListingStatusHelp";
 import { AddListingStatusIntroOverlay } from "@/components/add-listing/AddListingStatusIntroOverlay";
 import { useAddListingStatusIntro } from "@/hooks/useAddListingStatusIntro";
@@ -264,9 +267,11 @@ const AddListing = () => {
   );
   const [user, setUser] = useState<any>(null);
 
-  const { introVisible, showComingSoonRow, handleGotIt } = useAddListingDcmlsIntro(user);
+  const { introVisible, handleGotIt } = useAddListingDcmlsIntro(user);
   const { introVisible: statusIntroVisible, handleGotIt: handleStatusGotIt } =
     useAddListingStatusIntro(user);
+  const [dcmlsParticipation, setDcmlsParticipation] =
+    useState<DcmlsParticipationState>("loading");
   const [loading, setLoading] = useState(true);
   const [isLoadingListing, setIsLoadingListing] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -641,6 +646,14 @@ const AddListing = () => {
         return;
       }
       setUser(session.user);
+      setDcmlsParticipation("loading");
+      try {
+        const participating = await fetchDcmlsParticipation(session.user.id);
+        setDcmlsParticipation(participating ? "on" : "off");
+      } catch (err) {
+        console.error("Error loading DCMLS participation", err);
+        setDcmlsParticipation("unknown");
+      }
       
       // If we have a listingId in URL, load that listing's data
       if (listingId) {
@@ -2334,7 +2347,12 @@ const AddListing = () => {
         return null;
       }
 
-      const dcmlsSnapshot = dcmlsPublishSnapshot(false);
+      const dcmlsSnapshot =
+        dcmlsParticipation === "on"
+          ? dcmlsPublishSnapshot(formData.show_on_dcmls === true)
+          : dcmlsParticipation === "off"
+            ? dcmlsPublishSnapshot(false)
+            : null;
 
       const draftPrice =
         formData.listing_type === "for_rent"
@@ -2354,7 +2372,7 @@ const AddListing = () => {
         state: formData.state || 'MA',
         zip_code: formData.zip_code || '00000',
         price: draftPrice,
-        ...dcmlsSnapshot,
+        ...((dcmlsSnapshot ?? {}) as Record<string, unknown>),
       };
 
       if (isConciergeMode) {
@@ -2551,8 +2569,13 @@ const AddListing = () => {
       pet_options: petOptions,
     } : {}),
 
-    // DCMLS: gated until AAC launch — always persist internal-only snapshot (publish_to_dcmls false).
-    ...dcmlsPublishSnapshot(false),
+    // DCMLS: listing-level selection only when the agent participates.
+    // Only rewrite DCMLS fields when participation is known.
+    ...(dcmlsParticipation === "on"
+      ? dcmlsPublishSnapshot(formData.show_on_dcmls === true)
+      : dcmlsParticipation === "off"
+        ? dcmlsPublishSnapshot(false)
+        : {}),
 
     // Clone / relisting metadata (only set when cloning from an expired/cancelled listing)
     ...(isRelisting ? {
@@ -3518,8 +3541,6 @@ const AddListing = () => {
               </div>
 
               <div className="flex flex-col items-stretch gap-1.5 sm:ml-auto sm:items-end">
-                {showComingSoonRow ? <DcmlsLaunchingSoonReminder /> : null}
-
                 <div className="flex flex-wrap items-center gap-2">
               {/* Concierge mode: staff can only save a draft for the member */}
               {isConciergeMode ? (
@@ -3791,6 +3812,23 @@ const AddListing = () => {
                     </p>
                   </div>
                 </div>
+
+                {!isConciergeMode && (
+                  <div className="border-b border-zinc-100 pb-6">
+                    <DcmlsPublishControl
+                      checked={formData.show_on_dcmls === true}
+                      onCheckedChange={(checked) =>
+                        setFormData((prev) => ({ ...prev, show_on_dcmls: checked }))
+                      }
+                      dcmlsStatus={
+                        formData.show_on_dcmls && dcmlsParticipation === "on"
+                          ? "published"
+                          : "not_published"
+                      }
+                      participation={dcmlsParticipation}
+                    />
+                  </div>
+                )}
 
                 {/* Address Section */}
                 <div className="space-y-4">

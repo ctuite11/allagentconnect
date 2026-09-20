@@ -1,6 +1,10 @@
-import { Check, FileText, Mail, ExternalLink } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Check, FileText, Mail, ExternalLink, Globe, Loader2 } from "lucide-react";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { emailTemplateLabel } from "@/lib/emailTemplateLabels";
+import { supabase } from "@/integrations/supabase/client";
+import { fetchDcmlsParticipationRow, updateDcmlsParticipation } from "@/lib/dcmlsListing";
+import { toast } from "sonner";
 
 import {
   Sheet,
@@ -10,6 +14,18 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   EmailDeliveryBadge,
   type EmailStatusInfo,
@@ -126,6 +142,192 @@ function fmt(iso: string | null | undefined): string | null {
   return t.toLocaleString();
 }
 
+type DcmlsAdminParticipation = "loading" | "unknown" | "on" | "off";
+
+/**
+ * Admin-only DCMLS agent participation control.
+ * Writes `agent_settings.dcmls_participation` only — listing publish stays with the agent.
+ * Opt-out relies on existing DB triggers to clear listing DCMLS state atomically.
+ */
+function AgentDcmlsParticipationSection({
+  agentId,
+  enabled,
+}: {
+  agentId: string;
+  /** False for early-access / pending-verification rows without agent_settings. */
+  enabled: boolean;
+}) {
+  const [participation, setParticipation] = useState<DcmlsAdminParticipation>("loading");
+  const [saving, setSaving] = useState(false);
+  const [confirm, setConfirm] = useState<"on" | "off" | null>(null);
+
+  useEffect(() => {
+    if (!enabled) {
+      setParticipation("unknown");
+      return;
+    }
+    let cancelled = false;
+    setParticipation("loading");
+    void (async () => {
+      try {
+        const row = await fetchDcmlsParticipationRow(agentId);
+        if (cancelled) return;
+        if (row.status === "missing") {
+          // Missing settings row is not "Not Participating" — control unavailable.
+          setParticipation("unknown");
+          return;
+        }
+        setParticipation(row.status);
+      } catch (err) {
+        console.error("[AgentDetailsDrawer] DCMLS participation load failed:", err);
+        if (!cancelled) setParticipation("unknown");
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [agentId, enabled]);
+
+  const applyParticipation = async (next: boolean) => {
+    setSaving(true);
+    try {
+      // Write participation only; DB trigger owns dcmls_participation_at.
+      // Require a returned row so a zero-match UPDATE cannot look like success.
+      const updated = await updateDcmlsParticipation(agentId, next);
+      setParticipation(updated.status);
+      toast.success(
+        updated.status === "on"
+          ? "Agent joined Direct Connect MLS (no listings published)"
+          : "Agent removed from Direct Connect MLS",
+      );
+    } catch (err) {
+      console.error("[AgentDetailsDrawer] DCMLS participation update failed:", err);
+      setParticipation("unknown");
+      toast.error("Could not update DCMLS participation");
+    } finally {
+      setSaving(false);
+      setConfirm(null);
+    }
+  };
+
+  const participating = participation === "on";
+
+  return (
+    <section>
+      <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">
+        Direct Connect MLS
+      </h4>
+      <div className="space-y-3 rounded-md border border-zinc-100 bg-white p-3">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 text-sm font-medium text-zinc-800">
+              <Globe className="h-3.5 w-3.5 text-[#0E56F5]" />
+              Participation
+            </div>
+            <p className="mt-0.5 text-[11px] text-zinc-500">
+              Admin can opt this agent in or out. Listing-level publish stays with the agent.
+            </p>
+          </div>
+          {participation === "loading" ? (
+            <span className="inline-flex items-center gap-1 rounded-full bg-zinc-100 px-2 py-0.5 text-[11px] font-medium text-zinc-500">
+              <Loader2 className="h-3 w-3 animate-spin" aria-hidden />
+              Loading
+            </span>
+          ) : participation === "unknown" ? (
+            <span className="inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-800 ring-1 ring-amber-200">
+              Unavailable
+            </span>
+          ) : (
+            <span
+              className={
+                participating
+                  ? "inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700 ring-1 ring-emerald-200"
+                  : "inline-flex items-center rounded-full bg-zinc-100 px-2 py-0.5 text-[11px] font-medium text-zinc-500"
+              }
+            >
+              {participating ? "Participating" : "Not Participating"}
+            </span>
+          )}
+        </div>
+
+        {enabled && participation !== "loading" && participation !== "unknown" && (
+          <div className="flex items-center justify-between gap-4 border-t border-zinc-100 pt-3">
+            <Label htmlFor={`admin-dcmls-${agentId}`} className="text-sm text-zinc-700">
+              {participating ? "Participating in DCMLS" : "Not participating in DCMLS"}
+            </Label>
+            <Switch
+              id={`admin-dcmls-${agentId}`}
+              checked={participating}
+              disabled={saving}
+              onCheckedChange={(checked) => setConfirm(checked ? "on" : "off")}
+            />
+          </div>
+        )}
+
+        {!enabled && (
+          <p className="text-[11px] text-zinc-500">
+            DCMLS participation is available after this member has an agent settings record.
+          </p>
+        )}
+        {enabled && participation === "unknown" && (
+          <p className="text-[11px] text-amber-800">
+            No agent settings record found, or participation could not be loaded. Refresh and try
+            again — no change was made. This control does not create settings rows.
+          </p>
+        )}
+      </div>
+
+      <AlertDialog open={confirm === "on"} onOpenChange={(o) => !o && setConfirm(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Join Direct Connect MLS?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Joining DCMLS does not publish any listings. Listings must be selected individually.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={saving}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={saving}
+              onClick={(e) => {
+                e.preventDefault();
+                void applyParticipation(true);
+              }}
+            >
+              {saving ? "Saving…" : "Opt agent in"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={confirm === "off"} onOpenChange={(o) => !o && setConfirm(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove this agent from DCMLS?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Any listings they currently publish to DCMLS will be removed. Turning participation
+              back on will not automatically republish them.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={saving}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={saving}
+              className="bg-rose-600 hover:bg-rose-700"
+              onClick={(e) => {
+                e.preventDefault();
+                void applyParticipation(false);
+              }}
+            >
+              {saving ? "Saving…" : "Remove from DCMLS"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </section>
+  );
+}
+
 export function AgentDetailsDrawer({
   agent,
   open,
@@ -169,6 +371,8 @@ export function AgentDetailsDrawer({
     : null;
   const profileComplete = agent.profile_complete === true;
   const canPasswordReset = !agent.is_early_access && agent.source !== "pending_verification";
+  const canManageDcmls =
+    !agent.is_early_access && agent.source !== "pending_verification" && !!agent.id;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -297,9 +501,10 @@ export function AgentDetailsDrawer({
                     : "Never"
                 }
               />
-
             </div>
           </section>
+
+          <AgentDcmlsParticipationSection agentId={agent.id} enabled={canManageDcmls} />
 
           <section>
             <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">
