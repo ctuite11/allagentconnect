@@ -50,6 +50,13 @@
       "when": 1789932615196,
       "tag": "0006_dcmls_v1_agent_participation_and_gating",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1789932669474,
+      "tag": "0007_dcmls_v1_gated_view_no_function_grants",
+      "breakpoints": true
     }
   ]
 }
