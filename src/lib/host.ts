@@ -17,11 +17,16 @@ const DCMLS_HOSTS = new Set([
  *
  * Safe to call during SSR — returns false when `window` is unavailable.
  */
+/** True only on the live directconnectmls.com host (not the ?dcmls=1 preview override). */
+export function isLiveDcmlsHost(): boolean {
+  if (typeof window === "undefined") return false;
+  return DCMLS_HOSTS.has(window.location.hostname.toLowerCase());
+}
+
 export function isDcmlsHost(): boolean {
   if (typeof window === "undefined") return false;
 
-  const host = window.location.hostname.toLowerCase();
-  if (DCMLS_HOSTS.has(host)) return true;
+  if (isLiveDcmlsHost()) return true;
 
   const params = new URLSearchParams(window.location.search);
   if (params.get("dcmls") === "1") return true;
