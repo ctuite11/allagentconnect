@@ -64,6 +64,13 @@
       "when": 1789932708561,
       "tag": "0008_dcmls_v1_tighten_grants",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1789935420845,
+      "tag": "0009_stamp_dcmls_published_at",
+      "breakpoints": true
     }
   ]
 }
