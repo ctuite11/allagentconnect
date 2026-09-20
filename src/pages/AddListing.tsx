@@ -60,9 +60,11 @@ import { normalizeGooglePlace } from "@/lib/google-address";
 import { checkDuplicateListing, isLiveStatus } from "@/lib/checkDuplicateListing";
 import { formHasValidListingPricing } from "@/lib/listingPricingValidation";
 import { dcmlsPublishSnapshot, dcmlsShowOnFromRecord } from "@/lib/dcmlsPublishPayload";
+import { fetchDcmlsParticipation } from "@/lib/dcmlsListing";
+import { DcmlsPublishControl } from "@/components/listing/DcmlsPublishControl";
 import { Seo } from "@/components/Seo";
 import { Skeleton } from "@/components/ui/skeleton";
-import { DcmlsPublishingIntroOverlay, DcmlsLaunchingSoonReminder } from "@/components/add-listing/DcmlsPublishingIntroOverlay";
+import { DcmlsPublishingIntroOverlay } from "@/components/add-listing/DcmlsPublishingIntroOverlay";
 import { AddListingStatusHelp } from "@/components/add-listing/AddListingStatusHelp";
 import { AddListingStatusIntroOverlay } from "@/components/add-listing/AddListingStatusIntroOverlay";
 import { useAddListingStatusIntro } from "@/hooks/useAddListingStatusIntro";
@@ -264,9 +266,10 @@ const AddListing = () => {
   );
   const [user, setUser] = useState<any>(null);
 
-  const { introVisible, showComingSoonRow, handleGotIt } = useAddListingDcmlsIntro(user);
+  const { introVisible, handleGotIt } = useAddListingDcmlsIntro(user);
   const { introVisible: statusIntroVisible, handleGotIt: handleStatusGotIt } =
     useAddListingStatusIntro(user);
+  const [dcmlsParticipating, setDcmlsParticipating] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isLoadingListing, setIsLoadingListing] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -641,6 +644,12 @@ const AddListing = () => {
         return;
       }
       setUser(session.user);
+      try {
+        setDcmlsParticipating(await fetchDcmlsParticipation(session.user.id));
+      } catch (err) {
+        console.error("Error loading DCMLS participation", err);
+        setDcmlsParticipating(false);
+      }
       
       // If we have a listingId in URL, load that listing's data
       if (listingId) {
@@ -2334,7 +2343,9 @@ const AddListing = () => {
         return null;
       }
 
-      const dcmlsSnapshot = dcmlsPublishSnapshot(false);
+      const dcmlsSnapshot = dcmlsPublishSnapshot(
+        dcmlsParticipating && formData.show_on_dcmls === true,
+      );
 
       const draftPrice =
         formData.listing_type === "for_rent"
@@ -2551,8 +2562,8 @@ const AddListing = () => {
       pet_options: petOptions,
     } : {}),
 
-    // DCMLS: gated until AAC launch — always persist internal-only snapshot (publish_to_dcmls false).
-    ...dcmlsPublishSnapshot(false),
+    // DCMLS: listing-level selection only when the agent participates.
+    ...dcmlsPublishSnapshot(dcmlsParticipating && formData.show_on_dcmls === true),
 
     // Clone / relisting metadata (only set when cloning from an expired/cancelled listing)
     ...(isRelisting ? {
@@ -3518,8 +3529,6 @@ const AddListing = () => {
               </div>
 
               <div className="flex flex-col items-stretch gap-1.5 sm:ml-auto sm:items-end">
-                {showComingSoonRow ? <DcmlsLaunchingSoonReminder /> : null}
-
                 <div className="flex flex-wrap items-center gap-2">
               {/* Concierge mode: staff can only save a draft for the member */}
               {isConciergeMode ? (
@@ -3791,6 +3800,21 @@ const AddListing = () => {
                     </p>
                   </div>
                 </div>
+
+                {!isConciergeMode && (
+                  <div className="border-b border-zinc-100 pb-6">
+                    <DcmlsPublishControl
+                      checked={formData.show_on_dcmls === true}
+                      onCheckedChange={(checked) =>
+                        setFormData((prev) => ({ ...prev, show_on_dcmls: checked }))
+                      }
+                      dcmlsStatus={
+                        formData.show_on_dcmls && dcmlsParticipating ? "published" : "not_published"
+                      }
+                      participationEnabled={dcmlsParticipating}
+                    />
+                  </div>
+                )}
 
                 {/* Address Section */}
                 <div className="space-y-4">

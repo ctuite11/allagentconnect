@@ -7261,6 +7261,273 @@ export type Database = {
         }
         Relationships: []
       }
+      dcmls_listings_public: {
+        Row: {
+          activation_date: string | null
+          active_date: string | null
+          address: string | null
+          agent_id: string | null
+          amenities: Json | null
+          annual_property_tax: number | null
+          appointment_required: boolean | null
+          area_amenities: string[] | null
+          basement_features_list: Json | null
+          basement_floor_types: Json | null
+          basement_types: Json | null
+          bathrooms: number | null
+          beach_nearby: boolean | null
+          bedrooms: number | null
+          building_name: string | null
+          city: string | null
+          commercial_details: Json | null
+          condo_details: Json | null
+          construction_features: Json | null
+          cooling_types: Json | null
+          county: string | null
+          created_at: string | null
+          dcmls_status: string | null
+          description: string | null
+          entry_only: boolean | null
+          exterior_features_list: Json | null
+          floor_plans: Json | null
+          floors: number | null
+          foundation_types: Json | null
+          garage_additional_features_list: Json | null
+          garage_features_list: Json | null
+          garage_spaces: number | null
+          go_live_date: string | null
+          green_features: Json | null
+          handicap_access: string | null
+          handicap_accessible: string | null
+          has_basement: boolean | null
+          has_storage: boolean | null
+          heating_types: Json | null
+          id: string | null
+          latitude: number | null
+          laundry_type: string | null
+          lender_owned: boolean | null
+          list_date: string | null
+          listing_number: string | null
+          listing_type: string | null
+          longitude: number | null
+          lot_size: number | null
+          multi_family_details: Json | null
+          neighborhood: string | null
+          num_fireplaces: number | null
+          open_houses: Json | null
+          outdoor_space: Json | null
+          parking_features_list: Json | null
+          parking_spaces: number | null
+          pet_options: Json | null
+          pets_comment: string | null
+          photos: Json | null
+          price: number | null
+          price_range_max: number | null
+          price_range_min: number | null
+          property_features: Json | null
+          property_styles: Json | null
+          property_type: string | null
+          property_website_url: string | null
+          publish_to_dcmls: boolean | null
+          rental_fee: number | null
+          rental_fee_text: string | null
+          roof_materials: Json | null
+          short_sale: boolean | null
+          square_feet: number | null
+          state: string | null
+          status: string | null
+          storage_options: Json | null
+          tax_year: number | null
+          total_parking_spaces: number | null
+          town: string | null
+          unit_number: string | null
+          updated_at: string | null
+          video_url: string | null
+          virtual_tour_url: string | null
+          water_view: boolean | null
+          water_view_type: string | null
+          waterfront: boolean | null
+          year_built: number | null
+          zip_code: string | null
+        }
+        Insert: {
+          activation_date?: string | null
+          active_date?: string | null
+          address?: string | null
+          agent_id?: string | null
+          amenities?: Json | null
+          annual_property_tax?: number | null
+          appointment_required?: boolean | null
+          area_amenities?: string[] | null
+          basement_features_list?: Json | null
+          basement_floor_types?: Json | null
+          basement_types?: Json | null
+          bathrooms?: number | null
+          beach_nearby?: boolean | null
+          bedrooms?: number | null
+          building_name?: string | null
+          city?: string | null
+          commercial_details?: Json | null
+          condo_details?: Json | null
+          construction_features?: Json | null
+          cooling_types?: Json | null
+          county?: string | null
+          created_at?: string | null
+          dcmls_status?: string | null
+          description?: string | null
+          entry_only?: boolean | null
+          exterior_features_list?: Json | null
+          floor_plans?: Json | null
+          floors?: number | null
+          foundation_types?: Json | null
+          garage_additional_features_list?: Json | null
+          garage_features_list?: Json | null
+          garage_spaces?: number | null
+          go_live_date?: string | null
+          green_features?: Json | null
+          handicap_access?: string | null
+          handicap_accessible?: string | null
+          has_basement?: boolean | null
+          has_storage?: boolean | null
+          heating_types?: Json | null
+          id?: string | null
+          latitude?: number | null
+          laundry_type?: string | null
+          lender_owned?: boolean | null
+          list_date?: string | null
+          listing_number?: string | null
+          listing_type?: string | null
+          longitude?: number | null
+          lot_size?: number | null
+          multi_family_details?: Json | null
+          neighborhood?: string | null
+          num_fireplaces?: number | null
+          open_houses?: Json | null
+          outdoor_space?: Json | null
+          parking_features_list?: Json | null
+          parking_spaces?: number | null
+          pet_options?: Json | null
+          pets_comment?: string | null
+          photos?: Json | null
+          price?: number | null
+          price_range_max?: number | null
+          price_range_min?: number | null
+          property_features?: Json | null
+          property_styles?: Json | null
+          property_type?: string | null
+          property_website_url?: string | null
+          publish_to_dcmls?: boolean | null
+          rental_fee?: number | null
+          rental_fee_text?: string | null
+          roof_materials?: Json | null
+          short_sale?: boolean | null
+          square_feet?: number | null
+          state?: string | null
+          status?: string | null
+          storage_options?: Json | null
+          tax_year?: number | null
+          total_parking_spaces?: number | null
+          town?: string | null
+          unit_number?: string | null
+          updated_at?: string | null
+          video_url?: string | null
+          virtual_tour_url?: string | null
+          water_view?: boolean | null
+          water_view_type?: string | null
+          waterfront?: boolean | null
+          year_built?: number | null
+          zip_code?: string | null
+        }
+        Update: {
+          activation_date?: string | null
+          active_date?: string | null
+          address?: string | null
+          agent_id?: string | null
+          amenities?: Json | null
+          annual_property_tax?: number | null
+          appointment_required?: boolean | null
+          area_amenities?: string[] | null
+          basement_features_list?: Json | null
+          basement_floor_types?: Json | null
+          basement_types?: Json | null
+          bathrooms?: number | null
+          beach_nearby?: boolean | null
+          bedrooms?: number | null
+          building_name?: string | null
+          city?: string | null
+          commercial_details?: Json | null
+          condo_details?: Json | null
+          construction_features?: Json | null
+          cooling_types?: Json | null
+          county?: string | null
+          created_at?: string | null
+          dcmls_status?: string | null
+          description?: string | null
+          entry_only?: boolean | null
+          exterior_features_list?: Json | null
+          floor_plans?: Json | null
+          floors?: number | null
+          foundation_types?: Json | null
+          garage_additional_features_list?: Json | null
+          garage_features_list?: Json | null
+          garage_spaces?: number | null
+          go_live_date?: string | null
+          green_features?: Json | null
+          handicap_access?: string | null
+          handicap_accessible?: string | null
+          has_basement?: boolean | null
+          has_storage?: boolean | null
+          heating_types?: Json | null
+          id?: string | null
+          latitude?: number | null
+          laundry_type?: string | null
+          lender_owned?: boolean | null
+          list_date?: string | null
+          listing_number?: string | null
+          listing_type?: string | null
+          longitude?: number | null
+          lot_size?: number | null
+          multi_family_details?: Json | null
+          neighborhood?: string | null
+          num_fireplaces?: number | null
+          open_houses?: Json | null
+          outdoor_space?: Json | null
+          parking_features_list?: Json | null
+          parking_spaces?: number | null
+          pet_options?: Json | null
+          pets_comment?: string | null
+          photos?: Json | null
+          price?: number | null
+          price_range_max?: number | null
+          price_range_min?: number | null
+          property_features?: Json | null
+          property_styles?: Json | null
+          property_type?: string | null
+          property_website_url?: string | null
+          publish_to_dcmls?: boolean | null
+          rental_fee?: number | null
+          rental_fee_text?: string | null
+          roof_materials?: Json | null
+          short_sale?: boolean | null
+          square_feet?: number | null
+          state?: string | null
+          status?: string | null
+          storage_options?: Json | null
+          tax_year?: number | null
+          total_parking_spaces?: number | null
+          town?: string | null
+          unit_number?: string | null
+          updated_at?: string | null
+          video_url?: string | null
+          virtual_tour_url?: string | null
+          water_view?: boolean | null
+          water_view_type?: string | null
+          waterfront?: boolean | null
+          year_built?: number | null
+          zip_code?: string | null
+        }
+        Relationships: []
+      }
       seller_matches_public: {
         Row: {
           archived_at: string | null
@@ -8018,6 +8285,96 @@ export type Database = {
         }[]
       }
       get_public_listing: {
+        Args: { p_listing_id: string }
+        Returns: {
+          activation_date: string
+          active_date: string
+          address: string
+          amenities: Json
+          annual_property_tax: number
+          appointment_required: boolean
+          area_amenities: string[]
+          basement_features_list: Json
+          basement_floor_types: Json
+          basement_types: Json
+          bathrooms: number
+          beach_nearby: boolean
+          bedrooms: number
+          building_name: string
+          city: string
+          commercial_details: Json
+          condo_details: Json
+          construction_features: Json
+          cooling_types: Json
+          county: string
+          created_at: string
+          dcmls_status: string
+          description: string
+          entry_only: boolean
+          exterior_features_list: Json
+          floor_plans: Json
+          floors: number
+          foundation_types: Json
+          garage_additional_features_list: Json
+          garage_features_list: Json
+          garage_spaces: number
+          go_live_date: string
+          green_features: Json
+          handicap_access: string
+          handicap_accessible: string
+          has_basement: boolean
+          has_storage: boolean
+          heating_types: Json
+          id: string
+          latitude: number
+          laundry_type: string
+          lender_owned: boolean
+          list_date: string
+          listing_number: string
+          listing_type: string
+          longitude: number
+          lot_size: number
+          multi_family_details: Json
+          neighborhood: string
+          num_fireplaces: number
+          open_houses: Json
+          outdoor_space: Json
+          parking_features_list: Json
+          parking_spaces: number
+          pet_options: Json
+          pets_comment: string
+          photos: Json
+          price: number
+          price_range_max: number
+          price_range_min: number
+          property_features: Json
+          property_styles: Json
+          property_type: string
+          property_website_url: string
+          publish_to_dcmls: boolean
+          rental_fee: number
+          rental_fee_text: string
+          roof_materials: Json
+          short_sale: boolean
+          square_feet: number
+          state: string
+          status: string
+          storage_options: Json
+          tax_year: number
+          total_parking_spaces: number
+          town: string
+          unit_number: string
+          updated_at: string
+          video_url: string
+          virtual_tour_url: string
+          water_view: boolean
+          water_view_type: string
+          waterfront: boolean
+          year_built: number
+          zip_code: string
+        }[]
+      }
+      get_dcmls_listing: {
         Args: { p_listing_id: string }
         Returns: {
           activation_date: string

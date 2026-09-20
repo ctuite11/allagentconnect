@@ -25,6 +25,8 @@ export interface AgentSettings {
   muted_all: boolean;
   tour_completed: boolean;
   welcome_modal_dismissed: boolean;
+  dcmls_participation: boolean;
+  dcmls_participation_at: string | null;
 }
 
 const defaultSettings: Omit<AgentSettings, "user_id"> = {
@@ -45,6 +47,8 @@ const defaultSettings: Omit<AgentSettings, "user_id"> = {
   muted_all: false,
   tour_completed: false,
   welcome_modal_dismissed: false,
+  dcmls_participation: false,
+  dcmls_participation_at: null,
 };
 
 export const useAgentSettings = (user: User | null) => {

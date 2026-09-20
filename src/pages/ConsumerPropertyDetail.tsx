@@ -92,6 +92,7 @@ import {
   toPublicAgentProfile,
   toPublicListingViewModel,
 } from "@/lib/publicListing";
+import { fetchDcmlsListing } from "@/lib/dcmlsListing";
 
 // ATTRIBUTION MASKING (BUYER UI — authenticated buyers only on AAC)
 // Logged-in buyers on AAC must NEVER contact listing.agent_id from this page.
@@ -282,6 +283,20 @@ const ConsumerPropertyDetail = () => {
       setLoading(true);
       setAgentProfile(null);
 
+      // DCMLS host: gated lookup only — never fall back to AAC public/listings paths.
+      if (isDcmlsHost()) {
+        const dcmlsListing = await fetchDcmlsListing(id);
+        if (!dcmlsListing) {
+          setListing(null);
+          setAgentProfile(null);
+          return;
+        }
+        const publicAgent = await fetchPublicListingAgent(id);
+        setListing(toPublicListingViewModel(dcmlsListing, publicAgent));
+        setAgentProfile(publicAgent ? toPublicAgentProfile(publicAgent) : null);
+        return;
+      }
+
       // Unauthenticated shared-listing guests: safe RPC path only.
       // Do not fall back to anonymous listings.select("*").
       if (!user) {
@@ -298,7 +313,7 @@ const ConsumerPropertyDetail = () => {
         return;
       }
 
-      // Authenticated buyer/agent/admin: existing member data path.
+      // Authenticated buyer/agent/admin on AAC: existing member data path.
       const { data, error } = await supabase.from("listings").select("*").eq("id", id).maybeSingle();
 
       if (error) throw error;

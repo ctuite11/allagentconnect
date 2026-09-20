@@ -1,13 +1,14 @@
 /**
- * Shared DCMLS visibility filter.
- * 
- * DCMLS is a public-facing filtered view of the same AAC listings table.
- * A listing is visible on DCMLS only when:
+ * Shared DCMLS visibility helpers (client-side convenience only).
+ *
+ * The security boundary for public DCMLS reads is the gated source
+ * `dcmls_listings_public` / `get_dcmls_listing` — do not treat these
+ * client filters as authorization.
+ *
+ * Client-side checks remaining here are for badges / local UX only:
  *   - publish_to_dcmls = true
  *   - dcmls_status = 'published'
  *   - status is a publicly visible status (active, coming_soon, back_on_market, pending, under_contract)
- *
- * Use applyDcmlsFilter on any Supabase query that powers a DCMLS-facing view.
  */
 
 /** Statuses considered publicly visible on DCMLS */

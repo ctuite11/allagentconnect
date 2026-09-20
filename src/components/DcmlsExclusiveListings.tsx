@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { applyDcmlsFilter } from "@/lib/dcmlsFilter";
 import { getDcmlsConsumerPropertyPath } from "@/lib/host";
 import { Bed, Bath, Home } from "lucide-react";
 
@@ -39,13 +38,12 @@ const DcmlsExclusiveListings = () => {
 
   useEffect(() => {
     const fetch = async () => {
-      let query = supabase
-        .from("listings_public")
-        .select("id, address, city, state, price, bedrooms, bathrooms, square_feet, photos, publish_to_dcmls, dcmls_status, status")
+      // Gated DCMLS source — server enforces participation + publication.
+      const { data } = await supabase
+        .from("dcmls_listings_public")
+        .select("id, address, city, state, price, bedrooms, bathrooms, square_feet, photos")
         .order("created_at", { ascending: false })
         .limit(6);
-      query = applyDcmlsFilter(query);
-      const { data } = await query;
       if (data) setListings(data as DcmlsListing[]);
       setLoading(false);
     };
@@ -89,17 +87,25 @@ const DcmlsExclusiveListings = () => {
                 </div>
                 <div className="p-4">
                   <p className="text-lg font-bold text-primary">{formatPrice(listing.price)}</p>
-                  <p className="mt-1 break-words text-sm font-medium text-foreground">{listing.address}</p>
-                  <p className="text-xs text-muted-foreground">{listing.city}, {listing.state}</p>
-                  <div className="flex items-center gap-3 mt-2 text-sm text-muted-foreground">
+                  <p className="text-sm font-medium text-foreground truncate">{listing.address}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {listing.city}, {listing.state}
+                  </p>
+                  <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
                     {listing.bedrooms != null && (
-                      <span className="flex items-center gap-1"><Bed className="h-3.5 w-3.5" />{listing.bedrooms}</span>
+                      <span className="inline-flex items-center gap-1">
+                        <Bed className="w-3.5 h-3.5" />
+                        {listing.bedrooms}
+                      </span>
                     )}
                     {listing.bathrooms != null && (
-                      <span className="flex items-center gap-1"><Bath className="h-3.5 w-3.5" />{listing.bathrooms}</span>
+                      <span className="inline-flex items-center gap-1">
+                        <Bath className="w-3.5 h-3.5" />
+                        {listing.bathrooms}
+                      </span>
                     )}
                     {listing.square_feet != null && (
-                      <span className="flex items-center gap-1"><Home className="h-3.5 w-3.5" />{listing.square_feet.toLocaleString()} sqft</span>
+                      <span>{listing.square_feet.toLocaleString()} sqft</span>
                     )}
                   </div>
                 </div>
