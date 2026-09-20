@@ -69,3 +69,11 @@
 - [x] Crop and host the supplied listing-search screenshot for email delivery.
 - [x] Add the single product-preview section with the approved copy and caption.
 - [x] Deploy and verify only the agent-forward invitation sender; no email sent or queued.
+
+## DCMLS V1 — backend (2026-09-20)
+- [x] Agent participation fields on agent_settings (default off, no backfill)
+- [x] Participation change guard (agent or admin only) + audit trail table
+- [x] Atomic opt-out clearing of all that agent's listing DCMLS flags
+- [x] Listing-level enforcement trigger (DCMLS fields only)
+- [x] Gated dcmls_listings_public view + get_dcmls_listing lookup, read-only grants
+- [ ] Frontend: reconcile PR #71 (`dcmls-v1-launch`) against this backend contract — not started, awaiting approval

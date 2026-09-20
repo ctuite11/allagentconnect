@@ -836,6 +836,13 @@ export type Database = {
             foreignKeyName: "agent_messages_listing_id_fkey"
             columns: ["listing_id"]
             isOneToOne: false
+            referencedRelation: "dcmls_listings_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agent_messages_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
             referencedRelation: "listings"
             referencedColumns: ["id"]
           },
@@ -1132,6 +1139,8 @@ export type Database = {
           county: string | null
           created_at: string
           credentials_issued_at: string | null
+          dcmls_participation: boolean
+          dcmls_participation_at: string | null
           dismissed_announcement_ids: string[]
           early_access: boolean
           email_frequency: string
@@ -1173,6 +1182,8 @@ export type Database = {
           county?: string | null
           created_at?: string
           credentials_issued_at?: string | null
+          dcmls_participation?: boolean
+          dcmls_participation_at?: string | null
           dismissed_announcement_ids?: string[]
           early_access?: boolean
           email_frequency?: string
@@ -1214,6 +1225,8 @@ export type Database = {
           county?: string | null
           created_at?: string
           credentials_issued_at?: string | null
+          dcmls_participation?: boolean
+          dcmls_participation_at?: string | null
           dismissed_announcement_ids?: string[]
           early_access?: boolean
           email_frequency?: string
@@ -2382,6 +2395,13 @@ export type Database = {
             foreignKeyName: "conversations_listing_id_fkey"
             columns: ["listing_id"]
             isOneToOne: false
+            referencedRelation: "dcmls_listings_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversations_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
             referencedRelation: "listings"
             referencedColumns: ["id"]
           },
@@ -2412,6 +2432,39 @@ export type Database = {
           id?: string
           name?: string
           state?: string
+        }
+        Relationships: []
+      }
+      dcmls_participation_audit: {
+        Row: {
+          actor_role: string
+          actor_user_id: string | null
+          agent_user_id: string
+          created_at: string
+          id: string
+          listings_cleared: number
+          new_value: boolean
+          previous_value: boolean | null
+        }
+        Insert: {
+          actor_role: string
+          actor_user_id?: string | null
+          agent_user_id: string
+          created_at?: string
+          id?: string
+          listings_cleared?: number
+          new_value: boolean
+          previous_value?: boolean | null
+        }
+        Update: {
+          actor_role?: string
+          actor_user_id?: string | null
+          agent_user_id?: string
+          created_at?: string
+          id?: string
+          listings_cleared?: number
+          new_value?: boolean
+          previous_value?: boolean | null
         }
         Relationships: []
       }
@@ -4052,6 +4105,13 @@ export type Database = {
             foreignKeyName: "favorite_price_history_listing_id_fkey"
             columns: ["listing_id"]
             isOneToOne: false
+            referencedRelation: "dcmls_listings_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "favorite_price_history_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
             referencedRelation: "listings"
             referencedColumns: ["id"]
           },
@@ -4084,6 +4144,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "favorites_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "dcmls_listings_public"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "favorites_listing_id_fkey"
             columns: ["listing_id"]
@@ -4243,6 +4310,13 @@ export type Database = {
             foreignKeyName: "hot_sheet_comments_listing_id_fkey"
             columns: ["listing_id"]
             isOneToOne: false
+            referencedRelation: "dcmls_listings_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hot_sheet_comments_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
             referencedRelation: "listings"
             referencedColumns: ["id"]
           },
@@ -4311,6 +4385,13 @@ export type Database = {
             columns: ["hot_sheet_id"]
             isOneToOne: false
             referencedRelation: "hot_sheets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hot_sheet_delivery_claims_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "dcmls_listings_public"
             referencedColumns: ["id"]
           },
           {
@@ -4398,6 +4479,13 @@ export type Database = {
             foreignKeyName: "hot_sheet_favorites_listing_id_fkey"
             columns: ["listing_id"]
             isOneToOne: false
+            referencedRelation: "dcmls_listings_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hot_sheet_favorites_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
             referencedRelation: "listings"
             referencedColumns: ["id"]
           },
@@ -4467,6 +4555,13 @@ export type Database = {
             foreignKeyName: "hot_sheet_listing_events_listing_id_fkey"
             columns: ["listing_id"]
             isOneToOne: false
+            referencedRelation: "dcmls_listings_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hot_sheet_listing_events_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
             referencedRelation: "listings"
             referencedColumns: ["id"]
           },
@@ -4510,6 +4605,13 @@ export type Database = {
             columns: ["hot_sheet_id"]
             isOneToOne: false
             referencedRelation: "hot_sheets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hot_sheet_listing_status_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "dcmls_listings_public"
             referencedColumns: ["id"]
           },
           {
@@ -4568,6 +4670,13 @@ export type Database = {
             foreignKeyName: "hot_sheet_notifications_listing_id_fkey"
             columns: ["listing_id"]
             isOneToOne: false
+            referencedRelation: "dcmls_listings_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hot_sheet_notifications_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
             referencedRelation: "listings"
             referencedColumns: ["id"]
           },
@@ -4608,6 +4717,13 @@ export type Database = {
             columns: ["hot_sheet_id"]
             isOneToOne: false
             referencedRelation: "hot_sheets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hot_sheet_sent_listings_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "dcmls_listings_public"
             referencedColumns: ["id"]
           },
           {
@@ -4944,6 +5060,13 @@ export type Database = {
             foreignKeyName: "listing_price_history_listing_id_fkey"
             columns: ["listing_id"]
             isOneToOne: false
+            referencedRelation: "dcmls_listings_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "listing_price_history_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
             referencedRelation: "listings"
             referencedColumns: ["id"]
           },
@@ -4979,6 +5102,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "listing_reminder_log_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: true
+            referencedRelation: "dcmls_listings_public"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "listing_reminder_log_listing_id_fkey"
             columns: ["listing_id"]
@@ -5021,6 +5151,13 @@ export type Database = {
           shared_by?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "listing_shares_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "dcmls_listings_public"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "listing_shares_listing_id_fkey"
             columns: ["listing_id"]
@@ -5079,6 +5216,13 @@ export type Database = {
             foreignKeyName: "listing_stats_listing_id_fkey"
             columns: ["listing_id"]
             isOneToOne: true
+            referencedRelation: "dcmls_listings_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "listing_stats_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: true
             referencedRelation: "listings"
             referencedColumns: ["id"]
           },
@@ -5124,6 +5268,13 @@ export type Database = {
             foreignKeyName: "listing_status_history_listing_id_fkey"
             columns: ["listing_id"]
             isOneToOne: false
+            referencedRelation: "dcmls_listings_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "listing_status_history_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
             referencedRelation: "listings"
             referencedColumns: ["id"]
           },
@@ -5159,6 +5310,13 @@ export type Database = {
           viewer_ip?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "listing_views_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "dcmls_listings_public"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "listing_views_listing_id_fkey"
             columns: ["listing_id"]
@@ -5574,6 +5732,13 @@ export type Database = {
             foreignKeyName: "listings_original_listing_id_fkey"
             columns: ["original_listing_id"]
             isOneToOne: false
+            referencedRelation: "dcmls_listings_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "listings_original_listing_id_fkey"
+            columns: ["original_listing_id"]
+            isOneToOne: false
             referencedRelation: "listings"
             referencedColumns: ["id"]
           },
@@ -5672,6 +5837,13 @@ export type Database = {
           viewer_agent_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "off_market_views_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "dcmls_listings_public"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "off_market_views_listing_id_fkey"
             columns: ["listing_id"]
@@ -6099,6 +6271,13 @@ export type Database = {
             foreignKeyName: "showing_requests_listing_id_fkey"
             columns: ["listing_id"]
             isOneToOne: false
+            referencedRelation: "dcmls_listings_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "showing_requests_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
             referencedRelation: "listings"
             referencedColumns: ["id"]
           },
@@ -6484,6 +6663,13 @@ export type Database = {
             foreignKeyName: "conversations_listing_id_fkey"
             columns: ["listing_id"]
             isOneToOne: false
+            referencedRelation: "dcmls_listings_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversations_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
             referencedRelation: "listings"
             referencedColumns: ["id"]
           },
@@ -6495,6 +6681,273 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      dcmls_listings_public: {
+        Row: {
+          activation_date: string | null
+          active_date: string | null
+          address: string | null
+          agent_id: string | null
+          amenities: Json | null
+          annual_property_tax: number | null
+          appointment_required: boolean | null
+          area_amenities: string[] | null
+          basement_features_list: Json | null
+          basement_floor_types: Json | null
+          basement_types: Json | null
+          bathrooms: number | null
+          beach_nearby: boolean | null
+          bedrooms: number | null
+          building_name: string | null
+          city: string | null
+          commercial_details: Json | null
+          condo_details: Json | null
+          construction_features: Json | null
+          cooling_types: Json | null
+          county: string | null
+          created_at: string | null
+          dcmls_status: string | null
+          description: string | null
+          entry_only: boolean | null
+          exterior_features_list: Json | null
+          floor_plans: Json | null
+          floors: number | null
+          foundation_types: Json | null
+          garage_additional_features_list: Json | null
+          garage_features_list: Json | null
+          garage_spaces: number | null
+          go_live_date: string | null
+          green_features: Json | null
+          handicap_access: string | null
+          handicap_accessible: string | null
+          has_basement: boolean | null
+          has_storage: boolean | null
+          heating_types: Json | null
+          id: string | null
+          latitude: number | null
+          laundry_type: string | null
+          lender_owned: boolean | null
+          list_date: string | null
+          listing_number: string | null
+          listing_type: string | null
+          longitude: number | null
+          lot_size: number | null
+          multi_family_details: Json | null
+          neighborhood: string | null
+          num_fireplaces: number | null
+          open_houses: Json | null
+          outdoor_space: Json | null
+          parking_features_list: Json | null
+          parking_spaces: number | null
+          pet_options: Json | null
+          pets_comment: string | null
+          photos: Json | null
+          price: number | null
+          price_range_max: number | null
+          price_range_min: number | null
+          property_features: Json | null
+          property_styles: Json | null
+          property_type: string | null
+          property_website_url: string | null
+          publish_to_dcmls: boolean | null
+          rental_fee: number | null
+          rental_fee_text: string | null
+          roof_materials: Json | null
+          short_sale: boolean | null
+          square_feet: number | null
+          state: string | null
+          status: string | null
+          storage_options: Json | null
+          tax_year: number | null
+          total_parking_spaces: number | null
+          town: string | null
+          unit_number: string | null
+          updated_at: string | null
+          video_url: string | null
+          virtual_tour_url: string | null
+          water_view: boolean | null
+          water_view_type: string | null
+          waterfront: boolean | null
+          year_built: number | null
+          zip_code: string | null
+        }
+        Insert: {
+          activation_date?: string | null
+          active_date?: string | null
+          address?: string | null
+          agent_id?: string | null
+          amenities?: Json | null
+          annual_property_tax?: number | null
+          appointment_required?: boolean | null
+          area_amenities?: string[] | null
+          basement_features_list?: Json | null
+          basement_floor_types?: Json | null
+          basement_types?: Json | null
+          bathrooms?: number | null
+          beach_nearby?: boolean | null
+          bedrooms?: number | null
+          building_name?: string | null
+          city?: string | null
+          commercial_details?: Json | null
+          condo_details?: Json | null
+          construction_features?: Json | null
+          cooling_types?: Json | null
+          county?: string | null
+          created_at?: string | null
+          dcmls_status?: string | null
+          description?: string | null
+          entry_only?: boolean | null
+          exterior_features_list?: Json | null
+          floor_plans?: Json | null
+          floors?: number | null
+          foundation_types?: Json | null
+          garage_additional_features_list?: Json | null
+          garage_features_list?: Json | null
+          garage_spaces?: number | null
+          go_live_date?: string | null
+          green_features?: Json | null
+          handicap_access?: string | null
+          handicap_accessible?: string | null
+          has_basement?: boolean | null
+          has_storage?: boolean | null
+          heating_types?: Json | null
+          id?: string | null
+          latitude?: number | null
+          laundry_type?: string | null
+          lender_owned?: boolean | null
+          list_date?: string | null
+          listing_number?: string | null
+          listing_type?: string | null
+          longitude?: number | null
+          lot_size?: number | null
+          multi_family_details?: Json | null
+          neighborhood?: string | null
+          num_fireplaces?: number | null
+          open_houses?: Json | null
+          outdoor_space?: Json | null
+          parking_features_list?: Json | null
+          parking_spaces?: number | null
+          pet_options?: Json | null
+          pets_comment?: string | null
+          photos?: Json | null
+          price?: number | null
+          price_range_max?: number | null
+          price_range_min?: number | null
+          property_features?: Json | null
+          property_styles?: Json | null
+          property_type?: string | null
+          property_website_url?: string | null
+          publish_to_dcmls?: boolean | null
+          rental_fee?: number | null
+          rental_fee_text?: string | null
+          roof_materials?: Json | null
+          short_sale?: boolean | null
+          square_feet?: number | null
+          state?: string | null
+          status?: string | null
+          storage_options?: Json | null
+          tax_year?: number | null
+          total_parking_spaces?: number | null
+          town?: string | null
+          unit_number?: string | null
+          updated_at?: string | null
+          video_url?: string | null
+          virtual_tour_url?: string | null
+          water_view?: boolean | null
+          water_view_type?: string | null
+          waterfront?: boolean | null
+          year_built?: number | null
+          zip_code?: string | null
+        }
+        Update: {
+          activation_date?: string | null
+          active_date?: string | null
+          address?: string | null
+          agent_id?: string | null
+          amenities?: Json | null
+          annual_property_tax?: number | null
+          appointment_required?: boolean | null
+          area_amenities?: string[] | null
+          basement_features_list?: Json | null
+          basement_floor_types?: Json | null
+          basement_types?: Json | null
+          bathrooms?: number | null
+          beach_nearby?: boolean | null
+          bedrooms?: number | null
+          building_name?: string | null
+          city?: string | null
+          commercial_details?: Json | null
+          condo_details?: Json | null
+          construction_features?: Json | null
+          cooling_types?: Json | null
+          county?: string | null
+          created_at?: string | null
+          dcmls_status?: string | null
+          description?: string | null
+          entry_only?: boolean | null
+          exterior_features_list?: Json | null
+          floor_plans?: Json | null
+          floors?: number | null
+          foundation_types?: Json | null
+          garage_additional_features_list?: Json | null
+          garage_features_list?: Json | null
+          garage_spaces?: number | null
+          go_live_date?: string | null
+          green_features?: Json | null
+          handicap_access?: string | null
+          handicap_accessible?: string | null
+          has_basement?: boolean | null
+          has_storage?: boolean | null
+          heating_types?: Json | null
+          id?: string | null
+          latitude?: number | null
+          laundry_type?: string | null
+          lender_owned?: boolean | null
+          list_date?: string | null
+          listing_number?: string | null
+          listing_type?: string | null
+          longitude?: number | null
+          lot_size?: number | null
+          multi_family_details?: Json | null
+          neighborhood?: string | null
+          num_fireplaces?: number | null
+          open_houses?: Json | null
+          outdoor_space?: Json | null
+          parking_features_list?: Json | null
+          parking_spaces?: number | null
+          pet_options?: Json | null
+          pets_comment?: string | null
+          photos?: Json | null
+          price?: number | null
+          price_range_max?: number | null
+          price_range_min?: number | null
+          property_features?: Json | null
+          property_styles?: Json | null
+          property_type?: string | null
+          property_website_url?: string | null
+          publish_to_dcmls?: boolean | null
+          rental_fee?: number | null
+          rental_fee_text?: string | null
+          roof_materials?: Json | null
+          short_sale?: boolean | null
+          square_feet?: number | null
+          state?: string | null
+          status?: string | null
+          storage_options?: Json | null
+          tax_year?: number | null
+          total_parking_spaces?: number | null
+          town?: string | null
+          unit_number?: string | null
+          updated_at?: string | null
+          video_url?: string | null
+          virtual_tour_url?: string | null
+          water_view?: boolean | null
+          water_view_type?: string | null
+          waterfront?: boolean | null
+          year_built?: number | null
+          zip_code?: string | null
+        }
+        Relationships: []
       }
       email_jobs_delivery_status: {
         Row: {
@@ -7077,6 +7530,10 @@ export type Database = {
         Args: { _development_id: string; _notes: string }
         Returns: string
       }
+      agent_dcmls_participating: {
+        Args: { p_agent_id: string }
+        Returns: boolean
+      }
       agent_end_client_relationship: {
         Args: { p_client_id: string }
         Returns: number
@@ -7410,6 +7867,103 @@ export type Database = {
           state: string
           zip_code: string
         }[]
+      }
+      get_dcmls_listing: {
+        Args: { p_listing_id: string }
+        Returns: {
+          activation_date: string | null
+          active_date: string | null
+          address: string | null
+          agent_id: string | null
+          amenities: Json | null
+          annual_property_tax: number | null
+          appointment_required: boolean | null
+          area_amenities: string[] | null
+          basement_features_list: Json | null
+          basement_floor_types: Json | null
+          basement_types: Json | null
+          bathrooms: number | null
+          beach_nearby: boolean | null
+          bedrooms: number | null
+          building_name: string | null
+          city: string | null
+          commercial_details: Json | null
+          condo_details: Json | null
+          construction_features: Json | null
+          cooling_types: Json | null
+          county: string | null
+          created_at: string | null
+          dcmls_status: string | null
+          description: string | null
+          entry_only: boolean | null
+          exterior_features_list: Json | null
+          floor_plans: Json | null
+          floors: number | null
+          foundation_types: Json | null
+          garage_additional_features_list: Json | null
+          garage_features_list: Json | null
+          garage_spaces: number | null
+          go_live_date: string | null
+          green_features: Json | null
+          handicap_access: string | null
+          handicap_accessible: string | null
+          has_basement: boolean | null
+          has_storage: boolean | null
+          heating_types: Json | null
+          id: string | null
+          latitude: number | null
+          laundry_type: string | null
+          lender_owned: boolean | null
+          list_date: string | null
+          listing_number: string | null
+          listing_type: string | null
+          longitude: number | null
+          lot_size: number | null
+          multi_family_details: Json | null
+          neighborhood: string | null
+          num_fireplaces: number | null
+          open_houses: Json | null
+          outdoor_space: Json | null
+          parking_features_list: Json | null
+          parking_spaces: number | null
+          pet_options: Json | null
+          pets_comment: string | null
+          photos: Json | null
+          price: number | null
+          price_range_max: number | null
+          price_range_min: number | null
+          property_features: Json | null
+          property_styles: Json | null
+          property_type: string | null
+          property_website_url: string | null
+          publish_to_dcmls: boolean | null
+          rental_fee: number | null
+          rental_fee_text: string | null
+          roof_materials: Json | null
+          short_sale: boolean | null
+          square_feet: number | null
+          state: string | null
+          status: string | null
+          storage_options: Json | null
+          tax_year: number | null
+          total_parking_spaces: number | null
+          town: string | null
+          unit_number: string | null
+          updated_at: string | null
+          video_url: string | null
+          virtual_tour_url: string | null
+          water_view: boolean | null
+          water_view_type: string | null
+          waterfront: boolean | null
+          year_built: number | null
+          zip_code: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "dcmls_listings_public"
+          isOneToOne: false
+          isSetofReturn: true
+        }
       }
       get_delegate_invite_preview: { Args: { p_token: string }; Returns: Json }
       get_development_engagement_summary: {
