@@ -43,6 +43,13 @@
       "when": 1789476861325,
       "tag": "0005_signin_map_v2_with_user_id",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1789932615196,
+      "tag": "0006_dcmls_v1_agent_participation_and_gating",
+      "breakpoints": true
     }
   ]
 }
