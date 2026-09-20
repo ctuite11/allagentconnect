@@ -57,6 +57,13 @@
       "when": 1789932669474,
       "tag": "0007_dcmls_v1_gated_view_no_function_grants",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1789932708561,
+      "tag": "0008_dcmls_v1_tighten_grants",
+      "breakpoints": true
     }
   ]
 }
