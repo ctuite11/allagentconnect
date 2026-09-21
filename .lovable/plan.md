@@ -1,30 +1,42 @@
-# Why the activation reminder to Austyn Tuite never sent
+# Fix the email stream mapping (no emails released)
 
-## Cause (confirmed)
+## Why the reminder never sent
 
-Every queued email is assigned a "stream" (a delivery lane) based on its template name. The list of template-to-stream mappings lives in the database, and the new `agent-activation-reminder` template was never added to it.
+Every queued email is assigned a delivery lane ("stream") from its template name. The list of template-to-lane mappings lives in the database. `agent-activation-reminder` was never added to it, so the system failed closed: the email was stored with no lane, and the sender skips anything without one. Result: queued forever, 0 attempts, no error.
 
-When a template is unknown, the system deliberately fails closed: the email is stored with no stream, and the sending queue is built to skip any email without one. So the reminder sits in the queue forever — 0 attempts, no error, never picked up. That is exactly what the record shows.
+Three historical `team-approved` emails (Aug 31, Sep 10) are stuck for exactly the same reason.
 
-The same thing has silently happened before: three older `team-approved` emails (Aug 31 and Sep 10) are stuck in the queue for the identical reason.
+## Team Approved — correct lane
 
-Nothing is wrong with the recipient address, the email content, the admin button, or the sending service — the License Verified email to the same address 12 minutes earlier went out fine.
+Team Approved is an admin decision notice sent directly to the team lead, the same category as `team-invite`, `team-request-notification` and `team-decision`, which are all mapped to the **transactional** lane. So `team-approved` → `transactional` is the intended lane.
 
-## Fix
+Finding to flag: `team-rejected` (the other half of the same decision email) is **also** missing from the mapping and would get stuck the same way. It is not in the scope you gave me, so this migration will not touch it. Say the word and I'll add it in a follow-up.
 
-1. Add `agent-activation-reminder` to the template-to-stream list, mapped to the `transactional` lane (same lane as `license-verified`, `agent-login-link`, and `password-reset`). Done as a small, additive database migration — no other template mappings touched.
-2. Repair the one stuck reminder record so it gets a stream and can be picked up on the next queue run. This is a single-row correction, not a re-send or re-queue of anything else, and I will ask for your explicit go-ahead before running it.
-3. Leave the three old `team-approved` stuck emails exactly as they are. `team-approved` is also missing from the mapping; I will report it but not add it or release those emails unless you ask.
+## The migration
 
-## Result
+One migration, additive only:
 
-Once the mapping exists, the reminder (and any future activation reminders sent from Admin → Approvals) will process on the next minute's queue run and deliver normally.
+- `agent-activation-reminder` → `transactional`
+- `team-approved` → `transactional`
+- every other existing mapping copied byte-for-byte, unchanged
+- unknown templates still return nothing (fail closed) — that safety behavior stays
+
+Nothing else changes: no table, RLS, trigger, queue, edge function, or frontend change. No row is repaired or released, so the migration itself sends no email.
+
+## Verification after applying
+
+- `agent-activation-reminder` returns `transactional`
+- `team-approved` returns `transactional`
+- all previously mapped templates return exactly what they returned before (full before/after comparison)
+- Austyn's reminder row is still queued, 0 attempts, no stream
+- the three old Team Approved rows are untouched
+- no new sends, no change in queue counts
+
+Then I stop and report. Austyn's row stays queued; the three old Team Approved rows stay stuck until you say otherwise.
 
 ## Technical details
 
-- `public.email_stream_for_template(text)` returns NULL for `agent-activation-reminder`.
-- The `email_jobs_enforce_stream` BEFORE trigger writes `stream = NULL` when the template is unknown; `email_jobs_claim(p_limit, p_streams)` requires `stream IS NOT NULL AND stream = email_stream_for_template(payload->>'template')`, so the row can never be claimed.
-- Stuck row: `b33d9f8a-3d88-46d0-8179-842fd4eee7ab`, idempotency_key `agent-activation-reminder/12a5a3a1-...`, created 2026-09-21 18:17 UTC, status `queued`, attempts 0, `last_error` NULL, `stream` NULL.
-- Migration: `CREATE OR REPLACE FUNCTION public.email_stream_for_template` with one added `WHEN 'agent-activation-reminder' THEN 'transactional'` branch, everything else byte-identical.
-- Row repair (only after approval): `UPDATE public.email_jobs SET stream = 'transactional' WHERE id = 'b33d9f8a-...' AND status = 'queued' AND stream IS NULL;` — the cron `process-email-queue-every-minute` job then claims it.
-- No frontend, template, RLS, or edge function changes required.
+- Migration `0011_email_stream_activation_reminder_team_approved`: `CREATE OR REPLACE FUNCTION public.email_stream_for_template(p_template text)` with the current live body plus two `WHEN` branches.
+- Live body sourced from the deployed definition; `email_jobs_enforce_stream` and `email_jobs_claim` are not modified.
+- Stuck rows for reference (untouched): reminder `b33d9f8a-3d88-46d0-8179-842fd4eee7ab`; team-approved `51c8f7f2-…`, `db87549a-…`, `b6b0050c-…`.
+- Migration file lands in the repo so production and source control stay aligned.
