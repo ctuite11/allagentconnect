@@ -7388,6 +7388,7 @@ export type Database = {
               p_issuance_key: string
               p_reply_to: string
               p_subject: string
+              p_template?: string
               p_token_hash: string
               p_user_id: string
             }
@@ -7577,6 +7578,7 @@ export type Database = {
           p_agent_name: string
           p_reply_to: string
           p_subject: string
+          p_template?: string
           p_to_email: string
           p_token_id: string
         }
@@ -8447,6 +8449,7 @@ export type Database = {
               p_id: string
               p_reply_to?: string
               p_subject?: string
+              p_template?: string
               p_token_hash: string
               p_user_id: string
             }
