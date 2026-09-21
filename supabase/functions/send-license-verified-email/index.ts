@@ -87,6 +87,17 @@ serve(async (req) => {
     // "initial" is idempotent on the approval event; "resend" mints a fresh
     // token (admin-triggered, minute-bucketed so double-clicks collapse).
     const mode = body.mode === "resend" ? "resend" : "initial";
+    // Admin resends may opt into the short activation-reminder nudge template.
+    // Only honored for mode "resend" — the initial approval always sends the
+    // frozen license-verified template.
+    const variantRaw = body.variant;
+    if (variantRaw !== undefined && variantRaw !== "reminder") {
+      return json(400, { success: false, error: "Unknown variant" });
+    }
+    if (variantRaw === "reminder" && mode !== "resend") {
+      return json(400, { success: false, error: 'variant "reminder" requires mode "resend"' });
+    }
+    const template = variantRaw === "reminder" ? "agent-activation-reminder" : "license-verified";
 
     // ---- Server-side recipient resolution (never trusted from the caller) ----
     const { data: userRes, error: userErr } = await admin.auth.admin.getUserById(userId);
@@ -134,6 +145,7 @@ serve(async (req) => {
       // An admin who acknowledged the "previously deleted" warning can pass the
       // database-side tombstone gate too; every other gate stays enforced.
       p_allow_previously_deleted: acknowledgeDeleted,
+      ...(mode === "resend" ? { p_template: template } : {}),
     });
 
     if (rpcErr) {
