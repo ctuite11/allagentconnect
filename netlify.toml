@@ -81,6 +81,20 @@
   status = 200
   force = true
 
+# Activation setup form: read-only prefill + the single explicit submission
+# that sets the password and completes activation. Both are POST-only JSON.
+[[redirects]]
+  from = "/api/activation-preview"
+  to = "/.netlify/functions/activation-preview"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/activation-complete"
+  to = "/.netlify/functions/activation-complete"
+  status = 200
+  force = true
+
 # Sign-in links: same-origin POST endpoint for the AAC-owned login token.
 # The token travels in the POST body only — never a query string.
 [[redirects]]
