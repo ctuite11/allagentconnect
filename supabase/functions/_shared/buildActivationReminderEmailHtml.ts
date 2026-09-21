@@ -114,7 +114,7 @@ export function buildActivationReminderEmailHtml(opts: ActivationReminderEmailOp
           <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:12px 0 4px;">
             <tr><td align="center" style="padding:8px 0 6px;">
               <table role="presentation" cellspacing="0" cellpadding="0"><tr><td align="center" bgcolor="${CTA_GREEN}" style="border-radius:10px;">
-                <a href="${ctaUrl}" target="_blank" style="display:inline-block;padding:15px 34px;background-color:${CTA_GREEN};color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;letter-spacing:0.01em;border-radius:10px;font-family:${FONT};">Activate My Account</a>
+                <a href="${ctaUrl}" target="_blank" style="display:inline-block;padding:15px 34px;background-color:${CTA_GREEN};color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;letter-spacing:0.01em;border-radius:10px;font-family:${FONT};">Set Your Password</a>
               </td></tr></table>
             </td></tr>
             ${ctaNote ? `<tr><td align="center" style="padding:10px 0 8px;">
