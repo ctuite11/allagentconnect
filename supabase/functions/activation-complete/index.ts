@@ -17,7 +17,18 @@
 //      claim fails         -> caller gets the real state (+ resend handle)
 //      signature bad       -> claim released, link still usable
 //      profile save fails  -> claim released, link still usable, no password change
-//      password set fails  -> claim released, link still usable, no password change
+//      password set fails  -> claim released, link still usable, no password
+//                             change. NOTE: the profile fields (first name,
+//                             last name, brokerage) submitted on this attempt
+//                             HAVE already been written. This is deliberate:
+//                             they are exactly the values the agent just typed,
+//                             they are overwritten by the next attempt, and
+//                             they carry no lifecycle or authorization meaning
+//                             (activation state lives in account_activated_at,
+//                             agent_status and user_roles, none of which this
+//                             step touches). Nothing here can grant access.
+//      breach check down   -> 503 retry BEFORE any claim; password never
+//                             accepted unscreened, link untouched
 //      activation stamp    -> retried; on persistent failure we continue (the
 //                             password IS set, so the agent must not be
 //                             stranded) and the sign-in path re-stamps it
