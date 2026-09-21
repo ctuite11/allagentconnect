@@ -86,9 +86,14 @@ const FavoriteButton = ({
 
   const handleToggleFavorite = async () => {
     if (!userId) {
-      // DCMLS host → consumer signup flow; AAC host → agent auth surface
+      // DCMLS host → consumer signup when auth access is enabled; otherwise stay on page.
       const { isDcmlsHost } = await import("@/lib/host");
+      const { isDcmlsAuthAccessEnabled } = await import("@/lib/dcmlsAuthAccess");
       if (isDcmlsHost()) {
+        if (!isDcmlsAuthAccessEnabled()) {
+          toast.error("Account sign-in is not available on Direct Connect MLS yet.");
+          return;
+        }
         const from = window.location.pathname + window.location.search;
         window.location.href = `/consumer/auth?mode=signup&from=${encodeURIComponent(from)}`;
       } else {

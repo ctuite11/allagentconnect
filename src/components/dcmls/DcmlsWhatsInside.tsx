@@ -9,6 +9,7 @@ import {
   BellRing,
   type LucideIcon,
 } from "lucide-react";
+import { isDcmlsAuthAccessEnabled } from "@/lib/dcmlsAuthAccess";
 
 const AAC_BLUE = "#0E56F5";
 const AAC_GREEN = "#50C878";
@@ -121,18 +122,30 @@ const DcmlsWhatsInside: React.FC = () => {
           })}
         </div>
 
-        {/* CTA */}
+        {/* CTA — auth CTAs gated until DCMLS login is re-enabled */}
         <div className="mt-14 md:mt-16 flex flex-col sm:flex-row items-center justify-center gap-3">
-          <Link
-            to="/consumer/auth?mode=signup"
-            className="inline-flex items-center justify-center h-11 px-6 rounded-md text-sm font-medium text-white transition-opacity hover:opacity-90"
-            style={{ backgroundColor: AAC_BLUE }}
-          >
-            Create your free account
-          </Link>
-          <p className="text-xs text-muted-foreground">
-            No credit card. Takes under a minute.
-          </p>
+          {isDcmlsAuthAccessEnabled() ? (
+            <>
+              <Link
+                to="/consumer/auth?mode=signup"
+                className="inline-flex items-center justify-center h-11 px-6 rounded-md text-sm font-medium text-white transition-opacity hover:opacity-90"
+                style={{ backgroundColor: AAC_BLUE }}
+              >
+                Create your free account
+              </Link>
+              <p className="text-xs text-muted-foreground">
+                No credit card. Takes under a minute.
+              </p>
+            </>
+          ) : (
+            <Link
+              to="/browse?dcmls=1"
+              className="inline-flex items-center justify-center h-11 px-6 rounded-md text-sm font-medium text-white transition-opacity hover:opacity-90"
+              style={{ backgroundColor: AAC_BLUE }}
+            >
+              Browse Listings
+            </Link>
+          )}
         </div>
       </div>
     </section>

@@ -2,6 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import AACMonogram from "@/components/ui/AACMonogram";
 import VersionStamp from "@/components/VersionStamp";
+import { isDcmlsAuthAccessEnabled } from "@/lib/dcmlsAuthAccess";
 
 const AAC_BLUE = "#0E56F5";
 const AAC_GREEN = "#50C878";
@@ -57,11 +58,13 @@ const DcmlsFooter: React.FC = () => {
                   Our Agents
                 </Link>
               </li>
-              <li>
-                <Link to="/consumer/auth?mode=signin" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Sign In
-                </Link>
-              </li>
+              {isDcmlsAuthAccessEnabled() ? (
+                <li>
+                  <Link to="/consumer/auth?mode=signin" className="text-muted-foreground hover:text-foreground transition-colors">
+                    Sign In
+                  </Link>
+                </li>
+              ) : null}
             </ul>
           </div>
 
