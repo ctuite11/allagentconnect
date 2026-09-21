@@ -1628,6 +1628,9 @@ export default function AdminApprovals() {
         body: {
           user_id: agent.id,
           mode: "resend",
+          // Short activation nudge for verified, not-yet-activated agents —
+          // the frozen License Verified template stays for initial approvals.
+          variant: "reminder",
           agentName: agent.first_name || undefined,
           // Gate already passed above → allow the send even for a
           // previously-deleted email.

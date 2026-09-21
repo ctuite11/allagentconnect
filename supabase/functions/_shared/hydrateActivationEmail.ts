@@ -13,6 +13,7 @@ import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.39.3
 import { buildLicenseVerifiedEmailHtml } from "./buildLicenseVerifiedEmailHtml.ts";
 import { buildAdminCreatedInviteEmailHtml } from "./buildAdminCreatedInviteEmailHtml.ts";
 import { buildDeveloperApprovedEmailHtml } from "./buildDeveloperApprovedEmailHtml.ts";
+import { buildActivationReminderEmailHtml } from "./buildActivationReminderEmailHtml.ts";
 import { AAC_PUBLIC_URL } from "./aacPublicUrl.ts";
 import { activationUrl, epochSeconds, signActivationToken } from "./activationTokens.ts";
 
@@ -21,12 +22,15 @@ export const ACTIVATION_TEMPLATE = "license-verified";
 export const ADMIN_INVITE_TEMPLATE = "admin-created-invite";
 /** Developer approval / setup invite — same durable 30-day token, Developer copy. */
 export const DEVELOPER_INVITE_TEMPLATE = "developer-account-approved";
+/** Admin-triggered nudge for verified, not-yet-activated agents. */
+export const ACTIVATION_REMINDER_TEMPLATE = "agent-activation-reminder";
 
 /** Templates whose CTA is a late-rendered AAC activation link. */
 export function isActivationTemplate(template: string): boolean {
   return template === ACTIVATION_TEMPLATE ||
     template === ADMIN_INVITE_TEMPLATE ||
-    template === DEVELOPER_INVITE_TEMPLATE;
+    template === DEVELOPER_INVITE_TEMPLATE ||
+    template === ACTIVATION_REMINDER_TEMPLATE;
 }
 
 /** Hard ceiling on retries, kept well under Resend's 24h idempotency retention. */
@@ -105,6 +109,13 @@ export async function hydrateActivationEmail(
       ctaUrl,
       firstName: typeof payload.first_name === "string" ? payload.first_name : undefined,
       footerAgent: FOOTER_AGENT,
+    })
+    : template === ACTIVATION_REMINDER_TEMPLATE
+    ? buildActivationReminderEmailHtml({
+      ctaUrl,
+      agentName: typeof payload.agent_name === "string" ? payload.agent_name : undefined,
+      footerAgent: FOOTER_AGENT,
+      ctaNote: `This activation link is valid until ${formatActivationExpiry(row.expires_at)}.`,
     })
     : buildLicenseVerifiedEmailHtml({
       ctaUrl,
