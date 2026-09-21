@@ -40,7 +40,7 @@ import {
   verifyActivationToken,
 } from "../_shared/activationTokens.ts";
 import {
-  isPasswordBreached,
+  checkPasswordBreach,
   validateActivationPassword,
 } from "../_shared/activationPasswordPolicy.ts";
 
@@ -111,11 +111,20 @@ Deno.serve(async (req) => {
   }
   const policyError = validateActivationPassword(password);
   if (policyError) return json({ status: "validation", message: policyError }, 400);
-  if (await isPasswordBreached(password)) {
+  const breach = await checkPasswordBreach(password);
+  if (breach === "breached") {
     return json({
       status: "validation",
       message: "That password has appeared in a known data breach. Please choose a different one.",
     }, 400);
+  }
+  if (breach === "unavailable") {
+    // Fail closed: never accept a password we could not screen. Nothing has
+    // been claimed or changed yet, so the activation link stays fully usable.
+    return json({
+      status: "retry",
+      message: "We couldn't verify your password right now. Please try again in a moment.",
+    }, 503);
   }
 
   const admin = createClient(SUPABASE_URL, SERVICE_KEY);
