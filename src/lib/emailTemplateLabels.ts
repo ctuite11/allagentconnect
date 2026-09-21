@@ -12,6 +12,7 @@ export const EMAIL_TEMPLATE_LABELS: Record<string, string> = {
   "founder-invite-1to1": "Founder Invite",
   "agent-missing-opportunities": "Don't miss opportunities",
   "agent-activation-nudge": "Activation Nudge",
+  "agent-activation-reminder": "Activation Reminder",
   "agent-temp-password": "Temporary password",
   "password-reset": "Password Reset",
   "agent-login-link": "Login Link",
