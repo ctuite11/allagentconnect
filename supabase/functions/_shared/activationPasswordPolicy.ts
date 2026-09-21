@@ -40,30 +40,44 @@ async function sha1Hex(input: string): Promise<string> {
  *
  * The Supabase Admin API does NOT apply the project's leaked-password
  * protection the way the user-facing `updateUser` path does, so the check is
- * performed here explicitly. Fails OPEN on network/service errors so a
- * third-party outage can never block a legitimate activation.
+ * performed here explicitly.
+ *
+ * Fails CLOSED: when the breach service cannot be reached, times out or
+ * returns a non-200, the result is "unavailable" and the caller must ask the
+ * agent to retry. A breached password is never accepted just because the
+ * check could not run. Two short attempts are made before giving up.
  */
-export async function isPasswordBreached(password: string): Promise<boolean> {
-  try {
-    const hash = await sha1Hex(password);
-    const prefix = hash.slice(0, 5);
-    const suffix = hash.slice(5);
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 2000);
-    const res = await fetch(`https://api.pwnedpasswords.com/range/${prefix}`, {
-      headers: { "Add-Padding": "true" },
-      signal: controller.signal,
-    });
-    clearTimeout(timer);
-    if (!res.ok) return false;
-    const body = await res.text();
-    for (const line of body.split("\n")) {
-      const [candidate, countRaw] = line.trim().split(":");
-      if (candidate === suffix && Number(countRaw ?? "0") > 0) return true;
+export type BreachCheckResult = "breached" | "ok" | "unavailable";
+
+export async function checkPasswordBreach(password: string): Promise<BreachCheckResult> {
+  const hash = await sha1Hex(password);
+  const prefix = hash.slice(0, 5);
+  const suffix = hash.slice(5);
+
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 3000);
+      const res = await fetch(`https://api.pwnedpasswords.com/range/${prefix}`, {
+        headers: { "Add-Padding": "true" },
+        signal: controller.signal,
+      });
+      clearTimeout(timer);
+      if (!res.ok) throw new Error(`status ${res.status}`);
+      const body = await res.text();
+      for (const line of body.split("\n")) {
+        const [candidate, countRaw] = line.trim().split(":");
+        if (candidate === suffix && Number(countRaw ?? "0") > 0) return "breached";
+      }
+      return "ok";
+    } catch (err) {
+      // Never log the password or the full hash — only the failure reason.
+      console.warn(
+        `[activation] breach check attempt ${attempt} failed:`,
+        (err as Error).message,
+      );
+      if (attempt < 2) await new Promise((r) => setTimeout(r, 300));
     }
-    return false;
-  } catch {
-    // Never block activation on a breach-service failure.
-    return false;
   }
+  return "unavailable";
 }

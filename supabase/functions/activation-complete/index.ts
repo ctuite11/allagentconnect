@@ -17,7 +17,18 @@
 //      claim fails         -> caller gets the real state (+ resend handle)
 //      signature bad       -> claim released, link still usable
 //      profile save fails  -> claim released, link still usable, no password change
-//      password set fails  -> claim released, link still usable, no password change
+//      password set fails  -> claim released, link still usable, no password
+//                             change. NOTE: the profile fields (first name,
+//                             last name, brokerage) submitted on this attempt
+//                             HAVE already been written. This is deliberate:
+//                             they are exactly the values the agent just typed,
+//                             they are overwritten by the next attempt, and
+//                             they carry no lifecycle or authorization meaning
+//                             (activation state lives in account_activated_at,
+//                             agent_status and user_roles, none of which this
+//                             step touches). Nothing here can grant access.
+//      breach check down   -> 503 retry BEFORE any claim; password never
+//                             accepted unscreened, link untouched
 //      activation stamp    -> retried; on persistent failure we continue (the
 //                             password IS set, so the agent must not be
 //                             stranded) and the sign-in path re-stamps it
@@ -40,7 +51,7 @@ import {
   verifyActivationToken,
 } from "../_shared/activationTokens.ts";
 import {
-  isPasswordBreached,
+  checkPasswordBreach,
   validateActivationPassword,
 } from "../_shared/activationPasswordPolicy.ts";
 
@@ -111,11 +122,20 @@ Deno.serve(async (req) => {
   }
   const policyError = validateActivationPassword(password);
   if (policyError) return json({ status: "validation", message: policyError }, 400);
-  if (await isPasswordBreached(password)) {
+  const breach = await checkPasswordBreach(password);
+  if (breach === "breached") {
     return json({
       status: "validation",
       message: "That password has appeared in a known data breach. Please choose a different one.",
     }, 400);
+  }
+  if (breach === "unavailable") {
+    // Fail closed: never accept a password we could not screen. Nothing has
+    // been claimed or changed yet, so the activation link stays fully usable.
+    return json({
+      status: "retry",
+      message: "We couldn't verify your password right now. Please try again in a moment.",
+    }, 503);
   }
 
   const admin = createClient(SUPABASE_URL, SERVICE_KEY);
