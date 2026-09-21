@@ -57,7 +57,7 @@ export function buildAdminCreatedInviteEmailHtml(opts: AdminCreatedInviteEmailOp
 
 <p style="margin:0 0 20px;">We appreciate your support of the All Agent Connect community and hope you'll join us on the platform.</p>
 
-<p style="margin:0 0 20px;"><a href="${link}" style="color:#0E56F5;text-decoration:underline;">Activate My Account</a></p>
+<p style="margin:0 0 20px;"><a href="${link}" style="color:#0E56F5;text-decoration:underline;">Set Your Password</a></p>
 
 <p style="margin:0 0 4px;">Thanks,</p>
 <p style="margin:0 0 2px;">Chris Tuite</p>

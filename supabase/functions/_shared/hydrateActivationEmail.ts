@@ -121,7 +121,7 @@ export async function hydrateActivationEmail(
       ctaUrl,
       agentName: typeof payload.agent_name === "string" ? payload.agent_name : undefined,
       footerAgent: FOOTER_AGENT,
-      ctaLabel: "Activate My Account",
+      ctaLabel: "Set Your Password",
       ctaNote: `This activation link is valid until ${formatActivationExpiry(row.expires_at)}.`,
     });
 
