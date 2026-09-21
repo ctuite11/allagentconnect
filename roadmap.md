@@ -77,3 +77,15 @@
 - [x] Listing-level enforcement trigger (DCMLS fields only)
 - [x] Gated dcmls_listings_public view + get_dcmls_listing lookup, read-only grants
 - [ ] Frontend: reconcile PR #71 (`dcmls-v1-launch`) against this backend contract — not started, awaiting approval
+
+## Simplified activation flow (2026-09-21, backend deployed, frontend NOT published)
+- [x] preview_agent_activation_token() read-only RPC (migration 0014)
+- [x] activation-preview + activation-complete edge functions (POST-only, deployed)
+- [x] Netlify /api/activation-preview + /api/activation-complete proxies (HttpOnly resend cookie)
+- [x] /activate now renders the setup form directly; token stays in memory, nothing redeemed on load
+- [x] Server-side password policy + HIBP k-anonymity breach check in activation-complete
+- [x] Email CTA label -> "Set Your Password" (license-verified / reminder / admin invite)
+- [ ] Email functions NOT redeployed yet: label change must ship with the frontend publish
+- [ ] Live end-to-end test with a real eligible agent/test account
+- [ ] Publish frontend (awaiting approval)
+- Legacy redeem-activation-token + /api/activate-redeem left intact as rollback infrastructure
