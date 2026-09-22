@@ -702,8 +702,9 @@ export default function AdminApprovals() {
 
       if (error) {
         // A genuine 401/403 means the session/permission problem is real —
-        // never retried. Anything else (network failure, 5xx, the backend's
-        // transient 503) is safe to retry exactly once.
+        // never retried and never shown a cached roster: fail closed. Anything
+        // else (network failure, 5xx, the backend's transient 503) is safe to
+        // retry exactly once.
         const status = (error as { context?: { status?: number } } | null)?.context?.status;
         const permanent = status === 401 || status === 403;
         console.error("[AdminApprovals] Edge function error:", error, { status });
@@ -711,8 +712,14 @@ export default function AdminApprovals() {
           console.log("[AdminApprovals] transient failure — retrying roster load once");
           return runFetchAgents({ ...opts, retried: true });
         }
-        if (opts?.background || agentsLengthRef.current > 0) {
-          // Keep the cached roster on screen; flag a refresh-only problem.
+        if (permanent) {
+          // Real auth/authorization failure — do not leave a cached member
+          // roster on screen under a "couldn't refresh" warning.
+          setAgents([]);
+          agentsLengthRef.current = 0;
+          setRosterLoadError("full");
+        } else if (opts?.background || agentsLengthRef.current > 0) {
+          // Transient refresh failure — keep the cached roster on screen.
           setRosterLoadError("refresh");
         } else {
           setRosterLoadError("full");

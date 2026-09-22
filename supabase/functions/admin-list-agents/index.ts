@@ -127,9 +127,9 @@ function deriveEmailStatus(row: {
 // fetch (not supabase-js getUser, which has no timeout) so an upstream stall
 // cannot hang the request. Retries only transient failures; a real 401/403
 // from Auth is returned immediately and never retried. Never logs tokens.
-const AUTH_LOOKUP_TIMEOUT_MS = 4000
+const AUTH_LOOKUP_TIMEOUT_MS = 2000
 const AUTH_LOOKUP_MAX_ATTEMPTS = 2
-const AUTH_LOOKUP_RETRY_DELAY_MS = 600
+const AUTH_LOOKUP_RETRY_DELAY_MS = 300
 
 type CallerLookup =
   | { kind: 'ok'; user: { id: string; email?: string } }
