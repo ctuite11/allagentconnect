@@ -114,10 +114,20 @@ const handler: Handler = async (event) => {
   }
   if (!token) return jsonResponse(400, { status: "invalid" });
 
-  const payload = await callActivationFunction("activation-preview", { token });
+  const clientIp = clientIpFromEvent(event);
+  const payload = await callActivationFunction(
+    "activation-preview",
+    { token },
+    clientIp ? { "x-aac-client-ip": clientIp } : {},
+  );
   if (!payload) return jsonResponse(500, { status: "error" }, clearResendCookieHeader());
 
   const { resendHandle, ...safe } = payload as { resendHandle?: string | null };
+
+  // Generic throttle passthrough — reveals nothing about the token.
+  if (safe.status === "rate_limited") {
+    return jsonResponse(429, { status: "rate_limited" });
+  }
   return jsonResponse(
     200,
     safe as Record<string, unknown>,
