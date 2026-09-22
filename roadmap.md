@@ -94,11 +94,11 @@
 - [x] Event status authority + superseded-event skip in matcher (deployed, zero sends)
 - [ ] Reopen Hot Sheets (canary/unpause) — blocked on explicit user approval
 
-## Hot Sheet event-specific dedupe (2026-09-22) — Hot Sheets still PAUSED
+## Hot Sheet event-specific dedupe (2026-09-22) — Hot Sheets REOPENED 19:40 UTC
 - [x] Design approved (claim key = event + Hot Sheet + audience + recipient)
 - [x] Read-only pre-approval checks (nullability, helper lockdown, atomic transaction, live data, pause)
 - [x] Migration 0016 applied (helper SECURITY INVOKER, service_role only; old logical key dropped last)
 - [x] send-new-match-notification deployed (event-scoped :ev: keys, criteria helper, no sent-state gate)
 - [x] Outbox test 03 / concurrency test updated; new 09 dedupe test + hotSheetEventDedupe.test.ts
 - [x] Post-deploy read-only zero-send verification
-- [ ] Controlled Hot Sheet reopening — separate decision, blocked on explicit user approval
+- [x] Controlled reopening: HOT_SHEET_EMAILS_PAUSED=false; first 3 worker cycles clean (0 claimed, 0 jobs, 0 sends)
