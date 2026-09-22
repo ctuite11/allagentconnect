@@ -693,7 +693,7 @@ export default function AdminApprovals() {
   // instead of firing a second (5–11s) admin-list-agents request.
   const fetchAgentsInFlight = useRef<Promise<void> | null>(null);
 
-  const runFetchAgents = async (opts?: { background?: boolean }) => {
+  const runFetchAgents = async (opts?: { background?: boolean; retried?: boolean }): Promise<void> => {
     if (!opts?.background) setLoading(true);
 
     try {
@@ -701,11 +701,26 @@ export default function AdminApprovals() {
       const { data, error } = await supabase.functions.invoke('admin-list-agents');
 
       if (error) {
-        console.error("[AdminApprovals] Edge function error:", error);
-        toast.error("Failed to load agents - please refresh");
+        // A genuine 401/403 means the session/permission problem is real —
+        // never retried. Anything else (network failure, 5xx, the backend's
+        // transient 503) is safe to retry exactly once.
+        const status = (error as { context?: { status?: number } } | null)?.context?.status;
+        const permanent = status === 401 || status === 403;
+        console.error("[AdminApprovals] Edge function error:", error, { status });
+        if (!permanent && !opts?.retried) {
+          console.log("[AdminApprovals] transient failure — retrying roster load once");
+          return runFetchAgents({ ...opts, retried: true });
+        }
+        if (opts?.background || agentsLengthRef.current > 0) {
+          // Keep the cached roster on screen; flag a refresh-only problem.
+          setRosterLoadError("refresh");
+        } else {
+          setRosterLoadError("full");
+        }
         setLoading(false);
         return;
       }
+      setRosterLoadError(null);
 
       const {
         agents: agentList,
@@ -855,7 +870,7 @@ export default function AdminApprovals() {
   };
 
 
-  const fetchAgents = (opts?: { background?: boolean; force?: boolean }): Promise<void> => {
+  const fetchAgents = (opts?: { background?: boolean; force?: boolean; retried?: boolean }): Promise<void> => {
     if (!isAdmin) return Promise.resolve();
     // `force` skips joining an in-flight request: after a delete, the running
     // request may have read the list before the rows were removed.
