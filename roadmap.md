@@ -93,3 +93,8 @@
 ## Hot Sheet regression fix (paused)
 - [x] Event status authority + superseded-event skip in matcher (deployed, zero sends)
 - [ ] Reopen Hot Sheets (canary/unpause) — blocked on explicit user approval
+
+## Hot Sheet event-specific dedupe (2026-09-22) — Hot Sheets PAUSED, no migration/deploy yet
+- [x] Design approved in principle (claim key = event + Hot Sheet + audience + recipient)
+- [ ] Read-only pre-approval checks: key nullability, SECURITY DEFINER hardening, atomic transaction/rollback
+- [ ] BLOCKED on user approval: apply migration, deploy send-new-match-notification, read-only zero-send verification
