@@ -119,23 +119,23 @@ const HeroSection = () => {
       <div className="relative z-10 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-[100px] py-5">
         <div className="inline-grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-2.5 gap-y-0.5 min-w-0">
           <AACMonogram className="w-7 h-7 sm:w-9 sm:h-9 text-[#50c878] row-span-2 self-center shrink-0" />
-          <span className="font-['Manrope'] font-semibold text-white text-[13px] sm:text-xl tracking-[-0.4px] truncate">
+          <span className="font-manrope font-semibold text-white text-[13px] sm:text-xl tracking-[-0.4px] truncate">
             All Agent Connect
           </span>
-          <span className="font-['Manrope'] font-light text-[9px] sm:text-[11px] tracking-[0.2em] text-neutral-400 truncate">
+          <span className="font-manrope font-light text-[9px] sm:text-[11px] tracking-[0.2em] text-neutral-400 truncate">
             Massachusetts
           </span>
         </div>
         <div className="flex items-center gap-2 sm:gap-4 md:gap-5 shrink-0">
           <a
             href="/request-access"
-            className="font-['Manrope'] font-semibold text-white bg-transparent border border-white/40 hover:bg-white/10 hover:border-white/70 transition-colors h-9 sm:h-11 px-2.5 sm:px-6 rounded-full inline-flex items-center text-[11px] sm:text-sm whitespace-nowrap"
+            className="font-manrope font-semibold text-white bg-transparent border border-white/40 hover:bg-white/10 hover:border-white/70 transition-colors h-9 sm:h-11 px-2.5 sm:px-6 rounded-full inline-flex items-center text-[11px] sm:text-sm whitespace-nowrap"
           >
             Request Access
           </a>
           <a
             href="/login"
-            className="font-['Manrope'] font-semibold text-white bg-white/15 border border-white/25 backdrop-blur-md hover:bg-white/25 hover:border-white/50 transition-colors h-9 sm:h-11 px-3 sm:px-6 rounded-full inline-flex items-center text-[11px] sm:text-sm whitespace-nowrap"
+            className="font-manrope font-semibold text-white bg-white/15 border border-white/25 backdrop-blur-md hover:bg-white/25 hover:border-white/50 transition-colors h-9 sm:h-11 px-3 sm:px-6 rounded-full inline-flex items-center text-[11px] sm:text-sm whitespace-nowrap"
           >
             Login
           </a>
@@ -150,14 +150,14 @@ const HeroSection = () => {
           {/* Eyebrow */}
           <div className="inline-flex items-center gap-2.5 px-4 py-2 bg-white/10 border border-white/15 backdrop-blur-md rounded-full w-fit">
             <span className="w-[7px] h-[7px] rounded-full bg-[#50c878] shrink-0" />
-            <span className="font-['Manrope'] font-medium text-white/90 text-sm tracking-[0.28px]">
+            <span className="font-manrope font-medium text-white/90 text-sm tracking-[0.28px]">
               Verified Agent Network
             </span>
           </div>
 
           {/* Headline */}
           <h1
-            className="mt-6 font-['Manrope'] font-semibold text-4xl sm:text-5xl md:text-6xl tracking-tight leading-[1.05]"
+            className="mt-6 font-manrope font-semibold text-4xl sm:text-5xl md:text-6xl tracking-tight leading-[1.05]"
             style={{ textShadow: "0 2px 12px rgba(0,0,0,0.35)" }}
           >
             <span className="block whitespace-nowrap text-white">ONE NETWORK.</span>
@@ -166,7 +166,7 @@ const HeroSection = () => {
 
           {/* Sub-headline */}
           <p
-            className="mt-5 font-['Manrope'] font-medium text-white/90 text-base sm:text-lg md:text-xl leading-relaxed max-w-[34rem]"
+            className="mt-5 font-manrope font-medium text-white/90 text-base sm:text-lg md:text-xl leading-relaxed max-w-[34rem]"
             style={{ textShadow: "0 1px 10px rgba(0,0,0,0.45)" }}
           >
             Connecting verified agents across{" "}
@@ -179,7 +179,7 @@ const HeroSection = () => {
           <div className="flex items-center gap-4 mt-8 flex-wrap">
             <a
               href="/request-access"
-              className="h-14 px-8 inline-flex items-center gap-2 bg-[#50C878] rounded-full hover:bg-[#45b96d] transition-colors font-['Manrope'] font-semibold text-black text-base shadow-sm"
+              className="h-14 px-8 inline-flex items-center gap-2 bg-[#50C878] rounded-full hover:bg-[#45b96d] transition-colors font-manrope font-semibold text-black text-base shadow-sm"
             >
               Request access
               <svg width="18" height="18" viewBox="0 0 20 20" fill="none">

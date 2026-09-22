@@ -20,9 +20,9 @@ const HowAgentsUseAAC = () => {
         {/* Header */}
         <div className="flex flex-col items-center gap-5 text-center max-w-2xl mx-auto">
           <div className="inline-flex items-center gap-2 pl-3.5 pr-5 py-2 bg-[#0E56F50f] border border-[#0E56F526] rounded-full">
-            <span className="font-['Manrope'] font-semibold text-[14px] tracking-[0.28px]" style={{ color: AAC_BLUE }}>Agent workflow</span>
+            <span className="font-manrope font-semibold text-[14px] tracking-[0.28px]" style={{ color: AAC_BLUE }}>Agent workflow</span>
           </div>
-          <h2 className="font-['Manrope'] font-semibold text-[#0f172a] text-4xl md:text-6xl tracking-tight leading-[1.0]" style={{ textWrap: "balance" as any }}>
+          <h2 className="font-manrope font-semibold text-[#0f172a] text-4xl md:text-6xl tracking-tight leading-[1.0]" style={{ textWrap: "balance" as any }}>
             How Agents Work Inside<br />The AAC Network
           </h2>
         </div>
@@ -45,7 +45,7 @@ const HowAgentsUseAAC = () => {
                   { label: "Group by status", icon: <><rect x="3" y="3" width="8" height="8" rx="1.5" stroke="#64748b" strokeWidth="2" /><rect x="13" y="3" width="8" height="8" rx="1.5" stroke="#64748b" strokeWidth="2" /><rect x="3" y="13" width="8" height="8" rx="1.5" stroke="#64748b" strokeWidth="2" /><rect x="13" y="13" width="8" height="8" rx="1.5" stroke="#64748b" strokeWidth="2" /></> },
                 ].map((row, i) => (
                   <div key={row.label} className="flex items-center justify-between px-4 py-3 bg-white rounded-xl border border-[#e2e8f0]" style={{ opacity: i === 3 ? 0.55 : 1 }}>
-                    <span className="font-['Manrope'] font-medium text-[#0f172a] text-[13px]">{row.label}</span>
+                    <span className="font-manrope font-medium text-[#0f172a] text-[13px]">{row.label}</span>
                     <div className="flex items-center gap-1.5 text-[#94a3b8]">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none">{row.icon}</svg>
                       <span className="w-1 h-1 rounded-full bg-[#cbd5e1]" />
@@ -57,8 +57,8 @@ const HowAgentsUseAAC = () => {
               </div>
             </div>
             <div className="flex flex-col gap-2 p-5">
-              <h3 className="font-['Manrope'] font-bold text-[#0f172a] text-[17px] leading-[1.3]">Discover off-market opportunities</h3>
-              <p className="font-['Manrope'] font-normal text-[#64748b] text-[13px] leading-[1.45]">Access exclusive listings, buyer needs, and opportunities shared privately by verified agents in the network.</p>
+              <h3 className="font-manrope font-bold text-[#0f172a] text-[17px] leading-[1.3]">Discover off-market opportunities</h3>
+              <p className="font-manrope font-normal text-[#64748b] text-[13px] leading-[1.45]">Access exclusive listings, buyer needs, and opportunities shared privately by verified agents in the network.</p>
             </div>
           </div>
 
@@ -88,7 +88,7 @@ const HowAgentsUseAAC = () => {
                     <div className="w-6 h-6 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: "rgba(14,86,245,0.08)" }}>
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><rect x="2" y="4" width="20" height="16" rx="3" stroke={AAC_BLUE} strokeWidth="2" /><path d="M2 8l10 6 10-6" stroke={AAC_BLUE} strokeWidth="2" strokeLinecap="round" /></svg>
                     </div>
-                    <span className="font-['Manrope'] font-semibold text-[#0f172a] text-[12px]">Share via email</span>
+                    <span className="font-manrope font-semibold text-[#0f172a] text-[12px]">Share via email</span>
                   </div>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
                 </div>
@@ -98,7 +98,7 @@ const HowAgentsUseAAC = () => {
                     <div className="w-6 h-6 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: "rgba(14,86,245,0.08)" }}>
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke={AAC_BLUE} strokeWidth="2" strokeLinecap="round" /><circle cx="9" cy="7" r="4" stroke={AAC_BLUE} strokeWidth="2" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" stroke={AAC_BLUE} strokeWidth="2" strokeLinecap="round" /><path d="M16 3.13a4 4 0 0 1 0 7.75" stroke={AAC_BLUE} strokeWidth="2" strokeLinecap="round" /></svg>
                     </div>
-                    <span className="font-['Manrope'] font-semibold text-[12px]" style={{ color: AAC_BLUE }}>Share with agents</span>
+                    <span className="font-manrope font-semibold text-[12px]" style={{ color: AAC_BLUE }}>Share with agents</span>
                   </div>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke={AAC_BLUE} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity={0.5} /></svg>
                 </div>
@@ -107,15 +107,15 @@ const HowAgentsUseAAC = () => {
                     <div className="w-6 h-6 rounded-full bg-[#fff7ed] flex items-center justify-center shrink-0">
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><circle cx="18" cy="5" r="3" stroke="#f97316" strokeWidth="2" /><circle cx="6" cy="12" r="3" stroke="#f97316" strokeWidth="2" /><circle cx="18" cy="19" r="3" stroke="#f97316" strokeWidth="2" /><path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98" stroke="#f97316" strokeWidth="2" strokeLinecap="round" /></svg>
                     </div>
-                    <span className="font-['Manrope'] font-semibold text-[#0f172a] text-[12px]">Share across social media</span>
+                    <span className="font-manrope font-semibold text-[#0f172a] text-[12px]">Share across social media</span>
                   </div>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
                 </div>
               </div>
             </div>
             <div className="flex flex-col gap-2 p-5">
-              <h3 className="font-['Manrope'] font-bold text-[#0f172a] text-[17px] leading-[1.3]">Share listings before they hit the market</h3>
-              <p className="font-['Manrope'] font-normal text-[#64748b] text-[13px] leading-[1.45]">Quietly market properties to the AAC network and gauge demand before launching publicly.</p>
+              <h3 className="font-manrope font-bold text-[#0f172a] text-[17px] leading-[1.3]">Share listings before they hit the market</h3>
+              <p className="font-manrope font-normal text-[#64748b] text-[13px] leading-[1.45]">Quietly market properties to the AAC network and gauge demand before launching publicly.</p>
             </div>
           </div>
 
@@ -154,8 +154,8 @@ const HowAgentsUseAAC = () => {
               ))}
             </div>
             <div className="flex flex-col gap-2 p-5">
-              <h3 className="font-['Manrope'] font-bold text-[#0f172a] text-[17px] leading-[1.3]">Collaborate with trusted agents</h3>
-              <p className="font-['Manrope'] font-normal text-[#64748b] text-[13px] leading-[1.45]">Connect directly with experienced agents to match buyers, solve deals, and move transactions forward faster.</p>
+              <h3 className="font-manrope font-bold text-[#0f172a] text-[17px] leading-[1.3]">Collaborate with trusted agents</h3>
+              <p className="font-manrope font-normal text-[#64748b] text-[13px] leading-[1.45]">Connect directly with experienced agents to match buyers, solve deals, and move transactions forward faster.</p>
             </div>
           </div>
         </div>
