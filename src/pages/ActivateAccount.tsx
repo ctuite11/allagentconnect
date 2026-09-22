@@ -360,7 +360,7 @@ export default function ActivateAccount() {
   return (
     <div className="min-h-screen bg-white">
       <Helmet>
-        <title>Set your password | All Agent Connect</title>
+        <title>Activate your account | All Agent Connect</title>
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
 
