@@ -213,9 +213,14 @@ serve(async (req) => {
     );
 
     for (const hotSheet of hotSheets) {
-      // Check for new matches (uses hot_sheet_sent_listings for match/event state)
+      // Criteria only (service-role-only internal helper, same criteria as
+      // check_hot_sheet_matches minus its status-keyed sent-state filter),
+      // scoped to the event's listing.
       const { data: rpcMatches, error: matchError } = await supabase
-        .rpc("check_hot_sheet_matches", { p_hot_sheet_id: hotSheet.id });
+        .rpc("hot_sheet_criteria_matches", {
+          p_hot_sheet_id: hotSheet.id,
+          p_listing_id: triggerListingId,
+        });
 
       if (matchError) continue;
 
@@ -263,29 +268,13 @@ serve(async (req) => {
       scopedListings.sort((a: any, b: any) => String(a.id).localeCompare(String(b.id)));
 
       // Event context (loaded above) decides New Match vs Status Change.
-      // hot_sheet_sent_listings is dedupe state ONLY — it must never choose
-      // the template, or racing delivery paths pick different copy.
-      const { data: priorSends } = await supabase
-        .from("hot_sheet_sent_listings")
-        .select("listing_id, status_at_send")
-        .eq("hot_sheet_id", hotSheet.id)
-        .eq("listing_id", triggerListingId);
-
-      const priorStatusesByListing = new Map<string, Set<string>>();
-      for (const row of priorSends || []) {
-        const key = String((row as any).listing_id);
-        const set = priorStatusesByListing.get(key) || new Set<string>();
-        set.add(String((row as any).status_at_send || ""));
-        priorStatusesByListing.set(key, set);
-      }
-
+      // Duplicate protection is EVENT-specific (delivery claim key + email
+      // idempotency key both carry the event id). hot_sheet_sent_listings is
+      // never consulted here: a later, genuinely new transition back into a
+      // previously-sent status must remain eligible.
       const newMatchListings: any[] = [];
       const statusChangeListings: any[] = [];
       for (const l of scopedListings) {
-        const prior = priorStatusesByListing.get(String(l.id));
-        // Dedupe only: this hot sheet already received this listing at the
-        // EVENT's status.
-        if (prior?.has(eventStatus)) continue;
         if (isNewMatchEvent) {
           newMatchListings.push(l);
         } else {

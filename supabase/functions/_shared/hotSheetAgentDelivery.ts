@@ -95,6 +95,18 @@ export function subscriberListingIdempotencyKey(
   return `hss:${subscriberId}:hs:${hotSheetId}:listing:${listingId}:${status}`;
 }
 
+/**
+ * Scope a Hot Sheet email idempotency key to one immutable status-change
+ * event. Reprocessing the same event reuses the key (one email maximum); a
+ * later, genuinely new transition into the same status is a different event
+ * and therefore a different key. Historical keys (no suffix) are unaffected.
+ */
+export function eventScopedIdempotencyKey(baseKey: string, eventId: string): string {
+  const ev = String(eventId ?? "").trim();
+  if (!ev) throw new Error("event_id is required for Hot Sheet idempotency keys");
+  return `${baseKey}:ev:${ev}`;
+}
+
 export type DeliveryOutcome = "success" | "failed" | "skipped";
 
 /**
