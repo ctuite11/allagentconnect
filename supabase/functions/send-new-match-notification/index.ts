@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { renderAgentHotSheetListingEmailCard, renderHotSheetMatchListingEmailCard } from "../_shared/listingEmailCard.ts";
 import { enrichListingsWithListingAgentContact } from "../_shared/enrichListingsWithListingAgentContact.ts";
 import { resolveEmailBaseUrl } from "../_shared/aacPublicUrl.ts";
-import { getHotSheetStatusCopy, normalizeStatusKey, type HotSheetStatusKey } from "../_shared/hotSheetStatusCopy.ts";
+import { getHotSheetStatusCopy, type HotSheetStatusKey } from "../_shared/hotSheetStatusCopy.ts";
 import {
   agentIdempotencyKey,
   clientListingIdempotencyKey,
@@ -967,10 +967,17 @@ serve(async (req) => {
       }
     }
 
+    if (supersededMidRun && jobsQueued === 0) {
+      return skipResponse("event_superseded");
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
         listing_id: triggerListingId,
+        event_id: triggerEventId,
+        event_status: eventStatus,
+        ...(supersededMidRun ? { superseded_mid_run: true } : {}),
         hotSheetsProcessed: hotSheets.length,
         totalMatches,
         jobsQueued,
