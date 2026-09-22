@@ -8144,6 +8144,12 @@ export type Database = {
         }
         Returns: boolean
       }
+      hot_sheet_criteria_matches: {
+        Args: { p_hot_sheet_id: string; p_listing_id?: string }
+        Returns: {
+          listing_id: string
+        }[]
+      }
       hot_sheet_has_shared_workspace_recipients: {
         Args: { p_hot_sheet_id: string }
         Returns: boolean
