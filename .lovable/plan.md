@@ -99,6 +99,8 @@ Permanent regression tests only — disposable local Postgres for the trigger ru
 7. Later genuine status transition → correct status-specific template and subject.
 8. Event id whose `listing_id` differs from the requested listing → fail closed, zero jobs.
 9. Grants on `dispatch_hot_sheet_listing(uuid, uuid)`: no PUBLIC/anon/authenticated execute, service_role only.
+10. `pending -> active` → Status Change / "Now On MLS in {name}", never New Match.
+11. `withdrawn -> active` → Status Change / "Now On MLS in {name}", never New Match.
 
 ## Phase 4 — production verification (still paused)
 
