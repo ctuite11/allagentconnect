@@ -1,7 +1,31 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { User } from "@supabase/supabase-js";
-import { AGENT_PROFILE_ONBOARDING_SESSION_KEY } from "@/components/success-hub/AgentProfileOnboardingOverlay";
+import { AGENT_PROFILE_ONBOARDING_SESSION_KEY, type SetupChecklistCompletion } from "@/components/success-hub/AgentProfileOnboardingOverlay";
 import { useAgentSettings } from "@/hooks/useAgentSettings";
+import { supabase } from "@/integrations/supabase/client";
+
+export type { SetupChecklistCompletion };
+
+const EMPTY_COMPLETION: SetupChecklistCompletion = {
+  communications: false,
+  profile: false,
+  hotSheet: false,
+};
+
+async function hasAnyHotSheet(userId: string): Promise<boolean> {
+  const { data, error } = await supabase
+    .from("hot_sheets")
+    .select("id")
+    .eq("user_id", userId)
+    .limit(1);
+
+  if (error) {
+    console.error("Error checking hot sheets for setup checklist:", error);
+    return false;
+  }
+
+  return Boolean(data?.length);
+}
 
 export function useAgentProfileOnboarding(user: User | null) {
   const userId = user?.id ?? null;
@@ -9,29 +33,74 @@ export function useAgentProfileOnboarding(user: User | null) {
     settings,
     loading: settingsLoading,
     dismissWelcomeModal,
+    checkProfileComplete,
   } = useAgentSettings(user);
 
   const [visible, setVisible] = useState(false);
+  const [completion, setCompletion] = useState<SetupChecklistCompletion>(EMPTY_COMPLETION);
   const [sessionDismissed, setSessionDismissed] = useState(
     () => sessionStorage.getItem(AGENT_PROFILE_ONBOARDING_SESSION_KEY) === "1",
   );
+  const evaluationRef = useRef(0);
 
   useEffect(() => {
-    if (!userId || sessionDismissed) {
-      setVisible(false);
-      return;
-    }
+    let cancelled = false;
+    const evaluationId = ++evaluationRef.current;
 
-    if (settingsLoading) {
-      return;
-    }
+    const evaluate = async () => {
+      if (!userId || sessionDismissed) {
+        if (!cancelled) setVisible(false);
+        return;
+      }
 
-    setVisible(!settings?.welcome_modal_dismissed);
+      if (settingsLoading) {
+        return;
+      }
+
+      if (settings?.welcome_modal_dismissed) {
+        if (!cancelled) setVisible(false);
+        return;
+      }
+
+      const [profileDone, hotSheetDone] = await Promise.all([
+        checkProfileComplete(),
+        hasAnyHotSheet(userId),
+      ]);
+      if (cancelled || evaluationId !== evaluationRef.current) return;
+
+      const next: SetupChecklistCompletion = {
+        communications: settings?.preferences_set === true,
+        profile: profileDone,
+        hotSheet: hotSheetDone,
+      };
+      setCompletion(next);
+
+      const allDone = next.communications && next.profile && next.hotSheet;
+      if (allDone) {
+        // Fully set up — permanently suppress so the checklist does not keep
+        // reappearing for members who already finished every step.
+        await dismissWelcomeModal();
+        if (cancelled || evaluationId !== evaluationRef.current) return;
+        setVisible(false);
+        return;
+      }
+
+      setVisible(true);
+    };
+
+    void evaluate();
+
+    return () => {
+      cancelled = true;
+    };
   }, [
     userId,
     sessionDismissed,
     settingsLoading,
     settings?.welcome_modal_dismissed,
+    settings?.preferences_set,
+    checkProfileComplete,
+    dismissWelcomeModal,
   ]);
 
   const dismissForSession = useCallback(() => {
@@ -62,6 +131,7 @@ export function useAgentProfileOnboarding(user: User | null) {
 
   return {
     visible,
+    completion,
     handleLater,
     handleStepNavigate,
   };

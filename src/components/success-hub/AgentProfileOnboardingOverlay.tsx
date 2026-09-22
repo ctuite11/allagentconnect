@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
-import { Flame, Radio, ShieldCheck, UserCircle } from "lucide-react";
+import { Check, Flame, Radio, ShieldCheck, UserCircle } from "lucide-react";
 import AACMonogram from "@/components/ui/AACMonogram";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -9,6 +9,12 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 
 export const AGENT_PROFILE_ONBOARDING_SESSION_KEY = "aac_agent_profile_onboarding_later";
+
+export type SetupChecklistCompletion = {
+  communications: boolean;
+  profile: boolean;
+  hotSheet: boolean;
+};
 
 const AGENT_MONOGRAM_CLASS = "text-[#22C55E]";
 const AGENT_PRIMARY_BTN_CLASS =
@@ -30,7 +36,10 @@ function OnboardingBrand() {
   );
 }
 
+type StepKey = keyof SetupChecklistCompletion;
+
 const steps: {
+  key: StepKey;
   step: number;
   title: string;
   description: string;
@@ -40,6 +49,7 @@ const steps: {
   iconClass: string;
 }[] = [
   {
+    key: "communications",
     step: 1,
     title: "Communications",
     description:
@@ -50,20 +60,22 @@ const steps: {
     iconClass: "text-emerald-600",
   },
   {
+    key: "profile",
     step: 2,
     title: "Complete Your Profile",
     description:
-      "Add your brokerage, photo, service areas, and other details so agents across the network know who you are.",
+      "Make sure your profile is complete so other agents can find you, recognize you, and connect with you.",
     cta: "Complete Profile",
     path: PROFILE_EDITOR_PATH,
     icon: UserCircle,
     iconClass: "text-[#0E56F5]",
   },
   {
+    key: "hotSheet",
     step: 3,
     title: "Create a Hot Sheet",
     description:
-      "Tell us what your buyers are looking for and get matched with Off Market and Coming Soon opportunities as they're added.",
+      "Tell us what your buyers are looking for so you can be matched with Off Market and Coming Soon opportunities.",
     cta: "Create Hot Sheet",
     path: HOT_SHEETS_CREATE_PATH,
     icon: Flame,
@@ -72,11 +84,13 @@ const steps: {
 ];
 
 type AgentProfileOnboardingOverlayProps = {
+  completion: SetupChecklistCompletion;
   onLater: (dontShowAgain: boolean) => void;
   onStepNavigate: (dontShowAgain: boolean) => void;
 };
 
 export function AgentProfileOnboardingOverlay({
+  completion,
   onLater,
   onStepNavigate,
 }: AgentProfileOnboardingOverlayProps) {
@@ -92,6 +106,8 @@ export function AgentProfileOnboardingOverlay({
     onLater(dontShowAgain);
   };
 
+  const doneCount = steps.filter((s) => completion[s.key]).length;
+
   return createPortal(
     <div
       className="fixed inset-0 z-[200] flex items-center justify-center overflow-y-auto bg-black/45 p-4 backdrop-blur-[2px] sm:p-6"
@@ -104,7 +120,9 @@ export function AgentProfileOnboardingOverlay({
           <OnboardingBrand />
           <div className="flex items-center gap-1.5 text-[11px] text-zinc-500">
             <ShieldCheck className="h-3.5 w-3.5" aria-hidden />
-            <span>Setup checklist</span>
+            <span>
+              {doneCount}/3 complete
+            </span>
           </div>
         </div>
 
@@ -114,49 +132,83 @@ export function AgentProfileOnboardingOverlay({
               id="agent-profile-onboarding-title"
               className="text-xl font-semibold leading-snug tracking-tight text-zinc-900 sm:text-[1.35rem]"
             >
-              3 Crucial Steps to Get Started
+              Get the Full All Agent Connect Experience
             </h1>
             <p className="text-[13px] leading-relaxed text-zinc-500 sm:text-sm">
-              Complete these three steps so All Agent Connect can start working for you right away.
+              If you haven&apos;t completed these three steps yet, take a minute to get set up so you
+              don&apos;t miss opportunities across the network.
             </p>
           </div>
 
           <ol className="space-y-3">
-            {steps.map(({ step, title, description, cta, path, icon: Icon, iconClass }) => (
-              <li
-                key={step}
-                className="rounded-xl border border-zinc-100 bg-zinc-50/70 p-3.5 sm:p-4"
-              >
-                <div className="flex gap-3">
-                  <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-zinc-200 bg-white text-[12px] font-semibold text-zinc-700">
-                    {step}
-                  </span>
-                  <div className="min-w-0 flex-1 space-y-3">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <Icon className={cn("h-3.5 w-3.5", iconClass)} aria-hidden />
-                        <h2 className="text-[14px] font-semibold tracking-tight text-zinc-900">
-                          {title}
-                        </h2>
-                      </div>
-                      <p className="text-[12.5px] leading-relaxed text-zinc-500 sm:text-[13px]">
-                        {description}
-                      </p>
-                    </div>
-                    <Button
-                      type="button"
-                      onClick={() => handleStep(path)}
+            {steps.map(({ key, step, title, description, cta, path, icon: Icon, iconClass }) => {
+              const done = completion[key];
+              return (
+                <li
+                  key={key}
+                  className={cn(
+                    "rounded-xl border p-3.5 sm:p-4",
+                    done
+                      ? "border-emerald-100 bg-emerald-50/50"
+                      : "border-zinc-100 bg-zinc-50/70",
+                  )}
+                >
+                  <div className="flex gap-3">
+                    <span
                       className={cn(
-                        "h-9 w-full rounded-xl text-[12.5px] sm:w-auto sm:px-4",
-                        AGENT_PRIMARY_BTN_CLASS,
+                        "mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border text-[12px] font-semibold",
+                        done
+                          ? "border-emerald-200 bg-emerald-100 text-emerald-700"
+                          : "border-zinc-200 bg-white text-zinc-700",
                       )}
+                      aria-hidden
                     >
-                      {cta}
-                    </Button>
+                      {done ? <Check className="h-4 w-4" strokeWidth={2.5} /> : step}
+                    </span>
+                    <div className="min-w-0 flex-1 space-y-3">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <Icon
+                            className={cn("h-3.5 w-3.5", done ? "text-emerald-600" : iconClass)}
+                            aria-hidden
+                          />
+                          <h2 className="text-[14px] font-semibold tracking-tight text-zinc-900">
+                            {title}
+                          </h2>
+                          {done ? (
+                            <span className="text-[11px] font-medium text-emerald-700">Done</span>
+                          ) : null}
+                        </div>
+                        <p className="text-[12.5px] leading-relaxed text-zinc-500 sm:text-[13px]">
+                          {description}
+                        </p>
+                      </div>
+                      {done ? (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => handleStep(path)}
+                          className="h-9 w-full rounded-xl border-zinc-200 bg-white text-[12.5px] text-zinc-600 hover:bg-zinc-50 sm:w-auto sm:px-4"
+                        >
+                          Review
+                        </Button>
+                      ) : (
+                        <Button
+                          type="button"
+                          onClick={() => handleStep(path)}
+                          className={cn(
+                            "h-9 w-full rounded-xl text-[12.5px] sm:w-auto sm:px-4",
+                            AGENT_PRIMARY_BTN_CLASS,
+                          )}
+                        >
+                          {cta}
+                        </Button>
+                      )}
+                    </div>
                   </div>
-                </div>
-              </li>
-            ))}
+                </li>
+              );
+            })}
           </ol>
 
           <div className="space-y-3 border-t border-zinc-100 pt-4">
