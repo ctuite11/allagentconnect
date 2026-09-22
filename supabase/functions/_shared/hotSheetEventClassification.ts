@@ -17,6 +17,7 @@
  *   UPDATE, any other real transition     -> status_change
  *   missing / mismatched event context    -> skip       (fail closed)
  */
+import { normalizeStatusKey, type HotSheetStatusKey } from "./hotSheetStatusCopy.ts";
 export type HotSheetEventClass = "new_match" | "status_change" | "skip";
 
 export interface HotSheetEventContext {
@@ -73,4 +74,57 @@ export function classifyHotSheetEvent(
   }
 
   return { eventClass: "skip", reason: "unknown_trigger_op" };
+}
+
+// ---------------------------------------------------------------------------
+// Event-status authority + superseded-event safety.
+//
+// For a durable Hot Sheet event, the event's `new_status` is the ONLY status
+// the delivery may use: subject/statusKey, delivery-claim status, email
+// idempotency status component, `status_at_send`, and sent-state. The
+// listing's CURRENT status is consulted for exactly one thing — detecting
+// that the event has already been superseded by a later transition
+// (e.g. active -> off_market -> active before the worker ran). A superseded
+// event sends nothing: its email would already be false on arrival.
+// ---------------------------------------------------------------------------
+
+export type HotSheetEventDeliveryPlan =
+  | { action: "skip"; reason: string }
+  | {
+    action: "deliver";
+    eventClass: "new_match" | "status_change";
+    /** Raw event status (event.new_status, trimmed). */
+    status: string;
+    statusKey: HotSheetStatusKey;
+  };
+
+export function isEventSuperseded(
+  eventNewStatus: unknown,
+  currentListingStatus: unknown,
+): boolean {
+  return norm(eventNewStatus) !== norm(currentListingStatus);
+}
+
+export function planHotSheetEventDelivery(
+  event: HotSheetEventContext | null | undefined,
+  requestedListingId: string,
+  currentListingStatus: string | null | undefined,
+): HotSheetEventDeliveryPlan {
+  const classification = classifyHotSheetEvent(event, requestedListingId);
+  if (classification.eventClass === "skip") {
+    return { action: "skip", reason: classification.reason };
+  }
+  if (currentListingStatus == null || norm(currentListingStatus) === "") {
+    return { action: "skip", reason: "listing_missing" };
+  }
+  if (isEventSuperseded(event!.new_status, currentListingStatus)) {
+    return { action: "skip", reason: "event_superseded" };
+  }
+  const status = String(event!.new_status).trim();
+  return {
+    action: "deliver",
+    eventClass: classification.eventClass,
+    status,
+    statusKey: normalizeStatusKey(status),
+  };
 }

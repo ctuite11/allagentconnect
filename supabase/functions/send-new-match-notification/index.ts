@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { renderAgentHotSheetListingEmailCard, renderHotSheetMatchListingEmailCard } from "../_shared/listingEmailCard.ts";
 import { enrichListingsWithListingAgentContact } from "../_shared/enrichListingsWithListingAgentContact.ts";
 import { resolveEmailBaseUrl } from "../_shared/aacPublicUrl.ts";
-import { getHotSheetStatusCopy, normalizeStatusKey, type HotSheetStatusKey } from "../_shared/hotSheetStatusCopy.ts";
+import { getHotSheetStatusCopy, type HotSheetStatusKey } from "../_shared/hotSheetStatusCopy.ts";
 import {
   agentIdempotencyKey,
   clientListingIdempotencyKey,
@@ -17,7 +17,10 @@ import {
   type DeliveryOutcome,
 } from "../_shared/hotSheetAgentDelivery.ts";
 import { assertHotSheetEnqueueAllowed } from "../_shared/emailStreams.ts";
-import { classifyHotSheetEvent } from "../_shared/hotSheetEventClassification.ts";
+import {
+  isEventSuperseded,
+  planHotSheetEventDelivery,
+} from "../_shared/hotSheetEventClassification.ts";
 import { authorizeInternalServiceRole } from "../_shared/internalServiceRoleAuth.ts";
 import {
   countsAsQueued,
@@ -120,24 +123,44 @@ serve(async (req) => {
       eventRow = (data as Record<string, unknown> | null) ?? null;
     }
 
-    const classification = classifyHotSheetEvent(eventRow as any, triggerListingId);
-    if (classification.eventClass === "skip") {
+    // Current listing status is read ONLY to detect a superseded event. It is
+    // never used as the event's status for copy, claims, dedupe or sent-state.
+    const { data: currentListingRow } = await supabase
+      .from("listings")
+      .select("id, status")
+      .eq("id", triggerListingId)
+      .maybeSingle();
+
+    const skipResponse = (reason: string, extra: Record<string, unknown> = {}) => {
       console.log(
-        `[send-new-match-notification] skipped listing ${triggerListingId}: ${classification.reason}`,
+        `[send-new-match-notification] skipped listing ${triggerListingId} event ${triggerEventId ?? "none"}: ${reason}`,
       );
       return new Response(
         JSON.stringify({
           success: true,
           skipped: true,
-          reason: classification.reason,
+          reason,
           listing_id: triggerListingId,
           event_id: triggerEventId,
           jobsQueued: 0,
+          ...extra,
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
+    };
+
+    const plan = planHotSheetEventDelivery(
+      eventRow as any,
+      triggerListingId,
+      (currentListingRow as { status?: string | null } | null)?.status ?? null,
+    );
+    if (plan.action === "skip") {
+      return skipResponse(plan.reason);
     }
-    const isNewMatchEvent = classification.eventClass === "new_match";
+    const isNewMatchEvent = plan.eventClass === "new_match";
+    // AUTHORITATIVE event status for this delivery (event.new_status).
+    const eventStatus: string = plan.status;
+    const eventStatusKey: HotSheetStatusKey = plan.statusKey;
 
     // Active Hot Sheets on the near-real-time path only.
     // Digest schedules must not send through this immediate matcher.
@@ -173,6 +196,7 @@ serve(async (req) => {
 
     let totalMatches = 0;
     let jobsQueued = 0;
+    let supersededMidRun = false;
 
     const appBaseUrl = resolveEmailBaseUrl(
       Deno.env.get("EMAIL_BASE_URL") ||
@@ -205,10 +229,26 @@ serve(async (req) => {
 
       if (!listings?.length) continue;
 
+      // Superseded-event safety, re-checked immediately before this hot
+      // sheet's enqueues: if the listing moved on since the event, stop —
+      // never create a job for a status that is already false.
+      if (
+        listings.some(
+          (row: any) =>
+            String(row.id) === String(triggerListingId) &&
+            isEventSuperseded(eventStatus, row.status),
+        )
+      ) {
+        supersededMidRun = true;
+        break;
+      }
+
       // Hard scope: never process a row that isn't the requested listing.
-      const scopedListings = listings.filter(
-        (l: any) => String(l.id) === String(triggerListingId),
-      );
+      // Bind every row to the EVENT status so no downstream copy, claim,
+      // idempotency key or sent-state can pick up the live listing status.
+      const scopedListings = listings
+        .filter((l: any) => String(l.id) === String(triggerListingId))
+        .map((l: any) => ({ ...l, status: eventStatus }));
       if (!scopedListings.length) continue;
 
       // Deterministic ordering
@@ -235,10 +275,9 @@ serve(async (req) => {
       const statusChangeListings: any[] = [];
       for (const l of scopedListings) {
         const prior = priorStatusesByListing.get(String(l.id));
-        const currentStatus = String(l.status || "active");
-        // Dedupe only: this hot sheet already received this listing at this
-        // exact status.
-        if (prior?.has(currentStatus)) continue;
+        // Dedupe only: this hot sheet already received this listing at the
+        // EVENT's status.
+        if (prior?.has(eventStatus)) continue;
         if (isNewMatchEvent) {
           newMatchListings.push(l);
         } else {
@@ -263,10 +302,10 @@ serve(async (req) => {
           .join("");
       };
 
-      // Group status-change listings by normalized current status for copy lookup.
+      // Status-change copy comes from the EVENT status (event.new_status).
       const statusGroups = new Map<HotSheetStatusKey, any[]>();
       for (const l of statusChangeListings) {
-        const key = normalizeStatusKey(l.status);
+        const key = eventStatusKey;
         const bucket = statusGroups.get(key) || [];
         bucket.push(l);
         statusGroups.set(key, bucket);
@@ -284,7 +323,7 @@ serve(async (req) => {
       const clientPerListing = new Map<string, DeliveryOutcome[]>();
       const subscriberPerListing = new Map<string, DeliveryOutcome[]>();
 
-      const listingKey = (l: any) => `${l.id}::${String(l.status || "active")}`;
+      const listingKey = (l: any) => `${l.id}::${eventStatus}`;
       const allCandidateListings = [...newMatchListings, ...statusChangeListings];
       for (const l of allCandidateListings) {
         const key = listingKey(l);
@@ -353,7 +392,7 @@ serve(async (req) => {
           );
         } else if (agentEmail) {
           for (const listing of eligibleNew) {
-            const status = String(listing.status || "active");
+            const status = eventStatus;
             const idempotencyKey = agentIdempotencyKey(hotSheet.id, listing.id, status);
             const html = await renderAgentCards([listing]);
             const outcome = await enqueueHotSheetDelivery(supabase, {
@@ -405,7 +444,7 @@ serve(async (req) => {
 
           for (const { statusKey, listing } of eligibleStatus) {
             const copy = getHotSheetStatusCopy(statusKey);
-            const status = String(listing.status || "active");
+            const status = eventStatus;
             const idempotencyKey = agentIdempotencyKey(hotSheet.id, listing.id, status);
             const html = await renderAgentCards([listing]);
             const outcome = await enqueueHotSheetDelivery(supabase, {
@@ -604,7 +643,7 @@ serve(async (req) => {
           // Per-listing delivery so shrinking retry batches cannot create a new
           // batch key and resend a previously delivered listing.
           for (const listing of filterInitial(newMatchListings)) {
-            const status = String(listing.status || "active");
+            const status = eventStatus;
             const dedupeKey = clientListingIdempotencyKey(
               recipientKey,
               hotSheet.id,
@@ -661,7 +700,7 @@ serve(async (req) => {
           for (const [statusKey, groupListings] of statusGroups) {
             const copy = getHotSheetStatusCopy(statusKey);
             for (const listing of filterInitial(groupListings)) {
-              const status = String(listing.status || "active");
+              const status = eventStatus;
               const dedupeKey = clientListingIdempotencyKey(
                 recipientKey,
                 hotSheet.id,
@@ -749,7 +788,7 @@ serve(async (req) => {
           const subId = String(sub.id);
 
           for (const listing of newMatchListings) {
-            const status = String(listing.status || "active");
+            const status = eventStatus;
             const dedupeKey = subscriberListingIdempotencyKey(
               subId,
               hotSheet.id,
@@ -807,7 +846,7 @@ serve(async (req) => {
           for (const [statusKey, groupListings] of statusGroups) {
             const copy = getHotSheetStatusCopy(statusKey);
             for (const listing of groupListings) {
-              const status = String(listing.status || "active");
+              const status = eventStatus;
               const dedupeKey = subscriberListingIdempotencyKey(
                 subId,
                 hotSheet.id,
@@ -904,7 +943,7 @@ serve(async (req) => {
         sentRecords.push({
           hot_sheet_id: hotSheet.id,
           listing_id: String(l.id),
-          status_at_send: String(l.status || "active"),
+          status_at_send: eventStatus,
         });
       }
 
@@ -928,10 +967,17 @@ serve(async (req) => {
       }
     }
 
+    if (supersededMidRun && jobsQueued === 0) {
+      return skipResponse("event_superseded");
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
         listing_id: triggerListingId,
+        event_id: triggerEventId,
+        event_status: eventStatus,
+        ...(supersededMidRun ? { superseded_mid_run: true } : {}),
         hotSheetsProcessed: hotSheets.length,
         totalMatches,
         jobsQueued,
