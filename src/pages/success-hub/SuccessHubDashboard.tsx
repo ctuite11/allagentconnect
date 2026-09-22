@@ -172,8 +172,12 @@ class SuccessHubErrorBoundary extends React.Component<
 function SuccessHubDashboardBody() {
   const navigate = useNavigate();
   const { user } = useAuthRole();
-  const { visible: showProfileOnboarding, handleLater, handleCompleteProfile } =
-    useAgentProfileOnboarding(user);
+  const {
+    visible: showProfileOnboarding,
+    completion: setupCompletion,
+    handleLater,
+    handleStepNavigate,
+  } = useAgentProfileOnboarding(user);
   const {
     summary,
     loading,
@@ -199,8 +203,9 @@ function SuccessHubDashboardBody() {
     <>
       {showProfileOnboarding ? (
         <AgentProfileOnboardingOverlay
+          completion={setupCompletion}
           onLater={handleLater}
-          onCompleteProfile={handleCompleteProfile}
+          onStepNavigate={handleStepNavigate}
         />
       ) : null}
       <AgentAacPage className="space-y-8 pb-10">
