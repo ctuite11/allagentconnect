@@ -228,10 +228,26 @@ serve(async (req) => {
 
       if (!listings?.length) continue;
 
+      // Superseded-event safety, re-checked immediately before this hot
+      // sheet's enqueues: if the listing moved on since the event, stop —
+      // never create a job for a status that is already false.
+      if (
+        listings.some(
+          (row: any) =>
+            String(row.id) === String(triggerListingId) &&
+            isEventSuperseded(eventStatus, row.status),
+        )
+      ) {
+        supersededMidRun = true;
+        break;
+      }
+
       // Hard scope: never process a row that isn't the requested listing.
-      const scopedListings = listings.filter(
-        (l: any) => String(l.id) === String(triggerListingId),
-      );
+      // Bind every row to the EVENT status so no downstream copy, claim,
+      // idempotency key or sent-state can pick up the live listing status.
+      const scopedListings = listings
+        .filter((l: any) => String(l.id) === String(triggerListingId))
+        .map((l: any) => ({ ...l, status: eventStatus }));
       if (!scopedListings.length) continue;
 
       // Deterministic ordering
@@ -258,10 +274,9 @@ serve(async (req) => {
       const statusChangeListings: any[] = [];
       for (const l of scopedListings) {
         const prior = priorStatusesByListing.get(String(l.id));
-        const currentStatus = String(l.status || "active");
-        // Dedupe only: this hot sheet already received this listing at this
-        // exact status.
-        if (prior?.has(currentStatus)) continue;
+        // Dedupe only: this hot sheet already received this listing at the
+        // EVENT's status.
+        if (prior?.has(eventStatus)) continue;
         if (isNewMatchEvent) {
           newMatchListings.push(l);
         } else {
