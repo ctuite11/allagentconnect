@@ -123,11 +123,13 @@ BEGIN
     'claim must be recorded as paused_held';
   ASSERT (SELECT count(*) FROM public.email_jobs) = 0, 'paused delivery must create no email job';
 
-  -- duplicate while paused: no second claim, still no job
+  -- same EVENT reprocessed while paused: no second claim, still no job.
+  -- (Dedupe is event-specific: a different, genuinely new event into the same
+  -- status is allowed — covered in 09_hot_sheet_event_dedupe.sql.)
   v_res := public.enqueue_hot_sheet_delivery(
-    v_event2, v_listing, 'coming_soon', v_hs, 'agent', 'agent@example.com',
+    v_event, v_listing, 'coming_soon', v_hs, 'agent', 'agent@example.com',
     '{}'::jsonb, 'hs-agent:dup', true, 'hot_sheet_emails_paused');
-  ASSERT v_res->>'result' = 'duplicate', 'second event for the same logical delivery must be a duplicate';
+  ASSERT v_res->>'result' = 'duplicate', 'reprocessing the same event must be a duplicate';
   ASSERT (SELECT count(*) FROM public.hot_sheet_delivery_claims) = 1, 'only one logical claim may exist';
   ASSERT (SELECT count(*) FROM public.email_jobs) = 0, 'duplicate must create no email job';
 
@@ -146,9 +148,9 @@ BEGIN
                       WHERE state='enqueued' AND email_job_id IS NULL),
     'no enqueued claim may exist without a job';
 
-  -- duplicate invocation of the same logical delivery: no second job
+  -- duplicate invocation of the same event delivery: no second job
   v_res := public.enqueue_hot_sheet_delivery(
-    v_event, v_listing, 'active', v_hs, 'agent', 'AGENT@example.com',
+    v_event2, v_listing, 'active', v_hs, 'agent', 'AGENT@example.com',
     '{}'::jsonb, 'hs-agent:active:2', false, NULL);
   ASSERT v_res->>'result' = 'duplicate', 'repeat delivery must be a duplicate';
   ASSERT (SELECT count(*) FROM public.email_jobs) = 1, 'duplicate must not create a second job';
