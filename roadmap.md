@@ -89,3 +89,7 @@
 - [ ] Live end-to-end test with a real eligible agent/test account
 - [ ] Publish frontend (awaiting approval)
 - Legacy redeem-activation-token + /api/activate-redeem left intact as rollback infrastructure
+
+## Hot Sheet regression fix (paused)
+- [x] Event status authority + superseded-event skip in matcher (deployed, zero sends)
+- [ ] Reopen Hot Sheets (canary/unpause) — blocked on explicit user approval
