@@ -7,6 +7,7 @@ import { getHotSheetStatusCopy, type HotSheetStatusKey } from "../_shared/hotShe
 import {
   agentIdempotencyKey,
   clientListingIdempotencyKey,
+  eventScopedIdempotencyKey,
   filterMatchesToRequestedListing,
   hasClientsPendingAcceptance,
   isAgentEligibleForListing,
@@ -161,6 +162,13 @@ serve(async (req) => {
     // AUTHORITATIVE event status for this delivery (event.new_status).
     const eventStatus: string = plan.status;
     const eventStatusKey: HotSheetStatusKey = plan.statusKey;
+    // Immutable status-change event identity: the dedupe identity for every
+    // claim and email idempotency key. Reprocessing this event is a no-op; a
+    // later, genuinely new transition into the same status is a new event.
+    const deliveryEventId: string = String(triggerEventId ?? "").trim();
+    if (!deliveryEventId) {
+      return skipResponse("missing_event_context");
+    }
 
     // Active Hot Sheets on the near-real-time path only.
     // Digest schedules must not send through this immediate matcher.
@@ -205,9 +213,14 @@ serve(async (req) => {
     );
 
     for (const hotSheet of hotSheets) {
-      // Check for new matches (uses hot_sheet_sent_listings for match/event state)
+      // Criteria only (service-role-only internal helper, same criteria as
+      // check_hot_sheet_matches minus its status-keyed sent-state filter),
+      // scoped to the event's listing.
       const { data: rpcMatches, error: matchError } = await supabase
-        .rpc("check_hot_sheet_matches", { p_hot_sheet_id: hotSheet.id });
+        .rpc("hot_sheet_criteria_matches", {
+          p_hot_sheet_id: hotSheet.id,
+          p_listing_id: triggerListingId,
+        });
 
       if (matchError) continue;
 
@@ -255,29 +268,13 @@ serve(async (req) => {
       scopedListings.sort((a: any, b: any) => String(a.id).localeCompare(String(b.id)));
 
       // Event context (loaded above) decides New Match vs Status Change.
-      // hot_sheet_sent_listings is dedupe state ONLY — it must never choose
-      // the template, or racing delivery paths pick different copy.
-      const { data: priorSends } = await supabase
-        .from("hot_sheet_sent_listings")
-        .select("listing_id, status_at_send")
-        .eq("hot_sheet_id", hotSheet.id)
-        .eq("listing_id", triggerListingId);
-
-      const priorStatusesByListing = new Map<string, Set<string>>();
-      for (const row of priorSends || []) {
-        const key = String((row as any).listing_id);
-        const set = priorStatusesByListing.get(key) || new Set<string>();
-        set.add(String((row as any).status_at_send || ""));
-        priorStatusesByListing.set(key, set);
-      }
-
+      // Duplicate protection is EVENT-specific (delivery claim key + email
+      // idempotency key both carry the event id). hot_sheet_sent_listings is
+      // never consulted here: a later, genuinely new transition back into a
+      // previously-sent status must remain eligible.
       const newMatchListings: any[] = [];
       const statusChangeListings: any[] = [];
       for (const l of scopedListings) {
-        const prior = priorStatusesByListing.get(String(l.id));
-        // Dedupe only: this hot sheet already received this listing at the
-        // EVENT's status.
-        if (prior?.has(eventStatus)) continue;
         if (isNewMatchEvent) {
           newMatchListings.push(l);
         } else {
@@ -393,10 +390,13 @@ serve(async (req) => {
         } else if (agentEmail) {
           for (const listing of eligibleNew) {
             const status = eventStatus;
-            const idempotencyKey = agentIdempotencyKey(hotSheet.id, listing.id, status);
+            const idempotencyKey = eventScopedIdempotencyKey(
+              agentIdempotencyKey(hotSheet.id, listing.id, status),
+              deliveryEventId,
+            );
             const html = await renderAgentCards([listing]);
             const outcome = await enqueueHotSheetDelivery(supabase, {
-              eventId: triggerEventId,
+              eventId: deliveryEventId,
               listingId: listing.id,
               status,
               hotSheetId: hotSheet.id,
@@ -445,10 +445,13 @@ serve(async (req) => {
           for (const { statusKey, listing } of eligibleStatus) {
             const copy = getHotSheetStatusCopy(statusKey);
             const status = eventStatus;
-            const idempotencyKey = agentIdempotencyKey(hotSheet.id, listing.id, status);
+            const idempotencyKey = eventScopedIdempotencyKey(
+              agentIdempotencyKey(hotSheet.id, listing.id, status),
+              deliveryEventId,
+            );
             const html = await renderAgentCards([listing]);
             const outcome = await enqueueHotSheetDelivery(supabase, {
-              eventId: triggerEventId,
+              eventId: deliveryEventId,
               listingId: listing.id,
               status,
               hotSheetId: hotSheet.id,
@@ -644,15 +647,14 @@ serve(async (req) => {
           // batch key and resend a previously delivered listing.
           for (const listing of filterInitial(newMatchListings)) {
             const status = eventStatus;
-            const dedupeKey = clientListingIdempotencyKey(
+            const dedupeKey = eventScopedIdempotencyKey(clientListingIdempotencyKey(
               recipientKey,
               hotSheet.id,
-              listing.id,
-              status,
-            );
+              listing.id, status,
+            ), deliveryEventId);
             const html = renderBuyerCards([listing]);
             const outcome = await enqueueHotSheetDelivery(supabase, {
-              eventId: triggerEventId,
+              eventId: deliveryEventId,
               listingId: listing.id,
               status,
               hotSheetId: hotSheet.id,
@@ -701,15 +703,14 @@ serve(async (req) => {
             const copy = getHotSheetStatusCopy(statusKey);
             for (const listing of filterInitial(groupListings)) {
               const status = eventStatus;
-              const dedupeKey = clientListingIdempotencyKey(
+              const dedupeKey = eventScopedIdempotencyKey(clientListingIdempotencyKey(
                 recipientKey,
                 hotSheet.id,
-                listing.id,
-                status,
-              );
+                listing.id, status,
+              ), deliveryEventId);
               const html = renderBuyerCards([listing]);
               const outcome = await enqueueHotSheetDelivery(supabase, {
-                eventId: triggerEventId,
+                eventId: deliveryEventId,
                 listingId: listing.id,
                 status,
                 hotSheetId: hotSheet.id,
@@ -789,15 +790,14 @@ serve(async (req) => {
 
           for (const listing of newMatchListings) {
             const status = eventStatus;
-            const dedupeKey = subscriberListingIdempotencyKey(
+            const dedupeKey = eventScopedIdempotencyKey(subscriberListingIdempotencyKey(
               subId,
               hotSheet.id,
-              listing.id,
-              status,
-            );
+              listing.id, status,
+            ), deliveryEventId);
             const html = renderBuyerCards([listing]);
             const outcome = await enqueueHotSheetDelivery(supabase, {
-              eventId: triggerEventId,
+              eventId: deliveryEventId,
               listingId: listing.id,
               status,
               hotSheetId: hotSheet.id,
@@ -847,15 +847,14 @@ serve(async (req) => {
             const copy = getHotSheetStatusCopy(statusKey);
             for (const listing of groupListings) {
               const status = eventStatus;
-              const dedupeKey = subscriberListingIdempotencyKey(
+              const dedupeKey = eventScopedIdempotencyKey(subscriberListingIdempotencyKey(
                 subId,
                 hotSheet.id,
-                listing.id,
-                status,
-              );
+                listing.id, status,
+              ), deliveryEventId);
               const html = renderBuyerCards([listing]);
               const outcome = await enqueueHotSheetDelivery(supabase, {
-                eventId: triggerEventId,
+                eventId: deliveryEventId,
                 listingId: listing.id,
                 status,
                 hotSheetId: hotSheet.id,

@@ -27,11 +27,15 @@ createdb -h "$SOCK" -U postgres hstest
 psql -v ON_ERROR_STOP=1 -q -f supabase/tests/db/00_fixture.sql
 psql -v ON_ERROR_STOP=1 -q -f supabase/tests/db/02_outbox_fixture.sql
 for m in "${MIGRATIONS[@]}"; do psql -v ON_ERROR_STOP=1 -q -f "$m"; done
+# Event-specific delivery dedupe (single transaction, as in production).
+DEDUPE_MIGRATION="${HS_EVENT_DEDUPE_MIGRATION:-drizzle/migrations/0016_hot_sheet_event_specific_delivery_dedupe.sql}"
+psql -v ON_ERROR_STOP=1 -q -1 -f "$DEDUPE_MIGRATION"
+psql -v ON_ERROR_STOP=1 -q -c "GRANT SELECT ON ALL TABLES IN SCHEMA public TO service_role, authenticated;"
 
 echo "--- transactional behaviour suite (rolled back) ---"
 psql -v ON_ERROR_STOP=1 -f supabase/tests/db/03_hot_sheet_outbox_behavior.sql
 
-echo "--- two-session concurrency (duplicate events, same logical delivery) ---"
+echo "--- two-session concurrency (same event processed twice concurrently) ---"
 psql -v ON_ERROR_STOP=1 -q -f supabase/tests/db/04_concurrency_setup.sql
 
 DELIVERY="SELECT public.enqueue_hot_sheet_delivery(
@@ -43,7 +47,7 @@ DELIVERY="SELECT public.enqueue_hot_sheet_delivery(
 ( printf "BEGIN; %s; SELECT pg_sleep(3); COMMIT;" "$(printf "$DELIVERY" 33333333-3333-3333-3333-333333333333 key-a)" \
     | psql -v ON_ERROR_STOP=1 -t -A > "$PGDIR/a.out" 2>&1 ) &
 sleep 1
-printf "BEGIN; %s; COMMIT;" "$(printf "$DELIVERY" 44444444-4444-4444-4444-444444444444 key-b)" \
+printf "BEGIN; %s; COMMIT;" "$(printf "$DELIVERY" 33333333-3333-3333-3333-333333333333 key-b)" \
   | psql -v ON_ERROR_STOP=1 -t -A > "$PGDIR/b.out" 2>&1
 wait
 
@@ -53,5 +57,8 @@ grep -q 'paused_held' "$PGDIR/a.out" || { echo "FAIL: session A did not win the 
 grep -q 'duplicate'   "$PGDIR/b.out" || { echo "FAIL: session B was not arbitrated as duplicate"; cat "$PGDIR/b.out"; exit 1; }
 
 psql -v ON_ERROR_STOP=1 -f supabase/tests/db/05_concurrency_assert.sql
+
+echo "--- event-specific dedupe + helper lockdown (rolled back) ---"
+psql -v ON_ERROR_STOP=1 -f supabase/tests/db/09_hot_sheet_event_dedupe.sql
 
 echo "--- disposable cluster destroyed; nothing persisted ---"

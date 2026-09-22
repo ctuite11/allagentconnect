@@ -167,7 +167,7 @@ Deno.test("Hot Sheet producers enforce service-role auth before work", async () 
   // Unauthorized path must not reach matching / enqueue symbols before the gate
   // (gate is first executable auth call after OPTIONS).
   const matcherAuth = matcher.indexOf("authorizeInternalServiceRole(req)");
-  const matcherRpc = matcher.indexOf("check_hot_sheet_matches");
+  const matcherRpc = matcher.indexOf('.rpc("hot_sheet_criteria_matches"');
   // Enqueues now go through the atomic delivery-claim helper rather than a
   // direct email_jobs insert; the auth-before-work guarantee is unchanged.
   const matcherJobs = matcher.indexOf("enqueueHotSheetDelivery(supabase");
