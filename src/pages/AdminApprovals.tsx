@@ -441,6 +441,15 @@ export default function AdminApprovals() {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [licenseUploadAgentIds, setLicenseUploadAgentIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
+  // Roster load failure state. "full" = nothing usable to show (render the
+  // error card instead of "No agents found"); "refresh" = a background
+  // refresh failed while a cached roster stays visible. null = healthy.
+  const [rosterLoadError, setRosterLoadError] = useState<"full" | "refresh" | null>(null);
+  // Mirror of roster size readable inside async fetch handlers.
+  const agentsLengthRef = useRef(0);
+  useEffect(() => {
+    agentsLengthRef.current = agents.length;
+  }, [agents]);
   const [sendingSetupLinkFor, setSendingSetupLinkFor] = useState<Set<string>>(new Set());
   const [isSendingCommsPreview, setIsSendingCommsPreview] = useState(false);
   const [isSendingForwardInvite, setIsSendingForwardInvite] = useState(false);
@@ -684,7 +693,7 @@ export default function AdminApprovals() {
   // instead of firing a second (5–11s) admin-list-agents request.
   const fetchAgentsInFlight = useRef<Promise<void> | null>(null);
 
-  const runFetchAgents = async (opts?: { background?: boolean }) => {
+  const runFetchAgents = async (opts?: { background?: boolean; retried?: boolean }): Promise<void> => {
     if (!opts?.background) setLoading(true);
 
     try {
@@ -692,11 +701,26 @@ export default function AdminApprovals() {
       const { data, error } = await supabase.functions.invoke('admin-list-agents');
 
       if (error) {
-        console.error("[AdminApprovals] Edge function error:", error);
-        toast.error("Failed to load agents - please refresh");
+        // A genuine 401/403 means the session/permission problem is real —
+        // never retried. Anything else (network failure, 5xx, the backend's
+        // transient 503) is safe to retry exactly once.
+        const status = (error as { context?: { status?: number } } | null)?.context?.status;
+        const permanent = status === 401 || status === 403;
+        console.error("[AdminApprovals] Edge function error:", error, { status });
+        if (!permanent && !opts?.retried) {
+          console.log("[AdminApprovals] transient failure — retrying roster load once");
+          return runFetchAgents({ ...opts, retried: true });
+        }
+        if (opts?.background || agentsLengthRef.current > 0) {
+          // Keep the cached roster on screen; flag a refresh-only problem.
+          setRosterLoadError("refresh");
+        } else {
+          setRosterLoadError("full");
+        }
         setLoading(false);
         return;
       }
+      setRosterLoadError(null);
 
       const {
         agents: agentList,
@@ -782,8 +806,16 @@ export default function AdminApprovals() {
       void fetchEmailSummary(enriched);
 
     } catch (error) {
-      console.error("Unexpected error:", error);
-      toast.error("Failed to load agents");
+      // Network-level failure of the invoke itself — transient, retry once.
+      console.error("[AdminApprovals] roster invoke exception:", error);
+      if (!opts?.retried) {
+        return runFetchAgents({ ...opts, retried: true });
+      }
+      if (opts?.background || agentsLengthRef.current > 0) {
+        setRosterLoadError("refresh");
+      } else {
+        setRosterLoadError("full");
+      }
     } finally {
       setLoading(false);
     }
@@ -846,7 +878,7 @@ export default function AdminApprovals() {
   };
 
 
-  const fetchAgents = (opts?: { background?: boolean; force?: boolean }): Promise<void> => {
+  const fetchAgents = (opts?: { background?: boolean; force?: boolean; retried?: boolean }): Promise<void> => {
     if (!isAdmin) return Promise.resolve();
     // `force` skips joining an in-flight request: after a delete, the running
     // request may have read the list before the rows were removed.
@@ -2193,15 +2225,37 @@ export default function AdminApprovals() {
           </div>
         )}
 
+        {rosterLoadError === "refresh" && (
+          <div className="mb-6 flex items-center justify-between gap-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3">
+            <p className="text-sm font-medium text-rose-700">
+              Couldn’t refresh the member list. Showing the last loaded data.
+            </p>
+            <Button variant="outline" size="sm" onClick={() => void fetchAgents({ background: true, force: true })}>
+              Retry
+            </Button>
+          </div>
+        )}
+
         {/* Agent Cards */}
         {loading ? (
           <AacMonogramLoader variant="section" message="Loading agents…" className="py-12 sm:py-14" />
-        ) : agents.length === 0 ? (
+        ) : rosterLoadError === "full" && agents.length === 0 ? (
+          <div className="rounded-3xl border border-gray-200 bg-white p-12 shadow-[0_10px_30px_rgba(0,0,0,0.08)] text-center">
+            <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <p className="font-medium text-foreground">We couldn’t load the member list</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              The member list could not be loaded. Your data has not been changed.
+            </p>
+            <Button variant="outline" size="sm" className="mt-4" onClick={() => void fetchAgents({ force: true })}>
+              Retry
+            </Button>
+          </div>
+        ) : agents.length === 0 && !rosterLoadError ? (
           <div className="rounded-3xl border border-gray-200 bg-white p-12 shadow-[0_10px_30px_rgba(0,0,0,0.08)] text-center">
             <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <p className="text-muted-foreground">No agents found</p>
           </div>
-        ) : filteredAgents.length === 0 ? (
+        ) : filteredAgents.length === 0 && agents.length > 0 ? (
           <div className="rounded-3xl border border-gray-200 bg-white p-12 shadow-[0_10px_30px_rgba(0,0,0,0.08)] text-center">
             <Search className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <p className="text-muted-foreground">No agents match this search or status filter</p>
