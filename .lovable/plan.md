@@ -80,14 +80,18 @@ Permanent regression tests only — disposable local Postgres for the trigger ru
 5. Same event through both paths → same event id, same classification, exactly one logical delivery.
 6. Synthetic `UPDATE, old_status = new_status` → skipped, zero jobs.
 7. Later genuine status transition → correct status-specific template and subject.
+8. Event id whose `listing_id` differs from the requested listing → fail closed, zero jobs.
+9. Grants on `dispatch_hot_sheet_listing(uuid, uuid)`: no PUBLIC/anon/authenticated execute, service_role only.
 
 ## Phase 4 — production verification (still paused)
 
-Read-only only: live trigger and function definitions correct; two-argument dispatcher present; trigger passes `v_event_id`; matcher requires event context; no new Hot Sheet `email_jobs`; no historical events altered or jobs released; no provider send. No real listing altered.
+Read-only only: live trigger and function definitions correct; two-argument dispatcher present and locked down; trigger passes `v_event_id`; matcher requires matching event context; no new Hot Sheet `email_jobs`; no historical events altered or jobs released; no provider send. No real listing altered.
 
-Final report: pause confirmed, before/after snapshots, exact migration and functions deployed, test results, Hot Sheet emails sent during the whole operation (must be 0), and confirmation `HOT_SHEET_EMAILS_PAUSED` is still true.
+Final report: pause confirmed, zero-send baseline timestamp, before/after snapshots, exact migration and functions deployed, test results, and confirmation `HOT_SHEET_EMAILS_PAUSED` is still true.
 
-Hot Sheets stay paused. No canary, no unpause.
+**Hot Sheet provider sends attributable to this maintenance window: 0.** Anything other than zero means stop and investigate before Hot Sheets reopen.
+
+Operating rule: pause → stabilize → snapshot → implement → deploy while paused → verify zero sends → leave paused → stop. No canary, no unpause.
 
 ## Unchanged throughout
 
