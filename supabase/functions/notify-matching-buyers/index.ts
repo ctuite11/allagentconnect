@@ -83,7 +83,7 @@ const handler = async (req: Request): Promise<Response> => {
       invokeMatcher: (listingId) =>
         supabase.functions.invoke("send-new-match-notification", {
           headers: serviceRoleInvokeHeaders(SUPABASE_SERVICE_ROLE_KEY),
-          body: { trigger: "listing", listing_id: listingId },
+          body: { trigger: "listing", listing_id: listingId, event_id: eventId },
         }),
     });
 
