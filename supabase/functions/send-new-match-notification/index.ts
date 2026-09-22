@@ -17,7 +17,10 @@ import {
   type DeliveryOutcome,
 } from "../_shared/hotSheetAgentDelivery.ts";
 import { assertHotSheetEnqueueAllowed } from "../_shared/emailStreams.ts";
-import { classifyHotSheetEvent } from "../_shared/hotSheetEventClassification.ts";
+import {
+  isEventSuperseded,
+  planHotSheetEventDelivery,
+} from "../_shared/hotSheetEventClassification.ts";
 import { authorizeInternalServiceRole } from "../_shared/internalServiceRoleAuth.ts";
 import {
   countsAsQueued,
@@ -120,24 +123,44 @@ serve(async (req) => {
       eventRow = (data as Record<string, unknown> | null) ?? null;
     }
 
-    const classification = classifyHotSheetEvent(eventRow as any, triggerListingId);
-    if (classification.eventClass === "skip") {
+    // Current listing status is read ONLY to detect a superseded event. It is
+    // never used as the event's status for copy, claims, dedupe or sent-state.
+    const { data: currentListingRow } = await supabase
+      .from("listings")
+      .select("id, status")
+      .eq("id", triggerListingId)
+      .maybeSingle();
+
+    const skipResponse = (reason: string, extra: Record<string, unknown> = {}) => {
       console.log(
-        `[send-new-match-notification] skipped listing ${triggerListingId}: ${classification.reason}`,
+        `[send-new-match-notification] skipped listing ${triggerListingId} event ${triggerEventId ?? "none"}: ${reason}`,
       );
       return new Response(
         JSON.stringify({
           success: true,
           skipped: true,
-          reason: classification.reason,
+          reason,
           listing_id: triggerListingId,
           event_id: triggerEventId,
           jobsQueued: 0,
+          ...extra,
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
+    };
+
+    const plan = planHotSheetEventDelivery(
+      eventRow as any,
+      triggerListingId,
+      (currentListingRow as { status?: string | null } | null)?.status ?? null,
+    );
+    if (plan.action === "skip") {
+      return skipResponse(plan.reason);
     }
-    const isNewMatchEvent = classification.eventClass === "new_match";
+    const isNewMatchEvent = plan.eventClass === "new_match";
+    // AUTHORITATIVE event status for this delivery (event.new_status).
+    const eventStatus: string = plan.status;
+    const eventStatusKey: HotSheetStatusKey = plan.statusKey;
 
     // Active Hot Sheets on the near-real-time path only.
     // Digest schedules must not send through this immediate matcher.
