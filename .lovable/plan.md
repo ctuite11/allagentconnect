@@ -53,13 +53,30 @@ No table, RLS, index or lifecycle change; the only grant change is the lockdown 
 **Classification, entirely from the event row:**
 
 ```text
-INSERT, dispatchable status                 -> New Match
-UPDATE, old_status not dispatchable (draft) -> New Match
+INSERT, deliverable status                  -> New Match
+UPDATE, old_status = 'draft'                -> New Match
 UPDATE, old_status = new_status             -> NO EMAIL (fail closed)
-UPDATE, both dispatchable, statuses differ  -> Status Change, subject from hotSheetStatusCopy
+UPDATE, any other real status transition    -> Status Change, subject from hotSheetStatusCopy
 ```
 
-`draft` is not a dispatchable status, so a draft INSERT creates no event and the first move out of draft is the New Match. `hotSheetStatusCopy.ts` unchanged.
+Only `draft` counts as initial publication. `pending -> active`, `withdrawn -> active` and every other real transition are Status Change, never New Match. A draft INSERT creates no event at all. `hotSheetStatusCopy.ts` unchanged.
+
+### Audit: dispatchable list vs real statuses (read-only, reporting only)
+
+Valid `listings.status` values (check constraint): `draft, coming_soon, active, pending, under_contract, sold, cancelled, withdrawn, temporarily_withdrawn, off_market, expired, back_on_market`.
+
+Live `v_dispatchable` in the trigger: `active, price_changed, back_on_market, off_market, extended, reactivated, contingent, under_agreement, sold, rented, temporarily_withdrawn, expired, canceled, cancelled, coming_soon`.
+
+Mismatches found:
+
+- **Valid statuses missing from the dispatchable list:** `pending`, `under_contract`, `withdrawn` — all three are reachable, and `hotSheetStatusCopy` already has dedicated subjects for Pending and Withdrawn ("Now Pending in {name}", "Withdrawn in {name}"). A listing moving into any of them currently produces no Hot Sheet event at all. This looks like an oversight rather than a deliberate exclusion, but **this plan does not change the set** — reported for your decision.
+- **Entries in the list that are not valid statuses:** `price_changed, extended, reactivated, contingent, under_agreement, rented, canceled` — dead entries the check constraint can never produce. Harmless; also left alone.
+
+Current inventory by status: draft 41, active 25, coming_soon 19, off_market 14, expired 9, temporarily_withdrawn 1, cancelled 1. No listing is currently in pending/under_contract/withdrawn.
+
+Changing which statuses generate Hot Sheet events is a separate, approval-gated change.
+
+
 
 ## Phase 2 — deploy order (consumers before producers)
 
@@ -82,6 +99,8 @@ Permanent regression tests only — disposable local Postgres for the trigger ru
 7. Later genuine status transition → correct status-specific template and subject.
 8. Event id whose `listing_id` differs from the requested listing → fail closed, zero jobs.
 9. Grants on `dispatch_hot_sheet_listing(uuid, uuid)`: no PUBLIC/anon/authenticated execute, service_role only.
+10. `pending -> active` → Status Change / "Now On MLS in {name}", never New Match.
+11. `withdrawn -> active` → Status Change / "Now On MLS in {name}", never New Match.
 
 ## Phase 4 — production verification (still paused)
 
