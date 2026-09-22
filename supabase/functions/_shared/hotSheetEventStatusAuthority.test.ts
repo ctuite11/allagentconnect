@@ -110,4 +110,6 @@ Deno.test("matcher source never derives delivery status from the live listing ro
   assert(planIdx > 0 && enqueueIdx > planIdx, "plan must run before any enqueue");
   assert(src.includes('isEventSuperseded(eventStatus, row.status)'), "per-hot-sheet supersede re-check missing");
   assert(src.includes("status: eventStatus"), "rows must be bound to the event status");
+  // Event-specific dedupe: every email idempotency key carries ":ev:{event_id}".
+  assert(src.includes("eventScopedIdempotencyKey("), "idempotency keys must be event-scoped (:ev:)");
 });
