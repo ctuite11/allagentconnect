@@ -9,12 +9,8 @@ import { toast } from "sonner";
 import {
   Check,
   Loader2,
-  LayoutDashboard,
-  Share2,
   ShieldAlert,
   ShieldCheck,
-  UserCircle,
-  Users,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { validatePassword } from "@/lib/passwordPolicy";
@@ -36,7 +32,7 @@ import { consumePostAuthRedirect, setPostAuthRedirect } from "@/lib/sharedListin
  * Nothing is redeemed on load. The page makes one POST-only, read-only
  * preview call (which a non-JS mail scanner never performs and which mutates
  * nothing) to prefill the agent's known details, then waits for the single
- * explicit "Activate My Account" submission. Only that submission sets the
+ * explicit "Activate Account" submission. Only that submission sets the
  * password, stamps activation and consumes the token.
  */
 
@@ -117,13 +113,6 @@ const AGENT_BADGE_CLASS =
   "inline-flex items-center gap-1.5 rounded-full bg-[#16A34A]/10 text-[#16A34A] px-3 py-1 text-[12px] font-medium";
 const AGENT_PRIMARY_BTN_CLASS = "bg-[#16A34A] hover:bg-[#15803D] text-white font-medium";
 const AGENT_ACCENT_CLASS = "text-[#16A34A]";
-
-const benefits: { icon: typeof LayoutDashboard; label: string; iconClass: string }[] = [
-  { icon: LayoutDashboard, label: "Access your Success Hub", iconClass: "text-[#0E56F5]" },
-  { icon: Share2, label: "Share listings and Hot Sheets", iconClass: "text-emerald-600" },
-  { icon: Users, label: "Connect with verified agents", iconClass: "text-violet-600" },
-  { icon: UserCircle, label: "Manage your profile and buyer activity", iconClass: "text-amber-600" },
-];
 
 function AgentSetupBrand() {
   return (
@@ -371,7 +360,7 @@ export default function ActivateAccount() {
   return (
     <div className="min-h-screen bg-white">
       <Helmet>
-        <title>Set your password | All Agent Connect</title>
+        <title>Activate your account | All Agent Connect</title>
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
 
@@ -385,37 +374,24 @@ export default function ActivateAccount() {
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-6 py-12 lg:py-20">
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-start">
-          <div className="space-y-8 lg:pt-4">
-            <div className="space-y-4">
-              <span className={AGENT_BADGE_CLASS}>
-                <ShieldCheck className="w-3.5 h-3.5" />
-                License verified
-              </span>
-              <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight text-zinc-900 leading-[1.15]">
-                Welcome to All Agent Connect
+      <main className="mx-auto w-full max-w-md px-4 py-7 sm:px-6 sm:py-10">
+        <div className="space-y-5">
+          <div className="space-y-3">
+            <span className={AGENT_BADGE_CLASS}>
+              <ShieldCheck className="w-3.5 h-3.5" />
+              License verified
+            </span>
+            <div className="space-y-2">
+              <h1 className="text-3xl font-semibold tracking-tight text-zinc-900 leading-[1.15]">
+                Activate Your Account
               </h1>
-              <p className="text-[15px] sm:text-base text-zinc-500 leading-relaxed max-w-md">
-                Your license has been verified. Create your password to activate your agent account
-                and access your Success Hub.
+              <p className="text-[15px] leading-relaxed text-zinc-500">
+                Complete the information below to activate your All Agent Connect account.
               </p>
             </div>
-
-            <ul className="space-y-3">
-              {benefits.map(({ icon: Icon, label, iconClass }) => (
-                <li key={label} className="flex items-center gap-3 text-[14px] text-zinc-700">
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-50 border border-zinc-100">
-                    <Icon className={`w-4 h-4 ${iconClass}`} />
-                  </span>
-                  {label}
-                </li>
-              ))}
-            </ul>
           </div>
 
-          <div className="lg:pl-4 lg:-mt-7">
-            <div className="max-w-md mx-auto lg:mx-0 lg:ml-auto rounded-3xl border border-zinc-200 bg-white shadow-sm p-7 sm:p-8">
+          <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm sm:p-7">
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
@@ -545,7 +521,7 @@ export default function ActivateAccount() {
                       Activating…
                     </>
                   ) : (
-                    "Activate My Account"
+                    "Activate Account"
                   )}
                 </Button>
 
@@ -561,7 +537,6 @@ export default function ActivateAccount() {
                   .
                 </p>
               </form>
-            </div>
           </div>
         </div>
       </main>
