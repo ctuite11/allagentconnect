@@ -1,10 +1,10 @@
-# Hot Sheet email rule — regression audit and correction plan (revised)
+# Hot Sheet email rule — regression correction (audit + implementation plan)
 
-Audit only so far. Nothing changed, deployed, or sent.
+Audit complete. Nothing changed, deployed, or sent yet.
 
-## 1. Live definitions
+## Audit findings
 
-**Trigger:**
+**Live trigger:**
 
 ```sql
 CREATE TRIGGER notify_matching_buyers_trigger
@@ -15,83 +15,71 @@ ON public.listings FOR EACH ROW
 EXECUTE FUNCTION notify_matching_buyers_on_new_listing();
 ```
 
-**Function:** on UPDATE it treats any of those 16 columns changing as relevant, writes a `hot_sheet_listing_events` row (`trigger_op`, `old_status`, `new_status`, `dedupe_key`), logs a stage breadcrumb, then calls `dispatch_hot_sheet_listing(NEW.id)` — which posts only `{listing_id}`, dropping `v_event_id`. Confirms both the over-broad dispatch and the lost event context.
+**Live function:** on UPDATE, any of those 16 columns changing counts as relevant; it writes a `hot_sheet_listing_events` row (`trigger_op`, `old_status`, `new_status`, `dedupe_key`), logs a stage breadcrumb, then calls `dispatch_hot_sheet_listing(NEW.id)` — which posts only `{listing_id}`, discarding `v_event_id`.
 
-## 2. Both paths active
+**Both delivery paths are live:** the pg_net kick (→ `notify-matching-buyers` → matcher, no event id) and the durable outbox (cron job 11, every minute → matcher with `event_id`). The matcher classifies solely from `hot_sheet_sent_listings`, so the legacy path can win the delivery claim with the wrong template.
 
-- **Legacy pg_net:** trigger → `dispatch_hot_sheet_listing` → `notify-matching-buyers` → `send-new-match-notification` (no `event_id`).
-- **Durable outbox:** cron job 11 (active, every minute) → `claim_hot_sheet_events` → same matcher with `event_id`.
+**Historical events (read-only):** all 67 `hot_sheet_listing_events` rows are `processed`; none pending, claimed, failed or held. 10 processed rows are `UPDATE` with `old_status = new_status`. Nothing will be deleted or modified.
 
-Both terminate in the same matcher, so the race described is real: the legacy path can classify first from `hot_sheet_sent_listings` and win the delivery claim with the wrong template.
+**50 Proctor Avenue:** its only recent event is `UPDATE, off_market -> off_market` (22 Sep 02:29). Under the correction that edit creates no event and no email.
 
-## 3. Classification bug
+## Phase 0 — freeze Hot Sheets first
 
-`send-new-match-notification` (lines ~181–209) classifies solely from `hot_sheet_sent_listings`. `trigger_op` / `old_status` / `new_status` are never read.
+Set only `HOT_SHEET_EMAILS_PAUSED=true` (not the global email pause), confirm the live runtime honours it, wait one queue-worker cycle, then take a read-only snapshot of: Hot Sheet `email_jobs` in any nonterminal state; `hot_sheet_listing_events` counts by state; any in-progress delivery claim. If anything is in flight, stop and report. The three existing protections (`assertHotSheetEnqueueAllowed`, worker claiming zero while paused, `preSendBlockReason`) stay untouched.
 
-## 4. Corrections to make
+## Phase 1 — implementation (pause stays on)
 
-**Database (one additive migration):**
+**Database migration:**
+- New overload `dispatch_hot_sheet_listing(p_listing_id uuid, p_event_id uuid)` with **no default**; the existing one-argument function is left in place untouched for compatibility and is not used by the new trigger path.
+- `notify_matching_buyers_on_new_listing()` — UPDATE proceeds only when `OLD.status IS DISTINCT FROM NEW.status`; all non-status columns removed from the relevance test; legacy kick becomes `dispatch_hot_sheet_listing(NEW.id, v_event_id)`.
+- Trigger recreated as `AFTER INSERT OR UPDATE OF status`.
 
-- `notify_matching_buyers_on_new_listing()`
-  - UPDATE proceeds only when `OLD.status IS DISTINCT FROM NEW.status`; all non-status columns removed from the relevance test.
-  - Legacy kick now carries the event: `dispatch_hot_sheet_listing(NEW.id, v_event_id)`.
-- `dispatch_hot_sheet_listing(p_listing_id uuid, p_event_id uuid DEFAULT NULL)` — adds `event_id` to the pg_net body. Existing single-argument calls keep working.
-- `notify_matching_buyers_trigger` recreated as `AFTER INSERT OR UPDATE OF status`.
-
-No table, RLS, grant, index, or lifecycle change.
+No table, RLS, grant, index or lifecycle change.
 
 **Edge functions:**
+- `send-new-match-notification` — event id is authoritative: load that exact event row and classify from it. A trigger-driven request with no valid event id is skipped (zero email jobs); no "most recent event" lookup, no `hot_sheet_sent_listings` fallback for event type.
+- `notify-matching-buyers` — accepts and forwards `event_id` verbatim.
+- `process-hot-sheet-events` — unchanged; it already sends the exact `event_id`.
 
-- `notify-matching-buyers` — accepts and forwards `event_id` to the matcher.
-- `process-hot-sheet-events` — unchanged contract; already sends `event_id`.
-- `send-new-match-notification` — loads the event row by `event_id` and classifies from it. No `hot_sheet_sent_listings` fallback for event type. A trigger-driven request with no valid event context is skipped (fail closed) and left to the durable outbox.
-
-**Classification rule (from the event record):**
-
-```text
-trigger_op = INSERT, new_status dispatchable            -> New Match
-trigger_op = UPDATE, old_status not dispatchable        -> New Match   (draft -> coming_soon/active/off_market)
-trigger_op = UPDATE, old_status = new_status            -> NO EMAIL (fail closed)
-trigger_op = UPDATE, both dispatchable, statuses differ -> Status Change, subject from hotSheetStatusCopy(new_status)
-```
-
-`draft` is not in the dispatchable status list, so a draft INSERT creates no event at all, and the first publication out of draft is correctly the New Match.
-
-`hotSheetStatusCopy.ts` unchanged.
-
-## 5. Event type to subject line
+**Classification, entirely from the event row:**
 
 ```text
-listings trigger (TG_OP, OLD.status, NEW.status)
-  -> hot_sheet_listing_events row (trigger_op, old_status, new_status)
-  -> event_id carried on BOTH paths (pg_net body + outbox worker body)
-  -> matcher loads that one event row and classifies from it
-  -> template new-match-notification | hot-sheet-status-change
-  -> subject from getHotSheetStatusCopy(new_status)
+INSERT, dispatchable status                 -> New Match
+UPDATE, old_status not dispatchable (draft) -> New Match
+UPDATE, old_status = new_status             -> NO EMAIL (fail closed)
+UPDATE, both dispatchable, statuses differ  -> Status Change, subject from hotSheetStatusCopy
 ```
 
-Because both paths reference the same event row, they cannot disagree, and the first one through the delivery claim already holds the correct template.
+`draft` is not a dispatchable status, so a draft INSERT creates no event and the first move out of draft is the New Match. `hotSheetStatusCopy.ts` unchanged.
 
-## 6. 50 Proctor Avenue
+## Phase 2 — deploy order (consumers before producers)
 
-Its only recent event is `UPDATE, off_market -> off_market` (22 Sep 02:29). Under the corrected trigger that edit creates no event, no pg_net kick and no email. A later `off_market -> active` would produce one event and "Now On MLS in {name}".
+1. `send-new-match-notification`
+2. `notify-matching-buyers`
+3. the migration
 
-## 7. Historical event audit (read-only, done)
+No other functions deployed.
 
-All 67 `hot_sheet_listing_events` rows are in state `processed`. There are **no pending, failed, claimed or held events**. 10 of the processed rows are `UPDATE` with `old_status = new_status` (the regression's fingerprint). Nothing needs releasing or repairing, and no historical row will be deleted or modified. The fail-closed same-status rule still ships so any such row that were ever retried produces no email.
+## Phase 3 — tests (no live delivery)
 
-## Unchanged
+Permanent regression tests only — disposable local Postgres for the trigger rules (extending `supabase/tests/db/` + `scripts/run-hot-sheet-db-tests.sh`) and Deno tests with mocked calls for classification. No production listing touched, no provider call, no queue release, no event replay.
 
-`hot_sheet_sent_listings`, `hot_sheet_delivery_claims`, email job idempotency, recipient eligibility, matching criteria, active-hot-sheet requirement, pause controls, outbox lease/retry.
+1. Off-market listing, beds-only edit → zero events, zero jobs.
+2. Active listing, price-only edit → zero events, zero jobs.
+3. `active -> off_market`, sheet never received it → status-change event, `hot-sheet-status-change`, "Off Market update in {name}", never New Match.
+4. Draft INSERT → zero events; `draft -> coming_soon` → one event, New Match.
+5. Same event through both paths → same event id, same classification, exactly one logical delivery.
+6. Synthetic `UPDATE, old_status = new_status` → skipped, zero jobs.
+7. Later genuine status transition → correct status-specific template and subject.
 
-## Verification (local disposable Postgres + function tests, rollback only, no sends)
+## Phase 4 — production verification (still paused)
 
-1. Off-market listing, beds-only edit → zero new events.
-2. Active listing, price-only edit → zero new events.
-3. `active -> off_market`, sheet never received it → one event, status-change, "Off Market update in {name}", never "New matches".
-4. `draft` INSERT → no event; then `draft -> coming_soon` → one event classified New Match.
-5. Same event via both paths → one logical delivery, identical template and subject.
-6. Synthetic `UPDATE, old_status = new_status` event → skipped, zero email jobs.
-7. Genuine later status change after an initial delivery → correct status-specific subject.
+Read-only only: live trigger and function definitions correct; two-argument dispatcher present; trigger passes `v_event_id`; matcher requires event context; no new Hot Sheet `email_jobs`; no historical events altered or jobs released; no provider send. No real listing altered.
 
-Stop before any production deployment or Hot Sheet send.
+Final report: pause confirmed, before/after snapshots, exact migration and functions deployed, test results, Hot Sheet emails sent during the whole operation (must be 0), and confirmation `HOT_SHEET_EMAILS_PAUSED` is still true.
+
+Hot Sheets stay paused. No canary, no unpause.
+
+## Unchanged throughout
+
+`hot_sheet_sent_listings`, `hot_sheet_delivery_claims`, email job idempotency, recipient eligibility, matching criteria, active-hot-sheet requirement, pause controls, outbox lease/retry behaviour.
