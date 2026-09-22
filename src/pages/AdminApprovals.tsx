@@ -714,9 +714,11 @@ export default function AdminApprovals() {
         }
         if (permanent) {
           // Real auth/authorization failure — do not leave a cached member
-          // roster on screen under a "couldn't refresh" warning.
+          // roster on screen or in the 5-minute cache under a "couldn't
+          // refresh" warning: fail fully closed.
           setAgents([]);
           agentsLengthRef.current = 0;
+          clearAdminAgentsCache(user?.id);
           setRosterLoadError("full");
         } else if (opts?.background || agentsLengthRef.current > 0) {
           // Transient refresh failure — keep the cached roster on screen.
