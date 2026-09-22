@@ -441,6 +441,15 @@ export default function AdminApprovals() {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [licenseUploadAgentIds, setLicenseUploadAgentIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
+  // Roster load failure state. "full" = nothing usable to show (render the
+  // error card instead of "No agents found"); "refresh" = a background
+  // refresh failed while a cached roster stays visible. null = healthy.
+  const [rosterLoadError, setRosterLoadError] = useState<"full" | "refresh" | null>(null);
+  // Mirror of roster size readable inside async fetch handlers.
+  const agentsLengthRef = useRef(0);
+  useEffect(() => {
+    agentsLengthRef.current = agents.length;
+  }, [agents]);
   const [sendingSetupLinkFor, setSendingSetupLinkFor] = useState<Set<string>>(new Set());
   const [isSendingCommsPreview, setIsSendingCommsPreview] = useState(false);
   const [isSendingForwardInvite, setIsSendingForwardInvite] = useState(false);
