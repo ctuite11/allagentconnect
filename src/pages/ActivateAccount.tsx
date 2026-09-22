@@ -51,6 +51,7 @@ type ActivationState =
   | "invalid"
   | "resent"
   | "resend_unavailable"
+  | "rate_limited"
   | "error";
 
 const COPY: Record<
@@ -96,6 +97,11 @@ const COPY: Record<
     title: "We couldn't send a new link",
     body: "This request has expired. Open your original account setup email and try the link again.",
     tone: "warn",
+  },
+  rate_limited: {
+    title: "Too many attempts",
+    body: "We've had a lot of attempts on this page in a short time. Please wait a few minutes and open your activation link again.",
+    tone: "info",
   },
   error: {
     title: "Something went wrong",

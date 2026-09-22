@@ -52,9 +52,23 @@ export function jsonResponse(
   };
 }
 
+/** First public client IP Netlify saw, for per-IP throttling only. */
+export function clientIpFromEvent(event: Parameters<Handler>[0]): string {
+  const h = event.headers || {};
+  const raw =
+    h["x-nf-client-connection-ip"] ||
+    h["X-Nf-Client-Connection-Ip"] ||
+    h["x-forwarded-for"] ||
+    h["X-Forwarded-For"] ||
+    "";
+  const first = String(raw).split(",")[0]?.trim() ?? "";
+  return first.length > 0 && first.length <= 64 ? first : "";
+}
+
 export async function callActivationFunction(
   fnName: string,
   payload: unknown,
+  extraHeaders: Record<string, string> = {},
 ): Promise<Record<string, unknown> | null> {
   const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
   const ANON =
@@ -69,6 +83,7 @@ export async function callActivationFunction(
         "Content-Type": "application/json",
         Authorization: `Bearer ${ANON}`,
         apikey: ANON,
+        ...extraHeaders,
       },
       body: JSON.stringify(payload),
     });
@@ -99,10 +114,20 @@ const handler: Handler = async (event) => {
   }
   if (!token) return jsonResponse(400, { status: "invalid" });
 
-  const payload = await callActivationFunction("activation-preview", { token });
+  const clientIp = clientIpFromEvent(event);
+  const payload = await callActivationFunction(
+    "activation-preview",
+    { token },
+    clientIp ? { "x-aac-client-ip": clientIp } : {},
+  );
   if (!payload) return jsonResponse(500, { status: "error" }, clearResendCookieHeader());
 
   const { resendHandle, ...safe } = payload as { resendHandle?: string | null };
+
+  // Generic throttle passthrough — reveals nothing about the token.
+  if (safe.status === "rate_limited") {
+    return jsonResponse(429, { status: "rate_limited" });
+  }
   return jsonResponse(
     200,
     safe as Record<string, unknown>,
