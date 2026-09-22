@@ -146,19 +146,30 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Create client with user's token to verify their identity
+    // Create client with user's token for the role RPC below
     const userClient = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader } }
     })
 
-    const { data: { user }, error: userError } = await userClient.auth.getUser()
-    if (userError || !user) {
-      console.error('[admin-list-agents] Auth error:', userError?.message)
+    // Identity check with a real timeout + brief retry. A transient Auth
+    // stall (522/timeout/5xx) previously surfaced as 401 "invalid session"
+    // after a ~20s hang, which the page then rendered as "No agents found".
+    // Genuine invalid/expired sessions still return 401 without retry;
+    // transient failures return 503 so the client knows it is safe to retry.
+    const caller = await lookupCaller(supabaseUrl, supabaseAnonKey, authHeader)
+    if (caller.kind === 'invalid') {
       return new Response(
         JSON.stringify({ error: 'Unauthorized - invalid session' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
+    if (caller.kind === 'transient') {
+      return new Response(
+        JSON.stringify({ error: 'Authentication service temporarily unavailable - please retry' }),
+        { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+    const user = caller.user
 
     console.log('[admin-list-agents] Caller:', user.email)
 
