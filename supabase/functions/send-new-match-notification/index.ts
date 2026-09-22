@@ -104,6 +104,41 @@ serve(async (req) => {
       `[send-new-match-notification] near-realtime trigger for listing ${triggerListingId}`,
     );
 
+    // ---------------------------------------------------------------------
+    // Event context is authoritative for classification (New Match vs Status
+    // Change). Both delivery paths (legacy pg_net kick and durable outbox)
+    // carry the SAME event id, so neither can race the other into the wrong
+    // template. No event context => fail closed, zero jobs.
+    // ---------------------------------------------------------------------
+    let eventRow: Record<string, unknown> | null = null;
+    if (triggerEventId) {
+      const { data } = await supabase
+        .from("hot_sheet_listing_events")
+        .select("id, listing_id, trigger_op, old_status, new_status")
+        .eq("id", triggerEventId)
+        .maybeSingle();
+      eventRow = (data as Record<string, unknown> | null) ?? null;
+    }
+
+    const classification = classifyHotSheetEvent(eventRow as any, triggerListingId);
+    if (classification.eventClass === "skip") {
+      console.log(
+        `[send-new-match-notification] skipped listing ${triggerListingId}: ${classification.reason}`,
+      );
+      return new Response(
+        JSON.stringify({
+          success: true,
+          skipped: true,
+          reason: classification.reason,
+          listing_id: triggerListingId,
+          event_id: triggerEventId,
+          jobsQueued: 0,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+    const isNewMatchEvent = classification.eventClass === "new_match";
+
     // Active Hot Sheets on the near-real-time path only.
     // Digest schedules must not send through this immediate matcher.
     // NOTE: There is currently no separate Hot Sheet daily/weekly digest worker
