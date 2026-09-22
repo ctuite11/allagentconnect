@@ -155,8 +155,7 @@ Deno.test("matcher uses event-scoped keys everywhere and never gates on sent-sta
     new URL("../send-new-match-notification/index.ts", import.meta.url),
   );
   // Every key builder call is wrapped with the event scope.
-  const builders = [...src.matchAll(/(agentIdempotencyKey|clientListingIdempotencyKey|subscriberListingIdempotencyKey)\(/g)]
-    .filter((m) => !/^\s*(agentIdempotencyKey|clientListingIdempotencyKey|subscriberListingIdempotencyKey),/.test(src.slice(m.index!)));
+  const builders = [...src.matchAll(/(agentIdempotencyKey|clientListingIdempotencyKey|subscriberListingIdempotencyKey)\(/g)];
   const wrapped = [...src.matchAll(/eventScopedIdempotencyKey\(\s*(agentIdempotencyKey|clientListingIdempotencyKey|subscriberListingIdempotencyKey)\(/g)];
   assertEquals(builders.length, 6, "expected 6 delivery key sites");
   assertEquals(wrapped.length, builders.length, "every idempotency key must be event-scoped");
