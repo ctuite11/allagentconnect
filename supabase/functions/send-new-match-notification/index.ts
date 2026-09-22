@@ -17,6 +17,7 @@ import {
   type DeliveryOutcome,
 } from "../_shared/hotSheetAgentDelivery.ts";
 import { assertHotSheetEnqueueAllowed } from "../_shared/emailStreams.ts";
+import { classifyHotSheetEvent } from "../_shared/hotSheetEventClassification.ts";
 import { authorizeInternalServiceRole } from "../_shared/internalServiceRoleAuth.ts";
 import {
   countsAsQueued,
