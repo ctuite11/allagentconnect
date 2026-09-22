@@ -53,8 +53,17 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const listing: Listing = await req.json();
-    console.log("[notify-matching-buyers] Processing listing:", listing.listing_id);
+    const listing: Listing & { event_id?: string | null } = await req.json();
+    // The originating Hot Sheet event id must survive this hop verbatim: the
+    // matcher classifies New Match vs Status Change from the event row alone.
+    const rawEventId = typeof listing.event_id === "string" ? listing.event_id.trim() : "";
+    const eventId = rawEventId.length > 0 ? rawEventId : null;
+    console.log(
+      "[notify-matching-buyers] Processing listing:",
+      listing.listing_id,
+      "event:",
+      eventId ?? "none",
+    );
 
     const pauseGate = assertHotSheetEnqueueAllowed();
     if (pauseGate.paused) {
@@ -74,7 +83,7 @@ const handler = async (req: Request): Promise<Response> => {
       invokeMatcher: (listingId) =>
         supabase.functions.invoke("send-new-match-notification", {
           headers: serviceRoleInvokeHeaders(SUPABASE_SERVICE_ROLE_KEY),
-          body: { trigger: "listing", listing_id: listingId },
+          body: { trigger: "listing", listing_id: listingId, event_id: eventId },
         }),
     });
 

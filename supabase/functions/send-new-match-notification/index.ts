@@ -17,6 +17,7 @@ import {
   type DeliveryOutcome,
 } from "../_shared/hotSheetAgentDelivery.ts";
 import { assertHotSheetEnqueueAllowed } from "../_shared/emailStreams.ts";
+import { classifyHotSheetEvent } from "../_shared/hotSheetEventClassification.ts";
 import { authorizeInternalServiceRole } from "../_shared/internalServiceRoleAuth.ts";
 import {
   countsAsQueued,
@@ -103,6 +104,41 @@ serve(async (req) => {
       `[send-new-match-notification] near-realtime trigger for listing ${triggerListingId}`,
     );
 
+    // ---------------------------------------------------------------------
+    // Event context is authoritative for classification (New Match vs Status
+    // Change). Both delivery paths (legacy pg_net kick and durable outbox)
+    // carry the SAME event id, so neither can race the other into the wrong
+    // template. No event context => fail closed, zero jobs.
+    // ---------------------------------------------------------------------
+    let eventRow: Record<string, unknown> | null = null;
+    if (triggerEventId) {
+      const { data } = await supabase
+        .from("hot_sheet_listing_events")
+        .select("id, listing_id, trigger_op, old_status, new_status")
+        .eq("id", triggerEventId)
+        .maybeSingle();
+      eventRow = (data as Record<string, unknown> | null) ?? null;
+    }
+
+    const classification = classifyHotSheetEvent(eventRow as any, triggerListingId);
+    if (classification.eventClass === "skip") {
+      console.log(
+        `[send-new-match-notification] skipped listing ${triggerListingId}: ${classification.reason}`,
+      );
+      return new Response(
+        JSON.stringify({
+          success: true,
+          skipped: true,
+          reason: classification.reason,
+          listing_id: triggerListingId,
+          event_id: triggerEventId,
+          jobsQueued: 0,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+    const isNewMatchEvent = classification.eventClass === "new_match";
+
     // Active Hot Sheets on the near-real-time path only.
     // Digest schedules must not send through this immediate matcher.
     // NOTE: There is currently no separate Hot Sheet daily/weekly digest worker
@@ -178,7 +214,9 @@ serve(async (req) => {
       // Deterministic ordering
       scopedListings.sort((a: any, b: any) => String(a.id).localeCompare(String(b.id)));
 
-      // Classify each listing as new-match vs status-change based on ALL prior sends
+      // Event context (loaded above) decides New Match vs Status Change.
+      // hot_sheet_sent_listings is dedupe state ONLY — it must never choose
+      // the template, or racing delivery paths pick different copy.
       const { data: priorSends } = await supabase
         .from("hot_sheet_sent_listings")
         .select("listing_id, status_at_send")
@@ -198,11 +236,11 @@ serve(async (req) => {
       for (const l of scopedListings) {
         const prior = priorStatusesByListing.get(String(l.id));
         const currentStatus = String(l.status || "active");
-        if (!prior || prior.size === 0) {
+        // Dedupe only: this hot sheet already received this listing at this
+        // exact status.
+        if (prior?.has(currentStatus)) continue;
+        if (isNewMatchEvent) {
           newMatchListings.push(l);
-        } else if (prior.has(currentStatus)) {
-          // Already recorded at this exact status — skip
-          continue;
         } else {
           statusChangeListings.push(l);
         }
