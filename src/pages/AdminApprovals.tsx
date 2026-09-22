@@ -806,8 +806,16 @@ export default function AdminApprovals() {
       void fetchEmailSummary(enriched);
 
     } catch (error) {
-      console.error("Unexpected error:", error);
-      toast.error("Failed to load agents");
+      // Network-level failure of the invoke itself — transient, retry once.
+      console.error("[AdminApprovals] roster invoke exception:", error);
+      if (!opts?.retried) {
+        return runFetchAgents({ ...opts, retried: true });
+      }
+      if (opts?.background || agentsLengthRef.current > 0) {
+        setRosterLoadError("refresh");
+      } else {
+        setRosterLoadError("full");
+      }
     } finally {
       setLoading(false);
     }
