@@ -1,53 +1,36 @@
-# Hot Sheet: event-specific duplicate protection (Hot Sheets stay paused)
+# Success Hub Listing Activity: Off Market and Coming Soon only
 
-## Goal
-- Running the same status-change event twice can never produce a second email.
-- A later, genuinely new move back into the same status (active → off_market → active → off_market) can send again.
-- The event's `new_status` stays the only source for subject, status and delivery records. Superseded events still skip with zero jobs.
+## What changes
 
-## Why the match-email function alone isn't enough
-Four separate checks block a repeat today, and two of them live in the database:
+The Listing Activity section on the Success Hub dashboard will show only listings with a status of **Off Market** or **Coming Soon**.
 
-| Where | Current key | Blocks a genuine repeat? |
-|---|---|---|
-| Delivery claim (database unique key) | listing + status + Hot Sheet + audience + recipient | Yes, permanently |
-| Matching function's "already sent" filter (database) | Hot Sheet + listing + current status | Yes |
-| Prior-sent check in the match-email function | Hot Sheet + listing + status | Yes |
-| Email job idempotency key | Hot Sheet + listing + status (+ recipient) | Yes |
+- **Order:** newest first, by the date the listing was added to AAC. Edits, price changes, and status changes do not move a listing to the front.
+- **Price changes:** if an Off Market or Coming Soon listing in the feed changes price, its card shows the new price right away. Its place in the list stays the same.
+- **Status changes:** when a listing goes Active, Pending, Sold, Withdrawn, Cancelled, or anything other than Off Market or Coming Soon, it leaves Listing Activity. It stays in listing search and on its detail page.
+- **New listings:** a new Off Market or Coming Soon listing, or a draft published as one, appears in its place by date added.
+- The Sale/Rental toggle, Share selected, the 4-card layout, and listings already hidden from this feed (such as 31 Pacella Drive) work the same as before.
 
-Every status-change event already has an immutable id (one row per real transition, stored on every claim, `NOT NULL`). That id becomes the dedupe identity. No timestamps are involved.
+## What stays untouched
 
-## Changes
+- Listing search, listing detail pages, My Listings, Hot Sheets, and all emails.
+- No listing data, statuses, or database changes.
+- No design changes to the section or its cards.
 
-**1. Database migration (needs your approval on the card)**
-- Delivery claims: the unique key becomes **event + Hot Sheet + audience + recipient**. Checked live: all 96 existing claims already fit the new key (0 conflicts). `enqueue_hot_sheet_delivery` switches its conflict target to match. Everything else stays the same: pause handling, return values, email job insert.
-- Matching: the criteria logic moves, unchanged, into an internal function (service role only) that returns criteria matches without the sent-state filter. `check_hot_sheet_matches(hot_sheet_id)` becomes a thin wrapper that adds back the exact same "already sent at current status" filter, so the app, digests and dashboards get identical results. A new service-role-only helper answers "does listing L match Hot Sheet H?" for the event path. No criteria, status list or audience rule changes.
-- Not touched: the listing trigger, the outbox table, the worker, the sent-listings table structure, grants on existing public functions.
+## Current effect (from live data)
 
-**2. Match-email function and helper**
-- Calls the new per-listing criteria helper instead of the sent-state-filtered list.
-- Removes the Hot Sheet + listing + status "prior sent" skip. Dedupe is now per event, through the claim.
-- Idempotency keys for agent, client and subscriber get `:ev:{event_id}` added. Historical keys aren't affected.
-- The sent-listings upsert stays as it is (it refreshes `sent_at` for that status). It no longer gates anything on this path.
-- The race fix is kept as is: event status everywhere, supersede check before the plan and again before each Hot Sheet.
+The feed currently pulls in 19 Active sale listings and 6 Active rentals. It also includes one Temporarily Withdrawn and one Cancelled listing. All of these drop out. There are 14 Off Market and 19 Coming Soon sale listings, minus the ones already hidden. No Off Market or Coming Soon rentals exist today, so the Rental view will show its empty message until one is added.
 
-## Tests (local and throwaway database only, mocked transport)
-- Same event processed twice → exactly one email job and claim; the second run returns `duplicate`.
-- active → off_market → one Off Market alert.
-- off_market → active → one "Now On MLS" alert.
-- A later active → off_market as a new event → a second Off Market alert is allowed (new claim, new job).
-- A superseded old event → zero jobs, `event_superseded`.
-- Parity: the `check_hot_sheet_matches` wrapper returns identical rows before and after on the existing matcher fixtures.
-- Existing suites keep passing: status-only trigger, outbox, matcher behavior, concurrency, and all Deno tests (static guards updated to require `:ev:` in keys and to forbid the status-only prior-sent skip).
+## Verification
 
-## Deployment order (Hot Sheets paused the whole time)
-1. Confirm `HOT_SHEET_EMAILS_PAUSED=true` and take a zero-send snapshot.
-2. Apply the migration. It's additive for callers: the old function signature and RPC signature are unchanged.
-3. Deploy only `send-new-match-notification`.
-4. Read-only checks: still paused, worker claiming nothing, Hot Sheet queue at zero, no new claims, no Hot Sheet provider sends. Report the count.
-5. Stop. No test send, no unpause.
+- Open the Success Hub and confirm only Off Market and Coming Soon cards appear, newest-added first.
+- Confirm an Active listing (e.g. 242 Lexington Road) no longer appears in Listing Activity but still shows in listing search.
 
 ## Technical notes
-- New claim index: `UNIQUE (event_id, hot_sheet_id, audience, recipient_key)`. The old `hot_sheet_delivery_claims_logical_key` is dropped in the same transaction, after the new index exists.
-- Internal criteria function: `SECURITY DEFINER`, `REVOKE` from public/anon/authenticated, `GRANT EXECUTE` to service_role. The wrapper keeps its current owner and grants.
-- Migration file follows the `YYYYMMDDHHMM_description.sql` convention and is mirrored into the repo for drift protection.
+
+File: `src/components/success-hub/MarketActivityRow.tsx` only.
+
+- Initial query: replace `.not("status","in","(draft,expired)")` with `.in("status", ["off_market","coming_soon"])`, and order by `created_at` desc instead of `updated_at`. Keep `hidden_from_market_activity = false`.
+- Client sort in `visibleListings` and in the realtime upsert: sort by `created_at` desc.
+- Realtime INSERT: accept only `off_market` / `coming_soon` rows.
+- Realtime UPDATE: if the new status is not `off_market` / `coming_soon`, or the hidden flag is on, remove the row from the pool. Otherwise, on a status/price/type change, re-fetch and upsert in place, ordered by `created_at`.
+- Add a small shared constant `MARKET_ACTIVITY_STATUSES = ["off_market","coming_soon"]` in the file, used by all three paths.
