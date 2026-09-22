@@ -25,19 +25,28 @@ EXECUTE FUNCTION notify_matching_buyers_on_new_listing();
 
 ## Phase 0 — freeze Hot Sheets first
 
-Set only `HOT_SHEET_EMAILS_PAUSED=true` (not the global email pause), confirm the live runtime honours it, wait one queue-worker cycle, then take a read-only snapshot of: Hot Sheet `email_jobs` in any nonterminal state; `hot_sheet_listing_events` counts by state; any in-progress delivery claim. If anything is in flight, stop and report. The three existing protections (`assertHotSheetEnqueueAllowed`, worker claiming zero while paused, `preSendBlockReason`) stay untouched.
+Set only `HOT_SHEET_EMAILS_PAUSED=true` (not the global email pause) and confirm the live runtime honours it. Then **wait two full queue-worker cycles** so any invocation already running when the pause flipped has finished, verify no Hot Sheet job is processing or claimed, and record that timestamp as the **zero-send baseline** for the maintenance window. Only then take the read-only snapshot: Hot Sheet `email_jobs` in any nonterminal state; `hot_sheet_listing_events` counts by state; any in-progress delivery claim. If anything is in flight, stop and report. The three existing protections (`assertHotSheetEnqueueAllowed`, worker claiming zero while paused, `preSendBlockReason`) stay untouched.
 
 ## Phase 1 — implementation (pause stays on)
 
 **Database migration:**
 - New overload `dispatch_hot_sheet_listing(p_listing_id uuid, p_event_id uuid)` with **no default**; the existing one-argument function is left in place untouched for compatibility and is not used by the new trigger path.
+- The new overload is locked down in the same migration, matching the existing dispatcher:
+
+```sql
+REVOKE ALL ON FUNCTION public.dispatch_hot_sheet_listing(uuid, uuid) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.dispatch_hot_sheet_listing(uuid, uuid) FROM anon;
+REVOKE ALL ON FUNCTION public.dispatch_hot_sheet_listing(uuid, uuid) FROM authenticated;
+GRANT EXECUTE ON FUNCTION public.dispatch_hot_sheet_listing(uuid, uuid) TO service_role;
+```
+
 - `notify_matching_buyers_on_new_listing()` — UPDATE proceeds only when `OLD.status IS DISTINCT FROM NEW.status`; all non-status columns removed from the relevance test; legacy kick becomes `dispatch_hot_sheet_listing(NEW.id, v_event_id)`.
 - Trigger recreated as `AFTER INSERT OR UPDATE OF status`.
 
-No table, RLS, grant, index or lifecycle change.
+No table, RLS, index or lifecycle change; the only grant change is the lockdown above.
 
 **Edge functions:**
-- `send-new-match-notification` — event id is authoritative: load that exact event row and classify from it. A trigger-driven request with no valid event id is skipped (zero email jobs); no "most recent event" lookup, no `hot_sheet_sent_listings` fallback for event type.
+- `send-new-match-notification` — event id is authoritative: load that exact event row and classify from it. It must also verify `event.listing_id === request.listing_id`; on any mismatch, fail closed and create zero jobs — one event id may never classify another listing. A trigger-driven request with no valid event id is skipped (zero email jobs); no "most recent event" lookup, no `hot_sheet_sent_listings` fallback for event type.
 - `notify-matching-buyers` — accepts and forwards `event_id` verbatim.
 - `process-hot-sheet-events` — unchanged; it already sends the exact `event_id`.
 
