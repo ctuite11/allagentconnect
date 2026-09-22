@@ -1,52 +1,45 @@
-# Fix the Admin Approvals page hanging, then showing "No agents found"
+# Hot sheet: label matches by what actually changed
 
-## What is actually happening
+## What the records show
 
-Confirmed from the live logs for the last few loads of the admin page:
+I checked 50 Proctor Avenue, the listing that went out at 02:30 UTC on 22 Sep to four hot sheets with the subject "New matches in your Hot Sheet".
 
-```text
-02:47:52  admin member list   200    0.1s
-02:48:12  admin member list   401   19.7s
-02:48:38  admin member list   401   19.7s
-02:49:14  admin member list   200    0.1s
-```
+- Its last real status change was **20 July** (new to off market). Nothing changed status on 22 Sep.
+- Three edits were recorded on 22 Sep at 02:29 and 02:31, all "off market to off market" — attribute edits, not status changes.
+- The 02:29 edit is what queued the match and produced the four emails.
 
-The two failed loads each hung for roughly **20 seconds** and then came back rejected. The
-matching service log says `Auth error: HTTP 522` — the very first thing the admin list does is
-ask the sign-in service "who is calling?", and that single call stalled and timed out. The
-member list itself was never read.
+So two things are true at once:
 
-Two separate problems follow from that:
+1. Emails are **not** limited to status changes. The queueing rule also fires on a change to price, beds, baths, square feet, lot size, parking, property type, listing type, city, county, neighborhood, state, or listing agent. That is why an edit with no status change sent mail.
+2. The wording rule says "new match" whenever that hot sheet has **never** sent that listing before, at any status — regardless of how old the listing is or what actually changed. 50 Proctor had never been delivered to those four sheets, so it was labelled a new match even though it had been off market for 64 days.
 
-1. **The stall is unprotected.** That identity check has no timeout and no retry, so one slow
-   moment leaves the admin staring at a spinner for 20 seconds.
-2. **The failure is reported as emptiness.** When the call comes back rejected, the page keeps
-   an empty member list and falls through to the generic **"No agents found"** card. It looks
-   like the roster is gone, when in reality the list was never loaded.
+## What to change
 
-The backend is healthy right now, so this is an intermittent slow-response problem, not an
-outage — but the page handles it badly every time it happens.
+**1. Stop silent edits from sending anything.**
+Only queue a match when something buyers care about happened: status change, price change, or the listing newly qualifying for that hot sheet's criteria. Edits to beds, baths, square feet, parking, lot size and similar corrections stop producing emails on their own.
 
-## Fix
+**2. Label the email by the triggering event, not by send history.**
+Carry the event's before/after status and price into the matcher, then pick the wording from it:
 
-**1. Make the identity check fast and self-healing (admin member list service)**
-Put a short timeout around the "who is calling?" check and retry it briefly (a couple of quick
-attempts) before giving up. A transient stall then costs a second or two instead of twenty, and
-usually succeeds on the retry. The permission rules are untouched: the caller must still be a
-signed-in admin, and a genuinely invalid session is still rejected exactly as today.
+- Listing first published (or newly qualifies for the hot sheet) - "New match"
+- Price went down or up - "Price change"
+- Status changed - existing status-change wording (back on market, off market, coming soon, and so on)
 
-**2. Tell the truth on the page (Admin Approvals)**
-When the load fails, set an explicit error state instead of leaving an empty list. Show a clear
-"We couldn't load the member list" card with a Retry button, rather than the misleading
-"No agents found" message. "No agents found" stays reserved for a load that genuinely returned
-zero members.
+An old listing surfacing in a hot sheet for the first time because of a price cut reads as "Price change", not "New match".
 
-**3. Retry once automatically**
-If the first load fails on a transient error, retry it once in the background before showing
-the error card, so a single blip resolves itself without the admin doing anything.
+**3. Leave everything else intact.**
+No change to matching criteria, the per-status duplicate guard, the delivery claim/idempotency layer, or the paused-send controls.
 
-## Scope guard
+## Technical detail
 
-No changes to who can access the admin page, no changes to member records, no emails, no queue
-writes, no database migration, no redesign of the page. Only the identity-check resilience in
-the admin list service and the loading/error handling on the Admin Approvals page.
+- `notify_matching_buyers_on_new_listing` (trigger on `listings`): narrow the relevance test so a bare attribute edit no longer writes an outbox row; keep status and price in it, and keep criteria-affecting fields only where they can change qualification.
+- `hot_sheet_listing_events`: add `old_price` / `new_price` alongside the existing `old_status` / `new_status` so the matcher can see the cause.
+- `send-new-match-notification`: replace the "no prior send means new match" classifier with one driven by the event fields; fall back to today's behavior when a run has no event (manual send, initial batch).
+- `hot_sheet_sent_listings` and `hot_sheet_delivery_claims` keys stay as they are.
+
+## Verification before anything goes out
+
+- Replay the 50 Proctor edit against the new rule and confirm it produces no email.
+- Confirm a price cut on an existing off-market listing produces a "Price change" email, once per hot sheet.
+- Confirm a brand-new listing still produces "New match".
+- Confirm queue totals and the paused controls are unchanged, and no historical row is released.
