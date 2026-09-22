@@ -18,7 +18,6 @@ function escapeHtml(s: string): string {
 const NAVY = "#111317";
 const EMERALD_ACCENT = "#50c878";
 const CTA_GREEN = "#16A34A";
-const TEXT_DARK = "#0f172a";
 const TEXT_BODY = "#334155";
 const TEXT_MUTED = "#64748b";
 const BORDER = "#e5e7eb";
@@ -81,7 +80,7 @@ export function buildActivationReminderEmailHtml(opts: ActivationReminderEmailOp
   const ctaNote = opts.ctaNote?.trim() || "";
   const firstName = opts.agentName?.trim();
   const greeting = firstName ? `Hi ${escapeHtml(firstName)},` : "Hi,";
-  const preheader = "You're verified — one last step to activate your All Agent Connect account.";
+  const preheader = "Your All Agent Connect account is ready to activate.";
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -101,20 +100,19 @@ export function buildActivationReminderEmailHtml(opts: ActivationReminderEmailOp
           <img src="${MONOGRAM_URL}" width="44" height="44" alt="All Agent Connect" style="display:block;margin:0 auto;border:0;outline:none;text-decoration:none;" />
           <p style="margin:14px 0 0;font-size:18px;font-weight:600;letter-spacing:-0.02em;color:#ffffff;font-family:${FONT};">All Agent Connect</p>
           <div style="width:48px;height:2px;background-color:${EMERALD_ACCENT};margin:18px auto 20px;border-radius:1px;"></div>
-          <h1 style="margin:0;font-size:24px;line-height:1.25;font-weight:700;letter-spacing:-0.02em;color:#ffffff;font-family:${FONT};">You're verified — one step left</h1>
+          <h1 style="margin:0;font-size:24px;line-height:1.25;font-weight:700;letter-spacing:-0.02em;color:#ffffff;font-family:${FONT};">Your account is ready</h1>
         </td></tr>
 
         <!-- Body -->
         <tr><td style="background-color:#ffffff;border:1px solid ${BORDER};border-top:none;padding:32px 40px 8px;">
           <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:${TEXT_BODY};font-family:${FONT};">${greeting}</p>
-          <p style="margin:0 0 16px;font-size:15px;line-height:1.65;color:${TEXT_BODY};font-family:${FONT};">Your license is verified and your All Agent Connect account is ready — you just haven't activated it yet.</p>
-          <p style="margin:0 0 8px;font-size:15px;line-height:1.65;color:${TEXT_BODY};font-family:${FONT};">It takes less than a minute. Set your password and you're in.</p>
+          <p style="margin:0 0 8px;font-size:15px;line-height:1.65;color:${TEXT_BODY};font-family:${FONT};">Your real estate license has been verified. Activate your All Agent Connect account to get started.</p>
 
           <!-- CTA -->
           <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:12px 0 4px;">
             <tr><td align="center" style="padding:8px 0 6px;">
               <table role="presentation" cellspacing="0" cellpadding="0"><tr><td align="center" bgcolor="${CTA_GREEN}" style="border-radius:10px;">
-                <a href="${ctaUrl}" target="_blank" style="display:inline-block;padding:15px 34px;background-color:${CTA_GREEN};color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;letter-spacing:0.01em;border-radius:10px;font-family:${FONT};">Set Your Password</a>
+                <a href="${ctaUrl}" target="_blank" style="display:inline-block;padding:15px 34px;background-color:${CTA_GREEN};color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;letter-spacing:0.01em;border-radius:10px;font-family:${FONT};">Activate Account</a>
               </td></tr></table>
             </td></tr>
             ${ctaNote ? `<tr><td align="center" style="padding:10px 0 8px;">
@@ -122,7 +120,6 @@ export function buildActivationReminderEmailHtml(opts: ActivationReminderEmailOp
             </td></tr>` : ""}
           </table>
 
-          <p style="margin:18px 0 40px;font-size:13px;line-height:1.6;color:${TEXT_MUTED};font-family:${FONT};">Once you're in, you can complete your profile, set your Communications Center preferences, and start receiving opportunities from the network.</p>
         </td></tr>
 
         <!-- Footer -->
