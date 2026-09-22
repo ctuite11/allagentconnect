@@ -162,6 +162,13 @@ serve(async (req) => {
     // AUTHORITATIVE event status for this delivery (event.new_status).
     const eventStatus: string = plan.status;
     const eventStatusKey: HotSheetStatusKey = plan.statusKey;
+    // Immutable status-change event identity: the dedupe identity for every
+    // claim and email idempotency key. Reprocessing this event is a no-op; a
+    // later, genuinely new transition into the same status is a new event.
+    const deliveryEventId: string = String(triggerEventId ?? "").trim();
+    if (!deliveryEventId) {
+      return skipResponse("missing_event_context");
+    }
 
     // Active Hot Sheets on the near-real-time path only.
     // Digest schedules must not send through this immediate matcher.
