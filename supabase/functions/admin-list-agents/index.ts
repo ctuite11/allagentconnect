@@ -123,6 +123,59 @@ function deriveEmailStatus(row: {
   return 'queued'
 }
 
+// Caller identity lookup against the Auth service. Uses a raw abortable
+// fetch (not supabase-js getUser, which has no timeout) so an upstream stall
+// cannot hang the request. Retries only transient failures; a real 401/403
+// from Auth is returned immediately and never retried. Never logs tokens.
+const AUTH_LOOKUP_TIMEOUT_MS = 4000
+const AUTH_LOOKUP_MAX_ATTEMPTS = 2
+const AUTH_LOOKUP_RETRY_DELAY_MS = 600
+
+type CallerLookup =
+  | { kind: 'ok'; user: { id: string; email?: string } }
+  | { kind: 'invalid' }
+  | { kind: 'transient' }
+
+async function lookupCaller(
+  supabaseUrl: string,
+  anonKey: string,
+  authHeader: string,
+): Promise<CallerLookup> {
+  for (let attempt = 1; attempt <= AUTH_LOOKUP_MAX_ATTEMPTS; attempt++) {
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), AUTH_LOOKUP_TIMEOUT_MS)
+    try {
+      const res = await fetch(`${supabaseUrl}/auth/v1/user`, {
+        headers: { Authorization: authHeader, apikey: anonKey },
+        signal: controller.signal,
+      })
+      clearTimeout(timer)
+      if (res.ok) {
+        const user = await res.json()
+        if (!user?.id) return { kind: 'invalid' }
+        if (attempt > 1) {
+          console.log(`[admin-list-agents] auth lookup: success on retry ${attempt}`)
+        }
+        return { kind: 'ok', user }
+      }
+      if (res.status === 401 || res.status === 403) {
+        console.log('[admin-list-agents] auth lookup: invalid session (no retry)')
+        return { kind: 'invalid' }
+      }
+      console.warn(`[admin-list-agents] auth lookup: transient HTTP ${res.status} (attempt ${attempt})`)
+    } catch (e) {
+      clearTimeout(timer)
+      const why = controller.signal.aborted ? 'timeout' : 'network error'
+      console.warn(`[admin-list-agents] auth lookup: ${why} (attempt ${attempt})`)
+    }
+    if (attempt < AUTH_LOOKUP_MAX_ATTEMPTS) {
+      await new Promise((r) => setTimeout(r, AUTH_LOOKUP_RETRY_DELAY_MS))
+    }
+  }
+  console.error('[admin-list-agents] auth lookup: final transient failure')
+  return { kind: 'transient' }
+}
+
 Deno.serve(async (req) => {
   const requestStartedAt = Date.now()
 
