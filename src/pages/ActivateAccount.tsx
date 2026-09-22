@@ -174,11 +174,15 @@ export default function ActivateAccount() {
 
     // Read-only prefill. Never redeems, never mutates, never signs anyone in.
     void (async () => {
+      // Never leave the agent on an endless spinner if the lookup stalls.
+      const controller = new AbortController();
+      const timer = window.setTimeout(() => controller.abort(), 15000);
       try {
         const res = await fetch("/api/activation-preview", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ token: found }),
+          signal: controller.signal,
         });
         const payload = await res.json().catch(() => ({}));
         if (cancelled) return;
@@ -194,6 +198,8 @@ export default function ActivateAccount() {
         setState(mapped && mapped in COPY ? (mapped as ActivationState) : "error");
       } catch {
         if (!cancelled) setState("error");
+      } finally {
+        window.clearTimeout(timer);
       }
     })();
 
