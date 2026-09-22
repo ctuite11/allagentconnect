@@ -214,7 +214,9 @@ serve(async (req) => {
       // Deterministic ordering
       scopedListings.sort((a: any, b: any) => String(a.id).localeCompare(String(b.id)));
 
-      // Classify each listing as new-match vs status-change based on ALL prior sends
+      // Event context (loaded above) decides New Match vs Status Change.
+      // hot_sheet_sent_listings is dedupe state ONLY — it must never choose
+      // the template, or racing delivery paths pick different copy.
       const { data: priorSends } = await supabase
         .from("hot_sheet_sent_listings")
         .select("listing_id, status_at_send")
@@ -234,11 +236,11 @@ serve(async (req) => {
       for (const l of scopedListings) {
         const prior = priorStatusesByListing.get(String(l.id));
         const currentStatus = String(l.status || "active");
-        if (!prior || prior.size === 0) {
+        // Dedupe only: this hot sheet already received this listing at this
+        // exact status.
+        if (prior?.has(currentStatus)) continue;
+        if (isNewMatchEvent) {
           newMatchListings.push(l);
-        } else if (prior.has(currentStatus)) {
-          // Already recorded at this exact status — skip
-          continue;
         } else {
           statusChangeListings.push(l);
         }
