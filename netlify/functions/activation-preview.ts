@@ -52,9 +52,23 @@ export function jsonResponse(
   };
 }
 
+/** First public client IP Netlify saw, for per-IP throttling only. */
+export function clientIpFromEvent(event: Parameters<Handler>[0]): string {
+  const h = event.headers || {};
+  const raw =
+    h["x-nf-client-connection-ip"] ||
+    h["X-Nf-Client-Connection-Ip"] ||
+    h["x-forwarded-for"] ||
+    h["X-Forwarded-For"] ||
+    "";
+  const first = String(raw).split(",")[0]?.trim() ?? "";
+  return first.length > 0 && first.length <= 64 ? first : "";
+}
+
 export async function callActivationFunction(
   fnName: string,
   payload: unknown,
+  extraHeaders: Record<string, string> = {},
 ): Promise<Record<string, unknown> | null> {
   const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
   const ANON =
