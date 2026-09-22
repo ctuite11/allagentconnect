@@ -1,3 +1,6 @@
+// @auth-classification: admin-jwt
+// Caller must present a valid JWT whose user_id has the admin role (checked
+// via has_role before any privileged auth.admin.* / table reads below).
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
