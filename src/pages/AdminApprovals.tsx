@@ -2225,15 +2225,37 @@ export default function AdminApprovals() {
           </div>
         )}
 
+        {rosterLoadError === "refresh" && (
+          <div className="mb-6 flex items-center justify-between gap-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3">
+            <p className="text-sm font-medium text-rose-700">
+              Couldn’t refresh the member list. Showing the last loaded data.
+            </p>
+            <Button variant="outline" size="sm" onClick={() => void fetchAgents({ background: true, force: true })}>
+              Retry
+            </Button>
+          </div>
+        )}
+
         {/* Agent Cards */}
         {loading ? (
           <AacMonogramLoader variant="section" message="Loading agents…" className="py-12 sm:py-14" />
-        ) : agents.length === 0 ? (
+        ) : rosterLoadError === "full" && agents.length === 0 ? (
+          <div className="rounded-3xl border border-gray-200 bg-white p-12 shadow-[0_10px_30px_rgba(0,0,0,0.08)] text-center">
+            <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <p className="font-medium text-foreground">We couldn’t load the member list</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              The member list could not be loaded. Your data has not been changed.
+            </p>
+            <Button variant="outline" size="sm" className="mt-4" onClick={() => void fetchAgents({ force: true })}>
+              Retry
+            </Button>
+          </div>
+        ) : agents.length === 0 && !rosterLoadError ? (
           <div className="rounded-3xl border border-gray-200 bg-white p-12 shadow-[0_10px_30px_rgba(0,0,0,0.08)] text-center">
             <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <p className="text-muted-foreground">No agents found</p>
           </div>
-        ) : filteredAgents.length === 0 ? (
+        ) : filteredAgents.length === 0 && agents.length > 0 ? (
           <div className="rounded-3xl border border-gray-200 bg-white p-12 shadow-[0_10px_30px_rgba(0,0,0,0.08)] text-center">
             <Search className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <p className="text-muted-foreground">No agents match this search or status filter</p>
