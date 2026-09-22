@@ -101,7 +101,7 @@ Deno.test("matcher source never derives delivery status from the live listing ro
   );
   assertEquals(/String\((l|listing)\.status\s*\|\|/.test(src), false, "String(l.status || ...) found");
   assertEquals(/normalizeStatusKey\(/.test(src), false, "normalizeStatusKey(...) on live row found");
-  assertEquals(/status_at_send:\s*(?!status\b|eventStatus\b|string\b)/.test(src), false, "status_at_send not from event status");
+  assertEquals(/status_at_send:\s*(?!\s|status\b|eventStatus\b|string\b)/.test(src), false, "status_at_send not from event status");
   for (const m of src.matchAll(/const status\s*=\s*([^;]+);/g)) {
     assertEquals(m[1].trim(), "eventStatus", `local status must be eventStatus, got ${m[1]}`);
   }
