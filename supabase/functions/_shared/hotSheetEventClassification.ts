@@ -17,6 +17,7 @@
  *   UPDATE, any other real transition     -> status_change
  *   missing / mismatched event context    -> skip       (fail closed)
  */
+import { normalizeStatusKey, type HotSheetStatusKey } from "./hotSheetStatusCopy.ts";
 export type HotSheetEventClass = "new_match" | "status_change" | "skip";
 
 export interface HotSheetEventContext {
@@ -86,7 +87,6 @@ export function classifyHotSheetEvent(
 // (e.g. active -> off_market -> active before the worker ran). A superseded
 // event sends nothing: its email would already be false on arrival.
 // ---------------------------------------------------------------------------
-import { normalizeStatusKey, type HotSheetStatusKey } from "./hotSheetStatusCopy.ts";
 
 export type HotSheetEventDeliveryPlan =
   | { action: "skip"; reason: string }
