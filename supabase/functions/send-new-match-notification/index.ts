@@ -196,6 +196,7 @@ serve(async (req) => {
 
     let totalMatches = 0;
     let jobsQueued = 0;
+    let supersededMidRun = false;
 
     const appBaseUrl = resolveEmailBaseUrl(
       Deno.env.get("EMAIL_BASE_URL") ||
@@ -301,10 +302,10 @@ serve(async (req) => {
           .join("");
       };
 
-      // Group status-change listings by normalized current status for copy lookup.
+      // Status-change copy comes from the EVENT status (event.new_status).
       const statusGroups = new Map<HotSheetStatusKey, any[]>();
       for (const l of statusChangeListings) {
-        const key = normalizeStatusKey(l.status);
+        const key = eventStatusKey;
         const bucket = statusGroups.get(key) || [];
         bucket.push(l);
         statusGroups.set(key, bucket);
@@ -322,7 +323,7 @@ serve(async (req) => {
       const clientPerListing = new Map<string, DeliveryOutcome[]>();
       const subscriberPerListing = new Map<string, DeliveryOutcome[]>();
 
-      const listingKey = (l: any) => `${l.id}::${String(l.status || "active")}`;
+      const listingKey = (l: any) => `${l.id}::${eventStatus}`;
       const allCandidateListings = [...newMatchListings, ...statusChangeListings];
       for (const l of allCandidateListings) {
         const key = listingKey(l);
@@ -391,7 +392,7 @@ serve(async (req) => {
           );
         } else if (agentEmail) {
           for (const listing of eligibleNew) {
-            const status = String(listing.status || "active");
+            const status = eventStatus;
             const idempotencyKey = agentIdempotencyKey(hotSheet.id, listing.id, status);
             const html = await renderAgentCards([listing]);
             const outcome = await enqueueHotSheetDelivery(supabase, {
@@ -443,7 +444,7 @@ serve(async (req) => {
 
           for (const { statusKey, listing } of eligibleStatus) {
             const copy = getHotSheetStatusCopy(statusKey);
-            const status = String(listing.status || "active");
+            const status = eventStatus;
             const idempotencyKey = agentIdempotencyKey(hotSheet.id, listing.id, status);
             const html = await renderAgentCards([listing]);
             const outcome = await enqueueHotSheetDelivery(supabase, {
@@ -642,7 +643,7 @@ serve(async (req) => {
           // Per-listing delivery so shrinking retry batches cannot create a new
           // batch key and resend a previously delivered listing.
           for (const listing of filterInitial(newMatchListings)) {
-            const status = String(listing.status || "active");
+            const status = eventStatus;
             const dedupeKey = clientListingIdempotencyKey(
               recipientKey,
               hotSheet.id,
@@ -699,7 +700,7 @@ serve(async (req) => {
           for (const [statusKey, groupListings] of statusGroups) {
             const copy = getHotSheetStatusCopy(statusKey);
             for (const listing of filterInitial(groupListings)) {
-              const status = String(listing.status || "active");
+              const status = eventStatus;
               const dedupeKey = clientListingIdempotencyKey(
                 recipientKey,
                 hotSheet.id,
@@ -787,7 +788,7 @@ serve(async (req) => {
           const subId = String(sub.id);
 
           for (const listing of newMatchListings) {
-            const status = String(listing.status || "active");
+            const status = eventStatus;
             const dedupeKey = subscriberListingIdempotencyKey(
               subId,
               hotSheet.id,
@@ -845,7 +846,7 @@ serve(async (req) => {
           for (const [statusKey, groupListings] of statusGroups) {
             const copy = getHotSheetStatusCopy(statusKey);
             for (const listing of groupListings) {
-              const status = String(listing.status || "active");
+              const status = eventStatus;
               const dedupeKey = subscriberListingIdempotencyKey(
                 subId,
                 hotSheet.id,
@@ -942,7 +943,7 @@ serve(async (req) => {
         sentRecords.push({
           hot_sheet_id: hotSheet.id,
           listing_id: String(l.id),
-          status_at_send: String(l.status || "active"),
+          status_at_send: eventStatus,
         });
       }
 
