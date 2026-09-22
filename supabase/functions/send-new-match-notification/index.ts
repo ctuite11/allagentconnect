@@ -7,6 +7,7 @@ import { getHotSheetStatusCopy, type HotSheetStatusKey } from "../_shared/hotShe
 import {
   agentIdempotencyKey,
   clientListingIdempotencyKey,
+  eventScopedIdempotencyKey,
   filterMatchesToRequestedListing,
   hasClientsPendingAcceptance,
   isAgentEligibleForListing,
@@ -393,10 +394,13 @@ serve(async (req) => {
         } else if (agentEmail) {
           for (const listing of eligibleNew) {
             const status = eventStatus;
-            const idempotencyKey = agentIdempotencyKey(hotSheet.id, listing.id, status);
+            const idempotencyKey = eventScopedIdempotencyKey(
+              agentIdempotencyKey(hotSheet.id, listing.id, status),
+              deliveryEventId,
+            );
             const html = await renderAgentCards([listing]);
             const outcome = await enqueueHotSheetDelivery(supabase, {
-              eventId: triggerEventId,
+              eventId: deliveryEventId,
               listingId: listing.id,
               status,
               hotSheetId: hotSheet.id,
@@ -445,10 +449,13 @@ serve(async (req) => {
           for (const { statusKey, listing } of eligibleStatus) {
             const copy = getHotSheetStatusCopy(statusKey);
             const status = eventStatus;
-            const idempotencyKey = agentIdempotencyKey(hotSheet.id, listing.id, status);
+            const idempotencyKey = eventScopedIdempotencyKey(
+              agentIdempotencyKey(hotSheet.id, listing.id, status),
+              deliveryEventId,
+            );
             const html = await renderAgentCards([listing]);
             const outcome = await enqueueHotSheetDelivery(supabase, {
-              eventId: triggerEventId,
+              eventId: deliveryEventId,
               listingId: listing.id,
               status,
               hotSheetId: hotSheet.id,
@@ -644,15 +651,14 @@ serve(async (req) => {
           // batch key and resend a previously delivered listing.
           for (const listing of filterInitial(newMatchListings)) {
             const status = eventStatus;
-            const dedupeKey = clientListingIdempotencyKey(
+            const dedupeKey = eventScopedIdempotencyKey(clientListingIdempotencyKey(
               recipientKey,
               hotSheet.id,
-              listing.id,
-              status,
-            );
+              listing.id, status,
+            ), deliveryEventId);
             const html = renderBuyerCards([listing]);
             const outcome = await enqueueHotSheetDelivery(supabase, {
-              eventId: triggerEventId,
+              eventId: deliveryEventId,
               listingId: listing.id,
               status,
               hotSheetId: hotSheet.id,
@@ -701,15 +707,14 @@ serve(async (req) => {
             const copy = getHotSheetStatusCopy(statusKey);
             for (const listing of filterInitial(groupListings)) {
               const status = eventStatus;
-              const dedupeKey = clientListingIdempotencyKey(
+              const dedupeKey = eventScopedIdempotencyKey(clientListingIdempotencyKey(
                 recipientKey,
                 hotSheet.id,
-                listing.id,
-                status,
-              );
+                listing.id, status,
+              ), deliveryEventId);
               const html = renderBuyerCards([listing]);
               const outcome = await enqueueHotSheetDelivery(supabase, {
-                eventId: triggerEventId,
+                eventId: deliveryEventId,
                 listingId: listing.id,
                 status,
                 hotSheetId: hotSheet.id,
@@ -789,15 +794,14 @@ serve(async (req) => {
 
           for (const listing of newMatchListings) {
             const status = eventStatus;
-            const dedupeKey = subscriberListingIdempotencyKey(
+            const dedupeKey = eventScopedIdempotencyKey(subscriberListingIdempotencyKey(
               subId,
               hotSheet.id,
-              listing.id,
-              status,
-            );
+              listing.id, status,
+            ), deliveryEventId);
             const html = renderBuyerCards([listing]);
             const outcome = await enqueueHotSheetDelivery(supabase, {
-              eventId: triggerEventId,
+              eventId: deliveryEventId,
               listingId: listing.id,
               status,
               hotSheetId: hotSheet.id,
@@ -847,15 +851,14 @@ serve(async (req) => {
             const copy = getHotSheetStatusCopy(statusKey);
             for (const listing of groupListings) {
               const status = eventStatus;
-              const dedupeKey = subscriberListingIdempotencyKey(
+              const dedupeKey = eventScopedIdempotencyKey(subscriberListingIdempotencyKey(
                 subId,
                 hotSheet.id,
-                listing.id,
-                status,
-              );
+                listing.id, status,
+              ), deliveryEventId);
               const html = renderBuyerCards([listing]);
               const outcome = await enqueueHotSheetDelivery(supabase, {
-                eventId: triggerEventId,
+                eventId: deliveryEventId,
                 listingId: listing.id,
                 status,
                 hotSheetId: hotSheet.id,
