@@ -83,6 +83,7 @@ export async function callActivationFunction(
         "Content-Type": "application/json",
         Authorization: `Bearer ${ANON}`,
         apikey: ANON,
+        ...extraHeaders,
       },
       body: JSON.stringify(payload),
     });
