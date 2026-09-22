@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import type { User } from "@supabase/supabase-js";
 import PageShell from "@/components/layout/PageShell";
 import { Button } from "@/components/ui/button";
@@ -146,6 +146,7 @@ const HotSheets = ({
   isBuyerMode = false,
 }: HotSheetsProps) => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user: authSessionUser, loading: authRoleLoading } = useAuthRole();
   const [collections, setCollections] = useState<BuyerCollection[]>([]);
   const [personalHotSheets, setPersonalHotSheets] = useState<AgentPersonalHotSheet[]>([]);
@@ -173,6 +174,14 @@ const HotSheets = ({
   /** Hot sheet id whose Pause/Resume alerts toggle is in flight. */
   const [togglingSheetId, setTogglingSheetId] = useState<string | null>(null);
   const buyerMode = isBuyerMode;
+
+  useEffect(() => {
+    if (searchParams.get("create") !== "1") return;
+    setCreateDialogOpen(true);
+    const next = new URLSearchParams(searchParams);
+    next.delete("create");
+    setSearchParams(next, { replace: true });
+  }, [searchParams, setSearchParams]);
 
   /** Hero / page sections — white surface, subtle border/shadow (matches polished agent surfaces). */
   const AAC_CARD_SHELL =
