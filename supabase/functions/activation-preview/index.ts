@@ -19,6 +19,11 @@ import {
   sha256Hex,
   verifyActivationToken,
 } from "../_shared/activationTokens.ts";
+import {
+  activationRateLimited,
+  clientIpFrom,
+  enforceActivationPreviewLimits,
+} from "../_shared/activationRateLimit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
