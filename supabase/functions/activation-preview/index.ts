@@ -63,9 +63,16 @@ Deno.serve(async (req) => {
   if (!parsed) return json({ status: "invalid" }, 400);
 
   const admin = createClient(SUPABASE_URL, SERVICE_KEY);
+  const tokenHash = await sha256Hex(token);
+
+  // Throttle BEFORE any lookup. This only increments a counter keyed by the
+  // token hash / caller IP — it never reads, claims or consumes the token, and
+  // the 429 body is identical for valid, expired and non-existent tokens.
+  const limit = await enforceActivationPreviewLimits(admin, tokenHash, clientIpFrom(req));
+  if (!limit.allowed) return activationRateLimited(limit.resetAt, corsHeaders);
 
   const { data: preview, error } = await admin.rpc("preview_agent_activation_token", {
-    p_token_hash: await sha256Hex(token),
+    p_token_hash: tokenHash,
   });
   if (error) {
     console.error("[activation-preview] lookup failed:", error.message);
