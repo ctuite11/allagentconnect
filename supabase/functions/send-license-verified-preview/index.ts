@@ -1,12 +1,15 @@
-// Admin-only preview of the EXISTING License Verified email.
+// Admin-only preview of the License Verified email.
 //
 // Guarantees:
-//  - Renders buildLicenseVerifiedEmailHtml() exactly as it stands. No template edits.
+//  - Renders buildLicenseVerifiedEmailHtml() exactly as it stands.
 //  - Sends ONLY to the calling admin's own auth email.
 //  - CTA is inert ("#") — no activation token is issued or redeemed.
 //  - Never touches email_jobs / the queue / streams / pause flags. Direct Resend call.
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { buildLicenseVerifiedEmailHtml } from "../_shared/buildLicenseVerifiedEmailHtml.ts";
+import {
+  buildLicenseVerifiedEmailHtml,
+  type FooterAgent,
+} from "../_shared/buildLicenseVerifiedEmailHtml.ts";
 import { buildTransactionalFrom } from "../_shared/transactionalSender.ts";
 
 const corsHeaders = {
@@ -75,12 +78,23 @@ Deno.serve(async (req: Request): Promise<Response> => {
     // Recipient is always the caller. No arbitrary `to` is accepted.
     const to = email;
 
+    const FOOTER_AGENT: FooterAgent = {
+      firstName: "Chris",
+      lastName: "Tuite",
+      title: "Founder",
+      company: null,
+      email: "chris@allagentconnect.com",
+      phone: "6178770519",
+      headshotUrl:
+        "https://qocduqtfbsevnhlgsfka.supabase.co/storage/v1/object/public/agent-headshots/1fc50da1-2664-4931-8cab-64e24dc5ed8c/headshot-1773973124574.jpg",
+    };
+
     const html = buildLicenseVerifiedEmailHtml({
       ctaUrl: "#",
-      ctaLabel: "Activate My Account",
+      ctaLabel: "Activate Account",
       ctaNote: "Preview copy — this button is inactive and issues no activation link.",
       agentName: null,
-      footerAgent: null,
+      footerAgent: FOOTER_AGENT,
     });
 
     const res = await fetch("https://api.resend.com/emails", {
