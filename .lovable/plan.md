@@ -1,46 +1,40 @@
-# Stop the Agent Network intro popup for complete profiles
+# Agent Network intro — only show for incomplete profiles
 
-## What happened
+Delivered as a **separate draft** for review. Not merged, not deployed.
 
-The popup you saw is the Agent Network intro on the Our Agents page ("Complete your profile to appear in the Agent Network"). It is **not** the Success Hub setup checklist — your settings confirm that one is correctly dismissed (`welcome_modal_dismissed: true`, `preferences_set: true`).
+## Background
 
-The Agent Network intro has two problems:
+The Agent Network intro overlay on Our Agents has shown to every agent since June regardless of profile completeness, and its dismissal is browser-only (localStorage/sessionStorage), so it reappears in fresh browsers. Your `agent_settings` confirm the Success Hub checklist is correctly dismissed — this is a separate, older overlay. Not a regression from recent work.
 
-1. **It never checks whether your profile is actually complete.** It shows to every agent who hasn't dismissed it, even though its own message only applies to agents missing a headshot or profile details.
-2. **Its dismissal is browser-only** (localStorage/sessionStorage). A new browser, incognito window, or cleared storage makes it reappear — which is why it popped up for you.
+## Changes
 
-## Fix
+### 1. Gate on the existing profile-completeness check
 
-### 1. Only show the intro when the profile is genuinely incomplete
+- `src/hooks/useAgentNetworkIntro.ts`: reuse `checkProfileComplete` from `useAgentSettings` (the same check the Success Hub checklist uses — covers name, headshot, brokerage, contact info). No second/separate completeness test.
+- Profile complete → overlay never renders. No popup, no flash, including fresh browser/incognito.
+- Profile incomplete → existing behavior unchanged: same copy, same three buttons, same "Don't show this again" checkbox.
+- `src/pages/OurAgents.tsx`: minimal wiring to pass the completeness result into the hook.
 
-In `src/hooks/useAgentNetworkIntro.ts` (and its use in `src/pages/OurAgents.tsx`):
+### 2. Account-based permanent dismissal
 
-- Reuse the existing profile-completeness check (`checkProfileComplete` from `useAgentSettings`, the same check the Success Hub checklist uses) plus a headshot check.
-- If the agent's profile is complete (headshot + required fields), the overlay never renders — no popup, no flash.
-- If the profile is incomplete, behavior is unchanged: the intro shows once per session, with the same three buttons and "Don't show this again" checkbox.
+- Migration: add `agent_network_intro_dismissed boolean not null default false` to `public.agent_settings` (additive, nullable-safe with default; applied via the standard migration tool, types regenerate automatically).
+- When "Don't show this again" is selected on any button, save `agent_network_intro_dismissed = true` to `agent_settings` (via the existing settings update path) in addition to localStorage.
+- On load, the server-side flag is authoritative; localStorage stays as a fast cache and backward-compatible fallback for agents who already dismissed in-browser.
 
-### 2. Remember dismissal across browsers
+## Explicitly not touched
 
-- Add a `agent_network_intro_dismissed` boolean column to `agent_settings` (default `false`), via a standard timestamped migration with GRANTs.
-- When an agent clicks any button with "Don't show this again" checked, save the dismissal to `agent_settings` in addition to localStorage.
-- On load, the hook checks the server-side flag first; localStorage remains a fast cache.
-- Agents who already dismissed it in this browser keep their dismissal (localStorage still honored).
+- Success Hub Member Setup Checklist (`useAgentProfileOnboarding` / `AgentProfileOnboardingOverlay`)
+- Agent Network visibility/directory rules
+- Emails, queues, Hot Sheets, unrelated backend functions
+- Overlay design, copy, buttons
 
-## Explicitly not changed
-
-- Success Hub onboarding checklist (`useAgentProfileOnboarding` / `AgentProfileOnboardingOverlay`) — already working correctly.
-- The overlay's design, copy, buttons, or checkbox.
-- Agent Network visibility rules, directory, or any other page.
-- No emails, no queue, no backend functions.
-
-## Files touched
-
-- `src/hooks/useAgentNetworkIntro.ts` — add profile-completeness gate + server-side dismissal read/write.
-- `src/pages/OurAgents.tsx` — pass settings/completeness into the hook (small wiring change only).
-- One migration: add `agent_network_intro_dismissed` to `agent_settings`.
-
-## Verification
+## Verification (in the draft)
 
 - Type-check + lint clean.
-- Confirm with your account (complete profile): intro does not appear on Our Agents, including in a fresh browser session.
-- Confirm an incomplete-profile test path still shows the intro (code-level check; no test data created).
+- Complete-profile account (yours): no intro on Our Agents, including a fresh session.
+- Incomplete-profile path: intro still shows (code-level verification; no test data created).
+
+## Delivery
+
+- Built in a separate draft; you review the diff there before anything lands on main.
+- The migration is staged with the draft and applies only when the draft is accepted.
