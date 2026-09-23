@@ -1,6 +1,5 @@
 import { Link } from "react-router-dom";
 import { Paperclip, Plus } from "lucide-react";
-import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import type { CommsChannelMeta } from "@/lib/commsChannels";
@@ -25,6 +24,49 @@ type CommsChannelHubCardProps = {
   onSend: () => void;
 };
 
+/** Channel-card-only toggle: ON/OFF lives inside the track (not the shared Switch). */
+function EmailAlertsToggle({
+  checked,
+  onCheckedChange,
+  ariaLabel,
+}: {
+  checked: boolean;
+  onCheckedChange: () => void;
+  ariaLabel: string;
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-label={ariaLabel}
+      onClick={onCheckedChange}
+      className={cn(
+        "relative inline-flex h-7 w-[3.25rem] shrink-0 cursor-pointer items-center rounded-full transition-colors",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0E56F5]/40 focus-visible:ring-offset-2",
+        checked ? "bg-[#0E56F5]" : "bg-neutral-200",
+      )}
+    >
+      <span
+        aria-hidden
+        className={cn(
+          "pointer-events-none absolute inset-y-0 flex items-center text-[10px] font-bold tracking-wide",
+          checked ? "left-1.5 text-white" : "right-1.5 text-neutral-600",
+        )}
+      >
+        {checked ? "ON" : "OFF"}
+      </span>
+      <span
+        aria-hidden
+        className={cn(
+          "pointer-events-none absolute top-0.5 block h-6 w-6 rounded-full bg-white shadow-sm ring-0 transition-transform",
+          checked ? "translate-x-[1.55rem]" : "translate-x-0.5",
+        )}
+      />
+    </button>
+  );
+}
+
 export function CommsChannelHubCard({
   channel,
   preview,
@@ -48,15 +90,14 @@ export function CommsChannelHubCard({
           <p className="mt-1 line-clamp-2 text-[13px] leading-snug text-neutral-500">{channel.tagline}</p>
         </div>
         <div
-          className="flex shrink-0 items-center gap-1.5 pt-0.5"
+          className="flex shrink-0 items-center gap-2 pt-0.5"
           onClick={(e) => e.stopPropagation()}
         >
-          <span className="text-xs font-medium text-neutral-500">Email</span>
-          <Switch
+          <span className="text-xs font-medium text-neutral-500">Email alerts</span>
+          <EmailAlertsToggle
             checked={channelOn}
             onCheckedChange={onToggleChannel}
-            aria-label={`${channel.title} email alerts`}
-            className="data-[state=checked]:!bg-[#0E56F5] data-[state=unchecked]:!bg-neutral-200"
+            ariaLabel={`${channel.title} email alerts ${channelOn ? "on" : "off"}`}
           />
         </div>
       </header>
