@@ -1,36 +1,46 @@
-# Success Hub Listing Activity: Off Market and Coming Soon only
+# Simplify initial License Verified activation email
+
+## Scope
+
+- Update `supabase/functions/_shared/buildLicenseVerifiedEmailHtml.ts`.
+- The preview renderer (`supabase/functions/send-license-verified-preview/index.ts`) imports this shared builder, so it will automatically render the new template.
+- Render a preview only; do not send a real member email.
+- Do not change token issuance, CTA URL generation, expiration logic, activation security, queue behavior, or sender/footer identity.
 
 ## What changes
 
-The Listing Activity section on the Success Hub dashboard will show only listings with a status of **Off Market** or **Coming Soon**.
+In `buildLicenseVerifiedEmailHtml.ts`:
 
-- **Order:** newest first, by the date the listing was added to AAC. Edits, price changes, and status changes do not move a listing to the front.
-- **Price changes:** if an Off Market or Coming Soon listing in the feed changes price, its card shows the new price right away. Its place in the list stays the same.
-- **Status changes:** when a listing goes Active, Pending, Sold, Withdrawn, Cancelled, or anything other than Off Market or Coming Soon, it leaves Listing Activity. It stays in listing search and on its detail page.
-- **New listings:** a new Off Market or Coming Soon listing, or a draft published as one, appears in its place by date added.
-- The Sale/Rental toggle, Share selected, the 4-card layout, and listings already hidden from this feed (such as 31 Pacella Drive) work the same as before.
+- Keep the dark header monogram and "All Agent Connect" lockup.
+- Replace the header headline/subhead with a single new content block:
+  - Headline: **Your account is ready**
+  - Body: **Hi [First Name], Your real estate license has been verified. Activate your All Agent Connect account to get started.**
+- CTA label: **Activate Account**
+- Keep the existing `ctaNote` expiration line directly below the CTA.
+- Keep the existing Chris Tuite founder footer unchanged.
+- Remove completely:
+  - The large "Your license has been verified" headline.
+  - "Your account is approved and ready to use."
+  - The "Congratulations, [name]..." greeting paragraph.
+  - The "You now have full access..." paragraph.
+  - The entire "What's next" section and its three bullets.
+  - The Communications Center highlight box.
 
-## What stays untouched
+## How
 
-- Listing search, listing detail pages, My Listings, Hot Sheets, and all emails.
-- No listing data, statuses, or database changes.
-- No design changes to the section or its cards.
+- Restructure the dark header `<td>` to contain the new headline and body copy instead of the old headline/subhead.
+- Replace the body `<td>` content with only the greeting/body paragraph and the CTA block (no bullets, no highlight box).
+- Preserve all existing HTML wrapper, preheader, and footer rendering.
+- Update the default `ctaLabel` fallback to "Activate Account".
+- Leave `ctaNote`, `preheader`, `footerAgent`, and `agentName` handling untouched; callers pass the actual expiration note.
 
-## Current effect (from live data)
+## Preview and verification
 
-The feed currently pulls in 19 Active sale listings and 6 Active rentals. It also includes one Temporarily Withdrawn and one Cancelled listing. All of these drop out. There are 14 Off Market and 19 Coming Soon sale listings, minus the ones already hidden. No Off Market or Coming Soon rentals exist today, so the Rental view will show its empty message until one is added.
+- Use the existing `send-license-verified-preview` Edge Function path to render the HTML preview.
+- Verify the output contains only the approved headline, body, CTA, expiration line, and founder footer.
+- No real email will be sent.
 
-## Verification
+## Files expected to change
 
-- Open the Success Hub and confirm only Off Market and Coming Soon cards appear, newest-added first.
-- Confirm an Active listing (e.g. 242 Lexington Road) no longer appears in Listing Activity but still shows in listing search.
-
-## Technical notes
-
-File: `src/components/success-hub/MarketActivityRow.tsx` only.
-
-- Initial query: replace `.not("status","in","(draft,expired)")` with `.in("status", ["off_market","coming_soon"])`, and order by `created_at` desc instead of `updated_at`. Keep `hidden_from_market_activity = false`.
-- Client sort in `visibleListings` and in the realtime upsert: sort by `created_at` desc.
-- Realtime INSERT: accept only `off_market` / `coming_soon` rows.
-- Realtime UPDATE: if the new status is not `off_market` / `coming_soon`, or the hidden flag is on, remove the row from the pool. Otherwise, on a status/price/type change, re-fetch and upsert in place, ordered by `created_at`.
-- Add a small shared constant `MARKET_ACTIVITY_STATUSES = ["off_market","coming_soon"]` in the file, used by all three paths.
+1. `supabase/functions/_shared/buildLicenseVerifiedEmailHtml.ts`
+2. No source changes needed in `send-license-verified-preview/index.ts` (it already calls the shared builder).
