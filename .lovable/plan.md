@@ -1,40 +1,35 @@
-# Agent Network intro — only show for incomplete profiles
+# Remove the old Agent Network intro popup entirely
 
-Delivered as a **separate draft** for review. Not merged, not deployed.
+The Member Setup Checklist is the single onboarding system for incomplete setup. The separate Agent Network intro overlay (added in June) duplicates that job, so it is removed outright — no replacement dismissal logic, no new database field.
 
-## Background
-
-The Agent Network intro overlay on Our Agents has shown to every agent since June regardless of profile completeness, and its dismissal is browser-only (localStorage/sessionStorage), so it reappears in fresh browsers. Your `agent_settings` confirm the Success Hub checklist is correctly dismissed — this is a separate, older overlay. Not a regression from recent work.
+The earlier draft (improve-the-intro approach) is cancelled; its `agent_network_intro_dismissed` field and server-side dismissal logic are NOT built.
 
 ## Changes
 
-### 1. Gate on the existing profile-completeness check
+### Delete (3 files, used only by this popup)
+- `src/hooks/useAgentNetworkIntro.ts` — the intro visibility/dismissal hook
+- `src/lib/agentNetworkIntro.ts` — its localStorage/sessionStorage key helpers
+- `src/components/agent-directory/AgentNetworkIntroOverlay.tsx` — the overlay component itself
 
-- `src/hooks/useAgentNetworkIntro.ts`: reuse `checkProfileComplete` from `useAgentSettings` (the same check the Success Hub checklist uses — covers name, headshot, brokerage, contact info). No second/separate completeness test.
-- Profile complete → overlay never renders. No popup, no flash, including fresh browser/incognito.
-- Profile incomplete → existing behavior unchanged: same copy, same three buttons, same "Don't show this again" checkbox.
-- `src/pages/OurAgents.tsx`: minimal wiring to pass the completeness result into the hook.
+### Edit (1 file)
+- `src/pages/OurAgents.tsx`
+  - Remove the two imports (`AgentNetworkIntroOverlay`, `useAgentNetworkIntro`)
+  - Remove the `useAgentNetworkIntro(...)` hook call and its four destructured handlers
+  - Remove the `<AgentNetworkIntroOverlay ... />` block from the page render
+  - Keep the "See Profile" navigation behavior it triggered available through normal page navigation — the overlay's special-cased navigate calls go away with it; nothing else on the page depends on them
 
-### 2. Account-based permanent dismissal
+## Explicitly unchanged
+- Member Setup Checklist (useAgentProfileOnboarding / AgentProfileOnboardingOverlay) — untouched; it remains the one onboarding surface
+- Agent Network visibility, directory, and discovery rules — untouched
+- No database migration (no `agent_network_intro_dismissed` column)
+- No changes to emails, queues, Hot Sheets, or any edge function
+- Leftover localStorage/sessionStorage keys in existing browsers are simply never read again (harmless); no cleanup code added
 
-- Migration: add `agent_network_intro_dismissed boolean not null default false` to `public.agent_settings` (additive, nullable-safe with default; applied via the standard migration tool, types regenerate automatically).
-- When "Don't show this again" is selected on any button, save `agent_network_intro_dismissed = true` to `agent_settings` (via the existing settings update path) in addition to localStorage.
-- On load, the server-side flag is authoritative; localStorage stays as a fast cache and backward-compatible fallback for agents who already dismissed in-browser.
-
-## Explicitly not touched
-
-- Success Hub Member Setup Checklist (`useAgentProfileOnboarding` / `AgentProfileOnboardingOverlay`)
-- Agent Network visibility/directory rules
-- Emails, queues, Hot Sheets, unrelated backend functions
-- Overlay design, copy, buttons
-
-## Verification (in the draft)
-
-- Type-check + lint clean.
-- Complete-profile account (yours): no intro on Our Agents, including a fresh session.
-- Incomplete-profile path: intro still shows (code-level verification; no test data created).
+## Verification
+- Type-check and lint clean; build-errors.log clean
+- Confirm no remaining references to the intro anywhere in `src/`
+- Reason through the Our Agents page: it renders with no onboarding overlay in any session state (fresh browser, incognito, returning user)
 
 ## Delivery
-
-- Built in a separate draft; you review the diff there before anything lands on main.
-- The migration is staged with the draft and applies only when the draft is accepted.
+- Report the exact files changed/deleted, then STOP
+- No publish; note that once this reaches GitHub main it auto-deploys to allagentconnect.com
