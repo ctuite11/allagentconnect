@@ -102,3 +102,6 @@
 - [x] Outbox test 03 / concurrency test updated; new 09 dedupe test + hotSheetEventDedupe.test.ts
 - [x] Post-deploy read-only zero-send verification
 - [x] Controlled reopening: HOT_SHEET_EMAILS_PAUSED=false; first 3 worker cycles clean (0 claimed, 0 jobs, 0 sends)
+
+## Success Hub Listing Activity: Off Market + Coming Soon only (2026-09-23)
+- [x] MarketActivityRow.tsx only: status in (off_market, coming_soon), keep hidden flag, order created_at DESC, refresh every UPDATE, remove when ineligible or missing; no deploy

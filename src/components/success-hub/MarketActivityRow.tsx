@@ -7,6 +7,7 @@ import { mapMarketRowToListingCard } from "@/components/success-hub/listingCardA
 import { SuccessHubListingCard } from "@/components/success-hub/SuccessHubListingCard";
 import { SUCCESS_HUB_LISTINGS_GRID } from "@/components/success-hub/successHubListingLayout";
 import { BulkShareListingsDialog } from "@/components/BulkShareListingsDialog";
+import { LISTING_STATUS } from "@/constants/status";
 
 /** Matches listing-search compact share trigger (neutral AAC). */
 const MARKET_ACTIVITY_SHARE_TRIGGER =
@@ -51,6 +52,21 @@ type AgentListingMeta = {
 const FETCH_LISTING_LIMIT = 42;
 /** Fixed number of cards shown; new realtime items displace the oldest slot (no extra rows from updates). */
 const VISIBLE_MARKET_ACTIVITY_SLOTS = 4;
+
+/** Listing Activity shows only these statuses (initial fetch, INSERT, UPDATE). */
+const MARKET_ACTIVITY_STATUSES: string[] = [LISTING_STATUS.OFF_MARKET, LISTING_STATUS.COMING_SOON];
+
+/** Single eligibility rule for Listing Activity. */
+function isMarketActivityEligible(row: { status?: unknown; hidden_from_market_activity?: unknown } | null | undefined): boolean {
+  if (!row) return false;
+  if (row.hidden_from_market_activity === true) return false;
+  return typeof row.status === "string" && MARKET_ACTIVITY_STATUSES.includes(row.status);
+}
+
+/** Feed position = original AAC add date (created_at DESC). Never updated_at. */
+function compareByCreatedAtDesc(a: { created_at: string }, b: { created_at: string }): number {
+  return Date.parse(b.created_at) - Date.parse(a.created_at);
+}
 
 type MarketTypeFilter = "sale" | "rental";
 
@@ -127,9 +143,9 @@ export function MarketActivityRow() {
         photos, status, created_at, updated_at, active_date, listing_number, unit_number, condo_details,
         agent_id
       `)
-      .not("status", "in", "(draft,expired)")
+      .in("status", MARKET_ACTIVITY_STATUSES)
       .eq("hidden_from_market_activity", false)
-      .order("updated_at", { ascending: false })
+      .order("created_at", { ascending: false })
       .limit(FETCH_LISTING_LIMIT);
 
     if (error || !data) {
@@ -167,7 +183,7 @@ export function MarketActivityRow() {
   }, [fetchListings]);
 
   const visibleListings = useMemo(() => {
-    const sorted = [...poolListings].sort((a, b) => Date.parse(b.updated_at) - Date.parse(a.updated_at));
+    const sorted = [...poolListings].sort(compareByCreatedAtDesc);
     const filtered =
       marketTypeFilter === "sale"
         ? sorted.filter((l) => l.listing_type === "for_sale")
@@ -198,9 +214,14 @@ export function MarketActivityRow() {
         .eq("id", listingId)
         .maybeSingle();
 
-      if (!data) return;
-      if ((data as any).hidden_from_market_activity === true) {
-        setPoolListings((prev) => prev.filter((l) => l.id !== data.id));
+      // Deleted / inaccessible listing: drop any stale card.
+      if (!data) {
+        setPoolListings((prev) => prev.filter((l) => l.id !== listingId));
+        return;
+      }
+      // No longer eligible (status left off_market/coming_soon, or hidden): remove immediately.
+      if (!isMarketActivityEligible(data)) {
+        setPoolListings((prev) => prev.filter((l) => l.id !== listingId));
         return;
       }
 
@@ -224,13 +245,11 @@ export function MarketActivityRow() {
       const visible = filterVisibleListings([parsed], currentUserId);
 
       setPoolListings((prev) => {
-        // Remove if not visible to this user (e.g., off_market not owned)
         if (visible.length === 0) return prev.filter((l) => l.id !== parsed.id);
 
+        // Replace card data in place; position is determined solely by created_at.
         const without = prev.filter((l) => l.id !== parsed.id);
-        const next = [parsed, ...without].sort(
-          (a, b) => Date.parse(b.updated_at) - Date.parse(a.updated_at),
-        );
+        const next = [...without, parsed].sort(compareByCreatedAtDesc);
         return next.slice(0, FETCH_LISTING_LIMIT);
       });
     };
@@ -242,9 +261,8 @@ export function MarketActivityRow() {
         { event: "INSERT", schema: "public", table: "listings" },
         async (payload) => {
           const newRow = payload.new as any;
-          if (!newRow || newRow.status === "draft" || newRow.status === "expired") return;
-          if (newRow.hidden_from_market_activity === true) return;
-          if (typeof newRow.id !== "string") return;
+          if (!newRow || typeof newRow.id !== "string") return;
+          if (!isMarketActivityEligible(newRow)) return;
           await upsertFromListingChange(newRow.id);
         },
       )
@@ -252,21 +270,9 @@ export function MarketActivityRow() {
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "listings" },
         async (payload) => {
-          const oldRow = payload.old as any;
           const newRow = payload.new as any;
-          if (!newRow || newRow.status === "draft" || newRow.status === "expired") return;
-          if (typeof newRow.id !== "string") return;
-          if (newRow.hidden_from_market_activity === true) {
-            setPoolListings((prev) => prev.filter((l) => l.id !== newRow.id));
-            return;
-          }
-
-          // Avoid re-fetching on unrelated updates; treat only status/type/price changes as meaningful.
-          const relevantChanged = ["status", "listing_type", "price", "price_range_min", "price_range_max", "active_date"].some(
-            (k) => oldRow?.[k] !== newRow?.[k],
-          );
-          if (!relevantChanged) return;
-
+          if (!newRow || typeof newRow.id !== "string") return;
+          // Re-read on every update; eligibility is enforced on the fresh row.
           await upsertFromListingChange(newRow.id);
         },
       )
