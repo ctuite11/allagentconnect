@@ -2813,7 +2813,7 @@ const AddListing = () => {
     return true;
   };
 
-  /** Status that will actually be persisted when publishing (draft → new). */
+  /** Status that will actually be persisted when publishing (draft → new → DB active). */
   const resolveIntendedLiveStatus = (rawStatus: string, publishNow: boolean) => {
     if (publishNow && (rawStatus === "draft" || !rawStatus)) return "new";
     return rawStatus;
@@ -2959,6 +2959,10 @@ const AddListing = () => {
       setPendingPublishAction("saveChanges");
       setPublishConfirmOpen(true);
       return;
+    }
+    // One-shot bypass: consume after the gate so a failed publish re-prompts.
+    if (!isAutoSave) {
+      publishConfirmedRef.current = false;
     }
     // --- End validation / first-publish gates ---
 
@@ -3322,6 +3326,10 @@ const AddListing = () => {
         setPendingPublishAction("publish");
         setPublishConfirmOpen(true);
         return;
+      }
+      // One-shot bypass: consume after the gate so a failed publish re-prompts.
+      if (publishNow) {
+        publishConfirmedRef.current = false;
       }
 
       // Upload files first
@@ -5741,9 +5749,12 @@ const AddListing = () => {
       <ConfirmBeforePublishingDialog
         open={publishConfirmOpen}
         statusLabel={getListingStatusLabel(
-          resolveIntendedLiveStatus(
-            formData.status,
-            pendingPublishAction === "publish",
+          // Persist mapping: form "new" → DB "active" (On MLS). Show what will go live.
+          addListingFormStatusToDbStatus(
+            resolveIntendedLiveStatus(
+              formData.status,
+              pendingPublishAction === "publish",
+            ),
           ),
         )}
         address={formatPublishConfirmAddress()}
