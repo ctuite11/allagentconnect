@@ -3,7 +3,7 @@
 ## Scope
 
 - Update `supabase/functions/_shared/buildLicenseVerifiedEmailHtml.ts`.
-- The preview renderer (`supabase/functions/send-license-verified-preview/index.ts`) imports this shared builder, so it will automatically render the new template.
+- Update `supabase/functions/send-license-verified-preview/index.ts` so the preview accurately matches the production email (correct CTA label and founder footer).
 - Render a preview only; do not send a real member email.
 - Do not change token issuance, CTA URL generation, expiration logic, activation security, queue behavior, or sender/footer identity.
 
@@ -12,11 +12,15 @@
 In `buildLicenseVerifiedEmailHtml.ts`:
 
 - Keep the dark header monogram and "All Agent Connect" lockup.
-- Replace the header headline/subhead with a single new content block:
+- The dark header should contain only:
+  - AAC monogram
+  - "All Agent Connect"
   - Headline: **Your account is ready**
-  - Body: **Hi [First Name], Your real estate license has been verified. Activate your All Agent Connect account to get started.**
-- CTA label: **Activate Account**
-- Keep the existing `ctaNote` expiration line directly below the CTA.
+- The white body should contain only:
+  - **Hi [First Name],**
+  - **Your real estate license has been verified. Activate your All Agent Connect account to get started.**
+  - CTA: **Activate Account**
+  - Existing `ctaNote` expiration line directly below the CTA
 - Keep the existing Chris Tuite founder footer unchanged.
 - Remove completely:
   - The large "Your license has been verified" headline.
@@ -26,21 +30,36 @@ In `buildLicenseVerifiedEmailHtml.ts`:
   - The entire "What's next" section and its three bullets.
   - The Communications Center highlight box.
 
+In `send-license-verified-preview/index.ts`:
+
+- Change `ctaLabel` from `"Activate My Account"` to `"Activate Account"`.
+- Pass the same `FOOTER_AGENT` object used by `hydrateActivationEmail.ts` so the preview shows the Chris Tuite founder footer instead of the generic footer.
+
 ## How
 
-- Restructure the dark header `<td>` to contain the new headline and body copy instead of the old headline/subhead.
+In `buildLicenseVerifiedEmailHtml.ts`:
+
+- Restructure the dark header `<td>` to show only the monogram/brand and the new headline.
 - Replace the body `<td>` content with only the greeting/body paragraph and the CTA block (no bullets, no highlight box).
 - Preserve all existing HTML wrapper, preheader, and footer rendering.
 - Update the default `ctaLabel` fallback to "Activate Account".
 - Leave `ctaNote`, `preheader`, `footerAgent`, and `agentName` handling untouched; callers pass the actual expiration note.
 
+In `send-license-verified-preview/index.ts`:
+
+- Change the `ctaLabel` passed to the builder from `"Activate My Account"` to `"Activate Account"`.
+- Import or inline the same `FOOTER_AGENT` values from `hydrateActivationEmail.ts` and pass them as `footerAgent`.
+- Keep recipient as the authenticated admin, CTA inert (`#`), no activation token issued, and no queue/email_jobs writes.
+
 ## Preview and verification
 
-- Use the existing `send-license-verified-preview` Edge Function path to render the HTML preview.
-- Verify the output contains only the approved headline, body, CTA, expiration line, and founder footer.
-- No real email will be sent.
+- Use the existing `send-license-verified-preview` Edge Function path to render the HTML preview for the authenticated admin.
+- Verify the output shows: dark header with monogram, "All Agent Connect", and "Your account is ready"; white body with "Hi [First Name],", the body copy, "Activate Account" CTA, and expiration line; Chris Tuite founder footer.
+- No real member email will be sent.
 
 ## Files expected to change
 
 1. `supabase/functions/_shared/buildLicenseVerifiedEmailHtml.ts`
-2. No source changes needed in `send-license-verified-preview/index.ts` (it already calls the shared builder).
+2. `supabase/functions/send-license-verified-preview/index.ts`
+
+Do not change `supabase/functions/_shared/hydrateActivationEmail.ts`; its production License Verified path already uses `"Activate Account"` and the Chris Tuite footer correctly.
