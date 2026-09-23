@@ -220,7 +220,7 @@ export function MarketActivityRow() {
         return;
       }
       // No longer eligible (status left off_market/coming_soon, or hidden): remove immediately.
-      if (!isMarketActivityEligible(data as any)) {
+      if (!isMarketActivityEligible(data)) {
         setPoolListings((prev) => prev.filter((l) => l.id !== listingId));
         return;
       }
