@@ -363,6 +363,8 @@ const AddListing = () => {
   /**
    * Final first-publish confirmation (status / address / price) — last gate
    * before the listing status becomes live in the database.
+   * publishConfirmedRef is a one-shot bypass for the resumed attempt only;
+   * it is cleared once that attempt passes the confirm gate.
    */
   const [publishConfirmOpen, setPublishConfirmOpen] = useState(false);
   const [pendingPublishAction, setPendingPublishAction] = useState<"publish" | "saveChanges" | null>(null);
