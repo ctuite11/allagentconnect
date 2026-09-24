@@ -85,12 +85,15 @@ const steps: {
 
 type AgentProfileOnboardingOverlayProps = {
   completion: SetupChecklistCompletion;
+  /** True only for the first checklist appearance right after activation. */
+  isPostActivationWelcome?: boolean;
   onLater: (dontShowAgain: boolean) => void;
   onStepNavigate: (dontShowAgain: boolean) => void;
 };
 
 export function AgentProfileOnboardingOverlay({
   completion,
+  isPostActivationWelcome = false,
   onLater,
   onStepNavigate,
 }: AgentProfileOnboardingOverlayProps) {
@@ -132,11 +135,14 @@ export function AgentProfileOnboardingOverlay({
               id="agent-profile-onboarding-title"
               className="text-xl font-semibold leading-snug tracking-tight text-zinc-900 sm:text-[1.35rem]"
             >
-              Get the Full All Agent Connect Experience
+              {isPostActivationWelcome
+                ? "Welcome to All Agent Connect"
+                : "Complete your All Agent Connect setup"}
             </h1>
             <p className="text-[13px] leading-relaxed text-zinc-500 sm:text-sm">
-              If you haven&apos;t completed these three steps yet, take a minute to get set up so you
-              don&apos;t miss opportunities across the network.
+              {isPostActivationWelcome
+                ? "Your account is active. Complete these three quick setup steps so you can get the most from your membership and start seeing opportunities across the network."
+                : "Finish the remaining steps so you can get the most from your membership and opportunities across the network."}
             </p>
           </div>
 

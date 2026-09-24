@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import { AGENT_PROFILE_ONBOARDING_SESSION_KEY, type SetupChecklistCompletion } from "@/components/success-hub/AgentProfileOnboardingOverlay";
 import { useAgentSettings } from "@/hooks/useAgentSettings";
+import { consumeSetupChecklistWelcome } from "@/lib/setupChecklistWelcomeHandoff";
 import { supabase } from "@/integrations/supabase/client";
 
 export type { SetupChecklistCompletion };
@@ -38,10 +39,13 @@ export function useAgentProfileOnboarding(user: User | null) {
 
   const [visible, setVisible] = useState(false);
   const [completion, setCompletion] = useState<SetupChecklistCompletion>(EMPTY_COMPLETION);
+  /** One-time Welcome copy from post-activation handoff (not checklist progress). */
+  const [isPostActivationWelcome, setIsPostActivationWelcome] = useState(false);
   const [sessionDismissed, setSessionDismissed] = useState(
     () => sessionStorage.getItem(AGENT_PROFILE_ONBOARDING_SESSION_KEY) === "1",
   );
   const evaluationRef = useRef(0);
+  const welcomeHandoffConsumedRef = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -85,6 +89,15 @@ export function useAgentProfileOnboarding(user: User | null) {
         return;
       }
 
+      // First time this hook instance shows the checklist: consume the
+      // one-time post-activation Welcome handoff for this account only.
+      if (!welcomeHandoffConsumedRef.current) {
+        welcomeHandoffConsumedRef.current = true;
+        setIsPostActivationWelcome(
+          consumeSetupChecklistWelcome(userId, user?.email ?? null),
+        );
+      }
+
       setVisible(true);
     };
 
@@ -95,6 +108,7 @@ export function useAgentProfileOnboarding(user: User | null) {
     };
   }, [
     userId,
+    user?.email,
     sessionDismissed,
     settingsLoading,
     settings?.welcome_modal_dismissed,
@@ -132,6 +146,7 @@ export function useAgentProfileOnboarding(user: User | null) {
   return {
     visible,
     completion,
+    isPostActivationWelcome,
     handleLater,
     handleStepNavigate,
   };

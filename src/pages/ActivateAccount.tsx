@@ -20,6 +20,7 @@ import { cn } from "@/lib/utils";
 import { getRouteForRole, resolveUserRole } from "@/lib/resolveUserRole";
 import { clearRecoveryState } from "@/lib/authRecovery";
 import { consumePostAuthRedirect, setPostAuthRedirect } from "@/lib/sharedListingGuest";
+import { markSetupChecklistWelcome } from "@/lib/setupChecklistWelcomeHandoff";
 
 /**
  * AAC-owned activation landing page — now the setup screen itself.
@@ -228,6 +229,8 @@ export default function ActivateAccount() {
       password: signInPassword,
     });
     if (error || !data.user) {
+      // Sign-in failed; Welcome handoff (if any) was already set by the
+      // activation-success caller and must survive for manual sign-in.
       toast.success("Your account is activated. Please sign in.");
       navigate("/auth", { replace: true });
       return;
@@ -283,12 +286,20 @@ export default function ActivateAccount() {
       const status = typeof payload?.status === "string" ? payload.status : "error";
 
       if (status === "ok") {
-        await finishSignIn(typeof payload.email === "string" ? payload.email : email, password);
+        const activatedEmail =
+          typeof payload.email === "string" && payload.email.trim()
+            ? payload.email
+            : email;
+        // True first-time activation only — set handoff before auto sign-in so
+        // a failed sign-in still yields Welcome after the agent signs in manually.
+        markSetupChecklistWelcome({ email: activatedEmail });
+        await finishSignIn(activatedEmail, password);
         return;
       }
 
       // A lost success response looks like "used" / "ineligible" on retry.
-      // If the password we just submitted works, the activation did complete.
+      // Password may still work for sign-in, but this is NOT a new activation —
+      // do not set the Welcome handoff.
       if ((status === "used" || status === "ineligible") && email) {
         const { data } = await supabase.auth.signInWithPassword({ email, password });
         if (data?.user) {

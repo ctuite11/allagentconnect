@@ -175,6 +175,7 @@ function SuccessHubDashboardBody() {
   const {
     visible: showProfileOnboarding,
     completion: setupCompletion,
+    isPostActivationWelcome,
     handleLater,
     handleStepNavigate,
   } = useAgentProfileOnboarding(user);
@@ -204,6 +205,7 @@ function SuccessHubDashboardBody() {
       {showProfileOnboarding ? (
         <AgentProfileOnboardingOverlay
           completion={setupCompletion}
+          isPostActivationWelcome={isPostActivationWelcome}
           onLater={handleLater}
           onStepNavigate={handleStepNavigate}
         />
