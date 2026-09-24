@@ -20,6 +20,7 @@ import { cn } from "@/lib/utils";
 import { getRouteForRole, resolveUserRole } from "@/lib/resolveUserRole";
 import { clearRecoveryState } from "@/lib/authRecovery";
 import { consumePostAuthRedirect, setPostAuthRedirect } from "@/lib/sharedListingGuest";
+import { markSetupChecklistWelcome } from "@/lib/setupChecklistWelcomeHandoff";
 
 /**
  * AAC-owned activation landing page — now the setup screen itself.
@@ -233,6 +234,7 @@ export default function ActivateAccount() {
       return;
     }
     clearRecoveryState();
+    markSetupChecklistWelcome();
     toast.success("You're all set — welcome to All Agent Connect.");
     const stashed = consumePostAuthRedirect();
     if (stashed) {

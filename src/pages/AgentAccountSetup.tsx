@@ -23,6 +23,7 @@ import { cn } from "@/lib/utils";
 import { getRouteForRole, resolveUserRole } from "@/lib/resolveUserRole";
 import { clearRecoveryState } from "@/lib/authRecovery";
 import { consumePostAuthRedirect } from "@/lib/sharedListingGuest";
+import { markSetupChecklistWelcome } from "@/lib/setupChecklistWelcomeHandoff";
 
 /**
  * Agent Account Setup — final step of the approved-agent "License Verified"
@@ -323,6 +324,7 @@ const AgentAccountSetup = () => {
       }
 
       clearRecoveryState();
+      markSetupChecklistWelcome();
       window.history.replaceState(null, "", "/agent-setup");
 
       // Communications Center is OPT-IN ONLY (policy, Aug 2026).
