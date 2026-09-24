@@ -202,9 +202,10 @@ function SuccessHubDashboardBody() {
 
   return (
     <>
-      {showProfileOnboarding ? (
+      {showProfileOnboarding && user?.id ? (
         <AgentProfileOnboardingOverlay
           completion={setupCompletion}
+          agentUserId={user.id}
           isPostActivationWelcome={isPostActivationWelcome}
           onLater={handleLater}
           onStepNavigate={handleStepNavigate}
