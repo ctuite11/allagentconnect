@@ -137,7 +137,7 @@ export function AgentProfileOnboardingOverlay({
             >
               {isPostActivationWelcome
                 ? "Welcome to All Agent Connect"
-                : "Complete Your All Agent Connect Setup"}
+                : "Complete your All Agent Connect setup"}
             </h1>
             <p className="text-[13px] leading-relaxed text-zinc-500 sm:text-sm">
               {isPostActivationWelcome
