@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import PropertyMap from "@/components/PropertyMap";
 import { formatListingShareEmailStreetLine } from "@/lib/buildHotSheetShareEmailHtml";
+import { buildNewListingSharedEmailSubject } from "@/lib/listingEmailSubject";
 import { firstListingDisplayPhotoUrl } from "@/lib/resolveListingPhotoUrl";
 import {
   type ListingRecord,
