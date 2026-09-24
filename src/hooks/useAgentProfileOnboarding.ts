@@ -90,10 +90,12 @@ export function useAgentProfileOnboarding(user: User | null) {
       }
 
       // First time this hook instance shows the checklist: consume the
-      // one-time post-activation Welcome handoff (if any).
+      // one-time post-activation Welcome handoff for this account only.
       if (!welcomeHandoffConsumedRef.current) {
         welcomeHandoffConsumedRef.current = true;
-        setIsPostActivationWelcome(consumeSetupChecklistWelcome());
+        setIsPostActivationWelcome(
+          consumeSetupChecklistWelcome(userId, user?.email ?? null),
+        );
       }
 
       setVisible(true);
@@ -106,6 +108,7 @@ export function useAgentProfileOnboarding(user: User | null) {
     };
   }, [
     userId,
+    user?.email,
     sessionDismissed,
     settingsLoading,
     settings?.welcome_modal_dismissed,

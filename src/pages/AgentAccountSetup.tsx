@@ -324,7 +324,10 @@ const AgentAccountSetup = () => {
       }
 
       clearRecoveryState();
-      markSetupChecklistWelcome();
+      markSetupChecklistWelcome({
+        userId: data.user.id,
+        email: data.user.email,
+      });
       window.history.replaceState(null, "", "/agent-setup");
 
       // Communications Center is OPT-IN ONLY (policy, Aug 2026).

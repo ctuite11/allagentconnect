@@ -229,12 +229,17 @@ export default function ActivateAccount() {
       password: signInPassword,
     });
     if (error || !data.user) {
+      // Activation already succeeded; keep Welcome handoff for manual sign-in.
+      markSetupChecklistWelcome({ email: signInEmail });
       toast.success("Your account is activated. Please sign in.");
       navigate("/auth", { replace: true });
       return;
     }
     clearRecoveryState();
-    markSetupChecklistWelcome();
+    markSetupChecklistWelcome({
+      userId: data.user.id,
+      email: data.user.email ?? signInEmail,
+    });
     toast.success("You're all set — welcome to All Agent Connect.");
     const stashed = consumePostAuthRedirect();
     if (stashed) {
@@ -285,7 +290,14 @@ export default function ActivateAccount() {
       const status = typeof payload?.status === "string" ? payload.status : "error";
 
       if (status === "ok") {
-        await finishSignIn(typeof payload.email === "string" ? payload.email : email, password);
+        const activatedEmail =
+          typeof payload.email === "string" && payload.email.trim()
+            ? payload.email
+            : email;
+        // Activation completed here — set handoff before auto sign-in so a
+        // failed sign-in still yields Welcome after the agent signs in manually.
+        markSetupChecklistWelcome({ email: activatedEmail });
+        await finishSignIn(activatedEmail, password);
         return;
       }
 
@@ -294,6 +306,10 @@ export default function ActivateAccount() {
       if ((status === "used" || status === "ineligible") && email) {
         const { data } = await supabase.auth.signInWithPassword({ email, password });
         if (data?.user) {
+          markSetupChecklistWelcome({
+            userId: data.user.id,
+            email: data.user.email ?? email,
+          });
           await finishSignIn(email, password);
           return;
         }
