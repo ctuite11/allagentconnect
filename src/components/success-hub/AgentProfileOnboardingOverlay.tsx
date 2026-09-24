@@ -22,7 +22,7 @@ const AGENT_PRIMARY_BTN_CLASS =
 
 const COMMUNICATIONS_PATH = "/communications";
 const PROFILE_EDITOR_PATH = "/agent-profile-editor";
-const HOT_SHEETS_CREATE_PATH = "/agent/hot-sheets?create=1";
+const HOT_SHEETS_PATH = "/agent/hot-sheets";
 
 function OnboardingBrand() {
   return (
@@ -77,7 +77,7 @@ const steps: {
     description:
       "Tell us what your buyers are looking for so you can be matched with Off Market and Coming Soon opportunities.",
     cta: "Create Hot Sheet",
-    path: HOT_SHEETS_CREATE_PATH,
+    path: HOT_SHEETS_PATH,
     icon: Flame,
     iconClass: "text-amber-600",
   },
