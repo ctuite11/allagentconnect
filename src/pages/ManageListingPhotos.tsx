@@ -8,8 +8,6 @@ import { Loader2 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PageHeader } from '@/components/ui/page-header';
 import { Seo } from '@/components/Seo';
-import { isLiveStatus } from '@/lib/checkDuplicateListing';
-import { resolveListingPhotoUrl } from '@/lib/resolveListingPhotoUrl';
 
 type Photo = {
   url: string;
@@ -31,7 +29,6 @@ const ManageListingPhotos: React.FC<ManageListingPhotosProps> = ({ mode = 'photo
   const [selectedIndexes, setSelectedIndexes] = useState<Set<number>>(new Set());
   const [saving, setSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [listingStatus, setListingStatus] = useState<string | null>(null);
 
   // Bucket-enforced max upload size. listing-photos is currently 10 MB server-side
   // (raise coordinated separately); listing-floorplans keeps its existing limit.
@@ -85,13 +82,11 @@ const ManageListingPhotos: React.FC<ManageListingPhotosProps> = ({ mode = 'photo
     try {
       const { data, error } = await supabase
         .from('listings')
-        .select(`${config.dbField}, status`)
+        .select(config.dbField)
         .eq('id', id)
         .single();
 
       if (error) throw error;
-
-      setListingStatus(typeof (data as any)?.status === 'string' ? (data as any).status : null);
 
       const itemsData = ((data as any)?.[config.dbField] as any[]) || [];
       
@@ -110,18 +105,6 @@ const ManageListingPhotos: React.FC<ManageListingPhotosProps> = ({ mode = 'photo
     } finally {
       setLoading(false);
     }
-  };
-
-  const realPhotoCount = (photos: Photo[]) =>
-    photos.filter((p) => Boolean(resolveListingPhotoUrl(p))).length;
-
-  /** Live listings must keep ≥1 real photo; drafts may be empty. */
-  const assertCanSavePhotos = (itemsToSave: Photo[]) => {
-    if (mode !== 'photos') return true;
-    if (!listingStatus || !isLiveStatus(listingStatus)) return true;
-    if (realPhotoCount(itemsToSave) > 0) return true;
-    toast.error('Add at least one photo before publishing this listing.');
-    return false;
   };
 
   const handleDragStart = (index: number) => {
@@ -185,9 +168,8 @@ const ManageListingPhotos: React.FC<ManageListingPhotosProps> = ({ mode = 'photo
   };
 
   // Save items to database (without navigating)
-  const saveItemsToDb = async (itemsToSave: Photo[]): Promise<boolean | "blocked"> => {
+  const saveItemsToDb = async (itemsToSave: Photo[]) => {
     if (!id) return false;
-    if (!assertCanSavePhotos(itemsToSave)) return "blocked";
     
     try {
       const { error } = await supabase
@@ -210,7 +192,6 @@ const ManageListingPhotos: React.FC<ManageListingPhotosProps> = ({ mode = 'photo
     const success = await saveItemsToDb(items);
     setSaving(false);
     
-    if (success === "blocked") return;
     if (success) {
       toast.success(`${config.title.replace('Manage ', '')} updated successfully`);
     } else {
@@ -225,7 +206,6 @@ const ManageListingPhotos: React.FC<ManageListingPhotosProps> = ({ mode = 'photo
     const success = await saveItemsToDb(items);
     setSaving(false);
     
-    if (success === "blocked") return;
     if (success) {
       toast.success(`${config.title.replace('Manage ', '')} saved`);
       navigate(`/agent/listings/edit/${id}`);
@@ -316,9 +296,9 @@ const ManageListingPhotos: React.FC<ManageListingPhotosProps> = ({ mode = 'photo
       
       // Auto-save to database immediately after upload
       const success = await saveItemsToDb(updatedItems);
-      if (success === true) {
+      if (success) {
         toast.success(`${newItems.length} ${config.itemLabel.toLowerCase()}(s) uploaded and saved`);
-      } else if (success !== "blocked") {
+      } else {
         toast.error(`${config.itemLabel}s uploaded but failed to save to database`);
       }
     }

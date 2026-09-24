@@ -1,4 +1,4 @@
-import { useState, type ImgHTMLAttributes } from "react";
+import { useEffect, useState, type ImgHTMLAttributes } from "react";
 import { cn } from "@/lib/utils";
 import {
   LISTING_PHOTO_PLACEHOLDER,
@@ -25,6 +25,12 @@ export function ListingCoverImage({
   const initial =
     src?.trim() && !isListingPhotoPlaceholder(src) ? src.trim() : LISTING_PHOTO_PLACEHOLDER;
   const [failed, setFailed] = useState(false);
+
+  // Reset error fallback when the incoming src changes (e.g. carousel next photo).
+  useEffect(() => {
+    setFailed(false);
+  }, [initial]);
+
   const displaySrc = failed ? LISTING_PHOTO_PLACEHOLDER : initial;
 
   return (

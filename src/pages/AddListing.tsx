@@ -2889,8 +2889,11 @@ const AddListing = () => {
     // --- Centralized validation (manual save only; autosave handled below) ---
     if (!isAutoSave) {
       const targetIsDraft = !formData.status || formData.status === "draft";
+      // Photo rule only on draft/non-live → live; already-live saves keep prior behavior.
+      const previousWasLive =
+        Boolean(originalStatusRef.current) && isLiveStatus(originalStatusRef.current);
       const errors = getValidationErrors({
-        requirePhotos: isLiveStatus(formData.status),
+        requirePhotos: isLiveStatus(formData.status) && !previousWasLive,
         requirePricing: !targetIsDraft,
       });
       if (errors.length > 0) {
@@ -3230,9 +3233,16 @@ const AddListing = () => {
         return; // getFreshUserOrRedirect already shows toast and redirects
       }
 
-      // Centralized validation
+      // Centralized validation — photos required only when publishing into a live status
+      // for the first time (draft/non-live → live). Already-live listings are not blocked.
+      const intendedForPhotoRule =
+        publishNow
+          ? resolveIntendedLiveStatus(formData.status, publishNow)
+          : formData.status;
+      const previousWasLive =
+        Boolean(originalStatusRef.current) && isLiveStatus(originalStatusRef.current);
       const errors = getValidationErrors({
-        requirePhotos: publishNow,
+        requirePhotos: publishNow && isLiveStatus(intendedForPhotoRule) && !previousWasLive,
         requirePricing: publishNow,
       });
       if (errors.length > 0) {
