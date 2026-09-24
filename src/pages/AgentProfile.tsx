@@ -19,6 +19,7 @@ import {
   MessageSquare,
   Building2,
   UserRound,
+  Pencil,
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
@@ -388,6 +389,8 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
 
   const agentFullName = `${agent.first_name} ${agent.last_name}`;
   const agentProfileUrl = `${getPublicOrigin()}/agent/${agent.aac_id || agent.id}`;
+  // Own-profile actions (e.g. Edit Profile) — never for other agents or public visitors.
+  const isOwnProfile = Boolean(user?.id && agent.id === user.id);
 
   return (
     <div className="min-h-screen flex-1 bg-white">
@@ -521,6 +524,21 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
               <div className="relative mt-4 border-t border-neutral-100 pt-4">
                 <div className="flex w-full flex-col items-center gap-2 lg:w-auto lg:items-start">
                 <div className="flex flex-wrap items-center justify-center gap-2 lg:justify-start">
+                  {isOwnProfile ? (
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={() =>
+                        navigate("/agent-profile-editor", {
+                          state: { from: location.pathname + location.search },
+                        })
+                      }
+                      className="h-[34px] min-w-[7.75rem] rounded-md border border-neutral-900 bg-neutral-900 px-5 text-[13px] font-medium tracking-wide text-white hover:bg-neutral-800 hover:text-white focus-visible:bg-neutral-800 focus-visible:text-white [&_svg]:text-white hover:[&_svg]:text-white focus-visible:[&_svg]:text-white"
+                    >
+                      <Pencil className="mr-1.5 h-3.5 w-3.5 text-white" aria-hidden />
+                      Edit Profile
+                    </Button>
+                  ) : null}
                   {agent.email ? (
                     <ContactAgentProfileDialog
                       agentId={agent.id}
