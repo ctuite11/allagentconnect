@@ -229,17 +229,13 @@ export default function ActivateAccount() {
       password: signInPassword,
     });
     if (error || !data.user) {
-      // Activation already succeeded; keep Welcome handoff for manual sign-in.
-      markSetupChecklistWelcome({ email: signInEmail });
+      // Sign-in failed; Welcome handoff (if any) was already set by the
+      // activation-success caller and must survive for manual sign-in.
       toast.success("Your account is activated. Please sign in.");
       navigate("/auth", { replace: true });
       return;
     }
     clearRecoveryState();
-    markSetupChecklistWelcome({
-      userId: data.user.id,
-      email: data.user.email ?? signInEmail,
-    });
     toast.success("You're all set — welcome to All Agent Connect.");
     const stashed = consumePostAuthRedirect();
     if (stashed) {
@@ -294,22 +290,19 @@ export default function ActivateAccount() {
           typeof payload.email === "string" && payload.email.trim()
             ? payload.email
             : email;
-        // Activation completed here — set handoff before auto sign-in so a
-        // failed sign-in still yields Welcome after the agent signs in manually.
+        // True first-time activation only — set handoff before auto sign-in so
+        // a failed sign-in still yields Welcome after the agent signs in manually.
         markSetupChecklistWelcome({ email: activatedEmail });
         await finishSignIn(activatedEmail, password);
         return;
       }
 
       // A lost success response looks like "used" / "ineligible" on retry.
-      // If the password we just submitted works, the activation did complete.
+      // Password may still work for sign-in, but this is NOT a new activation —
+      // do not set the Welcome handoff.
       if ((status === "used" || status === "ineligible") && email) {
         const { data } = await supabase.auth.signInWithPassword({ email, password });
         if (data?.user) {
-          markSetupChecklistWelcome({
-            userId: data.user.id,
-            email: data.user.email ?? email,
-          });
           await finishSignIn(email, password);
           return;
         }
