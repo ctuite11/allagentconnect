@@ -52,13 +52,15 @@ import {
 import { 
   LISTING_STATUS, 
   ADD_LISTING_CREATE_STATUSES, 
-  ADD_LISTING_EDIT_STATUSES 
+  ADD_LISTING_EDIT_STATUSES,
+  getListingStatusLabel,
 } from "@/constants/status";
 import { createAddListingDraftSession } from "@/lib/addListingDraftSession";
 import AddressAutocomplete from "@/components/AddressAutocomplete";
 import { normalizeGooglePlace } from "@/lib/google-address";
 import { checkDuplicateListing, isLiveStatus } from "@/lib/checkDuplicateListing";
 import { formHasValidListingPricing } from "@/lib/listingPricingValidation";
+import { formatListingPriceDisplay } from "@/lib/formatListingPriceDisplay";
 import { dcmlsPublishSnapshot, dcmlsShowOnFromRecord } from "@/lib/dcmlsPublishPayload";
 import { fetchDcmlsParticipation } from "@/lib/dcmlsListing";
 import { DcmlsPublishControl } from "@/components/listing/DcmlsPublishControl";
@@ -68,6 +70,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { DcmlsPublishingIntroOverlay } from "@/components/add-listing/DcmlsPublishingIntroOverlay";
 import { AddListingStatusHelp } from "@/components/add-listing/AddListingStatusHelp";
 import { AddListingStatusIntroOverlay } from "@/components/add-listing/AddListingStatusIntroOverlay";
+import { ConfirmBeforePublishingDialog } from "@/components/add-listing/ConfirmBeforePublishingDialog";
 import { useAddListingStatusIntro } from "@/hooks/useAddListingStatusIntro";
 import { useAddListingDcmlsIntro } from "@/hooks/useAddListingDcmlsIntro";
 import { canonicalizeListingFormState, describeMediaCollection } from "@/lib/listingFormDirtyState";
@@ -357,8 +360,16 @@ const AddListing = () => {
    * Save Draft, or autosave.
    */
   const [photoOrderConfirmOpen, setPhotoOrderConfirmOpen] = useState(false);
+  /**
+   * Final first-publish confirmation (status / address / price) — last gate
+   * before the listing status becomes live in the database.
+   * publishConfirmedRef is a one-shot bypass for the resumed attempt only;
+   * it is cleared once that attempt passes the confirm gate.
+   */
+  const [publishConfirmOpen, setPublishConfirmOpen] = useState(false);
   const [pendingPublishAction, setPendingPublishAction] = useState<"publish" | "saveChanges" | null>(null);
   const photoOrderConfirmedRef = useRef(false);
+  const publishConfirmedRef = useRef(false);
 
   const [formData, setFormData] = useState({
     status: initialStatus,
@@ -2791,6 +2802,60 @@ const AddListing = () => {
     return photos.length > 0;
   };
 
+  /**
+   * True when this save takes the listing live for the first time and the
+   * agent has not yet confirmed status / address / price for this attempt.
+   * Runs after validation + photo-order; never for edits to already-live listings.
+   */
+  const needsFirstPublishLiveConfirm = (targetStatus: string) => {
+    if (publishConfirmedRef.current) return false;
+    if (!isLiveStatus(targetStatus)) return false;
+    const previousStatus = originalStatusRef.current;
+    if (previousStatus && isLiveStatus(previousStatus)) return false;
+    return true;
+  };
+
+  /** Status that will actually be persisted when publishing (draft → new → DB active). */
+  const resolveIntendedLiveStatus = (rawStatus: string, publishNow: boolean) => {
+    if (publishNow && (rawStatus === "draft" || !rawStatus)) return "new";
+    return rawStatus;
+  };
+
+  const formatPublishConfirmAddress = () => {
+    const street = formData.address.trim();
+    const unit = formData.unit_number.trim().replace(/^#/, "");
+    const city = formData.city.trim();
+    const state = formData.state.trim();
+    const zip = formData.zip_code.trim();
+    const line1 = [street, unit].filter(Boolean).join(" ");
+    const cityState = [city, state].filter(Boolean).join(", ");
+    const cityStateZip = [cityState, zip].filter(Boolean).join(" ");
+    if (!line1 && !cityStateZip) return "—";
+    if (!line1) return cityStateZip;
+    if (!cityStateZip) return line1;
+    return `${line1}, ${cityStateZip}`;
+  };
+
+  const formatPublishConfirmPrice = () => {
+    if (formData.listing_type === "for_rent") {
+      const rent = Number(formData.monthly_rent);
+      if (Number.isFinite(rent) && rent > 0) {
+        return `${formatListingPriceDisplay({ price: rent })}/month`;
+      }
+      return "—";
+    }
+    const min = Number(formData.price_range_min);
+    const max = Number(formData.price_range_max);
+    if (Number.isFinite(min) && min > 0 && Number.isFinite(max) && max > 0) {
+      return formatListingPriceDisplay({ price_range_min: min, price_range_max: max }) ?? "—";
+    }
+    const price = Number(formData.price);
+    if (Number.isFinite(price) && price > 0) {
+      return formatListingPriceDisplay({ price }) ?? "—";
+    }
+    return "—";
+  };
+
   // Handler for "Save Changes" in edit mode - preserves current status (does NOT force draft)
   const handleSaveChanges = async (isAutoSave = false) => {
     if (isConciergeMode) {
@@ -2888,6 +2953,20 @@ const AddListing = () => {
         return;
       }
     }
+
+    // Final first-publish confirmation (status / address / price) before DB goes live.
+    if (!isAutoSave && needsFirstPublishLiveConfirm(formData.status)) {
+      draftSession.endSave();
+      setSubmitting(false);
+      setPendingPublishAction("saveChanges");
+      setPublishConfirmOpen(true);
+      return;
+    }
+    // One-shot bypass: consume after the gate so a failed publish re-prompts.
+    if (!isAutoSave) {
+      publishConfirmedRef.current = false;
+    }
+    // --- End validation / first-publish gates ---
 
     try {
       // Upload any new files
@@ -3243,6 +3322,18 @@ const AddListing = () => {
         }
       }
 
+      // Final first-publish confirmation (status / address / price) before DB goes live.
+      if (publishNow && needsFirstPublishLiveConfirm(targetStatus)) {
+        setSubmitting(false);
+        setPendingPublishAction("publish");
+        setPublishConfirmOpen(true);
+        return;
+      }
+      // One-shot bypass: consume after the gate so a failed publish re-prompts.
+      if (publishNow) {
+        publishConfirmedRef.current = false;
+      }
+
       // Upload files first
       toast.info("Uploading files...");
       const uploadedFiles = await uploadFiles();
@@ -3432,8 +3523,9 @@ const AddListing = () => {
    *
    * The member already pressed Publish (and confirmed) on /agent/listings/review/:id.
    * We resume the normal publish path here so validation, photo-order confirmation,
-   * status rules and listing alerts behave exactly as they always have. The intent
-   * is cleared immediately so a refresh or back navigation can never republish.
+   * first-publish confirmation, status rules and listing alerts behave exactly as
+   * they always have. The intent is cleared immediately so a refresh or back
+   * navigation can never republish.
    */
   const autoPublishRequested =
     (location.state as { autoPublish?: boolean } | null)?.autoPublish === true;
@@ -3462,6 +3554,24 @@ const AddListing = () => {
 
   const handleCancelPhotoOrder = () => {
     setPhotoOrderConfirmOpen(false);
+    setPendingPublishAction(null);
+  };
+
+  /** Confirm status/address/price, then resume the exact publish path that was interrupted. */
+  const handleConfirmPublish = () => {
+    const action = pendingPublishAction;
+    setPublishConfirmOpen(false);
+    setPendingPublishAction(null);
+    publishConfirmedRef.current = true;
+    if (action === "saveChanges") {
+      void handleSaveChanges(false);
+    } else {
+      void handleSubmit({ preventDefault: () => {} } as unknown as React.FormEvent, true);
+    }
+  };
+
+  const handleCancelPublishConfirm = () => {
+    setPublishConfirmOpen(false);
     setPendingPublishAction(null);
   };
 
@@ -5636,6 +5746,24 @@ const AddListing = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Final first-publish confirmation: status / address / price */}
+      <ConfirmBeforePublishingDialog
+        open={publishConfirmOpen}
+        statusLabel={getListingStatusLabel(
+          // Persist mapping: form "new" → DB "active" (On MLS). Show what will go live.
+          addListingFormStatusToDbStatus(
+            resolveIntendedLiveStatus(
+              formData.status,
+              pendingPublishAction === "publish",
+            ),
+          ),
+        )}
+        address={formatPublishConfirmAddress()}
+        price={formatPublishConfirmPrice()}
+        onGoBack={handleCancelPublishConfirm}
+        onConfirm={handleConfirmPublish}
+      />
 
       {/* ATTOM Records Selection Modal */}
       <Dialog open={isAttomModalOpen} onOpenChange={setIsAttomModalOpen}>
