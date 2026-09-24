@@ -1,4 +1,5 @@
 import type { FilterState } from "@/components/listing-search/ListingSearchFilters";
+import { PROPERTY_TYPES } from "@/constants/status";
 import {
   RENT_PRICE_ABS_MIN,
   RENT_PRICE_ABS_MAX,
@@ -9,8 +10,16 @@ import {
 /** Default property-type chips on agent listing search (sale). */
 export const AGENT_SALE_DEFAULT_PROPERTY_TYPES = ["single_family", "condo"] as const;
 
-/** UI marker for rental searches; actual rentals match via `listing_type`. */
+/**
+ * Legacy URL marker. Not a property-type checkbox on agent listing search.
+ * Older links used it to mean For Rent; queries still match via `listing_type`.
+ */
 export const RESIDENTIAL_RENTAL_PROPERTY_TYPE = "residential_rental";
+
+/** Property-type checkboxes on agent listing search (sale and rent). */
+export const AGENT_LISTING_SEARCH_PROPERTY_TYPES = PROPERTY_TYPES.filter(
+  (type) => type.value !== RESIDENTIAL_RENTAL_PROPERTY_TYPE,
+);
 
 type ListingType = FilterState["listingType"];
 
@@ -43,35 +52,31 @@ export function defaultPropertyTypesForAgentListingSearch(
   return listingType === "for_rent" ? [] : [...AGENT_SALE_DEFAULT_PROPERTY_TYPES];
 }
 
-/**
- * Property types sent to Supabase. `residential_rental` is a UI sync with For Rent only —
- * rentals in the DB use `listing_type = for_rent` with types like single_family or apartment.
- */
-export function propertyTypesForAgentListingQuery(
-  listingType: ListingType,
-  propertyTypes: string[],
-): string[] {
-  const withoutRentalMarker = propertyTypes.filter(
-    (type) => type !== RESIDENTIAL_RENTAL_PROPERTY_TYPE,
-  );
-  if (listingType === "for_rent") {
-    return withoutRentalMarker;
-  }
-  return withoutRentalMarker;
+export function withoutResidentialRentalPropertyType(propertyTypes: string[]): string[] {
+  return propertyTypes.filter((type) => type !== RESIDENTIAL_RENTAL_PROPERTY_TYPE);
 }
 
-/** Keep Residential Rental checkbox and For Rent toggle in sync. */
+/**
+ * Property types sent to Supabase. `residential_rental` is not a listings filter —
+ * sale vs rent is `listing_type`.
+ */
+export function propertyTypesForAgentListingQuery(
+  _listingType: ListingType,
+  propertyTypes: string[],
+): string[] {
+  return withoutResidentialRentalPropertyType(propertyTypes);
+}
+
+/** Toggle a property type without changing the For Sale / For Rent control. */
 export function syncAgentListingSearchPropertyTypes(
   filters: FilterState,
   type: string,
   selecting: boolean,
 ): FilterState {
-  if (type === RESIDENTIAL_RENTAL_PROPERTY_TYPE && selecting) {
+  if (type === RESIDENTIAL_RENTAL_PROPERTY_TYPE) {
     return {
       ...filters,
-      listingType: "for_rent",
-      propertyTypes: [RESIDENTIAL_RENTAL_PROPERTY_TYPE],
-      ...clampListingSearchPrices(filters, "for_rent"),
+      propertyTypes: withoutResidentialRentalPropertyType(filters.propertyTypes),
     };
   }
 
@@ -79,24 +84,19 @@ export function syncAgentListingSearchPropertyTypes(
     ? [...filters.propertyTypes, type]
     : filters.propertyTypes.filter((t) => t !== type);
 
-  if (
-    selecting &&
-    type !== RESIDENTIAL_RENTAL_PROPERTY_TYPE &&
-    filters.propertyTypes.includes(RESIDENTIAL_RENTAL_PROPERTY_TYPE)
-  ) {
-    return {
-      ...filters,
-      listingType: "for_sale",
-      propertyTypes: updated.filter((t) => t !== RESIDENTIAL_RENTAL_PROPERTY_TYPE),
-      ...clampListingSearchPrices(filters, "for_sale"),
-    };
-  }
-
-  return { ...filters, propertyTypes: updated };
+  return {
+    ...filters,
+    propertyTypes: withoutResidentialRentalPropertyType(updated),
+  };
 }
 
+/**
+ * Older shared links used `residential_rental` as a For Rent marker.
+ * Honor that listing type, then drop the marker so it is not a selected type.
+ */
 export function syncListingTypeFromPropertyTypes(f: FilterState): void {
   if (f.propertyTypes.includes(RESIDENTIAL_RENTAL_PROPERTY_TYPE)) {
     f.listingType = "for_rent";
+    f.propertyTypes = withoutResidentialRentalPropertyType(f.propertyTypes);
   }
 }
