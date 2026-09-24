@@ -7,6 +7,8 @@ import FavoriteButton from "@/components/FavoriteButton";
 import { Button } from "@/components/ui/button";
 import { Bed, Bath, Maximize, MapPin, Heart } from "lucide-react";
 import { toast } from "sonner";
+import { ListingCoverImage } from "@/components/ListingCoverImage";
+import { firstListingDisplayPhotoUrl } from "@/lib/resolveListingPhotoUrl";
 
 interface Listing {
   id: string;
@@ -30,13 +32,7 @@ interface FavoriteRow {
 const formatPrice = (n: number) =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(n);
 
-const getPhoto = (photos: any): string | null => {
-  if (!photos || !Array.isArray(photos) || photos.length === 0) return null;
-  const first = photos[0];
-  if (typeof first === "string") return first;
-  if (first?.url) return first.url;
-  return null;
-};
+const getPhoto = (photos: any): string => firstListingDisplayPhotoUrl(photos);
 
 const DcmlsSaved = () => {
   const navigate = useNavigate();
@@ -115,18 +111,11 @@ const DcmlsSaved = () => {
                     onClick={() => navigate(`/property/${l.id}`)}
                   >
                     <div className="relative aspect-[4/3] bg-muted">
-                      {photo ? (
-                        <img
-                          src={photo}
-                          alt={l.address}
-                          loading="lazy"
-                          className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-500"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-muted-foreground text-sm">
-                          No photo
-                        </div>
-                      )}
+                      <ListingCoverImage
+                        src={photo}
+                        alt={l.address}
+                        className="object-cover group-hover:scale-[1.02] transition-transform duration-500"
+                      />
                       <div
                         className="absolute top-3 right-3"
                         onClick={(e) => e.stopPropagation()}

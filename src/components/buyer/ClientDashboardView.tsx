@@ -51,6 +51,7 @@ import { cn, resolveListingUnitNumber, type ListingAddressUnitSource } from "@/l
 import { listingSelectionCheckboxClass } from "@/lib/listingSelectionStyles";
 import { profileInitials } from "@/lib/buyerProfile";
 import { REMOVE_BUYER_BUTTON_LABEL } from "@/lib/removeBuyer";
+import { firstListingDisplayPhotoUrl } from "@/lib/resolveListingPhotoUrl";
 import { hasUnreadMessages, MessagesUnreadBadge } from "@/components/messaging/MessagesUnreadBadge";
 
 export interface ClientDashboardAgentInfo {
@@ -183,41 +184,7 @@ const agentMirrorStatValue =
 const buyerDashboardHotSheetsPreviewGridClass = buyerDashboardHotSheetsPreviewGrid;
 
 function getPrimaryPhotoUrl(photos: unknown): string {
-  if (!photos) return "/placeholder.svg";
-
-  const normalize = (value: unknown): unknown[] => {
-    if (Array.isArray(value)) return value;
-    if (typeof value === "string") {
-      const trimmed = value.trim();
-      if (!trimmed) return [];
-      if (trimmed.startsWith("[")) {
-        try {
-          const parsed = JSON.parse(trimmed);
-          return Array.isArray(parsed) ? parsed : [];
-        } catch {
-          return [];
-        }
-      }
-      return [trimmed];
-    }
-    return [];
-  };
-
-  const normalizedPhotos = normalize(photos);
-  const firstPhoto = normalizedPhotos[0];
-
-  if (typeof firstPhoto === "string" && firstPhoto.trim()) return firstPhoto;
-  if (
-    firstPhoto &&
-    typeof firstPhoto === "object" &&
-    "url" in firstPhoto &&
-    typeof (firstPhoto as { url?: unknown }).url === "string" &&
-    (firstPhoto as { url: string }).url.trim()
-  ) {
-    return (firstPhoto as { url: string }).url;
-  }
-
-  return "/placeholder.svg";
+  return firstListingDisplayPhotoUrl(photos);
 }
 
 /** Street line with MLS unit appended as `#3A` when not already present (buyer market activity only). */

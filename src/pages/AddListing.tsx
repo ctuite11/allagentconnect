@@ -59,6 +59,7 @@ import { createAddListingDraftSession } from "@/lib/addListingDraftSession";
 import AddressAutocomplete from "@/components/AddressAutocomplete";
 import { normalizeGooglePlace } from "@/lib/google-address";
 import { checkDuplicateListing, isLiveStatus } from "@/lib/checkDuplicateListing";
+import { resolveListingPhotoUrl } from "@/lib/resolveListingPhotoUrl";
 import { formHasValidListingPricing } from "@/lib/listingPricingValidation";
 import { formatListingPriceDisplay } from "@/lib/formatListingPriceDisplay";
 import { dcmlsPublishSnapshot, dcmlsShowOnFromRecord } from "@/lib/dcmlsPublishPayload";
@@ -2774,8 +2775,11 @@ const AddListing = () => {
       errors.push({ field: "go_live_date", label: "Go-Live Date (required for Coming Soon)" });
     }
 
-    if (requirePhotos && photos.length === 0) {
-      errors.push({ field: "photos", label: "At least one listing photo" });
+    if (requirePhotos && photos.filter((p) => Boolean(resolveListingPhotoUrl(p))).length === 0) {
+      errors.push({
+        field: "photos",
+        label: "Add at least one photo before publishing this listing.",
+      });
     }
 
     return errors;
@@ -2799,7 +2803,7 @@ const AddListing = () => {
     const previousStatus = originalStatusRef.current;
     // Already published before (any live status) -> never prompt again.
     if (previousStatus && isLiveStatus(previousStatus)) return false;
-    return photos.length > 0;
+    return photos.filter((p) => Boolean(resolveListingPhotoUrl(p))).length > 0;
   };
 
   /**

@@ -15,7 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import PropertyMap from "@/components/PropertyMap";
 import { formatListingShareEmailStreetLine } from "@/lib/buildHotSheetShareEmailHtml";
-import { buildNewListingSharedEmailSubject } from "@/lib/listingEmailSubject";
+import { firstListingDisplayPhotoUrl } from "@/lib/resolveListingPhotoUrl";
 import {
   type ListingRecord,
   type AgentOfficeRecord,
@@ -457,13 +457,7 @@ const Favorites = ({
     }).format(price);
   };
 
-  const getMainPhoto = (photos: any[]) => {
-    if (!photos || photos.length === 0) return "/placeholder.svg";
-    const p = photos[0];
-    if (typeof p === "string") return p;
-    if (p && typeof p === "object") return (p as { url?: string }).url ?? "/placeholder.svg";
-    return "/placeholder.svg";
-  };
+  const getMainPhoto = (photos: any[]) => firstListingDisplayPhotoUrl(photos);
 
   const sortedFavorites = useMemo(() => {
     const next = [...favorites];

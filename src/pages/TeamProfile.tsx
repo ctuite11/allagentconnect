@@ -15,6 +15,8 @@ import ContactAgentProfileDialog from "@/components/ContactAgentProfileDialog";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
 import { AacMonogramLoader } from "@/components/AacMonogramLoader";
 import { XIcon } from "@/components/icons/XIcon";
+import { ListingCoverImage } from "@/components/ListingCoverImage";
+import { firstListingDisplayPhotoUrl } from "@/lib/resolveListingPhotoUrl";
 
 const generateTeamVCard = (team: any, members: any[]) => {
   const primaryContact = members.find(m => m.role === 'owner')?.agent_profiles || members[0]?.agent_profiles;
@@ -511,10 +513,9 @@ const TeamProfile = () => {
                   {listings.map((listing) => (
                     <Card key={listing.id} className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate(`/property/${listing.id}`)}>
                       <div className="relative h-48 overflow-hidden rounded-t-lg">
-                        <img
-                          src={listing.photos && listing.photos.length > 0 ? listing.photos[0].url : '/placeholder.svg'}
+                        <ListingCoverImage
+                          src={firstListingDisplayPhotoUrl(listing.photos)}
                           alt={listing.address}
-                          className="w-full h-full object-cover"
                         />
                         <Badge className="absolute top-2 right-2 bg-accent">
                           {listing.listing_type === 'for_sale' ? 'For Sale' : 'For Rent'}
