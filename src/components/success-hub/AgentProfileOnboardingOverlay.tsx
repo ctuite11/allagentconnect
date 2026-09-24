@@ -107,6 +107,11 @@ export function AgentProfileOnboardingOverlay({
   };
 
   const doneCount = steps.filter((s) => completion[s.key]).length;
+  // First-setup experience: none of the three steps done yet.
+  // Partial progress (1/3 or 2/3) means they have already started setup and
+  // are returning to finish — use reminder copy. Derived from existing
+  // completion flags only (no activation time window).
+  const isFirstSetupExperience = doneCount === 0;
 
   return createPortal(
     <div
@@ -132,11 +137,14 @@ export function AgentProfileOnboardingOverlay({
               id="agent-profile-onboarding-title"
               className="text-xl font-semibold leading-snug tracking-tight text-zinc-900 sm:text-[1.35rem]"
             >
-              Get the Full All Agent Connect Experience
+              {isFirstSetupExperience
+                ? "Welcome to All Agent Connect"
+                : "Complete Your All Agent Connect Setup"}
             </h1>
             <p className="text-[13px] leading-relaxed text-zinc-500 sm:text-sm">
-              If you haven&apos;t completed these three steps yet, take a minute to get set up so you
-              don&apos;t miss opportunities across the network.
+              {isFirstSetupExperience
+                ? "Your account is active. Complete these three quick setup steps so you can get the most from your membership and start seeing opportunities across the network."
+                : "Finish the remaining steps so you can get the most from your membership and opportunities across the network."}
             </p>
           </div>
 
