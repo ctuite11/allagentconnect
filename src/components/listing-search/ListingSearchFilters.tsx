@@ -22,8 +22,11 @@ import {
 } from "lucide-react";
 import { useTownsPicker } from "@/hooks/useTownsPicker";
 import { TownsPicker } from "@/components/TownsPicker";
-import { LISTING_SEARCH_STATUSES, PROPERTY_TYPES } from "@/constants/status";
-import { syncAgentListingSearchPropertyTypes } from "@/lib/agentListingSearchDefaults";
+import { LISTING_SEARCH_STATUSES } from "@/constants/status";
+import {
+  AGENT_LISTING_SEARCH_PROPERTY_TYPES,
+  syncAgentListingSearchPropertyTypes,
+} from "@/lib/agentListingSearchDefaults";
 
 export interface FilterState {
   listingType: "for_sale" | "for_rent";
@@ -226,10 +229,10 @@ const ListingSearchFilters = ({
   };
 
   const toggleAllPropertyTypes = () => {
-    if (filters.propertyTypes.length === PROPERTY_TYPES.length) {
+    if (filters.propertyTypes.length === AGENT_LISTING_SEARCH_PROPERTY_TYPES.length) {
       updateFilter("propertyTypes", []);
     } else {
-      updateFilter("propertyTypes", PROPERTY_TYPES.map(p => p.value));
+      updateFilter("propertyTypes", AGENT_LISTING_SEARCH_PROPERTY_TYPES.map(p => p.value));
     }
   };
 
@@ -278,13 +281,13 @@ const ListingSearchFilters = ({
             <div className="p-3 space-y-1.5">
               <label className="flex items-center gap-2 cursor-pointer hover:bg-[#F1F0EC] px-1.5 py-1 rounded-lg transition-colors">
                 <Checkbox
-                  checked={filters.propertyTypes.length === PROPERTY_TYPES.length}
+                  checked={filters.propertyTypes.length === AGENT_LISTING_SEARCH_PROPERTY_TYPES.length}
                   onCheckedChange={toggleAllPropertyTypes}
                   className="h-3.5 w-3.5"
                 />
                 <span className="text-xs font-medium text-neutral-800">Select All</span>
               </label>
-              {PROPERTY_TYPES.map((type) => (
+              {AGENT_LISTING_SEARCH_PROPERTY_TYPES.map((type) => (
                 <label
                   key={type.value}
                   className="flex items-center gap-2 cursor-pointer hover:bg-[#F1F0EC] px-1.5 py-1 rounded-lg transition-colors"
