@@ -2,7 +2,9 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { getDcmlsConsumerPropertyPath } from "@/lib/host";
-import { Bed, Bath, Home } from "lucide-react";
+import { Bed, Bath } from "lucide-react";
+import { ListingCoverImage } from "@/components/ListingCoverImage";
+import { firstListingDisplayPhotoUrl } from "@/lib/resolveListingPhotoUrl";
 
 interface DcmlsListing {
   id: string;
@@ -18,18 +20,6 @@ interface DcmlsListing {
 
 const formatPrice = (price: number) =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(price);
-
-const resolvePhoto = (photos: any): string | null => {
-  if (!photos || !Array.isArray(photos) || photos.length === 0) return null;
-  const p = photos[0];
-  if (typeof p === "string") return p;
-  if (p?.url) {
-    if (p.url.startsWith("http")) return p.url;
-    const { data } = supabase.storage.from("listing-photos").getPublicUrl(p.url);
-    return data.publicUrl;
-  }
-  return null;
-};
 
 const DcmlsExclusiveListings = () => {
   const [listings, setListings] = useState<DcmlsListing[]>([]);
@@ -63,7 +53,7 @@ const DcmlsExclusiveListings = () => {
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {listings.map((listing) => {
-            const photo = resolvePhoto(listing.photos);
+            const photo = firstListingDisplayPhotoUrl(listing.photos);
             return (
               <div
                 key={listing.id}
@@ -71,13 +61,7 @@ const DcmlsExclusiveListings = () => {
                 onClick={() => navigate(getDcmlsConsumerPropertyPath(listing.id))}
               >
                 <div className="relative aspect-[4/3] bg-muted">
-                  {photo ? (
-                    <img src={photo} alt={listing.address} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center">
-                      <Home className="w-10 h-10 text-muted-foreground/40" />
-                    </div>
-                  )}
+                  <ListingCoverImage src={photo} alt={listing.address} />
                   <span
                     className="absolute top-2 left-2 z-10 inline-flex items-center text-white text-[10px] font-semibold tracking-wide px-2 py-0.5 rounded-full shadow-sm"
                     style={{ backgroundColor: "#0E56F5" }}

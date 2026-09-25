@@ -85,6 +85,8 @@ import SocialShareMenu from "@/components/SocialShareMenu";
 import ScheduleShowingDialog from "@/components/ScheduleShowingDialog";
 import FavoriteButton from "@/components/FavoriteButton";
 import PropertyMap from "@/components/PropertyMap";
+import { ListingCoverImage } from "@/components/ListingCoverImage";
+import { listingDisplayPhotoUrl } from "@/lib/resolveListingPhotoUrl";
 import { getListingPublicUrl, getListingShareUrl } from "@/lib/getPublicUrl";
 import { formatListingPriceDisplay, listingEffectiveNumericPrice } from "@/lib/formatListingPriceDisplay";
 import { parseDisclosures, cleanBrokerComments, isEmptyValue } from "@/lib/listingFieldParsers";
@@ -519,14 +521,12 @@ const PropertyDetail = () => {
   }
 
   // Helper to handle both string and object photo formats
-  const getPhotoUrl = (photo: any): string => {
-    if (typeof photo === 'string') return photo;
-    return photo?.url || '/placeholder.svg';
-  };
+  const getPhotoUrl = (photo: any): string => listingDisplayPhotoUrl(photo);
 
-  const mainPhoto = listing.photos && listing.photos.length > 0 
-    ? getPhotoUrl(listing.photos[currentPhotoIndex])
-    : '/placeholder.svg';
+  const mainPhoto =
+    listing.photos && listing.photos.length > 0
+      ? getPhotoUrl(listing.photos[currentPhotoIndex])
+      : listingDisplayPhotoUrl(null);
 
   const canonicalUrl = getListingPublicUrl(id!);
 
@@ -644,7 +644,7 @@ const PropertyDetail = () => {
               >
                 <div className="absolute inset-0 bg-neutral-950">
                   {activeMediaTab === "photos" && (
-                    <img
+                    <ListingCoverImage
                       src={mainPhoto}
                       alt={listing.address}
                       className="h-full w-full cursor-pointer object-cover"
