@@ -39,6 +39,13 @@
       if (isHome) {
         // Immediate — do not wait for React/Helmet; this is the homepage LCP text face.
         injectStylesheet(MANROPE, true);
+        // Critical fallback stack (zero network cost): if Manrope is still
+        // loading or blocked (common on fresh/Incognito), never paint UA serif.
+        var manropeFallback = document.createElement("style");
+        manropeFallback.id = "aac-manrope-fallback";
+        manropeFallback.textContent =
+          ".font-manrope{font-family:Manrope,system-ui,-apple-system,BlinkMacSystemFont,sans-serif}";
+        document.head.appendChild(manropeFallback);
       }
 
       if (!isHome) {
