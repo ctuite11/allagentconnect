@@ -30,16 +30,21 @@
 5. **Why restart helps** — a restart resets the saturated resource (connections/memory) and re-initializes the instance; it does not remove whatever drives the resource to the limit.
 6. **Permanent fix** — not determinable yet; requires incident-time evidence.
 
-## Plan (read-only unless you approve each step)
+## Approved plan — Step 1 send, Step 2 ready, Step 3 build
 
-### Step 1 — Report to Lovable support with hard evidence
-Use your drafted message, updated with these facts: database restart confirmed 2026-09-25 20:50:42 UTC; three consecutive days of "Database limit reached"; log retention wiped at each restart (so only they can see host-level metrics); current healthy-baseline numbers (16/60 connections, 54% memory, 12% disk, no slow queries). Ask specifically which limit fired and why the instance restarts.
+### Step 1 — Escalation to Lovable support (approved, ready to send)
+The finalized escalation message (restart at 2026-09-25 20:50:42 UTC, three consecutive days of "Database limit reached" alerts, logs wiped at each restart, healthy baseline numbers, seven specific questions) is ready. I have no direct channel to Lovable's infrastructure team, so Chris sends this message through Lovable support; it is fully drafted and matches the verified evidence.
 
-### Step 2 — Incident-time evidence runbook (read-only, no approval needed)
-When you report the next outage, within minutes I run a fixed read-only capture before the ~10-minute log window closes: DB health snapshot, live connection breakdown by source, database/auth/API logs, and API-layer timeout entries. This converts the next incident from "restart cleared it" to an actual root-cause reading.
+### Step 2 — Incident-time evidence runbook (read-only, armed)
+When the next outage is reported, within minutes I run a fixed read-only capture before the ~10-minute log window closes: DB health snapshot, live connection breakdown by source, database/auth/API logs, and API-layer timeout entries.
 
-### Step 3 — Optional, needs your explicit approval
-A tiny database-side recorder (a scheduled job sampling connection and memory state into one small table every minute) would capture the peak automatically, even if you're not watching. It writes only to a new diagnostic table — no email, no app behavior change. I will not create it without your explicit go-ahead.
+### Step 3 — Automatic evidence recorder (approved — build now)
+Strictly diagnostic; capture the peak automatically instead of losing evidence at each restart:
+
+- One new diagnostics table only (`public.db_capacity_samples`), plus GRANTs and RLS (service-role only; nothing readable by app users).
+- One scheduled job sampling **once per minute** (1,440 samples/day). The samples table is capped (auto-pruned to ~7 days) so it stays a few MB.
+- Each sample records: connections by state and source (application name/user), active vs idle count, longest transaction age, Postgres start time / uptime, plus any database-visible resource metrics available (memory-related settings, WAL size, database size).
+- No app behavior changes, no email, no capacity changes, no restart automation, no reads by the application.
 
 ### Explicitly not doing
-No code changes, no schema changes, no capacity resize, no backend restart, no emails — until the root cause is identified and you authorize the fix.
+No code changes, no capacity resize, no backend restart, no emails, no restart automation — until the root cause is identified and a fix is authorized.
