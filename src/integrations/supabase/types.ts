@@ -2435,6 +2435,57 @@ export type Database = {
         }
         Relationships: []
       }
+      db_capacity_samples: {
+        Row: {
+          active_connections: number
+          connections_by_source: Json
+          database_size_bytes: number
+          effective_cache_size_setting: string | null
+          id: number
+          idle_connections: number
+          longest_transaction_seconds: number
+          max_connections_setting: number | null
+          postmaster_uptime_seconds: number
+          sampled_at: string
+          shared_buffers_setting: string | null
+          total_connections: number
+          wal_size_bytes: number
+          work_mem_setting: string | null
+        }
+        Insert: {
+          active_connections: number
+          connections_by_source?: Json
+          database_size_bytes?: number
+          effective_cache_size_setting?: string | null
+          id?: never
+          idle_connections: number
+          longest_transaction_seconds?: number
+          max_connections_setting?: number | null
+          postmaster_uptime_seconds?: number
+          sampled_at?: string
+          shared_buffers_setting?: string | null
+          total_connections: number
+          wal_size_bytes?: number
+          work_mem_setting?: string | null
+        }
+        Update: {
+          active_connections?: number
+          connections_by_source?: Json
+          database_size_bytes?: number
+          effective_cache_size_setting?: string | null
+          id?: never
+          idle_connections?: number
+          longest_transaction_seconds?: number
+          max_connections_setting?: number | null
+          postmaster_uptime_seconds?: number
+          sampled_at?: string
+          shared_buffers_setting?: string | null
+          total_connections?: number
+          wal_size_bytes?: number
+          work_mem_setting?: string | null
+        }
+        Relationships: []
+      }
       dcmls_participation_audit: {
         Row: {
           actor_role: string
@@ -8500,6 +8551,7 @@ export type Database = {
       }
       resolve_share_token: { Args: { _token: string }; Returns: Json }
       resolve_user_role: { Args: { _user_id: string }; Returns: Json }
+      sample_db_capacity: { Args: never; Returns: undefined }
       set_active_owner_context: {
         Args: { p_owner_user_id: string }
         Returns: Json
