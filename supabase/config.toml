@@ -222,3 +222,12 @@ verify_jwt = false
 [functions.system-health]
 verify_jwt = false
 
+[functions.social-connect-portal]
+verify_jwt = false
+
+[functions.social-accounts-status]
+verify_jwt = false
+
+[functions.social-publish-listing]
+verify_jwt = false
+
