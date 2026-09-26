@@ -84,6 +84,9 @@ export async function authenticateGated(req: Request): Promise<AuthContext | nul
 export async function bundleFetch(path: string, init: RequestInit = {}): Promise<Response> {
   const apiKey = Deno.env.get('BUNDLE_SOCIAL_API_KEY')?.trim()
   if (!apiKey) throw new Error('BUNDLE_SOCIAL_API_KEY is not configured')
+  // Diagnostic: the key must be printable ASCII to be a valid HTTP header value.
+  // Logs metadata only — never the value.
+  console.log(`bundleFetch key check: length=${apiKey.length} ascii=${/^[\x21-\x7E]+$/.test(apiKey)}`)
   return fetch(`${BUNDLE_BASE_URL}${path}`, {
     ...init,
     headers: {
