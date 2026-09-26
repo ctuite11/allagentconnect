@@ -1262,6 +1262,30 @@ export type Database = {
         }
         Relationships: []
       }
+      agent_social_accounts: {
+        Row: {
+          agent_id: string
+          bundle_team_id: string
+          created_at: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          agent_id: string
+          bundle_team_id: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          agent_id?: string
+          bundle_team_id?: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       agent_state_preferences: {
         Row: {
           agent_id: string
@@ -5218,6 +5242,134 @@ export type Database = {
           },
           {
             foreignKeyName: "listing_shares_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      listing_social_defaults: {
+        Row: {
+          created_at: string
+          facebook: boolean
+          instagram: boolean
+          linkedin: boolean
+          listing_id: string
+          threads: boolean
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          facebook?: boolean
+          instagram?: boolean
+          linkedin?: boolean
+          listing_id: string
+          threads?: boolean
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          facebook?: boolean
+          instagram?: boolean
+          linkedin?: boolean
+          listing_id?: string
+          threads?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_social_defaults_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: true
+            referencedRelation: "dcmls_listings_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "listing_social_defaults_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: true
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "listing_social_defaults_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: true
+            referencedRelation: "listings_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      listing_social_events: {
+        Row: {
+          agent_id: string
+          bundle_post_id: string | null
+          bundle_upload_id: string | null
+          caption: string | null
+          client_request_id: string | null
+          created_at: string
+          event_type: string
+          failure_detail: string | null
+          id: string
+          image_url: string | null
+          listing_id: string
+          platforms: string[]
+          reference_key: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          agent_id: string
+          bundle_post_id?: string | null
+          bundle_upload_id?: string | null
+          caption?: string | null
+          client_request_id?: string | null
+          created_at?: string
+          event_type: string
+          failure_detail?: string | null
+          id?: string
+          image_url?: string | null
+          listing_id: string
+          platforms: string[]
+          reference_key: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          agent_id?: string
+          bundle_post_id?: string | null
+          bundle_upload_id?: string | null
+          caption?: string | null
+          client_request_id?: string | null
+          created_at?: string
+          event_type?: string
+          failure_detail?: string | null
+          id?: string
+          image_url?: string | null
+          listing_id?: string
+          platforms?: string[]
+          reference_key?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_social_events_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "dcmls_listings_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "listing_social_events_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "listing_social_events_listing_id_fkey"
             columns: ["listing_id"]
             isOneToOne: false
             referencedRelation: "listings_public"
