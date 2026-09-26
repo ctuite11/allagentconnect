@@ -308,6 +308,8 @@ const AddListing = () => {
   const [autoSaving, setAutoSaving] = useState(false);
   const [autoFillLoading, setAutoFillLoading] = useState(false);
   const [isUploadingPhotos, setIsUploadingPhotos] = useState(false);
+  // Synchronous in-flight counter (state can be stale inside resumed publish callbacks).
+  const photoUploadsInFlightRef = useRef(0);
   const [attomId, setAttomId] = useState<string | null>(null);
   const [attomResults, setAttomResults] = useState<any[]>([]);
   const [isAttomModalOpen, setIsAttomModalOpen] = useState(false);
@@ -2001,6 +2003,7 @@ const AddListing = () => {
       
       // Set uploading state
       setIsUploadingPhotos(true);
+      photoUploadsInFlightRef.current += 1;
       
       try {
         // Upload photos to storage
@@ -2089,7 +2092,8 @@ const AddListing = () => {
           toast.error('Photo upload failed, please try again');
         }
       } finally {
-        setIsUploadingPhotos(false);
+        photoUploadsInFlightRef.current = Math.max(0, photoUploadsInFlightRef.current - 1);
+        setIsUploadingPhotos(photoUploadsInFlightRef.current > 0);
       }
       return;
     }
@@ -2813,6 +2817,28 @@ const AddListing = () => {
     const previousStatus = originalStatusRef.current;
     if (previousStatus && isLiveStatus(previousStatus)) return false;
     return true;
+  };
+
+  /**
+   * First-publish photo gate, checked immediately before the live DB write.
+   * Returns an error message when the listing must NOT go live yet, else null.
+   * Never applies to edits of an already-live listing.
+   */
+  const firstPublishPhotoGateError = (
+    targetStatus: string,
+    finalPhotos: { url?: string | null }[],
+  ): string | null => {
+    if (!isLiveStatus(targetStatus)) return null;
+    const previousStatus = originalStatusRef.current;
+    if (previousStatus && isLiveStatus(previousStatus)) return null;
+    if (photoUploadsInFlightRef.current > 0) {
+      return "Photos are still uploading. Your listing was not published — please wait for the upload to finish, then publish again.";
+    }
+    const hasRealPhoto = finalPhotos.some((p) => typeof p?.url === "string" && p.url.trim().length > 0);
+    if (!hasRealPhoto) {
+      return "At least one photo must finish uploading before this listing can be published. Your listing was not published.";
+    }
+    return null;
   };
 
   /** Status that will actually be persisted when publishing (draft → new → DB active). */
