@@ -105,3 +105,6 @@
 
 ## Success Hub Listing Activity: Off Market + Coming Soon only (2026-09-23)
 - [x] MarketActivityRow.tsx only: status in (off_market, coming_soon), keep hidden flag, order created_at DESC, refresh every UPDATE, remove when ineligible or missing; no deploy
+
+## Listing → Social Media Publishing V1 (bundle.social) (2026-09-26)
+- [ ] Build in isolated Lovable draft only (no merge/deploy); run 13-point verification; report and wait for approval
