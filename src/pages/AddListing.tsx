@@ -3038,6 +3038,16 @@ const AddListing = () => {
       // IMPORTANT: Use fresh user ID from server-verified session
       const payload = buildListingDataFromForm(uploaded, undefined, freshUser.id);
 
+      // First publish: photo must be fully saved before the listing goes live
+      // (Hot Sheet emails fire on the live transition and must see the photo).
+      if (!isAutoSave) {
+        const gateError = firstPublishPhotoGateError(payload.status, uploaded.photos);
+        if (gateError) {
+          toast.error(gateError);
+          return;
+        }
+      }
+
       console.log('[handleSaveChanges] Saving with status:', payload.status, 'agent_id:', payload.agent_id);
 
       // Remove agent_id from update payload (it's immutable after creation)
@@ -3408,6 +3418,17 @@ const AddListing = () => {
       }
 
       // Determine if we're in edit mode (use sync draft ref, not React state alone)
+      // First publish: photo must be fully saved before the listing goes live
+      // (Hot Sheet emails fire on the live transition and must see the photo).
+      if (publishNow) {
+        const gateError = firstPublishPhotoGateError(listingData.status, uploadedFiles.photos);
+        if (gateError) {
+          toast.error(gateError);
+          setSubmitting(false);
+          return;
+        }
+      }
+
       const resolvedDraftId = draftSession.getDraftId();
       const isEditMode = !!(listingId || resolvedDraftId);
       const targetListingId = listingId || resolvedDraftId;
