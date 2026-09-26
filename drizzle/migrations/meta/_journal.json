@@ -127,6 +127,13 @@
       "when": 1790376554255,
       "tag": "0017_db_capacity_sampler",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1790389566431,
+      "tag": "0018_create_social_publishing_tables",
+      "breakpoints": true
     }
   ]
 }
