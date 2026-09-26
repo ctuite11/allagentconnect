@@ -1,8 +1,9 @@
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { resolveListingPhotoUrl } from "@/lib/resolveListingPhotoUrl";
 
 interface PhotoGalleryDialogProps {
   open: boolean;
@@ -28,6 +29,12 @@ const PhotoGalleryDialog = ({
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(initialIndex);
   const [currentFloorPlanIndex, setCurrentFloorPlanIndex] = useState(0);
   const [activeTab, setActiveTab] = useState(initialTab);
+
+  useEffect(() => {
+    if (!open) return;
+    setCurrentPhotoIndex(initialIndex);
+    setActiveTab(initialTab);
+  }, [open, initialIndex, initialTab]);
 
   const hasPhotos = photos && photos.length > 0;
   const hasFloorPlans = floorPlans && floorPlans.length > 0;
@@ -68,7 +75,7 @@ const PhotoGalleryDialog = ({
               <TabsContent value="photos" className="h-full m-0">
                 <div className="relative h-full flex items-center justify-center bg-black">
                   <img
-                    src={photos[currentPhotoIndex]?.url}
+                    src={resolveListingPhotoUrl(photos[currentPhotoIndex]) || ""}
                     alt={`Photo ${currentPhotoIndex + 1}`}
                     className="max-h-full max-w-full object-contain"
                   />
@@ -105,7 +112,7 @@ const PhotoGalleryDialog = ({
                         index === currentPhotoIndex ? "border-primary" : "border-transparent"
                       }`}
                     >
-                      <img src={photo.url} alt={`Thumbnail ${index + 1}`} className="w-full h-full object-cover" />
+                      <img src={resolveListingPhotoUrl(photo) || ""} alt={`Thumbnail ${index + 1}`} className="w-full h-full object-cover" />
                     </button>
                   ))}
                 </div>

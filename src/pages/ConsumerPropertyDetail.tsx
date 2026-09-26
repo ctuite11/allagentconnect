@@ -397,7 +397,7 @@ const ConsumerPropertyDetail = () => {
       return;
     }
     setActiveMediaTab(tab);
-    if (tab === 'photos') setCurrentPhotoIndex(0);
+    if (tab === "photos") setGalleryOpen(true);
   };
 
   const handleExpandGallery = () => setGalleryOpen(true);

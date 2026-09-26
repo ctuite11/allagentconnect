@@ -423,8 +423,8 @@ const PropertyDetail = () => {
       return;
     }
     setActiveMediaTab(tab);
-    if (tab === 'photos') {
-      setCurrentPhotoIndex(0);
+    if (tab === "photos") {
+      setGalleryOpen(true);
     }
   };
 
