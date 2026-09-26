@@ -82,7 +82,7 @@ export async function authenticateGated(req: Request): Promise<AuthContext | nul
 
 /** Server-side call to bundle.social. The API key is only ever read here. */
 export async function bundleFetch(path: string, init: RequestInit = {}): Promise<Response> {
-  const apiKey = Deno.env.get('BUNDLE_SOCIAL_API_KEY')
+  const apiKey = Deno.env.get('BUNDLE_SOCIAL_API_KEY')?.trim()
   if (!apiKey) throw new Error('BUNDLE_SOCIAL_API_KEY is not configured')
   return fetch(`${BUNDLE_BASE_URL}${path}`, {
     ...init,
