@@ -3806,7 +3806,7 @@ const AddListing = () => {
           />
 
           {/* Action Buttons - Sticky Top Bar */}
-          <div className={cn("-mx-4 sticky top-0 z-10 mb-6 border-b transition-opacity", bottomActionsVisible && "pointer-events-none opacity-0")} data-top-actions="1" style={undefined} data-cls=" bg-white/95 px-4 py-2.5 shadow-[0_1px_3px_rgba(0,0,0,0.04)] backdrop-blur-sm supports-[backdrop-filter]:bg-white/90">
+          <div className={cn("-mx-4 sticky top-0 z-10 mb-6 border-b border-zinc-200/90 bg-white/95 px-4 py-2.5 shadow-[0_1px_3px_rgba(0,0,0,0.04)] backdrop-blur-sm transition-opacity supports-[backdrop-filter]:bg-white/90", bottomActionsVisible && "pointer-events-none opacity-0")}>
             <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
               <div className="flex min-w-0 flex-1 flex-col gap-0.5 sm:flex-row sm:items-center sm:gap-2">
                 {autoSaving && (
