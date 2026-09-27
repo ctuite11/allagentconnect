@@ -108,3 +108,11 @@
 
 ## Listing → Social Media Publishing V1 (bundle.social) (2026-09-26)
 - [ ] Build in isolated Lovable draft only (no merge/deploy); run 13-point verification; report and wait for approval
+
+## Add Listing cleanup (2026-09-27)
+- [x] Regression audit: Preview + publish review (report)
+- [x] DCMLS block highlight (visual only)
+- [x] Add "Exclusive Right to Sell — Buyer-Broker Compensation Offered"
+- [x] Bottom Save Draft | Preview | Publish row; hide sticky top bar when visible
+- [x] Restore working Preview (draft opens in new tab)
+- [x] "Ready to publish?" review: cover photo, address, type, beds/baths/sqft

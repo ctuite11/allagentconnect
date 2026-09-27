@@ -37,7 +37,7 @@ export function DcmlsPublishControl({
   const disabled = !knownOn;
 
   return (
-    <div className="border rounded-lg p-4 bg-muted/30 space-y-3">
+    <div className="space-y-3 rounded-xl border border-primary/30 border-l-4 border-l-primary bg-primary/5 p-5 shadow-sm">
       <div className="flex items-center gap-3">
         <Checkbox
           id="publish_to_dcmls"
@@ -50,9 +50,9 @@ export function DcmlsPublishControl({
         />
         <Label
           htmlFor="publish_to_dcmls"
-          className={`flex items-center gap-2 font-medium ${disabled ? "cursor-not-allowed opacity-70" : "cursor-pointer"}`}
+          className={`flex items-center gap-2 text-base font-semibold text-foreground ${disabled ? "cursor-not-allowed opacity-70" : "cursor-pointer"}`}
         >
-          <Globe className="h-4 w-4 text-muted-foreground" />
+          <Globe className="h-5 w-5 text-primary" />
           Show this listing on DCMLS
         </Label>
 

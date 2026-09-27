@@ -1,5 +1,9 @@
 export const SALE_LISTING_AGREEMENT_OPTIONS = [
   { value: "Exclusive Right to Sell", label: "Exclusive Right to Sell" },
+  {
+    value: "Exclusive Right to Sell — Buyer-Broker Compensation Offered",
+    label: "Exclusive Right to Sell — Buyer-Broker Compensation Offered",
+  },
   { value: "Exclusive Agency", label: "Exclusive Agency" },
   { value: "Open Listing", label: "Open Listing" },
   { value: "Net Listing", label: "Net Listing" },
