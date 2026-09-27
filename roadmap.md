@@ -110,9 +110,9 @@
 - [ ] Build in isolated Lovable draft only (no merge/deploy); run 13-point verification; report and wait for approval
 
 ## Add Listing cleanup (2026-09-27)
-- [ ] Regression audit: Preview + publish review (report)
-- [ ] DCMLS block highlight (visual only)
-- [ ] Add "Exclusive Right to Sell — Buyer-Broker Compensation Offered"
-- [ ] Bottom Save Draft | Preview | Publish row; hide sticky top bar when visible
-- [ ] Restore working Preview (draft opens in new tab)
-- [ ] "Ready to publish?" review: cover photo, address, type, beds/baths/sqft
+- [x] Regression audit: Preview + publish review (report)
+- [x] DCMLS block highlight (visual only)
+- [x] Add "Exclusive Right to Sell — Buyer-Broker Compensation Offered"
+- [x] Bottom Save Draft | Preview | Publish row; hide sticky top bar when visible
+- [x] Restore working Preview (draft opens in new tab)
+- [x] "Ready to publish?" review: cover photo, address, type, beds/baths/sqft
