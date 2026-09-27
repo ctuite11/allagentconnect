@@ -6,22 +6,38 @@ type ConfirmBeforePublishingDialogProps = {
   statusLabel: string;
   address: string;
   price: string;
+  coverPhotoUrl?: string | null;
+  propertyType?: string;
+  beds?: string;
+  baths?: string;
+  sqft?: string;
   onGoBack: () => void;
   onConfirm: () => void;
 };
 
 /**
- * Final gate before a listing becomes live for the first time.
- * Shown after validation / photo-order confirmation; does not persist anything itself.
+ * "Ready to publish?" — final review before a listing goes live for the first time.
+ * Shown after validation; does not persist anything itself.
  */
 export function ConfirmBeforePublishingDialog({
   open,
   statusLabel,
   address,
   price,
+  coverPhotoUrl,
+  propertyType,
+  beds,
+  baths,
+  sqft,
   onGoBack,
   onConfirm,
 }: ConfirmBeforePublishingDialogProps) {
+  const vitals = [
+    beds ? `${beds} Beds` : null,
+    baths ? `${baths} Baths` : null,
+    sqft ? `${sqft} Sq Ft` : null,
+  ].filter(Boolean);
+
   return (
     <Dialog
       open={open}
@@ -31,23 +47,26 @@ export function ConfirmBeforePublishingDialog({
     >
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Confirm before publishing</DialogTitle>
+          <DialogTitle>Ready to publish?</DialogTitle>
         </DialogHeader>
 
-        <dl className="space-y-4 py-1">
-          <div>
-            <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Status</dt>
-            <dd className="mt-0.5 text-lg font-semibold text-foreground">{statusLabel}</dd>
+        {coverPhotoUrl ? (
+          <div className="relative overflow-hidden rounded-lg border bg-muted">
+            <img src={coverPhotoUrl} alt="Cover photo" className="h-48 w-full object-cover" />
+            <span className="absolute left-2 top-2 rounded-full bg-background/90 px-2 py-0.5 text-[11px] font-medium text-foreground">
+              Cover Photo
+            </span>
           </div>
-          <div>
-            <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Address</dt>
-            <dd className="mt-0.5 text-lg font-semibold leading-snug text-foreground">{address}</dd>
-          </div>
-          <div>
-            <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Price</dt>
-            <dd className="mt-0.5 text-lg font-semibold text-foreground">{price}</dd>
-          </div>
-        </dl>
+        ) : null}
+
+        <div className="space-y-1">
+          <p className="text-lg font-semibold leading-snug text-foreground">{address}</p>
+          {propertyType ? <p className="text-sm text-muted-foreground">{propertyType}</p> : null}
+          <p className="text-sm text-foreground">{vitals.length ? vitals.join(" | ") : "Beds | Baths | Sq Ft not entered"}</p>
+          <p className="pt-1 text-sm text-muted-foreground">
+            {price} · {statusLabel}
+          </p>
+        </div>
 
         <p className="text-sm text-muted-foreground">
           Publishing will make this listing live and may send Hot Sheet alerts to matching agents.
@@ -55,10 +74,10 @@ export function ConfirmBeforePublishingDialog({
 
         <div className="flex justify-end gap-2 pt-2">
           <Button type="button" variant="outline" onClick={onGoBack}>
-            Go Back
+            Go Back / Edit
           </Button>
           <Button type="button" onClick={onConfirm}>
-            Confirm & Publish
+            Yes, Publish Listing
           </Button>
         </div>
       </DialogContent>

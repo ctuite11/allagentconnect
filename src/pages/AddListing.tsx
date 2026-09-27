@@ -369,6 +369,15 @@ const AddListing = () => {
    * it is cleared once that attempt passes the confirm gate.
    */
   const [publishConfirmOpen, setPublishConfirmOpen] = useState(false);
+  const bottomActionsRef = useRef<HTMLDivElement | null>(null);
+  const [bottomActionsVisible, setBottomActionsVisible] = useState(false);
+  useEffect(() => {
+    const el = bottomActionsRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(([entry]) => setBottomActionsVisible(entry.isIntersecting));
+    obs.observe(el);
+    return () => obs.disconnect();
+  });
   const [pendingPublishAction, setPendingPublishAction] = useState<"publish" | "saveChanges" | null>(null);
   const photoOrderConfirmedRef = useRef(false);
   const publishConfirmedRef = useRef(false);
@@ -2798,6 +2807,8 @@ const AddListing = () => {
    * agent has not yet confirmed the photo order for this publish attempt.
    */
   const needsFirstPublishPhotoConfirm = (targetStatus: string) => {
+    // Hidden: cover photo now shown in the "Ready to publish?" review instead.
+    if (SHOW_PHOTO_ORDER_STEP === false) return false;
     if (photoOrderConfirmedRef.current) return false;
     if (!isLiveStatus(targetStatus)) return false;
     const previousStatus = originalStatusRef.current;
@@ -3240,8 +3251,21 @@ const AddListing = () => {
     navigate(`/agent/listings/${targetId}/floor-plans`);
   };
 
-  const handlePreview = () => {
-    toast.info("Preview functionality coming soon");
+  /** Save the draft, then open it on the listing page in a new tab. */
+  const handlePreview = async () => {
+    const win = window.open("about:blank", "_blank");
+    let id = listingId || draftSession.getDraftId();
+    if (!id || hasUnsavedChanges) {
+      await handleSaveDraft(true);
+      id = listingId || draftSession.getDraftId();
+    }
+    if (!id) {
+      win?.close();
+      toast.error("Add an address and save the draft before previewing.");
+      return;
+    }
+    if (win) win.location.href = `/property/${id}`;
+    else window.open(`/property/${id}`, "_blank");
   };
 
   const handleSubmit = async (e: React.FormEvent, publishNow: boolean = true) => {
@@ -3622,83 +3646,8 @@ const AddListing = () => {
     setPendingPublishAction(null);
   };
 
-  if (loading || isLoadingListing) {
-    return (
-      <>
-        <Seo title="Add Listing" />
-        <div className="min-h-0 bg-white pb-10" aria-busy="true" role="status">
-          <span className="sr-only">
-            {isLoadingListing ? "Loading listing data…" : "Preparing listing form…"}
-          </span>
-          <div className="container mx-auto px-4 py-8">
-            <div className="mx-auto max-w-5xl space-y-6">
-              <div className="flex items-center gap-2">
-                <Skeleton className="h-10 w-10 rounded-md bg-zinc-100" />
-              </div>
-              <Skeleton className="h-4 w-64 max-w-[90%] rounded-md bg-zinc-100" />
-              <Skeleton className="h-10 w-full rounded-lg bg-zinc-100" />
-              <Skeleton className="h-[min(52vh,440px)] w-full rounded-xl bg-zinc-100" />
-              <div className="grid gap-4 sm:grid-cols-2">
-                <Skeleton className="h-32 rounded-xl bg-zinc-100" />
-                <Skeleton className="h-32 rounded-xl bg-zinc-100" />
-              </div>
-            </div>
-          </div>
-        </div>
-      </>
-    );
-  }
-
-  return (
+  const renderActionButtons = () => (
     <>
-      <Seo title="Add Listing" />
-      <DcmlsPublishingIntroOverlay open={introVisible} onGotIt={handleGotIt} />
-      <AddListingStatusIntroOverlay
-        open={statusIntroVisible && !introVisible}
-        onGotIt={handleStatusGotIt}
-      />
-      <div className="min-h-0 bg-white pb-10">
-      <div className="container mx-auto px-4 pb-6">
-        <div className="max-w-5xl mx-auto">
-          <AgentPageHeader
-            withTopPadding
-            title={listingId ? "Edit listing" : "Add listing"}
-            backTo={addListingBackTo}
-            actions={
-              user?.email ? (
-                <span className="max-w-[14rem] truncate text-xs text-neutral-500 sm:max-w-xs" title={user.email}>
-                  Signed in as <span className="font-medium text-zinc-700">{user.email}</span>
-                </span>
-              ) : null
-            }
-          />
-
-          {/* Action Buttons - Sticky Top Bar */}
-          <div className="-mx-4 sticky top-0 z-10 mb-6 border-b border-zinc-200/90 bg-white/95 px-4 py-2.5 shadow-[0_1px_3px_rgba(0,0,0,0.04)] backdrop-blur-sm supports-[backdrop-filter]:bg-white/90">
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-              <div className="flex min-w-0 flex-1 flex-col gap-0.5 sm:flex-row sm:items-center sm:gap-2">
-                {autoSaving && (
-                  <div className="flex items-center gap-1.5 text-xs font-medium leading-snug text-neutral-600">
-                    <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin text-neutral-500" aria-hidden />
-                    <span>Auto-saving…</span>
-                  </div>
-                )}
-                {!autoSaving && hasUnsavedChanges && (
-                  <div className="flex items-center gap-1.5 text-xs font-medium leading-snug text-amber-800/90">
-                    <AlertCircle className="h-3.5 w-3.5 shrink-0" aria-hidden />
-                    <span>Unsaved changes</span>
-                  </div>
-                )}
-                {!autoSaving && !hasUnsavedChanges && lastAutoSave && (
-                  <div className="flex items-center gap-1.5 text-xs font-medium leading-snug text-neutral-600">
-                    <Cloud className="h-3.5 w-3.5 shrink-0 text-neutral-500" aria-hidden />
-                    <span>Auto-saved {lastAutoSave.toLocaleTimeString()}</span>
-                  </div>
-                )}
-              </div>
-
-              <div className="flex flex-col items-stretch gap-1.5 sm:ml-auto sm:items-end">
-                <div className="flex flex-wrap items-center gap-2">
               {/* Concierge mode: staff can only save a draft for the member */}
               {isConciergeMode ? (
                 <Button
@@ -3727,7 +3676,7 @@ const AddListing = () => {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => window.open(`/listing/${listingId}`, "_blank")}
+                    onClick={() => void handlePreview()}
                     type="button"
                     className="gap-1.5 border-zinc-200"
                   >
@@ -3783,7 +3732,7 @@ const AddListing = () => {
                       </>
                     )}
                   </Button>
-                  <Button variant="outline" size="sm" onClick={handlePreview} type="button" className="gap-1.5 border-zinc-200">
+                  <Button variant="outline" size="sm" onClick={() => void handlePreview()} type="button" className="gap-1.5 border-zinc-200">
                     <Eye className="h-4 w-4 shrink-0" />
                     Preview
                   </Button>
@@ -3802,6 +3751,87 @@ const AddListing = () => {
                   </Button>
                 </>
               )}
+    </>
+  );
+
+  if (loading || isLoadingListing) {
+    return (
+      <>
+        <Seo title="Add Listing" />
+        <div className="min-h-0 bg-white pb-10" aria-busy="true" role="status">
+          <span className="sr-only">
+            {isLoadingListing ? "Loading listing data…" : "Preparing listing form…"}
+          </span>
+          <div className="container mx-auto px-4 py-8">
+            <div className="mx-auto max-w-5xl space-y-6">
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-10 w-10 rounded-md bg-zinc-100" />
+              </div>
+              <Skeleton className="h-4 w-64 max-w-[90%] rounded-md bg-zinc-100" />
+              <Skeleton className="h-10 w-full rounded-lg bg-zinc-100" />
+              <Skeleton className="h-[min(52vh,440px)] w-full rounded-xl bg-zinc-100" />
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Skeleton className="h-32 rounded-xl bg-zinc-100" />
+                <Skeleton className="h-32 rounded-xl bg-zinc-100" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <Seo title="Add Listing" />
+      <DcmlsPublishingIntroOverlay open={introVisible} onGotIt={handleGotIt} />
+      <AddListingStatusIntroOverlay
+        open={statusIntroVisible && !introVisible}
+        onGotIt={handleStatusGotIt}
+      />
+      <div className="min-h-0 bg-white pb-10">
+      <div className="container mx-auto px-4 pb-6">
+        <div className="max-w-5xl mx-auto">
+          <AgentPageHeader
+            withTopPadding
+            title={listingId ? "Edit listing" : "Add listing"}
+            backTo={addListingBackTo}
+            actions={
+              user?.email ? (
+                <span className="max-w-[14rem] truncate text-xs text-neutral-500 sm:max-w-xs" title={user.email}>
+                  Signed in as <span className="font-medium text-zinc-700">{user.email}</span>
+                </span>
+              ) : null
+            }
+          />
+
+          {/* Action Buttons - Sticky Top Bar */}
+          <div className={cn("-mx-4 sticky top-0 z-10 mb-6 border-b transition-opacity", bottomActionsVisible && "pointer-events-none opacity-0")} data-top-actions="1" style={undefined} data-cls=" bg-white/95 px-4 py-2.5 shadow-[0_1px_3px_rgba(0,0,0,0.04)] backdrop-blur-sm supports-[backdrop-filter]:bg-white/90">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+              <div className="flex min-w-0 flex-1 flex-col gap-0.5 sm:flex-row sm:items-center sm:gap-2">
+                {autoSaving && (
+                  <div className="flex items-center gap-1.5 text-xs font-medium leading-snug text-neutral-600">
+                    <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin text-neutral-500" aria-hidden />
+                    <span>Auto-saving…</span>
+                  </div>
+                )}
+                {!autoSaving && hasUnsavedChanges && (
+                  <div className="flex items-center gap-1.5 text-xs font-medium leading-snug text-amber-800/90">
+                    <AlertCircle className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                    <span>Unsaved changes</span>
+                  </div>
+                )}
+                {!autoSaving && !hasUnsavedChanges && lastAutoSave && (
+                  <div className="flex items-center gap-1.5 text-xs font-medium leading-snug text-neutral-600">
+                    <Cloud className="h-3.5 w-3.5 shrink-0 text-neutral-500" aria-hidden />
+                    <span>Auto-saved {lastAutoSave.toLocaleTimeString()}</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex flex-col items-stretch gap-1.5 sm:ml-auto sm:items-end">
+                <div className="flex flex-wrap items-center gap-2">
+              {renderActionButtons()}
                 </div>
               </div>
             </div>
@@ -5747,6 +5777,14 @@ const AddListing = () => {
                 </div>
 
               </form>
+
+              {/* Final actions at the end of the form */}
+              <div
+                ref={bottomActionsRef}
+                className="mt-8 flex flex-wrap items-center justify-end gap-2 border-t border-zinc-200 pt-6"
+              >
+                {renderActionButtons()}
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -5808,6 +5846,11 @@ const AddListing = () => {
         )}
         address={formatPublishConfirmAddress()}
         price={formatPublishConfirmPrice()}
+        coverPhotoUrl={photos[0]?.preview || photos[0]?.url || null}
+        propertyType={String(formData.property_type || "").replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}
+        beds={String(formData.bedrooms ?? "")}
+        baths={String(formData.bathrooms ?? "")}
+        sqft={formData.square_feet ? Number(formData.square_feet).toLocaleString() : ""}
         onGoBack={handleCancelPublishConfirm}
         onConfirm={handleConfirmPublish}
       />
