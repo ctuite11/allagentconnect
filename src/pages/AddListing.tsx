@@ -4015,6 +4015,7 @@ const AddListing = () => {
                           : "not_published"
                       }
                       participation={dcmlsParticipation}
+                      onOptedIn={() => setDcmlsParticipation("on")}
                     />
                   </div>
                 )}
