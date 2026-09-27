@@ -249,6 +249,8 @@ function resolveAddListingReturnTo(
   return ROUTES.MY_LISTINGS;
 }
 
+const SHOW_PHOTO_ORDER_STEP: boolean = false;
+
 const AddListing = () => {
   const navigate = useNavigate();
   const location = useLocation();
