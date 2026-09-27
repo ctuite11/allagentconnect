@@ -4,6 +4,11 @@ import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Globe, AlertCircle, EyeOff, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { updateDcmlsParticipation } from "@/lib/dcmlsListing";
 
 /** Agent-level DCMLS participation resolution for listing forms. */
 export type DcmlsParticipationState = "loading" | "unknown" | "on" | "off";
@@ -19,6 +24,8 @@ interface DcmlsPublishControlProps {
    * - loading/unknown: control disabled; save must not rewrite DCMLS fields
    */
   participation: DcmlsParticipationState;
+  /** Called after a successful agent-level opt-in. Must NOT check the listing box. */
+  onOptedIn?: () => void;
 }
 
 /**
@@ -31,7 +38,24 @@ export function DcmlsPublishControl({
   dcmlsStatus,
   dcmlsError,
   participation,
+  onOptedIn,
 }: DcmlsPublishControlProps) {
+  const [optingIn, setOptingIn] = useState(false);
+  const handleOptIn = async () => {
+    setOptingIn(true);
+    try {
+      const { data } = await supabase.auth.getUser();
+      if (!data.user) throw new Error("Not signed in");
+      const res = await updateDcmlsParticipation(data.user.id, true);
+      if (res.status !== "on") throw new Error("Opt-in not confirmed");
+      toast.success("You're opted in to DCMLS. Choose whether to show this listing.");
+      onOptedIn?.();
+    } catch {
+      toast.error("Could not opt in to DCMLS. Try again or use Settings.");
+    } finally {
+      setOptingIn(false);
+    }
+  };
   const knownOn = participation === "on";
   const knownOff = participation === "off";
   const disabled = !knownOn;
@@ -74,13 +98,21 @@ export function DcmlsPublishControl({
           </span>
         </p>
       ) : knownOff ? (
-        <p className="text-xs text-muted-foreground pl-7">
-          Join Direct Connect MLS in{" "}
-          <Link to="/settings" className="underline underline-offset-2 hover:text-foreground">
-            Settings
-          </Link>{" "}
-          before you can show a listing here. Opting in does not publish listings automatically.
-        </p>
+        <div className="pl-7 space-y-2">
+          {onOptedIn && (
+            <Button type="button" size="sm" onClick={() => void handleOptIn()} disabled={optingIn}>
+              {optingIn && <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" aria-hidden />}
+              Opt in to DCMLS
+            </Button>
+          )}
+          <p className="text-xs text-muted-foreground">
+            You're not participating in Direct Connect MLS yet. Opt in here or in{" "}
+            <Link to="/settings" className="underline underline-offset-2 hover:text-foreground">
+              Settings
+            </Link>
+            . Opting in does not publish listings — you still choose each listing separately.
+          </p>
+        </div>
       ) : (
         <p className="text-xs text-muted-foreground pl-7">
           When enabled, this listing will be visible on Direct Connect MLS. Opting into DCMLS in
