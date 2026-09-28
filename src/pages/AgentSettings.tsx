@@ -13,6 +13,7 @@ import { AgentAacPage } from "@/components/layout/AgentAacPage";
 import { AgentPageHeader } from "@/components/layout/AgentPageHeader";
 import { AgentSectionCard } from "@/components/layout/AgentSectionCard";
 import { AccountDelegatesCard } from "@/components/AccountDelegatesCard";
+import { SocialMediaSettingsCard } from "@/components/social/SocialMediaSettingsCard";
 import { agentSectionDesc, agentSectionTitle } from "@/lib/agentUi";
 import { useAgentSettings } from "@/hooks/useAgentSettings";
 import type { User } from "@supabase/supabase-js";
@@ -130,6 +131,8 @@ export default function AgentSettings() {
         />
 
         <div className="space-y-8">
+          <SocialMediaSettingsCard />
+
           <AgentSectionCard className="space-y-4 p-5 md:p-6">
             <div>
               <h2 className={agentSectionTitle}>Subscription</h2>
