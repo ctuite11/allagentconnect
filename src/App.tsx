@@ -174,6 +174,7 @@ const DesignMockup = React.lazy(() => import("./pages/DesignMockup"));
 import HomepageV2 from "./pages/HomepageV2";
 import DcmlsHome from "./pages/DcmlsHome";
 import { isDcmlsHost } from "./lib/host";
+import { isDcmlsAuthAccessEnabled, shouldBlockDcmlsAuthRoutes } from "./lib/dcmlsAuthAccess";
 const AgentDiagnostics = React.lazy(() => import("./pages/AgentDiagnostics"));
 const AcceptBuyerWorkspaceInvite = React.lazy(() => import("./pages/AcceptBuyerWorkspaceInvite"));
 const AcceptDelegateInvite = React.lazy(() => import("./pages/AcceptDelegateInvite"));
@@ -344,12 +345,35 @@ function PublicSearchEntry() {
   return <PublicSearchResults />;
 }
 
-/** DCMLS consumer auth surface; AAC keeps the shared `/auth` redirect. */
+/** DCMLS consumer auth surface; AAC keeps the shared `/auth` redirect.
+ *  When DCMLS auth access is temporarily closed, never present login under DCMLS. */
 function ConsumerAuthEntry() {
+  if (shouldBlockDcmlsAuthRoutes()) {
+    return <Navigate to="/" replace />;
+  }
   if (isDcmlsHost()) {
+    if (!isDcmlsAuthAccessEnabled()) {
+      return <Navigate to="/" replace />;
+    }
     return <DcmlsAuth />;
   }
   return <Navigate to="/auth" replace />;
+}
+
+/** AAC `/login` portal — blocked on the live DCMLS hostname while auth access is off. */
+function LoginEntry() {
+  if (shouldBlockDcmlsAuthRoutes()) {
+    return <Navigate to="/" replace />;
+  }
+  return <LoginPage />;
+}
+
+/** AAC `/auth` — blocked on the live DCMLS hostname while auth access is off. */
+function AuthEntry() {
+  if (shouldBlockDcmlsAuthRoutes()) {
+    return <Navigate to="/" replace />;
+  }
+  return <Auth />;
 }
 
 /** Layout route: wraps children in AppShell (sidebar + header) */
@@ -465,7 +489,7 @@ const App = () => (
                 <Route path="/register" element={<Navigate to="/request-access" replace />} />
                 <Route path="/request-access" element={<RequestAccessPage />} />
                 <Route path="/developer-access" element={<DeveloperAccessPage />} />
-                <Route path="/login" element={<LoginPage />} />
+                <Route path="/login" element={<LoginEntry />} />
                 <Route
                   path="/agent-match"
                   element={
@@ -485,7 +509,7 @@ const App = () => (
                 <Route path="/blog" element={<Blog />} />
                 {/* Auth routes */}
                 <Route element={<PublicLayout />}>
-                  <Route path="/auth" element={<Auth />} />
+                  <Route path="/auth" element={<AuthEntry />} />
                   <Route path="/developer-login" element={<DeveloperLoginPage />} />
                   <Route path="/auth/callback" element={<AuthCallback />} />
                   <Route path="/auth/setup" element={<AuthSetupRedirect />} />

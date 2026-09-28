@@ -5,6 +5,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import AACMonogram from "@/components/ui/AACMonogram";
+import { isDcmlsAuthAccessEnabled } from "@/lib/dcmlsAuthAccess";
 
 const AAC_BLUE = "#0E56F5";
 
@@ -125,7 +126,7 @@ const DcmlsConsumerHeader: React.FC = () => {
             <Button variant="ghost" size="sm" onClick={handleSignOut}>
               Sign Out
             </Button>
-          ) : (
+          ) : isDcmlsAuthAccessEnabled() ? (
             <div className="flex items-center gap-2 pl-2">
               <Button asChild variant="ghost" size="sm" className="text-foreground">
                 <Link to="/consumer/auth?mode=signin">Sign In</Link>
@@ -139,7 +140,7 @@ const DcmlsConsumerHeader: React.FC = () => {
                 <Link to="/consumer/auth?mode=signup">Create Account</Link>
               </Button>
             </div>
-          )}
+          ) : null}
         </nav>
 
         {/* Mobile nav */}
@@ -170,7 +171,7 @@ const DcmlsConsumerHeader: React.FC = () => {
                 >
                   Sign Out
                 </Button>
-              ) : (
+              ) : isDcmlsAuthAccessEnabled() ? (
                 <div className="flex flex-col gap-2 mt-2">
                   <Button asChild variant="outline">
                     <Link to="/consumer/auth?mode=signin">Sign In</Link>
@@ -183,7 +184,7 @@ const DcmlsConsumerHeader: React.FC = () => {
                     <Link to="/consumer/auth?mode=signup">Create Account</Link>
                   </Button>
                 </div>
-              )}
+              ) : null}
 
               {/* Pages section (mobile) */}
               <div className="mt-6 pt-4 border-t border-border/60">
