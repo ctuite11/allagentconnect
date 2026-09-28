@@ -901,11 +901,11 @@ const AddListing = () => {
         backendStatusRef.current = rawStatus;
         
         // Normalize status to lowercase to match Select options
-        // If status is "draft", restore the agent's saved intended status; older drafts fall back to "new"
+        // If status is "draft", restore the agent's saved intended status; older drafts fall back to On MLS (active)
         let normalizedStatus = rawStatus;
         if (normalizedStatus === "draft") {
           normalizedStatus =
-            draftIntendedStatusToFormStatus((data as any).draft_intended_status) || "new";
+            draftIntendedStatusToFormStatus((data as any).draft_intended_status) || LISTING_STATUS.ACTIVE;
         }
         originalStatusRef.current = normalizedStatus;
         
