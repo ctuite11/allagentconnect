@@ -122,5 +122,6 @@
 
 ## Publish flow restore (2026-09-28)
 - [x] Step 1: social-draft inventory report (report only)
-- [ ] Step 2: first-publish review + social (owner-only), defaults function, edit prompt, Settings card
-- [ ] Live test Draft→Publish→Go Back (stop before real publish; blocked: needs user OK)
+- [x] Step 2: first-publish review + social (owner-only), defaults function, edit prompt, Settings card
+- [x] Live test Draft→Publish→Go Back
+- [ ] Real "Yes, Publish Listing" test on 999 Test Publish Lane (blocked: awaiting user OK; Hot Sheet emails possible)
