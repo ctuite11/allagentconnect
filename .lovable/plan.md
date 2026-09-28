@@ -1,20 +1,24 @@
-# Keep the chosen status when a draft is saved
+# Fix Save Draft button and Preview Back on Add/Edit Listing
 
-## Problem (confirmed in the code)
-Save Draft correctly stores the listing as `draft`. When the draft is reopened, the form converts `draft` to `new`, so the status the agent picked (Off Market, Coming Soon, On MLS) is lost. No other saved field keeps it; there is no existing "intended status" field.
+## 1. Existing drafts get a Save Draft button
+Right now, reopening a draft shows only **Preview | Publish**. The fix:
+- **Listing is still a Draft:** show **Save Draft | Preview | Publish**, in both the top bar and the bottom row.
+  - Save Draft keeps the listing as a Draft and saves the chosen status alongside it (current save-draft behavior).
+  - Preview works as it does today.
+  - Publish uses the existing publish flow, including the photo check and the "Ready to publish?" review.
+- **Live listing being edited:** unchanged, still **Preview | Save Changes**.
+- Concierge (staff) mode: unchanged.
 
-## Fix
-- Add one new optional field to listings: `draft_intended_status` (empty by default, only allows valid listing status values, never `draft`).
-- Save Draft, autosave, and the silent saves before Preview / Manage Photos / Manage Floor Plans: listing stays `draft`; the selected form status is also saved into `draft_intended_status`.
-- Reopening a draft: the Status field shows `draft_intended_status`. Older drafts without it keep the current behavior (New).
-- Publish: uses the selected form status as today, then clears `draft_intended_status`.
-- Saving a draft never goes live, and never triggers Hot Sheets, emails, social posts, or DCMLS.
+## 2. Preview's Back returns to the editor
+- Preview opens the listing page with a return link to that listing's edit page. This applies to new drafts after their first save, existing drafts, and live listings.
+- On the listing page, Back goes to that edit page first. It only accepts links inside the site; anything else falls back to today's Back behavior.
+- If a listing page is opened any other way (My Listings, search, Hot Sheets, shared links, DCMLS), Back behaves exactly as today.
 
 ## Not changing
-Hot Sheets, emails, social, DCMLS rules, the first-photo publish check, Edit of live listings, or any other page.
+Autosave, publish sequencing, the photo requirement, Hot Sheets, emails, social posting, DCMLS, statuses, or other pages.
 
 ## Technical details
-- Migration: `ALTER TABLE public.listings ADD COLUMN draft_intended_status text NULL` plus a check constraint limiting it to current status values (excluding `draft` and plain `withdrawn`). Additive only; existing grants and RLS cover it. Confirm no listing triggers act on this column.
-- `src/pages/AddListing.tsx`: `buildListingDataFromForm` sets `draft_intended_status` when the target status is draft (covers handleSaveDraft line ~2654, autosave and pre-navigation saves ~2926/2958); set it to null on publish (~3405). `loadExistingListing` (~884) hydrates from it when status is draft.
-- Check the Rental add-listing form for the same pattern and apply the identical fix if present.
-- Heads-up: saving to GitHub main makes this live on allagentconnect.com immediately. Report exact changes after.
+- `src/pages/AddListing.tsx` `renderActionButtons()` (~3713): split the `listingId` branch. When `backendStatusRef.current === "draft"`, render three buttons: an outline Save Draft (`handleSaveDraft(false)`), Preview, and a Publish button calling the same handler/gates the current Publish label uses (`handleSaveChanges()`). Otherwise keep Preview plus Save Changes.
+- `handlePreview` (~3307): open `/property/${id}?returnTo=${encodeURIComponent(`/agent/listings/edit/${id}`)}`.
+- `src/pages/PropertyDetail.tsx` back handler (~265): before the history and `/listing-results` fallback, read `returnTo` from the search params and, if `isSafeInternalReturnPath` accepts it (starts with `/`, not `//`, same pattern as ConsumerPropertyDetail), navigate there.
+- Heads-up: saving to GitHub main makes this live on allagentconnect.com right away. After that, the three draft-status live tests from earlier can run, including this new button.
