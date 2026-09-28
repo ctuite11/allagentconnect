@@ -122,4 +122,5 @@
 
 ## Publish flow restore (2026-09-28)
 - [x] Step 1: social-draft inventory report (report only)
-- [ ] Step 2: first-publish review + social section, gated defaults function, edit-time prompt (blocked: awaiting user review of Step 1)
+- [ ] Step 2: first-publish review + social (owner-only), defaults function, edit prompt, Settings card
+- [ ] Live test Draft→Publish→Go Back (stop before real publish; blocked: needs user OK)
