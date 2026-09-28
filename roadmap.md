@@ -118,4 +118,4 @@
 - [x] "Ready to publish?" review: cover photo, address, type, beds/baths/sqft
 - [x] My Listings: all 17 statuses in filter + fetch, BOM own filter, legacy canceled→Cancelled, search on own row
 - [x] Draft keeps chosen status (draft_intended_status): sale+rental, media nav stays draft, canonical values
-- [ ] Add/Edit Listing: Save Draft on existing drafts + Preview Back returns to editor (keep from context); then full live draft test
+- [x] Add/Edit Listing: Save Draft on existing drafts + Preview Back returns to editor (keep from context); then full live draft test
