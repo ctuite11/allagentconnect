@@ -1,26 +1,20 @@
-# My Listings: default view shows everything, including Drafts
+# Keep the chosen status when a draft is saved
 
-## Current behavior (verified in code)
-- `src/pages/MyListings.tsx` line ~528: when no status filter is selected, the page hides all Drafts (`listings.filter((l) => l.status !== "draft")`).
-- Line ~420: an effect force-selects the Draft filter and rewrites the URL to `?status=draft` for agents who own only drafts.
-- Default sort is already `created_at` (newest first), computed client-side on every render — edits, price changes, and status changes cannot move a listing's position.
+## Problem (confirmed in the code)
+Save Draft correctly stores the listing as `draft`. When the draft is reopened, the form converts `draft` to `new`, so the status the agent picked (Off Market, Coming Soon, On MLS) is lost. No other saved field keeps it; there is no existing "intended status" field.
 
-## Changes (MyListings.tsx only)
-1. **New default rule — no status selected = show all loaded listings**, including Drafts. Replace the special-case block with:
-   - No statuses selected → show every loaded listing.
-   - Statuses selected → show only matching statuses (legacy `canceled` still normalizes to `cancelled`).
-2. **Remove the drafts-only auto-select effect** (the one that force-picks Draft and rewrites the URL to `?status=draft`). An agent with only drafts simply sees their drafts in the default view, no URL change.
-3. **Remove the "Showing drafts because you don't have published listings yet" notice** and its `hasOnlyDrafts`/`nonDraftListings` helpers if nothing else uses them — the special case they exist for is gone.
-4. **Draft bulk-select toolbar**: draft checkboxes appear on draft cards in the default view too now, but the bulk toolbar only renders when the Draft filter is on. Show the toolbar whenever any draft is selected OR the Draft filter is on, so selections are never invisible.
-5. **Sorting untouched**: default stays Date (newest) by `created_at`; the other Sort options (Days on market, Price, Status) keep working. Sort never reorders on edits/price changes/status changes.
-6. **Kept as-is**: Sale/Rental toggle, search box, status filter buttons, Sort control, URL `?status=` read/write behavior, Draft bulk delete, Quick Edit, card actions, the 17-status filter list, plain `withdrawn` exclusion, and legacy `canceled` handling.
+## Fix
+- Add one new optional field to listings: `draft_intended_status` (empty by default, only allows valid listing status values, never `draft`).
+- Save Draft, autosave, and the silent saves before Preview / Manage Photos / Manage Floor Plans: listing stays `draft`; the selected form status is also saved into `draft_intended_status`.
+- Reopening a draft: the Status field shows `draft_intended_status`. Older drafts without it keep the current behavior (New).
+- Publish: uses the selected form status as today, then clears `draft_intended_status`.
+- Saving a draft never goes live, and never triggers Hot Sheets, emails, social posts, or DCMLS.
 
 ## Not changing
-Add/Edit Listing, Hot Sheets, emails, social posting, DCMLS, listing status behavior, the database, or any other page.
+Hot Sheets, emails, social, DCMLS rules, the first-photo publish check, Edit of live listings, or any other page.
 
 ## Technical details
-- File: `src/pages/MyListings.tsx` only.
-- `filteredListings` (line ~528): default branch becomes `selectedStatuses.size === 0 ? listings : listings.filter(...)`.
-- Delete the `useEffect` at line ~420 that auto-selects Draft, and the `nonDraftListings`/`hasOnlyDrafts` memo (line ~408) plus the notice block at line ~744 if now unused.
-- Bulk toolbar condition (line ~717): `(selectedStatuses.has("draft") || selectedDraftIds.size > 0) && draftListings.length > 0`.
-- Heads-up: saving to GitHub main makes this live on allagentconnect.com right away.
+- Migration: `ALTER TABLE public.listings ADD COLUMN draft_intended_status text NULL` plus a check constraint limiting it to current status values (excluding `draft` and plain `withdrawn`). Additive only; existing grants and RLS cover it. Confirm no listing triggers act on this column.
+- `src/pages/AddListing.tsx`: `buildListingDataFromForm` sets `draft_intended_status` when the target status is draft (covers handleSaveDraft line ~2654, autosave and pre-navigation saves ~2926/2958); set it to null on publish (~3405). `loadExistingListing` (~884) hydrates from it when status is draft.
+- Check the Rental add-listing form for the same pattern and apply the identical fix if present.
+- Heads-up: saving to GitHub main makes this live on allagentconnect.com immediately. Report exact changes after.
