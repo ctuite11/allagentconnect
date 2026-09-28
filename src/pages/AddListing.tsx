@@ -3975,11 +3975,19 @@ const AddListing = () => {
                         {isConciergeMode ? (
                           <SelectItem value="draft">Draft</SelectItem>
                         ) : (
-                          (!listingId ? ADD_LISTING_CREATE_STATUSES : ADD_LISTING_EDIT_STATUSES).map((opt) => (
+                          <>
+                          {/* Legacy: only shown when an existing listing is already stored as plain withdrawn; never selectable. */}
+                          {listingId && formData.status === LISTING_STATUS.WITHDRAWN && (
+                            <SelectItem value={LISTING_STATUS.WITHDRAWN} disabled>
+                              Withdrawn (Legacy)
+                            </SelectItem>
+                          )}
+                          {(!listingId ? ADD_LISTING_CREATE_STATUSES : ADD_LISTING_EDIT_STATUSES).map((opt) => (
                             <SelectItem key={opt.value} value={opt.value}>
                               {opt.label}
                             </SelectItem>
-                          ))
+                          ))}
+                          </>
                         )}
                       </SelectContent>
                     </Select>
