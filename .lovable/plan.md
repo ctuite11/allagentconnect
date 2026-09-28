@@ -1,21 +1,26 @@
-# My Listings: show every status, search on its own row
+# My Listings: default view shows everything, including Drafts
 
-## Why some statuses are missing now
-There's no technical reason. The page uses one short, hand-written list of statuses for three jobs: loading listings, the filter buttons, and the quick status editor on each card. Code comments say the list was kept small on purpose so the quick editor stays simple, and Back on Market was hidden inside "On MLS". Nothing in the database or the rest of the system needs Under Agreement, Pending, Contingent, Sold, Rented, Price Change, Extended or Reactivated left out of My Listings.
+## Current behavior (verified in code)
+- `src/pages/MyListings.tsx` line ~528: when no status filter is selected, the page hides all Drafts (`listings.filter((l) => l.status !== "draft")`).
+- Line ~420: an effect force-selects the Draft filter and rewrites the URL to `?status=draft` for agents who own only drafts.
+- Default sort is already `created_at` (newest first), computed client-side on every render — edits, price changes, and status changes cannot move a listing's position.
 
-## Changes (My Listings page only)
-1. **Load everything**: load the agent's listings in all 17 approved statuses. Plain Withdrawn stays out.
-2. **Filter buttons**: show all 17 statuses in this order: On MLS, New, Coming Soon, Off Market, Back on Market, Price Change, Extended, Reactivated, Under Agreement, Pending, Contingent, Sold, Rented, Temporarily Withdrawn, Cancelled, Expired, Draft. Names come from the app's existing status list, so there's no second copy.
-3. **Back on Market gets its own button**: it's no longer counted as On MLS.
-4. **Toolbar layout**: row 1 has Sale / Rental, the status buttons (they wrap onto another line on narrow screens), then Sort at the end. The "Search address, MLS #…" box moves to its own full-width row below.
-5. **Card actions stay the same**: Edit, Photos, Open House, Broker Tour, Matches, Email, Social, Views, Saves, Stats. No Share button.
-6. **Quick status editor stays the same**: it keeps its current short list. If a listing is in a status the editor doesn't offer (for example Sold), the editor shows that status as it is and doesn't quietly change it to On MLS.
+## Changes (MyListings.tsx only)
+1. **New default rule — no status selected = show all loaded listings**, including Drafts. Replace the special-case block with:
+   - No statuses selected → show every loaded listing.
+   - Statuses selected → show only matching statuses (legacy `canceled` still normalizes to `cancelled`).
+2. **Remove the drafts-only auto-select effect** (the one that force-picks Draft and rewrites the URL to `?status=draft`). An agent with only drafts simply sees their drafts in the default view, no URL change.
+3. **Remove the "Showing drafts because you don't have published listings yet" notice** and its `hasOnlyDrafts`/`nonDraftListings` helpers if nothing else uses them — the special case they exist for is gone.
+4. **Draft bulk-select toolbar**: draft checkboxes appear on draft cards in the default view too now, but the bulk toolbar only renders when the Draft filter is on. Show the toolbar whenever any draft is selected OR the Draft filter is on, so selections are never invisible.
+5. **Sorting untouched**: default stays Date (newest) by `created_at`; the other Sort options (Days on market, Price, Status) keep working. Sort never reorders on edits/price changes/status changes.
+6. **Kept as-is**: Sale/Rental toggle, search box, status filter buttons, Sort control, URL `?status=` read/write behavior, Draft bulk delete, Quick Edit, card actions, the 17-status filter list, plain `withdrawn` exclusion, and legacy `canceled` handling.
 
 ## Not changing
-What each status means, Add/Edit Listing status behaviour, Hot Sheets, emails, social posting, DCMLS, and anything in the database.
+Add/Edit Listing, Hot Sheets, emails, social posting, DCMLS, listing status behavior, the database, or any other page.
 
 ## Technical details
-- `src/pages/MyListings.tsx` only. Split the current list into `FILTER_STATUSES` (built from `LISTING_STATUS`, leaving out `WITHDRAWN` and the `CANCELED` alias; used for the query and the filter buttons) and `EDITABLE_STATUSES` (the current 8, used for the quick editor).
-- Widen the local `ListingStatus` type. Remove the back_on_market-to-active mapping from the filter (line ~513). Also update the editor setup (line ~557) so a status not in the editable list is shown read-only instead of being swapped for another status.
-- Keep the existing Draft default-hiding rule. Keep `?status=` URL values working.
+- File: `src/pages/MyListings.tsx` only.
+- `filteredListings` (line ~528): default branch becomes `selectedStatuses.size === 0 ? listings : listings.filter(...)`.
+- Delete the `useEffect` at line ~420 that auto-selects Draft, and the `nonDraftListings`/`hasOnlyDrafts` memo (line ~408) plus the notice block at line ~744 if now unused.
+- Bulk toolbar condition (line ~717): `(selectedStatuses.has("draft") || selectedDraftIds.size > 0) && draftListings.length > 0`.
 - Heads-up: saving to GitHub main makes this live on allagentconnect.com right away.
