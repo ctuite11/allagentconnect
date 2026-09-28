@@ -6,6 +6,7 @@ import DcmlsExclusiveListings from "@/components/DcmlsExclusiveListings";
 import Footer from "@/components/Footer";
 import DcmlsConsumerHeader from "@/components/dcmls/DcmlsConsumerHeader";
 import DcmlsWhatsInside from "@/components/dcmls/DcmlsWhatsInside";
+import { isDcmlsAuthAccessEnabled } from "@/lib/dcmlsAuthAccess";
 
 // AAC brand identity — applied to DCMLS surface
 const AAC_BLUE = "#0E56F5";
@@ -73,14 +74,16 @@ const DcmlsHome: React.FC = () => {
                 <Button asChild size="lg" className="text-white min-w-[180px]" style={{ backgroundColor: AAC_BLUE }}>
                   <Link to="/browse?dcmls=1">Browse Listings</Link>
                 </Button>
-                <div className="flex gap-2">
-                  <Button asChild size="lg" variant="outline">
-                    <Link to="/consumer/auth?mode=signin">Sign In</Link>
-                  </Button>
-                  <Button asChild size="lg" variant="ghost">
-                    <Link to="/consumer/auth?mode=signup">Create Account</Link>
-                  </Button>
-                </div>
+                {isDcmlsAuthAccessEnabled() ? (
+                  <div className="flex gap-2">
+                    <Button asChild size="lg" variant="outline">
+                      <Link to="/consumer/auth?mode=signin">Sign In</Link>
+                    </Button>
+                    <Button asChild size="lg" variant="ghost">
+                      <Link to="/consumer/auth?mode=signup">Create Account</Link>
+                    </Button>
+                  </div>
+                ) : null}
               </div>
             </div>
           </section>

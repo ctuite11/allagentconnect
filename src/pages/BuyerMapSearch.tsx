@@ -281,6 +281,11 @@ export default function BuyerMapSearch() {
     const user = authData?.user;
     if (!user) {
       if (isDcmlsHost()) {
+        const { isDcmlsAuthAccessEnabled } = await import("@/lib/dcmlsAuthAccess");
+        if (!isDcmlsAuthAccessEnabled()) {
+          toast.error("Account sign-in is not available on Direct Connect MLS yet.");
+          return;
+        }
         const from = window.location.pathname + window.location.search;
         window.location.href = `/consumer/auth?mode=signup&from=${encodeURIComponent(from)}`;
       } else {

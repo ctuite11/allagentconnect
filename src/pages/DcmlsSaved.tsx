@@ -47,6 +47,11 @@ const DcmlsSaved = () => {
     const load = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
+        const { isDcmlsAuthAccessEnabled } = await import("@/lib/dcmlsAuthAccess");
+        if (!isDcmlsAuthAccessEnabled()) {
+          setLoading(false);
+          return;
+        }
         navigate("/consumer/auth?mode=signup&from=/saved");
         return;
       }
