@@ -21,7 +21,6 @@ const AGENT_PRIMARY_BTN_CLASS =
   "bg-aac hover:bg-aac-hover active:bg-aac-active text-white font-medium";
 
 const COMMUNICATIONS_PATH = "/communications";
-const PROFILE_EDITOR_PATH = "/agent-profile-editor";
 const HOT_SHEETS_PATH = "/agent/hot-sheets";
 
 function OnboardingBrand() {
@@ -38,7 +37,7 @@ function OnboardingBrand() {
 
 type StepKey = keyof SetupChecklistCompletion;
 
-const steps: {
+function buildSteps(agentUserId: string): {
   key: StepKey;
   step: number;
   title: string;
@@ -47,44 +46,49 @@ const steps: {
   path: string;
   icon: typeof Radio;
   iconClass: string;
-}[] = [
-  {
-    key: "communications",
-    step: 1,
-    title: "Communications",
-    description:
-      "Choose what you want to hear about so you receive the opportunities and updates that matter to you.",
-    cta: "Set Communications",
-    path: COMMUNICATIONS_PATH,
-    icon: Radio,
-    iconClass: "text-emerald-600",
-  },
-  {
-    key: "profile",
-    step: 2,
-    title: "Complete Your Profile",
-    description:
-      "Make sure your profile is complete so other agents can find you, recognize you, and connect with you.",
-    cta: "Complete Profile",
-    path: PROFILE_EDITOR_PATH,
-    icon: UserCircle,
-    iconClass: "text-[#0E56F5]",
-  },
-  {
-    key: "hotSheet",
-    step: 3,
-    title: "Create a Hot Sheet",
-    description:
-      "Tell us what your buyers are looking for so you can be matched with Off Market and Coming Soon opportunities.",
-    cta: "Create Hot Sheet",
-    path: HOT_SHEETS_PATH,
-    icon: Flame,
-    iconClass: "text-amber-600",
-  },
-];
+}[] {
+  return [
+    {
+      key: "communications",
+      step: 1,
+      title: "Communications",
+      description:
+        "Choose what you want to hear about so you receive the opportunities and updates that matter to you.",
+      cta: "Set Communications",
+      path: COMMUNICATIONS_PATH,
+      icon: Radio,
+      iconClass: "text-emerald-600",
+    },
+    {
+      key: "profile",
+      step: 2,
+      title: "Complete Your Profile",
+      description:
+        "Make sure your profile is complete so other agents can find you, recognize you, and connect with you.",
+      cta: "Complete Profile",
+      // Land on the agent's normal profile view first; Edit Profile is on that page.
+      path: `/agent/${agentUserId}`,
+      icon: UserCircle,
+      iconClass: "text-[#0E56F5]",
+    },
+    {
+      key: "hotSheet",
+      step: 3,
+      title: "Create a Hot Sheet",
+      description:
+        "Tell us what your buyers are looking for so you can be matched with Off Market and Coming Soon opportunities.",
+      cta: "Create Hot Sheet",
+      path: HOT_SHEETS_PATH,
+      icon: Flame,
+      iconClass: "text-amber-600",
+    },
+  ];
+}
 
 type AgentProfileOnboardingOverlayProps = {
   completion: SetupChecklistCompletion;
+  /** Signed-in agent id — used for the Profile CTA (`/agent/:userId`). */
+  agentUserId: string;
   /** True only for the first checklist appearance right after activation. */
   isPostActivationWelcome?: boolean;
   onLater: (dontShowAgain: boolean) => void;
@@ -93,12 +97,14 @@ type AgentProfileOnboardingOverlayProps = {
 
 export function AgentProfileOnboardingOverlay({
   completion,
+  agentUserId,
   isPostActivationWelcome = false,
   onLater,
   onStepNavigate,
 }: AgentProfileOnboardingOverlayProps) {
   const navigate = useNavigate();
   const [dontShowAgain, setDontShowAgain] = useState(false);
+  const steps = buildSteps(agentUserId);
 
   const handleStep = (path: string) => {
     onStepNavigate(dontShowAgain);
