@@ -206,7 +206,8 @@ function toDraftIntendedStatus(formStatus: string | null | undefined): string | 
 function draftIntendedStatusToFormStatus(stored: string | null | undefined): string | null {
   const key = (stored || "").trim().toLowerCase();
   if (!DRAFT_INTENDED_STATUSES.has(key)) return null;
-  return key === "active" ? LISTING_STATUS.NEW : key;
+  // The Status select uses canonical values (On MLS = "active"), so return as stored.
+  return key;
 }
 
 /** `example.com`, `www.example.com`, or full URL → stored with `https://` when missing scheme. */
