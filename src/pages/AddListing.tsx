@@ -190,6 +190,25 @@ function addListingFormStatusToDbStatus(formStatus: string): string {
   return key;
 }
 
+/** Canonical statuses that may be remembered as a draft's intended publish status. */
+const DRAFT_INTENDED_STATUSES = new Set<string>([
+  "active", "coming_soon", "off_market", "back_on_market", "pending",
+  "sold", "temporarily_withdrawn", "cancelled", "expired",
+]);
+
+/** Form status → canonical intended status (never draft / plain withdrawn / UI aliases). */
+function toDraftIntendedStatus(formStatus: string | null | undefined): string | null {
+  const canonical = addListingFormStatusToDbStatus(formStatus || "");
+  return DRAFT_INTENDED_STATUSES.has(canonical) ? canonical : null;
+}
+
+/** Canonical intended status → Add Listing form option. */
+function draftIntendedStatusToFormStatus(stored: string | null | undefined): string | null {
+  const key = (stored || "").trim().toLowerCase();
+  if (!DRAFT_INTENDED_STATUSES.has(key)) return null;
+  return key === "active" ? LISTING_STATUS.NEW : key;
+}
+
 /** `example.com`, `www.example.com`, or full URL → stored with `https://` when missing scheme. */
 function normalizeOptionalWebUrl(raw: string | null | undefined): string | null {
   const t = (raw ?? "").trim();
@@ -881,10 +900,11 @@ const AddListing = () => {
         backendStatusRef.current = rawStatus;
         
         // Normalize status to lowercase to match Select options
-        // If status is "draft", convert to "new" (draft isn't a valid UI option for edit)
+        // If status is "draft", restore the agent's saved intended status; older drafts fall back to "new"
         let normalizedStatus = rawStatus;
         if (normalizedStatus === "draft") {
-          normalizedStatus = "new";
+          normalizedStatus =
+            draftIntendedStatusToFormStatus((data as any).draft_intended_status) || "new";
         }
         originalStatusRef.current = normalizedStatus;
         
@@ -2393,6 +2413,7 @@ const AddListing = () => {
       const minimalPayload = {
         agent_id: user.id,
         status: 'draft',
+        draft_intended_status: toDraftIntendedStatus(formData.status),
         address: formData.address || 'Draft',
         city: formData.city || 'TBD',
         state: formData.state || 'MA',
@@ -2409,7 +2430,7 @@ const AddListing = () => {
           return null;
         }
         try {
-          const { agent_id: _ignoredAgentId, status: _ignoredStatus, ...conciergePayload } = minimalPayload;
+          const { agent_id: _ignoredAgentId, status: _ignoredStatus, draft_intended_status: _ignoredIntended, ...conciergePayload } = minimalPayload;
           const created = await createConciergeDraft(conciergeAgentId, conciergePayload);
           console.log('ensureDraftListing: concierge draft created', created.id);
           return { id: created.id };
@@ -2486,8 +2507,20 @@ const AddListing = () => {
       // Agent - from verified session, not cached state
       agent_id: agentId,
       
-      // Status & Type (DB check constraint — never persist UI-only aliases like "new")
-      status: addListingFormStatusToDbStatus(overrideStatus || formData.status),
+      // Status & Type (DB check constraint — never persist UI-only aliases like "new").
+      // A listing that is still a draft stays "draft" unless a caller explicitly publishes
+      // (overrideStatus). Silent saves (media navigation) pass undefined and must never publish.
+      ...(() => {
+        const keepDraft =
+          overrideStatus === "draft" ||
+          (!overrideStatus && (backendStatusRef.current === "draft" || formData.status === "draft"));
+        return keepDraft
+          ? { status: "draft", draft_intended_status: toDraftIntendedStatus(formData.status) }
+          : {
+              status: addListingFormStatusToDbStatus(overrideStatus || formData.status),
+              draft_intended_status: null,
+            };
+      })(),
       listing_type: formData.listing_type,
       property_type: formData.property_type || null,
       
@@ -3047,9 +3080,14 @@ const AddListing = () => {
         }
       }
 
-      // Use centralized helper WITHOUT overriding status - keeps current form status
+      // Explicit Save/Publish applies the form status. Autosave on a draft stays draft
+      // (remembering the intended status) and never publishes.
       // IMPORTANT: Use fresh user ID from server-verified session
-      const payload = buildListingDataFromForm(uploaded, undefined, freshUser.id);
+      const saveStatus =
+        isAutoSave && backendStatusRef.current === "draft"
+          ? "draft"
+          : formData.status || "new";
+      const payload = buildListingDataFromForm(uploaded, saveStatus, freshUser.id);
 
       // First publish: photo must be fully saved before the listing goes live
       // (Hot Sheet emails fire on the live transition and must see the photo).

@@ -537,6 +537,8 @@ const AddRentalListing = () => {
       const payload: any = {
         agent_id: user.id,
         status: "draft",
+        // Remember the selected rental status for when the draft is reopened/published.
+        draft_intended_status: ["active", "pending"].includes(formData.status) ? formData.status : null,
         listing_type: formData.listing_type,
         address: (formData.address || "Draft").trim(),
         city: formData.city?.trim() || "",
@@ -649,6 +651,7 @@ const AddRentalListing = () => {
       const { data: insertedListing, error } = await supabase.from("listings").insert({
         agent_id: user.id,
         status: publishNow ? formData.status : "draft",
+        draft_intended_status: !publishNow && ["active", "pending"].includes(formData.status) ? formData.status : null,
         listing_type: formData.listing_type,
         address: validatedData.address,
         city: validatedData.city,

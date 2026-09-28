@@ -5585,6 +5585,7 @@ export type Database = {
           disclosures: Json | null
           disclosures_other: string | null
           documents: Json | null
+          draft_intended_status: string | null
           entry_only: boolean | null
           expiration_date: string | null
           exterior_features_list: Json | null
@@ -5716,6 +5717,7 @@ export type Database = {
           disclosures?: Json | null
           disclosures_other?: string | null
           documents?: Json | null
+          draft_intended_status?: string | null
           entry_only?: boolean | null
           expiration_date?: string | null
           exterior_features_list?: Json | null
@@ -5847,6 +5849,7 @@ export type Database = {
           disclosures?: Json | null
           disclosures_other?: string | null
           documents?: Json | null
+          draft_intended_status?: string | null
           entry_only?: boolean | null
           expiration_date?: string | null
           exterior_features_list?: Json | null
