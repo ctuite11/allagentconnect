@@ -403,6 +403,20 @@ const AddListing = () => {
   const [pendingPublishAction, setPendingPublishAction] = useState<"publish" | "saveChanges" | null>(null);
   const photoOrderConfirmedRef = useRef(false);
   const publishConfirmedRef = useRef(false);
+  // Social (V1): only offered when the signed-in user owns the listing.
+  const listingOwnerIdRef = useRef<string | null>(null);
+  const [publishSocialConnected, setPublishSocialConnected] = useState<SocialConnected | null>(null);
+  const [publishSocialSelected, setPublishSocialSelected] = useState<SocialPlatform[]>([]);
+  /** Platforms confirmed in "Ready to publish?" for the pending first publish (null = section not shown). */
+  const pendingFirstPublishSocialRef = useRef<SocialPlatform[] | null>(null);
+  const [editSocialPrompt, setEditSocialPrompt] = useState<{
+    listingId: string;
+    eventType: string;
+    connected: SocialConnected;
+    defaults: SocialPlatform[];
+  } | null>(null);
+  const [editSocialPosting, setEditSocialPosting] = useState(false);
+  const pendingNavAfterSocialRef = useRef<string | null>(null);
 
   const [formData, setFormData] = useState({
     status: initialStatus,
@@ -899,6 +913,7 @@ const AddListing = () => {
         // Store the true backend status before normalization (for draft detection)
         const rawStatus = (data.status || "new").toLowerCase();
         backendStatusRef.current = rawStatus;
+        listingOwnerIdRef.current = (data as any).agent_id ?? null;
         
         // Normalize status to lowercase to match Select options
         // If status is "draft", restore the agent's saved intended status; older drafts fall back to On MLS (active)
@@ -907,7 +922,8 @@ const AddListing = () => {
           normalizedStatus =
             draftIntendedStatusToFormStatus((data as any).draft_intended_status) || LISTING_STATUS.ACTIVE;
         }
-        originalStatusRef.current = normalizedStatus;
+        // Real DB status (a reopened draft stays "draft" here; the form shows the intended status).
+        originalStatusRef.current = rawStatus;
         
         setFormData(prev => ({
           ...prev,
@@ -1942,7 +1958,11 @@ const AddListing = () => {
 
   const handleStatusChange = (value: string) => {
     // Ensure status is never empty - default to original or LISTING_STATUS.NEW
-    const newStatus = value || originalStatusRef.current || LISTING_STATUS.NEW;
+    const fallbackStatus =
+      originalStatusRef.current && originalStatusRef.current !== LISTING_STATUS.DRAFT
+        ? originalStatusRef.current
+        : LISTING_STATUS.NEW;
+    const newStatus = value || fallbackStatus;
     setFormData(prev => ({ ...prev, status: newStatus }));
     if (newStatus === LISTING_STATUS.COMING_SOON) {
       setFormData(prev => ({ ...prev, auto_activate_on: null }));
@@ -2842,42 +2862,46 @@ const AddListing = () => {
    * True when this save takes the listing live for the first time and the
    * agent has not yet confirmed the photo order for this publish attempt.
    */
+  /**
+   * Never previously published: brand-new listing with no persisted status, or an
+   * existing row whose REAL saved status is draft (regardless of the form's status).
+   */
+  const isNeverPublished = () => {
+    const backend = backendStatusRef.current;
+    return !backend || backend === LISTING_STATUS.DRAFT;
+  };
+
   const needsFirstPublishPhotoConfirm = (targetStatus: string) => {
     // Hidden: cover photo now shown in the "Ready to publish?" review instead.
     if (SHOW_PHOTO_ORDER_STEP === false) return false;
     if (photoOrderConfirmedRef.current) return false;
     if (!isLiveStatus(targetStatus)) return false;
-    const previousStatus = originalStatusRef.current;
-    // Already published before (any live status) -> never prompt again.
-    if (previousStatus && isLiveStatus(previousStatus)) return false;
+    if (!isNeverPublished()) return false;
     return photos.length > 0;
   };
 
   /**
    * True when this save takes the listing live for the first time and the
    * agent has not yet confirmed status / address / price for this attempt.
-   * Runs after validation + photo-order; never for edits to already-live listings.
+   * Runs after validation + photo-order; never for edits to already-published listings.
    */
   const needsFirstPublishLiveConfirm = (targetStatus: string) => {
     if (publishConfirmedRef.current) return false;
     if (!isLiveStatus(targetStatus)) return false;
-    const previousStatus = originalStatusRef.current;
-    if (previousStatus && isLiveStatus(previousStatus)) return false;
-    return true;
+    return isNeverPublished();
   };
 
   /**
    * First-publish photo gate, checked immediately before the live DB write.
    * Returns an error message when the listing must NOT go live yet, else null.
-   * Never applies to edits of an already-live listing.
+   * Never applies to edits of an already-published listing.
    */
   const firstPublishPhotoGateError = (
     targetStatus: string,
     finalPhotos: { url?: string | null }[],
   ): string | null => {
     if (!isLiveStatus(targetStatus)) return null;
-    const previousStatus = originalStatusRef.current;
-    if (previousStatus && isLiveStatus(previousStatus)) return null;
+    if (!isNeverPublished()) return null;
     if (photoUploadsInFlightRef.current > 0) {
       return "Photos are still uploading. Your listing was not published — please wait for the upload to finish, then publish again.";
     }
