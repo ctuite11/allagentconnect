@@ -389,6 +389,12 @@ const EditListing: React.FC = () => {
                         <SelectValue placeholder="Select status" />
                       </SelectTrigger>
                       <SelectContent>
+                        {/* Legacy: only shown when this listing is already stored as plain withdrawn; never selectable. */}
+                        {status === LISTING_STATUS.WITHDRAWN && (
+                          <SelectItem value={LISTING_STATUS.WITHDRAWN} disabled>
+                            Withdrawn (Legacy)
+                          </SelectItem>
+                        )}
                         {ADD_LISTING_EDIT_STATUSES.map((opt) => (
                           <SelectItem key={opt.value} value={opt.value}>
                             {opt.label}

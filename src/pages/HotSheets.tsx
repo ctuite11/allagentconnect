@@ -198,7 +198,7 @@ const HotSheets = ({
     "Under Agreement",
     "Pending",
     "Sold",
-    "Withdrawn",
+    "Temporarily Withdrawn",
     "Private",
   ];
 
