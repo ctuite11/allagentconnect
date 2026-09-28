@@ -7,7 +7,7 @@ When a draft is reopened, the review check looks at its **chosen** status (for e
 List exactly what social screens and code exist in the separate social draft (settings connection card, "Promote This Listing" choices, publish-time social step, listing defaults) and what must be carried over. Nothing from that draft is merged as-is; it is rebuilt on today's version so none of the recent fixes are lost (Save Draft and remembered status, Preview/Back, photo check, review popup, DCMLS controls, bottom buttons, Withdrawn cleanup).
 
 ## Step 2: One controlled first-publish sequence
-For any listing whose real saved status is Draft (new or reopened):
+For any first publish — either a brand-new listing with no persisted live status, or an existing listing whose real saved status is Draft:
 1. Agent clicks Publish
 2. Required fields checked
 3. At least one finished photo required
