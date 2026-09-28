@@ -3126,6 +3126,11 @@ const AddListing = () => {
 
       console.log('[handleSaveChanges] Saving with status:', payload.status, 'agent_id:', payload.agent_id);
 
+      // Snapshot pre-save state for post-save social decisions.
+      const wasFirstPublish = !isAutoSave && isNeverPublished() && isLiveStatus(payload.status);
+      const prevStatusForSocial = originalStatusRef.current;
+      const prevPriceForSocial = originalPriceRef.current;
+
       // Remove agent_id from update payload (it's immutable after creation)
       const { agent_id, ...updatePayload } = payload;
 
@@ -3194,7 +3199,29 @@ const AddListing = () => {
         });
       } else {
         toast.success("Listing changes saved!");
-        navigate(addListingBackTo);
+        // The listing save is final from here; social can never undo it.
+        if (payload.status !== LISTING_STATUS.DRAFT) {
+          backendStatusRef.current = payload.status;
+          originalStatusRef.current = payload.status;
+          originalPriceRef.current = newPrice ?? null;
+        }
+        if (wasFirstPublish) {
+          await runFirstPublishSocial(targetId, payload.status);
+          navigate(addListingBackTo);
+        } else {
+          const prompted = await maybePromptEditSocial({
+            listingId: targetId,
+            prevStatus: prevStatusForSocial,
+            newStatus: payload.status,
+            prevPrice: prevPriceForSocial,
+            newPrice: newPrice ?? null,
+          });
+          if (prompted) {
+            pendingNavAfterSocialRef.current = addListingBackTo;
+          } else {
+            navigate(addListingBackTo);
+          }
+        }
       }
     } catch (error: any) {
       console.error("[handleSaveChanges] Error:", error);
