@@ -18,7 +18,6 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
-import { supabase } from "@/integrations/supabase/client";
 import ContactAgentDialog from "@/components/ContactAgentDialog";
 import { ListingAgentEmailContact } from "@/components/listing/ListingAgentEmailContact";
 import {
@@ -37,6 +36,8 @@ import { formatListingEmailSubjectLocation } from "@/lib/listingEmailSubject";
 import { buildDisplayAddress, cn } from "@/lib/utils";
 import { ListingCardAddressLine } from "@/components/listing/ListingCardAddressLine";
 import { ListingPhotoBanners } from "@/components/listing/ListingPhotoBanners";
+import { ListingCoverImage } from "@/components/ListingCoverImage";
+import { resolveListingPhotoUrl, resolveFirstListingPhotoUrl } from "@/lib/resolveListingPhotoUrl";
 import {
   listingSelectionCheckboxClass,
   listingSelectionSearchCardSelected,
@@ -109,26 +110,17 @@ interface SearchListingCardProps {
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
-const resolvePhotoUrl = (photo: any): string | null => {
-  if (typeof photo === "string") return photo;
-  if (photo?.url) {
-    if (photo.url.startsWith("http")) return photo.url;
-    const { data } = supabase.storage.from("listing-photos").getPublicUrl(photo.url);
-    return data.publicUrl;
-  }
-  return null;
-};
+const resolvePhotoUrl = (photo: any): string | null =>
+  resolveListingPhotoUrl(photo) ?? null;
 
-const getFirstPhoto = (listing: SearchListing) => {
-  if (listing.photos && Array.isArray(listing.photos) && listing.photos.length > 0) {
-    return resolvePhotoUrl(listing.photos[0]);
-  }
-  return null;
-};
+const getFirstPhoto = (listing: SearchListing) =>
+  resolveFirstListingPhotoUrl(listing.photos) ?? null;
 
 const getAllPhotos = (listing: SearchListing): string[] => {
   if (!listing.photos || !Array.isArray(listing.photos)) return [];
-  return listing.photos.map(resolvePhotoUrl).filter((u): u is string => u !== null);
+  return listing.photos
+    .map((photo) => resolveListingPhotoUrl(photo))
+    .filter((u): u is string => Boolean(u));
 };
 
 const formatTime = (time: string): string => {
@@ -337,13 +329,12 @@ export const SearchListingCard = ({
                 }
               />
               {allPhotos.length > 0 ? (
-                <img src={allPhotos[currentPhotoIndex] || photoUrl!} alt="" className="w-full h-full object-cover" />
-              ) : photoUrl ? (
-                <img src={photoUrl} alt="" className="w-full h-full object-cover" />
+                <ListingCoverImage
+                  src={allPhotos[currentPhotoIndex] || photoUrl}
+                  alt=""
+                />
               ) : (
-                <div className="flex h-full w-full items-center justify-center">
-                  <Home className="h-10 w-10 text-neutral-400" />
-                </div>
+                <ListingCoverImage src={photoUrl} alt="" />
               )}
               {allPhotos.length > 1 && (
                 <>
@@ -544,13 +535,7 @@ export const SearchListingCard = ({
                     ) : undefined
                   }
                 />
-                {photoUrl ? (
-                  <img src={photoUrl} alt="" className="h-full w-full object-cover" />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center">
-                    <Home className="h-6 w-6 text-neutral-400" />
-                  </div>
-                )}
+                <ListingCoverImage src={photoUrl} alt="" />
                 {photoCount > 0 && (
                   <div className="absolute bottom-1 left-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-white">
                     {photoCount}

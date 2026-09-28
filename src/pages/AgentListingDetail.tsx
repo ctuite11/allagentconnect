@@ -9,6 +9,8 @@ import { Separator } from "@/components/ui/separator";
 import { AgentAvatar } from "@/components/ui/AgentAvatar";
 import { ListingStatusBadge } from "@/components/ui/status-badge";
 import { getStatusConfig, LISTING_STATUS } from "@/constants/status";
+import { ListingCoverImage } from "@/components/ListingCoverImage";
+import { listingDisplayPhotoUrl, firstListingDisplayPhotoUrl } from "@/lib/resolveListingPhotoUrl";
 import { 
   ArrowLeft, 
   MapPin, 
@@ -288,10 +290,7 @@ const AgentListingDetail = () => {
   const getStatusColor = (status: string) => getStatusConfig(status, "listing");
   const formatStatus = (status: string) => getStatusConfig(status, "listing").label;
 
-  const getPhotoUrl = (photo: any): string => {
-    if (typeof photo === 'string') return photo;
-    return photo?.url || '/placeholder.svg';
-  };
+  const getPhotoUrl = (photo: any): string => listingDisplayPhotoUrl(photo);
 
   const formatArray = (arr: any[] | null | undefined) => {
     if (!arr || !Array.isArray(arr) || arr.length === 0) return null;
@@ -326,9 +325,10 @@ const AgentListingDetail = () => {
     );
   }
 
-  const mainPhoto = listing.photos && listing.photos.length > 0 
-    ? getPhotoUrl(listing.photos[currentPhotoIndex])
-    : '/placeholder.svg';
+  const mainPhoto =
+    listing.photos && listing.photos.length > 0
+      ? getPhotoUrl(listing.photos[currentPhotoIndex])
+      : firstListingDisplayPhotoUrl(listing.photos);
 
   const listDate = listing.list_date || listing.active_date || listing.created_at;
   const daysOnMarket = listDate 
@@ -562,10 +562,10 @@ const AgentListingDetail = () => {
         {/* Photo Gallery */}
         <Card className="bg-card border-border rounded-xl shadow-xl mb-6 overflow-hidden ring-1 ring-black/5">
           <div className="relative aspect-[16/9] bg-muted">
-            <img
+            <ListingCoverImage
               src={mainPhoto}
               alt={listing.address}
-              className="w-full h-full object-cover cursor-pointer"
+              className="h-full w-full cursor-pointer object-cover"
               onClick={() => setGalleryOpen(true)}
             />
             

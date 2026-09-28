@@ -26,6 +26,7 @@ import { formatListingIdLabel, LISTING_ID_NAV_CLASS } from "@/lib/listingIdDispl
 import { formatListingPropertyTypeLabel } from "@/lib/format";
 import { ListingCardAddressLine } from "@/components/listing/ListingCardAddressLine";
 import { ListingPhotoBanners } from "@/components/listing/ListingPhotoBanners";
+import { ListingCoverImage } from "@/components/ListingCoverImage";
 import { cn } from "@/lib/utils";
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -199,17 +200,11 @@ export function ListingCardShell({
           {photoOverlay}
           <DcmlsBadge listing={listing} />
 
-          {photoUrl ? (
-            <img
-              src={photoUrl}
-              alt={listing.address}
-              className={`w-full h-full object-cover ${photoAspect === "wide" ? "rounded-lg" : "rounded"}`}
-            />
-          ) : (
-            <div className="w-full h-full bg-muted rounded flex items-center justify-center">
-              <Home className="w-8 h-8 text-muted-foreground" />
-            </div>
-          )}
+          <ListingCoverImage
+            src={photoUrl}
+            alt={listing.address}
+            className={photoAspect === "wide" ? "rounded-lg" : "rounded"}
+          />
 
           {!hidePhotoBanners && (
             <ListingPhotoBanners

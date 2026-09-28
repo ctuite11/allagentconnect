@@ -27,6 +27,8 @@ import { toast } from "sonner";
 import { cn, propertyTypeToEnum } from "@/lib/utils";
 import { ListingCardAddressLine } from "@/components/listing/ListingCardAddressLine";
 import { ListingPhotoBanners } from "@/components/listing/ListingPhotoBanners";
+import { ListingCoverImage } from "@/components/ListingCoverImage";
+import { resolveListingPhotoUrl } from "@/lib/resolveListingPhotoUrl";
 import {
   listingSelectionCardCompactSelected,
   listingSelectionCardGridSelected,
@@ -488,30 +490,10 @@ const ListingCard = ({
   const displayPrice = formatListingPriceDisplay(listing) ?? "—";
   const listingPhotos = normalizeListingPhotos(listing?.photos);
   const getPhotoByIndex = (index: number) => {
-    if (listingPhotos.length > 0) {
-      const photo = listingPhotos[index];
-      if (!photo) return null;
-
-      // If it's a string, assume it's already a URL
-      if (typeof photo === 'string') {
-        return photo;
-      }
-
-      // If it's an object with a url property
-      const p = photo as { url?: string };
-      if (p.url) {
-        // Check if it's a full URL or a storage path
-        if (p.url.startsWith('http')) {
-          return p.url;
-        }
-        // If it's a storage path, construct the public URL
-        const {
-          data
-        } = supabase.storage.from('listing-photos').getPublicUrl(p.url);
-        return data.publicUrl;
-      }
-    }
-    return null;
+    if (listingPhotos.length === 0) return null;
+    const photo = listingPhotos[index];
+    if (!photo) return null;
+    return resolveListingPhotoUrl(photo) ?? null;
   };
   
   const getFirstPhoto = () => {
@@ -1333,17 +1315,10 @@ const ListingCard = ({
     >
       {/* Photo Container with scrolling */}
       <div className="group relative aspect-[4/3]">
-        {currentPhoto ? (
-          <img 
-            src={currentPhoto} 
-            alt={listing.address} 
-            className="h-full w-full object-cover" 
-          />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center bg-neutral-100">
-            <Home className="h-12 w-12 text-neutral-400" />
-          </div>
-        )}
+        <ListingCoverImage
+          src={currentPhoto}
+          alt={listing.address}
+        />
         
         <ListingPhotoBanners
           statusBanner={statusBanner}

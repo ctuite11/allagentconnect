@@ -67,6 +67,8 @@ import PhotoGalleryDialog from "@/components/PhotoGalleryDialog";
 import FavoriteButton from "@/components/FavoriteButton";
 import ScheduleShowingDialog from "@/components/ScheduleShowingDialog";
 import PropertyMap from "@/components/PropertyMap";
+import { ListingCoverImage } from "@/components/ListingCoverImage";
+import { listingDisplayPhotoUrl } from "@/lib/resolveListingPhotoUrl";
 import AdBanner from "@/components/AdBanner";
 import SocialShareMenu from "@/components/SocialShareMenu";
 import { getListingPublicUrl, getListingShareUrl } from "@/lib/getPublicUrl";
@@ -454,14 +456,12 @@ const ConsumerPropertyDetail = () => {
     );
   }
 
-  const getPhotoUrl = (photo: any): string => {
-    if (typeof photo === 'string') return photo;
-    return photo?.url || '/placeholder.svg';
-  };
+  const getPhotoUrl = (photo: any): string => listingDisplayPhotoUrl(photo);
 
-  const mainPhoto = listing.photos && listing.photos.length > 0
-    ? getPhotoUrl(listing.photos[currentPhotoIndex])
-    : '/placeholder.svg';
+  const mainPhoto =
+    listing.photos && listing.photos.length > 0
+      ? getPhotoUrl(listing.photos[currentPhotoIndex])
+      : listingDisplayPhotoUrl(null);
 
   const listingPriceDisplay = formatListingPriceDisplay(listing) ?? "—";
 
@@ -558,10 +558,10 @@ const ConsumerPropertyDetail = () => {
                 <div className="absolute inset-0 bg-neutral-950">
                   {/* Media Content */}
                   {activeMediaTab === "photos" && (
-                    <img
+                    <ListingCoverImage
                       src={mainPhoto}
                       alt={listing.address}
-                      className="w-full h-full object-cover cursor-pointer"
+                      className="h-full w-full cursor-pointer object-cover"
                       onClick={handleExpandGallery}
                     />
                   )}

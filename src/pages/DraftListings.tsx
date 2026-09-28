@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/ui/page-header";
 import { Seo } from "@/components/Seo";
+import { firstListingDisplayPhotoUrl } from "@/lib/resolveListingPhotoUrl";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -63,12 +64,7 @@ function formatAddressWithUnit(listing: DraftListing): string {
 }
 
 function getThumbnailUrl(listing: DraftListing) {
-  if (!listing.photos) return null;
-  const photos = Array.isArray(listing.photos) ? listing.photos : [];
-  if (photos.length === 0) return null;
-  const firstPhoto = photos[0];
-  if (typeof firstPhoto === "string") return firstPhoto;
-  return firstPhoto?.url || null;
+  return firstListingDisplayPhotoUrl(listing.photos);
 }
 
 function getDraftAgeBadge(updatedAt: string): { label: string; className: string } | null {
@@ -349,7 +345,7 @@ export default function DraftListings() {
                   onClick={() => navigate(`/agent/listings/edit/${l.id}`)}
                 >
                   <img
-                    src={thumbnail || "/placeholder.svg"}
+                    src={thumbnail}
                     alt={l.address}
                     className="w-full h-full object-cover"
                   />
@@ -457,7 +453,7 @@ export default function DraftListings() {
                     onClick={() => navigate(`/agent/listings/edit/${l.id}`)}
                   >
                     <img
-                      src={thumbnail || "/placeholder.svg"}
+                      src={thumbnail}
                       alt={l.address}
                       className="w-full h-full object-cover"
                     />

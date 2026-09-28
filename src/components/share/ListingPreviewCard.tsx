@@ -1,6 +1,6 @@
-import { Home } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ListingPreview } from "@/components/share/ShareListingsDialog";
+import { ListingCoverImage } from "@/components/ListingCoverImage";
 
 type ListingPreviewCardProps = {
   preview: ListingPreview;
@@ -15,17 +15,11 @@ export function ListingPreviewCard({ preview, className }: ListingPreviewCardPro
         className,
       )}
     >
-      {preview.photoUrl ? (
-        <img
-          src={preview.photoUrl}
-          alt=""
-          className="h-16 w-[4.5rem] shrink-0 rounded-md border border-neutral-100 object-cover"
-        />
-      ) : (
-        <div className="flex h-16 w-[4.5rem] shrink-0 items-center justify-center rounded-md border border-neutral-200 bg-neutral-50 text-neutral-400">
-          <Home className="h-4 w-4" />
-        </div>
-      )}
+      <ListingCoverImage
+        src={preview.photoUrl}
+        alt=""
+        className="h-16 w-[4.5rem] shrink-0 rounded-md border border-neutral-100 object-cover"
+      />
       <div className="min-w-0 flex-1">
         <div className="truncate text-[13px] font-semibold text-neutral-900">{preview.address}</div>
         <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[12px] text-neutral-600">

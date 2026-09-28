@@ -5,6 +5,8 @@ import { ListingStatusBadge } from "@/components/ui/status-badge";
 import type { SuccessHubSummary } from "@/hooks/useSuccessHubData";
 import { cn } from "@/lib/utils";
 import { SUCCESS_HUB_LISTING_GRID } from "@/components/success-hub/successHubListingCardStyles";
+import { ListingCoverImage } from "@/components/ListingCoverImage";
+import { firstListingDisplayPhotoUrl } from "@/lib/resolveListingPhotoUrl";
 
 const CARD_IMG_AUTO = "h-36 md:h-40";
 
@@ -43,8 +45,7 @@ export function MyListingsRow({ listings, autoFitGrid = false }: MyListingsRowPr
     listing: (typeof listings)[number],
     opts: { autoFit: boolean },
   ) => {
-    const raw = listing.photos?.[0];
-    const photo = typeof raw === "string" ? raw : raw?.url ?? null;
+    const photo = firstListingDisplayPhotoUrl(listing.photos);
     const imgClass = opts.autoFit ? CARD_IMG_AUTO : "h-44";
     return (
       <div
@@ -68,11 +69,7 @@ export function MyListingsRow({ listings, autoFitGrid = false }: MyListingsRowPr
             imgClass,
           )}
         >
-          {photo ? (
-            <img src={photo} alt={listing.address} className="h-full w-full object-cover" loading="lazy" />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center text-xs text-neutral-400">No photo</div>
-          )}
+          <ListingCoverImage src={photo} alt={listing.address} />
           <div className="absolute left-2 top-2">
             <ListingStatusBadge status={listing.status} size="sm" />
           </div>

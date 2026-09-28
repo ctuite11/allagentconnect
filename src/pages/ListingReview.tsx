@@ -15,7 +15,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { AacMonogramLoader } from "@/components/AacMonogramLoader";
-import { resolveFirstListingPhotoUrl } from "@/lib/resolveListingPhotoUrl";
+import { ListingCoverImage } from "@/components/ListingCoverImage";
+import { firstListingDisplayPhotoUrl } from "@/lib/resolveListingPhotoUrl";
 import { Bath, BedDouble, Pencil, Ruler, Rocket } from "lucide-react";
 
 /**
@@ -92,7 +93,7 @@ export default function ListingReview() {
   }, [id, navigate]);
 
   const photoUrl = useMemo(
-    () => (listing ? resolveFirstListingPhotoUrl(listing.photos) ?? null : null),
+    () => (listing ? firstListingDisplayPhotoUrl(listing.photos) : null),
     [listing],
   );
 
@@ -155,14 +156,13 @@ export default function ListingReview() {
       </header>
 
       <article className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-        {photoUrl && (
-          <img
+        <div className="h-64 w-full sm:h-80">
+          <ListingCoverImage
             src={photoUrl}
             alt={addressLine || "Listing photo"}
-            className="h-64 w-full object-cover sm:h-80"
-            loading="lazy"
+            className="h-full w-full object-cover"
           />
-        )}
+        </div>
         <div className="p-6">
           <p className="text-3xl font-semibold tracking-tight text-foreground">
             {formatPrice(listing.price)}

@@ -25,6 +25,7 @@ import { Seo } from "@/components/Seo";
 import { EmailShareModal } from "@/components/EmailShareModal";
 import { getListingPublicUrl, getListingShareUrl } from "@/lib/getPublicUrl";
 import { formatListingEmailSubjectLocation } from "@/lib/listingEmailSubject";
+import { firstListingDisplayPhotoUrl } from "@/lib/resolveListingPhotoUrl";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -122,16 +123,7 @@ const ALL_STATUSES: { label: string; value: ListingStatus }[] = FILTER_STATUSES.
 const EDIT_STATUS_OPTIONS: { label: string; value: ListingStatus }[] = EDITABLE_STATUSES.map(statusOption);
 
 function getThumbnailUrl(listing: Listing) {
-  if (!listing.photos) return null;
-  const photos = Array.isArray(listing.photos) ? listing.photos : [];
-  if (photos.length === 0) return null;
-  
-  // Handle both string URLs and objects with url property
-  const firstPhoto = photos[0];
-  if (typeof firstPhoto === 'string') {
-    return firstPhoto;
-  }
-  return firstPhoto?.url || null;
+  return firstListingDisplayPhotoUrl(listing.photos);
 }
 
 function formatDate(value?: string | null) {
@@ -878,7 +870,7 @@ function MyListingsView({
                     aria-label={`View or edit listing: ${formatAddressWithUnit(l)}`}
                   >
                     <img
-                      src={thumbnail || "/placeholder.svg"}
+                      src={thumbnail}
                       alt=""
                       className="pointer-events-none h-full w-full object-cover"
                     />

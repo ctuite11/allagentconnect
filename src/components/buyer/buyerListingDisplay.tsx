@@ -1,4 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
+import { ListingCoverImage } from "@/components/ListingCoverImage";
+import { resolveFirstListingPhotoUrl } from "@/lib/resolveListingPhotoUrl";
 
 export interface ListingRecord {
   id: string;
@@ -32,24 +34,7 @@ export interface AgentOfficeRecord {
 }
 
 export function getPrimaryPhotoUrl(photos: unknown): string | null {
-  if (!Array.isArray(photos) || photos.length === 0) return null;
-
-  const first = photos[0] as unknown;
-  if (typeof first === "string") {
-    const trimmed = first.trim();
-    return trimmed ? trimmed : null;
-  }
-
-  if (first && typeof first === "object") {
-    const candidate = first as { url?: unknown; src?: unknown; image_url?: unknown };
-    const raw = candidate.url ?? candidate.src ?? candidate.image_url;
-    if (typeof raw === "string") {
-      const trimmed = raw.trim();
-      return trimmed ? trimmed : null;
-    }
-  }
-
-  return null;
+  return resolveFirstListingPhotoUrl(photos) ?? null;
 }
 
 export function formatBrokerageLine(listOffice?: string | null): string | null {
@@ -65,28 +50,6 @@ export function resolveListingBrokerage(listing: ListingRecord): string | null {
 
 export function ListingImage({ photos, alt }: { photos?: unknown; alt: string }) {
   const src = useMemo(() => getPrimaryPhotoUrl(photos), [photos]);
-  const [failed, setFailed] = useState(false);
 
-  useEffect(() => {
-    setFailed(false);
-  }, [src]);
-
-  if (!src || failed) {
-    return (
-      <div className="h-full w-full flex flex-col items-center justify-center bg-gradient-to-br from-zinc-100 via-zinc-100 to-zinc-200/80">
-        <div className="text-[11px] font-medium text-zinc-500">Photo unavailable</div>
-      </div>
-    );
-  }
-
-  return (
-    <img
-      src={src}
-      alt={alt}
-      className="h-full w-full object-cover"
-      onError={() => setFailed(true)}
-      loading="lazy"
-      referrerPolicy="no-referrer"
-    />
-  );
+  return <ListingCoverImage src={src} alt={alt} />;
 }
