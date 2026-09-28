@@ -2413,6 +2413,7 @@ const AddListing = () => {
       const minimalPayload = {
         agent_id: user.id,
         status: 'draft',
+        draft_intended_status: toDraftIntendedStatus(formData.status),
         address: formData.address || 'Draft',
         city: formData.city || 'TBD',
         state: formData.state || 'MA',
@@ -3079,9 +3080,14 @@ const AddListing = () => {
         }
       }
 
-      // Use centralized helper WITHOUT overriding status - keeps current form status
+      // Explicit Save/Publish applies the form status. Autosave on a draft stays draft
+      // (remembering the intended status) and never publishes.
       // IMPORTANT: Use fresh user ID from server-verified session
-      const payload = buildListingDataFromForm(uploaded, undefined, freshUser.id);
+      const saveStatus =
+        isAutoSave && backendStatusRef.current === "draft"
+          ? "draft"
+          : formData.status || "new";
+      const payload = buildListingDataFromForm(uploaded, saveStatus, freshUser.id);
 
       // First publish: photo must be fully saved before the listing goes live
       // (Hot Sheet emails fire on the live transition and must see the photo).
