@@ -71,6 +71,19 @@ import { DcmlsPublishingIntroOverlay } from "@/components/add-listing/DcmlsPubli
 import { AddListingStatusHelp } from "@/components/add-listing/AddListingStatusHelp";
 import { AddListingStatusIntroOverlay } from "@/components/add-listing/AddListingStatusIntroOverlay";
 import { ConfirmBeforePublishingDialog } from "@/components/add-listing/ConfirmBeforePublishingDialog";
+import { SocialPostPrompt } from "@/components/social/SocialPostPrompt";
+import {
+  fetchListingSocialDefaults,
+  fetchSocialConnected,
+  hasAnyConnected,
+  isSocialEligibleStatus,
+  newClientRequestId,
+  publishListingSocial,
+  saveListingSocialDefaults,
+  statusToSocialEventType,
+  type SocialConnected,
+  type SocialPlatform,
+} from "@/lib/socialPublishing";
 import { useAddListingStatusIntro } from "@/hooks/useAddListingStatusIntro";
 import { useAddListingDcmlsIntro } from "@/hooks/useAddListingDcmlsIntro";
 import { canonicalizeListingFormState, describeMediaCollection } from "@/lib/listingFormDirtyState";
@@ -6126,9 +6139,29 @@ const AddListing = () => {
         beds={String(formData.bedrooms ?? "")}
         baths={String(formData.bathrooms ?? "")}
         sqft={formData.square_feet ? Number(formData.square_feet).toLocaleString() : ""}
+        social={
+          publishSocialConnected
+            ? {
+                connected: publishSocialConnected,
+                selected: publishSocialSelected,
+                onChange: setPublishSocialSelected,
+              }
+            : null
+        }
         onGoBack={handleCancelPublishConfirm}
         onConfirm={handleConfirmPublish}
       />
+
+      {editSocialPrompt ? (
+        <SocialPostPrompt
+          open
+          connected={editSocialPrompt.connected}
+          initialSelected={editSocialPrompt.defaults}
+          posting={editSocialPosting}
+          onSkip={finishEditSocialPrompt}
+          onPost={(platforms) => void handleEditSocialPost(platforms)}
+        />
+      ) : null}
 
       {/* ATTOM Records Selection Modal */}
       <Dialog open={isAttomModalOpen} onOpenChange={setIsAttomModalOpen}>
