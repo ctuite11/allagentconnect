@@ -2430,7 +2430,7 @@ const AddListing = () => {
           return null;
         }
         try {
-          const { agent_id: _ignoredAgentId, status: _ignoredStatus, ...conciergePayload } = minimalPayload;
+          const { agent_id: _ignoredAgentId, status: _ignoredStatus, draft_intended_status: _ignoredIntended, ...conciergePayload } = minimalPayload;
           const created = await createConciergeDraft(conciergeAgentId, conciergePayload);
           console.log('ensureDraftListing: concierge draft created', created.id);
           return { id: created.id };
