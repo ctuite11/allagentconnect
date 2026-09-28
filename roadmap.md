@@ -116,3 +116,4 @@
 - [x] Bottom Save Draft | Preview | Publish row; hide sticky top bar when visible
 - [x] Restore working Preview (draft opens in new tab)
 - [x] "Ready to publish?" review: cover photo, address, type, beds/baths/sqft
+- [ ] My Listings: all 17 statuses in filter + fetch, BOM own filter, legacy canceled→Cancelled, search on own row
