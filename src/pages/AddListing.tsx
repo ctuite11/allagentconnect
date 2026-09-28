@@ -3304,8 +3304,13 @@ const AddListing = () => {
       toast.error("Add an address and save the draft before previewing.");
       return;
     }
-    if (win) win.location.href = `/property/${id}`;
-    else window.open(`/property/${id}`, "_blank");
+    // Back on the preview returns to this editor; keep the editor's own safe `from`.
+    const safeFrom =
+      addListingBackTo.startsWith("/") && !addListingBackTo.startsWith("//") ? addListingBackTo : null;
+    const editorPath = `/agent/listings/edit/${id}${safeFrom ? `?from=${encodeURIComponent(safeFrom)}` : ""}`;
+    const previewUrl = `/property/${id}?returnTo=${encodeURIComponent(editorPath)}`;
+    if (win) win.location.href = previewUrl;
+    else window.open(previewUrl, "_blank");
   };
 
   const handleSubmit = async (e: React.FormEvent, publishNow: boolean = true) => {
@@ -3710,6 +3715,54 @@ const AddListing = () => {
                     </>
                   )}
                 </Button>
+              ) : listingId && backendStatusRef.current === "draft" ? (
+                /* Existing draft: Save Draft, Preview, Publish (status field = intended publish status) */
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleSaveDraft(false)}
+                    type="button"
+                    disabled={savingDraft || submitting}
+                    className="gap-1.5 border-zinc-200"
+                  >
+                    {savingDraft ? (
+                      <>
+                        <Loader2 className="h-4 w-4 shrink-0 animate-spin" aria-hidden />
+                        Saving…
+                      </>
+                    ) : (
+                      <>
+                        <Save className="h-4 w-4 shrink-0" />
+                        Save Draft
+                      </>
+                    )}
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => void handlePreview()} type="button" className="gap-1.5 border-zinc-200">
+                    <Eye className="h-4 w-4 shrink-0" />
+                    Preview
+                  </Button>
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={() => handleSaveChanges()}
+                    type="button"
+                    disabled={submitting || savingDraft}
+                    className="gap-1.5"
+                  >
+                    {submitting ? (
+                      <>
+                        <Loader2 className="h-4 w-4 shrink-0 animate-spin" aria-hidden />
+                        Publishing…
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="h-4 w-4 shrink-0" />
+                        Publish
+                      </>
+                    )}
+                  </Button>
+                </>
               ) : listingId ? (
 
                 <>

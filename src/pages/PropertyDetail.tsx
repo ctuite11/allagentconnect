@@ -262,6 +262,12 @@ const PropertyDetail = () => {
       navigate("/client/search");
       return;
     }
+    // Explicit return path (e.g. Preview opened from Add/Edit Listing in a new tab).
+    const returnTo = params.get("returnTo");
+    if (returnTo && isSafeInternalReturnPath(returnTo)) {
+      navigate(returnTo);
+      return;
+    }
     if (typeof st === "string" && isSafeInternalReturnPath(st)) {
       navigate(st);
       return;
