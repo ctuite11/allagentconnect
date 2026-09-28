@@ -557,7 +557,7 @@ function MyListingsView({
       }
     });
     return result;
-  }, [listings, selectedStatuses, searchQuery, sortKey, hasOnlyDrafts, listingTypeFilter]);
+  }, [listings, selectedStatuses, searchQuery, sortKey, listingTypeFilter]);
 
   const startQuickEdit = (listing: Listing) => {
     setEditingId(listing.id);
@@ -699,7 +699,7 @@ function MyListingsView({
       </AlertDialog>
 
       {/* Draft bulk-action toolbar */}
-      {selectedStatuses.has("draft") && draftListings.length > 0 && (
+      {(selectedStatuses.has("draft") || selectedDraftIds.size > 0) && draftListings.length > 0 && (
         <div className="mt-3 flex flex-wrap items-center gap-3 rounded-xl border border-neutral-200 bg-white px-3 py-2 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
           <Checkbox
             checked={selectedDraftIds.size === draftListings.length}
@@ -725,20 +725,6 @@ function MyListingsView({
         </div>
       )}
 
-      {/* Auto-draft notice when agent has only drafts */}
-      {hasOnlyDrafts && selectedStatuses.has("draft") && (
-        <div className="mt-3 rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-[13px] leading-snug text-zinc-600 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
-          Showing drafts because you don&apos;t have published listings yet.{" "}
-          <button
-            type="button"
-            className="font-medium text-[#0E56F5] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-300 focus-visible:ring-offset-2"
-            onClick={() => onNewListing("new")}
-          >
-            Create a listing
-          </button>
-          .
-        </div>
-      )}
 
       {/* LIST VIEW — listing card layout restored to pre-audit design */}
       <div className="mt-5 space-y-4">
