@@ -1,7 +1,7 @@
 # Restore the full Publish flow (review + social) on Add Listing
 
 ## Why a Draft went live in one click (confirmed)
-When a draft is reopened, the page remembers its **chosen** status (for example On MLS) as if it were the listing's **real** status. The "Ready to publish?" check then thinks the listing is already live and skips the review. This came in with the "remember the draft's chosen status" fix. Brand-new listings are not affected; reopened drafts are.
+When a draft is reopened, the review check looks at its **chosen** status (for example On MLS) instead of its **real** saved status (Draft), decides it is already live, and skips the review. New rule: a listing whose real saved status is Draft is always a first publish.
 
 ## Step 1: Report first (no changes)
 List exactly what social screens and code exist in the separate social draft (settings connection card, "Promote This Listing" choices, publish-time social step, listing defaults) and what must be carried over. Nothing from that draft is merged as-is; it is rebuilt on today's version so none of the recent fixes are lost (Save Draft and remembered status, Preview/Back, photo check, review popup, DCMLS controls, bottom buttons, Withdrawn cleanup).
