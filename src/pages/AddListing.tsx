@@ -3550,6 +3550,7 @@ const AddListing = () => {
         }
       }
 
+      const wasFirstPublishSubmit = !!publishNow && isNeverPublished() && isLiveStatus(listingData.status);
       const resolvedDraftId = draftSession.getDraftId();
       const isEditMode = !!(listingId || resolvedDraftId);
       const targetListingId = listingId || resolvedDraftId;
@@ -3672,6 +3673,15 @@ const AddListing = () => {
         setDraftId(null);
       }
 
+      // Listing write is final. Mark it published for this session, then run social.
+      if (listingData.status !== LISTING_STATUS.DRAFT) {
+        backendStatusRef.current = listingData.status;
+        originalStatusRef.current = listingData.status;
+      }
+      if (wasFirstPublishSubmit && resultListingId) {
+        await runFirstPublishSocial(resultListingId, listingData.status);
+      }
+
       navigate(addListingBackTo);
     } catch (error: any) {
       console.error("Error creating listing:", error);
@@ -3728,6 +3738,10 @@ const AddListing = () => {
   /** Confirm status/address/price, then resume the exact publish path that was interrupted. */
   const handleConfirmPublish = () => {
     const action = pendingPublishAction;
+    // Capture social choices only when the section was actually shown.
+    pendingFirstPublishSocialRef.current = publishSocialConnected
+      ? publishSocialSelected.filter((p) => publishSocialConnected[p])
+      : null;
     setPublishConfirmOpen(false);
     setPendingPublishAction(null);
     publishConfirmedRef.current = true;
@@ -3739,8 +3753,115 @@ const AddListing = () => {
   };
 
   const handleCancelPublishConfirm = () => {
+    // Go Back / close: no live write, no defaults write, no social call.
+    pendingFirstPublishSocialRef.current = null;
     setPublishConfirmOpen(false);
     setPendingPublishAction(null);
+  };
+
+  /** Social is offered only to the listing's owner (never admin/delegate/concierge in V1). */
+  const isSocialOwner = () => {
+    if (isConciergeMode) return false;
+    const owner = listingOwnerIdRef.current;
+    return !owner || (!!user?.id && owner === user.id);
+  };
+
+  // Load connected accounts when "Ready to publish?" opens. Errors/403 hide the section.
+  useEffect(() => {
+    if (!publishConfirmOpen) return;
+    setPublishSocialConnected(null);
+    setPublishSocialSelected([]);
+    if (!isSocialOwner()) return;
+    let cancelled = false;
+    void fetchSocialConnected().then((c) => {
+      if (!cancelled) setPublishSocialConnected(c);
+    });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [publishConfirmOpen]);
+
+  /** After a successful first publish: save defaults, then post. Never affects the listing. */
+  const runFirstPublishSocial = async (savedListingId: string, dbStatus: string) => {
+    const selection = pendingFirstPublishSocialRef.current;
+    pendingFirstPublishSocialRef.current = null;
+    if (!selection || !isSocialOwner()) return;
+    try {
+      const saved = await saveListingSocialDefaults(savedListingId, selection);
+      if (!saved) toast.error("Listing published, but social preferences could not be saved.");
+    } catch {
+      toast.error("Listing published, but social preferences could not be saved.");
+    }
+    if (selection.length > 0 && isSocialEligibleStatus(dbStatus)) {
+      try {
+        await publishListingSocial({
+          listingId: savedListingId,
+          eventType: statusToSocialEventType(dbStatus),
+          platforms: selection,
+          clientRequestId: newClientRequestId(),
+        });
+      } catch {
+        toast.error("Listing published, but the social post could not be completed.");
+      }
+    }
+  };
+
+  /** After an eligible live edit is saved, offer a one-off post. Returns true when the prompt opened. */
+  const maybePromptEditSocial = async (args: {
+    listingId: string;
+    prevStatus: string | null;
+    newStatus: string;
+    prevPrice: number | null;
+    newPrice: number | null;
+  }): Promise<boolean> => {
+    try {
+      if (!isSocialOwner()) return false;
+      if (!args.prevStatus || args.prevStatus === LISTING_STATUS.DRAFT) return false;
+      if (!isSocialEligibleStatus(args.newStatus)) return false;
+      const statusChanged = args.prevStatus !== args.newStatus;
+      const priceChanged =
+        args.prevPrice !== null && args.newPrice !== null && args.prevPrice !== args.newPrice;
+      if (!statusChanged && !priceChanged) return false;
+      const connected = await fetchSocialConnected();
+      if (!connected || !hasAnyConnected(connected)) return false;
+      const defaults = (await fetchListingSocialDefaults(args.listingId)) ?? [];
+      const eventType = statusChanged
+        ? statusToSocialEventType(args.newStatus)
+        : (args.newPrice as number) < (args.prevPrice as number)
+          ? "price_reduced"
+          : "price_updated";
+      setEditSocialPrompt({ listingId: args.listingId, eventType, connected, defaults });
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  const finishEditSocialPrompt = () => {
+    setEditSocialPrompt(null);
+    setEditSocialPosting(false);
+    const target = pendingNavAfterSocialRef.current;
+    pendingNavAfterSocialRef.current = null;
+    if (target) navigate(target);
+  };
+
+  const handleEditSocialPost = async (platforms: SocialPlatform[]) => {
+    const prompt = editSocialPrompt;
+    if (!prompt) return finishEditSocialPrompt();
+    setEditSocialPosting(true);
+    try {
+      // One-off post: does NOT change listing_social_defaults.
+      await publishListingSocial({
+        listingId: prompt.listingId,
+        eventType: prompt.eventType,
+        platforms,
+        clientRequestId: newClientRequestId(),
+      });
+    } catch {
+      toast.error("Your changes are saved, but the social post could not be completed.");
+    }
+    finishEditSocialPrompt();
   };
 
   const renderActionButtons = () => (
