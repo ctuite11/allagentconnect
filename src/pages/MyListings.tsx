@@ -404,25 +404,13 @@ function MyListingsView({
   const navigate = useNavigate();
   const statusFromUrl = searchParams.get("status");
   
-  // Detect if agent has only drafts (no published listings)
-  const nonDraftListings = useMemo(() => listings.filter(l => l.status !== "draft"), [listings]);
-  const hasOnlyDrafts = listings.length > 0 && nonDraftListings.length === 0;
-
-  // Multi-select: parse comma-separated statuses from URL, auto-select draft if only drafts exist
+  // Multi-select: parse comma-separated statuses from URL
   const [selectedStatuses, setSelectedStatuses] = useState<Set<ListingStatus>>(() => {
     if (statusFromUrl) {
       return new Set(statusFromUrl.split(",").filter(s => ALL_STATUSES.some(t => t.value === s)) as ListingStatus[]);
     }
     return new Set();
   });
-  
-  // Auto-select draft filter when agent has only drafts and no filter is active
-  useEffect(() => {
-    if (hasOnlyDrafts && selectedStatuses.size === 0 && !statusFromUrl) {
-      setSelectedStatuses(new Set(["draft"]));
-      setSearchParams({ status: "draft" });
-    }
-  }, [hasOnlyDrafts]);
   const [searchQuery, setSearchQuery] = useState("");
   
   // Sync URL param with state for multi-select
@@ -526,14 +514,11 @@ function MyListingsView({
   const [listingTypeFilter, setListingTypeFilter] = useState<MyListingsListingType>(LISTING_TYPE.FOR_SALE);
 
   const filteredListings = useMemo(() => {
-    // Default (no status pills): show live/pipeline inventory only — never mix drafts in.
-    // Drafts appear only when Draft is selected or URL includes `status=draft` (see selectedStatuses).
-    // Exception: agents with only drafts still see their drafts on first paint while URL syncs to `?status=draft`.
+    // Default (no status pills): show every loaded listing, including Drafts.
+    // Status pills only narrow the full list; they never change the default.
     let result =
       selectedStatuses.size === 0
-        ? hasOnlyDrafts
-          ? listings
-          : listings.filter((l) => l.status !== "draft")
+        ? listings
         : listings.filter((l) => {
             const statusForFilter = normalizeFilterStatus(l.status);
             return selectedStatuses.has(statusForFilter);
