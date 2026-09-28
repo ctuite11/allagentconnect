@@ -12,7 +12,7 @@ import { CardSurface } from "@/components/ui/CardSurface";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, ChevronDown, Search, Trash2, MoreHorizontal, Home } from "lucide-react";
 import { ListingStatusBadge } from "@/components/ui/status-badge";
-import { LISTING_STATUS_LABELS, LISTING_TYPE, LISTING_TYPE_LABELS, isComingSoon } from "@/constants/status";
+import { LISTING_STATUS, LISTING_STATUS_LABELS, LISTING_TYPE, LISTING_TYPE_LABELS, isComingSoon } from "@/constants/status";
 
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -38,12 +38,34 @@ import {
 } from "@/lib/listingPricingValidation";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-type ListingStatus = "new" | "active" | "coming_soon" | "off_market" | "temporarily_withdrawn" | "cancelled" | "draft" | "expired";
+type ListingStatus = string;
 
-// Managed statuses for My Listings controls (intentionally excludes BOM).
-const PIPELINE_STATUSES: ListingStatus[] = ["active", "new", "coming_soon", "off_market", "temporarily_withdrawn", "cancelled", "expired", "draft"];
-// Keep legacy BOM rows visible in My Listings without exposing BOM as a managed status option.
-const FETCH_STATUSES = [...PIPELINE_STATUSES, "back_on_market"];
+// All current AAC statuses shown as My Listings filters (plain `withdrawn` intentionally excluded).
+const FILTER_STATUSES: ListingStatus[] = [
+  LISTING_STATUS.ACTIVE,
+  LISTING_STATUS.NEW,
+  LISTING_STATUS.COMING_SOON,
+  LISTING_STATUS.OFF_MARKET,
+  LISTING_STATUS.BACK_ON_MARKET,
+  LISTING_STATUS.PRICE_CHANGED,
+  LISTING_STATUS.EXTENDED,
+  LISTING_STATUS.REACTIVATED,
+  LISTING_STATUS.UNDER_AGREEMENT,
+  LISTING_STATUS.PENDING,
+  LISTING_STATUS.CONTINGENT,
+  LISTING_STATUS.SOLD,
+  LISTING_STATUS.RENTED,
+  LISTING_STATUS.TEMPORARILY_WITHDRAWN,
+  LISTING_STATUS.CANCELLED,
+  LISTING_STATUS.EXPIRED,
+  LISTING_STATUS.DRAFT,
+];
+// Quick Edit keeps its smaller controlled list.
+const EDITABLE_STATUSES: ListingStatus[] = ["active", "new", "coming_soon", "off_market", "temporarily_withdrawn", "cancelled", "expired", "draft"];
+// Fetch includes the legacy `canceled` alias so old rows never disappear.
+const FETCH_STATUSES = [...FILTER_STATUSES, LISTING_STATUS.CANCELED];
+/** Legacy `canceled` is treated as `cancelled` for filtering. */
+const normalizeFilterStatus = (s: string) => (s === LISTING_STATUS.CANCELED ? LISTING_STATUS.CANCELLED : s);
 
 interface Listing {
   id: string;
@@ -90,11 +112,14 @@ type MyListingsCache = {
 let myListingsCache: MyListingsCache | null = null;
 const MY_LISTINGS_SCROLL_KEY = "myListings:scrollY";
 
-// Status filter options restricted to active pipeline
-const ALL_STATUSES: { label: string; value: ListingStatus }[] = PIPELINE_STATUSES.map(s => ({
+const statusOption = (s: ListingStatus) => ({
   label: s === "draft" ? "Drafts" : (LISTING_STATUS_LABELS[s] || s),
   value: s,
-}));
+});
+// Status filter options: every current AAC status
+const ALL_STATUSES: { label: string; value: ListingStatus }[] = FILTER_STATUSES.map(statusOption);
+// Quick Edit options
+const EDIT_STATUS_OPTIONS: { label: string; value: ListingStatus }[] = EDITABLE_STATUSES.map(statusOption);
 
 function getThumbnailUrl(listing: Listing) {
   if (!listing.photos) return null;
@@ -510,7 +535,7 @@ function MyListingsView({
           ? listings
           : listings.filter((l) => l.status !== "draft")
         : listings.filter((l) => {
-            const statusForFilter = (l.status === "back_on_market" ? "active" : l.status) as ListingStatus;
+            const statusForFilter = normalizeFilterStatus(l.status);
             return selectedStatuses.has(statusForFilter);
           });
 
@@ -553,8 +578,8 @@ function MyListingsView({
     setEditingId(listing.id);
     const seed = listingEffectiveNumericPrice(listing);
     setEditPrice(seed != null ? Math.round(seed) : "");
-    // Treat BOM as an activation action in management UI, not a managed status.
-    setEditStatus((listing.status === "back_on_market" ? "active" : listing.status) as ListingStatus);
+    // Keep the listing's real status; never silently convert it.
+    setEditStatus(normalizeFilterStatus(listing.status));
   };
 
   const cancelQuickEdit = () => {
@@ -582,30 +607,14 @@ function MyListingsView({
     <>
       {/* Compact toolbar: search + status filters + sort (white shell, subtle shadow) */}
       <div className="rounded-xl border border-neutral-200 bg-white px-3 py-2.5 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:gap-3">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:gap-3">
           <MyListingsListingTypeToggle
             value={listingTypeFilter}
             onChange={setListingTypeFilter}
           />
 
-          <div className="relative w-full shrink-0 lg:max-w-[240px]">
-            <Search
-              className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-zinc-400"
-              aria-hidden
-            />
-            <input
-              type="search"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search address, MLS #…"
-              autoComplete="off"
-              className="h-9 w-full rounded-xl border border-neutral-200 bg-white pl-9 pr-3 text-[13px] text-zinc-900 shadow-none outline-none placeholder:text-zinc-400 transition-colors focus:border-neutral-300 focus-visible:ring-2 focus-visible:ring-zinc-300 focus-visible:ring-offset-2"
-              aria-label="Search listings"
-            />
-          </div>
-
-          <div className="min-h-0 flex-1 overflow-x-auto scrollbar-none">
-            <div className="flex w-max max-w-full flex-nowrap gap-1.5 pb-0.5 sm:gap-2">
+          <div className="min-h-0 flex-1">
+            <div className="flex flex-wrap gap-1.5 sm:gap-2">
               {ALL_STATUSES.map((tab) => {
                 const on = selectedStatuses.has(tab.value);
                 return (
@@ -641,6 +650,22 @@ function MyListingsView({
 
             <MyListingsSortPill sortKey={sortKey} onSortKeyChange={setSortKey} />
           </div>
+        </div>
+
+        <div className="relative mt-2.5 w-full">
+          <Search
+            className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-zinc-400"
+            aria-hidden
+          />
+          <input
+            type="search"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search address, MLS #…"
+            autoComplete="off"
+            className="h-9 w-full rounded-xl border border-neutral-200 bg-white pl-9 pr-3 text-[13px] text-zinc-900 shadow-none outline-none placeholder:text-zinc-400 transition-colors focus:border-neutral-300 focus-visible:ring-2 focus-visible:ring-zinc-300 focus-visible:ring-offset-2"
+            aria-label="Search listings"
+          />
         </div>
       </div>
 
@@ -942,7 +967,10 @@ function MyListingsView({
                                <SelectValue placeholder="Status" />
                              </SelectTrigger>
                              <SelectContent>
-                               {ALL_STATUSES.map((tab) => (
+                               {(editStatus && !EDITABLE_STATUSES.includes(editStatus)
+                                 ? [statusOption(editStatus), ...EDIT_STATUS_OPTIONS]
+                                 : EDIT_STATUS_OPTIONS
+                               ).map((tab) => (
                                  <SelectItem key={tab.value} value={tab.value} className="text-xs capitalize">
                                    {tab.label}
                                  </SelectItem>
