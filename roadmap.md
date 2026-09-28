@@ -119,3 +119,7 @@
 - [x] My Listings: all 17 statuses in filter + fetch, BOM own filter, legacy canceled→Cancelled, search on own row
 - [x] Draft keeps chosen status (draft_intended_status): sale+rental, media nav stays draft, canonical values
 - [x] Add/Edit Listing: Save Draft on existing drafts + Preview Back returns to editor (keep from context); then full live draft test
+
+## Publish flow restore (2026-09-28)
+- [x] Step 1: social-draft inventory report (report only)
+- [ ] Step 2: first-publish review + social section, gated defaults function, edit-time prompt (blocked: awaiting user review of Step 1)
