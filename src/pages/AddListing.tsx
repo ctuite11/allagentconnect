@@ -71,6 +71,19 @@ import { DcmlsPublishingIntroOverlay } from "@/components/add-listing/DcmlsPubli
 import { AddListingStatusHelp } from "@/components/add-listing/AddListingStatusHelp";
 import { AddListingStatusIntroOverlay } from "@/components/add-listing/AddListingStatusIntroOverlay";
 import { ConfirmBeforePublishingDialog } from "@/components/add-listing/ConfirmBeforePublishingDialog";
+import { SocialPostPrompt } from "@/components/social/SocialPostPrompt";
+import {
+  fetchListingSocialDefaults,
+  fetchSocialConnected,
+  hasAnyConnected,
+  isSocialEligibleStatus,
+  newClientRequestId,
+  publishListingSocial,
+  saveListingSocialDefaults,
+  statusToSocialEventType,
+  type SocialConnected,
+  type SocialPlatform,
+} from "@/lib/socialPublishing";
 import { useAddListingStatusIntro } from "@/hooks/useAddListingStatusIntro";
 import { useAddListingDcmlsIntro } from "@/hooks/useAddListingDcmlsIntro";
 import { canonicalizeListingFormState, describeMediaCollection } from "@/lib/listingFormDirtyState";
@@ -403,6 +416,20 @@ const AddListing = () => {
   const [pendingPublishAction, setPendingPublishAction] = useState<"publish" | "saveChanges" | null>(null);
   const photoOrderConfirmedRef = useRef(false);
   const publishConfirmedRef = useRef(false);
+  // Social (V1): only offered when the signed-in user owns the listing.
+  const listingOwnerIdRef = useRef<string | null>(null);
+  const [publishSocialConnected, setPublishSocialConnected] = useState<SocialConnected | null>(null);
+  const [publishSocialSelected, setPublishSocialSelected] = useState<SocialPlatform[]>([]);
+  /** Platforms confirmed in "Ready to publish?" for the pending first publish (null = section not shown). */
+  const pendingFirstPublishSocialRef = useRef<SocialPlatform[] | null>(null);
+  const [editSocialPrompt, setEditSocialPrompt] = useState<{
+    listingId: string;
+    eventType: string;
+    connected: SocialConnected;
+    defaults: SocialPlatform[];
+  } | null>(null);
+  const [editSocialPosting, setEditSocialPosting] = useState(false);
+  const pendingNavAfterSocialRef = useRef<string | null>(null);
 
   const [formData, setFormData] = useState({
     status: initialStatus,
@@ -899,6 +926,7 @@ const AddListing = () => {
         // Store the true backend status before normalization (for draft detection)
         const rawStatus = (data.status || "new").toLowerCase();
         backendStatusRef.current = rawStatus;
+        listingOwnerIdRef.current = (data as any).agent_id ?? null;
         
         // Normalize status to lowercase to match Select options
         // If status is "draft", restore the agent's saved intended status; older drafts fall back to On MLS (active)
@@ -907,7 +935,8 @@ const AddListing = () => {
           normalizedStatus =
             draftIntendedStatusToFormStatus((data as any).draft_intended_status) || LISTING_STATUS.ACTIVE;
         }
-        originalStatusRef.current = normalizedStatus;
+        // Real DB status (a reopened draft stays "draft" here; the form shows the intended status).
+        originalStatusRef.current = rawStatus;
         
         setFormData(prev => ({
           ...prev,
@@ -1942,7 +1971,11 @@ const AddListing = () => {
 
   const handleStatusChange = (value: string) => {
     // Ensure status is never empty - default to original or LISTING_STATUS.NEW
-    const newStatus = value || originalStatusRef.current || LISTING_STATUS.NEW;
+    const fallbackStatus =
+      originalStatusRef.current && originalStatusRef.current !== LISTING_STATUS.DRAFT
+        ? originalStatusRef.current
+        : LISTING_STATUS.NEW;
+    const newStatus = value || fallbackStatus;
     setFormData(prev => ({ ...prev, status: newStatus }));
     if (newStatus === LISTING_STATUS.COMING_SOON) {
       setFormData(prev => ({ ...prev, auto_activate_on: null }));
@@ -2842,42 +2875,46 @@ const AddListing = () => {
    * True when this save takes the listing live for the first time and the
    * agent has not yet confirmed the photo order for this publish attempt.
    */
+  /**
+   * Never previously published: brand-new listing with no persisted status, or an
+   * existing row whose REAL saved status is draft (regardless of the form's status).
+   */
+  const isNeverPublished = () => {
+    const backend = backendStatusRef.current;
+    return !backend || backend === LISTING_STATUS.DRAFT;
+  };
+
   const needsFirstPublishPhotoConfirm = (targetStatus: string) => {
     // Hidden: cover photo now shown in the "Ready to publish?" review instead.
     if (SHOW_PHOTO_ORDER_STEP === false) return false;
     if (photoOrderConfirmedRef.current) return false;
     if (!isLiveStatus(targetStatus)) return false;
-    const previousStatus = originalStatusRef.current;
-    // Already published before (any live status) -> never prompt again.
-    if (previousStatus && isLiveStatus(previousStatus)) return false;
+    if (!isNeverPublished()) return false;
     return photos.length > 0;
   };
 
   /**
    * True when this save takes the listing live for the first time and the
    * agent has not yet confirmed status / address / price for this attempt.
-   * Runs after validation + photo-order; never for edits to already-live listings.
+   * Runs after validation + photo-order; never for edits to already-published listings.
    */
   const needsFirstPublishLiveConfirm = (targetStatus: string) => {
     if (publishConfirmedRef.current) return false;
     if (!isLiveStatus(targetStatus)) return false;
-    const previousStatus = originalStatusRef.current;
-    if (previousStatus && isLiveStatus(previousStatus)) return false;
-    return true;
+    return isNeverPublished();
   };
 
   /**
    * First-publish photo gate, checked immediately before the live DB write.
    * Returns an error message when the listing must NOT go live yet, else null.
-   * Never applies to edits of an already-live listing.
+   * Never applies to edits of an already-published listing.
    */
   const firstPublishPhotoGateError = (
     targetStatus: string,
     finalPhotos: { url?: string | null }[],
   ): string | null => {
     if (!isLiveStatus(targetStatus)) return null;
-    const previousStatus = originalStatusRef.current;
-    if (previousStatus && isLiveStatus(previousStatus)) return null;
+    if (!isNeverPublished()) return null;
     if (photoUploadsInFlightRef.current > 0) {
       return "Photos are still uploading. Your listing was not published — please wait for the upload to finish, then publish again.";
     }
@@ -3102,6 +3139,11 @@ const AddListing = () => {
 
       console.log('[handleSaveChanges] Saving with status:', payload.status, 'agent_id:', payload.agent_id);
 
+      // Snapshot pre-save state for post-save social decisions.
+      const wasFirstPublish = !isAutoSave && isNeverPublished() && isLiveStatus(payload.status);
+      const prevStatusForSocial = originalStatusRef.current;
+      const prevPriceForSocial = originalPriceRef.current;
+
       // Remove agent_id from update payload (it's immutable after creation)
       const { agent_id, ...updatePayload } = payload;
 
@@ -3170,7 +3212,29 @@ const AddListing = () => {
         });
       } else {
         toast.success("Listing changes saved!");
-        navigate(addListingBackTo);
+        // The listing save is final from here; social can never undo it.
+        if (payload.status !== LISTING_STATUS.DRAFT) {
+          backendStatusRef.current = payload.status;
+          originalStatusRef.current = payload.status;
+          originalPriceRef.current = newPrice ?? null;
+        }
+        if (wasFirstPublish) {
+          await runFirstPublishSocial(targetId, payload.status);
+          navigate(addListingBackTo);
+        } else {
+          const prompted = await maybePromptEditSocial({
+            listingId: targetId,
+            prevStatus: prevStatusForSocial,
+            newStatus: payload.status,
+            prevPrice: prevPriceForSocial,
+            newPrice: newPrice ?? null,
+          });
+          if (prompted) {
+            pendingNavAfterSocialRef.current = addListingBackTo;
+          } else {
+            navigate(addListingBackTo);
+          }
+        }
       }
     } catch (error: any) {
       console.error("[handleSaveChanges] Error:", error);
@@ -3499,6 +3563,7 @@ const AddListing = () => {
         }
       }
 
+      const wasFirstPublishSubmit = !!publishNow && isNeverPublished() && isLiveStatus(listingData.status);
       const resolvedDraftId = draftSession.getDraftId();
       const isEditMode = !!(listingId || resolvedDraftId);
       const targetListingId = listingId || resolvedDraftId;
@@ -3621,6 +3686,15 @@ const AddListing = () => {
         setDraftId(null);
       }
 
+      // Listing write is final. Mark it published for this session, then run social.
+      if (listingData.status !== LISTING_STATUS.DRAFT) {
+        backendStatusRef.current = listingData.status;
+        originalStatusRef.current = listingData.status;
+      }
+      if (wasFirstPublishSubmit && resultListingId) {
+        await runFirstPublishSocial(resultListingId, listingData.status);
+      }
+
       navigate(addListingBackTo);
     } catch (error: any) {
       console.error("Error creating listing:", error);
@@ -3677,6 +3751,10 @@ const AddListing = () => {
   /** Confirm status/address/price, then resume the exact publish path that was interrupted. */
   const handleConfirmPublish = () => {
     const action = pendingPublishAction;
+    // Capture social choices only when the section was actually shown.
+    pendingFirstPublishSocialRef.current = publishSocialConnected
+      ? publishSocialSelected.filter((p) => publishSocialConnected[p])
+      : null;
     setPublishConfirmOpen(false);
     setPendingPublishAction(null);
     publishConfirmedRef.current = true;
@@ -3688,8 +3766,115 @@ const AddListing = () => {
   };
 
   const handleCancelPublishConfirm = () => {
+    // Go Back / close: no live write, no defaults write, no social call.
+    pendingFirstPublishSocialRef.current = null;
     setPublishConfirmOpen(false);
     setPendingPublishAction(null);
+  };
+
+  /** Social is offered only to the listing's owner (never admin/delegate/concierge in V1). */
+  const isSocialOwner = () => {
+    if (isConciergeMode) return false;
+    const owner = listingOwnerIdRef.current;
+    return !owner || (!!user?.id && owner === user.id);
+  };
+
+  // Load connected accounts when "Ready to publish?" opens. Errors/403 hide the section.
+  useEffect(() => {
+    if (!publishConfirmOpen) return;
+    setPublishSocialConnected(null);
+    setPublishSocialSelected([]);
+    if (!isSocialOwner()) return;
+    let cancelled = false;
+    void fetchSocialConnected().then((c) => {
+      if (!cancelled) setPublishSocialConnected(c);
+    });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [publishConfirmOpen]);
+
+  /** After a successful first publish: save defaults, then post. Never affects the listing. */
+  const runFirstPublishSocial = async (savedListingId: string, dbStatus: string) => {
+    const selection = pendingFirstPublishSocialRef.current;
+    pendingFirstPublishSocialRef.current = null;
+    if (!selection || !isSocialOwner()) return;
+    try {
+      const saved = await saveListingSocialDefaults(savedListingId, selection);
+      if (!saved) toast.error("Listing published, but social preferences could not be saved.");
+    } catch {
+      toast.error("Listing published, but social preferences could not be saved.");
+    }
+    if (selection.length > 0 && isSocialEligibleStatus(dbStatus)) {
+      try {
+        await publishListingSocial({
+          listingId: savedListingId,
+          eventType: statusToSocialEventType(dbStatus),
+          platforms: selection,
+          clientRequestId: newClientRequestId(),
+        });
+      } catch {
+        toast.error("Listing published, but the social post could not be completed.");
+      }
+    }
+  };
+
+  /** After an eligible live edit is saved, offer a one-off post. Returns true when the prompt opened. */
+  const maybePromptEditSocial = async (args: {
+    listingId: string;
+    prevStatus: string | null;
+    newStatus: string;
+    prevPrice: number | null;
+    newPrice: number | null;
+  }): Promise<boolean> => {
+    try {
+      if (!isSocialOwner()) return false;
+      if (!args.prevStatus || args.prevStatus === LISTING_STATUS.DRAFT) return false;
+      if (!isSocialEligibleStatus(args.newStatus)) return false;
+      const statusChanged = args.prevStatus !== args.newStatus;
+      const priceChanged =
+        args.prevPrice !== null && args.newPrice !== null && args.prevPrice !== args.newPrice;
+      if (!statusChanged && !priceChanged) return false;
+      const connected = await fetchSocialConnected();
+      if (!connected || !hasAnyConnected(connected)) return false;
+      const defaults = (await fetchListingSocialDefaults(args.listingId)) ?? [];
+      const eventType = statusChanged
+        ? statusToSocialEventType(args.newStatus)
+        : (args.newPrice as number) < (args.prevPrice as number)
+          ? "price_reduced"
+          : "price_updated";
+      setEditSocialPrompt({ listingId: args.listingId, eventType, connected, defaults });
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  const finishEditSocialPrompt = () => {
+    setEditSocialPrompt(null);
+    setEditSocialPosting(false);
+    const target = pendingNavAfterSocialRef.current;
+    pendingNavAfterSocialRef.current = null;
+    if (target) navigate(target);
+  };
+
+  const handleEditSocialPost = async (platforms: SocialPlatform[]) => {
+    const prompt = editSocialPrompt;
+    if (!prompt) return finishEditSocialPrompt();
+    setEditSocialPosting(true);
+    try {
+      // One-off post: does NOT change listing_social_defaults.
+      await publishListingSocial({
+        listingId: prompt.listingId,
+        eventType: prompt.eventType,
+        platforms,
+        clientRequestId: newClientRequestId(),
+      });
+    } catch {
+      toast.error("Your changes are saved, but the social post could not be completed.");
+    }
+    finishEditSocialPrompt();
   };
 
   const renderActionButtons = () => (
@@ -5954,9 +6139,29 @@ const AddListing = () => {
         beds={String(formData.bedrooms ?? "")}
         baths={String(formData.bathrooms ?? "")}
         sqft={formData.square_feet ? Number(formData.square_feet).toLocaleString() : ""}
+        social={
+          publishSocialConnected
+            ? {
+                connected: publishSocialConnected,
+                selected: publishSocialSelected,
+                onChange: setPublishSocialSelected,
+              }
+            : null
+        }
         onGoBack={handleCancelPublishConfirm}
         onConfirm={handleConfirmPublish}
       />
+
+      {editSocialPrompt ? (
+        <SocialPostPrompt
+          open
+          connected={editSocialPrompt.connected}
+          initialSelected={editSocialPrompt.defaults}
+          posting={editSocialPosting}
+          onSkip={finishEditSocialPrompt}
+          onPost={(platforms) => void handleEditSocialPost(platforms)}
+        />
+      ) : null}
 
       {/* ATTOM Records Selection Modal */}
       <Dialog open={isAttomModalOpen} onOpenChange={setIsAttomModalOpen}>

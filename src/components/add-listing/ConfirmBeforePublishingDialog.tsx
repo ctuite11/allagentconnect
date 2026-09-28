@@ -1,5 +1,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { SocialPlatformChoices } from "@/components/social/SocialPlatformChoices";
+import type { SocialConnected, SocialPlatform } from "@/lib/socialPublishing";
 
 type ConfirmBeforePublishingDialogProps = {
   open: boolean;
@@ -11,6 +13,12 @@ type ConfirmBeforePublishingDialogProps = {
   beds?: string;
   baths?: string;
   sqft?: string;
+  /** Optional social choices; null/undefined hides the section. */
+  social?: {
+    connected: SocialConnected;
+    selected: SocialPlatform[];
+    onChange: (next: SocialPlatform[]) => void;
+  } | null;
   onGoBack: () => void;
   onConfirm: () => void;
 };
@@ -29,6 +37,7 @@ export function ConfirmBeforePublishingDialog({
   beds,
   baths,
   sqft,
+  social,
   onGoBack,
   onConfirm,
 }: ConfirmBeforePublishingDialogProps) {
@@ -71,6 +80,16 @@ export function ConfirmBeforePublishingDialog({
         <p className="text-sm text-muted-foreground">
           Publishing will make this listing live and may send Hot Sheet alerts to matching agents.
         </p>
+
+        {social ? (
+          <div className="space-y-2">
+            <p className="text-sm font-medium text-foreground">Share on social media</p>
+            <SocialPlatformChoices connected={social.connected} selected={social.selected} onChange={social.onChange} />
+            <p className="text-xs text-muted-foreground">
+              Leave all unchecked to publish without sharing. These become this listing's defaults.
+            </p>
+          </div>
+        ) : null}
 
         <div className="flex justify-end gap-2 pt-2">
           <Button type="button" variant="outline" onClick={onGoBack}>
