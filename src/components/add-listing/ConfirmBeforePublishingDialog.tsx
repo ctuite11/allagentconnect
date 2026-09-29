@@ -86,7 +86,12 @@ export function ConfirmBeforePublishingDialog({
         {social ? (
           <div className="space-y-2">
             <p className="text-sm font-medium text-foreground">Share on social media</p>
-            <SocialPlatformChoices connected={social.connected} selected={social.selected} onChange={social.onChange} />
+            <SocialPlatformChoices
+              connected={social.connected}
+              selected={social.selected}
+              onChange={social.onChange}
+              onConnectRequest={social.onConnectRequest}
+            />
             <p className="text-xs text-muted-foreground">
               Leave all unchecked to publish without sharing. These become this listing's defaults.
             </p>
