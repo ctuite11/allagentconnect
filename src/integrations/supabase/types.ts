@@ -1147,6 +1147,7 @@ export type Database = {
           dcmls_receive_seller_leads: boolean | null
           dcmls_seller_incentives: string[] | null
           dcmls_seller_incentives_more: string | null
+          dcmls_seller_lead_zips: string[] | null
           dismissed_announcement_ids: string[]
           early_access: boolean
           email_frequency: string
@@ -1196,6 +1197,7 @@ export type Database = {
           dcmls_receive_seller_leads?: boolean | null
           dcmls_seller_incentives?: string[] | null
           dcmls_seller_incentives_more?: string | null
+          dcmls_seller_lead_zips?: string[] | null
           dismissed_announcement_ids?: string[]
           early_access?: boolean
           email_frequency?: string
@@ -1245,6 +1247,7 @@ export type Database = {
           dcmls_receive_seller_leads?: boolean | null
           dcmls_seller_incentives?: string[] | null
           dcmls_seller_incentives_more?: string | null
+          dcmls_seller_lead_zips?: string[] | null
           dismissed_announcement_ids?: string[]
           early_access?: boolean
           email_frequency?: string
@@ -2525,6 +2528,42 @@ export type Database = {
           total_connections?: number
           wal_size_bytes?: number
           work_mem_setting?: string | null
+        }
+        Relationships: []
+      }
+      dcmls_incentive_leads: {
+        Row: {
+          agent_user_id: string
+          consumer_email: string
+          consumer_name: string
+          created_at: string
+          id: string
+          incentive_snapshot: Json
+          incentive_type: string
+          source_listing_id: string | null
+          source_zip: string | null
+        }
+        Insert: {
+          agent_user_id: string
+          consumer_email: string
+          consumer_name: string
+          created_at?: string
+          id?: string
+          incentive_snapshot?: Json
+          incentive_type: string
+          source_listing_id?: string | null
+          source_zip?: string | null
+        }
+        Update: {
+          agent_user_id?: string
+          consumer_email?: string
+          consumer_name?: string
+          created_at?: string
+          id?: string
+          incentive_snapshot?: Json
+          incentive_type?: string
+          source_listing_id?: string | null
+          source_zip?: string | null
         }
         Relationships: []
       }
