@@ -568,7 +568,7 @@ const AddListing = () => {
   const stickyActionBarRef = useRef<HTMLDivElement>(null);
 
   /** Scroll the validation summary to sit just below the sticky action bar (measured live). */
-  const scrollValidationSummaryIntoView = useCallback(() => {
+  const scrollValidationSummaryIntoView = React.useCallback(() => {
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         const alertEl = validationSummaryRef.current;
