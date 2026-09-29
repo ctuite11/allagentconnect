@@ -1,3 +1,4 @@
+import { buildDisplayAddress } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -226,7 +227,7 @@ const ConsumerDashboard = () => {
                       <CardTitle className="text-xl">{formatCurrency(fav.listing.price)}</CardTitle>
                       <CardDescription className="flex items-start gap-1">
                         <MapPin className="w-4 h-4 shrink-0 mt-0.5" />
-                        <span>{fav.listing.address}, {fav.listing.city}, {fav.listing.state}</span>
+                        <span>{buildDisplayAddress(fav.listing)}</span>
                       </CardDescription>
                     </CardHeader>
                     <CardContent>

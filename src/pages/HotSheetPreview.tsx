@@ -1,3 +1,4 @@
+import { buildDisplayAddress } from "@/lib/utils";
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
@@ -222,7 +223,7 @@ export default function HotSheetPreview() {
                     </div>
                     <p className="text-sm text-muted-foreground flex items-center gap-1">
                       <MapPin className="h-3.5 w-3.5 shrink-0" />
-                      {listing.address}, {listing.city}, {listing.state}
+                      {buildDisplayAddress(listing)}
                     </p>
                     <div className="flex items-center gap-4 text-xs text-muted-foreground">
                       {listing.bedrooms != null && (

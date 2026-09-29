@@ -1,3 +1,4 @@
+import { buildDisplayAddress } from "@/lib/utils";
 import { useState } from "react";
 import { Users, CheckCircle2, Lock, ArrowRight, Sparkles, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -74,7 +75,7 @@ const AgentMatchResultsPanel = ({
         {/* Property Summary */}
         <div className="p-4 bg-zinc-50 rounded-xl">
           <p className="text-sm font-medium text-zinc-900">
-            {propertyData.address}, {propertyData.city}, {propertyData.state}
+            {buildDisplayAddress(propertyData)}
           </p>
           <p className="text-sm text-zinc-600 mt-1">
             {formatPrice(propertyData.asking_price)} • {propertyData.buyer_agent_commission} buyer agent commission
@@ -149,7 +150,7 @@ const AgentMatchResultsPanel = ({
       {/* Property Summary */}
       <div className="p-4 bg-zinc-50 rounded-xl">
         <p className="text-sm font-medium text-zinc-900">
-          {propertyData.address}, {propertyData.city}, {propertyData.state}
+          {buildDisplayAddress(propertyData)}
         </p>
         <p className="text-sm text-zinc-600 mt-1">
           {formatPrice(propertyData.asking_price)} • {propertyData.buyer_agent_commission} buyer agent commission
