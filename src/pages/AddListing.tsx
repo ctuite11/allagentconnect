@@ -5614,6 +5614,9 @@ const AddListing = () => {
                       <div className="space-y-2 md:col-span-7">
                         <Label htmlFor="commission_notes">Compensation Notes</Label>
                         <Input
+                          spellCheck
+                          autoCorrect="on"
+                          autoCapitalize="sentences"
                           id="commission_notes"
                           className="h-9"
                           placeholder="Additional compensation details"
@@ -5963,6 +5966,9 @@ const AddListing = () => {
                               Custom document name
                             </Label>
                             <Input
+                              spellCheck
+                              autoCorrect="on"
+                              autoCapitalize="sentences"
                               id="document-custom-label"
                               className={`bg-white ${addListingFormChrome}`}
                               placeholder="e.g. HOA addendum, easement agreement…"

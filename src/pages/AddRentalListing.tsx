@@ -1205,6 +1205,9 @@ const AddRentalListing = () => {
                     <div className="space-y-2">
                       <Label htmlFor="commission_notes">Commission Notes</Label>
                       <Input
+                        spellCheck
+                        autoCorrect="on"
+                        autoCapitalize="sentences"
                         id="commission_notes"
                         placeholder="Additional commission details"
                         value={formData.commission_notes}
