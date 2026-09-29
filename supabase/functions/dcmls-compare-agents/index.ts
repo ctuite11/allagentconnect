@@ -7,7 +7,8 @@ import { DCMLS_SETTINGS_COLUMNS, eligibleForCompare, type DcmlsSettingsRow } fro
 
 const Body = z.object({
   type: z.enum(["buyer", "seller"]),
-  zip: z.string().regex(/^\d{5}$/),
+  zip: z.string().regex(/^\d{5}$/).optional().nullable(),
+  listing_id: z.string().uuid().optional().nullable(),
   exclude_agent_id: z.string().uuid().optional().nullable(),
 });
 
@@ -33,9 +34,18 @@ Deno.serve(async (req) => {
     return json({ error: "Invalid JSON" }, 400);
   }
   if (!parsed.success) return json({ error: "Please enter a 5-digit ZIP code." }, 400);
-  const { type, zip, exclude_agent_id } = parsed.data;
+  const { type, exclude_agent_id } = parsed.data;
+  let zip = parsed.data.zip ?? null;
 
   const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+  // A valid, non-draft source listing's ZIP always wins over a client-supplied ZIP.
+  if (parsed.data.listing_id) {
+    const { data: l } = await admin
+      .from("listings").select("zip_code, status").eq("id", parsed.data.listing_id).maybeSingle();
+    const z5 = String(l?.zip_code ?? "").slice(0, 5);
+    if (l && l.status !== "draft" && /^\d{5}$/.test(z5)) zip = z5;
+  }
+  if (!zip) return json({ error: "Please enter a 5-digit ZIP code.", agents: [] }, 400);
   const zipCol = type === "buyer" ? "dcmls_buyer_lead_zips" : "dcmls_seller_lead_zips";
   const { data, error } = await admin
     .from("agent_settings")
@@ -51,7 +61,7 @@ Deno.serve(async (req) => {
       .filter((s) => s.user_id !== exclude_agent_id && eligibleForCompare(s, type, zip))
       .map((s) => s.user_id),
   ).slice(0, 3);
-  if (!ids.length) return json({ agents: [] });
+  if (!ids.length) return json({ agents: [], zip });
 
   const { data: profiles } = await admin
     .from("agent_profiles")
@@ -69,5 +79,5 @@ Deno.serve(async (req) => {
       brokerage: p!.company || p!.office_name || null,
       service_area: [p!.office_city, p!.office_state].filter(Boolean).join(", ") || null,
     }));
-  return json({ agents });
+  return json({ agents, zip });
 });

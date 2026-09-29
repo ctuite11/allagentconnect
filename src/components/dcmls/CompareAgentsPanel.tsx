@@ -33,9 +33,32 @@ export function CompareAgentsPanel({ type, excludeAgentId, initialZip, listingId
   const [zipError, setZipError] = useState<string | null>(null);
   const [leadFor, setLeadFor] = useState<CompareAgent | null>(null);
   const label = type === "buyer" ? "Buyer" : "Seller";
+  const [listingResolved, setListingResolved] = useState(false);
+
+  // With listing context, the server derives the ZIP from the listing.
+  useEffect(() => {
+    if (!listingId) return;
+    let cancelled = false;
+    setLoading(true);
+    supabase.functions
+      .invoke("dcmls-compare-agents", { body: { type, listing_id: listingId, exclude_agent_id: excludeAgentId } })
+      .then(({ data }) => {
+        if (cancelled) return;
+        const d = data as { agents?: CompareAgent[]; zip?: string } | null;
+        setLoading(false);
+        if (d?.zip) {
+          setListingResolved(true);
+          setZip(d.zip);
+          setAgents((d.agents ?? []).slice(0, 3));
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [listingId, type, excludeAgentId]);
 
   useEffect(() => {
-    if (!activeZip) return;
+    if (!activeZip || listingResolved) return;
     let cancelled = false;
     setLoading(true);
     supabase.functions
@@ -65,7 +88,7 @@ export function CompareAgentsPanel({ type, excludeAgentId, initialZip, listingId
     <div className="mt-4 rounded-lg border border-border bg-card p-4">
       <p className="text-sm font-medium text-foreground">Compare with other agents serving this area</p>
 
-      {!activeZip || !initialZip ? (
+      {listingResolved ? null : !activeZip || !initialZip ? (
         <form onSubmit={submitZip} className="mt-3 flex flex-wrap items-end gap-2">
           <div className="space-y-1">
             <Label htmlFor={`compare-zip-${type}`} className="text-xs">Your ZIP code</Label>
