@@ -19,6 +19,58 @@ function toTitleCase(str: string): string {
     .join(" ");
 }
 
+const DISPLAY_STREET_SUFFIX_ABBREV: Readonly<Record<string, string>> = {
+  street: "St",
+  st: "St",
+  avenue: "Ave",
+  ave: "Ave",
+  road: "Rd",
+  rd: "Rd",
+  drive: "Dr",
+  dr: "Dr",
+  lane: "Ln",
+  ln: "Ln",
+  boulevard: "Blvd",
+  blvd: "Blvd",
+  court: "Ct",
+  ct: "Ct",
+  place: "Pl",
+  pl: "Pl",
+  terrace: "Ter",
+  ter: "Ter",
+  parkway: "Pkwy",
+  pkwy: "Pkwy",
+};
+
+function abbreviateTerminalStreetSuffixOnSegment(segment: string): string {
+  const trimmed = segment.trim();
+  if (!trimmed) return segment;
+
+  const unitSuffixMatch = trimmed.match(/(\s+#\S[\s\S]*)$/);
+  const unitSuffix = unitSuffixMatch?.[1] ?? "";
+  const streetCore = unitSuffix ? trimmed.slice(0, -unitSuffix.length).trimEnd() : trimmed;
+  const tokens = streetCore.split(/\s+/);
+  const lastIdx = tokens.length - 1;
+  const lastToken = tokens[lastIdx];
+  if (!lastToken) return segment;
+
+  const canonical = DISPLAY_STREET_SUFFIX_ABBREV[lastToken.replace(/\./g, "").toLowerCase()];
+  if (!canonical) return segment;
+  tokens[lastIdx] = canonical;
+  return tokens.join(" ") + unitSuffix;
+}
+
+function applyDisplayStreetSuffixAbbreviation(addressLine: string, city: string): string {
+  const cityTrim = city.trim();
+  if (!cityTrim) return abbreviateTerminalStreetSuffixOnSegment(addressLine);
+
+  const marker = `, ${cityTrim}`;
+  const idx = addressLine.toLowerCase().indexOf(marker.toLowerCase());
+  if (idx === -1) return abbreviateTerminalStreetSuffixOnSegment(addressLine);
+
+  return abbreviateTerminalStreetSuffixOnSegment(addressLine.slice(0, idx)) + addressLine.slice(idx);
+}
+
 /**
  * Title casing lowercases two-letter state codes ("MA" -> "Ma").
  * Restore uppercase for the state token that sits between the city comma and
@@ -98,7 +150,10 @@ function buildDisplayAddress(listing: ListingEmailAddressSource): string {
   const hasZip = zip && base.includes(zip);
 
   if (hasCity && hasState && hasZip) {
-    return upperCaseStateToken(toTitleCase(base), state);
+    return upperCaseStateToken(
+      applyDisplayStreetSuffixAbbreviation(toTitleCase(base), city),
+      state,
+    );
   }
 
   if (hasCity) {
@@ -111,7 +166,10 @@ function buildDisplayAddress(listing: ListingEmailAddressSource): string {
     base = `${base}, ${tail}`;
   }
 
-  return upperCaseStateToken(toTitleCase(base), state);
+  return upperCaseStateToken(
+    applyDisplayStreetSuffixAbbreviation(toTitleCase(base), city),
+    state,
+  );
 }
 
 /** Full formatted address (street + unit + city/state/zip) for compact listing cards. */

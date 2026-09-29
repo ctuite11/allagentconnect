@@ -124,4 +124,8 @@
 - [x] Step 1: social-draft inventory report (report only)
 - [x] Step 2: first-publish review + social (owner-only), defaults function, edit prompt, Settings card
 - [x] Live test Draft→Publish→Go Back
-- [ ] Real "Yes, Publish Listing" test on 999 Test Publish Lane (blocked: awaiting user OK; Hot Sheet emails possible)
+- [x] Test Draft deleted without publishing; no Hot Sheet, social, DCMLS, or status-history side effects
+
+## Address grammar + spell-check completion (2026-09-29)
+- [x] Match email street-suffix abbreviations to the website and enforce parity with shared fixtures
+- [x] Enable spell-check for Compensation Notes, Custom document name, and Rental Commission Notes
