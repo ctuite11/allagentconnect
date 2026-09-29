@@ -146,4 +146,4 @@
 - [x] Public profile shows only "incentives available" + gated Name/Email request form
 - [x] Compare Agents: up to 3 unranked eligible agents by ZIP (buyer/seller ZIP rules)
 - [x] Lead saved with incentive snapshot; in-app notification (metadata.lead_id) opens owner-only lead page
-- [ ] Guest listing-agent profile exception (SharedListingGate)
+- [x] Guest listing-agent profile exception (SharedListingGate)
