@@ -33,6 +33,7 @@ export function DcmlsProfileSettingsCard() {
   const [savingParticipation, setSavingParticipation] = useState(false);
   const [saving, setSaving] = useState(false);
   const [zipText, setZipText] = useState("");
+  const [sellerZipText, setSellerZipText] = useState("");
   const [sellerLeads, setSellerLeads] = useState<boolean | null>(null);
   const [buyerInc, setBuyerInc] = useState<string[]>([]);
   const [sellerInc, setSellerInc] = useState<string[]>([]);
@@ -49,6 +50,7 @@ export function DcmlsProfileSettingsCard() {
     if (!settings || hydrated.current) return;
     hydrated.current = true;
     setZipText((settings.dcmls_buyer_lead_zips ?? []).join(", "));
+    setSellerZipText((settings.dcmls_seller_lead_zips ?? []).join(", "));
     setSellerLeads(settings.dcmls_receive_seller_leads ?? null);
     setBuyerInc(settings.dcmls_buyer_incentives ?? []);
     setSellerInc(settings.dcmls_seller_incentives ?? []);
@@ -76,7 +78,8 @@ export function DcmlsProfileSettingsCard() {
 
   const save = async () => {
     const zips = parseZips(zipText);
-    const bad = zips.find((z) => !/^\d{5}$/.test(z));
+    const sellerZips = sellerLeads === true ? parseZips(sellerZipText) : [];
+    const bad = [...zips, ...sellerZips].find((z) => !/^\d{5}$/.test(z));
     if (bad) {
       toast.error(`"${bad}" is not a 5-digit ZIP code`);
       return;
@@ -92,6 +95,7 @@ export function DcmlsProfileSettingsCard() {
     setSaving(true);
     const ok = await updateSettings({
       dcmls_buyer_lead_zips: zips.length ? zips : null,
+      dcmls_seller_lead_zips: sellerZips.length ? sellerZips : null,
       dcmls_receive_seller_leads: sellerLeads,
       dcmls_buyer_incentives: buyerInc.length ? buyerInc : null,
       dcmls_seller_incentives: sellerInc.length ? sellerInc : null,
@@ -103,6 +107,7 @@ export function DcmlsProfileSettingsCard() {
     setSaving(false);
     if (ok) {
       setZipText(zips.join(", "));
+      setSellerZipText(sellerZips.join(", "));
       toast.success("DCMLS settings saved");
     } else toast.error("Could not save DCMLS settings");
   };
@@ -168,6 +173,23 @@ export function DcmlsProfileSettingsCard() {
                 <label className="flex items-center gap-2 text-sm"><RadioGroupItem value="no" /> No</label>
               </RadioGroup>
             </div>
+
+            {sellerLeads === true && (
+              <div className="space-y-2">
+                <Label htmlFor="dcmls-seller-zips">Seller-lead ZIP coverage</Label>
+                <Input
+                  id="dcmls-seller-zips"
+                  inputMode="numeric"
+                  spellCheck={false}
+                  autoComplete="off"
+                  placeholder="02114, 02116"
+                  value={sellerZipText}
+                  maxLength={2000}
+                  onChange={(e) => setSellerZipText(e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">Separate ZIP codes with commas.</p>
+              </div>
+            )}
 
             {[
               { id: "buyer", label: "Buyer incentives offered", opts: DCMLS_BUYER_INCENTIVES, val: buyerInc, set: setBuyerInc, more: buyerMore, setMore: setBuyerMore, moreLabel: "Tell buyers more about your incentives" },

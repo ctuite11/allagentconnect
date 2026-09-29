@@ -59,6 +59,10 @@ const AgentDetailRedirect = React.lazy(() => import("./pages/AgentDetailRedirect
 const ListingReview = React.lazy(() => import("./pages/ListingReview"));
 const ConsumerPropertyDetail = React.lazy(() => import("./pages/ConsumerPropertyDetail"));
 const AgentProfileEditor = React.lazy(() => import("./pages/AgentProfileEditor"));
+const DcmlsIncentiveLeadDetail = React.lazy(() => import("./pages/DcmlsIncentiveLeads"));
+const DcmlsIncentiveLeadsList = React.lazy(() =>
+  import("./pages/DcmlsIncentiveLeads").then((m) => ({ default: m.DcmlsIncentiveLeadsList })),
+);
 const ManageTeam = React.lazy(() => import("./pages/ManageTeam"));
 const TeamProfile = React.lazy(() => import("./pages/TeamProfile"));
 const TeamRequest = React.lazy(() => import("./pages/TeamRequest"));
@@ -580,6 +584,8 @@ const App = () => (
                   <Route path="/agent/diagnostics" element={<RouteGuard requireRole="agent"><AgentDiagnostics /></RouteGuard>} />
                   <Route path="/add-rental-listing" element={<RouteGuard requireRole="agent"><AddRentalListing /></RouteGuard>} />
                   <Route path="/agent/profile" element={<RouteGuard requireRole="agent"><AgentProfileEditor /></RouteGuard>} />
+                  <Route path="/agent/dcmls/leads" element={<RouteGuard requireRole="agent"><DcmlsIncentiveLeadsList /></RouteGuard>} />
+                  <Route path="/agent/dcmls/leads/:leadId" element={<RouteGuard requireRole="agent"><DcmlsIncentiveLeadDetail /></RouteGuard>} />
                   <Route path="/agent-profile-editor" element={<RouteGuard requireRole="agent"><AgentProfileEditor /></RouteGuard>} />
                   <Route path="/manage-team" element={<RouteGuard requireRole="agent"><ManageTeam /></RouteGuard>} />
                   <Route path="/team/:id/manage" element={<RouteGuard requireRole="agent"><ManageTeam /></RouteGuard>} />
