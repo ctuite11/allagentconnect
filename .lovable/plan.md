@@ -1,55 +1,55 @@
-# DCMLS wording + opt-in handoff + Buyer Agent Compensation Yes/No
+# DCMLS participation locations + listing control + Buyer Agent Compensation Yes/No
 
-Four separate fixes, shipped separately. No changes to DCMLS backend eligibility, Hot Sheets, social publishing, or Rental listings.
+No changes to Hot Sheets, social publishing, Rental listings, or DCMLS backend eligibility.
 
-## 1. Draft DCMLS badge says "Confirmed", not "Published"
-- Add/Edit Listing DCMLS control currently shows "Published" whenever `dcmls_status === "published"`, regardless of listing lifecycle.
-- New display rule (UI only):
-  - real listing status is Draft (or never saved) + DCMLS selected -> **Confirmed**
-  - live listing + `dcmls_status = published` -> **Published**
-  - Hidden / Error unchanged
-- `dcmls_status` values and gating rules unchanged. Agent-level wording stays Participating / Not Participating.
+## Already done (before this correction)
+- Added nullable columns: `listings.buyer_agent_compensation_offered`; on private `agent_settings`: `dcmls_buyer_lead_zips`, `dcmls_receive_seller_leads`, `dcmls_buyer_incentives`, `dcmls_seller_incentives`. Public `agent_profiles` untouched.
+- Add Listing: compensation Yes/No form state, hydration (real amount -> Yes, otherwise unanswered), first-publish validation, and "No" clears the saved amount. The on-screen Yes/No choice is not built yet.
 
-## 2. Opt-in -> Profile handoff popup
-- After a successful participation opt-in from Add/Edit Listing or Settings, show:
-  - Title: "You're opted in to Direct Connect MLS"
-  - Body: "Complete your DCMLS profile settings to choose your buyer-lead coverage, seller-lead preferences and incentives."
-  - Buttons: "Go to Profile" / "Not Now"
-- "Go to Profile" opens the Profile editor with an anchor that scrolls to the DCMLS settings section.
-- Shown only after a confirmed opt-in; never checks or publishes the current listing. On Add Listing, unsaved form work is not lost (Not Now keeps the agent on the form; Go to Profile warns/saves as current navigation does).
+## 1. Participation opt-in only in Settings and Profile
+**Settings**
+- Keep the Opt In / Opt Out switch.
+- After a successful Opt In, show a popup: "You're opted in to Direct Connect MLS" / "Complete your DCMLS profile settings to choose your buyer-lead coverage, seller-lead preferences and incentives." with buttons **Go to Profile** and **Not Now**.
+- Go to Profile opens the Profile editor scrolled to the DCMLS settings section.
 
-## 3. DCMLS Profile settings — current state and gap
-Found today:
-- Buyer incentives and seller incentives exist on the agent profile as free-text fields (already editable in the Profile editor).
-- No field exists for buyer-lead ZIP coverage or "Receive seller leads: Yes/No".
+**Profile — new "DCMLS settings" section**
+- DCMLS Participation: Opt In / Opt Out (same saved setting as Settings). No popup here; opting in just shows the fields below.
+- Buyer-lead ZIP coverage (ZIP list)
+- Receive seller leads: Yes / No
+- Buyer incentives (multi-select)
+- Seller incentives (multi-select)
+- Saved to private agent settings only. Kept separate from Communications / Hot Sheet preferences. Existing free-text profile incentive fields are left as they are.
 
-Plan:
-- Add a clearly labeled **DCMLS settings** section to the Profile editor (anchor target for #2), containing:
-  - Buyer-lead ZIP coverage (ZIP list input)
-  - Receive seller leads: Yes / No
-  - Buyer incentives and Seller incentives (reusing the existing profile fields — moved into this section, not duplicated)
-- New columns via migration on the agent profile: `dcmls_buyer_lead_zips text[]` (nullable), `dcmls_receive_seller_leads boolean` (nullable). Owner-only write, existing profile RLS applies.
-- These values are stored only; nothing consumes them for lead routing yet. Not tied to Communications/Hot Sheet preferences.
+## 2. Add/Edit Listing — listing-level decision only
+- Remove the "Opt in to DCMLS" button.
+- Participating: "Show this listing on DCMLS: Yes / No".
+- Not participating: choice disabled, with the message "You're not participating in Direct Connect MLS. Manage DCMLS in Profile or Settings." and links to both. The listing form never changes participation.
 
-## 4. Buyer Agent Compensation — required Yes/No (For Sale only)
-- Section renamed "Buyer Agent Compensation" with required radio: "Is buyer-agent compensation offered? *" Yes / No.
-- Yes: Percentage / Flat Amount, Rate or Amount, Compensation Notes stay active; amount required to publish.
-- No: type and amount controls disabled/hidden; saves as explicitly not offered; amount cleared on save so no stale value remains.
-- Required only when going live (first-publish review and live edits); Save Draft / autosave may leave it unanswered.
-- Listing detail page: shows compensation only when offered = true and an amount exists; when false shows nothing (or "Not offered" — see question below).
+## 3. Draft wording
+- Draft / never published + DCMLS selected -> **Confirmed**
+- Live listing + DCMLS published -> **Published**
+- Hidden / Error unchanged. Wording only; saved DCMLS status values unchanged.
 
-Data:
-- New column `listings.buyer_agent_compensation_offered boolean` nullable (null = unanswered).
-- Form hydration: existing listings with a real `commission_rate` display as Yes; others stay unanswered. No blanket backfill.
+## 4. Buyer Agent Compensation (For Sale) — finish the screen
+- Required choice: "Is buyer-agent compensation offered? *" Yes / No.
+- Yes: Percentage / Flat Amount, amount (required to publish), notes.
+- No: type and amount hidden; saves as not offered.
+- Save Draft / autosave may leave it unanswered; required only at first publish.
+- Listing page: Yes + amount -> show it; No -> "Buyer Agent Compensation: Not offered"; unanswered -> nothing.
 
 ## QA (no real publish)
-1. Draft + DCMLS checked -> "Confirmed".
-2. Opt-in from Add Listing -> popup -> Go to Profile lands on DCMLS settings (test on a non-participating test account, or verify with a reversible toggle only if authorized).
-3. Opt-in does not check or publish the listing.
-4. Publish blocked until Yes/No answered (validation summary, stops before "Yes, Publish Listing").
-5. Yes -> amount required. 6. No -> fields inactive, nothing shown on the detail page.
-7. Save Draft works unanswered.
+1. Change participation from Settings -> popup -> Go to Profile lands on DCMLS settings.
+2. Change participation from Profile (no popup); fields appear.
+3. No Opt In button on Add/Edit Listing; non-participant sees Profile/Settings guidance.
+4. Participant can choose Yes/No for the listing.
+5. Selected Draft shows Confirmed.
+6. Publish blocked until compensation Yes/No answered (stop at validation); Save Draft works unanswered.
+Any participation toggling on a real account is reversed to its starting value afterward.
 
 ## Technical details
-- Files: `src/components/listing/DcmlsPublishControl.tsx` (badge + popup trigger; needs listing lifecycle prop), `src/pages/AgentSettings.tsx` (popup after opt-in), new small `DcmlsOptInHandoffDialog`, `src/pages/AgentProfileEditor.tsx` (DCMLS section + anchor), `src/pages/AddListing.tsx` (radio, validation, payload, hydration), `src/components/PropertyDetailRightColumn.tsx` (display guard).
-- Two migrations (profile DCMLS columns; listings compensation boolean), each additive and nullable. Requires your go-ahead as production schema changes.
+- `DcmlsPublishControl.tsx`: drop opt-in button/handler and `onOptedIn`; add `listingIsDraft` prop for Confirmed badge; guidance text with links to `/agent/profile#dcmls-settings` and `/settings`. Update AddListing and EditListing callers (EditListing passes `originalStatus === "draft"`).
+- New `DcmlsOptInHandoffDialog.tsx`, used only by `AgentSettings.tsx` after a successful opt-in.
+- `AgentProfileEditor.tsx`: `id="dcmls-settings"` section reading/writing via `useAgentSettings` (add the four new fields to its type/defaults); scroll to hash on load.
+- `AddListing.tsx`: Yes/No radio UI and field error highlighting.
+- `PropertyDetailRightColumn.tsx`: compensation display rule above.
+- Incentive option lists defined in one constants file.
