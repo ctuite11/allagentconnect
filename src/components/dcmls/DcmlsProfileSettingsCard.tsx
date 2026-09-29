@@ -11,7 +11,14 @@ import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Globe } from "lucide-react";
 import { toast } from "sonner";
-import { DCMLS_BUYER_INCENTIVES, DCMLS_SELLER_INCENTIVES } from "@/constants/dcmlsIncentives";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  DCMLS_BUYER_INCENTIVES,
+  DCMLS_SELLER_INCENTIVES,
+  DCMLS_INCENTIVE_MORE,
+  DCMLS_INCENTIVE_MORE_MAX,
+  toggleDcmlsIncentive,
+} from "@/constants/dcmlsIncentives";
 
 const parseZips = (raw: string) =>
   Array.from(new Set(raw.split(/[\s,]+/).map((z) => z.trim()).filter(Boolean)));
@@ -29,6 +36,8 @@ export function DcmlsProfileSettingsCard() {
   const [sellerLeads, setSellerLeads] = useState<boolean | null>(null);
   const [buyerInc, setBuyerInc] = useState<string[]>([]);
   const [sellerInc, setSellerInc] = useState<string[]>([]);
+  const [buyerMore, setBuyerMore] = useState("");
+  const [sellerMore, setSellerMore] = useState("");
   const cardRef = useRef<HTMLDivElement>(null);
   const hydrated = useRef(false);
 
@@ -43,6 +52,8 @@ export function DcmlsProfileSettingsCard() {
     setSellerLeads(settings.dcmls_receive_seller_leads ?? null);
     setBuyerInc(settings.dcmls_buyer_incentives ?? []);
     setSellerInc(settings.dcmls_seller_incentives ?? []);
+    setBuyerMore(settings.dcmls_buyer_incentives_more ?? "");
+    setSellerMore(settings.dcmls_seller_incentives_more ?? "");
     if (window.location.hash === "#dcmls-settings") {
       requestAnimationFrame(() => cardRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
     }
@@ -61,7 +72,7 @@ export function DcmlsProfileSettingsCard() {
   };
 
   const toggle = (list: string[], set: (v: string[]) => void, item: string) =>
-    set(list.includes(item) ? list.filter((i) => i !== item) : [...list, item]);
+    set(toggleDcmlsIncentive(list, item));
 
   const save = async () => {
     const zips = parseZips(zipText);
@@ -76,6 +87,10 @@ export function DcmlsProfileSettingsCard() {
       dcmls_receive_seller_leads: sellerLeads,
       dcmls_buyer_incentives: buyerInc.length ? buyerInc : null,
       dcmls_seller_incentives: sellerInc.length ? sellerInc : null,
+      dcmls_buyer_incentives_more:
+        buyerInc.includes(DCMLS_INCENTIVE_MORE) && buyerMore.trim() ? buyerMore.trim().slice(0, DCMLS_INCENTIVE_MORE_MAX) : null,
+      dcmls_seller_incentives_more:
+        sellerInc.includes(DCMLS_INCENTIVE_MORE) && sellerMore.trim() ? sellerMore.trim().slice(0, DCMLS_INCENTIVE_MORE_MAX) : null,
     });
     setSaving(false);
     if (ok) {
@@ -147,8 +162,8 @@ export function DcmlsProfileSettingsCard() {
             </div>
 
             {[
-              { label: "Buyer incentives", opts: DCMLS_BUYER_INCENTIVES, val: buyerInc, set: setBuyerInc },
-              { label: "Seller incentives", opts: DCMLS_SELLER_INCENTIVES, val: sellerInc, set: setSellerInc },
+              { id: "buyer", label: "Buyer incentives offered", opts: DCMLS_BUYER_INCENTIVES, val: buyerInc, set: setBuyerInc, more: buyerMore, setMore: setBuyerMore, moreLabel: "Tell buyers more about your incentives" },
+              { id: "seller", label: "Seller incentives offered", opts: DCMLS_SELLER_INCENTIVES, val: sellerInc, set: setSellerInc, more: sellerMore, setMore: setSellerMore, moreLabel: "Tell sellers more about your incentives" },
             ].map((g) => (
               <div key={g.label} className="space-y-2">
                 <Label>{g.label}</Label>
@@ -160,6 +175,24 @@ export function DcmlsProfileSettingsCard() {
                     </label>
                   ))}
                 </div>
+                {g.val.includes(DCMLS_INCENTIVE_MORE) && (
+                  <div className="space-y-1.5 pt-1">
+                    <Label htmlFor={`dcmls-${g.id}-more`}>{g.moreLabel}</Label>
+                    <Textarea
+                      id={`dcmls-${g.id}-more`}
+                      spellCheck
+                      autoCorrect="on"
+                      autoCapitalize="sentences"
+                      rows={3}
+                      maxLength={DCMLS_INCENTIVE_MORE_MAX}
+                      value={g.more}
+                      onChange={(e) => g.setMore(e.target.value)}
+                    />
+                    <p className="text-right text-xs text-muted-foreground">
+                      {g.more.length}/{DCMLS_INCENTIVE_MORE_MAX}
+                    </p>
+                  </div>
+                )}
               </div>
             ))}
 
