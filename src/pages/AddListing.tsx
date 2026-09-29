@@ -3059,7 +3059,7 @@ const AddListing = () => {
       const errors = getValidationErrors({
         requirePhotos: isLiveStatus(formData.status),
         requirePricing: !targetIsDraft,
-        requireCompensation: !targetIsDraft && isNeverPublished(),
+        requireCompensation: !targetIsDraft && isLiveStatus(formData.status),
       });
       if (errors.length > 0) {
         setValidationErrors(errors);
