@@ -13,11 +13,18 @@ type ListingCommissionFields = {
   commission_rate?: number | null;
   commission_type?: string | null;
   commission_notes?: string | null;
+  buyer_agent_compensation_offered?: boolean | null;
 };
 
+export const BUYER_AGENT_COMP_NOT_OFFERED = "Not offered";
+
+/**
+ * explicit false -> "Not offered"; true/legacy null -> amount if present, else nothing.
+ */
 export function formatBuyerAgentFeeDisplay(
   listing: ListingCommissionFields,
 ): string | null {
+  if (listing?.buyer_agent_compensation_offered === false) return BUYER_AGENT_COMP_NOT_OFFERED;
   if (!listing?.commission_rate) return null;
   if (listing.commission_type === "percentage") {
     return `${listing.commission_rate}%`;
@@ -39,6 +46,18 @@ export function BuyerAgentFeeDetail({
   commissionNotes,
   className,
 }: BuyerAgentFeeDetailProps) {
+  if (feeDisplay === BUYER_AGENT_COMP_NOT_OFFERED) {
+    return (
+      <Card className={cn("rounded-2xl border border-neutral-200 bg-white shadow-sm", className)}>
+        <CardContent className="px-3.5 py-3">
+          <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+            <p className="text-xs font-medium tracking-wide text-neutral-500">Buyer Agent Compensation</p>
+            <p className="text-sm font-semibold leading-none text-neutral-900">Not offered</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
   return (
     <Card className={cn("rounded-2xl border border-neutral-200 bg-white shadow-sm", className)}>
       <CardContent className="px-3.5 py-3">
