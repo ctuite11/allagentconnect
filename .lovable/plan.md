@@ -1,33 +1,36 @@
-# Let signed-out listing visitors open that listing's agent profile
+# Automated tests for SharedListingGate guest exception
 
-## What changes
-A signed-out visitor who is viewing a public listing can click **View agent profile** and open **that listing agent's** profile without signing up. Everything else in the existing shared-listing guest flow stays behind the sign-up wall.
+Add focused unit tests for `src/components/SharedListingGate.tsx`, covering the signed-out guest exception that lets a shared-listing visitor open only that listing's agent profile. No production data changes, no live test requests, no app behavior changes.
 
-| Situation (signed out, arrived via a listing) | Result |
-|---|---|
-| Profile of the listing's own agent, from that listing | Opens |
-| Incentive buttons + Compare Agents on that profile | Work |
-| "View Profile" on a compared agent | Sign-up wall (unchanged) |
-| Any other agent profile, search, directory, etc. | Sign-up wall (unchanged) |
+## Test setup (one-time)
 
-## How the exception is decided
-- The listing used is the one already recorded for the visitor's guest visit (the listing they first opened), **not** a listing ID taken from the web address. A visitor can't unlock a profile by editing the web address.
-- Before letting the profile through, the app looks up that listing in the public listing records and checks that its agent matches the profile being opened (by ID or AAC code). The listing must be publicly visible (never a Draft).
-- While that check runs, the wall stays up (no flash of the profile). If the check fails or errors, the wall stays.
-- The source listing continues to be passed to the profile, so incentive requests record it and the server derives the ZIP from it (already built).
+The project has Vitest but no DOM environment, so component tests need:
 
-## QA (signed out, no data left behind)
-1. Open a public listing, click **View agent profile**: the listing agent's profile opens with no wall.
-2. Listing context is preserved (listing attached; Compare uses the listing's ZIP).
-3. Incentive buttons open the request form (only submit if approved again; any test request deleted).
-4. Compare Agents loads.
-5. "View Profile" on a compared agent shows the wall (if a compared agent exists; otherwise checked by opening another agent's profile directly).
-6. Editing the web address to another agent's profile, or to the same agent with a different listing attached, still shows the wall.
+1. Add dev dependencies: `jsdom`, `@testing-library/react`, `@testing-library/jest-dom`.
+2. Add `src/test/setup.ts` (jest-dom matchers + `matchMedia` stub) and point `vitest.config.ts` at it with `environment: "jsdom"`. Keep the existing include/exclude scoping unchanged.
 
-## Not changing
-Listing publishing, DCMLS eligibility, Hot Sheets, social, email, private settings, and the rest of the sign-up wall.
+## Test file: `src/components/SharedListingGate.test.tsx`
 
-## Technical details
-- `src/components/SharedListingGate.tsx`: for `/agent/:idOrCode` when in guest mode, resolve `allowedListingId` via `listings_public` (`agent_id`, status not draft) and compare with the route param (UUID or `aac_id` via `get_public_agent_profile`). Keep `blocked=true` while pending; cache the result per listing/profile pair.
-- No database or server changes needed; `listings_public` is already readable signed out.
-- Note: the wall is a browsing gate in the app. Visitors who didn't come from a listing can already open profiles directly, as before; this plan doesn't change that.
+Render `SharedListingGate` with mocked `useAuthRole` (signed out, not loading), mocked `useSharedListingGuest` (`isGuest: true`, fixed `allowedListingId`), a `MemoryRouter` at the route under test, and a mocked `@/integrations/supabase/client` so `from("listings_public")` and `rpc("get_public_agent_profile")` return scripted results. Assert whether the wall ("Create a free account to keep exploring") renders or children pass through.
+
+Cases:
+
+1. **Valid guest listing + its agent → allowed.** Route `/agent/<agent-uuid>`; `listings_public` returns that `agent_id` with a public status; children render, no wall.
+2. **Valid guest listing + different agent → blocked.** `listings_public` returns a different `agent_id`; wall renders.
+3. **Query-string / listing manipulation → blocked.** Route carries `?listing=<other-id>` (or similar); gate still uses only the stored `allowedListingId`, so a mismatched agent stays walled.
+4. **Public-listing lookup error → blocked.** `listings_public` query returns an error; wall renders (fail closed).
+5. **Lookup pending → profile not exposed.** `listings_public` promise never resolves during the assertion window; wall renders and children do not.
+6. **UUID and AAC-code agent routes both resolve.** (a) `/agent/<uuid>` matches directly on `agent_id`; (b) `/agent/AAC-0639` does not match `agent_id`, falls through to `get_public_agent_profile`, and is allowed when the RPC returns the listing's `agent_id` — and blocked when it returns a different id.
+
+Also assert the draft guard implicitly: a `listings_public` row with `status: "draft"` stays blocked (covered as part of case 2/4 family if convenient, not required).
+
+## Verification
+
+- Run the Vitest suite; all new tests pass and existing suites are unaffected.
+- `bunx tsgo --noEmit` passes.
+- No changes to `SharedListingGate.tsx` itself unless a test exposes a real bug — if one does, stop and report before changing behavior.
+
+## Out of scope
+
+- No production data, no real network calls (Supabase client fully mocked), no live test requests.
+- No changes to guest-mode policy, routing, or any other component.
