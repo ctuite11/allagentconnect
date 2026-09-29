@@ -1,31 +1,21 @@
-# Global address formatting + spell-check
+# Listing results card address QA
 
-## 1. One address format everywhere
-- The shared address formatter (fixed earlier today to keep MA/NH/RI in capitals) becomes the only way listing addresses are shown on screen.
-- Audit and switch over the screens that still build the address by hand (street + city + state + ZIP). Candidates found so far:
-  - property detail and the consumer property detail
-  - My Listings, Agent Dashboard, Consumer Dashboard, Listing Analytics, DCMLS Saved
-  - Hot Sheet Review and Preview, Agent Match and its results panel
-  - Listing Card, Reverse Prospect dialog, New Conversation dialog, map pins
-- For each candidate, only the text shown on screen changes. Map search queries, links, form values and saved data are left as they are.
-- If a screen deliberately shows only the street or only the city, it uses the matching shared helper (street line, or conversation title) instead of the full address.
-- Emails: email templates are frozen, so the email formatter is not edited. Add a test that feeds the same addresses (MA, NH, RI, unit, "USA" suffix) through both the web and email formatters and flags any difference. If the test finds a difference, report it for your decision rather than changing the email.
-- No stored listing data is rewritten.
-
-## 2. Spell-check on Profile
-On the Profile editor, turn on the browser's spell-check for free-text fields: Title, Team Name, Brokerage/Company, Office Name, Bio, testimonial role and testimonial text.
-- Short names and titles: first letter of each word capitalized automatically.
-- Bio and testimonials: first letter of each sentence capitalized.
-- Spell-check stays off for email, phone, website/social links and license numbers.
-
-## 3. Spell-check on Add/Edit Listing
-Turn on spell-check, with sentence capitalization, for the listing's written-text fields: description, remarks, showing instructions, compensation notes, disclosure/custom text, custom document labels.
-- Spell-check stays off for the address autocomplete (no change there), city/state/ZIP, prices and numbers, MLS numbers, phone, email and links.
+## Verified current paths
+- The standard list-row results use `SearchListingCard`, and both its wide and compact layouts render addresses through `ListingCardAddressLine`.
+- `ListingCardAddressLine` formats its text with the shared `buildDisplayAddress()` helper.
+- The default map/results grid uses the shared compact `ListingCard`, whose address lines also use `ListingCardAddressLine`.
+- The current preview build is healthy.
 
 ## QA
-- 4 Derne St #1, Boston, MA 02114 appears exactly that way on the detail page and on a listing card.
-- Another MA listing and one NH/RI listing keep their state letters in capitals.
-- Typing "Real Estate Advisot" into Profile Title gets the browser's red underline. The same goes for a misspelling in Description and in Showing Instructions.
-- Address autocomplete still works and shows no spelling warnings.
+- Open an authenticated Listing Search results screen containing 4 Derne St #1.
+- Verify its visible card address is exactly `4 Derne St #1, Boston, MA 02114`.
+- Check both result modes:
+  - desktop list-row view
+  - compact/mobile card view
+- Confirm the displayed address retains uppercase `MA`, uses `St`, includes `#1`, and does not repeat city, state, or ZIP.
+- Spot-check another visible result for the same address grammar and confirm the layout remains intact.
 
-No redesign, no data changes.
+## Conditional fix only
+- If any results-card surface bypasses the shared path or displays different grammar, replace only that address output with the existing `ListingCardAddressLine` or shared listing-address helper.
+- Do not add another formatter, redesign cards, alter stored listing data, or change search behavior.
+- Recheck both layouts after any necessary correction and confirm the build remains healthy.
