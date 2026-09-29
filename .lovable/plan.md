@@ -1,5 +1,10 @@
 # Profile becomes the single place for social media
 
+Clarifications folded in:
+- When `fetchSocialConnected()` returns `null`, the request may have failed or the agent may not be allowed. Profile treats `null` only as "hide the publishing connection controls" (fail closed).
+- Threads is added to the `AgentProfile.tsx` social-links type, to `socialIconMap`, and to the icon renderer, so the public Threads icon appears. `social_links` stays as-is; no database change.
+- When a saved profile is loaded, any missing link keys default to `""`, including `threads`.
+
 ## What changes for the agent
 
 **Profile → Social Media** shows one block per platform: Facebook, Instagram, LinkedIn, Threads.
