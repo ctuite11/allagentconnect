@@ -144,6 +144,15 @@ const [headerBackgroundType, setHeaderBackgroundType] = useState("color");
     checkAuthAndLoadProfile();
   }, []);
 
+  // Open directly at Social Media (Settings pointer + social portal return).
+  useEffect(() => {
+    if (loading || window.location.hash !== "#social-media") return;
+    const t = window.setTimeout(() => {
+      document.getElementById("social-media")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 50);
+    return () => window.clearTimeout(t);
+  }, [loading]);
+
   const checkAuthAndLoadProfile = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     
