@@ -1,23 +1,32 @@
-# Preview opens in the same tab (Add/Edit Listing)
+# Preview only before first publish, in the same tab
 
-## What changes
-Clicking **Preview** in Add Listing or Edit Listing will save any unsaved changes as a Draft (same as today), then go to the listing page **in the same tab**. No new tab or window is ever opened. Back on the preview returns to the editor, and Back from the editor returns to where the agent came from (e.g. My Listings).
+## Rule
+Preview appears on Add/Edit Listing only for a listing that has **never been published** and is still a Draft. Once a listing has ever gone live, Preview is gone for good, even if it is later Pending, Sold, Cancelled, Temporarily Withdrawn, etc. The listing's own page is the agent's view of a published listing.
+
+## Never-published Draft (including brand-new)
+- Preview button shown.
+- Click: save unsaved changes with the existing Draft save (listing stays Draft), then open the listing page **in the same tab**. Never publishes.
+- If the save fails and there is no Draft yet, stay on the editor and show the existing error.
+- Back returns to the editor; Back again returns to where the agent came from (e.g. My Listings). One tab throughout.
+- A brand-new listing becomes a saved Draft on Preview (existing behavior), so Back lands in the same form showing everything entered.
+
+## Already-published listings
+Preview button hidden in every spot it appears (top bar and bottom actions). No save prompt, no Draft conversion, no separate preview mode.
 
 ## Unchanged
-Publish, Save Draft, validation, listing status logic, photo gate, and the listing page's existing Back handling. Preview never publishes. The Rental form's Preview (currently a "coming soon" message) is not touched.
+Publish, Save Draft, validation, status logic, photo gate, the listing page's Back handling, and Rental Preview.
 
-## Brand-new listing note
-A new listing must be saved as a Draft before it can be previewed (existing behavior). So after Preview → Back, the agent lands in the same editor showing that saved Draft, with everything they entered. The editor page address changes from "add" to "edit" behind the scenes; the screen is the same form.
-
-## QA (no publishing)
-Using one clearly fake test Draft, deleted afterward while still Draft:
-1. My Listings → Edit → Preview → Back → Edit → Back → My Listings, one tab.
-2. New listing → enter data → Preview → Back → entered data still there.
-3. Edit a field without saving → Preview → change was saved and listing is still Draft.
-4. Status stays Draft throughout; no status history, Hot Sheet, email, social, or DCMLS activity.
-5. Tab count stays at 1 on desktop and mobile sizes.
+## QA (no publishing, no real listing touched)
+1. Brand-new listing -> Preview available, opens in same tab, Back keeps data.
+2. Fake never-published test Draft -> Preview available; My Listings -> Edit -> Preview -> Back -> Back -> My Listings in one tab.
+3. Unsaved change -> Preview saves it, listing stays Draft.
+4. Open one of my own live listings and one previously published listing in a later status -> Preview button not shown (view only, nothing saved).
+5. No status history, Hot Sheet, email, social, or DCMLS activity from Preview; test Draft deleted afterward while still Draft.
+6. Tab count stays 1 on desktop and mobile sizes.
+Not tested: the moment a Draft is actually published (would require a real publish).
 
 ## Technical details
-- `src/pages/AddListing.tsx` `handlePreview`: remove `window.open("about:blank","_blank")`, `win.location.href`, `win.close()`, and the `window.open(previewUrl,"_blank")` fallback; end with `navigate(previewUrl)`. Keep the existing `returnTo` built from `/agent/listings/edit/:id?from=<safe from>`.
-- Navigation happens only after the awaited draft save, so the unsaved-changes guard is not triggered by pending edits (confirm during QA; if a leave-page prompt fires, clear the dirty flag only after a successful save).
-- `PropertyDetail.tsx` already honors a safe `returnTo`; no change.
+- Both `/agent/listings/new` and `/agent/listings/edit/:id` use `src/pages/AddListing.tsx`; only this file changes.
+- "Ever published": listings has no published-at column. Treat a listing as ever published if its backend status is not `draft`, or if `listing_status_history` has any row for it with `new_status <> 'draft'`. Load this once when an existing listing is opened; new listings count as never published. Hide Preview while this check is loading and if it errors (fail closed).
+- `handlePreview`: guard on the eligibility flag; remove `window.open("about:blank","_blank")`, `win.location.href`, `win.close()` and the `_blank` fallback; end with `navigate(previewUrl)`, keeping the existing `returnTo=/agent/listings/edit/:id?from=<safe from>`. Comment becomes "Save the draft, then open it on the listing page in the same tab."
+- Because Preview is never offered on published listings, the current Draft-save path can no longer demote a live listing through Preview.
