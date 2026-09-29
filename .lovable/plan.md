@@ -27,7 +27,7 @@ Desktop + mobile on the profile page: CTAs show/hide correctly per category, for
 
 ## Technical details
 - Migration: `agent_settings.dcmls_seller_lead_zips text[] NULL`; `dcmls_incentive_leads` table (id, agent_user_id, incentive_type 'buyer'|'seller', name, email, source_zip, source_listing_id, created_at) with GRANTs, RLS: agent reads own; no direct anon insert.
-- Notification: row in existing `agent_notifications` linking to the lead id.
+- Notification: lead saved first; then an `agent_notifications` row with type `dcmls_incentive_lead`, `metadata.lead_id` (optional `metadata.route`). No new notification column. The notification click handler reads the metadata and opens a lead details view (owner-only via RLS). No conversation thread.
 - Edge Functions (service role, never return private selections):
   - `dcmls-incentive-availability`: given agent id(s) returns only `{buyer: bool, seller: bool}`.
   - `dcmls-compare-agents`: given type + ZIP + exclude id returns up to 3 random eligible public profile cards.
