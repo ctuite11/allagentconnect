@@ -3770,6 +3770,7 @@ const AddListing = () => {
 
       // Listing write is final. Mark it published for this session, then run social.
       if (listingData.status !== LISTING_STATUS.DRAFT) {
+        setCanPreview(false);
         backendStatusRef.current = listingData.status;
         originalStatusRef.current = listingData.status;
       }
@@ -4006,10 +4007,12 @@ const AddListing = () => {
                       </>
                     )}
                   </Button>
+                  {canPreview && (
                   <Button variant="outline" size="sm" onClick={() => void handlePreview()} type="button" className="gap-1.5 border-zinc-200">
                     <Eye className="h-4 w-4 shrink-0" />
                     Preview
                   </Button>
+                  )}
                   <Button
                     variant="default"
                     size="sm"
@@ -4034,6 +4037,7 @@ const AddListing = () => {
               ) : listingId ? (
 
                 <>
+                  {canPreview && (
                   <Button
                     variant="outline"
                     size="sm"
@@ -4044,6 +4048,7 @@ const AddListing = () => {
                     <Eye className="h-4 w-4 shrink-0" />
                     Preview
                   </Button>
+                  )}
                   <Button
                     variant="default"
                     size="sm"
@@ -4093,10 +4098,12 @@ const AddListing = () => {
                       </>
                     )}
                   </Button>
+                  {canPreview && (
                   <Button variant="outline" size="sm" onClick={() => void handlePreview()} type="button" className="gap-1.5 border-zinc-200">
                     <Eye className="h-4 w-4 shrink-0" />
                     Preview
                   </Button>
+                  )}
                   <Button variant="default" size="sm" onClick={(e) => handleSubmit(e, true)} type="button" disabled={submitting || savingDraft} className="gap-1.5">
                     {submitting ? (
                       <>
