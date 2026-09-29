@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Menu, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import DcmlsBrandLogo from "@/components/dcmls/DcmlsBrandLogo";
 import { isDcmlsAuthAccessEnabled } from "@/lib/dcmlsAuthAccess";
 
 type SearchMode = "buy" | "rent";
@@ -93,12 +94,7 @@ const DcmlsHomeHero: React.FC = () => {
 
       <header className="relative z-20">
         <div className="mx-auto flex h-[4.25rem] max-w-[1200px] items-center justify-between px-5 sm:px-8 lg:px-10">
-          <Link
-            to="/"
-            className="font-['Manrope'] text-[15px] font-semibold tracking-[0.18em] text-white sm:text-base"
-          >
-            DIRECT CONNECT MLS
-          </Link>
+          <DcmlsBrandLogo variant="onDark" monogramClassName="h-7 w-7 sm:h-8 sm:w-8" />
 
           <nav className="hidden items-center gap-7 md:flex" aria-label="Primary">
             {NAV_LINKS.map((item) => (
@@ -154,11 +150,17 @@ const DcmlsHomeHero: React.FC = () => {
       </header>
 
       <div className="relative z-10 mx-auto flex min-h-[calc(100svh-4.25rem)] max-w-[760px] flex-col items-center justify-center px-5 pb-24 pt-10 text-center sm:px-8">
-        <h1 className="animate-[dcmls-fade-up_0.9s_ease-out_both] font-['Instrument_Serif'] text-[clamp(2.5rem,7vw,4.75rem)] font-normal leading-[1.05] tracking-[-0.02em] text-white">
-          Search on Direct Connect
+        <h1
+          className="animate-[dcmls-fade-up_0.9s_ease-out_both] font-['Manrope'] text-[clamp(2.5rem,7vw,4.75rem)] font-semibold leading-[1.05] tracking-tight text-white"
+          style={{ textShadow: "0 2px 12px rgba(0,0,0,0.35)" }}
+        >
+          Find it First
         </h1>
-        <p className="mt-4 animate-[dcmls-fade-up_0.9s_ease-out_0.12s_both] font-['Manrope'] text-base font-medium text-white/90 sm:text-lg">
-          Find more homes.
+        <p
+          className="mt-4 animate-[dcmls-fade-up_0.9s_ease-out_0.12s_both] font-['Manrope'] text-base font-medium text-white/90 sm:text-lg"
+          style={{ textShadow: "0 1px 10px rgba(0,0,0,0.45)" }}
+        >
+          See more homes.
         </p>
 
         <div className="mt-9 w-full max-w-[640px] animate-[dcmls-fade-up_0.9s_ease-out_0.22s_both]">

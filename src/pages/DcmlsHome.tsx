@@ -29,7 +29,7 @@ const DcmlsHome: React.FC = () => {
   return (
     <>
       <Seo
-        title="Direct Connect MLS — Search"
+        title="Direct Connect MLS — Find it First"
         description="Browse agent-published homes on Direct Connect MLS — including off-market and coming-soon listings. Contact the listing agent directly, or choose buyer representation."
         canonical="https://directconnectmls.com"
         brandType="dcmls"
@@ -41,7 +41,7 @@ const DcmlsHome: React.FC = () => {
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link
           rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Manrope:wght@400;500;600;700&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap"
         />
         <style>{`
           @keyframes dcmls-hero-zoom {
