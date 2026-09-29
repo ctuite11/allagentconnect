@@ -30,10 +30,13 @@ In short: **Add my Facebook once → check Facebook when publishing → authoriz
 
 The social checkboxes stay where they are. New behavior for a **not-connected** platform:
 
-1. Checking it triggers the connection step immediately: the listing is saved as a Draft first (it may not exist yet), then the existing hosted portal opens via `social-connect-portal` in the same tab, with a return URL back to the editor.
-2. On return, the editor detects the resume marker, reopens **Ready to publish?**, restores the checked platforms (kept in `sessionStorage`, keyed by listing), and refreshes connection status. The newly connected platform shows as available.
-3. Still only one final publish confirmation. Canceling authorization or closing the review never publishes anything, and the agent can always publish with no platforms checked.
-4. Fail-closed: if connection status is unavailable (gated agent or request failed — `fetchSocialConnected()` returns `null`), the not-connected platforms stay disabled with no connect attempt, exactly as today.
+1. In the first-publish review only, a not-connected platform is clickable: checking it triggers the connection step. The later-update prompt keeps its current disabled behavior.
+2. The connection step saves the listing as a Draft first (a brand-new listing may not exist yet) and **opens the hosted portal only after the Draft save definitively succeeds and returns the listing ID**. If the save fails, stay on the editor with the error. Then the existing hosted portal opens in the same tab, with a return URL back to the editor.
+3. On return, the editor reopens **Ready to publish?** and refreshes connection status. Then:
+   - **Authorization succeeded** → the platform is restored as checked and connected.
+   - **Authorization not completed** → the platform is shown as "Not connected" and left **unchecked** — a checked box must never promise a post that can't happen. Clicking it again retries authorization.
+4. The agent continues with **Yes, Publish Listing** — still the only final confirmation. Canceling authorization or closing the review never publishes anything, and the agent can always publish with no platforms checked.
+5. Fail-closed: if connection status is unavailable (gated agent or request failed — `fetchSocialConnected()` returns `null`), the not-connected platforms stay disabled with no connect attempt, exactly as today.
 
 First-publish defaults are unchanged: whatever is checked at the moment of publish becomes the listing's saved defaults.
 
