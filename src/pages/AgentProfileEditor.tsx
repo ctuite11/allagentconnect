@@ -944,7 +944,7 @@ setHeaderBackgroundType(profile.header_background_type || "color");
                   <Share2 className="h-5 w-5 text-primary" />
                   Social Media
                 </CardTitle>
-                <CardDescription className="text-zinc-500">Your public profile links and publishing connections</CardDescription>
+                <CardDescription className="text-zinc-500">Your public profile links</CardDescription>
               </CardHeader>
               <CardContent>
                 <SocialLinksSection
