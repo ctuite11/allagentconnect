@@ -3903,7 +3903,7 @@ const AddListing = () => {
    * The round-trip never publishes — the listing stays a Draft until the agent
    * returns and presses "Yes, Publish Listing".
    */
-  const handleConnectFromReview = async (platform: SocialPlatform) => {
+  const handleConnectFromReview = async (_platform: SocialPlatform) => {
     if (socialConnectInProgressRef.current) return;
     socialConnectInProgressRef.current = true;
     try {
@@ -6367,6 +6367,7 @@ const AddListing = () => {
                 connected: publishSocialConnected,
                 selected: publishSocialSelected,
                 onChange: setPublishSocialSelected,
+                onConnectRequest: (p) => void handleConnectFromReview(p),
               }
             : null
         }
