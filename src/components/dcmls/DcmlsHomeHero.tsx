@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Menu, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import DcmlsBrandLogo from "@/components/dcmls/DcmlsBrandLogo";
 import { isDcmlsAuthAccessEnabled } from "@/lib/dcmlsAuthAccess";
 
 type SearchMode = "buy" | "rent";
@@ -93,12 +94,7 @@ const DcmlsHomeHero: React.FC = () => {
 
       <header className="relative z-20">
         <div className="mx-auto flex h-[4.25rem] max-w-[1200px] items-center justify-between px-5 sm:px-8 lg:px-10">
-          <Link
-            to="/"
-            className="font-['Manrope'] text-[15px] font-semibold tracking-[0.18em] text-white sm:text-base"
-          >
-            DIRECT CONNECT MLS
-          </Link>
+          <DcmlsBrandLogo variant="onDark" monogramClassName="h-7 w-7 sm:h-8 sm:w-8" />
 
           <nav className="hidden items-center gap-7 md:flex" aria-label="Primary">
             {NAV_LINKS.map((item) => (
