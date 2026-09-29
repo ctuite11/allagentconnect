@@ -154,10 +154,16 @@ const DcmlsHomeHero: React.FC = () => {
       </header>
 
       <div className="relative z-10 mx-auto flex min-h-[calc(100svh-4.25rem)] max-w-[760px] flex-col items-center justify-center px-5 pb-24 pt-10 text-center sm:px-8">
-        <h1 className="animate-[dcmls-fade-up_0.9s_ease-out_both] font-['Instrument_Serif'] text-[clamp(2.5rem,7vw,4.75rem)] font-normal leading-[1.05] tracking-[-0.02em] text-white">
-          Search on Direct Connect
+        <h1
+          className="animate-[dcmls-fade-up_0.9s_ease-out_both] font-['Manrope'] text-[clamp(2.5rem,7vw,4.75rem)] font-semibold leading-[1.05] tracking-tight text-white"
+          style={{ textShadow: "0 2px 12px rgba(0,0,0,0.35)" }}
+        >
+          Find it First
         </h1>
-        <p className="mt-4 animate-[dcmls-fade-up_0.9s_ease-out_0.12s_both] font-['Manrope'] text-base font-medium text-white/90 sm:text-lg">
+        <p
+          className="mt-4 animate-[dcmls-fade-up_0.9s_ease-out_0.12s_both] font-['Manrope'] text-base font-medium text-white/90 sm:text-lg"
+          style={{ textShadow: "0 1px 10px rgba(0,0,0,0.45)" }}
+        >
           Find more homes.
         </p>
 

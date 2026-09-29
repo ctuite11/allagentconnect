@@ -55,7 +55,7 @@ const DcmlsWhatsInside: React.FC = () => {
     <section className="border-t border-neutral-200 bg-neutral-50">
       <div className="mx-auto max-w-[1200px] px-5 py-20 sm:px-8 md:py-24 lg:px-10">
         <div className="max-w-2xl">
-          <h2 className="font-['Instrument_Serif'] text-3xl tracking-[-0.02em] text-neutral-950 md:text-[2.5rem]">
+          <h2 className="font-['Manrope'] text-3xl font-semibold tracking-tight text-neutral-950 md:text-[2.5rem]">
             Your home search, elevated
           </h2>
           <p className="mt-3 font-['Manrope'] text-[15px] leading-relaxed text-neutral-600 md:text-base">
