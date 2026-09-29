@@ -27,7 +27,9 @@ Desktop + mobile on the profile page: CTAs show/hide correctly per category, for
 
 ## Technical details
 - Migration: `agent_settings.dcmls_seller_lead_zips text[] NULL`; `dcmls_incentive_leads` table (id, agent_user_id, incentive_type 'buyer'|'seller', name, email, source_zip, source_listing_id, created_at) with GRANTs, RLS: agent reads own; no direct anon insert.
-- Notification: lead saved first; then an `agent_notifications` row with type `dcmls_incentive_lead`, `metadata.lead_id` (optional `metadata.route`). No new notification column. The notification click handler reads the metadata and opens a lead details view (owner-only via RLS). No conversation thread.
+- `dcmls_incentive_leads.incentive_snapshot jsonb`: private copy of the applicable buyer or seller selections plus the "More" explanation at the moment of the request, written by the lead function. Owner-only; never returned to the consumer or by the availability/comparison functions.
+- Notification: lead saved first; then an `agent_notifications` row with type `dcmls_incentive_lead`, `metadata.lead_id` (optional `metadata.route`). No new notification column. No conversation thread, no automatic email.
+- New signed-in, owner-only page `/agent/dcmls/leads/:leadId` (notification click routes here). It shows: Buyer or Seller request, consumer name, email, ZIP, source listing if any, the incentive details in effect when requested (from the snapshot), and the request date/time. Non-owners see not found.
 - Edge Functions (service role, never return private selections):
   - `dcmls-incentive-availability`: given agent id(s) returns only `{buyer: bool, seller: bool}`.
   - `dcmls-compare-agents`: given type + ZIP + exclude id returns up to 3 random eligible public profile cards.
