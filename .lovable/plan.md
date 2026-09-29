@@ -71,7 +71,7 @@ Keeps the current pointer card with **Go to Profile**, but the wording changes t
 
 1. Profile shows only link boxes; save/reload keeps links; no connection lines or buttons anywhere on Profile.
 2. Ready to publish? with a connected platform checked → no redirect, flow as today.
-3. Ready to publish? with a not-connected platform checked → Draft saved (stays Draft), hosted portal opens same-tab; return without connecting → review reopens with the platform still checked and shown not connected; publish remains possible with nothing checked.
+3. Ready to publish? with a not-connected platform checked → Draft saved (stays Draft) with the save confirmed before any redirect, hosted portal opens same-tab; return without connecting → review reopens with that platform **unchecked**, shown "Not connected"; clicking it again retries authorization; publish remains possible with nothing checked.
 4. Cancel/close the review at any point → no publish, no status history, no Hot Sheet, no email, no social post, no defaults saved.
 5. Update prompt (live-listing edit) behaves exactly as today; no connect flow there.
 6. Tab count never increases.
