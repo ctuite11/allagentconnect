@@ -84,7 +84,8 @@ describe("SharedListingGate guest agent-profile exception", () => {
 
   it("blocks a different agent's profile", async () => {
     listingResult = { data: { agent_id: OTHER_AGENT_ID, status: "active" }, error: null };
-    profileResult = { data: { id: OTHER_AGENT_ID }, error: null };
+    // The requested profile resolves to itself, which is NOT the listing's agent.
+    profileResult = { data: { id: AGENT_ID }, error: null };
     renderAt(`/agent/${AGENT_ID}`);
 
     // Give the async check a chance to (not) resolve in the guest's favor.
