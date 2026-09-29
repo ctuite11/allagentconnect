@@ -103,7 +103,7 @@ const DcmlsSeeItFirst: React.FC = () => {
               Find it First
             </h2>
             <p className="mt-2 max-w-xl font-['Manrope'] text-[15px] text-neutral-600">
-              Find more homes before they&apos;re available on other websites.
+              See more homes before they&apos;re available on other websites.
             </p>
           </div>
           <Link
@@ -126,7 +126,7 @@ const DcmlsSeeItFirst: React.FC = () => {
               Find it First
             </h2>
             <p className="mt-2 max-w-xl font-['Manrope'] text-[15px] leading-relaxed text-neutral-600">
-              Find more homes before they&apos;re available on other websites.
+              See more homes before they&apos;re available on other websites.
             </p>
           </div>
           <div className="hidden shrink-0 items-center gap-2 sm:flex">

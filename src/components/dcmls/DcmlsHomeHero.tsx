@@ -164,7 +164,7 @@ const DcmlsHomeHero: React.FC = () => {
           className="mt-4 animate-[dcmls-fade-up_0.9s_ease-out_0.12s_both] font-['Manrope'] text-base font-medium text-white/90 sm:text-lg"
           style={{ textShadow: "0 1px 10px rgba(0,0,0,0.45)" }}
         >
-          Find more homes.
+          See more homes.
         </p>
 
         <div className="mt-9 w-full max-w-[640px] animate-[dcmls-fade-up_0.9s_ease-out_0.22s_both]">
