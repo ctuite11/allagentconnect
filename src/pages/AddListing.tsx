@@ -3876,20 +3876,98 @@ const AddListing = () => {
   };
 
   // Load connected accounts when "Ready to publish?" opens. Errors/403 hide the section.
+  // A resume from the authorization round-trip restores its saved selections
+  // after the refreshed status arrives (and drops any that are still not connected).
   useEffect(() => {
     if (!publishConfirmOpen) return;
+    const restore = restoreSocialSelectionsRef.current;
+    restoreSocialSelectionsRef.current = null;
     setPublishSocialConnected(null);
-    setPublishSocialSelected([]);
+    setPublishSocialSelected(restore ?? []);
     if (!isSocialOwner()) return;
     let cancelled = false;
     void fetchSocialConnected().then((c) => {
-      if (!cancelled) setPublishSocialConnected(c);
+      if (cancelled) return;
+      setPublishSocialConnected(c);
+      if (restore) setPublishSocialSelected(restore.filter((p) => !!c && c[p]));
     });
     return () => {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [publishConfirmOpen]);
+
+  /**
+   * Connect-on-demand from "Ready to publish?": save the Draft (definitively),
+   * stash the resume state, then open the hosted authorization page in this tab.
+   * The round-trip never publishes — the listing stays a Draft until the agent
+   * returns and presses "Yes, Publish Listing".
+   */
+  const handleConnectFromReview = async (platform: SocialPlatform) => {
+    if (socialConnectInProgressRef.current) return;
+    socialConnectInProgressRef.current = true;
+    try {
+      const savedId = await handleSaveDraft(true);
+      if (!savedId) {
+        toast.error("Your changes could not be saved. Try connecting again after the draft is saved.");
+        return;
+      }
+      try {
+        sessionStorage.setItem(
+          socialResumeKey(savedId),
+          JSON.stringify({
+            listingId: savedId,
+            selected: publishSocialSelected,
+            pendingPublishAction: pendingPublishAction ?? "publish",
+          }),
+        );
+      } catch {
+        toast.error("Could not prepare the connection step. Please try again.");
+        return;
+      }
+      // Preserve the existing safe from param so Back behavior is unchanged.
+      const params = new URLSearchParams();
+      params.set("social", "resume");
+      const paramFrom = searchParams.get("from");
+      if (paramFrom?.startsWith("/")) params.set("from", paramFrom);
+      await openSocialConnectPortal(
+        `${window.location.origin}/agent/listings/edit/${savedId}?${params.toString()}`,
+      );
+-   } finally {
+      socialConnectInProgressRef.current = false;
+    }
+  };
+
+  // Returning from the hosted authorization page: reopen "Ready to publish?"
+  // with the saved selections, then strip only the social param (from stays).
+  useEffect(() => {
+    if (socialResumeFiredRef.current) return;
+    if (loading || isLoadingListing) return;
+    if (searchParams.get("social") !== "resume") return;
+    socialResumeFiredRef.current = true;
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete("social");
+    navigate(
+      { pathname: location.pathname, search: nextParams.toString() },
+      { replace: true, state: location.state },
+    );
+    if (isConciergeMode || !listingId || !isSocialOwner()) return;
+    if (backendStatusRef.current !== "draft") return;
+    let stored: { selected?: SocialPlatform[]; pendingPublishAction?: string } | null = null;
+    try {
+      stored = JSON.parse(sessionStorage.getItem(socialResumeKey(listingId)) || "null");
+    } catch {
+      stored = null;
+    }
+    sessionStorage.removeItem(socialResumeKey(listingId));
+    if (!stored) return;
+    restoreSocialSelectionsRef.current = Array.isArray(stored.selected)
+      ? stored.selected.filter((p): p is SocialPlatform => typeof p === "string")
+      : [];
+    setPendingPublishAction(stored.pendingPublishAction === "saveChanges" ? "saveChanges" : "publish");
+    setPublishConfirmOpen(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, isLoadingListing, searchParams, listingId, isConciergeMode]);
 
   /** After a successful first publish: save defaults, then post. Never affects the listing. */
   const runFirstPublishSocial = async (savedListingId: string, dbStatus: string) => {
