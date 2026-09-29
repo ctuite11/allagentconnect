@@ -1,91 +1,73 @@
-# Profile becomes the single place for social media
+# Simplify social media — Profile links only, connect when sharing
 
-Clarifications folded in:
-- When `fetchSocialConnected()` returns `null`, the request may have failed or the agent may not be allowed. Profile treats `null` only as "hide the publishing connection controls" (fail closed).
-- Threads is added to the `AgentProfile.tsx` social-links type, to `socialIconMap`, and to the icon renderer, so the public Threads icon appears. `social_links` stays as-is; no database change.
-- When a saved profile is loaded, any missing link keys default to `""`, including `threads`.
+Replaces the previous plan. Profile is only for links. The publish/authorize decision happens in the listing flow, not in Profile.
 
 ## How it works, step by step (plain language)
 
-**Everyday use — saving your social links (all agents):**
+**Setting up (one time):**
 
-1. Open the sidebar and go to **Profile**. (Or open **Settings → Social Media** and click **Go to Profile** — it takes you to the same place.)
-2. Scroll to the **Social Media** block. You'll see one link box per platform: Facebook, Instagram, LinkedIn, Threads, X, and Website.
-3. Paste your public page or profile address into each box (for example, `https://facebook.com/yourpage`). Only fill in the ones you want shown.
-4. Click **Save** on the Profile page.
-5. Whatever you saved now appears as small icons on your public agent profile, so visitors can find you on those platforms.
+1. Open **Profile → Social Media** and paste your Facebook, Instagram, LinkedIn, Threads, X, and Website links. Click **Save**.
+2. That's it. Your links appear as icons on your public profile. There are no connection lines or buttons here anymore.
 
-That's all most agents will ever see and do. Typing or saving a link never signs anything up or starts any posting.
+**Publishing a listing with social sharing:**
 
-**Connecting for publishing (only admins and named test accounts right now):**
+1. You publish as you do now. In the **Ready to publish?** screen, check the platforms you want to share to (Facebook, Instagram, LinkedIn, Threads).
+2. If a platform you checked is already connected, nothing extra happens — continue and click **Yes, Publish Listing**.
+3. If a platform you checked is not connected yet, the hosted sign-in page opens (same tab). Sign in to that platform there.
+4. You come straight back to the **Ready to publish?** screen with your platform choices still checked and the newly connected platform now available.
+5. Click **Yes, Publish Listing** — the only final confirmation, exactly as today.
+6. If you cancel the sign-in or skip social entirely, you can still publish the listing; just leave the platforms unchecked.
 
-1. On the same Profile → Social Media block, each of the four publishing platforms (Facebook, Instagram, LinkedIn, Threads) also shows a line: **Publishing connection: Not connected**, with a **Connect for Publishing** button.
-2. Click **Connect for Publishing**.
-3. A hosted sign-in page opens in this same browser tab. Sign in to your account for that platform there.
-4. When you finish, you come straight back to your **Profile → Social Media**.
-5. The page reloads the connection status. The platform you authorized now says **Connected**, and the button changes to **Manage Connection**.
-6. All four platforms are managed on that one hosted page together — you can go back there any time with **Manage Connection**.
+In short: **Add my Facebook once → check Facebook when publishing → authorize it the first time if needed → publish.**
 
-**The one distinction that matters:**
+## Profile → Social Media
 
-- A **link** (step 3 above) = your profile icon shows that platform publicly. Nothing else.
-- A **connection** = All Agent Connect is authorized to post your listing updates to that platform for you. Only created by the hosted sign-in, never by typing a link.
+- Only the six link boxes: Facebook, Instagram, LinkedIn, Threads, X, Website. Saved in `social_links` as today; Threads needs no migration.
+- **Removed:** the "Publishing connection: Connected / Not connected" lines, the **Connect for Publishing** / **Manage Connection** buttons, the "Public profile/page" label, and the connection-status load. `fetchSocialConnected()` is no longer called on Profile.
+- Public profile icon display (including the new Threads icon) is unchanged.
 
-**If you're not in the launch group:** you see only the link boxes — no "Publishing connection" lines and no buttons. That's intentional; publishing opens up later.
+## Ready to publish? (first publish)
 
-## What changes for the agent
+The social checkboxes stay where they are. New behavior for a **not-connected** platform:
 
-**Profile → Social Media** shows one block per platform: Facebook, Instagram, LinkedIn, Threads.
+1. Checking it triggers the connection step immediately: the listing is saved as a Draft first (it may not exist yet), then the existing hosted portal opens via `social-connect-portal` in the same tab, with a return URL back to the editor.
+2. On return, the editor detects the resume marker, reopens **Ready to publish?**, restores the checked platforms (kept in `sessionStorage`, keyed by listing), and refreshes connection status. The newly connected platform shows as available.
+3. Still only one final publish confirmation. Canceling authorization or closing the review never publishes anything, and the agent can always publish with no platforms checked.
+4. Fail-closed: if connection status is unavailable (gated agent or request failed — `fetchSocialConnected()` returns `null`), the not-connected platforms stay disabled with no connect attempt, exactly as today.
 
-Each block has:
-- **Public profile/page** — the existing link box (saved with the profile, as it is now)
-- **Publishing connection** — "Connected" or "Not connected"
-- Button: **Connect for Publishing** when it's not connected, **Manage Connection** when it is
+First-publish defaults are unchanged: whatever is checked at the moment of publish becomes the listing's saved defaults.
 
-X and Website stay as link-only rows. They have no publishing, so they get no connection line.
+## Later listing changes
 
-Link and connection are separate. Typing a Facebook link never marks Facebook as Connected. Only the existing sign-in flow does that.
+Unchanged: saved defaults pre-check the update prompt, choices apply to that post only, and no reconnection is asked unless the provider itself requires it. Not-connected platforms remain disabled in the update prompt (no connect flow there) — this is not changing in this task.
 
-**Settings → Social Media** becomes a short pointer: "Manage your social profile links and publishing connections from your Profile." It has a **Go to Profile** button that opens Profile scrolled to Social Media. The full connection list is removed from Settings.
+## Settings
 
-## Connection flow
-
-1. The agent clicks Connect for Publishing (or Manage Connection) on Profile.
-2. The existing hosted connection page opens, the same one Settings uses today.
-3. After signing in, the agent comes back to Profile → Social Media, not Settings.
-4. Profile reloads the connection status on return and shows Connected for any platform that was authorized.
-
-All buttons open the same page, because it manages all four platforms together.
-
-## Launch gate (unchanged)
-
-Publishing is still limited to admins and named test accounts. Everyone else sees only the link boxes on Profile, with no connection lines or buttons, just as the Settings card is hidden from them today. The Settings pointer is shown to every agent, because every agent has profile links.
-
-## Note: Threads link is new
-
-Today's Profile has no Threads link box. It has LinkedIn, X, Facebook, Instagram and Website. I'll add a Threads link box, saved in the same place as the other links. No database change is needed. Existing profiles just start with an empty Threads link. If a Threads link is filled in, the public profile shows a Threads icon next to the other social icons.
+Keeps the current pointer card ("Manage your social profile links ... from your Profile" with **Go to Profile**). It now points to a links-only section, which is still accurate.
 
 ## Not changing
 
-- Server functions (`social-accounts-status`, `social-connect-portal`), `agent_social_accounts`, and Bundle teams. Each agent still has one team, and it's reused.
-- Publishing rules, first-publish defaults, the listing social checkboxes, and social events
-- Listing status, Hot Sheets, email, DCMLS
-- No social posts are sent
+- Server functions (`social-accounts-status`, `social-connect-portal`, `social-publish-listing`, `social-save-listing-defaults`), `agent_social_accounts`, one Bundle Team per agent.
+- Publishing rules, first-publish detection, photo gate, Hot Sheets, email, DCMLS, listing status logic, social-event idempotency.
+- The saved-Facebook-URL ≠ authorization rule stays true: a link never grants posting rights; only the hosted sign-in does.
 
 ## Technical details
 
-- `src/components/profile-editor/SocialLinksSection.tsx`: add `threads` to `SocialLinks`. Load connection status once with `fetchSocialConnected()`; `null` means connection status is unavailable (either gated or the request failed), so no publishing connection lines or buttons are shown. Show status and a button under the Facebook, Instagram, LinkedIn and Threads rows. Button calls `openSocialConnectPortal(returnUrl)`.
-- `src/lib/socialPublishing.ts`: `openSocialConnectPortal` takes an optional `returnUrl`, defaulting to the current `/agent/settings` so other callers behave the same. Profile passes `${origin}/agent/profile#social-media`. The server already accepts any valid `returnUrl`.
-- `src/pages/AgentProfileEditor.tsx`: add `threads: ""` to the default and loaded links (merged, so old rows keep their values). Add `id="social-media"` to the Social Media card, and scroll to it when the address ends in `#social-media`. Update the card description.
-- `src/pages/AgentProfile.tsx`: add Threads to the social icon list, shown only when a link exists.
-- `src/components/social/SocialMediaSettingsCard.tsx`: replace the body with the pointer text and a Go to Profile button (`/agent/profile#social-media`). Always shown.
+- `src/components/profile-editor/SocialLinksSection.tsx`: drop `fetchSocialConnected` usage, `connected` state, the connection row, and the connect button; drop the `platform` field and "Public profile/page" label. Link boxes only.
+- `src/lib/socialPublishing.ts`: add `connectSocialPlatform(returnUrl)` — thin wrapper over the existing `openSocialConnectPortal` (same function, new name/usage site). No server change.
+- `src/pages/AddListing.tsx` (review dialog path):
+  - In `SocialPlatformChoices` usage for first publish, checking a not-connected platform calls `handleConnectFromReview(platform)`.
+  - `handleConnectFromReview`: save the Draft via the existing `handleSaveDraft(true)` (stay put with the existing error if it fails and no ID exists), stash `socialSelectedRef` selections in `sessionStorage` under `aac-social-resume-<listingId>`, then `connectSocialPlatform(`${origin}/agent/listings/edit/<id>?social=resume`)`.
+  - On load, `?social=resume` + a listing ID + a sessionStorage entry → reopen the review dialog, restore selections, re-fetch connection status, clear the sessionStorage entry and the query param.
+  - Keep the existing `pendingFirstPublishSocialRef` publish-time flow untouched.
+- `SocialPlatformChoices.tsx`: first-publish usage needs an `onConnectRequest` callback; the update-prompt usage passes none, so its disabled behavior is unchanged.
+- Launch gate unchanged: gated agents see `null` status → checkboxes disabled, no connect attempt; the portal server still refuses non-gated agents.
 
-## QA (no posts, no listing changes)
+## QA (no real publish, no post)
 
-1. Edit and save profile links, including Threads; reload and confirm they're kept. Confirm they show on the public profile.
-2. Save a Facebook link while Facebook isn't connected. Profile still says Not connected.
-3. Connect for Publishing opens the real hosted connection page. Stop there unless you approve connecting an account.
-4. Coming back lands on Profile → Social Media, and the status reloads. If an account is connected, it shows Connected.
-5. Settings → Go to Profile opens Profile at Social Media.
-6. `agent_social_accounts` still has one row for the test agent before and after, so no duplicate team.
-7. The listing social checkboxes and first-publish review are unchanged. This is checked in the code only, with no publishing.
+1. Profile shows only link boxes; save/reload keeps links; no connection lines or buttons anywhere on Profile.
+2. Ready to publish? with a connected platform checked → no redirect, flow as today.
+3. Ready to publish? with a not-connected platform checked → Draft saved (stays Draft), hosted portal opens same-tab; return without connecting → review reopens with the platform still checked and shown not connected; publish remains possible with nothing checked.
+4. Cancel/close the review at any point → no publish, no status history, no Hot Sheet, no email, no social post, no defaults saved.
+5. Update prompt (live-listing edit) behaves exactly as today; no connect flow there.
+6. Tab count never increases.
