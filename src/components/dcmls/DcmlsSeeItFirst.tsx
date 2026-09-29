@@ -99,10 +99,10 @@ const DcmlsSeeItFirst: React.FC = () => {
       <section className="bg-white py-16 md:py-20">
         <div className="mx-auto flex max-w-[1200px] flex-col gap-6 px-5 sm:flex-row sm:items-end sm:justify-between sm:px-8 lg:px-10">
           <div>
-            <h2 className="font-['Manrope'] font-semibold text-3xl tracking-[-0.02em] text-neutral-950 md:text-4xl">
+            <h2 className="font-['Manrope'] text-[1.75rem] font-semibold tracking-[-0.02em] text-neutral-950 md:text-[2rem]">
               Find it First
             </h2>
-            <p className="mt-2 max-w-xl font-['Manrope'] text-[15px] text-neutral-600">
+            <p className="mt-2 max-w-xl font-['Manrope'] text-[15px] text-neutral-600 md:text-base">
               See more homes before they&apos;re available on other websites.
             </p>
           </div>
@@ -122,10 +122,10 @@ const DcmlsSeeItFirst: React.FC = () => {
       <div className="mx-auto max-w-[1200px] px-5 sm:px-8 lg:px-10">
         <div className="flex items-end justify-between gap-6">
           <div className="min-w-0">
-            <h2 className="font-['Manrope'] font-semibold text-3xl tracking-[-0.02em] text-neutral-950 md:text-[2.5rem]">
+            <h2 className="font-['Manrope'] text-[1.75rem] font-semibold tracking-[-0.02em] text-neutral-950 md:text-[2rem]">
               Find it First
             </h2>
-            <p className="mt-2 max-w-xl font-['Manrope'] text-[15px] leading-relaxed text-neutral-600">
+            <p className="mt-2 max-w-xl font-['Manrope'] text-[15px] leading-relaxed text-neutral-600 md:text-base">
               See more homes before they&apos;re available on other websites.
             </p>
           </div>
@@ -201,7 +201,7 @@ const DcmlsSeeItFirst: React.FC = () => {
 
           <div className="flex w-[min(86vw,300px)] shrink-0 flex-col justify-between bg-neutral-950 p-7 text-white">
             <div>
-              <h3 className="font-['Manrope'] font-semibold text-[1.65rem] leading-tight tracking-[-0.02em]">
+              <h3 className="font-['Manrope'] text-[1.375rem] font-semibold leading-tight tracking-[-0.02em] md:text-[1.5rem]">
                 Find it First
               </h3>
               <p className="mt-3 font-['Manrope'] text-sm leading-relaxed text-white/75">

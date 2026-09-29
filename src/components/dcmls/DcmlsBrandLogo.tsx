@@ -27,7 +27,7 @@ const DcmlsBrandLogo: React.FC<DcmlsBrandLogoProps> = ({
       <AACMonogram className={cn(monogramClassName, "shrink-0 text-[#0E56F5]")} />
       <span
         className={cn(
-          "font-['Manrope'] text-[15px] font-semibold tracking-tight sm:text-base",
+          "font-['Manrope'] text-[14px] font-semibold tracking-[-0.02em] sm:text-[15px]",
           onDark ? "text-white" : "text-neutral-950",
         )}
       >
