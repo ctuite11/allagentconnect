@@ -10,10 +10,16 @@ interface Props {
   connected: SocialConnected;
   selected: SocialPlatform[];
   onChange: (next: SocialPlatform[]) => void;
+  /**
+   * First-publish review only: clicking a not-connected platform starts the
+   * hosted authorization flow instead of staying disabled.
+   * The later-update prompt omits this and keeps the disabled behavior.
+   */
+  onConnectRequest?: (platform: SocialPlatform) => void;
 }
 
-/** Four platform checkboxes. Not-connected platforms are shown but cannot be picked. */
-export function SocialPlatformChoices({ connected, selected, onChange }: Props) {
+/** Four platform checkboxes. */
+export function SocialPlatformChoices({ connected, selected, onChange, onConnectRequest }: Props) {
   const toggle = (p: SocialPlatform, on: boolean) => {
     const set = new Set(selected);
     if (on) set.add(p);
@@ -28,16 +34,29 @@ export function SocialPlatformChoices({ connected, selected, onChange }: Props) 
         const id = `social-${p}`;
         return (
           <li key={p} className="flex items-center justify-between px-3 py-2">
-            <label htmlFor={id} className="flex items-center gap-2 text-sm text-foreground">
+            <label
+              htmlFor={id}
+              className={`flex items-center gap-2 text-sm text-foreground ${!isConnected && onConnectRequest ? "cursor-pointer" : ""}`}
+            >
               <Checkbox
                 id={id}
                 checked={isConnected && selected.includes(p)}
-                disabled={!isConnected}
-                onCheckedChange={(v) => toggle(p, v === true)}
+                disabled={!isConnected && !onConnectRequest}
+                onCheckedChange={(v) => {
+                  if (!isConnected) {
+                    if (onConnectRequest) onConnectRequest(p);
+                    return;
+                  }
+                  toggle(p, v === true);
+                }}
               />
               {SOCIAL_PLATFORM_LABELS[p]}
             </label>
-            {!isConnected && <span className="text-xs text-muted-foreground">Not connected</span>}
+            {!isConnected && (
+              <span className="text-xs text-muted-foreground">
+                Not connected{onConnectRequest ? " — click to connect" : ""}
+              </span>
+            )}
           </li>
         );
       })}

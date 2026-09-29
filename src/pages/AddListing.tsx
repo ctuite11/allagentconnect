@@ -78,6 +78,7 @@ import {
   hasAnyConnected,
   isSocialEligibleStatus,
   newClientRequestId,
+  openSocialConnectPortal,
   publishListingSocial,
   saveListingSocialDefaults,
   statusToSocialEventType,
@@ -282,6 +283,11 @@ function resolveAddListingReturnTo(
   return ROUTES.MY_LISTINGS;
 }
 
+/** sessionStorage key for the authorization round-trip resume state. */
+function socialResumeKey(listingId: string): string {
+  return `aac-social-resume-${listingId}`;
+}
+
 const SHOW_PHOTO_ORDER_STEP: boolean = false;
 
 const AddListing = () => {
@@ -441,6 +447,10 @@ const AddListing = () => {
   const [publishSocialSelected, setPublishSocialSelected] = useState<SocialPlatform[]>([]);
   /** Platforms confirmed in "Ready to publish?" for the pending first publish (null = section not shown). */
   const pendingFirstPublishSocialRef = useRef<SocialPlatform[] | null>(null);
+  /** Saved selections restored when "Ready to publish?" reopens after the authorization round-trip. */
+  const restoreSocialSelectionsRef = useRef<SocialPlatform[] | null>(null);
+  const socialConnectInProgressRef = useRef(false);
+  const socialResumeFiredRef = useRef(false);
   const [editSocialPrompt, setEditSocialPrompt] = useState<{
     listingId: string;
     eventType: string;
@@ -2745,7 +2755,8 @@ const AddListing = () => {
     };
   };
 
-  const handleSaveDraft = async (isAutoSave = false) => {
+  /** Returns the saved draft listing ID on success, null on failure. */
+  const handleSaveDraft = async (isAutoSave = false): Promise<string | null> => {
     draftSession.beginSave();
     try {
       // Get fresh user from server - single source of truth
@@ -2754,7 +2765,7 @@ const AddListing = () => {
         if (!isAutoSave) {
           // getFreshUserOrRedirect already shows toast and redirects
         }
-        return;
+        return null;
       }
       
       if (isAutoSave) {
@@ -2848,6 +2859,8 @@ const AddListing = () => {
         navigate(isConciergeMode ? CONCIERGE_BASE_PATH : `${ROUTES.MY_LISTINGS}?status=draft`);
       }
 
+      return targetId;
+
     } catch (error: any) {
       console.error("Error saving draft listing:", {
         message: error.message,
@@ -2869,7 +2882,7 @@ const AddListing = () => {
         toast.error(`Failed to save draft: ${error.message || 'Unknown error'}`);
       }
       // Return early on error - don't update state or show success
-      return;
+      return null;
     } finally {
       draftSession.endSave();
       if (isAutoSave) {
@@ -3863,20 +3876,98 @@ const AddListing = () => {
   };
 
   // Load connected accounts when "Ready to publish?" opens. Errors/403 hide the section.
+  // A resume from the authorization round-trip restores its saved selections
+  // after the refreshed status arrives (and drops any that are still not connected).
   useEffect(() => {
     if (!publishConfirmOpen) return;
+    const restore = restoreSocialSelectionsRef.current;
+    restoreSocialSelectionsRef.current = null;
     setPublishSocialConnected(null);
-    setPublishSocialSelected([]);
+    setPublishSocialSelected(restore ?? []);
     if (!isSocialOwner()) return;
     let cancelled = false;
     void fetchSocialConnected().then((c) => {
-      if (!cancelled) setPublishSocialConnected(c);
+      if (cancelled) return;
+      setPublishSocialConnected(c);
+      if (restore) setPublishSocialSelected(restore.filter((p) => !!c && c[p]));
     });
     return () => {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [publishConfirmOpen]);
+
+  /**
+   * Connect-on-demand from "Ready to publish?": save the Draft (definitively),
+   * stash the resume state, then open the hosted authorization page in this tab.
+   * The round-trip never publishes — the listing stays a Draft until the agent
+   * returns and presses "Yes, Publish Listing".
+   */
+  const handleConnectFromReview = async (_platform: SocialPlatform) => {
+    if (socialConnectInProgressRef.current) return;
+    socialConnectInProgressRef.current = true;
+    try {
+      const savedId = await handleSaveDraft(true);
+      if (!savedId) {
+        toast.error("Your changes could not be saved. Try connecting again after the draft is saved.");
+        return;
+      }
+      try {
+        sessionStorage.setItem(
+          socialResumeKey(savedId),
+          JSON.stringify({
+            listingId: savedId,
+            selected: publishSocialSelected,
+            pendingPublishAction: pendingPublishAction ?? "publish",
+          }),
+        );
+      } catch {
+        toast.error("Could not prepare the connection step. Please try again.");
+        return;
+      }
+      // Preserve the existing safe from param so Back behavior is unchanged.
+      const params = new URLSearchParams();
+      params.set("social", "resume");
+      const paramFrom = searchParams.get("from");
+      if (paramFrom?.startsWith("/")) params.set("from", paramFrom);
+      await openSocialConnectPortal(
+        `${window.location.origin}/agent/listings/edit/${savedId}?${params.toString()}`,
+      );
+    } finally {
+      socialConnectInProgressRef.current = false;
+    }
+  };
+
+  // Returning from the hosted authorization page: reopen "Ready to publish?"
+  // with the saved selections, then strip only the social param (from stays).
+  useEffect(() => {
+    if (socialResumeFiredRef.current) return;
+    if (loading || isLoadingListing) return;
+    if (searchParams.get("social") !== "resume") return;
+    socialResumeFiredRef.current = true;
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete("social");
+    navigate(
+      { pathname: location.pathname, search: nextParams.toString() },
+      { replace: true, state: location.state },
+    );
+    if (isConciergeMode || !listingId || !isSocialOwner()) return;
+    if (backendStatusRef.current !== "draft") return;
+    let stored: { selected?: SocialPlatform[]; pendingPublishAction?: string } | null = null;
+    try {
+      stored = JSON.parse(sessionStorage.getItem(socialResumeKey(listingId)) || "null");
+    } catch {
+      stored = null;
+    }
+    sessionStorage.removeItem(socialResumeKey(listingId));
+    if (!stored) return;
+    restoreSocialSelectionsRef.current = Array.isArray(stored.selected)
+      ? stored.selected.filter((p): p is SocialPlatform => typeof p === "string")
+      : [];
+    setPendingPublishAction(stored.pendingPublishAction === "saveChanges" ? "saveChanges" : "publish");
+    setPublishConfirmOpen(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, isLoadingListing, searchParams, listingId, isConciergeMode]);
 
   /** After a successful first publish: save defaults, then post. Never affects the listing. */
   const runFirstPublishSocial = async (savedListingId: string, dbStatus: string) => {
@@ -6276,6 +6367,7 @@ const AddListing = () => {
                 connected: publishSocialConnected,
                 selected: publishSocialSelected,
                 onChange: setPublishSocialSelected,
+                onConnectRequest: (p) => void handleConnectFromReview(p),
               }
             : null
         }

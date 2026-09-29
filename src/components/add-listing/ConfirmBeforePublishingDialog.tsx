@@ -18,6 +18,8 @@ type ConfirmBeforePublishingDialogProps = {
     connected: SocialConnected;
     selected: SocialPlatform[];
     onChange: (next: SocialPlatform[]) => void;
+    /** First-publish review only: starts authorization for a not-connected platform. */
+    onConnectRequest?: (platform: SocialPlatform) => void;
   } | null;
   onGoBack: () => void;
   onConfirm: () => void;
@@ -84,7 +86,12 @@ export function ConfirmBeforePublishingDialog({
         {social ? (
           <div className="space-y-2">
             <p className="text-sm font-medium text-foreground">Share on social media</p>
-            <SocialPlatformChoices connected={social.connected} selected={social.selected} onChange={social.onChange} />
+            <SocialPlatformChoices
+              connected={social.connected}
+              selected={social.selected}
+              onChange={social.onChange}
+              onConnectRequest={social.onConnectRequest}
+            />
             <p className="text-xs text-muted-foreground">
               Leave all unchecked to publish without sharing. These become this listing's defaults.
             </p>

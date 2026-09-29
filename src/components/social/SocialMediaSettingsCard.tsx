@@ -10,7 +10,7 @@ export function SocialMediaSettingsCard() {
       <div>
         <h2 className={agentSectionTitle}>Social Media</h2>
         <p className={`mt-0.5 ${agentSectionDesc}`}>
-          Manage your social profile links and publishing connections from your Profile.
+          Manage your social profile links from your Profile.
         </p>
       </div>
       <Button asChild size="sm" variant="outline">
