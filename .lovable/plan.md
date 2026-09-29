@@ -1,7 +1,7 @@
 # Let signed-out listing visitors open that listing's agent profile
 
 ## What changes
-A signed-out visitor who is viewing a public listing can click **View agent profile** and open **that listing agent's** profile without signing up. Everything else stays behind the existing sign-up wall.
+A signed-out visitor who is viewing a public listing can click **View agent profile** and open **that listing agent's** profile without signing up. Everything else in the existing shared-listing guest flow stays behind the sign-up wall.
 
 | Situation (signed out, arrived via a listing) | Result |
 |---|---|
