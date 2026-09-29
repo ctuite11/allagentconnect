@@ -148,6 +148,13 @@
       "when": 1790647959143,
       "tag": "0020_dcmls_settings_and_buyer_comp_offered",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1790648992706,
+      "tag": "0021_dcmls_incentive_more_text",
+      "breakpoints": true
     }
   ]
 }
