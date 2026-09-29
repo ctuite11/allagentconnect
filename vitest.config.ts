@@ -5,8 +5,11 @@ import path from "path";
 // supabase/functions are Deno tests and are run with `deno test`; without this
 // scoping Vitest tries to load their `https://` imports and fails.
 export default defineConfig({
+  esbuild: { jsx: "automatic" },
   test: {
     globals: true,
+    environment: "jsdom",
+    setupFiles: ["./src/test/setup.ts"],
     include: ["src/**/*.{test,spec}.{ts,tsx}"],
     exclude: [
       "node_modules/**",
