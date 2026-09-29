@@ -130,3 +130,6 @@
 - [x] Match email street-suffix abbreviations to the website and enforce parity with shared fixtures
 - [x] Enable spell-check for Compensation Notes, Custom document name, and Rental Commission Notes
 - [x] Visually verified 4 Derne St #1 in desktop list-row and compact/mobile card layouts, plus 105 Solaire Dr; shared grammar passed, so no code changed
+
+## Add Listing validation scroll
+- [x] Keep the full required-fields error box visible below the sticky buttons (live bar height, never scroll above the top, skip if the box or bar is missing)
