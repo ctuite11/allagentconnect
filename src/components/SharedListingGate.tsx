@@ -1,4 +1,5 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { Link, useLocation } from "react-router-dom";
 
 import AACMonogram from "@/components/ui/AACMonogram";
@@ -96,6 +97,39 @@ export function SharedListingGate({ children }: SharedListingGateProps) {
   const { isGuest, allowedListingId } = useSharedListingGuest();
   const location = useLocation();
 
+  // Narrow exception: the guest's own listing agent profile. Uses the stored
+  // first-write-wins listing (never a query-string id), verified against the
+  // public listing record. Stays blocked while checking; fails closed.
+  const agentParam = location.pathname.match(/^\/agent\/([^/]+)\/?$/)?.[1] ?? null;
+  const pairKey = agentParam && allowedListingId ? `${allowedListingId}|${agentParam}` : null;
+  const [allowedPair, setAllowedPair] = useState<string | null>(null);
+  useEffect(() => {
+    if (!pairKey || user || !isGuest) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const [listingId, param] = pairKey.split("|");
+        const { data: l, error } = await supabase
+          .from("listings_public")
+          .select("agent_id, status")
+          .eq("id", listingId)
+          .maybeSingle();
+        if (error || !l?.agent_id || l.status === "draft") return;
+        let match = String(l.agent_id).toLowerCase() === param.toLowerCase();
+        if (!match) {
+          const { data: prof } = await supabase.rpc("get_public_agent_profile", { p_id_or_code: param });
+          match = (prof as { id?: string } | null)?.id === l.agent_id;
+        }
+        if (match && !cancelled) setAllowedPair(pairKey);
+      } catch {
+        /* fail closed */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [pairKey, user, isGuest]);
+
   const blocked = useMemo(() => {
     if (loading) return false;
     if (user) return false;
@@ -105,8 +139,9 @@ export function SharedListingGate({ children }: SharedListingGateProps) {
     // The originally shared listing is always allowed.
     if (path === `/property/${allowedListingId}`) return false;
     if (path === `/consumer-property/${allowedListingId}`) return false;
+    if (pairKey && allowedPair === pairKey) return false;
     return isGatedPath(path);
-  }, [loading, user, isGuest, allowedListingId, location.pathname]);
+  }, [loading, user, isGuest, allowedListingId, location.pathname, pairKey, allowedPair]);
 
   if (!blocked) return <>{children}</>;
 
