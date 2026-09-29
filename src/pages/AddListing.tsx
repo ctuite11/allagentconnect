@@ -584,7 +584,10 @@ const AddListing = () => {
         const scroller = (container ?? document.scrollingElement ?? document.documentElement) as HTMLElement;
         // Sticky bar pins at its CSS top offset inside the scroller; measure that plus its live height.
         const containerTop = container ? container.getBoundingClientRect().top : 0;
-        const barStickyTop = parseFloat(getComputedStyle(barEl).top) || 0;
+        // Sticky offsets are measured from the scroller's padding edge, so include its padding-top.
+        const barStickyTop =
+          (parseFloat(getComputedStyle(barEl).top) || 0) +
+          (parseFloat(getComputedStyle(scroller).paddingTop) || 0);
         const barHeight = barEl.getBoundingClientRect().height;
         const gap = 12;
         const target = Math.max(
