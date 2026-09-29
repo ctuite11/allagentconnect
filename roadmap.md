@@ -140,3 +140,9 @@
 - [x] Add/Edit Listing: listing-level Yes/No only; no opt-in button; Draft shows Confirmed
 - [x] Buyer Agent Compensation Yes/No required on every live For Sale save; No shows "Not offered"
 - [x] Real incentive option lists with More text box and exclusive "No incentive offered"
+
+## DCMLS consumer incentives (2026-09-29)
+- [x] Separate private Seller-lead ZIP coverage (shown when Receive seller leads = Yes)
+- [x] Public profile shows only "incentives available" + gated Name/Email request form
+- [x] Compare Agents: up to 3 unranked eligible agents by ZIP (buyer/seller ZIP rules)
+- [x] Lead saved with incentive snapshot; in-app notification (metadata.lead_id) opens owner-only lead page
