@@ -18,6 +18,8 @@ type ConfirmBeforePublishingDialogProps = {
     connected: SocialConnected;
     selected: SocialPlatform[];
     onChange: (next: SocialPlatform[]) => void;
+    /** First-publish review only: starts authorization for a not-connected platform. */
+    onConnectRequest?: (platform: SocialPlatform) => void;
   } | null;
   onGoBack: () => void;
   onConfirm: () => void;
