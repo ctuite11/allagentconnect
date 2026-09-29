@@ -565,6 +565,34 @@ const AddListing = () => {
   const [locationValidation, setLocationValidation] = useState<{ isValid: boolean; message?: string }>({ isValid: true });
   const [validationErrors, setValidationErrors] = useState<{ field: string; label: string }[]>([]);
   const validationSummaryRef = useRef<HTMLDivElement>(null);
+  const stickyActionBarRef = useRef<HTMLDivElement>(null);
+
+  /** Scroll the validation summary to sit just below the sticky action bar (measured live). */
+  const scrollValidationSummaryIntoView = useCallback(() => {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const alertEl = validationSummaryRef.current;
+        const barEl = stickyActionBarRef.current;
+        if (!alertEl || !barEl) return;
+
+        let container: HTMLElement | null = alertEl.parentElement;
+        while (container) {
+          const oy = getComputedStyle(container).overflowY;
+          if ((oy === "auto" || oy === "scroll") && container.scrollHeight > container.clientHeight) break;
+          container = container.parentElement;
+        }
+        const scroller = (container ?? document.scrollingElement ?? document.documentElement) as HTMLElement;
+        const containerTop = container ? container.getBoundingClientRect().top : 0;
+        const barHeight = barEl.getBoundingClientRect().height;
+        const gap = 12;
+        const target = Math.max(
+          0,
+          scroller.scrollTop + alertEl.getBoundingClientRect().top - containerTop - barHeight - gap,
+        );
+        scroller.scrollTo({ top: target, behavior: "smooth" });
+      });
+    });
+  }, []);
   
   // Flag to prevent cascading useEffects from clearing values during initial data load
   const isHydratingLocationRef = useRef(false);
@@ -3001,8 +3029,7 @@ const AddListing = () => {
       });
       if (errors.length > 0) {
         setValidationErrors(errors);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        validationSummaryRef.current?.scrollIntoView({ behavior: 'smooth' });
+        scrollValidationSummaryIntoView();
         draftSession.endSave();
         setSubmitting(false);
         return;
@@ -3403,8 +3430,7 @@ const AddListing = () => {
       });
       if (errors.length > 0) {
         setValidationErrors(errors);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        validationSummaryRef.current?.scrollIntoView({ behavior: 'smooth' });
+        scrollValidationSummaryIntoView();
         setSubmitting(false);
         return;
       }
@@ -4085,7 +4111,7 @@ const AddListing = () => {
           />
 
           {/* Action Buttons - Sticky Top Bar */}
-          <div className={cn("-mx-4 sticky top-0 z-10 mb-6 border-b border-zinc-200/90 bg-white/95 px-4 py-2.5 shadow-[0_1px_3px_rgba(0,0,0,0.04)] backdrop-blur-sm transition-opacity supports-[backdrop-filter]:bg-white/90", bottomActionsVisible && "pointer-events-none opacity-0")}>
+          <div ref={stickyActionBarRef} className={cn("-mx-4 sticky top-0 z-10 mb-6 border-b border-zinc-200/90 bg-white/95 px-4 py-2.5 shadow-[0_1px_3px_rgba(0,0,0,0.04)] backdrop-blur-sm transition-opacity supports-[backdrop-filter]:bg-white/90", bottomActionsVisible && "pointer-events-none opacity-0")}>
             <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
               <div className="flex min-w-0 flex-1 flex-col gap-0.5 sm:flex-row sm:items-center sm:gap-2">
                 {autoSaving && (
