@@ -8285,6 +8285,10 @@ export type Database = {
           verified_at: string
         }[]
       }
+      get_public_agent_profile: {
+        Args: { p_id_or_code: string }
+        Returns: Json
+      }
       get_public_listing: {
         Args: { p_listing_id: string }
         Returns: {
