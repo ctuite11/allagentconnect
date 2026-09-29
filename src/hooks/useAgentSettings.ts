@@ -32,6 +32,8 @@ export interface AgentSettings {
   dcmls_receive_seller_leads?: boolean | null;
   dcmls_buyer_incentives?: string[] | null;
   dcmls_seller_incentives?: string[] | null;
+  dcmls_buyer_incentives_more?: string | null;
+  dcmls_seller_incentives_more?: string | null;
 }
 
 const defaultSettings: Omit<AgentSettings, "user_id"> = {
