@@ -129,4 +129,4 @@
 ## Address grammar + spell-check completion (2026-09-29)
 - [x] Match email street-suffix abbreviations to the website and enforce parity with shared fixtures
 - [x] Enable spell-check for Compensation Notes, Custom document name, and Rental Commission Notes
-- [ ] Visually verify 4 Derne St #1 and one additional Listing Search result in desktop list-row and compact/mobile card layouts; change no code if both pass
+- [x] Visually verified 4 Derne St #1 in desktop list-row and compact/mobile card layouts, plus 105 Solaire Dr; shared grammar passed, so no code changed
