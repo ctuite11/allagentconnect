@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { AgentPageHeader } from "@/components/layout/AgentPageHeader";
 import { agentSectionTitle } from "@/lib/agentUi";
 import { useNavigate, useParams, useSearchParams, useLocation } from "react-router-dom";
