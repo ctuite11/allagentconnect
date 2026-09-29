@@ -1,4 +1,4 @@
-// @auth-classification: public
+// @auth-classification: public-read
 // Saves a consumer's incentive-details request (the source of truth), snapshots the offer,
 // and creates an in-app agent notification. Never returns incentive details to the consumer.
 import { createClient } from "npm:@supabase/supabase-js@2";
