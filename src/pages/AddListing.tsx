@@ -2755,7 +2755,8 @@ const AddListing = () => {
     };
   };
 
-  const handleSaveDraft = async (isAutoSave = false) => {
+  /** Returns the saved draft listing ID on success, null on failure. */
+  const handleSaveDraft = async (isAutoSave = false): Promise<string | null> => {
     draftSession.beginSave();
     try {
       // Get fresh user from server - single source of truth
@@ -2764,7 +2765,7 @@ const AddListing = () => {
         if (!isAutoSave) {
           // getFreshUserOrRedirect already shows toast and redirects
         }
-        return;
+        return null;
       }
       
       if (isAutoSave) {
@@ -2858,6 +2859,8 @@ const AddListing = () => {
         navigate(isConciergeMode ? CONCIERGE_BASE_PATH : `${ROUTES.MY_LISTINGS}?status=draft`);
       }
 
+      return targetId;
+
     } catch (error: any) {
       console.error("Error saving draft listing:", {
         message: error.message,
@@ -2879,7 +2882,7 @@ const AddListing = () => {
         toast.error(`Failed to save draft: ${error.message || 'Unknown error'}`);
       }
       // Return early on error - don't update state or show success
-      return;
+      return null;
     } finally {
       draftSession.endSave();
       if (isAutoSave) {
