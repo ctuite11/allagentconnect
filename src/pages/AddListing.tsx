@@ -582,12 +582,14 @@ const AddListing = () => {
           container = container.parentElement;
         }
         const scroller = (container ?? document.scrollingElement ?? document.documentElement) as HTMLElement;
+        // Sticky bar pins at its CSS top offset inside the scroller; measure that plus its live height.
         const containerTop = container ? container.getBoundingClientRect().top : 0;
+        const barStickyTop = parseFloat(getComputedStyle(barEl).top) || 0;
         const barHeight = barEl.getBoundingClientRect().height;
         const gap = 12;
         const target = Math.max(
           0,
-          scroller.scrollTop + alertEl.getBoundingClientRect().top - containerTop - barHeight - gap,
+          scroller.scrollTop + alertEl.getBoundingClientRect().top - containerTop - barStickyTop - barHeight - gap,
         );
         scroller.scrollTo({ top: target, behavior: "smooth" });
       });
