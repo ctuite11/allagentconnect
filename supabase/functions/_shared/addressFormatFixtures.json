@@ -1,0 +1,8 @@
+[
+  { "name": "MA lowercase input with unit", "input": { "address": "4 derne st", "unit_number": "1", "city": "boston", "state": "MA", "zip_code": "02114" }, "expected": "4 Derne St #1, Boston, MA 02114" },
+  { "name": "MA with trailing USA and embedded city", "input": { "address": "4 Derne St #1, Boston, MA 02114, USA", "unit_number": "1", "city": "Boston", "state": "MA", "zip_code": "02114" }, "expected": "4 Derne St #1, Boston, MA 02114" },
+  { "name": "NH", "input": { "address": "12 Main St", "city": "Nashua", "state": "NH", "zip_code": "03060" }, "expected": "12 Main St, Nashua, NH 03060" },
+  { "name": "RI", "input": { "address": "55 Hope St", "city": "Providence", "state": "RI", "zip_code": "02906" }, "expected": "55 Hope St, Providence, RI 02906" },
+  { "name": "Unit number", "input": { "address": "300 Commercial St", "unit_number": "434", "city": "Boston", "state": "MA", "zip_code": "02109" }, "expected": "300 Commercial St #434, Boston, MA 02109" },
+  { "name": "Ma as a street word stays Ma", "input": { "address": "12 Ma Way", "city": "Nashua", "state": "NH", "zip_code": "03060" }, "expected": "12 Ma Way, Nashua, NH 03060" }
+]
