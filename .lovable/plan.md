@@ -1,38 +1,58 @@
-# Preview only before first publish, in the same tab
+# Profile becomes the single place for social media
 
-## Rule
-Preview appears on Add/Edit Listing only for a listing that has **never been published** and is still a Draft. Once a listing has ever gone live, Preview is gone for good, even if it is later Pending, Sold, Cancelled, Temporarily Withdrawn, etc. The listing's own page is the agent's view of a published listing.
+## What changes for the agent
 
-## Never-published Draft (including brand-new)
-- Preview button shown.
-- Click: save unsaved changes with the existing Draft save (listing stays Draft), then open the listing page **in the same tab**. Never publishes.
-- If the save fails and there is no Draft yet, stay on the editor and show the existing error.
-- Back returns to the editor; Back again returns to where the agent came from (e.g. My Listings). One tab throughout.
-- A brand-new listing becomes a saved Draft on Preview (existing behavior), so Back lands in the same form showing everything entered.
+**Profile → Social Media** shows one block per platform: Facebook, Instagram, LinkedIn, Threads.
 
-## Already-published listings
-Preview button hidden in every spot it appears (top bar and bottom actions). No save prompt, no Draft conversion, no separate preview mode.
+Each block has:
+- **Public profile/page** — the existing link box (saved with the profile, as it is now)
+- **Publishing connection** — "Connected" or "Not connected"
+- Button: **Connect for Publishing** when it's not connected, **Manage Connection** when it is
 
-## Unchanged
-Publish, Save Draft, validation, status logic, photo gate, the listing page's Back handling, and Rental Preview.
+X and Website stay as link-only rows. They have no publishing, so they get no connection line.
 
-## QA (no publishing, no real listing touched)
-1. Brand-new listing -> Preview available, opens in same tab, Back keeps data.
-2. Fake never-published test Draft -> Preview available; My Listings -> Edit -> Preview -> Back -> Back -> My Listings in one tab.
-3. Unsaved change -> Preview saves it, listing stays Draft.
-4. Open one of my own live listings and one previously published listing in a later status -> Preview button not shown (view only, nothing saved).
-5. No status history, Hot Sheet, email, social, or DCMLS activity from Preview; test Draft deleted afterward while still Draft.
-6. Tab count stays 1 on desktop and mobile sizes.
-Not tested: the moment a Draft is actually published (would require a real publish).
+Link and connection are separate. Typing a Facebook link never marks Facebook as Connected. Only the existing sign-in flow does that.
+
+**Settings → Social Media** becomes a short pointer: "Manage your social profile links and publishing connections from your Profile." It has a **Go to Profile** button that opens Profile scrolled to Social Media. The full connection list is removed from Settings.
+
+## Connection flow
+
+1. The agent clicks Connect for Publishing (or Manage Connection) on Profile.
+2. The existing hosted connection page opens, the same one Settings uses today.
+3. After signing in, the agent comes back to Profile → Social Media, not Settings.
+4. Profile reloads the connection status on return and shows Connected for any platform that was authorized.
+
+All buttons open the same page, because it manages all four platforms together.
+
+## Launch gate (unchanged)
+
+Publishing is still limited to admins and named test accounts. Everyone else sees only the link boxes on Profile, with no connection lines or buttons, just as the Settings card is hidden from them today. The Settings pointer is shown to every agent, because every agent has profile links.
+
+## Note: Threads link is new
+
+Today's Profile has no Threads link box. It has LinkedIn, X, Facebook, Instagram and Website. I'll add a Threads link box, saved in the same place as the other links. No database change is needed. Existing profiles just start with an empty Threads link. If a Threads link is filled in, the public profile shows a Threads icon next to the other social icons.
+
+## Not changing
+
+- Server functions (`social-accounts-status`, `social-connect-portal`), `agent_social_accounts`, and Bundle teams. Each agent still has one team, and it's reused.
+- Publishing rules, first-publish defaults, the listing social checkboxes, and social events
+- Listing status, Hot Sheets, email, DCMLS
+- No social posts are sent
 
 ## Technical details
-- Both `/agent/listings/new` and `/agent/listings/edit/:id` use `src/pages/AddListing.tsx`; only this file changes.
-- One `canPreview` flag, based on the raw saved status (`backendStatusRef.current`), never the form's selected/intended status:
-  - Brand-new / no listing ID: eligible.
-  - Existing listing with saved status other than `draft`: ineligible right away, no lookup.
-  - Existing listing with saved status `draft`: existence check on `listing_status_history` (select id, `new_status <> 'draft'`, limit 1). No row: eligible. Any row: hidden permanently.
-  - While loading or on error: hidden (fail closed).
-- For an existing listing, `canPreview` starts false and turns true only after the status/history check completes, so the button never flashes.
-- `canPreview` controls every Preview button (top/sticky and bottom actions) and also guards `handlePreview` (UI and handler protection).
-- `handlePreview`: guard on the eligibility flag; remove `window.open("about:blank","_blank")`, `win.location.href`, `win.close()` and the `_blank` fallback; end with `navigate(previewUrl)`, keeping the existing `returnTo=/agent/listings/edit/:id?from=<safe from>`. Comment becomes "Save the draft, then open it on the listing page in the same tab."
-- Because Preview is never offered on published listings, the current Draft-save path can no longer demote a live listing through Preview.
+
+- `src/components/profile-editor/SocialLinksSection.tsx`: add `threads` to `SocialLinks`. Load connection status once with `fetchSocialConnected()`; `null` means the agent is gated, so no connection lines are shown. Show status and a button under the Facebook, Instagram, LinkedIn and Threads rows. Button calls `openSocialConnectPortal(returnUrl)`.
+- `src/lib/socialPublishing.ts`: `openSocialConnectPortal` takes an optional `returnUrl`, defaulting to the current `/agent/settings` so other callers behave the same. Profile passes `${origin}/agent/profile#social-media`. The server already accepts any valid `returnUrl`.
+- `src/pages/AgentProfileEditor.tsx`: add `threads: ""` to the default and loaded links (merged, so old rows keep their values). Add `id="social-media"` to the Social Media card, and scroll to it when the address ends in `#social-media`. Update the card description.
+- `src/pages/AgentProfile.tsx`: add Threads to the social icon list, shown only when a link exists.
+- `src/components/social/SocialMediaSettingsCard.tsx`: replace the body with the pointer text and a Go to Profile button (`/agent/profile#social-media`). Always shown.
+
+## QA (no posts, no listing changes)
+
+1. Edit and save profile links, including Threads; reload and confirm they're kept. Confirm they show on the public profile.
+2. Save a Facebook link while Facebook isn't connected. Profile still says Not connected.
+3. Connect for Publishing opens the real hosted connection page. Stop there unless you approve connecting an account.
+4. Coming back lands on Profile → Social Media, and the status reloads. If an account is connected, it shows Connected.
+5. Settings → Go to Profile opens Profile at Social Media.
+6. `agent_social_accounts` still has one row for the test agent before and after, so no duplicate team.
+7. The listing social checkboxes and first-publish review are unchanged. This is checked in the code only, with no publishing.
