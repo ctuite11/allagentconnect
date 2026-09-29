@@ -384,6 +384,25 @@ const AddListing = () => {
    const originalPriceRef = useRef<number | null>(null);
    const originalStatusRef = useRef<string | null>(null);
    const backendStatusRef = useRef<string | null>(null);
+   // Preview is a first-publish tool only. Brand-new listings are eligible; existing
+   // listings start hidden (fail closed) until the saved status/history check completes.
+   const [canPreview, setCanPreview] = useState<boolean>(!listingId);
+   const resolvePreviewEligibility = async (id: string, rawStatus: string) => {
+     setCanPreview(false);
+     if (rawStatus !== "draft") return;
+     try {
+       const { data, error } = await supabase
+         .from("listing_status_history")
+         .select("id")
+         .eq("listing_id", id)
+         .neq("new_status", "draft")
+         .limit(1);
+       if (error) return;
+       setCanPreview(!data || data.length === 0);
+     } catch {
+       setCanPreview(false);
+     }
+   };
 
   // Clone listing state (set when navigating from AgentListingDetail "Clone as New Listing")
   const [isRelisting, setIsRelisting] = useState(false);
@@ -960,6 +979,8 @@ const AddListing = () => {
         // Store the true backend status before normalization (for draft detection)
         const rawStatus = (data.status || "new").toLowerCase();
         backendStatusRef.current = rawStatus;
+        if (data.id) void resolvePreviewEligibility(data.id, rawStatus);
+        else setCanPreview(false);
         listingOwnerIdRef.current = (data as any).agent_id ?? null;
         
         // Normalize status to lowercase to match Select options
@@ -3275,6 +3296,7 @@ const AddListing = () => {
         toast.success("Listing changes saved!");
         // The listing save is final from here; social can never undo it.
         if (payload.status !== LISTING_STATUS.DRAFT) {
+          setCanPreview(false);
           backendStatusRef.current = payload.status;
           originalStatusRef.current = payload.status;
           originalPriceRef.current = newPrice ?? null;
@@ -3417,16 +3439,16 @@ const AddListing = () => {
     navigate(`/agent/listings/${targetId}/floor-plans`);
   };
 
-  /** Save the draft, then open it on the listing page in a new tab. */
+  /** Save the draft, then open it on the listing page in the same tab. */
   const handlePreview = async () => {
-    const win = window.open("about:blank", "_blank");
+    // Handler-level guard: Preview never runs for a listing that has ever been published.
+    if (!canPreview) return;
     let id = listingId || draftSession.getDraftId();
     if (!id || hasUnsavedChanges) {
       await handleSaveDraft(true);
       id = listingId || draftSession.getDraftId();
     }
     if (!id) {
-      win?.close();
       toast.error("Add an address and save the draft before previewing.");
       return;
     }
@@ -3435,8 +3457,7 @@ const AddListing = () => {
       addListingBackTo.startsWith("/") && !addListingBackTo.startsWith("//") ? addListingBackTo : null;
     const editorPath = `/agent/listings/edit/${id}${safeFrom ? `?from=${encodeURIComponent(safeFrom)}` : ""}`;
     const previewUrl = `/property/${id}?returnTo=${encodeURIComponent(editorPath)}`;
-    if (win) win.location.href = previewUrl;
-    else window.open(previewUrl, "_blank");
+    navigate(previewUrl);
   };
 
   const handleSubmit = async (e: React.FormEvent, publishNow: boolean = true) => {
@@ -3749,6 +3770,7 @@ const AddListing = () => {
 
       // Listing write is final. Mark it published for this session, then run social.
       if (listingData.status !== LISTING_STATUS.DRAFT) {
+        setCanPreview(false);
         backendStatusRef.current = listingData.status;
         originalStatusRef.current = listingData.status;
       }
@@ -3985,10 +4007,12 @@ const AddListing = () => {
                       </>
                     )}
                   </Button>
+                  {canPreview && (
                   <Button variant="outline" size="sm" onClick={() => void handlePreview()} type="button" className="gap-1.5 border-zinc-200">
                     <Eye className="h-4 w-4 shrink-0" />
                     Preview
                   </Button>
+                  )}
                   <Button
                     variant="default"
                     size="sm"
@@ -4013,6 +4037,7 @@ const AddListing = () => {
               ) : listingId ? (
 
                 <>
+                  {canPreview && (
                   <Button
                     variant="outline"
                     size="sm"
@@ -4023,6 +4048,7 @@ const AddListing = () => {
                     <Eye className="h-4 w-4 shrink-0" />
                     Preview
                   </Button>
+                  )}
                   <Button
                     variant="default"
                     size="sm"
@@ -4072,10 +4098,12 @@ const AddListing = () => {
                       </>
                     )}
                   </Button>
+                  {canPreview && (
                   <Button variant="outline" size="sm" onClick={() => void handlePreview()} type="button" className="gap-1.5 border-zinc-200">
                     <Eye className="h-4 w-4 shrink-0" />
                     Preview
                   </Button>
+                  )}
                   <Button variant="default" size="sm" onClick={(e) => handleSubmit(e, true)} type="button" disabled={submitting || savingDraft} className="gap-1.5">
                     {submitting ? (
                       <>
