@@ -81,6 +81,14 @@ export function DcmlsProfileSettingsCard() {
       toast.error(`"${bad}" is not a 5-digit ZIP code`);
       return;
     }
+    if (buyerInc.includes(DCMLS_INCENTIVE_MORE) && !buyerMore.trim()) {
+      toast.error('Please add a short explanation for "More" under Buyer incentives offered.');
+      return;
+    }
+    if (sellerInc.includes(DCMLS_INCENTIVE_MORE) && !sellerMore.trim()) {
+      toast.error('Please add a short explanation for "More" under Seller incentives offered.');
+      return;
+    }
     setSaving(true);
     const ok = await updateSettings({
       dcmls_buyer_lead_zips: zips.length ? zips : null,
