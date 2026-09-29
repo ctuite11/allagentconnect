@@ -14,7 +14,7 @@ type DcmlsBrandLogoProps = {
 const DcmlsBrandLogo: React.FC<DcmlsBrandLogoProps> = ({
   variant = "onLight",
   className,
-  monogramClassName = "h-7 w-7",
+  monogramClassName = "h-8 w-8",
 }) => {
   const onDark = variant === "onDark";
 
@@ -27,7 +27,7 @@ const DcmlsBrandLogo: React.FC<DcmlsBrandLogoProps> = ({
       <AACMonogram className={cn(monogramClassName, "shrink-0 text-[#0E56F5]")} />
       <span
         className={cn(
-          "font-['Manrope'] text-[14px] font-semibold tracking-[-0.02em] sm:text-[15px]",
+          "font-['Manrope'] text-[15px] font-bold tracking-[-0.02em] sm:text-[17px]",
           onDark ? "text-white" : "text-neutral-950",
         )}
       >
