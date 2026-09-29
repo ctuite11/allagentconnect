@@ -4362,7 +4362,6 @@ const AddListing = () => {
                       }
                       listingIsDraft={isNeverPublished()}
                       participation={dcmlsParticipation}
-                      onOptedIn={() => setDcmlsParticipation("on")}
                     />
                   </div>
                 )}

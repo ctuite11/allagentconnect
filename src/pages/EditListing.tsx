@@ -720,7 +720,7 @@ const EditListing: React.FC = () => {
                     dcmlsStatus={dcmlsStatus}
                     dcmlsError={dcmlsError}
                     participation={dcmlsParticipation}
-                    onOptedIn={() => setDcmlsParticipation("on")}
+                    listingIsDraft={originalStatus === "draft"}
                   />
                 </div>
 
