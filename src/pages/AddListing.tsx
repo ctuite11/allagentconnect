@@ -4699,7 +4699,7 @@ const AddListing = () => {
                   {/* Property Description */}
                   <div className="mt-6 space-y-3 pb-10">
                     <Label htmlFor="description">Property Description</Label>
-                    <Textarea
+                    <Textarea spellCheck autoCorrect="on" autoCapitalize="sentences"
                       id="description"
                       value={formData.description}
                       onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
@@ -5109,7 +5109,7 @@ const AddListing = () => {
                       </div>
                       <div className="mt-3">
                         <Label htmlFor="pets_comment">Pets - Notes / Restrictions</Label>
-                        <Textarea
+                        <Textarea spellCheck autoCorrect="on" autoCapitalize="sentences"
                           id="pets_comment"
                           rows={3}
                           placeholder="e.g. Cats OK, small dogs only, no aggressive breeds..."
@@ -5286,7 +5286,7 @@ const AddListing = () => {
                   {/* Other Features Text Field */}
                   <div className="space-y-2">
                     <Label htmlFor="other_features">Other Features (optional)</Label>
-                    <Textarea
+                    <Textarea spellCheck autoCorrect="on" autoCapitalize="sentences"
                       id="other_features"
                       placeholder="List any additional features not covered above..."
                       value={otherAmenities}
@@ -5368,7 +5368,7 @@ const AddListing = () => {
                   {/* Parking Comments */}
                   <div className="space-y-2">
                     <Label htmlFor="parking_comments">Parking Comments (optional)</Label>
-                    <Textarea
+                    <Textarea spellCheck autoCorrect="on" autoCapitalize="sentences"
                       id="parking_comments"
                       placeholder="Additional parking notes..."
                       value={formData.parking_comments}
@@ -5418,7 +5418,7 @@ const AddListing = () => {
                   {/* Garage Comments */}
                   <div className="space-y-2">
                     <Label htmlFor="garage_comments">Garage Comments (optional)</Label>
-                    <Textarea
+                    <Textarea spellCheck autoCorrect="on" autoCapitalize="sentences"
                       id="garage_comments"
                       placeholder="Additional garage notes..."
                       value={formData.garage_comments}
@@ -5631,7 +5631,7 @@ const AddListing = () => {
                   <div className="space-y-5">
                     <div className="space-y-2">
                       <Label htmlFor="showing_instructions">Instructions</Label>
-                      <Textarea
+                      <Textarea spellCheck autoCorrect="on" autoCapitalize="sentences"
                         id="showing_instructions"
                         placeholder="Please call 24 hours in advance. Remove shoes..."
                         value={formData.showing_instructions}
@@ -5659,7 +5659,7 @@ const AddListing = () => {
                 {/* Additional Notes */}
                 <div className="mt-2 space-y-4 border-t border-zinc-100 pt-12 pb-4">
                   <Label htmlFor="additional_notes">Additional Notes</Label>
-                  <Textarea
+                  <Textarea spellCheck autoCorrect="on" autoCapitalize="sentences"
                     id="additional_notes"
                     placeholder="Any other important information about the property..."
                     value={formData.additional_notes}
