@@ -792,6 +792,13 @@ const ConsumerPropertyDetail = () => {
                               {agentProfile.company || agentProfile.office_name}
                             </p>
                           )}
+                          <button
+                            type="button"
+                            onClick={() => navigate(`/agent/${agentProfile.id}?listing=${id}`, { state: { from: location.pathname + location.search, listingId: id } })}
+                            className="mt-1 text-sm font-medium text-primary hover:underline"
+                          >
+                            View agent profile
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -1009,6 +1016,13 @@ const ConsumerPropertyDetail = () => {
                               {agentProfile.company || agentProfile.office_name}
                             </p>
                           )}
+                          <button
+                            type="button"
+                            onClick={() => navigate(`/agent/${agentProfile.id}?listing=${id}`, { state: { from: location.pathname + location.search, listingId: id } })}
+                            className="mt-1 text-sm font-medium text-primary hover:underline"
+                          >
+                            View agent profile
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -1200,6 +1214,13 @@ const ConsumerPropertyDetail = () => {
                               {agentProfile.company || agentProfile.office_name}
                             </p>
                           )}
+                          <button
+                            type="button"
+                            onClick={() => navigate(`/agent/${agentProfile.id}?listing=${id}`, { state: { from: location.pathname + location.search, listingId: id } })}
+                            className="mt-1 text-sm font-medium text-primary hover:underline"
+                          >
+                            View agent profile
+                          </button>
                         </div>
                       </div>
                     </div>

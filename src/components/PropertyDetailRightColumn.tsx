@@ -192,7 +192,7 @@ export const PropertyDetailRightColumn = ({ listing, agent, isAgentView, stats }
                   type="button"
                   onClick={() =>
                     navigate(`/agent/${agent.id}`, {
-                      state: { from: location.pathname + location.search },
+                      state: { from: location.pathname + location.search, listingId: listing?.id },
                     })
                   }
                   className="flex w-full items-center gap-2 text-sm text-left hover:text-primary transition"
