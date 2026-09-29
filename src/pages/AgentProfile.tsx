@@ -262,17 +262,8 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
             .eq(filterCol, idOrCode)
             .maybeSingle()
         : supabase
-            .from("agent_profiles")
-            .select(`
-              id, aac_id, first_name, last_name, title, company, office_name, team_name,
-              bio, social_links, buyer_incentives, seller_incentives, headshot_url,
-              logo_url, header_background_type, header_background_value, header_image_url,
-              office_city, office_state,
-              created_at, updated_at,
-              agent_county_preferences ( county_id, counties (name, state) )
-            `)
-            .eq(filterCol, idOrCode)
-            .maybeSingle();
+            .rpc("get_public_agent_profile", { p_id_or_code: idOrCode ?? "" })
+            .then((r) => ({ data: r.data as any, error: r.error }));
 
       const { data: agentData, error: agentError } = await agentQuery;
 
