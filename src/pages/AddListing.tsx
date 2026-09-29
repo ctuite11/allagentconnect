@@ -78,6 +78,7 @@ import {
   hasAnyConnected,
   isSocialEligibleStatus,
   newClientRequestId,
+  openSocialConnectPortal,
   publishListingSocial,
   saveListingSocialDefaults,
   statusToSocialEventType,
@@ -282,6 +283,11 @@ function resolveAddListingReturnTo(
   return ROUTES.MY_LISTINGS;
 }
 
+/** sessionStorage key for the authorization round-trip resume state. */
+function socialResumeKey(listingId: string): string {
+  return `aac-social-resume-${listingId}`;
+}
+
 const SHOW_PHOTO_ORDER_STEP: boolean = false;
 
 const AddListing = () => {
@@ -441,6 +447,10 @@ const AddListing = () => {
   const [publishSocialSelected, setPublishSocialSelected] = useState<SocialPlatform[]>([]);
   /** Platforms confirmed in "Ready to publish?" for the pending first publish (null = section not shown). */
   const pendingFirstPublishSocialRef = useRef<SocialPlatform[] | null>(null);
+  /** Saved selections restored when "Ready to publish?" reopens after the authorization round-trip. */
+  const restoreSocialSelectionsRef = useRef<SocialPlatform[] | null>(null);
+  const socialConnectInProgressRef = useRef(false);
+  const socialResumeFiredRef = useRef(false);
   const [editSocialPrompt, setEditSocialPrompt] = useState<{
     listingId: string;
     eventType: string;
