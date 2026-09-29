@@ -1,21 +1,20 @@
-# Listing results card address QA
+# Fix required-field error hidden behind sticky Add Listing buttons
 
-## Verified current paths
-- The standard list-row results use `SearchListingCard`, and both its wide and compact layouts render addresses through `ListingCardAddressLine`.
-- `ListingCardAddressLine` formats its text with the shared `buildDisplayAddress()` helper.
-- The default map/results grid uses the shared compact `ListingCard`, whose address lines also use `ListingCardAddressLine`.
-- The current preview build is healthy.
+## What changes
+When Publish validation fails, the page scrolls so the whole red "Please complete the following required fields" box sits just below the sticky Save Draft / Preview / Publish bar, with every missing-field line visible. This applies to both publish paths: existing Draft/Edit and brand-new listing. It works on desktop and mobile, including when the buttons wrap onto two lines.
+
+## How
+- Add a ref to the sticky action bar.
+- Add one small scroll helper. On the next frame (after the red box has rendered), it measures the bar's current height and scrolls the page's actual scroll area to the red box's position minus that height plus a small gap. It scrolls smoothly.
+- Use that helper in both validation-failure spots, replacing the current `window.scrollTo({ top: 0 })` + `scrollIntoView()` pair.
+- Measuring the height live makes wrapped (taller) button bars work automatically. A fixed `scroll-margin-top` can't adapt to that, and the page scrolls inside a workspace pane, not the window.
+
+## Not changing
+Validation rules, button design and layout, the sticky bar itself, and the Publish / review flow.
 
 ## QA
-- Open an authenticated Listing Search results screen containing 4 Derne St #1.
-- Verify its visible card address is exactly `4 Derne St #1, Boston, MA 02114`.
-- Check both result modes:
-  - desktop list-row view
-  - compact/mobile card view
-- Confirm the displayed address retains uppercase `MA`, uses `St`, includes `#1`, and does not repeat city, state, or ZIP.
-- Spot-check another visible result for the same address grammar and confirm the layout remains intact.
-
-## Conditional fix only
-- If any results-card surface bypasses the shared path or displays different grammar, replace only that address output with the existing `ListingCardAddressLine` or shared listing-address helper.
-- Do not add another formatter, redesign cards, alter stored listing data, or change search behavior.
-- Recheck both layouts after any necessary correction and confirm the build remains healthy.
+On a Draft with several required fields missing, at desktop (1280px) and mobile (390px) widths:
+1. Scroll partway down.
+2. Click Publish.
+3. Confirm the page scrolls up and the full red box, including every missing-field line, is visible below the sticky controls, with nothing covered.
+QA only clicks Publish to trigger the validation failure. It never confirms a publish.
