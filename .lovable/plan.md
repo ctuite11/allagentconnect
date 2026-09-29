@@ -32,6 +32,7 @@ Not tested: the moment a Draft is actually published (would require a real publi
   - Existing listing with saved status other than `draft`: ineligible right away, no lookup.
   - Existing listing with saved status `draft`: existence check on `listing_status_history` (select id, `new_status <> 'draft'`, limit 1). No row: eligible. Any row: hidden permanently.
   - While loading or on error: hidden (fail closed).
-- `canPreview` controls every Preview button (top/sticky and bottom actions) and also guards `handlePreview`.
+- For an existing listing, `canPreview` starts false and turns true only after the status/history check completes, so the button never flashes.
+- `canPreview` controls every Preview button (top/sticky and bottom actions) and also guards `handlePreview` (UI and handler protection).
 - `handlePreview`: guard on the eligibility flag; remove `window.open("about:blank","_blank")`, `win.location.href`, `win.close()` and the `_blank` fallback; end with `navigate(previewUrl)`, keeping the existing `returnTo=/agent/listings/edit/:id?from=<safe from>`. Comment becomes "Save the draft, then open it on the listing page in the same tab."
 - Because Preview is never offered on published listings, the current Draft-save path can no longer demote a live listing through Preview.
