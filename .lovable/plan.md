@@ -46,7 +46,7 @@ Today's Profile has no Threads link box. It has LinkedIn, X, Facebook, Instagram
 
 ## Technical details
 
-- `src/components/profile-editor/SocialLinksSection.tsx`: add `threads` to `SocialLinks`. Load connection status once with `fetchSocialConnected()`; `null` means the agent is gated, so no connection lines are shown. Show status and a button under the Facebook, Instagram, LinkedIn and Threads rows. Button calls `openSocialConnectPortal(returnUrl)`.
+- `src/components/profile-editor/SocialLinksSection.tsx`: add `threads` to `SocialLinks`. Load connection status once with `fetchSocialConnected()`; `null` means connection status is unavailable (either gated or the request failed), so no publishing connection lines or buttons are shown. Show status and a button under the Facebook, Instagram, LinkedIn and Threads rows. Button calls `openSocialConnectPortal(returnUrl)`.
 - `src/lib/socialPublishing.ts`: `openSocialConnectPortal` takes an optional `returnUrl`, defaulting to the current `/agent/settings` so other callers behave the same. Profile passes `${origin}/agent/profile#social-media`. The server already accepts any valid `returnUrl`.
 - `src/pages/AgentProfileEditor.tsx`: add `threads: ""` to the default and loaded links (merged, so old rows keep their values). Add `id="social-media"` to the Social Media card, and scroll to it when the address ends in `#social-media`. Update the card description.
 - `src/pages/AgentProfile.tsx`: add Threads to the social icon list, shown only when a link exists.
