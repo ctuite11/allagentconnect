@@ -58,6 +58,7 @@ interface SocialLinks {
   twitter: string;
   facebook: string;
   instagram: string;
+  threads: string;
   website: string;
 }
 
@@ -111,6 +112,7 @@ const AgentProfileEditor = () => {
     twitter: "",
     facebook: "",
     instagram: "",
+    threads: "",
     website: "",
   });
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
@@ -204,13 +206,14 @@ const [headerBackgroundType, setHeaderBackgroundType] = useState("color");
 setHeaderBackgroundType(profile.header_background_type || "color");
         setHeaderBackgroundValue(profile.header_background_value || "directconnect-blue");
         setHeaderImageUrl(profile.header_image_url || "");
-        const links = profile.social_links as unknown as SocialLinks;
-        setSocialLinks(links || {
-          linkedin: "",
-          twitter: "",
-          facebook: "",
-          instagram: "",
-          website: "",
+        const links = (profile.social_links ?? {}) as unknown as Partial<SocialLinks>;
+        setSocialLinks({
+          linkedin: links.linkedin ?? "",
+          twitter: links.twitter ?? "",
+          facebook: links.facebook ?? "",
+          instagram: links.instagram ?? "",
+          threads: links.threads ?? "",
+          website: links.website ?? "",
         });
       }
 
@@ -926,13 +929,13 @@ setHeaderBackgroundType(profile.header_background_type || "color");
             )}
 
             {/* Social Links Section */}
-            <Card className="bg-white border border-zinc-200 rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+            <Card id="social-media" className="scroll-mt-24 bg-white border border-zinc-200 rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Share2 className="h-5 w-5 text-primary" />
                   Social Media
                 </CardTitle>
-                <CardDescription className="text-zinc-500">Connect your social profiles</CardDescription>
+                <CardDescription className="text-zinc-500">Your public profile links and publishing connections</CardDescription>
               </CardHeader>
               <CardContent>
                 <SocialLinksSection

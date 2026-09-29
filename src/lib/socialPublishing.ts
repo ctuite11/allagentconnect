@@ -77,9 +77,9 @@ export function hasAnyConnected(c: SocialConnected | null): boolean {
   return !!c && SOCIAL_PLATFORMS.some((p) => c[p]);
 }
 
-export async function openSocialConnectPortal(): Promise<void> {
+export async function openSocialConnectPortal(returnUrl?: string): Promise<void> {
   const { data, error } = await supabase.functions.invoke("social-connect-portal", {
-    body: { returnUrl: `${window.location.origin}/agent/settings` },
+    body: { returnUrl: returnUrl ?? `${window.location.origin}/agent/settings` },
   });
   const url = (data as { portalUrl?: string } | null)?.portalUrl;
   if (error || !url) {

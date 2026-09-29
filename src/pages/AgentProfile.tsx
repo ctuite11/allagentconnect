@@ -64,6 +64,7 @@ interface AgentProfileData {
     twitter?: string;
     facebook?: string;
     instagram?: string;
+    threads?: string;
     website?: string;
   } | null;
   receive_buyer_alerts: boolean;
@@ -97,7 +98,7 @@ const SECTION_PAD = "py-9 md:py-11";
 const LISTINGS_SECTION = "border-t border-neutral-100 pt-14 pb-10 md:pt-16 md:pb-12";
 const EYEBROW = "text-[10px] font-medium uppercase tracking-[0.14em] text-neutral-400";
 
-type ProfileSocialBrand = "linkedin" | "facebook" | "instagram" | "twitter";
+type ProfileSocialBrand = "linkedin" | "facebook" | "instagram" | "twitter" | "threads";
 
 const PROFILE_INSTAGRAM_GRADIENT_ID = "aac-profile-ig-gradient";
 
@@ -154,6 +155,12 @@ function ProfileSocialBrandIcon({ brand }: { brand: ProfileSocialBrand }) {
           d="M16.2 8.5h2.6l-5.7 6.5 6.7 8.8h-5.2l-4.1-5.4-4.7 5.4H7.1l6.1-7-6.6-8.3h5.3l3.7 4.9 4.3-4.9zm-1.4 15.1h1.4L10.2 10.2H8.7l6.1 13.4z"
         />
       ) : null}
+      {brand === "threads" ? (
+        <>
+          <rect width="28" height="28" rx="7" fill="#000" />
+          <text x="14" y="19.5" textAnchor="middle" fontSize="16" fontWeight="600" fill="#fff" fontFamily="Arial, sans-serif">@</text>
+        </>
+      ) : null}
     </svg>
   );
 }
@@ -162,6 +169,7 @@ const socialIconMap = [
   { key: "linkedin", brand: "linkedin" as const },
   { key: "facebook", brand: "facebook" as const },
   { key: "instagram", brand: "instagram" as const },
+  { key: "threads", brand: "threads" as const },
   { key: "twitter", brand: "twitter" as const },
 ] as const;
 
