@@ -75,3 +75,4 @@ Keeps the current pointer card with **Go to Profile**, but the wording changes t
 4. Cancel/close the review at any point → no publish, no status history, no Hot Sheet, no email, no social post, no defaults saved.
 5. Update prompt (live-listing edit) behaves exactly as today; no connect flow there.
 6. Tab count never increases.
+7. Enter the editor from My Listings, run the authorization round-trip, cancel, then Back → lands on My Listings as before (`from` preserved).
