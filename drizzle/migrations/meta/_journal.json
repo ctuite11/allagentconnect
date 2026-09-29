@@ -176,6 +176,13 @@
       "when": 1790651788291,
       "tag": "0024_public_agent_profile_rpc_safe_match",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1790652058894,
+      "tag": "0025_public_agent_profile_hide_legacy_incentives",
+      "breakpoints": true
     }
   ]
 }
