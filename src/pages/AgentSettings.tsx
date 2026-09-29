@@ -17,6 +17,7 @@ import { SocialMediaSettingsCard } from "@/components/social/SocialMediaSettings
 import { agentSectionDesc, agentSectionTitle } from "@/lib/agentUi";
 import { useAgentSettings } from "@/hooks/useAgentSettings";
 import type { User } from "@supabase/supabase-js";
+import { DcmlsOptInHandoffDialog } from "@/components/dcmls/DcmlsOptInHandoffDialog";
 
 export default function AgentSettings() {
   const [user, setUser] = useState<User | null>(null);
@@ -26,6 +27,7 @@ export default function AgentSettings() {
   const [savingPassword, setSavingPassword] = useState(false);
   const [loading, setLoading] = useState(true);
   const [savingDcmls, setSavingDcmls] = useState(false);
+  const [showDcmlsHandoff, setShowDcmlsHandoff] = useState(false);
 
   const { settings, loading: settingsLoading, updateSettings } = useAgentSettings(user);
 
@@ -50,12 +52,14 @@ export default function AgentSettings() {
         });
         return;
       }
-      toast({
-        title: next ? "Joined Direct Connect MLS" : "Left Direct Connect MLS",
-        description: next
-          ? "Opting in does not publish listings. Select listings individually with “Show this listing on DCMLS.”"
-          : "Your listings are no longer participating on Direct Connect MLS.",
-      });
+      if (next) {
+        setShowDcmlsHandoff(true);
+      } else {
+        toast({
+          title: "Left Direct Connect MLS",
+          description: "Your listings are no longer participating on Direct Connect MLS.",
+        });
+      }
     } finally {
       setSavingDcmls(false);
     }
@@ -200,6 +204,7 @@ export default function AgentSettings() {
               />
             </div>
           </AgentSectionCard>
+          <DcmlsOptInHandoffDialog open={showDcmlsHandoff} onOpenChange={setShowDcmlsHandoff} />
 
           <AgentSectionCard className="space-y-4 p-5 md:p-6">
             <div className="flex items-center justify-between gap-4">
