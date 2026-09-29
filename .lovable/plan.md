@@ -5,6 +5,34 @@ Clarifications folded in:
 - Threads is added to the `AgentProfile.tsx` social-links type, to `socialIconMap`, and to the icon renderer, so the public Threads icon appears. `social_links` stays as-is; no database change.
 - When a saved profile is loaded, any missing link keys default to `""`, including `threads`.
 
+## How it works, step by step (plain language)
+
+**Everyday use — saving your social links (all agents):**
+
+1. Open the sidebar and go to **Profile**. (Or open **Settings → Social Media** and click **Go to Profile** — it takes you to the same place.)
+2. Scroll to the **Social Media** block. You'll see one link box per platform: Facebook, Instagram, LinkedIn, Threads, X, and Website.
+3. Paste your public page or profile address into each box (for example, `https://facebook.com/yourpage`). Only fill in the ones you want shown.
+4. Click **Save** on the Profile page.
+5. Whatever you saved now appears as small icons on your public agent profile, so visitors can find you on those platforms.
+
+That's all most agents will ever see and do. Typing or saving a link never signs anything up or starts any posting.
+
+**Connecting for publishing (only admins and named test accounts right now):**
+
+1. On the same Profile → Social Media block, each of the four publishing platforms (Facebook, Instagram, LinkedIn, Threads) also shows a line: **Publishing connection: Not connected**, with a **Connect for Publishing** button.
+2. Click **Connect for Publishing**.
+3. A hosted sign-in page opens in this same browser tab. Sign in to your account for that platform there.
+4. When you finish, you come straight back to your **Profile → Social Media**.
+5. The page reloads the connection status. The platform you authorized now says **Connected**, and the button changes to **Manage Connection**.
+6. All four platforms are managed on that one hosted page together — you can go back there any time with **Manage Connection**.
+
+**The one distinction that matters:**
+
+- A **link** (step 3 above) = your profile icon shows that platform publicly. Nothing else.
+- A **connection** = All Agent Connect is authorized to post your listing updates to that platform for you. Only created by the hosted sign-in, never by typing a link.
+
+**If you're not in the launch group:** you see only the link boxes — no "Publishing connection" lines and no buttons. That's intentional; publishing opens up later.
+
 ## What changes for the agent
 
 **Profile → Social Media** shows one block per platform: Facebook, Instagram, LinkedIn, Threads.
