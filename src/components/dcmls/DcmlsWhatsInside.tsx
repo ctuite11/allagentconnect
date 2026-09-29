@@ -11,16 +11,10 @@ import {
 } from "lucide-react";
 import { isDcmlsAuthAccessEnabled } from "@/lib/dcmlsAuthAccess";
 
-const AAC_BLUE = "#0E56F5";
-const AAC_GREEN = "#50C878";
-const AAC_RED = "#DC2626";
-
 type Feature = {
   icon: LucideIcon;
   title: string;
   desc: string;
-  /** Default AAC blue; Hot Sheets uses red per global nav spec. */
-  accent?: "blue" | "red";
 };
 
 const FEATURES: Feature[] = [
@@ -33,7 +27,6 @@ const FEATURES: Feature[] = [
     icon: Flame,
     title: "Hot Sheets",
     desc: "Curated collections of homes matched to what you're looking for.",
-    accent: "red",
   },
   {
     icon: Sparkles,
@@ -59,89 +52,51 @@ const FEATURES: Feature[] = [
 
 const DcmlsWhatsInside: React.FC = () => {
   return (
-    <section className="border-t border-border/60 bg-background">
-      <div className="max-w-6xl mx-auto px-6 py-20 md:py-28">
-        {/* Section header */}
-        <div className="max-w-2xl mb-14 md:mb-20">
-          <div className="inline-flex items-center gap-2 mb-5">
-            <span
-              className="inline-block w-1.5 h-1.5 rounded-full"
-              style={{ backgroundColor: AAC_GREEN }}
-              aria-hidden
-            />
-            <p className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground font-medium">
-              What's Inside
-            </p>
-          </div>
-          <h2 className="text-3xl md:text-5xl font-semibold tracking-tight text-foreground leading-[1.08] mb-5">
-            Your home search,{" "}
-            <span style={{ color: AAC_BLUE }}>elevated</span>.
+    <section className="border-t border-neutral-200 bg-neutral-50">
+      <div className="mx-auto max-w-[1200px] px-5 py-20 sm:px-8 md:py-24 lg:px-10">
+        <div className="max-w-2xl">
+          <h2 className="font-['Instrument_Serif'] text-3xl tracking-[-0.02em] text-neutral-950 md:text-[2.5rem]">
+            Your home search, elevated
           </h2>
-          <p className="text-base md:text-lg text-muted-foreground leading-relaxed">
-            A free account unlocks the tools serious buyers use to stay ahead of
-            the market.
+          <p className="mt-3 font-['Manrope'] text-[15px] leading-relaxed text-neutral-600 md:text-base">
+            Tools for serious buyers — early access inventory, curated matches,
+            and direct connections to listing agents.
           </p>
         </div>
 
-        {/* Feature grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-px bg-border/60 border border-border/60 rounded-2xl overflow-hidden">
-          {FEATURES.map(({ icon: Icon, title, desc, accent = "blue" }) => {
-            const isRed = accent === "red";
-            const iconBg = isRed ? "rgba(220, 38, 38, 0.08)" : `${AAC_BLUE}0F`;
-            const iconColor = isRed ? AAC_RED : AAC_BLUE;
-            return (
-            <div
-              key={title}
-              className="group bg-background p-8 md:p-10 transition-colors hover:bg-muted/30"
-            >
-              <div className="flex items-start gap-4">
-                <div
-                  className="shrink-0 w-10 h-10 rounded-lg flex items-center justify-center transition-transform group-hover:scale-105"
-                  style={{ backgroundColor: iconBg }}
-                >
-                  <Icon className="w-5 h-5" style={{ color: iconColor }} />
-                </div>
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2 mb-2">
-                    <h3 className="text-base font-semibold text-foreground tracking-tight">
-                      {title}
-                    </h3>
-                    <span
-                      className="inline-block w-1 h-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                      style={{ backgroundColor: AAC_GREEN }}
-                      aria-hidden
-                    />
-                  </div>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    {desc}
-                  </p>
-                </div>
+        <div className="mt-12 grid grid-cols-1 gap-x-10 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
+          {FEATURES.map(({ icon: Icon, title, desc }) => (
+            <div key={title} className="min-w-0">
+              <div className="mb-3 flex h-9 w-9 items-center justify-center border border-neutral-200 bg-white">
+                <Icon className="h-4 w-4 text-neutral-900" strokeWidth={1.75} />
               </div>
+              <h3 className="font-['Manrope'] text-[15px] font-semibold text-neutral-950">
+                {title}
+              </h3>
+              <p className="mt-1.5 font-['Manrope'] text-sm leading-relaxed text-neutral-600">
+                {desc}
+              </p>
             </div>
-            );
-          })}
+          ))}
         </div>
 
-        {/* CTA — auth CTAs gated until DCMLS login is re-enabled */}
-        <div className="mt-14 md:mt-16 flex flex-col sm:flex-row items-center justify-center gap-3">
+        <div className="mt-14 flex flex-col items-start gap-3 sm:flex-row sm:items-center">
           {isDcmlsAuthAccessEnabled() ? (
             <>
               <Link
                 to="/consumer/auth?mode=signup"
-                className="inline-flex items-center justify-center h-11 px-6 rounded-md text-sm font-medium text-white transition-opacity hover:opacity-90"
-                style={{ backgroundColor: AAC_BLUE }}
+                className="inline-flex h-11 items-center justify-center rounded-md bg-neutral-950 px-6 font-['Manrope'] text-sm font-semibold text-white transition-colors hover:bg-neutral-800"
               >
                 Create your free account
               </Link>
-              <p className="text-xs text-muted-foreground">
+              <p className="font-['Manrope'] text-xs text-neutral-500">
                 No credit card. Takes under a minute.
               </p>
             </>
           ) : (
             <Link
               to="/browse?dcmls=1"
-              className="inline-flex items-center justify-center h-11 px-6 rounded-md text-sm font-medium text-white transition-opacity hover:opacity-90"
-              style={{ backgroundColor: AAC_BLUE }}
+              className="inline-flex h-11 items-center justify-center rounded-md bg-neutral-950 px-6 font-['Manrope'] text-sm font-semibold text-white transition-colors hover:bg-neutral-800"
             >
               Browse Listings
             </Link>
