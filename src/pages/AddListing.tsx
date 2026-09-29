@@ -3933,7 +3933,7 @@ const AddListing = () => {
       await openSocialConnectPortal(
         `${window.location.origin}/agent/listings/edit/${savedId}?${params.toString()}`,
       );
--   } finally {
+    } finally {
       socialConnectInProgressRef.current = false;
     }
   };
