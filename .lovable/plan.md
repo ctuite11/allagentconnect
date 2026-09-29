@@ -14,9 +14,9 @@ Replaces the previous plan. Profile is only for links. The publish/authorize dec
 1. You publish as you do now. In the **Ready to publish?** screen, check the platforms you want to share to (Facebook, Instagram, LinkedIn, Threads).
 2. If a platform you checked is already connected, nothing extra happens — continue and click **Yes, Publish Listing**.
 3. If a platform you checked is not connected yet, the hosted sign-in page opens (same tab). Sign in to that platform there.
-4. You come straight back to the **Ready to publish?** screen with your platform choices still checked and the newly connected platform now available.
+4. You come straight back to the **Ready to publish?** screen. If you completed the sign-in, that platform is checked and available. If you canceled it, it shows "Not connected" and is unchecked — click it again to retry, or publish without it.
 5. Click **Yes, Publish Listing** — the only final confirmation, exactly as today.
-6. If you cancel the sign-in or skip social entirely, you can still publish the listing; just leave the platforms unchecked.
+6. If you skip social entirely, you can still publish the listing; just leave the platforms unchecked.
 
 In short: **Add my Facebook once → check Facebook when publishing → authorize it the first time if needed → publish.**
 
