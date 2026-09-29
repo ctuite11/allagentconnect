@@ -50,6 +50,7 @@ import AgentProposalIncentivesForm from "@/components/proposals/AgentProposalInc
 import { Seo } from "@/components/Seo";
 import TeamAccountCTA from "@/components/profile-editor/TeamAccountCTA";
 import { useAuthRole } from "@/hooks/useAuthRole";
+import { DcmlsProfileSettingsCard } from "@/components/dcmls/DcmlsProfileSettingsCard";
 
 
 interface SocialLinks {
@@ -1378,6 +1379,8 @@ setHeaderBackgroundType(profile.header_background_type || "color");
                 )}
               </CardContent>
             </Card>
+
+            <DcmlsProfileSettingsCard />
           </div>
 
           {/* Right Column - Live Preview */}

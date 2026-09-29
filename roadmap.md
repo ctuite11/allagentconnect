@@ -133,3 +133,10 @@
 
 ## Add Listing validation scroll
 - [x] Keep the full required-fields error box visible below the sticky buttons (live bar height, never scroll above the top, skip if the box or bar is missing)
+
+## DCMLS participation + Buyer Agent Compensation Yes/No
+- [x] Participation opt-in only in Settings (with Go to Profile popup) and Profile DCMLS settings section
+- [x] Profile DCMLS settings (ZIPs, seller leads, buyer/seller incentives) stored privately in agent settings
+- [x] Add/Edit Listing: listing-level Yes/No only; no opt-in button; Draft shows Confirmed
+- [x] Buyer Agent Compensation Yes/No required on every live For Sale save; No shows "Not offered"
+- [ ] Real incentive option lists — waiting on user (placeholder options used)
