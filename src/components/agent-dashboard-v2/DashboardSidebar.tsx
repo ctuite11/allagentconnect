@@ -19,6 +19,7 @@ import {
   Search,
   Home,
   Building2,
+  Inbox,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { isAgentHotSheetsNavActive } from "@/lib/sidebarNavActive";
@@ -53,6 +54,7 @@ const baseMainMenu: Omit<SidebarItem, "badge">[] = [
   { label: "Listings", icon: List, route: "/agent/listings" },
   { label: "Hot Sheets", icon: Flame, route: "/agent/hot-sheets" },
   { label: "Profile", icon: UserCircle, route: "/agent-profile-editor" },
+  { label: "DCMLS Requests", icon: Inbox, route: "/agent/dcmls/leads" },
 ];
 
 const adminItem: SidebarItem = { label: "Admin", icon: ShieldCheck, route: "/admin/approvals" };
