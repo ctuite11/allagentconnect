@@ -83,35 +83,36 @@ const DcmlsHomeHero: React.FC = () => {
         className="absolute inset-0 h-full w-full object-cover scale-105 animate-[dcmls-hero-zoom_18s_ease-out_forwards]"
         fetchPriority="high"
       />
+      {/* Lighter overlay — Compass keeps the photo readable behind white type */}
       <div
-        className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/35 to-black/50"
+        className="absolute inset-0 bg-gradient-to-b from-black/45 via-black/25 to-black/40"
         aria-hidden
       />
       <div
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-white to-transparent"
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-white to-transparent"
         aria-hidden
       />
 
       <header className="relative z-20">
-        <div className="mx-auto flex h-[4.25rem] max-w-[1200px] items-center justify-between px-5 sm:px-8 lg:px-10">
-          <DcmlsBrandLogo variant="onDark" monogramClassName="h-7 w-7 sm:h-8 sm:w-8" />
+        <div className="mx-auto flex h-14 max-w-[1280px] items-center justify-between px-5 sm:h-[3.75rem] sm:px-8 lg:px-12">
+          <DcmlsBrandLogo variant="onDark" monogramClassName="h-6 w-6 sm:h-7 sm:w-7" />
 
-          <nav className="hidden items-center gap-7 md:flex" aria-label="Primary">
+          <nav className="hidden items-center gap-6 lg:gap-8 md:flex" aria-label="Primary">
             {NAV_LINKS.map((item) => (
               <Link
                 key={item.to}
                 to={item.to}
-                className="font-['Manrope'] text-[13px] font-medium text-white/90 transition-opacity hover:opacity-70"
+                className="font-['Manrope'] text-[12px] font-medium tracking-[0.01em] text-white/95 transition-opacity hover:opacity-70 sm:text-[13px]"
               >
                 {item.label}
               </Link>
             ))}
             {isDcmlsAuthAccessEnabled() ? (
               <>
-                <span className="h-4 w-px bg-white/35" aria-hidden />
+                <span className="h-3.5 w-px bg-white/40" aria-hidden />
                 <Link
                   to="/consumer/auth?mode=signin"
-                  className="font-['Manrope'] text-[13px] font-medium text-white/90 transition-opacity hover:opacity-70"
+                  className="font-['Manrope'] text-[12px] font-medium text-white/95 transition-opacity hover:opacity-70 sm:text-[13px]"
                 >
                   Register / Sign In
                 </Link>
@@ -134,12 +135,12 @@ const DcmlsHomeHero: React.FC = () => {
             <SheetContent side="right" className="w-72">
               <div className="mt-8 flex flex-col gap-1">
                 {NAV_LINKS.map((item) => (
-                  <Button key={item.to} asChild variant="ghost" className="justify-start">
+                  <Button key={item.to} asChild variant="ghost" className="justify-start font-['Manrope']">
                     <Link to={item.to}>{item.label}</Link>
                   </Button>
                 ))}
                 {isDcmlsAuthAccessEnabled() ? (
-                  <Button asChild variant="outline" className="mt-3 justify-start">
+                  <Button asChild variant="outline" className="mt-3 justify-start font-['Manrope']">
                     <Link to="/consumer/auth?mode=signin">Register / Sign In</Link>
                   </Button>
                 ) : null}
@@ -149,22 +150,23 @@ const DcmlsHomeHero: React.FC = () => {
         </div>
       </header>
 
-      <div className="relative z-10 mx-auto flex min-h-[calc(100svh-4.25rem)] max-w-[760px] flex-col items-center justify-center px-5 pb-24 pt-10 text-center sm:px-8">
+      {/* Center stack — Compass proportions: ~52–60px title, ~20–22px sub, wide search */}
+      <div className="relative z-10 mx-auto flex min-h-[calc(100svh-3.75rem)] w-full max-w-[760px] flex-col items-center justify-center px-5 pb-28 pt-6 text-center sm:px-8">
         <h1
-          className="animate-[dcmls-fade-up_0.9s_ease-out_both] font-['Manrope'] text-[clamp(2.5rem,7vw,4.75rem)] font-semibold leading-[1.05] tracking-tight text-white"
-          style={{ textShadow: "0 2px 12px rgba(0,0,0,0.35)" }}
+          className="animate-[dcmls-fade-up_0.9s_ease-out_both] font-['Manrope'] text-[2.75rem] font-semibold leading-[1.08] tracking-[-0.02em] text-white sm:text-[3.25rem] md:text-[3.5rem]"
+          style={{ textShadow: "0 2px 14px rgba(0,0,0,0.35)" }}
         >
           Find it First
         </h1>
         <p
-          className="mt-4 animate-[dcmls-fade-up_0.9s_ease-out_0.12s_both] font-['Manrope'] text-base font-medium text-white/90 sm:text-lg"
-          style={{ textShadow: "0 1px 10px rgba(0,0,0,0.45)" }}
+          className="mt-3 animate-[dcmls-fade-up_0.9s_ease-out_0.12s_both] font-['Manrope'] text-[1.125rem] font-medium leading-snug text-white sm:mt-3.5 sm:text-[1.25rem] md:text-[1.375rem]"
+          style={{ textShadow: "0 1px 10px rgba(0,0,0,0.4)" }}
         >
           See more homes.
         </p>
 
-        <div className="mt-9 w-full max-w-[640px] animate-[dcmls-fade-up_0.9s_ease-out_0.22s_both]">
-          <div className="mb-0 flex items-end gap-1.5 px-0.5" role="tablist" aria-label="Search type">
+        <div className="mt-7 w-full max-w-[680px] animate-[dcmls-fade-up_0.9s_ease-out_0.22s_both] sm:mt-8">
+          <div className="mb-0 flex items-end gap-1" role="tablist" aria-label="Search type">
             {(
               [
                 { id: "buy", label: "Buy" },
@@ -181,8 +183,8 @@ const DcmlsHomeHero: React.FC = () => {
                   onClick={() => setMode(tab.id)}
                   className={
                     active
-                      ? "rounded-t-md bg-white px-4 py-2 font-['Manrope'] text-[13px] font-semibold text-neutral-900"
-                      : "rounded-t-md bg-white/55 px-4 py-2 font-['Manrope'] text-[13px] font-semibold text-neutral-800 backdrop-blur-sm transition-colors hover:bg-white/75"
+                      ? "rounded-t-[3px] bg-white px-3.5 py-1.5 font-['Manrope'] text-[12px] font-semibold text-neutral-900 sm:px-4 sm:text-[13px]"
+                      : "rounded-t-[3px] bg-white/70 px-3.5 py-1.5 font-['Manrope'] text-[12px] font-semibold text-neutral-700 transition-colors hover:bg-white/85 sm:px-4 sm:text-[13px]"
                   }
                 >
                   {tab.label}
@@ -193,7 +195,7 @@ const DcmlsHomeHero: React.FC = () => {
 
           <form
             onSubmit={handleSearch}
-            className="flex overflow-hidden rounded-b-md rounded-tr-md bg-white shadow-[0_18px_50px_rgba(0,0,0,0.28)]"
+            className="flex h-12 overflow-hidden rounded-b-[3px] rounded-tr-[3px] bg-white shadow-[0_12px_40px_rgba(0,0,0,0.28)] sm:h-[52px]"
           >
             <label className="sr-only" htmlFor="dcmls-hero-search">
               Search location
@@ -204,14 +206,14 @@ const DcmlsHomeHero: React.FC = () => {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="City, Neighborhood, Address, ZIP"
-              className="min-w-0 flex-1 border-0 bg-transparent px-4 py-3.5 font-['Manrope'] text-[15px] text-neutral-900 outline-none placeholder:text-neutral-400 sm:px-5 sm:py-4"
+              className="min-w-0 flex-1 border-0 bg-transparent px-4 font-['Manrope'] text-[14px] text-neutral-900 outline-none placeholder:text-neutral-400 sm:px-5 sm:text-[15px]"
             />
             <button
               type="submit"
               aria-label="Search listings"
-              className="flex h-auto w-12 shrink-0 items-center justify-center bg-neutral-950 text-white transition-colors hover:bg-neutral-800 sm:w-14"
+              className="flex h-full w-12 shrink-0 items-center justify-center bg-neutral-950 text-white transition-colors hover:bg-neutral-800 sm:w-[52px]"
             >
-              <Search className="h-5 w-5" strokeWidth={2.25} />
+              <Search className="h-[18px] w-[18px]" strokeWidth={2.25} />
             </button>
           </form>
         </div>
