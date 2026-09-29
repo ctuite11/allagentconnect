@@ -5593,7 +5593,42 @@ const AddListing = () => {
                 {formData.listing_type === "for_sale" && (
                   <div className="space-y-4 border-t border-zinc-100 pt-6">
                     <Label className={agentSectionTitle}>Buyer Agent Compensation</Label>
-                    <p className="text-sm text-muted-foreground -mt-2">Offered from the seller</p>
+                    <div
+                      id="buyer_agent_compensation_offered"
+                      className={cn(
+                        "space-y-2 rounded-md",
+                        hasFieldError("buyer_agent_compensation_offered") && "ring-2 ring-destructive/50 p-2",
+                      )}
+                    >
+                      <p className="text-sm font-medium text-foreground">
+                        Is buyer-agent compensation offered? <span className="text-destructive">*</span>
+                      </p>
+                      <div className="flex gap-6">
+                        {([
+                          { v: true, label: "Yes" },
+                          { v: false, label: "No" },
+                        ] as const).map((o) => (
+                          <label key={o.label} className="flex cursor-pointer items-center gap-2 text-sm">
+                            <input
+                              type="radio"
+                              name="buyer_agent_compensation_offered"
+                              className="h-4 w-4 accent-primary"
+                              checked={formData.buyer_agent_compensation_offered === o.v}
+                              onChange={() => {
+                                setFormData((prev) => ({ ...prev, buyer_agent_compensation_offered: o.v }));
+                                clearFieldError("buyer_agent_compensation_offered");
+                              }}
+                            />
+                            {o.label}
+                          </label>
+                        ))}
+                      </div>
+                      {formData.buyer_agent_compensation_offered === null &&
+                        hasFieldError("buyer_agent_compensation_offered") && (
+                          <p className="text-sm text-destructive">Please choose Yes or No.</p>
+                        )}
+                    </div>
+                    {formData.buyer_agent_compensation_offered === true && (
                     <div className="grid grid-cols-1 gap-3 md:grid-cols-12 md:items-end md:gap-4">
                       <div className="space-y-2 md:col-span-3">
                         <Label htmlFor="commission_type">Compensation Type</Label>
@@ -5686,6 +5721,7 @@ const AddListing = () => {
                         />
                       </div>
                     </div>
+                    )}
                   </div>
                 )}
 
