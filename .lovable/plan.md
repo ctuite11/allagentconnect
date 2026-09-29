@@ -46,7 +46,7 @@ Unchanged: saved defaults pre-check the update prompt, choices apply to that pos
 
 ## Settings
 
-Keeps the current pointer card ("Manage your social profile links ... from your Profile" with **Go to Profile**). It now points to a links-only section, which is still accurate.
+Keeps the current pointer card with **Go to Profile**, but the wording changes to **"Manage your social profile links from your Profile."** — Profile no longer manages publishing connections.
 
 ## Not changing
 
