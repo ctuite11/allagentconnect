@@ -1161,7 +1161,7 @@ const AddRentalListing = () => {
                 {/* Property Description */}
                 <div className="space-y-2">
                   <Label htmlFor="description">Property Description</Label>
-                  <Textarea
+                  <Textarea spellCheck autoCorrect="on" autoCapitalize="sentences"
                     id="description"
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
@@ -1220,7 +1220,7 @@ const AddRentalListing = () => {
                   <div className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="showing_instructions">Instructions</Label>
-                      <Textarea
+                      <Textarea spellCheck autoCorrect="on" autoCapitalize="sentences"
                         id="showing_instructions"
                         placeholder="Please call 24 hours in advance. Remove shoes..."
                         value={formData.showing_instructions}
@@ -1380,7 +1380,7 @@ const AddRentalListing = () => {
                 {/* Additional Notes */}
                 <div className="space-y-2 border-t pt-6">
                   <Label htmlFor="additional_notes">Additional Notes</Label>
-                  <Textarea
+                  <Textarea spellCheck autoCorrect="on" autoCapitalize="sentences"
                     id="additional_notes"
                     placeholder="Any other important information about the property..."
                     value={formData.additional_notes}

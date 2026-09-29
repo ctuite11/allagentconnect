@@ -24,7 +24,7 @@ import {
 } from "@/lib/contactSearch";
 import { fetchBuyerMessageRecipients } from "@/lib/fetchBuyerMessageRecipients";
 import { useNavigate } from "react-router-dom";
-import { cn } from "@/lib/utils";
+import { cn, buildDisplayAddress } from "@/lib/utils";
 import AACMonogram from "@/components/ui/AACMonogram";
 import { useAgentLastSeen } from "@/hooks/useAgentLastSeen";
 import { formatDistanceToNow } from "date-fns";
@@ -784,7 +784,7 @@ export function NewConversationDialog({
                           >
                             <Building2 className="w-4 h-4 text-zinc-400 shrink-0" />
                             <span className="truncate text-zinc-700">
-                              {l.address}, {l.city}, {l.state}
+                              {buildDisplayAddress(l)}
                             </span>
                           </button>
                         ))}
@@ -821,7 +821,7 @@ export function NewConversationDialog({
                         >
                           <Building2 className="w-4 h-4 text-zinc-400 shrink-0" />
                           <span className="truncate text-zinc-700">
-                            {l.address}, {l.city}, {l.state}
+                            {buildDisplayAddress(l)}
                           </span>
                         </button>
                       ))}

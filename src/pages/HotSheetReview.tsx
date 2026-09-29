@@ -1531,7 +1531,7 @@ const HotSheetReview = () => {
                           className="flex items-center justify-between gap-2 rounded-lg border border-neutral-200/90 bg-white px-2 py-2 text-[11px] transition-all duration-200 ease-out hover:border-neutral-300 hover:shadow-sm"
                         >
                           <span className="min-w-0 truncate text-neutral-700">
-                            {l.address}, {l.city}
+                            {formatListingConversationTitle(l)}
                           </span>
                           <Button
                             type="button"

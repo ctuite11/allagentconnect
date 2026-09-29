@@ -748,7 +748,7 @@ setHeaderBackgroundType(profile.header_background_type || "color");
                 <div>
                   <Label htmlFor="title">Title</Label>
                   <Input
-                    id="title"
+                    id="title" spellCheck autoCorrect="on" autoCapitalize="words"
                     placeholder="Real Estate Agent, Broker, etc."
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
@@ -757,7 +757,7 @@ setHeaderBackgroundType(profile.header_background_type || "color");
                 <div>
                   <Label htmlFor="team_name">Team Name</Label>
                   <Input
-                    id="team_name"
+                    id="team_name" spellCheck autoCorrect="on" autoCapitalize="words"
                     placeholder="Your Team Name"
                     value={teamName}
                     onChange={(e) => setTeamName(e.target.value)}
@@ -766,7 +766,7 @@ setHeaderBackgroundType(profile.header_background_type || "color");
                 <div>
                   <Label htmlFor="company_name">Brokerage / Company Name</Label>
                   <Input
-                    id="company_name"
+                    id="company_name" spellCheck autoCorrect="on" autoCapitalize="words"
                     placeholder="Your Brokerage or Company"
                     value={companyName}
                     onChange={(e) => setCompanyName(e.target.value)}
@@ -823,7 +823,7 @@ setHeaderBackgroundType(profile.header_background_type || "color");
                 <div>
                   <Label htmlFor="office_name">Office Name</Label>
                   <Input
-                    id="office_name"
+                    id="office_name" spellCheck autoCorrect="on" autoCapitalize="words"
                     placeholder="ABC Realty Group"
                     value={officeName}
                     onChange={(e) => setOfficeName(e.target.value)}
@@ -890,7 +890,7 @@ setHeaderBackgroundType(profile.header_background_type || "color");
               </CardHeader>
               <CardContent>
                 <Textarea
-                  placeholder="Write your professional bio here..."
+                  placeholder="Write your professional bio here..." spellCheck autoCorrect="on" autoCapitalize="sentences"
                   value={bio}
                   onChange={(e) => setBio(e.target.value)}
                   rows={6}
@@ -1316,7 +1316,7 @@ setHeaderBackgroundType(profile.header_background_type || "color");
                     <div>
                       <Label htmlFor="client_title">Client Role (Optional)</Label>
                       <Input
-                        id="client_title"
+                        id="client_title" spellCheck autoCorrect="on" autoCapitalize="words"
                         placeholder="First-time Homebuyer"
                         value={newTestimonial.client_title}
                         onChange={(e) => setNewTestimonial({ ...newTestimonial, client_title: e.target.value })}
@@ -1326,7 +1326,7 @@ setHeaderBackgroundType(profile.header_background_type || "color");
                   <div>
                     <Label htmlFor="testimonial_text">Testimonial *</Label>
                     <Textarea
-                      id="testimonial_text"
+                      id="testimonial_text" spellCheck autoCorrect="on" autoCapitalize="sentences"
                       placeholder="Write the testimonial here..."
                       value={newTestimonial.testimonial_text}
                       onChange={(e) => setNewTestimonial({ ...newTestimonial, testimonial_text: e.target.value })}

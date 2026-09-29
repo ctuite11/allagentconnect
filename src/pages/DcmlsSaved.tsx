@@ -1,3 +1,4 @@
+import { buildDisplayAddress } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -168,7 +169,7 @@ const DcmlsSaved = () => {
                       <div className="flex items-start gap-1.5 mt-2.5 text-sm text-foreground">
                         <MapPin className="w-3.5 h-3.5 mt-0.5 shrink-0 text-muted-foreground" />
                         <span className="line-clamp-2">
-                          {l.address}, {l.city}, {l.state}
+                          {buildDisplayAddress(l)}
                         </span>
                       </div>
                     </div>

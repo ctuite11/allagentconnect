@@ -29,7 +29,7 @@ const IncentivesSection = ({
         </CardHeader>
         <CardContent>
           <Textarea
-            placeholder="e.g., Free home inspection, closing cost assistance, buyer rebate..."
+            placeholder="e.g., Free home inspection, closing cost assistance, buyer rebate..." spellCheck autoCorrect="on" autoCapitalize="sentences"
             value={buyerIncentives}
             onChange={(e) => onBuyerChange(e.target.value)}
             rows={4}
@@ -50,7 +50,7 @@ const IncentivesSection = ({
         </CardHeader>
         <CardContent>
           <Textarea
-            placeholder="e.g., Professional photography, staging consultation, reduced commission..."
+            placeholder="e.g., Professional photography, staging consultation, reduced commission..." spellCheck autoCorrect="on" autoCapitalize="sentences"
             value={sellerIncentives}
             onChange={(e) => onSellerChange(e.target.value)}
             rows={4}

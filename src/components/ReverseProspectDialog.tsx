@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { propertyTypeToEnum } from "@/lib/utils";
+import { propertyTypeToEnum, buildDisplayAddress } from "@/lib/utils";
 import { Loader2, MapPin, DollarSign, Home, Users, User } from "lucide-react";
 import { useSenderProfilePrefill } from "@/lib/currentSenderProfile";
 import { formatListingEmailSubjectLocation } from "@/lib/listingEmailSubject";
@@ -295,7 +295,7 @@ export function ReverseProspectDialog({
           <h3 className="font-semibold">Your Listing</h3>
           <div className="flex items-start gap-2 text-sm">
             <MapPin className="w-4 h-4 mt-0.5 text-muted-foreground" />
-            <span>{listing.address}, {listing.city}, {listing.state}</span>
+            <span>{buildDisplayAddress(listing)}</span>
           </div>
           <div className="flex items-center gap-4 text-sm">
             <div className="flex items-center gap-1">
