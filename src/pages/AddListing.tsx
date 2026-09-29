@@ -454,6 +454,7 @@ const AddListing = () => {
     commission_rate: "",
     commission_type: "percentage",
     commission_notes: "",
+    buyer_agent_compensation_offered: null as boolean | null,
     showing_instructions: "",
     lockbox_code: "",
     appointment_required: false,
@@ -999,6 +1000,12 @@ const AddListing = () => {
                 ? String(data.commission_rate)
                 : "",
           commission_notes: data.commission_notes || "",
+          buyer_agent_compensation_offered:
+            typeof data.buyer_agent_compensation_offered === "boolean"
+              ? data.buyer_agent_compensation_offered
+              : data.commission_rate != null && Number(data.commission_rate) > 0
+                ? true
+                : null,
           showing_instructions: data.showing_instructions || "",
           lockbox_code: data.lockbox_code || "",
           appointment_required: data.appointment_required || false,
@@ -2637,7 +2644,13 @@ const AddListing = () => {
     documents: uploadedMedia.documents,
     
     // Commission & Showing
-    commission_rate: formData.commission_rate ? parseFloat(formData.commission_rate) : null,
+    buyer_agent_compensation_offered:
+      formData.listing_type === "for_sale" ? formData.buyer_agent_compensation_offered : null,
+    // Explicit "No" clears the saved amount so stale compensation cannot reappear.
+    commission_rate:
+      formData.listing_type === "for_sale" && formData.buyer_agent_compensation_offered === false
+        ? null
+        : formData.commission_rate ? parseFloat(formData.commission_rate) : null,
     commission_type: formData.commission_type || null,
     commission_notes: formData.commission_notes || null,
     showing_instructions: formData.showing_instructions || null,
@@ -2850,8 +2863,9 @@ const AddListing = () => {
   const getValidationErrors = (opts: {
     requirePhotos?: boolean;
     requirePricing?: boolean;
+    requireCompensation?: boolean;
   } = {}): { field: string; label: string }[] => {
-    const { requirePhotos = false, requirePricing = false } = opts;
+    const { requirePhotos = false, requirePricing = false, requireCompensation = false } = opts;
     const errors: { field: string; label: string }[] = [];
 
     if (!formData.address.trim()) errors.push({ field: "address", label: "Street Address" });
@@ -2887,6 +2901,20 @@ const AddListing = () => {
 
     if (formData.status === "coming_soon" && !formData.go_live_date.trim()) {
       errors.push({ field: "go_live_date", label: "Go-Live Date (required for Coming Soon)" });
+    }
+
+    if (requireCompensation && formData.listing_type === "for_sale") {
+      if (formData.buyer_agent_compensation_offered === null) {
+        errors.push({ field: "buyer_agent_compensation_offered", label: "Buyer Agent Compensation (Yes or No)" });
+      } else if (
+        formData.buyer_agent_compensation_offered === true &&
+        !(Number(formData.commission_rate) > 0)
+      ) {
+        errors.push({
+          field: "commission_rate",
+          label: formData.commission_type === "flat_fee" ? "Buyer Agent Compensation Flat Amount" : "Buyer Agent Compensation Rate (%)",
+        });
+      }
     }
 
     if (requirePhotos && photos.length === 0) {
@@ -3031,6 +3059,7 @@ const AddListing = () => {
       const errors = getValidationErrors({
         requirePhotos: isLiveStatus(formData.status),
         requirePricing: !targetIsDraft,
+        requireCompensation: !targetIsDraft && isNeverPublished(),
       });
       if (errors.length > 0) {
         setValidationErrors(errors);
@@ -3432,6 +3461,7 @@ const AddListing = () => {
       const errors = getValidationErrors({
         requirePhotos: publishNow,
         requirePricing: publishNow,
+        requireCompensation: publishNow,
       });
       if (errors.length > 0) {
         setValidationErrors(errors);
@@ -4330,6 +4360,7 @@ const AddListing = () => {
                           ? "published"
                           : "not_published"
                       }
+                      listingIsDraft={isNeverPublished()}
                       participation={dcmlsParticipation}
                       onOptedIn={() => setDcmlsParticipation("on")}
                     />

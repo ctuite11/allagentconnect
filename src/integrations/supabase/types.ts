@@ -1139,8 +1139,12 @@ export type Database = {
           county: string | null
           created_at: string
           credentials_issued_at: string | null
+          dcmls_buyer_incentives: string[] | null
+          dcmls_buyer_lead_zips: string[] | null
           dcmls_participation: boolean
           dcmls_participation_at: string | null
+          dcmls_receive_seller_leads: boolean | null
+          dcmls_seller_incentives: string[] | null
           dismissed_announcement_ids: string[]
           early_access: boolean
           email_frequency: string
@@ -1182,8 +1186,12 @@ export type Database = {
           county?: string | null
           created_at?: string
           credentials_issued_at?: string | null
+          dcmls_buyer_incentives?: string[] | null
+          dcmls_buyer_lead_zips?: string[] | null
           dcmls_participation?: boolean
           dcmls_participation_at?: string | null
+          dcmls_receive_seller_leads?: boolean | null
+          dcmls_seller_incentives?: string[] | null
           dismissed_announcement_ids?: string[]
           early_access?: boolean
           email_frequency?: string
@@ -1225,8 +1233,12 @@ export type Database = {
           county?: string | null
           created_at?: string
           credentials_issued_at?: string | null
+          dcmls_buyer_incentives?: string[] | null
+          dcmls_buyer_lead_zips?: string[] | null
           dcmls_participation?: boolean
           dcmls_participation_at?: string | null
+          dcmls_receive_seller_leads?: boolean | null
+          dcmls_seller_incentives?: string[] | null
           dismissed_announcement_ids?: string[]
           early_access?: boolean
           email_frequency?: string
@@ -5561,6 +5573,7 @@ export type Database = {
           bedrooms: number | null
           broker_comments: string | null
           building_name: string | null
+          buyer_agent_compensation_offered: boolean | null
           cancelled_at: string | null
           city: string
           commercial_details: Json | null
@@ -5693,6 +5706,7 @@ export type Database = {
           bedrooms?: number | null
           broker_comments?: string | null
           building_name?: string | null
+          buyer_agent_compensation_offered?: boolean | null
           cancelled_at?: string | null
           city: string
           commercial_details?: Json | null
@@ -5825,6 +5839,7 @@ export type Database = {
           bedrooms?: number | null
           broker_comments?: string | null
           building_name?: string | null
+          buyer_agent_compensation_offered?: boolean | null
           cancelled_at?: string | null
           city?: string
           commercial_details?: Json | null
