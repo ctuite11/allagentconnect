@@ -27,6 +27,11 @@ Not tested: the moment a Draft is actually published (would require a real publi
 
 ## Technical details
 - Both `/agent/listings/new` and `/agent/listings/edit/:id` use `src/pages/AddListing.tsx`; only this file changes.
-- "Ever published": listings has no published-at column. Treat a listing as ever published if its backend status is not `draft`, or if `listing_status_history` has any row for it with `new_status <> 'draft'`. Load this once when an existing listing is opened; new listings count as never published. Hide Preview while this check is loading and if it errors (fail closed).
+- One `canPreview` flag, based on the raw saved status (`backendStatusRef.current`), never the form's selected/intended status:
+  - Brand-new / no listing ID: eligible.
+  - Existing listing with saved status other than `draft`: ineligible right away, no lookup.
+  - Existing listing with saved status `draft`: existence check on `listing_status_history` (select id, `new_status <> 'draft'`, limit 1). No row: eligible. Any row: hidden permanently.
+  - While loading or on error: hidden (fail closed).
+- `canPreview` controls every Preview button (top/sticky and bottom actions) and also guards `handlePreview`.
 - `handlePreview`: guard on the eligibility flag; remove `window.open("about:blank","_blank")`, `win.location.href`, `win.close()` and the `_blank` fallback; end with `navigate(previewUrl)`, keeping the existing `returnTo=/agent/listings/edit/:id?from=<safe from>`. Comment becomes "Save the draft, then open it on the listing page in the same tab."
 - Because Preview is never offered on published listings, the current Draft-save path can no longer demote a live listing through Preview.
