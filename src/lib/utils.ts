@@ -159,7 +159,7 @@ export function buildDisplayAddress(listing: ListingAddressUnitSource) {
   // If address already contains city, just ensure state and zip are present
   if (hasCity && hasState && hasZip) {
     // All present, just convert to title case
-    return toTitleCase(base);
+    return upperCaseStateBeforeZip(toTitleCase(base));
   }
   
   // If address has city but not full location, append missing parts
@@ -179,7 +179,15 @@ export function buildDisplayAddress(listing: ListingAddressUnitSource) {
   base = applyDisplayStreetSuffixAbbreviation(base, city);
 
   // Convert to Title Case before returning
-  return toTitleCase(base);
+  return upperCaseStateBeforeZip(toTitleCase(base));
+}
+
+/** Title case turns "MA" into "Ma"; restore only the 2-letter token in the state position (", Xx 02114"). */
+function upperCaseStateBeforeZip(formatted: string): string {
+  return formatted.replace(
+    /(,\s*)([A-Za-z]{2})(\s+\d{5}(?:-\d{4})?)(?=\s*$|,)/,
+    (_m, sep: string, st: string, zip: string) => `${sep}${st.toUpperCase()}${zip}`,
+  );
 }
 
 /**
