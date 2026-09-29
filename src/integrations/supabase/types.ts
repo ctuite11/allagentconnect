@@ -1140,11 +1140,13 @@ export type Database = {
           created_at: string
           credentials_issued_at: string | null
           dcmls_buyer_incentives: string[] | null
+          dcmls_buyer_incentives_more: string | null
           dcmls_buyer_lead_zips: string[] | null
           dcmls_participation: boolean
           dcmls_participation_at: string | null
           dcmls_receive_seller_leads: boolean | null
           dcmls_seller_incentives: string[] | null
+          dcmls_seller_incentives_more: string | null
           dismissed_announcement_ids: string[]
           early_access: boolean
           email_frequency: string
@@ -1187,11 +1189,13 @@ export type Database = {
           created_at?: string
           credentials_issued_at?: string | null
           dcmls_buyer_incentives?: string[] | null
+          dcmls_buyer_incentives_more?: string | null
           dcmls_buyer_lead_zips?: string[] | null
           dcmls_participation?: boolean
           dcmls_participation_at?: string | null
           dcmls_receive_seller_leads?: boolean | null
           dcmls_seller_incentives?: string[] | null
+          dcmls_seller_incentives_more?: string | null
           dismissed_announcement_ids?: string[]
           early_access?: boolean
           email_frequency?: string
@@ -1234,11 +1238,13 @@ export type Database = {
           created_at?: string
           credentials_issued_at?: string | null
           dcmls_buyer_incentives?: string[] | null
+          dcmls_buyer_incentives_more?: string | null
           dcmls_buyer_lead_zips?: string[] | null
           dcmls_participation?: boolean
           dcmls_participation_at?: string | null
           dcmls_receive_seller_leads?: boolean | null
           dcmls_seller_incentives?: string[] | null
+          dcmls_seller_incentives_more?: string | null
           dismissed_announcement_ids?: string[]
           early_access?: boolean
           email_frequency?: string

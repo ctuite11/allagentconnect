@@ -139,4 +139,4 @@
 - [x] Profile DCMLS settings (ZIPs, seller leads, buyer/seller incentives) stored privately in agent settings
 - [x] Add/Edit Listing: listing-level Yes/No only; no opt-in button; Draft shows Confirmed
 - [x] Buyer Agent Compensation Yes/No required on every live For Sale save; No shows "Not offered"
-- [ ] Real incentive option lists — waiting on user (placeholder options used)
+- [x] Real incentive option lists with More text box and exclusive "No incentive offered"
