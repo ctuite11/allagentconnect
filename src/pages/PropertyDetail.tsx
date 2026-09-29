@@ -1146,6 +1146,7 @@ const PropertyDetail = () => {
                               state: {
                                 from: location.pathname + location.search,
                                 fromState: location.state,
+                                listingId: id,
                               },
                             })
                           }

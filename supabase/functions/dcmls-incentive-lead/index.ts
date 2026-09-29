@@ -57,7 +57,7 @@ Deno.serve(async (req) => {
   let zip = b.zip ?? null;
   let listingId: string | null = null;
   if (b.listing_id) {
-    const { data: l } = await admin.from("listings").select("id, zip_code").eq("id", b.listing_id).maybeSingle();
+    const { data: l } = await admin.from("listings").select("id, zip_code").eq("id", b.listing_id).neq("status", "draft").maybeSingle();
     if (l) {
       listingId = l.id;
       const z5 = String(l.zip_code ?? "").slice(0, 5);

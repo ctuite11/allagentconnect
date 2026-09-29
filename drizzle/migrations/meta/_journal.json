@@ -162,6 +162,20 @@
       "when": 1790651075648,
       "tag": "0022_dcmls_incentive_leads",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1790651768718,
+      "tag": "0023_public_agent_profile_rpc",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1790651788291,
+      "tag": "0024_public_agent_profile_rpc_safe_match",
+      "breakpoints": true
     }
   ]
 }
