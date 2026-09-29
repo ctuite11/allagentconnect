@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { IncentiveAvailabilitySection } from "@/components/dcmls/IncentiveAvailabilitySection";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import ListingCard from "@/components/ListingCard";
@@ -200,6 +201,12 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
   const [isStartingChat, setIsStartingChat] = useState(false);
   const [viewerSender, setViewerSender] = useState<SenderProfile | null>(null);
   const { isOnline } = useAgentLastSeen(agent?.id);
+  const incentiveParams = new URLSearchParams(location.search);
+  const incentiveStateZip = (location.state as { zip?: string } | null)?.zip;
+  const rawIncentiveZip = incentiveParams.get("zip") ?? incentiveStateZip ?? null;
+  const incentiveZip = rawIncentiveZip && /^\d{5}$/.test(rawIncentiveZip) ? rawIncentiveZip : null;
+  const rawListingId = incentiveParams.get("listing") ?? (location.state as { listingId?: string } | null)?.listingId ?? null;
+  const incentiveListingId = rawListingId && UUID_RE.test(rawListingId) ? rawListingId : null;
 
   useEffect(() => {
     if (!user?.id) {
@@ -597,6 +604,15 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
 
       {/* Content */}
       <div className={`${PROFILE_PAGE} pb-20`}>
+        {/* DCMLS incentives — availability only; details gated */}
+        <IncentiveAvailabilitySection
+          agentId={agent.id}
+          agentName={`${agent.first_name ?? ""} ${agent.last_name ?? ""}`.trim() || "This agent"}
+          zip={incentiveZip}
+          listingId={incentiveListingId}
+          profileBasePath="/agent"
+          className={`${SECTION_RULE} ${SECTION_PAD}`}
+        />
         {/* About + testimonials sidebar */}
         {(agent.bio || testimonials.length > 0) ? (
           <section className={`${SECTION_RULE} ${SECTION_PAD}`}>

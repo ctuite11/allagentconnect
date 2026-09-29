@@ -29,6 +29,7 @@ export interface AgentSettings {
   dcmls_participation_at: string | null;
   /** Private DCMLS routing preferences (storage/UI only). */
   dcmls_buyer_lead_zips?: string[] | null;
+  dcmls_seller_lead_zips?: string[] | null;
   dcmls_receive_seller_leads?: boolean | null;
   dcmls_buyer_incentives?: string[] | null;
   dcmls_seller_incentives?: string[] | null;
