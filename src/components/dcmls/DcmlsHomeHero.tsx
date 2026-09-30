@@ -76,16 +76,16 @@ const DcmlsHomeHero: React.FC = () => {
   };
 
   return (
-    <section className="relative isolate min-h-[100svh] overflow-hidden bg-neutral-900 text-white">
+    <section className="relative isolate min-h-[100svh] overflow-x-hidden overflow-y-hidden bg-neutral-900 text-white">
       <img
         src={HERO_IMAGE}
         alt=""
         className="absolute inset-0 h-full w-full object-cover scale-105 animate-[dcmls-hero-zoom_18s_ease-out_forwards]"
         fetchPriority="high"
       />
-      {/* Lighter overlay — Compass keeps the photo readable behind white type */}
+      {/* Upper contrast only — nav + headline; keep the house mid/lower bright */}
       <div
-        className="absolute inset-0 bg-gradient-to-b from-black/45 via-black/25 to-black/40"
+        className="pointer-events-none absolute inset-x-0 top-0 h-[58%] bg-gradient-to-b from-black/60 via-black/35 to-transparent"
         aria-hidden
       />
       <div
@@ -107,6 +107,7 @@ const DcmlsHomeHero: React.FC = () => {
                 {item.label}
               </Link>
             ))}
+            {/* Auth CTAs stay gated — do not surface Sign In / Create Account while closed */}
             {isDcmlsAuthAccessEnabled() ? (
               <>
                 <span className="h-3.5 w-px bg-white/40" aria-hidden />
@@ -150,23 +151,24 @@ const DcmlsHomeHero: React.FC = () => {
         </div>
       </header>
 
-      {/* Left-aligned stack above Buy — Compass-style copy over the search */}
-      <div className="relative z-10 mx-auto flex min-h-[calc(100svh-3.75rem)] w-full max-w-[760px] flex-col items-center justify-center px-5 pb-28 pt-6 sm:px-8">
-        <div className="w-full max-w-[680px] text-left">
+      {/* One aligned unit: headline → subhead → Buy/Rent → search */}
+      <div className="relative z-10 mx-auto flex min-h-[calc(100svh-3.75rem)] w-full max-w-[820px] flex-col items-center justify-center px-5 pb-28 pt-6 sm:px-8">
+        <div className="w-full max-w-[720px] text-left">
           <h1
-            className="animate-[dcmls-fade-up_0.9s_ease-out_both] font-['Manrope'] text-[2.75rem] font-extrabold leading-[1.08] tracking-[-0.02em] text-white sm:text-[3.25rem] md:text-[3.5rem]"
-            style={{ textShadow: "0 2px 18px rgba(0,0,0,0.45)" }}
+            className="animate-[dcmls-fade-up_0.9s_ease-out_both] font-['Manrope'] text-[2.75rem] font-extrabold leading-[1.1] tracking-[-0.02em] text-white sm:text-[3.25rem] md:text-[3.5rem]"
+            style={{ textShadow: "0 2px 18px rgba(0,0,0,0.5)" }}
           >
-            Find it First on Direct Connect
+            Find it First on{" "}
+            <span className="whitespace-nowrap">Direct Connect</span>
           </h1>
           <p
-            className="mt-3 animate-[dcmls-fade-up_0.9s_ease-out_0.12s_both] font-['Manrope'] text-[1.125rem] font-semibold leading-snug text-white sm:mt-3.5 sm:text-[1.25rem] md:text-[1.375rem]"
-            style={{ textShadow: "0 1px 12px rgba(0,0,0,0.5)" }}
+            className="mt-2.5 animate-[dcmls-fade-up_0.9s_ease-out_0.12s_both] font-['Manrope'] text-[1.125rem] font-semibold leading-snug text-white sm:mt-3 sm:text-[1.25rem] md:text-[1.375rem]"
+            style={{ textShadow: "0 1px 12px rgba(0,0,0,0.55)" }}
           >
-            See more homes.
+            See homes you may be missing.
           </p>
 
-          <div className="mt-7 w-full animate-[dcmls-fade-up_0.9s_ease-out_0.22s_both] sm:mt-8">
+          <div className="mt-7 w-full min-w-0 animate-[dcmls-fade-up_0.9s_ease-out_0.22s_both] sm:mt-8">
             <div className="mb-0 flex items-end gap-1" role="tablist" aria-label="Search type">
               {(
                 [
@@ -196,7 +198,7 @@ const DcmlsHomeHero: React.FC = () => {
 
             <form
               onSubmit={handleSearch}
-              className="flex h-12 overflow-hidden rounded-b-[3px] rounded-tr-[3px] bg-white shadow-[0_12px_40px_rgba(0,0,0,0.28)] sm:h-[52px]"
+              className="flex h-12 min-w-0 overflow-hidden rounded-b-[3px] rounded-tr-[3px] bg-white shadow-[0_12px_40px_rgba(0,0,0,0.28)] sm:h-[52px]"
             >
               <label className="sr-only" htmlFor="dcmls-hero-search">
                 Search location
@@ -207,12 +209,12 @@ const DcmlsHomeHero: React.FC = () => {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="City, Neighborhood, Address, ZIP"
-                className="min-w-0 flex-1 border-0 bg-transparent px-4 font-['Manrope'] text-[14px] text-neutral-900 outline-none placeholder:text-neutral-400 sm:px-5 sm:text-[15px]"
+                className="min-w-0 flex-1 border-0 bg-transparent px-3 font-['Manrope'] text-[14px] text-neutral-900 outline-none placeholder:text-neutral-400 sm:px-5 sm:text-[15px]"
               />
               <button
                 type="submit"
                 aria-label="Search listings"
-                className="flex h-full w-12 shrink-0 items-center justify-center bg-neutral-950 text-white transition-colors hover:bg-neutral-800 sm:w-[52px]"
+                className="flex h-full w-11 shrink-0 items-center justify-center bg-neutral-950 text-white transition-colors hover:bg-neutral-800 sm:w-[52px]"
               >
                 <Search className="h-[18px] w-[18px]" strokeWidth={2.25} />
               </button>
