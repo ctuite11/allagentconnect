@@ -159,7 +159,7 @@ const DcmlsHomeHero: React.FC = () => {
             style={{ textShadow: "0 2px 18px rgba(0,0,0,0.5)" }}
           >
             Find It First on
-            <br className="hidden sm:block" />
+            <br className="hidden sm:block" />{" "}
             <span className="whitespace-nowrap">Direct Connect</span>
           </h1>
           <p
