@@ -94,8 +94,8 @@ const DcmlsHomeHero: React.FC = () => {
       />
 
       <header className="relative z-20">
-        <div className="mx-auto flex h-14 max-w-[1280px] items-center justify-between px-5 sm:h-[3.75rem] sm:px-8 lg:px-12">
-          <DcmlsBrandLogo variant="onDark" monogramClassName="h-8 w-8 sm:h-9 sm:w-9" />
+        <div className="mx-auto flex h-16 max-w-[1280px] items-center justify-between px-5 sm:h-[4.5rem] sm:px-8 lg:px-12">
+          <DcmlsBrandLogo variant="onDark" size="hero" />
 
           <nav className="hidden items-center gap-6 lg:gap-8 md:flex" aria-label="Primary">
             {NAV_LINKS.map((item) => (
@@ -152,23 +152,24 @@ const DcmlsHomeHero: React.FC = () => {
       </header>
 
       {/* One aligned unit: headline → subhead → Buy/Rent → search */}
-      <div className="relative z-10 mx-auto flex min-h-[calc(100svh-3.75rem)] w-full max-w-[820px] flex-col items-center justify-center px-5 pb-28 pt-6 sm:px-8">
-        <div className="w-full max-w-[720px] text-left">
+      <div className="relative z-10 mx-auto flex min-h-[calc(100svh-4.5rem)] w-full max-w-[960px] flex-col items-center justify-center px-5 pb-28 pt-6 sm:px-8">
+        <div className="w-full max-w-[920px] text-left">
           <h1
-            className="animate-[dcmls-fade-up_0.9s_ease-out_both] font-['Manrope'] text-[2.75rem] font-extrabold leading-[1.1] tracking-[-0.02em] text-white sm:text-[3.25rem] md:text-[3.5rem]"
+            className="animate-[dcmls-fade-up_0.9s_ease-out_both] max-w-none font-['Manrope'] text-[2.35rem] font-extrabold leading-[1.12] tracking-[-0.02em] text-white sm:text-[2.75rem] lg:text-[3rem]"
             style={{ textShadow: "0 2px 18px rgba(0,0,0,0.5)" }}
           >
-            Find it First on{" "}
+            Find It First on
+            <br className="hidden sm:block" />
             <span className="whitespace-nowrap">Direct Connect</span>
           </h1>
           <p
-            className="mt-2.5 animate-[dcmls-fade-up_0.9s_ease-out_0.12s_both] font-['Manrope'] text-[1.125rem] font-semibold leading-snug text-white sm:mt-3 sm:text-[1.25rem] md:text-[1.375rem]"
+            className="mt-3 animate-[dcmls-fade-up_0.9s_ease-out_0.12s_both] font-['Manrope'] text-[1.05rem] font-semibold leading-snug text-white sm:mt-3.5 sm:text-[1.2rem] lg:text-[1.3rem]"
             style={{ textShadow: "0 1px 12px rgba(0,0,0,0.55)" }}
           >
             See homes you may be missing.
           </p>
 
-          <div className="mt-7 w-full min-w-0 animate-[dcmls-fade-up_0.9s_ease-out_0.22s_both] sm:mt-8">
+          <div className="mt-6 w-full max-w-[680px] min-w-0 animate-[dcmls-fade-up_0.9s_ease-out_0.22s_both] sm:mt-7">
             <div className="mb-0 flex items-end gap-1" role="tablist" aria-label="Search type">
               {(
                 [
