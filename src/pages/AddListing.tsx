@@ -3932,7 +3932,7 @@ const AddListing = () => {
    * The round-trip never publishes — the listing stays a Draft until the agent
    * returns and presses "Yes, Publish Listing".
    */
-  const handleConnectFromReview = async (_platform: SocialPlatform) => {
+  const handleConnectFromReview = async (platform: SocialPlatform) => {
     if (socialConnectInProgressRef.current) return;
     socialConnectInProgressRef.current = true;
     try {
@@ -3961,6 +3961,7 @@ const AddListing = () => {
       if (paramFrom?.startsWith("/")) params.set("from", paramFrom);
       await openSocialConnectPortal(
         `${window.location.origin}/agent/listings/edit/${savedId}?${params.toString()}`,
+        platform,
       );
     } finally {
       socialConnectInProgressRef.current = false;

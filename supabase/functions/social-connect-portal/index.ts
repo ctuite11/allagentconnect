@@ -13,7 +13,12 @@ import {
 
 const BodySchema = z.object({
   returnUrl: z.string().url().max(500).optional(),
+  // Optional: limit the hosted portal to the one platform the agent clicked.
+  platform: z.enum(PLATFORMS).optional(),
 })
+
+const AAC_LOGO_URL =
+  'https://qocduqtfbsevnhlgsfka.supabase.co/storage/v1/object/public/brand-assets/aac-monogram-green.svg'
 
 const DEFAULT_RETURN_URL = 'https://allagentconnect.com/agent-settings'
 
@@ -72,12 +77,28 @@ Deno.serve(async (req) => {
     }
   }
 
+  // Display name shown in the portal instead of the internal team label.
+  const { data: profile } = await svc
+    .from('agent_profiles')
+    .select('first_name, last_name')
+    .eq('id', auth.userId)
+    .maybeSingle()
+  const agentName = [profile?.first_name, profile?.last_name].filter(Boolean).join(' ').trim()
+  const userName = agentName ? `All Agent Connect – ${agentName}` : 'All Agent Connect'
+
+  // Branding fields are documented in Bundle's create-portal-link schema.
+  // withBusinessScope is intentionally NOT set until Standard Access is confirmed
+  // to grant the Facebook Page publishing permissions AAC needs.
   const portalRes = await bundleFetch('/api/v1/social-account/create-portal-link', {
     method: 'POST',
     body: JSON.stringify({
       teamId: account.bundle_team_id,
       redirectUrl: parsed.data.returnUrl ?? DEFAULT_RETURN_URL,
-      socialAccountTypes: [...PLATFORMS],
+      socialAccountTypes: parsed.data.platform ? [parsed.data.platform] : [...PLATFORMS],
+      logoUrl: AAC_LOGO_URL,
+      userName,
+      hidePoweredBy: true,
+      goBackButtonText: 'Back to All Agent Connect',
     }),
   })
   if (!portalRes.ok) {
