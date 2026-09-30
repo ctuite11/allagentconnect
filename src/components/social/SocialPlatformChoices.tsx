@@ -1,4 +1,5 @@
 import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
 import {
   SOCIAL_PLATFORMS,
   SOCIAL_PLATFORM_LABELS,
@@ -11,16 +12,15 @@ interface Props {
   selected: SocialPlatform[];
   onChange: (next: SocialPlatform[]) => void;
   /**
-   * First-publish review only: clicking a not-connected platform starts the
-   * hosted authorization flow instead of staying disabled.
-   * The later-update prompt omits this and keeps the disabled behavior.
+   * First-publish review only: a not-connected platform shows a Connect button
+   * that starts the authorization flow. The later-update prompt omits this.
    */
   onConnectRequest?: (platform: SocialPlatform) => void;
   /** Connection-status state. Rows render in every state so layout never shifts. */
   status?: "loading" | "ready" | "error";
 }
 
-/** Four platform checkboxes. */
+/** Four platform checkboxes. A profile link never counts as a publishing connection. */
 export function SocialPlatformChoices({ connected, selected, onChange, onConnectRequest, status = "ready" }: Props) {
   const ready = status === "ready";
   const toggle = (p: SocialPlatform, on: boolean) => {
@@ -35,38 +35,39 @@ export function SocialPlatformChoices({ connected, selected, onChange, onConnect
       {SOCIAL_PLATFORMS.map((p) => {
         const isConnected = ready && connected[p];
         const id = `social-${p}`;
-        const clickableConnect = ready && !isConnected && !!onConnectRequest;
-        const rightText = !ready
+        const statusText = !ready
           ? status === "loading"
             ? "Checking…"
             : "Status unavailable"
           : isConnected
-            ? onConnectRequest
-              ? "Connected"
-              : null
-            : `Not connected${onConnectRequest ? " — click to connect" : ""}`;
+            ? "Connected for publishing"
+            : "Not connected for publishing";
+        const showConnect = ready && !isConnected && !!onConnectRequest;
         return (
-          <li key={p} className="flex min-h-10 items-center justify-between px-3 py-2">
-            <label
-              htmlFor={id}
-              className={`flex items-center gap-2 text-sm text-foreground ${clickableConnect ? "cursor-pointer" : ""}`}
-            >
+          <li key={p} className="flex min-h-14 items-center justify-between gap-3 px-3 py-2">
+            <div className="flex items-start gap-2">
               <Checkbox
                 id={id}
+                className="mt-0.5"
                 checked={isConnected && selected.includes(p)}
-                disabled={!ready || (!isConnected && !onConnectRequest)}
+                disabled={!isConnected}
                 onCheckedChange={(v) => {
-                  if (!ready) return;
-                  if (!isConnected) {
-                    if (onConnectRequest) onConnectRequest(p);
-                    return;
-                  }
+                  if (!isConnected) return;
                   toggle(p, v === true);
                 }}
               />
-              {SOCIAL_PLATFORM_LABELS[p]}
-            </label>
-            {rightText && <span className="text-xs text-muted-foreground">{rightText}</span>}
+              <label htmlFor={id} className="flex flex-col">
+                <span className="text-sm text-foreground">{SOCIAL_PLATFORM_LABELS[p]}</span>
+                <span className="text-xs text-muted-foreground">{statusText}</span>
+              </label>
+            </div>
+            <div className="flex h-8 w-20 items-center justify-end">
+              {showConnect && (
+                <Button type="button" size="sm" variant="outline" className="h-8" onClick={() => onConnectRequest?.(p)}>
+                  Connect
+                </Button>
+              )}
+            </div>
           </li>
         );
       })}
