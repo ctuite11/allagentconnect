@@ -95,7 +95,7 @@ export function ConfirmBeforePublishingDialog({
               onConnectRequest={social.onConnectRequest}
             />
             <p className="text-xs text-muted-foreground">
-              Leave all unchecked to publish without sharing. These become this listing's defaults.
+              Leave all unselected to publish without sharing. These become this listing's defaults.
             </p>
           </div>
         ) : null}
