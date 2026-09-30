@@ -444,6 +444,8 @@ const AddListing = () => {
   // Social (V1): only offered when the signed-in user owns the listing.
   const listingOwnerIdRef = useRef<string | null>(null);
   const [publishSocialConnected, setPublishSocialConnected] = useState<SocialConnected | null>(null);
+  const [publishSocialStatus, setPublishSocialStatus] = useState<"loading" | "ready" | "error">("loading");
+  const socialStatusCacheRef = useRef<SocialConnected | null>(null);
   const [publishSocialSelected, setPublishSocialSelected] = useState<SocialPlatform[]>([]);
   /** Platforms confirmed in "Ready to publish?" for the pending first publish (null = section not shown). */
   const pendingFirstPublishSocialRef = useRef<SocialPlatform[] | null>(null);
@@ -3848,7 +3850,7 @@ const AddListing = () => {
   const handleConfirmPublish = () => {
     const action = pendingPublishAction;
     // Capture social choices only when the section was actually shown.
-    pendingFirstPublishSocialRef.current = publishSocialConnected
+    pendingFirstPublishSocialRef.current = publishSocialConnected && publishSocialStatus === "ready"
       ? publishSocialSelected.filter((p) => publishSocialConnected[p])
       : null;
     setPublishConfirmOpen(false);
@@ -3882,20 +3884,45 @@ const AddListing = () => {
     if (!publishConfirmOpen) return;
     const restore = restoreSocialSelectionsRef.current;
     restoreSocialSelectionsRef.current = null;
-    setPublishSocialConnected(null);
-    setPublishSocialSelected(restore ?? []);
+    setPublishSocialSelected([]);
     if (!isSocialOwner()) return;
+    // Dialog is already rendered at full size; show cached status (if any) now,
+    // refresh quietly. On resume, wait for the refresh before restoring.
+    const cached = socialStatusCacheRef.current;
+    if (cached && !restore) {
+      setPublishSocialConnected(cached);
+      setPublishSocialStatus("ready");
+    } else {
+      setPublishSocialConnected(null);
+      setPublishSocialStatus("loading");
+    }
     let cancelled = false;
     void fetchSocialConnected().then((c) => {
       if (cancelled) return;
+      if (c) socialStatusCacheRef.current = c;
       setPublishSocialConnected(c);
-      if (restore) setPublishSocialSelected(restore.filter((p) => !!c && c[p]));
+      setPublishSocialStatus(c ? "ready" : "error");
+      if (c) setPublishSocialSelected((prev) => (restore ?? prev).filter((p) => c[p]));
+      else setPublishSocialSelected([]);
     });
     return () => {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [publishConfirmOpen]);
+
+  // Background, non-blocking prefetch so "Checking…" is rarely seen.
+  useEffect(() => {
+    if (!user?.id || isConciergeMode) return;
+    let cancelled = false;
+    void fetchSocialConnected().then((c) => {
+      if (!cancelled && c) socialStatusCacheRef.current = c;
+    });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   /**
    * Connect-on-demand from "Ready to publish?": save the Draft (definitively),
@@ -6362,9 +6389,10 @@ const AddListing = () => {
         baths={String(formData.bathrooms ?? "")}
         sqft={formData.square_feet ? Number(formData.square_feet).toLocaleString() : ""}
         social={
-          publishSocialConnected
+          publishConfirmOpen && isSocialOwner()
             ? {
-                connected: publishSocialConnected,
+                connected: publishSocialConnected ?? { FACEBOOK: false, INSTAGRAM: false, LINKEDIN: false, THREADS: false },
+                status: publishSocialConnected ? publishSocialStatus : publishSocialStatus === "error" ? "error" : "loading",
                 selected: publishSocialSelected,
                 onChange: setPublishSocialSelected,
                 onConnectRequest: (p) => void handleConnectFromReview(p),
