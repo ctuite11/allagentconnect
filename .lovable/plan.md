@@ -30,6 +30,7 @@ Clicking **Connect** in the publish review first opens a small AAC box:
 
 - **Cancel:** you're back in the review, nothing saved and nothing changed.
 - **Continue to Connect:** the existing flow runs. It saves the Draft, opens Bundle in the same tab, comes back and reopens the review. Still no publishing without your final "Yes, Publish Listing".
+- **After you connect:** the statuses refresh, and a newly connected platform shows "Connected for publishing" but stays **unchecked**. You have to tick it yourself before publishing.
 
 ### 3. New "Social Publishing" section in Settings
 This replaces today's "Social Media" pointer card in Settings.
@@ -38,7 +39,7 @@ This replaces today's "Social Media" pointer card in Settings.
 > Connect your social accounts to publish listings directly from All Agent Connect. These connections are separate from the social links displayed on your profile.
 
 - **Four rows:** Facebook, Instagram, LinkedIn and Threads, each showing Connected or Not connected. They show "Checking…" while loading.
-- **One button:** **Connect** when nothing is connected, **Manage connections** otherwise. It goes through the same explainer box, then Bundle, then back to Settings.
+- **One button:** **Connect accounts** when nothing is connected (Bundle's page manages all four networks), **Manage connections** once at least one is connected. It goes through the same explainer box, then Bundle, then back to Settings.
 - **Link to profile links:** a line underneath reads "Looking for the social links on your profile? Edit them on your Profile," with the existing link.
 - **Accounts without access:** while social publishing is limited to the launch group (admins today), accounts without access see only that Profile line, not the publishing rows.
 
