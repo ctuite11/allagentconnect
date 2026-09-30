@@ -29,7 +29,7 @@ const DcmlsHome: React.FC = () => {
   return (
     <>
       <Seo
-        title="Direct Connect MLS — Find it First"
+        title="Direct Connect MLS — Find It First"
         description="Browse agent-published homes on Direct Connect MLS — including off-market and coming-soon listings. Contact the listing agent directly, or choose buyer representation."
         canonical="https://directconnectmls.com"
         brandType="dcmls"
