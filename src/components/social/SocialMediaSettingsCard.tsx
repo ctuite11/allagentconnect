@@ -87,7 +87,7 @@ export function SocialMediaSettingsCard() {
         onCancel={() => setExplainerOpen(false)}
         onContinue={() => {
           setExplainerOpen(false);
-          void openSocialConnectPortal(`${window.location.origin}/agent/settings`);
+          void openSocialConnectPortal(`${window.location.origin}/settings`);
         }}
       />
     </AgentSectionCard>
