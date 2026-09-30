@@ -446,6 +446,7 @@ const AddListing = () => {
   const [publishSocialConnected, setPublishSocialConnected] = useState<SocialConnected | null>(null);
   const [publishSocialStatus, setPublishSocialStatus] = useState<"loading" | "ready" | "error">("loading");
   const socialStatusCacheRef = useRef<SocialConnected | null>(null);
+  const [connectExplainerPlatform, setConnectExplainerPlatform] = useState<SocialPlatform | null>(null);
   const [publishSocialSelected, setPublishSocialSelected] = useState<SocialPlatform[]>([]);
   /** Platforms confirmed in "Ready to publish?" for the pending first publish (null = section not shown). */
   const pendingFirstPublishSocialRef = useRef<SocialPlatform[] | null>(null);
@@ -6395,12 +6396,22 @@ const AddListing = () => {
                 status: publishSocialConnected ? publishSocialStatus : publishSocialStatus === "error" ? "error" : "loading",
                 selected: publishSocialSelected,
                 onChange: setPublishSocialSelected,
-                onConnectRequest: (p) => void handleConnectFromReview(p),
+                onConnectRequest: (p) => setConnectExplainerPlatform(p),
               }
             : null
         }
         onGoBack={handleCancelPublishConfirm}
         onConfirm={handleConfirmPublish}
+      />
+
+      <ConnectSocialExplainerDialog
+        open={!!connectExplainerPlatform}
+        onCancel={() => setConnectExplainerPlatform(null)}
+        onContinue={() => {
+          const p = connectExplainerPlatform;
+          setConnectExplainerPlatform(null);
+          if (p) void handleConnectFromReview(p);
+        }}
       />
 
       {editSocialPrompt ? (
