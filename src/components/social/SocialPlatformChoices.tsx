@@ -1,4 +1,4 @@
-import { Checkbox } from "@/components/ui/checkbox";
+import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   SOCIAL_PLATFORMS,
@@ -12,62 +12,71 @@ interface Props {
   selected: SocialPlatform[];
   onChange: (next: SocialPlatform[]) => void;
   /**
-   * First-publish review only: a not-connected platform shows a Connect button
-   * that starts the authorization flow. The later-update prompt omits this.
+   * First-publish review only: a not-connected platform shows Connect.
+   * The later-update prompt omits this, so unconnected rows show a disabled Share.
    */
   onConnectRequest?: (platform: SocialPlatform) => void;
-  /** Connection-status state. Rows render in every state so layout never shifts. */
+  /** Connection-status state. Every state uses identical row/button dimensions. */
   status?: "loading" | "ready" | "error";
 }
 
-/** Four platform checkboxes. A profile link never counts as a publishing connection. */
+/**
+ * One button per network: Connect / Share / ✓ Share. Share only toggles this
+ * listing's selection — it never disconnects an account (that lives in Settings).
+ */
 export function SocialPlatformChoices({ connected, selected, onChange, onConnectRequest, status = "ready" }: Props) {
   const ready = status === "ready";
-  const toggle = (p: SocialPlatform, on: boolean) => {
+  const toggle = (p: SocialPlatform) => {
     const set = new Set(selected);
-    if (on) set.add(p);
-    else set.delete(p);
+    if (set.has(p)) set.delete(p);
+    else set.add(p);
     onChange(SOCIAL_PLATFORMS.filter((x) => set.has(x)));
   };
+
+  // Fixed width/height so swapping state never moves the row or resizes the modal.
+  const btn = "h-8 w-28 justify-center gap-1";
 
   return (
     <ul className="divide-y divide-border rounded-md border border-border">
       {SOCIAL_PLATFORMS.map((p) => {
         const isConnected = ready && connected[p];
-        const id = `social-${p}`;
-        const statusText = !ready
-          ? status === "loading"
-            ? "Checking…"
-            : "Status unavailable"
-          : isConnected
-            ? "Connected for publishing"
-            : "Not connected for publishing";
-        const showConnect = ready && !isConnected && !!onConnectRequest;
+        const isSelected = isConnected && selected.includes(p);
+        let action;
+        if (!ready) {
+          action = (
+            <Button type="button" size="sm" variant="outline" className={btn} disabled aria-label={`${SOCIAL_PLATFORM_LABELS[p]} status loading`}>
+              …
+            </Button>
+          );
+        } else if (!isConnected) {
+          action = onConnectRequest ? (
+            <Button type="button" size="sm" variant="outline" className={btn} onClick={() => onConnectRequest(p)}>
+              Connect
+            </Button>
+          ) : (
+            <Button type="button" size="sm" variant="outline" className={btn} disabled>
+              Share
+            </Button>
+          );
+        } else {
+          action = (
+            <Button
+              type="button"
+              size="sm"
+              variant={isSelected ? "default" : "outline"}
+              className={btn}
+              aria-pressed={isSelected}
+              onClick={() => toggle(p)}
+            >
+              {isSelected && <Check className="h-4 w-4" aria-hidden />}
+              Share
+            </Button>
+          );
+        }
         return (
-          <li key={p} className="flex min-h-14 items-center justify-between gap-3 px-3 py-2">
-            <div className="flex items-start gap-2">
-              <Checkbox
-                id={id}
-                className="mt-0.5"
-                checked={isConnected && selected.includes(p)}
-                disabled={!isConnected}
-                onCheckedChange={(v) => {
-                  if (!isConnected) return;
-                  toggle(p, v === true);
-                }}
-              />
-              <label htmlFor={id} className="flex flex-col">
-                <span className="text-sm text-foreground">{SOCIAL_PLATFORM_LABELS[p]}</span>
-                <span className="text-xs text-muted-foreground">{statusText}</span>
-              </label>
-            </div>
-            <div className="flex h-8 w-20 items-center justify-end">
-              {showConnect && (
-                <Button type="button" size="sm" variant="outline" className="h-8" onClick={() => onConnectRequest?.(p)}>
-                  Connect
-                </Button>
-              )}
-            </div>
+          <li key={p} className="flex h-12 items-center justify-between px-3">
+            <span className="text-sm text-foreground">{SOCIAL_PLATFORM_LABELS[p]}</span>
+            {action}
           </li>
         );
       })}
