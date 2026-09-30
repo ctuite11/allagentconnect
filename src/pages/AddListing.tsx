@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import { ConnectSocialExplainerDialog } from "@/components/social/ConnectSocialExplainerDialog";
 import { AgentPageHeader } from "@/components/layout/AgentPageHeader";
 import { agentSectionTitle } from "@/lib/agentUi";
 import { useNavigate, useParams, useSearchParams, useLocation } from "react-router-dom";
