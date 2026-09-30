@@ -16,6 +16,7 @@ type ConfirmBeforePublishingDialogProps = {
   /** Optional social choices; null/undefined hides the section. */
   social?: {
     connected: SocialConnected;
+    status?: "loading" | "ready" | "error";
     selected: SocialPlatform[];
     onChange: (next: SocialPlatform[]) => void;
     /** First-publish review only: starts authorization for a not-connected platform. */
@@ -88,6 +89,7 @@ export function ConfirmBeforePublishingDialog({
             <p className="text-sm font-medium text-foreground">Share on social media</p>
             <SocialPlatformChoices
               connected={social.connected}
+              status={social.status}
               selected={social.selected}
               onChange={social.onChange}
               onConnectRequest={social.onConnectRequest}
