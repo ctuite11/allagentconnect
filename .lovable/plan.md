@@ -1,36 +1,22 @@
-# Social sharing: one button per network, and a cleaner connection page
+# Social publishing stays in test-only mode — no launch
 
-## 1. "Ready to publish?": one button per network
-Checkboxes and status lines are removed. Each row shows only the network name and one button, with no other text:
+## Confirmed current state (verified this turn)
+- `SOCIAL_LAUNCH_OPEN` is **not set** in the backend secrets, so the server-side launch gate is closed.
+- `SOCIAL_TEST_USER_IDS` is also not set, so today **only AAC admins** can use any social-publishing endpoint.
+- The gate lives server-side in `supabase/functions/_shared/bundleSocial.ts` (`authenticateGated`): launch flag → admins → named test accounts → everyone else refused, even calling the endpoint directly.
 
-```text
-Facebook   [Connect]
-Facebook   [Share]
-Facebook   [✓ Share]   (AAC blue)
-```
-- **Connect:** the network isn't connected yet. It opens the explainer box ("Connect social media for publishing"), then the connection step. After you return the button reads **Share**, not selected. You choose it yourself.
-- **Share / ✓ Share:** switches that network on or off for this listing only. It never disconnects anything.
-- **Disconnecting and managing** stay only in **Settings → Social Publishing**.
-- **Loading:** the box uses the last known connection status straight away and refreshes quietly. If nothing is known yet, the button sits in a plain, stable disabled state, then updates without resizing the box. The server still checks each account again before any real post.
-- **"Share this update?"** after later edits uses the same Share / ✓ Share buttons, with no Connect.
+## What this plan does
+Nothing changes. This plan records the approved safe state:
 
-## 2. Connection experience
-- **Connect from "Ready to publish?":** I'll first check Bundle's documented single-platform `connect-url`. If it takes the agent straight from the AAC explainer into that network's own sign-in and back to AAC, it's used there, which skips the extra Bundle page. If it doesn't, the hosted page is used, filtered to only that network.
-- **Settings "Connect accounts / Manage connections":** keeps the hosted page with all four networks.
-- **Branding on the hosted page:** the AAC logo (`logoUrl`), "Powered by bundle.social" hidden (`hidePoweredBy`), and AAC back-button text, all through Bundle's documented options.
-- **Your name, not an internal code:** the account label changes from "AAC Agent 1fc50da1" to "All Agent Connect – [Agent Name]". This applies to new setups, and to existing ones through Bundle's documented team update if one exists.
-- **Facebook "Choose Connection Type" screen:** no change for now. `withBusinessScope` is **not** added until I've confirmed that exact option in Bundle's current documentation, and that Standard Access still gives the Facebook Page posting permissions AAC needs. If I can't confirm both, I'll report back and leave it as is.
+1. **Social publishing is NOT approved for launch.** `SOCIAL_LAUNCH_OPEN` stays unset/false.
+2. **Access stays restricted** to admins and explicitly named test accounts only.
+3. **No real social posts during QA.** No real connect/disconnect, no publish, no post.
+4. **Profile social links stay live.** They are public links only — separate from publishing authorization.
+5. **The "Ready to publish?" social section stays hidden for normal agents.** The frontend already hides it when the server refuses access (`fetchSocialConnected()` returns null → section not rendered).
+6. **The server-side gate is not removed or weakened.** It stays exactly as implemented.
 
-## Not changing
-Posting, Hot Sheets, email, listing publishing, social defaults, sign-in security, the single final "Yes, Publish Listing".
+## If a named test account is ever needed
+Only with your explicit approval: add that account's user ID to `SOCIAL_TEST_USER_IDS`. Not part of this plan.
 
-## QA
-- **Checks:** code checks, plus the publish review on a disposable Draft with Bundle stubbed. Stop at Go Back, then delete the Draft while it's still a Draft.
-- **Nothing real during QA:** no real connect or disconnect, no publish, email, Hot Sheet event or social post.
-- **The real test:** the end-to-end test on a rental happens only when you separately authorize it.
-- **Report back:** exactly which Bundle options were confirmed and used.
-
-## Technical details
-- `SocialPlatformChoices`: one `Button` per platform (`outline` for Connect and Share, primary with a check for selected) and no status text. `onConnectRequest` is still first-publish only. The `AddListing` prefetch cache is reused.
-- `social-connect-portal`: add an optional `platform` (validated against `PLATFORMS`). When it's given, use the single-platform connect-url if verified, otherwise the hosted portal with `socialAccountTypes: [platform]`. Add `logoUrl` (a public brand-assets URL), `hidePoweredBy: true` and back-button text. Use the agent's name for the team on create, and update existing teams only if a documented endpoint exists. No `withBusinessScope` without verification. Redeploy only this function.
-- `openSocialConnectPortal(returnUrl, platform?)`: passes the platform through.
+## Launch, when you approve it later
+Setting `SOCIAL_LAUNCH_OPEN = true` is the single switch that opens social publishing to all members. That happens only on your explicit instruction.
