@@ -10,7 +10,7 @@ Nothing changes. This plan records the approved safe state:
 
 1. **Social publishing is NOT approved for launch.** `SOCIAL_LAUNCH_OPEN` stays unset/false.
 2. **Access stays restricted** to admins and explicitly named test accounts only.
-3. **No real social posts during QA.** No real connect/disconnect, no publish, no post.
+3. **No real social activity during QA.** No real social account connect/disconnect and no social post. Normal listing publishing remains unchanged.
 4. **Profile social links stay live.** They are public links only — separate from publishing authorization.
 5. **The "Ready to publish?" social section stays hidden for normal agents.** The frontend already hides it when the server refuses access (`fetchSocialConnected()` returns null → section not rendered).
 6. **The server-side gate is not removed or weakened.** It stays exactly as implemented.
