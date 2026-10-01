@@ -18,5 +18,5 @@ Nothing changes. This plan records the approved safe state:
 ## If a named test account is ever needed
 Only with your explicit approval: add that account's user ID to `SOCIAL_TEST_USER_IDS`. Not part of this plan.
 
-## Launch, when you approve it later
-Setting `SOCIAL_LAUNCH_OPEN = true` is the single switch that opens social publishing to all members. That happens only on your explicit instruction.
+## Launch, when approved later
+Do **not** simply turn on `SOCIAL_LAUNCH_OPEN` until we first confirm the launch gate should allow only the intended AAC agent/member population. The current `true` behavior permits **any authenticated user** — that access rule needs review and likely tightening before launch. Launch requires Chris's explicit approval and a final access-rule review. This is a pre-launch fix, not something to change now.
