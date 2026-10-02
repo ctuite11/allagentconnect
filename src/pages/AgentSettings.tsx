@@ -14,6 +14,7 @@ import { AgentPageHeader } from "@/components/layout/AgentPageHeader";
 import { AgentSectionCard } from "@/components/layout/AgentSectionCard";
 import { AccountDelegatesCard } from "@/components/AccountDelegatesCard";
 import { SocialMediaSettingsCard } from "@/components/social/SocialMediaSettingsCard";
+import { SOCIAL_PUBLISHING_UI_ENABLED } from "@/config/featureFlags";
 import { agentSectionDesc, agentSectionTitle } from "@/lib/agentUi";
 import { useAgentSettings } from "@/hooks/useAgentSettings";
 import type { User } from "@supabase/supabase-js";

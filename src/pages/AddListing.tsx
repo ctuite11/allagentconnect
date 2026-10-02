@@ -73,6 +73,7 @@ import { AddListingStatusHelp } from "@/components/add-listing/AddListingStatusH
 import { AddListingStatusIntroOverlay } from "@/components/add-listing/AddListingStatusIntroOverlay";
 import { ConfirmBeforePublishingDialog } from "@/components/add-listing/ConfirmBeforePublishingDialog";
 import { SocialPostPrompt } from "@/components/social/SocialPostPrompt";
+import { SOCIAL_PUBLISHING_UI_ENABLED } from "@/config/featureFlags";
 import {
   fetchListingSocialDefaults,
   fetchSocialConnected,
@@ -3883,6 +3884,7 @@ const AddListing = () => {
   // A resume from the authorization round-trip restores its saved selections
   // after the refreshed status arrives (and drops any that are still not connected).
   useEffect(() => {
+    if (!SOCIAL_PUBLISHING_UI_ENABLED) return;
     if (!publishConfirmOpen) return;
     const restore = restoreSocialSelectionsRef.current;
     restoreSocialSelectionsRef.current = null;
@@ -3915,6 +3917,7 @@ const AddListing = () => {
 
   // Background, non-blocking prefetch so "Checking…" is rarely seen.
   useEffect(() => {
+    if (!SOCIAL_PUBLISHING_UI_ENABLED) return;
     if (!user?.id || isConciergeMode) return;
     let cancelled = false;
     void fetchSocialConnected().then((c) => {
