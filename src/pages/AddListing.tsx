@@ -6392,7 +6392,7 @@ const AddListing = () => {
         baths={String(formData.bathrooms ?? "")}
         sqft={formData.square_feet ? Number(formData.square_feet).toLocaleString() : ""}
         social={
-          publishConfirmOpen && isSocialOwner()
+          SOCIAL_PUBLISHING_UI_ENABLED && publishConfirmOpen && isSocialOwner()
             ? {
                 connected: publishSocialConnected ?? { FACEBOOK: false, INSTAGRAM: false, LINKEDIN: false, THREADS: false },
                 status: publishSocialConnected ? publishSocialStatus : publishSocialStatus === "error" ? "error" : "loading",
@@ -6416,7 +6416,7 @@ const AddListing = () => {
         }}
       />
 
-      {editSocialPrompt ? (
+      {SOCIAL_PUBLISHING_UI_ENABLED && editSocialPrompt ? (
         <SocialPostPrompt
           open
           connected={editSocialPrompt.connected}

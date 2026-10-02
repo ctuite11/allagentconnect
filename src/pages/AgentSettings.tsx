@@ -135,7 +135,7 @@ export default function AgentSettings() {
         />
 
         <div className="space-y-8">
-          <SocialMediaSettingsCard />
+          {SOCIAL_PUBLISHING_UI_ENABLED ? <SocialMediaSettingsCard /> : null}
 
           <AgentSectionCard className="space-y-4 p-5 md:p-6">
             <div>
