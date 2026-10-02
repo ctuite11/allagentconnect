@@ -9,7 +9,7 @@
 - [x] Social one-button rows (Connect/Share/✓ Share), filtered branded Bundle portal
 
 ## Monitoring findings (2026-10-02)
-- [ ] PropertyDetail anon via public RPCs
-- [ ] email_unsubscribes category CHECK → 10 values
-- [ ] admin-agent-email-summary batching (diagnose first)
-- [ ] Hide all social publishing UI (keep backend intact)
+- [x] PropertyDetail anon via public RPCs
+- [x] email_unsubscribes category CHECK → 10 values
+- [x] admin-agent-email-summary batching (diagnose first)
+- [x] Hide all social publishing UI (keep backend intact)
