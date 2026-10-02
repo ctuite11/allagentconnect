@@ -183,6 +183,13 @@
       "when": 1790652058894,
       "tag": "0025_public_agent_profile_hide_legacy_incentives",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1790900245982,
+      "tag": "0026_widen_email_unsubscribes_categories",
+      "breakpoints": true
     }
   ]
 }
