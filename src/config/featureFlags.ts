@@ -8,3 +8,12 @@
  * to `true` to re-enable it after the review-email test passes.
  */
 export const CONCIERGE_LISTINGS_ENABLED = false;
+
+/**
+ * SOCIAL_PUBLISHING_UI_ENABLED
+ * Hides every agent-facing social publishing surface (publish-dialog social
+ * section, post-publish prompt, Settings card) while the feature is on hold.
+ * Backend tables, edge functions, Bundle integration, and the server-side
+ * launch gate stay fully intact; flip to `true` to restore the UI.
+ */
+export const SOCIAL_PUBLISHING_UI_ENABLED = false;

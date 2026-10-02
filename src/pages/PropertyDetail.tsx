@@ -97,6 +97,12 @@ import {
   canMessageListingAgent as viewerCanMessageListingAgent,
   resolveListingAgentId,
 } from "@/lib/canMessageListingAgent";
+import {
+  fetchPublicListing,
+  fetchPublicListingAgent,
+  toPublicAgentProfile,
+  toPublicListingViewModel,
+} from "@/lib/publicListing";
 
 interface Listing {
   id: string;
@@ -310,6 +316,21 @@ const PropertyDetail = () => {
     const fetchListing = async () => {
       try {
         setFetchError(false);
+
+        // Signed-out visitors: safe public RPCs only. Direct listings /
+        // agent_profiles selects are revoked for anon (phase-3 lockdown).
+        if (!user) {
+          const publicListing = await fetchPublicListing(id!);
+          if (!publicListing) {
+            setListing(null);
+            return;
+          }
+          const publicAgent = await fetchPublicListingAgent(id!);
+          setListing(toPublicListingViewModel(publicListing, publicAgent) as unknown as Listing);
+          setAgentProfile(publicAgent ? (toPublicAgentProfile(publicAgent) as AgentProfile) : null);
+          return;
+        }
+
         const { data, error } = await supabase
           .from("listings")
           .select("*")
@@ -367,13 +388,14 @@ const PropertyDetail = () => {
       }
     };
 
+    if (roleLoading) return;
     if (id) {
       fetchListing();
     } else {
       setLoading(false);
       setListing(null);
     }
-  }, [id]);
+  }, [id, user, roleLoading]);
 
   useEffect(() => {
     if (!listing?.id) return;

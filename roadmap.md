@@ -7,3 +7,9 @@
 - [x] Ready to publish? opens instantly full-size; social rows Checking…/Status unavailable; non-blocking prefetch
 - [x] Social publishing UX: 'for publishing' wording, Connect button + explainer, Settings Social Publishing card
 - [x] Social one-button rows (Connect/Share/✓ Share), filtered branded Bundle portal
+
+## Monitoring findings (2026-10-02)
+- [ ] PropertyDetail anon via public RPCs
+- [ ] email_unsubscribes category CHECK → 10 values
+- [ ] admin-agent-email-summary batching (diagnose first)
+- [ ] Hide all social publishing UI (keep backend intact)
