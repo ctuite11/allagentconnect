@@ -97,6 +97,12 @@ import {
   canMessageListingAgent as viewerCanMessageListingAgent,
   resolveListingAgentId,
 } from "@/lib/canMessageListingAgent";
+import {
+  fetchPublicListing,
+  fetchPublicListingAgent,
+  toPublicAgentProfile,
+  toPublicListingViewModel,
+} from "@/lib/publicListing";
 
 interface Listing {
   id: string;
@@ -382,13 +388,14 @@ const PropertyDetail = () => {
       }
     };
 
+    if (roleLoading) return;
     if (id) {
       fetchListing();
     } else {
       setLoading(false);
       setListing(null);
     }
-  }, [id]);
+  }, [id, user, roleLoading]);
 
   useEffect(() => {
     if (!listing?.id) return;
