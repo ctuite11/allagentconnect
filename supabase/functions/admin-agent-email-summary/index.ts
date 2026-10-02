@@ -119,17 +119,23 @@ Deno.serve(async (req) => {
       })
     }
 
-    const { data: rows, error: rpcError } = await adminClient.rpc('admin_agent_email_summary', {
-      _emails: recipients,
-      _templates: ['admin-created-invite', 'license-verified'],
-    })
-
-    if (rpcError) {
-      console.error('[admin-agent-email-summary] rpc error:', rpcError.message)
-      return new Response(JSON.stringify({ error: 'Failed to load email summary' }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    // Full-roster calls previously timed out when every recipient went into a
+    // single RPC. Batch sequentially; response shape is unchanged.
+    const BATCH = 200
+    const rows: any[] = []
+    for (let i = 0; i < recipients.length; i += BATCH) {
+      const { data: batchRows, error: rpcError } = await adminClient.rpc('admin_agent_email_summary', {
+        _emails: recipients.slice(i, i + BATCH),
+        _templates: ['admin-created-invite', 'license-verified'],
       })
+      if (rpcError) {
+        console.error('[admin-agent-email-summary] rpc error:', rpcError.message)
+        return new Response(JSON.stringify({ error: 'Failed to load email summary' }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+      if (batchRows) rows.push(...batchRows)
     }
 
     const summaries: Record<string, {
