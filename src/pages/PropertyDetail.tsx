@@ -310,6 +310,21 @@ const PropertyDetail = () => {
     const fetchListing = async () => {
       try {
         setFetchError(false);
+
+        // Signed-out visitors: safe public RPCs only. Direct listings /
+        // agent_profiles selects are revoked for anon (phase-3 lockdown).
+        if (!user) {
+          const publicListing = await fetchPublicListing(id!);
+          if (!publicListing) {
+            setListing(null);
+            return;
+          }
+          const publicAgent = await fetchPublicListingAgent(id!);
+          setListing(toPublicListingViewModel(publicListing, publicAgent) as unknown as Listing);
+          setAgentProfile(publicAgent ? (toPublicAgentProfile(publicAgent) as AgentProfile) : null);
+          return;
+        }
+
         const { data, error } = await supabase
           .from("listings")
           .select("*")
