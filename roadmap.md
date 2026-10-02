@@ -13,3 +13,4 @@
 - [x] email_unsubscribes category CHECK → 10 values
 - [x] admin-agent-email-summary batching (diagnose first)
 - [x] Hide all social publishing UI (keep backend intact)
+- [x] Ready to publish: always show Sq Ft ("Sq Ft not entered" when blank)

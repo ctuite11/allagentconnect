@@ -47,7 +47,7 @@ export function ConfirmBeforePublishingDialog({
   const vitals = [
     beds ? `${beds} Beds` : null,
     baths ? `${baths} Baths` : null,
-    sqft ? `${sqft} Sq Ft` : null,
+    sqft ? `${sqft} Sq Ft` : "Sq Ft not entered",
   ].filter(Boolean);
 
   return (
