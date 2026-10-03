@@ -1,25 +1,26 @@
-# Send Alice Miles a fresh sign-up link
+# Send Alice Miles a new sign-up link (admin-created account)
 
-## Where she stands
-- Nothing left to delete. Both of her verification requests (July 18 and Oct 1) are gone. She has no account, profile, role, or archive entry.
-- The only things left are three old emails from July in the email history. These are send records, so they stay.
+## Current state (verified)
+- Alice Miles (alice.miles@nemoves.com) is fully removed: no auth account, no agent profile, no pending verification request.
+- A "previously deleted" tombstone exists for her email, so the system will ask for a one-time confirmation before recreating her.
+- The existing admin flow already does everything needed: **Admin Approvals → Create Agent** creates the account and automatically sends the standard "Your account is ready" invite email with her secure setup link (hash-only, single-use, 30-day token).
 
-## What happens
-Send one email to alice.miles@nemoves.com with a link to the agent sign-up page. She fills it out again, and her new request shows up in Admin Approvals for you to review.
+## Plan — no code changes, no new emails, uses the existing flow
 
-- From: hello@mail.allagentconnect.com, with replies going to chris@allagentconnect.com
-- Design: the existing branded AAC email. No template changes.
-- Subject: "Your All Agent Connect sign-up link"
-- Message: "Hi Alice, here is a fresh link to sign up for All Agent Connect. Please complete the short form with your current license details and we'll verify you right away."
-- Button: "Sign Up" → https://allagentconnect.com/auth?mode=register
+1. In the app, signed in as admin (Chris), open **Admin → Approvals** and click **Create Agent**.
+2. Enter: Alice Miles, alice.miles@nemoves.com.
+3. The dialog will flag that this email was previously deleted — confirm the acknowledgement to proceed (this is the built-in safety check working as intended).
+4. Submit. The system will:
+   - Create her auth account (email confirmed, no password — she sets it herself).
+   - Create her agent profile with status "invited".
+   - Send her the standard admin-created invite email from Chris with the secure account-setup link.
+5. Verify afterwards (read-only): her account exists with status "invited", and exactly one invite email job was queued/sent to her address.
 
-## Steps
-1. Send exactly one email through the existing admin email sender, as Chris.
-2. Confirm one email was queued and sent to her, and nothing else.
-3. Report back.
+## What this does NOT do
+- No code or template changes (email templates remain frozen).
+- No password is set or logged — Alice creates her own via the setup link.
+- No Hot Sheet, listing, social, or DCMLS activity.
+- She is not verified — she completes profile + license setup herself, then goes through normal verification.
 
-## Out of scope
-- No deletes, since there's nothing to delete
-- No account creation and no activation token
-- No code, template, or schema changes, and no publishing
-- No other people get emailed
+## Alternative
+If you'd rather not click through the UI, I can invoke the same admin-create-user function directly with the admin session (with the previously-deleted acknowledgement). Same result, same email.
