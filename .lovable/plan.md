@@ -1,26 +1,14 @@
-# Send Alice Miles a new sign-up link (admin-created account)
+# Alice Miles — re-onboarding (COMPLETED by Chris)
 
-## Current state (verified)
-- Alice Miles (alice.miles@nemoves.com) is fully removed: no auth account, no agent profile, no pending verification request.
-- A "previously deleted" tombstone exists for her email, so the system will ask for a one-time confirmation before recreating her.
-- The existing admin flow already does everything needed: **Admin Approvals → Create Agent** creates the account and automatically sends the standard "Your account is ready" invite email with her secure setup link (hash-only, single-use, 30-day token).
+Chris completed the admin-create flow himself on 2026-10-03. Verified read-only:
 
-## Plan — no code changes, no new emails, uses the existing flow
+- Auth user created 2026-10-03 18:10 UTC (id 6a9cf001-e60a-4794-b9af-47da7fc6b187), email confirmed.
+- Agent profile, agent settings (status: invited), and agent role all present.
+- Activation email "Chris Tuite invited you to All Agent Connect" sent at 18:10:39 UTC — status: sent.
 
-1. In the app, signed in as admin (Chris), open **Admin → Approvals** and click **Create Agent**.
-2. Enter: Alice Miles, alice.miles@nemoves.com.
-3. The dialog will flag that this email was previously deleted — confirm the acknowledgement to proceed (this is the built-in safety check working as intended).
-4. Submit. The system will:
-   - Create her auth account (email confirmed, no password — she sets it herself).
-   - Create her agent profile with status "invited".
-   - Send her the standard admin-created invite email from Chris with the secure account-setup link.
-5. Verify afterwards (read-only): her account exists with status "invited", and exactly one invite email job was queued/sent to her address.
+No further action needed. Alice can use the activation link in that email to set her password and finish signing up.
 
-## What this does NOT do
-- No code or template changes (email templates remain frozen).
-- No password is set or logged — Alice creates her own via the setup link.
-- No Hot Sheet, listing, social, or DCMLS activity.
-- She is not verified — she completes profile + license setup herself, then goes through normal verification.
+## Remaining open items (unchanged)
 
-## Alternative
-If you'd rather not click through the UI, I can invoke the same admin-create-user function directly with the admin session (with the previously-deleted acknowledgement). Same result, same email.
+- High-load alert investigation: read-only only; no restarts or DB changes without explicit approval.
+- Social publishing stays test-only, admins only; server-side launch gate intact; Profile social links remain live; normal listing publishing unchanged.
