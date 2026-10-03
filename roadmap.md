@@ -1,12 +1,12 @@
 # Roadmap — AAC
 
-## 2026-10-03 — Approved production action: cron.job_run_details cleanup (IN PROGRESS)
+## 2026-10-03 — Approved production action: cron.job_run_details cleanup (DONE 2026-10-03)
 - [x] Evidence snapshot (db 694 MB; 760,994 rows / 463 MB; oldest 2026-02-09; 718,994 deletable; uptime 7d23h; 26 conns)
-- [ ] Fixed 7-day cutoff computed once, used for every batch (Chris's added safeguard)
-- [ ] Batched delete of rows older than cutoff (~719k rows, ~100k per batch)
-- [ ] Add daily retention job keeping cron.job_run_details to 7 days (no existing job touched)
-- [ ] Plain VACUUM only (NO VACUUM FULL, no restart, no resource changes, no other changes)
-- [ ] Post-cleanup report: rows removed/remaining, table size, db size, connections, cron jobs normal
+- [x] Fixed 7-day cutoff (2026-09-26 20:47:33 UTC, used for every batch) computed once, used for every batch (Chris's added safeguard)
+- [x] Batched delete (~718k rows removed; 49,988 remain incl. 42k kept + 7.9k margin trimmed by retention job) of rows older than cutoff (~719k rows, ~100k per batch)
+- [x] Daily retention job added (aac-job-run-details-retention, 00:00 UTC; no existing job touched) keeping cron.job_run_details to 7 days (no existing job touched)
+- [x] Plain VACUUM run; no VACUUM FULL, no restart, no other changes (NO VACUUM FULL, no restart, no resource changes, no other changes)
+- [x] Post-cleanup report delivered (db 695 MB — dead space reused, not returned; table 463 MB; 19 conns; all AAC cron jobs running): rows removed/remaining, table size, db size, connections, cron jobs normal
 
 ## Separate items
 - [ ] Weborik Phase 1 finding: pg_cron job_run_details never auto-cleaned — operational dependency to document before leaving Lovable
