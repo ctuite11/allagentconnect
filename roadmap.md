@@ -1,16 +1,14 @@
-# Roadmap
+# Roadmap — AAC
 
-- [x] Add focused Vitest coverage for SharedListingGate guest exception (8 tests, all passing; SharedListingGate.tsx unchanged)
-- [x] Preview only for never-published Drafts, same tab (AddListing)
-- [x] Profile is the single place for social links + publishing connections; Settings is a pointer
-- [x] Simplify social: Profile links only; connect-at-publish in "Ready to publish?" (save-draft gate, sessionStorage resume, from preserved, fail-closed on null status) — QA'd end-to-end with stubbed portal; test drafts deleted while Draft
-- [x] Ready to publish? opens instantly full-size; social rows Checking…/Status unavailable; non-blocking prefetch
-- [x] Social publishing UX: 'for publishing' wording, Connect button + explainer, Settings Social Publishing card
-- [x] Social one-button rows (Connect/Share/✓ Share), filtered branded Bundle portal
+## 2026-10-03 — Approved production action: cron.job_run_details cleanup (DONE 2026-10-03)
+- [x] Evidence snapshot (db 694 MB; 760,994 rows / 463 MB; oldest 2026-02-09; 718,994 deletable; uptime 7d23h; 26 conns)
+- [x] Fixed 7-day cutoff (2026-09-26 20:47:33 UTC, used for every batch) computed once, used for every batch (Chris's added safeguard)
+- [x] Batched delete (~718k rows removed; 49,988 remain incl. 42k kept + 7.9k margin trimmed by retention job) of rows older than cutoff (~719k rows, ~100k per batch)
+- [x] Daily retention job added (aac-job-run-details-retention, 00:00 UTC; no existing job touched) keeping cron.job_run_details to 7 days (no existing job touched)
+- [x] Plain VACUUM run; no VACUUM FULL, no restart, no other changes (NO VACUUM FULL, no restart, no resource changes, no other changes)
+- [x] Post-cleanup report delivered (db 695 MB — dead space reused, not returned; table 463 MB; 19 conns; all AAC cron jobs running): rows removed/remaining, table size, db size, connections, cron jobs normal
 
-## Monitoring findings (2026-10-02)
-- [x] PropertyDetail anon via public RPCs
-- [x] email_unsubscribes category CHECK → 10 values
-- [x] admin-agent-email-summary batching (diagnose first)
-- [x] Hide all social publishing UI (keep backend intact)
-- [x] Ready to publish: always show Sq Ft ("Sq Ft not entered" when blank)
+## Separate items
+- [ ] Weborik Phase 1 finding: pg_cron job_run_details never auto-cleaned — operational dependency to document before leaving Lovable
+- [ ] Lovable support (Chris sends): identify exact metric/threshold of high-load alert; do not assume db size was the trigger
+- [x] Alice Miles — done and separate from this work: account created 2026-10-03 18:10 UTC, activation email sent; no further action
