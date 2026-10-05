@@ -131,6 +131,7 @@ export async function publishListingSocial(args: {
   eventType: string;
   platforms: SocialPlatform[];
   clientRequestId: string;
+  failureMessage?: string;
 }): Promise<boolean> {
   if (args.platforms.length === 0) return true;
   let ok = false;
@@ -150,7 +151,7 @@ export async function publishListingSocial(args: {
   if (ok) {
     toast.success("Shared to social media.");
   } else {
-    toast.error("Listing published, but the social post could not be completed.", {
+    toast.error(args.failureMessage ?? "Listing published, but the social post could not be completed.", {
       duration: 12000,
       action: { label: "Retry", onClick: () => void publishListingSocial(args) },
     });

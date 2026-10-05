@@ -45,12 +45,7 @@ export function SocialMediaSettingsCard() {
   );
 
   if (status === "unavailable") {
-    return (
-      <AgentSectionCard className="space-y-2 p-5 md:p-6">
-        <h2 className={agentSectionTitle}>Social Media</h2>
-        {profileLine}
-      </AgentSectionCard>
-    );
+    return null;
   }
 
   return (
