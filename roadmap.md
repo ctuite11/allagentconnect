@@ -9,7 +9,7 @@
 - [x] Post-cleanup report delivered (db 695 MB — dead space reused, not returned; table 463 MB; 19 conns; all AAC cron jobs running): rows removed/remaining, table size, db size, connections, cron jobs normal
 
 ## Separate items
-- [ ] Move first-publish social choices to Add Listing above the final actions; persist defaults, keep confirmation listing-only, preserve closed test gate, and complete non-destructive QA
+- [x] Move first-publish social choices to Add Listing above the final actions; persist defaults, keep confirmation listing-only, preserve closed test gate, and complete non-destructive QA (2026-10-05)
 - [ ] Weborik Phase 1 finding: pg_cron job_run_details never auto-cleaned — operational dependency to document before leaving Lovable
 - [ ] Lovable support (Chris sends): identify exact metric/threshold of high-load alert; do not assume db size was the trigger
 - [x] Alice Miles — done and separate from this work: account created 2026-10-03 18:10 UTC, activation email sent; no further action
