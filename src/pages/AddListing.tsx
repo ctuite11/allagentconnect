@@ -72,8 +72,8 @@ import { DcmlsPublishingIntroOverlay } from "@/components/add-listing/DcmlsPubli
 import { AddListingStatusHelp } from "@/components/add-listing/AddListingStatusHelp";
 import { AddListingStatusIntroOverlay } from "@/components/add-listing/AddListingStatusIntroOverlay";
 import { ConfirmBeforePublishingDialog } from "@/components/add-listing/ConfirmBeforePublishingDialog";
+import { SocialPublishingSection } from "@/components/add-listing/SocialPublishingSection";
 import { SocialPostPrompt } from "@/components/social/SocialPostPrompt";
-import { SOCIAL_PUBLISHING_UI_ENABLED } from "@/config/featureFlags";
 import {
   fetchListingSocialDefaults,
   fetchSocialConnected,
@@ -450,10 +450,7 @@ const AddListing = () => {
   const socialStatusCacheRef = useRef<SocialConnected | null>(null);
   const [connectExplainerPlatform, setConnectExplainerPlatform] = useState<SocialPlatform | null>(null);
   const [publishSocialSelected, setPublishSocialSelected] = useState<SocialPlatform[]>([]);
-  /** Platforms confirmed in "Ready to publish?" for the pending first publish (null = section not shown). */
-  const pendingFirstPublishSocialRef = useRef<SocialPlatform[] | null>(null);
-  /** Saved selections restored when "Ready to publish?" reopens after the authorization round-trip. */
-  const restoreSocialSelectionsRef = useRef<SocialPlatform[] | null>(null);
+  const [savingSocialDefaults, setSavingSocialDefaults] = useState(false);
   const socialConnectInProgressRef = useRef(false);
   const socialResumeFiredRef = useRef(false);
   const [editSocialPrompt, setEditSocialPrompt] = useState<{
@@ -3852,10 +3849,6 @@ const AddListing = () => {
   /** Confirm status/address/price, then resume the exact publish path that was interrupted. */
   const handleConfirmPublish = () => {
     const action = pendingPublishAction;
-    // Capture social choices only when the section was actually shown.
-    pendingFirstPublishSocialRef.current = publishSocialConnected && publishSocialStatus === "ready"
-      ? publishSocialSelected.filter((p) => publishSocialConnected[p])
-      : null;
     setPublishConfirmOpen(false);
     setPendingPublishAction(null);
     publishConfirmedRef.current = true;
@@ -3867,8 +3860,6 @@ const AddListing = () => {
   };
 
   const handleCancelPublishConfirm = () => {
-    // Go Back / close: no live write, no defaults write, no social call.
-    pendingFirstPublishSocialRef.current = null;
     setPublishConfirmOpen(false);
     setPendingPublishAction(null);
   };
@@ -3880,60 +3871,54 @@ const AddListing = () => {
     return !owner || (!!user?.id && owner === user.id);
   };
 
-  // Load connected accounts when "Ready to publish?" opens. Errors/403 hide the section.
-  // A resume from the authorization round-trip restores its saved selections
-  // after the refreshed status arrives (and drops any that are still not connected).
+  // The gated status request is also the visibility check: ordinary agents receive
+  // no social UI. Existing Draft defaults load independently of the listing review.
   useEffect(() => {
-    if (!SOCIAL_PUBLISHING_UI_ENABLED) return;
-    if (!publishConfirmOpen) return;
-    const restore = restoreSocialSelectionsRef.current;
-    restoreSocialSelectionsRef.current = null;
-    setPublishSocialSelected([]);
+    if (!user?.id || isConciergeMode || loading || isLoadingListing) return;
     if (!isSocialOwner()) return;
-    // Dialog is already rendered at full size; show cached status (if any) now,
-    // refresh quietly. On resume, wait for the refresh before restoring.
-    const cached = socialStatusCacheRef.current;
-    if (cached && !restore) {
-      setPublishSocialConnected(cached);
-      setPublishSocialStatus("ready");
-    } else {
-      setPublishSocialConnected(null);
-      setPublishSocialStatus("loading");
-    }
     let cancelled = false;
-    void fetchSocialConnected().then((c) => {
+    void Promise.all([
+      fetchSocialConnected(),
+      listingId ? fetchListingSocialDefaults(listingId) : Promise.resolve(null),
+    ]).then(([connected, defaults]) => {
       if (cancelled) return;
-      if (c) socialStatusCacheRef.current = c;
-      setPublishSocialConnected(c);
-      setPublishSocialStatus(c ? "ready" : "error");
-      if (c) setPublishSocialSelected((prev) => (restore ?? prev).filter((p) => c[p]));
-      else setPublishSocialSelected([]);
+      if (connected) socialStatusCacheRef.current = connected;
+      setPublishSocialConnected(connected);
+      setPublishSocialStatus(connected ? "ready" : "error");
+      setPublishSocialSelected(defaults ?? []);
     });
     return () => {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [publishConfirmOpen]);
+  }, [user?.id, listingId, isConciergeMode, loading, isLoadingListing]);
 
-  // Background, non-blocking prefetch so "Checking…" is rarely seen.
-  useEffect(() => {
-    if (!SOCIAL_PUBLISHING_UI_ENABLED) return;
-    if (!user?.id || isConciergeMode) return;
-    let cancelled = false;
-    void fetchSocialConnected().then((c) => {
-      if (!cancelled && c) socialStatusCacheRef.current = c;
-    });
-    return () => {
-      cancelled = true;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id]);
+  const handleFirstPublishSocialChange = async (next: SocialPlatform[]) => {
+    if (savingSocialDefaults) return;
+    const previous = publishSocialSelected;
+    setPublishSocialSelected(next);
+    setSavingSocialDefaults(true);
+    try {
+      // Persist the complete current form first so social choices can never
+      // strand unsaved listing work or attach to an incomplete Draft.
+      const savedId = await handleSaveDraft(true);
+      if (!savedId || !(await saveListingSocialDefaults(savedId, next))) {
+        setPublishSocialSelected(previous);
+        toast.error("Social sharing choices could not be saved. Your listing remains a Draft.");
+      }
+    } catch {
+      setPublishSocialSelected(previous);
+      toast.error("Social sharing choices could not be saved. Your listing remains a Draft.");
+    } finally {
+      setSavingSocialDefaults(false);
+    }
+  };
 
   /**
-   * Connect-on-demand from "Ready to publish?": save the Draft (definitively),
+   * Connect-on-demand from Add Listing: save the complete Draft (definitively),
    * stash the resume state, then open the hosted authorization page in this tab.
    * The round-trip never publishes — the listing stays a Draft until the agent
-   * returns and presses "Yes, Publish Listing".
+   * returns and deliberately selects Share before publishing.
    */
   const handleConnectFromReview = async (platform: SocialPlatform) => {
     if (socialConnectInProgressRef.current) return;
@@ -3950,7 +3935,6 @@ const AddListing = () => {
           JSON.stringify({
             listingId: savedId,
             selected: publishSocialSelected,
-            pendingPublishAction: pendingPublishAction ?? "publish",
           }),
         );
       } catch {
@@ -3971,8 +3955,8 @@ const AddListing = () => {
     }
   };
 
-  // Returning from the hosted authorization page: reopen "Ready to publish?"
-  // with the saved selections, then strip only the social param (from stays).
+  // Returning from authorization: stay in Add Listing, refresh status, and strip
+  // only the social param. The newly connected platform is never auto-selected.
   useEffect(() => {
     if (socialResumeFiredRef.current) return;
     if (loading || isLoadingListing) return;
@@ -3986,7 +3970,7 @@ const AddListing = () => {
     );
     if (isConciergeMode || !listingId || !isSocialOwner()) return;
     if (backendStatusRef.current !== "draft") return;
-    let stored: { selected?: SocialPlatform[]; pendingPublishAction?: string } | null = null;
+    let stored: { selected?: SocialPlatform[] } | null = null;
     try {
       stored = JSON.parse(sessionStorage.getItem(socialResumeKey(listingId)) || "null");
     } catch {
@@ -3994,24 +3978,26 @@ const AddListing = () => {
     }
     sessionStorage.removeItem(socialResumeKey(listingId));
     if (!stored) return;
-    restoreSocialSelectionsRef.current = Array.isArray(stored.selected)
+    setPublishSocialSelected(Array.isArray(stored.selected)
       ? stored.selected.filter((p): p is SocialPlatform => typeof p === "string")
-      : [];
-    setPendingPublishAction(stored.pendingPublishAction === "saveChanges" ? "saveChanges" : "publish");
-    setPublishConfirmOpen(true);
+      : []);
+    void fetchSocialConnected().then((connected) => {
+      if (connected) socialStatusCacheRef.current = connected;
+      setPublishSocialConnected(connected);
+      setPublishSocialStatus(connected ? "ready" : "error");
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading, isLoadingListing, searchParams, listingId, isConciergeMode]);
 
-  /** After a successful first publish: save defaults, then post. Never affects the listing. */
+  /** After a successful first publish: read saved defaults, then post. Never affects the listing. */
   const runFirstPublishSocial = async (savedListingId: string, dbStatus: string) => {
-    const selection = pendingFirstPublishSocialRef.current;
-    pendingFirstPublishSocialRef.current = null;
-    if (!selection || !isSocialOwner()) return;
+    if (!isSocialOwner()) return;
+    let selection: SocialPlatform[] = [];
     try {
-      const saved = await saveListingSocialDefaults(savedListingId, selection);
-      if (!saved) toast.error("Listing published, but social preferences could not be saved.");
+      selection = (await fetchListingSocialDefaults(savedListingId)) ?? [];
     } catch {
-      toast.error("Listing published, but social preferences could not be saved.");
+      toast.error("Listing published. Saved social sharing choices could not be checked.");
+      return;
     }
     if (selection.length > 0 && isSocialEligibleStatus(dbStatus)) {
       try {
@@ -4020,9 +4006,10 @@ const AddListing = () => {
           eventType: statusToSocialEventType(dbStatus),
           platforms: selection,
           clientRequestId: newClientRequestId(),
+          failureMessage: `Listing published. Social sharing could not be completed for ${selection.map((p) => p.charAt(0) + p.slice(1).toLowerCase()).join(", ")}.`,
         });
       } catch {
-        toast.error("Listing published, but the social post could not be completed.");
+        toast.error(`Listing published. Social sharing could not be completed for ${selection.map((p) => p.charAt(0) + p.slice(1).toLowerCase()).join(", ")}.`);
       }
     }
   };
@@ -6321,10 +6308,20 @@ const AddListing = () => {
 
               </form>
 
+              {isNeverPublished() && publishSocialConnected && publishSocialStatus === "ready" && isSocialOwner() ? (
+                <SocialPublishingSection
+                  connected={publishSocialConnected}
+                  selected={publishSocialSelected}
+                  saving={savingSocialDefaults}
+                  onChange={(next) => void handleFirstPublishSocialChange(next)}
+                  onConnectRequest={(platform) => setConnectExplainerPlatform(platform)}
+                />
+              ) : null}
+
               {/* Final actions at the end of the form */}
               <div
                 ref={bottomActionsRef}
-                className="mt-8 flex flex-wrap items-center justify-end gap-2 border-t border-zinc-200 pt-6"
+                className={`${isNeverPublished() && publishSocialConnected && publishSocialStatus === "ready" ? "mt-6" : "mt-8 border-t border-zinc-200 pt-6"} flex flex-wrap items-center justify-end gap-2`}
               >
                 {renderActionButtons()}
               </div>
@@ -6394,17 +6391,7 @@ const AddListing = () => {
         beds={String(formData.bedrooms ?? "")}
         baths={String(formData.bathrooms ?? "")}
         sqft={formData.square_feet ? Number(formData.square_feet).toLocaleString() : ""}
-        social={
-          SOCIAL_PUBLISHING_UI_ENABLED && publishConfirmOpen && isSocialOwner()
-            ? {
-                connected: publishSocialConnected ?? { FACEBOOK: false, INSTAGRAM: false, LINKEDIN: false, THREADS: false },
-                status: publishSocialConnected ? publishSocialStatus : publishSocialStatus === "error" ? "error" : "loading",
-                selected: publishSocialSelected,
-                onChange: setPublishSocialSelected,
-                onConnectRequest: (p) => setConnectExplainerPlatform(p),
-              }
-            : null
-        }
+        dcmlsLabel={formData.show_on_dcmls && dcmlsParticipation === "on" ? "Yes" : "No"}
         onGoBack={handleCancelPublishConfirm}
         onConfirm={handleConfirmPublish}
       />
@@ -6419,7 +6406,7 @@ const AddListing = () => {
         }}
       />
 
-      {SOCIAL_PUBLISHING_UI_ENABLED && editSocialPrompt ? (
+      {editSocialPrompt ? (
         <SocialPostPrompt
           open
           connected={editSocialPrompt.connected}

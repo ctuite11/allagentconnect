@@ -18,13 +18,15 @@ interface Props {
   onConnectRequest?: (platform: SocialPlatform) => void;
   /** Connection-status state. Every state uses identical row/button dimensions. */
   status?: "loading" | "ready" | "error";
+  /** Temporarily prevents another selection while its saved default is updating. */
+  disabled?: boolean;
 }
 
 /**
  * One button per network: Connect / Share / ✓ Share. Share only toggles this
  * listing's selection — it never disconnects an account (that lives in Settings).
  */
-export function SocialPlatformChoices({ connected, selected, onChange, onConnectRequest, status = "ready" }: Props) {
+export function SocialPlatformChoices({ connected, selected, onChange, onConnectRequest, status = "ready", disabled = false }: Props) {
   const ready = status === "ready";
   const toggle = (p: SocialPlatform) => {
     const set = new Set(selected);
@@ -50,7 +52,7 @@ export function SocialPlatformChoices({ connected, selected, onChange, onConnect
           );
         } else if (!isConnected) {
           action = onConnectRequest ? (
-            <Button type="button" size="sm" variant="outline" className={btn} onClick={() => onConnectRequest(p)}>
+            <Button type="button" size="sm" variant="outline" className={btn} disabled={disabled} onClick={() => onConnectRequest(p)}>
               Connect
             </Button>
           ) : (
@@ -65,6 +67,7 @@ export function SocialPlatformChoices({ connected, selected, onChange, onConnect
               size="sm"
               variant={isSelected ? "default" : "outline"}
               className={btn}
+              disabled={disabled}
               aria-pressed={isSelected}
               onClick={() => toggle(p)}
             >

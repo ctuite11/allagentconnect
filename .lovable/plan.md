@@ -12,6 +12,7 @@ Keep the final listing review focused on the listing itself. Move first-publish 
   - Connected and selected: **✓ Share** in AAC blue
 - The button itself is the selector. Clicking **✓ Share** only deselects that network; it never disconnects an account.
 - Keep the existing AAC explainer before connection authorization.
+- **Authorization safety:** Before opening a social Connect flow, save the complete current listing state through the existing safe Draft-save path. Do not leave the page unless that save succeeds and a valid Draft/listing ID is confirmed.
 - After authorization, return to the same Draft, refresh connection status, and show **Share**. Do not automatically select the newly connected network.
 - Show: **Selected networks will publish when this listing is published.**
 - Keep disconnecting and account management only in **Settings → Social Publishing**.
@@ -22,6 +23,7 @@ Keep the final listing review focused on the listing itself. Move first-publish 
 - Load saved selections whenever an existing Draft is reopened.
 - Save selection changes without publishing the listing. A failed social-selection save must not change the Draft or block ordinary listing work.
 - Preserve selected choices across the authorization return flow and ordinary Draft reopening.
+- The saved choices are the listing's persistent defaults and preselect future eligible **Share this update?** prompts.
 
 ## Publish behavior
 - Remove all social controls, connection checks, loading states, and social error states from **Ready to publish?**
@@ -29,6 +31,7 @@ Keep the final listing review focused on the listing itself. Move first-publish 
 - Clicking **Yes, Publish Listing** keeps the existing listing validation, photo requirement, listing save, Hot Sheet/email behavior, status rules, and DCMLS behavior unchanged.
 - Only after the listing successfully publishes, read the saved selections and post to the selected networks that are still connected.
 - Social failure must never roll back or delay the successful listing publish.
+- Report a post-publish social failure separately and visibly so the listing never appears unpublished.
 - Publishing with no selected networks performs no social action.
 
 ## Later listing updates

@@ -14,7 +14,6 @@ import { AgentPageHeader } from "@/components/layout/AgentPageHeader";
 import { AgentSectionCard } from "@/components/layout/AgentSectionCard";
 import { AccountDelegatesCard } from "@/components/AccountDelegatesCard";
 import { SocialMediaSettingsCard } from "@/components/social/SocialMediaSettingsCard";
-import { SOCIAL_PUBLISHING_UI_ENABLED } from "@/config/featureFlags";
 import { agentSectionDesc, agentSectionTitle } from "@/lib/agentUi";
 import { useAgentSettings } from "@/hooks/useAgentSettings";
 import type { User } from "@supabase/supabase-js";
@@ -136,7 +135,7 @@ export default function AgentSettings() {
         />
 
         <div className="space-y-8">
-          {SOCIAL_PUBLISHING_UI_ENABLED ? <SocialMediaSettingsCard /> : null}
+          <SocialMediaSettingsCard />
 
           <AgentSectionCard className="space-y-4 p-5 md:p-6">
             <div>
