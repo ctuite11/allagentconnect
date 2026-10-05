@@ -6308,10 +6308,20 @@ const AddListing = () => {
 
               </form>
 
+              {isNeverPublished() && publishSocialConnected && publishSocialStatus === "ready" && isSocialOwner() ? (
+                <SocialPublishingSection
+                  connected={publishSocialConnected}
+                  selected={publishSocialSelected}
+                  saving={savingSocialDefaults}
+                  onChange={(next) => void handleFirstPublishSocialChange(next)}
+                  onConnectRequest={(platform) => setConnectExplainerPlatform(platform)}
+                />
+              ) : null}
+
               {/* Final actions at the end of the form */}
               <div
                 ref={bottomActionsRef}
-                className="mt-8 flex flex-wrap items-center justify-end gap-2 border-t border-zinc-200 pt-6"
+                className={`${isNeverPublished() && publishSocialConnected && publishSocialStatus === "ready" ? "mt-6" : "mt-8 border-t border-zinc-200 pt-6"} flex flex-wrap items-center justify-end gap-2`}
               >
                 {renderActionButtons()}
               </div>
@@ -6381,17 +6391,7 @@ const AddListing = () => {
         beds={String(formData.bedrooms ?? "")}
         baths={String(formData.bathrooms ?? "")}
         sqft={formData.square_feet ? Number(formData.square_feet).toLocaleString() : ""}
-        social={
-          SOCIAL_PUBLISHING_UI_ENABLED && publishConfirmOpen && isSocialOwner()
-            ? {
-                connected: publishSocialConnected ?? { FACEBOOK: false, INSTAGRAM: false, LINKEDIN: false, THREADS: false },
-                status: publishSocialConnected ? publishSocialStatus : publishSocialStatus === "error" ? "error" : "loading",
-                selected: publishSocialSelected,
-                onChange: setPublishSocialSelected,
-                onConnectRequest: (p) => setConnectExplainerPlatform(p),
-              }
-            : null
-        }
+        dcmlsLabel={formData.show_on_dcmls && dcmlsParticipation === "on" ? "Yes" : "No"}
         onGoBack={handleCancelPublishConfirm}
         onConfirm={handleConfirmPublish}
       />
@@ -6406,7 +6406,7 @@ const AddListing = () => {
         }}
       />
 
-      {SOCIAL_PUBLISHING_UI_ENABLED && editSocialPrompt ? (
+      {editSocialPrompt ? (
         <SocialPostPrompt
           open
           connected={editSocialPrompt.connected}
