@@ -91,6 +91,8 @@ export type AgentSplitResultsSurfaceProps = {
   sortTriggerClassName?: string;
   /** When false, hide bulk Share selected while keeping listing selection pills. */
   shareSelectedEnabled?: boolean;
+  /** When true, hide Select all / Unselect all pills (parent owns select-all). */
+  hideSelectAllPills?: boolean;
   /** Override map/results grid height token. */
   mapResultsGridClassName?: string;
   /** Full-width toolbar rows above map grid (hot sheet review workspace). */

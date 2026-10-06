@@ -22,6 +22,8 @@ type AgentSplitResultsSelectionActionsProps = {
   onSuccessfulShare?: () => void;
   /** When false, selection pills remain but bulk Share selected is hidden. */
   shareSelectedEnabled?: boolean;
+  /** When true, Select all / Unselect all pills are hidden (parent owns select-all). */
+  hideSelectAllPills?: boolean;
   /** Extra pills (e.g. Save as Hot Sheet) rendered after share controls. */
   children?: ReactNode;
   className?: string;
