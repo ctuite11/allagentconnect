@@ -470,6 +470,19 @@ export function ClientDashboardView({
                           </div>
                         ) : null}
                       </div>
+                      {hotSheets.length > 0 ? (
+                        <div className="flex flex-col gap-0.5" aria-label="Buyer hot sheets">
+                          {hotSheets.map((sheet) => (
+                            <p
+                              key={sheet.id}
+                              className="truncate text-sm font-medium text-neutral-700"
+                              title={sheet.name}
+                            >
+                              {sheet.name}
+                            </p>
+                          ))}
+                        </div>
+                      ) : null}
                       {(buyerEmail?.trim() || buyerPhoneFmt) ? (
                         <div className="flex flex-col gap-1.5 text-xs text-neutral-600">
                           {buyerEmail?.trim() ? (
