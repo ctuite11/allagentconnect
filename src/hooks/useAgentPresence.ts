@@ -1,5 +1,6 @@
 import { useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuthRole } from "@/hooks/useAuthRole";
 
 /**
  * Lightweight heartbeat: updates agent_settings.last_seen_at every 2 minutes
@@ -11,6 +12,9 @@ import { supabase } from "@/integrations/supabase/client";
  * heartbeats and stale ones are filtered out at read time.
  */
 export function useAgentPresence() {
+  const { user: authUser } = useAuthRole();
+  const authUserRef = useRef(authUser);
+  authUserRef.current = authUser;
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   // null = not checked yet; cached for the lifetime of the mount.
   const eligibleRef = useRef<boolean | null>(null);
@@ -55,7 +59,7 @@ export function useAgentPresence() {
     const now = Date.now();
     if (now - lastWriteRef.current < 90 * 1000) return;
 
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = authUserRef.current;
     if (!user) return;
     if (!(await checkEligibility(user.id))) return;
 
