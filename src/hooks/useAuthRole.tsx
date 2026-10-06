@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { clearAllPageData } from "@/lib/pageDataCache";
 import {
   resolveUserRole,
   type DelegateMembershipSummary,
@@ -84,6 +85,8 @@ function useAuthRoleStore(): AuthRoleState {
   const currentUserId = useRef<string | null>(null);
   const currentRole = useRef<Role>(null);
   const resolvingUserId = useRef<string | null>(null);
+  // Wipe per-user page caches on sign-out or account switch (before children render).
+  if ((currentUserId.current ?? null) !== (user?.id ?? null)) clearAllPageData();
   currentUserId.current = user?.id ?? null;
   currentRole.current = role;
 
