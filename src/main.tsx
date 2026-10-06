@@ -1,6 +1,7 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
 import "./lib/tabScopedAuthStorage";
+import "./lib/successHubCacheInvalidation";
 import App from "./App.tsx";
 import "./index.css";
 import { applyFaviconForHost } from "./lib/favicon";
