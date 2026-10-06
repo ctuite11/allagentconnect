@@ -273,7 +273,7 @@ serve(async (req) => {
   const { data: invite, error: inviteErr } = await supabaseAdmin
     .from("agent_account_members")
     .select(
-      "id, owner_user_id, delegate_user_id, invite_email, display_name, status, invite_expires_at, accepted_at",
+      "id, owner_user_id, delegate_user_id, invite_email, display_name, status, invite_expires_at, accepted_at, team_id",
     )
     .eq("invite_token", inviteToken)
     .maybeSingle();
@@ -318,7 +318,10 @@ serve(async (req) => {
       const existingUser = await findAuthUserByEmail(supabaseAdmin, email);
       if (existingUser?.id === invite.delegate_user_id) {
         const ownerName = await loadOwnerDisplayName(supabaseAdmin, invite.owner_user_id);
-        await setOwnerContext(supabaseAdmin, existingUser.id, invite.owner_user_id);
+        // Team assistants must not get personal account impersonation context.
+        if (!invite.team_id) {
+          await setOwnerContext(supabaseAdmin, existingUser.id, invite.owner_user_id);
+        }
         await ensureDelegateFeatureAllowlist(supabaseAdmin, existingUser.id);
         return await buildSuccessResponse(
           supabaseUrl,
@@ -434,13 +437,20 @@ serve(async (req) => {
     return json({ success: false, error: "Account owners cannot accept their own delegate invite" }, 400);
   }
 
-  const { data: otherMembership } = await supabaseAdmin
+  let otherMembershipQuery = supabaseAdmin
     .from("agent_account_members")
     .select("id")
     .eq("delegate_user_id", userId)
     .eq("status", "accepted")
-    .neq("id", invite.id)
-    .maybeSingle();
+    .neq("id", invite.id);
+
+  // Personal: conflict only with other personal accepted rows.
+  // Team-scoped: conflict only with other accepted rows for the same team.
+  otherMembershipQuery = invite.team_id
+    ? otherMembershipQuery.eq("team_id", invite.team_id)
+    : otherMembershipQuery.is("team_id", null);
+
+  const { data: otherMembership } = await otherMembershipQuery.maybeSingle();
 
   if (otherMembership) {
     return json({
@@ -468,7 +478,10 @@ serve(async (req) => {
   }
 
   try {
-    await setOwnerContext(supabaseAdmin, userId, invite.owner_user_id);
+    // Team assistants must not get personal account impersonation context.
+    if (!invite.team_id) {
+      await setOwnerContext(supabaseAdmin, userId, invite.owner_user_id);
+    }
     await ensureDelegateFeatureAllowlist(supabaseAdmin, userId);
   } catch (ctxErr) {
     console.error("[accept-account-delegate-invite] context set failed:", ctxErr);

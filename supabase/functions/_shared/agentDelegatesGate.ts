@@ -75,6 +75,71 @@ export async function hasAgentRole(
   return !!data;
 }
 
+export async function hasAdminRole(
+  admin: SupabaseClient,
+  userId: string,
+): Promise<boolean> {
+  const { data } = await admin
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId)
+    .eq("role", "admin")
+    .maybeSingle();
+
+  return !!data;
+}
+
+/** Team lead, team_members.role=delegate, or platform admin. */
+export async function canManageTeamAssistants(
+  admin: SupabaseClient,
+  teamId: string,
+  userId: string,
+): Promise<boolean> {
+  if (await hasAdminRole(admin, userId)) return true;
+
+  const { data: team } = await admin
+    .from("teams")
+    .select("id, team_lead_user_id")
+    .eq("id", teamId)
+    .maybeSingle();
+
+  if (!team) return false;
+  if (team.team_lead_user_id === userId) return true;
+
+  const { data: membership } = await admin
+    .from("team_members")
+    .select("role, status")
+    .eq("team_id", teamId)
+    .eq("agent_id", userId)
+    .eq("status", "accepted")
+    .maybeSingle();
+
+  return membership?.role === "lead" || membership?.role === "delegate";
+}
+
+export async function resolveTeamLeadUserId(
+  admin: SupabaseClient,
+  teamId: string,
+): Promise<string | null> {
+  const { data: team } = await admin
+    .from("teams")
+    .select("team_lead_user_id")
+    .eq("id", teamId)
+    .maybeSingle();
+
+  if (team?.team_lead_user_id) return team.team_lead_user_id;
+
+  const { data: lead } = await admin
+    .from("team_members")
+    .select("agent_id")
+    .eq("team_id", teamId)
+    .eq("role", "lead")
+    .eq("status", "accepted")
+    .maybeSingle();
+
+  return lead?.agent_id ?? null;
+}
+
 export async function resolveAuthUserEmail(
   admin: SupabaseClient,
   userId: string,
