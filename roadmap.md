@@ -16,3 +16,5 @@
 - [x] Heavy-load message: find origin (Lovable/AAC/database/preview) — read-only (2026-10-06)
 - [ ] Navigation speed plan for items 1,2,3,5 (Success Hub cache, Back scroll, single session check, parallel Hot Sheets) — awaiting approval; #4 Network Activity excluded
 - [x] Full read-only infra audit: rollbacks, job cost/frequency, 13:04 alert, verified-agent lookup, Success Hub load share (2026-10-06)
+- [ ] Capacity recorder: index, null-label fix, separate hourly prune job
+- [ ] Navigation: Success Hub cache, Back scroll restore, shared session, Hot Sheets parallel
