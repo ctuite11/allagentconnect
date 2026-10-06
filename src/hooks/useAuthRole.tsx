@@ -86,7 +86,11 @@ function useAuthRoleStore(): AuthRoleState {
   const currentRole = useRef<Role>(null);
   const resolvingUserId = useRef<string | null>(null);
   // Wipe per-user page caches on sign-out or account switch (before children render).
-  if ((currentUserId.current ?? null) !== (user?.id ?? null)) clearAllPageData();
+  const cacheOwnerId = useRef<string | null>(null);
+  if (cacheOwnerId.current !== (user?.id ?? null)) {
+    clearAllPageData();
+    cacheOwnerId.current = user?.id ?? null;
+  }
   currentUserId.current = user?.id ?? null;
   currentRole.current = role;
 
