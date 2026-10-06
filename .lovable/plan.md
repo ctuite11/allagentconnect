@@ -1,21 +1,32 @@
-# Active incident: database unavailable, member sign-in failing
+# Fix: new Hot Sheet → first batch sends to the attached buyer (no contact picker)
 
-## Evidence captured (20:45–20:56 UTC, read-only)
-- **Sign-in is failing on allagentconnect.com.** Sign-in requests returned 504 timeouts at 20:52:16 and 20:52:27, then 500 errors at 20:52:15 and 20:52:42. The 20:52:42 error was "failed to connect to database". All came from the live site.
-- **The database is starved, not down.** Even trivial lookups take 12+ seconds; one settings read took 12.2s at 20:52:43. Statement timeouts repeated at 20:46, 20:51 and 20:53. One query ran for 710 seconds, finishing at 20:47:46.
-- **Scheduled work is backing up.** At 20:48 jobs 2, 6, 11 and 12 failed with "job startup timeout", the same symptom as the Oct 5 outage. At 20:49 email-queue and Hot Sheet triggers took 63s each, the listing-status trigger 35s and the capacity sampler 90s; each normally takes well under a second.
-- **Connections are dropping.** "Connection reset by peer" appeared at 20:47 and 20:53.
-- **Health readings are unavailable.** The backend status check reports the database unreachable. The only alert on record is the disk read/write budget warning at 17:09 UTC, value 15, which was 48 at 13:04.
-- **Recorder:** the last saved sample was at 20:32 UTC. The index exists, and history covers Sep 29 to Oct 6, about 7 days.
+## What's happening now (trace)
+1. Saving a new Hot Sheet does go to the correct Hot Sheet page (Review Matches), and the buyer is linked to it. The Hot Sheet and buyer are not lost.
+2. That page reuses the generic Listing Search results layout. That layout includes a **"Share selected"** button that opens the generic **Share Listings** window, and that window always asks you to pick a contact.
+3. The page's own Hot Sheet send button ("Send Hot Sheet" / "Send Hot Sheet with Invite") only works in one case: the buyer **has not yet accepted** an invite. If the buyer already has AAC access, or an invite went out before, the page assumes the Hot Sheet was already sent. It then shows a greyed-out **"Hot Sheet Sent"** and switches on the generic "Share selected" button.
+4. The result: for a brand-new Hot Sheet whose buyer is already connected (or was invited before), the only way to send is the generic share. That share asks for the contact again. This matches what you recorded.
 
-**Reading:** everything is slow at once, including trivial reads, while memory and connections were normal earlier. That fits disk read/write throttling once the budget ran out. It does not look like one bad query from AAC. Lovable support has to confirm this.
+## Fix (only on the Hot Sheet Review page)
+- **On every Hot Sheet Review page, replace the generic "Share selected" button with one Hot Sheet send button.** It sends the selected listings to the buyer or buyers already linked to this Hot Sheet. There is no contact picker.
+- Button label:
+  - Buyer has no AAC access yet: **"Send Listings & Invite"**. This sends the selected listings plus the buyer invitation, using the existing invite send.
+  - Buyer already has access: **"Send Listings"**. This sends the selected listings only, with no new invitation, using the existing first-batch send.
+  - Both kinds of buyer on one Hot Sheet: each buyer gets the right version.
+- **"Hot Sheet Sent" will only show after this Hot Sheet's first batch has actually gone out.** It will no longer show just because the buyer is connected or was invited for another Hot Sheet. You can still send more selected listings afterward with the same button.
+- The button stays greyed out until at least one listing is selected. If the buyer has no email, it stays greyed out and tells you to add one.
+- The Hot Sheet name, buyer and search criteria stay as they are on this page.
 
-## Recommended next step (needs your approval)
-1. **Restart the database now to restore sign-in.** The evidence above is already captured for support. Expect a few minutes of downtime.
-2. Right after the restart, check: the backend reports healthy, a test sign-in works on the live site, and scheduled jobs run with normal timings again. All read-only.
-3. Report the results and add the evidence above to your support message.
+## Not changing
+- The normal Listing Search share and its contact picker.
+- How Hot Sheets match listings, send alerts, or format emails (templates stay frozen).
+- How invites are created, plus the delete/end-relationship and household (shared) views.
 
-**Important caveat:** a restart clears the backlog, but it may not restore the disk read/write budget. If the slowdown returns soon, the real fix is a larger database server, which comes with a bigger read/write allowance. That would be a separate decision for you, and I would ask first.
+## QA (no real sends)
+- As Chris, create a test Hot Sheet for a test contact and confirm it lands on Review Matches with the buyer shown.
+- Confirm there is no "Share selected" button, and that the correct send label shows for a not-yet-invited buyer and for an already-connected buyer.
+- Do **not** press send. Delete the test Hot Sheet afterward. No emails or invites.
 
-## Not doing
-No application, schema or schedule changes. No emails, publishing or resizing without separate approval.
+## Technical details
+- `src/pages/HotSheetReview.tsx`: pass `shareSelectedEnabled={false}` to `AgentSplitResultsSurface` and put the Hot Sheet send button in `toolbarActionsExtra`. Route the click to `handleSendInvites()` for pending recipients and `sendSelectedListingsDirect()` for connected ones, both already in the file.
+- Fix the `inviteCta` logic so "sent" depends on a first-batch or initial send record for this `hot_sheet_id`, not `allInviteAccepted` alone. Read-only check: confirm which record (`hot_sheet_sent_listings` or `invite_events`) reliably marks the initial batch before building.
+- `AgentSplitResultsSelectionActions` / `BulkShareListingsDialog` stay unchanged.
