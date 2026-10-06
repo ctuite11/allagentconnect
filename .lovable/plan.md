@@ -19,4 +19,12 @@ No new changes. Only checks and a report.
 4. Run a signed-in timing test as Chris: Success Hub → Hot Sheets, Back within 60s (no full refetch, count requests), scroll restore, forward resets to top, and after 60s cached content shows first then refreshes quietly.
 5. Report the numbers and add the 17:09 alert to the Lovable Support message.
 
+## Close-out criteria (all four required)
+1. Confirm allagentconnect.com is running the new navigation code: check the live site's build for the new scroll and cache behavior.
+2. Back to Success Hub within the 60-second window is effectively immediate, with no full data reload.
+3. The every-minute recorder and the separate hourly cleanup are both active, with no failures.
+4. A timeline for the 17:09 UTC disk warning (value 15): compare it with when the recorder change went live and with the busiest activity around 17:00–17:10.
+
+If all four pass, performance work stops and we go back to the Hot Sheet Academy recording.
+
 No publishing, emails, writes, restarts or schedule changes.
