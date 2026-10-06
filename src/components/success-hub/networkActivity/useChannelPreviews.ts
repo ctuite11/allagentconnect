@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuthRole } from "@/hooks/useAuthRole";
+import { getPageData, setPageData } from "@/lib/pageDataCache";
 
 export type ChannelPreviewAgent = {
   id: string;
@@ -56,13 +58,24 @@ type BroadcastCategory =
   | "general_discussion";
 
 function useBroadcastsPreview(category: BroadcastCategory, limit: number) {
-  const [items, setItems] = useState<ChannelPreviewItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const cacheKey = `success-hub:broadcasts:${category}:${limit}`;
+  const { user: authUser } = useAuthRole();
+  const authUserId = authUser?.id ?? null;
+  const [items, setItemsRaw] = useState<ChannelPreviewItem[]>(
+    () => getPageData<ChannelPreviewItem[]>(cacheKey, authUserId)?.value ?? [],
+  );
+  const [loading, setLoading] = useState(() => !getPageData(cacheKey, authUserId));
+  const setItems = (v: ChannelPreviewItem[]) => {
+    setItemsRaw(v);
+    setPageData(cacheKey, authUserId, v);
+  };
 
   useEffect(() => {
+    const cached = getPageData<ChannelPreviewItem[]>(cacheKey, authUserId);
+    if (cached?.fresh) return;
     let cancelled = false;
     (async () => {
-      setLoading(true);
+      if (!cached) setLoading(true);
       const { data, error } = await supabase
         .from("comms_broadcasts" as any)
         .select("id, sender_id, subject, message, created_at")
@@ -96,7 +109,7 @@ function useBroadcastsPreview(category: BroadcastCategory, limit: number) {
     return () => {
       cancelled = true;
     };
-  }, [category, limit]);
+  }, [category, limit, cacheKey, authUserId]);
 
   return { items, loading };
 }

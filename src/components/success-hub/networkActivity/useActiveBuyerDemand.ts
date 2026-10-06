@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuthRole } from "@/hooks/useAuthRole";
+import { getPageData, setPageData } from "@/lib/pageDataCache";
 
 export type BuyerDemandAgent = {
   id: string;
@@ -45,13 +47,24 @@ function truncate(s: string, n = 60) {
 }
 
 export function useActiveBuyerDemand(limit = 6) {
-  const [items, setItems] = useState<BuyerDemandLiveItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const cacheKey = `success-hub:buyer-demand:${limit}`;
+  const { user: authUser } = useAuthRole();
+  const authUserId = authUser?.id ?? null;
+  const [items, setItemsRaw] = useState<BuyerDemandLiveItem[]>(
+    () => getPageData<BuyerDemandLiveItem[]>(cacheKey, authUserId)?.value ?? [],
+  );
+  const [loading, setLoading] = useState(() => !getPageData(cacheKey, authUserId));
+  const setItems = (v: BuyerDemandLiveItem[]) => {
+    setItemsRaw(v);
+    setPageData(cacheKey, authUserId, v);
+  };
 
   useEffect(() => {
+    const cached = getPageData<BuyerDemandLiveItem[]>(cacheKey, authUserId);
+    if (cached?.fresh) return;
     let cancelled = false;
     (async () => {
-      setLoading(true);
+      if (!cached) setLoading(true);
       const { data: needs, error } = await supabase
         .from("client_needs")
         .select(
@@ -126,7 +139,7 @@ export function useActiveBuyerDemand(limit = 6) {
     return () => {
       cancelled = true;
     };
-  }, [limit]);
+  }, [limit, cacheKey, authUserId]);
 
   return { items, loading };
 }

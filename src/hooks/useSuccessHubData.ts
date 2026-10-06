@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuthRole } from "@/hooks/useAuthRole";
+import { getPageData, setPageData } from "@/lib/pageDataCache";
 import {
   buildBuyerStatusInput,
   getBuyerListStatus,
@@ -186,15 +188,22 @@ function supabaseResult<T>(result: { data?: T; error?: unknown; count?: unknown 
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
+const SUCCESS_HUB_CACHE_KEY = "success-hub:summary";
+
 export function useSuccessHubData(): UseSuccessHubDataResult {
-  const [summary, setSummary] = useState<SuccessHubSummary | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const { user: authUser } = useAuthRole();
+  const authUserId = authUser?.id ?? null;
+  const initialCache = getPageData<SuccessHubSummary>(SUCCESS_HUB_CACHE_KEY, authUserId);
+  const [summary, setSummary] = useState<SuccessHubSummary | null>(initialCache?.value ?? null);
+  const [loading, setLoading] = useState<boolean>(!initialCache);
   const [error, setError] = useState<string | null>(null);
 
   const mountedRef = useRef(true);
   const loadIdRef = useRef(0);
   /** Tracks whether we ever persisted a hydrated summary — avoids full blocking reload on silent refetches. */
-  const summaryHydratedRef = useRef<boolean>(false);
+  const summaryHydratedRef = useRef<boolean>(!!initialCache);
+  const authUserRef = useRef(authUser);
+  authUserRef.current = authUser;
 
   const loadAll = useCallback(async () => {
     const myLoadId = ++loadIdRef.current;
@@ -206,8 +215,13 @@ export function useSuccessHubData(): UseSuccessHubDataResult {
 
     try {
       // ── Auth ────────────────────────────────────────────────────────────────
-      const { data: { user }, error: userErr } = await supabase.auth.getUser();
-      if (userErr || !user) throw new Error(userErr?.message ?? "Not authenticated");
+      // Reuse the shared, already-confirmed session user; only ask the server if absent.
+      let user = authUserRef.current;
+      if (!user) {
+        const { data, error: userErr } = await supabase.auth.getUser();
+        if (userErr || !data.user) throw new Error(userErr?.message ?? "Not authenticated");
+        user = data.user;
+      }
       const agentId = user.id;
 
       const { profile: resolvedProfile, source: profileSource } =
@@ -810,6 +824,9 @@ export function useSuccessHubData(): UseSuccessHubDataResult {
         activity: activityCapped,
       };
 
+      if (loadIdRef.current === myLoadId) {
+        setPageData(SUCCESS_HUB_CACHE_KEY, agentId, nextSummary);
+      }
       if (mountedRef.current && loadIdRef.current === myLoadId) {
         summaryHydratedRef.current = true;
         setSummary(nextSummary);
@@ -831,11 +848,21 @@ export function useSuccessHubData(): UseSuccessHubDataResult {
 
   useEffect(() => {
     mountedRef.current = true;
-    void loadAll();
+    const cached = getPageData<SuccessHubSummary>(SUCCESS_HUB_CACHE_KEY, authUserId);
+    if (cached) {
+      // Instant render from cache; skip the full refetch while fresh, refresh quietly otherwise.
+      summaryHydratedRef.current = true;
+      setSummary(cached.value);
+      setLoading(false);
+      if (!cached.fresh) void loadAll();
+    } else {
+      summaryHydratedRef.current = false;
+      void loadAll();
+    }
     return () => {
       mountedRef.current = false;
     };
-  }, [loadAll]);
+  }, [loadAll, authUserId]);
 
   const merged = summary ?? EMPTY_SUCCESS_HUB_SUMMARY;
 

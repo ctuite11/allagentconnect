@@ -499,7 +499,12 @@ const HotSheets = ({
   }
 
   const checkAuth = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
+    // Reuse the shared, already-confirmed session user; only ask the server if absent.
+    let user: User | null = authSessionUser ?? null;
+    if (!user) {
+      const { data } = await supabase.auth.getUser();
+      user = data.user ?? null;
+    }
     if (!user) {
       toast.error("Please sign in to manage hot sheets");
       navigate("/auth");
@@ -515,8 +520,9 @@ const HotSheets = ({
       setLoading(true);
       setAgentLoadError(false);
 
-      // 1. Fetch hot sheets with clients and shares
-      const { data: hsData, error } = await supabase
+      // 1. Fetch hot sheets (with clients and shares) and active/pending buyer
+      // relationships in parallel — they are independent.
+      const hotSheetsPromise = supabase
         .from("hot_sheets")
         .select(`
           id, name, criteria, is_active, created_at, last_sent_at,
@@ -526,16 +532,21 @@ const HotSheets = ({
         .eq("user_id", userId)
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
-      const sheetsRaw = (hsData || []) as AgentHotSheetRow[];
-
-      // 1b. Filter out hot sheets linked to removed/inactive buyers.
+      // 1b. Used to filter out hot sheets linked to removed/inactive buyers.
       // Keep: active + pending. Hide: anything else.
-      const { data: relRows } = await supabase
+      const relationshipsPromise = supabase
         .from("client_agent_relationships")
         .select("crm_client_id, client_id, status")
         .eq("agent_id", userId)
         .in("status", ["active", "pending"]);
+
+      const [{ data: hsData, error }, { data: relRows }] = await Promise.all([
+        hotSheetsPromise,
+        relationshipsPromise,
+      ]);
+
+      if (error) throw error;
+      const sheetsRaw = (hsData || []) as AgentHotSheetRow[];
 
       const visibleClientIds = new Set<string>();
       (relRows || []).forEach((r: RelationshipRow) => {
@@ -569,9 +580,9 @@ const HotSheets = ({
 
       // 2. Fetch listing photos from criteria-matched listings for each sheet
       const photosPerSheet = new Map<string, string[]>();
-      for (const sheet of sheets) {
+      await Promise.all(sheets.map(async (sheet) => {
         const criteria = sheet.criteria;
-        if (!criteria) continue;
+        if (!criteria) return;
         try {
           const { data: matchedListings } = await buildListingsQuery(supabase, criteria).limit(20);
           const photos: string[] = [];
@@ -592,7 +603,7 @@ const HotSheets = ({
         } catch (e) {
           console.error("Error fetching matches for", sheet.id, e);
         }
-      }
+      }));
 
       // 3. Personal (no CRM contact) vs buyer-linked sheets
       const clientMap = new Map<string, BuyerCollection>();

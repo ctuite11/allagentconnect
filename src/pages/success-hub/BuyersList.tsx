@@ -83,6 +83,8 @@ export default function BuyersList() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuthRole();
+  const authUserRef = useRef(user);
+  authUserRef.current = user;
   const { visible: showBuyersIntro, handleLater: handleBuyersIntroLater, handleAddBuyer: dismissBuyersIntro } =
     useBuyersPageIntro(user);
   const [buyers, setBuyers] = useState<BuyerRow[]>([]);
@@ -114,7 +116,8 @@ export default function BuyersList() {
     if (!opts?.silent) setLoading(true);
     try {
       setLoadError(false);
-      const { data: { user } } = await supabase.auth.getUser();
+      const sharedUser = authUserRef.current;
+      const user = sharedUser ?? (await supabase.auth.getUser()).data.user;
       if (!user) return;
       setAgentUserId(user.id);
 
