@@ -385,6 +385,7 @@ export function AgentSplitResultsSurface({
           onKeepSelectedCustom={onKeepSelected}
           onSuccessfulShare={clearShareSelection}
           shareSelectedEnabled={shareSelectedEnabled}
+          hideSelectAllPills={hideSelectAllPills}
           pillClassName={selectionPillClassName}
         >
           {toolbarActionsExtra}

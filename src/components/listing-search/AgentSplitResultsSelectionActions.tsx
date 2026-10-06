@@ -81,9 +81,11 @@ export function AgentSplitResultsSelectionActions({
       <>
       {visibleSelectionState.allVisible && (
         <>
-          <Button type="button" size="sm" variant="outline" className={PILL_CLASS} onClick={onUnselectAllVisible}>
-            Unselect all
-          </Button>
+          {!hideSelectAllPills && (
+            <Button type="button" size="sm" variant="outline" className={PILL_CLASS} onClick={onUnselectAllVisible}>
+              Unselect all
+            </Button>
+          )}
           {shareDialog}
         </>
       )}
@@ -91,9 +93,11 @@ export function AgentSplitResultsSelectionActions({
         <>
           {!showSelectedOnly && !onKeepSelectedCustom && (
             <>
-              <Button type="button" size="sm" variant="outline" className={PILL_CLASS} onClick={onAddAllVisible}>
-                Select all
-              </Button>
+              {!hideSelectAllPills && (
+                <Button type="button" size="sm" variant="outline" className={PILL_CLASS} onClick={onAddAllVisible}>
+                  Select all
+                </Button>
+              )}
               <Button type="button" size="sm" variant="outline" className={PILL_CLASS} onClick={onKeepSelectedOnly}>
                 Keep selected only
               </Button>
@@ -101,9 +105,11 @@ export function AgentSplitResultsSelectionActions({
           )}
           {!showSelectedOnly && onKeepSelectedCustom && (
             <>
-              <Button type="button" size="sm" variant="outline" className={PILL_CLASS} onClick={onAddAllVisible}>
-                Select all
-              </Button>
+              {!hideSelectAllPills && (
+                <Button type="button" size="sm" variant="outline" className={PILL_CLASS} onClick={onAddAllVisible}>
+                  Select all
+                </Button>
+              )}
               <Button type="button" size="sm" variant="outline" className={PILL_CLASS} onClick={onKeepSelectedCustom}>
                 Keep selected
               </Button>
@@ -117,7 +123,7 @@ export function AgentSplitResultsSelectionActions({
           Keep selected
         </Button>
       )}
-      {visibleSelectionState.noneVisible && (
+      {visibleSelectionState.noneVisible && !hideSelectAllPills && (
         <Button
           type="button"
           size="sm"
