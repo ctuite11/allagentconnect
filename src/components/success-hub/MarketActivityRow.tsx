@@ -8,6 +8,10 @@ import { SuccessHubListingCard } from "@/components/success-hub/SuccessHubListin
 import { SUCCESS_HUB_LISTINGS_GRID } from "@/components/success-hub/successHubListingLayout";
 import { BulkShareListingsDialog } from "@/components/BulkShareListingsDialog";
 import { LISTING_STATUS } from "@/constants/status";
+import { useAuthRole } from "@/hooks/useAuthRole";
+import { getPageData, setPageData } from "@/lib/pageDataCache";
+
+const MARKET_CACHE_KEY = "success-hub:market-activity";
 
 /** Matches listing-search compact share trigger (neutral AAC). */
 const MARKET_ACTIVITY_SHARE_TRIGGER =
@@ -72,9 +76,13 @@ type MarketTypeFilter = "sale" | "rental";
 
 export function MarketActivityRow() {
   const navigate = useNavigate();
-  const [poolListings, setPoolListings] = useState<MarketListingRow[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const { user: authUser } = useAuthRole();
+  const authUserId = authUser?.id ?? null;
+  const [poolListings, setPoolListings] = useState<MarketListingRow[]>(
+    () => getPageData<MarketListingRow[]>(MARKET_CACHE_KEY, authUserId)?.value ?? [],
+  );
+  const [loading, setLoading] = useState(() => !getPageData(MARKET_CACHE_KEY, authUserId));
+  const [currentUserId, setCurrentUserId] = useState<string | null>(authUserId);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
   const [marketTypeFilter, setMarketTypeFilter] = useState<MarketTypeFilter>("sale");
 
@@ -130,8 +138,11 @@ export function MarketActivityRow() {
   }, []);
 
   const fetchListings = useCallback(async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    const userId = user?.id ?? null;
+    let userId = authUserId;
+    if (!userId) {
+      const { data: { user } } = await supabase.auth.getUser();
+      userId = user?.id ?? null;
+    }
     setCurrentUserId(userId);
 
     const { data, error } = await supabase
@@ -175,12 +186,15 @@ export function MarketActivityRow() {
     const parsed = data.map((row: any) => parseListing(row, agentMeta));
     const visible = filterVisibleListings(parsed, userId);
     setPoolListings(visible);
+    setPageData(MARKET_CACHE_KEY, userId, visible);
     setLoading(false);
-  }, [parseListing]);
+  }, [parseListing, authUserId]);
 
   useEffect(() => {
+    const cached = getPageData<MarketListingRow[]>(MARKET_CACHE_KEY, authUserId);
+    if (cached?.fresh) return;
     fetchListings();
-  }, [fetchListings]);
+  }, [fetchListings, authUserId]);
 
   const visibleListings = useMemo(() => {
     const sorted = [...poolListings].sort(compareByCreatedAtDesc);
