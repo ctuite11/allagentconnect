@@ -1494,6 +1494,11 @@ const HotSheetReview = () => {
               withTopPadding
               back={<AacBackButton type="button" onClick={handleAgentHotSheetReviewBack} />}
               title={`Review ${listings.length} Hot Sheet Matches`}
+              subtitle={
+                reviewRecipients[0]?.displayName
+                  ? `${reviewRecipients[0].displayName} · ${hotSheet.name}`
+                  : hotSheet.name
+              }
               actions={
                 <>
                   {buyerContextClientId ? (
@@ -1599,6 +1604,7 @@ const HotSheetReview = () => {
             saveToHotSheetCriteria={hotSheet.criteria ?? {}}
             selectionEnabled
             shareSelectedEnabled={false}
+            hideSelectAllPills
             selectedRows={selectedListings}
             onSelectedRowsChange={setSelectedListings}
             onSelectAll={toggleSelectAll}
