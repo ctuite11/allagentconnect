@@ -4821,6 +4821,64 @@ export type Database = {
           },
         ]
       }
+      hot_sheet_recipient_batches: {
+        Row: {
+          client_id: string
+          created_at: string
+          hot_sheet_id: string
+          id: string
+          initial_batch_queued_at: string | null
+          initial_listing_ids: string[]
+          invited_at: string | null
+          recipient_user_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          hot_sheet_id: string
+          id?: string
+          initial_batch_queued_at?: string | null
+          initial_listing_ids?: string[]
+          invited_at?: string | null
+          recipient_user_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          hot_sheet_id?: string
+          id?: string
+          initial_batch_queued_at?: string | null
+          initial_listing_ids?: string[]
+          invited_at?: string | null
+          recipient_user_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hot_sheet_recipient_batches_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hot_sheet_recipient_batches_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients_with_relationship_status"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hot_sheet_recipient_batches_hot_sheet_id_fkey"
+            columns: ["hot_sheet_id"]
+            isOneToOne: false
+            referencedRelation: "hot_sheets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       hot_sheet_sent_listings: {
         Row: {
           hot_sheet_id: string
