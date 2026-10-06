@@ -824,6 +824,9 @@ export function useSuccessHubData(): UseSuccessHubDataResult {
         activity: activityCapped,
       };
 
+      if (loadIdRef.current === myLoadId) {
+        setPageData(SUCCESS_HUB_CACHE_KEY, agentId, nextSummary);
+      }
       if (mountedRef.current && loadIdRef.current === myLoadId) {
         summaryHydratedRef.current = true;
         setSummary(nextSummary);
@@ -845,11 +848,21 @@ export function useSuccessHubData(): UseSuccessHubDataResult {
 
   useEffect(() => {
     mountedRef.current = true;
-    void loadAll();
+    const cached = getPageData<SuccessHubSummary>(SUCCESS_HUB_CACHE_KEY, authUserId);
+    if (cached) {
+      // Instant render from cache; skip the full refetch while fresh, refresh quietly otherwise.
+      summaryHydratedRef.current = true;
+      setSummary(cached.value);
+      setLoading(false);
+      if (!cached.fresh) void loadAll();
+    } else {
+      summaryHydratedRef.current = false;
+      void loadAll();
+    }
     return () => {
       mountedRef.current = false;
     };
-  }, [loadAll]);
+  }, [loadAll, authUserId]);
 
   const merged = summary ?? EMPTY_SUCCESS_HUB_SUMMARY;
 
