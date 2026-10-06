@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuthRole } from "@/hooks/useAuthRole";
+import { getPageData, setPageData } from "@/lib/pageDataCache";
 import { isVisibleInAgentNetwork } from "@/lib/agentNetworkVisibility";
 
 export type NewestVerifiedAgent = {
@@ -11,13 +13,24 @@ export type NewestVerifiedAgent = {
 };
 
 export function useNewestVerifiedAgents(limit = 12) {
-  const [agents, setAgents] = useState<NewestVerifiedAgent[]>([]);
-  const [loading, setLoading] = useState(true);
+  const cacheKey = `success-hub:newest-agents:${limit}`;
+  const { user: authUser } = useAuthRole();
+  const authUserId = authUser?.id ?? null;
+  const [agents, setAgentsRaw] = useState<NewestVerifiedAgent[]>(
+    () => getPageData<NewestVerifiedAgent[]>(cacheKey, authUserId)?.value ?? [],
+  );
+  const [loading, setLoading] = useState(() => !getPageData(cacheKey, authUserId));
+  const setAgents = (v: NewestVerifiedAgent[]) => {
+    setAgentsRaw(v);
+    setPageData(cacheKey, authUserId, v);
+  };
 
   useEffect(() => {
+    const cached = getPageData<NewestVerifiedAgent[]>(cacheKey, authUserId);
+    if (cached?.fresh) return;
     let cancelled = false;
     (async () => {
-      setLoading(true);
+      if (!cached) setLoading(true);
       const { data, error } = await supabase.rpc("get_newest_verified_agents", { _limit: limit });
       if (cancelled) return;
       if (error || !data) {
@@ -45,7 +58,7 @@ export function useNewestVerifiedAgents(limit = 12) {
     return () => {
       cancelled = true;
     };
-  }, [limit]);
+  }, [limit, cacheKey, authUserId]);
 
   return { agents, loading };
 }
