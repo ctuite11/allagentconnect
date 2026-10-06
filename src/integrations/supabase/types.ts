@@ -8691,6 +8691,7 @@ export type Database = {
         Args: { grace_minutes?: number }
         Returns: number
       }
+      prune_db_capacity_samples: { Args: never; Returns: number }
       rate_limit_consume: {
         Args: { p_key: string; p_limit: number; p_window_seconds: number }
         Returns: Json
