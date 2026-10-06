@@ -73,7 +73,7 @@ const handler = async (req: Request): Promise<Response> => {
         const uid = userData?.user?.id;
         let allowed = !!uid && uid === hotSheet.user_id;
         if (!allowed && uid) {
-          const { data: canAct } = await supabaseClient.rpc("can_act_for_agent", { _agent_id: hotSheet.user_id } as any);
+          const { data: canAct } = await supabaseClient.rpc("can_act_for_agent", { p_agent_user_id: hotSheet.user_id });
           allowed = canAct === true;
         }
         if (!allowed) {
