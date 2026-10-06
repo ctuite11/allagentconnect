@@ -18,3 +18,5 @@
 - [x] Full read-only infra audit: rollbacks, job cost/frequency, 13:04 alert, verified-agent lookup, Success Hub load share (2026-10-06)
 - [ ] Capacity recorder: index, null-label fix, separate hourly prune job
 - [ ] Navigation: Success Hub cache, Back scroll restore, shared session, Hot Sheets parallel
+
+- [ ] Hot Sheet first batch: send to attached buyer on Review Matches, no contact picker (plan awaiting approval)

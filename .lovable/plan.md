@@ -1,32 +1,46 @@
-# Fix: new Hot Sheet → first batch sends to the attached buyer (no contact picker)
+# Fix: new Hot Sheet → send selected listings to the buyer already attached
 
-## What's happening now (trace)
-1. Saving a new Hot Sheet does go to the correct Hot Sheet page (Review Matches), and the buyer is linked to it. The Hot Sheet and buyer are not lost.
-2. That page reuses the generic Listing Search results layout. That layout includes a **"Share selected"** button that opens the generic **Share Listings** window, and that window always asks you to pick a contact.
-3. The page's own Hot Sheet send button ("Send Hot Sheet" / "Send Hot Sheet with Invite") only works in one case: the buyer **has not yet accepted** an invite. If the buyer already has AAC access, or an invite went out before, the page assumes the Hot Sheet was already sent. It then shows a greyed-out **"Hot Sheet Sent"** and switches on the generic "Share selected" button.
-4. The result: for a brand-new Hot Sheet whose buyer is already connected (or was invited before), the only way to send is the generic share. That share asks for the contact again. This matches what you recorded.
+## Why it's broken (trace)
+- After saving, a new Hot Sheet opens Review Matches with its buyer linked. That page reuses the generic results layout, so it shows a **"Share selected"** button that opens the contact picker.
+- The page's own send button only works for buyers who haven't accepted an invite yet. A connected buyer, or one invited from another Hot Sheet, sees a greyed-out **"Hot Sheet Sent"**, so the generic share is the only way left.
+- Problems in the current send steps:
+  - The invite send queues **only the invitation**, not the selected listings.
+  - The listings send only reaches buyers who accepted an invite **for this exact Hot Sheet**. A connected buyer on a brand-new Hot Sheet would silently get nothing.
+  - None of today's records reliably shows that the first batch went out. Accepting an invite records the current matches as already seen without emailing anything.
 
-## Fix (only on the Hot Sheet Review page)
-- **On every Hot Sheet Review page, replace the generic "Share selected" button with one Hot Sheet send button.** It sends the selected listings to the buyer or buyers already linked to this Hot Sheet. There is no contact picker.
-- Button label:
-  - Buyer has no AAC access yet: **"Send Listings & Invite"**. This sends the selected listings plus the buyer invitation, using the existing invite send.
-  - Buyer already has access: **"Send Listings"**. This sends the selected listings only, with no new invitation, using the existing first-batch send.
-  - Both kinds of buyer on one Hot Sheet: each buyer gets the right version.
-- **"Hot Sheet Sent" will only show after this Hot Sheet's first batch has actually gone out.** It will no longer show just because the buyer is connected or was invited for another Hot Sheet. You can still send more selected listings afterward with the same button.
-- The button stays greyed out until at least one listing is selected. If the buyer has no email, it stays greyed out and tells you to add one.
-- The Hot Sheet name, buyer and search criteria stay as they are on this page.
+## Fix
+1. **Review Matches only:** remove "Share selected". Listing Search and its share window stay unchanged.
+2. **One Hot Sheet send button in the toolbar.** It sends to the buyer(s) linked to this Hot Sheet and stays disabled until at least one listing is selected.
+   - Buyer not yet connected: **Send Listings & Invite**
+   - Buyer connected: **Send Listings**
+   - Mixed buyers: one click handles each buyer the right way.
+   - Buyer has no email: disabled, with "Add an email to this buyer first".
+3. **One send action that delivers what the button says:**
+   - Connected buyers linked to this Hot Sheet get the selected listings without needing another invite. This applies to a manual first send only; automatic alert eligibility does not change.
+   - Not-yet-connected buyers get the existing invitation. The selected listings are tied to that invitation, so they are what the buyer sees when they accept.
+   - Listings are never marked as sent to a pending buyer unless that buyer actually receives or opens that batch.
+4. **A dedicated "first batch sent" timestamp per Hot Sheet.** It is recorded only after the selected batch was successfully queued for the linked buyer(s).
+   - **"Hot Sheet Sent"** shows only when this Hot Sheet's first batch has actually gone out.
+   - It never shows just because the buyer has AAC access, has an agent relationship, was invited from another Hot Sheet, or had an invite email queued.
+   - After the first batch, the agent can still select more unsent listings and press **Send Listings** again.
 
 ## Not changing
-- The normal Listing Search share and its contact picker.
-- How Hot Sheets match listings, send alerts, or format emails (templates stay frozen).
-- How invites are created, plus the delete/end-relationship and household (shared) views.
+Listing Search sharing, automatic Hot Sheet alert rules, email templates, the invite email itself, matching, the household (shared) view, and delete/end-relationship.
 
-## QA (no real sends)
-- As Chris, create a test Hot Sheet for a test contact and confirm it lands on Review Matches with the buyer shown.
-- Confirm there is no "Share selected" button, and that the correct send label shows for a not-yet-invited buyer and for an already-connected buyer.
-- Do **not** press send. Delete the test Hot Sheet afterward. No emails or invites.
+## QA: no real sends
+1. Never-invited test contact: new Hot Sheet → Review Matches → buyer attached, no "Share selected" → after selecting a listing the button says **Send Listings & Invite**.
+2. Connected test buyer: same steps → no contact picker → **Send Listings**.
+3. Connected buyer on a brand-new Hot Sheet does not show "Hot Sheet Sent".
+4. Mixed buyers each get the right treatment.
+5. Neither send button is pressed. Test Hot Sheets are deleted afterward.
+No emails, invitations, Hot Sheet sends, or social activity.
 
 ## Technical details
-- `src/pages/HotSheetReview.tsx`: pass `shareSelectedEnabled={false}` to `AgentSplitResultsSurface` and put the Hot Sheet send button in `toolbarActionsExtra`. Route the click to `handleSendInvites()` for pending recipients and `sendSelectedListingsDirect()` for connected ones, both already in the file.
-- Fix the `inviteCta` logic so "sent" depends on a first-batch or initial send record for this `hot_sheet_id`, not `allInviteAccepted` alone. Read-only check: confirm which record (`hot_sheet_sent_listings` or `invite_events`) reliably marks the initial batch before building.
-- `AgentSplitResultsSelectionActions` / `BulkShareListingsDialog` stay unchanged.
+- `HotSheetReview.tsx`: set `shareSelectedEnabled={false}` and put a new `HotSheetSendAction` in `toolbarActionsExtra`.
+- New handler `sendHotSheetBatch()`:
+  - Pending recipients: run the existing invite logic, storing the selected listing IDs in the invite token payload as `initial_listing_ids`. Acceptance then sends a baseline of only those IDs.
+  - Connected recipients: call `process-hot-sheet` with `sendInitialBatch: true, selectedListingIds, manualRecipientsFromHotSheetClients: true`.
+- `process-hot-sheet` (manual initial-batch path only): when that flag is set, add recipients from `hot_sheet_clients` whose client has an active `client_agent_relationships` row with a linked buyer `user_id`. Do not touch the cron/automatic path. Write `hot_sheet_sent_listings` only for actually queued recipients, and set `initial_batch_sent_at` only on successful enqueue. Stop updating `last_sent_at` when nobody received the batch.
+- Migration: `ALTER TABLE hot_sheets ADD COLUMN initial_batch_sent_at timestamptz NULL` (additive). No backfill; existing Hot Sheets read as "not sent" until their next send.
+- `inviteCta` logic is driven by `initial_batch_sent_at` plus each recipient's status, not by `allInviteAccepted`.
+- Redeploy only `process-hot-sheet` and `accept-client-hot-sheet-invite`, and only if that function needs the `initial_listing_ids` change. Templates are untouched.
