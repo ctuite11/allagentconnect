@@ -13,5 +13,6 @@
 - [ ] Weborik Phase 1 finding: pg_cron job_run_details never auto-cleaned — operational dependency to document before leaving Lovable
 - [ ] Lovable support (Chris sends): identify exact metric/threshold of high-load alert; do not assume db size was the trigger
 - [x] Alice Miles — done and separate from this work: account created 2026-10-03 18:10 UTC, activation email sent; no further action
-- [ ] Heavy-load message: find origin (Lovable/AAC/database/preview) — read-only (2026-10-06)
+- [x] Heavy-load message: find origin (Lovable/AAC/database/preview) — read-only (2026-10-06)
 - [ ] Navigation speed plan for items 1,2,3,5 (Success Hub cache, Back scroll, single session check, parallel Hot Sheets) — awaiting approval; #4 Network Activity excluded
+- [x] Full read-only infra audit: rollbacks, job cost/frequency, 13:04 alert, verified-agent lookup, Success Hub load share (2026-10-06)
