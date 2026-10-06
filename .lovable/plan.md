@@ -16,13 +16,12 @@
    - Mixed buyers: one click handles each buyer the right way.
    - Buyer has no email: disabled, with "Add an email to this buyer first".
 3. **One send action that delivers what the button says:**
-   - Connected buyers linked to this Hot Sheet get the selected listings without needing another invite. This applies to a manual first send only; automatic alert eligibility does not change.
-   - Not-yet-connected buyers get the existing invitation. The selected listings are tied to that invitation, so they are what the buyer sees when they accept.
-   - Listings are never marked as sent to a pending buyer unless that buyer actually receives or opens that batch.
-4. **A dedicated "first batch sent" timestamp per Hot Sheet.** It is recorded only after the selected batch was successfully queued for the linked buyer(s).
-   - **"Hot Sheet Sent"** shows only when this Hot Sheet's first batch has actually gone out.
-   - It never shows just because the buyer has AAC access, has an agent relationship, was invited from another Hot Sheet, or had an invite email queued.
-   - After the first batch, the agent can still select more unsent listings and press **Send Listings** again.
+   - **Connected buyer:** the selected listings are sent right away. This works even without an invite for this exact Hot Sheet. It applies to this manual send only; automatic alert rules do not change.
+   - **Pending buyer:** gets the existing invitation, unchanged. The selected listings are saved for that buyer. When the buyer accepts, AAC uses the same listings send to deliver exactly those listings to that buyer. Only after that does AAC mark the remaining current matches as already seen. Saving the listings with the invite never counts as "sent".
+4. **Track each buyer separately.** One record per Hot Sheet and buyer stores: the selected first-batch listings, when they were invited, and when the first batch was actually queued to them.
+   - **"Hot Sheet Sent"** shows only when every buyer on this Hot Sheet has had the first batch queued. With mixed buyers, the page shows each buyer's own state (Invited, waiting to accept / Listings sent).
+   - It never shows because of AAC access, an agent relationship, another Hot Sheet's invite, or a queued invite email.
+   - After the first batch, the agent can select more unsent listings and press **Send Listings** again.
 
 ## Not changing
 Listing Search sharing, automatic Hot Sheet alert rules, email templates, the invite email itself, matching, the household (shared) view, and delete/end-relationship.
@@ -36,11 +35,8 @@ Listing Search sharing, automatic Hot Sheet alert rules, email templates, the in
 No emails, invitations, Hot Sheet sends, or social activity.
 
 ## Technical details
-- `HotSheetReview.tsx`: set `shareSelectedEnabled={false}` and put a new `HotSheetSendAction` in `toolbarActionsExtra`.
-- New handler `sendHotSheetBatch()`:
-  - Pending recipients: run the existing invite logic, storing the selected listing IDs in the invite token payload as `initial_listing_ids`. Acceptance then sends a baseline of only those IDs.
-  - Connected recipients: call `process-hot-sheet` with `sendInitialBatch: true, selectedListingIds, manualRecipientsFromHotSheetClients: true`.
-- `process-hot-sheet` (manual initial-batch path only): when that flag is set, add recipients from `hot_sheet_clients` whose client has an active `client_agent_relationships` row with a linked buyer `user_id`. Do not touch the cron/automatic path. Write `hot_sheet_sent_listings` only for actually queued recipients, and set `initial_batch_sent_at` only on successful enqueue. Stop updating `last_sent_at` when nobody received the batch.
-- Migration: `ALTER TABLE hot_sheets ADD COLUMN initial_batch_sent_at timestamptz NULL` (additive). No backfill; existing Hot Sheets read as "not sent" until their next send.
-- `inviteCta` logic is driven by `initial_batch_sent_at` plus each recipient's status, not by `allInviteAccepted`.
-- Redeploy only `process-hot-sheet` and `accept-client-hot-sheet-invite`, and only if that function needs the `initial_listing_ids` change. Templates are untouched.
+- `HotSheetReview.tsx`: set `shareSelectedEnabled={false}` and put a new `HotSheetSendAction` in `toolbarActionsExtra`. Button label and per-buyer state come from the new recipient records.
+- **New table `hot_sheet_recipient_batches`** with unique (`hot_sheet_id`, `client_id`) and columns `initial_listing_ids uuid[]`, `invited_at`, `initial_batch_queued_at`, `delivered_to_user_id`, and timestamps. Includes GRANTs, RLS (owning agent or delegate can read; writes only through edge functions with service role), and an additive migration. It is the source of truth; no `hot_sheets.initial_batch_sent_at` column.
+- **Connected buyers:** resolve through `client_agent_relationships` where `crm_client_id` is the attached CRM client, status is active, and `client_id` is the buyer's auth user. `process-hot-sheet` gets a manual-only flag, `recipientClientIds`. It delivers `selectedListingIds` to those resolved buyers. It writes `hot_sheet_sent_listings` and sets `initial_batch_queued_at` only for buyers actually queued, and updates `last_sent_at` only if at least one buyer was queued. The cron/automatic path is untouched.
+- **Pending buyers:** the existing invite flow runs, then `initial_listing_ids` and `invited_at` are upserted. In `accept-client-hot-sheet-invite`, after the relationship is created, if that buyer has `initial_listing_ids` and no `initial_batch_queued_at`, it calls `process-hot-sheet` with `sendInitialBatch: true`, `selectedListingIds`, and `recipientClientIds` set to [that client]. Only after a successful queue does it set `initial_batch_queued_at` and then run the existing `baselineOnly` step for the rest. If delivery fails, acceptance still succeeds; the batch stays unsent and visible on the Review page.
+- The email template is unchanged; the existing Hot Sheet listings email is reused. Only `process-hot-sheet` and `accept-client-hot-sheet-invite` are redeployed.
