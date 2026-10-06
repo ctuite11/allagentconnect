@@ -1,21 +1,30 @@
-# Confirm the cause of the "high load" message (read-only)
+# Narrow read-only question to Lovable Support: identify the job-history full scans
 
-## What is already confirmed
-- The message comes from Lovable Cloud's database **disk read/write budget** alert, not from AAC's code.
-- A fresh check right now shows a new, worse alert: **21:14 UTC today, budget at 0** (earlier: 48 at 13:04, 15 at 17:09). The budget is being drained through the day.
-- Everything else is healthy: 13 of 60 connections, memory 57%, disk space 12%, no restarts since boot.
+## Goal
+Ask Lovable Support one narrow question: identify the exact query or process responsible for the two full scans of the 463 MB `cron.job_run_details` (job-history) table. No changes to anything.
 
-So the alert is confirmed. What is **not** yet confirmed is *what is using up the read/write budget*.
+## Evidence to include in the request (all post-21:10 UTC restart window unless noted)
+- The job-history table holds 47,350 rows but occupies 463 MB.
+- Two full sequential scans of it produced 57,094 and 57,021 physical disk reads; all measured queries together showed 121,102 disk reads — so those two scans dominate the observed physical-read workload.
+- Query writes were only 115; WAL (database change log) ~1.4 MB; zero temp files; background writer cleaned 0 pages; 99.76% of reads served from memory.
+- Historical comparison only (clearly labeled as pre-restart data, NOT part of the post-restart pg_stat_statements window): minute-by-minute recorder samples around 13:04, 17:09, 18:53–21:10, and 21:14 UTC.
 
-## Read-only checks to confirm the cause
-1. Rank database work by total volume (slowest/heaviest queries since the last restart), separating AAC queries from platform-internal ones (live updates, scheduler).
-2. Check which tables are read and written the most (rows scanned, rows written, table and index sizes), including the scheduler history table and the every-minute capacity recorder.
-3. List all scheduled jobs and how often they run; estimate disk work per job per hour.
-4. Look at the capacity recorder samples around 13:04, 17:09 and 21:14 for spikes in activity.
-5. Check background functions and email/Hot Sheet queue activity in the same windows.
+## The exact question
+Identify the exact query or process responsible for the two full scans of the 463 MB job-history table:
+1. When did each scan run?
+2. What triggered it?
+3. Is it AAC application code, Supabase/Lovable scheduler infrastructure (e.g. pg_cron bookkeeping), or platform maintenance?
+4. Does Lovable's disk I/O budget meter count additional platform I/O that PostgreSQL statistics cannot see?
 
-## What you will get
-A short report naming the top contributor(s) to the read/write budget, with numbers, labelled as confirmed or likely, plus options (e.g. slow a job down, add an index, or ask Lovable for a larger budget) — **no changes made** without your approval.
+## Classification to state in the report
+- Confirmed: the job-history table is producing very large physical reads.
+- Likely: those full scans are the principal reason the Lovable disk I/O budget is being exhausted.
+- Not yet confirmed: which exact scheduler/platform query causes the scans, and whether the budget meter counts extra platform I/O.
 
-## Not doing
-No writes, restarts, resizing, schedule changes, emails, or publishing.
+## Constraints
+- Read-only. No writes, restart, resize, schema/index changes, schedule changes, emails, or publishing without explicit approval.
+- No VACUUM FULL or table rewrite yet — that remains a separate, separately-approved decision.
+- If performance degrades during the investigation, capture live evidence first and report before restarting anything.
+
+## After the answer
+Report back with Lovable's answer and a recommended next step (e.g. approved table shrink, or scheduler-side fix) for separate approval.
