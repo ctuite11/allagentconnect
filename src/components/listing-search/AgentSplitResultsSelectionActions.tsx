@@ -42,6 +42,7 @@ export function AgentSplitResultsSelectionActions({
   onKeepSelectedCustom,
   onSuccessfulShare,
   shareSelectedEnabled = true,
+  hideSelectAllPills = false,
   children,
   className,
   pillClassName = DEFAULT_PILL_CLASS,

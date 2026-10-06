@@ -140,6 +140,7 @@ export function AgentSplitResultsSurface({
   mapResultsGridClassName,
   workspaceToolbarLayout = "default",
   shareSelectedEnabled = true,
+  hideSelectAllPills = false,
 }: AgentSplitResultsSurfaceProps) {
   const navigate = useNavigate();
   const [sortColumn, setSortColumn] = useState(LISTING_DEFAULT_SORT_COLUMN);
