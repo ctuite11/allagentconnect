@@ -20,3 +20,4 @@
 - [ ] Navigation: Success Hub cache, Back scroll restore, shared session, Hot Sheets parallel
 
 - [x] Hot Sheet first batch: send to attached buyer on Review Matches, no contact picker (built, deployed, and browser-verified without sending, 2026-10-06)
+- [ ] Read-only disk I/O budget root cause (budget 0 at 21:14 UTC): statements by blocks, cache vs disk, maintenance/WAL, tables, cron, recorder, 13:04/17:09/21:14 compare
