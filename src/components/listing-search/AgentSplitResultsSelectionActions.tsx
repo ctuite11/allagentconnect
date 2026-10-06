@@ -22,6 +22,8 @@ type AgentSplitResultsSelectionActionsProps = {
   onSuccessfulShare?: () => void;
   /** When false, selection pills remain but bulk Share selected is hidden. */
   shareSelectedEnabled?: boolean;
+  /** When true, Select all / Unselect all pills are hidden (parent owns select-all). */
+  hideSelectAllPills?: boolean;
   /** Extra pills (e.g. Save as Hot Sheet) rendered after share controls. */
   children?: ReactNode;
   className?: string;
@@ -40,6 +42,7 @@ export function AgentSplitResultsSelectionActions({
   onKeepSelectedCustom,
   onSuccessfulShare,
   shareSelectedEnabled = true,
+  hideSelectAllPills = false,
   children,
   className,
   pillClassName = DEFAULT_PILL_CLASS,
@@ -78,9 +81,11 @@ export function AgentSplitResultsSelectionActions({
       <>
       {visibleSelectionState.allVisible && (
         <>
-          <Button type="button" size="sm" variant="outline" className={PILL_CLASS} onClick={onUnselectAllVisible}>
-            Unselect all
-          </Button>
+          {!hideSelectAllPills && (
+            <Button type="button" size="sm" variant="outline" className={PILL_CLASS} onClick={onUnselectAllVisible}>
+              Unselect all
+            </Button>
+          )}
           {shareDialog}
         </>
       )}
@@ -88,9 +93,11 @@ export function AgentSplitResultsSelectionActions({
         <>
           {!showSelectedOnly && !onKeepSelectedCustom && (
             <>
-              <Button type="button" size="sm" variant="outline" className={PILL_CLASS} onClick={onAddAllVisible}>
-                Select all
-              </Button>
+              {!hideSelectAllPills && (
+                <Button type="button" size="sm" variant="outline" className={PILL_CLASS} onClick={onAddAllVisible}>
+                  Select all
+                </Button>
+              )}
               <Button type="button" size="sm" variant="outline" className={PILL_CLASS} onClick={onKeepSelectedOnly}>
                 Keep selected only
               </Button>
@@ -98,9 +105,11 @@ export function AgentSplitResultsSelectionActions({
           )}
           {!showSelectedOnly && onKeepSelectedCustom && (
             <>
-              <Button type="button" size="sm" variant="outline" className={PILL_CLASS} onClick={onAddAllVisible}>
-                Select all
-              </Button>
+              {!hideSelectAllPills && (
+                <Button type="button" size="sm" variant="outline" className={PILL_CLASS} onClick={onAddAllVisible}>
+                  Select all
+                </Button>
+              )}
               <Button type="button" size="sm" variant="outline" className={PILL_CLASS} onClick={onKeepSelectedCustom}>
                 Keep selected
               </Button>
@@ -114,7 +123,7 @@ export function AgentSplitResultsSelectionActions({
           Keep selected
         </Button>
       )}
-      {visibleSelectionState.noneVisible && (
+      {visibleSelectionState.noneVisible && !hideSelectAllPills && (
         <Button
           type="button"
           size="sm"
