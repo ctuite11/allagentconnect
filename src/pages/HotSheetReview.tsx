@@ -1402,7 +1402,11 @@ const HotSheetReview = () => {
   const renderHotSheetSendAction = () => {
     if (reviewRecipients.length === 0) return null;
     const allMissingEmail = reviewRecipients.every((r) => !r.email.trim());
-    const label = hasPendingInviteRecipients ? "Send Listings & Invite" : "Send Listings";
+    const label = hasPendingInviteRecipients
+      ? "Send First Batch & Invite"
+      : allFirstBatchQueued
+        ? "Send Selected Matches"
+        : "Send First Batch";
     const count = selectedListings.size;
     const disabled = sending || count === 0 || allMissingEmail;
     const button = (
@@ -1414,7 +1418,7 @@ const HotSheetReview = () => {
         onClick={() => void handleHotSheetSend()}
       >
         <Send className="h-3.5 w-3.5" aria-hidden />
-        {sending ? "Sending…" : count > 0 ? `${label} (${count})` : label}
+        {sending ? "Sending…" : label}
       </Button>
     );
     const tip = allMissingEmail
@@ -1489,7 +1493,7 @@ const HotSheetReview = () => {
             <AacPageIntro
               withTopPadding
               back={<AacBackButton type="button" onClick={handleAgentHotSheetReviewBack} />}
-              title="Review matches"
+              title={`Review ${listings.length} Hot Sheet Matches`}
               actions={
                 <>
                   {buyerContextClientId ? (
@@ -1599,7 +1603,6 @@ const HotSheetReview = () => {
             onSelectedRowsChange={setSelectedListings}
             onSelectAll={toggleSelectAll}
             onKeepSelected={!isSharedWorkspace ? handleKeepSelected : undefined}
-            toolbarActionsExtra={renderHotSheetSendAction()}
             containerClassName="min-w-0 px-0"
             toolbarAriaLabel="Hot sheet results"
             resultsView={resultsView}
@@ -1609,16 +1612,34 @@ const HotSheetReview = () => {
             mapResultsGridClassName={agentWorkspaceMapResultsGrid}
             beforeResults={
               <>
-                {showPendingInviteBanner ? (
-                  <div className="mb-4 flex flex-col gap-3 rounded-lg border border-[#0E56F5]/20 bg-[rgba(14,86,245,0.06)] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                {reviewRecipients.length > 0 ? (
+                  <div
+                    className="mb-4 flex flex-col gap-3 rounded-lg border border-[#0E56F5]/20 bg-[rgba(14,86,245,0.06)] px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+                    aria-label="Hot Sheet send controls"
+                  >
                     <p className="text-[13px] leading-snug text-neutral-800">
-                      {pendingInviteNeedsResend
-                        ? "The invite was sent but not accepted yet. Resend to share these matches with your buyer."
-                        : "This buyer hasn't been invited yet. Send the invite to share these matches."}
+                      {hasPendingInviteRecipients
+                        ? "Select the listings you want to send to your buyer. When you're ready, send the first batch and invite your buyer to their Hot Sheet."
+                        : allFirstBatchQueued
+                          ? "Select additional matches you want to send to your buyer."
+                          : "Select the listings you want to send to your buyer as their first Hot Sheet batch."}
                     </p>
-                    {showInviteCta ? (
-                      <div className="shrink-0 sm:pl-4">{renderInviteCtaButton()}</div>
-                    ) : null}
+                    <div className="flex shrink-0 flex-wrap items-center gap-2 sm:pl-4">
+                      <span className="text-[12px] font-medium text-neutral-700">
+                        {selectedListings.size} selected
+                      </span>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className={secondaryActionClassName}
+                        disabled={listings.length === 0}
+                        onClick={toggleSelectAll}
+                      >
+                        {listings.length > 0 && selectedListings.size === listings.length ? "Clear All" : "Select All"}
+                      </Button>
+                      {renderHotSheetSendAction()}
+                    </div>
                   </div>
                 ) : null}
                 {!isSharedWorkspace && removedListings.length > 0 ? (
