@@ -27,6 +27,7 @@ const ScrollRestoration = () => {
   const location = useLocation();
   const navType = useNavigationType();
   const keyRef = useRef(location.key);
+  const pathRef = useRef<string | null>(null);
 
   // Continuously remember the current entry's scroll position.
   useEffect(() => {
@@ -50,7 +51,10 @@ const ScrollRestoration = () => {
 
   useLayoutEffect(() => {
     keyRef.current = location.key;
+    const pathChanged = pathRef.current !== location.pathname;
+    pathRef.current = location.pathname;
     if (navType !== "POP") {
+      if (!pathChanged) return; // query-only changes keep position, as before
       window.scrollTo(0, 0);
       if (document.documentElement) document.documentElement.scrollTop = 0;
       if (document.body) document.body.scrollTop = 0;
