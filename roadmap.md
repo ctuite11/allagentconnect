@@ -19,4 +19,4 @@
 - [ ] Capacity recorder: index, null-label fix, separate hourly prune job
 - [ ] Navigation: Success Hub cache, Back scroll restore, shared session, Hot Sheets parallel
 
-- [ ] Hot Sheet first batch: send to attached buyer on Review Matches, no contact picker (approved — implementing)
+- [ ] Hot Sheet first batch: send to attached buyer on Review Matches, no contact picker (built + deployed; browser QA without sending still pending)
