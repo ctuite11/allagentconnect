@@ -204,6 +204,10 @@ const HotSheetReview = () => {
   const [resultsView, setResultsView] = useState<"map" | "list">("map");
   const [criteriaOpen, setCriteriaOpen] = useState(false);
   const [confirmSendAllOpen, setConfirmSendAllOpen] = useState(false);
+  /** Per-recipient first-batch state (hot_sheet_recipient_batches) keyed by CRM client id. */
+  const [recipientBatches, setRecipientBatches] = useState<
+    Record<string, { invited_at: string | null; initial_batch_queued_at: string | null }>
+  >({});
 
   const isSharedWorkspace = useMemo(
     () =>
@@ -224,8 +228,37 @@ const HotSheetReview = () => {
   const primaryBuyer = reviewRecipients[0] ?? null;
   const primaryBuyerMissingEmail = !primaryBuyer?.email?.trim();
 
+  const loadRecipientBatches = useCallback(async () => {
+    if (!id) return;
+    const { data, error } = await supabase
+      .from("hot_sheet_recipient_batches")
+      .select("client_id, invited_at, initial_batch_queued_at")
+      .eq("hot_sheet_id", id);
+    if (error) {
+      console.warn("[HotSheetReview] recipient batches load failed", error);
+      return;
+    }
+    const next: Record<string, { invited_at: string | null; initial_batch_queued_at: string | null }> = {};
+    for (const r of data ?? []) {
+      next[String(r.client_id)] = { invited_at: r.invited_at, initial_batch_queued_at: r.initial_batch_queued_at };
+    }
+    setRecipientBatches(next);
+  }, [id]);
+
+  useEffect(() => {
+    void loadRecipientBatches();
+  }, [loadRecipientBatches, reviewRecipients]);
+
+  /** True only when EVERY attached buyer has had this Hot Sheet's first batch queued. */
+  const allFirstBatchQueued = useMemo(
+    () =>
+      reviewRecipients.length > 0 &&
+      reviewRecipients.every((r) => Boolean(recipientBatches[r.clientId]?.initial_batch_queued_at)),
+    [reviewRecipients, recipientBatches],
+  );
+
   const inviteCta = useMemo(() => {
-    if (allInviteAccepted || (invitesSent && !hasPendingInviteRecipients)) {
+    if (allFirstBatchQueued && !hasPendingInviteRecipients) {
       return { label: "Hot Sheet Sent", disabled: true, showCheck: true, tooltip: undefined as string | undefined };
     }
     if (!hasPendingInviteRecipients) {
@@ -257,7 +290,7 @@ const HotSheetReview = () => {
       tooltip: undefined,
     };
   }, [
-    allInviteAccepted,
+    allFirstBatchQueued,
     hasPendingInviteRecipients,
     invitesSent,
     pendingInviteRecipients,
@@ -900,6 +933,55 @@ const HotSheetReview = () => {
   };
 
 
+  /**
+   * Recipient-specific send: the buyers are the ones attached to this Hot Sheet.
+   * Connected buyers get the selected listings now; pending buyers get them
+   * stored with their invitation and delivered when they accept.
+   */
+  const sendRecipientBatch = async () => {
+    if (!hotSheet?.id || reviewRecipients.length === 0) return;
+    const { data, error } = await supabase.functions.invoke("process-hot-sheet", {
+      body: {
+        hotSheetId: hotSheet.id,
+        sendInitialBatch: true,
+        selectedListingIds: Array.from(selectedListings),
+        recipientClientIds: reviewRecipients.map((r) => r.clientId),
+      },
+    });
+    if (error) {
+      console.error("[HotSheetReview] sendRecipientBatch error", error);
+      toast.error("Listings could not be sent. Please try again.");
+      return;
+    }
+    const rows = ((data as any)?.recipients ?? []) as Array<{ state: string; count?: number }>;
+    const queued = rows.filter((r) => r.state === "queued");
+    const pending = rows.filter((r) => r.state === "pending_invite").length;
+    const failed = rows.filter((r) => r.state === "failed").length;
+    if (queued.length > 0) {
+      const n = Math.max(...queued.map((r) => r.count ?? 0));
+      toast.success(`Sent ${n} listing${n === 1 ? "" : "s"} to ${queued.length === 1 ? "your buyer" : `${queued.length} buyers`}.`);
+      void supabase.functions.invoke("kick-email-queue").catch(() => undefined);
+    } else if (pending === 0 && failed === 0) {
+      toast.message("Those listings were already sent to this buyer.");
+    }
+    if (failed > 0) toast.error(`Could not send to ${failed} buyer${failed === 1 ? "" : "s"}. Please try again.`);
+    await loadRecipientBatches();
+  };
+
+  const handleHotSheetSend = async () => {
+    if (selectedListings.size === 0) return;
+    if (hasPendingInviteRecipients) {
+      await handleSendInvites();
+      return;
+    }
+    setSending(true);
+    try {
+      await sendRecipientBatch();
+    } finally {
+      setSending(false);
+    }
+  };
+
   const handleSendInvites = async () => {
     if (!hotSheet?.id) return;
 
@@ -1130,7 +1212,7 @@ const HotSheetReview = () => {
         if (skippedAcceptedInvite > 0 && skippedAcceptedInvite >= recipientsWithEmail) {
           // Everyone already accepted — send selected listings directly via the
           // standard process-hot-sheet path instead of stopping.
-          await sendSelectedListingsDirect();
+          await sendRecipientBatch();
           return;
         }
         if (
@@ -1139,7 +1221,7 @@ const HotSheetReview = () => {
         ) {
           // No new invites needed (buyers already invited or already in search).
           // Just send the selected listings to accepted recipients.
-          await sendSelectedListingsDirect();
+          await sendRecipientBatch();
           return;
         }
         if (skippedTokenInsert > 0) {
@@ -1168,6 +1250,8 @@ const HotSheetReview = () => {
 
       setInvitesSent(true);
       showInviteEmailSentToast();
+      // Store pending buyers' first batch with their invite; send to connected buyers now.
+      await sendRecipientBatch();
       void supabase.functions.invoke("kick-email-queue").catch((e) => {
         console.warn(
           "[HotSheetReview] kick-email-queue failed — emails stay in queue until worker runs",
@@ -1315,6 +1399,42 @@ const HotSheetReview = () => {
     }
   };
 
+  const renderHotSheetSendAction = () => {
+    if (reviewRecipients.length === 0) return null;
+    const allMissingEmail = reviewRecipients.every((r) => !r.email.trim());
+    const label = hasPendingInviteRecipients ? "Send Listings & Invite" : "Send Listings";
+    const count = selectedListings.size;
+    const disabled = sending || count === 0 || allMissingEmail;
+    const button = (
+      <Button
+        type="button"
+        size="sm"
+        className={AGENT_WORKSPACE_BTN_PRIMARY}
+        disabled={disabled}
+        onClick={() => void handleHotSheetSend()}
+      >
+        <Send className="h-3.5 w-3.5" aria-hidden />
+        {sending ? "Sending…" : count > 0 ? `${label} (${count})` : label}
+      </Button>
+    );
+    const tip = allMissingEmail
+      ? "Add an email to this buyer first"
+      : count === 0
+        ? "Select at least one listing to send"
+        : undefined;
+    if (!tip) return button;
+    return (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className="inline-flex">{button}</span>
+          </TooltipTrigger>
+          <TooltipContent>{tip}</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  };
+
   const renderInviteCtaButton = () => {
     if (!inviteCta) return null;
     const button = (
@@ -1330,10 +1450,10 @@ const HotSheetReview = () => {
         disabled={inviteCta.disabled || sending || clientCount === 0}
         onClick={() => {
           if (selectedListings.size === 0) {
-            setConfirmSendAllOpen(true);
+            toast.message("Select at least one listing to send.");
             return;
           }
-          void handleSendInvites();
+          void handleHotSheetSend();
         }}
       >
         {inviteCta.showCheck ? (
@@ -1473,19 +1593,13 @@ const HotSheetReview = () => {
             resultsFromPath={resultsFromPath}
             showSaveToHotSheet={false}
             saveToHotSheetCriteria={hotSheet.criteria ?? {}}
-            selectionEnabled={!isSharedWorkspace}
-            shareSelectedEnabled={allowBulkShareSelected}
+            selectionEnabled
+            shareSelectedEnabled={false}
             selectedRows={selectedListings}
             onSelectedRowsChange={setSelectedListings}
             onSelectAll={toggleSelectAll}
             onKeepSelected={!isSharedWorkspace ? handleKeepSelected : undefined}
-            toolbarActionsExtra={
-              !allowBulkShareSelected && selectedListings.size > 0 ? (
-                <span className="text-xs font-medium tabular-nums text-neutral-600">
-                  {selectedListings.size} selected
-                </span>
-              ) : null
-            }
+            toolbarActionsExtra={renderHotSheetSendAction()}
             containerClassName="min-w-0 px-0"
             toolbarAriaLabel="Hot sheet results"
             resultsView={resultsView}

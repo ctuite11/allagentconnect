@@ -197,6 +197,13 @@
       "when": 1791307785523,
       "tag": "0027_capacity_recorder_lightweight",
       "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1791323162832,
+      "tag": "0028_hot_sheet_recipient_batches",
+      "breakpoints": true
     }
   ]
 }

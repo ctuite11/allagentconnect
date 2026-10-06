@@ -20,6 +20,8 @@ interface ProcessHotSheetRequest {
    * the buyer dashboard's "New Matches" stat starts at 0.
    */
   baselineOnly?: boolean;
+  /** Manual, recipient-specific send (attached hot_sheet_clients ids). */
+  recipientClientIds?: string[];
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -44,7 +46,7 @@ const handler = async (req: Request): Promise<Response> => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    const { hotSheetId, sendInitialBatch = false, selectedListingIds, baselineOnly = false }: ProcessHotSheetRequest = await req.json();
+    const { hotSheetId, sendInitialBatch = false, selectedListingIds, baselineOnly = false, recipientClientIds }: ProcessHotSheetRequest = await req.json();
 
     console.log("Processing hot sheet:", hotSheetId, { sendInitialBatch, selectedListingCount: selectedListingIds?.length });
 
@@ -57,6 +59,195 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (hotSheetError) throw hotSheetError;
     if (!hotSheet) throw new Error("Hot sheet not found");
+
+    // ── Recipient-specific manual send (Hot Sheet Review / invite acceptance) ──
+    // Isolated from the automatic/legacy path below. hot_sheet_recipient_batches
+    // is the dedupe/source of truth for each recipient's FIRST batch: those IDs
+    // are sent even if already present in the Hot-Sheet-wide
+    // hot_sheet_sent_listings. Subsequent manual sends keep the normal filter.
+    if (Array.isArray(recipientClientIds) && recipientClientIds.length > 0) {
+      const authHeader = req.headers.get("Authorization") ?? "";
+      const isServiceRole = authHeader === `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`;
+      if (!isServiceRole) {
+        const { data: userData } = await supabaseClient.auth.getUser();
+        const uid = userData?.user?.id;
+        let allowed = !!uid && uid === hotSheet.user_id;
+        if (!allowed && uid) {
+          const { data: canAct } = await supabaseClient.rpc("can_act_for_agent", { p_agent_user_id: hotSheet.user_id });
+          allowed = canAct === true;
+        }
+        if (!allowed) {
+          return new Response(JSON.stringify({ error: "Not allowed" }), {
+            status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+      }
+
+      const { data: attached } = await adminClient
+        .from("hot_sheet_clients")
+        .select("client_id, clients ( id, first_name, last_name, email )")
+        .eq("hot_sheet_id", hotSheetId)
+        .in("client_id", recipientClientIds);
+
+      const { data: batchRows } = await adminClient
+        .from("hot_sheet_recipient_batches")
+        .select("*")
+        .eq("hot_sheet_id", hotSheetId)
+        .in("client_id", recipientClientIds);
+      const batchByClient = new Map((batchRows ?? []).map((b: any) => [String(b.client_id), b]));
+
+      const { data: rels } = await adminClient
+        .from("client_agent_relationships")
+        .select("client_id, crm_client_id")
+        .eq("agent_id", hotSheet.user_id)
+        .eq("status", "active")
+        .is("ended_at", null)
+        .in("crm_client_id", recipientClientIds);
+      const buyerUserByCrm = new Map(
+        (rels ?? []).filter((r: any) => r.client_id).map((r: any) => [String(r.crm_client_id), String(r.client_id)]),
+      );
+
+      const { data: sentRows } = await adminClient
+        .from("hot_sheet_sent_listings")
+        .select("listing_id")
+        .eq("hot_sheet_id", hotSheetId);
+      const hotSheetSent = new Set((sentRows ?? []).map((r: any) => String(r.listing_id)));
+
+      const { data: agentProfile } = await adminClient
+        .from("agent_profiles")
+        .select("email, first_name")
+        .eq("id", hotSheet.user_id)
+        .maybeSingle();
+
+      const baseUrl = resolveEmailBaseUrl(Deno.env.get("EMAIL_BASE_URL"));
+      const nowIso = new Date().toISOString();
+      const results: Array<{ clientId: string; state: string; count?: number }> = [];
+      const queuedListingIds = new Set<string>();
+      const listingCache = new Map<string, any>();
+
+      const loadListings = async (ids: string[]) => {
+        const missing = ids.filter((i) => !listingCache.has(i));
+        if (missing.length > 0) {
+          const { data } = await adminClient.from("listings").select("*").in("id", missing);
+          for (const l of data ?? []) listingCache.set(String(l.id), l);
+        }
+        return ids.map((i) => listingCache.get(i)).filter(Boolean);
+      };
+
+      for (const row of attached ?? []) {
+        const clientId = String(row.client_id);
+        const client: any = Array.isArray(row.clients) ? row.clients[0] : row.clients;
+        const email = client?.email?.toLowerCase().trim();
+        const batch = batchByClient.get(clientId);
+        const firstBatchPending = !batch?.initial_batch_queued_at;
+        const buyerUserId = buyerUserByCrm.get(clientId) ?? null;
+        const requested = (selectedListingIds ?? []).map(String);
+
+        if (!email) { results.push({ clientId, state: "missing_email" }); continue; }
+
+        if (!buyerUserId) {
+          // Pending buyer: store their first batch with the invitation; nothing is sent now.
+          if (requested.length > 0 && firstBatchPending) {
+            await adminClient.from("hot_sheet_recipient_batches").upsert({
+              hot_sheet_id: hotSheetId,
+              client_id: clientId,
+              initial_listing_ids: requested,
+              invited_at: batch?.invited_at ?? nowIso,
+              updated_at: nowIso,
+            }, { onConflict: "hot_sheet_id,client_id" });
+          }
+          results.push({ clientId, state: "pending_invite" });
+          continue;
+        }
+
+        let ids: string[];
+        if (firstBatchPending) {
+          const stored = (batch?.initial_listing_ids ?? []).map(String);
+          ids = requested.length > 0 ? requested : stored; // bypass Hot-Sheet-wide filter
+        } else {
+          ids = requested.filter((i) => !hotSheetSent.has(i)); // normal filter for later sends
+        }
+        const listings = await loadListings(ids);
+        if (listings.length === 0) { results.push({ clientId, state: "nothing_to_send" }); continue; }
+
+        const accessUrl = `${baseUrl}/client/hot-sheets/${hotSheetId}`;
+        let listingsHtml = listings.slice(0, 5)
+          .map((l: any) => renderHotSheetMatchListingEmailCard(l, { baseUrl })).join("");
+        if (listings.length > 5) {
+          listingsHtml += `<p style="color: #6b7280; margin: 16px 0;">And ${listings.length - 5} more ${listings.length - 5 === 1 ? "property" : "properties"}...</p>`;
+        }
+        listingsHtml += `
+          <div style="margin-top: 32px; padding: 16px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px;">
+            <p style="margin: 0 0 12px 0; color: #1f2937;">View all properties and add comments:</p>
+            <a href="${accessUrl}" style="display: inline-block; background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 500;">View Hot Sheet</a>
+          </div>`;
+        const clientName = `${client?.first_name ?? ""} ${client?.last_name ?? ""}`.trim() || "Client";
+        const keyIds = listings.map((l: any) => String(l.id)).sort().join(",");
+
+        const { error: jobErr } = await adminClient.from("email_jobs").insert({
+          idempotency_key: `hotsheet-recipient-batch:${hotSheetId}:${clientId}:${firstBatchPending ? "initial" : nowIso}:${keyIds}`.slice(0, 500),
+          payload: {
+            provider: "resend",
+            template: "hot-sheet-alert",
+            to: [email],
+            subject: `${listings.length} New Properties Match Your Search - ${hotSheet.name}`,
+            variables: { userName: clientName, hotSheetName: hotSheet.name, matchCount: listings.length, listingsHtml },
+          },
+        });
+        if (jobErr) {
+          console.error("[process-hot-sheet] recipient batch enqueue failed", clientId, jobErr.message);
+          results.push({ clientId, state: "failed" });
+          continue;
+        }
+
+        if (agentProfile?.email) {
+          await adminClient.from("email_jobs").insert({
+            idempotency_key: `hotsheet-agent-copy:${hotSheetId}:${clientId}:${Date.now()}`,
+            payload: {
+              provider: "resend",
+              template: "hot-sheet-alert",
+              to: [agentProfile.email.toLowerCase().trim()],
+              subject: `Copy: Hot Sheet sent to ${clientName}`,
+              variables: {
+                userName: agentProfile.first_name || "there",
+                hotSheetName: hotSheet.name,
+                matchCount: listings.length,
+                listingsHtml: `<div style="margin: 0 0 16px 0; padding: 12px 16px; background-color: #f3f4f6; border-radius: 8px; color: #374151; font-size: 13px;"><strong>Copy of what your buyer received</strong><br>Sent to: ${clientName} (${email})<br>Hot Sheet: ${hotSheet.name}</div>${listingsHtml}`,
+              },
+            },
+          }).then(({ error }) => { if (error) console.warn("[process-hot-sheet] agent copy failed", error.message); });
+        }
+
+        if (firstBatchPending) {
+          await adminClient.from("hot_sheet_recipient_batches").upsert({
+            hot_sheet_id: hotSheetId,
+            client_id: clientId,
+            initial_listing_ids: listings.map((l: any) => String(l.id)),
+            invited_at: batch?.invited_at ?? null,
+            initial_batch_queued_at: nowIso,
+            recipient_user_id: buyerUserId,
+            updated_at: nowIso,
+          }, { onConflict: "hot_sheet_id,client_id" });
+        }
+        for (const l of listings) queuedListingIds.add(String(l.id));
+        results.push({ clientId, state: "queued", count: listings.length });
+      }
+
+      if (queuedListingIds.size > 0) {
+        const rows = [...queuedListingIds].map((id) => ({
+          hot_sheet_id: hotSheetId,
+          listing_id: id,
+          status_at_send: listingCache.get(id)?.status || "active",
+        }));
+        await adminClient.from("hot_sheet_sent_listings")
+          .upsert(rows, { onConflict: "hot_sheet_id,listing_id", ignoreDuplicates: true });
+        await adminClient.from("hot_sheets").update({ last_sent_at: nowIso }).eq("id", hotSheetId);
+      }
+
+      return new Response(JSON.stringify({ success: true, recipients: results }), {
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     // Cooldown check: skip if sent within last 60 seconds (not applied for baseline-only writes)
     if (!baselineOnly && hotSheet.last_sent_at) {

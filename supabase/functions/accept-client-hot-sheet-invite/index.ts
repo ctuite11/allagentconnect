@@ -447,6 +447,31 @@ serve(async (req) => {
       return json({ success: false, error: "Failed to link accepted hot sheet to buyer account" }, 500);
     }
 
+    // Deliver this buyer's stored first batch (selected by the agent on Hot Sheet
+    // Review) BEFORE baselining. process-hot-sheet only marks it queued after a
+    // successful enqueue. Best-effort: never blocks acceptance.
+    try {
+      const { data: pendingBatch } = await supabaseAdmin
+        .from("hot_sheet_recipient_batches")
+        .select("initial_listing_ids, initial_batch_queued_at")
+        .eq("hot_sheet_id", hotSheetId)
+        .eq("client_id", crmClientId)
+        .maybeSingle();
+      if (
+        pendingBatch &&
+        !pendingBatch.initial_batch_queued_at &&
+        Array.isArray(pendingBatch.initial_listing_ids) &&
+        pendingBatch.initial_listing_ids.length > 0
+      ) {
+        const { error: batchErr } = await supabaseAdmin.functions.invoke("process-hot-sheet", {
+          body: { hotSheetId, sendInitialBatch: true, recipientClientIds: [crmClientId] },
+        });
+        if (batchErr) console.warn("[accept-client-hot-sheet-invite] initial batch invoke failed:", batchErr);
+      }
+    } catch (batchEx) {
+      console.warn("[accept-client-hot-sheet-invite] initial batch threw:", batchEx);
+    }
+
     // Baseline existing matches so they DO NOT count as "New Matches" on the
     // buyer dashboard. Best-effort: any failure is logged but never blocks the
     // invite acceptance.
