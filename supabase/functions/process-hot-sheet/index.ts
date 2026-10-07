@@ -69,7 +69,13 @@ const handler = async (req: Request): Promise<Response> => {
       const authHeader = req.headers.get("Authorization") ?? "";
       const isServiceRole = authHeader === `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`;
       if (!isServiceRole) {
-        const { data: userData } = await supabaseClient.auth.getUser();
+        // Pass the caller's JWT explicitly: a server-side client has no stored
+        // session, so getUser() without the token always returns no user.
+        // Never log the token.
+        const callerJwt = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
+        const { data: userData, error: userErr } = callerJwt
+          ? await supabaseClient.auth.getUser(callerJwt)
+          : { data: { user: null }, error: null };
         const uid = userData?.user?.id;
         let allowed = !!uid && uid === hotSheet.user_id;
         if (!allowed && uid) {
@@ -77,6 +83,7 @@ const handler = async (req: Request): Promise<Response> => {
           allowed = canAct === true;
         }
         if (!allowed) {
+          console.warn("[process-hot-sheet] recipient send rejected:", userErr ? "auth lookup failed" : uid ? "not owner/delegate" : "no user");
           return new Response(JSON.stringify({ error: "Not allowed" }), {
             status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
