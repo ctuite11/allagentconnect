@@ -225,6 +225,13 @@
       "when": 1791349144367,
       "tag": "0031_add_network_agent_contact",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1791383891046,
+      "tag": "0032_drop_add_network_agent_contact",
+      "breakpoints": true
     }
   ]
 }
