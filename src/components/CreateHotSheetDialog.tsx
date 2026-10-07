@@ -2180,48 +2180,45 @@ export function CreateHotSheetDialog({
               <Card className={cn("border", HS_DIALOG_CARD)}>
                 <CollapsibleTrigger className="w-full">
                   <CardHeader className="flex cursor-pointer flex-row items-center justify-between p-4 pb-3 hover:bg-neutral-50/80 sm:p-5 sm:pb-3">
-                    <CardTitle className="text-[15px] font-semibold text-neutral-900">Notifications</CardTitle>
+                    <CardTitle className="text-[15px] font-semibold text-neutral-900">Buyer emails</CardTitle>
                     {notificationsOpen ? <ChevronUp className="h-4 w-4 text-neutral-600" /> : <ChevronDown className="h-4 w-4 text-neutral-600" />}
                   </CardHeader>
                 </CollapsibleTrigger>
                 <CollapsibleContent>
                   <CardContent className="space-y-4 px-4 pb-4 pt-0 sm:px-5 sm:pb-5">
-                    <div className="space-y-3">
-                      <div className="flex items-center space-x-2">
-                        <Checkbox
-                          id="notify-agent"
-                          checked={notifyAgent}
-                          onCheckedChange={(checked) => setNotifyAgent(checked as boolean)}
-                        />
-                        <Label htmlFor="notify-agent" className="cursor-pointer">
-                          Send notifications to me (agent)
-                        </Label>
-                      </div>
-
-                    </div>
-
                     <div className="space-y-2">
-                      <Label>Notification Schedule</Label>
+                      <Label>How often matching listings are emailed to the buyer</Label>
                       <RadioGroup value={notificationSchedule} onValueChange={setNotificationSchedule}>
                         <div className="flex items-center space-x-2">
                           <RadioGroupItem value="immediately" id="immediately" />
                           <Label htmlFor="immediately" className="cursor-pointer">
-                            Immediately - Get alerts as soon as matching listings appear
+                            Immediately — as soon as a matching listing appears
                           </Label>
                         </div>
                         <div className="flex items-center space-x-2">
                           <RadioGroupItem value="daily" id="daily" />
                           <Label htmlFor="daily" className="cursor-pointer">
-                            Daily - Receive a daily digest of new matching listings
+                            Daily — a daily digest of new matching listings
                           </Label>
                         </div>
                         <div className="flex items-center space-x-2">
                           <RadioGroupItem value="weekly" id="weekly" />
                           <Label htmlFor="weekly" className="cursor-pointer">
-                            Weekly - Receive a weekly summary of new matching listings
+                            Weekly — a weekly summary of new matching listings
                           </Label>
                         </div>
                       </RadioGroup>
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="notify-agent"
+                        checked={notifyAgent}
+                        onCheckedChange={(checked) => setNotifyAgent(checked as boolean)}
+                      />
+                      <Label htmlFor="notify-agent" className="cursor-pointer">
+                        Also email me a copy
+                      </Label>
                     </div>
                   </CardContent>
                 </CollapsibleContent>
@@ -2321,9 +2318,13 @@ export function CreateHotSheetDialog({
 
             {!hideNotificationSettings && (
               <div className="pb-3">
-                <p className="text-sm font-semibold text-foreground mb-2">Notifications</p>
+                <p className="text-sm font-semibold text-foreground mb-2">Buyer emails</p>
                 <div className="space-y-1 text-sm text-muted-foreground">
-                  <p><span className="font-medium">Agent:</span> {notifyAgent ? "Enabled" : "Disabled"}</p>
+                  <p>
+                    <span className="font-medium">Buyer:</span>{" "}
+                    {notificationSchedule === "immediately" ? "Immediately" : notificationSchedule === "daily" ? "Daily" : "Weekly"}
+                  </p>
+                  <p><span className="font-medium">Email me a copy:</span> {notifyAgent ? "Yes" : "No"}</p>
                   {selectedClients.length > 0 && (
                     <p className="text-muted-foreground">
                       {lockedToClient
@@ -2331,7 +2332,6 @@ export function CreateHotSheetDialog({
                         : "Contacts on this sheet receive invitations and listing emails when you send from the review screen."}
                     </p>
                   )}
-                  <p><span className="font-medium">Schedule:</span> {notificationSchedule === "immediately" ? "Immediately" : notificationSchedule === "daily" ? "Daily" : "Weekly"}</p>
                 </div>
               </div>
             )}

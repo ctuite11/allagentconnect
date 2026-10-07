@@ -1499,47 +1499,45 @@ const HotSheetReview = () => {
                   ? `${reviewRecipients[0].displayName} · ${hotSheet.name}`
                   : hotSheet.name
               }
-              actions={
-                <>
-                  {buyerContextClientId ? (
+              afterSubtitle={
+                <Collapsible open={criteriaOpen} onOpenChange={setCriteriaOpen}>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <CollapsibleTrigger className="inline-flex items-center gap-1 rounded-md py-0.5 text-[11px] font-medium text-neutral-500 transition-colors hover:text-neutral-800">
+                      <ChevronDown
+                        className={cn(
+                          "h-3 w-3 shrink-0 transition-transform",
+                          criteriaOpen && "rotate-180",
+                        )}
+                      />
+                      Search criteria
+                    </CollapsibleTrigger>
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
                       className={secondaryActionClassName}
-                      onClick={() => navigate(`/agent/buyers/${buyerContextClientId}/favorites`)}
+                      onClick={() => setEditCriteriaOpen(true)}
                     >
-                      <Heart
-                        className="h-3.5 w-3.5 shrink-0 fill-[#FF2D55] text-[#FF2D55] stroke-[#FF2D55]"
-                        strokeWidth={2}
-                        aria-hidden
-                      />
-                      Favorites
+                      <Pencil className="h-3.5 w-3.5" aria-hidden />
+                      Edit Criteria
                     </Button>
-                  ) : null}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className={secondaryActionClassName}
-                    onClick={() => setEditCriteriaOpen(true)}
-                  >
-                    <Pencil className="h-3.5 w-3.5" aria-hidden />
-                    Edit Criteria
-                  </Button>
-                </>
-              }
-              afterSubtitle={
-                <Collapsible open={criteriaOpen} onOpenChange={setCriteriaOpen}>
-                  <CollapsibleTrigger className="inline-flex items-center gap-1 rounded-md py-0.5 text-[11px] font-medium text-neutral-500 transition-colors hover:text-neutral-800">
-                    <ChevronDown
-                      className={cn(
-                        "h-3 w-3 shrink-0 transition-transform",
-                        criteriaOpen && "rotate-180",
-                      )}
-                    />
-                    Search criteria
-                  </CollapsibleTrigger>
+                    {buyerContextClientId ? (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className={secondaryActionClassName}
+                        onClick={() => navigate(`/agent/buyers/${buyerContextClientId}/favorites`)}
+                      >
+                        <Heart
+                          className="h-3.5 w-3.5 shrink-0 fill-[#FF2D55] text-[#FF2D55] stroke-[#FF2D55]"
+                          strokeWidth={2}
+                          aria-hidden
+                        />
+                        Favorites
+                      </Button>
+                    ) : null}
+                  </div>
                   <CollapsibleContent className="mt-1 space-y-0.5 text-[11px] leading-snug text-neutral-600">
                     <p>
                       <span className="font-medium text-neutral-800">Scope</span> {criteriaSummary.scope}
@@ -1631,9 +1629,6 @@ const HotSheetReview = () => {
                           : "Select the listings you want to send to your buyer as their first Hot Sheet batch."}
                     </p>
                     <div className="flex shrink-0 flex-wrap items-center gap-2 sm:pl-4">
-                      <span className="text-[12px] font-medium text-neutral-700">
-                        {selectedListings.size} selected
-                      </span>
                       <Button
                         type="button"
                         variant="outline"
@@ -1644,6 +1639,9 @@ const HotSheetReview = () => {
                       >
                         {listings.length > 0 && selectedListings.size === listings.length ? "Clear All" : "Select All"}
                       </Button>
+                      <span className="text-[12px] font-medium text-neutral-700">
+                        {selectedListings.size} selected
+                      </span>
                       {renderHotSheetSendAction()}
                     </div>
                   </div>
