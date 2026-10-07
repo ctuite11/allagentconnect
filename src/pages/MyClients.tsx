@@ -1,3 +1,4 @@
+import { resolveOrCreateAgentContact } from "@/lib/agentContactResolver";
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { AgentAacPage } from "@/components/layout/AgentAacPage";
@@ -304,20 +305,26 @@ const MyClients = () => {
           }
         }
 
-        const { error } = await supabase
-          .from("clients")
-          .insert({
-            agent_id: user.id,
-            agent_user_id: user.id,
-            first_name: validatedData.first_name,
-            last_name: validatedData.last_name,
-            email: normalizedEmail,
-            phone: validatedData.phone || null,
-            client_type: validatedData.client_type || null,
-          });
-
-        if (error) throw error;
-        toast.success("Client added successfully");
+        // Locked duplicate-email rule (server-side authority).
+        const resolved = await resolveOrCreateAgentContact({
+          email: normalizedEmail,
+          firstName: validatedData.first_name,
+          lastName: validatedData.last_name,
+          phone: validatedData.phone || null,
+          clientType: validatedData.client_type || null,
+        });
+        if (resolved.ok === false) {
+          toast.error(resolved.message);
+          setSaving(false);
+          return;
+        }
+        if (!resolved.created) {
+          toast.message("This contact is already in your list");
+        } else {
+          // Preserve this screen's prior behavior of linking agent_user_id.
+          await supabase.from("clients").update({ agent_user_id: user.id }).eq("id", resolved.contactId);
+          toast.success("Client added successfully");
+        }
       }
 
       setAddDialogOpen(false);

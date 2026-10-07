@@ -1,3 +1,4 @@
+import { resolveOrCreateAgentContact } from "@/lib/agentContactResolver";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -141,14 +142,19 @@ export function PersonalHotSheetShareEmailDialog({
       } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { error } = await supabase.from("clients").insert({
-        agent_id: user.id,
-        first_name: recipient.firstName,
-        last_name: recipient.lastName ?? "",
+      const resolved = await resolveOrCreateAgentContact({
         email: recipient.email.trim(),
+        firstName: recipient.firstName,
+        lastName: recipient.lastName ?? "",
       });
-
-      if (error) throw error;
+      if (resolved.ok === false) {
+        toast.error(resolved.message);
+        return;
+      }
+      if (!resolved.created) {
+        toast.message(`${shareRecipientDisplayName(recipient)} is already in your contacts`);
+        return;
+      }
       toast.success(`${shareRecipientDisplayName(recipient)} saved to contacts`);
       await refreshContacts();
     } catch (error) {
