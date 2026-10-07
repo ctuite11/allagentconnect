@@ -380,7 +380,7 @@ export function EditHotsheetCriteriaDialog({
             Edit search criteria
           </DialogTitle>
           <DialogDescription className="text-[13px] leading-snug text-neutral-500">
-            Update location, property type, status, and numeric filters. Changes apply when you save.
+            Review contacts and update location, property type, status, and numeric filters. Changes apply when you save.
           </DialogDescription>
         </DialogHeader>
 
