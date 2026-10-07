@@ -1,31 +1,50 @@
-# Two fixes: Add Additional Contact + stale invitation eligibility
+# Hot Sheet regression lock-down (audit first, then tests)
 
-Scope is exactly these two items. Nothing will be sent. The two waiting batches (kerri, Buyer 1 Boston Condo's) stay untouched. The connected-state rule stays as it is.
+No Hot Sheet changes, emails, invites, saves, or data changes until you approve this plan.
 
-## 1. Restore Add Additional Contact on Create Hot Sheet
+## Initial findings (read-only, from this turn)
 
-**Cause (confirmed):** When Create Hot Sheet is opened from a buyer (the Buyer detail and Buyer Account pages), the form runs in "locked to buyer" mode. In that mode, both the "Add another" button and the contact search are hidden. The original "Add Additional Contact" link was removed in the Feb 16–18 contact-display rework.
+- **Status defaults:** wrong value introduced 2026-04-22 (commit `34586f894`, criteria moved into `hotSheetCriteriaCore.ts`). It went unnoticed because nothing tests it. Create, Edit, and the Comms Center builder all read one shared constant, so the source of truth is OK; only the test is missing.
+- **Connected buyer:** decided in Hot Sheet Review (`buyerConnected`), plus separate relationship lookups in about 15 other files (Buyer Detail, Hot Sheets, Success Hub, buyer status, and others). Several compute "connected" on their own. This is the main reason the logic drifted.
+- **First invite vs reminder:** `sendDashboardInvite` logic was copied into both `HotSheetReview.tsx` and `enqueueHotSheetClientInvites.ts` (May 2026). The stale-token filter is now shared, but the eligibility rule is still duplicated.
+- **Add Additional Contact:** built separately in Create and Edit. Create had saved contacts in edit mode without ever writing them, and Edit had no Contacts section. There is no shared contacts component.
+- **Duplicate email rules are not enforced as specified:**
+  - The other-member case shows "This person is already registered with another agent." This is the wrong text, it appears in two places, and it comes as a pop-up notice rather than blocking at the field.
+  - An existing contact for the same agent shows "already exists in your list" and recovers through a separate dialog. It does not reliably auto-select that contact.
+  - The required message "This email is associated with another member and cannot be added." appears nowhere in the code.
+- **Contact search dropdown overlapping manual add:** not checked yet. Step 1 covers it.
+- **Tests:** Vitest is set up, but no Hot Sheet tests exist.
+- **Commit history:** most recent Hot Sheet commits are labeled only "Changes" (13 on Oct 7). Step 1 maps each one by its diff.
 
-**Fix (frontend only, `CreateHotSheetDialog.tsx`):**
-- Show an **Add Additional Contact** button beneath the selected contact(s) in all modes, including locked-to-buyer.
-- Clicking it opens the existing search/add-contact picker that is already in this form.
-- The buyer the sheet was created from stays selected and keeps no Remove button (existing behavior). Added contacts can be removed.
-- Saving already attaches every selected contact to the same Hot Sheet, so no save logic changes.
-- No changes to matching, invitations, email, the review flow, or the layout beyond restoring this control.
+## Step 1: Finish the audit (read-only, report only)
 
-## 2. Stale invitation fix (approved smallest fix)
+1. Go through the Hot Sheet commit diffs since June 2026 and match each to a rule it set, changed, or broke.
+2. List every place that decides each locked rule, and mark where they disagree.
+3. Check the contact search dropdown (close on select or blur, layering over the manual-add form) in Create and Edit.
+4. Send you the report: responsible commits and components, the duplicated logic list, and test gaps. Then stop.
 
-**Cause (from the read-only trace):** The global invite-eligibility lookup counts any non-revoked Hot Sheet invite for the same email, including tokens for deleted contacts or deleted Hot Sheets. So `sendDashboardInvite` is false, and Send First Batch & Invite **skips** the invitation entirely.
+## Step 2: Centralize (smallest change, after your approval)
 
-**Fix:** Change only the global-token eligibility lookup in the two copies (`HotSheetReview.tsx` and `src/lib/enqueueHotSheetClientInvites.ts`). Load the agent's existing contact IDs and Hot Sheet IDs (read-only). Then drop any token whose `payload.client_id` or `payload.hot_sheet_id` no longer exists. Tokens tied to live contacts and live Hot Sheets still count, so "one dashboard invite per buyer" is kept.
+Create one shared rule module and point existing screens at it. Screens and behavior stay the same.
+- `isBuyerConnected` (active relationship only)
+- `isFirstInviteEligible` (built on the existing stale-token filter)
+- `resolveContactEmail`: existing contact for this agent → select it; another member → block with the exact required message
+- The status default and order constants stay where they are.
+- One shared Contacts section used by both Create and Edit, if the audit confirms it can be extracted without visual changes.
 
-No changes to: the connected-state logic, same-Hot-Sheet reminders, backend matching or batch delivery, templates, dedupe, or the waiting batches.
+## Step 3: Regression tests (before any further Hot Sheet work)
 
-## Verification (no Send pressed)
+Vitest unit tests covering every locked rule:
+- Defaults are exactly Coming Soon + Off Market, and those two are first in the list.
+- Connected only with an active relationship. Ended relationships and accepted invites alone do not count.
+- A pending buyer gets "Send First Batch & Invite"; a connected buyer gets "Send First Batch".
+- A stale token whose contact or Hot Sheet was deleted does not block a first invite. A legacy token without those IDs is still respected.
+- Duplicate email: same-agent contact is selected; another member is blocked with the exact message.
+- Add Additional Contact is shown in Create (including from a buyer) and in Edit. It cannot remove the last contact.
+- The search dropdown closes after selection.
 
-1. Build passes.
-2. Create Hot Sheet opened from a buyer shows Add Additional Contact. It opens the picker, and the primary buyer stays selected. The form is closed without saving.
-3. Computed eligibility: kerri is eligible for a first invite, and so is Buyer 1 Boston Condo's. The genuinely connected buyer (sdfdsafdsa) is not eligible.
-4. Confirm the specific May 16 stale token is excluded by the new filter (identify it by ID, and show that its contact or Hot Sheet is missing).
-5. `email_jobs` count stays at 16,528. `share_tokens` is unchanged (same count and same latest row).
-6. Report the exact code changes and results, then stop. A real invitation test needs separate approval.
+Also add a line to the project rules saying these rules are locked and must not change without their tests changing too.
+
+## Out of scope
+
+Matching, notifications, templates, dedupe, backend batch logic, the two waiting batches, and any real sends.
