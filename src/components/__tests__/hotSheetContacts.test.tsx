@@ -8,6 +8,7 @@ import { render, screen, fireEvent, waitFor, act } from "@testing-library/react"
 
 const tableData: Record<string, unknown> = {};
 let searchResults: any[] = [];
+const calls: Array<{ table: string; method: string; arg?: any }> = [];
 
 function chain(table: string): any {
   const result = () => Promise.resolve({ data: tableData[table] ?? [], error: null, count: 0 });
@@ -15,8 +16,11 @@ function chain(table: string): any {
     get(_t, prop) {
       if (prop === "then") return (res: any, rej: any) => result().then(res, rej);
       if (prop === "single" || prop === "maybeSingle")
-        return () => Promise.resolve({ data: null, error: null });
-      return () => proxy;
+        return () => Promise.resolve({ data: table === "hot_sheets" ? { id: "hs-new" } : null, error: null });
+      return (arg?: any) => {
+        calls.push({ table, method: String(prop), arg });
+        return proxy;
+      };
     },
     apply() {
       return proxy;
@@ -56,6 +60,7 @@ const extra = { id: "c-extra", first_name: "Sam", last_name: "Second", email: "s
 beforeEach(() => {
   for (const k of Object.keys(tableData)) delete tableData[k];
   searchResults = [extra];
+  calls.length = 0;
   // jsdom lacks these; Radix uses them
   (globalThis as any).ResizeObserver ??= class { observe() {} unobserve() {} disconnect() {} };
   Element.prototype.scrollIntoView ??= () => {};
@@ -229,5 +234,40 @@ describe("Edit Hot Sheet — contacts (locked)", () => {
     const input = await openEditPicker();
     await typeSearch(input);
     expect(results()!.className).not.toMatch(/\babsolute\b/);
+  });
+});
+
+async function saveNewHotSheet(name: string) {
+  fireEvent.change(screen.getByLabelText(/Hot Sheet Name/i), { target: { value: name } });
+  const createBtns = screen.getAllByRole("button", { name: /Create Hot Sheet/i });
+  fireEvent.click(createBtns[createBtns.length - 1]);
+  const confirm = await screen.findAllByRole("button", { name: /Create|Confirm/i });
+  fireEvent.click(confirm[confirm.length - 1]);
+  await waitFor(() => expect(calls.some((c) => c.table === "hot_sheets" && c.method === "insert")).toBe(true));
+}
+
+describe("Create Hot Sheet — personal vs buyer (locked)", () => {
+  it("opened independently: the last contact can be removed and a zero-contact personal Hot Sheet saves", async () => {
+    const onSuccess = vi.fn();
+    render(<CreateHotSheetDialog open onOpenChange={() => {}} userId="agent-1" onSuccess={onSuccess} preSelectedClients={[buyer]} />);
+    fireEvent.click(await screen.findByRole("button", { name: "Remove" }));
+    await waitFor(() => expect(screen.queryByText("kerri@example.com")).not.toBeInTheDocument());
+    await saveNewHotSheet("Personal sheet");
+    await waitFor(() => expect(onSuccess).toHaveBeenCalledWith("hs-new"));
+    expect(calls.some((c) => c.table === "hot_sheet_clients" && c.method === "insert")).toBe(false);
+  });
+
+  it("opened from a buyer: the buyer is the only contact, cannot be removed, and is attached on save", async () => {
+    const onSuccess = vi.fn();
+    render(
+      <CreateHotSheetDialog open onOpenChange={() => {}} userId="agent-1" onSuccess={onSuccess}
+        clientId={buyer.id} clientName="Kerri Buyer" preSelectedClients={[buyer]} lockedToClient />,
+    );
+    await screen.findByText("kerri@example.com");
+    expect(screen.queryByRole("button", { name: "Remove" })).not.toBeInTheDocument();
+    await saveNewHotSheet("Buyer sheet");
+    await waitFor(() => expect(onSuccess).toHaveBeenCalledWith("hs-new"));
+    const link = calls.find((c) => c.table === "hot_sheet_clients" && c.method === "insert");
+    expect(link?.arg).toEqual([{ hot_sheet_id: "hs-new", client_id: buyer.id }]);
   });
 });
