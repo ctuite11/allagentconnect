@@ -9,6 +9,7 @@ Before your out-of-scope decision arrived, I had already made four Agent Network
 - **Helper:** remove the unused `addNetworkAgentContact` helper.
 - **Guard test:** remove the two Agent Network guard tests. The card goes back on the guard test's "pending decision" list, so the five migrated screens stay protected while the card is left alone.
 - **Database function:** remove the unused `add_network_agent_contact` function, so it isn't left unused in your database. Removing it needs your yes/no approval when it runs.
+  - Safeguard check, done read-only: no other database function or access rule references it. It was created only by this session's migration (`0031_add_network_agent_contact`). The only code that calls it is the helper and card being undone above.
 
 I'll also record the Agent Network question as a separate, open item for later.
 
