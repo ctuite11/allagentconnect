@@ -148,6 +148,135 @@ export function EditHotsheetCriteriaDialog({
     setStatusOpen(coreCriteria.statuses.length > 0);
   }, [open, initialCriteria]);
 
+  // Resolve the current agent and load the hot sheet's contacts when the dialog opens
+  useEffect(() => {
+    if (!open || !hotSheetId) return;
+
+    setContactsLoaded(false);
+    setShowClientPicker(false);
+    setClientSearchQuery("");
+    setClientSearchResults([]);
+    setShowClientDropdown(false);
+
+    let cancelled = false;
+
+    const loadContacts = async () => {
+      try {
+        const { data: authData } = await supabase.auth.getUser();
+        if (!cancelled) setUserId(authData?.user?.id ?? null);
+
+        // Same junction query used by CreateHotSheetDialog's edit mode
+        const { data: hotSheetClients, error } = await supabase
+          .from('hot_sheet_clients' as any)
+          .select(`
+            client_id,
+            clients (
+              id,
+              first_name,
+              last_name,
+              email,
+              phone
+            )
+          `)
+          .eq('hot_sheet_id', hotSheetId);
+
+        if (error) throw error;
+
+        const clients = (hotSheetClients || [])
+          .map((hsc: any) => {
+            const client = hsc.clients;
+            return Array.isArray(client) ? client[0] : client;
+          })
+          .filter((client: any): client is NonNullable<typeof client> => client != null);
+
+        if (!cancelled) {
+          setSelectedClients(clients);
+          setContactsLoaded(true);
+        }
+      } catch (error) {
+        console.error("Failed to load hot sheet contacts:", error);
+        // Fail-safe: leave contacts unloaded so Save never touches the junction
+        if (!cancelled) setContactsLoaded(false);
+      }
+    };
+
+    void loadContacts();
+    return () => {
+      cancelled = true;
+    };
+  }, [open, hotSheetId]);
+
+  // Search existing contacts as the agent types — same helper as CreateHotSheetDialog
+  useEffect(() => {
+    const searchClients = async () => {
+      if (!clientSearchQuery || clientSearchQuery.length < 2 || !open || !userId) {
+        setClientSearchResults([]);
+        setShowClientDropdown(false);
+        return;
+      }
+
+      try {
+        const data = await searchClientContacts({
+          agentId: userId,
+          query: clientSearchQuery,
+          select: "*",
+          limit: 10,
+        });
+        setClientSearchResults(data);
+        setShowClientDropdown(data.length > 0);
+      } catch (error) {
+        console.error("Error searching clients:", error);
+        setClientSearchResults([]);
+      }
+    };
+
+    const timer = setTimeout(searchClients, 300);
+    return () => clearTimeout(timer);
+  }, [clientSearchQuery, userId, open]);
+
+  const handleSelectClient = async (client: any) => {
+    if (selectedClients.some(c => c.id === client.id)) {
+      toast.error("This person is already added");
+      return;
+    }
+
+    // Same guard as CreateHotSheetDialog: block contacts registered with another agent
+    const email = (client.email || "").trim();
+    if (email) {
+      const { data, error } = await supabase.rpc("check_client_has_other_agent", {
+        p_client_email: email,
+      });
+      if (!error && data === true) {
+        toast.error("This person is already registered with another agent.");
+        return;
+      }
+    }
+
+    setSelectedClients(prev => [...prev, {
+      id: client.id,
+      first_name: client.first_name,
+      last_name: client.last_name,
+      email: client.email,
+      phone: client.phone,
+    }]);
+
+    setClientSearchQuery("");
+    setClientSearchResults([]);
+    setShowClientDropdown(false);
+    setShowClientPicker(false);
+
+    toast.success(`Added contact: ${client.first_name} ${client.last_name}`);
+  };
+
+  const handleRemoveClient = (clientId: string) => {
+    if (selectedClients.length <= 1) {
+      toast.error("A hot sheet needs at least one contact");
+      return;
+    }
+    setSelectedClients(prev => prev.filter(c => c.id !== clientId));
+    toast.success("Contact removed");
+  };
+
   const togglePropertyType = (value: string) => {
     setPropertyTypes(prev =>
       prev.includes(value) ? prev.filter(t => t !== value) : [...prev, value]
