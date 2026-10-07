@@ -21,7 +21,9 @@
 
 - [x] Hot Sheet first batch: send to attached buyer on Review Matches, no contact picker (built, deployed, and browser-verified without sending, 2026-10-06)
 - [x] Hot Sheet Review connected-state fix: connected = active relationship only (matches process-hot-sheet); verified without sending, 2026-10-07
-- [ ] Stale May 16 accepted invite makes a new invite for chris.tuite@compass.com look like a reminder — fix decision pending before any real invite test
+- [x] Stale invite fix: global invite eligibility ignores tokens whose contact/Hot Sheet is confirmed deleted (2026-10-07, no sends)
+- [x] Restore Add Additional Contact on Create Hot Sheet (incl. when opened from a buyer)
+- [ ] Real Send First Batch & Invite test — awaiting approval
 - [x] Read-only disk I/O budget root cause (2026-10-06): since 21:10 restart ~90% of physical reads = full scans of bloated cron.job_run_details (47k rows / 463 MB). Pre-restart cause unknown (stats wiped). Fix (rewrite/shrink that table) awaits approval.
 - [x] Fix Send First Batch 403: pass bearer token to getUser() in process-hot-sheet recipient branch (done 2026-10-07): deployed, controlled pending-buyer test passed (8 IDs stored, zero email_jobs), publish requested
-- [ ] Read-only investigation: why the stale May accepted token classifies a new invite for chris.tuite@compass.com as a reminder (approved as next item; no fix/send until approved)
+- [x] Read-only trace of stale May invite (done 2026-10-07)
