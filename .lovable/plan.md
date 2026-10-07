@@ -1,40 +1,27 @@
-# Revert out-of-scope Agent Network changes; finish personal vs buyer Hot Sheet tests
+# Delete the three pending Hot Sheet invites
 
-The Agent Network work was out of scope. This plan reverts only the Agent Network changes made earlier in this session. The five approved contact-creation migrations and their tests stay exactly as they are. No sends, emails, invitations, matching changes, waiting-batch changes, or other feature work.
+## Scope
 
-## 1. Revert the Agent Network changes (only these)
+Delete exactly the three pending first-batch invites identified in the read-only audit. Nothing else.
 
-- **Database function:** remove `public.add_network_agent_contact`.
-  - Read-only check, already done: nothing else in the database references it.
-  - It was created only by this session's migration, `0031_add_network_agent_contact`.
-  - The only code that calls it is the helper and card listed below.
-- **Card:** restore the Agent Network card to its exact code from before this session.
-- **Helper:** remove `addNetworkAgentContact`. It was added only for this exception.
-- **Tests:** remove the two Agent Network-specific guard tests. The card goes back on the guard test's "pending decision" list, as it was before.
+- kerri — chris.tuite@compass.com — 62 listings — queued Oct 7, 2:08 AM UTC
+- sally 1 — chris.tuite@compass.com — 62 listings — queued Oct 7, 3:03 AM UTC
+- dad — two recipients including chris.tuite@compass.com — 62 listings — queued Oct 7, 3:58 AM UTC
 
-Two things I will not do:
-- No Agent Network exception is added to `AGENTS.md`. None was ever added.
-- No other Agent Network changes.
+## Steps
 
-## 2. Personal vs buyer Hot Sheet tests (tests only)
+1. Re-verify read-only: re-query the pending batch rows to confirm exact IDs, that none have queued a first batch, and that no email jobs reference them.
+2. Delete only those rows by explicit ID.
+3. Verify after: rows gone, email queue count unchanged, no other Hot Sheet data touched.
 
-- **Opened independently:** a Hot Sheet with zero contacts is allowed and saves.
-- **Opened from a buyer:** that buyer remains attached and cannot be removed.
+## Explicitly not done
 
-I'll re-run these tests and fix only the test setup if they fail. The dialogs and Hot Sheet behavior will not change.
+- No emails, invitations, or sends of any kind.
+- No changes to the Hot Sheets, their contacts, criteria, or matching.
+- No changes to the older waiting batches, the failed May invite, or the Sept 21 activation-reminder job.
+- No code changes.
 
-## 3. Verify and report
+## Technical notes
 
-I'll run the full Hot Sheet/contact test suite and the type-check, then report:
-- exactly what was reverted;
-- the final test results.
-
-Then I'll stop.
-
-## Technical details
-
-- The card file is `src/components/agent-search/AgentMarketplaceCard.tsx`, restored from the last commit before this session.
-- The helper is removed from `src/lib/agentContactResolver.ts`.
-- The guard test is `src/lib/contactCreationPaths.test.ts`: the card goes back on `PENDING_DECISION`, and the two Agent Network tests are deleted.
-- The function removal is a migration running `DROP FUNCTION IF EXISTS public.add_network_agent_contact(uuid);`.
-- The personal vs buyer tests are in `src/components/__tests__/hotSheetContacts.test.tsx`.
+- Deletion uses explicit row IDs captured in step 1, so the exact rows removed are reported back.
+- If step 1 shows any of the three has since queued an email, I stop and report instead of deleting.
