@@ -1,3 +1,4 @@
+import { addNetworkAgentContact } from "@/lib/agentContactResolver";
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -63,34 +64,13 @@ const AgentMarketplaceCard = ({ agent, isOnline }: AgentMarketplaceCardProps) =>
         return;
       }
 
-      // Check for duplicate
-      const { data: existing } = await supabase
-        .from("clients")
-        .select("id")
-        .eq("agent_id", user.id)
-        .eq("email", agent.email)
-        .maybeSingle();
-
-      if (existing) {
+      // Agent Network exception to the duplicate-email rule (server-side).
+      const { created } = await addNetworkAgentContact(agent.id);
+      if (!created) {
         toast.info("This agent is already in your contacts");
         setSaved(true);
         return;
       }
-
-      const { error } = await supabase
-        .from("clients")
-        .insert({
-          agent_id: user.id,
-          first_name: agent.first_name,
-          last_name: agent.last_name,
-          email: agent.email,
-          phone: agent.cell_phone || agent.phone || null,
-          client_type: "agent",
-          source: "network",
-          agent_user_id: agent.id,
-        });
-
-      if (error) throw error;
       toast.success(`${fullName} saved to your contacts`);
       setSaved(true);
     } catch (error: any) {
