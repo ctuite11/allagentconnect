@@ -1492,12 +1492,24 @@ const HotSheetReview = () => {
           >
             <AacPageIntro
               withTopPadding
+              hideTitleAccent
               back={<AacBackButton type="button" onClick={handleAgentHotSheetReviewBack} />}
-              title={`Review ${listings.length} Hot Sheet Matches`}
+              title={hotSheet.name}
               subtitle={
-                reviewRecipients[0]?.displayName
-                  ? `${reviewRecipients[0].displayName} · ${hotSheet.name}`
-                  : hotSheet.name
+                <>
+                  <span className="block text-base font-semibold text-neutral-900">
+                    Review {listings.length} {listings.length === 1 ? "match" : "matches"}
+                  </span>
+                  {reviewRecipients[0]?.displayName ? (
+                    <span className="mt-0.5 block text-sm font-normal text-neutral-500">
+                      {reviewRecipients[0].displayName
+                        .split(/\s+/)
+                        .filter(Boolean)
+                        .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                        .join(" ")}
+                    </span>
+                  ) : null}
+                </>
               }
               afterSubtitle={
                 <Collapsible open={criteriaOpen} onOpenChange={setCriteriaOpen}>
