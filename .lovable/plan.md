@@ -1,62 +1,31 @@
-# Lovable Support request: read-only investigation of the cron.job_run_details full scans
+# Audit: last Hot Sheet email attempt (read-only, nothing changed)
 
-## What we send to Lovable Support — exactly as the user wrote it
+## What happened
+- **When:** 02:08 UTC Oct 7 (10:08 PM New York)
+- **Hot Sheet:** "kerri" — created 20 seconds earlier by chris@allagentconnect.com
+- **Buyer:** chris tuite (chris.tuite@compass.com)
+- **Action:** Send First Batch with **62 listings** selected
+- **Result:** the send succeeded (no "could not be sent" error). The 62 listings were saved as this buyer's first batch.
 
-> Please run a **read-only investigation** to identify the exact query or process responsible for the two full scans of `cron.job_run_details`.
->
-> Current evidence:
->
-> - `cron.job_run_details` has about **47,350 rows** but occupies about **463 MB**.
-> - Two full sequential scans produced **57,094** and **57,021 physical disk reads**.
-> - All measured queries together showed **121,102 disk reads**, so those two scans account for most of the observed physical-read workload.
-> - Query writes were only **115**.
-> - WAL was about **1.4 MB**.
-> - There were **zero temp files**.
-> - Background writer cleaned **0 pages**.
-> - About **99.76% of reads were served from memory**.
->
-> Please answer these specific questions:
->
-> 1. **When did each of the two scans run?**
-> 2. **What exact query or process triggered each scan?**
-> 3. Is the source:
->    - AAC application code,
->    - Supabase/Lovable scheduler infrastructure such as `pg_cron`,
->    - or platform/database maintenance?
-> 4. Please provide the **query text or query ID, `application_name`/backend source, and associated cron/job ID**, if available.
-> 5. Please confirm whether the ~463 MB being read is primarily the table heap, TOAST data, indexes, or a combination.
-> 6. Does Lovable's disk I/O budget meter include any platform-level I/O that PostgreSQL statistics do not expose?
->
-> If `pg_stat_statements` cannot provide the exact timing of each scan, please use the available **platform/query logs** to identify when they occurred.
->
-> My current classification is:
->
-> - **Confirmed:** `cron.job_run_details` is producing very large physical reads.
-> - **Likely:** those full scans are the main reason the disk I/O budget is being exhausted.
-> - **Not yet confirmed:** the exact process causing the scans and whether Lovable's budget meter includes additional platform I/O.
->
-> **Constraints:** read-only only. Do not restart, resize, change schema or indexes, change schedules, run `VACUUM FULL`, rewrite tables, send emails, or publish anything without my explicit approval.
->
-> If performance degrades during the investigation, capture the live evidence first and report back before restarting anything.
->
-> Please report the cause and your recommended next step, but do not make any changes.
+## Why no email went out
+- **0 emails were created** (email queue still at 16,528; nothing queued in the last 30 minutes).
+- This buyer is **not connected** to you yet (no accepted invitation), so the system correctly held the 62 listings until the buyer accepts. It did **not** email them.
+- **No invitation was sent either.** No invite was logged in the last hour.
 
-## Plan
+## The real problem
+For a buyer who isn't connected yet, the button should say **Send First Batch & Invite** and send the invitation. Here it said **Send First Batch**: the page wrongly treated this buyer as already connected (we saw the same thing during the earlier test on "Buyer 1 Boston Condo's"). Result: the listings are waiting for an acceptance that will never happen, because the buyer never got an invitation.
 
-1. Send the message above verbatim to Lovable Support as the investigation request.
-2. Nothing else changes in the app: no code edits, no database changes, no schedules touched.
+There are now two batches waiting like this for the same buyer: "Buyer 1 Boston Condo's" (8 listings) and "kerri" (62 listings).
 
-## Explicitly not approved yet
+The last emails that actually went out from Hot Sheets were agent status-change alerts on Oct 4. Both were sent.
 
-- No `VACUUM FULL` or table rewrite.
-- No resizing (compute or disk).
-- No change to cron job frequency or schedules.
-- No deletion of job history.
+## Proposed next step (needs your approval)
+1. Find out why the review page treats an unconnected buyer as connected. Compare the page's check with the buyer's real connection status.
+2. Fix only that check, so unconnected buyers see **Send First Batch & Invite** and the existing invitation is sent. No template changes. No changes to matching, alert frequency, or how duplicates are prevented.
+3. Check on the review page without pressing Send. Then do one controlled send, but only if you approve it, because it will send a real invitation email.
+4. Leave both waiting batches as they are. If you want, we can resend their invitations later, but only with your approval for each one.
 
-Corrective action will be decided only after the scanning process is identified and the 463 MB composition (heap vs. TOAST/bloat) is confirmed.
-
-## Technical details
-
-- Evidence already gathered (read-only): top-read query in `pg_stat_statements` is a full scan of `cron.job_run_details` (57,094 and 57,021 block scans of 121,102 total); table stats: 47,350 rows / 463 MB.
-- Pre-restart recorder samples (13:04, 17:09 normal; 18:53–21:10 stall — one task 405 s, WAL 592 MB) are historical and labeled as such, separate from the post-restart stats window (counters reset at the 21:10 restart on 2026-10-06).
-- This is a support question only — no database, function, or app changes are part of this plan.
+## Technical notes
+- Batch row `930db0a6…`: hot_sheet `deb2a9eb…`, client `665e416b…`, 62 IDs, `initial_batch_queued_at` null, `recipient_user_id` null.
+- `client_agent_relationships` has no row for crm_client `665e416b…`. `invite_events` is empty for the last hour.
+- Suspect: `hasPendingInviteRecipients` in `HotSheetReview.tsx` (~619–669, ~895) uses a different signal than relationship status.
