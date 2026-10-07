@@ -21,7 +21,8 @@ export interface HotSheetCriteriaCore {
   hasParking: "yes" | "no" | "any";
 }
 
-export const DEFAULT_HOT_SHEET_STATUSES = ["coming_soon", "active", "off_market", "back_on_market"];
+// Regression constraint: only Coming Soon and Off Market are preselected for new Hot Sheets.
+export const DEFAULT_HOT_SHEET_STATUSES = ["coming_soon", "off_market"];
 export const HOT_SHEET_STATUS_ORDER: readonly string[] = HOT_SHEET_FILTER_STATUSES.map((option) => option.value);
 
 export const DEFAULT_HOT_SHEET_CRITERIA: HotSheetCriteriaCore = {

@@ -333,10 +333,12 @@ export const AGENT_STATUS_OPTIONS = [
  * Hot Sheet status options with MLSPIN codes
  */
 export const HOT_SHEET_FILTER_STATUSES = [
+  // AAC-priority statuses stay pinned to the top of the Hot Sheet status list.
+  { value: LISTING_STATUS.COMING_SOON, label: `Coming Soon (${LISTING_STATUS_MLSPIN[LISTING_STATUS.COMING_SOON]})` },
+  { value: LISTING_STATUS.OFF_MARKET, label: "Off Market" },
   { value: LISTING_STATUS.ACTIVE, label: `On MLS (${LISTING_STATUS_MLSPIN[LISTING_STATUS.ACTIVE]})` },
   { value: LISTING_STATUS.PRICE_CHANGED, label: `Price Changed (${LISTING_STATUS_MLSPIN[LISTING_STATUS.PRICE_CHANGED]})` },
   { value: LISTING_STATUS.BACK_ON_MARKET, label: `Back on Market (${LISTING_STATUS_MLSPIN[LISTING_STATUS.BACK_ON_MARKET]})` },
-  { value: LISTING_STATUS.OFF_MARKET, label: "Off Market" },
   { value: LISTING_STATUS.EXTENDED, label: `Extended (${LISTING_STATUS_MLSPIN[LISTING_STATUS.EXTENDED]})` },
   { value: LISTING_STATUS.REACTIVATED, label: `Reactivated (${LISTING_STATUS_MLSPIN[LISTING_STATUS.REACTIVATED]})` },
   { value: LISTING_STATUS.CONTINGENT, label: `Contingent (${LISTING_STATUS_MLSPIN[LISTING_STATUS.CONTINGENT]})` },
