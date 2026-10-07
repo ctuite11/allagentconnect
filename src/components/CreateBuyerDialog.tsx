@@ -1,3 +1,4 @@
+import { resolveOrCreateAgentContact } from "@/lib/agentContactResolver";
 import { useEffect, useState, useCallback } from "react";
 import {
   Dialog,
@@ -360,24 +361,21 @@ export function CreateBuyerDialog({ open, onOpenChange, onSuccess }: CreateBuyer
       }
 
       // 2. No existing contact → original insert path
-      const { data: client, error: clientErr } = await supabase
-        .from("clients")
-        .insert({
-          agent_id: user.id,
-          agent_user_id: user.id,
-          first_name: firstName.trim(),
-          last_name: lastName.trim(),
-          email: normalizedEmail,
-          phone: phone.trim() || null,
-          client_type: "buyer",
-          source: "manual",
-        })
-        .select("id")
-        .single();
-
-      if (clientErr) {
-        failWithStep("insert clients", clientErr);
+      // Authoritative rule (server): blocks another member's email and never
+      // creates a duplicate for this agent.
+      const resolved = await resolveOrCreateAgentContact({
+        email: normalizedEmail,
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        phone: phone.trim() || null,
+        clientType: "buyer",
+        source: "manual",
+      });
+      if (resolved.ok === false) {
+        toast.error(resolved.message);
+        return;
       }
+      const client = { id: resolved.contactId };
 
       // 3. Insert client_agent_relationships
       const { error: relErr } = await supabase

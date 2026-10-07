@@ -968,7 +968,7 @@ export function CreateHotSheetDialog({
           : await fetchAgentClientByEmail(validation.normalizedEmail);
 
       if (existing) {
-        useExistingContact(existing as DuplicateExistingClient);
+        selectExistingContact(existing as DuplicateExistingClient);
         return;
       }
 
@@ -983,7 +983,7 @@ export function CreateHotSheetDialog({
   };
 
   /** LOCKED: an existing contact for this agent is selected, never duplicated. */
-  const useExistingContact = (existing: DuplicateExistingClient) => {
+  const selectExistingContact = (existing: DuplicateExistingClient) => {
     setSelectedClients((prev) =>
       prev.some((c) => c.id === existing.id)
         ? prev
@@ -1037,7 +1037,7 @@ export function CreateHotSheetDialog({
       if (error) throw error;
       if (!result.created && data) {
         setShowCreateClientDialog(false);
-        useExistingContact(data as DuplicateExistingClient);
+        selectExistingContact(data as DuplicateExistingClient);
         return;
       }
 
