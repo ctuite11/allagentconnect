@@ -495,8 +495,11 @@ const HotSheetReview = () => {
             });
 
             /** Any hot-sheet invite tokens for this agent (all sheets / buyers) — one-time dashboard invite eligibility. */
-            const allInviteForAgent = (stRows ?? []).filter(
-              (t: any) => t?.payload?.type === "client_hotsheet_invite" && !t?.revoked_at,
+            // Tokens pointing to a confirmed-deleted contact/Hot Sheet don't block a first invite.
+            const allInviteForAgent = await filterStaleInviteTokens(
+              (stRows ?? []).filter(
+                (t: any) => t?.payload?.type === "client_hotsheet_invite" && !t?.revoked_at,
+              ),
             );
             const globalInviteByClientId = new Map<string, any[]>();
             const globalInviteByEmail = new Map<string, any[]>();
