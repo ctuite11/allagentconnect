@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { filterStaleInviteTokens } from "@/lib/filterStaleInviteTokens";
 
 export type EnqueueHotSheetInvitesResult = {
   /** True when no invoke/insert errors occurred. */
