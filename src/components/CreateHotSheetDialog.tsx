@@ -1,3 +1,4 @@
+import { OTHER_MEMBER_EMAIL_MESSAGE, resolveOrCreateAgentContact } from "@/lib/agentContactResolver";
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -468,7 +469,7 @@ export function CreateHotSheetDialog({
         p_client_email: email,
       });
       if (!error && data === true) {
-        toast.error("This person is already registered with another agent.");
+        toast.error(OTHER_MEMBER_EMAIL_MESSAGE);
         return;
       }
     }
@@ -1496,12 +1497,18 @@ export function CreateHotSheetDialog({
                           setShowClientDropdown(true);
                         }
                       }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Escape") {
+                          e.stopPropagation();
+                          setShowClientDropdown(false);
+                        }
+                      }}
                       onBlur={() => {
                         setTimeout(() => setShowClientDropdown(false), 200);
                       }}
                     />
                     {showClientDropdown && clientSearchResults.length > 0 && (
-                      <div className="absolute z-50 mt-1 max-h-60 w-full overflow-y-auto rounded-md border border-neutral-200 bg-white shadow-[0_2px_12px_rgba(0,0,0,0.08)]">
+                      <div role="listbox" data-testid="contact-search-results" className="relative mt-1 max-h-60 w-full overflow-y-auto rounded-md border border-neutral-200 bg-white shadow-[0_2px_12px_rgba(0,0,0,0.08)]">
                         {clientSearchResults.map((client) => (
                           <button
                             key={client.id}
