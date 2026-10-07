@@ -24,3 +24,4 @@
 - [ ] Stale May 16 accepted invite makes a new invite for chris.tuite@compass.com look like a reminder — fix decision pending before any real invite test
 - [x] Read-only disk I/O budget root cause (2026-10-06): since 21:10 restart ~90% of physical reads = full scans of bloated cron.job_run_details (47k rows / 463 MB). Pre-restart cause unknown (stats wiped). Fix (rewrite/shrink that table) awaits approval.
 - [x] Fix Send First Batch 403: pass bearer token to getUser() in process-hot-sheet recipient branch (done 2026-10-07): deployed, controlled pending-buyer test passed (8 IDs stored, zero email_jobs), publish requested
+- [ ] Read-only investigation: why the stale May accepted token classifies a new invite for chris.tuite@compass.com as a reminder (approved as next item; no fix/send until approved)
