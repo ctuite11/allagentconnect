@@ -1,39 +1,40 @@
-# Personal vs buyer Hot Sheets: lock with tests
+# Revert out-of-scope Agent Network changes; finish personal vs buyer Hot Sheet tests
 
-Scope is only the zero-contact distinction. The Agent Network card stays as it was before this work. The five contact-creation migrations and the 46 existing tests stay as they are. Nothing is sent, and there are no changes to matching, invitations, waiting batches, or the Agent Network. The 14 existing zero-contact Hot Sheets are not touched.
+The Agent Network work was out of scope. This plan reverts only the Agent Network changes made earlier in this session. The five approved contact-creation migrations and their tests stay exactly as they are. No sends, emails, invitations, matching changes, waiting-batch changes, or other feature work.
 
-## 1. Undo the Agent Network changes made earlier this session
+## 1. Revert the Agent Network changes (only these)
 
-Before your out-of-scope decision arrived, I had already made four Agent Network changes. Each will be undone:
-- **Card:** restore the Agent Network card exactly as it was before, using its original duplicate check and save.
-- **Helper:** remove the unused `addNetworkAgentContact` helper.
-- **Guard test:** remove the two Agent Network guard tests. The card goes back on the guard test's "pending decision" list, so the five migrated screens stay protected while the card is left alone.
-- **Database function:** remove the unused `add_network_agent_contact` function, so it isn't left unused in your database. Removing it needs your yes/no approval when it runs.
-  - Safeguard check, done read-only: no other database function or access rule references it. It was created only by this session's migration (`0031_add_network_agent_contact`). The only code that calls it is the helper and card being undone above.
+- **Database function:** remove `public.add_network_agent_contact`.
+  - Read-only check, already done: nothing else in the database references it.
+  - It was created only by this session's migration, `0031_add_network_agent_contact`.
+  - The only code that calls it is the helper and card listed below.
+- **Card:** restore the Agent Network card to its exact code from before this session.
+- **Helper:** remove `addNetworkAgentContact`. It was added only for this exception.
+- **Tests:** remove the two Agent Network-specific guard tests. The card goes back on the guard test's "pending decision" list, as it was before.
 
-I'll also record the Agent Network question as a separate, open item for later.
+Two things I will not do:
+- No Agent Network exception is added to `AGENTS.md`. None was ever added.
+- No other Agent Network changes.
 
-## 2. Lock personal vs buyer Hot Sheets
+## 2. Personal vs buyer Hot Sheet tests (tests only)
 
-The app's behavior does not change. These are tests only:
-- **Opened independently:** the last contact can be removed. Saving then creates the Hot Sheet with no contacts attached, which is a valid personal Hot Sheet.
-- **Opened from a buyer:** the buyer has no Remove button and stays attached when saved.
+- **Opened independently:** a Hot Sheet with zero contacts is allowed and saves.
+- **Opened from a buyer:** that buyer remains attached and cannot be removed.
 
-These two tests are already written. Their first run was cut off, so I'll re-run them. If anything fails, I'll fix only the test setup, never the Create or Edit dialogs.
+I'll re-run these tests and fix only the test setup if they fail. The dialogs and Hot Sheet behavior will not change.
 
 ## 3. Verify and report
 
-I'll run all Hot Sheet and contact-rule tests, plus the type-check. The report will include:
-- the final test count;
-- confirmation that the Agent Network card matches the original code exactly;
-- confirmation that nothing was sent and both waiting batches are untouched.
+I'll run the full Hot Sheet/contact test suite and the type-check, then report:
+- exactly what was reverted;
+- the final test results.
+
+Then I'll stop.
 
 ## Technical details
 
-- The card file is `src/components/agent-search/AgentMarketplaceCard.tsx`. It will be restored from the previous commit.
-- The helper being removed is in `src/lib/agentContactResolver.ts`.
-- The guard test is `src/lib/contactCreationPaths.test.ts`:
-  - `PENDING_DECISION` goes back to `["components/agent-search/AgentMarketplaceCard.tsx"]`.
-  - The two Agent Network tests are deleted.
+- The card file is `src/components/agent-search/AgentMarketplaceCard.tsx`, restored from the last commit before this session.
+- The helper is removed from `src/lib/agentContactResolver.ts`.
+- The guard test is `src/lib/contactCreationPaths.test.ts`: the card goes back on `PENDING_DECISION`, and the two Agent Network tests are deleted.
 - The function removal is a migration running `DROP FUNCTION IF EXISTS public.add_network_agent_contact(uuid);`.
-- The personal vs buyer tests are in `src/components/__tests__/hotSheetContacts.test.tsx`, under the "personal vs buyer" section.
+- The personal vs buyer tests are in `src/components/__tests__/hotSheetContacts.test.tsx`.
