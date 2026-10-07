@@ -87,7 +87,7 @@ interface ReviewRecipient {
 }
 
 function isPendingInviteRecipient(r: ReviewRecipient): boolean {
-  if (r.inviteAccepted || r.buyerLinked || r.inviteAcceptedForSheet) return false;
+  if (r.inviteAccepted) return false;
   if (!r.email.trim()) return false;
   return true;
 }
@@ -642,7 +642,10 @@ const HotSheetReview = () => {
                 },
                 { inviteAcceptedForClient: inviteAcceptedGlobally },
               );
-              const buyerConnected = isActiveBuyerRelationship(statusInput);
+              // Connected = same rule as process-hot-sheet: an active relationship for this
+              // CRM contact with a linked buyer account. Email-matched or old accepted invites
+              // must not count, or the page skips the invite the backend still requires.
+              const buyerConnected = buyerLinkedCrmIds.has(cid);
               const buyerLinked =
                 isBuyerWorkspaceLinked(statusInput) || buyerLinkedCrmIds.has(cid);
               const pick = pickPendingTokenRow(
