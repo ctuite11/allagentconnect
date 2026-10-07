@@ -478,19 +478,6 @@ export function ClientDashboardView({
                           </div>
                         ) : null}
                       </div>
-                      {hotSheets.length > 0 ? (
-                        <div className="flex flex-col gap-0.5" aria-label="Buyer hot sheets">
-                          {hotSheets.map((sheet) => (
-                            <p
-                              key={sheet.id}
-                              className="truncate text-sm font-medium text-neutral-700"
-                              title={sheet.name}
-                            >
-                              {sheet.name}
-                            </p>
-                          ))}
-                        </div>
-                      ) : null}
                       {(buyerEmail?.trim() || buyerPhoneFmt) ? (
                         <div className="flex flex-col gap-1.5 text-xs text-neutral-600">
                           {buyerEmail?.trim() ? (
@@ -693,10 +680,14 @@ export function ClientDashboardView({
                         <CardTitle
                           className={`${
                             variant === "agent" ? agentMirrorSectionTitle : dashSectionTitleClass
-                          } inline-flex items-center gap-2`}
+                          } flex min-w-0 items-center gap-2`}
                         >
                           <Flame className="h-4 w-4 shrink-0 text-red-600" aria-hidden strokeWidth={2} />
-                          Hot Sheets
+                          <span className="min-w-0">
+                            {variant === "agent" && buyerDisplayName.trim()
+                              ? `${buyerDisplayName.trim()}'s Hot Sheets`
+                              : "Hot Sheets"}
+                          </span>
                         </CardTitle>
                         <CardDescription className={`${dashSectionDescClass} mt-0 p-0`}>
                           {isBuyerWorkspace
