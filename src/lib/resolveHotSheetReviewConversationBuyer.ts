@@ -208,6 +208,7 @@ export async function fetchActiveRelationshipsForCrmClients(
     .select("crm_client_id, client_id, status")
     .eq("agent_id", agentUserId)
     .eq("status", "active")
+    .is("ended_at", null)
     .or(orFilter);
   if (error) {
     console.warn("[HotSheetReview] client_agent_relationships:", error.message);
