@@ -1630,12 +1630,35 @@ const HotSheetReview = () => {
             selectionPillClassName={AGENT_WORKSPACE_SELECT_PILL}
             sortTriggerClassName={AGENT_WORKSPACE_SORT_TRIGGER}
             mapResultsGridClassName={agentWorkspaceMapResultsGrid}
+            toolbarActionsExtra={
+              reviewRecipients.length > 0 ? (
+                <div
+                  className="flex flex-wrap items-center gap-2"
+                  aria-label="Hot Sheet send controls"
+                >
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className={secondaryActionClassName}
+                    disabled={listings.length === 0}
+                    onClick={toggleSelectAll}
+                  >
+                    {listings.length > 0 && selectedListings.size === listings.length ? "Clear All" : "Select All"}
+                  </Button>
+                  <span className="text-[12px] font-medium text-neutral-700">
+                    {selectedListings.size} selected
+                  </span>
+                  {renderHotSheetSendAction()}
+                </div>
+              ) : null
+            }
             beforeResults={
               <>
                 {reviewRecipients.length > 0 ? (
                   <div
-                    className="mb-4 flex flex-col gap-3 rounded-lg border border-[#0E56F5]/20 bg-[rgba(14,86,245,0.06)] px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
-                    aria-label="Hot Sheet send controls"
+                    className="mb-4 rounded-lg border border-[#0E56F5]/20 bg-[rgba(14,86,245,0.06)] px-4 py-3"
+                    aria-label="Hot Sheet send guidance"
                   >
                     <p className="text-[13px] leading-snug text-neutral-800">
                       {hasPendingInviteRecipients
@@ -1644,22 +1667,6 @@ const HotSheetReview = () => {
                           ? "Select additional matches you want to send to your buyer."
                           : "Select the listings you want to send to your buyer as their first Hot Sheet batch."}
                     </p>
-                    <div className="flex shrink-0 flex-wrap items-center gap-2 sm:pl-4">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className={secondaryActionClassName}
-                        disabled={listings.length === 0}
-                        onClick={toggleSelectAll}
-                      >
-                        {listings.length > 0 && selectedListings.size === listings.length ? "Clear All" : "Select All"}
-                      </Button>
-                      <span className="text-[12px] font-medium text-neutral-700">
-                        {selectedListings.size} selected
-                      </span>
-                      {renderHotSheetSendAction()}
-                    </div>
                   </div>
                 ) : null}
                 {!isSharedWorkspace && removedListings.length > 0 ? (
