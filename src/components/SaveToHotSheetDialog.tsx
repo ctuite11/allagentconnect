@@ -1,3 +1,4 @@
+import { resolveOrCreateAgentContact } from "@/lib/agentContactResolver";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -183,42 +184,33 @@ const SaveToHotSheetDialog = ({ open, onOpenChange, selectedListingIds, currentS
         return;
       }
 
-      // Check if client with this email already exists
-      const { data: existingClient } = await supabase
+      // Authoritative rule (server): reuse this agent's existing contact,
+      // block another member's email, otherwise create one contact.
+      const result = await resolveOrCreateAgentContact({
+        email: manualEmail,
+        firstName: manualFirstName.trim(),
+        lastName: manualLastName.trim() || "",
+        phone: manualPhone ? formatPhoneNumber(manualPhone) : null,
+      });
+      if (result.ok === false) {
+        toast.error(result.message);
+        return;
+      }
+      const { data: contact, error } = await supabase
         .from("clients")
         .select("id, first_name, last_name, email, phone")
-        .eq("agent_id", user.id)
-        .eq("email", manualEmail.toLowerCase().trim())
+        .eq("id", result.contactId)
         .single();
-
-      if (existingClient) {
-        // Use existing client
-        if (selectedClients.some(c => c.id === existingClient.id)) {
-          toast.error("This client is already added");
-        } else {
-          setSelectedClients(prev => [...prev, existingClient]);
-          toast.success(`Added existing contact: ${existingClient.first_name} ${existingClient.last_name}`);
-        }
+      if (error) throw error;
+      if (selectedClients.some(c => c.id === contact.id)) {
+        toast.error("This client is already added");
       } else {
-        // Create new client
-        const { data: newClient, error } = await supabase
-          .from("clients")
-          .insert({
-            agent_id: user.id,
-            first_name: manualFirstName.trim(),
-            last_name: manualLastName.trim() || "",
-            email: manualEmail.toLowerCase().trim(),
-            phone: manualPhone ? formatPhoneNumber(manualPhone) : null,
-          })
-          .select("id, first_name, last_name, email, phone")
-          .single();
-
-        if (error) throw error;
-
-        if (newClient) {
-          setSelectedClients(prev => [...prev, newClient]);
-          toast.success(`Created and added: ${newClient.first_name} ${newClient.last_name}`);
-        }
+        setSelectedClients(prev => [...prev, contact]);
+        toast.success(
+          result.created
+            ? `Created and added: ${contact.first_name} ${contact.last_name}`
+            : `Added existing contact: ${contact.first_name} ${contact.last_name}`,
+        );
       }
 
       // Reset manual entry form

@@ -8827,6 +8827,20 @@ export type Database = {
           auth_user_id: string
         }[]
       }
+      resolve_or_create_agent_contact: {
+        Args: {
+          p_client_type?: string
+          p_email: string
+          p_first_name: string
+          p_last_name?: string
+          p_phone?: string
+          p_source?: string
+        }
+        Returns: {
+          contact_id: string
+          created: boolean
+        }[]
+      }
       resolve_share_token: { Args: { _token: string }; Returns: Json }
       resolve_user_role: { Args: { _user_id: string }; Returns: Json }
       sample_db_capacity: { Args: never; Returns: undefined }

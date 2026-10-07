@@ -1,3 +1,4 @@
+import { isBuyerConnected, isFirstInviteEligible } from "@/lib/hotSheetRules";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { filterStaleInviteTokens } from "@/lib/filterStaleInviteTokens";
 
@@ -78,7 +79,7 @@ export async function enqueueHotSheetClientInvites({
 
   const buyerLinkedCrmIds = new Set(
     (relationshipRes.data ?? [])
-      .filter((r: { status?: string; client_id?: string | null }) => String(r.status) === "active" && r.client_id != null)
+      .filter((r: { status?: string; client_id?: string | null; ended_at?: string | null }) => isBuyerConnected(r))
       .map((r: { crm_client_id?: string }) => String(r.crm_client_id)),
   );
 
@@ -153,7 +154,7 @@ export async function enqueueHotSheetClientInvites({
 
     const emailKey = clientData.email.toLowerCase();
     const globalMerged = mergeGlobalInviteTokens(clientId, emailKey);
-    const sendDashboardInvite = !buyerLinkedCrmIds.has(clientId) && globalMerged.length === 0;
+    const sendDashboardInvite = isFirstInviteEligible(buyerLinkedCrmIds.has(clientId), globalMerged.length);
 
     let tokenId: string;
     let finalToken: string;

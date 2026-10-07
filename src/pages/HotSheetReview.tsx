@@ -1,3 +1,4 @@
+import { isBuyerConnected, isFirstInviteEligible, getFirstBatchCta } from "@/lib/hotSheetRules";
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { filterStaleInviteTokens } from "@/lib/filterStaleInviteTokens";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
@@ -542,7 +543,7 @@ const HotSheetReview = () => {
 
             const buyerLinkedCrmIds = new Set(
               relationshipRows
-                .filter((r) => r.status === "active" && r.client_id != null && r.crm_client_id != null)
+                .filter((r) => isBuyerConnected(r) && r.crm_client_id != null)
                 .map((r) => String(r.crm_client_id)),
             );
             const authUserIdByCrmClientId = new Map<string, string>();
@@ -655,7 +656,7 @@ const HotSheetReview = () => {
               const pick = pickPendingTokenRow(
                 sheetMerged.length > 0 ? sheetMerged : globalMerged,
               );
-              const sendDashboardInvite = !buyerConnected && globalMerged.length === 0;
+              const sendDashboardInvite = isFirstInviteEligible(buyerConnected, globalMerged.length);
               const inviteEnqueued = enqueuedClientIds.has(cid);
               const canResendInvite = !buyerConnected && inviteEnqueued && Boolean(pick);
 
@@ -1409,11 +1410,7 @@ const HotSheetReview = () => {
   const renderHotSheetSendAction = () => {
     if (reviewRecipients.length === 0) return null;
     const allMissingEmail = reviewRecipients.every((r) => !r.email.trim());
-    const label = hasPendingInviteRecipients
-      ? "Send First Batch & Invite"
-      : allFirstBatchQueued
-        ? "Send Selected Matches"
-        : "Send First Batch";
+    const label = getFirstBatchCta({ hasPendingInviteRecipients, allFirstBatchQueued });
     const count = selectedListings.size;
     const disabled = sending || count === 0 || allMissingEmail;
     const button = (

@@ -1,3 +1,4 @@
+import { OTHER_MEMBER_EMAIL_MESSAGE } from "@/lib/agentContactResolver";
 import { useState, useEffect, useMemo } from "react";
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -236,6 +237,7 @@ export function EditHotsheetCriteriaDialog({
   }, [clientSearchQuery, userId, open]);
 
   const handleSelectClient = async (client: any) => {
+    setShowClientDropdown(false);
     if (selectedClients.some(c => c.id === client.id)) {
       toast.error("This person is already added");
       return;
@@ -248,7 +250,7 @@ export function EditHotsheetCriteriaDialog({
         p_client_email: email,
       });
       if (!error && data === true) {
-        toast.error("This person is already registered with another agent.");
+        toast.error(OTHER_MEMBER_EMAIL_MESSAGE);
         return;
       }
     }
@@ -457,12 +459,18 @@ export function EditHotsheetCriteriaDialog({
                       setShowClientDropdown(true);
                     }
                   }}
-                  onBlur={() => {
+                  onKeyDown={(e) => {
+                        if (e.key === "Escape") {
+                          e.stopPropagation();
+                          setShowClientDropdown(false);
+                        }
+                      }}
+                      onBlur={() => {
                     setTimeout(() => setShowClientDropdown(false), 200);
                   }}
                 />
                 {showClientDropdown && clientSearchResults.length > 0 && (
-                  <div className="absolute z-50 mt-1 max-h-60 w-full overflow-y-auto rounded-md border border-neutral-200 bg-white shadow-[0_2px_12px_rgba(0,0,0,0.08)]">
+                  <div role="listbox" data-testid="contact-search-results" className="relative mt-1 max-h-60 w-full overflow-y-auto rounded-md border border-neutral-200 bg-white shadow-[0_2px_12px_rgba(0,0,0,0.08)]">
                     {clientSearchResults.map((client) => (
                       <button
                         key={client.id}
