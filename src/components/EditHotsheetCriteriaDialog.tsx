@@ -326,6 +326,38 @@ export function EditHotsheetCriteriaDialog({
 
       if (error) throw error;
 
+      // Sync the hot_sheet_clients junction — only when contacts loaded cleanly,
+      // so a failed load can never wipe existing links.
+      if (contactsLoaded) {
+        const { data: existingRows, error: existingError } = await supabase
+          .from('hot_sheet_clients' as any)
+          .select('client_id')
+          .eq('hot_sheet_id', hotSheetId);
+        if (existingError) throw existingError;
+
+        const existingIds = new Set((existingRows || []).map((row: any) => row.client_id));
+        const selectedIds = new Set(selectedClients.map(c => c.id));
+
+        const toRemove = [...existingIds].filter(id => !selectedIds.has(id));
+        const toAdd = [...selectedIds].filter(id => !existingIds.has(id));
+
+        if (toRemove.length > 0) {
+          const { error: removeError } = await supabase
+            .from('hot_sheet_clients' as any)
+            .delete()
+            .eq('hot_sheet_id', hotSheetId)
+            .in('client_id', toRemove);
+          if (removeError) throw removeError;
+        }
+
+        if (toAdd.length > 0) {
+          const { error: addError } = await supabase
+            .from('hot_sheet_clients' as any)
+            .insert(toAdd.map(clientId => ({ hot_sheet_id: hotSheetId, client_id: clientId })));
+          if (addError) throw addError;
+        }
+      }
+
       toast.success("Search criteria updated");
       onUpdate();
       onOpenChange(false);
