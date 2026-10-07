@@ -27,4 +27,4 @@
 - [x] Read-only disk I/O budget root cause (2026-10-06): since 21:10 restart ~90% of physical reads = full scans of bloated cron.job_run_details (47k rows / 463 MB). Pre-restart cause unknown (stats wiped). Fix (rewrite/shrink that table) awaits approval.
 - [x] Fix Send First Batch 403: pass bearer token to getUser() in process-hot-sheet recipient branch (done 2026-10-07): deployed, controlled pending-buyer test passed (8 IDs stored, zero email_jobs), publish requested
 - [x] Read-only trace of stale May invite (done 2026-10-07)
-- [x] Publish Add Additional Contact + stale-invite eligibility fixes (no sends, no browser tests; user tests live)
+- [ ] Publish Add Additional Contact + stale-invite eligibility fixes (no sends; user tests live): fixes committed (68bc647ab); Lovable Publish skipped (lovable.app copy broken platform-side); production = GitHub main sync → Netlify; verify allagentconnect.com bundle live after sync (currently stale — neither fix string present)
