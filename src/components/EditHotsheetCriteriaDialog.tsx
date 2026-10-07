@@ -69,6 +69,21 @@ export function EditHotsheetCriteriaDialog({
   const [citySearch, setCitySearch] = useState("");
   const [saving, setSaving] = useState(false);
 
+  // Contacts — mirrors CreateHotSheetDialog
+  const [selectedClients, setSelectedClients] = useState<Array<{
+    id: string;
+    first_name: string;
+    last_name: string;
+    email: string;
+    phone?: string | null;
+  }>>([]);
+  const [contactsLoaded, setContactsLoaded] = useState(false);
+  const [showClientPicker, setShowClientPicker] = useState(false);
+  const [clientSearchQuery, setClientSearchQuery] = useState("");
+  const [clientSearchResults, setClientSearchResults] = useState<any[]>([]);
+  const [showClientDropdown, setShowClientDropdown] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+
   // Collapsible sections
   const [townsOpen, setTownsOpen] = useState(false);
   const [propertyTypeOpen, setPropertyTypeOpen] = useState(false);
