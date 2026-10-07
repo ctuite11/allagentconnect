@@ -9,10 +9,7 @@ import path from "path";
 
 const SRC = path.resolve(__dirname, "..");
 
-// Pending explicit decision: saving another AAC agent as a contact is, by
-// definition, "an email associated with another member", so the locked rule
-// would block it. Remove from this list once the product decision is made.
-const PENDING_DECISION = ["components/agent-search/AgentMarketplaceCard.tsx"];
+const PENDING_DECISION: string[] = [];
 
 const MIGRATED = [
   "pages/MyClients.tsx",
@@ -49,6 +46,20 @@ describe("contact creation paths (locked)", () => {
 
   it.each(MIGRATED)("%s uses resolveOrCreateAgentContact", (rel) => {
     expect(readFileSync(path.join(SRC, rel), "utf8")).toContain("resolveOrCreateAgentContact(");
+  });
+
+  it("Agent Network card uses the narrow member-id exception only", () => {
+    const card = readFileSync(path.join(SRC, "components/agent-search/AgentMarketplaceCard.tsx"), "utf8");
+    expect(card).toContain("addNetworkAgentContact(agent.id)");
+    expect(card).not.toContain("resolveOrCreateAgentContact(");
+  });
+
+  it("the Agent Network exception is used nowhere else", () => {
+    const users = walk(SRC)
+      .map((f) => path.relative(SRC, f).split(path.sep).join("/"))
+      .filter((rel) => rel !== "lib/agentContactResolver.ts")
+      .filter((rel) => readFileSync(path.join(SRC, rel), "utf8").includes("addNetworkAgentContact("));
+    expect(users).toEqual(["components/agent-search/AgentMarketplaceCard.tsx"]);
   });
 
   it("the guard actually detects a direct insert", () => {

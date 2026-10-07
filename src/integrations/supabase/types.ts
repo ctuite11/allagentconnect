@@ -7718,6 +7718,13 @@ export type Database = {
             }
             Returns: Json
           }
+      add_network_agent_contact: {
+        Args: { p_member_id: string }
+        Returns: {
+          contact_id: string
+          created: boolean
+        }[]
+      }
       admin_agent_email_summary: {
         Args: {
           _emails: string[]
