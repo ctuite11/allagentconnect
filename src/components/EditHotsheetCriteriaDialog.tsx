@@ -1,4 +1,4 @@
-import { OTHER_MEMBER_EMAIL_MESSAGE, resolveOrCreateAgentContact } from "@/lib/agentContactResolver";
+import { OTHER_MEMBER_EMAIL_MESSAGE } from "@/lib/agentContactResolver";
 import { useState, useEffect, useMemo } from "react";
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
