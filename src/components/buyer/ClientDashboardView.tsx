@@ -172,6 +172,14 @@ export interface ClientDashboardViewProps {
 const buyerHeaderSoftBtn =
   "h-8 rounded-full border border-neutral-200 bg-white px-3 text-[13px] font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-200 ease-out hover:border-neutral-300 hover:bg-neutral-50/90 sm:h-9 sm:px-4";
 
+/** Primary create action — same pill size as the header outline buttons, filled so it leads the row. */
+const buyerNewHotSheetHeaderBtn =
+  "h-8 rounded-full px-3 text-[13px] font-semibold shadow-sm sm:h-9 sm:px-4";
+
+/** Primary CTA inside the Hot Sheets section. */
+const buyerNewHotSheetSectionBtn =
+  "h-9 shrink-0 gap-1.5 px-3.5 text-xs font-semibold shadow-sm";
+
 /** Success Hub agent mirror — same typographic hierarchy as buyer (neutral headings). */
 const agentMirrorHeroShell = "rounded-2xl border-0 bg-white p-4 shadow-none md:p-5 lg:p-6";
 const agentMirrorSectionTitle = "text-[15px] font-semibold text-neutral-950";
@@ -522,6 +530,18 @@ export function ClientDashboardView({
                         </div>
                       ) : null}
                       <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                        {onCreateHotSheet ? (
+                          <Button
+                            type="button"
+                            size="sm"
+                            className={buyerNewHotSheetHeaderBtn}
+                            title="Create a new Hot Sheet for this buyer"
+                            onClick={onCreateHotSheet}
+                          >
+                            <Plus className="mr-1.5 h-3.5 w-3.5 shrink-0 sm:mr-2 sm:h-4 sm:w-4" strokeWidth={2} aria-hidden />
+                            New Hot Sheet
+                          </Button>
+                        ) : null}
                         <Button
                           variant="outline"
                           size="sm"
@@ -689,8 +709,8 @@ export function ClientDashboardView({
                           <Button
                             type="button"
                             size="sm"
-                            variant="outline"
-                            className="h-8 shrink-0 gap-1.5 px-3 text-xs font-medium"
+                            className={buyerNewHotSheetSectionBtn}
+                            title="Create a new Hot Sheet for this buyer"
                             onClick={onCreateHotSheet}
                           >
                             <Plus className="h-3.5 w-3.5 shrink-0" strokeWidth={2} aria-hidden />
