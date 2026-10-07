@@ -1,36 +1,34 @@
-# Fix: Send First Batch fails with "Listings could not be sent"
+# Lovable Support request: full scans of cron.job_run_details exhausting disk I/O budget
 
-## Root cause (confirmed)
+## What we send to Lovable Support (read-only investigation request, no changes)
 
-The 01:28:04 UTC request to `process-hot-sheet` (Hot Sheet "Buyer 1 Boston Condo's", 8 listings) reached the function and was rejected with **403 "Not allowed"** from the new recipient-branch ownership check.
+**Context**
 
-The check calls `supabaseClient.auth.getUser()` **without passing the caller's token**. In a server-side function there is no stored session, so `getUser()` short-circuits locally with "session missing" and returns no user — it never even calls the auth server (confirmed: no `/user` request in the auth logs at 01:28:04, while the page's own session check at 01:27:42 succeeded). With no user id, `allowed` stays false and every non-service-role caller — including the sheet's owner — gets 403.
+- On 2026-10-06 we received disk I/O budget warnings: 48 alerts at 13:04 UTC, 15 at 17:09 UTC, 0 at 21:14 UTC (after a user-approved restart at 21:10 UTC).
+- Post-restart `pg_stat_statements` shows that ~90% of all physical reads come from full scans of `cron.job_run_details` — two observed scans alone read 57,094 and 57,021 blocks out of 121,102 total.
+- The table has only ~47,350 rows but occupies ~463 MB, which is unusually large relative to its row count.
+- A cleanup of old rows already ran (Oct 3), but it did not reclaim physical space, so each full scan still reads the entire 463 MB.
 
-Evidence:
-- Edge log: `POST | 403 | process-hot-sheet`, 484 ms, 01:28:04 UTC; function logged the request then returned with no error line (the 403 path has no logging).
-- Hot sheet `a9b766f1-6f56-4fd1-ad57-3ad335833b87` is owned by Chris (`1fc50da1-…`); buyer `chris.tuite@compass.com` is attached, not yet connected (no relationship row) — so a successful send would have stored the pending first batch, not emailed anyone.
-- `hot_sheet_recipient_batches` schema is correct (incl. `recipient_user_id`); no email jobs were created; nothing was sent.
+**Questions for Lovable**
 
-## Fix (one function, one spot)
+1. Identify the exact query or process responsible for the two full scans of `cron.job_run_details`:
+   - Please provide the **query text or query ID**, the **application_name / backend source** if available, and any **associated scheduler job ID** for each scan.
+   - Is it AAC application code, Supabase/Lovable scheduler infrastructure (e.g., pg_cron startup cleanup or retention jobs), or platform maintenance?
+2. Confirm what the ~463 MB physically consists of: the **main `cron.job_run_details` heap itself, associated TOAST data, or both**.
+3. Timing: `pg_stat_statements` is aggregated and may not preserve the exact timestamp of each individual scan. If "when did each scan run?" cannot be answered from PostgreSQL statistics alone, please use **platform/query logs** rather than treating the timing as unknowable.
+4. Does the disk I/O budget meter count **additional platform-internal I/O** (e.g., vacuum, replication, snapshots) beyond user-query reads?
 
-In `supabase/functions/process-hot-sheet/index.ts`, recipient branch only:
+**What we are explicitly NOT approving yet**
 
-1. Extract the token from the `Authorization` header and pass it explicitly:
-   `supabaseClient.auth.getUser(token)` instead of `getUser()`.
-2. Add a `console.warn` on the 403 path (with the reason: no user vs. not owner/delegate) so any future rejection is visible in logs.
+- No `VACUUM FULL` or table rewrite.
+- No resizing (compute or disk).
+- No change to cron job frequency or schedules.
+- No deletion of job history.
 
-No changes to matching, cooldowns, dedupe logic, the pending-buyer store-and-deliver flow, email templates, or any UI.
+Corrective action will be decided only after the scanning process is identified and the 463 MB composition (heap vs. TOAST/bloat) is confirmed.
 
-## Verification
+## Technical details
 
-1. Deploy `process-hot-sheet`.
-2. Browser check on the review page (no Send pressed): confirm the page still renders and the button states are unchanged.
-3. **One controlled test send** on "Buyer 1 Boston Condo's" (buyer is pending/not connected, so the expected result is: selected IDs stored with the invitation, `pending_invite` state returned, success toast, **zero emails enqueued**). Verify in the database: `hot_sheet_recipient_batches` row present with the 8 selected IDs, `email_jobs` unchanged, no invite email triggered by this path.
-4. Confirm the "Also email me a copy" behavior is untouched (agent copy only enqueues for connected-buyer sends, as before).
-5. Report the exact cause, fix, and test result before anything is published.
-
-## Explicitly not in scope
-
-- No repeated send attempts while diagnosing.
-- No changes to Hot Sheet matching, notification frequency, selection behavior, or the new UI.
-- No emails sent during diagnosis; the single controlled test above stores a pending batch only and sends nothing.
+- Evidence already gathered (read-only): `pg_stat_statements` top-reads query is a full scan of `cron.job_run_details`; table stats: 47,350 rows / 463 MB; alert counts from the metrics endpoint at 13:04 / 17:09 / 21:14 UTC.
+- Pre-restart recorder samples (13:04, 17:09 normal; 18:53–21:10 stall — one task 405 s, WAL 592 MB) are historical and labeled as such, separate from the post-restart stats window (counters reset at the 21:10 restart).
+- This is a support question only — no database, function, or app changes are part of this plan.
