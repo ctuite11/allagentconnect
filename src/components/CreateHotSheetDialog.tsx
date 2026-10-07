@@ -1418,20 +1418,6 @@ export function CreateHotSheetDialog({
                     Contacts <span className="font-normal text-neutral-500">*</span>
                   </span>
                 </CardTitle>
-                <div className="flex flex-wrap items-center gap-2">
-                  {!lockedToClient && selectedClients.length > 0 && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="h-8 border-neutral-200 px-2.5 text-[12px] font-medium shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:border-neutral-300 hover:bg-neutral-50/90"
-                      onClick={openClientPicker}
-                    >
-                      <UserPlus className="mr-1.5 h-3.5 w-3.5" aria-hidden />
-                      Add another
-                    </Button>
-                  )}
-                </div>
               </div>
             </CardHeader>
             <CardContent className="space-y-4 px-4 pb-4 pt-0 sm:px-5 sm:pb-5">
@@ -1476,6 +1462,18 @@ export function CreateHotSheetDialog({
                       );
                     })}
                   </div>
+                  {!showClientPicker && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-8 border-neutral-200 px-2.5 text-[12px] font-medium shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:border-neutral-300 hover:bg-neutral-50/90"
+                      onClick={openClientPicker}
+                    >
+                      <UserPlus className="mr-1.5 h-3.5 w-3.5" aria-hidden />
+                      Add Additional Contact
+                    </Button>
+                  )}
                 </div>
               ) : (
                 <p className="text-sm text-muted-foreground">
@@ -1483,7 +1481,7 @@ export function CreateHotSheetDialog({
                 </p>
               )}
 
-              {(showClientPicker || selectedClients.length === 0) && !lockedToClient && (
+              {(showClientPicker || (selectedClients.length === 0 && !lockedToClient)) && (
                 <>
                   <div className="space-y-2 relative">
                     <Label htmlFor="client-search">Search Existing Contact</Label>
