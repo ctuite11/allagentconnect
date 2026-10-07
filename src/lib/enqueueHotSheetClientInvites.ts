@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { filterStaleInviteTokens } from "@/lib/filterStaleInviteTokens";
 
 export type EnqueueHotSheetInvitesResult = {
   /** True when no invoke/insert errors occurred. */
@@ -84,9 +85,12 @@ export async function enqueueHotSheetClientInvites({
   const hotSheetIdNorm = String(hotSheetId);
   const stRows = existingTokensRes.data ?? [];
 
-  const allInviteForAgent = stRows.filter(
-    (t: { payload?: { type?: string }; revoked_at?: string | null }) =>
-      t?.payload?.type === "client_hotsheet_invite" && !t?.revoked_at,
+  // Tokens pointing to a confirmed-deleted contact/Hot Sheet don't block a first invite.
+  const allInviteForAgent = await filterStaleInviteTokens(
+    stRows.filter(
+      (t: { payload?: { type?: string }; revoked_at?: string | null }) =>
+        t?.payload?.type === "client_hotsheet_invite" && !t?.revoked_at,
+    ),
   );
   const globalInviteByClientId = new Map<string, unknown[]>();
   const globalInviteByEmail = new Map<string, unknown[]>();
