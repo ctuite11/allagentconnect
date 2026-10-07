@@ -46,22 +46,3 @@ export async function resolveOrCreateAgentContact(input: {
   return { ok: true, contactId: row.contact_id, created: Boolean(row.created) };
 }
 
-/**
- * NARROW EXCEPTION — Agent Network flow only. Adds a known AAC agent member
- * (by member id, never by typed email) as this agent's contact, reusing an
- * existing contact. Manually entered emails must keep using
- * resolveOrCreateAgentContact, which blocks other members.
- */
-export async function addNetworkAgentContact(
-  memberId: string,
-): Promise<{ contactId: string; created: boolean }> {
-  const { data, error } = await supabase.rpc("add_network_agent_contact", {
-    p_member_id: memberId,
-  } as never);
-  if (error) throw error;
-  const row = (Array.isArray(data) ? data[0] : data) as
-    | { contact_id: string; created: boolean }
-    | undefined;
-  if (!row?.contact_id) throw new Error("Contact could not be resolved");
-  return { contactId: row.contact_id, created: Boolean(row.created) };
-}
