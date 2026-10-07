@@ -456,6 +456,7 @@ export function CreateHotSheetDialog({
   }, [clientEmail, showManualClientEntry, userId, open]);
 
   const handleSelectClient = async (client: any) => {
+    setShowClientDropdown(false);
     // Check if client is already selected
     if (selectedClients.some(c => c.id === client.id)) {
       toast.error("This person is already added");
@@ -967,8 +968,7 @@ export function CreateHotSheetDialog({
           : await fetchAgentClientByEmail(validation.normalizedEmail);
 
       if (existing) {
-        setDuplicateExistingClient(existing as DuplicateExistingClient);
-        setShowDuplicateDialog(true);
+        useExistingContact(existing as DuplicateExistingClient);
         return;
       }
 
@@ -980,6 +980,26 @@ export function CreateHotSheetDialog({
       addingManualContactRef.current = false;
       setAddingManualContact(false);
     }
+  };
+
+  /** LOCKED: an existing contact for this agent is selected, never duplicated. */
+  const useExistingContact = (existing: DuplicateExistingClient) => {
+    setSelectedClients((prev) =>
+      prev.some((c) => c.id === existing.id)
+        ? prev
+        : [...prev, {
+            id: existing.id,
+            first_name: existing.first_name,
+            last_name: existing.last_name,
+            email: existing.email,
+            phone: existing.phone,
+          }],
+    );
+    toast.success("Using your existing contact");
+    clearManualContactForm();
+    setClientSearchQuery("");
+    setShowClientPicker(false);
+    setShowManualClientEntry(false);
   };
 
   const handleCreateClient = async () => {
@@ -997,57 +1017,28 @@ export function CreateHotSheetDialog({
     try {
       const normalizedEmail = validation.normalizedEmail;
 
-      const existingBeforeInsert =
-        existingClient?.email &&
-        normalizeClientEmail(existingClient.email) === normalizedEmail
-          ? existingClient
-          : await fetchAgentClientByEmail(normalizedEmail);
-
-      if (existingBeforeInsert) {
-        setShowCreateClientDialog(false);
-        setDuplicateExistingClient(existingBeforeInsert as DuplicateExistingClient);
-        setShowDuplicateDialog(true);
+      // Authoritative rule (server): same-agent contact is reused, another
+      // member's email is blocked, otherwise one contact is created.
+      const result = await resolveOrCreateAgentContact({
+        email: normalizedEmail,
+        firstName: validation.firstName,
+        lastName: validation.lastName,
+        phone: clientPhone ? formatPhoneNumber(clientPhone) : null,
+      });
+      if (result.ok === false) {
+        toast.error(result.message);
         return;
       }
-
-      // Block if this email already belongs to an AAC account.
-      const { data: alreadyRegistered, error: regCheckErr } = await supabase.rpc(
-        "is_email_registered_with_aac" as any,
-        { p_email: normalizedEmail }
-      );
-      if (regCheckErr) throw regCheckErr;
-      if (alreadyRegistered === true) {
-        toast.error(
-          "This email is already registered with AAC. They already have an account — share your AAC profile link instead."
-        );
-        return;
-      }
-
       const { data, error } = await supabase
         .from("clients")
-        .insert({
-          agent_id: userId,
-          first_name: validation.firstName,
-          last_name: validation.lastName,
-          email: normalizedEmail,
-          phone: clientPhone ? formatPhoneNumber(clientPhone) : null,
-        })
-        .select()
+        .select("id, first_name, last_name, email, phone")
+        .eq("id", result.contactId)
         .single();
-
-      if (error) {
-        if (isDuplicateClientEmailError(error)) {
-          const existing = await fetchAgentClientByEmail(normalizedEmail);
-          if (existing) {
-            setShowCreateClientDialog(false);
-            setDuplicateExistingClient(existing as DuplicateExistingClient);
-            setShowDuplicateDialog(true);
-            return;
-          }
-          toast.error("A contact with this email already exists in your list.");
-          return;
-        }
-        throw error;
+      if (error) throw error;
+      if (!result.created && data) {
+        setShowCreateClientDialog(false);
+        useExistingContact(data as DuplicateExistingClient);
+        return;
       }
 
       if (data) {
@@ -1507,7 +1498,7 @@ export function CreateHotSheetDialog({
                         setTimeout(() => setShowClientDropdown(false), 200);
                       }}
                     />
-                    {showClientDropdown && clientSearchResults.length > 0 && (
+                    {showClientDropdown && !showManualClientEntry && clientSearchResults.length > 0 && (
                       <div role="listbox" data-testid="contact-search-results" className="relative mt-1 max-h-60 w-full overflow-y-auto rounded-md border border-neutral-200 bg-white shadow-[0_2px_12px_rgba(0,0,0,0.08)]">
                         {clientSearchResults.map((client) => (
                           <button

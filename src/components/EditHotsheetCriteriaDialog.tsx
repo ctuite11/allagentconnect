@@ -237,6 +237,7 @@ export function EditHotsheetCriteriaDialog({
   }, [clientSearchQuery, userId, open]);
 
   const handleSelectClient = async (client: any) => {
+    setShowClientDropdown(false);
     if (selectedClients.some(c => c.id === client.id)) {
       toast.error("This person is already added");
       return;
