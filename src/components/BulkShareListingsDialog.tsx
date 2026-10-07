@@ -1,3 +1,4 @@
+import { resolveOrCreateAgentContact } from "@/lib/agentContactResolver";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Share2 } from "lucide-react";
@@ -112,16 +113,19 @@ export function BulkShareListingsDialog({
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { error } = await supabase
-        .from("clients")
-        .insert({
-          agent_id: user.id,
-          first_name: recipient.firstName,
-          last_name: recipient.lastName ?? "",
-          email: recipient.email.trim(),
-        });
-
-      if (error) throw error;
+      const resolved = await resolveOrCreateAgentContact({
+        email: recipient.email.trim(),
+        firstName: recipient.firstName,
+        lastName: recipient.lastName ?? "",
+      });
+      if (resolved.ok === false) {
+        toast.error(resolved.message);
+        return;
+      }
+      if (!resolved.created) {
+        toast.message(`${shareRecipientDisplayName(recipient)} is already in your contacts`);
+        return;
+      }
       toast.success(`${shareRecipientDisplayName(recipient)} saved to contacts`);
       await refreshContacts();
     } catch (error) {

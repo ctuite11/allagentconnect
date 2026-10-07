@@ -1,3 +1,4 @@
+import { resolveOrCreateAgentContact } from "@/lib/agentContactResolver";
 /**
  * Single Listing Share Dialog
  * Wrapper around the universal ShareListingsDialog for sharing a single listing.
@@ -125,19 +126,18 @@ export const ShareListingDialog = ({
             } = await supabase.auth.getUser();
             if (!user) return;
 
-            const { error } = await supabase.from("clients").insert({
-              agent_id: user.id,
-              first_name: recipient.firstName,
-              last_name: recipient.lastName ?? "",
+            const resolved = await resolveOrCreateAgentContact({
               email: recipient.email.trim(),
+              firstName: recipient.firstName,
+              lastName: recipient.lastName ?? "",
             });
-
-            if (error) {
-              if (error.code === "23505") {
-                toast.message(`${shareRecipientDisplayName(recipient)} is already in your contacts`);
-                return;
-              }
-              throw error;
+            if (resolved.ok === false) {
+              toast.error(resolved.message);
+              return;
+            }
+            if (!resolved.created) {
+              toast.message(`${shareRecipientDisplayName(recipient)} is already in your contacts`);
+              return;
             }
             toast.success(`${shareRecipientDisplayName(recipient)} saved to contacts`);
             await refreshContacts();

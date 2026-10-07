@@ -1,3 +1,4 @@
+import { resolveOrCreateAgentContact } from "@/lib/agentContactResolver";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -450,51 +451,45 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
         return;
       }
 
-      // 3) Batched insert (chunks of 500) so a single big payload doesn't
-      // exceed Supabase request limits or time out. Continue on per-batch failure.
-      const INSERT_CHUNK = 500;
-      const rows = newClients.map(client => ({
-        agent_id: agentId,
-        first_name: client.first_name,
-        last_name: client.last_name || '',
-        email: client.email,
-        phone: client.phone || null,
-        client_type: client.client_type || null,
-        office_id: client.office_id || null,
-      }));
-
+      // 3) Every row goes through the locked server-side duplicate-email rule
+      // (resolve_or_create_agent_contact). Small concurrency keeps it fast.
       let insertedCount = 0;
       let failedCount = 0;
       let raceDupSkipped = 0;
+      let blockedCount = 0;
       const batchErrors: string[] = [];
-      const totalBatches = Math.ceil(rows.length / INSERT_CHUNK);
-
-      for (let b = 0; b < totalBatches; b++) {
-        const batch = rows.slice(b * INSERT_CHUNK, (b + 1) * INSERT_CHUNK);
-        setImportProgress(
-          `Importing ${insertedCount + batch.length} / ${rows.length}...`
-        );
-        const { error } = await supabase.from('clients').insert(batch);
-        if (!error) {
-          insertedCount += batch.length;
-          continue;
-        }
-        // Fall back to per-row inserts: silently skip unique-violation duplicates
-        // (race condition vs. the new partial unique index on (agent_id, lower(email))).
-        console.warn("Batch insert failed, retrying row-by-row", b + 1, error);
-        for (const row of batch) {
-          const { error: rowErr } = await supabase.from('clients').insert(row);
-          if (!rowErr) {
-            insertedCount++;
-          } else if (rowErr.code === '23505') {
-            raceDupSkipped++;
-          } else {
+      let rowCursor = 0;
+      const rowWorker = async () => {
+        while (rowCursor < newClients.length) {
+          const client = newClients[rowCursor++];
+          try {
+            const resolved = await resolveOrCreateAgentContact({
+              email: client.email,
+              firstName: client.first_name,
+              lastName: client.last_name || "",
+              phone: client.phone || null,
+              clientType: client.client_type || null,
+            });
+            if (resolved.ok === false) {
+              blockedCount++;
+            } else if (!resolved.created) {
+              raceDupSkipped++;
+            } else {
+              insertedCount++;
+              if (client.office_id) {
+                await supabase.from("clients").update({ office_id: client.office_id }).eq("id", resolved.contactId);
+              }
+            }
+          } catch (rowErr: any) {
             failedCount++;
-            batchErrors.push(rowErr.message);
-            console.error("Row insert failed", row.email, rowErr);
+            batchErrors.push(rowErr?.message ?? String(rowErr));
+            console.error("Row import failed", client.email, rowErr);
           }
+          const done = insertedCount + raceDupSkipped + blockedCount + failedCount;
+          if (done % 25 === 0) setImportProgress(`Importing ${done} / ${newClients.length}...`);
         }
-      }
+      };
+      await Promise.all(Array.from({ length: Math.min(6, newClients.length) }, rowWorker));
 
       const dbDupSkipped =
         uniqueInFile.length - newClients.length - aacSkipped + raceDupSkipped;
@@ -509,6 +504,7 @@ export function ImportClientsDialog({ open, onOpenChange, agentId, onImportCompl
             (dbDupSkipped > 0 ? `. Skipped ${dbDupSkipped} already in your list` : '') +
             (inFileDupCount > 0 ? `. Skipped ${inFileDupCount} duplicate(s) in file` : '') +
             (aacSkipped > 0 ? `. Skipped ${aacSkipped} already registered with AAC` : '') +
+            (blockedCount > 0 ? `. Skipped ${blockedCount} associated with another member` : '') +
             (failedCount > 0 ? `. ${failedCount} failed` : '')
         );
       }
