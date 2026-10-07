@@ -218,6 +218,13 @@
       "when": 1791347658654,
       "tag": "0030_resolve_or_create_agent_contact_defaults",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1791349144367,
+      "tag": "0031_add_network_agent_contact",
+      "breakpoints": true
     }
   ]
 }
