@@ -1,24 +1,23 @@
-# Why the last Hot Sheet invite did not send (read-only findings + proposed fix)
+# Start fresh: delete all Hot Sheets for chris@allagentconnect.com
 
-## What happened (Oct 8, 14:43 UTC)
-- Hot Sheet "Buyer one boston condo's", buyer chris tuite (chris.tuite@compass.com). The buyer has no active relationship, so the button correctly read "Send First Batch & Invite".
-- The 8 selected listings were saved as the buyer's first batch. That part worked.
-- No invitation was created and no email was queued. The last email job is from Oct 8, 00:30, and it's a digest.
+## What gets removed
+- All 13 Hot Sheets on your account (newest "wdfwfwdf", oldest "boston" from June).
+- Their 2 unsent saved batches ("wdfwfwdf", "Buyer one boston condo's").
+- Their contact links, favorites, comments, statuses, shares, and sent-listing records.
+- Any open (unaccepted) invitation links tied to these Hot Sheets, so you can send real first invitations again.
 
-## Root cause
-The same contact already has an **unaccepted, unrevoked invitation link created Oct 7, 03:58** for the Hot Sheet "dad". That Hot Sheet still exists. Yesterday's batch deletions removed only the pending batches, not this invite link.
+## What stays
+- Your contacts in My Clients, including hidden "Hot Sheet only" contacts (only their link to the Hot Sheet is removed).
+- Email history and the email queue. Nothing is sent, resent, or re-queued.
+- Other agents' Hot Sheets, plus your buyer relationships and listings.
+- The app itself and how it matches listings. No changes to either.
 
-The first-invite rule (`isFirstInviteEligible`) counts any live invite link for this buyer as "already invited", so the page silently skipped them. It also never falls back to re-sending, because the existing link belongs to a different Hot Sheet.
+## Steps
+1. Read only: list the exact Hot Sheet IDs (expect 13), open invite tokens, waiting batches, and every linked row. Record the email queue count. Stop if the count differs or any Hot Sheet belongs to another account.
+2. Mark open invite tokens for these Hot Sheets as revoked/expired. If the table has no revoke field, delete them instead. Leave accepted invites alone.
+3. Delete the waiting batches and linked child rows. Then delete the 13 Hot Sheets by their exact IDs, using the existing delete protections.
+4. Check the result: zero Hot Sheets on your account, zero waiting batches, no open invites for those sheets. The email queue and contacts count should be unchanged.
 
-To check: no email was ever queued for the Oct 7 link either. The buyer has never actually received an invitation, but that link blocks every new one.
-
-The stale-invite filter didn't help, because the "dad" Hot Sheet and the contact are not deleted.
-
-## Options (choose one)
-- **A. Data only (smallest):** revoke the single Oct 7 invite link (`8b022815…`). This is exact-ID and reversible. You then press Send again yourself. No code change.
-- **B. Rule fix:** treat a live, unaccepted invite link that never produced an email as not blocking. This needs a matching update to the locked rule and test (`hotSheetRules.ts` and its test, same change). The silent skip should also show a visible message.
-
-Either way, nothing is sent by me. The current batch row stays untouched.
-
-## Webhook check
-Paused. The read-only Resend webhook review is still ready to resume after this.
+## Technical notes
+- Use explicit ID lists only, with no broad deletes. Run inside one transaction, and roll back if any count doesn't match.
+- Respect the existing `delete_hot_sheet_client_links_before_hot_sheet_delete` trigger and `can_authenticated_user_delete_hot_sheet` rules.
