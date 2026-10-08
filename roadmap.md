@@ -30,3 +30,4 @@
 - [ ] Publish Add Additional Contact + stale-invite eligibility fixes (no sends; user tests live): fixes committed (68bc647ab); Lovable Publish skipped (lovable.app copy broken platform-side); production = GitHub main sync → Netlify; verify allagentconnect.com bundle live after sync (currently stale — neither fix string present)
 
 - [ ] Weborik/Nenad read-only Phase 1 access: Viewer invite (user does via Share); direct read-only DB login blocked, since Lovable Cloud has no external DB connections. Waiting on user to pick an alternative.
+- [x] Admin 'Share to AAC Social' button on property page (admin's own accounts; retry reuses clientRequestId; no backend changes) (2026-10-08)
