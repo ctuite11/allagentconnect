@@ -6,6 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Home, ChevronDown, ChevronUp } from "lucide-react";
 import { AacMonogramLoader } from "@/components/AacMonogramLoader";
+import { resolveCommsPropertyTypes } from "@/lib/propertyTypeDefaults";
 
 export interface PropertyTypeData {
   propertyTypes: string[];
@@ -67,16 +68,7 @@ const PropertyTypePreferences = ({ agentId, onFiltersUpdated, onDataChange }: Pr
         throw error;
       }
 
-      if (data && (data as any).property_types) {
-        // Handle both array and object formats for safety
-        const types = Array.isArray((data as any).property_types) 
-          ? ((data as any).property_types as string[])
-          : [];
-        // Validate that all items are strings
-        const validTypes = types.filter(t => typeof t === 'string');
-        setSelectedTypes(validTypes);
-      }
-      // If no data or no property_types, keep as empty array (no preselection)
+      setSelectedTypes(resolveCommsPropertyTypes((data as any)?.property_types));
     } catch (error) {
       console.error("Error fetching property type preferences:", error);
     } finally {

@@ -252,9 +252,7 @@ setHeaderBackgroundType(profile.header_background_type || "color");
         .eq("user_id", userId)
         .maybeSingle();
       
-      if (prefData?.property_types && Array.isArray(prefData.property_types)) {
-        setSelectedPropertyTypes(prefData.property_types as string[]);
-      }
+      setSelectedPropertyTypes(resolveCommsPropertyTypes(prefData?.property_types));
     } catch (error) {
       console.error("Error loading profile:", error);
       toast.error("Failed to load profile");
