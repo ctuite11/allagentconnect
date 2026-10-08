@@ -1,3 +1,4 @@
+import { resolveCommsPropertyTypes } from "@/lib/propertyTypeDefaults";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -252,9 +253,7 @@ setHeaderBackgroundType(profile.header_background_type || "color");
         .eq("user_id", userId)
         .maybeSingle();
       
-      if (prefData?.property_types && Array.isArray(prefData.property_types)) {
-        setSelectedPropertyTypes(prefData.property_types as string[]);
-      }
+      setSelectedPropertyTypes(resolveCommsPropertyTypes(prefData?.property_types));
     } catch (error) {
       console.error("Error loading profile:", error);
       toast.error("Failed to load profile");
