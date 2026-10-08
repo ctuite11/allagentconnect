@@ -232,6 +232,13 @@
       "when": 1791383891046,
       "tag": "0032_drop_add_network_agent_contact",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1791421116974,
+      "tag": "0033_hidden_hot_sheet_only_contacts",
+      "breakpoints": true
     }
   ]
 }
