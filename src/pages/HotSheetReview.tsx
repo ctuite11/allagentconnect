@@ -1028,7 +1028,7 @@ const HotSheetReview = () => {
           .in("id", recipientClientIds),
         supabase
           .from("share_tokens")
-          .select("id, token, payload, accepted_at, revoked_at")
+          .select("id, token, payload, accepted_at, revoked_at, created_at")
           .eq("agent_id", user.id),
       ]);
 
@@ -1086,6 +1086,37 @@ const HotSheetReview = () => {
       let skippedAcceptedInvite = 0;
       let skippedDashboardIneligible = 0;
       let resendCount = 0;
+      const skippedInviteNotices: { name: string; sentAt: string | null; hotSheetId: string | null }[] = [];
+      const showSkippedInviteNotices = async () => {
+        if (!skippedInviteNotices.length) return;
+        const otherIds = [
+          ...new Set(
+            skippedInviteNotices
+              .map((n) => n.hotSheetId)
+              .filter((id): id is string => Boolean(id) && id !== String(hotSheet.id)),
+          ),
+        ];
+        const nameById = new Map<string, string>();
+        if (otherIds.length) {
+          const { data } = await supabase.from("hot_sheets").select("id, name").in("id", otherIds);
+          for (const h of data ?? []) nameById.set(String(h.id), String(h.name ?? ""));
+        }
+        for (const n of skippedInviteNotices) {
+          const when = n.sentAt
+            ? ` sent ${new Date(n.sentAt).toLocaleDateString(undefined, { month: "short", day: "numeric" })}`
+            : "";
+          const fromName = n.hotSheetId ? nameById.get(n.hotSheetId) : undefined;
+          toast.info(
+            `First batch saved. ${n.name} already has a pending AAC invitation${when}. No new invitation was sent.`,
+            {
+              description: fromName
+                ? `Their pending invitation was originally sent from \u2018${fromName}\u2019.`
+                : undefined,
+              duration: 12000,
+            },
+          );
+        }
+      };
 
       for (const clientId of recipientClientIds) {
         const clientData = clientMap.get(clientId);
@@ -1108,6 +1139,23 @@ const HotSheetReview = () => {
           console.log(
             `[handleSendInvites] Skipping dashboard invite — buyer already invited or in search (client ${clientId})`,
           );
+          // Never skip silently: remember the existing open invitation so the agent is told.
+          const emailKey = clientData.email.toLowerCase();
+          const prior = (existingTokensRes.data ?? [])
+            .filter((t: any) => {
+              const p = t.payload as Record<string, unknown> | null;
+              if (p?.type !== "client_hotsheet_invite" || t.revoked_at || t.accepted_at) return false;
+              return (
+                String(p.client_id ?? "") === clientId ||
+                String(p.client_email ?? "").toLowerCase() === emailKey
+              );
+            })
+            .sort((a: any, b: any) => String(a.created_at).localeCompare(String(b.created_at)))[0];
+          skippedInviteNotices.push({
+            name: clientData.name,
+            sentAt: (prior as any)?.created_at ?? null,
+            hotSheetId: ((prior as any)?.payload?.hot_sheet_id as string | undefined) ?? null,
+          });
           continue;
         }
         if (existing && !existing.accepted_at) {
@@ -1230,6 +1278,7 @@ const HotSheetReview = () => {
           // No new invites needed (buyers already invited or already in search).
           // Just send the selected listings to accepted recipients.
           await sendRecipientBatch();
+          await showSkippedInviteNotices();
           return;
         }
         if (skippedTokenInsert > 0) {
@@ -1260,6 +1309,7 @@ const HotSheetReview = () => {
       showInviteEmailSentToast();
       // Store pending buyers' first batch with their invite; send to connected buyers now.
       await sendRecipientBatch();
+      await showSkippedInviteNotices();
       void supabase.functions.invoke("kick-email-queue").catch((e) => {
         console.warn(
           "[HotSheetReview] kick-email-queue failed — emails stay in queue until worker runs",
