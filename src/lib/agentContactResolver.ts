@@ -24,6 +24,11 @@ export async function resolveOrCreateAgentContact(input: {
   phone?: string | null;
   clientType?: string | null;
   source?: string | null;
+  /**
+   * Hot-Sheet-only contact ("Save to contacts? → No"): created hidden from
+   * normal contact lists. A later non-hidden call promotes it; never demotes.
+   */
+  hidden?: boolean;
 }): Promise<ResolveContactResult> {
   const { data, error } = await supabase.rpc("resolve_or_create_agent_contact", {
     p_email: input.email,
@@ -32,6 +37,7 @@ export async function resolveOrCreateAgentContact(input: {
     p_phone: input.phone ?? null,
     p_client_type: input.clientType ?? null,
     p_source: input.source ?? null,
+    p_hidden: input.hidden ?? false,
   } as never);
   if (error) {
     if (isOtherMemberEmailError(error)) {

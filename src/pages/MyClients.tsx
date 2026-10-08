@@ -266,14 +266,16 @@ const MyClients = () => {
 
         const { data: existing, error: lookupError } = await supabase
           .from("clients")
-          .select("id, first_name, last_name")
+          .select("id, first_name, last_name, hidden_from_contacts")
           .eq("agent_id", user.id)
           .ilike("email", normalizedEmail)
           .maybeSingle();
 
         if (lookupError) throw lookupError;
 
-        if (existing) {
+        // A Hot-Sheet-only (hidden) contact is promoted by the resolver below
+        // instead of being reported as a duplicate.
+        if (existing && !existing.hidden_from_contacts) {
           toast.error(
             `A contact with this email already exists: ${existing.first_name} ${existing.last_name}.`
           );

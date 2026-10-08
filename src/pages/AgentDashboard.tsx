@@ -204,7 +204,7 @@ const AgentDashboard = () => {
       } = await supabase.from("clients").select("*", {
         count: "exact",
         head: true
-      }).eq("agent_id", userId);
+      }).eq("agent_id", userId).eq("hidden_from_contacts", false);
       if (clientsCount) setClientsCount(clientsCount);
 
       // Load messages count
@@ -267,7 +267,7 @@ const AgentDashboard = () => {
       // Recent clients (last 5)
       const {
         data: recentClients
-      } = await supabase.from("clients").select("id, first_name, last_name, created_at, email").eq("agent_id", userId).order("created_at", {
+      } = await supabase.from("clients").select("id, first_name, last_name, created_at, email").eq("agent_id", userId).eq("hidden_from_contacts", false).order("created_at", {
         ascending: false
       }).limit(5);
       if (recentClients) {

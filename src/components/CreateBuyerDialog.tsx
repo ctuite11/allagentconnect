@@ -261,7 +261,8 @@ export function CreateBuyerDialog({ open, onOpenChange, onSuccess }: CreateBuyer
 
       if (existing) {
         // Flip non-buyer contacts to buyer + backfill any missing name fields.
-        const updates: Record<string, any> = {};
+        // Explicit save as a buyer promotes a Hot-Sheet-only (hidden) contact.
+        const updates: Record<string, any> = { hidden_from_contacts: false };
         if (existing.client_type !== "buyer") updates.client_type = "buyer";
         if (!existing.first_name && firstName.trim()) updates.first_name = firstName.trim();
         if (!existing.last_name && lastName.trim()) updates.last_name = lastName.trim();

@@ -227,6 +227,8 @@ export async function fetchAllAgentContacts<T extends ContactRow = ContactRow>(
       .from(AGENT_CONTACTS_SOURCE)
       .select(select)
       .eq("agent_id", agentId)
+      // Hot-Sheet-only contacts never appear in normal lists or pickers.
+      .eq("hidden_from_contacts", false)
       .order("created_at", { ascending: false })
       .order("id", { ascending: false })
       .limit(PAGE_SIZE);
