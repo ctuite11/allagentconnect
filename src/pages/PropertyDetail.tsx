@@ -86,6 +86,8 @@ import ScheduleShowingDialog from "@/components/ScheduleShowingDialog";
 import FavoriteButton from "@/components/FavoriteButton";
 import PropertyMap from "@/components/PropertyMap";
 import { getListingPublicUrl, getListingShareUrl } from "@/lib/getPublicUrl";
+import { AdminSocialShareDialog } from "@/components/social/AdminSocialShareDialog";
+import { isSocialEligibleStatus } from "@/lib/socialPublishing";
 import { formatListingPriceDisplay, listingEffectiveNumericPrice } from "@/lib/formatListingPriceDisplay";
 import { parseDisclosures, cleanBrokerComments, isEmptyValue } from "@/lib/listingFieldParsers";
 import { buildMessageReturnState } from "@/lib/messageNavigation";
@@ -767,6 +769,10 @@ const PropertyDetail = () => {
                     neutralTone
                     className="!mt-0 min-w-0 !px-0"
                     trailing={
+                      <div className="flex items-center gap-2">
+                      {isAdmin && isSocialEligibleStatus(listing.status) ? (
+                        <AdminSocialShareDialog listingId={id!} status={listing.status ?? ""} />
+                      ) : null}
                       <SocialShareMenu
                         url={getListingShareUrl(id!)}
                         title={listing.address}
@@ -786,6 +792,7 @@ const PropertyDetail = () => {
                           </Button>
                         }
                       />
+                      </div>
                     }
                   />
                   {isAgentView && listing.listing_number ? (
