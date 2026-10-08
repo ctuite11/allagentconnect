@@ -336,6 +336,7 @@ export function useSuccessHubData(): UseSuccessHubDataResult {
           .from("clients")
           .select("id,email,first_name,last_name,created_at")
           .eq("agent_id", agentId)
+          .eq("hidden_from_contacts", false)
           .gte("created_at", since30d)
           .order("created_at", { ascending: false })
           .limit(25),

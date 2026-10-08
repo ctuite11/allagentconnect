@@ -923,7 +923,12 @@ export function CreateHotSheetDialog({
     return { valid: true, message: "ok" };
   };
 
-  const handleAddClientWithoutSaving = () => {
+  /**
+   * "Save to contacts? → No": a real Hot-Sheet-only contact (hidden from
+   * My Clients and pickers) so it can be attached by UUID. Never a temp- id.
+   */
+  const handleAddClientWithoutSaving = async () => {
+    if (creatingClientRef.current) return;
     const validation = validateManualContactForm();
     if (!validation.valid) {
       setErrors((prev) => ({ ...prev, ...validation.errors }));
@@ -931,21 +936,57 @@ export function CreateHotSheetDialog({
       return;
     }
 
-    setSelectedClients(prev => [...prev, {
-      id: `temp-${Date.now()}`,
-      first_name: validation.firstName,
-      last_name: validation.lastName,
-      email: validation.normalizedEmail,
-      phone: clientPhone ? formatPhoneNumber(clientPhone) : null
-    }]);
-    
-    setShowCreateClientDialog(false);
-    toast.success("Contact added to this hot sheet (not saved to your contacts list)");
-    
-    clearManualContactForm();
-    setClientSearchQuery("");
-    setShowClientPicker(false);
-    setShowManualClientEntry(false);
+    creatingClientRef.current = true;
+    setCreatingClient(true);
+    try {
+      const result = await resolveOrCreateAgentContact({
+        email: validation.normalizedEmail,
+        firstName: validation.firstName,
+        lastName: validation.lastName,
+        phone: clientPhone ? formatPhoneNumber(clientPhone) : null,
+        hidden: true,
+      });
+      if (result.ok === false) {
+        toast.error(result.message);
+        return;
+      }
+      const { data, error } = await supabase
+        .from("clients")
+        .select("id, first_name, last_name, email, phone")
+        .eq("id", result.contactId)
+        .single();
+      if (error) throw error;
+
+      setShowCreateClientDialog(false);
+      if (!result.created) {
+        selectExistingContact(data as DuplicateExistingClient);
+        return;
+      }
+
+      setSelectedClients(prev =>
+        prev.some(c => c.id === data.id)
+          ? prev
+          : [...prev, {
+              id: data.id,
+              first_name: data.first_name,
+              last_name: data.last_name,
+              email: data.email,
+              phone: data.phone,
+            }],
+      );
+      toast.success("Contact added to this hot sheet (not saved to your contacts list)");
+
+      clearManualContactForm();
+      setClientSearchQuery("");
+      setShowClientPicker(false);
+      setShowManualClientEntry(false);
+    } catch (error: unknown) {
+      console.error("Error adding hot-sheet-only contact:", error);
+      toast.error("Could not add this contact. Please try again.");
+    } finally {
+      creatingClientRef.current = false;
+      setCreatingClient(false);
+    }
   };
 
   const handleAddManualContactClick = async () => {

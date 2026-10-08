@@ -58,7 +58,7 @@ export function AgentEditDrawer({ open, onOpenChange, agent, onSaved }: AgentEdi
   });
 
   // Client deletion state
-  const [agentClients, setAgentClients] = useState<{ id: string; first_name: string; last_name: string; email: string }[]>([]);
+  const [agentClients, setAgentClients] = useState<{ id: string; first_name: string; last_name: string; email: string; hidden_from_contacts?: boolean }[]>([]);
   const [loadingClients, setLoadingClients] = useState(false);
   const [deleteClientTarget, setDeleteClientTarget] = useState<{ id: string; name: string } | null>(null);
   const [deletingClient, setDeletingClient] = useState(false);
@@ -84,7 +84,7 @@ export function AgentEditDrawer({ open, onOpenChange, agent, onSaved }: AgentEdi
     setLoadingClients(true);
     const { data } = await supabase
       .from("clients")
-      .select("id, first_name, last_name, email")
+      .select("id, first_name, last_name, email, hidden_from_contacts")
       .eq("agent_id", agentId)
       .order("last_name");
     setAgentClients(data || []);
@@ -322,6 +322,11 @@ export function AgentEditDrawer({ open, onOpenChange, agent, onSaved }: AgentEdi
                     <div className="min-w-0">
                       <span className="font-medium text-foreground">{c.first_name} {c.last_name}</span>
                       <span className="text-muted-foreground ml-2 text-xs">{c.email}</span>
+                      {c.hidden_from_contacts && (
+                        <span className="ml-2 rounded border border-border px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+                          Hot Sheet only
+                        </span>
+                      )}
                     </div>
                     <Button
                       variant="ghost"

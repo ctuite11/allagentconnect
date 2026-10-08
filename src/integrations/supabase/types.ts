@@ -1830,6 +1830,7 @@ export type Database = {
           created_at: string
           email: string
           first_name: string
+          hidden_from_contacts: boolean
           id: string
           is_favorite: boolean
           last_name: string
@@ -1846,6 +1847,7 @@ export type Database = {
           created_at?: string
           email: string
           first_name: string
+          hidden_from_contacts?: boolean
           id?: string
           is_favorite?: boolean
           last_name: string
@@ -1862,6 +1864,7 @@ export type Database = {
           created_at?: string
           email?: string
           first_name?: string
+          hidden_from_contacts?: boolean
           id?: string
           is_favorite?: boolean
           last_name?: string
@@ -6949,6 +6952,7 @@ export type Database = {
           created_at: string | null
           email: string | null
           first_name: string | null
+          hidden_from_contacts: boolean | null
           id: string | null
           is_favorite: boolean | null
           last_name: string | null
@@ -8832,6 +8836,7 @@ export type Database = {
           p_client_type?: string
           p_email: string
           p_first_name: string
+          p_hidden?: boolean
           p_last_name?: string
           p_phone?: string
           p_source?: string

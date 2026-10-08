@@ -69,6 +69,7 @@ export function AddHotSheetRecipientDialog({
         .from("clients")
         .select("id, first_name, last_name, email, phone")
         .eq("agent_id", agentUserId)
+        .eq("hidden_from_contacts", false)
         .order("first_name", { ascending: true });
       if (cancelled) return;
       if (error) {
