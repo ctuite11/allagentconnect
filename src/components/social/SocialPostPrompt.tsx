@@ -12,10 +12,27 @@ interface Props {
   posting: boolean;
   onSkip: () => void;
   onPost: (platforms: SocialPlatform[]) => void;
+  /** Defaults match the post-edit prompt. Admin share passes its own account context. */
+  title?: string;
+  description?: string;
+  dismissLabel?: string;
+  /** When set, an unconnected network shows Connect. Omitted, it stays a disabled Share. */
+  onConnectRequest?: (platform: SocialPlatform) => void;
 }
 
 /** Shown after an eligible edit of a live listing has already been saved. */
-export function SocialPostPrompt({ open, connected, initialSelected, posting, onSkip, onPost }: Props) {
+export function SocialPostPrompt({
+  open,
+  connected,
+  initialSelected,
+  posting,
+  onSkip,
+  onPost,
+  title = "Share this update?",
+  description = "Your changes are saved. Choose where to share this update. These choices apply to this post only.",
+  dismissLabel = "Skip",
+  onConnectRequest,
+}: Props) {
   const [selected, setSelected] = useState<SocialPlatform[]>(initialSelected);
   useEffect(() => {
     if (open) setSelected(initialSelected.filter((p) => connected[p]));
@@ -25,15 +42,18 @@ export function SocialPostPrompt({ open, connected, initialSelected, posting, on
     <Dialog open={open} onOpenChange={(o) => { if (!o && !posting) onSkip(); }}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Share this update?</DialogTitle>
+          <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
-        <p className="text-sm text-muted-foreground">
-          Your changes are saved. Choose where to share this update. These choices apply to this post only.
-        </p>
-        <SocialPlatformChoices connected={connected} selected={selected} onChange={setSelected} />
+        <p className="text-sm text-muted-foreground">{description}</p>
+        <SocialPlatformChoices
+          connected={connected}
+          selected={selected}
+          onChange={setSelected}
+          onConnectRequest={onConnectRequest}
+        />
         <div className="flex justify-end gap-2 pt-2">
           <Button type="button" variant="outline" onClick={onSkip} disabled={posting}>
-            Skip
+            {dismissLabel}
           </Button>
           <Button type="button" onClick={() => onPost(selected)} disabled={posting || selected.length === 0}>
             {posting ? "Sharing…" : "Share"}
