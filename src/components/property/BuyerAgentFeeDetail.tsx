@@ -64,7 +64,7 @@ export function BuyerAgentFeeDetail({
         <div className="flex items-start gap-2">
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-              <p className="text-xs font-medium tracking-wide text-neon-green">Buyer Agent Fee</p>
+              <p className="text-xs font-medium tracking-wide text-neon-green">Buyer Agent Compensation</p>
               <p className="text-sm font-semibold leading-none text-neutral-900">{feeDisplay}</p>
             </div>
             <p className="mt-1 text-xs text-neutral-500">Paid by Seller</p>
@@ -73,7 +73,7 @@ export function BuyerAgentFeeDetail({
             <DialogTrigger asChild>
               <button
                 type="button"
-                aria-label="About buyer agent fee"
+                aria-label="About buyer agent compensation"
                 className="shrink-0 rounded-md p-0.5 text-neutral-400 transition-colors hover:bg-neutral-50 hover:text-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300/50"
               >
                 <HelpCircle className="h-4 w-4" />
@@ -83,7 +83,7 @@ export function BuyerAgentFeeDetail({
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2 text-neutral-900">
                   <DollarSign className="h-5 w-5 text-neutral-600" />
-                  Buyer Agent Fee
+                  Buyer Agent Compensation
                 </DialogTitle>
               </DialogHeader>
               <div className="space-y-3 py-4 text-sm text-neutral-600">
