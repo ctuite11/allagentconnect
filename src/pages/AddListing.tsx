@@ -75,6 +75,7 @@ import { DcmlsPublishingIntroOverlay } from "@/components/add-listing/DcmlsPubli
 import { AddListingStatusHelp } from "@/components/add-listing/AddListingStatusHelp";
 import { AddListingStatusIntroOverlay } from "@/components/add-listing/AddListingStatusIntroOverlay";
 import { ConfirmBeforePublishingDialog } from "@/components/add-listing/ConfirmBeforePublishingDialog";
+import { SOCIAL_PUBLISHING_UI_ENABLED } from "@/config/featureFlags";
 import { SocialPublishingSection } from "@/components/add-listing/SocialPublishingSection";
 import { SocialPostPrompt } from "@/components/social/SocialPostPrompt";
 import {
@@ -611,6 +612,8 @@ const AddListing = () => {
   const [availableCities, setAvailableCities] = useState<CityOption[]>([]);
   const [locationValidation, setLocationValidation] = useState<{ isValid: boolean; message?: string }>({ isValid: true });
   const [validationErrors, setValidationErrors] = useState<{ field: string; label: string }[]>([]);
+  /** True when the current errors came from a Publish attempt (drives section highlights). */
+  const [publishErrorMode, setPublishErrorMode] = useState(false);
   const validationSummaryRef = useRef<HTMLDivElement>(null);
   const stickyActionBarRef = useRef<HTMLDivElement>(null);
 
@@ -2984,6 +2987,36 @@ const AddListing = () => {
     setValidationErrors(prev => prev.filter(err => err.field !== field));
   };
 
+  // Publish validation only: which page section contains each publish-blocking field.
+  const PUBLISH_ERROR_SECTIONS: Record<string, string> = {
+    go_live_date: "go_live_date",
+    address: "section-location", city: "section-location", state: "section-location",
+    zip_code: "section-location", county: "section-location",
+    price: "section-pricing", monthly_rent: "section-pricing",
+    listing_agreement_type: "section-agreement",
+    buyer_agent_compensation_offered: "section-compensation", commission_rate: "section-compensation",
+    photos: "section-photos",
+  };
+  const sectionErrorClass = (sectionId: string) =>
+    publishErrorMode && validationErrors.some((e) => PUBLISH_ERROR_SECTIONS[e.field] === sectionId)
+      ? "rounded-lg border border-destructive/40 border-l-4 border-l-destructive bg-destructive/5 px-4 pb-4"
+      : "";
+  const scrollToFirstErrorSection = (errors: { field: string }[]) => {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const first = errors.find((e) => PUBLISH_ERROR_SECTIONS[e.field]);
+        if (!first) return scrollValidationSummaryIntoView();
+        const section = document.getElementById(PUBLISH_ERROR_SECTIONS[first.field]);
+        if (!section) return scrollValidationSummaryIntoView();
+        section.scrollIntoView({ behavior: "smooth", block: "start" });
+        const fieldEl =
+          (document.getElementById(first.field) as HTMLElement | null) ??
+          section.querySelector<HTMLElement>("input:not([type=hidden]), button, [tabindex]");
+        fieldEl?.focus({ preventScroll: true });
+      });
+    });
+  };
+
   /**
    * True when this save takes the listing live for the first time and the
    * agent has not yet confirmed the photo order for this publish attempt.
@@ -3115,7 +3148,9 @@ const AddListing = () => {
       });
       if (errors.length > 0) {
         setValidationErrors(errors);
-        scrollValidationSummaryIntoView();
+        setPublishErrorMode(!targetIsDraft);
+        if (!targetIsDraft) scrollToFirstErrorSection(errors);
+        else scrollValidationSummaryIntoView();
         draftSession.endSave();
         setSubmitting(false);
         return;
@@ -3518,7 +3553,9 @@ const AddListing = () => {
       });
       if (errors.length > 0) {
         setValidationErrors(errors);
-        scrollValidationSummaryIntoView();
+        setPublishErrorMode(publishNow);
+        if (publishNow) scrollToFirstErrorSection(errors);
+        else scrollValidationSummaryIntoView();
         setSubmitting(false);
         return;
       }
@@ -4008,6 +4045,7 @@ const AddListing = () => {
 
   /** After a successful first publish: read saved defaults, then post. Never affects the listing. */
   const runFirstPublishSocial = async (savedListingId: string, dbStatus: string) => {
+    if (!SOCIAL_PUBLISHING_UI_ENABLED) return;
     if (!isSocialOwner()) return;
     let selection: SocialPlatform[] = [];
     try {
@@ -4040,6 +4078,7 @@ const AddListing = () => {
     newPrice: number | null;
   }): Promise<boolean> => {
     try {
+      if (!SOCIAL_PUBLISHING_UI_ENABLED) return false;
       if (!isSocialOwner()) return false;
       if (!args.prevStatus || args.prevStatus === LISTING_STATUS.DRAFT) return false;
       if (!isSocialEligibleStatus(args.newStatus)) return false;
@@ -4523,7 +4562,7 @@ const AddListing = () => {
                 )}
 
                 {/* Address Section */}
-                <div className="space-y-4">
+                <div id="section-location" className={cn("space-y-4", sectionErrorClass("section-location"))}>
                   <Label className={agentSectionTitle}>Property location</Label>
                   
                   {/* Street Address + Unit # */}
@@ -4757,7 +4796,7 @@ const AddListing = () => {
                 </div>
 
                 {/* Price Section */}
-                <div className="space-y-4 border-t border-zinc-100 pt-6">
+                <div id="section-pricing" className={cn("space-y-4 border-t border-zinc-100 pt-6", sectionErrorClass("section-pricing"))}>
                   <Label className={agentSectionTitle}>
                     {formData.listing_type === "for_rent" ? "Pricing & deposits" : "Pricing"}
                   </Label>
@@ -5695,7 +5734,7 @@ const AddListing = () => {
                 </div>
 
                 {/* Listing / Rental Agreement Type */}
-                <div className="space-y-2 border-t border-zinc-100 pt-6">
+                <div id="section-agreement" className={cn("space-y-2 border-t border-zinc-100 pt-6", sectionErrorClass("section-agreement"))}>
                   <Label className={agentSectionTitle}>{listingAgreementSectionTitle(formData.listing_type)}</Label>
                   <div className={cn("space-y-3 max-w-md", hasFieldError("listing_agreement_type") && "rounded-lg border border-red-200 ring-1 ring-red-200/80 bg-white p-3 shadow-none")}>
                     <Label>
@@ -5734,7 +5773,7 @@ const AddListing = () => {
 
                 {/* Buyer Agent Compensation - For Sale only */}
                 {formData.listing_type === "for_sale" && (
-                  <div className="space-y-4 border-t border-zinc-100 pt-6">
+                  <div id="section-compensation" className={cn("space-y-4 border-t border-zinc-100 pt-6", sectionErrorClass("section-compensation"))}>
                     <Label className={agentSectionTitle}>Buyer Agent Compensation</Label>
                     <div
                       id="buyer_agent_compensation_offered"
@@ -6023,7 +6062,7 @@ const AddListing = () => {
                   
                   {/* Property Photos - Auto-Navigate to Management Page */}
                   {/* Photos Section */}
-                  <div className="space-y-4">
+                  <div id="section-photos" className={cn("space-y-4", sectionErrorClass("section-photos"))}>
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                       <div>
                         <Label className={agentSectionTitle}>Property Photos</Label>
@@ -6322,7 +6361,7 @@ const AddListing = () => {
 
               </form>
 
-              {isNeverPublished() && publishSocialConnected && publishSocialStatus === "ready" && isSocialOwner() ? (
+              {SOCIAL_PUBLISHING_UI_ENABLED && isNeverPublished() && publishSocialConnected && publishSocialStatus === "ready" && isSocialOwner() ? (
                 <SocialPublishingSection
                   connected={publishSocialConnected}
                   selected={publishSocialSelected}
@@ -6335,7 +6374,7 @@ const AddListing = () => {
               {/* Final actions at the end of the form */}
               <div
                 ref={bottomActionsRef}
-                className={`${isNeverPublished() && publishSocialConnected && publishSocialStatus === "ready" ? "mt-6" : "mt-8 border-t border-zinc-200 pt-6"} flex flex-wrap items-center justify-end gap-2`}
+                className={`${SOCIAL_PUBLISHING_UI_ENABLED && isNeverPublished() && publishSocialConnected && publishSocialStatus === "ready" ? "mt-6" : "mt-8 border-t border-zinc-200 pt-6"} flex flex-wrap items-center justify-end gap-2`}
               >
                 {renderActionButtons()}
               </div>
@@ -6420,7 +6459,7 @@ const AddListing = () => {
         }}
       />
 
-      {editSocialPrompt ? (
+      {SOCIAL_PUBLISHING_UI_ENABLED && editSocialPrompt ? (
         <SocialPostPrompt
           open
           connected={editSocialPrompt.connected}
