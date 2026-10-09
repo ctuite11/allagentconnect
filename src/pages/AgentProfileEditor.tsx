@@ -52,6 +52,7 @@ import { Seo } from "@/components/Seo";
 import TeamAccountCTA from "@/components/profile-editor/TeamAccountCTA";
 import { useAuthRole } from "@/hooks/useAuthRole";
 import { DcmlsProfileSettingsCard } from "@/components/dcmls/DcmlsProfileSettingsCard";
+import { DCMLS_SETTINGS_UI_ENABLED } from "@/config/featureFlags";
 
 
 interface SocialLinks {
@@ -1391,7 +1392,7 @@ setHeaderBackgroundType(profile.header_background_type || "color");
               </CardContent>
             </Card>
 
-            <DcmlsProfileSettingsCard />
+            {DCMLS_SETTINGS_UI_ENABLED && <DcmlsProfileSettingsCard />}
           </div>
 
           {/* Right Column - Live Preview */}

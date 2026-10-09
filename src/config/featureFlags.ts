@@ -17,3 +17,13 @@ export const CONCIERGE_LISTINGS_ENABLED = false;
  * launch gate stay fully intact; flip to `true` to restore the UI.
  */
 export const SOCIAL_PUBLISHING_UI_ENABLED = false;
+
+/**
+ * DCMLS_SETTINGS_UI_ENABLED
+ * Hides every agent-facing DCMLS settings surface (the Direct Connect MLS
+ * participation card on Settings and the full DCMLS profile settings card on
+ * the Profile editor) until Direct Connect MLS is ready. All DCMLS backend
+ * fields, participation state, audit history, saved preferences, and code stay
+ * fully intact; flip to `true` to restore the UI.
+ */
+export const DCMLS_SETTINGS_UI_ENABLED = false;

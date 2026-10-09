@@ -18,6 +18,7 @@ import { agentSectionDesc, agentSectionTitle } from "@/lib/agentUi";
 import { useAgentSettings } from "@/hooks/useAgentSettings";
 import type { User } from "@supabase/supabase-js";
 import { DcmlsOptInHandoffDialog } from "@/components/dcmls/DcmlsOptInHandoffDialog";
+import { DCMLS_SETTINGS_UI_ENABLED } from "@/config/featureFlags";
 
 export default function AgentSettings() {
   const [user, setUser] = useState<User | null>(null);
@@ -172,39 +173,43 @@ export default function AgentSettings() {
             </div>
           </AgentSectionCard>
 
-          <AgentSectionCard className="space-y-4 p-5 md:p-6">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <h2 className={agentSectionTitle}>Direct Connect MLS</h2>
-                <p className={`mt-0.5 ${agentSectionDesc}`}>
-                  Opt into the consumer Direct Connect MLS marketplace. Opting in does{" "}
-                  <span className="font-medium text-neutral-700">not</span> automatically publish
-                  listings — each listing must be selected separately.
-                </p>
-              </div>
-              <Globe className="h-5 w-5 text-[#0E56F5]" />
-            </div>
+          {DCMLS_SETTINGS_UI_ENABLED && (
+            <>
+              <AgentSectionCard className="space-y-4 p-5 md:p-6">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <h2 className={agentSectionTitle}>Direct Connect MLS</h2>
+                    <p className={`mt-0.5 ${agentSectionDesc}`}>
+                      Opt into the consumer Direct Connect MLS marketplace. Opting in does{" "}
+                      <span className="font-medium text-neutral-700">not</span> automatically publish
+                      listings — each listing must be selected separately.
+                    </p>
+                  </div>
+                  <Globe className="h-5 w-5 text-[#0E56F5]" />
+                </div>
 
-            <div className="flex items-center justify-between gap-4 rounded-lg border border-zinc-100 bg-white px-4 py-3">
-              <div className="min-w-0">
-                <Label htmlFor="dcmls-participation" className="text-sm font-medium text-neutral-900">
-                  Participate in Direct Connect MLS
-                </Label>
-                <p className="mt-0.5 text-xs text-neutral-500">
-                  {settings?.dcmls_participation
-                    ? "You can show individual listings on DCMLS from Add/Edit Listing."
-                    : "Turn this on before selecting listings to show on DCMLS."}
-                </p>
-              </div>
-              <Switch
-                id="dcmls-participation"
-                checked={settings?.dcmls_participation === true}
-                disabled={savingDcmls || !settings}
-                onCheckedChange={(checked) => void handleDcmlsParticipation(checked)}
-              />
-            </div>
-          </AgentSectionCard>
-          <DcmlsOptInHandoffDialog open={showDcmlsHandoff} onOpenChange={setShowDcmlsHandoff} />
+                <div className="flex items-center justify-between gap-4 rounded-lg border border-zinc-100 bg-white px-4 py-3">
+                  <div className="min-w-0">
+                    <Label htmlFor="dcmls-participation" className="text-sm font-medium text-neutral-900">
+                      Participate in Direct Connect MLS
+                    </Label>
+                    <p className="mt-0.5 text-xs text-neutral-500">
+                      {settings?.dcmls_participation
+                        ? "You can show individual listings on DCMLS from Add/Edit Listing."
+                        : "Turn this on before selecting listings to show on DCMLS."}
+                    </p>
+                  </div>
+                  <Switch
+                    id="dcmls-participation"
+                    checked={settings?.dcmls_participation === true}
+                    disabled={savingDcmls || !settings}
+                    onCheckedChange={(checked) => void handleDcmlsParticipation(checked)}
+                  />
+                </div>
+              </AgentSectionCard>
+              <DcmlsOptInHandoffDialog open={showDcmlsHandoff} onOpenChange={setShowDcmlsHandoff} />
+            </>
+          )}
 
           <AgentSectionCard className="space-y-4 p-5 md:p-6">
             <div className="flex items-center justify-between gap-4">
