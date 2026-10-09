@@ -5714,17 +5714,17 @@ const AddListing = () => {
                         key={option.value}
                         className="flex items-center gap-3 cursor-pointer group"
                       >
-                        <Checkbox
+                        <input
+                          type="radio"
+                          name="listing_agreement_type"
+                          className="h-4 w-4 accent-primary"
                           checked={formData.listing_agreement_type === option.value}
-                          onCheckedChange={(checked) => {
-                            const newValue = checked ? option.value : "";
+                          onChange={() => {
                             setFormData(prev => ({
                               ...prev,
-                              listing_agreement_type: newValue,
+                              listing_agreement_type: option.value,
                             }));
-                            if (newValue) {
-                              clearFieldError("listing_agreement_type");
-                            }
+                            clearFieldError("listing_agreement_type");
                           }}
                         />
                         <span className="text-sm text-foreground group-hover:text-foreground/80">
