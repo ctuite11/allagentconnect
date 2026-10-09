@@ -18,6 +18,7 @@ import { dcmlsPublishSnapshot } from "@/lib/dcmlsPublishPayload";
 import { DcmlsPublishControl } from "@/components/listing/DcmlsPublishControl";
 import type { DcmlsParticipationState } from "@/components/listing/DcmlsPublishControl";
 import { fetchDcmlsParticipation } from "@/lib/dcmlsListing";
+import { DCMLS_SETTINGS_UI_ENABLED } from "@/config/featureFlags";
 
 const EditListing: React.FC = () => {
   const { user } = useAuthRole();
@@ -262,7 +263,7 @@ const EditListing: React.FC = () => {
       auto_activate_days: status === LISTING_STATUS.NEW && typeof autoActivateDays === "number" ? autoActivateDays : null,
       auto_activate_on: computedAutoActivateOn,
       // Only rewrite DCMLS fields when participation is known. Lookup failure must not unpublish.
-      ...(dcmlsParticipation === "on"
+      ...(!DCMLS_SETTINGS_UI_ENABLED ? {} : dcmlsParticipation === "on"
         ? dcmlsPublishSnapshot(publishToDcmls)
         : dcmlsParticipation === "off"
           ? dcmlsPublishSnapshot(false)
@@ -711,7 +712,7 @@ const EditListing: React.FC = () => {
                 )}
 
                 {/* DCMLS Publishing */}
-                <div className="border-t pt-4">
+                {DCMLS_SETTINGS_UI_ENABLED && <div className="border-t pt-4">
                   <DcmlsPublishControl
                     checked={publishToDcmls}
                     onCheckedChange={setPublishToDcmls}
@@ -720,7 +721,7 @@ const EditListing: React.FC = () => {
                     participation={dcmlsParticipation}
                     listingIsDraft={originalStatus === "draft"}
                   />
-                </div>
+                </div>}
 
                 <div className="flex gap-3 pt-4">
                   <Button

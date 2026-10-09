@@ -75,7 +75,7 @@ import { DcmlsPublishingIntroOverlay } from "@/components/add-listing/DcmlsPubli
 import { AddListingStatusHelp } from "@/components/add-listing/AddListingStatusHelp";
 import { AddListingStatusIntroOverlay } from "@/components/add-listing/AddListingStatusIntroOverlay";
 import { ConfirmBeforePublishingDialog } from "@/components/add-listing/ConfirmBeforePublishingDialog";
-import { SOCIAL_PUBLISHING_UI_ENABLED } from "@/config/featureFlags";
+import { SOCIAL_PUBLISHING_UI_ENABLED, DCMLS_SETTINGS_UI_ENABLED } from "@/config/featureFlags";
 import { SocialPublishingSection } from "@/components/add-listing/SocialPublishingSection";
 import { SocialPostPrompt } from "@/components/social/SocialPostPrompt";
 import {
@@ -2519,7 +2519,7 @@ const AddListing = () => {
       }
 
       const dcmlsSnapshot =
-        dcmlsParticipation === "on"
+        !DCMLS_SETTINGS_UI_ENABLED ? null : dcmlsParticipation === "on"
           ? dcmlsPublishSnapshot(formData.show_on_dcmls === true)
           : dcmlsParticipation === "off"
             ? dcmlsPublishSnapshot(false)
@@ -2761,7 +2761,7 @@ const AddListing = () => {
 
     // DCMLS: listing-level selection only when the agent participates.
     // Only rewrite DCMLS fields when participation is known.
-    ...(dcmlsParticipation === "on"
+    ...(!DCMLS_SETTINGS_UI_ENABLED ? {} : dcmlsParticipation === "on"
       ? dcmlsPublishSnapshot(formData.show_on_dcmls === true)
       : dcmlsParticipation === "off"
         ? dcmlsPublishSnapshot(false)
@@ -4321,7 +4321,7 @@ const AddListing = () => {
       <Seo title="Add Listing" />
       <DcmlsPublishingIntroOverlay open={introVisible} onGotIt={handleGotIt} />
       <AddListingStatusIntroOverlay
-        open={statusIntroVisible && !introVisible}
+        open={statusIntroVisible && !(DCMLS_SETTINGS_UI_ENABLED && introVisible)}
         onGotIt={handleStatusGotIt}
       />
       <div className="min-h-0 bg-white pb-10">
@@ -4532,7 +4532,7 @@ const AddListing = () => {
                         required
                       />
                       <p className="text-xs text-muted-foreground">
-                        On this date, the listing goes live on MLS and DCMLS — status changes from Coming Soon to On MLS.
+                        On this date, the listing goes live on MLS{DCMLS_SETTINGS_UI_ENABLED ? " and DCMLS" : ""} — status changes from Coming Soon to On MLS.
                       </p>
                     </div>
                   )}
@@ -4550,7 +4550,7 @@ const AddListing = () => {
                   </div>
                 </div>
 
-                {!isConciergeMode && (
+                {DCMLS_SETTINGS_UI_ENABLED && !isConciergeMode && (
                   <div className="border-b border-zinc-100 pb-6">
                     <DcmlsPublishControl
                       checked={formData.show_on_dcmls === true}
