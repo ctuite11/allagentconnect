@@ -18,6 +18,7 @@ import { agentSectionDesc, agentSectionTitle } from "@/lib/agentUi";
 import { useAgentSettings } from "@/hooks/useAgentSettings";
 import type { User } from "@supabase/supabase-js";
 import { DcmlsOptInHandoffDialog } from "@/components/dcmls/DcmlsOptInHandoffDialog";
+import { DCMLS_SETTINGS_UI_ENABLED } from "@/config/featureFlags";
 
 export default function AgentSettings() {
   const [user, setUser] = useState<User | null>(null);
