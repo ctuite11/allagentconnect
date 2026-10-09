@@ -1,4 +1,5 @@
 import type { ResolvedRoleResult } from "@/lib/resolveUserRole";
+import { DEVELOPER_ACCESS_UI_ENABLED } from "@/config/featureFlags";
 
 /**
  * Deterministic router: one decision, one redirect, no retries.
@@ -9,7 +10,7 @@ export function getRouteForRole(result: ResolvedRoleResult): string {
     case "admin":
       return "/admin/approvals";
     case "developer":
-      return "/developer";
+      return DEVELOPER_ACCESS_UI_ENABLED ? "/developer" : "/";
     case "delegate":
       return "/agent-dashboard";
     case "buyer":

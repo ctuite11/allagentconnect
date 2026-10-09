@@ -1,5 +1,10 @@
 # Roadmap — AAC
 
+## 2026-10-09 — Developer access prelaunch hide
+- [x] Add one reversible flag that hides the Developer request choice and blocks direct request, sign-in, and private workspace routes.
+- [x] Run focused safeguards and type-check; verify Agent request/login paths remain available (6 tests passed; preview routes verified 2026-10-09).
+- [ ] Deploy through GitHub `main` → Netlify and verify the hidden state on allagentconnect.com.
+
 ## 2026-10-09 — DCMLS prelaunch UI hide
 - [x] Extend the existing reversible flag to all agent-facing DCMLS surfaces; preserve stored values and backend logic (4 focused regression tests passed).
 - [x] Verify signed-in UI without saving, publishing, sending, or changing data (Settings, Profile, Add, Edit, Requests redirect).
