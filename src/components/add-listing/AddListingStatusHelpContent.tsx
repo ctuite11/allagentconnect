@@ -1,5 +1,6 @@
 import { ADD_LISTING_STATUS_INTRO } from "@/lib/addListingStatusHelp";
 import { cn } from "@/lib/utils";
+import { DCMLS_SETTINGS_UI_ENABLED } from "@/config/featureFlags";
 
 type AddListingStatusHelpContentProps = {
   className?: string;
@@ -46,7 +47,7 @@ export function AddListingStatusHelpContent({
               <span>
                 <span className="font-semibold text-neutral-900">{label}</span>
                 {" — "}
-                {description}
+                {DCMLS_SETTINGS_UI_ENABLED ? description : description.replace(" Can be published on Direct Connect MLS.", "")}
               </span>
             </li>
           ))}
