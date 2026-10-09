@@ -1,5 +1,10 @@
 # Roadmap — AAC
 
+## 2026-10-09 — Add Listing documents
+- [x] Add "Floor Plan" to Type of Document (stored as `floor_plan`); dedicated Floor Plans media section untouched.
+- [x] Added documents row: Document Type is the main line, uploaded filename underneath (display-only; type-check passed).
+- [ ] Browser QA with a Draft: add a Floor Plan PDF, save, reopen, confirm label and row order (no publish).
+
 ## 2026-10-09 — Manage Photos/Floor Plans return flow
 - [x] Save & Return goes back to the original form context; Add listing heading only for creation-flow drafts; scroll to media section; scroll flag cleared, creation flag kept.
 - [ ] Signed-in browser QA with a Draft (no publish).

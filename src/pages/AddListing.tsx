@@ -6378,8 +6378,8 @@ const AddListing = () => {
                               <div className="flex min-w-0 flex-1 items-start gap-3">
                                 <FileText className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground" aria-hidden />
                                 <div className="min-w-0">
-                                  <p className="truncate text-sm font-medium text-neutral-900">{doc.file.name}</p>
-                                  <p className="text-xs text-muted-foreground">{addListingDocumentTypeDisplay(doc)}</p>
+                                  <p className="truncate text-sm font-medium text-neutral-900">{addListingDocumentTypeDisplay(doc)}</p>
+                                  <p className="truncate text-xs text-muted-foreground" title={doc.file.name}>{doc.file.name}</p>
                                 </div>
                               </div>
                               <Button
