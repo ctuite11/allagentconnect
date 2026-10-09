@@ -1,28 +1,25 @@
-# Edit Draft: show original placeholders for untouched fields
+# Temporarily hide all Developer access
 
-## What the agent will see
-Reopening an incomplete Draft shows blank fields with the normal placeholder text (as on a new Add Listing form) instead of `Draft`, `TBD`, `00000`, or `$0`. Anything the agent actually typed still appears.
+## What visitors will see
+- The Request Access page will show only the Agent path; the Developer card and its explanatory copy will be hidden.
+- Direct visits to the Developer request form, Developer sign-in, or any private Developer workspace URL will return to the AAC homepage.
+- Existing agent login and access-request behavior will remain unchanged.
 
-## Known filler values (confirmed in the save code)
-Drafts are saved with these stand-ins only so the record can be stored:
-- Street Address: `Draft` (sale and rental forms)
-- City/Town: `TBD` (sale form)
-- ZIP Code: `00000` (sale form)
-- Listing Price / Monthly Rent: `0` (sale and rental forms)
+## Implementation
+- Add one reversible `DEVELOPER_ACCESS_UI_ENABLED` frontend feature flag, set to `false`, alongside the existing centralized flags.
+- Use that single flag for the Request Access Developer card and every Developer access route:
+  - `/developer-access`
+  - `/developer-login`
+  - `/developer`
+  - `/developer/developments/new`
+  - `/developer/developments/:developmentId` and its child pages
+- Keep all Developer pages, workspace code, account memberships, projects, database records, functions, storage, and role resolution intact. Turning the flag back on restores access.
+- Do not change agent-facing New Developments browsing or admin development management; this scope is Developer request, sign-in, and private portal access only.
 
-State defaults to `MA`. That is a real default selection, not filler, so it stays as is.
+## Safeguards and tests
+- Add focused route/visibility tests proving the Developer card is absent and every direct Developer access URL is blocked while the flag is off.
+- Confirm Agent Request Access and Agent Login still work.
+- Confirm a developer role cannot enter the private portal through the ordinary login redirect while the flag is off.
+- Run the relevant tests and type-check, then verify the hidden state on the live site after the normal GitHub `main` → Netlify deployment.
 
-## Change
-- Add one small shared helper that turns a loaded value back to blank **only when the listing's status is `draft`** and the value exactly matches one of the filler values above (address `Draft`, city `TBD`, ZIP `00000`, price/rent `0`).
-- Use it where a saved draft loads into the form on the Add/Edit Listing screen (sale and rent), and in the rental draft reopen path if it loads saved drafts.
-- Saving still writes the same filler values to the database when a field is blank, so draft saving works the same.
-- Published and live listings are never normalized. Real entries are never cleared. That includes a street name typed by the agent, even an unusual one. Placeholders on new Add Listing forms stay the same. Save Draft and Publish validation stay the same.
-
-## Tests
-Unit tests for the helper:
-- Each filler value on a draft becomes blank.
-- The same values on a non-draft listing stay as they are.
-- Real values (e.g. `12 Main St`, `Boston`, `02129`, `750000`) stay as they are.
-
-## QA
-Save an incomplete draft and reopen it. Every untouched field should show its normal placeholder. Type-check and build should pass. No backend, email, publishing, or stored-data changes.
+No backend, account, project, listing, email, Hot Sheet, publishing, or stored-data changes.
