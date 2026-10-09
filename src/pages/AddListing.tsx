@@ -5839,15 +5839,16 @@ const AddListing = () => {
                               key="commission_rate_pct"
                               id="commission_rate"
                               name="buyer_agent_commission_rate"
-                              type="number"
+                              type="text"
                               inputMode="decimal"
-                              step="0.01"
-                              min="0"
-                              max="100"
+                              autoComplete="off"
                               placeholder="2.5"
                               value={formData.commission_rate}
                               onChange={(e) =>
-                                setFormData((prev) => ({ ...prev, commission_rate: e.target.value }))
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  commission_rate: commissionPercentFromInput(e.target.value),
+                                }))
                               }
                               autoComplete="off"
                               className={cn(
