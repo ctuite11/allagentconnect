@@ -4,6 +4,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Globe, AlertCircle, EyeOff, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { DCMLS_SETTINGS_UI_ENABLED } from "@/config/featureFlags";
 
 /** Agent-level DCMLS participation resolution for listing forms. */
 export type DcmlsParticipationState = "loading" | "unknown" | "on" | "off";
@@ -35,6 +36,7 @@ export function DcmlsPublishControl({
   participation,
   listingIsDraft = false,
 }: DcmlsPublishControlProps) {
+  if (!DCMLS_SETTINGS_UI_ENABLED) return null;
   const knownOn = participation === "on";
   const knownOff = participation === "off";
   const disabled = !knownOn;

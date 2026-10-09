@@ -1,5 +1,6 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { DCMLS_SETTINGS_UI_ENABLED } from "@/config/featureFlags";
 
 type ConfirmBeforePublishingDialogProps = {
   open: boolean;
@@ -68,7 +69,7 @@ export function ConfirmBeforePublishingDialog({
           <p className="pt-1 text-sm text-muted-foreground">
             {price} · {statusLabel}
           </p>
-          <p className="text-sm text-muted-foreground">DCMLS · {dcmlsLabel}</p>
+          {DCMLS_SETTINGS_UI_ENABLED && <p className="text-sm text-muted-foreground">DCMLS · {dcmlsLabel}</p>}
         </div>
 
         <p className="text-sm text-muted-foreground">

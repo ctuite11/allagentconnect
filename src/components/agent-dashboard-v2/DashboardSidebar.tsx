@@ -22,6 +22,7 @@ import {
   Inbox,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { DCMLS_SETTINGS_UI_ENABLED } from "@/config/featureFlags";
 import { isAgentHotSheetsNavActive } from "@/lib/sidebarNavActive";
 import { getSidebarRouteContext } from "@/lib/workspaceSidebarRoutes";
 import { supabase } from "@/integrations/supabase/client";
@@ -175,9 +176,9 @@ export function DashboardSidebar({
     prevRouteContextRef.current = routeContext;
   }, [routeContext]);
 
-  const mainMenu: SidebarItem[] = baseMainMenu.map((item) =>
-    item.label === "Messages" ? { ...item, badge: unreadCount } : item
-  );
+  const mainMenu: SidebarItem[] = baseMainMenu
+    .filter((item) => DCMLS_SETTINGS_UI_ENABLED || item.route !== "/agent/dcmls/leads")
+    .map((item) => item.label === "Messages" ? { ...item, badge: unreadCount } : item);
 
   const handleLogout = async () => {
     try {

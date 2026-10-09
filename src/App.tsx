@@ -221,7 +221,7 @@ import { Skeleton } from "./components/ui/skeleton";
 import { SharedListingGuestProvider } from "./contexts/SharedListingGuestContext";
 import { SharedListingGate } from "./components/SharedListingGate";
 import { decideLegacyDashboardRoute } from "./lib/legacyDashboardRoute";
-import { CONCIERGE_LISTINGS_ENABLED } from "./config/featureFlags";
+import { CONCIERGE_LISTINGS_ENABLED, DCMLS_SETTINGS_UI_ENABLED } from "./config/featureFlags";
 
 /** Legacy `/dashboard` → role-appropriate home (buyers must land on `/client/dashboard`). */
 function LegacyDashboardRedirect() {
@@ -584,8 +584,8 @@ const App = () => (
                   <Route path="/agent/diagnostics" element={<RouteGuard requireRole="agent"><AgentDiagnostics /></RouteGuard>} />
                   <Route path="/add-rental-listing" element={<RouteGuard requireRole="agent"><AddRentalListing /></RouteGuard>} />
                   <Route path="/agent/profile" element={<RouteGuard requireRole="agent"><AgentProfileEditor /></RouteGuard>} />
-                  <Route path="/agent/dcmls/leads" element={<RouteGuard requireRole="agent"><DcmlsIncentiveLeadsList /></RouteGuard>} />
-                  <Route path="/agent/dcmls/leads/:leadId" element={<RouteGuard requireRole="agent"><DcmlsIncentiveLeadDetail /></RouteGuard>} />
+                  <Route path="/agent/dcmls/leads" element={<RouteGuard requireRole="agent">{DCMLS_SETTINGS_UI_ENABLED ? <DcmlsIncentiveLeadsList /> : <Navigate to="/agent-dashboard" replace />}</RouteGuard>} />
+                  <Route path="/agent/dcmls/leads/:leadId" element={<RouteGuard requireRole="agent">{DCMLS_SETTINGS_UI_ENABLED ? <DcmlsIncentiveLeadDetail /> : <Navigate to="/agent-dashboard" replace />}</RouteGuard>} />
                   <Route path="/agent-profile-editor" element={<RouteGuard requireRole="agent"><AgentProfileEditor /></RouteGuard>} />
                   <Route path="/manage-team" element={<RouteGuard requireRole="agent"><ManageTeam /></RouteGuard>} />
                   <Route path="/team/:id/manage" element={<RouteGuard requireRole="agent"><ManageTeam /></RouteGuard>} />

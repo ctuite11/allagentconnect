@@ -20,9 +20,9 @@ export const SOCIAL_PUBLISHING_UI_ENABLED = false;
 
 /**
  * DCMLS_SETTINGS_UI_ENABLED
- * Hides every agent-facing DCMLS settings surface (the Direct Connect MLS
- * participation card on Settings and the full DCMLS profile settings card on
- * the Profile editor) until Direct Connect MLS is ready. All DCMLS backend
+ * Hides all agent-facing DCMLS surfaces together: Profile/Settings,
+ * listing publishing controls and introductions, badges/search controls,
+ * and the Requests navigation/routes until Direct Connect MLS is ready. All DCMLS backend
  * fields, participation state, audit history, saved preferences, and code stay
  * fully intact; flip to `true` to restore the UI.
  */

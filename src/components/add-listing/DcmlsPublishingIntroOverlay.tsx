@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import { DCMLS_SETTINGS_UI_ENABLED } from "@/config/featureFlags";
 
 const AGENT_MONOGRAM_CLASS = "text-[#22C55E]";
 const AGENT_PRIMARY_BTN_CLASS =
@@ -43,6 +44,7 @@ const capabilities: { icon: typeof Globe; label: string; iconClass: string }[] =
 
 /** Compact emerald reminder above Publish — shown after intro dismiss. */
 export function DcmlsLaunchingSoonReminder({ className }: { className?: string }) {
+  if (!DCMLS_SETTINGS_UI_ENABLED) return null;
   return (
     <p
       className={cn(
@@ -65,7 +67,7 @@ type DcmlsPublishingIntroOverlayProps = {
 export function DcmlsPublishingIntroOverlay({ open, onGotIt }: DcmlsPublishingIntroOverlayProps) {
   const [dontShowAgain, setDontShowAgain] = useState(false);
 
-  if (!open) return null;
+  if (!DCMLS_SETTINGS_UI_ENABLED || !open) return null;
 
   return createPortal(
     <div
