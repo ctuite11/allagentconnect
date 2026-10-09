@@ -574,12 +574,21 @@ function MyListingsView({
   };
 
   const saveQuickEdit = async () => {
-    if (!editingId || editPrice === "" || editStatus === "") return;
+    if (!editingId || editPrice === "") return;
+    const current = listings.find((l) => l.id === editingId);
+    if (!current) return;
 
-    await onQuickUpdate(editingId, {
-      price: Number(editPrice),
-      status: editStatus as ListingStatus,
-    });
+    // Drafts: Quick Edit is strictly price-only. Status is never sent, so this
+    // path can never publish a draft (only Edit Listing → Publish → confirm can).
+    if (isDraftListingStatus(current.status)) {
+      await onQuickUpdate(editingId, { price: Number(editPrice) });
+    } else {
+      if (editStatus === "") return;
+      await onQuickUpdate(editingId, {
+        price: Number(editPrice),
+        status: editStatus as ListingStatus,
+      });
+    }
 
     cancelQuickEdit();
   };
@@ -930,6 +939,11 @@ function MyListingsView({
                                onChange={(e) => setEditPrice(parseUsdWholeInput(e.target.value))}
                              />
                            </div>
+                           {isDraftListingStatus(l.status) ? (
+                             <span className="text-[12px] text-zinc-500">
+                               Open the listing and click Publish to make a draft live.
+                             </span>
+                           ) : (
                            <Select
                              value={editStatus}
                              onValueChange={(v) => setEditStatus(v as ListingStatus)}
@@ -1308,6 +1322,13 @@ const MyListings = () => {
         status === "temporarily_withdrawn" ||
         status === "withdrawn" ||
         status === "draft";
+
+      // Backstop: a draft can never be moved to any status from My Listings.
+      // Publishing a draft happens only via Edit Listing → Publish → confirmation.
+      if (isDraftListingStatus(current.status) && updates.status !== undefined) {
+        toast.error("Open the listing and click Publish to make a draft live.");
+        return;
+      }
 
       let nextUpdates = { ...updates };
       // My Listings-only behavior: BOM action reactivates to `active` for inactive listings.
