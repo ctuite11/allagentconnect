@@ -135,6 +135,7 @@ const ADD_LISTING_DOCUMENT_TYPE_LABELS: Record<string, string> = {
   survey: "Survey",
   hoa_docs: "HOA Documents",
   deed: "Deed",
+  floor_plan: "Floor Plan",
   other: "Other",
 };
 
@@ -6285,6 +6286,7 @@ const AddListing = () => {
                               <SelectItem value="survey">Survey</SelectItem>
                               <SelectItem value="hoa_docs">HOA Documents</SelectItem>
                               <SelectItem value="deed">Deed</SelectItem>
+                              <SelectItem value="floor_plan">Floor Plan</SelectItem>
                               <SelectItem value="other">Other</SelectItem>
                             </SelectContent>
                           </Select>
