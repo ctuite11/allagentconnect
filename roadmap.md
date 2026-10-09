@@ -1,5 +1,9 @@
 # Roadmap — AAC
 
+## 2026-10-09 — Manage Photos/Floor Plans return flow
+- [x] Save & Return goes back to the original form context; Add listing heading only for creation-flow drafts; scroll to media section; scroll flag cleared, creation flag kept.
+- [ ] Signed-in browser QA with a Draft (no publish).
+
 ## 2026-10-09 — Developer access prelaunch hide
 - [x] Add one reversible flag that hides the Developer request choice and blocks direct request, sign-in, and private workspace routes.
 - [x] Run focused safeguards and type-check; verify Agent request/login paths remain available (6 tests passed; preview routes verified 2026-10-09).
