@@ -4904,6 +4904,8 @@ const AddListing = () => {
                       <Label htmlFor="year_built">Year Built</Label>
                       <NumericInput
                         id="year_built"
+                        min={YEAR_BUILT_MIN}
+                        max={yearBuiltMax()}
                         value={formData.year_built}
                         onChange={(e) => setFormData(prev => ({ ...prev, year_built: e.target.value }))}
                       />

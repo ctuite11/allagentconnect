@@ -627,6 +627,8 @@ const EditListing: React.FC = () => {
                     <Label htmlFor="yearBuilt">Year Built</Label>
                     <NumericInput
                       id="yearBuilt"
+                      min={YEAR_BUILT_MIN}
+                      max={yearBuiltMax()}
                       value={yearBuilt}
                       onChange={(e) => setYearBuilt(e.target.value === "" ? "" : Number(e.target.value))}
                       placeholder="e.g. 1990"

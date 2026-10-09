@@ -18,6 +18,10 @@ export function sanitizeNumericInput(raw: string, decimal: boolean): string {
 
 type Limit = string | number | undefined;
 
+/** Year Built bounds: optional, but if entered a four-digit year from 1600 through next year. */
+export const YEAR_BUILT_MIN = 1600;
+export const yearBuiltMax = () => new Date().getFullYear() + 1;
+
 /** Same rules as a browser number input: min, max, and step (default 1) counted from min (or 0). */
 export function numericValidationMessage(text: string, min: Limit, max: Limit, step: Limit): string {
   if (text.trim() === "") return "";
