@@ -42,3 +42,6 @@
 
 - [ ] Weborik/Nenad read-only Phase 1 access: Viewer invite (user does via Share); direct read-only DB login blocked, since Lovable Cloud has no external DB connections. Waiting on user to pick an alternative.
 - [x] Admin 'Share to AAC Social' button on property page (admin's own accounts; retry reuses clientRequestId; no backend changes) (2026-10-08)
+
+- [x] Incident 2026-10-09: My Listings Quick Edit price-only for drafts (paused Hot Sheet emails; 234 Friend St back to Draft)
+- [ ] Live QA of Quick Edit on a throwaway draft after deploy, then user decides when to unpause Hot Sheet emails
