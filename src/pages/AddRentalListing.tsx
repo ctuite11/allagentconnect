@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { NumericInput, blockIfInvalidNumericFields } from "@/components/ui/numeric-input";
+import { NumericInput, blockIfInvalidNumericFields, YEAR_BUILT_MIN, yearBuiltMax } from "@/components/ui/numeric-input";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -1153,6 +1153,8 @@ const AddRentalListing = () => {
                     <Label htmlFor="year_built">Year Built</Label>
                     <NumericInput
                       id="year_built"
+                      min={YEAR_BUILT_MIN}
+                      max={yearBuiltMax()}
                       value={formData.year_built}
                       onChange={(e) => setFormData({ ...formData, year_built: e.target.value })}
                     />
