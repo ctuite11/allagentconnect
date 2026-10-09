@@ -1,5 +1,7 @@
 # Project rules
 
+- All agent-facing DCMLS UI is gated by the single `DCMLS_SETTINGS_UI_ENABLED` flag; hiding it must preserve stored DCMLS fields and leave the consumer-host/backend behavior intact so launch restoration is reversible.
+
 - On-screen listing addresses use `buildDisplayAddress` / `listingCardStreetHeading` from `src/lib/utils`; web and email formatters share `supabase/functions/_shared/addressFormatFixtures.json` so the website and emails format addresses the same way.
 - First-publish social selections live on Add Listing and persist as listing defaults; the publish confirmation stays listing-only and later update choices remain one-off, keeping publishing concerns separated.
 - Hot Sheet rules are LOCKED: connected-buyer, first-invite, Send-button label and status defaults/order come only from `src/lib/hotSheetRules.ts`, guarded by `src/lib/hotSheetRules.test.ts` and `filterStaleInviteTokens.test.ts`; changing a rule requires changing its test in the same change, because these decisions kept regressing when re-implemented inline.

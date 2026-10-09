@@ -1,5 +1,10 @@
 # Roadmap — AAC
 
+## 2026-10-09 — DCMLS prelaunch UI hide
+- [ ] Extend the existing reversible flag to all agent-facing DCMLS surfaces; preserve stored values and backend logic.
+- [ ] Verify signed-in UI without saving, publishing, sending, or changing data.
+- [ ] Verify GitHub main → Netlify production deployment at allagentconnect.com.
+
 ## 2026-10-03 — Approved production action: cron.job_run_details cleanup (DONE 2026-10-03)
 - [x] Evidence snapshot (db 694 MB; 760,994 rows / 463 MB; oldest 2026-02-09; 718,994 deletable; uptime 7d23h; 26 conns)
 - [x] Fixed 7-day cutoff (2026-09-26 20:47:33 UTC, used for every batch) computed once, used for every batch (Chris's added safeguard)
