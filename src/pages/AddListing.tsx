@@ -318,6 +318,10 @@ const AddListing = () => {
     [location, searchParams],
   );
   const initialStatus = searchParams.get("status") || "new";
+  // True only while still in the original Add Listing creation workflow (new route,
+  // or a draft created this session returning from Manage Photos/Floor Plans).
+  const mediaReturnState = location.state as { fromAddListing?: boolean; scrollTo?: string } | null;
+  const inCreationFlow = !listingId || mediaReturnState?.fromAddListing === true;
   /**
    * Admin concierge mode ("Create Listing for Agent").
    * Draft-only: the listing is owned by the selected member, saved through
@@ -3456,7 +3460,12 @@ const AddListing = () => {
       // Continue anyway - photos page can still work
     }
     
-    navigate(`/agent/listings/${targetId}/photos`);
+    navigate(`/agent/listings/${targetId}/photos`, {
+      state: {
+        returnTo: `/agent/listings/edit/${targetId}`,
+        returnState: { ...(inCreationFlow ? { fromAddListing: true } : {}), scrollTo: "section-photos", from: addListingBackTo },
+      },
+    });
   };
 
   // Helper to save form data and navigate to manage floor plans
@@ -3502,7 +3511,12 @@ const AddListing = () => {
       console.error('[AddListing] Error saving before floor plan navigation:', err);
     }
     
-    navigate(`/agent/listings/${targetId}/floor-plans`);
+    navigate(`/agent/listings/${targetId}/floor-plans`, {
+      state: {
+        returnTo: `/agent/listings/edit/${targetId}`,
+        returnState: { ...(inCreationFlow ? { fromAddListing: true } : {}), scrollTo: "section-floorplans", from: addListingBackTo },
+      },
+    });
   };
 
   /** Save the draft, then open it on the listing page in the same tab. */
@@ -4009,6 +4023,26 @@ const AddListing = () => {
     }
   };
 
+  // Returning from Manage Photos/Floor Plans: scroll once to the media section,
+  // then clear only scrollTo (keep fromAddListing so the heading stays stable).
+  useEffect(() => {
+    const target = mediaReturnState?.scrollTo;
+    if (!target || loading || isLoadingListing) return;
+    const t = window.setTimeout(() => {
+      const el = document.getElementById(target);
+      if (el) {
+        el.style.scrollMarginTop = el.style.scrollMarginTop || "96px";
+        el.scrollIntoView({ behavior: "auto", block: "start" });
+      }
+      const { scrollTo: _drop, ...rest } = mediaReturnState ?? {};
+      navigate(
+        { pathname: location.pathname, search: location.search },
+        { replace: true, state: rest },
+      );
+    }, 150);
+    return () => window.clearTimeout(t);
+  }, [mediaReturnState?.scrollTo, loading, isLoadingListing]);
+
   // Returning from authorization: stay in Add Listing, refresh status, and strip
   // only the social param. The newly connected platform is never auto-selected.
   useEffect(() => {
@@ -4329,7 +4363,7 @@ const AddListing = () => {
         <div className="max-w-5xl mx-auto">
           <AgentPageHeader
             withTopPadding
-            title={listingId ? "Edit listing" : "Add listing"}
+            title={inCreationFlow ? "Add listing" : "Edit listing"}
             backTo={addListingBackTo}
             actions={
               user?.email ? (
@@ -6160,7 +6194,7 @@ const AddListing = () => {
                   </div>
 
                   {/* Floor Plans */}
-                  <div className="space-y-4">
+                  <div id="section-floorplans" className="space-y-4 scroll-mt-24">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                       <Label className={agentSectionTitle}>Floor Plans</Label>
                       <div className="flex flex-wrap gap-2">

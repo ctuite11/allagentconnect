@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -22,6 +22,7 @@ interface ManageListingPhotosProps {
 const ManageListingPhotos: React.FC<ManageListingPhotosProps> = ({ mode = 'photos' }) => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const [items, setItems] = useState<Photo[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
@@ -208,7 +209,12 @@ const ManageListingPhotos: React.FC<ManageListingPhotosProps> = ({ mode = 'photo
     
     if (success) {
       toast.success(`${config.title.replace('Manage ', '')} saved`);
-      navigate(`/agent/listings/edit/${id}`);
+      const ret = location.state as { returnTo?: string; returnState?: unknown } | null;
+      if (ret?.returnTo?.startsWith('/')) {
+        navigate(ret.returnTo, { state: ret.returnState });
+      } else {
+        navigate(`/agent/listings/edit/${id}`);
+      }
     } else {
       toast.error(`Failed to save ${mode === 'photos' ? 'photos' : 'floor plans'}`);
     }
