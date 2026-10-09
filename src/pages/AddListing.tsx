@@ -2989,7 +2989,7 @@ const AddListing = () => {
 
   // Publish validation only: which page section contains each publish-blocking field.
   const PUBLISH_ERROR_SECTIONS: Record<string, string> = {
-    go_live_date: "section-status",
+    go_live_date: "go_live_date",
     address: "section-location", city: "section-location", state: "section-location",
     zip_code: "section-location", county: "section-location",
     price: "section-pricing", monthly_rent: "section-pricing",
