@@ -22,6 +22,7 @@ interface ManageListingPhotosProps {
 const ManageListingPhotos: React.FC<ManageListingPhotosProps> = ({ mode = 'photos' }) => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const [items, setItems] = useState<Photo[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
