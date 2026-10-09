@@ -42,6 +42,7 @@ import {
   listingAgreementOptions,
   listingAgreementSectionTitle,
   listingAgreementTypeLabel,
+  normalizeLegacyListingAgreementType,
 } from "@/lib/listingAgreement";
 import { 
   getCitiesForStateAndCounty, 
