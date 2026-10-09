@@ -42,6 +42,7 @@ import {
   listingAgreementOptions,
   listingAgreementSectionTitle,
   listingAgreementTypeLabel,
+  normalizeLegacyListingAgreementType,
 } from "@/lib/listingAgreement";
 import { 
   getCitiesForStateAndCounty, 
@@ -1064,8 +1065,8 @@ const AddListing = () => {
           rental_fee_text: data.rental_fee_text || "",
           laundry_type: data.laundry_type || "none",
           pets_comment: data.pets_comment || "",
-          listing_agreement_type: Array.isArray(data.listing_agreement_types) && data.listing_agreement_types.length > 0 
-            ? data.listing_agreement_types[0] as string 
+          listing_agreement_type: Array.isArray(data.listing_agreement_types) && data.listing_agreement_types.length > 0
+            ? normalizeLegacyListingAgreementType(data.listing_agreement_types[0] as string)
             : "",
           // Additional fields that were missing
           
@@ -5714,17 +5715,17 @@ const AddListing = () => {
                         key={option.value}
                         className="flex items-center gap-3 cursor-pointer group"
                       >
-                        <Checkbox
+                        <input
+                          type="radio"
+                          name="listing_agreement_type"
+                          className="h-4 w-4 accent-primary"
                           checked={formData.listing_agreement_type === option.value}
-                          onCheckedChange={(checked) => {
-                            const newValue = checked ? option.value : "";
+                          onChange={() => {
                             setFormData(prev => ({
                               ...prev,
-                              listing_agreement_type: newValue,
+                              listing_agreement_type: option.value,
                             }));
-                            if (newValue) {
-                              clearFieldError("listing_agreement_type");
-                            }
+                            clearFieldError("listing_agreement_type");
                           }}
                         />
                         <span className="text-sm text-foreground group-hover:text-foreground/80">
@@ -5807,12 +5808,14 @@ const AddListing = () => {
                           {formData.commission_type === 'percentage' ? 'Rate (%)' : 'Flat Amount ($)'}
                         </Label>
                         <div className="relative w-full">
-                          <span
-                            className="pointer-events-none absolute left-2.5 top-1/2 z-10 -translate-y-1/2 text-sm font-medium tabular-nums text-muted-foreground"
-                            aria-hidden
-                          >
-                            {formData.commission_type === "percentage" ? "%" : "$"}
-                          </span>
+                          {formData.commission_type === "flat_fee" && (
+                            <span
+                              className="pointer-events-none absolute left-2.5 top-1/2 z-10 -translate-y-1/2 text-sm font-medium tabular-nums text-muted-foreground"
+                              aria-hidden
+                            >
+                              $
+                            </span>
+                          )}
                           {formData.commission_type === "flat_fee" ? (
                             <Input
                               key="commission_rate_flat"
@@ -5851,10 +5854,18 @@ const AddListing = () => {
                                 }))
                               }
                               className={cn(
-                                "h-9 w-full py-1 pl-7 pr-2",
+                                "h-9 w-full py-1 pl-3 pr-7",
                                 "[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none",
                               )}
                             />
+                          )}
+                          {formData.commission_type === "percentage" && (
+                            <span
+                              className="pointer-events-none absolute right-2.5 top-1/2 z-10 -translate-y-1/2 text-sm font-medium tabular-nums text-muted-foreground"
+                              aria-hidden
+                            >
+                              %
+                            </span>
                           )}
                         </div>
                       </div>
