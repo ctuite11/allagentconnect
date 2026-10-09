@@ -258,6 +258,18 @@ function commissionFlatFeeDigitsFromNumber(value: unknown): string {
   return String(Math.round(n));
 }
 
+/**
+ * Percentage `commission_rate` uses a text input (wheel/trackpad safe). Keep digits and at most
+ * one decimal point so typing and paste both work ("2.5" stays "2.5", "abc2.5%" becomes "2.5",
+ * a second "." is dropped). Saves still use `parseFloat`, unchanged.
+ */
+function commissionPercentFromInput(raw: string): string {
+  const cleaned = raw.replace(/[^\d.]/g, "");
+  const firstDot = cleaned.indexOf(".");
+  if (firstDot === -1) return cleaned;
+  return cleaned.slice(0, firstDot + 1) + cleaned.slice(firstDot + 1).replace(/\./g, "");
+}
+
 /** Strip grouping/non-digits from flat-fee typing; normalize to whole dollars as digits. */
 function commissionFlatFeeDigitsFromInput(raw: string): string {
   const d = raw.replace(/\D/g, "");
