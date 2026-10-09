@@ -1,28 +1,28 @@
-# Make the Buyer Agent Compensation rate field wheel/trackpad safe
+# Edit Draft: show original placeholders for untouched fields
 
-## The bug
-On Add Listing / Edit Listing, the **Rate (%)** field is a browser number field. While it has focus, a mouse wheel or Mac trackpad scroll increments/decrements the value (2.5 → 2.4 → 2.6…) instead of just scrolling the page. An agent scrolling the form can silently change the offered compensation.
+## What the agent will see
+Reopening an incomplete Draft shows blank fields with the normal placeholder text (as on a new Add Listing form) instead of `Draft`, `TBD`, `00000`, or `$0`. Anything the agent actually typed still appears.
 
-## Root cause (confirmed in code)
-- `src/pages/AddListing.tsx` (~line 5826): the percentage branch of `commission_rate` uses `type="number"`. Number inputs change value on wheel while focused.
-- The **Flat Amount ($)** branch on the same screen is already a text input with numeric input mode — wheel-safe.
-- The rental form (`AddRentalListing.tsx`) uses `FormattedInput`, also a text input — wheel-safe.
-- So only the one percentage field needs fixing.
+## Known filler values (confirmed in the save code)
+Drafts are saved with these stand-ins only so the record can be stored:
+- Street Address: `Draft` (sale and rental forms)
+- City/Town: `TBD` (sale form)
+- ZIP Code: `00000` (sale form)
+- Listing Price / Monthly Rent: `0` (sale and rental forms)
 
-## The fix (one field, one file)
-Change the Rate (%) input in `AddListing.tsx` from `type="number"` to `type="text"` with `inputMode="decimal"`, mirroring the existing flat-fee pattern:
+State defaults to `MA`. That is a real default selection, not filler, so it stays as is.
 
-- Accept only digits and a single decimal point while typing (e.g. 2, 2.5, 2.25 all work).
-- Keep `min 0 / max 100` validation at save time exactly as today — stored values, calculations, and existing listing data are untouched.
-- Mobile still gets the decimal numeric keyboard via `inputMode="decimal"`.
-- Page scrolling is unaffected: text inputs never consume wheel events.
-- The existing spinner-arrow-hiding CSS stays, harmlessly.
+## Change
+- Add one small shared helper that turns a loaded value back to blank **only when the listing's status is `draft`** and the value exactly matches one of the filler values above (address `Draft`, city `TBD`, ZIP `00000`, price/rent `0`).
+- Use it where a saved draft loads into the form on the Add/Edit Listing screen (sale and rent), and in the rental draft reopen path if it loads saved drafts.
+- Saving still writes the same filler values to the database when a field is blank, so draft saving works the same.
+- Published and live listings are never normalized. Real entries are never cleared. That includes a street name typed by the agent, even an unusual one. Placeholders on new Add Listing forms stay the same. Save Draft and Publish validation stay the same.
 
-No other compensation field needs changes (flat fee and rental are already text-based). No backend, template, or data changes.
+## Tests
+Unit tests for the helper:
+- Each filler value on a draft becomes blank.
+- The same values on a non-draft listing stay as they are.
+- Real values (e.g. `12 Main St`, `Boston`, `02129`, `750000`) stay as they are.
 
 ## QA
-1. Enter 2.5 in Rate (%), leave the field focused, two-finger scroll up/down on a Mac trackpad: page scrolls, value stays exactly 2.5.
-2. Type 2, 2.5, 2.25 — all accepted; letters rejected.
-3. Switch to Flat Amount and back — both fields behave as before.
-4. Save a listing with 2.5% and reload — value round-trips unchanged.
-5. Build + type-check pass.
+Save an incomplete draft and reopen it. Every untouched field should show its normal placeholder. Type-check and build should pass. No backend, email, publishing, or stored-data changes.
