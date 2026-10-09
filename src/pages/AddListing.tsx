@@ -2989,7 +2989,7 @@ const AddListing = () => {
 
   // Publish validation only: which page section contains each publish-blocking field.
   const PUBLISH_ERROR_SECTIONS: Record<string, string> = {
-    go_live_date: "go_live_date",
+    go_live_date: "section-dates",
     address: "section-location", city: "section-location", state: "section-location",
     zip_code: "section-location", county: "section-location",
     price: "section-pricing", monthly_rent: "section-pricing",
@@ -4498,7 +4498,14 @@ const AddListing = () => {
                 </div>
 
                 {/* Date Section - shown for all statuses */}
-                <div className={`grid grid-cols-1 ${formData.status === "coming_soon" ? "md:grid-cols-3" : "md:grid-cols-2"} gap-4 border-b border-zinc-100 pb-6`}>
+                <div
+                  id="section-dates"
+                  className={cn(
+                    "grid grid-cols-1 gap-4 border-b border-zinc-100 pb-6",
+                    formData.status === "coming_soon" ? "md:grid-cols-3" : "md:grid-cols-2",
+                    sectionErrorClass("section-dates")
+                  )}
+                >
                   <div className="space-y-2">
                     <Label htmlFor="list_date">AAC List Date</Label>
                     <Input
