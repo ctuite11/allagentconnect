@@ -962,6 +962,7 @@ function MyListingsView({
                                ))}
                              </SelectContent>
                            </Select>
+                           )}
                            <Button type="button" size="sm" className="h-7 px-2.5 text-[12px]" onClick={saveQuickEdit}>
                              Save
                            </Button>
