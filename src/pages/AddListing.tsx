@@ -258,6 +258,18 @@ function commissionFlatFeeDigitsFromNumber(value: unknown): string {
   return String(Math.round(n));
 }
 
+/**
+ * Percentage `commission_rate` uses a text input (wheel/trackpad safe). Keep digits and at most
+ * one decimal point so typing and paste both work ("2.5" stays "2.5", "abc2.5%" becomes "2.5",
+ * a second "." is dropped). Saves still use `parseFloat`, unchanged.
+ */
+function commissionPercentFromInput(raw: string): string {
+  const cleaned = raw.replace(/[^\d.]/g, "");
+  const firstDot = cleaned.indexOf(".");
+  if (firstDot === -1) return cleaned;
+  return cleaned.slice(0, firstDot + 1) + cleaned.slice(firstDot + 1).replace(/\./g, "");
+}
+
 /** Strip grouping/non-digits from flat-fee typing; normalize to whole dollars as digits. */
 function commissionFlatFeeDigitsFromInput(raw: string): string {
   const d = raw.replace(/\D/g, "");
@@ -5827,17 +5839,17 @@ const AddListing = () => {
                               key="commission_rate_pct"
                               id="commission_rate"
                               name="buyer_agent_commission_rate"
-                              type="number"
+                              type="text"
                               inputMode="decimal"
-                              step="0.01"
-                              min="0"
-                              max="100"
+                              autoComplete="off"
                               placeholder="2.5"
                               value={formData.commission_rate}
                               onChange={(e) =>
-                                setFormData((prev) => ({ ...prev, commission_rate: e.target.value }))
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  commission_rate: commissionPercentFromInput(e.target.value),
+                                }))
                               }
-                              autoComplete="off"
                               className={cn(
                                 "h-9 w-full py-1 pl-7 pr-2",
                                 "[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none",
