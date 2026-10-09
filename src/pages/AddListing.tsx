@@ -5853,10 +5853,18 @@ const AddListing = () => {
                                 }))
                               }
                               className={cn(
-                                "h-9 w-full py-1 pl-7 pr-2",
+                                "h-9 w-full py-1 pl-3 pr-7",
                                 "[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none",
                               )}
                             />
+                          )}
+                          {formData.commission_type === "percentage" && (
+                            <span
+                              className="pointer-events-none absolute right-2.5 top-1/2 z-10 -translate-y-1/2 text-sm font-medium tabular-nums text-muted-foreground"
+                              aria-hidden
+                            >
+                              %
+                            </span>
                           )}
                         </div>
                       </div>
