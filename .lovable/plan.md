@@ -1,34 +1,39 @@
-# Urgent: Quick Edit on My Listings published a draft
+# Apology Email — Hot Sheet Incident (234 Friend Street)
 
-## Root cause (confirmed in code)
-The **Quick Edit** button on a My Listings card saves the price and status you pick straight to the listing. It skips everything Add/Edit Listing uses to protect a draft: no keep-it-a-draft step, no required-field or photo checks, no duplicate check, and no "Ready to publish?" confirmation. The only check it runs is on price.
+## Recipients
 
-So saving a draft with a live status in Quick Edit makes the listing live right away. Hot Sheets treat that as a real status change, and emails go out. Quick Edit has worked this way since Nov 26, 2025. Its status list includes live statuses even when the listing is a draft.
+The 4 agents who received Hot Sheet emails containing the fake/incidental listing **234 Friend Street** on Oct 9 (4 new-match emails at 1:00 PM ET + 4 status-change emails at 1:01 PM ET). Deduplicated by email address — each agent receives exactly one apology, regardless of how many emails they got.
 
-## Evidence (read-only, already captured)
-- 234 Friend Street (L-1430, id `541e6a81-c977-41fb-83e0-1f37b6461ad9`), saved from the app under your login.
-- Times are ET. The records show a first save at 12:59:26 of **Draft → Coming Soon**, then Coming Soon → Off Market at 1:00:12, then → Cancelled at 1:01:53. The listing is Cancelled now.
-- 3 Hot Sheet listing events and 8 delivery records. 8 emails went out (4 new-match, 4 status-change), and none are still pending, so nothing for this listing can be stopped.
-- One unrelated email is still waiting in the queue. I won't touch it.
+## Draft email (for your review — nothing sends until you approve)
 
-## Plan
-1. **Containment:** turn on the existing Hot Sheet email pause switch. No restarts or resizing.
-2. **Fix Quick Edit only:**
-   - When a listing is a draft, Quick Edit lets you change the price only. Status changes are removed for drafts, with the note: "Open the listing and click Publish to make a draft live."
-   - As a backstop, the Quick Edit save also refuses to move a draft to any live status.
-   - Already-live listings keep today's Quick Edit behavior.
-3. **Lock it with a test**: Quick Edit can never take a draft live.
-4. **Return 234 Friend Street to Draft**, keeping all incident records (status history, audit, Hot Sheet events, deliveries, emails).
-5. **QA with Hot Sheet emails paused, sending no email:**
-   - On a throwaway draft, change the price in Quick Edit. It stays a draft, and the status choice isn't offered.
-   - Check that the status is still Draft and there are zero Hot Sheet events, deliveries, or emails.
-   - Confirm Edit Listing → Publish → confirmation still publishes.
-6. Deploy the usual way (GitHub `main` → allagentconnect.com) and report the exact fix and results. Hot Sheet emails stay paused until you say to turn them back on.
+**Subject:** Apology: a test listing was emailed to you in error
 
-## Not touched
-Add/Edit Listing, Hot Sheet matching and templates, other queued emails, and other listings.
+**Body:**
 
-## Technical notes
-- `src/pages/MyListings.tsx`: `saveQuickEdit` → `onQuickUpdate` → `supabase.from("listings").update({ price, status })`. The status list is `EDIT_STATUS_OPTIONS`, built from `EDITABLE_STATUSES`.
-- Pause switch: `HOT_SHEET_EMAILS_PAUSED=true`, read by `assertHotSheetEnqueueAllowed` in `_shared/emailStreams.ts`.
-- Revert: update `status='draft'` for that one listing by its id. The status-history trigger records the change.
+> Hi [First name],
+>
+> Earlier today you received one or two Hot Sheet emails from All Agent Connect that included a listing for 234 Friend Street. That listing was a test record that was published by mistake, and it should never have been sent to you.
+>
+> The listing is not real, and no action is needed on your part — please disregard those emails.
+>
+> We've fixed the underlying issue so this can't happen again, and we're sorry for the clutter in your inbox.
+>
+> Thank you for being part of All Agent Connect.
+>
+> — Chris Tuite, All Agent Connect
+
+## Sending method
+
+- One-off send through the existing email queue (`email_jobs`) using the existing **admin-adhoc** template, from `hello@mail.allagentconnect.com` — the same compliant pipeline as all other AAC email (no new template, no template changes).
+- Personalized first name per recipient.
+- Idempotency key per recipient so no duplicates can be created.
+
+## Verification after send
+
+- Confirm exactly 4 email jobs created (one per unique agent email), all delivered.
+- Confirm no other queue rows, Hot Sheet batches, or listing data changed.
+
+## Explicitly out of scope
+
+- No changes to Hot Sheet matching, notifications, templates, or the email system.
+- No other emails sent. No listing or contact data modified.
