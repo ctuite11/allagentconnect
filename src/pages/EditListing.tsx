@@ -6,6 +6,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NumericInput } from "@/components/ui/numeric-input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
@@ -452,9 +453,8 @@ const EditListing: React.FC = () => {
                 {status === LISTING_STATUS.NEW && (
                   <div className="border rounded-lg p-4 bg-muted/30">
                     <Label htmlFor="autoActivateDays">Auto-activate after (days)</Label>
-                    <Input
+                    <NumericInput
                       id="autoActivateDays"
-                      type="number"
                       min={1}
                       value={autoActivateDays}
                       onChange={(e) => setAutoActivateDays(e.target.value === "" ? "" : Number(e.target.value))}
@@ -532,9 +532,9 @@ const EditListing: React.FC = () => {
 
                   <div>
                     <Label htmlFor="price">{listingType === "for_sale" ? "Price" : "Monthly Rent"} *</Label>
-                    <Input
+                    <NumericInput
                       id="price"
-                      type="number"
+                      decimal
                       value={listingType === "for_sale" ? price : monthlyRent}
                       onChange={(e) => {
                         const val = e.target.value === "" ? "" : Number(e.target.value);
@@ -583,9 +583,8 @@ const EditListing: React.FC = () => {
                 <div className="grid grid-cols-3 gap-4 border-t pt-4">
                   <div>
                     <Label htmlFor="bedrooms">Bedrooms</Label>
-                    <Input
+                    <NumericInput
                       id="bedrooms"
-                      type="number"
                       value={bedrooms}
                       onChange={(e) => setBedrooms(e.target.value === "" ? "" : Number(e.target.value))}
                       placeholder="e.g. 3"
@@ -593,9 +592,9 @@ const EditListing: React.FC = () => {
                   </div>
                   <div>
                     <Label htmlFor="bathrooms">Bathrooms</Label>
-                    <Input
+                    <NumericInput
                       id="bathrooms"
-                      type="number"
+                      decimal
                       step="0.5"
                       value={bathrooms}
                       onChange={(e) => setBathrooms(e.target.value === "" ? "" : Number(e.target.value))}
@@ -604,9 +603,8 @@ const EditListing: React.FC = () => {
                   </div>
                   <div>
                     <Label htmlFor="squareFeet">Square Feet</Label>
-                    <Input
+                    <NumericInput
                       id="squareFeet"
-                      type="number"
                       value={squareFeet}
                       onChange={(e) => setSquareFeet(e.target.value === "" ? "" : Number(e.target.value))}
                       placeholder="e.g. 2000"
@@ -617,9 +615,9 @@ const EditListing: React.FC = () => {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="lotSize">Lot Size (sq ft)</Label>
-                    <Input
+                    <NumericInput
                       id="lotSize"
-                      type="number"
+                      decimal
                       value={lotSize}
                       onChange={(e) => setLotSize(e.target.value === "" ? "" : Number(e.target.value))}
                       placeholder="e.g. 5000"
@@ -627,9 +625,8 @@ const EditListing: React.FC = () => {
                   </div>
                   <div>
                     <Label htmlFor="yearBuilt">Year Built</Label>
-                    <Input
+                    <NumericInput
                       id="yearBuilt"
-                      type="number"
                       value={yearBuilt}
                       onChange={(e) => setYearBuilt(e.target.value === "" ? "" : Number(e.target.value))}
                       placeholder="e.g. 1990"
@@ -643,9 +640,9 @@ const EditListing: React.FC = () => {
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <Label htmlFor="securityDeposit">Security Deposit</Label>
-                        <Input
+                        <NumericInput
                           id="securityDeposit"
-                          type="number"
+                          decimal
                           value={securityDeposit}
                           onChange={(e) => setSecurityDeposit(e.target.value === "" ? "" : Number(e.target.value))}
                           placeholder="e.g. 2500"
@@ -680,9 +677,8 @@ const EditListing: React.FC = () => {
                     <div className="grid grid-cols-3 gap-4">
                       <div>
                         <Label htmlFor="numUnits">Number of Units</Label>
-                        <Input
+                        <NumericInput
                           id="numUnits"
-                          type="number"
                           value={numUnits}
                           onChange={(e) => setNumUnits(e.target.value === "" ? "" : Number(e.target.value))}
                           placeholder="e.g. 3"
@@ -690,9 +686,9 @@ const EditListing: React.FC = () => {
                       </div>
                       <div>
                         <Label htmlFor="grossIncome">Gross Annual Income</Label>
-                        <Input
+                        <NumericInput
                           id="grossIncome"
-                          type="number"
+                          decimal
                           value={grossIncome}
                           onChange={(e) => setGrossIncome(e.target.value === "" ? "" : Number(e.target.value))}
                           placeholder="e.g. 60000"
@@ -700,9 +696,9 @@ const EditListing: React.FC = () => {
                       </div>
                       <div>
                         <Label htmlFor="operatingExpenses">Operating Expenses</Label>
-                        <Input
+                        <NumericInput
                           id="operatingExpenses"
-                          type="number"
+                          decimal
                           value={operatingExpenses}
                           onChange={(e) => setOperatingExpenses(e.target.value === "" ? "" : Number(e.target.value))}
                           placeholder="e.g. 15000"

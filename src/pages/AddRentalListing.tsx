@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NumericInput } from "@/components/ui/numeric-input";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -1121,18 +1122,17 @@ const AddRentalListing = () => {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="bedrooms">Bedrooms</Label>
-                    <Input
+                    <NumericInput
                       id="bedrooms"
-                      type="number"
                       value={formData.bedrooms}
                       onChange={(e) => setFormData({ ...formData, bedrooms: e.target.value })}
                     />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="bathrooms">Bathrooms</Label>
-                    <Input
+                    <NumericInput
                       id="bathrooms"
-                      type="number"
+                      decimal
                       step="0.5"
                       value={formData.bathrooms}
                       onChange={(e) => setFormData({ ...formData, bathrooms: e.target.value })}
@@ -1149,9 +1149,8 @@ const AddRentalListing = () => {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="year_built">Year Built</Label>
-                    <Input
+                    <NumericInput
                       id="year_built"
-                      type="number"
                       value={formData.year_built}
                       onChange={(e) => setFormData({ ...formData, year_built: e.target.value })}
                     />
