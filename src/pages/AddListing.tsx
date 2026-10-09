@@ -17,7 +17,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { NumericInput } from "@/components/ui/numeric-input";
+import { NumericInput, blockIfInvalidNumericFields } from "@/components/ui/numeric-input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -2773,6 +2773,7 @@ const AddListing = () => {
 
   /** Returns the saved draft listing ID on success, null on failure. */
   const handleSaveDraft = async (isAutoSave = false): Promise<string | null> => {
+    if (!isAutoSave && blockIfInvalidNumericFields()) return null;
     draftSession.beginSave();
     try {
       // Get fresh user from server - single source of truth
@@ -3491,6 +3492,7 @@ const AddListing = () => {
 
   const handleSubmit = async (e: React.FormEvent, publishNow: boolean = true) => {
     e.preventDefault();
+    if (blockIfInvalidNumericFields()) return;
     if (isConciergeMode) {
       // AAC staff can never publish on a member's behalf.
       toast.error("Concierge listings are saved as a draft for the member to publish.");

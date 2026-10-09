@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { NumericInput } from "@/components/ui/numeric-input";
+import { NumericInput, blockIfInvalidNumericFields } from "@/components/ui/numeric-input";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -520,6 +520,7 @@ const AddRentalListing = () => {
   };
 
   const handleSaveDraft = async (isAutoSave = false) => {
+    if (!isAutoSave && blockIfInvalidNumericFields()) return;
     try {
       if (!user) {
         if (!isAutoSave) {
@@ -602,6 +603,7 @@ const AddRentalListing = () => {
 
   const handleSubmit = async (e: React.FormEvent, publishNow: boolean = true) => {
     e.preventDefault();
+    if (blockIfInvalidNumericFields()) return;
     setSubmitting(true);
 
     try {
