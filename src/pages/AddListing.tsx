@@ -17,6 +17,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NumericInput } from "@/components/ui/numeric-input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -4872,18 +4873,17 @@ const AddListing = () => {
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="bedrooms">Bedrooms</Label>
-                      <Input
+                      <NumericInput
                         id="bedrooms"
-                        type="number"
                         value={formData.bedrooms}
                         onChange={(e) => setFormData(prev => ({ ...prev, bedrooms: e.target.value }))}
                       />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="bathrooms">Bathrooms</Label>
-                      <Input
+                      <NumericInput
                         id="bathrooms"
-                        type="number"
+                        decimal
                         step="0.5"
                         value={formData.bathrooms}
                         onChange={(e) => setFormData(prev => ({ ...prev, bathrooms: e.target.value }))}
@@ -4900,9 +4900,8 @@ const AddListing = () => {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="year_built">Year Built</Label>
-                      <Input
+                      <NumericInput
                         id="year_built"
-                        type="number"
                         value={formData.year_built}
                         onChange={(e) => setFormData(prev => ({ ...prev, year_built: e.target.value }))}
                       />
@@ -4952,9 +4951,8 @@ const AddListing = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="fiscal_year">Fiscal Year</Label>
-                      <Input
+                      <NumericInput
                         id="fiscal_year"
-                        type="number"
                         value={formData.fiscal_year}
                         onChange={(e) => setFormData(prev => ({ ...prev, fiscal_year: e.target.value }))}
                         placeholder="2025"
@@ -4990,9 +4988,8 @@ const AddListing = () => {
                     {/* Number of Units */}
                     <div className="space-y-2 max-w-xs">
                       <Label htmlFor="num_units">Number of Units *</Label>
-                      <Input
+                      <NumericInput
                         id="num_units"
-                        type="number"
                         min="2"
                         value={formData.num_units}
                         onChange={(e) => setFormData(prev => ({ ...prev, num_units: e.target.value }))}
@@ -5007,9 +5004,8 @@ const AddListing = () => {
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                         <div className="space-y-2">
                           <Label htmlFor="total_rooms">Total Rooms</Label>
-                          <Input
+                          <NumericInput
                             id="total_rooms"
-                            type="number"
                             min="0"
                             value={formData.total_rooms}
                             onChange={(e) => setFormData(prev => ({ ...prev, total_rooms: e.target.value }))}
@@ -5017,9 +5013,8 @@ const AddListing = () => {
                         </div>
                         <div className="space-y-2">
                           <Label htmlFor="total_bedrooms">Total Bedrooms</Label>
-                          <Input
+                          <NumericInput
                             id="total_bedrooms"
-                            type="number"
                             min="0"
                             value={formData.total_bedrooms}
                             onChange={(e) => setFormData(prev => ({ ...prev, total_bedrooms: e.target.value }))}
@@ -5027,9 +5022,8 @@ const AddListing = () => {
                         </div>
                         <div className="space-y-2">
                           <Label htmlFor="total_full_baths">Total Full Baths</Label>
-                          <Input
+                          <NumericInput
                             id="total_full_baths"
-                            type="number"
                             min="0"
                             value={formData.total_full_baths}
                             onChange={(e) => setFormData(prev => ({ ...prev, total_full_baths: e.target.value }))}
@@ -5037,9 +5031,8 @@ const AddListing = () => {
                         </div>
                         <div className="space-y-2">
                           <Label htmlFor="total_half_baths">Total Half Baths</Label>
-                          <Input
+                          <NumericInput
                             id="total_half_baths"
-                            type="number"
                             min="0"
                             value={formData.total_half_baths}
                             onChange={(e) => setFormData(prev => ({ ...prev, total_half_baths: e.target.value }))}
@@ -5047,9 +5040,8 @@ const AddListing = () => {
                         </div>
                         <div className="space-y-2">
                           <Label htmlFor="total_fireplaces">Total Fireplaces</Label>
-                          <Input
+                          <NumericInput
                             id="total_fireplaces"
-                            type="number"
                             min="0"
                             value={formData.total_fireplaces}
                             onChange={(e) => setFormData(prev => ({ ...prev, total_fireplaces: e.target.value }))}
@@ -5143,9 +5135,8 @@ const AddListing = () => {
                               </div>
                               <div className="space-y-2">
                                 <Label htmlFor={`unit_${index}_bedrooms`}>Beds</Label>
-                                <Input
+                                <NumericInput
                                   id={`unit_${index}_bedrooms`}
-                                  type="number"
                                   min="0"
                                   value={unit.bedrooms}
                                   onChange={(e) => {
@@ -5157,9 +5148,8 @@ const AddListing = () => {
                               </div>
                               <div className="space-y-2">
                                 <Label htmlFor={`unit_${index}_full_baths`}>Full Baths</Label>
-                                <Input
+                                <NumericInput
                                   id={`unit_${index}_full_baths`}
-                                  type="number"
                                   min="0"
                                   value={unit.full_baths}
                                   onChange={(e) => {
@@ -5171,9 +5161,8 @@ const AddListing = () => {
                               </div>
                               <div className="space-y-2">
                                 <Label htmlFor={`unit_${index}_half_baths`}>Half Baths</Label>
-                                <Input
+                                <NumericInput
                                   id={`unit_${index}_half_baths`}
-                                  type="number"
                                   min="0"
                                   value={unit.half_baths}
                                   onChange={(e) => {
@@ -5543,9 +5532,8 @@ const AddListing = () => {
                   {/* # of Parking Spaces */}
                   <div className="space-y-2 max-w-xs">
                     <Label htmlFor="parking_spaces"># of Parking Spaces</Label>
-                    <Input
+                    <NumericInput
                       id="parking_spaces"
-                      type="number"
                       min="0"
                       placeholder="0"
                       value={formData.parking_spaces}
@@ -5593,9 +5581,8 @@ const AddListing = () => {
                   {/* # of Garage Spaces */}
                   <div className="space-y-2 max-w-xs border-t border-zinc-100 pt-4">
                     <Label htmlFor="garage_spaces"># of Garage Spaces</Label>
-                    <Input
+                    <NumericInput
                       id="garage_spaces"
-                      type="number"
                       min="0"
                       placeholder="0"
                       value={formData.garage_spaces}
@@ -5643,9 +5630,8 @@ const AddListing = () => {
                   {/* Total Parking (computed) */}
                   <div className="space-y-2 max-w-xs border-t border-zinc-100 pt-4">
                     <Label htmlFor="total_parking">Total Parking</Label>
-                    <Input
+                    <NumericInput
                       id="total_parking"
-                      type="number"
                       readOnly
                       className="border-zinc-200 bg-zinc-50 text-zinc-800"
                       value={(Number(formData.parking_spaces) || 0) + (Number(formData.garage_spaces) || 0) || ""}
