@@ -2,7 +2,7 @@
 
 ## 2026-10-09 — Developer access prelaunch hide
 - [x] Add one reversible flag that hides the Developer request choice and blocks direct request, sign-in, and private workspace routes.
-- [ ] Run focused safeguards and type-check; verify Agent request/login paths remain available.
+- [x] Run focused safeguards and type-check; verify Agent request/login paths remain available (6 tests passed; preview routes verified 2026-10-09).
 - [ ] Deploy through GitHub `main` → Netlify and verify the hidden state on allagentconnect.com.
 
 ## 2026-10-09 — DCMLS prelaunch UI hide
