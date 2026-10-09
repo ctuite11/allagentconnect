@@ -1,6 +1,7 @@
 # Project rules
 
 - All agent-facing DCMLS UI is gated by the single `DCMLS_SETTINGS_UI_ENABLED` flag; hiding it must preserve stored DCMLS fields and leave the consumer-host/backend behavior intact so launch restoration is reversible.
+- All public and private Developer access is gated by the single `DEVELOPER_ACCESS_UI_ENABLED` flag; hiding it must preserve Developer accounts, memberships, projects, data, and implementation so launch restoration is reversible.
 
 - On-screen listing addresses use `buildDisplayAddress` / `listingCardStreetHeading` from `src/lib/utils`; web and email formatters share `supabase/functions/_shared/addressFormatFixtures.json` so the website and emails format addresses the same way.
 - First-publish social selections live on Add Listing and persist as listing defaults; the publish confirmation stays listing-only and later update choices remain one-off, keeping publishing concerns separated.

@@ -4,6 +4,7 @@ import { Seo } from "@/components/Seo";
 import { AacTitleAccent } from "@/components/layout/AacTitleAccent";
 import { agentSectionCard } from "@/lib/agentUi";
 import { cn } from "@/lib/utils";
+import { DEVELOPER_ACCESS_UI_ENABLED } from "@/config/featureFlags";
 
 /** Same primary action as `Button` default / `bg-aac` in-app CTAs. */
 const portalCta =
@@ -38,7 +39,12 @@ export default function RequestAccessPage() {
             </p>
           </div>
 
-          <div className="mt-12 grid gap-5 sm:grid-cols-2">
+          <div
+            className={cn(
+              "mt-12 grid gap-5",
+              DEVELOPER_ACCESS_UI_ENABLED ? "sm:grid-cols-2" : "mx-auto max-w-md",
+            )}
+          >
             <Link
               to="/auth?mode=register&source=request_access_agent"
               className={cn(agentSectionCard, portalCard)}
@@ -54,20 +60,22 @@ export default function RequestAccessPage() {
               <span className={portalCta}>Request Agent Access</span>
             </Link>
 
-            <Link
-              to="/developer-access"
-              className={cn(agentSectionCard, portalCard)}
-            >
-              <h2 className="font-sans text-3xl font-semibold leading-tight tracking-tight text-zinc-900">
-                Developer
-              </h2>
-              <AacTitleAccent className="mt-3" />
-              <p className="mt-4 flex-1 font-sans text-lg leading-relaxed text-zinc-700">
-                Manage and promote new developments for AAC’s agent network—projects, photos, floor
-                plans, units, documents, updates, and a dedicated Developer portal.
-              </p>
-              <span className={portalCta}>Request Developer Access</span>
-            </Link>
+            {DEVELOPER_ACCESS_UI_ENABLED ? (
+              <Link
+                to="/developer-access"
+                className={cn(agentSectionCard, portalCard)}
+              >
+                <h2 className="font-sans text-3xl font-semibold leading-tight tracking-tight text-zinc-900">
+                  Developer
+                </h2>
+                <AacTitleAccent className="mt-3" />
+                <p className="mt-4 flex-1 font-sans text-lg leading-relaxed text-zinc-700">
+                  Manage and promote new developments for AAC’s agent network—projects, photos, floor
+                  plans, units, documents, updates, and a dedicated Developer portal.
+                </p>
+                <span className={portalCta}>Request Developer Access</span>
+              </Link>
+            ) : null}
           </div>
 
           <p className="mt-8 text-center font-sans text-sm text-zinc-500 sm:text-base">

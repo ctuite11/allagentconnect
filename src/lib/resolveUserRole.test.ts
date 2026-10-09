@@ -11,14 +11,14 @@ function base(partial: Partial<ResolvedRoleResult>): ResolvedRoleResult {
 }
 
 describe("getRouteForRole", () => {
-  it("routes developer accounts to the developer portal", () => {
-    expect(getRouteForRole(base({ role: "developer" }))).toBe("/developer");
+  it("keeps developer accounts out of the portal while access is hidden", () => {
+    expect(getRouteForRole(base({ role: "developer" }))).toBe("/");
   });
 
   it("never sends developers to Success Hub or pending verification", () => {
     expect(
       getRouteForRole(base({ role: "developer", is_verified_agent: false })),
-    ).toBe("/developer");
+    ).toBe("/");
   });
 
   it("keeps existing agent/admin/buyer routes", () => {

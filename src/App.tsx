@@ -221,7 +221,11 @@ import { Skeleton } from "./components/ui/skeleton";
 import { SharedListingGuestProvider } from "./contexts/SharedListingGuestContext";
 import { SharedListingGate } from "./components/SharedListingGate";
 import { decideLegacyDashboardRoute } from "./lib/legacyDashboardRoute";
-import { CONCIERGE_LISTINGS_ENABLED, DCMLS_SETTINGS_UI_ENABLED } from "./config/featureFlags";
+import {
+  CONCIERGE_LISTINGS_ENABLED,
+  DCMLS_SETTINGS_UI_ENABLED,
+  DEVELOPER_ACCESS_UI_ENABLED,
+} from "./config/featureFlags";
 
 /** Legacy `/dashboard` → role-appropriate home (buyers must land on `/client/dashboard`). */
 function LegacyDashboardRedirect() {
@@ -492,7 +496,7 @@ const App = () => (
                 <Route path="/index" element={<Navigate to="/" replace />} />
                 <Route path="/register" element={<Navigate to="/request-access" replace />} />
                 <Route path="/request-access" element={<RequestAccessPage />} />
-                <Route path="/developer-access" element={<DeveloperAccessPage />} />
+                <Route path="/developer-access" element={DEVELOPER_ACCESS_UI_ENABLED ? <DeveloperAccessPage /> : <Navigate to="/" replace />} />
                 <Route path="/login" element={<LoginEntry />} />
                 <Route
                   path="/agent-match"
@@ -514,7 +518,7 @@ const App = () => (
                 {/* Auth routes */}
                 <Route element={<PublicLayout />}>
                   <Route path="/auth" element={<AuthEntry />} />
-                  <Route path="/developer-login" element={<DeveloperLoginPage />} />
+                  <Route path="/developer-login" element={DEVELOPER_ACCESS_UI_ENABLED ? <DeveloperLoginPage /> : <Navigate to="/" replace />} />
                   <Route path="/auth/callback" element={<AuthCallback />} />
                   <Route path="/auth/setup" element={<AuthSetupRedirect />} />
                   <Route path="/auth/diagnostics" element={<AuthDiagnostics />} />
@@ -661,7 +665,7 @@ const App = () => (
                 </Route>
 
                 {/* Developer portal — dedicated shell, not AppShell */}
-                <Route element={<DeveloperLayout />}>
+                <Route element={DEVELOPER_ACCESS_UI_ENABLED ? <DeveloperLayout /> : <Navigate to="/" replace />}>
                   <Route
                     path="/developer"
                     element={

@@ -27,3 +27,12 @@ export const SOCIAL_PUBLISHING_UI_ENABLED = false;
  * fully intact; flip to `true` to restore the UI.
  */
 export const DCMLS_SETTINGS_UI_ENABLED = false;
+
+/**
+ * DEVELOPER_ACCESS_UI_ENABLED
+ * Temporarily hides the public Developer request/sign-in paths and blocks the
+ * private Developer workspace until the product is ready. Developer accounts,
+ * memberships, projects, backend data, and implementation remain intact; flip
+ * to `true` to restore every Developer access surface together.
+ */
+export const DEVELOPER_ACCESS_UI_ENABLED = false;
