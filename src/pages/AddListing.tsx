@@ -5807,12 +5807,14 @@ const AddListing = () => {
                           {formData.commission_type === 'percentage' ? 'Rate (%)' : 'Flat Amount ($)'}
                         </Label>
                         <div className="relative w-full">
-                          <span
-                            className="pointer-events-none absolute left-2.5 top-1/2 z-10 -translate-y-1/2 text-sm font-medium tabular-nums text-muted-foreground"
-                            aria-hidden
-                          >
-                            {formData.commission_type === "percentage" ? "%" : "$"}
-                          </span>
+                          {formData.commission_type === "flat_fee" && (
+                            <span
+                              className="pointer-events-none absolute left-2.5 top-1/2 z-10 -translate-y-1/2 text-sm font-medium tabular-nums text-muted-foreground"
+                              aria-hidden
+                            >
+                              $
+                            </span>
+                          )}
                           {formData.commission_type === "flat_fee" ? (
                             <Input
                               key="commission_rate_flat"
