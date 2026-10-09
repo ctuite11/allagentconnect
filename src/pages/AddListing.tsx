@@ -1,3 +1,4 @@
+import { clearDraftFiller } from "@/lib/draftFillerValues";
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { ConnectSocialExplainerDialog } from "@/components/social/ConnectSocialExplainerDialog";
 import { AgentPageHeader } from "@/components/layout/AgentPageHeader";
@@ -1024,10 +1025,10 @@ const AddListing = () => {
           status: normalizedStatus,
           listing_type: data.listing_type || "for_sale",
           property_type: data.property_type || "single_family",
-          address: data.address || "",
-          city: data.city || "",
+          address: clearDraftFiller(rawStatus, "address", data.address || ""),
+          city: clearDraftFiller(rawStatus, "city", data.city || ""),
           state: data.state || "",
-          zip_code: data.zip_code || "",
+          zip_code: clearDraftFiller(rawStatus, "zip_code", data.zip_code || ""),
           county: data.county || "",
           neighborhood: data.neighborhood || "",
           latitude: data.latitude,
@@ -1037,7 +1038,7 @@ const AddListing = () => {
           square_feet: data.square_feet?.toString() || "",
           lot_size: data.lot_size?.toString() || "",
           year_built: data.year_built?.toString() || "",
-          price: data.price?.toString() || "",
+          price: clearDraftFiller(rawStatus, "price", data.price?.toString() || ""),
           description: data.description || "",
           commission_type: data.commission_type || "percentage",
           commission_rate:
