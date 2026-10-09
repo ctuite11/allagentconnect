@@ -1064,8 +1064,8 @@ const AddListing = () => {
           rental_fee_text: data.rental_fee_text || "",
           laundry_type: data.laundry_type || "none",
           pets_comment: data.pets_comment || "",
-          listing_agreement_type: Array.isArray(data.listing_agreement_types) && data.listing_agreement_types.length > 0 
-            ? data.listing_agreement_types[0] as string 
+          listing_agreement_type: Array.isArray(data.listing_agreement_types) && data.listing_agreement_types.length > 0
+            ? normalizeLegacyListingAgreementType(data.listing_agreement_types[0] as string)
             : "",
           // Additional fields that were missing
           
