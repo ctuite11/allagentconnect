@@ -1,13 +1,27 @@
 export const SALE_LISTING_AGREEMENT_OPTIONS = [
   { value: "Exclusive Right to Sell", label: "Exclusive Right to Sell" },
   {
-    value: "Exclusive Right to Sell — Buyer-Broker Compensation Offered",
-    label: "Exclusive Right to Sell — Buyer-Broker Compensation Offered",
+    value: "Exclusive Right to Sell — Variable Rate Commission",
+    label: "Exclusive Right to Sell — Variable Rate Commission",
   },
   { value: "Exclusive Agency", label: "Exclusive Agency" },
   { value: "Open Listing", label: "Open Listing" },
   { value: "Net Listing", label: "Net Listing" },
 ] as const;
+
+/**
+ * Legacy sale-agreement values saved before the rename. Mapping runs only on
+ * edit-mode load, so saved listings stay editable and re-save under the new name.
+ */
+const LEGACY_SALE_LISTING_AGREEMENT_VALUES: Record<string, string> = {
+  "Exclusive Right to Sell — Buyer-Broker Compensation Offered":
+    "Exclusive Right to Sell — Variable Rate Commission",
+};
+
+export function normalizeLegacyListingAgreementType(value: string | null | undefined): string {
+  if (!value) return "";
+  return LEGACY_SALE_LISTING_AGREEMENT_VALUES[value] ?? value;
+}
 
 export const RENTAL_LISTING_AGREEMENT_OPTIONS = [
   { value: "Exclusive Right to Rent", label: "Exclusive Right to Rent" },
