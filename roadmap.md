@@ -9,6 +9,7 @@
 - [x] Extend the existing reversible flag to all agent-facing DCMLS surfaces; preserve stored values and backend logic (4 focused regression tests passed).
 - [x] Verify signed-in UI without saving, publishing, sending, or changing data (Settings, Profile, Add, Edit, Requests redirect).
 - [x] Verify production deployment at allagentconnect.com through the existing automatic GitHub → Netlify path (signed-in live checks passed 2026-10-09; no DCMLS text/controls in checked surfaces).
+- [ ] Reconfirm the complete production checklist read-only: Settings, Profile, Add, Edit, sidebar, request redirects, and preserved stored DCMLS values.
 
 ## 2026-10-03 — Approved production action: cron.job_run_details cleanup (DONE 2026-10-03)
 - [x] Evidence snapshot (db 694 MB; 760,994 rows / 463 MB; oldest 2026-02-09; 718,994 deletable; uptime 7d23h; 26 conns)
