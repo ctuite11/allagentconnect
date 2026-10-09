@@ -5850,7 +5850,6 @@ const AddListing = () => {
                                   commission_rate: commissionPercentFromInput(e.target.value),
                                 }))
                               }
-                              autoComplete="off"
                               className={cn(
                                 "h-9 w-full py-1 pl-7 pr-2",
                                 "[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none",
