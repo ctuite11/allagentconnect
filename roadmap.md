@@ -61,3 +61,6 @@
 ## 2026-10-10 — List View event bar color matches event type
 - [x] Match the event bar to the photo badge: broker_tour = light purple bg / purple text+border, in_person = light green bg / green text+border (display-only; layout, spacing, icon, date/time format, row size unchanged). Type-check passed; preview verified in List View (Broker Tour bar renders purple, open house classes resolve to green).
 - [x] Deployed through GitHub `main` → Netlify and verified live on allagentconnect.com (Broker Tour bar renders light purple with purple text/border, row height unchanged at 34px; 2026-10-10).
+
+## 2026-10-10 — Detail page event banners
+- [done] PropertyDetail hero: upcoming Broker Tour/Open House badges stacked under status badge, reusing useListingBanners + ListingPhotoBannerBadge/formatOpenHouseLabel; preview QA passed (purple BROKER TOUR / green OPEN HOUSE, Oct 15 · 11:30 AM–1:30 PM); test events removed; not yet deployed
