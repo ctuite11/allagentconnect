@@ -81,10 +81,6 @@ function hoursSince(iso: string): number {
   return (Date.now() - new Date(iso).getTime()) / (1000 * 60 * 60);
 }
 
-function getNextOpenHouse(openHouses: unknown): any | null {
-  return getUpcomingOpenHouses(openHouses)[0] || null;
-}
-
 function getUpcomingOpenHouses(openHouses: unknown): any[] {
   if (!openHouses || !Array.isArray(openHouses)) return [];
   const now = new Date();
