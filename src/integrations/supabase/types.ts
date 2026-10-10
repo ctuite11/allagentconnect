@@ -5272,6 +5272,48 @@ export type Database = {
           },
         ]
       }
+      listing_publish_audit: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          errors: Json | null
+          id: string
+          listing_id: string
+          new_status: string | null
+          operation_id: string
+          outcome: string
+          previous_status: string | null
+          source: string
+          user_id: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          errors?: Json | null
+          id?: string
+          listing_id: string
+          new_status?: string | null
+          operation_id: string
+          outcome?: string
+          previous_status?: string | null
+          source?: string
+          user_id?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          errors?: Json | null
+          id?: string
+          listing_id?: string
+          new_status?: string | null
+          operation_id?: string
+          outcome?: string
+          previous_status?: string | null
+          source?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       listing_reminder_log: {
         Row: {
           created_at: string
@@ -8754,6 +8796,10 @@ export type Database = {
         Returns: number
       }
       prune_db_capacity_samples: { Args: never; Returns: number }
+      publish_listing: {
+        Args: { p_listing_id: string; p_operation_id: string }
+        Returns: Json
+      }
       rate_limit_consume: {
         Args: { p_key: string; p_limit: number; p_window_seconds: number }
         Returns: Json
