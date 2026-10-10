@@ -71,3 +71,9 @@
 
 ## 2026-10-10 (developments sidebar hide)
 - Hide Developments from agent sidebar (desktop + mobile) behind `DEVELOPMENTS_UI_ENABLED = false`; pages/routes/admin reviews untouched; add guard test; verify tests, type-check/build, signed-in preview. No deploy. [done]
+
+## 2026-10-10 Draft → Live server guard
+- [ ] Migration A: listing_publish_audit + publish_listing(p_listing_id, p_operation_id) (failed op IDs durable)
+- [ ] Frontend: all Draft saves keep draft; only "Yes, Publish Listing" calls publish_listing; remove publishConfirmedRef
+- [ ] Migration B: guard triggers (Draft → any status blocked; non-draft inserts rejected)
+- [ ] QA with disposable Draft, Hot Sheet emails paused; report before production
