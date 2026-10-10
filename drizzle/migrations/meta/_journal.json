@@ -246,6 +246,13 @@
       "when": 1791605909889,
       "tag": "0034_listing_publish_audit_and_publish_listing",
       "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1791606112068,
+      "tag": "0035_listings_draft_publish_guard",
+      "breakpoints": true
     }
   ]
 }
