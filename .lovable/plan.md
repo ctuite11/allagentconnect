@@ -1,5 +1,15 @@
 # Server-side Draft → Live guard (plan only — no backend change until approved)
 
+## The one rule
+A listing whose saved status is Draft can go live only through this sequence:
+1. The agent clicks Publish.
+2. The "Ready to publish?" dialog opens.
+3. The agent clicks "Yes, Publish Listing" in that dialog.
+4. Only that click calls `publish_listing()`, and the server changes the status from Draft to live.
+
+Every other action leaves a saved Draft as Draft, whatever status is chosen in the form: Autosave, Save Draft, Save Changes, photo, floor-plan and document saves, Preview, Quick Edit, leaving the page and coming back, changing the status dropdown, and any ordinary `listings.update()`. Choosing a status only records `draft_intended_status`. If the agent cancels, the dialog is interrupted, validation fails, the agent navigates away, or the request fails, the listing stays Draft and the next attempt needs Publish → confirmation again. There is no reusable confirmation flag and no Save Changes path that can publish.
+
+
 ## Correction on 16 N Mead Street
 The record shows Draft → Coming Soon at 17:58:44 UTC Oct 9, made from the Add Listing form under Chris's signed-in account. Nothing saved proves the "Ready to publish?" dialog was confirmed: there is no confirmation record and no publish marker. This plan does not treat it as an intentional publish.
 
@@ -37,8 +47,11 @@ A new DB function `publish_listing(p_listing_id uuid, p_target_status text, p_op
 - Idempotent on `p_operation_id`. A retry with the same ID returns the earlier result.
 
 Client changes:
-- Add/Edit/Rental: the explicit save always writes fields with `status='draft'` for a stored Draft. Only **Ready to publish? → Confirm** calls `publish_listing`, then reloads.
-- The confirmed state becomes a value passed straight from `handleConfirmPublish` into the save. The long-lived ref is removed, which fixes the leak described above.
+- Add/Edit/Rental: whenever the saved status is Draft, every save path (autosave, Save Draft, Save Changes, media/document, Preview, navigation saves) writes `status='draft'` plus `draft_intended_status`. There are no exceptions.
+- "Save Changes" no longer gets a first-publish branch. For a Draft it is only a field save.
+- `publishConfirmedRef` is deleted. The confirm button's own click handler is the only place that calls `publish_listing`: it saves the fields as Draft first, then makes the call. Nothing else in the app imports or calls it, and a source test locks that in.
+- On any failure, the dialog closes and the listing stays Draft. No state carries over to the next attempt.
+- Quick Edit stays price-only for Drafts (already live).
 
 ## 4. Flows that could break
 - Add Listing first insert straight to live: changes to insert as draft, then publish (two steps, same user experience)
@@ -59,6 +72,8 @@ Client changes:
   - A direct REST update draft → coming_soon as the agent is **rejected**
   - Save Changes / Save Draft keep it as Draft
   - Reproduce the old ref leak (Confirm → validation error → fix → Save): it now shows the dialog again and does not publish
+  - For a Draft with Coming Soon selected: Autosave, Save Draft, Save Changes, photo save, Preview, and leave-and-return each keep it as Draft
+  - Cancel the dialog, then Save Changes: it stays Draft
   - Confirm → `publish_listing` → goes live, and exactly one audit row is written
   - A retry with the same operation ID writes no second row
   - Live → Cancelled, and the scheduled activation running on a coming_soon test listing, still work
