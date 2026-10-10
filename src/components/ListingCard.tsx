@@ -24,7 +24,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
-import { cn, propertyTypeToEnum } from "@/lib/utils";
+import { cn, parseDateOnly, propertyTypeToEnum } from "@/lib/utils";
 import { ListingCardAddressLine } from "@/components/listing/ListingCardAddressLine";
 import { ListingPhotoBanners } from "@/components/listing/ListingPhotoBanners";
 import {
@@ -552,7 +552,7 @@ const ListingCard = ({
     const upcoming = listing.open_houses.filter((oh: any) => {
       const ohEndDateTime = new Date(`${oh.date}T${oh.end_time}:00`);
       return ohEndDateTime > now;
-    }).sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    }).sort((a: any, b: any) => parseDateOnly(a.date).getTime() - parseDateOnly(b.date).getTime());
     return upcoming[0] || null;
   };
   const photoUrl = getFirstPhoto();

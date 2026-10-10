@@ -28,7 +28,7 @@ import { formatListingEmailSubjectLocation } from "@/lib/listingEmailSubject";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { cn } from "@/lib/utils";
+import { cn, parseDateOnly } from "@/lib/utils";
 import { formatListingPriceDisplay, formatUsdWholeForInput, listingEffectiveNumericPrice, parseUsdWholeInput } from "@/lib/formatListingPriceDisplay";
 import {
   isDraftListingStatus,
@@ -146,7 +146,7 @@ function formatDate(value?: string | null) {
 
 // Format open house/broker tour event for inline display
 function formatOpenHouseEvent(openHouse: any): { isBrokerTour: boolean; dateLabel: string; timeLabel: string } {
-  const date = new Date(openHouse.date);
+  const date = parseDateOnly(openHouse.date);
   const dayName = date.toLocaleDateString("en-US", { weekday: "short" });
   const monthDay = date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   

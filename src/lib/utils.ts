@@ -246,3 +246,16 @@ export function propertyTypeToEnum(displayType: string): string {
   };
   return mapping[displayType] || displayType.toLowerCase().replace(/\s+/g, '_');
 }
+
+/**
+ * Parse a date-only "YYYY-MM-DD" string as a local calendar date (no UTC shift).
+ * Malformed or out-of-range input returns an Invalid Date (never a rolled-over day).
+ */
+export function parseDateOnly(value: unknown): Date {
+  const m = typeof value === "string" ? /^(\d{4})-(\d{2})-(\d{2})$/.exec(value.trim()) : null;
+  if (!m) return new Date(NaN);
+  const y = Number(m[1]), mo = Number(m[2]), d = Number(m[3]);
+  const date = new Date(y, mo - 1, d);
+  if (date.getFullYear() !== y || date.getMonth() !== mo - 1 || date.getDate() !== d) return new Date(NaN);
+  return date;
+}
