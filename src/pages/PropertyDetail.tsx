@@ -703,13 +703,18 @@ const PropertyDetail = () => {
                     />
                   )}
 
-                  {/* Status Badge - Top Left Overlay */}
-                  <div className="absolute left-4 top-4 flex items-center gap-2">
+                  {/* Status Badge - Top Left Overlay, with event banners stacked below */}
+                  <div className="absolute left-4 top-4 flex flex-col items-start gap-1.5">
                     <Badge className={`${getStatusColor(listing.status ?? "")} bg-white/90 backdrop-blur-sm`}>
                       {listing.status
                         ? getStatusConfig(listing.status, "listing").label
                         : "—"}
                     </Badge>
+                    {openHouseBanners.map((ev, i) => (
+                      <ListingPhotoBannerBadge key={i} color={ev.color}>
+                        <span className="truncate">{formatOpenHouseLabel(ev, "full")}</span>
+                      </ListingPhotoBannerBadge>
+                    ))}
                   </div>
 
                   {!isAgentView && (
