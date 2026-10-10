@@ -714,7 +714,7 @@ const PropertyDetail = () => {
                         : "—"}
                     </Badge>
                     {openHouseBanners.map((ev, i) => (
-                      <ListingPhotoBannerBadge key={i} color={ev.color}>
+                      <ListingPhotoBannerBadge key={i} color={ev.color} className="text-xs">
                         <span className="truncate">{formatOpenHouseLabel(ev, "full")}</span>
                       </ListingPhotoBannerBadge>
                     ))}
