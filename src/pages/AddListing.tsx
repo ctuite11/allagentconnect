@@ -446,10 +446,11 @@ const AddListing = () => {
    */
   const [photoOrderConfirmOpen, setPhotoOrderConfirmOpen] = useState(false);
   /**
-   * Final first-publish confirmation (status / address / price) — last gate
-   * before the listing status becomes live in the database.
-   * publishConfirmedRef is a one-shot bypass for the resumed attempt only;
-   * it is cleared once that attempt passes the confirm gate.
+   * Final first-publish confirmation ("Ready to publish?"). A never-published
+   * listing can leave Draft ONLY when "Yes, Publish Listing" is clicked: that
+   * click mints a fresh operation id and passes it straight into the save,
+   * which saves as Draft and then calls the server-side publish_listing().
+   * There is no reusable confirmation flag.
    */
   const [publishConfirmOpen, setPublishConfirmOpen] = useState(false);
   const bottomActionsRef = useRef<HTMLDivElement | null>(null);
@@ -463,7 +464,6 @@ const AddListing = () => {
   });
   const [pendingPublishAction, setPendingPublishAction] = useState<"publish" | "saveChanges" | null>(null);
   const photoOrderConfirmedRef = useRef(false);
-  const publishConfirmedRef = useRef(false);
   // Social (V1): only offered when the signed-in user owns the listing.
   const listingOwnerIdRef = useRef<string | null>(null);
   const [publishSocialConnected, setPublishSocialConnected] = useState<SocialConnected | null>(null);
@@ -3045,14 +3045,48 @@ const AddListing = () => {
   };
 
   /**
-   * True when this save takes the listing live for the first time and the
-   * agent has not yet confirmed status / address / price for this attempt.
-   * Runs after validation + photo-order; never for edits to already-published listings.
+   * True when this save would take a never-published listing out of Draft and
+   * the attempt does not carry an operation id minted by the final
+   * "Yes, Publish Listing" click. Any non-draft target counts.
    */
-  const needsFirstPublishLiveConfirm = (targetStatus: string) => {
-    if (publishConfirmedRef.current) return false;
-    if (!isLiveStatus(targetStatus)) return false;
+  const needsFirstPublishLiveConfirm = (targetStatus: string, publishOpId: string | null) => {
+    if (publishOpId) return false;
+    if (!targetStatus || targetStatus === LISTING_STATUS.DRAFT) return false;
     return isNeverPublished();
+  };
+
+  /**
+   * The ONLY way a never-published listing leaves Draft: the server-side
+   * publish_listing() reads the saved intended status, enforces the full
+   * publish contract and records an audit row. Returns the new status, or
+   * null (listing stays Draft; errors shown).
+   */
+  const runPublishListing = async (id: string, publishOpId: string): Promise<string | null> => {
+    const { data, error } = await supabase.rpc("publish_listing", {
+      p_listing_id: id,
+      p_operation_id: publishOpId,
+    });
+    const res = (data ?? null) as {
+      ok?: boolean;
+      status?: string;
+      code?: string;
+      message?: string;
+      errors?: { field: string; message: string }[];
+    } | null;
+    if (error || !res?.ok || !res.status) {
+      const errs = res?.errors ?? [];
+      if (errs.length > 0) {
+        const mapped = errs.map((e) => ({ field: e.field, label: e.message }));
+        setValidationErrors(mapped);
+        setPublishErrorMode(true);
+        scrollToFirstErrorSection(mapped);
+        toast.error("This listing can't be published yet. It is still saved as a Draft.");
+      } else {
+        toast.error("Publish didn't complete. The listing is still a Draft — click Publish to try again.");
+      }
+      return null;
+    }
+    return res.status;
   };
 
   /**
@@ -3118,7 +3152,7 @@ const AddListing = () => {
   };
 
   // Handler for "Save Changes" in edit mode - preserves current status (does NOT force draft)
-  const handleSaveChanges = async (isAutoSave = false) => {
+  const handleSaveChanges = async (isAutoSave = false, publishOpId: string | null = null) => {
     if (isConciergeMode) {
       // Concierge listings are draft-only: route every save to Save Draft.
       return handleSaveDraft(isAutoSave);
@@ -3218,17 +3252,15 @@ const AddListing = () => {
     }
 
     // Final first-publish confirmation (status / address / price) before DB goes live.
-    if (!isAutoSave && needsFirstPublishLiveConfirm(formData.status)) {
+    if (!isAutoSave && needsFirstPublishLiveConfirm(formData.status, publishOpId)) {
       draftSession.endSave();
       setSubmitting(false);
       setPendingPublishAction("saveChanges");
       setPublishConfirmOpen(true);
       return;
     }
-    // One-shot bypass: consume after the gate so a failed publish re-prompts.
-    if (!isAutoSave) {
-      publishConfirmedRef.current = false;
-    }
+    // Only a manual save resumed by the final confirm click may publish.
+    if (isAutoSave) publishOpId = null;
     // --- End validation / first-publish gates ---
 
     try {
@@ -3271,19 +3303,28 @@ const AddListing = () => {
         }
       }
 
-      // Explicit Save/Publish applies the form status. Autosave on a draft stays draft
-      // (remembering the intended status) and never publishes.
+      // A never-published listing is ALWAYS written as Draft here (the form status is
+      // only remembered as draft_intended_status). Leaving Draft happens afterwards,
+      // solely through publish_listing() with the confirm-click operation id.
       // IMPORTANT: Use fresh user ID from server-verified session
+      const neverPublished = isNeverPublished();
       const saveStatus =
-        isAutoSave && backendStatusRef.current === "draft"
+        neverPublished || (isAutoSave && backendStatusRef.current === "draft")
           ? "draft"
           : formData.status || "new";
       const payload = buildListingDataFromForm(uploaded, saveStatus, freshUser.id);
+      if (neverPublished) {
+        payload.draft_intended_status = toDraftIntendedStatus(formData.status);
+      }
+      const publishingNow = neverPublished && !!publishOpId;
 
       // First publish: photo must be fully saved before the listing goes live
       // (Hot Sheet emails fire on the live transition and must see the photo).
       if (!isAutoSave) {
-        const gateError = firstPublishPhotoGateError(payload.status, uploaded.photos);
+        const gateError = firstPublishPhotoGateError(
+          publishingNow ? addListingFormStatusToDbStatus(formData.status) : payload.status,
+          uploaded.photos,
+        );
         if (gateError) {
           toast.error(gateError);
           return;
@@ -3293,7 +3334,7 @@ const AddListing = () => {
       console.log('[handleSaveChanges] Saving with status:', payload.status, 'agent_id:', payload.agent_id);
 
       // Snapshot pre-save state for post-save social decisions.
-      const wasFirstPublish = !isAutoSave && isNeverPublished() && isLiveStatus(payload.status);
+      const wasFirstPublish = publishingNow;
       const prevStatusForSocial = originalStatusRef.current;
       const prevPriceForSocial = originalPriceRef.current;
 
@@ -3313,6 +3354,13 @@ const AddListing = () => {
       }
       if (!updatedListing) {
         throw new Error("Listing update was blocked or not found.");
+      }
+
+      if (publishingNow && publishOpId) {
+        const publishedStatus = await runPublishListing(targetId, publishOpId);
+        if (!publishedStatus) return;
+        payload.status = publishedStatus;
+        payload.draft_intended_status = null;
       }
 
       // Track price changes if applicable
@@ -3541,7 +3589,7 @@ const AddListing = () => {
     navigate(previewUrl);
   };
 
-  const handleSubmit = async (e: React.FormEvent, publishNow: boolean = true) => {
+  const handleSubmit = async (e: React.FormEvent, publishNow: boolean = true, publishOpId: string | null = null) => {
     e.preventDefault();
     if (blockIfInvalidNumericFields()) return;
     if (isConciergeMode) {
@@ -3659,15 +3707,11 @@ const AddListing = () => {
       }
 
       // Final first-publish confirmation (status / address / price) before DB goes live.
-      if (publishNow && needsFirstPublishLiveConfirm(targetStatus)) {
+      if (publishNow && needsFirstPublishLiveConfirm(targetStatus, publishOpId)) {
         setSubmitting(false);
         setPendingPublishAction("publish");
         setPublishConfirmOpen(true);
         return;
-      }
-      // One-shot bypass: consume after the gate so a failed publish re-prompts.
-      if (publishNow) {
-        publishConfirmedRef.current = false;
       }
 
       // Upload files first
@@ -3677,11 +3721,17 @@ const AddListing = () => {
       // Use centralized helper to build payload with FRESH user ID
       // When publishing, ensure we never save "draft" - default to "new" if somehow still draft
       const statusForPublish = (formData.status === "draft" || !formData.status) ? "new" : formData.status;
+      // A never-published listing is always written as Draft; publish_listing() takes it live.
+      const neverPublished = isNeverPublished();
+      const publishingNow = !!publishNow && neverPublished && !!publishOpId;
       const listingData = buildListingDataFromForm(
         { photos: uploadedFiles.photos, floorPlans: uploadedFiles.floorPlans, documents: uploadedFiles.documents },
-        publishNow ? statusForPublish : "draft",
+        publishNow && !neverPublished ? statusForPublish : "draft",
         freshUser.id  // Use fresh user ID from server-verified session
       );
+      if (neverPublished) {
+        listingData.draft_intended_status = toDraftIntendedStatus(publishNow ? statusForPublish : formData.status);
+      }
       
       const isRangeOnlySalePricing =
         formData.listing_type === "for_sale" &&
@@ -3721,7 +3771,10 @@ const AddListing = () => {
       // First publish: photo must be fully saved before the listing goes live
       // (Hot Sheet emails fire on the live transition and must see the photo).
       if (publishNow) {
-        const gateError = firstPublishPhotoGateError(listingData.status, uploadedFiles.photos);
+        const gateError = firstPublishPhotoGateError(
+          publishingNow ? addListingFormStatusToDbStatus(statusForPublish) : listingData.status,
+          uploadedFiles.photos,
+        );
         if (gateError) {
           toast.error(gateError);
           setSubmitting(false);
@@ -3729,7 +3782,7 @@ const AddListing = () => {
         }
       }
 
-      const wasFirstPublishSubmit = !!publishNow && isNeverPublished() && isLiveStatus(listingData.status);
+      const wasFirstPublishSubmit = publishingNow;
       const resolvedDraftId = draftSession.getDraftId();
       const isEditMode = !!(listingId || resolvedDraftId);
       const targetListingId = listingId || resolvedDraftId;
@@ -3752,6 +3805,13 @@ const AddListing = () => {
           throw new Error("Listing update was blocked or not found.");
         }
         resultListingId = targetListingId;
+
+        if (publishingNow && publishOpId) {
+          const publishedStatus = await runPublishListing(targetListingId, publishOpId);
+          if (!publishedStatus) return;
+          listingData.status = publishedStatus;
+          listingData.draft_intended_status = null;
+        }
 
         // Track price changes
         const newPrice = effectivePrice;
@@ -3802,6 +3862,17 @@ const AddListing = () => {
 
         if (error) throw error;
         resultListingId = insertedListing?.id ?? null;
+
+        if (publishingNow && publishOpId && resultListingId) {
+          const publishedStatus = await runPublishListing(resultListingId, publishOpId);
+          if (!publishedStatus) {
+            // Keep editing the Draft we just created; the next Publish needs a new confirm.
+            setDraftId(resultListingId);
+            return;
+          }
+          listingData.status = publishedStatus;
+          listingData.draft_intended_status = null;
+        }
 
         // Log price history for new listing
         if (resultListingId) {
@@ -3915,16 +3986,20 @@ const AddListing = () => {
     setPendingPublishAction(null);
   };
 
-  /** Confirm status/address/price, then resume the exact publish path that was interrupted. */
+  /**
+   * "Yes, Publish Listing" — the only event allowed to publish a never-published
+   * listing. Mints a fresh single-use operation id for this click only and passes
+   * it directly into the interrupted path; nothing is stored for later attempts.
+   */
   const handleConfirmPublish = () => {
     const action = pendingPublishAction;
     setPublishConfirmOpen(false);
     setPendingPublishAction(null);
-    publishConfirmedRef.current = true;
+    const publishOpId = crypto.randomUUID();
     if (action === "saveChanges") {
-      void handleSaveChanges(false);
+      void handleSaveChanges(false, publishOpId);
     } else {
-      void handleSubmit({ preventDefault: () => {} } as unknown as React.FormEvent, true);
+      void handleSubmit({ preventDefault: () => {} } as unknown as React.FormEvent, true, publishOpId);
     }
   };
 
