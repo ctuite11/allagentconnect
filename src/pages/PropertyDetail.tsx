@@ -50,6 +50,8 @@ const listingDetailPrimaryCtaClass =
 const listingDetailOutlineCtaClass =
   "border-[#0E56F5]/30 text-[#0E56F5] hover:bg-[#0E56F5]/5 hover:text-[#0B46CC]";
 import { useListingView } from "@/hooks/useListingView";
+import { useListingBanners } from "@/hooks/useListingBanners";
+import { ListingPhotoBannerBadge, formatOpenHouseLabel } from "@/components/listing/ListingPhotoBanners";
 import { useAuthRole } from "@/hooks/useAuthRole";
 import { useSharedListingGuest } from "@/contexts/SharedListingGuestContext";
 import { usePropertyDetailRailPosition } from "@/hooks/usePropertyDetailRailPosition";
@@ -126,6 +128,7 @@ interface Listing {
   status: string;
   listing_type: string;
   photos: any[] | null;
+  open_houses?: unknown;
   listing_number?: string | null;
   created_at?: string;
   active_date?: string | null;
@@ -200,6 +203,13 @@ const PropertyDetail = () => {
   const [listingMessageOpen, setListingMessageOpen] = useState(false);
   const [contactDialogOpen, setContactDialogOpen] = useState(false);
   const [priceHistory, setPriceHistory] = useState<ListingPriceHistoryItem[]>([]);
+
+  // Shared banner derivation — same upcoming-event logic as the search cards.
+  const { openHouseBanners } = useListingBanners({
+    id: listing?.id ?? "",
+    status: listing?.status ?? "",
+    open_houses: listing?.open_houses,
+  });
 
   // Role detection + URL-based client mode
   const { user, role, loading: roleLoading } = useAuthRole();
@@ -696,13 +706,18 @@ const PropertyDetail = () => {
                     />
                   )}
 
-                  {/* Status Badge - Top Left Overlay */}
-                  <div className="absolute left-4 top-4 flex items-center gap-2">
+                  {/* Status Badge - Top Left Overlay, with event banners stacked below */}
+                  <div className="absolute left-4 top-4 flex flex-col items-start gap-1.5">
                     <Badge className={`${getStatusColor(listing.status ?? "")} bg-white/90 backdrop-blur-sm`}>
                       {listing.status
                         ? getStatusConfig(listing.status, "listing").label
                         : "—"}
                     </Badge>
+                    {openHouseBanners.map((ev, i) => (
+                      <ListingPhotoBannerBadge key={i} color={ev.color}>
+                        <span className="truncate">{formatOpenHouseLabel(ev, "full")}</span>
+                      </ListingPhotoBannerBadge>
+                    ))}
                   </div>
 
                   {!isAgentView && (
