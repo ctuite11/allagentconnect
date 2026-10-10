@@ -778,6 +778,7 @@ const ListingCard = ({
               statusBanner={compactAgentOwned ? null : statusBanner}
               priceChangeBanner={compactAgentOwned ? null : priceChangeBanner}
               openHouseBanner={compactAgentOwned ? null : openHouseBanner}
+              openHouseBanners={compactAgentOwned ? null : openHouseBanners}
               leading={
                 onSelect ? (
                   <div
