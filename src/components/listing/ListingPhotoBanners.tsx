@@ -33,8 +33,8 @@ function formatOpenHouseLabel(
   if (variant === "short") {
     return banner.isBroker ? "BROKER TOUR" : "OPEN HOUSE";
   }
-  const prefix = banner.isBroker ? "BROKER" : "OPEN";
-  return `${prefix}: ${banner.date} ${banner.time}`;
+  const prefix = banner.isBroker ? "BROKER TOUR" : "OPEN HOUSE";
+  return `${prefix}: ${banner.date} · ${banner.time.replace(" - ", "–")}`;
 }
 
 export function ListingPhotoBannerBadge({
@@ -63,6 +63,8 @@ export interface ListingPhotoBannersProps {
   statusBanner?: BannerData | null;
   priceChangeBanner?: BannerData | null;
   openHouseBanner?: OpenHouseBannerData | null;
+  /** All upcoming events (date order). Each renders on its own line under the status. */
+  openHouseBanners?: OpenHouseBannerData[] | null;
   /**
    * Top-left control that shares a row with banners (typically the selection checkbox).
    * When provided, banners sit to the right with a fixed flex gap — never overlaid on the checkbox.
@@ -85,48 +87,50 @@ export function ListingPhotoBanners({
   statusBanner = null,
   priceChangeBanner = null,
   openHouseBanner = null,
+  openHouseBanners = null,
   leading,
   compact = false,
   className,
 }: ListingPhotoBannersProps) {
   const primaryBanner = priceChangeBanner ?? statusBanner;
-  const showOpenHouse = Boolean(openHouseBanner);
-  const hasBanners = Boolean(primaryBanner) || showOpenHouse;
+  const events =
+    openHouseBanners && openHouseBanners.length > 0
+      ? openHouseBanners
+      : openHouseBanner
+        ? [openHouseBanner]
+        : [];
+  // Tiny thumbnails keep a single short event label to avoid covering the photo.
+  const shownEvents = compact ? events.slice(0, 1) : events;
+  const hasBanners = Boolean(primaryBanner) || shownEvents.length > 0;
 
   if (!hasBanners && !leading) return null;
 
   return (
     <div
       className={cn(
-        "absolute top-2 left-2 z-20 flex max-w-[calc(100%-1rem)] flex-nowrap items-center",
-        LEADING_GAP_CLASS,
+        "pointer-events-none absolute top-2 left-2 z-20 flex max-w-[calc(100%-1rem)] flex-col items-start gap-1",
         className,
       )}
     >
-      {leading ? (
-        <div className="pointer-events-auto relative z-10 flex shrink-0 items-center">
-          {leading}
-        </div>
-      ) : null}
+      <div className={cn("flex max-w-full flex-nowrap items-center", LEADING_GAP_CLASS)}>
+        {leading ? (
+          <div className="pointer-events-auto relative z-10 flex shrink-0 items-center">
+            {leading}
+          </div>
+        ) : null}
+        {primaryBanner && (
+          <ListingPhotoBannerBadge color={primaryBanner.color} className="min-w-0">
+            <BannerIcon type={primaryBanner.iconType} />
+            <span className="truncate">{primaryBanner.text}</span>
+          </ListingPhotoBannerBadge>
+        )}
+      </div>
 
-      {hasBanners ? (
-        <div className="pointer-events-none flex min-w-0 flex-1 flex-nowrap items-center gap-1 overflow-hidden">
-          {primaryBanner && (
-            <ListingPhotoBannerBadge color={primaryBanner.color}>
-              <BannerIcon type={primaryBanner.iconType} />
-              <span className="truncate">{primaryBanner.text}</span>
-            </ListingPhotoBannerBadge>
-          )}
-
-          {showOpenHouse && openHouseBanner && (
-            <ListingPhotoBannerBadge color={openHouseBanner.color}>
-              <span className="truncate">
-                {formatOpenHouseLabel(openHouseBanner, compact ? "short" : "full")}
-              </span>
-            </ListingPhotoBannerBadge>
-          )}
-        </div>
-      ) : null}
+      {shownEvents.map((ev, i) => (
+        <ListingPhotoBannerBadge key={i} color={ev.color}>
+          <span className="truncate">{formatOpenHouseLabel(ev, compact ? "short" : "full")}</span>
+        </ListingPhotoBannerBadge>
+      ))}
     </div>
   );
 }
