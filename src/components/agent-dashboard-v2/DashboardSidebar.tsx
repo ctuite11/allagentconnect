@@ -22,7 +22,7 @@ import {
   Inbox,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { DCMLS_SETTINGS_UI_ENABLED } from "@/config/featureFlags";
+import { DCMLS_SETTINGS_UI_ENABLED, DEVELOPMENTS_UI_ENABLED } from "@/config/featureFlags";
 import { isAgentHotSheetsNavActive } from "@/lib/sidebarNavActive";
 import { getSidebarRouteContext } from "@/lib/workspaceSidebarRoutes";
 import { supabase } from "@/integrations/supabase/client";
