@@ -653,8 +653,10 @@ const AddRentalListing = () => {
 
       const { data: insertedListing, error } = await supabase.from("listings").insert({
         agent_id: user.id,
-        status: publishNow ? formData.status : "draft",
-        draft_intended_status: !publishNow && ["active", "pending"].includes(formData.status) ? formData.status : null,
+        // Every new listing is created as a Draft. Going live happens only in the
+        // listing editor: Publish → "Ready to publish?" → Yes, Publish Listing.
+        status: "draft",
+        draft_intended_status: ["active", "pending"].includes(formData.status) ? formData.status : null,
         listing_type: formData.listing_type,
         address: validatedData.address,
         city: validatedData.city,
@@ -701,8 +703,13 @@ const AddRentalListing = () => {
         }
       }
 
-      toast.success("Rental listing created successfully!");
-      navigate("/agent-dashboard", { state: { reload: true } });
+      if (publishNow && insertedListing?.id) {
+        toast.success("Saved as a Draft. Review it and click Publish to make it live.");
+        navigate(`/agent/listings/edit/${insertedListing.id}`);
+      } else {
+        toast.success("Rental listing saved as a Draft.");
+        navigate("/agent-dashboard", { state: { reload: true } });
+      }
     } catch (error: any) {
       console.error("Error creating listing:", error);
       
