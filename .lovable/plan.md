@@ -1,24 +1,20 @@
-# Fix Open House / Broker Tour display in Search cards
+# Remove Sticky Behavior from Listing Search Results Header
 
-This only changes how events are shown. Saved events, scheduling, listing status, publishing, Hot Sheets and emails stay as they are.
+## Goal
+On `/listing-results` (Listing Search results), the top controls (Back, Edit search, Results count, Map/List toggle, Select all, Save as Hot Sheet, Sort) currently stay fixed at the top while listings scroll underneath. Remove the sticky positioning so the whole section scrolls offscreen naturally with the page.
 
-## 1. Photo cards (Map and Grid): event banner goes under the status
-- The status banner (Coming Soon, Off Market, On MLS, and so on) stays at the top-left.
-- Each upcoming Open House or Broker Tour gets its own line underneath it, earliest first, with the full text, for example `BROKER TOUR: Oct 15 · 11:30 AM–1:30 PM`.
-- The event line can be as wide as the photo, so the date and time aren't cut off. The text stays the same size and the cards stay the same size.
-- The photo arrows stay clear. Banners sit at the top-left; the arrows are at the middle of each side.
-- The selection checkbox still sits next to the status banner.
+## Current state (verified)
+- `src/pages/ListingSearchResults.tsx` line 531 — the results toolbar wrapper is `className="sticky top-0 z-20 border-b border-neutral-200 bg-white px-3 sm:px-4 lg:px-5"`. This is the only sticky element on the results page.
+- In map-split view the equivalent header (line 538) is already non-sticky — no change needed there.
+- Open House / Broker Tour event bars (`ListingPhotoBanners`, `SearchListingCard`, `ListingCardShell`, `ListingCard`) contain **no** sticky positioning anywhere — they render inside individual listing cards and cannot become sticky. No change needed; verified read-only.
+- The search entry page (`/listing-search`, `ListingSearch.tsx` line 234) has its own sticky criteria card — out of scope (user asked only for the results controls; strict scope adherence).
 
-## 2. List View: correct event label
-- The line currently reads "Open House: Oct 15 • …" even for Broker Tours.
-- It will read **Broker Tour** for broker tours and **Open House** for public open houses. The date and time format stays the same.
+## Change
+1. In `src/pages/ListingSearchResults.tsx`, line 531, change the toolbar wrapper class from
+   `sticky top-0 z-20 border-b ...` to `border-b ...` (remove only `sticky top-0 z-20`; keep border, background, and padding so appearance is unchanged while scrolling).
+2. Nothing else. No changes to search behavior, Hot Sheets, selection, sorting, listing data, events, or global navigation.
 
-## Where this applies
-- The shared photo banners, so every card that uses them is consistent.
-- The search card's List View line.
-
-## Technical details
-- `useListingBanners`: also return `openHouseBanners[]` (all upcoming events in date order, same shape as now). Keep `openHouseBanner` (the next event) for existing callers.
-- `ListingPhotoBanners`: change the layout to a column. Row 1 has the checkbox (if any) and the primary banner. Each event badge goes on its own row below. Full label: `BROKER TOUR:` / `OPEN HOUSE:` + `MMM d · h:mm AM–h:mm PM`. The existing `compact` short label stays for tiny thumbnails. Accept an optional `openHouseBanners` prop and fall back to the single banner.
-- `SearchListingCard`: pass `openHouseBanners`. The List View line (around line 487) uses `event_type === "broker_tour"` to choose the label.
-- QA: in the preview, check Map, Grid and List views for a listing with a Broker Tour and a listing with an Open House. View only, no saving.
+## Verification
+- Type-check and build pass.
+- Preview (signed in as Chris): open Listing Search results, confirm the toolbar (Back / Edit search / count / Map-List / Select all / Save as Hot Sheet / Sort) scrolls away with the page and listings use the full viewport; confirm an Open House / Broker Tour bar scrolls with its listing card and never pins to the top.
+- No deploy unless Chris asks; production goes via GitHub main → Netlify as usual.
