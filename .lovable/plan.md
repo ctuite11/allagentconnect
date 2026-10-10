@@ -1,21 +1,22 @@
-# Fix Open House / Broker Tour dates showing one day early
+# Live QA: Open House / Broker Tour date fix
 
-## Cause
-Dates are saved correctly as plain calendar days (e.g. `2026-10-15`). Some screens turn that into a midnight-UTC time, so in Eastern Time it shows as the day before (Oct 14).
+Netlify published `main@9334245` at 9:10 PM, and that version includes the date fix, so the fix is now live on allagentconnect.com.
 
-## Screens affected (confirmed in code)
-- Scheduled Open Houses & Broker Tours popup (`ViewOpenHousesDialog.tsx`)
-- My Listings inline Open House / Broker Tour line (`MyListings.tsx`, `formatOpenHouseEvent`)
-- Listing photo banners "OPEN: Oct 15 ..." on listing cards (`useListingBanners.ts`)
-- Search result cards "Open House: Oct 15" / "OH: Oct 15" (`SearchListingCard.tsx`)
+## Steps
+1. Confirm the live site is running the new version.
+2. On a test listing I own, add:
+   - Broker Tour: Oct 15, 2026, 11:30 AM–1:30 PM
+   - Public Open House: Oct 15, 2026, 11:30 AM–1:30 PM
+3. Check that both show **Thu, Oct 15** in each of these places:
+   - The Scheduled Open Houses & Broker Tours popup
+   - The open house dates on My Listings
+   - The banners on listing photos
+   - Search result cards
+   - The two other listing card screens
+4. Check that both saved dates are still exactly `2026-10-15`.
+5. Remove the two test events so the listing goes back to how it was.
+6. Report the results and stop.
 
-## Change (display only)
-1. Add one small helper `parseDateOnly("YYYY-MM-DD")` in `src/lib/utils.ts` that builds a local calendar date from year/month/day.
-2. Use it in the four places above for the displayed date and for sorting by date. Lines already using `date + "T" + time` (upcoming/expired checks) are already correct and stay as-is.
-3. Add a unit test showing `2026-10-15` formats as Thu, Oct 15, 2026.
-
-## Unchanged
-Saved data (no migration; stored values are correct), saving logic, statuses, publishing, Hot Sheets, emails.
-
-## QA
-On a test listing, save a Broker Tour and a Public Open House for Oct 15, 2026, 11:30 AM–1:30 PM. Confirm every screen shows Thu, Oct 15.
+## Limits
+- No code changes and no other data changes.
+- Nothing gets published, and no Hot Sheet emails or other emails are sent. The test listing stays at its current status. If it's live and adding events could alert buyers, I'll stop and ask first.
