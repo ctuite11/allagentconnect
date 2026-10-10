@@ -178,6 +178,7 @@ export function DashboardSidebar({
 
   const mainMenu: SidebarItem[] = baseMainMenu
     .filter((item) => DCMLS_SETTINGS_UI_ENABLED || item.route !== "/agent/dcmls/leads")
+    .filter((item) => DEVELOPMENTS_UI_ENABLED || item.route !== "/developments")
     .map((item) => item.label === "Messages" ? { ...item, badge: unreadCount } : item);
 
   const handleLogout = async () => {
