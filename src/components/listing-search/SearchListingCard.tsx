@@ -34,7 +34,7 @@ import { ListingCardAttributionStrip } from "@/components/listing/ListingCardAtt
 import { ListingCardPropertyTypeLine } from "@/components/listing/ListingCardPropertyTypeLine";
 import { formatListingIdLabel, LISTING_ID_NAV_CLASS, LISTING_ID_NAV_CLASS_SEARCH_SURFACE } from "@/lib/listingIdDisplay";
 import { formatListingEmailSubjectLocation } from "@/lib/listingEmailSubject";
-import { buildDisplayAddress, cn } from "@/lib/utils";
+import { buildDisplayAddress, cn, parseDateOnly } from "@/lib/utils";
 import { ListingCardAddressLine } from "@/components/listing/ListingCardAddressLine";
 import { ListingPhotoBanners } from "@/components/listing/ListingPhotoBanners";
 import {
@@ -144,7 +144,7 @@ const getNextOpenHouse = (openHouses?: any) => {
   const now = new Date();
   const upcoming = openHouses
     .filter((oh: any) => new Date(`${oh.date}T${oh.end_time}:00`) > now)
-    .sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    .sort((a: any, b: any) => parseDateOnly(a.date).getTime() - parseDateOnly(b.date).getTime());
   return upcoming[0] || null;
 };
 
@@ -484,7 +484,7 @@ export const SearchListingCard = ({
               <div className="mt-3.5 flex items-center gap-1.5 rounded-lg border border-emerald-200/80 bg-emerald-50/80 px-3 py-2 text-xs">
                 <Calendar className="h-3.5 w-3.5 text-emerald-700" />
                 <span className="font-medium text-emerald-900">
-                  Open House: {format(new Date(nextOpenHouse.date), "MMM d")} • {formatTime(nextOpenHouse.start_time)} – {formatTime(nextOpenHouse.end_time)}
+                  Open House: {format(parseDateOnly(nextOpenHouse.date), "MMM d")} • {formatTime(nextOpenHouse.start_time)} – {formatTime(nextOpenHouse.end_time)}
                 </span>
               </div>
             )}
@@ -625,7 +625,7 @@ export const SearchListingCard = ({
             <div className="mt-2 flex items-center gap-1.5 text-xs p-2 rounded-md bg-emerald-50 border border-emerald-200">
               <Calendar className="h-3.5 w-3.5 text-emerald-600" />
               <span className="text-emerald-700 font-medium">
-                OH: {format(new Date(nextOpenHouse.date), "MMM d")} • {formatTime(nextOpenHouse.start_time)} – {formatTime(nextOpenHouse.end_time)}
+                OH: {format(parseDateOnly(nextOpenHouse.date), "MMM d")} • {formatTime(nextOpenHouse.start_time)} – {formatTime(nextOpenHouse.end_time)}
               </span>
             </div>
           )}

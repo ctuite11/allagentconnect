@@ -1,3 +1,4 @@
+import { parseDateOnly } from "@/lib/utils";
 import { useState, useEffect } from "react";
 import {
   Dialog,
@@ -176,7 +177,7 @@ export function ViewOpenHousesDialog({
                       <div className="flex items-center gap-2 text-foreground">
                         <Calendar className="w-4 h-4 text-muted-foreground" />
                         <span>
-                          {new Date(house.date).toLocaleDateString("en-US", {
+                          {parseDateOnly(house.date).toLocaleDateString("en-US", {
                             weekday: "short",
                             month: "short",
                             day: "numeric",

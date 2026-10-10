@@ -1,3 +1,4 @@
+import { parseDateOnly } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
@@ -87,7 +88,7 @@ function getNextOpenHouse(openHouses: unknown): any | null {
       const end = new Date(`${oh.date}T${oh.end_time}:00`);
       return end > now;
     })
-    .sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    .sort((a: any, b: any) => parseDateOnly(a.date).getTime() - parseDateOnly(b.date).getTime());
   return upcoming[0] || null;
 }
 
@@ -211,7 +212,7 @@ export function useListingBanners(listing: UseListingBannersInput): UseListingBa
     const isBrokerOnly = nextOH.event_type === "broker_tour";
     return {
       text: isBrokerOnly ? "BROKER TOUR" : "OPEN HOUSE",
-      date: format(new Date(nextOH.date), "MMM d"),
+      date: format(parseDateOnly(nextOH.date), "MMM d"),
       time: `${formatTime(nextOH.start_time)} - ${formatTime(nextOH.end_time)}`,
       color: isBrokerOnly ? "bg-purple-600" : "bg-green-600",
       isBroker: isBrokerOnly,
