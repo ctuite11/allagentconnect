@@ -50,6 +50,8 @@ const listingDetailPrimaryCtaClass =
 const listingDetailOutlineCtaClass =
   "border-[#0E56F5]/30 text-[#0E56F5] hover:bg-[#0E56F5]/5 hover:text-[#0B46CC]";
 import { useListingView } from "@/hooks/useListingView";
+import { useListingBanners } from "@/hooks/useListingBanners";
+import { ListingPhotoBannerBadge, formatOpenHouseLabel } from "@/components/listing/ListingPhotoBanners";
 import { useAuthRole } from "@/hooks/useAuthRole";
 import { useSharedListingGuest } from "@/contexts/SharedListingGuestContext";
 import { usePropertyDetailRailPosition } from "@/hooks/usePropertyDetailRailPosition";
