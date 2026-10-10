@@ -26,7 +26,7 @@ function BannerIcon({ type }: { type: BannerData["iconType"] }) {
   }
 }
 
-function formatOpenHouseLabel(
+export function formatOpenHouseLabel(
   banner: OpenHouseBannerData,
   variant: "full" | "short",
 ): string {

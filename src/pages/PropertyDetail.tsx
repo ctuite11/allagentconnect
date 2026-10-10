@@ -201,6 +201,13 @@ const PropertyDetail = () => {
   const [contactDialogOpen, setContactDialogOpen] = useState(false);
   const [priceHistory, setPriceHistory] = useState<ListingPriceHistoryItem[]>([]);
 
+  // Shared banner derivation — same upcoming-event logic as the search cards.
+  const { openHouseBanners } = useListingBanners({
+    id: listing?.id ?? "",
+    status: listing?.status ?? "",
+    open_houses: listing?.open_houses,
+  });
+
   // Role detection + URL-based client mode
   const { user, role, loading: roleLoading } = useAuthRole();
   const { registerGuestListing } = useSharedListingGuest();
