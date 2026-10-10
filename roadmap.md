@@ -70,4 +70,4 @@
 - Remove sticky positioning from Listing Search results toolbar (`/listing-results`) — approved, single class change in `src/pages/ListingSearchResults.tsx`. Preview verification: [done] — toolbar computed position static; after scroll it moves to y=-1168 (fully offscreen) while first card scrolls with it; no sticky/fixed elements remain in results; map-split header unchanged; no page errors. Not deployed.
 
 ## 2026-10-10 (developments sidebar hide)
-- Hide Developments from agent sidebar (desktop + mobile) behind `DEVELOPMENTS_UI_ENABLED = false`; pages/routes/admin reviews untouched; add guard test; verify tests, type-check/build, signed-in preview. No deploy. [in progress]
+- Hide Developments from agent sidebar (desktop + mobile) behind `DEVELOPMENTS_UI_ENABLED = false`; pages/routes/admin reviews untouched; add guard test; verify tests, type-check/build, signed-in preview. No deploy. [done]
