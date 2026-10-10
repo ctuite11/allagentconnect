@@ -11,15 +11,15 @@ const NetworkIntelligence = () => {
       {/* Section label pill */}
       <div className="mb-6 inline-flex items-center gap-2 pl-3.5 pr-5 py-2 bg-[#2537ff0f] border border-[#2537ff26] rounded-full">
         <img src={iconChart} alt="" className="w-4 h-4 shrink-0" />
-        <span className="font-['Manrope'] font-semibold text-[#2537ff] text-[14px] tracking-[0.28px]">Our network values</span>
+        <span className="font-manrope font-semibold text-[#2537ff] text-[14px] tracking-[0.28px]">Our network values</span>
       </div>
 
       {/* Headline + sub */}
       <div className="flex flex-col items-center gap-5 mb-12 max-w-4xl w-full text-center">
-        <h2 className="font-['Manrope'] font-semibold text-[#292d32] text-4xl md:text-6xl tracking-tight leading-[1.0]" style={{ textWrap: "balance" as any }}>
+        <h2 className="font-manrope font-semibold text-[#292d32] text-4xl md:text-6xl tracking-tight leading-[1.0]" style={{ textWrap: "balance" as any }}>
           Operate on network intelligence,<br className="hidden sm:block" /> not the public feed.
         </h2>
-        <p className="font-['Manrope'] font-medium text-[#40424d] text-lg md:text-xl leading-relaxed max-w-2xl">
+        <p className="font-manrope font-medium text-[#40424d] text-lg md:text-xl leading-relaxed max-w-2xl">
           Your centralized workspace for managing coming-soon listings, private inventory, and active buyer and renter needs.
         </p>
       </div>
@@ -57,7 +57,7 @@ const NetworkIntelligence = () => {
             style={{ top: "10%", left: "0%", transform: "translateX(-52%)" }}
           >
             <img src={iconShield} alt="" className="w-[18px] h-[18px] shrink-0" />
-            <span className="font-['Manrope'] font-semibold text-slate-900 text-[13px] leading-[1.4] whitespace-nowrap">For those clients looking for privacy</span>
+            <span className="font-manrope font-semibold text-slate-900 text-[13px] leading-[1.4] whitespace-nowrap">For those clients looking for privacy</span>
           </div>
 
           <div
@@ -65,7 +65,7 @@ const NetworkIntelligence = () => {
             style={{ top: "60%", left: "0%", transform: "translateX(-52%)" }}
           >
             <img src={iconChart} alt="" className="w-[18px] h-[18px] shrink-0" />
-            <span className="font-['Manrope'] font-semibold text-[#292d32] text-[13px] leading-[1.4] whitespace-nowrap">Increased agent production / GCI</span>
+            <span className="font-manrope font-semibold text-[#292d32] text-[13px] leading-[1.4] whitespace-nowrap">Increased agent production / GCI</span>
           </div>
 
           <div
@@ -73,7 +73,7 @@ const NetworkIntelligence = () => {
             style={{ top: "10%", right: "0%", transform: "translateX(52%)" }}
           >
             <img src={iconArchive} alt="" className="w-[18px] h-[18px] shrink-0" />
-            <span className="font-['Manrope'] font-semibold text-[#292d32] text-[13px] leading-[1.4] whitespace-nowrap">Access the Unlisted</span>
+            <span className="font-manrope font-semibold text-[#292d32] text-[13px] leading-[1.4] whitespace-nowrap">Access the Unlisted</span>
           </div>
 
           <div
@@ -81,7 +81,7 @@ const NetworkIntelligence = () => {
             style={{ top: "60%", right: "4%", transform: "translateX(52%)" }}
           >
             <img src={iconStar} alt="" className="w-[18px] h-[18px] shrink-0" />
-            <span className="font-['Manrope'] font-semibold text-slate-900 text-[13px] leading-[1.4] whitespace-nowrap">Direct seller + buyer-agent opportunities</span>
+            <span className="font-manrope font-semibold text-slate-900 text-[13px] leading-[1.4] whitespace-nowrap">Direct seller + buyer-agent opportunities</span>
           </div>
         </div>
       </div>
@@ -91,21 +91,21 @@ const NetworkIntelligence = () => {
         <div className="flex flex-col gap-3">
           <div className="flex items-center gap-2.5 bg-white/90 backdrop-blur-md border border-white/60 rounded-full px-4 py-2.5 shadow-xl">
             <img src={iconShield} alt="" className="w-4 h-4 shrink-0" />
-            <span className="font-['Manrope'] font-semibold text-slate-900 text-[12px] leading-[1.4]">For those clients looking for privacy</span>
+            <span className="font-manrope font-semibold text-slate-900 text-[12px] leading-[1.4]">For those clients looking for privacy</span>
           </div>
           <div className="flex items-center gap-2.5 bg-white rounded-full px-4 py-2.5 shadow-[0_4px_16px_rgba(41,45,50,0.16)]">
             <img src={iconChart} alt="" className="w-4 h-4 shrink-0" />
-            <span className="font-['Manrope'] font-semibold text-[#292d32] text-[12px] leading-[1.4]">Increased agent production / GCI</span>
+            <span className="font-manrope font-semibold text-[#292d32] text-[12px] leading-[1.4]">Increased agent production / GCI</span>
           </div>
         </div>
         <div className="flex flex-col gap-3">
           <div className="flex items-center gap-2.5 bg-white rounded-full px-4 py-2.5 shadow-[0_4px_16px_rgba(41,45,50,0.16)]">
             <img src={iconArchive} alt="" className="w-4 h-4 shrink-0" />
-            <span className="font-['Manrope'] font-semibold text-[#292d32] text-[12px] leading-[1.4]">Access the Unlisted</span>
+            <span className="font-manrope font-semibold text-[#292d32] text-[12px] leading-[1.4]">Access the Unlisted</span>
           </div>
           <div className="flex items-center gap-2.5 bg-white/90 backdrop-blur-md border border-white/60 rounded-full px-4 py-2.5 shadow-xl">
             <img src={iconStar} alt="" className="w-4 h-4 shrink-0" />
-            <span className="font-['Manrope'] font-semibold text-slate-900 text-[12px] leading-[1.4]">Direct seller + buyer-agent opportunities</span>
+            <span className="font-manrope font-semibold text-slate-900 text-[12px] leading-[1.4]">Direct seller + buyer-agent opportunities</span>
           </div>
         </div>
       </div>
@@ -125,11 +125,11 @@ const NetworkIntelligence = () => {
               <div className="absolute top-3 left-3">
                 <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-full shadow">
                   <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: card.dot }} />
-                  <span className="font-['Manrope'] font-semibold text-[#292d32] text-[12px] tracking-[0.2px] whitespace-nowrap">{card.label}</span>
+                  <span className="font-manrope font-semibold text-[#292d32] text-[12px] tracking-[0.2px] whitespace-nowrap">{card.label}</span>
                 </div>
               </div>
               <div className="absolute bottom-5 left-5">
-                <span className="font-['Manrope'] font-semibold text-white text-[16px] tracking-[0.16px]">{card.price}</span>
+                <span className="font-manrope font-semibold text-white text-[16px] tracking-[0.16px]">{card.price}</span>
               </div>
             </div>
           ))}
