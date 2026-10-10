@@ -128,6 +128,7 @@ interface Listing {
   status: string;
   listing_type: string;
   photos: any[] | null;
+  open_houses?: unknown;
   listing_number?: string | null;
   created_at?: string;
   active_date?: string | null;
