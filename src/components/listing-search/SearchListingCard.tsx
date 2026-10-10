@@ -480,11 +480,32 @@ export const SearchListingCard = ({
               </div>
             )}
 
-            {/* Open house banner */}
+            {/* Open house banner — color family matches the photo badge (purple = Broker Tour, green = Open House) */}
             {nextOpenHouse && (
-              <div className="mt-3.5 flex items-center gap-1.5 rounded-lg border border-emerald-200/80 bg-emerald-50/80 px-3 py-2 text-xs">
-                <Calendar className="h-3.5 w-3.5 text-emerald-700" />
-                <span className="font-medium text-emerald-900">
+              <div
+                className={cn(
+                  "mt-3.5 flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs",
+                  nextOpenHouse.event_type === "broker_tour"
+                    ? "border-purple-200/80 bg-purple-50/80"
+                    : "border-green-200/80 bg-green-50/80",
+                )}
+              >
+                <Calendar
+                  className={cn(
+                    "h-3.5 w-3.5",
+                    nextOpenHouse.event_type === "broker_tour"
+                      ? "text-purple-700"
+                      : "text-green-700",
+                  )}
+                />
+                <span
+                  className={cn(
+                    "font-medium",
+                    nextOpenHouse.event_type === "broker_tour"
+                      ? "text-purple-900"
+                      : "text-green-900",
+                  )}
+                >
                   {nextOpenHouse.event_type === "broker_tour" ? "Broker Tour" : "Open House"}: {format(parseDateOnly(nextOpenHouse.date), "MMM d")} • {formatTime(nextOpenHouse.start_time)} – {formatTime(nextOpenHouse.end_time)}
                 </span>
               </div>
