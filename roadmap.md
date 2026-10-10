@@ -55,5 +55,5 @@
 - [x] Incident 2026-10-09: My Listings Quick Edit price-only for drafts (paused Hot Sheet emails; 234 Friend St back to Draft)
 - [ ] Live QA of Quick Edit on a throwaway draft after deploy, then user decides when to unpause Hot Sheet emails
 
-- [ ] Live QA of Open House date fix on production (before/after status + Hot Sheet/email counts; stop on any anomaly)
-- [ ] Search cards: stack event banners under status; List View uses Broker Tour label
+- [x] Live QA of Open House date fix on production (before/after status + Hot Sheet/email counts; stop on any anomaly)
+- [x] Search cards (preview; not yet live): stack event banners under status; List View uses Broker Tour label

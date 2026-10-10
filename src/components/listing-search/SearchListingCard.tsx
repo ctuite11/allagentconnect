@@ -190,7 +190,7 @@ export const SearchListingCard = ({
   const photoUrl = getFirstPhoto(listing);
   const allPhotos = getAllPhotos(listing);
   const nextOpenHouse = getNextOpenHouse(listing.open_houses);
-  const { statusBanner, priceChangeBanner, openHouseBanner } = useListingBanners({
+  const { statusBanner, priceChangeBanner, openHouseBanner, openHouseBanners } = useListingBanners({
     id: listing.id,
     status: listing.status,
     is_relisting: listing.is_relisting ?? null,
@@ -320,6 +320,7 @@ export const SearchListingCard = ({
                 statusBanner={statusBanner}
                 priceChangeBanner={priceChangeBanner}
                 openHouseBanner={openHouseBanner}
+                openHouseBanners={openHouseBanners}
                 leading={
                   onSelect ? (
                     <button
@@ -484,7 +485,7 @@ export const SearchListingCard = ({
               <div className="mt-3.5 flex items-center gap-1.5 rounded-lg border border-emerald-200/80 bg-emerald-50/80 px-3 py-2 text-xs">
                 <Calendar className="h-3.5 w-3.5 text-emerald-700" />
                 <span className="font-medium text-emerald-900">
-                  Open House: {format(parseDateOnly(nextOpenHouse.date), "MMM d")} • {formatTime(nextOpenHouse.start_time)} – {formatTime(nextOpenHouse.end_time)}
+                  {nextOpenHouse.event_type === "broker_tour" ? "Broker Tour" : "Open House"}: {format(parseDateOnly(nextOpenHouse.date), "MMM d")} • {formatTime(nextOpenHouse.start_time)} – {formatTime(nextOpenHouse.end_time)}
                 </span>
               </div>
             )}

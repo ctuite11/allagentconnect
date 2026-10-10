@@ -557,7 +557,7 @@ const ListingCard = ({
   };
   const photoUrl = getFirstPhoto();
   const nextOpenHouse = getNextOpenHouse();
-  const { statusBanner, priceChangeBanner, openHouseBanner } = useListingBanners({
+  const { statusBanner, priceChangeBanner, openHouseBanner, openHouseBanners } = useListingBanners({
     id: listing.id,
     status: listing.status,
     is_relisting: listing.is_relisting,
@@ -778,6 +778,7 @@ const ListingCard = ({
               statusBanner={compactAgentOwned ? null : statusBanner}
               priceChangeBanner={compactAgentOwned ? null : priceChangeBanner}
               openHouseBanner={compactAgentOwned ? null : openHouseBanner}
+              openHouseBanners={compactAgentOwned ? null : openHouseBanners}
               leading={
                 onSelect ? (
                   <div
@@ -1160,6 +1161,7 @@ const ListingCard = ({
         statusBanner={statusBanner}
         priceChangeBanner={priceChangeBanner}
         openHouseBanner={openHouseBanner}
+        openHouseBanners={openHouseBanners}
         nextOpenHouse={nextOpenHouse}
         dateDisplay={listing.created_at ? format(new Date(listing.created_at), "MM/dd/yy") : null}
         onListingNumberClick={() => {
@@ -1349,6 +1351,7 @@ const ListingCard = ({
           statusBanner={statusBanner}
           priceChangeBanner={priceChangeBanner}
           openHouseBanner={openHouseBanner}
+          openHouseBanners={openHouseBanners}
           leading={
             onSelect ? (
               <div

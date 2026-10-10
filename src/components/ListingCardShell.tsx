@@ -79,6 +79,7 @@ export interface ListingCardShellProps {
   statusBanner?: BannerData | null;
   priceChangeBanner?: BannerData | null;
   openHouseBanner?: OpenHouseBannerData | null;
+  openHouseBanners?: OpenHouseBannerData[] | null;
 
   /** Next open house data (for inline info block) */
   nextOpenHouse?: any;
@@ -159,6 +160,7 @@ export function ListingCardShell({
   statusBanner,
   priceChangeBanner,
   openHouseBanner,
+  openHouseBanners,
   nextOpenHouse,
   dateDisplay,
   listedByLine,
@@ -216,6 +218,7 @@ export function ListingCardShell({
               statusBanner={statusBanner}
               priceChangeBanner={priceChangeBanner}
               openHouseBanner={openHouseBanner}
+              openHouseBanners={openHouseBanners}
             />
           )}
 

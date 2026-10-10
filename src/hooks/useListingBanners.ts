@@ -65,6 +65,8 @@ export interface UseListingBannersResult {
   statusBanner: BannerData;
   priceChangeBanner: BannerData | null;
   openHouseBanner: OpenHouseBannerData | null;
+  /** All upcoming events in date order (first === openHouseBanner). */
+  openHouseBanners: OpenHouseBannerData[];
 }
 
 function formatTime(time: string): string {
@@ -79,8 +81,8 @@ function hoursSince(iso: string): number {
   return (Date.now() - new Date(iso).getTime()) / (1000 * 60 * 60);
 }
 
-function getNextOpenHouse(openHouses: unknown): any | null {
-  if (!openHouses || !Array.isArray(openHouses)) return null;
+function getUpcomingOpenHouses(openHouses: unknown): any[] {
+  if (!openHouses || !Array.isArray(openHouses)) return [];
   const now = new Date();
   const upcoming = (openHouses as any[])
     .filter((oh: any) => {
@@ -88,8 +90,12 @@ function getNextOpenHouse(openHouses: unknown): any | null {
       const end = new Date(`${oh.date}T${oh.end_time}:00`);
       return end > now;
     })
-    .sort((a: any, b: any) => parseDateOnly(a.date).getTime() - parseDateOnly(b.date).getTime());
-  return upcoming[0] || null;
+    .sort(
+      (a: any, b: any) =>
+        parseDateOnly(a.date).getTime() - parseDateOnly(b.date).getTime() ||
+        String(a.start_time ?? "").localeCompare(String(b.start_time ?? "")),
+    );
+  return upcoming;
 }
 
 function fallbackStatusBanner(status: string): BannerData {
@@ -206,9 +212,7 @@ export function useListingBanners(listing: UseListingBannersInput): UseListingBa
     return getBackOnMarketBanner() ?? getBaseStatusBanner();
   };
 
-  const getOpenHouseBanner = (): OpenHouseBannerData | null => {
-    const nextOH = getNextOpenHouse(listing.open_houses);
-    if (!nextOH) return null;
+  const toOpenHouseBanner = (nextOH: any): OpenHouseBannerData => {
     const isBrokerOnly = nextOH.event_type === "broker_tour";
     return {
       text: isBrokerOnly ? "BROKER TOUR" : "OPEN HOUSE",
@@ -219,9 +223,13 @@ export function useListingBanners(listing: UseListingBannersInput): UseListingBa
     };
   };
 
+  const openHouseBanners = getUpcomingOpenHouses(listing.open_houses).map(toOpenHouseBanner);
+  const getOpenHouseBanner = (): OpenHouseBannerData | null => openHouseBanners[0] ?? null;
+
   return {
     statusBanner: getStatusChangeBanner(),
     priceChangeBanner: getPriceChangeBanner(),
     openHouseBanner: getOpenHouseBanner(),
+    openHouseBanners,
   };
 }
