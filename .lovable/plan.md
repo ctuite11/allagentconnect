@@ -35,7 +35,7 @@ Server:
 A new BEFORE UPDATE trigger on `listings` raises an error whenever `OLD.status = 'draft'` and `NEW.status <> 'draft'`. The only exception is a transaction-local marker that only `publish_listing()` sets, internally, with `set_config(..., true)`. A browser request cannot set it through the normal data API, so no client boolean acts as the security boundary.
 - **There are no status exceptions.** Coming Soon, Off Market, Active/New, Back on Market, Cancelled, Withdrawn/Temporary Withdrawn, Pending, Sold, Rented, Expired, and every other non-Draft status are all blocked. A never-published listing stays Draft until Publish → Ready to publish? → Yes, Publish Listing, or until it is deleted.
 - **No admin or service escape.** The trigger runs for every role (authenticated, service role, admin, concierge, scheduled jobs). Concierge staff still cannot publish a member's Draft.
-- A BEFORE INSERT rule makes every new listing insert as `draft`, for every role. Creation is always a Draft insert followed by `publish_listing()`.
+- A BEFORE INSERT trigger **rejects with an explicit error** any new listing with `status <> 'draft'`, for every role. It never silently rewrites the status. Every creation flow deliberately inserts as Draft and then goes through `publish_listing()`.
 - Processes that only touch already-live listings are unaffected: scheduled activation, live → live status changes, cancel/withdraw on live listings, and price edits.
 - Before the guard migration, step 1 confirms that no existing server path moves a listing out of Draft (`admin-manage-concierge-listing`, `admin-create-listing-for-agent`, `dcmls_participation_apply`, `auto_activate_listings`, `update-listing-statuses`). Any path that does is moved to `publish_listing()` or stopped, and is reported before the change.
 
@@ -45,7 +45,8 @@ A new DB function `publish_listing(p_listing_id uuid, p_operation_id uuid)`, SEC
 - Checks that the caller is the listing agent or their authorized delegate (`can_act_for_agent`). Admin and concierge accounts get no publish right for another member's Draft.
 - Checks that the stored status is `draft`
 - Reads the stored `draft_intended_status` and checks it is a publishable status
-- Runs the server-side publish checks (address, price, minimum photos, required fields), matching the client rules
+- Enforces the **full current publish contract** on the server: address/location; sale or rental pricing rules; at least one fully uploaded photo; Listing Agreement; buyer-agent compensation where it applies; Coming Soon / On MLS / go-live date rules; numeric bounds (Year Built 1600–next year, Bathrooms ≥0 in 0.5 steps, and the others); fields required for the property or listing type; and the duplicate-listing rule. A direct call can never publish anything the normal Publish flow would reject.
+- Returns structured validation errors (`{ field, section, message }[]`) so the form can highlight the right section, using the existing summary and section highlighting
 - Sets the internal marker, changes the status to the intended status, and clears `draft_intended_status`
 - Writes one row to the new `listing_publish_audit` table: listing_id, user_id, previous_status, new_status, created_at, operation_id, source
 - Is idempotent on `p_operation_id`. A repeat call with the same ID after a success returns that success and writes nothing. An ID from a failed attempt is recorded as failed and can never authorize a later publish.
@@ -84,7 +85,8 @@ Client changes:
   - Yes, Publish Listing → `publish_listing` → publishes the saved intended status, and exactly one audit row is written
   - A retry with the same successful operation ID writes no second row
   - Live → Cancelled and scheduled activation still work on the now-live test listing
-- Delete the test listing afterward, confirm queue counts are unchanged and any new Hot Sheet events came only from the test, then turn emails back on only with Chris's go-ahead
+- Hot Sheet expectations: keep `HOT_SHEET_EMAILS_PAUSED=true` and record before/after counts. The test publish may legitimately create Hot Sheet events or deliveries. Pass means **zero emails sent**, any new Hot Sheet records belong only to the disposable test listing and its expected status changes, and no unrelated listing shows activity.
+- Delete the test listing afterward. Turn email sending back on only with Chris's approval.
 - Release goes through GitHub main → allagentconnect.com, with a live check that ends at the confirm dialog
 
 ## Out of scope
