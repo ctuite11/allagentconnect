@@ -60,4 +60,4 @@
 
 ## 2026-10-10 — List View event bar color matches event type
 - [x] Match the event bar to the photo badge: broker_tour = light purple bg / purple text+border, in_person = light green bg / green text+border (display-only; layout, spacing, icon, date/time format, row size unchanged). Type-check passed; preview verified in List View (Broker Tour bar renders purple, open house classes resolve to green).
-- [ ] Deploy through GitHub `main` → Netlify and confirm on allagentconnect.com (blocked: the earlier search-card commit has not reached the live bundle yet).
+- [x] Deployed through GitHub `main` → Netlify and verified live on allagentconnect.com (Broker Tour bar renders light purple with purple text/border, row height unchanged at 34px; 2026-10-10).
