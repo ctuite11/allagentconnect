@@ -294,7 +294,7 @@ export function ListingCardShell({
                       ? 'text-purple-600 dark:text-purple-400'
                       : 'text-emerald-600 dark:text-emerald-400'
                   }>
-                    {format(new Date(nextOpenHouse.date), "EEE, MMM d")} • {nextOpenHouse.start_time} - {nextOpenHouse.end_time}
+                    {format(parseDateOnly(nextOpenHouse.date), "EEE, MMM d")} • {nextOpenHouse.start_time} - {nextOpenHouse.end_time}
                   </div>
                 </div>
               </div>
@@ -374,7 +374,7 @@ export function ListingCardShell({
           }`}>
             {openHouseBanner.isBroker ? 'Broker Open House:' : 'Open House:'}
           </span>{" "}
-          {format(new Date(nextOpenHouse.date), "EEEE, MMMM d, yyyy")} • {openHouseBanner.time}
+          {format(parseDateOnly(nextOpenHouse.date), "EEEE, MMMM d, yyyy")} • {openHouseBanner.time}
         </div>
       )}
     </Card>
