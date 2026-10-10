@@ -36,3 +36,12 @@ export const DCMLS_SETTINGS_UI_ENABLED = false;
  * to `true` to restore every Developer access surface together.
  */
 export const DEVELOPER_ACCESS_UI_ENABLED = false;
+
+/**
+ * DEVELOPMENTS_UI_ENABLED
+ * Hides the Developments entry from the agent sidebar (desktop and mobile)
+ * until the feature is ready to launch. All Developments pages, routes, data,
+ * admin review screens, and the Developer Portal stay fully intact; flip to
+ * `true` to restore the sidebar entry.
+ */
+export const DEVELOPMENTS_UI_ENABLED = false;
