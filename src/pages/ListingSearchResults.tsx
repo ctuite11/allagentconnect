@@ -528,7 +528,7 @@ const ListingSearchResults = () => {
         <div className={agentWorkspacePageContainer}>
           {!showMapSplit && (
             <div
-              className="sticky top-0 z-20 border-b border-neutral-200 bg-white px-3 sm:px-4 lg:px-5"
+              className="border-b border-neutral-200 bg-white px-3 sm:px-4 lg:px-5"
               aria-label="Agent listing search toolbar"
             >
               {renderAgentToolbarFull()}
