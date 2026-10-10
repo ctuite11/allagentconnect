@@ -65,3 +65,6 @@
 ## 2026-10-10 — Detail page event banners
 - [done] PropertyDetail hero: upcoming Broker Tour/Open House badges stacked under status badge, reusing useListingBanners + ListingPhotoBannerBadge/formatOpenHouseLabel; preview QA passed (purple BROKER TOUR / green OPEN HOUSE, Oct 15 · 11:30 AM–1:30 PM); test events removed; deployed main@00671a90
 - [x] Banner font size matched to status badge (`text-xs` on ListingPhotoBannerBadge usage); preview QA on 6 Sheridan St: both badges compute 12px, banner styling/stacking unchanged; build OK; not yet deployed (awaiting go-ahead)
+
+## 2026-10-10 (listing search header)
+- Remove sticky positioning from Listing Search results toolbar (`/listing-results`) — approved, single class change in `src/pages/ListingSearchResults.tsx`. Preview verification: [ ]
