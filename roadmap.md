@@ -67,4 +67,4 @@
 - [x] Banner font size matched to status badge (`text-xs` on ListingPhotoBannerBadge usage); preview QA on 6 Sheridan St: both badges compute 12px, banner styling/stacking unchanged; build OK; not yet deployed (awaiting go-ahead)
 
 ## 2026-10-10 (listing search header)
-- Remove sticky positioning from Listing Search results toolbar (`/listing-results`) — approved, single class change in `src/pages/ListingSearchResults.tsx`. Preview verification: [ ]
+- Remove sticky positioning from Listing Search results toolbar (`/listing-results`) — approved, single class change in `src/pages/ListingSearchResults.tsx`. Preview verification: [done] — toolbar computed position static; after scroll it moves to y=-1168 (fully offscreen) while first card scrolls with it; no sticky/fixed elements remain in results; map-split header unchanged; no page errors. Not deployed.
