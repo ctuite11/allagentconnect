@@ -338,6 +338,7 @@ const ManageListingPhotos: React.FC<ManageListingPhotosProps> = ({ mode = 'photo
       // Auto-save to database immediately after upload
       const success = await saveItemsToDb(updatedItems);
       if (success) {
+        setIsDirty(false);
         toast.success(`${newItems.length} ${config.itemLabel.toLowerCase()}(s) uploaded and saved`);
       } else {
         toast.error(`${config.itemLabel}s uploaded but failed to save to database`);
@@ -377,17 +378,7 @@ const ManageListingPhotos: React.FC<ManageListingPhotosProps> = ({ mode = 'photo
           title={config.title}
           subtitle={config.description}
           backTo={`/agent/listings`}
-          onBack={() => {
-            // Back mirrors Save & Return's origin-aware destination; navigation only, no writes.
-            const ret = location.state as { returnTo?: string; returnState?: unknown } | null;
-            if (ret?.returnTo?.startsWith('/')) {
-              navigate(ret.returnTo, { state: ret.returnState });
-            } else if (id) {
-              navigate(`/agent/listings/edit/${id}`);
-            } else {
-              navigate('/agent/listings');
-            }
-          }}
+          onBack={handleBack}
         />
         <Button
           variant="default"
