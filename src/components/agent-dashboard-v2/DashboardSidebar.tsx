@@ -45,8 +45,8 @@ interface SidebarItem {
 
 const baseMainMenu: Omit<SidebarItem, "badge">[] = [
   { label: "Success Hub", icon: LayoutDashboard, route: "/agent-dashboard" },
-  { label: "Search", icon: Search, route: "/listing-search" },
-  { label: "Developments", icon: Building2, route: "/developments" },
+  { label: "Search Listings", icon: Search, route: "/listing-search" },
+  { label: "New Developments", icon: Building2, route: "/developments" },
   { label: "Communications Center", icon: Radio, route: "/communications" },
   { label: "Messages", icon: MessageSquare, route: "/agent/messages" },
   { label: "Buyers", icon: Home, route: "/agent/buyers" },
@@ -202,9 +202,9 @@ export function DashboardSidebar({
     const prefix = allItems.find((item) => item.route && item.route !== "/" && path.startsWith(item.route));
     if (prefix) return prefix.label;
 
-    // Search-related routes that should always highlight "Search"
+    // Search-related routes that should always highlight "Search Listings"
     const searchPrefixes = ["/listing-results", "/listing-search", "/agent-search", "/property/"];
-    if (searchPrefixes.some((p) => path.startsWith(p))) return "Search";
+    if (searchPrefixes.some((p) => path.startsWith(p))) return "Search Listings";
 
     // Hot sheet list, review, and buyer-detail routes (not under /agent/hot-sheets prefix)
     if (isAgentHotSheetsNavActive(path)) return "Hot Sheets";
