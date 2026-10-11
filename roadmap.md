@@ -88,3 +88,5 @@
 - [x] Migration B: guard triggers (Draft → any status blocked; non-draft inserts rejected)
 - [x] QA with disposable Draft, Hot Sheet emails paused; report before production
 - [ ] Turn Hot Sheet emails back on (waiting for Chris's approval)
+
+- [ ] Follow-up (not urgent): Hot Sheet "email me a copy" agent copy uses a time-based duplicate key (process-hot-sheet) — can repeat if delivery is triggered twice. Logged Oct 11; do not change without approval.
