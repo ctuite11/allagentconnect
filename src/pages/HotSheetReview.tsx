@@ -1034,6 +1034,7 @@ const HotSheetReview = () => {
       await handleSendInvites();
       return;
     }
+    selectionTouchedRef.current = true;
     setSending(true);
     try {
       await sendRecipientBatch();
@@ -1045,6 +1046,7 @@ const HotSheetReview = () => {
   const handleSendInvites = async () => {
     if (!hotSheet?.id) return;
 
+    selectionTouchedRef.current = true;
     setSending(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -1380,6 +1382,7 @@ const HotSheetReview = () => {
   const handleSendFirstBatch = async () => {
     if (selectedListings.size === 0) return;
     try {
+      selectionTouchedRef.current = true;
       setSending(true);
 
       const { error } = await supabase.functions.invoke("process-hot-sheet", {
@@ -1426,6 +1429,7 @@ const HotSheetReview = () => {
 
   const handleNotifyWithMatches = async () => {
     try {
+      selectionTouchedRef.current = true;
       setSending(true);
       const { error } = await supabase.functions.invoke("process-hot-sheet", {
         body: { hotSheetId: id, sendInitialBatch: true },
@@ -1442,6 +1446,7 @@ const HotSheetReview = () => {
 
   const handleNotifyUpdate = async () => {
     try {
+      selectionTouchedRef.current = true;
       setSending(true);
       toast.info("Message-only updates are coming soon. Use 'Send current matches' for now.");
     } finally {
