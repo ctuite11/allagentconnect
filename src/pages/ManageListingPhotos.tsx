@@ -8,6 +8,16 @@ import { Loader2 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PageHeader } from '@/components/ui/page-header';
 import { Seo } from '@/components/Seo';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 type Photo = {
   url: string;
@@ -30,6 +40,10 @@ const ManageListingPhotos: React.FC<ManageListingPhotosProps> = ({ mode = 'photo
   const [selectedIndexes, setSelectedIndexes] = useState<Set<number>>(new Set());
   const [saving, setSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  // Unsaved local edits (reorder/delete). Uploads auto-save immediately, so they
+  // do not count as unsaved changes.
+  const [isDirty, setIsDirty] = useState(false);
+  const [showLeaveDialog, setShowLeaveDialog] = useState(false);
 
   // Bucket-enforced max upload size. listing-photos is currently 10 MB server-side
   // (raise coordinated separately); listing-floorplans keeps its existing limit.
