@@ -14,7 +14,7 @@ describe("Developments prelaunch UI gate", () => {
     );
 
     // The menu entry stays defined so launch is only a flag flip.
-    expect(source).toContain('{ label: "Developments", icon: Building2, route: "/developments" }');
+    expect(source).toContain('{ label: "New Developments", icon: Building2, route: "/developments" }');
     // Both desktop and mobile drawers render from the filtered mainMenu list.
     expect(source).toContain('DEVELOPMENTS_UI_ENABLED || item.route !== "/developments"');
     expect(source).toContain("mainMenu.map((item)");
