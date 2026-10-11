@@ -772,6 +772,20 @@ const HotSheetReview = () => {
       if (listingsError) throw listingsError;
 
       let nextListings: Listing[] = (listingsData || []) as Listing[];
+      // First batch from Search = exactly what the agent selected. Fetch any
+      // selected listing that is outside the current criteria matches so it is
+      // never silently dropped (ongoing matching is unaffected).
+      const preIds = preselectRef.current;
+      if (preIds && preIds.length > 0) {
+        const have = new Set(nextListings.map((l) => l.id));
+        const missing = preIds.filter((pid) => !have.has(pid));
+        if (missing.length > 0) {
+          const { data: extra } = await supabase.from("listings").select("*").in("id", missing);
+          if (extra && extra.length > 0) {
+            nextListings = [...(extra as unknown as Listing[]), ...nextListings];
+          }
+        }
+      }
       const agentIds = Array.from(new Set(nextListings.map((l) => l.agent_id).filter(Boolean)));
       if (agentIds.length > 0) {
         const { data: agents } = await supabase
