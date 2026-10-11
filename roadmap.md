@@ -6,8 +6,9 @@
 - [x] 3. Guard check: agent + service-role Draft→Coming Soon rejected; non-Draft insert rejected
 - [x] 4. Disposable-listing QA (emails paused); delete disposable test listing
 - [x] 5. Pass/fail report; hold Manage Photos/Floor Plans deploy
-- [ ] Turn Hot Sheet emails back on — waiting for Chris's approval
-- [ ] Deploy held Manage Photos/Floor Plans changes — waiting for Chris's approval
+- [ ] Turn Hot Sheet emails back on — waiting for Chris's approval of the pre-unpause check
+- [x] Manage Photos/Floor Plans changes live (auto-deployed 01:06 UTC) + live QA passed 2026-10-11
+- [x] Pre-unpause Hot Sheet check reported
 
 ## 2026-10-09 — Add Listing documents
 - [x] Add "Floor Plan" to Type of Document (stored as `floor_plan`); dedicated Floor Plans media section untouched.
