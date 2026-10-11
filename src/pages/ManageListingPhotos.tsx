@@ -144,6 +144,7 @@ const ManageListingPhotos: React.FC<ManageListingPhotosProps> = ({ mode = 'photo
     const reOrdered = updated.map((p, i) => ({ ...p, order: i }));
     setItems(reOrdered);
     setDragIndex(null);
+    setIsDirty(true);
   };
 
   const handleDragEnd = () => {
@@ -171,6 +172,7 @@ const ManageListingPhotos: React.FC<ManageListingPhotosProps> = ({ mode = 'photo
       next.delete(index);
       return next;
     });
+    setIsDirty(true);
   };
 
   const handleDeleteSelected = () => {
@@ -180,6 +182,7 @@ const ManageListingPhotos: React.FC<ManageListingPhotosProps> = ({ mode = 'photo
     const reOrdered = updated.map((p, i) => ({ ...p, order: i }));
     setItems(reOrdered);
     setSelectedIndexes(new Set());
+    setIsDirty(true);
   };
 
   // Save items to database (without navigating)
@@ -208,6 +211,7 @@ const ManageListingPhotos: React.FC<ManageListingPhotosProps> = ({ mode = 'photo
     setSaving(false);
     
     if (success) {
+      setIsDirty(false);
       toast.success(`${config.title.replace('Manage ', '')} updated successfully`);
     } else {
       toast.error(`Failed to save ${mode === 'photos' ? 'photos' : 'floor plans'}`);
@@ -216,21 +220,38 @@ const ManageListingPhotos: React.FC<ManageListingPhotosProps> = ({ mode = 'photo
 
   const handleSaveAndReturn = async () => {
     if (!id) return;
-    
+
     setSaving(true);
     const success = await saveItemsToDb(items);
     setSaving(false);
-    
+
     if (success) {
+      setIsDirty(false);
       toast.success(`${config.title.replace('Manage ', '')} saved`);
-      const ret = location.state as { returnTo?: string; returnState?: unknown } | null;
-      if (ret?.returnTo?.startsWith('/')) {
-        navigate(ret.returnTo, { state: ret.returnState });
-      } else {
-        navigate(`/agent/listings/edit/${id}`);
-      }
+      navigateBackToOrigin();
     } else {
       toast.error(`Failed to save ${mode === 'photos' ? 'photos' : 'floor plans'}`);
+    }
+  };
+
+  // Origin-aware return navigation; navigation only, no writes.
+  const navigateBackToOrigin = () => {
+    const ret = location.state as { returnTo?: string; returnState?: unknown } | null;
+    if (ret?.returnTo?.startsWith('/')) {
+      navigate(ret.returnTo, { state: ret.returnState });
+    } else if (id) {
+      navigate(`/agent/listings/edit/${id}`);
+    } else {
+      navigate('/agent/listings');
+    }
+  };
+
+  // Back never saves. With unsaved changes, ask first; otherwise leave immediately.
+  const handleBack = () => {
+    if (isDirty) {
+      setShowLeaveDialog(true);
+    } else {
+      navigateBackToOrigin();
     }
   };
 
