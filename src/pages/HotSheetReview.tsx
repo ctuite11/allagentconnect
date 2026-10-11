@@ -163,6 +163,7 @@ const HotSheetReview = () => {
   const location = useLocation();
   const { id } = useParams<{ id: string }>();
   const originFrom = (location.state as { from?: string } | null)?.from;
+  const preselectRecoveredRef = useRef(false);
   const preselectRef = useRef<string[] | null>(
     (location.state as { preselectListingIds?: string[] } | null)?.preselectListingIds ?? null,
   );
@@ -765,6 +766,24 @@ const HotSheetReview = () => {
 
       // Build query using unified search utility
       const criteria = hotSheetData.criteria as any;
+      // Recover the Search first batch after refresh / leave-and-return: it is
+      // persisted on the Hot Sheet as criteria.selectedListingIds. Only used
+      // while no recipient's first batch has been queued yet.
+      if (!preselectRef.current && !preselectRecoveredRef.current) {
+        preselectRecoveredRef.current = true;
+        const stored: string[] = Array.isArray(criteria?.selectedListingIds)
+          ? criteria.selectedListingIds.map(String)
+          : [];
+        if (stored.length > 0) {
+          const { data: queued } = await supabase
+            .from("hot_sheet_recipient_batches")
+            .select("id")
+            .eq("hot_sheet_id", hotSheetData.id)
+            .not("initial_batch_queued_at", "is", null)
+            .limit(1);
+          if (!queued || queued.length === 0) preselectRef.current = stored;
+        }
+      }
       const query = buildListingsQuery(supabase, criteria).limit(200);
 
       const { data: listingsData, error: listingsError } = await query;
