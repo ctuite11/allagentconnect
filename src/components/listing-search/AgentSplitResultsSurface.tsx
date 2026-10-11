@@ -352,7 +352,7 @@ export function AgentSplitResultsSurface({
 
   const renderResultsActionsContent = () => {
     const saveHotSheetBtn =
-      showSaveToHotSheet ? (
+      showSaveToHotSheet && safeSelectedRows.size > 0 ? (
         <Button
           type="button"
           variant="outline"
