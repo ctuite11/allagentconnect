@@ -56,6 +56,7 @@ const AAC_GREEN_CHECKBOX =
   "border-neutral-300 data-[state=checked]:border-[#50C878] data-[state=checked]:bg-[#50C878] data-[state=checked]:text-white";
 
 const SaveToHotSheetDialog = ({ open, onOpenChange, selectedListingIds, currentSearch }: SaveToHotSheetDialogProps) => {
+  const navigate = useNavigate();
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
   const [notifyAgent, setNotifyAgent] = useState(true);
