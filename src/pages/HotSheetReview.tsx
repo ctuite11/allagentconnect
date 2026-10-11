@@ -164,6 +164,12 @@ const HotSheetReview = () => {
   const { id } = useParams<{ id: string }>();
   const originFrom = (location.state as { from?: string } | null)?.from;
   const preselectRecoveredRef = useRef(false);
+  /** Set once the agent changes the selection; stops re-applying the first-batch preselect. */
+  const selectionTouchedRef = useRef(false);
+  const setSelectedByUser = useCallback((next: Set<string>) => {
+    selectionTouchedRef.current = true;
+    setSelectedListings(next);
+  }, []);
   const preselectRef = useRef<string[] | null>(
     (location.state as { preselectListingIds?: string[] } | null)?.preselectListingIds ?? null,
   );
@@ -864,8 +870,7 @@ const HotSheetReview = () => {
       setAllListings(workspaceIsShared ? visibleListings : nextListings);
       // One-time preselect of the first batch chosen in Search → Save as Hot Sheet.
       const pre = preselectRef.current;
-      if (pre && pre.length > 0) {
-        preselectRef.current = null;
+      if (pre && pre.length > 0 && !selectionTouchedRef.current) {
         const visibleIds = new Set(visibleListings.map((l) => l.id));
         setSelectedListings(new Set(pre.filter((pid) => visibleIds.has(pid))));
       } else {
@@ -935,6 +940,7 @@ const HotSheetReview = () => {
   const resultsFromPath = id ? `/hot-sheets/${id}/review` : "/agent/hot-sheets";
 
   const toggleListing = (listingId: string) => {
+    selectionTouchedRef.current = true;
     const newSelected = new Set(selectedListings);
     if (newSelected.has(listingId)) {
       newSelected.delete(listingId);
@@ -945,6 +951,7 @@ const HotSheetReview = () => {
   };
 
   const toggleSelectAll = () => {
+    selectionTouchedRef.current = true;
     if (selectedListings.size === listings.length) {
       setSelectedListings(new Set());
       setListings(allListings);
@@ -977,6 +984,7 @@ const HotSheetReview = () => {
       toast.error("No listings selected");
       return;
     }
+    selectionTouchedRef.current = true;
     const filtered = listings.filter(l => selectedListings.has(l.id));
     setListings(filtered);
     setSelectedListings(new Set());
@@ -1714,7 +1722,7 @@ const HotSheetReview = () => {
             shareSelectedEnabled={false}
             hideSelectAllPills
             selectedRows={selectedListings}
-            onSelectedRowsChange={setSelectedListings}
+            onSelectedRowsChange={setSelectedByUser}
             onSelectAll={toggleSelectAll}
             onKeepSelected={!isSharedWorkspace ? handleKeepSelected : undefined}
             containerClassName="min-w-0 px-0"
