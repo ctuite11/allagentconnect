@@ -38,13 +38,13 @@ const legalLinks = [
 const FooterLink = ({ href, children }: { href: string; children: React.ReactNode }) => {
   if (href.startsWith("/")) {
     return (
-      <Link to={href} className="font-['Manrope'] font-medium text-white text-base hover:opacity-70 transition-opacity whitespace-nowrap">
+      <Link to={href} className="font-manrope font-medium text-white text-base hover:opacity-70 transition-opacity whitespace-nowrap">
         {children}
       </Link>
     );
   }
   return (
-    <a href={href} className="font-['Manrope'] font-medium text-white text-base hover:opacity-70 transition-opacity whitespace-nowrap">
+    <a href={href} className="font-manrope font-medium text-white text-base hover:opacity-70 transition-opacity whitespace-nowrap">
       {children}
     </a>
   );
@@ -62,11 +62,11 @@ const FooterV2 = () => {
           <div className="flex flex-col gap-6 max-w-[320px]">
             <div className="flex items-center gap-3">
               <img src={footerLogo} alt="Logo" className="w-8 h-8" />
-              <span className="font-['Manrope'] font-extrabold text-white text-xl tracking-[-0.8px] whitespace-nowrap">
+              <span className="font-manrope font-extrabold text-white text-xl tracking-[-0.8px] whitespace-nowrap">
                 All Agent Connect
               </span>
             </div>
-            <p className="font-['Manrope'] font-medium text-[#edeff7a6] text-base leading-[1.6]">
+            <p className="font-manrope font-medium text-[#edeff7a6] text-base leading-[1.6]">
               Private agent network for off-market and early-stage real estate intelligence.
             </p>
             <img src={footerSocial} alt="Social icons" className="w-[200px] h-auto" />
@@ -74,7 +74,7 @@ const FooterV2 = () => {
 
           {/* Platform */}
           <div className="flex flex-col gap-7">
-            <span className="font-['Manrope'] font-semibold text-[#d4cfc9] text-sm tracking-[1.12px] uppercase">
+            <span className="font-manrope font-semibold text-[#d4cfc9] text-sm tracking-[1.12px] uppercase">
               Platform
             </span>
             <nav className="flex flex-col gap-5">
@@ -86,7 +86,7 @@ const FooterV2 = () => {
 
           {/* Solutions */}
           <div className="flex flex-col gap-7">
-            <span className="font-['Manrope'] font-semibold text-[#d4cfc9] text-sm tracking-[1.12px] uppercase">
+            <span className="font-manrope font-semibold text-[#d4cfc9] text-sm tracking-[1.12px] uppercase">
               Solutions
             </span>
             <nav className="flex flex-col gap-5">
@@ -98,7 +98,7 @@ const FooterV2 = () => {
 
           {/* Company */}
           <div className="flex flex-col gap-7">
-            <span className="font-['Manrope'] font-semibold text-[#d4cfc9] text-sm tracking-[1.12px] uppercase">
+            <span className="font-manrope font-semibold text-[#d4cfc9] text-sm tracking-[1.12px] uppercase">
               Company
             </span>
             <nav className="flex flex-col gap-5">
@@ -111,10 +111,10 @@ const FooterV2 = () => {
           {/* Newsletter */}
           <div className="flex flex-col gap-7 max-w-[420px]">
             <div className="flex flex-col gap-3">
-              <h3 className="font-['Manrope'] font-semibold text-white text-base leading-[1.6]">
+              <h3 className="font-manrope font-semibold text-white text-base leading-[1.6]">
                 Be First to Know What's Moving Privately
               </h3>
-              <p className="font-['Manrope'] font-medium text-[#edeff7a6] text-sm leading-[1.6]">
+              <p className="font-manrope font-medium text-[#edeff7a6] text-sm leading-[1.6]">
                 Member-only insights, off-market trends, and platform updates.
               </p>
             </div>
@@ -125,10 +125,10 @@ const FooterV2 = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Email address"
-                className="absolute inset-0 w-full h-full bg-transparent rounded-full pl-5 pr-36 text-white text-base font-['Manrope'] placeholder-white/40 outline-none"
+                className="absolute inset-0 w-full h-full bg-transparent rounded-full pl-5 pr-36 text-white text-base font-manrope placeholder-white/40 outline-none"
               />
               <div className="absolute top-[5px] right-[5px] h-[44px]">
-                <Button className="h-full px-5 bg-[#50C878] rounded-full text-black text-sm font-semibold font-['Manrope'] hover:bg-[#45b96d] whitespace-nowrap shadow-sm">
+                <Button className="h-full px-5 bg-[#50C878] rounded-full text-black text-sm font-semibold font-manrope hover:bg-[#45b96d] whitespace-nowrap shadow-sm">
                   Subscribe
                 </Button>
               </div>
@@ -142,11 +142,11 @@ const FooterV2 = () => {
           <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 py-7">
             {legalLinks.map((l) =>
               l.href.startsWith("/") ? (
-                <Link key={l.label} to={l.href} className="font-['Manrope'] font-medium text-[#ffffffcc] text-sm hover:opacity-70 transition-opacity whitespace-nowrap">
+                <Link key={l.label} to={l.href} className="font-manrope font-medium text-[#ffffffcc] text-sm hover:opacity-70 transition-opacity whitespace-nowrap">
                   {l.label}
                 </Link>
               ) : (
-                <a key={l.label} href={l.href} className="font-['Manrope'] font-medium text-[#ffffffcc] text-sm hover:opacity-70 transition-opacity whitespace-nowrap">
+                <a key={l.label} href={l.href} className="font-manrope font-medium text-[#ffffffcc] text-sm hover:opacity-70 transition-opacity whitespace-nowrap">
                   {l.label}
                 </a>
               )
@@ -154,7 +154,7 @@ const FooterV2 = () => {
           </div>
           <Separator className="bg-[#ffffff1a]" />
           <div className="flex items-center justify-center py-8">
-            <span className="font-['Manrope'] font-medium text-[#edeff7a6] text-sm text-center">
+            <span className="font-manrope font-medium text-[#edeff7a6] text-sm text-center">
               © {new Date().getFullYear()} All Agent Connect, Inc. All rights reserved.
             </span>
           </div>

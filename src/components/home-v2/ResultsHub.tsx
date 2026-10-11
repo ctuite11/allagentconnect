@@ -83,12 +83,12 @@ const ResultsHub = () => {
         {/* Header */}
         <div className="flex flex-col items-center gap-4 text-center max-w-[680px]">
           <div className="inline-flex items-center gap-2 pl-3.5 pr-5 py-2 rounded-full" style={{ background: "rgba(14,86,245,0.08)", border: "1px solid rgba(14,86,245,0.18)" }}>
-            <span className="font-['Manrope'] font-semibold text-[14px] tracking-[0.28px]" style={{ color: "#6B9AFF" }}>⚡ Capability</span>
+            <span className="font-manrope font-semibold text-[14px] tracking-[0.28px]" style={{ color: "#6B9AFF" }}>⚡ Capability</span>
           </div>
-          <h2 className="font-['Manrope'] font-bold text-[clamp(28px,4vw,48px)] tracking-[-1.5px] leading-[1.12]" style={{ color: "#ffffff" }}>
+          <h2 className="font-manrope font-bold text-[clamp(28px,4vw,48px)] tracking-[-1.5px] leading-[1.12]" style={{ color: "#ffffff" }}>
             Turning network intelligence into real results.
           </h2>
-          <p className="font-['Manrope'] font-bold text-[20px] tracking-[-0.3px] leading-[1.4] mt-1" style={{ color: "#0E56F5" }}>
+          <p className="font-manrope font-bold text-[20px] tracking-[-0.3px] leading-[1.4] mt-1" style={{ color: "#0E56F5" }}>
             Data in. Dollars out.
           </p>
         </div>
@@ -167,8 +167,8 @@ const ResultsHub = () => {
             </foreignObject>
 
             {/* ── Center labels ── */}
-            <text x={cx} y={cy + 50} textAnchor="middle" fontFamily="Manrope,Helvetica" fontWeight="800" fontSize="14" letterSpacing="-0.3" fill="#ffffff">All Agent Connect</text>
-            <text x={cx} y={cy + 66} textAnchor="middle" fontFamily="Manrope,Helvetica" fontWeight="500" fontSize="11.5" fill="#92a2bb">Private agent network</text>
+            <text x={cx} y={cy + 50} textAnchor="middle" fontFamily="Manrope, system-ui, -apple-system, BlinkMacSystemFont, sans-serif" fontWeight="800" fontSize="14" letterSpacing="-0.3" fill="#ffffff">All Agent Connect</text>
+            <text x={cx} y={cy + 66} textAnchor="middle" fontFamily="Manrope, system-ui, -apple-system, BlinkMacSystemFont, sans-serif" fontWeight="500" fontSize="11.5" fill="#92a2bb">Private agent network</text>
 
             {/* ── Left pills (blue) ── */}
             {leftNodes.map((n) => {
@@ -182,7 +182,7 @@ const ResultsHub = () => {
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4B83F7" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d={n.icon} /></svg>
                   </g>
                   <rect x={iconBoxSize + gap} y="0" width={PILL_W} height={PILL_H} rx={PILL_H / 2} fill="rgba(14,86,245,0.06)" stroke="rgba(14,86,245,0.25)" strokeWidth="0.8" />
-                  <text x={iconBoxSize + gap + PILL_W / 2} y={PILL_H / 2 + 4.5} textAnchor="middle" fontFamily="Manrope,Helvetica" fontWeight="600" fontSize="11.5" fill="#c8d5f0">{n.label}</text>
+                  <text x={iconBoxSize + gap + PILL_W / 2} y={PILL_H / 2 + 4.5} textAnchor="middle" fontFamily="Manrope, system-ui, -apple-system, BlinkMacSystemFont, sans-serif" fontWeight="600" fontSize="11.5" fill="#c8d5f0">{n.label}</text>
                 </g>
               );
             })}
@@ -195,7 +195,7 @@ const ResultsHub = () => {
                 <g key={n.label} transform={`translate(${startX}, ${n.y - PILL_H / 2})`}>
                   <rect x="0" y="0" width={PILL_W} height={PILL_H} rx={PILL_H / 2} fill="rgba(5,150,105,0.06)" stroke="rgba(5,150,105,0.25)" strokeWidth="0.8" />
                   <circle cx={14} cy={PILL_H / 2} r={3.5} fill="#059669" />
-                  <text x={PILL_W / 2 + 4} y={PILL_H / 2 + 4.5} textAnchor="middle" fontFamily="Manrope,Helvetica" fontWeight="600" fontSize="11.5" fill="#b4e4cb">{n.label}</text>
+                  <text x={PILL_W / 2 + 4} y={PILL_H / 2 + 4.5} textAnchor="middle" fontFamily="Manrope, system-ui, -apple-system, BlinkMacSystemFont, sans-serif" fontWeight="600" fontSize="11.5" fill="#b4e4cb">{n.label}</text>
                   <rect x={PILL_W + gap} y="0" width={iconBoxSize} height={PILL_H} rx="6" fill="rgba(5,150,105,0.08)" stroke="rgba(5,150,105,0.18)" strokeWidth="0.8" />
                   <g transform={`translate(${PILL_W + gap + iconBoxSize / 2 - 7}, ${PILL_H / 2 - 7})`}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4eca8a" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d={n.icon} /></svg>
@@ -213,20 +213,20 @@ const ResultsHub = () => {
               <div className="absolute inset-0 rounded-full" style={{ background: "radial-gradient(circle, rgba(14,86,245,0.25) 0%, transparent 70%)", transform: "scale(2.2)" }} />
               <Monogram size={56} />
             </div>
-            <p className="font-['Manrope'] font-bold text-[14px]" style={{ color: "#ffffff" }}>All Agent Connect</p>
-            <p className="font-['Manrope'] font-medium text-[12px] -mt-2" style={{ color: "#92a2bb" }}>Private agent network</p>
+            <p className="font-manrope font-bold text-[14px]" style={{ color: "#ffffff" }}>All Agent Connect</p>
+            <p className="font-manrope font-medium text-[12px] -mt-2" style={{ color: "#92a2bb" }}>Private agent network</p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {LEFT_NODES.map((n) => (
               <div key={n.label} className="flex items-center gap-2.5 px-4 py-2.5 rounded-full shadow-sm" style={{ background: "rgba(14,86,245,0.06)", border: "1px solid rgba(14,86,245,0.2)" }}>
                 <span className="w-2 h-2 rounded-full shrink-0" style={{ background: "#0E56F5" }} />
-                <span className="font-['Manrope'] font-semibold text-[12px]" style={{ color: "#c8d5f0" }}>{n.label}</span>
+                <span className="font-manrope font-semibold text-[12px]" style={{ color: "#c8d5f0" }}>{n.label}</span>
               </div>
             ))}
             {RIGHT_NODES.map((n) => (
               <div key={n.label} className="flex items-center gap-2.5 px-4 py-2.5 rounded-full shadow-sm" style={{ background: "rgba(5,150,105,0.06)", border: "1px solid rgba(5,150,105,0.2)" }}>
                 <span className="w-2 h-2 rounded-full shrink-0" style={{ background: "#059669" }} />
-                <span className="font-['Manrope'] font-semibold text-[12px]" style={{ color: "#b4e4cb" }}>{n.label}</span>
+                <span className="font-manrope font-semibold text-[12px]" style={{ color: "#b4e4cb" }}>{n.label}</span>
               </div>
             ))}
           </div>
