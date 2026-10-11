@@ -535,6 +535,30 @@ const ManageListingPhotos: React.FC<ManageListingPhotosProps> = ({ mode = 'photo
           ))}
         </div>
       )}
+
+      {/* Unsaved-changes warning for Back (Back never saves) */}
+      <AlertDialog open={showLeaveDialog} onOpenChange={setShowLeaveDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Leave without saving?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Your {mode === 'photos' ? 'photo' : 'floor plan'} changes have not been saved.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Stay Here</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setShowLeaveDialog(false);
+                setIsDirty(false);
+                navigateBackToOrigin();
+              }}
+            >
+              Leave Without Saving
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
