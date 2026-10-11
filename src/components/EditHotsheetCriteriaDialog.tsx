@@ -322,6 +322,18 @@ export function EditHotsheetCriteriaDialog({
         zipCode: zipCode || null,
       };
 
+      // Preserve the Search first-batch selection (criteria.selectedListingIds);
+      // editing matching criteria must never drop the agent's chosen first batch.
+      const { data: existingRow } = await supabase
+        .from("hot_sheets")
+        .select("criteria")
+        .eq("id", hotSheetId)
+        .maybeSingle();
+      const existingSelected = (existingRow?.criteria as any)?.selectedListingIds;
+      if (Array.isArray(existingSelected) && existingSelected.length > 0) {
+        (hotsheetCriteria as any).selectedListingIds = existingSelected;
+      }
+
       const { error } = await supabase
         .from("hot_sheets")
         .update({ criteria: hotsheetCriteria })
