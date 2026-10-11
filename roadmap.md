@@ -1,5 +1,12 @@
 # Roadmap — AAC
 
+## 2026-10-11 — 16 N Mead closeout (Draft-publish protection)
+- [ ] 1. Confirm production SHA + live bundle uses publish_listing(); no Draft→non-Draft direct write path
+- [ ] 2. Read-only 16 N Mead write-path investigation
+- [ ] 3. Guard check: agent + service-role Draft→Coming Soon rejected; non-Draft insert rejected
+- [ ] 4. Disposable-listing QA (emails paused); delete disposable test listing
+- [ ] 5. Pass/fail report; hold Manage Photos/Floor Plans deploy
+
 ## 2026-10-09 — Add Listing documents
 - [x] Add "Floor Plan" to Type of Document (stored as `floor_plan`); dedicated Floor Plans media section untouched.
 - [x] Added documents row: Document Type is the main line, uploaded filename underneath (display-only; type-check passed).
