@@ -37,6 +37,8 @@ interface PageHeaderProps {
   compactBack?: boolean;
   /** Standard top inset when this is the first block in the page shell. */
   withTopPadding?: boolean;
+  /** Optional override for the Back click (e.g. to pass router state). */
+  onBack?: () => void;
 }
 
 /**
@@ -53,11 +55,14 @@ export function PageHeader({
   actionsClassName,
   icon,
   withTopPadding = false,
+  onBack,
 }: PageHeaderProps) {
   const navigate = useNavigate();
 
   const handleBack = () => {
-    if (backTo) {
+    if (onBack) {
+      onBack();
+    } else if (backTo) {
       navigate(backTo);
     } else {
       navigate(-1);
