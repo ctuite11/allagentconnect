@@ -460,7 +460,7 @@ const ListingSearchResults = () => {
   );
 
   const renderResultsActionsContent = () => {
-    const saveHotSheetBtn = (
+    const saveHotSheetBtn = safeSelectedRows.size === 0 ? null : (
       <Button
         type="button"
         variant="outline"
