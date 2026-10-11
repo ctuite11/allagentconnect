@@ -163,6 +163,9 @@ const HotSheetReview = () => {
   const location = useLocation();
   const { id } = useParams<{ id: string }>();
   const originFrom = (location.state as { from?: string } | null)?.from;
+  const preselectRef = useRef<string[] | null>(
+    (location.state as { preselectListingIds?: string[] } | null)?.preselectListingIds ?? null,
+  );
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [hotSheet, setHotSheet] = useState<HotSheet | null>(null);
@@ -826,7 +829,15 @@ const HotSheetReview = () => {
 
       setListings(visibleListings);
       setAllListings(workspaceIsShared ? visibleListings : nextListings);
-      setSelectedListings(new Set());
+      // One-time preselect of the first batch chosen in Search → Save as Hot Sheet.
+      const pre = preselectRef.current;
+      if (pre && pre.length > 0) {
+        preselectRef.current = null;
+        const visibleIds = new Set(visibleListings.map((l) => l.id));
+        setSelectedListings(new Set(pre.filter((pid) => visibleIds.has(pid))));
+      } else {
+        setSelectedListings(new Set());
+      }
 
       const listingIdsForChat = visibleListings.map((l) => l.id);
       const grouped: Record<string, ListingCardThreadMessage[]> = {};
