@@ -8,6 +8,16 @@ import { Loader2 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PageHeader } from '@/components/ui/page-header';
 import { Seo } from '@/components/Seo';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 type Photo = {
   url: string;
@@ -30,6 +40,10 @@ const ManageListingPhotos: React.FC<ManageListingPhotosProps> = ({ mode = 'photo
   const [selectedIndexes, setSelectedIndexes] = useState<Set<number>>(new Set());
   const [saving, setSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  // Unsaved local edits (reorder/delete). Uploads auto-save immediately, so they
+  // do not count as unsaved changes.
+  const [isDirty, setIsDirty] = useState(false);
+  const [showLeaveDialog, setShowLeaveDialog] = useState(false);
 
   // Bucket-enforced max upload size. listing-photos is currently 10 MB server-side
   // (raise coordinated separately); listing-floorplans keeps its existing limit.
@@ -130,6 +144,7 @@ const ManageListingPhotos: React.FC<ManageListingPhotosProps> = ({ mode = 'photo
     const reOrdered = updated.map((p, i) => ({ ...p, order: i }));
     setItems(reOrdered);
     setDragIndex(null);
+    setIsDirty(true);
   };
 
   const handleDragEnd = () => {
@@ -157,6 +172,7 @@ const ManageListingPhotos: React.FC<ManageListingPhotosProps> = ({ mode = 'photo
       next.delete(index);
       return next;
     });
+    setIsDirty(true);
   };
 
   const handleDeleteSelected = () => {
@@ -166,6 +182,7 @@ const ManageListingPhotos: React.FC<ManageListingPhotosProps> = ({ mode = 'photo
     const reOrdered = updated.map((p, i) => ({ ...p, order: i }));
     setItems(reOrdered);
     setSelectedIndexes(new Set());
+    setIsDirty(true);
   };
 
   // Save items to database (without navigating)
@@ -194,6 +211,7 @@ const ManageListingPhotos: React.FC<ManageListingPhotosProps> = ({ mode = 'photo
     setSaving(false);
     
     if (success) {
+      setIsDirty(false);
       toast.success(`${config.title.replace('Manage ', '')} updated successfully`);
     } else {
       toast.error(`Failed to save ${mode === 'photos' ? 'photos' : 'floor plans'}`);
@@ -202,21 +220,38 @@ const ManageListingPhotos: React.FC<ManageListingPhotosProps> = ({ mode = 'photo
 
   const handleSaveAndReturn = async () => {
     if (!id) return;
-    
+
     setSaving(true);
     const success = await saveItemsToDb(items);
     setSaving(false);
-    
+
     if (success) {
+      setIsDirty(false);
       toast.success(`${config.title.replace('Manage ', '')} saved`);
-      const ret = location.state as { returnTo?: string; returnState?: unknown } | null;
-      if (ret?.returnTo?.startsWith('/')) {
-        navigate(ret.returnTo, { state: ret.returnState });
-      } else {
-        navigate(`/agent/listings/edit/${id}`);
-      }
+      navigateBackToOrigin();
     } else {
       toast.error(`Failed to save ${mode === 'photos' ? 'photos' : 'floor plans'}`);
+    }
+  };
+
+  // Origin-aware return navigation; navigation only, no writes.
+  const navigateBackToOrigin = () => {
+    const ret = location.state as { returnTo?: string; returnState?: unknown } | null;
+    if (ret?.returnTo?.startsWith('/')) {
+      navigate(ret.returnTo, { state: ret.returnState });
+    } else if (id) {
+      navigate(`/agent/listings/edit/${id}`);
+    } else {
+      navigate('/agent/listings');
+    }
+  };
+
+  // Back never saves. With unsaved changes, ask first; otherwise leave immediately.
+  const handleBack = () => {
+    if (isDirty) {
+      setShowLeaveDialog(true);
+    } else {
+      navigateBackToOrigin();
     }
   };
 
@@ -303,6 +338,7 @@ const ManageListingPhotos: React.FC<ManageListingPhotosProps> = ({ mode = 'photo
       // Auto-save to database immediately after upload
       const success = await saveItemsToDb(updatedItems);
       if (success) {
+        setIsDirty(false);
         toast.success(`${newItems.length} ${config.itemLabel.toLowerCase()}(s) uploaded and saved`);
       } else {
         toast.error(`${config.itemLabel}s uploaded but failed to save to database`);
@@ -342,17 +378,7 @@ const ManageListingPhotos: React.FC<ManageListingPhotosProps> = ({ mode = 'photo
           title={config.title}
           subtitle={config.description}
           backTo={`/agent/listings`}
-          onBack={() => {
-            // Back mirrors Save & Return's origin-aware destination; navigation only, no writes.
-            const ret = location.state as { returnTo?: string; returnState?: unknown } | null;
-            if (ret?.returnTo?.startsWith('/')) {
-              navigate(ret.returnTo, { state: ret.returnState });
-            } else if (id) {
-              navigate(`/agent/listings/edit/${id}`);
-            } else {
-              navigate('/agent/listings');
-            }
-          }}
+          onBack={handleBack}
         />
         <Button
           variant="default"
@@ -509,6 +535,30 @@ const ManageListingPhotos: React.FC<ManageListingPhotosProps> = ({ mode = 'photo
           ))}
         </div>
       )}
+
+      {/* Unsaved-changes warning for Back (Back never saves) */}
+      <AlertDialog open={showLeaveDialog} onOpenChange={setShowLeaveDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Leave without saving?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Your {mode === 'photos' ? 'photo' : 'floor plan'} changes have not been saved.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Stay Here</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setShowLeaveDialog(false);
+                setIsDirty(false);
+                navigateBackToOrigin();
+              }}
+            >
+              Leave Without Saving
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
