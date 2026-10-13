@@ -1,42 +1,45 @@
-# Personal vs Buyer Hot Sheets (Option C) + clean up "mine"
+# Save Draft for Create Hot Sheet (Personal and Buyer)
 
-## What I found (read-only, nothing changed)
-- **The invitation was never delivered.** It was handed off at 11:00 PM on Oct 12 (New York time). It was delayed all day and finally bounced at 1:00 PM today with "unable to deliver… no such domain allagentconnet.com". No one received it, and nothing will retry.
-- **The link is still technically open.** One unused invitation link exists for that contact: not accepted, not cancelled.
-- **The misspelled "Chris" contact (created May 29) is used only by "mine".** It isn't linked to any other Hot Sheet or saved first batch. It has one *pending* buyer connection record, created by that invitation click, with no buyer account attached.
-- **"mine" has one saved first batch** with 1 listing, never sent.
+## How it works today
+- Create Hot Sheet is one large dialog. Nothing is saved until the final Create click, so leaving the dialog loses everything.
+- Each Hot Sheet record already has an "active" on/off switch. The matching check only looks at sheets that are switched on, so a sheet that is off never matches listings and never sends anything.
+- An "off" sheet is not the same as a draft. Agents can already pause sheets, so drafts need their own label.
 
-## 1. Personal is a saved Hot Sheet type
-- Each Hot Sheet gets a saved type: **Personal** or **Buyer**.
-- Existing sheets are labeled automatically: sheets with contacts become Buyer, sheets without become Personal. This doesn't change how any of them behave today.
-- **Create Hot Sheet** gets a clear choice: "Personal — Just for Me" or "For a Buyer". Choosing Personal hides the contacts section and saves with no contacts.
-- **Review / Edit for Personal sheets:** no Send First Batch, Invite, Send All Listings, or other buyer buttons. Criteria editing and match review work as usual.
-- **Server enforcement:** the database refuses to attach a contact or save a first batch on a Personal sheet. The invitation step also refuses Personal sheets, so a stale or crafted request still can't invite anyone. To invite a buyer, the agent first changes the sheet to Buyer (an explicit action).
-
-## 2. Self-invite warning
-- In Create/Edit (Buyer type), if a picked contact's email matches the agent's own login email, or looks like a near-miss of it (e.g. one letter off, like allagentconnet vs allagentconnect), show: "This looks like you. Make this a Personal Hot Sheet instead?" with **Switch to Personal** or **Keep as Buyer**.
-- The same check runs before "Send First Batch & Invite" on Review.
-
-## 3. Your data (only your account)
-In this order, by exact ID:
-1. Cancel the invitation link (`00790dbf…`) by marking it cancelled, not deleting it, so the record stays.
-2. Remove the pending buyer connection for that contact (no buyer account was ever attached).
-3. Remove "mine"'s saved first batch (`9824a8b6…`). Your 1 selected listing is kept as a Personal pick on "mine", so it still shows pinned in Review.
-4. Detach the contact from "mine" and set "mine" to **Personal**. Name and criteria are unchanged.
-5. Delete the misspelled "Chris" contact (`ba16414c…`), since it's used nowhere else.
-- The email record and its bounce history are kept for audit.
-
-## Impact on saved data
-- One new setting on every Hot Sheet. Other agents' sheets only get a label that matches how they already behave. Their contacts, batches and sending are untouched.
-- Data removed: only the five items above, all yours.
-- **One detail to confirm:** the misspelled email will no longer exist as a contact. If you want it kept and corrected to chris@allagentconnect.com instead, tell me.
+## What agents will see
+- **Save Draft button** in Create Hot Sheet, available at any point. It needs no name, contact, buyer or criteria.
+- **Automatic saving** about 2 seconds after the first real change (typing a name, choosing Personal/Buyer, picking an area or criteria, or adding a contact). Just opening the dialog creates nothing. A small "Draft saved" note confirms each save.
+- **My Hot Sheets** shows drafts in their own "Drafts" group with a Draft badge, plus **Continue Editing**, **Rename** and **Delete**. Drafts never appear among active sheets or in match counts.
+- **Continue Editing** reopens Create Hot Sheet with everything restored: name, type, criteria, areas, price, property types, chosen contacts and selected listings. It keeps updating the same draft, so no duplicate is created. Drafts are stored on the server, so they survive refreshes, logging out and switching devices.
+- **Finishing a draft:** the existing Create button runs the usual checks and then turns the same record into a real Hot Sheet.
+  - Personal: no contact needed.
+  - Buyer: same flow as today, ending on Review with the pinning, count and saved selections working as they do now.
 
 ## Safety
-- No emails, invitations, batches or notifications. Email queue count recorded before and after.
-- The Buyer workflow, pending-contact flow and the Review fixes (pinning, count, persistence) stay the same. The locked Hot Sheet rules and their tests stay in place. New tests cover Personal sheets.
+- A draft is always switched off and labeled Draft, so matching, notifications, batches and invitations never see it.
+- On the server:
+  - A draft can't have a saved first batch or invitation.
+  - The invite and processing steps refuse drafts.
+- Contacts picked in a draft are kept with the draft only. They are linked when the sheet is created, so a draft never shows up in a buyer's or contact's views.
+- Existing Hot Sheets are not touched. Every current sheet keeps its current state.
+- Communications Center, Hot Sheet email rules and buyer relationships are unchanged. No emails, invitations or test notifications.
+
+## Testing (no sending)
+- Automated tests:
+  - Drafts are excluded from matching and active lists.
+  - Resuming updates the same record.
+  - Opening the dialog doesn't create a draft.
+  - The server refuses to batch or invite a draft.
+- Signed-in preview check of save, leave, resume and finish for a Personal draft. For Buyer, the check stops at Review without clicking Send.
+- Before and after counts for the email queue and active Hot Sheets.
 
 ## Technical details
-- Migration: `hot_sheets.sheet_type text NOT NULL DEFAULT 'buyer' CHECK (in ('personal','buyer'))`, backfilled to `personal` where no `hot_sheet_clients` rows exist. Triggers on `hot_sheet_clients` and `hot_sheet_recipient_batches` reject inserts for personal sheets. Add `hot_sheets.personal_listing_ids uuid[]` so the selected listing is kept without a recipient batch.
-- The invite path (`enqueueHotSheetClientInvites`, plus the server function it calls) rejects personal sheets.
-- `CreateHotSheetDialog.tsx`: type toggle. `HotSheetReview.tsx`: hide buyer CTAs when the sheet is personal. Self-match helper in `src/lib/hotSheetRules.ts` with tests in `hotSheetRules.test.ts`.
-- Data step: `share_tokens.revoked_at = now()`. Delete the pending `client_agent_relationships` row, the batch row, and the `hot_sheet_clients` row. Set the sheet type to personal. Delete the client row. AGENTS.md: Personal/Buyer is an explicit saved type, enforced server-side.
+- Migration (additive):
+  - `hot_sheets.is_draft boolean NOT NULL DEFAULT false`
+  - `hot_sheets.draft_state jsonb` holding pending contact IDs, selected listing IDs and the UI step
+  - A trigger keeps `is_active = false` while `is_draft` is true, and rejects `hot_sheet_recipient_batches` / `hot_sheet_clients` inserts for draft sheets.
+  - Partial index on `(user_id) WHERE is_draft`.
+- Matching already filters on `is_active` (for example `hot_sheet_criteria_matches`, `count_matching_agents`, `get_hot_sheet_for_member`, `list_hot_sheets_for_member`). The trigger keeps drafts inactive, so no matcher change is needed. Each one will be checked during the build.
+- `process-hot-sheet` and `send-hot-sheet-invite` add an `is_draft` refusal next to the existing Personal refusal.
+- Draft autosave and single-record creation in `CreateHotSheetDialog.tsx` reuse the single-flight pattern from `addListingDraftSession.ts`: one create, then updates, with no overlapping saves. Finishing does an update (`is_draft=false`, `is_active=true`, set `sheet_type`) and then the existing contact linking and batch flow.
+- `HotSheets.tsx`: add a Drafts section, and filter `is_draft` out of active lists and counts.
+- AGENTS.md: drafts are `is_draft` rows that are never active and never linked to recipients until finished.
