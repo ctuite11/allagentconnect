@@ -1,37 +1,42 @@
-# Restore core Communications Center emails for chris@allagentconnect.com (stay hidden)
+# Personal vs Buyer Hot Sheets (Option C) + clean up "mine"
 
-## Goal
-Chris stays hidden from the Agent Network and Our Agents, and receives core Communications Center emails again, filtered by his saved preferences. No other account is affected.
+## What I found (read-only, nothing changed)
+- **The invitation was never delivered.** It was handed off at 11:00 PM on Oct 12 (New York time). It was delayed all day and finally bounced at 1:00 PM today with "unable to deliver… no such domain allagentconnet.com". No one received it, and nothing will retry.
+- **The link is still technically open.** One unused invitation link exists for that contact: not accepted, not cancelled.
+- **The misspelled "Chris" contact (created May 29) is used only by "mine".** It isn't linked to any other Hot Sheet or saved first batch. It has one *pending* buyer connection record, created by that invitation click, with no buyer account attached.
+- **"mine" has one saved first batch** with 1 listing, never sent.
 
-## Cause (confirmed)
-Communications emails go only to agents who appear in the directory. Chris is marked hidden, so he is left out before his preferences are checked. His preferences, address and delivery are all fine.
+## 1. Personal is a saved Hot Sheet type
+- Each Hot Sheet gets a saved type: **Personal** or **Buyer**.
+- Existing sheets are labeled automatically: sheets with contacts become Buyer, sheets without become Personal. This doesn't change how any of them behave today.
+- **Create Hot Sheet** gets a clear choice: "Personal — Just for Me" or "For a Buyer". Choosing Personal hides the contacts section and saves with no contacts.
+- **Review / Edit for Personal sheets:** no Send First Batch, Invite, Send All Listings, or other buyer buttons. Criteria editing and match review work as usual.
+- **Server enforcement:** the database refuses to attach a contact or save a first batch on a Personal sheet. The invitation step also refuses Personal sheets, so a stale or crafted request still can't invite anyone. To invite a buyer, the agent first changes the sheet to Buyer (an explicit action).
 
-## The change
-1. **New per-account switch, off for everyone.** Add `comms_email_when_hidden` on agent settings, off by default.
-2. **Turn it on for Chris only.** One row changes. It is not tied to the admin role.
-3. **Core Communications emails only.** A new email-only recipient list includes the switch. Only these three use it:
-   - Communications broadcasts (buyer, renter, sales and discussion)
-   - Daily and weekly Communications summaries
-   - Re-sends of a Communications broadcast
-4. **Everything else stays as it is.** Seller alerts, general agent notices, buyer-need notices, Hot Sheet emails, the Agent Network and Our Agents keep using the current list, so they still exclude Chris.
-5. **All filters still apply.** Master switches, category toggles, Boston/Suffolk area, $1M minimum, property types, timing, the sender exclusion, verification and activation checks, global blocks and duplicate protection.
+## 2. Self-invite warning
+- In Create/Edit (Buyer type), if a picked contact's email matches the agent's own login email, or looks like a near-miss of it (e.g. one letter off, like allagentconnet vs allagentconnect), show: "This looks like you. Make this a Personal Hot Sheet instead?" with **Switch to Personal** or **Keep as Buyer**.
+- The same check runs before "Send First Batch & Invite" on Review.
 
-## Past messages can't be sent (checked)
-- **Summaries:** Chris has 0 waiting summary items. Summaries only send items that were saved for that agent when a broadcast went out. Hidden agents were never given items, so turning the switch on has nothing old to send. Only broadcasts sent after the change can reach him.
-- **Waiting deliveries:** no queue rows are added, re-run or changed.
-- **Re-sends:** these only run when an admin manually re-sends one broadcast, and none have run in the last day. One thing to know: if an admin re-sends an older broadcast after this change, Chris could receive it if it matches his preferences, the same as any agent who missed the original.
+## 3. Your data (only your account)
+In this order, by exact ID:
+1. Cancel the invitation link (`00790dbf…`) by marking it cancelled, not deleting it, so the record stays.
+2. Remove the pending buyer connection for that contact (no buyer account was ever attached).
+3. Remove "mine"'s saved first batch (`9824a8b6…`). Your 1 selected listing is kept as a Personal pick on "mine", so it still shows pinned in Review.
+4. Detach the contact from "mine" and set "mine" to **Personal**. Name and criteria are unchanged.
+5. Delete the misspelled "Chris" contact (`ba16414c…`), since it's used nowhere else.
+- The email record and its bounce history are kept for audit.
 
-## Checks before going live (no emails)
-- Automated tests: a hidden agent without the switch is excluded; with the switch they're included in the core Communications list only; the directory list and the other email lists are unchanged.
-- Read-only checks: exactly one account has the switch on, the directory list count is the same before and after, Chris still has 0 waiting summary items, and the email queue count is unchanged.
-- A dry-run preview of the Sep 29 statewide broadcast shows Chris included. Dry runs send nothing.
+## Impact on saved data
+- One new setting on every Hot Sheet. Other agents' sheets only get a label that matches how they already behave. Their contacts, batches and sending are untouched.
+- Data removed: only the five items above, all yours.
+- **One detail to confirm:** the misspelled email will no longer exist as a contact. If you want it kept and corrected to chris@allagentconnect.com instead, tell me.
 
-## After going live, I'll report
-The exact functions changed, the test results, and the email queue count before and after (zero emails sent).
+## Safety
+- No emails, invitations, batches or notifications. Email queue count recorded before and after.
+- The Buyer workflow, pending-contact flow and the Review fixes (pinning, count, persistence) stay the same. The locked Hot Sheet rules and their tests stay in place. New tests cover Personal sheets.
 
 ## Technical details
-- Migration: add `agent_settings.comms_email_when_hidden boolean NOT NULL DEFAULT false`. Add a new SECURITY DEFINER function `get_comms_hidden_optin_agent_ids()`, which mirrors `get_verified_agent_ids()` filters plus `hide_from_directory = true AND comms_email_when_hidden = true`. Execute revoked from public and granted to service_role only.
-- Data: set the flag true for `1fc50da1-2664-4931-8cab-64e24dc5ed8c` only.
-- `_shared/verifiedAgentAudience.ts`: add opt-in parameters `{ includeCommsHiddenOptIn?: boolean }` to `loadVerifiedAgentIdSet` and `getVerifiedAgentAudienceWithStats`, default false. Existing callers are unchanged.
-- Pass `true` only in `send-client-need-notification`, `process-comms-digests` and `resend-comms-broadcast`. `notify-agents`, `notify-agents-client-need` and `send-seller-alert` are untouched.
-- Add tests in `_shared`. Record in AGENTS.md: directory visibility and Communications email eligibility are separate, using an explicit per-account switch.
+- Migration: `hot_sheets.sheet_type text NOT NULL DEFAULT 'buyer' CHECK (in ('personal','buyer'))`, backfilled to `personal` where no `hot_sheet_clients` rows exist. Triggers on `hot_sheet_clients` and `hot_sheet_recipient_batches` reject inserts for personal sheets. Add `hot_sheets.personal_listing_ids uuid[]` so the selected listing is kept without a recipient batch.
+- The invite path (`enqueueHotSheetClientInvites`, plus the server function it calls) rejects personal sheets.
+- `CreateHotSheetDialog.tsx`: type toggle. `HotSheetReview.tsx`: hide buyer CTAs when the sheet is personal. Self-match helper in `src/lib/hotSheetRules.ts` with tests in `hotSheetRules.test.ts`.
+- Data step: `share_tokens.revoked_at = now()`. Delete the pending `client_agent_relationships` row, the batch row, and the `hot_sheet_clients` row. Set the sheet type to personal. Delete the client row. AGENTS.md: Personal/Buyer is an explicit saved type, enforced server-side.
