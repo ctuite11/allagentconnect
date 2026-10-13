@@ -39,6 +39,7 @@ import { TownsPicker } from "@/components/TownsPicker";
 import { getAreasForCity, hasNeighborhoodData } from "@/data/usNeighborhoodsData";
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
 import { fetchAllAgentContacts, searchClientContacts, invalidateAgentContactsCache } from "@/lib/contactSearch";
+import { isLikelySelfEmail, type HotSheetType } from "@/lib/hotSheetRules";
 import { isValidShareRecipientEmail } from "@/lib/shareRecipientUtils";
 import { DuplicateContactDialog, type DuplicateExistingClient } from "@/components/hot-sheets/DuplicateContactDialog";
 import {
