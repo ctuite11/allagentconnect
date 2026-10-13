@@ -150,7 +150,7 @@ const handler = async (req: Request): Promise<Response> => {
     // 1. Canonical audience = Agent Network RPC, then delivery annotations.
     //    network_rpc_base is the raw RPC size before suppression drops.
     const { audience, network_rpc_base, globally_suppressed } =
-      await getVerifiedAgentAudienceWithStats(supabase);
+      await getVerifiedAgentAudienceWithStats(supabase, { includeCommsHiddenOptIn: true });
     const audienceIds = audience.map((a) => a.agent_id);
 
     // 2. Legacy category-column false set (still collected for counts).

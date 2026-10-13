@@ -253,6 +253,13 @@
       "when": 1791606112068,
       "tag": "0035_listings_draft_publish_guard",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1791864733007,
+      "tag": "0036_comms_email_when_hidden",
+      "breakpoints": true
     }
   ]
 }

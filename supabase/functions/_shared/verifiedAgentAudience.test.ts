@@ -3,6 +3,7 @@ import { loadCommsOptIn } from "./commsOptIn.ts";
 import { loadCommsSchedules, partitionByCommsSchedule } from "./commsDigest.ts";
 import {
   getVerifiedAgentAudienceWithStats,
+  loadVerifiedAgentIdSet,
   partitionAudience,
   type EligibleAgent,
 } from "./verifiedAgentAudience.ts";
@@ -27,6 +28,8 @@ type AudienceDb = {
   unsubscribes?: TableRow[];
   suppressed?: TableRow[];
   rpcError?: unknown;
+  hiddenOptInIds?: string[];
+  rpcCalls?: string[];
 };
 
 function chainable(result: { data: unknown; error: unknown }) {
@@ -44,6 +47,13 @@ function chainable(result: { data: unknown; error: unknown }) {
 function fakeAudienceSupabase(db: AudienceDb) {
   return {
     rpc: (name: string) => {
+      db.rpcCalls?.push(name);
+      if (name === "get_comms_hidden_optin_agent_ids") {
+        return Promise.resolve({
+          data: (db.hiddenOptInIds ?? []).map((user_id) => ({ user_id })),
+          error: null,
+        });
+      }
       assertEquals(name, "get_verified_agent_ids");
       if (db.rpcError) return Promise.resolve({ data: null, error: db.rpcError });
       return Promise.resolve({
@@ -422,4 +432,36 @@ Deno.test("matcher still enforces real ZIPs supplied outside the notifications p
     matchesCommunicationPreferences(prefs, { state: "MA", city: "Boston", zip: "02135" }).matches,
     false,
   );
+});
+
+Deno.test("hidden comms opt-in is excluded by default (directory/other email paths unchanged)", async () => {
+  const calls: string[] = [];
+  const ids = await loadVerifiedAgentIdSet(
+    fakeAudienceSupabase({ rpcIds: ["net-1"], hiddenOptInIds: ["hidden-1"], rpcCalls: calls }),
+  );
+  assertEquals([...ids], ["net-1"]);
+  assertEquals(calls, ["get_verified_agent_ids"]);
+});
+
+Deno.test("hidden comms opt-in is included only when core Comms paths ask for it", async () => {
+  const ids = await loadVerifiedAgentIdSet(
+    fakeAudienceSupabase({ rpcIds: ["net-1"], hiddenOptInIds: ["hidden-1"] }),
+    { includeCommsHiddenOptIn: true },
+  );
+  assertEquals([...ids].sort(), ["hidden-1", "net-1"]);
+});
+
+Deno.test("hidden opt-in agent still flows through preference annotations", async () => {
+  const { audience } = await getVerifiedAgentAudienceWithStats(
+    fakeAudienceSupabase({
+      rpcIds: ["net-1"],
+      hiddenOptInIds: ["hidden-1"],
+      profiles: ["net-1", "hidden-1"].map((id) => ({ id, email: `${id}@example.com`, first_name: "A", last_name: "B" })),
+      notifPrefs: [{ user_id: "hidden-1", min_price: 1000000, max_price: null, has_no_min: false, has_no_max: true, property_types: ["condo"] }],
+    }),
+    { includeCommsHiddenOptIn: true },
+  );
+  const h = audience.find((a) => a.agent_id === "hidden-1")!;
+  assertEquals(h.preferences_set, true);
+  assertEquals(h.savedPrefs.minPrice, 1000000);
 });

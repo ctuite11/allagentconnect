@@ -1135,6 +1135,7 @@ export type Database = {
           account_activated_at: string | null
           agent_status: Database["public"]["Enums"]["agent_status"]
           approval_email_sent: boolean
+          comms_email_when_hidden: boolean
           comms_onboarding_seen_at: string | null
           county: string | null
           created_at: string
@@ -1185,6 +1186,7 @@ export type Database = {
           account_activated_at?: string | null
           agent_status?: Database["public"]["Enums"]["agent_status"]
           approval_email_sent?: boolean
+          comms_email_when_hidden?: boolean
           comms_onboarding_seen_at?: string | null
           county?: string | null
           created_at?: string
@@ -1235,6 +1237,7 @@ export type Database = {
           account_activated_at?: string | null
           agent_status?: Database["public"]["Enums"]["agent_status"]
           approval_email_sent?: boolean
+          comms_email_when_hidden?: boolean
           comms_onboarding_seen_at?: string | null
           county?: string | null
           created_at?: string
@@ -8238,6 +8241,12 @@ export type Database = {
           square_feet: number
           state: string
           zip_code: string
+        }[]
+      }
+      get_comms_hidden_optin_agent_ids: {
+        Args: never
+        Returns: {
+          user_id: string
         }[]
       }
       get_dcmls_listing: {
