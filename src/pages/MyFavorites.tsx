@@ -180,7 +180,7 @@ const MyFavorites = () => {
     try {
       setLoading(true);
 
-      const { data: hotSheets } = await supabase.from("hot_sheets").select("id, name").eq("user_id", userId);
+      const { data: hotSheets } = await supabase.from("hot_sheets").select("id, name").eq("user_id", userId).eq("is_draft", false);
 
       if (!hotSheets?.length) {
         setListings([]);

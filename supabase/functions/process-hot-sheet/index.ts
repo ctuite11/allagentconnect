@@ -60,6 +60,14 @@ const handler = async (req: Request): Promise<Response> => {
     if (hotSheetError) throw hotSheetError;
     if (!hotSheet) throw new Error("Hot sheet not found");
 
+    // Draft Hot Sheets are never processed or sent.
+    if ((hotSheet as { is_draft?: boolean | null }).is_draft === true) {
+      return new Response(
+        JSON.stringify({ error: "Draft Hot Sheets cannot be sent" }),
+        { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
     // Personal Hot Sheets never deliver to buyers (no first batch, no recipient sends).
     if (
       (hotSheet as { sheet_type?: string | null }).sheet_type === "personal" &&

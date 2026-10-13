@@ -12,6 +12,7 @@ import { AacBackButton } from "@/components/layout/AacBackLink";
 import { AacPageIntro } from "@/components/layout/AacPageIntro";
 import { toast } from "sonner";
 import { CreateHotSheetDialog } from "@/components/CreateHotSheetDialog";
+import { draftDisplayName } from "@/lib/hotSheetDraftSession";
 import { HotSheetCommentsDialog } from "@/components/HotSheetCommentsDialog";
 import { BuyerCollectionCard } from "@/components/BuyerCollectionCard";
 import { BuyerHotSheetPreviewCard } from "@/components/buyer/BuyerHotSheetPreviewCard";
@@ -134,6 +135,8 @@ interface AgentHotSheetRow {
   name: string;
   criteria: Record<string, unknown> | null;
   is_active: boolean;
+  is_draft?: boolean | null;
+  updated_at?: string | null;
   created_at: string;
   last_sent_at: string | null;
   hot_sheet_shares?: HotSheetShare[] | null;
@@ -173,6 +176,11 @@ const HotSheets = ({
   const [agentLoadError, setAgentLoadError] = useState(false);
   /** Hot sheet id whose Pause/Resume alerts toggle is in flight. */
   const [togglingSheetId, setTogglingSheetId] = useState<string | null>(null);
+  const [draftSheets, setDraftSheets] = useState<AgentHotSheetRow[]>([]);
+  const [resumeDraftId, setResumeDraftId] = useState<string | null>(null);
+  const [renameDraft, setRenameDraft] = useState<{ id: string; name: string } | null>(null);
+  const [deleteDraft, setDeleteDraft] = useState<{ id: string; name: string } | null>(null);
+  const [draftBusy, setDraftBusy] = useState(false);
   const buyerMode = isBuyerMode;
 
   useEffect(() => {
@@ -525,7 +533,7 @@ const HotSheets = ({
       const hotSheetsPromise = supabase
         .from("hot_sheets")
         .select(`
-          id, name, criteria, is_active, created_at, last_sent_at,
+          id, name, criteria, is_active, is_draft, created_at, updated_at, last_sent_at,
           hot_sheet_shares ( id, shared_with_email, created_at ),
           hot_sheet_clients ( client_id, clients ( id, first_name, last_name, email, phone ) )
         `)
@@ -546,7 +554,14 @@ const HotSheets = ({
       ]);
 
       if (error) throw error;
-      const sheetsRaw = (hsData || []) as AgentHotSheetRow[];
+      const allRows = (hsData || []) as AgentHotSheetRow[];
+      // Drafts are listed separately and never treated as active/paused Hot Sheets.
+      setDraftSheets(
+        allRows
+          .filter((s) => s.is_draft === true)
+          .sort((a, b) => String(b.updated_at ?? b.created_at).localeCompare(String(a.updated_at ?? a.created_at))),
+      );
+      const sheetsRaw = allRows.filter((s) => s.is_draft !== true);
 
       const visibleClientIds = new Set<string>();
       (relRows || []).forEach((r: RelationshipRow) => {
@@ -787,6 +802,85 @@ const HotSheets = ({
     }
   };
 
+  const refreshAgentSheets = () => {
+    if (user) void fetchData(user.id);
+  };
+
+  const handleRenameDraft = async () => {
+    if (!renameDraft) return;
+    setDraftBusy(true);
+    const { error } = await supabase
+      .from("hot_sheets")
+      .update({ name: renameDraft.name.trim() })
+      .eq("id", renameDraft.id)
+      .eq("is_draft", true);
+    setDraftBusy(false);
+    if (error) {
+      toast.error("Could not rename the draft");
+      return;
+    }
+    setRenameDraft(null);
+    refreshAgentSheets();
+  };
+
+  const handleDeleteDraft = async () => {
+    if (!deleteDraft) return;
+    setDraftBusy(true);
+    const { error } = await supabase
+      .from("hot_sheets")
+      .delete()
+      .eq("id", deleteDraft.id)
+      .eq("is_draft", true);
+    setDraftBusy(false);
+    if (error) {
+      toast.error("Could not delete the draft");
+      return;
+    }
+    setDeleteDraft(null);
+    toast.success("Draft deleted");
+    refreshAgentSheets();
+  };
+
+  const renderDraftsSection = () =>
+    draftSheets.length === 0 ? null : (
+      <section className={`${AAC_CARD_SHELL} p-5 md:p-6`} aria-labelledby="agent-draft-hot-sheets-heading">
+        <div className="min-w-0 space-y-1">
+          <h2 id="agent-draft-hot-sheets-heading" className={DASH_SECTION_TITLE}>
+            Drafts
+          </h2>
+          <p className={DASH_SECTION_DESC}>Unfinished Hot Sheets. Drafts don't match listings or send anything until you finish them.</p>
+        </div>
+        <ul className="mt-4 divide-y divide-neutral-200 rounded-xl border border-neutral-200">
+          {draftSheets.map((d) => (
+            <li key={d.id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="truncate text-sm font-medium text-neutral-900">{draftDisplayName(d.name)}</span>
+                  <span className="rounded-full border border-neutral-300 px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide text-neutral-600">
+                    Draft
+                  </span>
+                </div>
+                <p className="mt-0.5 text-xs text-neutral-500">
+                  Last saved {new Date(d.updated_at ?? d.created_at).toLocaleString()}
+                </p>
+              </div>
+              <div className="flex shrink-0 gap-2">
+                <Button type="button" size="sm" className={`h-8 px-3 text-xs ${AAC_PRIMARY_BTN}`} onClick={() => setResumeDraftId(d.id)}>
+                  Continue Editing
+                </Button>
+                <Button type="button" size="sm" variant="outline" className="h-8 px-3 text-xs" onClick={() => setRenameDraft({ id: d.id, name: d.name ?? "" })}>
+                  Rename
+                </Button>
+                <Button type="button" size="sm" variant="ghost" className="h-8 px-3 text-xs text-destructive" onClick={() => setDeleteDraft({ id: d.id, name: draftDisplayName(d.name) })}>
+                  Delete
+                </Button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </section>
+    );
+
   const renderMyHotSheetsSection = () => (
     <section className={`${AAC_CARD_SHELL} p-5 md:p-6`} aria-labelledby="agent-my-hot-sheets-heading">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -983,6 +1077,7 @@ const HotSheets = ({
           </div>
         ) : (
           <div className="space-y-6">
+            {renderDraftsSection()}
             {renderMyHotSheetsSection()}
             {renderBuyersSection()}
           </div>
@@ -1034,7 +1129,48 @@ const HotSheets = ({
       </Dialog>
 
       {/* Hot Sheet Creation Dialog */}
-      <CreateHotSheetDialog open={createDialogOpen} onOpenChange={setCreateDialogOpen} userId={user?.id} onSuccess={handleHotSheetSuccess} />
+      <CreateHotSheetDialog open={createDialogOpen} onOpenChange={setCreateDialogOpen} userId={user?.id} onSuccess={handleHotSheetSuccess} onDraftsChanged={refreshAgentSheets} />
+
+      {/* Continue Editing a draft */}
+      <CreateHotSheetDialog
+        open={!!resumeDraftId}
+        onOpenChange={(o) => { if (!o) setResumeDraftId(null); }}
+        userId={user?.id}
+        onSuccess={handleHotSheetSuccess}
+        draftId={resumeDraftId || undefined}
+        onDraftsChanged={refreshAgentSheets}
+      />
+
+      <Dialog open={!!renameDraft} onOpenChange={(o) => { if (!o) setRenameDraft(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Rename draft</DialogTitle>
+            <DialogDescription>Change the name of this draft Hot Sheet.</DialogDescription>
+          </DialogHeader>
+          <Input
+            aria-label="Draft name"
+            value={renameDraft?.name ?? ""}
+            onChange={(e) => setRenameDraft((r) => (r ? { ...r, name: e.target.value } : r))}
+          />
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setRenameDraft(null)}>Cancel</Button>
+            <Button className={AAC_PRIMARY_BTN} disabled={draftBusy} onClick={() => void handleRenameDraft()}>Save</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={!!deleteDraft} onOpenChange={(o) => { if (!o) setDeleteDraft(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this draft?</AlertDialogTitle>
+            <AlertDialogDescription>"{deleteDraft?.name}" will be removed. This can't be undone.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={draftBusy}>Cancel</AlertDialogCancel>
+            <Button variant="destructive" disabled={draftBusy} onClick={() => void handleDeleteDraft()}>Delete draft</Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Hot Sheet Edit Dialog */}
       <CreateHotSheetDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} userId={user?.id} onSuccess={handleHotSheetSuccess} hotSheetId={editingHotSheetId || undefined} editMode={true} allowDeleteFromEdit />

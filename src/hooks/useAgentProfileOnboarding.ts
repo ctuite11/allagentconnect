@@ -18,6 +18,7 @@ async function hasAnyHotSheet(userId: string): Promise<boolean> {
     .from("hot_sheets")
     .select("id")
     .eq("user_id", userId)
+    .eq("is_draft", false)
     .limit(1);
 
   if (error) {
