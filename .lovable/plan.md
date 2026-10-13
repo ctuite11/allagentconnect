@@ -1,26 +1,35 @@
-# Draft-publish protection: close out 16 N Mead St
+# Restore Communications Center emails for chris@allagentconnect.com (stay hidden)
 
-16 N Mead St is still the open case. Nobody claims the system is fully protected until every step below passes.
+## Goal
+Chris keeps his "hidden from the Agent Network directory" setting and gets Communications Center emails again, filtered by his saved preferences. No other account changes.
 
-## Current state (checked today)
-- The server-side guard is turned on in the live database. It rejects any Draft → non-Draft change unless the audited `publish_listing()` function makes it. That function is called only from the final "Yes, Publish Listing" click.
-- The code no longer has the old reusable "confirmed" flag. Add Listing now calls the publish function.
-- I haven't confirmed yet that the frontend change for the guard is on allagentconnect.com. Step 1 checks that.
-- The Manage Photos/Floor Plans changes (return flow, Back vs Save & Return) are held. They won't deploy until step 4 passes.
+## Cause (confirmed)
+- Every email path picks recipients from the same list of agents who appear in the directory. Agents marked hidden are left off that list.
+- Chris is marked hidden, so he's dropped before his preferences are checked. His preferences, his address and delivery all check out fine.
 
-## Steps
-1. **Check what's live.** Confirm the commit running on allagentconnect.com includes the Add Listing change to the publish function. Report the commit and whether the live bundle still contains any direct status-write path. Read-only.
-2. **16 N Mead St investigation (read-only).** Line up every write on that listing around 17:58:44 UTC Oct 9 against the Add Listing code at the commit that was live then: request logs, autosave timing, and status history. Name the exact frontend path as far as the evidence supports it. Say clearly what is proven and what is inferred. Change no data.
-3. **Guard sanity check.** Re-confirm the trigger covers every role and every update path, including inserts, admin, service role, and the dormant external sync. Read-only.
-4. **Full disposable-Draft QA in preview.** Hot Sheet emails are paused for the whole test and turned back on only with your approval. Use one brand-new test Draft and run each action, confirming the status stays `draft` after each one:
-   - Autosave, Save Draft, Save Changes, with the status dropdown set to Coming Soon
-   - Manage Photos: Save & Return, and Back (both the warning and leave-without-saving)
-   - Manage Floor Plans: Save & Return, and Back
-   - Document add/remove/save, Preview, navigating away and back, Quick Edit price change
-   - A direct status write attempt, which the database should reject
-   - Then the real flow: Publish → "Ready to publish?" → Cancel stays Draft, and "Yes, Publish Listing" publishes once and is audited
-   - Record queue and Hot Sheet counts before and after. The only allowed activity is from the test listing. Delete the test Draft afterwards.
-5. **Report and stop.** You get a full pass/fail table. Production deploy of the held changes happens only after your approval.
+## The change
+1. **New per-account switch, off for everyone.** Add a field on agent settings called "receive Communications emails while hidden from the directory". It's off by default for every account.
+2. **Turn it on for Chris only.** Make a one-row change on Chris's account (user `1fc50da1-…`). This isn't tied to the admin role, so other admins and other hidden agents stay excluded.
+3. **Add Chris back to the email list only.** The email recipient list adds verified, activated agents who have this switch on. The directory lookup used by the Agent Network and Our Agents pages stays exactly as it is, so Chris stays hidden there.
+4. **All filters still apply.** Chris then goes through the usual checks: master switches, category toggles, Boston/Suffolk area, $1M minimum, property types, timing, the sender exclusion, global blocks and duplicate protection.
 
-## Out of scope
-No emails, invites, Hot Sheet batch changes, template changes, or edits to real listings.
+## Who it affects
+- Only accounts with the switch on. After the change that's Chris and nobody else.
+- Agent Network, Our Agents and the sign-in hints: no change.
+- Hot Sheet matching and delivery: no change. They don't use this list.
+- Paths that will now include Chris, still filtered by his preferences: buyer, renter, sales and discussion broadcasts, daily and weekly summaries, broadcast re-sends, buyer-need notices, the general agent notices from `notify-agents`, and seller alerts. These are the normal agent emails every visible agent already gets. If you want only the core Communications Center emails, I can limit it to broadcasts, summaries and re-sends.
+
+## What's not included
+- No emails, test sends, re-sends of past messages, invitations or catch-up sends. Chris only gets emails for activity after the change.
+- No change to global email settings, to other agents' settings, or to directory visibility.
+
+## Checks
+- Automated tests: a hidden agent without the switch stays excluded, a hidden agent with it is included, and the directory list is unchanged.
+- Read-only checks: the directory list size before and after is identical, exactly one account has the switch on, and a dry-run preview of the Sep 29 statewide broadcast would include Chris. Dry-run previews send nothing.
+
+## Technical details
+- Database migration: add `agent_settings.comms_email_when_hidden boolean NOT NULL DEFAULT false`. Add a new SECURITY DEFINER function `get_comms_hidden_optin_agent_ids()` that applies the same verified, activated, role and name rules as `get_verified_agent_ids()`, plus `hide_from_directory = true AND comms_email_when_hidden = true`. Execute is granted to service_role only.
+- One data update: set the flag true for user `1fc50da1-2664-4931-8cab-64e24dc5ed8c`.
+- `supabase/functions/_shared/verifiedAgentAudience.ts`: `loadVerifiedAgentIdSet` unions the new function's IDs into the set. The `get_verified_agent_ids()` function itself stays as it is.
+- Redeploy the edge functions that import the helper (send-client-need-notification, process-comms-digests, resend-comms-broadcast, notify-agents, notify-agents-client-need, send-seller-alert). If the "core only" option is chosen, the union instead goes into a new helper used by just the first three.
+- Record the rule in AGENTS.md: directory visibility and email eligibility are separate, with an explicit per-account switch.
