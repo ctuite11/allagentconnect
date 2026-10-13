@@ -90,6 +90,6 @@
 - [ ] Turn Hot Sheet emails back on (waiting for Chris's approval)
 
 - [ ] Follow-up (not urgent): Hot Sheet "email me a copy" agent copy uses a time-based duplicate key (process-hot-sheet) — can repeat if delivery is triggered twice. Logged Oct 11; do not change without approval.
-- [ ] Hot Sheet Review: header count should include out-of-criteria first-batch picks (awaiting approval)
-- [ ] Hot Sheet Review: keep selected first-batch picks at top (awaiting approval)
+- [x] Hot Sheet Review header count = listings shown
+- [x] Hot Sheet Review picks pinned at top
 - [ ] Connected-buyer Send First Batch test (needs approval for one controlled invitation email)
