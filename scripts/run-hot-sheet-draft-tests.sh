@@ -11,7 +11,7 @@ AS_PG=(); if [ "$(id -u)" = "0" ]; then chown -R 1000:1000 "$PGDIR"; AS_PG=(setp
 "${AS_PG[@]}" pg_ctl -D "$PGDIR/data" -o "-k $SOCK -c listen_addresses=''" -l "$PGDIR/log" -w start >/dev/null
 unset PGPASSWORD PGSERVICE PGSSLMODE
 export PGHOST="$SOCK" PGPORT=5432 PGUSER=postgres PGDATABASE=hsdraft
-createdb hsdraft
+cat "$PGDIR/log" | tail -5; ls -la "$SOCK"; createdb hsdraft
 psql -v ON_ERROR_STOP=1 -q -f supabase/tests/db/10_hot_sheet_drafts_fixture.sql
 psql -v ON_ERROR_STOP=1 -q -f "$MIGRATION"
 psql -v ON_ERROR_STOP=1 -f supabase/tests/db/11_hot_sheet_drafts_behavior.sql
