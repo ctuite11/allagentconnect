@@ -5030,6 +5030,7 @@ export type Database = {
           notification_schedule: string | null
           notify_agent_email: boolean | null
           notify_client_email: boolean | null
+          sheet_type: string | null
           updated_at: string
           user_id: string
         }
@@ -5045,6 +5046,7 @@ export type Database = {
           notification_schedule?: string | null
           notify_agent_email?: boolean | null
           notify_client_email?: boolean | null
+          sheet_type?: string | null
           updated_at?: string
           user_id: string
         }
@@ -5060,6 +5062,7 @@ export type Database = {
           notification_schedule?: string | null
           notify_agent_email?: boolean | null
           notify_client_email?: boolean | null
+          sheet_type?: string | null
           updated_at?: string
           user_id?: string
         }

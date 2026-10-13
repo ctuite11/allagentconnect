@@ -39,6 +39,7 @@ import { TownsPicker } from "@/components/TownsPicker";
 import { getAreasForCity, hasNeighborhoodData } from "@/data/usNeighborhoodsData";
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
 import { fetchAllAgentContacts, searchClientContacts, invalidateAgentContactsCache } from "@/lib/contactSearch";
+import { isLikelySelfEmail, type HotSheetType } from "@/lib/hotSheetRules";
 import { isValidShareRecipientEmail } from "@/lib/shareRecipientUtils";
 import { DuplicateContactDialog, type DuplicateExistingClient } from "@/components/hot-sheets/DuplicateContactDialog";
 import {
@@ -108,6 +109,9 @@ export function CreateHotSheetDialog({
   allowDeleteFromEdit = false,
 }: CreateHotSheetDialogProps) {
   const [hotSheetName, setHotSheetName] = useState("");
+  const [sheetType, setSheetType] = useState<HotSheetType | null>(null);
+  const [agentEmail, setAgentEmail] = useState<string | null>(null);
+  const [selfWarnKeep, setSelfWarnKeep] = useState<null | (() => void)>(null);
   const [saving, setSaving] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -145,6 +149,7 @@ export function CreateHotSheetDialog({
   // Validation errors
   const [errors, setErrors] = useState<{
     hotSheetName?: string;
+    sheetType?: string;
     clientFirstName?: string;
     clientLastName?: string;
     clientEmail?: string;
@@ -306,6 +311,11 @@ export function CreateHotSheetDialog({
     setShowClientPicker(true);
   };
 
+  useEffect(() => {
+    if (!open) return;
+    void supabase.auth.getUser().then(({ data }) => setAgentEmail(data.user?.email ?? null));
+  }, [open]);
+
   // Initialize from preSelectedClients when dialog opens (only once on open)
   useEffect(() => {
     if (open && preSelectedClients && preSelectedClients.length > 0 && selectedClients.length === 0) {
@@ -455,11 +465,14 @@ export function CreateHotSheetDialog({
     };
   }, [clientEmail, showManualClientEntry, userId, open]);
 
-  const handleSelectClient = async (client: any) => {
+  const handleSelectClient = async (client: any, skipSelfCheck = false) => {
     setShowClientDropdown(false);
     // Check if client is already selected
     if (selectedClients.some(c => c.id === client.id)) {
       toast.error("This person is already added");
+      return;
+    }
+    if (!skipSelfCheck && shouldWarnSelf(client.email, () => void handleSelectClient(client, true))) {
       return;
     }
 
@@ -516,6 +529,7 @@ export function CreateHotSheetDialog({
 
       // Populate form fields
       setHotSheetName(data.name);
+      setSheetType(((data as { sheet_type?: string | null }).sheet_type as HotSheetType | null) ?? null);
       const criteria = data.criteria as any;
       const coreCriteria = fromCriteriaPayload(criteria);
       
@@ -841,8 +855,49 @@ export function CreateHotSheetDialog({
       return;
     }
 
+    if (!effectiveSheetType) {
+      setErrors({ sheetType: "Choose Personal or For a Buyer" });
+      toast.error("Choose Personal or For a Buyer");
+      return;
+    }
+
     // Show confirmation dialog for new hot sheets only
     setShowConfirmDialog(true);
+  };
+
+  const effectiveSheetType: HotSheetType | null =
+    lockedToClient || (preSelectedClients && preSelectedClients.length > 0) ? "buyer" : sheetType;
+
+  const selectSheetType = (next: HotSheetType) => {
+    setSheetType(next);
+    setErrors((prev) => ({ ...prev, sheetType: undefined }));
+    if (next === "personal") {
+      setSelectedClients([]);
+      setShowClientPicker(false);
+    }
+  };
+
+  /** Explicit, agent-chosen switch from Personal to Buyer (Edit only). */
+  const handleConvertToBuyer = async () => {
+    if (!hotSheetId) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase.from("hot_sheets").update({ sheet_type: "buyer" }).eq("id", hotSheetId);
+      if (error) throw error;
+      setSheetType("buyer");
+      toast.success("This is now a Buyer Hot Sheet. Add contacts to invite them.");
+    } catch (e: any) {
+      toast.error(e?.message || "Could not change the Hot Sheet type");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  /** Returns true when the add should pause for the "This looks like you" warning. */
+  const shouldWarnSelf = (email: string | null | undefined, onKeep: () => void) => {
+    if (!isLikelySelfEmail(email, agentEmail)) return false;
+    setSelfWarnKeep(() => onKeep);
+    return true;
   };
 
   const buildCriteriaPayload = () => ({
@@ -927,12 +982,15 @@ export function CreateHotSheetDialog({
    * "Save to contacts? → No": a real Hot-Sheet-only contact (hidden from
    * My Clients and pickers) so it can be attached by UUID. Never a temp- id.
    */
-  const handleAddClientWithoutSaving = async () => {
+  const handleAddClientWithoutSaving = async (skipSelfCheck?: unknown) => {
     if (creatingClientRef.current) return;
     const validation = validateManualContactForm();
     if (!validation.valid) {
       setErrors((prev) => ({ ...prev, ...validation.errors }));
       toast.error("Please complete all required contact fields.");
+      return;
+    }
+    if (skipSelfCheck !== true && shouldWarnSelf(validation.normalizedEmail, () => void handleAddClientWithoutSaving(true))) {
       return;
     }
 
@@ -1043,13 +1101,16 @@ export function CreateHotSheetDialog({
     setShowManualClientEntry(false);
   };
 
-  const handleCreateClient = async () => {
+  const handleCreateClient = async (skipSelfCheck?: unknown) => {
     if (creatingClientRef.current) return;
 
     const validation = validateManualContactForm();
     if (!validation.valid) {
       setErrors((prev) => ({ ...prev, ...validation.errors }));
       toast.error("Please complete all required contact fields.");
+      return;
+    }
+    if (skipSelfCheck !== true && shouldWarnSelf(validation.normalizedEmail, () => void handleCreateClient(true))) {
       return;
     }
 
@@ -1200,25 +1261,27 @@ export function CreateHotSheetDialog({
       const criteria = buildCriteriaPayload();
 
       // Create new hot sheet
+        const isPersonal = effectiveSheetType === "personal";
         const { data: createdHotSheet, error } = await supabase
           .from("hot_sheets")
           .insert({
             user_id: userId,
-            client_id: clientId || null,
+            client_id: isPersonal ? null : clientId || null,
             name: hotSheetName,
             criteria,
             is_active: true,
-            notify_client_email: true,
-            notify_agent_email: notifyAgent,
+            notify_client_email: !isPersonal,
+            notify_agent_email: isPersonal ? true : notifyAgent,
             notification_schedule: notificationSchedule,
+            sheet_type: effectiveSheetType,
           })
           .select()
           .single();
 
         if (error) throw error;
 
-        // Insert clients into hot_sheet_clients junction table
-        if (selectedClients.length > 0 && createdHotSheet) {
+        // Insert clients into hot_sheet_clients junction table (never for Personal)
+        if (!isPersonal && selectedClients.length > 0 && createdHotSheet) {
           const { error: clientError } = await supabase
             .from('hot_sheet_clients' as any)
             .insert(
@@ -1256,6 +1319,7 @@ export function CreateHotSheetDialog({
 
   const resetForm = () => {
     setHotSheetName("");
+    setSheetType(null);
     setClientFirstName("");
     setClientLastName("");
     setClientEmail("");
@@ -1441,7 +1505,48 @@ export function CreateHotSheetDialog({
             )}
           </div>
 
+          {/* Hot Sheet type: explicit Personal vs Buyer */}
+          {!lockedToClient && (!editMode || sheetType === "personal" || sheetType === null) && (
+            <div className="space-y-2">
+              <Label className="text-[13px] font-medium text-neutral-800">
+                Who is this Hot Sheet for? {!editMode && <span className="text-neutral-500">*</span>}
+              </Label>
+              {editMode && sheetType === "personal" ? (
+                <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-neutral-200 px-3 py-2.5">
+                  <span className="text-sm text-neutral-800">Personal — Just for Me. No contacts or invitations.</span>
+                  <Button type="button" variant="outline" size="sm" disabled={saving} onClick={() => void handleConvertToBuyer()}>
+                    Change to Buyer Hot Sheet
+                  </Button>
+                </div>
+              ) : !editMode ? (
+                <div role="radiogroup" className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  {([
+                    { value: "personal", title: "Personal — Just for Me", desc: "No contacts. Never sends invitations." },
+                    { value: "buyer", title: "For a Buyer", desc: "Add contacts and invite them from Review." },
+                  ] as const).map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      role="radio"
+                      aria-checked={sheetType === opt.value}
+                      onClick={() => selectSheetType(opt.value)}
+                      className={cn(
+                        "rounded-lg border px-3 py-2.5 text-left transition-colors",
+                        sheetType === opt.value ? "border-primary bg-primary/5" : "border-neutral-200 hover:bg-neutral-50",
+                      )}
+                    >
+                      <span className="block text-sm font-medium text-neutral-900">{opt.title}</span>
+                      <span className="block text-[12px] text-neutral-500">{opt.desc}</span>
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+              {errors.sheetType && <p className="text-[13px] text-destructive">{errors.sheetType}</p>}
+            </div>
+          )}
+
           {/* Contact Information */}
+          {sheetType !== "personal" && (!editMode ? sheetType === "buyer" || lockedToClient : true) && (
           <Card className={cn("border", HS_DIALOG_CARD)}>
             <CardHeader className="space-y-2 p-4 pb-3 sm:p-5 sm:pb-3">
               <div className="flex flex-wrap items-center justify-between gap-2">
@@ -1705,6 +1810,7 @@ export function CreateHotSheetDialog({
               )}
             </CardContent>
           </Card>
+          )}
 
           {/* Search Criteria */}
           <Collapsible open={criteriaOpen} onOpenChange={setCriteriaOpen}>
@@ -2439,6 +2545,40 @@ export function CreateHotSheetDialog({
                 "Yes"
               )}
             </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={selfWarnKeep !== null} onOpenChange={(o) => { if (!o) setSelfWarnKeep(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>This looks like you</AlertDialogTitle>
+            <AlertDialogDescription>
+              This contact's email matches your own account. Make this a Personal Hot Sheet instead? Personal Hot Sheets never send invitations.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              onClick={() => {
+                const keep = selfWarnKeep;
+                setSelfWarnKeep(null);
+                keep?.();
+              }}
+            >
+              Keep as Buyer
+            </AlertDialogCancel>
+            {!editMode && !lockedToClient && (
+              <AlertDialogAction
+                onClick={() => {
+                  setSelfWarnKeep(null);
+                  clearManualContactForm();
+                  setClientSearchQuery("");
+                  selectSheetType("personal");
+                }}
+              >
+                Switch to Personal
+              </AlertDialogAction>
+            )}
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

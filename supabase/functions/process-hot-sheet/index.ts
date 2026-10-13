@@ -60,6 +60,17 @@ const handler = async (req: Request): Promise<Response> => {
     if (hotSheetError) throw hotSheetError;
     if (!hotSheet) throw new Error("Hot sheet not found");
 
+    // Personal Hot Sheets never deliver to buyers (no first batch, no recipient sends).
+    if (
+      (hotSheet as { sheet_type?: string | null }).sheet_type === "personal" &&
+      (sendInitialBatch || (Array.isArray(recipientClientIds) && recipientClientIds.length > 0))
+    ) {
+      return new Response(
+        JSON.stringify({ error: "Personal Hot Sheets cannot send to buyers" }),
+        { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
     // ── Recipient-specific manual send (Hot Sheet Review / invite acceptance) ──
     // Isolated from the automatic/legacy path below. hot_sheet_recipient_batches
     // is the dedupe/source of truth for each recipient's FIRST batch: those IDs

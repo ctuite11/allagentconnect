@@ -260,6 +260,13 @@
       "when": 1791864733007,
       "tag": "0036_comms_email_when_hidden",
       "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1791913943687,
+      "tag": "0037_hot_sheet_personal_buyer_type",
+      "breakpoints": true
     }
   ]
 }

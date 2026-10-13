@@ -1,4 +1,4 @@
-import { isBuyerConnected, isFirstInviteEligible, getFirstBatchCta } from "@/lib/hotSheetRules";
+import { isBuyerConnected, isFirstInviteEligible, getFirstBatchCta, canSheetSendToBuyers, isLikelySelfEmail } from "@/lib/hotSheetRules";
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { filterStaleInviteTokens } from "@/lib/filterStaleInviteTokens";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
@@ -218,6 +218,7 @@ const HotSheetReview = () => {
   const [resultsView, setResultsView] = useState<"map" | "list">("map");
   const [criteriaOpen, setCriteriaOpen] = useState(false);
   const [confirmSendAllOpen, setConfirmSendAllOpen] = useState(false);
+  const [selfInviteWarnOpen, setSelfInviteWarnOpen] = useState(false);
   /** Per-recipient first-batch state (hot_sheet_recipient_batches) keyed by CRM client id. */
   const [recipientBatches, setRecipientBatches] = useState<
     Record<string, { invited_at: string | null; initial_batch_queued_at: string | null }>
@@ -416,7 +417,7 @@ const HotSheetReview = () => {
         await Promise.all([
           supabase
             .from("hot_sheets")
-            .select("id, name, criteria, last_sent_at, client_id, is_active")
+            .select("id, name, criteria, last_sent_at, client_id, is_active, sheet_type")
             .eq("id", id)
             .maybeSingle(),
           supabase
@@ -1031,9 +1032,17 @@ const HotSheetReview = () => {
     await loadRecipientBatches();
   };
 
-  const handleHotSheetSend = async () => {
+  const handleHotSheetSend = async (skipSelfCheck = false) => {
     if (selectedListings.size === 0) return;
+    if (!canSheetSendToBuyers((hotSheet as { sheet_type?: string | null } | null)?.sheet_type)) return;
     if (hasPendingInviteRecipients) {
+      if (!skipSelfCheck) {
+        const { data: { user: me } } = await supabase.auth.getUser();
+        if (pendingInviteRecipients.some((r) => isLikelySelfEmail(r.email, me?.email))) {
+          setSelfInviteWarnOpen(true);
+          return;
+        }
+      }
       await handleSendInvites();
       return;
     }
@@ -1518,6 +1527,7 @@ const HotSheetReview = () => {
   };
 
   const renderHotSheetSendAction = () => {
+    if (!canSheetSendToBuyers((hotSheet as { sheet_type?: string | null } | null)?.sheet_type)) return null;
     if (reviewRecipients.length === 0) return null;
     const allMissingEmail = reviewRecipients.every((r) => !r.email.trim());
     const label = getFirstBatchCta({ hasPendingInviteRecipients, allFirstBatchQueued });
@@ -2029,6 +2039,28 @@ const HotSheetReview = () => {
               }}
             >
               Send All Listings
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={selfInviteWarnOpen} onOpenChange={setSelfInviteWarnOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>This looks like you</AlertDialogTitle>
+            <AlertDialogDescription>
+              A contact on this Hot Sheet has an email that matches your own account. If this sheet is just for you, remove the contact in Edit and make it a Personal Hot Sheet. Nothing has been sent.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Don&apos;t send</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setSelfInviteWarnOpen(false);
+                void handleHotSheetSend(true);
+              }}
+            >
+              Send anyway
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

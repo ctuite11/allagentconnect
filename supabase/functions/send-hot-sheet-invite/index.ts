@@ -62,6 +62,21 @@ const handler = async (req: Request): Promise<Response> => {
 
     const inviteOnly = mode === "invite_only";
 
+    // Personal Hot Sheets never invite anyone.
+    if (hotSheetId) {
+      const { data: sheetTypeRow } = await supabase
+        .from("hot_sheets")
+        .select("sheet_type")
+        .eq("id", hotSheetId)
+        .maybeSingle();
+      if ((sheetTypeRow as { sheet_type?: string | null } | null)?.sheet_type === "personal") {
+        return new Response(
+          JSON.stringify({ error: "Personal Hot Sheets cannot send invitations" }),
+          { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+    }
+
     // --- Server-side JWT authorization ---
     // For resend mode, verify the caller owns the token and it is unaccepted.
     // actorUserId from the request body is IGNORED — we derive it from the JWT.
