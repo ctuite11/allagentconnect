@@ -186,7 +186,7 @@ const AgentDashboard = () => {
       } = await supabase.from("hot_sheets").select("*", {
         count: "exact",
         head: true
-      }).eq("user_id", userId);
+      }).eq("user_id", userId).eq("is_draft", false);
       if (hotSheetsCount) setHotSheetsCount(hotSheetsCount);
 
       // Load favorites count
