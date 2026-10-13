@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState, type ReactNode, type ReactElement } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode, type ReactElement } from "react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -97,6 +97,10 @@ export type AgentSplitResultsSurfaceProps = {
   mapResultsGridClassName?: string;
   /** Full-width toolbar rows above map grid (hot sheet review workspace). */
   workspaceToolbarLayout?: "default" | "hotSheetReview";
+  /** Listing ids kept at the top (in this order), ahead of the normal sort. */
+  pinnedListingIds?: string[];
+  /** Reports how many listings are actually displayed. */
+  onDisplayedCountChange?: (count: number) => void;
 };
 
 /**
@@ -141,6 +145,8 @@ export function AgentSplitResultsSurface({
   workspaceToolbarLayout = "default",
   shareSelectedEnabled = true,
   hideSelectAllPills = false,
+  pinnedListingIds,
+  onDisplayedCountChange,
 }: AgentSplitResultsSurfaceProps) {
   const navigate = useNavigate();
   const [sortColumn, setSortColumn] = useState(LISTING_DEFAULT_SORT_COLUMN);
@@ -159,13 +165,25 @@ export function AgentSplitResultsSurface({
   const safeSelectedRows = selectedRows instanceof Set ? selectedRows : new Set<string>();
 
   const sortedListings = useMemo(
-    () => sortAgentSplitListings(listings, sortColumn, sortDirection),
-    [listings, sortColumn, sortDirection],
+    () => {
+      const sorted = sortAgentSplitListings(listings, sortColumn, sortDirection);
+      if (!pinnedListingIds || pinnedListingIds.length === 0) return sorted;
+      const rank = new Map(pinnedListingIds.map((pid, i) => [pid, i]));
+      const pinned = sorted
+        .filter((l) => rank.has(l.id))
+        .sort((a, b) => (rank.get(a.id) ?? 0) - (rank.get(b.id) ?? 0));
+      return [...pinned, ...sorted.filter((l) => !rank.has(l.id))];
+    },
+    [listings, sortColumn, sortDirection, pinnedListingIds],
   );
 
   const displayedListings = showSelectedOnly
     ? sortedListings.filter((l) => safeSelectedRows.has(l.id))
     : sortedListings;
+
+  useEffect(() => {
+    onDisplayedCountChange?.(displayedListings.length);
+  }, [displayedListings.length, onDisplayedCountChange]);
 
   const displayedListingIds = useMemo(
     () => displayedListings.map((l) => l.id),

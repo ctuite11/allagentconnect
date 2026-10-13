@@ -166,6 +166,8 @@ const HotSheetReview = () => {
   const preselectRecoveredRef = useRef(false);
   /** Set once the agent changes the selection; stops re-applying the first-batch preselect. */
   const selectionTouchedRef = useRef(false);
+  const [firstBatchPinnedIds, setFirstBatchPinnedIds] = useState<string[]>([]);
+  const [displayedCount, setDisplayedCount] = useState<number | null>(null);
   const setSelectedByUser = useCallback((next: Set<string>) => {
     selectionTouchedRef.current = true;
     setSelectedListings(next);
@@ -873,6 +875,7 @@ const HotSheetReview = () => {
       if (pre && pre.length > 0 && !selectionTouchedRef.current) {
         const visibleIds = new Set(visibleListings.map((l) => l.id));
         setSelectedListings(new Set(pre.filter((pid) => visibleIds.has(pid))));
+        setFirstBatchPinnedIds(pre.filter((pid) => visibleIds.has(pid)));
       } else {
         setSelectedListings(new Set());
       }
@@ -1609,7 +1612,7 @@ const HotSheetReview = () => {
               subtitle={
                 <>
                   <span className="block text-base font-semibold text-neutral-900">
-                    Review {listings.length} {listings.length === 1 ? "match" : "matches"}
+                    Review {displayedCount ?? listings.length} {(displayedCount ?? listings.length) === 1 ? "match" : "matches"}
                   </span>
                   {reviewRecipients[0]?.displayName ? (
                     <span className="mt-0.5 block text-sm font-normal text-neutral-500">
@@ -1715,6 +1718,8 @@ const HotSheetReview = () => {
             hideResultsSummaryToolbar
             showAgentEmailContact
             listings={splitListings}
+            pinnedListingIds={firstBatchPinnedIds}
+            onDisplayedCountChange={setDisplayedCount}
             loading={false}
             loadError={null}
             emptyMessage="No listings match yet."
