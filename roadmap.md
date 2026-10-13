@@ -93,3 +93,6 @@
 - [x] Hot Sheet Review header count = listings shown
 - [x] Hot Sheet Review picks pinned at top
 - [ ] Connected-buyer Send First Batch test — ON HOLD (needs approval for one controlled invitation email); Review UI work closed 2026-10-13
+
+## 2026-10-13 — Restore Chris's Communications Center emails (hidden account)
+- [x] Per-account `comms_email_when_hidden` switch, on for Chris only; core Comms paths only; deployed and verified, zero sends.
