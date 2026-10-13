@@ -96,3 +96,10 @@
 
 ## 2026-10-13 — Restore Chris's Communications Center emails (hidden account)
 - [x] Per-account `comms_email_when_hidden` switch, on for Chris only; core Comms paths only; deployed and verified, zero sends.
+
+## 2026-10-13 — Personal vs Buyer Hot Sheets
+- [x] Explicit Personal/Buyer type on new sheets; legacy sheets untouched
+- [x] Server-side block (DB triggers + invite/first-batch functions)
+- [x] Self-invite warning in Create and Review
+- [x] Clean up "mine" (Personal, listing kept, link cancelled, contact deleted, bounce history kept)
+- [ ] Save Draft / auto-persist for Hot Sheet creation — separate plan to present next (no changes yet)
