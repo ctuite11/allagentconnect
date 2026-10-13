@@ -1,5 +1,6 @@
 import { OTHER_MEMBER_EMAIL_MESSAGE, resolveOrCreateAgentContact } from "@/lib/agentContactResolver";
 import React, { useState, useEffect, useRef, useMemo } from "react";
+import { createHotSheetDraftSession, snapshotKey, type HotSheetDraftSession, type HotSheetDraftSnapshot, type DraftSaveStatus } from "@/lib/hotSheetDraftSession";
 import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -92,6 +93,10 @@ interface CreateHotSheetDialogProps {
   hideNotificationSettings?: boolean;
   /** When set with `editMode`, shows delete controls (used from agent `/agent/hot-sheets` edit only). */
   allowDeleteFromEdit?: boolean;
+  /** Resume an existing server-side draft (Continue Editing). */
+  draftId?: string;
+  /** Called when a draft was created/updated/finished so lists can refresh. */
+  onDraftsChanged?: () => void;
 }
 
 export function CreateHotSheetDialog({
@@ -107,6 +112,8 @@ export function CreateHotSheetDialog({
   lockedToClient = false,
   hideNotificationSettings = false,
   allowDeleteFromEdit = false,
+  draftId,
+  onDraftsChanged,
 }: CreateHotSheetDialogProps) {
   const [hotSheetName, setHotSheetName] = useState("");
   const [sheetType, setSheetType] = useState<HotSheetType | null>(null);
@@ -323,6 +330,120 @@ export function CreateHotSheetDialog({
     }
   }, [open, preSelectedClients]);
 
+  // ── Server-backed draft session (Create flow only; Edit is unchanged) ──
+  const isDraftFlow = !editMode;
+  const [draftStatus, setDraftStatus] = useState<DraftSaveStatus>("idle");
+  const [savedKey, setSavedKey] = useState<string | null>(null);
+  const [baselineKey, setBaselineKey] = useState<string | null>(null);
+  const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
+  const [restoreOffer, setRestoreOffer] = useState<{ snap: HotSheetDraftSnapshot; at: number } | null>(null);
+  const draftListingIdsRef = useRef<string[]>([]);
+  const finalizingRef = useRef(false);
+  const latestSnapRef = useRef<HotSheetDraftSnapshot | null>(null);
+  const latestKeyRef = useRef<string>("");
+  const backupStorageKey = `aac:hotsheet:draft-backup:${userId}`;
+  const clearDraftBackup = () => {
+    try { window.localStorage.removeItem(backupStorageKey); } catch { /* ignore */ }
+  };
+  const makeDraftSession = (initialId: string | null): HotSheetDraftSession =>
+    createHotSheetDraftSession(
+      {
+        create: async (snap) => {
+          const { data, error } = await supabase
+            .from("hot_sheets")
+            .insert({
+              user_id: userId,
+              name: snap.name.trim(),
+              criteria: snap.criteria as any,
+              is_draft: true,
+              is_active: false,
+              sheet_type: snap.sheetType,
+              notify_client_email: false,
+              notify_agent_email: snap.notifyAgent,
+              notification_schedule: snap.notificationSchedule,
+              draft_state: { clientIds: snap.clientIds, selectedListingIds: snap.selectedListingIds, savedAt: new Date().toISOString() },
+            } as any)
+            .select("id")
+            .single();
+          if (error) throw error;
+          return (data as { id: string }).id;
+        },
+        update: async (id, snap) => {
+          const { data, error } = await supabase
+            .from("hot_sheets")
+            .update({
+              name: snap.name.trim(),
+              criteria: snap.criteria as any,
+              sheet_type: snap.sheetType,
+              notify_agent_email: snap.notifyAgent,
+              notification_schedule: snap.notificationSchedule,
+              draft_state: { clientIds: snap.clientIds, selectedListingIds: snap.selectedListingIds, savedAt: new Date().toISOString() },
+            } as any)
+            .eq("id", id)
+            .eq("is_draft", true)
+            .select("id");
+          if (error) throw error;
+          if (!data || data.length === 0) throw new Error("Draft no longer exists");
+        },
+        onStatus: setDraftStatus,
+        onSavedKey: (key) => {
+          setSavedKey(key);
+          clearDraftBackup();
+        },
+      },
+      initialId,
+    );
+  const sessionRef = useRef<HotSheetDraftSession | null>(null);
+  if (!sessionRef.current) sessionRef.current = makeDraftSession(draftId ?? null);
+
+  const readDraftBackup = (forDraftId: string | null) => {
+    try {
+      const raw = window.localStorage.getItem(backupStorageKey);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw) as { snap: HotSheetDraftSnapshot; at: number; draftId: string | null };
+      if ((parsed.draftId ?? null) !== forDraftId) return null;
+      return parsed;
+    } catch {
+      return null;
+    }
+  };
+
+  const captureBaseline = (alsoSaved: boolean) => {
+    window.setTimeout(() => {
+      const key = latestKeyRef.current;
+      setBaselineKey(key);
+      if (alsoSaved) {
+        sessionRef.current?.markSaved(key);
+        setSavedKey(key);
+      }
+    }, 400);
+  };
+
+  // Fresh session every time the dialog opens; nothing is created until a real change.
+  useEffect(() => {
+    if (!open || editMode) return;
+    finalizingRef.current = false;
+    sessionRef.current = makeDraftSession(draftId ?? null);
+    setDraftStatus("idle");
+    setSavedKey(null);
+    setBaselineKey(null);
+    setRestoreOffer(null);
+    draftListingIdsRef.current = [];
+    if (draftId) {
+      void loadHotSheet(draftId).then((row) => {
+        captureBaseline(true);
+        const backup = readDraftBackup(draftId);
+        const serverAt = row?.updated_at ? new Date(row.updated_at as string).getTime() : 0;
+        if (backup && backup.at > serverAt) setRestoreOffer({ snap: backup.snap, at: backup.at });
+      });
+    } else {
+      captureBaseline(false);
+      const backup = readDraftBackup(null);
+      if (backup) setRestoreOffer({ snap: backup.snap, at: backup.at });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, draftId, editMode]);
+
   // Fetch hot sheet data on mount if editing
   useEffect(() => {
     // If editing, load the hot sheet data
@@ -516,21 +637,11 @@ export function CreateHotSheetDialog({
     toast.success("Contact removed");
   };
 
-  const loadHotSheet = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("hot_sheets")
-        .select("*")
-        .eq("id", hotSheetId)
-        .single();
-
-      if (error) throw error;
-      if (!data) return;
-
+  const applySheetRow = (data: any) => {
       // Populate form fields
-      setHotSheetName(data.name);
+      setHotSheetName(data.name ?? "");
       setSheetType(((data as { sheet_type?: string | null }).sheet_type as HotSheetType | null) ?? null);
-      const criteria = data.criteria as any;
+      const criteria = (data.criteria || {}) as any;
       const coreCriteria = fromCriteriaPayload(criteria);
       
       // Load all the criteria fields
@@ -564,35 +675,6 @@ export function CreateHotSheetDialog({
       setNotifyAgent(data.notify_agent_email);
       setNotificationSchedule(data.notification_schedule);
 
-      // Load associated clients from hot_sheet_clients table
-      const { data: hotSheetClients } = await supabase
-        .from('hot_sheet_clients' as any)
-        .select(`
-          client_id,
-          clients (
-            id,
-            first_name,
-            last_name,
-            email,
-            phone
-          )
-        `)
-        .eq('hot_sheet_id', hotSheetId);
-
-      if (hotSheetClients && hotSheetClients.length > 0) {
-        const clients = hotSheetClients
-          .map((hsc: any) => {
-            const client = hsc.clients;
-            if (Array.isArray(client)) {
-              return client[0];
-            }
-            return client;
-          })
-          .filter((client: any): client is NonNullable<typeof client> => client !== null);
-        
-        setSelectedClients(clients);
-      }
-
       // Load additional criteria fields
       setListingAgreementTypes(criteria.listingAgreementTypes || []);
       setEntryOnly(criteria.entryOnly ?? null);
@@ -619,10 +701,68 @@ export function CreateHotSheetDialog({
       setCoolingTypes(criteria.coolingTypes || []);
       setGreenFeatures(criteria.greenFeatures || []);
 
-      // ... rest of criteria loading
+  };
+
+  const loadHotSheet = async (id: string | undefined = hotSheetId) => {
+    if (!id) return null;
+    try {
+      const { data, error } = await supabase
+        .from("hot_sheets")
+        .select("*")
+        .eq("id", id)
+        .single();
+
+      if (error) throw error;
+      if (!data) return null;
+
+      applySheetRow(data);
+
+      // Load associated clients from hot_sheet_clients table
+      const { data: hotSheetClients } = await supabase
+        .from('hot_sheet_clients' as any)
+        .select(`
+          client_id,
+          clients (
+            id,
+            first_name,
+            last_name,
+            email,
+            phone
+          )
+        `)
+        .eq('hot_sheet_id', id);
+
+      if (hotSheetClients && hotSheetClients.length > 0) {
+        const clients = hotSheetClients
+          .map((hsc: any) => {
+            const client = hsc.clients;
+            if (Array.isArray(client)) {
+              return client[0];
+            }
+            return client;
+          })
+          .filter((client: any): client is NonNullable<typeof client> => client !== null);
+        
+        setSelectedClients(clients);
+      }
+
+      if ((data as any).is_draft) {
+        const ds = ((data as any).draft_state || {}) as { clientIds?: string[]; selectedListingIds?: string[] };
+        draftListingIdsRef.current = Array.isArray(ds.selectedListingIds) ? ds.selectedListingIds : [];
+        const ids = Array.isArray(ds.clientIds) ? ds.clientIds : [];
+        if (ids.length > 0) {
+          const { data: cl } = await supabase
+            .from("clients")
+            .select("id, first_name, last_name, email, phone")
+            .in("id", ids);
+          if (cl) setSelectedClients(cl as any);
+        }
+      }
+      return data;
     } catch (error: any) {
       console.error("Error loading hot sheet:", error);
       toast.error("Failed to load hot sheet data");
+      return null;
     }
   };
 
@@ -954,6 +1094,108 @@ export function CreateHotSheetDialog({
     greenFeatures: greenFeatures.length > 0 ? greenFeatures : null,
   });
 
+  const draftSnapshot: HotSheetDraftSnapshot = {
+    name: hotSheetName,
+    sheetType: effectiveSheetType,
+    criteria: buildCriteriaPayload() as Record<string, unknown>,
+    clientIds: selectedClients.map((c) => c.id),
+    selectedListingIds: draftListingIdsRef.current,
+    notifyAgent,
+    notificationSchedule,
+  };
+  const draftKey = snapshotKey(draftSnapshot);
+  latestSnapRef.current = draftSnapshot;
+  latestKeyRef.current = draftKey;
+  const isDraftDirty =
+    isDraftFlow && open && baselineKey !== null && draftKey !== (savedKey ?? baselineKey);
+
+  // Autosave ~2s after the last real change. Never on open alone.
+  useEffect(() => {
+    if (!isDraftDirty || !userId) return;
+    try {
+      window.localStorage.setItem(
+        backupStorageKey,
+        JSON.stringify({ snap: draftSnapshot, at: Date.now(), draftId: sessionRef.current?.getDraftId() ?? null }),
+      );
+    } catch { /* ignore */ }
+    const t = window.setTimeout(() => {
+      if (finalizingRef.current || !latestSnapRef.current) return;
+      void sessionRef.current?.save(latestSnapRef.current).then((ok) => {
+        if (ok) onDraftsChanged?.();
+      });
+    }, 2000);
+    return () => window.clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isDraftDirty, draftKey, userId]);
+
+  // Browser close / refresh with unsaved changes: browser warning (backup already on device).
+  useEffect(() => {
+    if (!isDraftDirty) return;
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [isDraftDirty]);
+
+  const applyDraftBackup = async (snap: HotSheetDraftSnapshot) => {
+    applySheetRow({
+      name: snap.name,
+      sheet_type: snap.sheetType,
+      criteria: snap.criteria,
+      notify_agent_email: snap.notifyAgent,
+      notification_schedule: snap.notificationSchedule,
+    });
+    draftListingIdsRef.current = snap.selectedListingIds || [];
+    if (snap.clientIds?.length) {
+      const { data: cl } = await supabase
+        .from("clients")
+        .select("id, first_name, last_name, email, phone")
+        .in("id", snap.clientIds);
+      if (cl) setSelectedClients(cl as any);
+    } else {
+      setSelectedClients([]);
+    }
+    setRestoreOffer(null);
+    toast.success("Restored your unsaved changes from this device");
+  };
+
+  const closeDialogNow = () => {
+    const hadDraft = !!sessionRef.current?.getDraftId();
+    setShowUnsavedDialog(false);
+    resetDialogState();
+    onOpenChange(false);
+    resetForm();
+    setBaselineKey(null);
+    setSavedKey(null);
+    if (hadDraft) onDraftsChanged?.();
+  };
+
+  /** Every close path in the Create flow goes through here. */
+  const requestClose = () => {
+    if (saving) return;
+    if (isDraftDirty) {
+      setShowUnsavedDialog(true);
+      return;
+    }
+    closeDialogNow();
+  };
+
+  const saveDraftNow = async (closeAfter: boolean) => {
+    if (!latestSnapRef.current) return;
+    const ok = await sessionRef.current!.save(latestSnapRef.current);
+    if (!ok) {
+      toast.error("Couldn't save the draft. Check your connection and try again.");
+      return;
+    }
+    onDraftsChanged?.();
+    if (closeAfter) {
+      toast.success("Draft saved. Find it under Drafts on My Hot Sheets.");
+      closeDialogNow();
+    }
+  };
+
   const validateCriteriaInputs = () => {
     if (selectedCities.length === 0 && !zipCode && !state) {
       return { valid: false, message: "Please select at least one location filter." };
@@ -1260,39 +1502,32 @@ export function CreateHotSheetDialog({
 
       const criteria = buildCriteriaPayload();
 
-      // Create new hot sheet
+      // Create (or finish a draft) in one all-or-nothing server step.
         const isPersonal = effectiveSheetType === "personal";
-        const { data: createdHotSheet, error } = await supabase
-          .from("hot_sheets")
-          .insert({
-            user_id: userId,
-            client_id: isPersonal ? null : clientId || null,
-            name: hotSheetName,
-            criteria,
-            is_active: true,
-            notify_client_email: !isPersonal,
-            notify_agent_email: isPersonal ? true : notifyAgent,
-            notification_schedule: notificationSchedule,
-            sheet_type: effectiveSheetType,
-          })
-          .select()
-          .single();
+        finalizingRef.current = true;
+        await sessionRef.current?.idle();
+        const { data: finalizedId, error } = await supabase.rpc("finalize_hot_sheet" as any, {
+          p_hot_sheet_id: sessionRef.current?.getDraftId() ?? null,
+          p_user_id: userId,
+          p_name: hotSheetName.trim(),
+          p_criteria: criteria,
+          p_sheet_type: effectiveSheetType,
+          p_client_ids: isPersonal ? [] : selectedClients.map((c) => c.id),
+          p_client_id: isPersonal ? null : clientId || null,
+          p_notify_agent_email: isPersonal ? true : notifyAgent,
+          p_notify_client_email: !isPersonal,
+          p_notification_schedule: notificationSchedule,
+        });
 
-        if (error) throw error;
-
-        // Insert clients into hot_sheet_clients junction table (never for Personal)
-        if (!isPersonal && selectedClients.length > 0 && createdHotSheet) {
-          const { error: clientError } = await supabase
-            .from('hot_sheet_clients' as any)
-            .insert(
-              selectedClients.map(client => ({
-                hot_sheet_id: createdHotSheet.id,
-                client_id: client.id
-              }))
-            );
-
-          if (clientError) throw clientError;
+        if (error) {
+          finalizingRef.current = false;
+          throw error;
         }
+        const createdHotSheet = { id: finalizedId as unknown as string };
+        clearDraftBackup();
+        setBaselineKey(null);
+        setSavedKey(null);
+        onDraftsChanged?.();
 
         window.localStorage.removeItem(`aac:hotsheet:draft:${userId}:new`);
 
@@ -1420,6 +1655,10 @@ export function CreateHotSheetDialog({
       open={open}
       onOpenChange={(next) => {
         if (!next) {
+          if (isDraftFlow) {
+            requestClose();
+            return;
+          }
           // Reset contact-entry slice on every dismissal path (X, Esc, backdrop)
           // so the blue "Or add a new contact manually" link reappears on next open.
           resetDialogState();
@@ -1456,6 +1695,15 @@ export function CreateHotSheetDialog({
             </div>
           </div>
         </DialogHeader>
+        {isDraftFlow && restoreOffer ? (
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2 text-[13px] text-neutral-700">
+            <span>You have unsaved Hot Sheet changes from {new Date(restoreOffer.at).toLocaleString()} on this device.</span>
+            <span className="flex gap-2">
+              <Button type="button" size="sm" variant="outline" className="h-7 px-2 text-xs" onClick={() => void applyDraftBackup(restoreOffer.snap)}>Restore</Button>
+              <Button type="button" size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={() => { clearDraftBackup(); setRestoreOffer(null); }}>Dismiss</Button>
+            </span>
+          </div>
+        ) : null}
 
         <div className="space-y-5 sm:space-y-6">
           {/* Hot Sheet Name */}
@@ -2369,6 +2617,23 @@ export function CreateHotSheetDialog({
             </Collapsible>
           )}
 
+          {isDraftFlow ? (
+            <div className="flex min-h-[18px] items-center justify-end gap-2 text-[12px] text-neutral-500" aria-live="polite">
+              {draftStatus === "saving" ? (
+                <span className="inline-flex items-center gap-1"><Loader2 className="h-3 w-3 animate-spin" /> Saving…</span>
+              ) : draftStatus === "error" ? (
+                <span className="text-red-600">
+                  Not saved.{" "}
+                  <button type="button" className="underline" onClick={() => void saveDraftNow(false)}>Retry</button>
+                </span>
+              ) : isDraftDirty ? (
+                <span>Unsaved changes</span>
+              ) : draftStatus === "saved" ? (
+                <span className="inline-flex items-center gap-1"><Check className="h-3 w-3" /> Draft saved</span>
+              ) : null}
+            </div>
+          ) : null}
+
           {/* Action Buttons */}
           <div className="flex flex-col gap-2 rounded-xl border border-neutral-200 bg-white p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)] sm:flex-row sm:gap-2">
             <Button
@@ -2376,6 +2641,10 @@ export function CreateHotSheetDialog({
               variant="outline"
               className="h-9 flex-1 rounded-md border-neutral-200 bg-white px-3 text-[13px] font-medium shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:border-neutral-300 hover:bg-neutral-50/90 disabled:opacity-50"
               onClick={() => {
+                if (isDraftFlow) {
+                  requestClose();
+                  return;
+                }
                 onOpenChange(false);
                 resetForm();
               }}
@@ -2383,6 +2652,17 @@ export function CreateHotSheetDialog({
             >
               Cancel
             </Button>
+            {isDraftFlow ? (
+              <Button
+                type="button"
+                variant="outline"
+                className="h-9 flex-1 rounded-md border-neutral-200 bg-white px-3 text-[13px] font-medium shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:border-neutral-300 hover:bg-neutral-50/90 disabled:opacity-50"
+                onClick={() => void saveDraftNow(true)}
+                disabled={saving || draftStatus === "saving"}
+              >
+                Save Draft
+              </Button>
+            ) : null}
             <Button
               type="button"
               onClick={handleValidateAndShowConfirmation}
@@ -2420,6 +2700,37 @@ export function CreateHotSheetDialog({
           ) : null}
         </div>
       </DialogContent>
+
+      <AlertDialog open={showUnsavedDialog} onOpenChange={setShowUnsavedDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>You have unsaved changes</AlertDialogTitle>
+            <AlertDialogDescription>
+              Save them as a draft so you can continue later, or close without saving these changes.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Keep editing</AlertDialogCancel>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                clearDraftBackup();
+                closeDialogNow();
+              }}
+            >
+              Close without saving
+            </Button>
+            <Button
+              type="button"
+              disabled={draftStatus === "saving"}
+              onClick={() => void saveDraftNow(true)}
+            >
+              Save draft and close
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Confirmation Dialog */}
       <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
