@@ -148,6 +148,7 @@ export function CreateHotSheetDialog({
   // Validation errors
   const [errors, setErrors] = useState<{
     hotSheetName?: string;
+    sheetType?: string;
     clientFirstName?: string;
     clientLastName?: string;
     clientEmail?: string;
@@ -980,12 +981,15 @@ export function CreateHotSheetDialog({
    * "Save to contacts? → No": a real Hot-Sheet-only contact (hidden from
    * My Clients and pickers) so it can be attached by UUID. Never a temp- id.
    */
-  const handleAddClientWithoutSaving = async () => {
+  const handleAddClientWithoutSaving = async (skipSelfCheck?: unknown) => {
     if (creatingClientRef.current) return;
     const validation = validateManualContactForm();
     if (!validation.valid) {
       setErrors((prev) => ({ ...prev, ...validation.errors }));
       toast.error("Please complete all required contact fields.");
+      return;
+    }
+    if (skipSelfCheck !== true && shouldWarnSelf(validation.normalizedEmail, () => void handleAddClientWithoutSaving(true))) {
       return;
     }
 
@@ -1096,13 +1100,16 @@ export function CreateHotSheetDialog({
     setShowManualClientEntry(false);
   };
 
-  const handleCreateClient = async () => {
+  const handleCreateClient = async (skipSelfCheck?: unknown) => {
     if (creatingClientRef.current) return;
 
     const validation = validateManualContactForm();
     if (!validation.valid) {
       setErrors((prev) => ({ ...prev, ...validation.errors }));
       toast.error("Please complete all required contact fields.");
+      return;
+    }
+    if (skipSelfCheck !== true && shouldWarnSelf(validation.normalizedEmail, () => void handleCreateClient(true))) {
       return;
     }
 
@@ -1311,6 +1318,7 @@ export function CreateHotSheetDialog({
 
   const resetForm = () => {
     setHotSheetName("");
+    setSheetType(null);
     setClientFirstName("");
     setClientLastName("");
     setClientEmail("");
@@ -2536,6 +2544,40 @@ export function CreateHotSheetDialog({
                 "Yes"
               )}
             </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={selfWarnKeep !== null} onOpenChange={(o) => { if (!o) setSelfWarnKeep(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>This looks like you</AlertDialogTitle>
+            <AlertDialogDescription>
+              This contact's email matches your own account. Make this a Personal Hot Sheet instead? Personal Hot Sheets never send invitations.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              onClick={() => {
+                const keep = selfWarnKeep;
+                setSelfWarnKeep(null);
+                keep?.();
+              }}
+            >
+              Keep as Buyer
+            </AlertDialogCancel>
+            {!editMode && !lockedToClient && (
+              <AlertDialogAction
+                onClick={() => {
+                  setSelfWarnKeep(null);
+                  clearManualContactForm();
+                  setClientSearchQuery("");
+                  selectSheetType("personal");
+                }}
+              >
+                Switch to Personal
+              </AlertDialogAction>
+            )}
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
