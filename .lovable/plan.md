@@ -1,35 +1,37 @@
-# Restore Communications Center emails for chris@allagentconnect.com (stay hidden)
+# Restore core Communications Center emails for chris@allagentconnect.com (stay hidden)
 
 ## Goal
-Chris keeps his "hidden from the Agent Network directory" setting and gets Communications Center emails again, filtered by his saved preferences. No other account changes.
+Chris stays hidden from the Agent Network and Our Agents, and receives core Communications Center emails again, filtered by his saved preferences. No other account is affected.
 
 ## Cause (confirmed)
-- Every email path picks recipients from the same list of agents who appear in the directory. Agents marked hidden are left off that list.
-- Chris is marked hidden, so he's dropped before his preferences are checked. His preferences, his address and delivery all check out fine.
+Communications emails go only to agents who appear in the directory. Chris is marked hidden, so he is left out before his preferences are checked. His preferences, address and delivery are all fine.
 
 ## The change
-1. **New per-account switch, off for everyone.** Add a field on agent settings called "receive Communications emails while hidden from the directory". It's off by default for every account.
-2. **Turn it on for Chris only.** Make a one-row change on Chris's account (user `1fc50da1-…`). This isn't tied to the admin role, so other admins and other hidden agents stay excluded.
-3. **Add Chris back to the email list only.** The email recipient list adds verified, activated agents who have this switch on. The directory lookup used by the Agent Network and Our Agents pages stays exactly as it is, so Chris stays hidden there.
-4. **All filters still apply.** Chris then goes through the usual checks: master switches, category toggles, Boston/Suffolk area, $1M minimum, property types, timing, the sender exclusion, global blocks and duplicate protection.
+1. **New per-account switch, off for everyone.** Add `comms_email_when_hidden` on agent settings, off by default.
+2. **Turn it on for Chris only.** One row changes. It is not tied to the admin role.
+3. **Core Communications emails only.** A new email-only recipient list includes the switch. Only these three use it:
+   - Communications broadcasts (buyer, renter, sales and discussion)
+   - Daily and weekly Communications summaries
+   - Re-sends of a Communications broadcast
+4. **Everything else stays as it is.** Seller alerts, general agent notices, buyer-need notices, Hot Sheet emails, the Agent Network and Our Agents keep using the current list, so they still exclude Chris.
+5. **All filters still apply.** Master switches, category toggles, Boston/Suffolk area, $1M minimum, property types, timing, the sender exclusion, verification and activation checks, global blocks and duplicate protection.
 
-## Who it affects
-- Only accounts with the switch on. After the change that's Chris and nobody else.
-- Agent Network, Our Agents and the sign-in hints: no change.
-- Hot Sheet matching and delivery: no change. They don't use this list.
-- Paths that will now include Chris, still filtered by his preferences: buyer, renter, sales and discussion broadcasts, daily and weekly summaries, broadcast re-sends, buyer-need notices, the general agent notices from `notify-agents`, and seller alerts. These are the normal agent emails every visible agent already gets. If you want only the core Communications Center emails, I can limit it to broadcasts, summaries and re-sends.
+## Past messages can't be sent (checked)
+- **Summaries:** Chris has 0 waiting summary items. Summaries only send items that were saved for that agent when a broadcast went out. Hidden agents were never given items, so turning the switch on has nothing old to send. Only broadcasts sent after the change can reach him.
+- **Waiting deliveries:** no queue rows are added, re-run or changed.
+- **Re-sends:** these only run when an admin manually re-sends one broadcast, and none have run in the last day. One thing to know: if an admin re-sends an older broadcast after this change, Chris could receive it if it matches his preferences, the same as any agent who missed the original.
 
-## What's not included
-- No emails, test sends, re-sends of past messages, invitations or catch-up sends. Chris only gets emails for activity after the change.
-- No change to global email settings, to other agents' settings, or to directory visibility.
+## Checks before going live (no emails)
+- Automated tests: a hidden agent without the switch is excluded; with the switch they're included in the core Communications list only; the directory list and the other email lists are unchanged.
+- Read-only checks: exactly one account has the switch on, the directory list count is the same before and after, Chris still has 0 waiting summary items, and the email queue count is unchanged.
+- A dry-run preview of the Sep 29 statewide broadcast shows Chris included. Dry runs send nothing.
 
-## Checks
-- Automated tests: a hidden agent without the switch stays excluded, a hidden agent with it is included, and the directory list is unchanged.
-- Read-only checks: the directory list size before and after is identical, exactly one account has the switch on, and a dry-run preview of the Sep 29 statewide broadcast would include Chris. Dry-run previews send nothing.
+## After going live, I'll report
+The exact functions changed, the test results, and the email queue count before and after (zero emails sent).
 
 ## Technical details
-- Database migration: add `agent_settings.comms_email_when_hidden boolean NOT NULL DEFAULT false`. Add a new SECURITY DEFINER function `get_comms_hidden_optin_agent_ids()` that applies the same verified, activated, role and name rules as `get_verified_agent_ids()`, plus `hide_from_directory = true AND comms_email_when_hidden = true`. Execute is granted to service_role only.
-- One data update: set the flag true for user `1fc50da1-2664-4931-8cab-64e24dc5ed8c`.
-- `supabase/functions/_shared/verifiedAgentAudience.ts`: `loadVerifiedAgentIdSet` unions the new function's IDs into the set. The `get_verified_agent_ids()` function itself stays as it is.
-- Redeploy the edge functions that import the helper (send-client-need-notification, process-comms-digests, resend-comms-broadcast, notify-agents, notify-agents-client-need, send-seller-alert). If the "core only" option is chosen, the union instead goes into a new helper used by just the first three.
-- Record the rule in AGENTS.md: directory visibility and email eligibility are separate, with an explicit per-account switch.
+- Migration: add `agent_settings.comms_email_when_hidden boolean NOT NULL DEFAULT false`. Add a new SECURITY DEFINER function `get_comms_hidden_optin_agent_ids()`, which mirrors `get_verified_agent_ids()` filters plus `hide_from_directory = true AND comms_email_when_hidden = true`. Execute revoked from public and granted to service_role only.
+- Data: set the flag true for `1fc50da1-2664-4931-8cab-64e24dc5ed8c` only.
+- `_shared/verifiedAgentAudience.ts`: add opt-in parameters `{ includeCommsHiddenOptIn?: boolean }` to `loadVerifiedAgentIdSet` and `getVerifiedAgentAudienceWithStats`, default false. Existing callers are unchanged.
+- Pass `true` only in `send-client-need-notification`, `process-comms-digests` and `resend-comms-broadcast`. `notify-agents`, `notify-agents-client-need` and `send-seller-alert` are untouched.
+- Add tests in `_shared`. Record in AGENTS.md: directory visibility and Communications email eligibility are separate, using an explicit per-account switch.
