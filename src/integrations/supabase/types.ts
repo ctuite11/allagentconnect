@@ -5023,8 +5023,10 @@ export type Database = {
           client_id: string | null
           created_at: string
           criteria: Json
+          draft_state: Json | null
           id: string
           is_active: boolean
+          is_draft: boolean
           last_sent_at: string | null
           name: string
           notification_schedule: string | null
@@ -5039,8 +5041,10 @@ export type Database = {
           client_id?: string | null
           created_at?: string
           criteria?: Json
+          draft_state?: Json | null
           id?: string
           is_active?: boolean
+          is_draft?: boolean
           last_sent_at?: string | null
           name: string
           notification_schedule?: string | null
@@ -5055,8 +5059,10 @@ export type Database = {
           client_id?: string | null
           created_at?: string
           criteria?: Json
+          draft_state?: Json | null
           id?: string
           is_active?: boolean
+          is_draft?: boolean
           last_sent_at?: string | null
           name?: string
           notification_schedule?: string | null
@@ -8205,6 +8211,21 @@ export type Database = {
       fail_hot_sheet_event: {
         Args: { p_error: string; p_event_id: string; p_worker_id: string }
         Returns: boolean
+      }
+      finalize_hot_sheet: {
+        Args: {
+          p_client_id?: string
+          p_client_ids?: string[]
+          p_criteria: Json
+          p_hot_sheet_id: string
+          p_name: string
+          p_notification_schedule?: string
+          p_notify_agent_email?: boolean
+          p_notify_client_email?: boolean
+          p_sheet_type: string
+          p_user_id: string
+        }
+        Returns: string
       }
       find_current_agent_deletion: {
         Args: { p_email: string }

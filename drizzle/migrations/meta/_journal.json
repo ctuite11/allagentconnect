@@ -267,6 +267,13 @@
       "when": 1791913943687,
       "tag": "0037_hot_sheet_personal_buyer_type",
       "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1791935172529,
+      "tag": "0038_hot_sheet_drafts",
+      "breakpoints": true
     }
   ]
 }
