@@ -66,9 +66,15 @@ const handler = async (req: Request): Promise<Response> => {
     if (hotSheetId) {
       const { data: sheetTypeRow } = await supabase
         .from("hot_sheets")
-        .select("sheet_type")
+        .select("sheet_type, is_draft")
         .eq("id", hotSheetId)
         .maybeSingle();
+      if ((sheetTypeRow as { is_draft?: boolean | null } | null)?.is_draft === true) {
+        return new Response(
+          JSON.stringify({ error: "Draft Hot Sheets cannot send invitations" }),
+          { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
       if ((sheetTypeRow as { sheet_type?: string | null } | null)?.sheet_type === "personal") {
         return new Response(
           JSON.stringify({ error: "Personal Hot Sheets cannot send invitations" }),
