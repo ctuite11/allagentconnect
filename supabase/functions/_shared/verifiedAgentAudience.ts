@@ -46,19 +46,39 @@ function isNonEmpty(v: unknown): boolean {
  * Loads the Agent Network ID set from `public.get_verified_agent_ids()`.
  * Used by enqueue paths and by digest send-time rechecks.
  */
+export interface CommsAudienceOptions {
+  /**
+   * Core Communications Center emails only (broadcasts, digests, broadcast
+   * re-sends). Adds accounts hidden from the directory that have the explicit
+   * per-account `agent_settings.comms_email_when_hidden` switch on. Default
+   * false so the directory and every other email path are unchanged.
+   */
+  includeCommsHiddenOptIn?: boolean;
+}
+
 export async function loadVerifiedAgentIdSet(
   supabase: any,
+  options: CommsAudienceOptions = {},
 ): Promise<Set<string>> {
   const { data: rpcRows, error: rpcErr } = await supabase.rpc(
     "get_verified_agent_ids",
   );
   if (rpcErr) throw rpcErr;
 
-  return new Set(
-    (rpcRows || [])
+  const toIds = (rows: any[] | null) =>
+    (rows || [])
       .map((r: any) => (typeof r === "string" ? r : r?.user_id))
-      .filter((id: unknown): id is string => typeof id === "string" && id.length > 0),
-  );
+      .filter((id: unknown): id is string => typeof id === "string" && id.length > 0);
+
+  const ids = new Set<string>(toIds(rpcRows));
+  if (options.includeCommsHiddenOptIn) {
+    const { data: optRows, error: optErr } = await supabase.rpc(
+      "get_comms_hidden_optin_agent_ids",
+    );
+    if (optErr) throw optErr;
+    for (const id of toIds(optRows)) ids.add(id);
+  }
+  return ids;
 }
 
 /**
@@ -86,9 +106,11 @@ export interface AudienceWithStats {
  */
 export async function getVerifiedAgentAudienceWithStats(
   supabase: any,
+  options: CommsAudienceOptions = {},
 ): Promise<AudienceWithStats> {
-  // 1) Single canonical base population = Agent Network RPC.
-  const idSet = await loadVerifiedAgentIdSet(supabase);
+  // 1) Single canonical base population = Agent Network RPC
+  //    (+ explicit hidden opt-ins for core Comms paths only).
+  const idSet = await loadVerifiedAgentIdSet(supabase, options);
   const eligibleIds = Array.from(idSet);
   if (!eligibleIds.length) {
     return { audience: [], network_rpc_base: 0, globally_suppressed: 0 };

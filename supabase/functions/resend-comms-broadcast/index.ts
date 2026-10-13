@@ -193,7 +193,7 @@ serve(async (req: Request): Promise<Response> => {
     }
 
     // Intersect with the currently eligible audience: never widens the set.
-    const { audience } = await getVerifiedAgentAudienceWithStats(admin);
+    const { audience } = await getVerifiedAgentAudienceWithStats(admin, { includeCommsHiddenOptIn: true });
     const recipients = audience.filter(
       (a) => originalIds.has(a.agent_id) && a.agent_id !== broadcast.sender_id && isValidEmail(a.email ?? ""),
     );

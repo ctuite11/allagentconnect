@@ -109,7 +109,7 @@ async function processCadence(
   // Send-time Network membership: digest items may sit for days after enqueue.
   // Re-read the canonical Agent Network RPC each run so agents who left the
   // Network never receive a digest email.
-  const networkIds = await loadVerifiedAgentIdSet(supabase);
+  const networkIds = await loadVerifiedAgentIdSet(supabase, { includeCommsHiddenOptIn: true });
 
   const agentIds = Array.from(
     new Set((pendingRows || []).map((r: { agent_id: string }) => r.agent_id)),
