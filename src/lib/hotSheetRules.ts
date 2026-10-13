@@ -48,3 +48,37 @@ export function getFirstBatchCta(opts: {
   if (opts.allFirstBatchQueued) return FIRST_BATCH_CTA.alreadySent;
   return FIRST_BATCH_CTA.connected;
 }
+
+export type HotSheetType = "personal" | "buyer";
+
+/** Personal Hot Sheets never send to buyers or invite anyone. NULL (legacy) keeps prior behavior. */
+export function canSheetSendToBuyers(sheetType: string | null | undefined): boolean {
+  return sheetType !== "personal";
+}
+
+function editDistanceAtMostOne(a: string, b: string): boolean {
+  if (a === b) return true;
+  if (Math.abs(a.length - b.length) > 1) return false;
+  let i = 0;
+  let j = 0;
+  let edits = 0;
+  while (i < a.length && j < b.length) {
+    if (a[i] === b[j]) { i++; j++; continue; }
+    if (++edits > 1) return false;
+    if (a.length > b.length) i++;
+    else if (b.length > a.length) j++;
+    else { i++; j++; }
+  }
+  return edits + (a.length - i) + (b.length - j) <= 1;
+}
+
+/**
+ * True when a contact email is the agent's own login email or a one-character
+ * near-miss of it (e.g. allagentconnet.com vs allagentconnect.com).
+ */
+export function isLikelySelfEmail(contactEmail: string | null | undefined, agentEmail: string | null | undefined): boolean {
+  const c = (contactEmail ?? "").trim().toLowerCase();
+  const a = (agentEmail ?? "").trim().toLowerCase();
+  if (!c || !a || !c.includes("@") || !a.includes("@")) return false;
+  return editDistanceAtMostOne(c, a);
+}

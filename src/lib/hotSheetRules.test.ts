@@ -92,3 +92,25 @@ describe("LOCKED: duplicate email message", () => {
     expect(isOtherMemberEmailError({ message: "other" })).toBe(false);
   });
 });
+
+import { canSheetSendToBuyers, isLikelySelfEmail } from "./hotSheetRules";
+
+describe("LOCKED: Personal Hot Sheets never send to buyers", () => {
+  it("personal blocks buyer sends; buyer and legacy (null) keep working", () => {
+    expect(canSheetSendToBuyers("personal")).toBe(false);
+    expect(canSheetSendToBuyers("buyer")).toBe(true);
+    expect(canSheetSendToBuyers(null)).toBe(true);
+  });
+});
+
+describe("LOCKED: self-invite detection", () => {
+  it("matches own email and one-letter typos", () => {
+    expect(isLikelySelfEmail("Chris@AllAgentConnect.com", "chris@allagentconnect.com")).toBe(true);
+    expect(isLikelySelfEmail("chris@allagentconnet.com", "chris@allagentconnect.com")).toBe(true);
+  });
+  it("does not match a different person", () => {
+    expect(isLikelySelfEmail("kerri@allagentconnect.com", "chris@allagentconnect.com")).toBe(false);
+    expect(isLikelySelfEmail("chris.tuite@compass.com", "chris@allagentconnect.com")).toBe(false);
+    expect(isLikelySelfEmail("", "chris@allagentconnect.com")).toBe(false);
+  });
+});
