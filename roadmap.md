@@ -6,7 +6,7 @@
 - [x] 3. Guard check: agent + service-role Draft→Coming Soon rejected; non-Draft insert rejected
 - [x] 4. Disposable-listing QA (emails paused); delete disposable test listing
 - [x] 5. Pass/fail report; hold Manage Photos/Floor Plans deploy
-- [ ] Turn Hot Sheet emails back on — waiting for Chris's approval of the pre-unpause check
+- [x] Turn Hot Sheet emails back on (unpaused 2026-10-11; four clean worker cycles, no old emails, incident counts unchanged)
 - [x] Manage Photos/Floor Plans changes live (auto-deployed 01:06 UTC) + live QA passed 2026-10-11
 - [x] Pre-unpause Hot Sheet check reported
 
@@ -53,17 +53,17 @@
 - [x] Hot Sheet Review connected-state fix: connected = active relationship only (matches process-hot-sheet); verified without sending, 2026-10-07
 - [x] Stale invite fix: global invite eligibility ignores tokens whose contact/Hot Sheet is confirmed deleted (2026-10-07, no sends)
 - [x] Restore Add Additional Contact on Create Hot Sheet (incl. when opened from a buyer)
-- [ ] Real Send First Batch & Invite test — awaiting approval
+- [ ] Real Send First Batch & Invite test — ON HOLD, needs explicit approval for one controlled invitation email
 - [x] Read-only disk I/O budget root cause (2026-10-06): since 21:10 restart ~90% of physical reads = full scans of bloated cron.job_run_details (47k rows / 463 MB). Pre-restart cause unknown (stats wiped). Fix (rewrite/shrink that table) awaits approval.
 - [x] Fix Send First Batch 403: pass bearer token to getUser() in process-hot-sheet recipient branch (done 2026-10-07): deployed, controlled pending-buyer test passed (8 IDs stored, zero email_jobs), publish requested
 - [x] Read-only trace of stale May invite (done 2026-10-07)
-- [ ] Publish Add Additional Contact + stale-invite eligibility fixes (no sends; user tests live): fixes committed (68bc647ab); Lovable Publish skipped (lovable.app copy broken platform-side); production = GitHub main sync → Netlify; verify allagentconnect.com bundle live after sync (currently stale — neither fix string present)
+- [x] Publish Add Additional Contact + stale-invite eligibility fixes — deployed and verified live on allagentconnect.com via GitHub main → Netlify (no sends)
 
 - [ ] Weborik/Nenad read-only Phase 1 access: Viewer invite (user does via Share); direct read-only DB login blocked, since Lovable Cloud has no external DB connections. Waiting on user to pick an alternative.
 - [x] Admin 'Share to AAC Social' button on property page (admin's own accounts; retry reuses clientRequestId; no backend changes) (2026-10-08)
 
 - [x] Incident 2026-10-09: My Listings Quick Edit price-only for drafts (paused Hot Sheet emails; 234 Friend St back to Draft)
-- [ ] Live QA of Quick Edit on a throwaway draft after deploy, then user decides when to unpause Hot Sheet emails
+- [x] Live QA of Quick Edit on a throwaway draft after deploy (price-only, no status selector, Draft preserved); Hot Sheet emails unpaused afterward
 
 - [x] Live QA of Open House date fix on production (before/after status + Hot Sheet/email counts; stop on any anomaly)
 - [x] Search cards (preview; not yet live): stack event banners under status; List View uses Broker Tour label
@@ -87,9 +87,9 @@
 - [x] Frontend: all Draft saves keep draft; only "Yes, Publish Listing" calls publish_listing; remove publishConfirmedRef
 - [x] Migration B: guard triggers (Draft → any status blocked; non-draft inserts rejected)
 - [x] QA with disposable Draft, Hot Sheet emails paused; report before production
-- [ ] Turn Hot Sheet emails back on (waiting for Chris's approval)
+- [x] Turn Hot Sheet emails back on (done 2026-10-11)
 
 - [ ] Follow-up (not urgent): Hot Sheet "email me a copy" agent copy uses a time-based duplicate key (process-hot-sheet) — can repeat if delivery is triggered twice. Logged Oct 11; do not change without approval.
 - [x] Hot Sheet Review header count = listings shown
 - [x] Hot Sheet Review picks pinned at top
-- [ ] Connected-buyer Send First Batch test (needs approval for one controlled invitation email)
+- [ ] Connected-buyer Send First Batch test — ON HOLD (needs approval for one controlled invitation email); Review UI work closed 2026-10-13
