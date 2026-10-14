@@ -40,3 +40,9 @@ Preview first, then allagentconnect.com after the automatic deploy, signed in as
 - `hotSheetDraftSession.ts`: generate a client UUID at session start (or reuse the persisted one). `create` inserts with that `id`; on unique-violation (23505) it falls back to `update` on the same id. Add tests for lost-reply retry → single row, and for resume via the persisted id.
 - `CreateHotSheetDialog.tsx`: persist `{draftId, snap, at}` under a per-user "active draft session" key in sessionStorage on first edit. On open in create mode, if an active session exists, resume that draft id and restore the snapshot automatically (instead of only offering a restore). Clear the key only on explicit close (Save Draft / close without saving / discard), finalize, or delete.
 - No schema, edge function or email changes.
+
+## Separate item: LinkedIn banner download
+
+- I'll create a 1584x396 JPEG (LinkedIn's banner size) from your current homepage hero, using the cover image you uploaded: the logo with "Massachusetts", "ONE NETWORK. ALL AGENTS." and the man at the laptop.
+- I'll re-crop it for LinkedIn's wider shape and keep the text clear of the bottom-left corner, where your profile photo covers part of the banner.
+- You'll get it as a download in Files. The website doesn't change.
