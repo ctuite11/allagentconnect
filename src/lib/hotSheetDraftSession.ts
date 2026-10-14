@@ -19,16 +19,24 @@ export interface HotSheetDraftSnapshot {
 }
 
 export interface HotSheetDraftSessionDeps {
-  create: (snap: HotSheetDraftSnapshot) => Promise<string>;
+  /**
+   * Create the draft row with the session's pre-assigned id. Must be idempotent:
+   * if a row with that id already exists (a retry after a lost reply), update it instead.
+   */
+  create: (snap: HotSheetDraftSnapshot, id: string) => Promise<string>;
   update: (id: string, snap: HotSheetDraftSnapshot) => Promise<void>;
   onStatus?: (status: DraftSaveStatus) => void;
   onSavedKey?: (key: string) => void;
+  /** Id generator for the session's single draft row (defaults to crypto.randomUUID). */
+  newId?: () => string;
 }
 
 export const snapshotKey = (snap: HotSheetDraftSnapshot) => JSON.stringify(snap);
 
 export function createHotSheetDraftSession(deps: HotSheetDraftSessionDeps, initialDraftId: string | null = null) {
   let draftId: string | null = initialDraftId;
+  // Fixed for the life of the session, so retries can never create a second row.
+  const sessionId: string = initialDraftId ?? (deps.newId ?? (() => crypto.randomUUID()))();
   let inflight: Promise<boolean> | null = null;
   let pending: HotSheetDraftSnapshot | null = null;
   let lastSavedKey: string | null = null;
@@ -39,7 +47,7 @@ export function createHotSheetDraftSession(deps: HotSheetDraftSessionDeps, initi
     const key = snapshotKey(snap);
     try {
       if (!draftId) {
-        draftId = await deps.create(snap);
+        draftId = await deps.create(snap, sessionId);
       } else {
         await deps.update(draftId, snap);
       }
@@ -72,6 +80,8 @@ export function createHotSheetDraftSession(deps: HotSheetDraftSessionDeps, initi
 
   return {
     getDraftId: () => draftId,
+    /** The id this session will use (or already uses) for its one draft row. */
+    getSessionId: () => sessionId,
     setDraftId: (id: string | null) => {
       draftId = id;
     },

@@ -99,6 +99,23 @@ interface CreateHotSheetDialogProps {
   onDraftsChanged?: () => void;
 }
 
+/**
+ * Live Create/Draft editing sessions, kept outside the component so an unexpected
+ * remount of the window (parent reload, auth refresh) resumes the SAME draft row
+ * and entries instead of starting a new one. Only a remount within a few seconds
+ * of unmount is treated as an interruption; any deliberate close ends the session,
+ * so clicking Create Hot Sheet later always starts fresh.
+ */
+type LiveDraftEntry = {
+  session: HotSheetDraftSession;
+  sinks: { onStatus: (s: DraftSaveStatus) => void; onSavedKey: (k: string) => void };
+  snap: HotSheetDraftSnapshot | null;
+  savedKey: string | null;
+  unmountedAt: number | null;
+};
+const liveDraftSessions = new Map<string, LiveDraftEntry>();
+const REMOUNT_RECOVERY_MS = 5000;
+
 export function CreateHotSheetDialog({
   open,
   onOpenChange,
@@ -348,10 +365,11 @@ export function CreateHotSheetDialog({
   const makeDraftSession = (initialId: string | null): HotSheetDraftSession =>
     createHotSheetDraftSession(
       {
-        create: async (snap) => {
+        create: async (snap, id) => {
           const { data, error } = await supabase
             .from("hot_sheets")
             .insert({
+              id,
               user_id: userId,
               name: snap.name.trim(),
               criteria: snap.criteria as any,
@@ -365,10 +383,23 @@ export function CreateHotSheetDialog({
             } as any)
             .select("id")
             .single();
-          if (error) throw error;
+          if (error) {
+            // Same id already saved (earlier reply was lost): update that row instead of creating another.
+            if ((error as { code?: string }).code === "23505") {
+              await updateDraftRow(id, snap);
+              return id;
+            }
+            throw error;
+          }
           return (data as { id: string }).id;
         },
-        update: async (id, snap) => {
+        update: (id, snap) => updateDraftRow(id, snap),
+        onStatus: (st) => sinksRef.current.onStatus(st),
+        onSavedKey: (key) => sinksRef.current.onSavedKey(key),
+      },
+      initialId,
+    );
+  const updateDraftRow = async (id: string, snap: HotSheetDraftSnapshot) => {
           const { data, error } = await supabase
             .from("hot_sheets")
             .update({
@@ -380,19 +411,31 @@ export function CreateHotSheetDialog({
               draft_state: { clientIds: snap.clientIds, selectedListingIds: snap.selectedListingIds, savedAt: new Date().toISOString() },
             } as any)
             .eq("id", id)
+            .eq("user_id", userId)
             .eq("is_draft", true)
             .select("id");
           if (error) throw error;
           if (!data || data.length === 0) throw new Error("Draft no longer exists");
-        },
-        onStatus: setDraftStatus,
-        onSavedKey: (key) => {
-          setSavedKey(key);
-          clearDraftBackup();
-        },
-      },
-      initialId,
-    );
+  };
+  // Status sinks are swapped on remount so a recovered session reports to the live window.
+  const sinksRef = useRef({
+    onStatus: (st: DraftSaveStatus) => setDraftStatus(st),
+    onSavedKey: (key: string) => {
+      setSavedKey(key);
+      clearDraftBackup();
+    },
+  });
+  sinksRef.current.onStatus = (st) => setDraftStatus(st);
+  sinksRef.current.onSavedKey = (key) => {
+    setSavedKey(key);
+    clearDraftBackup();
+    const e = liveDraftSessions.get(liveKey);
+    if (e) e.savedKey = key;
+  };
+  const liveKey = `${userId ?? "anon"}:${draftId ?? "new"}`;
+  const endLiveSession = () => {
+    liveDraftSessions.delete(liveKey);
+  };
   const sessionRef = useRef<HotSheetDraftSession | null>(null);
   if (!sessionRef.current) sessionRef.current = makeDraftSession(draftId ?? null);
 
@@ -423,7 +466,45 @@ export function CreateHotSheetDialog({
   useEffect(() => {
     if (!open || editMode) return;
     finalizingRef.current = false;
+    const live = liveDraftSessions.get(liveKey);
+    if (live && live.unmountedAt !== null && Date.now() - live.unmountedAt < REMOUNT_RECOVERY_MS) {
+      // Interrupted (window was remounted mid-edit): resume the same draft and entries.
+      live.unmountedAt = null;
+      sessionRef.current = live.session;
+      sinksRef.current = live.sinks;
+      setSavedKey(live.savedKey);
+      setDraftStatus(live.session.isSaving() ? "saving" : live.savedKey ? "saved" : "idle");
+      setRestoreOffer(null);
+      if (live.snap) {
+        const snap = live.snap;
+        applySheetRow({
+          name: snap.name,
+          sheet_type: snap.sheetType,
+          criteria: snap.criteria,
+          notify_agent_email: snap.notifyAgent,
+          notification_schedule: snap.notificationSchedule,
+        });
+        draftListingIdsRef.current = snap.selectedListingIds || [];
+        if (snap.clientIds?.length) {
+          void supabase
+            .from("clients")
+            .select("id, first_name, last_name, email, phone")
+            .in("id", snap.clientIds)
+            .then(({ data: cl }) => { if (cl) setSelectedClients(cl as any); });
+        }
+      }
+      captureBaseline(false);
+      return;
+    }
+    liveDraftSessions.delete(liveKey);
     sessionRef.current = makeDraftSession(draftId ?? null);
+    liveDraftSessions.set(liveKey, {
+      session: sessionRef.current,
+      sinks: sinksRef.current,
+      snap: null,
+      savedKey: null,
+      unmountedAt: null,
+    });
     setDraftStatus("idle");
     setSavedKey(null);
     setBaselineKey(null);
@@ -443,6 +524,17 @@ export function CreateHotSheetDialog({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, draftId, editMode]);
+
+  // If the window is torn down while open (not a deliberate close), mark it so a quick remount resumes it.
+  useEffect(() => {
+    if (!open || editMode) return;
+    const key = liveKey;
+    return () => {
+      const e = liveDraftSessions.get(key);
+      if (e) e.unmountedAt = Date.now();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, editMode, liveKey]);
 
   // Fetch hot sheet data on mount if editing
   useEffect(() => {
@@ -1106,6 +1198,10 @@ export function CreateHotSheetDialog({
   const draftKey = snapshotKey(draftSnapshot);
   latestSnapRef.current = draftSnapshot;
   latestKeyRef.current = draftKey;
+  if (isDraftFlow && open) {
+    const e = liveDraftSessions.get(liveKey);
+    if (e && e.session === sessionRef.current) e.snap = draftSnapshot;
+  }
   const isDraftDirty =
     isDraftFlow && open && baselineKey !== null && draftKey !== (savedKey ?? baselineKey);
 
@@ -1163,6 +1259,7 @@ export function CreateHotSheetDialog({
 
   const closeDialogNow = () => {
     const hadDraft = !!sessionRef.current?.getDraftId();
+    endLiveSession();
     setShowUnsavedDialog(false);
     resetDialogState();
     onOpenChange(false);
@@ -1539,6 +1636,7 @@ export function CreateHotSheetDialog({
           toast.success("Hot sheet created");
         }
 
+        endLiveSession();
         resetDialogState();
         onOpenChange(false);
         onSuccess(createdHotSheet.id);

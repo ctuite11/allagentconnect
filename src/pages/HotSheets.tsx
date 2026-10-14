@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import type { User } from "@supabase/supabase-js";
 import PageShell from "@/components/layout/PageShell";
@@ -181,6 +181,7 @@ const HotSheets = ({
   const [renameDraft, setRenameDraft] = useState<{ id: string; name: string } | null>(null);
   const [deleteDraft, setDeleteDraft] = useState<{ id: string; name: string } | null>(null);
   const [draftBusy, setDraftBusy] = useState(false);
+  const hasLoadedOnceRef = useRef(false);
   const buyerMode = isBuyerMode;
 
   useEffect(() => {
@@ -523,10 +524,14 @@ const HotSheets = ({
     fetchData(user.id);
   };
 
+  // Full-page loading/error screens replace the page (and any open Create window),
+  // so they are only allowed before the first successful load. Later refreshes are quiet.
   const fetchData = async (userId: string, silent = false) => {
+    const quiet = silent || hasLoadedOnceRef.current;
+    let failed = false;
     try {
-      if (!silent) setLoading(true);
-      setAgentLoadError(false);
+      if (!quiet) setLoading(true);
+      if (!quiet) setAgentLoadError(false);
 
       // 1. Fetch hot sheets (with clients and shares) and active/pending buyer
       // relationships in parallel — they are independent.
@@ -677,12 +682,19 @@ const HotSheets = ({
       setPersonalHotSheets(personal);
     } catch (error) {
       console.error("Error fetching hot sheets:", error);
+      if (quiet) {
+        // Keep what is on screen; never replace the page under an open window.
+        toast.error("Couldn't refresh your Hot Sheets. Your open work is unaffected.");
+        return;
+      }
       toast.error("Failed to load hot sheets");
       setAgentLoadError(true);
       setCollections([]);
       setPersonalHotSheets([]);
       setRawHotSheets([]);
+      failed = true;
     } finally {
+      if (!failed) hasLoadedOnceRef.current = true;
       setLoading(false);
     }
   };

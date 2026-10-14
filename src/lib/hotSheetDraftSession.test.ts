@@ -68,6 +68,22 @@ describe("hot sheet draft session", () => {
     expect(s.getDraftId()).toBeNull();
   });
 
+  it("a retry after a lost reply reuses the same id (no second row)", async () => {
+    const rows = new Set<string>();
+    let fail = true;
+    const create = vi.fn().mockImplementation(async (_s: HotSheetDraftSnapshot, id: string) => {
+      rows.add(id); // server wrote it...
+      if (fail) { fail = false; throw new Error("reply lost"); } // ...but the reply never arrived
+      return id;
+    });
+    const s = createHotSheetDraftSession({ create, update: vi.fn(), newId: () => "fixed-id" });
+    expect(await s.save(snap("a"))).toBe(false);
+    expect(await s.save(snap("b"))).toBe(true);
+    expect(create.mock.calls.map((c) => c[1])).toEqual(["fixed-id", "fixed-id"]);
+    expect(rows.size).toBe(1);
+    expect(s.getDraftId()).toBe("fixed-id");
+  });
+
   it("labels unnamed drafts", () => {
     expect(draftDisplayName("")).toBe("Untitled draft");
     expect(draftDisplayName("  ")).toBe("Untitled draft");
