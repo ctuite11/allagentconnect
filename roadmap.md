@@ -108,3 +108,9 @@
 - [x] Drafts saved on the server, autosave, unsaved-changes prompt, Drafts section first, Continue Editing/Rename/Delete
 - [x] All-or-nothing finish; drafts can be fully blank (type stays blank); no buyer needs from drafts
 - [x] Isolated-database tests (10/10) and preview save/resume/delete check (no activation, no sends)
+
+## 2026-10-14 — Save Draft reliability fix + LinkedIn banner
+- [x] Create window never removed by background refreshes; one fixed draft ID per editing session; retries update the same row; quick remount resumes same draft; deliberate Create starts fresh
+- [x] Preview QA: 4 autosaves → 1 row, reload → no new row, resume → same row; test drafts removed
+- [ ] Production QA on allagentconnect.com — waits for this change to deploy (goes out when this turn ends)
+- [x] LinkedIn banner 1584x396 JPEG delivered to Files
