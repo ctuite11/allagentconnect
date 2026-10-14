@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import type { User } from "@supabase/supabase-js";
 import PageShell from "@/components/layout/PageShell";
@@ -528,6 +528,7 @@ const HotSheets = ({
   // so they are only allowed before the first successful load. Later refreshes are quiet.
   const fetchData = async (userId: string, silent = false) => {
     const quiet = silent || hasLoadedOnceRef.current;
+    let failed = false;
     try {
       if (!quiet) setLoading(true);
       if (!quiet) setAgentLoadError(false);
@@ -681,13 +682,19 @@ const HotSheets = ({
       setPersonalHotSheets(personal);
     } catch (error) {
       console.error("Error fetching hot sheets:", error);
+      if (quiet) {
+        // Keep what is on screen; never replace the page under an open window.
+        toast.error("Couldn't refresh your Hot Sheets. Your open work is unaffected.");
+        return;
+      }
       toast.error("Failed to load hot sheets");
-      if (!quiet) setAgentLoadError(true);
-      else toast.error("Couldn't refresh your Hot Sheets. Your open work is unaffected.");
+      setAgentLoadError(true);
       setCollections([]);
       setPersonalHotSheets([]);
       setRawHotSheets([]);
+      failed = true;
     } finally {
+      if (!failed) hasLoadedOnceRef.current = true;
       setLoading(false);
     }
   };
