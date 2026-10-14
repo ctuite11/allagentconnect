@@ -348,10 +348,11 @@ export function CreateHotSheetDialog({
   const makeDraftSession = (initialId: string | null): HotSheetDraftSession =>
     createHotSheetDraftSession(
       {
-        create: async (snap) => {
+        create: async (snap, id) => {
           const { data, error } = await supabase
             .from("hot_sheets")
             .insert({
+              id,
               user_id: userId,
               name: snap.name.trim(),
               criteria: snap.criteria as any,
@@ -365,10 +366,23 @@ export function CreateHotSheetDialog({
             } as any)
             .select("id")
             .single();
-          if (error) throw error;
+          if (error) {
+            // Same id already saved (earlier reply was lost): update that row instead of creating another.
+            if ((error as { code?: string }).code === "23505") {
+              await updateDraftRow(id, snap);
+              return id;
+            }
+            throw error;
+          }
           return (data as { id: string }).id;
         },
-        update: async (id, snap) => {
+        update: (id, snap) => updateDraftRow(id, snap),
+        onStatus: (st) => sinksRef.current.onStatus(st),
+        onSavedKey: (key) => sinksRef.current.onSavedKey(key),
+      },
+      initialId,
+    );
+  const updateDraftRow = async (id: string, snap: HotSheetDraftSnapshot) => {
           const { data, error } = await supabase
             .from("hot_sheets")
             .update({
@@ -380,19 +394,25 @@ export function CreateHotSheetDialog({
               draft_state: { clientIds: snap.clientIds, selectedListingIds: snap.selectedListingIds, savedAt: new Date().toISOString() },
             } as any)
             .eq("id", id)
+            .eq("user_id", userId)
             .eq("is_draft", true)
             .select("id");
           if (error) throw error;
           if (!data || data.length === 0) throw new Error("Draft no longer exists");
-        },
-        onStatus: setDraftStatus,
-        onSavedKey: (key) => {
-          setSavedKey(key);
-          clearDraftBackup();
-        },
-      },
-      initialId,
-    );
+  };
+  // Status sinks are swapped on remount so a recovered session reports to the live window.
+  const sinksRef = useRef({
+    onStatus: (st: DraftSaveStatus) => setDraftStatus(st),
+    onSavedKey: (key: string) => {
+      setSavedKey(key);
+      clearDraftBackup();
+    },
+  });
+  sinksRef.current.onStatus = (st) => setDraftStatus(st);
+  sinksRef.current.onSavedKey = (key) => {
+    setSavedKey(key);
+    clearDraftBackup();
+  };
   const sessionRef = useRef<HotSheetDraftSession | null>(null);
   if (!sessionRef.current) sessionRef.current = makeDraftSession(draftId ?? null);
 
