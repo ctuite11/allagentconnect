@@ -103,3 +103,8 @@
 - [x] Self-invite warning in Create and Review
 - [x] Clean up "mine" (Personal, listing kept, link cancelled, contact deleted, bounce history kept)
 - [ ] Save Draft / auto-persist for Hot Sheet creation — separate plan to present next (no changes yet)
+
+## 2026-10-13 — Hot Sheet Save Draft
+- [x] Drafts saved on the server, autosave, unsaved-changes prompt, Drafts section first, Continue Editing/Rename/Delete
+- [x] All-or-nothing finish; drafts can be fully blank (type stays blank); no buyer needs from drafts
+- [x] Isolated-database tests (10/10) and preview save/resume/delete check (no activation, no sends)
