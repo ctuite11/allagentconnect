@@ -523,9 +523,9 @@ const HotSheets = ({
     fetchData(user.id);
   };
 
-  const fetchData = async (userId: string) => {
+  const fetchData = async (userId: string, silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       setAgentLoadError(false);
 
       // 1. Fetch hot sheets (with clients and shares) and active/pending buyer
@@ -802,8 +802,9 @@ const HotSheets = ({
     }
   };
 
+  // Silent: a full-page spinner would unmount an open Create/Draft dialog and reset its save state.
   const refreshAgentSheets = () => {
-    if (user) void fetchData(user.id);
+    if (user) void fetchData(user.id, true);
   };
 
   const handleRenameDraft = async () => {
