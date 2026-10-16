@@ -115,4 +115,4 @@
 - [ ] Production QA on allagentconnect.com — waits for this change to deploy (goes out when this turn ends)
 - [x] LinkedIn banner 1584x396 JPEG delivered to Files
 
-- [ ] Create Agent email follow-up audit (read-only): reconcile counts, same-age activation comparison, link validity, Compass/Corcoran delivery signals, tracking usefulness, evidence for pacing. No template/tracking/queue changes, no resends.
+- [x] Create Agent email follow-up audit (read-only): reconcile counts, same-age activation comparison, link validity, Compass/Corcoran delivery signals, tracking usefulness, evidence for pacing. No template/tracking/queue changes, no resends.
