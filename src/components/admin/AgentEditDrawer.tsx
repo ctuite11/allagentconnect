@@ -208,7 +208,18 @@ export function AgentEditDrawer({ open, onOpenChange, agent, onSaved }: AgentEdi
           </SheetDescription>
         </SheetHeader>
 
-        <div className="mt-6 space-y-6">
+        {profileState === "missing" && (
+          <div role="status" className="mt-4 rounded-xl border border-border bg-muted p-3 text-sm text-foreground">
+            This is a legacy account without an agent profile. Profile editing is unavailable.
+          </div>
+        )}
+        {profileState === "error" && (
+          <div role="alert" className="mt-4 rounded-xl border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+            Couldn't check this agent's profile. Editing is disabled — close and reopen to try again.
+          </div>
+        )}
+
+        <fieldset disabled={readOnly} className="mt-6 space-y-6 min-w-0">
           {/* Personal Info Section */}
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <div className="flex items-center gap-2 mb-4">
@@ -376,7 +387,7 @@ export function AgentEditDrawer({ open, onOpenChange, agent, onSaved }: AgentEdi
               </div>
             )}
           </div>
-        </div>
+        </fieldset>
 
         <SheetFooter className="mt-6 pt-4 border-t border-slate-200">
           <Button 
@@ -388,7 +399,7 @@ export function AgentEditDrawer({ open, onOpenChange, agent, onSaved }: AgentEdi
           </Button>
           <Button 
             onClick={handleSave} 
-            disabled={saving}
+            disabled={saving || readOnly}
             className="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white"
           >
             {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
