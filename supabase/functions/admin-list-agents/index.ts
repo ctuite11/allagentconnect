@@ -507,6 +507,8 @@ Deno.serve(async (req) => {
           )
           for (const bp of (baseProfiles ?? []) as any[]) {
             const s = msByUser.get(bp.id)
+            // Only verified accounts — keeps old pending test/buyer rows out of the approval queue.
+            if (s?.agent_status !== 'verified') continue
             const emailKey = (bp.email ?? '').toLowerCase()
             agents.push({
               id: bp.id,
@@ -533,7 +535,7 @@ Deno.serve(async (req) => {
               headshot_url: null,
             } as MergedAgent)
           }
-          console.log('[admin-list-agents] settings-only agents added:', baseProfiles?.length ?? 0)
+          console.log('[admin-list-agents] settings-only verified agents checked:', baseProfiles?.length ?? 0)
         }
       }
     } catch (e) {
