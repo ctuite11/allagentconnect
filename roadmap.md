@@ -116,3 +116,11 @@
 - [x] LinkedIn banner 1584x396 JPEG delivered to Files
 
 - [x] Create Agent email follow-up audit (read-only): reconcile counts, same-age activation comparison, link validity, Compass/Corcoran delivery signals, tracking usefulness, evidence for pacing. No template/tracking/queue changes, no resends.
+
+## 2026-10-16 — Create Agent invitation audit (closed)
+- [x] Counts reconciled: Oct 14 batch = 44 (17 Compass, 20 Corcoran Advisors, 1 Corcoran, 6 Gmail); 51 statuses = Oct 14–16 + Sep 22–Oct 9 window, 50 delivered (1 later temp bounce), 1 delayed
+- [x] 2-day activation comparison: Aug 28 2/141 (1.4%), Sep 8 3/52 (5.8%), Oct 14 0/44 — zero plausible at low expected counts
+- [x] All 44 Oct 14 links valid, unused, expire ~Nov 13; accounts eligible
+- [x] No Compass/Corcoran delivery anomalies; no evidence bulk-by-domain caused issues (Aug 28 sent 141 at once incl. 8 Compass)
+- [x] Recommendation: no tracking/pacing/template/queue changes; Chris checks with recipients personally
+- [ ] ~Oct 22: read-only 7-day activation comparison of Oct 14 batch vs earlier batches at equivalent elapsed time, split by brokerage/domain. No code changes or emails; evaluate before deciding on improvements.
