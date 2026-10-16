@@ -484,6 +484,63 @@ Deno.serve(async (req) => {
       }
     })
 
+    // Fallback: settings rows with no agent_profiles row (read-only).
+    try {
+      const { data: settingsIdRows, error: settingsIdsError } = await settingsIdsPromise
+      if (settingsIdsError) {
+        console.error('[admin-list-agents] settings id read error:', settingsIdsError.message)
+      } else {
+        const profileIds = new Set(profiles.map(p => p.id))
+        const missingIds = (settingsIdRows ?? [])
+          .map((r: { user_id: string }) => r.user_id)
+          .filter((id: string) => id && !profileIds.has(id))
+        if (missingIds.length > 0) {
+          const [{ data: baseProfiles }, missingSettings] = await Promise.all([
+            adminClient
+              .from('profiles')
+              .select('id, first_name, last_name, email, phone, created_at')
+              .in('id', missingIds),
+            fetchSettingsChunk(missingIds),
+          ])
+          const msByUser = new Map<string, AgentSettings>(
+            (missingSettings.rows ?? []).map(s => [s.user_id, s]),
+          )
+          for (const bp of (baseProfiles ?? []) as any[]) {
+            const s = msByUser.get(bp.id)
+            const emailKey = (bp.email ?? '').toLowerCase()
+            agents.push({
+              id: bp.id,
+              aac_id: '—',
+              first_name: bp.first_name,
+              last_name: bp.last_name,
+              email: bp.email ?? '',
+              phone: bp.phone ?? null,
+              company: null,
+              bio: null,
+              license_number: s?.license_number ?? null,
+              license_state: s?.license_state ?? null,
+              agent_status: s?.agent_status ?? 'unknown',
+              verified_at: s?.verified_at ?? null,
+              created_at: bp.created_at || new Date().toISOString(),
+              has_auth_account: authUserIds.has(bp.id) || authEmails.has(emailKey),
+              last_sign_in_at: authUserIds.has(bp.id)
+                ? (lastSignInById.get(bp.id) ?? null)
+                : (lastSignInByEmail.get(emailKey) ?? null),
+              account_activated_at: s?.account_activated_at ?? null,
+              credentials_issued_at: s?.credentials_issued_at ?? null,
+              approval_email_sent: s?.approval_email_sent ?? null,
+              profile_complete: false,
+              headshot_url: null,
+            } as MergedAgent)
+          }
+          console.log('[admin-list-agents] settings-only agents added:', baseProfiles?.length ?? 0)
+        }
+      }
+    } catch (e) {
+      console.error('[admin-list-agents] settings-only fallback failed:', e)
+    }
+
+
     // Log status distribution
     const statusCounts = agents.reduce((acc, a) => {
       acc[a.agent_status] = (acc[a.agent_status] || 0) + 1
