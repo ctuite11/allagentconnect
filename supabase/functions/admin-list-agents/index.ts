@@ -309,6 +309,15 @@ Deno.serve(async (req) => {
       .select('id, aac_id, first_name, last_name, email, phone, company, headshot_url, created_at')
       .order('created_at', { ascending: false })
 
+    // Light ID-only read: agents with an agent_settings row but no
+    // agent_profiles row (historic accounts) must still appear in the admin
+    // roster. Read-only; no agent_profiles rows are ever created here, so
+    // directory/matching visibility is unaffected.
+    const settingsIdsPromise = adminClient
+      .from('agent_settings')
+      .select('user_id')
+      .range(0, 9999)
+
 
     const earlyAccessPromise = adminClient
       .from('agent_early_access')
