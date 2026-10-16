@@ -1,22 +1,41 @@
-# Admin search shows zero matches for an existing verified agent
+# Admin Approvals: show the 7 verified accounts that are missing agent profiles
 
-## Root cause (confirmed by reads)
+## The cause
 
-- tuite.chris11@gmail.com **has a real, verified agent account** (created June 4, 2026; roles: agent + buyer; `agent_settings.agent_status = verified`; not hidden, not deleted). The invite screen's "email is in use" is **correct** — existing accounts can't be re-invited.
-- The admin page roster is built by the `admin-list-agents` edge function **from `agent_profiles`**. This account has **no `agent_profiles` row**, so it never loads into the admin list — searching its email returns zero matches even though admin search does match on email.
-- The gap is small and historic: exactly **7 verified agents** lack an `agent_profiles` row. All are early May–June 2026 accounts (your own test/family accounts: chris.tuite@compass.com, tuite.chris11@gmail.com, nataliia.tuite@gmail.com, boo@allagentconnect.com, nataliia@directconnectmls.com, n.lopachak@gmail.com, mbaltimore@gmail.com). They predate whatever now creates `agent_profiles` rows during onboarding/verification.
+- tuite.chris11@gmail.com is a real, verified account (created June 4, 2026). The invite screen says the email is in use, and that's correct.
+- The Admin Approvals list is built only from `agent_profiles`. Seven verified accounts have no `agent_profiles` row, so they never load and searching their emails finds nothing. The seven are chris.tuite@compass.com, n.lopachak@gmail.com, tuite.chris11@gmail.com, mbaltimore@gmail.com, nataliia.tuite@gmail.com, boo@allagentconnect.com and nataliia@directconnectmls.com.
 
-## Plan
+## Smallest safe fix: change only how the admin list is read, with no new records
 
-1. **Backfill the 7 missing `agent_profiles` rows** (one migration): insert minimal rows (id, first_name, last_name from `profiles`) for verified agents that lack one. No other columns touched; no emails or side effects.
-2. **Harden `admin-list-agents`** so this can't silently recur: agents with an `agent_settings` row but no `agent_profiles` row still appear in the roster (fall back to `profiles` for name/email). This is a read-path change only.
-3. **Verify:** the 7 accounts appear in the admin roster and are findable by email search; roster count changes by exactly +7; no other accounts affected; type-check/build pass.
+The fix is in one function, `admin-list-agents`, which feeds the admin page.
 
-## Safety
+1. Alongside the reads it already runs in parallel, add one light read: the `user_id` column from `agent_settings`.
+2. Find the IDs that have settings but no `agent_profiles` row. Today that's the 7 accounts.
+3. For just those IDs, read name and email from `profiles` (the account record every sign-in already has). Then read their full settings with the existing chunked settings lookup.
+4. Add them to the list using their real account ID and their saved status and activation dates. Mark them `profile_complete: false` with an AAC ID of "—". Search by email or name will then find them.
 
-- No emails, invitations, or notifications. No changes to roles, statuses, visibility, or any other account data.
-- The invite flow stays unchanged: existing accounts correctly block new invites.
+## Answers to your requirements
 
-## Optional (only if you want it)
+1. **Real identities, no duplicates.** Each row uses the existing account ID and verified status. Nothing is created.
+2. **No new agent profiles.** The fallback alone fixes admin visibility. Whether the seven need full profiles is a separate decision for later.
+3. **Not visible anywhere else.** Agent Network, Our Agents and matching all need an `agent_profiles` row. Since no rows are created, those screens stay exactly as they are.
+4. **Database fields.** Not needed, because nothing is inserted.
+5. **Nothing about the accounts changes.** Roles, verification and activation status, directory privacy and email preferences stay as they are.
+6. **No automatic actions.** The change only reads data, so no emails, invitations, Hot Sheet notifications or queue entries.
+7. **Stays fast.** The new work is one read of about 530 small ID values, plus two small lookups for the 7 accounts. All of it runs in parallel with the reads that already happen, so the admin page should load just as fast.
 
-- A friendlier invite message ("This person already has an account — Chris Tuite") instead of just "in use". Not included unless you ask.
+## One caution
+
+Status buttons on the admin page (Verify, Reject and so on) already work by account ID, so they would work on these rows too. The plan doesn't change those buttons. Please don't use them on the seven old test accounts unless you mean to.
+
+## Checks before release
+
+- Before and after, the admin list total goes up by exactly 7. Searching tuite.chris11@gmail.com finds one row: "Chris Tuite", Verified.
+- Agent Network and Our Agents still show the same count (332), and none of the seven appear.
+- The email queue count is unchanged.
+- Function deploy, type-check and build all pass.
+
+## Left for later
+
+- Whether to give any of the seven accounts full profiles.
+- The friendlier wording on the invitation message.
