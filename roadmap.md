@@ -127,5 +127,6 @@
 
 ## 2026-10-17 — Create Agent invitation redesign (preview only)
 - [x] Preview built (desktop/mobile, images on/off) in Files; live email untouched
+- [ ] Rebuild revised preview using established AAC dark masthead/footer and actual hosted command monogram; preserve approved copy/photo/two buttons, verify desktop/mobile images on/off; no production changes
 - [ ] Chris approves design + copy → then edit live template, host hero image, deploy (no sends)
 - [ ] Later phase: plain-text version (needs shared send-step change, separate approval)
