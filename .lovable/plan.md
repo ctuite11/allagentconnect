@@ -1,21 +1,40 @@
-# Create Agent email audit (read-only findings + proposed next steps)
+# Redesign the Create Agent invitation email (preview first, nothing live)
 
-## What I found
-- **The emails are being sent.** Every agent created from Create Agent got the "Chris Tuite invited you to All Agent Connect" email queued and handed off. No agent created by an admin was skipped.
-- **Recipients' mail servers accepted them.** Of the last 51, 48 show "delivered", 1 bounced (andrea.hulme@corcoranadvisors.com, a temporary bounce), and 1 is delayed (n.lopachak@carbonet.ltd).
-- **Sender setup is healthy.** SPF, DKIM and DMARC are all in place for allagentconnect.com.
-- **But nobody from the Oct 14 batch has activated:** 0 of 44 (34 Compass, 21 Corcoran). Earlier batches activated at 5–8%. For one-off sends, nearly everyone activated.
-- **This email has no open or click tracking**, so I can't tell whether it landed in the inbox, spam or quarantine.
+## Scope
+Redesign only the email agents receive when an admin creates their account ("admin-created-invite"). No other email, Hot Sheet, notification, database, onboarding or verification change. Nothing sent, deployed or resent until you approve the finished design.
 
-## Most likely cause (not yet proven)
-"Delivered" only means the company's mail server accepted the email. Compass and Corcoran run corporate filters that often **quarantine** messages after delivery. The Oct 14 batch sent 44 near-identical invites to two company domains within about 2 hours. That's the classic pattern those filters catch. The 1:1 sends, which weren't caught, activated.
+## What changes
+- **Subject:** "Your Next Deal Starts With a Connection." (replaces the current default subject for new sends only)
+- **Preview text:** your exact line.
+- **Layout (white background, responsive, table-based for Gmail/Outlook/Apple Mail/mobile):**
+  1. AAC logo at top (existing approved hosted AAC lockup/monogram, not redrawn).
+  2. Hero residential property photo (hosted, optimized ~100–150 KB, with alt text).
+  3. Headline, subhead, intro paragraph — your exact copy.
+  4. Green "ACTIVATE YOUR FREE ACCOUNT" button.
+  5. "Discover What All Agent Connect Can Do for You" — six compact feature blocks with small hosted icons, your exact copy.
+  6. Closing section, second green button, Chris Tuite signature and www.allagentconnect.com.
+- **All Facebook-group language removed.**
+- All text is real HTML; with images blocked the email still reads fully and both buttons still work (buttons are styled HTML, not images).
 
-## Proposed next steps (each needs your OK, nothing sent)
-1. **Confirm the cause with no sends.** Ask 1–2 Compass or Corcoran recipients you know to check spam or quarantine for the Oct 14 email. That's your call. I won't contact anyone.
-2. **Turn on open/click tracking for this one email**, so future sends show whether people open it. This is a backend change only. The email's wording and design stay the same, per the template freeze.
-3. **Pace future Create Agent sends** to the same company domain, for example a few per hour instead of dozens at once. This only affects new sends; nothing old is re-sent.
-4. **Resending the Oct 14 batch is NOT included.** That needs your explicit approval for each send, under the queue rule.
+## What stays exactly the same
+- Resend sending, sender address, reply-to, authentication.
+- Per-recipient activation link created at send time from the existing 30-day token; both buttons use that same link. No new tokens or invitations.
+- Queue, pacing, retry/idempotency, tracking configuration, expiration rules.
+- Existing footer/compliance elements.
+
+## Before you approve, I will show you
+- Desktop and mobile screenshots, images on and images off, rendered from preview data with a placeholder link (no real token, no send).
+- Confirmation the logo is the existing approved asset.
+- A feature-accuracy check: each of the six claims checked against what's live today. Note: "Buyer Needs & Matching" and "Off-Market & Coming Soon" exist; I'll flag any wording that overstates (e.g. "hundreds of agents" — directory currently shows 334 agents, so "hundreds" is accurate).
+- Proof no other template file changed.
+
+## Open questions (answer when reviewing)
+- **Hero photo:** I'll use an existing homepage property photo if suitable; otherwise generate a realistic residential photo. Say if you'd rather supply one.
+- **Plain-text fallback:** the email system currently sends HTML only. Adding a text version means a small change in the shared send step (only used when a text version is provided, so other emails are unaffected). I'll include it only if you approve that.
 
 ## Technical details
-- Path: `admin-create-user` calls `send-admin-created-invite` (fire-and-forget), which enqueues `email_jobs` with template `admin-created-invite`. `process-email-queue` sends via Resend from `hello@allagentconnect.com` with reply-to chris@.
-- Evidence: `email_jobs` + `email_events` (delivered/bounced/delayed), `agent_settings.account_activated_at`, and `email_job_opens`/`email_job_clicks` (no rows for this template).
+- Edit only `supabase/functions/_shared/buildAdminCreatedInviteEmailHtml.ts` and the default subject in `send-admin-created-invite/index.ts`; `hydrateActivationEmail.ts` call stays as-is (ctaUrl late-rendered).
+- Images hosted in the existing public `brand-assets` storage (absolute https URLs).
+- Preview rendered locally via a throwaway script to `/tmp`, screenshots with Playwright at 600px and 375px, images blocked via request interception.
+- Optional text fallback: `text` field passed through to Resend only when present.
+- Edge functions not deployed until you approve.
