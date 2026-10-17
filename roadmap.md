@@ -124,3 +124,8 @@
 - [x] No Compass/Corcoran delivery anomalies; no evidence bulk-by-domain caused issues (Aug 28 sent 141 at once incl. 8 Compass)
 - [x] Recommendation: no tracking/pacing/template/queue changes; Chris checks with recipients personally
 - [ ] ~Oct 22: read-only 7-day activation comparison of Oct 14 batch vs earlier batches at equivalent elapsed time, split by brokerage/domain. No code changes or emails; evaluate before deciding on improvements.
+
+## 2026-10-17 — Create Agent invitation redesign (preview only)
+- [x] Preview built (desktop/mobile, images on/off) in Files; live email untouched
+- [ ] Chris approves design + copy → then edit live template, host hero image, deploy (no sends)
+- [ ] Later phase: plain-text version (needs shared send-step change, separate approval)
