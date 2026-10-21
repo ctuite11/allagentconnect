@@ -3,8 +3,8 @@
  * Create and Edit dialogs (tested separately on purpose; do not refactor the
  * dialogs into a shared component just to satisfy these tests).
  */
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, fireEvent, waitFor, act, cleanup } from "@testing-library/react";
 
 const tableData: Record<string, unknown> = {};
 let searchResults: any[] = [];
@@ -32,7 +32,10 @@ function chain(table: string): any {
 vi.mock("@/integrations/supabase/client", () => ({
   supabase: {
     from: (t: string) => chain(t),
-    rpc: () => Promise.resolve({ data: false, error: null }),
+    rpc: (fn: string, args?: any) => {
+      calls.push({ table: `rpc:${fn}`, method: "rpc", arg: args });
+      return Promise.resolve({ data: fn === "finalize_hot_sheet" ? "hs-new" : fn === "save_hot_sheet_draft" ? args?.p_id ?? "draft-1" : false, error: null });
+    },
     auth: {
       getUser: () => Promise.resolve({ data: { user: { id: "agent-1" } }, error: null }),
       getSession: () => Promise.resolve({ data: { session: null }, error: null }),
@@ -57,10 +60,13 @@ import { EditHotsheetCriteriaDialog } from "@/components/EditHotsheetCriteriaDia
 const buyer = { id: "c-buyer", first_name: "Kerri", last_name: "Buyer", email: "kerri@example.com", phone: null };
 const extra = { id: "c-extra", first_name: "Sam", last_name: "Second", email: "sam@example.com", phone: null };
 
+afterEach(() => cleanup());
+
 beforeEach(() => {
   for (const k of Object.keys(tableData)) delete tableData[k];
   searchResults = [extra];
   calls.length = 0;
+  window.localStorage.clear(); // isolate the Create dialog's local draft backup between tests
   // jsdom lacks these; Radix uses them
   (globalThis as any).ResizeObserver ??= class { observe() {} unobserve() {} disconnect() {} };
   Element.prototype.scrollIntoView ??= () => {};
@@ -91,8 +97,8 @@ function renderCreateFromBuyer() {
 
 async function openCreatePicker() {
   renderCreateFromBuyer();
-  fireEvent.click(await screen.findByRole("button", { name: /Add Additional Contact/i }));
-  return screen.getByLabelText("Search Existing Contact");
+  await waitFor(() => fireEvent.click(screen.getByRole("button", { name: /Add Additional Contact/i })));
+  return screen.findByLabelText("Search Existing Contact");
 }
 
 describe("Create Hot Sheet — contacts (locked)", () => {
@@ -103,7 +109,7 @@ describe("Create Hot Sheet — contacts (locked)", () => {
 
   it("shows Add Additional Contact on a fresh Create once a contact is selected", async () => {
     render(<CreateHotSheetDialog open onOpenChange={() => {}} userId="agent-1" onSuccess={() => {}} preSelectedClients={[buyer]} />);
-    expect(await screen.findByRole("button", { name: /Add Additional Contact/i })).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByRole("button", { name: /Add Additional Contact/i })).toBeInTheDocument());
   });
 
   it("original buyer cannot be removed; an added secondary contact can", async () => {
@@ -243,31 +249,55 @@ async function saveNewHotSheet(name: string) {
   fireEvent.click(createBtns[createBtns.length - 1]);
   const confirm = await screen.findAllByRole("button", { name: /Create|Confirm/i });
   fireEvent.click(confirm[confirm.length - 1]);
-  await waitFor(() => expect(calls.some((c) => c.table === "hot_sheets" && c.method === "insert")).toBe(true));
+  await waitFor(() => expect(finalizeArgs()).toBeTruthy());
 }
 
+const finalizeArgs = () => calls.find((c) => c.table === "rpc:finalize_hot_sheet")?.arg;
+
 describe("Create Hot Sheet — personal vs buyer (locked)", () => {
-  it("opened independently: the last contact can be removed and a zero-contact personal Hot Sheet saves", async () => {
+  it("preselected contacts open as For a Buyer, visibly selected, and all contacts are saved", async () => {
     const onSuccess = vi.fn();
-    render(<CreateHotSheetDialog open onOpenChange={() => {}} userId="agent-1" onSuccess={onSuccess} preSelectedClients={[buyer]} />);
-    fireEvent.click(await screen.findByRole("button", { name: "Remove" }));
-    await waitFor(() => expect(screen.queryByText("kerri@example.com")).not.toBeInTheDocument());
-    await saveNewHotSheet("Personal sheet");
-    await waitFor(() => expect(onSuccess).toHaveBeenCalledWith("hs-new"));
-    expect(calls.some((c) => c.table === "hot_sheet_clients" && c.method === "insert")).toBe(false);
+    render(<CreateHotSheetDialog open onOpenChange={() => {}} userId="agent-1" onSuccess={onSuccess} preSelectedClients={[buyer, extra]} />);
+    await waitFor(() => expect(screen.getByRole("radio", { name: /For a Buyer/ })).toHaveAttribute("aria-checked", "true"));
+    expect(screen.getByRole("radio", { name: /Personal/ })).toHaveAttribute("aria-checked", "false");
+    expect(screen.getByText("kerri@example.com")).toBeInTheDocument();
+    expect(screen.getByText("sam@example.com")).toBeInTheDocument();
+    await saveNewHotSheet("Buyer sheet");
+    expect(finalizeArgs().p_sheet_type).toBe("buyer");
+    expect(finalizeArgs().p_client_ids).toEqual([buyer.id, extra.id]);
   });
 
-  it("opened from a buyer: the buyer is the only contact, cannot be removed, and is attached on save", async () => {
+  it("switching to Personal clears contacts, hides buyer controls, never restores them, and saves Personal with no contacts", async () => {
+    const onSuccess = vi.fn();
+    render(<CreateHotSheetDialog open onOpenChange={() => {}} userId="agent-1" onSuccess={onSuccess} preSelectedClients={[buyer, extra]} />);
+    await screen.findByText("kerri@example.com");
+    fireEvent.click(screen.getByRole("radio", { name: /Personal/ }));
+    await waitFor(() => expect(screen.queryByText("kerri@example.com")).not.toBeInTheDocument());
+    expect(screen.queryByText("sam@example.com")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Add Additional Contact/i })).not.toBeInTheDocument();
+    expect(screen.queryAllByRole("button", { name: /invite/i })).toHaveLength(0);
+    expect(screen.queryAllByRole("checkbox", { name: /invite|buyer|client/i })).toHaveLength(0);
+    await saveNewHotSheet("Personal sheet");
+    await waitFor(() => expect(onSuccess).toHaveBeenCalledWith("hs-new"));
+    expect(finalizeArgs().p_sheet_type).toBe("personal");
+    expect(finalizeArgs().p_client_ids).toEqual([]);
+    expect(finalizeArgs().p_client_id).toBeNull();
+    expect(finalizeArgs().p_notify_client_email).toBe(false);
+  });
+
+  it("opened from a buyer: locked to buyer, shown as such, buyer cannot be removed, and is attached on save", async () => {
     const onSuccess = vi.fn();
     render(
       <CreateHotSheetDialog open onOpenChange={() => {}} userId="agent-1" onSuccess={onSuccess}
         clientId={buyer.id} clientName="Kerri Buyer" preSelectedClients={[buyer]} lockedToClient />,
     );
     await screen.findByText("kerri@example.com");
+    expect(screen.getByText(/can't be changed to Personal/)).toBeInTheDocument();
+    expect(screen.queryByRole("radio", { name: /Personal/ })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Remove" })).not.toBeInTheDocument();
     await saveNewHotSheet("Buyer sheet");
     await waitFor(() => expect(onSuccess).toHaveBeenCalledWith("hs-new"));
-    const link = calls.find((c) => c.table === "hot_sheet_clients" && c.method === "insert");
-    expect(link?.arg).toEqual([{ hot_sheet_id: "hs-new", client_id: buyer.id }]);
+    expect(finalizeArgs().p_sheet_type).toBe("buyer");
+    expect(finalizeArgs().p_client_ids).toEqual([buyer.id]);
   });
 });

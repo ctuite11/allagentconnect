@@ -40,7 +40,7 @@ import { TownsPicker } from "@/components/TownsPicker";
 import { getAreasForCity, hasNeighborhoodData } from "@/data/usNeighborhoodsData";
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
 import { fetchAllAgentContacts, searchClientContacts, invalidateAgentContactsCache } from "@/lib/contactSearch";
-import { isLikelySelfEmail, type HotSheetType } from "@/lib/hotSheetRules";
+import { isLikelySelfEmail, initialCreateSheetType, resolveCreateSheetType, type HotSheetType } from "@/lib/hotSheetRules";
 import { isValidShareRecipientEmail } from "@/lib/shareRecipientUtils";
 import { DuplicateContactDialog, type DuplicateExistingClient } from "@/components/hot-sheets/DuplicateContactDialog";
 import {
@@ -340,10 +340,20 @@ export function CreateHotSheetDialog({
     void supabase.auth.getUser().then(({ data }) => setAgentEmail(data.user?.email ?? null));
   }, [open]);
 
-  // Initialize from preSelectedClients when dialog opens (only once on open)
+  // Initialize from preSelectedClients once per open: contacts shown and
+  // "For a Buyer" visibly selected. Never re-applied after the agent switches
+  // to Personal (which clears contacts).
+  const preselectAppliedRef = useRef(false);
   useEffect(() => {
-    if (open && preSelectedClients && preSelectedClients.length > 0 && selectedClients.length === 0) {
+    if (!open) {
+      preselectAppliedRef.current = false;
+      return;
+    }
+    if (preselectAppliedRef.current || editMode) return;
+    if (preSelectedClients && preSelectedClients.length > 0 && selectedClients.length === 0) {
+      preselectAppliedRef.current = true;
       setSelectedClients(preSelectedClients);
+      setSheetType((prev) => prev ?? initialCreateSheetType({ lockedToClient, preSelectedCount: preSelectedClients.length }));
     }
   }, [open, preSelectedClients]);
 
@@ -1098,7 +1108,7 @@ export function CreateHotSheetDialog({
   };
 
   const effectiveSheetType: HotSheetType | null =
-    lockedToClient || (preSelectedClients && preSelectedClients.length > 0) ? "buyer" : sheetType;
+    resolveCreateSheetType({ lockedToClient, chosen: sheetType });
 
   const selectSheetType = (next: HotSheetType) => {
     setSheetType(next);
@@ -1850,6 +1860,12 @@ export function CreateHotSheetDialog({
               <p className="text-[13px] text-destructive">{errors.hotSheetName}</p>
             )}
           </div>
+
+          {lockedToClient && !editMode && (
+            <p className="text-[13px] text-neutral-600">
+              For a Buyer — this Hot Sheet is tied to {clientName || "this buyer"} and can't be changed to Personal here.
+            </p>
+          )}
 
           {/* Hot Sheet type: explicit Personal vs Buyer */}
           {!lockedToClient && (!editMode || sheetType === "personal" || sheetType === null) && (

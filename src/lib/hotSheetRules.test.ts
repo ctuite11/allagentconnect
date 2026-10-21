@@ -114,3 +114,20 @@ describe("LOCKED: self-invite detection", () => {
     expect(isLikelySelfEmail("", "chris@allagentconnect.com")).toBe(false);
   });
 });
+
+import { initialCreateSheetType, resolveCreateSheetType } from "./hotSheetRules";
+
+describe("Create Hot Sheet type selection", () => {
+  it("preselected contacts start the form as For a Buyer", () => {
+    expect(initialCreateSheetType({ lockedToClient: false, preSelectedCount: 3 })).toBe("buyer");
+  });
+  it("no preselected contacts starts with no choice", () => {
+    expect(initialCreateSheetType({ lockedToClient: false, preSelectedCount: 0 })).toBeNull();
+  });
+  it("agent choosing Personal is saved as Personal even when contacts were preselected", () => {
+    expect(resolveCreateSheetType({ lockedToClient: false, chosen: "personal" })).toBe("personal");
+  });
+  it("locked buyer workflow always saves as buyer", () => {
+    expect(resolveCreateSheetType({ lockedToClient: true, chosen: "personal" })).toBe("buyer");
+  });
+});

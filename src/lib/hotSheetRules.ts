@@ -82,3 +82,17 @@ export function isLikelySelfEmail(contactEmail: string | null | undefined, agent
   if (!c || !a || !c.includes("@") || !a.includes("@")) return false;
   return editDistanceAtMostOne(c, a);
 }
+
+/**
+ * Create-flow type rules.
+ * - Preselected contacts (My Clients bulk) start the form as "buyer", visibly selected.
+ * - After that, the agent's explicit choice always wins; only a locked buyer
+ *   workflow forces "buyer". Personal is never silently overridden.
+ */
+export function initialCreateSheetType(opts: { lockedToClient: boolean; preSelectedCount: number }): HotSheetType | null {
+  return opts.lockedToClient || opts.preSelectedCount > 0 ? "buyer" : null;
+}
+
+export function resolveCreateSheetType(opts: { lockedToClient: boolean; chosen: HotSheetType | null }): HotSheetType | null {
+  return opts.lockedToClient ? "buyer" : opts.chosen;
+}
