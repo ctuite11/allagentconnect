@@ -132,3 +132,9 @@
 - [ ] Later phase: plain-text version (needs shared send-step change, separate approval)
 
 - [x] 2026-10-21 Hot Sheet results Back follows path used; new-match email skips drafts (is_draft=false). Web change goes live via GitHub main.
+
+## 2026-10-21 — Create Hot Sheet fix: live verification
+- [x] Live click-through on allagentconnect.com (as Chris): 22 contacts selected in My Clients → Create Hot Sheet opened with "For a Buyer" visibly selected and all contacts listed; clicking "Personal — Just for Me" checked Personal, removed every contact, and none came back after waiting; closed without saving
+- [x] Leftover "Untitled draft" from the test removed through the page's own Delete control; drafts back to 3 ("new test", "test new", "another test"), active still 21, zero emails queued during the test
+- [ ] Personal view still shows the "Buyer emails" section ("How often matching listings are emailed to the buyer", "Also email me a copy") — waits for Chris's approval to hide it when Personal is selected
+- [ ] Clicking "Personal — Just for Me" autosaves an "Untitled draft" at once — waits for Chris to say whether that is wanted or should wait until he types something
