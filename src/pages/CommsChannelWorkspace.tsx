@@ -25,6 +25,7 @@ import {
 } from "@/lib/commsChannelLists";
 import { formatSentDateTime, previewSentMessage } from "@/lib/commsSentFormat";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
+import { resolveCommsChannelBack } from "@/lib/commsChannelBack";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import type { SentBroadcastListItem } from "@/lib/commsSent";
@@ -71,6 +72,9 @@ export default function CommsChannelWorkspace() {
   const [editItem, setEditItem] = useState<SentBroadcastListItem | null>(null);
 
   const returnState = { from: `${location.pathname}${location.search}` };
+  const backTarget = resolveCommsChannelBack(
+    (location.state as { from?: string } | null)?.from,
+  );
 
   const reload = useCallback(async () => {
     if (!category) return;
@@ -147,9 +151,9 @@ export default function CommsChannelWorkspace() {
 
       <div className="mb-4">
         <Button asChild variant="ghost" size="sm" className="-ml-2 h-8 text-neutral-600">
-          <Link to="/communications">
+          <Link to={backTarget.path}>
             <ArrowLeft className="mr-1.5 h-4 w-4" />
-            Communications Center
+            {backTarget.label}
           </Link>
         </Button>
       </div>

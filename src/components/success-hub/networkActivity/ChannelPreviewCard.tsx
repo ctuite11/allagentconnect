@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Plus } from "lucide-react";
 import { NetworkActivityCard } from "./NetworkActivityCard";
 import { ActivityAgentContact } from "./ActivityAgentContact";
@@ -34,6 +34,7 @@ export function ChannelPreviewCard({
   emptyLabel = "No recent activity",
   onCreate,
 }: ChannelPreviewCardProps) {
+  const location = useLocation();
   return (
     <NetworkActivityCard
       className="h-full"
@@ -44,6 +45,7 @@ export function ChannelPreviewCard({
         <div className="flex shrink-0 items-center gap-3">
           <Link
             to={viewAllTo}
+            state={{ from: `${location.pathname}${location.search}` }}
             className="inline-flex items-center rounded-md bg-primary px-2.5 py-1 text-[11px] font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2"
           >
             View all
