@@ -94,8 +94,8 @@ function renderCreateFromBuyer() {
 
 async function openCreatePicker() {
   renderCreateFromBuyer();
-  fireEvent.click(await screen.findByRole("button", { name: /Add Additional Contact/i }));
-  return screen.getByLabelText("Search Existing Contact");
+  await waitFor(() => fireEvent.click(screen.getByRole("button", { name: /Add Additional Contact/i })));
+  return screen.findByLabelText("Search Existing Contact");
 }
 
 describe("Create Hot Sheet — contacts (locked)", () => {
@@ -106,7 +106,7 @@ describe("Create Hot Sheet — contacts (locked)", () => {
 
   it("shows Add Additional Contact on a fresh Create once a contact is selected", async () => {
     render(<CreateHotSheetDialog open onOpenChange={() => {}} userId="agent-1" onSuccess={() => {}} preSelectedClients={[buyer]} />);
-    expect(await screen.findByRole("button", { name: /Add Additional Contact/i })).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByRole("button", { name: /Add Additional Contact/i })).toBeInTheDocument());
   });
 
   it("original buyer cannot be removed; an added secondary contact can", async () => {
