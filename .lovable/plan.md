@@ -1,40 +1,30 @@
-# Redesign the Create Agent invitation email (preview first, nothing live)
+# Hot Sheet card Back button + draft email check
 
-## Scope
-Redesign only the email agents receive when an admin creates their account ("admin-created-invite"). No other email, Hot Sheet, notification, database, onboarding or verification change. Nothing sent, deployed or resent until you approve the finished design.
+## 1. Back from a buyer Hot Sheet goes to Hot Sheets
 
-## What changes
-- **Subject:** "Your Next Deal Starts With a Connection." (replaces the current default subject for new sends only)
-- **Preview text:** your exact line.
-- **Layout (white background, responsive, table-based for Gmail/Outlook/Apple Mail/mobile):**
-  1. AAC logo at top (existing approved hosted AAC lockup/monogram, not redrawn).
-  2. Hero residential property photo (hosted, optimized ~100–150 KB, with alt text).
-  3. Headline, subhead, intro paragraph — your exact copy.
-  4. Green "ACTIVATE YOUR FREE ACCOUNT" button.
-  5. "Discover What All Agent Connect Can Do for You" — six compact feature blocks with small hosted icons, your exact copy.
-  6. Closing section, second green button, Chris Tuite signature and www.allagentconnect.com.
-- **All Facebook-group language removed.**
-- All text is real HTML; with images blocked the email still reads fully and both buttons still work (buttons are styled HTML, not images).
+**What happens now:** Clicking a buyer card with one Hot Sheet opens its results. The Back button there goes to the buyer's dashboard first whenever the sheet has a buyer, so you end up on the buyer page instead of Hot Sheets.
 
-## What stays exactly the same
-- Resend sending, sender address, reply-to, authentication.
-- Per-recipient activation link created at send time from the existing 30-day token; both buttons use that same link. No new tokens or invitations.
-- Queue, pacing, retry/idempotency, tracking configuration, expiration rules.
-- Existing footer/compliance elements.
+**Fix:**
+- When you open results from a Hot Sheets card, remember that you came from Hot Sheets.
+- On the results page, Back goes to Hot Sheets when that's where you came from.
+- If you opened results from a buyer's dashboard, Back still goes to that buyer's dashboard.
+- Buyer cards with several Hot Sheets work the same way: Hot Sheets → buyer list → results → Back → buyer list → Back → Hot Sheets.
 
-## Before you approve, I will show you
-- Desktop and mobile screenshots, images on and images off, rendered from preview data with a placeholder link (no real token, no send).
-- Confirmation the logo is the existing approved asset.
-- A feature-accuracy check: each of the six claims checked against what's live today. Note: "Buyer Needs & Matching" and "Off-Market & Coming Soon" exist; I'll flag any wording that overstates (e.g. "hundreds of agents" — directory currently shows 334 agents, so "hundreds" is accurate).
-- Proof no other template file changed.
+## 2. Saved drafts never send email alerts
 
-## Open questions (answer when reviewing)
-- **Hero photo:** I'll use an existing homepage property photo if suitable; otherwise generate a realistic residential photo. Say if you'd rather supply one.
-- **Plain-text fallback:** the email system currently sends HTML only. Adding a text version means a small change in the shared send step (only used when a text version is provided, so other emails are unaffected). I'll include it only if you approve that.
+**What I checked (read-only):** You have 3 saved drafts ("new test", "test new", "another test"). None is active, and **no email has ever been queued for any of them**. Drafts are always kept inactive, and the new-match email only looks at active Hot Sheets. The Hot Sheet send and invitation steps already refuse drafts.
+
+**Extra protection (no change in behavior):**
+- The new-match alert email will also skip any sheet marked as a draft, so a draft can't send even if it somehow became active.
+- Add a small test that fails if a draft could ever get a match alert.
+
+If you did get an email you think came from a draft, tell me the Hot Sheet name and I'll trace it.
+
+## Not changing
+Email templates, active Hot Sheets, buyers, invitations, the email queue. No emails sent during testing.
 
 ## Technical details
-- Edit only `supabase/functions/_shared/buildAdminCreatedInviteEmailHtml.ts` and the default subject in `send-admin-created-invite/index.ts`; `hydrateActivationEmail.ts` call stays as-is (ctaUrl late-rendered).
-- Images hosted in the existing public `brand-assets` storage (absolute https URLs).
-- Preview rendered locally via a throwaway script to `/tmp`, screenshots with Playwright at 600px and 375px, images blocked via request interception.
-- Optional text fallback: `text` field passed through to Resend only when present.
-- Edge functions not deployed until you approve.
+- `HotSheets.tsx` `handleCardClick`: pass `state: { from: "/agent/hot-sheets" }` on the single-sheet review navigate.
+- `HotSheetReview.tsx` `handleAgentHotSheetReviewBack`: if `originFrom` is `/agent/hot-sheets` or `/hot-sheets`, go to `AGENT_HOT_SHEETS_PATH` before the buyer-dashboard fallback; when opened from `HotSheetBuyerDetail`, pass `from` as the buyer-detail path (keeping its own `from`) so Back returns there.
+- `send-new-match-notification`: add `.or("is_draft.is.null,is_draft.eq.false")` beside `.eq("is_active", true)`; deploy that one function.
+- Test: extend `hotSheetRules.test.ts` (or a new test beside it) for the back-target rule and draft exclusion.
