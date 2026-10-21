@@ -275,7 +275,8 @@ describe("Create Hot Sheet — personal vs buyer (locked)", () => {
     await waitFor(() => expect(screen.queryByText("kerri@example.com")).not.toBeInTheDocument());
     expect(screen.queryByText("sam@example.com")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Add Additional Contact/i })).not.toBeInTheDocument();
-    expect(screen.queryByText(/invite/i)).not.toBeInTheDocument();
+    expect(screen.queryAllByRole("button", { name: /invite/i })).toHaveLength(0);
+    expect(screen.queryAllByRole("checkbox", { name: /invite|buyer|client/i })).toHaveLength(0);
     await saveNewHotSheet("Personal sheet");
     await waitFor(() => expect(onSuccess).toHaveBeenCalledWith("hs-new"));
     expect(finalizeArgs().p_sheet_type).toBe("personal");
