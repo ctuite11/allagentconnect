@@ -732,7 +732,7 @@ const HotSheets = ({
 
   const handleCardClick = (collection: BuyerCollection) => {
     if (collection.hotSheets.length === 1) {
-      navigate(`/hot-sheets/${collection.hotSheets[0].id}/review`);
+      navigate(`/hot-sheets/${collection.hotSheets[0].id}/review`, { state: { from: "/agent/hot-sheets" } });
     } else {
       navigate(`/hot-sheets/buyer/${collection.clientId}`, { state: { from: "/agent/hot-sheets" } });
     }

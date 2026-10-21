@@ -180,6 +180,7 @@ serve(async (req) => {
       .from("hot_sheets")
       .select("id, user_id, name, notify_agent_email, notification_schedule")
       .eq("is_active", true)
+      .eq("is_draft", false)
       .eq("notification_schedule", "immediately");
 
     if (fetchError) throw fetchError;

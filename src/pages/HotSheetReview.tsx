@@ -156,7 +156,7 @@ interface HotSheet {
 }
 
 /** Agent Hot Sheets list — canonical back target from review/results. */
-const AGENT_HOT_SHEETS_PATH = "/agent/hot-sheets";
+import { AGENT_HOT_SHEETS_PATH, resolveHotSheetReviewBack } from "@/lib/hotSheetReviewBack";
 
 const HotSheetReview = () => {
   const navigate = useNavigate();
@@ -321,15 +321,13 @@ const HotSheetReview = () => {
   const allowBulkShareSelected =
     isSharedWorkspace || allInviteAccepted || invitesSent;
 
+  const reviewBackTarget = resolveHotSheetReviewBack({
+    originFrom,
+    parentFrom: (location.state as { parentFrom?: string } | null)?.parentFrom,
+    buyerContextClientId,
+  });
   const handleAgentHotSheetReviewBack = () => {
-    const buyerDashboard = buyerContextClientId
-      ? `/agent/buyers/${buyerContextClientId}`
-      : null;
-    const preferBuyerDashboard =
-      typeof originFrom === "string" && originFrom.includes("/agent/buyers/")
-        ? originFrom.split("?")[0].replace(/\/(favorites|new-matches)(\/.*)?$/, "")
-        : null;
-    navigate(buyerDashboard || preferBuyerDashboard || AGENT_HOT_SHEETS_PATH);
+    navigate(reviewBackTarget.path, reviewBackTarget.state ? { state: reviewBackTarget.state } : undefined);
   };
 
   useEffect(() => {
@@ -1858,7 +1856,7 @@ const HotSheetReview = () => {
                       className="h-9 rounded-md border-neutral-200 bg-white px-3 text-[12px] font-medium shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-200 hover:border-neutral-300 hover:bg-neutral-50/90"
                       onClick={handleAgentHotSheetReviewBack}
                     >
-                      Back to buyer
+                      {reviewBackTarget.label}
                     </Button>
                   </div>
                 </div>
