@@ -562,11 +562,11 @@ const HotSheetBuyerDetail = () => {
                 subtitle={`${hs.matchCount} ${hs.matchCount === 1 ? "match" : "matches"}`}
                 preferWideTitle
                 createdAt={hs.createdAt}
-                onClick={() => navigate(`/hot-sheets/${hs.id}/review`)}
+                onClick={() => navigate(`/hot-sheets/${hs.id}/review`, { state: { from: `/hot-sheets/buyer/${clientId}`, parentFrom: backTo } })}
                 onKeyDown={(e) => {
                   if (e.key !== "Enter" && e.key !== " ") return;
                   e.preventDefault();
-                  navigate(`/hot-sheets/${hs.id}/review`);
+                  navigate(`/hot-sheets/${hs.id}/review`, { state: { from: `/hot-sheets/buyer/${clientId}`, parentFrom: backTo } });
                 }}
                 onFavoritesClick={() => {
                   if (clientId) navigate(`/agent/buyers/${clientId}/favorites`);
@@ -615,7 +615,7 @@ const HotSheetBuyerDetail = () => {
             onSuccess={(hotSheetId) => {
               setCreateHotSheetOpen(false);
               fetchBuyerData();
-              navigate(`/hot-sheets/${hotSheetId}/review`);
+              navigate(`/hot-sheets/${hotSheetId}/review`, { state: { from: `/hot-sheets/buyer/${clientId}`, parentFrom: backTo } });
             }}
           />
         )}
