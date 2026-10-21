@@ -130,3 +130,5 @@
 - [x] Rebuild revised preview using established AAC dark masthead/footer and actual hosted command monogram; approved copy/photo/two buttons preserved, desktop/mobile images on/off visually verified; no production changes
 - [ ] Chris approves design + copy → then edit live template, host hero image, deploy (no sends)
 - [ ] Later phase: plain-text version (needs shared send-step change, separate approval)
+
+- [x] 2026-10-21 Hot Sheet results Back follows path used; new-match email skips drafts (is_draft=false). Web change goes live via GitHub main.
