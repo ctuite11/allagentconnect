@@ -3,8 +3,8 @@
  * Create and Edit dialogs (tested separately on purpose; do not refactor the
  * dialogs into a shared component just to satisfy these tests).
  */
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, fireEvent, waitFor, act, cleanup } from "@testing-library/react";
 
 const tableData: Record<string, unknown> = {};
 let searchResults: any[] = [];
@@ -56,6 +56,8 @@ import { EditHotsheetCriteriaDialog } from "@/components/EditHotsheetCriteriaDia
 
 const buyer = { id: "c-buyer", first_name: "Kerri", last_name: "Buyer", email: "kerri@example.com", phone: null };
 const extra = { id: "c-extra", first_name: "Sam", last_name: "Second", email: "sam@example.com", phone: null };
+
+afterEach(() => cleanup());
 
 beforeEach(() => {
   for (const k of Object.keys(tableData)) delete tableData[k];
