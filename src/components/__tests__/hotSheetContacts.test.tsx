@@ -61,6 +61,7 @@ beforeEach(() => {
   for (const k of Object.keys(tableData)) delete tableData[k];
   searchResults = [extra];
   calls.length = 0;
+  window.localStorage.clear(); // isolate the Create dialog's local draft backup between tests
   // jsdom lacks these; Radix uses them
   (globalThis as any).ResizeObserver ??= class { observe() {} unobserve() {} disconnect() {} };
   Element.prototype.scrollIntoView ??= () => {};
