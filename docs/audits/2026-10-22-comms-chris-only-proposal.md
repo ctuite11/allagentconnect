@@ -1,6 +1,6 @@
 # Chris-only Communications correction — approval proposal
 
-Status: preparation only. No runtime code, preferences, database records, queues, deployed functions or templates changed. No hosted send/dry-run functions invoked. Local prototype is in `comms-chris-only-proposal.test.ts`, never imported by production.
+Status: approved isolated implementation saved locally; deployment HELD. The broadcaster now calls the UUID/email-gated `chrisCommsBroadcastMatch` supplement. No deployed functions, preferences, database records, queues or templates changed. No hosted send/dry-run functions invoked. The original approval prototype remains separate from production.
 
 ## Proposed correction
 
@@ -9,7 +9,7 @@ Keep the shared matcher and all existing broadcast event evaluations unchanged. 
 - Require both recipient UUID `1fc50da1-2664-4931-8cab-64e24dc5ed8c` and normalized email `chris@allagentconnect.com` from the server-loaded audience. Neither value is client-selectable.
 - Require a currently saved Boston/Suffolk/MA notifications row and a post explicitly including Boston and MA.
 - Resolve the fixed Boston → Suffolk association independently from the saved preferences (confirmed by the project's MA county reference). Do not infer other towns' counties.
-- Read counties from the original parsed post criteria, before split-event expansion. If no county is supplied, the independently established Boston/Suffolk association may supply Suffolk. If counties are supplied, require only Suffolk; unknown/conflicting or mixed counties get no supplemental match. Do not guess county slug/name equivalence in this first correction.
+- Read counties from the original parsed post criteria, before split-event expansion. If no county is supplied, the independently established Boston/Suffolk association may supply Suffolk. If counties are supplied, require only Suffolk; unknown/conflicting or mixed counties get no supplemental match. Reconcile only the known literal names Suffolk / Suffolk County locally; no guessed slugs or other counties.
 - Evaluate that complete event using the unchanged shared matcher and Chris's original price/type/geographic restrictions. Other saved town rows, ZIPs and neighborhoods receive no relaxation.
 - Existing network-wide and no-criteria behavior remains unchanged. This is not a statewide-post or rental-price workaround.
 
@@ -39,3 +39,16 @@ Do not fix that shared suppression discrepancy as part of this isolated proposal
 6. A controlled test is optional, not part of this preparation. If necessary, present the exact one-email action first; use a path enforcing one sole destination (Chris), no CC/BCC or sender copies, no network audience traversal, no other jobs and a unique test deduplication key. Do not use the multi-agent broadcaster for a test send. A provider test alone does not prove normal future matching.
 
 No old emails are resent or backfilled. Verification remains pending approval, integration checks, and actual delivery evidence.
+
+## Approved implementation results — October 22, 02:02 UTC
+
+72 actual Deno tests passed (0 failures): 20 adapter rules, 4 full broadcaster integration tests, and 48 existing matcher/opt-in/digest/pause/dry-run safeguards. Integration tests execute the actual handler with in-memory database and reminder boundaries; no network permission or provider call is available. Baseline is the same handler with only the adapter decision removed.
+
+- Across 22 synthetic category/scope/cadence/gate scenarios, other agents' ordinary job payloads, reasons, digest rows, dedup writes and reminder payloads were identical.
+- Chris alone gains one immediate job for the qualifying Boston fixture, to his exact email, with no CC/BCC and the existing broadcast/account dedup key.
+- Chris still gets no job when suppressed, outside hidden opt-in, sender-excluded, master/category-muted, paused or already recorded. Preview and dry-run fixtures perform zero writes and retain all non-Chris roster entries.
+- **Parity exception discovered:** when an existing sender independently requests a copy, its truthful `recipientCount` and matching count sentence increase by one if Chris newly qualifies. No additional sender email is created and no other copy content changes, but strict identical non-Chris payloads are NOT satisfied in that case. Deployment is held; do not silently rewrite copy behavior or claim universal parity. Requires a decision before deployment.
+
+Read-only delivery checks: the actual `is_email_unsubscribed` RPC returns false for Chris / `comms_broadcast` and `all`; unsubscribe row count is zero. In 30 days, Chris has 58 provider-delivered events, 59 provider-sent events, and no recorded bounce/complaint/block event. Latest provider delivery was October 21 at 14:17 UTC, from non-Communications email. These establish no current database unsubscribe block and recent mailbox delivery, NOT current provider suppression certification. The referenced `suppressed_emails` table is still absent. Complete provider suppression and current hosted pause state remain unverified; no shared suppression repair or pause-setting change was made. Stop before deployment until reconciled.
+
+Queue/Comms counts identical before and after: email_jobs 17,252; comms_broadcasts 67; agent_sent_broadcasts 7,892; comms_digest_items 358; comms_broadcast_resends 0. No test emails, resends or backfills. Live delivery remains unverified because the implementation is not deployed and no new qualifying post was exercised.

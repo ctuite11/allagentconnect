@@ -6,6 +6,7 @@ import {
   type EligibleAgent,
 } from "../_shared/verifiedAgentAudience.ts";
 import { matchesCommunicationPreferences } from "../_shared/communicationPreferencesMatcher.ts";
+import { chrisCommsBroadcastMatch } from "../_shared/chrisCommsBroadcastMatch.ts";
 import { loadCommsOptIn, type CommsCategoryColumn } from "../_shared/commsOptIn.ts";
 import {
   countExistingReminders,
@@ -224,9 +225,10 @@ const handler = async (req: Request): Promise<Response> => {
     const matchFn = (a: EligibleAgent): boolean => {
       if (audienceScope === "network_wide") return true;
       if (!anyCriteriaSupplied) return false;
-      return broadcastEvents.some(
+      const originalMatch = broadcastEvents.some(
         (ev) => matchesCommunicationPreferences(a.savedPrefs, ev as any).matches,
       );
+      return chrisCommsBroadcastMatch(a, parsedCriteria, originalMatch);
     };
 
     const partition = partitionAudience<EligibleAgent>(
