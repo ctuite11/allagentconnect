@@ -138,3 +138,5 @@
 - [x] Leftover "Untitled draft" from the test removed through the page's own Delete control; drafts back to 3 ("new test", "test new", "another test"), active still 21, zero emails queued during the test
 - [ ] Personal view still shows the "Buyer emails" section ("How often matching listings are emailed to the buyer", "Also email me a copy") — waits for Chris's approval to hide it when Personal is selected
 - [ ] Clicking "Personal — Just for Me" autosaves an "Untitled draft" at once — waits for Chris to say whether that is wanted or should wait until he types something
+
+- [ ] Comms emails for Chris: Boston town+county matching fix tested locally, NOT deployed — awaiting approval. Separate gap: state-only posts miss town-level areas.
