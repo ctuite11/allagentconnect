@@ -139,13 +139,13 @@
 - [ ] Personal view still shows the "Buyer emails" section ("How often matching listings are emailed to the buyer", "Also email me a copy") — waits for Chris's approval to hide it when Personal is selected
 - [ ] Clicking "Personal — Just for Me" autosaves an "Untitled draft" at once — waits for Chris to say whether that is wanted or should wait until he types something
 
-- [ ] Comms emails for Chris: Boston town+county matching fix tested locally, NOT deployed — awaiting approval. Separate gap: state-only posts miss town-level areas.
+- [x] Comms emails for Chris: approved account-only Boston/Suffolk correction deployed 2026-10-22; single isolated test delivered. State-only matching is outside this approval.
 
 ## 2026-10-22 — Communications matching final impact review
 - [x] Read-only named impact comparison completed: Chris + four others across 43 posts; Oct 20 adds only Chris and Walter. Shared patch is NOT safe to approve yet: seller-alert impact and split-event county-conflict bypass reproduced. Report: docs/audits/2026-10-22-comms-matching-impact.md.
 - [x] Prepare Chris-only correction proposal and local no-send safeguards: 16 proposal checks + 11 existing assertions passed; report docs/audits/2026-10-22-comms-chris-only-proposal.md. No runtime edits, deployment, hosted send calls, preference changes or queue writes.
 - [x] Implement approved exact UUID+email-gated Boston-only supplement locally and run no-send integration tests: 72 Deno tests passed; no hosted invokes, sends, queue writes or preference changes. No deployment.
-- [ ] Resolve strict sender-copy parity exception before deployment: adding Chris changes the sender's existing copy recipientCount/count sentence by one; no additional copy is created. Requires Chris's decision; do not silently alter copy behavior.
+- [x] Sender-copy count adjustment explicitly accepted by Chris on 2026-10-22; no additional copy is created.
 - [x] Final requested delivery checks (2026-10-22): Chris unsubscribe RPC false for comms_broadcast/all, zero unsubscribe rows, complete provider suppression list excludes Chris; current project global and Communications pause gates are not active. No settings changes, sends, hosted broadcaster invocations or queue writes. Missing suppressed_emails needs no shared repair for this check.
-- [ ] Deploy Chris-only correction only with explicit deployment approval and resolved checks; no other-agent expansion, preferences unchanged, no resends/backfills. Broader rollout requires separate approval.
-- [ ] After approved deployment, verify Chris's inclusion and actual future qualifying delivery; waits for deployment approval and a qualifying new post.
+- [x] Deploy Chris-only correction (explicitly approved 2026-10-22): send-client-need-notification deployment succeeded; exact UUID+email-gated adapter only. No other-agent expansion, preferences unchanged, no resends/backfills. Broader rollout requires separate approval.
+- [x] Exactly one isolated controlled test delivered to chris@allagentconnect.com at 02:20:07 UTC on 2026-10-22; provider independently confirms delivered, no CC/BCC. One new email job, zero other-agent jobs; broadcast/digest/recipient counts unchanged. No normal broadcast created. Read-only hosted dry-run lacked an authenticated session; no extra access or send pursued. Future inclusion is supported by deployed adapter and 24 re-run passing account/integration safeguards (prior full suite 72 passed).
