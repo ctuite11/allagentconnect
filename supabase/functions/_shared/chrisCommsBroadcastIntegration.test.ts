@@ -17,7 +17,8 @@ async function loadHandler(original: boolean) {
   if (original) {
     code = code.replace("return chrisCommsBroadcastMatch(a, parsedCriteria, originalMatch);", "return originalMatch;");
   }
-  return (await import(`data:application/typescript;base64,${btoa(code)}`)).default;
+  const encoded = btoa(Array.from(new TextEncoder().encode(code), (byte) => String.fromCharCode(byte)).join(""));
+  return (await import(`data:application/typescript;base64,${encoded}`)).default;
 }
 const baselineHandler = await loadHandler(true);
 const correctedHandler = await loadHandler(false);
