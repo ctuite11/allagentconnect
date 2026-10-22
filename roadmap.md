@@ -140,3 +140,8 @@
 - [ ] Clicking "Personal — Just for Me" autosaves an "Untitled draft" at once — waits for Chris to say whether that is wanted or should wait until he types something
 
 - [ ] Comms emails for Chris: Boston town+county matching fix tested locally, NOT deployed — awaiting approval. Separate gap: state-only posts miss town-level areas.
+
+## 2026-10-22 — Communications matching final impact review
+- [ ] Read-only named impact comparison with all recipient gates; confirm intended expansion only and report results.
+- [ ] Deploy only after Chris separately approves the impact report; preferences unchanged, no resends/backfills.
+- [ ] After approved deployment, verify Chris's inclusion and actual future qualifying delivery; waits for deployment approval and a qualifying new post.
