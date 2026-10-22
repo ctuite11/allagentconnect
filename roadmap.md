@@ -140,3 +140,9 @@
 - [ ] Clicking "Personal — Just for Me" autosaves an "Untitled draft" at once — waits for Chris to say whether that is wanted or should wait until he types something
 
 - [ ] Comms emails for Chris: Boston town+county matching fix tested locally, NOT deployed — awaiting approval. Separate gap: state-only posts miss town-level areas.
+
+## 2026-10-22 — Communications matching final impact review
+- [x] Read-only named impact comparison completed: Chris + four others across 43 posts; Oct 20 adds only Chris and Walter. Shared patch is NOT safe to approve yet: seller-alert impact and split-event county-conflict bypass reproduced. Report: docs/audits/2026-10-22-comms-matching-impact.md.
+- [ ] Narrow Communications-only correction and preserve explicit county conflicts; requires approval for revised implementation/testing scope. Delivery-time suppression lookup also needs reconciliation (referenced suppressed_emails table absent).
+- [ ] Deploy only after Chris separately approves the impact report; preferences unchanged, no resends/backfills.
+- [ ] After approved deployment, verify Chris's inclusion and actual future qualifying delivery; waits for deployment approval and a qualifying new post.
