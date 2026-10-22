@@ -143,6 +143,6 @@
 
 ## 2026-10-22 — Communications matching final impact review
 - [x] Read-only named impact comparison completed: Chris + four others across 43 posts; Oct 20 adds only Chris and Walter. Shared patch is NOT safe to approve yet: seller-alert impact and split-event county-conflict bypass reproduced. Report: docs/audits/2026-10-22-comms-matching-impact.md.
-- [ ] Narrow Communications-only correction and preserve explicit county conflicts; requires approval for revised implementation/testing scope. Delivery-time suppression lookup also needs reconciliation (referenced suppressed_emails table absent).
-- [ ] Deploy only after Chris separately approves the impact report; preferences unchanged, no resends/backfills.
+- [ ] Prepare Chris-only Communications correction proposal and local no-send safeguards; approved preparation Oct 22. Preserve original county conflicts, unchanged other-agent delivery, and all preferences. No runtime edits or deployment before proposal approval. Delivery-time suppression lookup also needs reconciliation (referenced suppressed_emails table absent).
+- [ ] Deploy Chris-only correction only after Chris separately approves the proposal; no other-agent expansion, preferences unchanged, no resends/backfills. Broader rollout requires separate approval.
 - [ ] After approved deployment, verify Chris's inclusion and actual future qualifying delivery; waits for deployment approval and a qualifying new post.
