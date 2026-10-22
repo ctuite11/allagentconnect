@@ -1,3 +1,5 @@
+// Approval-stage local prototype only. Never import into a deployed function.
+// Run with: bun docs/audits/comms-chris-only-proposal.test.ts
 import assert from 'node:assert/strict';
 import { matchesCommunicationPreferences, EMPTY_PREFERENCES, type AgentPreferences, type PreferenceEvent } from '../../supabase/functions/_shared/communicationPreferencesMatcher.ts';
 const ID = '1fc50da1-2664-4931-8cab-64e24dc5ed8c';
