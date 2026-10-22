@@ -84,7 +84,10 @@ function locationPasses(agent: AgentPreferences, event: PreferenceEvent): boolea
     // A row with no populated fields cannot match anything.
     if (!rState && !rCounty && !rCity && !rZip && !rHood) continue;
     if (rState && rState !== eState) continue;
-    if (rCounty && rCounty !== eCounty) continue;
+    // Town-only events (no county) still match a saved town+county row when
+    // the town matches; a county mismatch when both sides have one still fails.
+    const townOnlyMatch = !eCounty && !!rCity && rCity === eCity;
+    if (rCounty && rCounty !== eCounty && !townOnlyMatch) continue;
     if (rCity && rCity !== eCity) continue;
     if (rZip && rZip !== eZip) continue;
     if (rHood && rHood !== eHood) continue;
