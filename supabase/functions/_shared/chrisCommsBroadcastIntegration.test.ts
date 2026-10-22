@@ -80,7 +80,7 @@ function fixture(scenario: Scenario) {
     notification_preferences: prefs,
     email_unsubscribes: scenario.suppressed ? [{ email: EMAIL }] : [],
     suppressed_emails: [],
-    agent_sent_broadcasts: scenario.duplicate ? [{ agent_id: CHRIS }] : [],
+    agent_sent_broadcasts: scenario.duplicate ? [{ agent_id: CHRIS, broadcast_id: "fixture-broadcast" }] : [],
   };
   const client = {
     auth: { getUser: () => Promise.resolve({ data: { user: { id: scenario.sender ?? "sender", email: "sender@example.com" } }, error: null }) },
