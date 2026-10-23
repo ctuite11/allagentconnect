@@ -47,18 +47,18 @@ const GCIBenefits = () => {
         <div className="flex flex-col items-center text-center gap-6 max-w-3xl">
           <div className="inline-flex items-center gap-2 pl-3.5 pr-5 py-2 bg-white/10 border border-white/15 backdrop-blur-md rounded-full">
             <span className="h-2 w-2 rounded-full bg-[#50c878] shrink-0" />
-            <span className="font-['Manrope'] font-medium text-white/90 text-[14px] tracking-[0.28px] leading-none">GCI driven by better intelligence</span>
+            <span className="font-manrope font-medium text-white/90 text-[14px] tracking-[0.28px] leading-none">GCI driven by better intelligence</span>
           </div>
-          <h2 className="font-['Manrope'] font-semibold text-white text-4xl md:text-6xl tracking-tight leading-[1.0]" style={{ textWrap: "balance" as any }}>
+          <h2 className="font-manrope font-semibold text-white text-4xl md:text-6xl tracking-tight leading-[1.0]" style={{ textWrap: "balance" as any }}>
             More GCI through better intelligence and faster connections.
           </h2>
-          <p className="font-['Manrope'] font-medium text-white/70 text-lg md:text-xl leading-relaxed max-w-2xl">
+          <p className="font-manrope font-medium text-white/70 text-lg md:text-xl leading-relaxed max-w-2xl">
             All Agent Connect gives agents the intelligence edge to close more deals and grow GCI with verified peers across brokerages.
           </p>
           <div className="flex flex-wrap justify-center items-center gap-4 pt-2">
             <a
               href="/request-access"
-              className="h-14 px-8 inline-flex items-center gap-2 bg-[#50C878] rounded-full hover:bg-[#45b96d] transition-colors font-['Manrope'] font-semibold text-black text-base shadow-sm"
+              className="h-14 px-8 inline-flex items-center gap-2 bg-[#50C878] rounded-full hover:bg-[#45b96d] transition-colors font-manrope font-semibold text-black text-base shadow-sm"
             >
               Request access
               <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
@@ -85,7 +85,7 @@ const GCIBenefits = () => {
                   {f.icon}
                 </svg>
               </div>
-              <p className="font-['Manrope'] font-bold text-white text-[15px] leading-[1.55]" style={{ textShadow: "0 1px 6px rgba(0,0,0,0.55)" }}>
+              <p className="font-manrope font-bold text-white text-[15px] leading-[1.55]" style={{ textShadow: "0 1px 6px rgba(0,0,0,0.55)" }}>
                 {f.title}
               </p>
             </div>

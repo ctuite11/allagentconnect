@@ -16,6 +16,15 @@ export default {
       fontFamily: {
         sans: ['Inter', 'sans-serif'],
         display: ['Poppins', 'sans-serif'],
+        // Homepage primary face. Always include a generic sans so a slow/blocked
+        // Google Fonts load never falls through to the UA default serif.
+        manrope: [
+          'Manrope',
+          'system-ui',
+          '-apple-system',
+          'BlinkMacSystemFont',
+          'sans-serif',
+        ],
       },
       colors: {
         border: "hsl(var(--border))",
