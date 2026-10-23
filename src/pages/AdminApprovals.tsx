@@ -1585,7 +1585,8 @@ export default function AdminApprovals() {
       const { error } = await supabase.functions.invoke("send-password-reset", {
         body: { 
           email: agent.email,
-          redirectUrl: `${window.location.origin}/auth?mode=reset`
+          // Same recognised recovery callback as the agent "Forgot password" flow.
+          redirectUrl: `${window.location.origin}/auth/callback`
         },
       });
 
