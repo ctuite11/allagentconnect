@@ -1,3 +1,5 @@
+import { clearBootRecoveryLanding } from "./authRecoveryLanding";
+
 /**
  * Centralized cleanup for recovery / password-setup session markers.
  *
@@ -7,6 +9,7 @@
  * and no code path can re-route the agent back into a password form.
  */
 export function clearRecoveryState(): void {
+  clearBootRecoveryLanding();
   if (typeof window === "undefined") return;
   try {
     sessionStorage.removeItem("aac_recovery_flow");

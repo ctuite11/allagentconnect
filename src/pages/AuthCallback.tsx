@@ -8,6 +8,7 @@ import { authDebug, getAuthRouteDecisionDiagnostics } from "@/lib/authDebug";
 import { resolveUserRole, getRouteForRole } from "@/lib/resolveUserRole";
 import { clearGuestListing, resolvePostAuthRedirectWithMeta } from "@/lib/sharedListingGuest";
 import { clearRecoveryState } from "@/lib/authRecovery";
+import { getBootRecoveryLanding } from "@/lib/authRecoveryLanding";
 import { AGENT_ACTIVATION_SUPPORT_EMAIL } from "@/lib/agentActivationHint";
 
 type AuthCallbackErrorKind = "setup" | "reset" | "generic";
@@ -105,10 +106,14 @@ const AuthCallback = () => {
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
     const typeFromHash = hashParams.get("type");
     const typeFromQuery = searchParams.get("type");
-    const isRecovery = typeFromHash === "recovery" || typeFromQuery === "recovery";
+    // The auth client may strip the hash before this lazy page renders; the
+    // boot-time capture (main.tsx, tokens required) restores that context.
+    const boot = getBootRecoveryLanding();
+    const isRecovery =
+      typeFromHash === "recovery" || typeFromQuery === "recovery" || boot.isRecovery;
     const setupFromHash = hashParams.get("setup");
     const setupFromQuery = searchParams.get("setup");
-    const isSetup = setupFromHash === "1" || setupFromQuery === "1";
+    const isSetup = setupFromHash === "1" || setupFromQuery === "1" || boot.isSetup;
     return { isRecovery, isSetup };
   }, [searchParams]);
 

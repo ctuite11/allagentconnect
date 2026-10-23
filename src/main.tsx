@@ -5,9 +5,18 @@ import "./lib/successHubCacheInvalidation";
 import App from "./App.tsx";
 import "./index.css";
 import { applyFaviconForHost } from "./lib/favicon";
+import { recordBootRecoveryLanding } from "./lib/authRecoveryLanding";
 
 // Apply the correct brand favicon (AAC vs DCMLS) before React renders.
 applyFaviconForHost();
+
+// Capture a recovery-link landing before the auth client strips the hash, so
+// the lazy /auth/callback page still knows this was a password reset.
+try {
+  recordBootRecoveryLanding(window.location.hash, window.location.search);
+} catch {
+  // best-effort
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Global recovery/setup-link rescue.
