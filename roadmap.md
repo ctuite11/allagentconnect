@@ -149,3 +149,8 @@
 - [x] Final requested delivery checks (2026-10-22): Chris unsubscribe RPC false for comms_broadcast/all, zero unsubscribe rows, complete provider suppression list excludes Chris; current project global and Communications pause gates are not active. No settings changes, sends, hosted broadcaster invocations or queue writes. Missing suppressed_emails needs no shared repair for this check.
 - [x] Deploy Chris-only correction (explicitly approved 2026-10-22): send-client-need-notification deployment succeeded; exact UUID+email-gated adapter only. No other-agent expansion, preferences unchanged, no resends/backfills. Broader rollout requires separate approval.
 - [x] Exactly one isolated controlled test delivered to chris@allagentconnect.com at 02:20:07 UTC on 2026-10-22; provider independently confirms delivered, no CC/BCC. One new email job, zero other-agent jobs; broadcast/digest/recipient counts unchanged. No normal broadcast created. Read-only hosted dry-run lacked an authenticated session; no extra access or send pursued. Future inclusion is supported by deployed adapter and 24 re-run passing account/integration safeguards (prior full suite 72 passed).
+
+## 2026-10-23 — Password reset link must open "Choose a new password"
+- [x] Capture recovery landing at boot (hash stripped before lazy /auth/callback rendered); admin reset now uses /auth/callback; reset no longer calls mark_agent_activated; 10 regression tests.
+- [x] Redirect allowlist checked: production + preview callbacks allowed; no fallback involved.
+- [ ] Production deploy — waits on Chris's approval; then his one controlled reset test.
