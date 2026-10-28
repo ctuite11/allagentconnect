@@ -1,4 +1,4 @@
-export const MAX_RECIPIENTS = 25;
+export const MAX_RECIPIENTS = 50;
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
