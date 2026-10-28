@@ -1,20 +1,13 @@
-# Eric Klein: reconcile Pending in the admin panel
+# Restore sign-in on allagentconnect.com
 
-## Confirmed records
-- Eric's License Verified email to ericklein1@gmail.com is marked sent and delivered on October 26 at 6:39 PM New York time.
-- His account is verified, has an activation timestamp at 6:42 PM, and a sign-in recorded at 6:42 PM.
-- Account lifecycle and email delivery are separate. The checked-in lifecycle logic would classify an account with a sign-in as Activated.
-- The admin roster retains cached results and can keep them on screen after a failed refresh. Whether that explains Eric's Pending label is unconfirmed.
+## What's wrong
+Your account isn't the issue. The backend isn't responding right now: a health check just timed out, and no sign-in attempts are reaching the login service. That's why the page spins. This matches the earlier alert that the database had used up its disk read/write budget on the smallest (Tiny) size.
 
-## Plan
-1. **Trace the discrepancy read-only.** Compare Eric's live admin roster response with the displayed row, its account identifier, matching request records, cached state, and refresh errors. Do not assume a cache problem or overwrite account data.
-2. **Resolve only the verified display problem.** If a successful refresh corrects the label, report that and make no code change. If the response or display mapping is demonstrably wrong, present the smallest proposed correction for approval before changing or deploying it.
-3. **Verify without sending.** Confirm the displayed account stage agrees with Eric's existing sign-in and activation records, and email history shows Delivered. Delivery alone must never activate an account.
+## Steps
+1. Restart the backend. It takes a few minutes, and no data, accounts, or settings change.
+2. Recheck health and try a sign-in for chris@allagentconnect.com without changing your password or account.
+3. If it's still not responding or slows down again, offer the upgrade from Tiny to Mini (about 18.56 extra credits a month if it runs all the time). That change would go through its own approval card first.
+4. Afterwards, look for the scheduled background jobs that were adding load. Any change to them would need your approval first.
 
-## Boundaries
-- No sends, resends, queue writes, backfills, password changes, or account-status edits.
-- No frozen email-template changes, admin redesign, or Cloud resize. The earlier resize did not execute.
-- Record this investigation in the task list when implementation mode permits other file edits.
-
-## Technical details
-Compare `admin-list-agents` lifecycle output with `AdminApprovals` cached roster and refresh behavior, plus `AgentEmailHistory` delivery data. Any later approved correction needs a focused regression test for the identified data/refresh rule and an authenticated admin verification without email actions.
+## Not included
+No emails, password resets, preference changes, or code changes.
