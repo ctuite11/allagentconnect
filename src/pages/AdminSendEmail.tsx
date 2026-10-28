@@ -17,6 +17,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { toast } from "sonner";
 import { ArrowLeft, Mail } from "lucide-react";
 import { invokeEdgeFunction } from "@/lib/invokeEdgeFunction";
+import { parseRecipientList, MAX_RECIPIENTS } from "@/lib/parseRecipientList";
 
 type TemplateKind = "plain" | "branded" | "personal-forward-invite";
 
@@ -84,9 +85,18 @@ export default function AdminSendEmail() {
   const isInvite = template === "personal-forward-invite";
 
   const handleSend = async () => {
-    const trimmed = to.trim().toLowerCase();
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
-      toast.error("Enter a valid email address");
+    const { valid, invalid, tooMany } = parseRecipientList(to);
+    if (invalid.length > 0) {
+      toast.error(`Fix these addresses before sending: ${invalid.join(", ")}`);
+      setLastResult(`Nothing sent. Invalid: ${invalid.join(", ")}`);
+      return;
+    }
+    if (valid.length === 0) {
+      toast.error("Enter at least one email address");
+      return;
+    }
+    if (tooMany) {
+      toast.error(`Up to ${MAX_RECIPIENTS} recipients per send`);
       return;
     }
     if (!isInvite && (!subject.trim() || !message.trim())) {
@@ -95,26 +105,44 @@ export default function AdminSendEmail() {
     }
     setSending(true);
     setLastResult(null);
-    try {
-      await invokeEdgeFunction("admin-send-email", {
-        to: trimmed,
-        subject: subject.trim() || undefined,
-        message: message.trim() || undefined,
-        template,
-        ctaLabel: ctaLabel.trim() || undefined,
-        ctaUrl: ctaUrl.trim() || undefined,
-        replyTo: replyTo.trim() || undefined,
-      });
-      toast.success(`Email sent successfully to ${trimmed}`);
-      setLastResult(`Sent successfully to ${trimmed}`);
-      if (!isInvite) setMessage("");
-    } catch (e) {
-      const msg = (e as Error)?.message || "Failed to send";
-      toast.error(msg);
-      setLastResult(`Error: ${msg}`);
-    } finally {
-      setSending(false);
+    const queued: string[] = [];
+    const failed: { email: string; error: string }[] = [];
+    // One separate email per recipient, sent one after another.
+    for (const email of valid) {
+      try {
+        await invokeEdgeFunction("admin-send-email", {
+          to: email,
+          subject: subject.trim() || undefined,
+          message: message.trim() || undefined,
+          template,
+          ctaLabel: ctaLabel.trim() || undefined,
+          ctaUrl: ctaUrl.trim() || undefined,
+          replyTo: replyTo.trim() || undefined,
+        });
+        queued.push(email);
+      } catch (e) {
+        failed.push({ email, error: (e as Error)?.message || "Failed" });
+      }
     }
+    // Leave only failed recipients in the box so a retry never re-sends to queued ones.
+    setTo(failed.map((f) => f.email).join(", "));
+    const parts: string[] = [];
+    if (queued.length) parts.push(`Queued successfully (${queued.length}): ${queued.join(", ")}`);
+    if (failed.length)
+      parts.push(
+        `Failed (${failed.length}) — still in the recipient box, press Send to retry only these: ` +
+          failed.map((f) => `${f.email} (${f.error})`).join(", "),
+      );
+    setLastResult(parts.join("\n"));
+    if (failed.length === 0) {
+      toast.success(`Queued successfully for ${queued.length} recipient${queued.length === 1 ? "" : "s"}`);
+      if (!isInvite) setMessage("");
+    } else if (queued.length) {
+      toast.warning(`${queued.length} queued, ${failed.length} failed`);
+    } else {
+      toast.error(`All ${failed.length} failed`);
+    }
+    setSending(false);
   };
 
   if (authChecked && !allowed) {
