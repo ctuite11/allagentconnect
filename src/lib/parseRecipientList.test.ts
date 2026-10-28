@@ -14,7 +14,13 @@ describe("parseRecipientList", () => {
     const r = parseRecipientList("a@x.com, bad-address");
     expect(r.invalid).toEqual(["bad-address"]);
   });
-  it("flags more than 25 recipients", () => {
+  it("allows 36 and flags 51 recipients", () => {
+    const l36 = Array.from({ length: 36 }, (_, i) => `u${i}@x.com`).join(",");
+    expect(parseRecipientList(l36).tooMany).toBe(false);
+    const l51 = Array.from({ length: 51 }, (_, i) => `u${i}@x.com`).join(",");
+    expect(parseRecipientList(l51).tooMany).toBe(true);
+  });
+  it("flags more than the max recipients", () => {
     const list = Array.from({ length: MAX_RECIPIENTS + 1 }, (_, i) => `u${i}@x.com`).join(",");
     expect(parseRecipientList(list).tooMany).toBe(true);
     const ok = Array.from({ length: MAX_RECIPIENTS }, (_, i) => `u${i}@x.com`).join(",");
