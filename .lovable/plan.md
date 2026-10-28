@@ -1,19 +1,14 @@
-# Admin Send Email: allow multiple recipients separated by commas
-
-## What's wrong
-The admin "Send Email" page only accepts one address. Typing `a@x.com, b@y.com` fails the single-address check and shows "Enter a valid email address".
+# Raise Admin Send Email recipient limit from 25 to 50
 
 ## What changes
-- The "Recipient email" box accepts several addresses separated by commas (spaces, semicolons and new lines also work).
-- Before sending, every address is checked. If any are invalid, nothing sends and the error lists the bad ones.
-- Duplicates are removed. Up to 25 addresses per send.
-- Each person gets their **own separate email**. Recipients never see each other's addresses, and there is no CC or BCC.
-- The confirmation lists who it went to. If some fail, it shows which ones were sent and which failed.
-- The label becomes "Recipient email(s)" and the description no longer says "single recipient".
-
-Nothing else changes: same email formats, the same sender (you), the same reply-to, and the same email queue and tracking. Nothing is sent as part of this work.
+- Admin → Send Email will accept up to 50 addresses in one send, up from 25. Your list of 36 will go out in a single send.
+- Everything else stays the same:
+  - Every address is checked before anything sends.
+  - Each person gets their own separate email.
+  - A retry goes only to the addresses that failed.
+  - Confirmations say "Queued successfully".
+- Only this page changes. No backend or email queue changes, and no emails are sent during testing.
 
 ## Technical details
-- `src/pages/AdminSendEmail.tsx`: parse `to` with `split(/[,;\s]+/)`, then trim, lowercase, dedupe, validate each address, and cap the list at 25. Change the input from `type="email"` to `type="text"`, because the browser's email type rejects lists. Call `admin-send-email` once per address in sequence and collect the per-address results.
-- Edge function `admin-send-email` is unchanged: it stays one recipient per call, with an admin check on every call. No redeploy is needed.
-- Add a small `parseRecipientList` helper with a test covering commas, spaces, duplicates, invalid addresses and the 25 cap.
+- `src/lib/parseRecipientList.ts`: change `MAX_RECIPIENTS` from 25 to 50.
+- `src/lib/parseRecipientList.test.ts`: the cap test follows the constant. Add a check that 36 addresses are accepted and 51 are flagged. Run the test.
