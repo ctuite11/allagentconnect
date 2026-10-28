@@ -170,7 +170,7 @@ export default function AdminSendEmail() {
           </div>
 
           <CardDescription>
-            Send a one-off email to a single recipient through the normal email queue.
+            Send a one-off email through the normal email queue. Separate multiple addresses with commas — each person gets their own email.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -186,11 +186,11 @@ export default function AdminSendEmail() {
 
           <div className="space-y-2">
 
-            <Label htmlFor="admin-email-to">Recipient email</Label>
+            <Label htmlFor="admin-email-to">Recipient email(s)</Label>
             <Input
               id="admin-email-to"
-              type="email"
-              placeholder="name@example.com"
+              type="text"
+              placeholder="name@example.com, other@example.com"
               value={to}
               onChange={(e) => setTo(e.target.value)}
               disabled={sending}
@@ -292,7 +292,7 @@ export default function AdminSendEmail() {
           </div>
 
           {lastResult && (
-            <p className="border-t border-neutral-100 pt-2 text-sm text-neutral-600">{lastResult}</p>
+            <p className="whitespace-pre-line border-t border-neutral-100 pt-2 text-sm text-neutral-600">{lastResult}</p>
           )}
         </CardContent>
       </Card>

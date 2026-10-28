@@ -155,4 +155,4 @@
 - [x] Redirect allowlist checked: production + preview callbacks allowed; no fallback involved.
 - [ ] Production deploy — waits on Chris's approval; then his one controlled reset test.
 
-- [ ] Admin Send Email: comma-separated recipients (validate all first, retry only failed, say "Queued" not "Delivered"; frontend-only)
+- [x] Admin Send Email: comma-separated recipients (validate all first, retry only failed, say "Queued" not "Delivered"; frontend-only)
