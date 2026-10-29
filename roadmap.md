@@ -156,3 +156,5 @@
 - [ ] Production deploy — waits on Chris's approval; then his one controlled reset test.
 
 - [x] Admin Send Email: comma-separated recipients (validate all first, retry only failed, say "Queued" not "Delivered"; frontend-only)
+
+- [ ] Compare Success Hub checklist lookups 24h after the 2026-10-29 01:47 UTC fix (baseline: profile 125,415 / Hot Sheet 125,412). Waiting on 24h to pass.
