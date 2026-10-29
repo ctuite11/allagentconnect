@@ -7,19 +7,16 @@ Every saved change goes live on allagentconnect.com automatically, so I can't ho
 3. I save it only after you reply "make it live".
 
 ## 1. Headline
-- **Desktop:** two lines, "ONE NETWORK. ALL BROKERAGES." in white on one line, then "ALL AGENTS." in the existing AAC green.
-- **Mobile:** three lines, "ONE NETWORK." / "ALL BROKERAGES." / "ALL AGENTS.", with only the last line green.
-- Same font, weight, shadow and colors as now.
-- The desktop first line is about twice as long as today's "ONE NETWORK.", and won't fit at today's size within the current text column. To keep it on one line:
-  - the headline alone may run wider than the description column,
-  - its size scales with the screen width, peaking a little smaller than today's largest size,
-  - it never runs off the screen.
+- **Desktop (wide screens):** two lines. "ONE NETWORK. ALL BROKERAGES." in white on one line, then "ALL AGENTS." in the existing AAC green.
+- **Mobile and narrower tablets:** three lines, "ONE NETWORK." / "ALL BROKERAGES." / "ALL AGENTS.", with only the last line green.
+- Same font, weight, shadow and colors as now. The font won't be shrunk heavily to force one line. Where the long line doesn't fit at close to today's size, the headline switches to the three-line version.
+- To fit the two-line version on desktop, the headline alone may run wider than the description column. It never runs off the screen.
 - The description, badge and button keep their current width and position.
 
 ## 2. Description
-Replaced with: "Connecting verified agents across all brokerages to share properties agents are preparing to list, properties sellers choose to market privately, buyer demand, and market intelligence — giving their clients a competitive edge."
+Replaced with: "Connecting verified agents across **all brokerages** to share properties agents are preparing to list, properties sellers choose to market privately, buyer demand, and market intelligence — giving their clients a competitive edge."
 
-Today's description shows "all brokerages" in bold. I'll keep that bold styling, since it's part of the current design. Tell me if you'd prefer plain text.
+"all brokerages" stays bold, as it is today.
 
 ## Unchanged
 The "Verified Agent Network" badge, the green "Request access" button, the top Request Access / Login buttons, the background photo, the colors, every other homepage section, and all listing statuses and features.
