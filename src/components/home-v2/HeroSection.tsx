@@ -171,8 +171,9 @@ const HeroSection = () => {
           >
             Connecting verified agents across{" "}
             <span className="font-bold text-white not-italic no-underline">all brokerages</span>{" "}
-            to share off-market and coming-soon opportunities, buyer demand, and market
-            intelligence — giving their clients a competitive edge.
+            to share properties agents are preparing to list, properties sellers choose to
+            market privately, buyer demand, and market intelligence — giving their clients
+            a competitive edge.
           </p>
 
           {/* CTA */}
