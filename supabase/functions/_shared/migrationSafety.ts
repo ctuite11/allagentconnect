@@ -5,7 +5,7 @@
  */
 export type EnvReader = (name: string) => string | undefined;
 
-export const LEGACY_BACKEND_HOST = "kwfqjnepesiihjkdnxou.supabase.co";
+export const LEGACY_BACKEND_HOST = "qocduqtfbsevnhlgsfka.supabase.co";
 
 export function readRuntimeEnv(name: string): string | undefined {
   const runtime = globalThis as typeof globalThis & {
