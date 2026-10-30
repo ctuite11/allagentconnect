@@ -1,3 +1,4 @@
+import "../_shared/migrationRuntime.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.0";
 import { buildAdminCreatedInviteEmailHtml } from "../_shared/buildAdminCreatedInviteEmailHtml.ts";
@@ -48,7 +49,7 @@ const FOOTER_AGENT = {
   email: "chris@allagentconnect.com",
   phone: "6178770519",
   headshotUrl:
-    "https://qocduqtfbsevnhlgsfka.supabase.co/storage/v1/object/public/agent-headshots/1fc50da1-2664-4931-8cab-64e24dc5ed8c/headshot-1773973124574.jpg",
+    "https://kwfqjnepesiihjkdnxou.supabase.co/storage/v1/object/public/agent-headshots/1fc50da1-2664-4931-8cab-64e24dc5ed8c/headshot-1773973124574.jpg",
 };
 
 const handler = async (req: Request): Promise<Response> => {

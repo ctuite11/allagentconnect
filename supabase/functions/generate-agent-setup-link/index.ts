@@ -1,3 +1,4 @@
+import "../_shared/migrationRuntime.ts";
 // @auth-classification: admin-jwt
 //
 // Admin -> "Copy setup link".

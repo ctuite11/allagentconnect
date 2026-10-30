@@ -737,7 +737,7 @@ const Auth = () => {
       const validatedEmail = emailSchema.parse(email);
       
       // Use VITE_PUBLIC_URL env var for redirect, fallback to production domain
-      const publicSiteUrl = import.meta.env.VITE_PUBLIC_URL || "https://allagentconnect.com";
+      const publicSiteUrl = import.meta.env.VITE_PUBLIC_URL || window.location.origin;
       const redirectUrl = `${publicSiteUrl}/auth/callback`;
 
       // Use custom edge function (bypasses Supabase default purple email)

@@ -1,3 +1,4 @@
+import "../_shared/migrationRuntime.ts";
 // @auth-classification: public
 // Up to 3 other eligible DCMLS agents for a ZIP, in random order (no ranking). Public card fields only.
 import { createClient } from "npm:@supabase/supabase-js@2";

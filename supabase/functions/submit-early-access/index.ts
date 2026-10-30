@@ -1,3 +1,4 @@
+import "../_shared/migrationRuntime.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { verifyTurnstileToken, TURNSTILE_GENERIC_ERROR } from "../_shared/verifyTurnstile.ts";
 import { validateAgentSignup } from "../_shared/agentSignupValidation.ts";

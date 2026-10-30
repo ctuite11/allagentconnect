@@ -1,3 +1,4 @@
+import "../_shared/migrationRuntime.ts";
 /**
  * HARD-DISABLED 2026-08-01.
  *

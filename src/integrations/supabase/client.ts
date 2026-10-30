@@ -2,16 +2,22 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 import { brokeredPreviewStorage } from './previewAuthStorage';
+import { migrationClientFetch } from '@/lib/migrationClientFetch';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 /** Matches Supabase dashboard "anon" / public JWT, or newer publishable keys. Netlify sometimes only sets `VITE_SUPABASE_ANON_KEY`. */
 const SUPABASE_PUBLISHABLE_KEY =
   import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY;
 
+if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
+  throw new Error('Missing Netlify build variables: VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY (or VITE_SUPABASE_ANON_KEY). Set them for this deployment context and rebuild.');
+}
+
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+  global: { fetch: migrationClientFetch },
   auth: {
     storage: brokeredPreviewStorage(),
     persistSession: true,

@@ -6,7 +6,7 @@ import { useSearchParams, Navigate } from "react-router-dom";
  *
  * Approval emails render a CTA on https://allagentconnect.com/auth/setup?next=<base64url>
  * so recipients (and inbox spam filters) see only the brand domain. We decode the
- * `next` parameter here, validate that it points to a *.supabase.co host, then
+ * `next` parameter here, validate that it points to this environment's Supabase project, then
  * forward the browser to the underlying auth verify URL. We never log the
  * decoded URL or the token it carries.
  */
@@ -26,7 +26,9 @@ export default function AuthSetupRedirect() {
       const padded = b64 + "=".repeat((4 - (b64.length % 4)) % 4);
       const decoded = decodeURIComponent(escape(atob(padded)));
       const url = new URL(decoded);
-      if (url.protocol !== "https:" || !url.hostname.endsWith(".supabase.co")) {
+      const destination = new URL(import.meta.env.VITE_SUPABASE_URL);
+      if (url.protocol !== "https:" || url.origin !== destination.origin ||
+          url.username || url.password || url.pathname !== "/auth/v1/verify") {
         setInvalid(true);
         return;
       }

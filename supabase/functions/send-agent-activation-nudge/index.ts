@@ -1,3 +1,4 @@
+import "../_shared/migrationRuntime.ts";
 /**
  * One-time "Don't miss opportunities" agent activation campaign.
  *

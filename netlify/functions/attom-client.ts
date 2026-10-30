@@ -1,3 +1,4 @@
+import "../../supabase/functions/_shared/migrationRuntime.ts";
 const ATTOM_BASE_URL = "https://api.gateway.attomdata.com/propertyapi/v1.0.0";
 
 export type AttomLookupInput = {

@@ -1,3 +1,4 @@
+import "../_shared/migrationRuntime.ts";
 // @auth-classification: token-redemption (public, token-bearing, POST-only)
 //
 // Redeems an AAC-owned 30-day login token and returns a freshly minted,

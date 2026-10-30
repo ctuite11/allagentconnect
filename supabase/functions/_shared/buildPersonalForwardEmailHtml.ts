@@ -10,7 +10,7 @@ const AAC_LOGO_URL =
   "https://allagentconnect.com/email/aac-monogram-green-128.png";
 
 const CHRIS_HEADSHOT_URL =
-  "https://qocduqtfbsevnhlgsfka.supabase.co/storage/v1/object/public/agent-headshots/1fc50da1-2664-4931-8cab-64e24dc5ed8c/headshot-1773973124574.jpg";
+  "https://kwfqjnepesiihjkdnxou.supabase.co/storage/v1/object/public/agent-headshots/1fc50da1-2664-4931-8cab-64e24dc5ed8c/headshot-1773973124574.jpg";
 
 export const PERSONAL_FORWARD_H1 =
   "You\u2019re invited to join All Agent Connect";

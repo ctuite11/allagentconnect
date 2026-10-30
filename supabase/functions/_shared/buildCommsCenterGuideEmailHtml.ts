@@ -1,7 +1,7 @@
 import { buildAacEmail } from "./aacEmailTemplate.ts";
 
 const IMG_BASE =
-  "https://qocduqtfbsevnhlgsfka.supabase.co/storage/v1/object/public/email-attachments/comms-guide";
+  "https://kwfqjnepesiihjkdnxou.supabase.co/storage/v1/object/public/email-attachments/comms-guide";
 
 function escapeHtml(s: string): string {
   return s

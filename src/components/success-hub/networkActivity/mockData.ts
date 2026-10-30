@@ -102,7 +102,7 @@ export const MOCK_LISTING_ACTIVITY: ListingActivityItem[] = [
     neighborhood: "Seaport",
     timestamp: "32m ago",
     photoUrl:
-      "https://qocduqtfbsevnhlgsfka.supabase.co/storage/v1/object/public/listing-photos/be8d4e9a-798d-456b-8b7b-152b7f3d43a6/0.7267744968741802.jpg",
+      "https://kwfqjnepesiihjkdnxou.supabase.co/storage/v1/object/public/listing-photos/be8d4e9a-798d-456b-8b7b-152b7f3d43a6/0.7267744968741802.jpg",
   },
   {
     id: "la-2",

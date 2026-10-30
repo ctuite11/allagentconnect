@@ -1,3 +1,4 @@
+import "../_shared/migrationRuntime.ts";
 // @auth-classification: token-redemption (public, token-bearing, POST-only)
 //
 // Redeems an AAC-owned activation token. Invoked ONLY by the same-origin

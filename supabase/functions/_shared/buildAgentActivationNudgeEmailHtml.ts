@@ -21,11 +21,11 @@ export const COMMS_CENTER_CTA_URL = `${AAC_PUBLIC_URL}/communications`;
  * Visual support only — the email reads correctly with images blocked.
  */
 const HOT_SHEETS_SCREENSHOT_URL =
-  "https://qocduqtfbsevnhlgsfka.supabase.co/storage/v1/object/public/brand-assets/email%2Fagent-activation-nudge%2Fhot-sheets-2026-08-08.jpg";
+  "https://kwfqjnepesiihjkdnxou.supabase.co/storage/v1/object/public/brand-assets/email%2Fagent-activation-nudge%2Fhot-sheets-2026-08-08.jpg";
 const COMMS_CENTER_SCREENSHOT_URL =
-  "https://qocduqtfbsevnhlgsfka.supabase.co/storage/v1/object/public/brand-assets/email%2Fagent-activation-nudge%2Fcomms-center-2026-08-08.jpg";
+  "https://kwfqjnepesiihjkdnxou.supabase.co/storage/v1/object/public/brand-assets/email%2Fagent-activation-nudge%2Fcomms-center-2026-08-08.jpg";
 const COMMS_FEED_SCREENSHOT_URL =
-  "https://qocduqtfbsevnhlgsfka.supabase.co/storage/v1/object/public/brand-assets/email%2Fagent-activation-nudge%2Fcomms-feed-blurred-2026-08-08.jpg";
+  "https://kwfqjnepesiihjkdnxou.supabase.co/storage/v1/object/public/brand-assets/email%2Fagent-activation-nudge%2Fcomms-feed-blurred-2026-08-08.jpg";
 
 const FONT = "system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif";
 

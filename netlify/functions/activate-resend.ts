@@ -1,3 +1,4 @@
+import "../../supabase/functions/_shared/migrationRuntime.ts";
 /**
  * Consumes the opaque, single-use resend handle stored in an HttpOnly cookie
  * and asks the backend to issue a replacement activation email.

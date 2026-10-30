@@ -1,3 +1,4 @@
+import "../_shared/migrationRuntime.ts";
 // Saves a listing's social defaults on its first publish (all-false allowed).
 // Browser has SELECT-only on listing_social_defaults; writes happen here with
 // the service role. V1: only the listing's owner may set defaults, because

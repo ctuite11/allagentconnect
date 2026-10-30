@@ -1,3 +1,4 @@
+import "../../supabase/functions/_shared/migrationRuntime.ts";
 import type { Handler } from "@netlify/functions";
 import { createClient } from "@supabase/supabase-js";
 

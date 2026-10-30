@@ -1,3 +1,4 @@
+import "../_shared/migrationRuntime.ts";
 // @auth-classification: public
 // Returns only { buyer: boolean, seller: boolean } for an agent. Never returns incentive details.
 import { createClient } from "npm:@supabase/supabase-js@2";

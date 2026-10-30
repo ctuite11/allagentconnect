@@ -1,3 +1,4 @@
+import { assertMigrationActionAllowed } from "./migrationSafety.ts";
 // Shared server-side helpers for AAC social publishing via bundle.social.
 // Server-only: BUNDLE_SOCIAL_API_KEY must never reach the browser.
 import { createClient, SupabaseClient } from 'npm:@supabase/supabase-js@2'
@@ -82,6 +83,7 @@ export async function authenticateGated(req: Request): Promise<AuthContext | nul
 
 /** Server-side call to bundle.social. The API key is only ever read here. */
 export async function bundleFetch(path: string, init: RequestInit = {}): Promise<Response> {
+  assertMigrationActionAllowed();
   const apiKey = Deno.env.get('BUNDLE_SOCIAL_API_KEY')?.trim()
   if (!apiKey) throw new Error('BUNDLE_SOCIAL_API_KEY is not configured')
   if (!/^[\x21-\x7E]+$/.test(apiKey)) {

@@ -1,3 +1,4 @@
+import "../../supabase/functions/_shared/migrationRuntime.ts";
 /** Street + unit line for listing-share email cards (mirrors src/lib/utils listing address helpers). */
 
 export type ListingEmailAddressSource = {

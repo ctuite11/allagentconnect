@@ -1,3 +1,4 @@
+import "../_shared/migrationRuntime.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { b64urlDecode, verifyClick } from "../_shared/tracking.ts";
 

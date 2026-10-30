@@ -20,7 +20,7 @@ const TEXT_BODY = "#334155";
 const TEXT_MUTED = "#64748b";
 const BORDER = "#e5e7eb";
 const MONOGRAM_URL = "https://allagentconnect.com/email/aac-monogram-green-128.png";
-const PRODUCT_PREVIEW_URL = "https://qocduqtfbsevnhlgsfka.supabase.co/storage/v1/object/public/brand-assets/email%2Fagent-forward%2Faac-listing-search-preview.jpg";
+const PRODUCT_PREVIEW_URL = "https://kwfqjnepesiihjkdnxou.supabase.co/storage/v1/object/public/brand-assets/email%2Fagent-forward%2Faac-listing-search-preview.jpg";
 
 const MEMBER_BENEFITS = [
   "Discover <strong>Off-Market &amp; Coming Soon</strong> opportunities",

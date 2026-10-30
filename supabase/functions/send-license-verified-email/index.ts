@@ -1,3 +1,4 @@
+import "../_shared/migrationRuntime.ts";
 // @auth-classification: admin-or-internal
 //
 // Issues the AAC-owned License Verified activation email.

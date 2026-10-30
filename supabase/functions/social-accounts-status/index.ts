@@ -1,3 +1,4 @@
+import "../_shared/migrationRuntime.ts";
 // Returns Connected / Not Connected per platform for the caller's own
 // bundle.social team. Never exposes other agents' teams or accounts.
 import {

@@ -1,3 +1,4 @@
+import "../../supabase/functions/_shared/migrationRuntime.ts";
 /**
  * Same-origin JSON proxy for the read-only activation preview.
  *

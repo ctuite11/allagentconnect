@@ -1,3 +1,5 @@
+import "../_shared/migrationRuntime.ts";
+import { migrationOutboundLocked } from "../_shared/migrationSafety.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import type { EmailJob } from "../_shared/emailTypes.ts";
 import {
@@ -40,7 +42,7 @@ Deno.serve(async (req) => {
   /* ---- GLOBAL KILL SWITCH ----
    * Checked before any auth work, any email_jobs_claim call, and any provider call.
    * Set the EMAIL_SENDING_PAUSED secret to "true" to freeze all outbound email. */
-  if (isGloballyPaused()) {
+  if (migrationOutboundLocked() || isGloballyPaused()) {
     console.log("[process-email-queue] EMAIL_SENDING_PAUSED=true — refusing to claim jobs");
     return json({ paused: true, processed: 0 });
   }

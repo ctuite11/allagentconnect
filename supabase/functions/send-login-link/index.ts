@@ -1,3 +1,4 @@
+import "../_shared/migrationRuntime.ts";
 // @auth-classification: admin-jwt
 //
 // Issues an AAC-owned 30-day sign-in link for an agent.

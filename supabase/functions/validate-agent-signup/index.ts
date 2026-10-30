@@ -1,3 +1,4 @@
+import "../_shared/migrationRuntime.ts";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { verifyTurnstileToken, TURNSTILE_GENERIC_ERROR } from "../_shared/verifyTurnstile.ts";
 

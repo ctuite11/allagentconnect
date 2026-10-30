@@ -1,3 +1,4 @@
+import "../_shared/migrationRuntime.ts";
 // @auth-classification: internal-cron
 /**
  * development-notification-retry (DRAFT 3 — NOT DEPLOYED).

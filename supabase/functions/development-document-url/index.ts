@@ -1,3 +1,4 @@
+import "../_shared/migrationRuntime.ts";
 // @auth-classification: user-jwt
 /**
  * development-document-url (DRAFT 3 — NOT DEPLOYED).

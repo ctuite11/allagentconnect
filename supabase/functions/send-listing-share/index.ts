@@ -1,3 +1,4 @@
+import "../_shared/migrationRuntime.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 import { buildAgentSharedPropertyEmailSubject } from "../_shared/listingEmailSubject.ts";
@@ -6,6 +7,7 @@ import { buildTransactionalFrom } from "../_shared/transactionalSender.ts";
 import { formatListingShareEmailFullAddress } from "../_shared/listingShareEmailAddress.ts";
 import { resolveEmailBaseUrl } from "../_shared/aacPublicUrl.ts";
 import nodemailer from "npm:nodemailer@6.9.16";
+import { assertMigrationDeliveryAllowed } from "../_shared/migrationSafety.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -128,6 +130,7 @@ async function sendListingShareViaSmtp(opts: {
   text: string;
   resendApiKey: string;
 }): Promise<string | null> {
+  assertMigrationDeliveryAllowed();
   const transporter = nodemailer.createTransport({
     host: "smtp.resend.com",
     port: 465,

@@ -1,3 +1,4 @@
+import "../_shared/migrationRuntime.ts";
 // @auth-classification: admin-jwt
 // Caller must present a valid JWT whose user_id has the admin role (checked
 // via has_role before any privileged auth.admin.* / table reads below).

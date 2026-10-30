@@ -1,3 +1,4 @@
+import "../_shared/migrationRuntime.ts";
 // @auth-classification: admin-jwt (service-role also permitted)
 //
 // Corrects a user's email address across auth + app tables.

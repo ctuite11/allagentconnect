@@ -1,3 +1,4 @@
+import { assertMigrationDeliveryAllowed } from "./migrationSafety.ts";
 import type { EmailJob } from "./emailTypes.ts";
 import { renderEmailTemplate } from "./renderEmailTemplate.ts";
 import {
@@ -300,6 +301,7 @@ export async function sendEmail(
     requestHeaders["Idempotency-Key"] = options.providerIdempotencyKey;
   }
 
+  assertMigrationDeliveryAllowed();
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: requestHeaders,

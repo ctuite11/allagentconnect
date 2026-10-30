@@ -1,3 +1,4 @@
+import "../_shared/migrationRuntime.ts";
 /**
  * Explicit "Send Again" for an already-sent Communications broadcast.
  *

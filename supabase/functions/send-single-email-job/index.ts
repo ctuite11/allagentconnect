@@ -1,3 +1,5 @@
+import "../_shared/migrationRuntime.ts";
+import { migrationOutboundLocked } from "../_shared/migrationSafety.ts";
 // @auth-classification: internal-cron (service-role bearer only; exact-job-ID delivery)
 /**
  * Exact-job-ID email delivery. Service-role only.
@@ -88,7 +90,7 @@ Deno.serve(async (req) => {
   }
 
   // 3. Pause gate before touching the database at all.
-  if (isGloballyPaused()) {
+  if (migrationOutboundLocked() || isGloballyPaused()) {
     return json({
       paused: true,
       switch: "EMAIL_SENDING_PAUSED",

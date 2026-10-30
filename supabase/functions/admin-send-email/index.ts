@@ -1,3 +1,4 @@
+import "../_shared/migrationRuntime.ts";
 // Admin-only ad-hoc email sender.
 // Verifies the caller holds the `admin` role, then enqueues a single 1:1
 // email into `email_jobs` and kicks the queue.

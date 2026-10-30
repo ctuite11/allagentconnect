@@ -4,7 +4,7 @@ const CDN_HOST = "https://cdn.allagentconnect.com";
 // branded CDN at cdn.allagentconnect.com is returning 403/text-plain.
 // Restore CDN rewriting in `rewriteEmailImageUrl` / `resolveEmailPhotoUrl`
 // once the CDN serves 200 image/jpeg again.
-const SUPABASE_STORAGE_HOST = "https://qocduqtfbsevnhlgsfka.supabase.co";
+const SUPABASE_STORAGE_HOST = "https://kwfqjnepesiihjkdnxou.supabase.co";
 
 /** Rewrite Supabase storage public/render URLs onto the cdn.allagentconnect.com CNAME. */
 function rewriteToCdn(url: string): string {

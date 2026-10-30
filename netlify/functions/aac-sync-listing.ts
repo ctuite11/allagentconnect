@@ -1,3 +1,4 @@
+import "../../supabase/functions/_shared/migrationRuntime.ts";
 /// <reference types="node" />
 
 type Handler = (event: {

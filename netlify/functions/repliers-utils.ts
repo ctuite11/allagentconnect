@@ -1,3 +1,4 @@
+import "../../supabase/functions/_shared/migrationRuntime.ts";
 type CorsResult = {
   headers: Record<string, string>;
   isAllowedOrigin: boolean;

@@ -1,3 +1,4 @@
+import "../_shared/migrationRuntime.ts";
 // @auth-classification: admin-jwt
 //
 // Admin -> "Send to Agent for Review".

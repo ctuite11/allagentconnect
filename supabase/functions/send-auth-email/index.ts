@@ -1,3 +1,5 @@
+import "../_shared/migrationRuntime.ts";
+import { assertMigrationDeliveryAllowed } from "../_shared/migrationSafety.ts";
 // supabase edge function: send-auth-email
 // Purpose: Handle Supabase Auth "Send Email Hook" and send emails via Resend
 // Requirements:
@@ -245,6 +247,7 @@ Deno.serve(async (req: Request) => {
     const isBuyer = isBuyerAuthRecipient(verified);
     console.log("send-auth-email hook invoked:", { type, email, hasActionUrl: !!actionUrl, isBuyer });
 
+    assertMigrationDeliveryAllowed();
     const resend = new Resend(resendApiKey);
 
     const { subject, html, text } = buildEmailForType({ type, email, actionUrl, otp, isBuyer });

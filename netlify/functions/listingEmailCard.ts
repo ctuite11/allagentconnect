@@ -1,3 +1,4 @@
+import "../../supabase/functions/_shared/migrationRuntime.ts";
 /**
  * Shared email-safe listing card renderers.
  *

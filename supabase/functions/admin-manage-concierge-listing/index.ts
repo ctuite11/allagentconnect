@@ -1,3 +1,4 @@
+import "../_shared/migrationRuntime.ts";
 /**
  * Admin concierge: securely LOAD, UPDATE and LIST admin-created DRAFT listings.
  *

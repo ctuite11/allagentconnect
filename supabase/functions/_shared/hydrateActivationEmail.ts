@@ -44,7 +44,7 @@ const FOOTER_AGENT = {
   email: "chris@allagentconnect.com",
   phone: "6178770519",
   headshotUrl:
-    "https://qocduqtfbsevnhlgsfka.supabase.co/storage/v1/object/public/agent-headshots/1fc50da1-2664-4931-8cab-64e24dc5ed8c/headshot-1773973124574.jpg",
+    "https://kwfqjnepesiihjkdnxou.supabase.co/storage/v1/object/public/agent-headshots/1fc50da1-2664-4931-8cab-64e24dc5ed8c/headshot-1773973124574.jpg",
 };
 
 export type ActivationHydration =

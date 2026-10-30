@@ -1,3 +1,4 @@
+import "../_shared/migrationRuntime.ts";
 /**
  * Admin concierge: create a DRAFT listing owned by an existing AAC member.
  *

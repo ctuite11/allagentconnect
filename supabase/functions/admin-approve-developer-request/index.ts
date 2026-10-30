@@ -1,3 +1,4 @@
+import "../_shared/migrationRuntime.ts";
 // @auth-classification: admin-only (caller must hold the admin role)
 //
 // One-click Developer approval.

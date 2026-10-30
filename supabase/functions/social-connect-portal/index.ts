@@ -1,3 +1,4 @@
+import "../_shared/migrationRuntime.ts";
 // Creates (lazily, once per agent) the agent's bundle.social Team and returns a
 // hosted portal link for connecting Facebook / Instagram / LinkedIn / Threads.
 import { z } from 'npm:zod@3'
@@ -18,7 +19,7 @@ const BodySchema = z.object({
 })
 
 const AAC_LOGO_URL =
-  'https://qocduqtfbsevnhlgsfka.supabase.co/storage/v1/object/public/brand-assets/aac-monogram-green.svg'
+  'https://kwfqjnepesiihjkdnxou.supabase.co/storage/v1/object/public/brand-assets/aac-monogram-green.svg'
 
 const DEFAULT_RETURN_URL = 'https://allagentconnect.com/agent-settings'
 

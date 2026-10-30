@@ -1,3 +1,4 @@
+import "../../supabase/functions/_shared/migrationRuntime.ts";
 import { randomUUID } from "crypto";
 import type { Handler } from "@netlify/functions";
 

@@ -1,3 +1,4 @@
+import "../_shared/migrationRuntime.ts";
 // @auth-classification: token-redemption (public, token-bearing, POST-only)
 //
 // The single explicit submission that completes agent activation:

@@ -1,3 +1,4 @@
+import "../_shared/migrationRuntime.ts";
 // Publishes one listing event to the agent's connected social platforms.
 // Idempotent: one event row per (listing, client_request_id); retries reuse the
 // same event id and referenceKey so bundle.social deduplicates. A bundle.social

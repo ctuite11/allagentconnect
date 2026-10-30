@@ -1,3 +1,4 @@
+import "../../supabase/functions/_shared/migrationRuntime.ts";
 // Same-origin password reset endpoint with database-backed rate limiting
 // Uses Supabase RPC for durable rate limits across cold starts
 

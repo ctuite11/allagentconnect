@@ -1,3 +1,4 @@
+import "../../supabase/functions/_shared/migrationRuntime.ts";
 /**
  * Same-origin sign-in-link redemption endpoint.
  *

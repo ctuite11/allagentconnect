@@ -1,3 +1,4 @@
+import "../_shared/migrationRuntime.ts";
 // @auth-classification: token-redemption (public, token-bearing, POST-only)
 //
 // Issues a replacement activation link from a single-use resend handle.

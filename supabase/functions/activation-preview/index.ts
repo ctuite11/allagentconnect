@@ -1,3 +1,4 @@
+import "../_shared/migrationRuntime.ts";
 // @auth-classification: token-preview (public, token-bearing, POST-only, READ-ONLY)
 //
 // Returns the details the /activate setup form needs to prefill itself.

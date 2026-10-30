@@ -1,3 +1,4 @@
+import "../_shared/migrationRuntime.ts";
 /**
  * AAC Production Monitoring — Phase 1
  *
