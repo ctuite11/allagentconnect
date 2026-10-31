@@ -165,4 +165,6 @@
 - [ ] P3 Visible, compliant HTML fallback (no hidden text, no design change)
 - [ ] P4 Explain Search Console verification + sitemap submission
 - [ ] List backend changes for Weborik's migration
-- [ ] PRIVATE NETWORK (Oct 31): signed-out visitors see only homepage, Request Access, Login, info/legal pages. Read-only review of all anon data access (tables, views, functions, storage, routes, share links), Google-indexed private URLs + removal process, affected sharing features. Sitemap = marketing pages only. No deploy without approval.
+- [~] DEFERRED by user (Oct 31, SEO-only focus): PRIVATE NETWORK: signed-out visitors see only homepage, Request Access, Login, info/legal pages. Read-only review of all anon data access (tables, views, functions, storage, routes, share links), Google-indexed private URLs + removal process, affected sharing features. Sitemap = marketing pages only. No deploy without approval.
+
+- [ ] Oct 31 refocus (staged + tested in private copy, awaiting 'Make it live'): SEO only — title/description/JSON-LD, visible HTML fallback, marketing-only sitemap, GSC prep, other tech SEO issues. Staged + tested, no deploy without approval.
