@@ -1,17 +1,18 @@
-import React, { lazy, Suspense, useLayoutEffect } from "react";
+import React, { Suspense, useLayoutEffect } from "react";
 import { Seo } from "@/components/Seo";
 import { isDcmlsHost } from "@/lib/host";
+import { lazyWithRetry } from "@/lib/lazyWithRetry";
 import HeroSection from "@/components/home-v2/HeroSection";
 import ProofStrip from "@/components/home-v2/ProofStrip";
 // Below-the-fold sections are lazy so they don't inflate the initial JS payload
 // on the public landing page. Hero + ProofStrip stay eager for LCP/FCP.
-const NetworkIntelligence = lazy(() => import("@/components/home-v2/NetworkIntelligence"));
-const EcosystemSection = lazy(() => import("@/components/home-v2/EcosystemSection"));
-const HowAgentsUseAAC = lazy(() => import("@/components/home-v2/HowAgentsUseAAC"));
-const ScalePersistence = lazy(() => import("@/components/home-v2/ScalePersistence"));
-const GCIBenefits = lazy(() => import("@/components/home-v2/GCIBenefits"));
-const FinalCTA = lazy(() => import("@/components/home-v2/FinalCTA"));
-const FooterV2 = lazy(() => import("@/components/home-v2/FooterV2"));
+const NetworkIntelligence = lazyWithRetry(() => import("@/components/home-v2/NetworkIntelligence"));
+const EcosystemSection = lazyWithRetry(() => import("@/components/home-v2/EcosystemSection"));
+const HowAgentsUseAAC = lazyWithRetry(() => import("@/components/home-v2/HowAgentsUseAAC"));
+const ScalePersistence = lazyWithRetry(() => import("@/components/home-v2/ScalePersistence"));
+const GCIBenefits = lazyWithRetry(() => import("@/components/home-v2/GCIBenefits"));
+const FinalCTA = lazyWithRetry(() => import("@/components/home-v2/FinalCTA"));
+const FooterV2 = lazyWithRetry(() => import("@/components/home-v2/FooterV2"));
 
 const HOMEPAGE_DESCRIPTION =
   "A private, verified network connecting real estate agents across brokerages. Share buyer needs, discover properties being prepared for sale, and collaborate directly.";
