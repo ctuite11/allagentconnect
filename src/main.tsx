@@ -7,6 +7,14 @@ import "./index.css";
 import { applyFaviconForHost } from "./lib/favicon";
 import { recordBootRecoveryLanding } from "./lib/authRecoveryLanding";
 
+// Drop static head SEO tags; each page's <Seo> (Helmet) re-renders its own,
+// so crawlers see exactly one canonical / description / JSON-LD after load.
+try {
+  document.querySelectorAll("[data-static-seo]").forEach((el) => el.remove());
+} catch {
+  // best-effort
+}
+
 // Apply the correct brand favicon (AAC vs DCMLS) before React renders.
 applyFaviconForHost();
 

@@ -13,14 +13,29 @@ const GCIBenefits = lazy(() => import("@/components/home-v2/GCIBenefits"));
 const FinalCTA = lazy(() => import("@/components/home-v2/FinalCTA"));
 const FooterV2 = lazy(() => import("@/components/home-v2/FooterV2"));
 
+const HOMEPAGE_DESCRIPTION =
+  "A private, verified network connecting real estate agents across brokerages. Share buyer needs, discover properties being prepared for sale, and collaborate directly.";
+
 const HOMEPAGE_JSON_LD = {
   "@context": "https://schema.org",
-  "@type": "Organization",
-  name: "All Agent Connect",
-  url: "https://allagentconnect.com",
-  description:
-    "A private, agent-only network for off-market and coming-soon listings, powered by real buyer and renter needs.",
-  sameAs: [],
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://allagentconnect.com/#organization",
+      name: "All Agent Connect",
+      url: "https://allagentconnect.com/",
+      logo: "https://allagentconnect.com/og-image.jpg?v=20260902",
+      description: HOMEPAGE_DESCRIPTION,
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://allagentconnect.com/#website",
+      name: "All Agent Connect",
+      url: "https://allagentconnect.com/",
+      description: HOMEPAGE_DESCRIPTION,
+      publisher: { "@id": "https://allagentconnect.com/#organization" },
+    },
+  ],
 };
 
 /**
@@ -58,10 +73,10 @@ const HomepageV2 = () => {
         title={
           isDcmls
             ? "See the Market Before It Hits the MLS"
-            : "All Agent Connect | Private Listing Network"
+            : "All Agent Connect | Private Network for Real Estate Agents"
         }
-        description="The private network where agents share off-market listings, buyer demand, and deal intelligence before properties go public."
-        canonical={isDcmls ? undefined : "https://allagentconnect.com"}
+        description={HOMEPAGE_DESCRIPTION}
+        canonical={isDcmls ? undefined : "https://allagentconnect.com/"}
         brandType={isDcmls ? "dcmls" : "aac"}
         jsonLd={HOMEPAGE_JSON_LD}
       />

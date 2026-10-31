@@ -54,10 +54,11 @@
     Cache-Control = "public, max-age=31536000, immutable"
     Netlify-CDN-Cache-Control = "public, max-age=31536000, immutable"
 
-[[redirects]]
-  from = "/sitemap.xml"
-  to = "https://qocduqtfbsevnhlgsfka.supabase.co/functions/v1/sitemap"
-  status = 200
+# Static marketing-only sitemap (public/sitemap.xml).
+[[headers]]
+  for = "/sitemap.xml"
+  [headers.values]
+    Content-Type = "application/xml; charset=utf-8"
 
 [[edge_functions]]
   path = "/property/*"
