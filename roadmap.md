@@ -158,3 +158,10 @@
 - [x] Admin Send Email: comma-separated recipients (validate all first, retry only failed, say "Queued" not "Delivered"; frontend-only)
 
 - [ ] Compare Success Hub checklist lookups 24h after the 2026-10-29 01:47 UTC fix (baseline: profile 125,415 / Hot Sheet 125,412). Waiting on 24h to pass.
+
+## SEO (Oct 31) — staged only, no production deploy without approval
+- [ ] P1 Sitemap privacy: only verified + publicly visible agents, only publicly authorized listings; check direct URLs of hidden agents/private listings; Google removal needs
+- [ ] P2 Homepage title/description/canonical/JSON-LD consistent in index.html and React SEO component
+- [ ] P3 Visible, compliant HTML fallback (no hidden text, no design change)
+- [ ] P4 Explain Search Console verification + sitemap submission
+- [ ] List backend changes for Weborik's migration
