@@ -47,3 +47,24 @@ Conditions: use no copied real user data (seed fakes from the fixture), send no 
 3. Function and table grant cleanup.
 4. Private buckets and the image service.
 5. Rollback path for any step: `02_lockdown_down.sql`, or revert the website change. Neither reopens public access.
+
+## Update — Secure share links (staged, locally tested)
+
+Files: `03_secure_share_links_up.sql`, `04_secure_share_links_down.sql`, `edge-function-draft/shared-listing-photos.ts`.
+
+How it works:
+- A verified agent creates a link for one public-status listing. It expires after 90 days by default (maximum 365). Only a SHA-256 hash of the token is stored, and the agent can revoke the link.
+- `get_shared_listing(token)` is the only lookup open to signed-out visitors. It returns that one listing's safe fields and the sharing agent's contact card.
+- The link stops working when it expires, is revoked, the listing leaves public status, or the sharing agent is no longer verified.
+- Photos are served by the edge function: the token goes in the POST body, and the function returns 10-minute signed URLs from a private bucket.
+
+Local result: **20/20 share-link assertions passed**. The lockdown and rollback assertions also passed. Not yet built: the app screens (share button and `/s/<token>` page). These are deliberately not added to the live code, because saving to `main` deploys automatically.
+
+### Impact on existing links and emails
+
+| Item | What happens after lockdown | Plan |
+|---|---|---|
+| Hot Sheet invitation links (52 tokens, 10 still valid) | Keep working. Token-based. | Verify in staging. |
+| Plain `/property/<id>` links already shared (emails, texts, social posts) | Cannot be preserved securely: there is no token, so anyone with the ID could read the listing. | Signed-out visitors see a "This link has been updated. Ask your agent for a new link" page with no listing data. Agents re-share with new links. Optional: notify agents with a list of their recent shares (needs approval; no sends). |
+| Photos inside already-sent Hot Sheet / listing emails (public bucket URLs) | Break if the originals are moved or deleted. | Recommended: put new uploads in the private bucket, leave existing public objects in place for a fixed grace period (e.g. 90 days), then remove them. Chris decides the length. |
+| Agent headshots and logos, brand assets | Unchanged (public by design). | — |
