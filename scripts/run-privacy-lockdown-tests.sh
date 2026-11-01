@@ -2,6 +2,7 @@
 # Privacy lockdown tests in a DISPOSABLE local Postgres (temp dir). FAKE data only.
 # No production connection: all PG* vars are unset; unix socket in a temp dir; no TCP.
 set -euo pipefail
+exec 2>&1
 PORT=5434
 PGDIR="$(mktemp -d /tmp/privacy-pg-XXXXXX)"; SOCK="$PGDIR/sock"; mkdir -p "$SOCK"
 cleanup() { pg_ctl -D "$PGDIR/data" -m immediate stop >/dev/null 2>&1 || true; rm -rf "$PGDIR"; }

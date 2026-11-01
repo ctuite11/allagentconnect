@@ -7,7 +7,7 @@ BEGIN
   BEGIN
     EXECUTE format('SELECT count(*) FROM (%s) q WHERE q.v IS NOT NULL', q) INTO n;
     res := n::text;
-  EXCEPTION WHEN insufficient_privilege THEN res := 'DENIED';
+  EXCEPTION WHEN insufficient_privilege THEN res := 'DENIED'; WHEN undefined_function THEN res := 'n/a';
   END;
   RESET ROLE;
   RETURN res;
