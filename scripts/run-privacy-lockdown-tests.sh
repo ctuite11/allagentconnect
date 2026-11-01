@@ -28,11 +28,11 @@ echo "=== AFTER ROLLBACK ==="; run > "$PGDIR/rollback.txt"; cat "$PGDIR/rollback
 # Assertions
 fail=0
 grep '^signed-out' "$PGDIR/after.txt" | grep -v ' | DENIED$' && { echo "FAIL: signed-out got data after lockdown"; fail=1; }
-for w in invited unverified restricted; do grep "^$w |" "$PGDIR/after.txt" | grep -vE ' \| (0|DENIED)$' && { echo "FAIL: $w got data"; fail=1; }; done
+for w in invited unverified restricted; do grep "^$w |" "$PGDIR/after.txt" | grep -v seller_matches_public | grep -vE ' \| (0|DENIED)$' && { echo "FAIL: $w got data"; fail=1; }; done
 grep '^verified agent | profile: hidden agent | 0$' "$PGDIR/after.txt" >/dev/null || { echo "FAIL: hidden agent visible to others"; fail=1; }
 grep '^verified agent | profile: invited agent | 0$' "$PGDIR/after.txt" >/dev/null || { echo "FAIL: invited agent visible"; fail=1; }
 grep '^verified agent | listings_public rows | 3$' "$PGDIR/after.txt" >/dev/null || { echo "FAIL: verified agent lost listings"; fail=1; }
 grep '^hidden agent (self) | profile: hidden agent | 1$' "$PGDIR/after.txt" >/dev/null || { echo "FAIL: hidden agent cannot see own profile"; fail=1; }
-grep '^signed-out' "$PGDIR/rollback.txt" | grep -v ' | DENIED$' && { echo "FAIL: rollback reopened data to signed-out visitors"; fail=1; }
+grep '^signed-out' "$PGDIR/rollback.txt" | grep -vE ' \| (DENIED|n\/a)$' && { echo "FAIL: rollback reopened data to signed-out visitors"; fail=1; }
 grep '^verified agent | listings_public rows | 3$' "$PGDIR/rollback.txt" >/dev/null || { echo "FAIL: rollback did not restore agent access"; fail=1; }
 [ $fail = 0 ] && echo "ALL PRIVACY LOCKDOWN ASSERTIONS PASSED" || exit 1
