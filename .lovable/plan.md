@@ -1,55 +1,74 @@
-# AI Search Visibility: All Agent Connect and Chris Tuite
+# Privacy and Google Indexing Audit — Findings and Recommended Fixes
 
-This is a read-only audit. Nothing has been changed or deployed. Every change below needs your approval before it goes live.
+Read-only. Nothing was changed. Checks were run against the live allagentconnect.com, signed out, as a normal browser, as Googlebot and as Facebook's preview crawler.
 
-## What the audit found
+## Findings
 
-### All Agent Connect (AAC)
-1. **Search and AI-answer crawlers can reach the site.** Googlebot, Bingbot (which Copilot uses), OAI-SearchBot and ChatGPT-User (which ChatGPT Search uses) and PerplexityBot all get the homepage. The new title, description and sitemap are live.
-2. **Cloudflare controls robots.txt, not the site.** It blocks the crawlers that train AI models (GPTBot, ClaudeBot, Google-Extended and others) and adds `ai-train=no`. This does not stop AI search answers. GPTBot and ClaudeBot are also refused at the door (403). The file has no `Sitemap:` line.
-3. **The web barely knows AAC yet.** Searching for "All Agent Connect" mostly returns Chris's LinkedIn posts. No independent page describes the product, so AI assistants have almost nothing to quote.
-4. **No About page or founder bio.** `/about` still says "About DCMLS" and is left out of the sitemap. The structured data names the organization but has no founder, location or links to official profiles.
-5. **No `/llms.txt`.** That address currently returns the homepage instead of a summary file.
-6. **Nothing is measured yet.** Search Console isn't connected, and Bing Webmaster Tools isn't set up.
+**1. Agent profiles (/agent/AAC-0497) are open to anyone.**
+- The page returns "OK" (200) to signed-out visitors and to Googlebot. The site sends no sign-in requirement for this address.
+- The page tells Google "index, follow". Its canonical points to the homepage, but that's only a hint, so Google can still index the page.
+- The profile data comes from a public lookup that returns any agent's profile by AAC code, including hidden and invited agents. I confirmed this in the earlier review.
 
-### Chris Tuite
-Public sources disagree on his history and title:
-- **Years in real estate:** LinkedIn's summary says about 31 years, RealtyHop says 26, and you've given 33.
-- **Title at Compass:** Compass lists "Managing Director" and principal of The Tuite Group. LinkedIn shows Managing Director ending in Oct 2022, and RealtyHop says "Licensed Real Estate Salesperson."
-- **Outdated sources:** An old ChrisTuite.com listing still describes him as a RE/MAX affiliate.
-- **Founder role:** LinkedIn shows "Founder at All Agent Connect," but neither his Compass profile nor the AAC site mentions it.
-- **Charlestown:** It appears only in lists of neighborhoods (UpNest, the old RE/MAX text), not as a stated specialty.
+**2. Property pages (/property/...) expose listing details in several places.**
+- A server-side social-preview step runs on every /property/ address. It writes the address, price, beds/baths and description into the page title and preview tags before any JavaScript runs. Example tested: "$2,995,000 · 220 Dorset Road, Newton, MA" with the full description.
+- Googlebot, Facebook and anyone who views the page source can read this without signing in.
+- The listing data feed is also readable without signing in: 68 listings, including 17 Off Market and 22 Coming Soon.
 
-## Proposed improvements, in priority order
+**3. How Google finds these pages.** The sitemap no longer lists them. The likely sources are:
+- the old sitemap, which listed 528 agents and 50 listings until this month. Google remembers those addresses.
+- Facebook/social listing posts and listing-share emails that link to /property/ pages.
+- agent and listing pages linking to each other.
 
-**P1 — Measurement (no site design changes)**
-- Connect Google Search Console: verify ownership with a tag on the homepage, submit the sitemap, and check whether Google has indexed the homepage.
-- Set up Bing Webmaster Tools. ChatGPT Search and Copilot rely on Bing's index. It can import the site from Search Console.
+**4. Sitemap — correct.** It has 10 public pages: the original nine plus About, which you approved. No agents or listings. It is served as XML.
 
-**P2 — An accurate public About page at `/about`**
-- Replace the DCMLS text with All Agent Connect copy: what AAC is, who it serves, how membership works and a short founder section. It will use the existing page layout and fonts, with no homepage changes.
-- Give it its own title ("About All Agent Connect | Private Network for Real Estate Agents"), description and canonical link (`https://allagentconnect.com/about`). Then add it back to the sitemap.
-- You approve the exact wording before anything goes live. I won't invent facts. I'll need your confirmed details: the 33 years, your current Compass title, Boston and Charlestown focus, and when AAC was founded.
+**5. robots.txt — managed by Cloudflare, not the site.** It allows all crawlers and has no "Sitemap:" line. Nothing in it blocks or protects private pages. That's fine, because robots.txt shouldn't be used for privacy anyway.
 
-**P3 — Founder and organization structured data**
-- Add `founder` (Chris Tuite as a Person), the Boston, MA location and `sameAs` links to official profiles (LinkedIn company page and Chris's LinkedIn) to the homepage structured data.
-- On the About page, add a Person entry for Chris: job title, `worksFor` Compass and All Agent Connect, and `knowsAbout` Boston and Charlestown real estate.
+**6. Indexing directives point the wrong way.**
+- The whole site sends an "index everything" header (`X-Robots-Tag: all`).
+- Every app page, including agent and property pages, starts with the homepage's "index, follow" tag and homepage canonical.
 
-**P4 — AI-readable files and Cloudflare**
-- Add `public/llms.txt` with a one-line summary and links to public pages only (Home, About, Request Access and the legal pages).
-- In Cloudflare, add a `Sitemap: https://allagentconnect.com/sitemap.xml` line, or turn off Cloudflare's managed robots.txt so the site's own file is used.
-- Decision for you: keep blocking the AI-training crawlers (the current setting, which protects content) or allow them. Blocking them does not affect AI search answers.
+**7. Old setups that cause conflicts.**
+- The old backend sitemap is no longer used, but Google still remembers its addresses.
+- directconnectmls.com and the lovable.app copy serve the same pages.
+- The Facebook preview step on /property/* was built for public sharing. It now conflicts with keeping the network private.
+- /about returned a redirect (301) in this check. I'll confirm where it goes during the fix.
 
-**P5 — Off-site consistency for Chris (you do these; I can draft the text)**
-- One standard bio sentence used everywhere: years, title, brokerage, neighborhoods and founder role.
-- Update the Compass profile to mention All Agent Connect, make the LinkedIn headline and dates consistent, and correct or claim RealtyHop, UpNest and SpotEasy.
-- Create or complete a LinkedIn company page for All Agent Connect with the same description as the site.
+**8. "Discovered" vs "indexed".**
+- Search Console's 381 non-indexed URLs include 336 agent and 25 property addresses. Those are pages Google discovered or crawled but chose not to index. That's good, but they're still reachable.
+- Of the 231 indexed URLs, I can't tell from here how many are agents or listings, because Search Console isn't connected to this project. Please export the "Indexed pages" list (or the Pages report filtered to /agent/ and /property/) and share it. Any agent or property address in that list is actually in Google's results.
 
-## Still private
-None of these changes touches member profiles, listings, Hot Sheets, buyer information or messages. The sitemap and llms.txt list only public marketing pages.
+## Recommended fixes (safest order, each needs your approval)
+
+**Step 1 — Tell Google to drop private pages right away. Low risk, no effect on members.**
+- Send a "noindex" header on /agent/*, /property/*, /listing/*, /hot-sheet* and other app addresses.
+- Keep "index" on the 10 public marketing pages.
+- Remove the site-wide "index everything" header.
+- Google needs to be able to crawl these pages to see the noindex, so robots.txt will not block them at this stage.
+
+**Step 2 — Stop property details from leaking before sign-in.**
+- Turn off the social-preview step for /property/*. Shared links would then show the generic AAC preview instead of the address, price and photo.
+- This affects Facebook/social listing posts and listing-share emails. Their links would still work, but would ask for sign-in once Step 3 is in place.
+
+**Step 3 — Require sign-in for agent and property pages.**
+- Signed-out visitors to /agent/:id and /property/:id would be sent to Login and come back after signing in.
+- This changes what visitors see, but not how members use the app.
+
+**Step 4 — Real protection on the backend.**
+- Close the public agent-profile lookup and the public listings feed to signed-out users.
+- This is a permissions change and is outside the "SEO only" scope you set earlier. It needs its own decision because it affects buyer Hot Sheet links, the homepage agent counts and share emails. I recommend it, but it won't be included unless you approve it separately.
+
+**Step 5 — Clean up what Google already has.** Do this in Search Console yourself after Step 1 is live:
+- Use the Removals tool with prefix requests for `https://allagentconnect.com/agent/` and `https://allagentconnect.com/property/`. This hides them for about 6 months while the noindex takes permanent effect.
+- Ask Cloudflare to add `Sitemap: https://allagentconnect.com/sitemap.xml` to robots.txt.
+
+## Testing before anything goes live
+- Prepare the changes in a private test copy first.
+- Confirm signed out and as Googlebot that agent and property pages send noindex and show no listing or agent details in the page source.
+- Confirm the 10 marketing pages still say "index" and display normally.
+- Confirm a signed-in agent can still open profiles and properties.
+- Show you the results before making anything live.
 
 ## Technical details
-- Files: `src/pages/About.tsx` (copy plus a `<Seo>` component with title, canonical and Person JSON-LD), `src/pages/HomepageV2.tsx` and the JSON-LD in `index.html` (add founder and sameAs; keep the two in sync), `public/sitemap.xml` (add `/about`), and a new `public/llms.txt`.
-- Cloudflare's robots.txt and the bot rules that return 403 are set in the Cloudflare dashboard, not in code.
-- Weborik migration: no database or backend changes. All edits are front-end files and Cloudflare settings. The old `sitemap` backend function stays retired.
-- Verification: confirm each page's title, canonical and JSON-LD in a browser test, validate the structured data with Google's Rich Results test, and run Search Console URL Inspection on the homepage and About page after go-live.
+- `netlify.toml`: add `X-Robots-Tag: noindex, nofollow` header rules for the private paths, remove the global `X-Robots-Tag = "all"`, and remove the `[[edge_functions]] path="/property/*" social-preview` entry. The function files stay in place so the change can be undone.
+- `src/App.tsx`: wrap `/property/:id` and `/agent/:id` in the existing sign-in guard. Helmet sets `robots: noindex` on those pages.
+- Step 4 (separate approval): change `get_public_agent_profile` and the grants on `listings_public` and `agent_profiles_public`. Weborik would need to carry this into the migration.
