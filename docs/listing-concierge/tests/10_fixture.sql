@@ -5,10 +5,10 @@ CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS
   $$ SELECT nullif(current_setting('test.uid', true),'')::uuid $$;
 CREATE TYPE public.app_role AS ENUM ('buyer','agent','admin','developer');
 CREATE TABLE public.user_roles(user_id uuid, role public.app_role);
-CREATE FUNCTION public.has_role(u uuid, r public.app_role) RETURNS boolean LANGUAGE sql STABLE AS
+CREATE FUNCTION public.has_role(u uuid, r public.app_role) RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER AS
   $$ SELECT EXISTS(SELECT 1 FROM public.user_roles WHERE user_id=u AND role=r) $$;
 CREATE TABLE public.delegates(owner uuid, delegate uuid);
-CREATE FUNCTION public.can_act_for_agent(o uuid) RETURNS boolean LANGUAGE sql STABLE AS
+CREATE FUNCTION public.can_act_for_agent(o uuid) RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER AS
   $$ SELECT EXISTS(SELECT 1 FROM public.delegates WHERE owner=o AND delegate=auth.uid()) $$;
 CREATE TABLE public.agent_profiles(id uuid PRIMARY KEY, email text, first_name text);
 CREATE TABLE public.listings(id uuid PRIMARY KEY DEFAULT gen_random_uuid(), agent_id uuid,
