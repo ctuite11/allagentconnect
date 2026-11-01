@@ -17,13 +17,5 @@ Emails 1, 2, 4, 5 go to the agent plus each accepted assistant as individual cop
 ## Form reuse
 `/agent/listings/:id/concierge` reuses the existing Edit Listing status menu (same nine statuses, labels, validation), price/photos/property-detail fields and components. Only additions: Sold actual-transaction fields (closing date, final sale price, buyer-agent compensation actually paid: % / $ / none / unknown), optional files, and the "submit as request" step. No second editing system.
 
-## Preview-crash fix (vite.config.ts) — for Nenad's migration code
-Added to `vite.config.ts`:
-```ts
-resolve: { dedupe: ["react", "react-dom", "react/jsx-runtime", "react-router-dom"] },
-optimizeDeps: { include: ["react", "react-dom", "react/jsx-runtime", "react-router-dom"] },
-```
-- `optimizeDeps` affects only the development preview server, not production output.
-- `dedupe` tells the bundler to always use the single top-level copy. The project has exactly one installed copy of each package, so the production build output is functionally unchanged.
-- Checks: build passes; fresh homepage load showed no runtime errors.
-- Migration: Nenad's repo must carry this same block in its `vite.config.ts` (not a different React/router version or a second copy). If his branch already has different settings, merge into one block — do not keep two.
+## Preview-crash fix
+Superseded: held back from production and removed from the AAC project. See 04-final-instructions-2026-11-01.md and patches/vite-dedupe-preview-fix.diff (review only; apply only if needed).
