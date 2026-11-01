@@ -21,3 +21,6 @@ Status: STAGED ONLY. Nothing applied to production; reminder cron job 7 stays in
 3. Private storage bucket `concierge-uploads` (path `<agent_id>/<request_id>/…`).
 4. Admin notification on submit and agent "review ready" email: one recipient each, idempotency key per request.
 5. Enable the weekly schedule in ONE environment only, after cut-over. Never in both.
+
+## Revisions 2026-11-01
+See `02-revisions-2026-11-01.md` (Edit Listing status menu reuse, assistant copies, "Still accurate" confirmation, Edit Listing entry point, two new emails). Email templates are in `emails/`. Items 2–4 above are replaced where that file differs.
