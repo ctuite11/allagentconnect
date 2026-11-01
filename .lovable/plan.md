@@ -1,74 +1,85 @@
-# Privacy and Google Indexing Audit — Findings and Recommended Fixes
+# Coordinated Privacy Lockdown and Google Cleanup
 
-Read-only. Nothing was changed. Checks were run against the live allagentconnect.com, signed out, as a normal browser, as Googlebot and as Facebook's preview crawler.
+This plan fixes the backend, the website pages, property previews and Google indexing together. All work happens in a private test copy first. Nothing goes live until you approve the test results.
 
-## Findings
+## What was confirmed (read-only)
+- Google has indexed 201 agent profiles and 24 property pages. This is from your Search Console report.
+- Anyone who isn't signed in can read:
+  - listings through `listings_public`, `dcmls_listings_public` and `seller_matches_public`
+  - any agent's profile through `get_public_agent_profile`, including hidden and invited agents
+  - single listings and their agents through `get_public_listing` and `get_public_listing_agent`
+  - lists of verified agents through `get_verified_agent_ids` and `get_newest_verified_agents`
+  - a "who is online" check through `get_agent_presence`
+- About 100 backend functions can be run by signed-out visitors. Many only check things internally, but each one needs reviewing.
+- These photo and file folders are open to anyone: listing photos, floor plans, agent headshots, agent logos, agent-match photos and email attachments.
+- The property-preview step writes the address, price, description and photo into every /property/ page before it loads.
+- The whole site tells Google "index everything", and agent and property pages say "index, follow".
+- directconnectmls.com and allagentconnect.lovable.app show the same agent pages to signed-out visitors (they return 200 OK). They use the same backend, so the backend fix covers them too.
 
-**1. Agent profiles (/agent/AAC-0497) are open to anyone.**
-- The page returns "OK" (200) to signed-out visitors and to Googlebot. The site sends no sign-in requirement for this address.
-- The page tells Google "index, follow". Its canonical points to the homepage, but that's only a hint, so Google can still index the page.
-- The profile data comes from a public lookup that returns any agent's profile by AAC code, including hidden and invited agents. I confirmed this in the earlier review.
+## The fix, in five parts
 
-**2. Property pages (/property/...) expose listing details in several places.**
-- A server-side social-preview step runs on every /property/ address. It writes the address, price, beds/baths and description into the page title and preview tags before any JavaScript runs. Example tested: "$2,995,000 · 220 Dorset Road, Newton, MA" with the full description.
-- Googlebot, Facebook and anyone who views the page source can read this without signing in.
-- The listing data feed is also readable without signing in: 68 listings, including 17 Off Market and 22 Coming Soon.
+**1. Backend (the real protection)**
+- Signed-out visitors lose read access to `listings_public`, `dcmls_listings_public` and `seller_matches_public`. Signed-in verified agents keep it, so nothing changes in the app for members.
+- These functions become sign-in only, and only hand out verified, non-hidden agents:
+  - `get_public_agent_profile`, `get_public_listing` and `get_public_listing_agent`
+  - `get_verified_agent_ids`, `get_newest_verified_agents` and `get_agent_presence`
+  - `get_listing_interest_signals`, `listings_within_radius` and `get_dcmls_listing`
+- Buyer links keep working through the existing link-checking functions: `get_hot_sheet_by_token`, `resolve_share_token` and `accept_client_hot_sheet_invite`. These only return data when the link's code is valid. I'll confirm each one returns nothing beyond that sheet's or link's listings.
+- Every signed-out-runnable function gets reviewed. Signed-out access is removed from anything that isn't needed before sign-in, such as sign-up, activation, link checks or the homepage count. The full list will be in the test report.
+- Homepage numbers keep working through count-only functions that never return names or IDs.
 
-**3. How Google finds these pages.** The sitemap no longer lists them. The likely sources are:
-- the old sitemap, which listed 528 agents and 50 listings until this month. Google remembers those addresses.
-- Facebook/social listing posts and listing-share emails that link to /property/ pages.
-- agent and listing pages linking to each other.
+**2. Photos and files**
+- Listing photos, floor plans and agent-match photos: make the folders private and serve images through short-lived signed links for signed-in users and valid buyer links.
+- This is the largest change: 13 places in the app build photo links. Old links already sent in Hot Sheet emails would stop showing images. For that reason I recommend doing photos as a second release once part 1 is live and steady. Old photo addresses are hard to guess, and once the pages that list them are locked, no one can find them.
+- Headshots, logos and brand files stay public. Email images rely on them.
 
-**4. Sitemap — correct.** It has 10 public pages: the original nine plus About, which you approved. No agents or listings. It is served as XML.
+**3. Website pages**
+- Signed-out visitors to /agent/:id, /property/:id, /team/*, /our-agents and the listing search are sent to Login and return to the page after signing in.
+- Buyers opening a Hot Sheet or share link still see only that sheet or listing, through the shared-listing page that already handles those links.
 
-**5. robots.txt — managed by Cloudflare, not the site.** It allows all crawlers and has no "Sitemap:" line. Nothing in it blocks or protects private pages. That's fine, because robots.txt shouldn't be used for privacy anyway.
+**4. Property previews**
+- Turn off the property-preview step for /property/*. Links shared on Facebook, in texts or in emails will show the generic AAC preview card instead of address, price and photo.
+- The function files stay in place so the change can be undone.
 
-**6. Indexing directives point the wrong way.**
-- The whole site sends an "index everything" header (`X-Robots-Tag: all`).
-- Every app page, including agent and property pages, starts with the homepage's "index, follow" tag and homepage canonical.
-
-**7. Old setups that cause conflicts.**
-- The old backend sitemap is no longer used, but Google still remembers its addresses.
-- directconnectmls.com and the lovable.app copy serve the same pages.
-- The Facebook preview step on /property/* was built for public sharing. It now conflicts with keeping the network private.
-- /about returned a redirect (301) in this check. I'll confirm where it goes during the fix.
-
-**8. "Discovered" vs "indexed".**
-- Search Console's 381 non-indexed URLs include 336 agent and 25 property addresses. Those are pages Google discovered or crawled but chose not to index. That's good, but they're still reachable.
-- Of the 231 indexed URLs, I can't tell from here how many are agents or listings, because Search Console isn't connected to this project. Please export the "Indexed pages" list (or the Pages report filtered to /agent/ and /property/) and share it. Any agent or property address in that list is actually in Google's results.
-
-## Recommended fixes (safest order, each needs your approval)
-
-**Step 1 — Tell Google to drop private pages right away. Low risk, no effect on members.**
-- Send a "noindex" header on /agent/*, /property/*, /listing/*, /hot-sheet* and other app addresses.
-- Keep "index" on the 10 public marketing pages.
+**5. Google**
 - Remove the site-wide "index everything" header.
-- Google needs to be able to crawl these pages to see the noindex, so robots.txt will not block them at this stage.
+- Add "noindex" to /agent/*, /property/*, /team/*, /hot-sheet*, /shared/*, /seller-listing/* and every signed-in page.
+- The 10 public marketing pages keep "index" and stay in the sitemap.
+- In Search Console (you do this): after release, submit Removals prefix requests for `/agent/` and `/property/`. This takes them out of results within about a day and keeps them out about 6 months while the noindex takes permanent effect. Also request removal of the same prefixes on directconnectmls.com if that property is verified.
 
-**Step 2 — Stop property details from leaking before sign-in.**
-- Turn off the social-preview step for /property/*. Shared links would then show the generic AAC preview instead of the address, price and photo.
-- This affects Facebook/social listing posts and listing-share emails. Their links would still work, but would ask for sign-in once Step 3 is in place.
+## Effect on existing features
+| Feature | After the change |
+|---|---|
+| Signed-in agents (search, profiles, listings, Hot Sheets, Communications) | Unchanged |
+| Buyer Hot Sheet links and invites | Still work, showing only that sheet's listings |
+| Listing-share emails and links | Open for valid share links. Links without a share code ask for sign-in. |
+| Facebook/social listing posts | The link opens Login. The preview card is generic AAC. |
+| Homepage statistics | Unchanged (counts only) |
+| Public team and agent directory pages | Need sign-in |
+| Hot Sheet emails | Unchanged in this release (images stay public until part 2) |
 
-**Step 3 — Require sign-in for agent and property pages.**
-- Signed-out visitors to /agent/:id and /property/:id would be sent to Login and come back after signing in.
-- This changes what visitors see, but not how members use the app.
+## Test matrix (private copy, before approval)
+I'll run each check as a signed-out visitor, Googlebot, Facebook's preview crawler, a signed-in verified agent, a buyer with a valid Hot Sheet link and a buyer with an invalid link:
+- agent profiles, including hidden, invited and unverified agents
+- property pages for Active, Coming Soon, Off Market and Draft listings
+- a direct request to each locked data feed and function
+- the page source and preview tags on /property/
+- the robots header on private pages and on the 10 marketing pages
+- the homepage counts and the sitemap
 
-**Step 4 — Real protection on the backend.**
-- Close the public agent-profile lookup and the public listings feed to signed-out users.
-- This is a permissions change and is outside the "SEO only" scope you set earlier. It needs its own decision because it affects buyer Hot Sheet links, the homepage agent counts and share emails. I recommend it, but it won't be included unless you approve it separately.
+Expected result: signed-out visitors and crawlers get no agent or listing data. Agents get full access. Buyers see only their own sheet or link.
 
-**Step 5 — Clean up what Google already has.** Do this in Search Console yourself after Step 1 is live:
-- Use the Removals tool with prefix requests for `https://allagentconnect.com/agent/` and `https://allagentconnect.com/property/`. This hides them for about 6 months while the noindex takes permanent effect.
-- Ask Cloudflare to add `Sitemap: https://allagentconnect.com/sitemap.xml` to robots.txt.
+No emails will be sent and no listings, members or preferences will change. Buyer flows will be tested with existing sheets, read-only.
 
-## Testing before anything goes live
-- Prepare the changes in a private test copy first.
-- Confirm signed out and as Googlebot that agent and property pages send noindex and show no listing or agent details in the page source.
-- Confirm the 10 marketing pages still say "index" and display normally.
-- Confirm a signed-in agent can still open profiles and properties.
-- Show you the results before making anything live.
+## For Weborik's migration
+- The database migration file (grants, function changes, view access) applies unchanged to the new backend.
+- The `netlify.toml` changes: noindex rules, removal of the global header, and the property-preview step turned off.
+- The page-access changes in the app code.
+- Part 2 if approved: private folders plus the signed-link helper.
+- Re-run the test matrix against the new environment before switching over.
 
 ## Technical details
-- `netlify.toml`: add `X-Robots-Tag: noindex, nofollow` header rules for the private paths, remove the global `X-Robots-Tag = "all"`, and remove the `[[edge_functions]] path="/property/*" social-preview` entry. The function files stay in place so the change can be undone.
-- `src/App.tsx`: wrap `/property/:id` and `/agent/:id` in the existing sign-in guard. Helmet sets `robots: noindex` on those pages.
-- Step 4 (separate approval): change `get_public_agent_profile` and the grants on `listings_public` and `agent_profiles_public`. Weborik would need to carry this into the migration.
+- Migration: `REVOKE SELECT ... FROM anon` on the three views. `REVOKE EXECUTE ... FROM anon, public` on the listed functions. Add `auth.uid()` and `is_verified_agent` checks inside them. Filter to `verification_status='verified' AND NOT hidden`. Add count-only RPCs for homepage stats if they are missing.
+- Netlify: drop `X-Robots-Tag = "all"`. Add `X-Robots-Tag: noindex, nofollow` blocks per private path. Delete the `[[edge_functions]] /property/*` entry.
+- App: wrap `/agent/:id`, `/property/:id` and the team and directory routes in the existing sign-in guard with a return-to path. Keep `SharedListingGate` for token links.
+- Tests: add database grant tests (anon denied, agent allowed, valid token allowed) next to the existing SQL tests.
