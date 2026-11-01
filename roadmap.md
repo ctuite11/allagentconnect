@@ -169,3 +169,12 @@
 
 - [ ] Oct 31 refocus (staged + tested in private copy, awaiting 'Make it live'): SEO only — title/description/JSON-LD, visible HTML fallback, marketing-only sitemap, GSC prep, other tech SEO issues. Staged + tested, no deploy without approval.
 - [ ] About page + Organization/Person structured data in private test copy (awaiting approval before live)
+
+## Privacy lockdown (approved for isolated testing only, 2026-11-01)
+- [ ] Isolated draft: verify separate DB + storage from production
+- [ ] Backend lockdown + full anon/authenticated function review (verified-membership gating)
+- [ ] Private buckets for listing photos, floor plans, agent-match photos, email attachments; Email Option B (no access codes in image URLs)
+- [ ] Route guards, social-preview off, server noindex headers verified on all 3 domains (redirects, edge/server functions)
+- [ ] Test matrix, rollback that doesn't reopen data, release sequence, Nenad handover doc
+- [ ] Production deploy — BLOCKED on Chris's explicit approval
+- Note: GSC removals for /agent/ and /property/ already submitted by Chris; don't repeat
