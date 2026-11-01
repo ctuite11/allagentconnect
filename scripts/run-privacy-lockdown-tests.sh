@@ -36,3 +36,10 @@ grep '^hidden agent (self) | profile: hidden agent | 1$' "$PGDIR/after.txt" >/de
 grep '^signed-out' "$PGDIR/rollback.txt" | grep -vE ' \| (DENIED|n/a)$' && { echo "FAIL: rollback reopened data to signed-out visitors"; fail=1; }
 grep '^verified agent | listings_public rows | 3$' "$PGDIR/rollback.txt" >/dev/null || { echo "FAIL: rollback did not restore agent access"; fail=1; }
 [ $fail = 0 ] && echo "ALL PRIVACY LOCKDOWN ASSERTIONS PASSED" || exit 1
+echo "=== SECURE SHARE LINKS (lockdown re-applied) ==="
+psql -v ON_ERROR_STOP=1 -q -f docs/privacy-lockdown/01_lockdown_up.sql
+psql -v ON_ERROR_STOP=1 -q -c "CREATE EXTENSION pgcrypto WITH SCHEMA extensions" 2>/dev/null || psql -v ON_ERROR_STOP=1 -q -c "CREATE SCHEMA IF NOT EXISTS extensions; CREATE EXTENSION pgcrypto WITH SCHEMA extensions"
+psql -v ON_ERROR_STOP=1 -q -f supabase/tests/db/22_share_links_fixture_extra.sql
+psql -v ON_ERROR_STOP=1 -q -f docs/privacy-lockdown/03_secure_share_links_up.sql
+psql -v ON_ERROR_STOP=1 -q -f supabase/tests/db/23_share_links_behavior.sql 2>&1 | grep -E "PASS|FAIL|ERROR|ALL"
+psql -v ON_ERROR_STOP=1 -q -f docs/privacy-lockdown/04_secure_share_links_down.sql && echo "share-link rollback applied cleanly"
