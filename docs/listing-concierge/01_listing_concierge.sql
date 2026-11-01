@@ -43,7 +43,7 @@ RETURNS timestamptz LANGUAGE plpgsql SECURITY DEFINER SET search_path = public A
 DECLARE v_agent uuid; v_now timestamptz := now();
 BEGIN
   SELECT agent_id INTO v_agent FROM listings WHERE id = p_listing_id AND status <> 'draft';
-  IF v_agent IS NULL OR NOT (v_agent = auth.uid() OR public.can_act_for_agent(v_agent)) THEN
+  IF auth.uid() IS NULL OR v_agent IS NULL OR NOT (v_agent = auth.uid() OR public.can_act_for_agent(v_agent)) THEN
     RAISE EXCEPTION 'not_authorized' USING ERRCODE = '42501';
   END IF;
   UPDATE listings SET agent_last_touched_at = v_now WHERE id = p_listing_id;
@@ -179,7 +179,7 @@ RETURNS uuid LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
 DECLARE v_agent uuid; v_id uuid;
 BEGIN
   SELECT agent_id INTO v_agent FROM listings WHERE id = p_listing_id AND status <> 'draft';
-  IF v_agent IS NULL OR NOT (v_agent = auth.uid() OR public.can_act_for_agent(v_agent)) THEN
+  IF auth.uid() IS NULL OR v_agent IS NULL OR NOT (v_agent = auth.uid() OR public.can_act_for_agent(v_agent)) THEN
     RAISE EXCEPTION 'not_authorized' USING ERRCODE = '42501';
   END IF;
   IF p_update_type = 'still_active' THEN
@@ -225,7 +225,7 @@ RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
 DECLARE r listing_concierge_requests;
 BEGIN
   SELECT * INTO r FROM listing_concierge_requests WHERE id = p_request_id FOR UPDATE;
-  IF r.id IS NULL OR NOT (r.agent_id = auth.uid() OR public.can_act_for_agent(r.agent_id)) THEN
+  IF auth.uid() IS NULL OR r.id IS NULL OR NOT (r.agent_id = auth.uid() OR public.can_act_for_agent(r.agent_id)) THEN
     RAISE EXCEPTION 'not_authorized' USING ERRCODE = '42501';
   END IF;
   IF r.status <> 'proposed' THEN RAISE EXCEPTION 'request_not_proposed'; END IF;
