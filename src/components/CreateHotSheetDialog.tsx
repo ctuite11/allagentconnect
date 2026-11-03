@@ -10,21 +10,14 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FormattedInput } from "@/components/ui/formatted-input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   ChevronDown,
   ChevronUp,
   Check,
-  CircleDot,
-  DollarSign,
   AlertCircle,
-  Home,
-  ListFilter,
   Loader2,
-  MapPin,
-  Ruler,
   SlidersHorizontal,
   UserPlus,
   Users,
@@ -33,11 +26,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { US_STATES, COUNTIES_BY_STATE } from "@/data/usStatesCountiesData";
+import { US_STATES } from "@/data/usStatesCountiesData";
 import { formatPhoneNumber } from "@/lib/phoneFormat";
-import { useTownsPicker } from "@/hooks/useTownsPicker";
-import { TownsPicker } from "@/components/TownsPicker";
-import { getAreasForCity, hasNeighborhoodData } from "@/data/usNeighborhoodsData";
 import { buildListingsQuery } from "@/lib/buildListingsQuery";
 import { fetchAllAgentContacts, searchClientContacts, invalidateAgentContactsCache } from "@/lib/contactSearch";
 import { isLikelySelfEmail, initialCreateSheetType, resolveCreateSheetType, type HotSheetType } from "@/lib/hotSheetRules";
@@ -47,11 +37,16 @@ import {
   DEFAULT_HOT_SHEET_CRITERIA,
   fromCriteriaPayload,
   normalizeStatusSelection,
+  optionToParking,
   parkingToOption,
   toCriteriaPayload,
 } from "@/lib/hotSheetCriteriaCore";
-import { formatTownSelectionLabel, normalizeTownSelections, toggleTownSelection } from "@/lib/townSelection";
-import { HOT_SHEET_FILTER_STATUSES, PROPERTY_TYPES as STATUS_PROPERTY_TYPES } from "@/constants/status";
+import { normalizeTownSelections } from "@/lib/townSelection";
+import { PROPERTY_TYPES as STATUS_PROPERTY_TYPES } from "@/constants/status";
+import {
+  HotSheetCriteriaBuilder,
+  type HotSheetCriteriaFormValue,
+} from "@/components/communication-center/HotSheetCriteriaBuilder";
 import { cn } from "@/lib/utils";
 
 /** Nested cards in this dialog — keep white surface and subtle shadow (override global Card lift). */
@@ -205,8 +200,6 @@ export function CreateHotSheetDialog({
 
   // Towns / coverage areas
   const [selectedCities, setSelectedCities] = useState<string[]>([]);
-  const [citySearch, setCitySearch] = useState("");
-  const [multiTownInput, setMultiTownInput] = useState("");
   const [state, setState] = useState(DEFAULT_HOT_SHEET_CRITERIA.state);
   const [selectedCountyId, setSelectedCountyId] = useState<string>("all");
   const [showAreas, setShowAreas] = useState<boolean>(true);
@@ -250,18 +243,13 @@ export function CreateHotSheetDialog({
   const [notificationSchedule, setNotificationSchedule] = useState("immediately");
 
   // Collapsible sections - Towns, Property Type, Status collapsed by default
-  const [criteriaOpen, setCriteriaOpen] = useState(true);
   const [addressOpen, setAddressOpen] = useState(false);
-  const [notificationsOpen, setNotificationsOpen] = useState(true);
   /** Prevents duplicate submissions from the confirm dialog firing twice in quick succession. */
   const createInFlightRef = useRef(false);
   const creatingClientRef = useRef(false);
   const addingManualContactRef = useRef(false);
   const [showClientPicker, setShowClientPicker] = useState(false);
   const [showManualClientEntry, setShowManualClientEntry] = useState(false);
-  const [townsOpen, setTownsOpen] = useState(false);
-  const [propertyTypeOpen, setPropertyTypeOpen] = useState(false);
-  const [statusOpen, setStatusOpen] = useState(false);
 
   
   const resetDialogState = () => {
@@ -868,149 +856,67 @@ export function CreateHotSheetDialog({
     }
   };
 
-  const propertyTypeOptions = [
-    { value: "single_family", label: "Single Family (SF)" },
-    { value: "condo", label: "Condominium (CC)" },
-    { value: "multi_family", label: "Multi Family (MF)" },
-    { value: "townhouse", label: "Townhouse (TH)" },
-    { value: "land", label: "Land (LD)" },
-    { value: "commercial", label: "Commercial (CI)" },
-    { value: "business_opp", label: "Business Opp. (BU)" },
-    { value: "residential_rental", label: "Residential Rental (RR)" },
-  ];
-
-  // Use centralized status options from constants
-  const statusOptions = HOT_SHEET_FILTER_STATUSES;
-
-  const togglePropertyType = (value: string) => {
-    setPropertyTypes(prev =>
-      prev.includes(value) ? prev.filter(t => t !== value) : [...prev, value]
-    );
-  };
-
-  const toggleStatus = (value: string) => {
-    setStatuses(prev =>
-      normalizeStatusSelection(prev.includes(value) ? prev.filter(s => s !== value) : [...prev, value])
-    );
-  };
-
-  const toggleCity = (city: string) => {
-    setSelectedCities((prev) => toggleTownSelection(prev, city));
-  };
-  const selectAllTowns = () => {
-    const allSelections = [...townsList];
-    
-    // If showAreas is enabled, include all neighborhoods for each town
-    if (showAreas) {
-      const stateKey = state && state.length > 2 
-        ? (US_STATES.find(s => s.name.toLowerCase() === state.toLowerCase())?.code ?? state)
-        : state?.toUpperCase();
-
-      townsList.forEach(town => {
-        // Skip if this is already a neighborhood entry
-        if (town.includes('-')) return;
-        
-        // Get neighborhoods from the data
-        const hasNeighborhoods = hasNeighborhoodData(town, stateKey || state);
-        let neighborhoods = hasNeighborhoods ? getAreasForCity(town, stateKey || state) : [];
-        
-        // Also check for hyphenated neighborhoods in the towns list
-        if ((neighborhoods?.length ?? 0) === 0) {
-          neighborhoods = Array.from(new Set(
-            townsList
-              .filter((t) => t.startsWith(`${town}-`))
-              .map((t) => t.split('-').slice(1).join('-'))
-          ));
-        }
-        
-        // Add all neighborhoods for this town
-        neighborhoods?.forEach(neighborhood => {
-          allSelections.push(`${town}-${neighborhood}`);
-        });
-      });
-      
-      const normalizedSelections = normalizeTownSelections(allSelections);
-      setSelectedCities(normalizedSelections);
-      toast.success(`Selected all ${normalizedSelections.length} towns and neighborhoods`);
-    } else {
-      const normalizedSelections = normalizeTownSelections(allSelections);
-      setSelectedCities(normalizedSelections);
-      toast.success(`Selected all ${normalizedSelections.length} towns`);
-    }
-  };
-
-  const handleAddMultipleTowns = () => {
-    if (!multiTownInput.trim()) {
-      toast.error("Please enter at least one town name");
-      return;
-    }
-
-    // Split by comma, semicolon, or newline and trim each entry
-    const inputTowns = multiTownInput
-      .split(/[,;\n]/)
-      .map(t => t.trim())
-      .filter(t => t.length > 0);
-
-    const addedTowns: string[] = [];
-    const notFoundTowns: string[] = [];
-
-    inputTowns.forEach(inputTown => {
-      // Try to find matching town (case-insensitive, partial match)
-      const matchedTown = townsList.find(town => 
-        town.toLowerCase().includes(inputTown.toLowerCase())
-      );
-
-      if (matchedTown) {
-        if (!selectedCities.includes(matchedTown)) {
-          addedTowns.push(matchedTown);
-        }
-      } else {
-        notFoundTowns.push(inputTown);
-      }
-    });
-
-    // Add the matched towns to selection
-    if (addedTowns.length > 0) {
-      setSelectedCities((prev) => normalizeTownSelections([...prev, ...addedTowns]));
-    }
-
-    // Provide feedback
-    if (addedTowns.length > 0 && notFoundTowns.length === 0) {
-      toast.success(`Added ${addedTowns.length} town(s) to selected areas`);
-      setMultiTownInput("");
-    } else if (addedTowns.length > 0 && notFoundTowns.length > 0) {
-      toast.success(`Added ${addedTowns.length} town(s). Not found: ${notFoundTowns.join(", ")}`);
-      setMultiTownInput("");
-    } else {
-      toast.error(`No matching towns found for: ${notFoundTowns.join(", ")}`);
-    }
-  };
-
-  // Get counties for the selected state from COUNTIES_BY_STATE
-  const countiesForState = state && COUNTIES_BY_STATE[state]
-    ? COUNTIES_BY_STATE[state].map(name => ({ id: name, name, state }))
-    : [];
-
-  const locationSummary = useMemo(() => {
-    const stateLabel = US_STATES.find((stateItem) => stateItem.code === state)?.name ?? state;
-    const countyName = countiesForState.find((county) => county.id === selectedCountyId)?.name;
-    const countyLabel = selectedCountyId === "all" ? "All Counties" : `${countyName ?? "Selected"} County`;
-
-    if (selectedCities.length === 0) {
-      return `${stateLabel} • ${countyLabel} • 0 towns selected`;
-    }
-
-    const preview = selectedCities.slice(0, 2).map((city) => formatTownSelectionLabel(city)).join(", ");
-    const townsLabel = selectedCities.length > 2 ? `${preview} +${selectedCities.length - 2}` : preview;
-    return `${stateLabel} • ${countyLabel} • ${townsLabel}`;
-  }, [countiesForState, selectedCities, selectedCountyId, state]);
-
-  // Use the shared towns picker hook
-  const { townsList, expandedCities, toggleCityExpansion } = useTownsPicker({
+  const criteriaValue = useMemo((): HotSheetCriteriaFormValue => ({
     state,
-    county: selectedCountyId,
-    showAreas
-  });
+    selectedCountyId,
+    cities: selectedCities,
+    showAreas,
+    propertyTypes,
+    statuses,
+    minPrice,
+    maxPrice,
+    hasNoMin,
+    hasNoMax,
+    bedrooms,
+    bathrooms,
+    rooms,
+    acres,
+    minSqft,
+    maxSqft,
+    pricePerSqft,
+    hasParking: parkingToOption(hasParking),
+  }), [
+    state,
+    selectedCountyId,
+    selectedCities,
+    showAreas,
+    propertyTypes,
+    statuses,
+    minPrice,
+    maxPrice,
+    hasNoMin,
+    hasNoMax,
+    bedrooms,
+    bathrooms,
+    rooms,
+    acres,
+    minSqft,
+    maxSqft,
+    pricePerSqft,
+    hasParking,
+  ]);
+
+  const handleCriteriaChange = (next: HotSheetCriteriaFormValue) => {
+    setState(next.state);
+    setSelectedCountyId(next.selectedCountyId);
+    setSelectedCities(next.cities);
+    setShowAreas(next.showAreas);
+    setPropertyTypes(next.propertyTypes);
+    setStatuses(next.statuses);
+    setMinPrice(next.minPrice);
+    setMaxPrice(next.maxPrice);
+    setHasNoMin(next.hasNoMin);
+    setHasNoMax(next.hasNoMax);
+    setBedrooms(next.bedrooms);
+    setBathrooms(next.bathrooms);
+    setRooms(next.rooms);
+    setAcres(next.acres);
+    setMinSqft(next.minSqft);
+    setMaxSqft(next.maxSqft);
+    setPricePerSqft(next.pricePerSqft);
+    setHasParking(optionToParking(next.hasParking));
+  };
+
 
   // Fetch matching listings count
   useEffect(() => {
@@ -1071,7 +977,6 @@ export function CreateHotSheetDialog({
 
   // Reset search input when state or county changes
   useEffect(() => {
-    setCitySearch("");
   }, [state, selectedCountyId]);
 
   const handleValidateAndShowConfirmation = async () => {
@@ -1698,7 +1603,6 @@ export function CreateHotSheetDialog({
     setPricePerSqft("");
     setZipCode("");
     setSelectedCities([]);
-    setCitySearch("");
     setState(DEFAULT_HOT_SHEET_CRITERIA.state);
     setSelectedCountyId(DEFAULT_HOT_SHEET_CRITERIA.selectedCountyId);
     setShowAreas(DEFAULT_HOT_SHEET_CRITERIA.showAreas);
@@ -2174,562 +2078,23 @@ export function CreateHotSheetDialog({
           </Card>
           )}
 
-          {/* Search Criteria */}
-          <Collapsible open={criteriaOpen} onOpenChange={setCriteriaOpen}>
-            <Card className={cn("border", HS_DIALOG_CARD)}>
-              <CollapsibleTrigger className="w-full">
-                <CardHeader className="flex cursor-pointer flex-row items-center justify-between p-4 pb-3 hover:bg-neutral-50/80 sm:p-5 sm:pb-3">
-                  <CardTitle className="flex items-center gap-2 text-[15px] font-semibold text-neutral-900">
-                    <HsSectionIcon icon={SlidersHorizontal} />
-                    Search criteria
-                  </CardTitle>
-                  {criteriaOpen ? <ChevronUp className="h-4 w-4 text-neutral-600" /> : <ChevronDown className="h-4 w-4 text-neutral-600" />}
-                </CardHeader>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <CardContent className="space-y-6 px-4 pb-4 pt-0 sm:px-5 sm:pb-5">
-                  {/* Unified Location section */}
-                  <Collapsible open={townsOpen} onOpenChange={setTownsOpen}>
-                    <CollapsibleTrigger className="w-full">
-                      <div className="flex cursor-pointer items-center justify-between rounded-lg border border-neutral-200 p-3 hover:bg-neutral-50/80">
-                        <div className="flex min-w-0 items-start gap-2 text-left">
-                          <HsSectionIcon icon={MapPin} />
-                          <div className="min-w-0 space-y-1">
-                            <Label className="cursor-pointer text-xs font-semibold uppercase tracking-wide text-neutral-700">
-                              Location
-                            </Label>
-                            <p className="text-xs text-neutral-500">{locationSummary}</p>
-                          </div>
-                        </div>
-                        {townsOpen ? <ChevronUp className="h-4 w-4 text-neutral-600" /> : <ChevronDown className="h-4 w-4 text-neutral-600" />}
-                      </div>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent>
-                      <div className="space-y-4 pt-4">
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label htmlFor="state" className="text-sm font-semibold">State</Label>
-                            <Select value={state} onValueChange={setState}>
-                              <SelectTrigger
-                                id="state"
-                                className="h-9 border-neutral-200 bg-white text-sm focus-visible:ring-2 focus-visible:ring-neutral-300/35 focus-visible:ring-offset-2"
-                              >
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent className="bg-popover z-50 max-h-[300px]">
-                                {US_STATES.map((stateItem) => (
-                                  <SelectItem key={stateItem.code} value={stateItem.code}>
-                                    {stateItem.name}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label htmlFor="county" className="text-sm font-semibold">County</Label>
-                            <Select value={selectedCountyId} onValueChange={setSelectedCountyId}>
-                              <SelectTrigger
-                                id="county"
-                                className="h-9 border-neutral-200 bg-white text-sm focus-visible:ring-2 focus-visible:ring-neutral-300/35 focus-visible:ring-offset-2"
-                              >
-                                <SelectValue placeholder="All Counties" />
-                              </SelectTrigger>
-                              <SelectContent className="bg-popover z-50 max-h-[300px]">
-                                <SelectItem value="all">All Counties</SelectItem>
-                                {countiesForState.map((county) => (
-                                  <SelectItem key={county.id} value={county.id}>
-                                    {county.name} County
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-4">
-                          <Label className="text-sm">Show Areas</Label>
-                          <div className="flex gap-4">
-                            <div className="flex items-center space-x-2">
-                              <input
-                                type="radio"
-                                id="show-yes"
-                                name="show-areas"
-                                checked={showAreas === true}
-                                onChange={() => setShowAreas(true)}
-                                className="w-4 h-4 accent-emerald-600"
-                              />
-                              <Label htmlFor="show-yes" className="text-sm">Yes</Label>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <input
-                                type="radio"
-                                id="show-no"
-                                name="show-areas"
-                                checked={showAreas === false}
-                                onChange={() => setShowAreas(false)}
-                                className="w-4 h-4 accent-emerald-600"
-                              />
-                              <Label htmlFor="show-no" className="text-sm">No</Label>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Input
-                              placeholder="Type Full or Partial Name"
-                              value={citySearch}
-                              onChange={(e) => setCitySearch(e.target.value)}
-                              className="text-sm"
-                            />
-                            <div className="border border-neutral-200 rounded-md bg-white max-h-60 overflow-y-auto p-2 relative z-10">
-                              {selectedCountyId && townsList.length > 0 && (
-                                <button
-                                  type="button"
-                                  onClick={selectAllTowns}
-                                  className="mb-2 w-full rounded-md border-b border-neutral-200 px-2 py-2 text-left text-[13px] font-semibold transition-colors hover:bg-neutral-50/90"
-                                >
-                                  {selectedCountyId === "all" 
-                                    ? `✓ Add All Towns from All Counties` 
-                                    : `✓ Add All Towns in County (${townsList.length})`}
-                                </button>
-                              )}
-                              <TownsPicker
-                                towns={townsList}
-                                selectedTowns={selectedCities}
-                                onToggleTown={toggleCity}
-                                expandedCities={expandedCities}
-                                onToggleCityExpansion={toggleCityExpansion}
-                                state={state}
-                                searchQuery={citySearch}
-                                variant="button"
-                                showAreas={showAreas}
-                              />
-                            </div>
-                          </div>
-
-                          <div className="space-y-2">
-                            <div className="flex items-center justify-between">
-                              <Label className="text-sm font-medium">
-                                Selected Towns
-                                {selectedCities.length > 0 && (
-                                  <span className="ml-1.5 text-xs font-normal text-muted-foreground">({selectedCities.length})</span>
-                                )}
-                              </Label>
-                              {selectedCities.length > 0 && (
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => setSelectedCities([])}
-                                  className="h-7 px-2 text-xs font-normal text-muted-foreground hover:text-foreground"
-                                >
-                                  Remove All
-                                </Button>
-                              )}
-                            </div>
-                            <div className="border border-neutral-200 rounded-md p-3 bg-white min-h-[200px] max-h-60 overflow-y-auto">
-                              {selectedCities.length === 0 ? (
-                                <p className="text-sm text-muted-foreground">No towns selected</p>
-                              ) : (
-                                selectedCities.map((city) => (
-                                  <div
-                                    key={city}
-                                    className="group flex items-center justify-between gap-2 rounded-lg border border-neutral-200 bg-white px-3 py-2 text-[13px] shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-colors hover:border-neutral-300"
-                                  >
-                                    <span className="truncate font-medium text-neutral-800">{formatTownSelectionLabel(city)}</span>
-                                    <button
-                                      type="button"
-                                      onClick={() => toggleCity(city)}
-                                      aria-label={`Remove ${formatTownSelectionLabel(city)}`}
-                                      className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded text-neutral-400 transition-colors hover:text-neutral-700"
-                                    >
-                                      <X className="h-3.5 w-3.5" />
-                                    </button>
-                                  </div>
-                                ))
-                              )}
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label className="text-sm">Type Multiple Towns/Areas</Label>
-                          <p className="text-xs text-muted-foreground">Separate multiple towns with commas</p>
-                          <div className="flex gap-2">
-                            <Input
-                              value={multiTownInput}
-                              onChange={(e) => setMultiTownInput(e.target.value)}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter') {
-                                  e.preventDefault();
-                                  handleAddMultipleTowns();
-                                }
-                              }}
-                              placeholder="e.g. Northborough, Worcester, Boston"
-                              className="text-sm flex-1"
-                            />
-                            <Button
-                              type="button"
-                              variant="outline"
-                              onClick={handleAddMultipleTowns}
-                              className="h-9 shrink-0 border-neutral-200 px-4 text-[12px] font-medium shadow-[0_1px_2px_rgba(0,0,0,0.04)] hover:border-neutral-300 hover:bg-neutral-50/90"
-                            >
-                              Add
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    </CollapsibleContent>
-                  </Collapsible>
-
-                  {/* Property Type - Collapsed by default */}
-                  <Collapsible open={propertyTypeOpen} onOpenChange={setPropertyTypeOpen}>
-                    <CollapsibleTrigger className="w-full">
-                      <div className="flex cursor-pointer items-center justify-between rounded-lg border border-neutral-200 p-3 hover:bg-neutral-50/80">
-                        <div className="flex min-w-0 items-center gap-2">
-                          <HsSectionIcon icon={Home} />
-                          <Label className="cursor-pointer text-xs font-semibold uppercase tracking-wide text-neutral-700">
-                            Property type
-                            {propertyTypes.length > 0 && (
-                              <span className="ml-2 text-xs font-normal text-neutral-500">
-                                ({propertyTypes.length} selected)
-                              </span>
-                            )}
-                          </Label>
-                        </div>
-                        {propertyTypeOpen ? <ChevronUp className="h-4 w-4 text-neutral-600" /> : <ChevronDown className="h-4 w-4 text-neutral-600" />}
-                      </div>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent>
-                      <div className="mt-2 max-h-64 space-y-2 overflow-y-auto rounded-lg border border-neutral-200 bg-white p-3">
-                        <div className="flex items-center space-x-2">
-                          <Checkbox
-                            id="pt-select-all"
-                            checked={propertyTypes.length === propertyTypeOptions.length}
-                            onCheckedChange={(checked) => {
-                              if (checked) {
-                                setPropertyTypes(propertyTypeOptions.map(opt => opt.value));
-                              } else {
-                                setPropertyTypes([]);
-                              }
-                            }}
-                          />
-                          <Label htmlFor="pt-select-all" className="cursor-pointer font-medium">
-                            Select All
-                          </Label>
-                        </div>
-                        {propertyTypeOptions.map((option) => (
-                          <div key={option.value} className="flex items-center space-x-2">
-                            <Checkbox
-                              id={`pt-${option.value}`}
-                              checked={propertyTypes.includes(option.value)}
-                              onCheckedChange={() => togglePropertyType(option.value)}
-                            />
-                            <Label htmlFor={`pt-${option.value}`} className="cursor-pointer text-sm">
-                              {option.label}
-                            </Label>
-                          </div>
-                        ))}
-                      </div>
-                    </CollapsibleContent>
-                  </Collapsible>
-
-                  {/* Status - Collapsed by default */}
-                  <Collapsible open={statusOpen} onOpenChange={setStatusOpen}>
-                    <CollapsibleTrigger className="w-full">
-                      <div className="flex cursor-pointer items-center justify-between rounded-lg border border-neutral-200 p-3 hover:bg-neutral-50/80">
-                        <div className="flex min-w-0 items-center gap-2">
-                          <HsSectionIcon icon={CircleDot} />
-                          <Label className="cursor-pointer text-xs font-semibold uppercase tracking-wide text-neutral-700">
-                            Status
-                            {statuses.length > 0 && (
-                              <span className="ml-2 text-xs font-normal text-neutral-500">
-                                ({statuses.length} selected)
-                              </span>
-                            )}
-                          </Label>
-                        </div>
-                        {statusOpen ? <ChevronUp className="h-4 w-4 text-neutral-600" /> : <ChevronDown className="h-4 w-4 text-neutral-600" />}
-                      </div>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent>
-                      <div className="mt-2 max-h-64 space-y-2 overflow-y-auto rounded-lg border border-neutral-200 bg-white p-3">
-                        <div className="flex items-center space-x-2">
-                          <Checkbox
-                            id="st-select-all"
-                            checked={statuses.length === statusOptions.length}
-                            onCheckedChange={(checked) => {
-                              if (checked) {
-                                setStatuses(normalizeStatusSelection(statusOptions.map((opt) => opt.value)));
-                              } else {
-                                setStatuses([]);
-                              }
-                            }}
-                          />
-                          <Label htmlFor="st-select-all" className="cursor-pointer font-medium">
-                            Select All
-                          </Label>
-                        </div>
-                        {statusOptions.map((option) => (
-                          <div key={option.value} className="flex items-center space-x-2">
-                            <Checkbox
-                              id={`st-${option.value}`}
-                              checked={statuses.includes(option.value)}
-                              onCheckedChange={() => toggleStatus(option.value)}
-                            />
-                            <Label htmlFor={`st-${option.value}`} className="cursor-pointer text-sm">
-                              {option.label}
-                            </Label>
-                          </div>
-                        ))}
-                      </div>
-                    </CollapsibleContent>
-                  </Collapsible>
-
-                  {/* Price Range */}
-                  <div className="space-y-4 border-t pt-4">
-                    <Label className="flex items-center gap-2 text-sm font-semibold text-neutral-900">
-                      <HsSectionIcon icon={DollarSign} />
-                      Price Range
-                    </Label>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="min-price">Min Price</Label>
-                        <FormattedInput
-                          id="min-price"
-                          format="currency"
-                          placeholder="500000"
-                          value={minPrice}
-                          onChange={(value) => setMinPrice(value)}
-                          disabled={hasNoMin}
-                        />
-                        <div className="flex items-center space-x-2">
-                          <Checkbox
-                            id="no-min"
-                            checked={hasNoMin}
-                            onCheckedChange={(checked) => {
-                              setHasNoMin(checked === true);
-                              if (checked) setMinPrice("");
-                            }}
-                          />
-                          <Label htmlFor="no-min" className="text-sm font-normal cursor-pointer">
-                            No Minimum
-                          </Label>
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="max-price">Max Price</Label>
-                        <FormattedInput
-                          id="max-price"
-                          format="currency"
-                          placeholder="1000000"
-                          value={maxPrice}
-                          onChange={(value) => setMaxPrice(value)}
-                          disabled={hasNoMax}
-                        />
-                        <div className="flex items-center space-x-2">
-                          <Checkbox
-                            id="no-max"
-                            checked={hasNoMax}
-                            onCheckedChange={(checked) => {
-                              setHasNoMax(checked === true);
-                              if (checked) setMaxPrice("");
-                            }}
-                          />
-                          <Label htmlFor="no-max" className="text-sm font-normal cursor-pointer">
-                            No Maximum
-                          </Label>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Standard Search Criteria */}
-                  <div className="space-y-4 border-t pt-4">
-                    <Label className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-neutral-900">
-                      <HsSectionIcon icon={ListFilter} />
-                      Standard Search Criteria
-                    </Label>
-                    
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="bedrooms">Bedrooms</Label>
-                        <Input
-                          id="bedrooms"
-                          type="number"
-                          placeholder="Any"
-                          value={bedrooms}
-                          onChange={(e) => setBedrooms(e.target.value)}
-                          min="0"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="bathrooms">Total Bathrooms</Label>
-                        <Input
-                          id="bathrooms"
-                          type="number"
-                          step="0.5"
-                          placeholder="Any"
-                          value={bathrooms}
-                          onChange={(e) => setBathrooms(e.target.value)}
-                          min="0"
-                        />
-                      </div>
-                      {/* Rooms is intentionally not offered: there is no
-                          listings.rooms column, so the Hot Sheet matcher cannot
-                          enforce it. Existing saved Rooms criteria fail closed
-                          (zero matches) server-side. */}
-                      <div className="space-y-2">
-                        <Label htmlFor="acres">Acres</Label>
-                        <Input
-                          id="acres"
-                          type="number"
-                          step="0.01"
-                          placeholder="Any"
-                          value={acres}
-                          onChange={(e) => setAcres(e.target.value)}
-                          min="0"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label className="flex items-center gap-2 text-sm font-semibold text-neutral-900">
-                        <HsSectionIcon icon={Ruler} />
-                        Living Area Total (SqFt)
-                      </Label>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="min-sqft">Min</Label>
-                          <FormattedInput
-                            id="min-sqft"
-                            format="number"
-                            placeholder="0"
-                            value={minSqft}
-                            onChange={(value) => setMinSqft(value)}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="max-sqft">Max</Label>
-                          <FormattedInput
-                            id="max-sqft"
-                            format="number"
-                            placeholder="Any"
-                            value={maxSqft}
-                            onChange={(value) => setMaxSqft(value)}
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="price-per-sqft">Price per SqFt</Label>
-                        <FormattedInput
-                          id="price-per-sqft"
-                          format="currency"
-                          placeholder="Any"
-                          value={pricePerSqft}
-                          onChange={(value) => setPricePerSqft(value)}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-sm">Parking (includes garage)</Label>
-                        <div className="flex gap-4 mt-2">
-                          <div className="flex items-center space-x-2">
-                            <input
-                              type="radio"
-                              id="parking-yes"
-                              name="parking"
-                              checked={hasParking === true}
-                              onChange={() => setHasParking(true)}
-                              className="w-4 h-4"
-                            />
-                            <Label htmlFor="parking-yes" className="text-sm">Yes</Label>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <input
-                              type="radio"
-                              id="parking-no"
-                              name="parking"
-                              checked={hasParking === false}
-                              onChange={() => setHasParking(false)}
-                              className="w-4 h-4"
-                            />
-                            <Label htmlFor="parking-no" className="text-sm">No</Label>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <input
-                              type="radio"
-                              id="parking-any"
-                              name="parking"
-                              checked={hasParking === null}
-                              onChange={() => setHasParking(null)}
-                              className="w-4 h-4"
-                            />
-                            <Label htmlFor="parking-any" className="text-sm">Any</Label>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </CollapsibleContent>
-            </Card>
-          </Collapsible>
-
-          {!hideNotificationSettings && (
-            <Collapsible open={notificationsOpen} onOpenChange={setNotificationsOpen}>
-              <Card className={cn("border", HS_DIALOG_CARD)}>
-                <CollapsibleTrigger className="w-full">
-                  <CardHeader className="flex cursor-pointer flex-row items-center justify-between p-4 pb-3 hover:bg-neutral-50/80 sm:p-5 sm:pb-3">
-                    <CardTitle className="text-[15px] font-semibold text-neutral-900">Buyer emails</CardTitle>
-                    {notificationsOpen ? <ChevronUp className="h-4 w-4 text-neutral-600" /> : <ChevronDown className="h-4 w-4 text-neutral-600" />}
-                  </CardHeader>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <CardContent className="space-y-4 px-4 pb-4 pt-0 sm:px-5 sm:pb-5">
-                    <div className="space-y-2">
-                      <Label>How often matching listings are emailed to the buyer</Label>
-                      <RadioGroup value={notificationSchedule} onValueChange={setNotificationSchedule}>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="immediately" id="immediately" />
-                          <Label htmlFor="immediately" className="cursor-pointer">
-                            Immediately — as soon as a matching listing appears
-                          </Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="daily" id="daily" />
-                          <Label htmlFor="daily" className="cursor-pointer">
-                            Daily — a daily digest of new matching listings
-                          </Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="weekly" id="weekly" />
-                          <Label htmlFor="weekly" className="cursor-pointer">
-                            Weekly — a weekly summary of new matching listings
-                          </Label>
-                        </div>
-                      </RadioGroup>
-                    </div>
-
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="notify-agent"
-                        checked={notifyAgent}
-                        onCheckedChange={(checked) => setNotifyAgent(checked as boolean)}
-                      />
-                      <Label htmlFor="notify-agent" className="cursor-pointer">
-                        Also email me a copy
-                      </Label>
-                    </div>
-                  </CardContent>
-                </CollapsibleContent>
-              </Card>
-            </Collapsible>
-          )}
+          {/* Search criteria — shared Communications Center filter pattern */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 px-0.5">
+              <HsSectionIcon icon={SlidersHorizontal} />
+              <h3 className="text-[15px] font-semibold text-neutral-900">Search criteria</h3>
+            </div>
+            <HotSheetCriteriaBuilder
+              value={criteriaValue}
+              onChange={handleCriteriaChange}
+              idPrefix="create-hs"
+              showNotificationSettings={!hideNotificationSettings}
+              notificationSchedule={notificationSchedule}
+              onNotificationScheduleChange={setNotificationSchedule}
+              notifyAgent={notifyAgent}
+              onNotifyAgentChange={setNotifyAgent}
+            />
+          </div>
 
           {isDraftFlow ? (
             <div className="flex min-h-[18px] items-center justify-end gap-2 text-[12px] text-neutral-500" aria-live="polite">

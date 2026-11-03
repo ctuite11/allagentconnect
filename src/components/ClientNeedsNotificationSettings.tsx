@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
-import { Bell } from "lucide-react";
+import { NotificationFrequencyCards, type NotificationFrequencyOption } from "@/components/filters";
 import { cn } from "@/lib/utils";
 
 const cardShell =
@@ -10,7 +10,7 @@ const cardShell =
 
 type Schedule = "immediate" | "daily" | "weekly";
 
-const scheduleOptions: { value: Schedule; label: string; description: string }[] = [
+const scheduleOptions: readonly NotificationFrequencyOption[] = [
   {
     value: "immediate",
     label: "Immediately",
@@ -65,7 +65,8 @@ export const ClientNeedsNotificationSettings = () => {
     }
   };
 
-  const updateSchedule = async (next: Schedule) => {
+  const updateSchedule = async (nextValue: string) => {
+    const next = normalizeSchedule(nextValue);
     if (next === schedule) return;
     const previous = schedule;
     setSchedule(next);
@@ -118,41 +119,12 @@ export const ClientNeedsNotificationSettings = () => {
   }
 
   return (
-    <Card className={cn(cardShell)}>
-      <CardHeader className="space-y-1 p-0">
-        <div className="flex items-center gap-2">
-          <Bell className="h-5 w-5 shrink-0 !text-[#16A34A]" strokeWidth={2} aria-hidden />
-          <CardTitle className="text-base font-semibold text-neutral-900">Notification timing</CardTitle>
-        </div>
-        <p className="text-[13px] leading-relaxed text-neutral-500">
-          Choose when you receive email about Comms Center activity. Channel toggles below control
-          which categories you get.
-        </p>
-      </CardHeader>
-      <CardContent className="mt-4 grid grid-cols-1 gap-2 p-0 sm:grid-cols-3">
-        {scheduleOptions.map((option) => {
-          const active = schedule === option.value;
-          return (
-            <button
-              key={option.value}
-              type="button"
-              onClick={() => updateSchedule(option.value)}
-              aria-pressed={active}
-              className={cn(
-                "flex flex-col items-start rounded-xl border bg-white px-3 py-2.5 text-left transition-colors",
-                active
-                  ? "border-[#0E56F5] ring-1 ring-[#0E56F5]/20"
-                  : "border-neutral-200 hover:border-neutral-300",
-              )}
-            >
-              <span className={cn("text-[13px] font-semibold", active ? "text-[#0E56F5]" : "text-neutral-900")}>
-                {option.label}
-              </span>
-              <span className="mt-0.5 text-xs text-neutral-500">{option.description}</span>
-            </button>
-          );
-        })}
-      </CardContent>
-    </Card>
+    <NotificationFrequencyCards
+      value={schedule}
+      onChange={updateSchedule}
+      options={scheduleOptions}
+      title="Notification timing"
+      description="Choose when you receive email about Comms Center activity. Channel toggles below control which categories you get."
+    />
   );
 };
