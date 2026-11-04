@@ -61,9 +61,9 @@ describe("LOCKED: first invite eligibility", () => {
 });
 
 describe("LOCKED: Send button label", () => {
-  it("pending buyer sees Send First Batch & Invite", () => {
+  it("pending buyer sees Send Invite with Listings", () => {
     expect(getFirstBatchCta({ hasPendingInviteRecipients: true, allFirstBatchQueued: false })).toBe(
-      "Send First Batch & Invite",
+      "Send Invite with Listings",
     );
     expect(getFirstBatchCta({ hasPendingInviteRecipients: true, allFirstBatchQueued: true })).toBe(
       FIRST_BATCH_CTA.pendingInvite,

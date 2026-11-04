@@ -34,7 +34,7 @@ export function isFirstInviteEligible(connected: boolean, liveGlobalTokenCount: 
 }
 
 export const FIRST_BATCH_CTA = {
-  pendingInvite: "Send First Batch & Invite",
+  pendingInvite: "Send Invite with Listings",
   alreadySent: "Send Selected Matches",
   connected: "Send First Batch",
 } as const;
