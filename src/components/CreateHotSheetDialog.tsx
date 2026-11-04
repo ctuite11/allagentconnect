@@ -1543,7 +1543,9 @@ export function CreateHotSheetDialog({
 
         window.localStorage.removeItem(`aac:hotsheet:draft:${userId}:new`);
 
-        if (lockedToClient && createdHotSheet && selectedClients.length > 0) {
+        if (isPersonal) {
+          toast.success("Hot Sheet saved successfully.");
+        } else if (lockedToClient && createdHotSheet && selectedClients.length > 0) {
           toast.success(
             "Hot sheet created. Review the matches and send the invite when ready.",
           );
