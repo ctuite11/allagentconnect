@@ -13,7 +13,11 @@ import {
   type HotSheetCriteriaFormValue,
 } from "@/components/communication-center/HotSheetCriteriaBuilder";
 import { PageShell } from "@/components/layout/PageShell";
-import { DEFAULT_HOT_SHEET_CRITERIA, toCriteriaPayload } from "@/lib/hotSheetCriteriaCore";
+import {
+  DEFAULT_HOT_SHEET_CRITERIA,
+  parseHotSheetNumber,
+  toCriteriaPayload,
+} from "@/lib/hotSheetCriteriaCore";
 import { formatCriteriaDisplayLabel } from "@/lib/formatCriteriaDisplay";
 import { aacStyles } from "@/ui/aacStyles";
 
@@ -62,8 +66,10 @@ export default function ClientCreateHotsheetNew() {
       parts.push(formatCriteriaDisplayLabel(criteria.propertyTypes[0]));
     }
     if (criteria.maxPrice && !criteria.hasNoMax) {
-      const maxPrice = parseFloat(criteria.maxPrice);
-      parts.push(`under $${(maxPrice / 1000).toFixed(0)}k`);
+      const maxPrice = parseHotSheetNumber(criteria.maxPrice);
+      if (maxPrice != null) {
+        parts.push(`under $${(maxPrice / 1000).toFixed(0)}k`);
+      }
     }
     return parts.join(" ") || "My Hot Sheet";
   };
