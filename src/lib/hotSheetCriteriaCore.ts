@@ -56,18 +56,25 @@ const toStringValue = (value: unknown): string => {
 const toStringArray = (value: unknown): string[] =>
   Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
 
-/** Accept plain or comma-formatted numeric strings from filter UIs. */
-const toNumber = (value: string): number | null => {
+/**
+ * Accept plain or comma-formatted numeric strings from filter UIs.
+ * Shared by validation, live matching count, and `toCriteriaPayload` so
+ * "$500,000" and "500000" always resolve to the same number.
+ */
+export const parseHotSheetNumber = (value: string): number | null => {
   if (!value) return null;
   const parsed = Number.parseFloat(value.replace(/,/g, ""));
   return Number.isFinite(parsed) ? parsed : null;
 };
 
-const toInteger = (value: string): number | null => {
+export const parseHotSheetInteger = (value: string): number | null => {
   if (!value) return null;
   const parsed = Number.parseInt(value.replace(/,/g, ""), 10);
   return Number.isFinite(parsed) ? parsed : null;
 };
+
+const toNumber = parseHotSheetNumber;
+const toInteger = parseHotSheetInteger;
 
 export const normalizeStatusSelection = (statuses: string[]): string[] => {
   const unique = Array.from(new Set(statuses));

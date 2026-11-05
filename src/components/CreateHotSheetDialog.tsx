@@ -39,6 +39,7 @@ import {
   normalizeStatusSelection,
   optionToParking,
   parkingToOption,
+  parseHotSheetNumber,
   toCriteriaPayload,
 } from "@/lib/hotSheetCriteriaCore";
 import { normalizeTownSelections } from "@/lib/townSelection";
@@ -925,29 +926,52 @@ export function CreateHotSheetDialog({
       
       setLoadingCount(true);
       try {
-        // Build criteria object in the same format as SearchResults/HotSheetReview
+        // Same numeric conversion as save (`toCriteriaPayload`) so the live
+        // count matches what the Hot Sheet will persist — including comma prices.
+        const savedNumbers = toCriteriaPayload({
+          ...DEFAULT_HOT_SHEET_CRITERIA,
+          state,
+          selectedCountyId,
+          cities: selectedCities,
+          showAreas,
+          propertyTypes,
+          statuses,
+          minPrice,
+          maxPrice,
+          hasNoMin,
+          hasNoMax,
+          bedrooms,
+          bathrooms,
+          rooms,
+          acres,
+          minSqft,
+          maxSqft,
+          pricePerSqft,
+          hasParking: parkingToOption(hasParking),
+        });
+
         const criteria = {
           propertyTypes, // UI codes like "single_family" - will be mapped to DB values
           statuses: statuses.length > 0 ? statuses : undefined,
           cities: selectedCities,
           state,
           zipCode,
-          minPrice: hasNoMin ? undefined : (minPrice ? parseFloat(minPrice) : undefined),
-          maxPrice: hasNoMax ? undefined : (maxPrice ? parseFloat(maxPrice) : undefined),
-          bedrooms: bedrooms ? parseInt(bedrooms) : undefined,
-          bathrooms: bathrooms ? parseFloat(bathrooms) : undefined,
-          minSqft: minSqft ? parseInt(minSqft) : undefined,
-          maxSqft: maxSqft ? parseInt(maxSqft) : undefined,
+          minPrice: savedNumbers.minPrice ?? undefined,
+          maxPrice: savedNumbers.maxPrice ?? undefined,
+          bedrooms: savedNumbers.bedrooms ?? undefined,
+          bathrooms: savedNumbers.bathrooms ?? undefined,
+          minSqft: savedNumbers.minSqft ?? undefined,
+          maxSqft: savedNumbers.maxSqft ?? undefined,
         };
 
-        // Use buildListingsQuery to get the full query, then count the results
-        // Since we can't get count directly from the query (select is already called),
-        // we fetch IDs and count them
-        const { data, error } = await buildListingsQuery(supabase, criteria).limit(1000);
-        
+        // Exact head-count — one request, no 1000-row fetch cap.
+        const { count, error } = await buildListingsQuery(supabase, criteria, {
+          countExact: true,
+        });
+
         if (error) throw error;
-        
-        setMatchingListingsCount(data?.length || 0);
+
+        setMatchingListingsCount(count ?? 0);
       } catch (error) {
         console.error("Error fetching matching count:", error);
       } finally {
@@ -963,7 +987,9 @@ export function CreateHotSheetDialog({
     statuses,
     propertyTypes,
     state,
+    selectedCountyId,
     selectedCities,
+    showAreas,
     zipCode,
     minPrice,
     maxPrice,
@@ -971,8 +997,12 @@ export function CreateHotSheetDialog({
     hasNoMax,
     bedrooms,
     bathrooms,
+    rooms,
+    acres,
     minSqft,
     maxSqft,
+    pricePerSqft,
+    hasParking,
   ]);
 
   // Reset search input when state or county changes
@@ -1213,14 +1243,14 @@ export function CreateHotSheetDialog({
       return { valid: false, message: "Please select at least one location filter." };
     }
 
-    const min = minPrice ? parseFloat(minPrice) : null;
-    const max = maxPrice ? parseFloat(maxPrice) : null;
+    const min = hasNoMin ? null : parseHotSheetNumber(minPrice);
+    const max = hasNoMax ? null : parseHotSheetNumber(maxPrice);
     if (min !== null && max !== null && min > max) {
       return { valid: false, message: "Min Price cannot be greater than Max Price." };
     }
 
-    const minArea = minSqft ? parseFloat(minSqft) : null;
-    const maxArea = maxSqft ? parseFloat(maxSqft) : null;
+    const minArea = parseHotSheetNumber(minSqft);
+    const maxArea = parseHotSheetNumber(maxSqft);
     if (minArea !== null && maxArea !== null && minArea > maxArea) {
       return { valid: false, message: "Min SqFt cannot be greater than Max SqFt." };
     }

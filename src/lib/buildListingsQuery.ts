@@ -47,24 +47,39 @@ const PROPERTY_TYPE_MAP: Record<string, string> = {
   'business_opp': 'Business Opportunity'
 };
 
+export type BuildListingsQueryOptions = {
+  /**
+   * Return an exact head-count query (no row payload). Prefer this for live
+   * matching counters so results are not capped by a fetch limit like 1000.
+   */
+  countExact?: boolean;
+};
+
 /**
  * Builds a unified Supabase query for listings based on search criteria.
  * Handles case-insensitive matching for cities, states, and partial zip codes.
  * 
  * @param supabase - Supabase client instance
  * @param rawCriteria - Search criteria object
- * @returns Supabase query builder (caller should add .limit() as needed)
+ * @param options - Optional count-only mode
+ * @returns Supabase query builder (caller should add .limit() as needed unless countExact)
  */
 export function buildListingsQuery(
   supabase: SupabaseClient,
-  rawCriteria: SearchCriteria
+  rawCriteria: SearchCriteria,
+  options?: BuildListingsQueryOptions,
 ) {
   // AAC marketing view vs gated DCMLS source. Server enforces DCMLS eligibility
   // on `dcmls_listings_public` — do not re-apply participation/publication filters here.
   const dcmlsOnly = rawCriteria.dcmlsOnly === true;
+  const countExact = options?.countExact === true;
   let query = dcmlsOnly
-    ? supabase.from("dcmls_listings_public").select("*")
-    : supabase.from("listings_public").select("*");
+    ? supabase
+        .from("dcmls_listings_public")
+        .select(countExact ? "id" : "*", countExact ? { count: "exact", head: true } : undefined)
+    : supabase
+        .from("listings_public")
+        .select(countExact ? "id" : "*", countExact ? { count: "exact", head: true } : undefined);
 
   // Normalize criteria
   // Note: honor the caller's statuses array as-is. An empty array is a valid
