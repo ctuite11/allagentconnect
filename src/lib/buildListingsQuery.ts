@@ -244,8 +244,10 @@ export function buildListingsQuery(
     query = query.gt("square_feet", 0);
   }
 
-  // Default ordering
-  query = query.order("created_at", { ascending: false });
+  // Default ordering (skip for head-count — order does not affect the total)
+  if (!countExact) {
+    query = query.order("created_at", { ascending: false });
+  }
 
   return query;
 }
