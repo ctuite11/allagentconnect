@@ -1,117 +1,154 @@
-# Coordinated Privacy Lockdown and Google Cleanup (v2)
+# heycatch.ai Site Audit for All Agent Connect: full extracted results (read-only)
 
-Approval scope: prepare and test the fixes in an isolated environment only. Production, the live database and live storage won't change until you give final approval.
+Source: public audit page, opened on Nov 6, 2026. All five dimension panels opened in a headless browser and their full text was captured. Text below is quoted from the source. Nothing was invented, edited, deployed or published. No member data was accessed.
 
-## 0. Isolated testing (answer to your point 1)
-- This project's preview and the live site share one database. The earlier "private test copy" only isolated website code, not the database.
-- So all database, permission and storage testing will happen in a **draft with its own separate database**:
-  - It starts with the same structure as production but none of the real data.
-  - I'll fill it with fake test records: verified, invited, unverified, suspended and hidden agents; Active, Coming Soon, Off Market and Draft listings; a buyer Hot Sheet with a valid link; a share link; and photos.
-  - It has no live email sending, so nothing can reach real people.
-- If the draft can't get its own database, I'll stop and tell you before running any permission change. I won't fall back to the live database.
+## What could and could not be extracted
+- All 5 dimensions expanded. Codes, scores, statuses and insights captured in full.
+- The action plan has 13 items in two groups: 8 Quick wins and 5 Do this quarter. They appear here in source order.
+- Codes the source does not show: D3.4 is missing from Trust (its numbered items jump from D3.3 to D3.5). Dimension 4 is missing entirely. The page says "Pricing & Paywall and Transactional trust are excluded from scoring" (pre-launch, denominator 85). The source gives no further detail on either.
+- Brief fit has no D-codes. The source shows it as "What matches the brief" and "Gaps vs the brief".
+- Overall total: not shown on the page. The five scores add up to 50.5/85. That sum is my arithmetic, not the source's number.
 
-## What was confirmed so far (read-only)
-- Google has indexed 201 agent profiles and 24 property pages. This is from your Search Console report.
-- Signed-out visitors can read:
-  - listings through `listings_public`, `dcmls_listings_public` and `seller_matches_public`
-  - any agent's profile, including hidden and invited agents, through `get_public_agent_profile`
-  - listing and agent details through `get_public_listing` and `get_public_listing_agent`
-  - lists of agents through `get_verified_agent_ids` and `get_newest_verified_agents`
-  - online status through `get_agent_presence`
-- About 100 elevated functions are runnable by signed-out visitors.
-- These file folders are open to anyone: listing photos, floor plans, agent-match photos and email attachments. Headshots, logos and brand files are open too.
-- The property-preview step writes the address, price, description and photo into /property/ pages on the server, before the page loads.
-- The site sends "index everything" on every page.
-- directconnectmls.com and allagentconnect.lovable.app also show agent pages to signed-out visitors (they return 200 OK).
+## Header (source)
+- Audience scope: US with an explicit Massachusetts regional signal.
+- Gut reaction: polished homepage with one clear Request-access CTA, but "the trust layer is empty". It cites no named person, no testimonial, no third-party signal, placeholder stock portraits and eight dead footer links.
+- Spotlight competitors: Off-Market.io (closest ICP match, from $99/mo) and Insightful Agent ("1.5M+ Verified Agents", $29/mo, $1 trial).
 
-## 1. Backend security
-- **Full function review:** I'll check every elevated function that signed-out visitors or members can run. Each one gets a recorded decision in the report:
-  - keep for signed-out visitors (sign-up, activation, valid-link checks, homepage counts)
-  - members only
-  - verified members only
-  - service only
-- **Access depends on membership, not just signing in.** Network data (listings, agent profiles, buyer needs, Communications) requires a verified agent who isn't suspended or restricted. This uses the existing `is_verified_agent` checks. Being signed in as invited, unverified, suspended, rejected or a buyer isn't enough.
-- **Data views:** remove signed-out access from `listings_public`, `dcmls_listings_public` and `seller_matches_public`, and restrict them to verified agents. I'll also check rights they inherit through `public` and through view ownership.
-- **Access rules:** list every table that signed-out visitors can read, and every rule that allows "any signed-in user". I'll tighten the network-data ones to verified agents.
-- **Profiles:** only verified, non-hidden agents are returned to other verified agents. Hidden, invited and unverified agents are never returned.
-- **Buyer links:** `get_hot_sheet_by_token`, `resolve_share_token` and `accept_client_hot_sheet_invite` stay available. I'll verify each returns only the listings explicitly on that sheet or link.
+## Dimension scores
+| Dimension | Score | Status |
+|---|---|---|
+| Positioning | 17/25 | Partial |
+| Conversion clarity | 17/25 | Partial |
+| Trust signals and social proofs | 1/20 | Fail |
+| SEO basics | 8.5/15 | Partial |
+| Brief fit | 7/10 | Partial |
 
-## 2. Photos and attachments — protected in the same release
-Solution: make the listing photos, floor plans, agent-match photos and email attachments folders private, and serve files through one secure image gateway.
-- **Members:** the app asks the gateway for short-lived signed links. The gateway checks the user is a verified agent.
-- **Buyer links:** the gateway checks the Hot Sheet or share code and only signs photos of listings on that sheet or link.
-- **Emails:** Hot Sheet and share emails currently embed permanent public photo addresses. Once the folders are private, those images would break, in both already-sent and new emails.
-  - Option A (recommended): emails point at an image address on the gateway that includes the recipient's link code, so images keep showing for the right recipient only. This changes the email photo address the shared builder produces, which needs your explicit approval because email templates are frozen.
-  - Option B: emails show photos only after the buyer clicks through to the signed-in or link page.
-  - Either way, emails sent before the change lose their images. Their links still work.
-- Headshots, logos and brand files stay public, as the email masthead and footer need them. Headshots of hidden agents will be checked.
-- If testing shows the photo change can't safely go out with part 1, I'll report the remaining exposure. The privacy issue won't be called resolved until photos are private.
+## 1. Positioning: 17/25, Partial
+Key finding: the copy speaks the audience's vocabulary but never says where the network operates or shows the network from the inside.
+- **D1.1 Hook (4/6, Partial):** the headline and subhead name the buyer and the offer. Geography is missing from the hero; only a small "Massachusetts" label appears in the header. The bigger-goal line is generic.
+- **D1.2 Pain match (4/5, Partial):** quiet marketing, early access and "No Days On Market" hit the main pain. Discretion appears only as a floating chip.
+- **D1.3 JTBD coverage (3/4, Partial):** three workflow cards cover the functional job. The emotional job (discretion, peer trust) is never developed.
+- **D1.4 Objection handling (1/3, Fail):** verification is addressed (Agent Network Rules). NAR Clear Cooperation and pricing are not. "Thousands of agents" is unverifiable.
+- **D1.5 Desired-result visualization (2/3, Partial):** the dashboard screenshot, listing cards and workflow simulation are shown. No directory, message thread or demand feed is shown.
+- **D1.6 Audience language (3/4, Partial):** strong industry vocabulary. Filler phrases flagged: "Deliberately designed for scale and persistence", "Specialization over generalization."
+- Competitors: both state the outcome in the first line. AAC states affiliation first. AAC's narrower agent-only hook is defensible but needs geography and a concrete after-state.
 
-## 3. Website pages
-- Signed-out visitors to /agent/:id, /property/:id, /team/*, /our-agents and listing search are sent to Login with a return path.
-- Valid buyer links open the shared-listing page, limited to authorized listings.
+## 2. Conversion clarity: 17/25, Partial
+Key finding: one clear, repeated Request-access CTA, held back by eight dead footer links and untested mobile rendering.
+- **D2.1 5-second comprehension (5/7, Partial):** the above-fold area works. The headline alone is affiliation-only, and the hero photo has empty alt text.
+- **D2.2 CTA hierarchy (4/5, Partial):** Request access appears three times and Login is secondary. The footer's "Request Demo" links to "#".
+- **D2.3 Visual hierarchy and scroll flow (3/5, Partial):** consistent rhythm. The marquee repeats six slogans four times, and some animated elements sit at opacity 0 in the page code.
+- **D2.4 Friction and navigation (2/4, Fail):** eight "#" links (Request Demo, For Agents, For Sellers, For Buyers, Careers, Contact Us, Data Usage & Security, Accessibility Statement). The homepage has no path to the agent rules or the verification explanation.
+- **D2.5 Mobile experience (2/4, Partial, capped):** good markup signals, but real devices were not tested, so the score is capped.
+- **D2.B Scope honesty bonus (+1/2):** "Built for licensed professionals, not public lead routing" earns +1. There is no explicit "not for X" line.
+- Competitors: a free posting tier (Off-Market.io) and a $1 trial (Insightful Agent) back their CTAs with a low-cost first step.
 
-## 4. Property previews
-- Turn off the server-side property preview. Shared links show the generic AAC card.
-- The function file stays in place so this can be rolled back.
+## 3. Trust signals and social proofs: 1/20, Fail
+Key finding: no named person, testimonial, customer or third-party signal. The only member portraits are placeholder photos.
+- **D3.1 Quantity proof (1/4, Fail):** "Thousands of agents…" and "More than 50 companies joined the hands" are text only. The second is broken English. "Proven Since 2016" is undated.
+- **D3.2 Story proof (0/7, Fail):** zero testimonials. The "Collaborate with trusted agents" card uses randomuser.me placeholder portraits (alt "Agent").
+- **D3.3 Founder-led trust (0/6, Fail):** no founder name, photo or profile link on the homepage. /about is in the sitemap but not linked from the homepage.
+- **D3.5 Third-party and recency signals (0/3, Fail):** no badges, reviews or press, and no dated content beyond the legal pages.
+- (D3.4: not shown in the source.)
+- Competitors rely on big numbers. AAC's unbacked "Thousands" loses on size and specificity.
 
-## 5. Google — in real server responses
-- These are set in the hosting settings, so the server sends them on every response, including redirects and the bare page before JavaScript loads:
-  - remove the site-wide "index everything" header
-  - add "noindex, nofollow" to all private routes
-  - the 10 public marketing pages keep "index"
-- Because the backend and pages are locked, no listing or agent data appears in page source.
-- **Tested on all three domains:**
-  - allagentconnect.com and directconnectmls.com get the same hosting settings, so the same headers.
-  - The lovable.app copy gets its headers from the page itself plus the locked backend, so data is protected there too. I'll report whether the noindex header itself arrives there.
-- After release (you do this in Search Console): submit Removals prefix requests for `/agent/` and `/property/` on each verified domain.
+## 4. SEO basics: 8.5/15, Partial
+Key finding: solid foundations, but the Cloudflare robots file blocks major AI assistant crawlers and there is no comparison or category content.
+- **D5.1 Title and meta description (2/3, Partial):** the title is good (52 chars). /request-access serves the homepage's og:title and og:url. The homepage description is about 165 chars, over the roughly 155-char display limit.
+- **D5.2 Heading structure (2/2, Pass).**
+- **D5.3 Indexable content, /vs pages, internal linking (1.5/4, Partial):** the sitemap has 9 URLs, a plain-text fallback exists, and Googlebot/Bingbot are allowed. There are no /vs or category pages. Internal linking is weak: "#" footer links and an unlinked /about.
+- **D5.4 Page speed (2/3, Partial):** 578–590 ms response time. Total page weight was not confirmed, so the score is capped.
+- **D5.5 AI discovery and structured data (1/3, Fail):** OG/Twitter metadata and Organization JSON-LD are present. Product/Service schema, FAQ schema and llms.txt are missing (/llms.txt returns the app shell). GPTBot, ClaudeBot, Google-Extended, anthropic-ai, Perplexity-class and others are disallowed. Alt text is thin.
+- Competitors: Insightful Agent ranks with FAQ and pricing pages. Off-Market.io runs a marketplace SEO funnel.
 
-## 6. Evidence of actual unauthorized retrieval
-- Backend request logs keep only a short recent window. I'll search them for signed-out requests to the listing views, profile functions and photo files, broken down by source, crawler and volume.
-- Website hosting logs (Netlify, Cloudflare) aren't visible to me. I'll list exactly which reports you or Nenad can pull.
-- The report will separate three things: confirmed retrievals, crawler retrievals (Google, Facebook), and what can't be determined because the logs aren't kept long enough.
+## 5. Brief fit: 7/10, Partial
+Key finding: the site sells the described private verified network, but the scale claims are unbacked and the directory is not shown on the homepage.
+- What matches: the hero description; the gated, verified-only model; license verification in the Agent Network Rules; the buyer-demand workspace line.
+- Gaps:
+  - Scale claims have no evidence behind them.
+  - The agent directory is not shown or linked from the homepage. /our-agents and /browse appear only in inner-page footers, and the brief reports /our-agents failed to load.
+  - "Proven Since 2016" is unsubstantiated.
+  - Market intelligence is never illustrated.
+  - No participating brokerage is named.
 
-## 7. Test matrix (in the isolated draft)
-Accounts tested: signed-out, Googlebot, Facebook crawler, verified agent, delegate, invited, unverified, suspended/restricted, hidden agent, buyer with a valid link, buyer with a link for a different sheet, buyer with an invalid link.
+## Action plan, in source order
 
-| Check | Expected |
-|---|---|
-| Each locked view and function, called directly | Only verified agents get data |
-| Agent profiles (hidden, invited, unverified) | Never returned |
-| Property pages for each status | Agents: full. Valid link: only that listing. Others: nothing. |
-| Photo and file links | Signed link required; buyer link limited to its listings |
-| Hot Sheets, invitations, share links | Work within their permissions |
-| Communications, Success Hub, search, My Listings | Unchanged for verified agents |
-| Homepage counts | Unchanged, numbers only |
-| Page source and preview tags on /property/ | No listing data |
-| Server headers on private and marketing pages | noindex on private pages, index on the 10 marketing pages |
+### Quick wins
+1. **Build a member wall of real, named agents on the homepage.**
+   - Where: Homepage, new testimonial section.
+   - Why (D3.2): no social proof.
+   - What: 3–5 quotes, each with name, brokerage, city and outcome. Heading: "Agents already working the network."
+   - Metric: homepage → access-request conversion over 4 weeks.
+   - Effort: Medium.
+2. **Replace placeholder portraits with real member imagery.**
+   - Where: "Collaborate with trusted agents" card.
+   - Why (D3.2, D3.1): placeholder faces undermine every other claim.
+   - What: real photos with permission, or a non-figurative network graphic.
+   - Metric: scroll-through past the workflow section, or a trust score from user testing.
+   - Effort: Low.
+3. **Put a named founder face and story on /about and link it from the homepage.**
+   - Why (D3.3, D2.4): no founder is named anywhere.
+   - What: photo, name, story, LinkedIn/X link; point the footer About link at /about.
+   - Metric: access-request form completion rate.
+   - Effort: Low.
+4. **Wire up or remove the eight dead footer links.**
+   - Why (D2.4): eight dead ends.
+   - What: Contact Us opens a mailto to hello@; Request Demo is removed or goes to the access form.
+   - Metric: footer click-through.
+   - Effort: Low.
+5. **Add Product and FAQ structured data.**
+   - Why (D5.5): nothing tells search engines or AI assistants what the product is.
+   - What: Service/Product JSON-LD (area served: Massachusetts) and FAQPage schema.
+   - Metric: AI-answer impressions over 60 days.
+   - Effort: Low.
+6. **Write per-page titles and descriptions.**
+   - Why (D5.1): /request-access shows the homepage's preview; the homepage description is too long.
+   - What: distinct metadata per page; homepage description under 155 chars.
+   - Metric: inner-page organic click-through.
+   - Effort: Low.
+7. **Fix alt text on the hero and key product images.**
+   - Why (D5.5): empty or generic alt text.
+   - What: descriptive alt text for the hero and the dashboard.
+   - Metric: image-search impressions.
+   - Effort: Low.
+8. **Say where the network operates in the hero itself.**
+   - Why (D1.1, D2.B, FIT): geography appears only as a small header label.
+   - What: badge reads "Verified Agent Network · Massachusetts"; the subhead adds "for licensed agents across Greater Boston."
+   - Metric: request rate from Massachusetts traffic.
+   - Effort: Low.
 
-No emails will be sent. Email output will be checked by rendering it, not by sending.
+### Do this quarter
+9. **Make the agent-count claim countable or cut it.**
+   - Why (D3.1, FIT): unbacked slogans with broken English.
+   - What: a dated member counter or verified badges, or an honest line such as "Verified agents across Greater Boston. Growing weekly."
+   - Metric: below-fold CTA click-through.
+   - Effort: Medium.
+10. **Answer the compliance and verification questions on an FAQ page.**
+    - Why (D1.4, D5.5): Clear Cooperation, pricing and verification questions go unanswered.
+    - What: a /faq page with 5–8 questions and FAQ schema.
+    - Metric: conversion among visitors who view the FAQ.
+    - Effort: Medium.
+11. **Let AI assistants read the site and add an llms.txt.**
+    - Why (D3.5, D5.3, D5.5): AI crawlers are blocked and no dated content exists.
+    - What: allow retrieval crawlers (training restrictions optional), publish /llms.txt, start a /changelog, add all three to the sitemap.
+    - Metric: AI referral visits over 60 days.
+    - Effort: Medium.
+12. **Ship one category page for off-market listing network searches.**
+    - Why (D5.3, D1.4): no category content exists.
+    - What: a page such as /off-market-listing-network.
+    - Metric: organic clicks on category keywords.
+    - Effort: Medium.
+13. **Show what approved members get before the gate.**
+    - Why (D1.5, D1.4, D2.1): the member experience is asserted, never shown.
+    - What: three labeled or anonymized captures (search, a buyer-need card, an agent profile) plus an onboarding timeline.
+    - Metric: access-request submission rate.
+    - Effort: Medium.
 
-## 8. Rollback
-- Database: a paired rollback migration that restores the previous grants and function bodies exactly. It's prepared and tested in the draft.
-- Storage: switch the folders back to public.
-- Hosting and app: revert the commit. The preview function file is kept, so this is instant.
-- A rollback runbook with the exact order of steps goes in the report.
+## Points to review before acting (my notes, not from the audit)
+- **Items 1, 2, 9 and 13** would show real agents, profiles or buyer needs publicly. That conflicts with AAC's agent-only privacy rule. They would need explicit consent or fully fake or anonymized mock-ups.
+- **Item 11** reverses your earlier choice to keep AI-training crawlers blocked and to skip llms.txt. The audit says your Cloudflare settings block AI assistant crawlers too, but my earlier check found search-answer crawlers allowed. Both need re-checking before deciding.
+- **Item 3** may be partly out of date: the founder About page was approved and added to the sitemap. I haven't confirmed whether the live footer links to it.
+- **Item 8 and the D1.1 finding** cover hero wording, which you recently finalized. Any change needs your approval.
+- **Unverified audit claims:** "Proven Since 2016", the randomuser.me portraits, the eight "#" links, and the "/our-agents failed to load" report all come from the audit. I have not checked them against the site.
 
-## 9. Proposed release sequence (after your final approval)
-1. Hosting noindex headers and the preview function turned off. No impact on members.
-2. Backend lockdown, app page guards and the image gateway, released together.
-3. Folders made private (with your approved email image option).
-4. Re-run the test matrix against production. Then you submit the Search Console removals.
-
-## 10. For Weborik / Nenad
-A handover document (`docs/audits/2026-11-privacy-lockdown.md`) listing:
-- every migration, with its rollback
-- the storage folder settings and access rules
-- the image gateway function and its secrets
-- the `netlify.toml` changes
-- the app route changes
-- the test matrix, to re-run before switching to the new environment
-
-## Technical details
-- Use `drafts--create` for the isolated database and confirm it really is isolated before running any migration.
-- Review `pg_proc` where `prosecdef` and `has_function_privilege('anon'|'authenticated')`. Check `information_schema.role_table_grants` and view owners. Check `pg_policies` for rules that only test `auth.role()='authenticated'` or `true`.
-- Image gateway: an edge function that checks the user is a verified agent (from the JWT) or that the link code matches a valid Hot Sheet or share listing, then returns a signed storage link (302 redirect). App photo helper: `getListingPhotoUrl` (13 places) switches to the gateway.
-- Netlify `[[headers]]` per private path with `X-Robots-Tag: noindex, nofollow`. Remove the global `X-Robots-Tag = "all"` and the `/property/*` edge function entry.
-- SQL grant tests go under `supabase/tests/`, in the same style as the existing ones.
+No changes are proposed in this document. Approving it only records these findings. Any fix needs separate instruction.
