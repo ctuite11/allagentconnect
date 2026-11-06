@@ -13,9 +13,11 @@ const ScalePersistence = lazyWithRetry(() => import("@/components/home-v2/ScaleP
 const GCIBenefits = lazyWithRetry(() => import("@/components/home-v2/GCIBenefits"));
 const FinalCTA = lazyWithRetry(() => import("@/components/home-v2/FinalCTA"));
 const FooterV2 = lazyWithRetry(() => import("@/components/home-v2/FooterV2"));
+const MemberPreviewSection = lazyWithRetry(() => import("@/components/home-v2/MemberPreviewSection"));
+const FounderTrustSection = lazyWithRetry(() => import("@/components/home-v2/FounderTrustSection"));
 
 const HOMEPAGE_DESCRIPTION =
-  "A private, verified network connecting real estate agents across brokerages. Share buyer needs, discover properties being prepared for sale, and collaborate directly.";
+  "A private network for verified real estate agents. Share buyer needs, properties being prepared for sale, and connect directly across brokerages.";
 
 const HOMEPAGE_JSON_LD = {
   "@context": "https://schema.org",
@@ -35,6 +37,17 @@ const HOMEPAGE_JSON_LD = {
       url: "https://allagentconnect.com/",
       description: HOMEPAGE_DESCRIPTION,
       publisher: { "@id": "https://allagentconnect.com/#organization" },
+    },
+    {
+      "@type": "Service",
+      "@id": "https://allagentconnect.com/#agent-network",
+      name: "All Agent Connect verified agent network",
+      serviceType: "Private real estate agent collaboration network",
+      audience: { "@type": "Audience", audienceType: "Licensed real estate agents" },
+      areaServed: { "@type": "AdministrativeArea", name: "Massachusetts" },
+      provider: { "@id": "https://allagentconnect.com/#organization" },
+      description: HOMEPAGE_DESCRIPTION,
+      url: "https://allagentconnect.com/",
     },
   ],
 };
@@ -97,6 +110,8 @@ const HomepageV2 = () => {
             <NetworkIntelligence />
             <EcosystemSection />
             <HowAgentsUseAAC />
+            <MemberPreviewSection />
+            <FounderTrustSection />
             <ScalePersistence />
             <GCIBenefits />
             <FinalCTA />

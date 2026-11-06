@@ -1,167 +1,75 @@
-import React, { useState } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import footerLogo from "@/assets/home/vuesax-bold-command.svg";
-import footerSocial from "@/assets/home/group-1261153741.png";
 
 const platformLinks = [
-  { label: "How It Works", href: "#how-it-works" },
-  { label: "Request Access", href: "/request-access" },
-  { label: "Request Demo", href: "#" },
+  { label: "How it works", href: "#how-it-works" },
+  { label: "Member preview", href: "#member-preview" },
+  { label: "Request access", href: "/request-access" },
   { label: "Login", href: "/login" },
 ];
 
-const solutionsLinks = [
-  { label: "For Agents", href: "#" },
-  { label: "For Sellers", href: "#" },
-  { label: "For Buyers", href: "#" },
+const exploreLinks = [
+  { label: "For licensed agents", href: "#how-it-works" },
+  { label: "Off-market listing network", href: "/off-market-listing-network" },
+  { label: "Frequently asked questions", href: "/faq" },
+  { label: "Agent Network Rules", href: "/agent-rules" },
 ];
 
 const companyLinks = [
-  { label: "About", href: "#about" },
-  { label: "Network Values", href: "#network" },
-  { label: "Careers", href: "#" },
-  { label: "Contact Us", href: "#" },
+  { label: "About & founder", href: "/about" },
+  { label: "Contact Us", href: "mailto:hello@allagentconnect.com" },
 ];
 
 const legalLinks = [
   { label: "Privacy Policy", href: "/privacy" },
   { label: "Terms of Service", href: "/terms" },
   { label: "Cookie Policy", href: "/cookies" },
-  { label: "Data Usage & Security", href: "#" },
-  { label: "Disclaimer", href: "/disclosures" },
+  { label: "Disclosures", href: "/disclosures" },
   { label: "Fair Housing Notice", href: "/fair-housing" },
-  { label: "Accessibility Statement", href: "#" },
 ];
 
-const FooterLink = ({ href, children }: { href: string; children: React.ReactNode }) => {
-  if (href.startsWith("/")) {
-    return (
-      <Link to={href} className="font-['Manrope'] font-medium text-white text-base hover:opacity-70 transition-opacity whitespace-nowrap">
-        {children}
-      </Link>
-    );
-  }
+function FooterLink({ href, children }: { href: string; children: React.ReactNode }) {
+  const className = "font-['Manrope'] font-medium text-white/85 text-sm hover:text-white underline-offset-4 focus-visible:underline";
+  return href.startsWith("/") ? <Link to={href} className={className}>{children}</Link> :
+    <a href={href} className={className}>{children}</a>;
+}
+
+function FooterColumn({ title, links }: { title: string; links: {label: string; href: string}[] }) {
   return (
-    <a href={href} className="font-['Manrope'] font-medium text-white text-base hover:opacity-70 transition-opacity whitespace-nowrap">
-      {children}
-    </a>
+    <div className="flex flex-col gap-5">
+      <h3 className="font-['Manrope'] font-semibold text-white/65 text-xs uppercase tracking-wider">{title}</h3>
+      <nav aria-label={title} className="flex flex-col gap-4">
+        {links.map(link => <FooterLink key={link.label} href={link.href}>{link.label}</FooterLink>)}
+      </nav>
+    </div>
   );
-};
+}
 
-const FooterV2 = () => {
-  const [email, setEmail] = useState("");
-
+export default function FooterV2() {
   return (
-    <footer className="w-full bg-[#070708]">
-      <div className="w-full max-w-[1440px] mx-auto px-6 lg:px-[100px] pt-24 pb-0">
-        {/* Main grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-[1fr_auto_auto_auto_1fr] gap-12">
-          {/* Brand */}
-          <div className="flex flex-col gap-6 max-w-[320px]">
+    <footer className="w-full bg-[#070708] text-white">
+      <div className="mx-auto max-w-[1440px] px-6 py-14 lg:px-[100px]">
+        <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1fr]">
+          <div className="max-w-[340px]">
             <div className="flex items-center gap-3">
-              <img src={footerLogo} alt="Logo" className="w-8 h-8" />
-              <span className="font-['Manrope'] font-extrabold text-white text-xl tracking-[-0.8px] whitespace-nowrap">
-                All Agent Connect
-              </span>
+              <img src={footerLogo} alt="" aria-hidden="true" className="h-8 w-8" />
+              <span className="font-['Manrope'] font-bold text-xl">All Agent Connect</span>
             </div>
-            <p className="font-['Manrope'] font-medium text-[#edeff7a6] text-base leading-[1.6]">
-              Private agent network for off-market and early-stage real estate intelligence.
+            <p className="mt-5 text-sm leading-relaxed text-white/70">
+              A private network for verified real estate agents to share buyer needs, discuss properties being prepared for sale, and work across brokerages.
             </p>
-            <img src={footerSocial} alt="Social icons" className="w-[200px] h-auto" />
+            <p className="mt-4 text-sm text-white/70">Based in Greater Boston. Membership is for licensed agents, not the public.</p>
           </div>
-
-          {/* Platform */}
-          <div className="flex flex-col gap-7">
-            <span className="font-['Manrope'] font-semibold text-[#d4cfc9] text-sm tracking-[1.12px] uppercase">
-              Platform
-            </span>
-            <nav className="flex flex-col gap-5">
-              {platformLinks.map((l) => (
-                <FooterLink key={l.label} href={l.href}>{l.label}</FooterLink>
-              ))}
-            </nav>
-          </div>
-
-          {/* Solutions */}
-          <div className="flex flex-col gap-7">
-            <span className="font-['Manrope'] font-semibold text-[#d4cfc9] text-sm tracking-[1.12px] uppercase">
-              Solutions
-            </span>
-            <nav className="flex flex-col gap-5">
-              {solutionsLinks.map((l) => (
-                <FooterLink key={l.label} href={l.href}>{l.label}</FooterLink>
-              ))}
-            </nav>
-          </div>
-
-          {/* Company */}
-          <div className="flex flex-col gap-7">
-            <span className="font-['Manrope'] font-semibold text-[#d4cfc9] text-sm tracking-[1.12px] uppercase">
-              Company
-            </span>
-            <nav className="flex flex-col gap-5">
-              {companyLinks.map((l) => (
-                <FooterLink key={l.label} href={l.href}>{l.label}</FooterLink>
-              ))}
-            </nav>
-          </div>
-
-          {/* Newsletter */}
-          <div className="flex flex-col gap-7 max-w-[420px]">
-            <div className="flex flex-col gap-3">
-              <h3 className="font-['Manrope'] font-semibold text-white text-base leading-[1.6]">
-                Be First to Know What's Moving Privately
-              </h3>
-              <p className="font-['Manrope'] font-medium text-[#edeff7a6] text-sm leading-[1.6]">
-                Member-only insights, off-market trends, and platform updates.
-              </p>
-            </div>
-            <div className="relative h-14">
-              <div className="absolute inset-0 bg-white/5 rounded-full border border-white/10" />
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Email address"
-                className="absolute inset-0 w-full h-full bg-transparent rounded-full pl-5 pr-36 text-white text-base font-['Manrope'] placeholder-white/40 outline-none"
-              />
-              <div className="absolute top-[5px] right-[5px] h-[44px]">
-                <Button className="h-full px-5 bg-[#50C878] rounded-full text-black text-sm font-semibold font-['Manrope'] hover:bg-[#45b96d] whitespace-nowrap shadow-sm">
-                  Subscribe
-                </Button>
-              </div>
-            </div>
-          </div>
+          <FooterColumn title="Platform" links={platformLinks} />
+          <FooterColumn title="Explore" links={exploreLinks} />
+          <FooterColumn title="Company" links={companyLinks} />
         </div>
-
-        {/* Bottom bar */}
-        <div className="mt-20 flex flex-col gap-0">
-          <Separator className="bg-[#ffffff1a]" />
-          <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 py-7">
-            {legalLinks.map((l) =>
-              l.href.startsWith("/") ? (
-                <Link key={l.label} to={l.href} className="font-['Manrope'] font-medium text-[#ffffffcc] text-sm hover:opacity-70 transition-opacity whitespace-nowrap">
-                  {l.label}
-                </Link>
-              ) : (
-                <a key={l.label} href={l.href} className="font-['Manrope'] font-medium text-[#ffffffcc] text-sm hover:opacity-70 transition-opacity whitespace-nowrap">
-                  {l.label}
-                </a>
-              )
-            )}
-          </div>
-          <Separator className="bg-[#ffffff1a]" />
-          <div className="flex items-center justify-center py-8">
-            <span className="font-['Manrope'] font-medium text-[#edeff7a6] text-sm text-center">
-              © {new Date().getFullYear()} All Agent Connect, Inc. All rights reserved.
-            </span>
-          </div>
-        </div>
+        <nav aria-label="Legal" className="mt-14 flex flex-wrap gap-x-6 gap-y-3 border-t border-white/15 pt-7">
+          {legalLinks.map(link => <FooterLink key={link.label} href={link.href}>{link.label}</FooterLink>)}
+        </nav>
+        <p className="mt-8 text-center text-sm text-white/60">© {new Date().getFullYear()} All Agent Connect, Inc. All rights reserved.</p>
       </div>
     </footer>
   );
-};
-
-export default FooterV2;
+}

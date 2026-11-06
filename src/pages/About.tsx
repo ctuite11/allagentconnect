@@ -74,7 +74,7 @@ export default function About() {
             </li>
           </ul>
 
-          <h2 className="mt-10 text-2xl font-semibold tracking-tight text-foreground">Founder</h2>
+          <h2 className="mt-10 text-2xl font-semibold tracking-tight text-foreground">Founder: Chris Tuite</h2>
           <p className="mt-4 text-base text-muted-foreground leading-7">
             Chris Tuite has spent 33 years as a real estate broker in Boston, with deep experience in Charlestown and
             the Greater Boston market. He is a broker with Compass and the founder of All Agent Connect.
@@ -83,6 +83,14 @@ export default function About() {
             Chris is the inventor of U.S. Patent No. 11,379,939 B2, "Real Estate Buyer Registry" (granted July 5,
             2022) — a computerized system for connecting real estate professionals with buyer demand. That idea grew
             into All Agent Connect.
+          </p>
+          <p className="mt-4 text-base text-muted-foreground leading-7">
+            <a href="https://patents.google.com/patent/US11379939B2/en" target="_blank" rel="noopener noreferrer" className="text-[#0E56F5] underline underline-offset-2">
+              View the published U.S. patent record
+            </a>. A patent is not an endorsement of the network or its results.
+          </p>
+          <p className="mt-6 text-sm text-muted-foreground">
+            For membership questions, email <a href="mailto:hello@allagentconnect.com" className="underline underline-offset-2">hello@allagentconnect.com</a>.
           </p>
         </div>
       </main>

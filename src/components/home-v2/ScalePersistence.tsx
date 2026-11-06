@@ -21,10 +21,10 @@ const ScalePersistence = () => {
             <span className="font-['Manrope'] font-semibold text-[#2537ff] text-[14px] tracking-[0.3px]">Why choose All Agent Connect</span>
           </div>
           <h2 className="font-['Manrope'] font-semibold text-[#292d32] text-4xl md:text-6xl tracking-tight leading-[1.0]" style={{ textWrap: "balance" as any }}>
-            Deliberately designed<br />for scale and persistence
+            Keep private opportunities<br />moving across brokerages
           </h2>
           <p className="font-['Manrope'] font-medium text-[#6b7280] text-lg md:text-xl leading-relaxed max-w-2xl">
-            All Agent Connect is designed for scale and persistence: intelligence compounds, participation creates leverage, and network activity becomes visible and actionable.
+            Share property opportunities at the right time, discuss buyer demand, and connect directly with verified agents while respecting seller instructions.
           </p>
         </div>
 

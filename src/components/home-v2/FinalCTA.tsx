@@ -1,16 +1,16 @@
 import React from "react";
 
 const marqueeItems = [
-  "Professional specialists are available to serve",
-  "Thousands of agents. One common goal: Success.",
-  "Agent-focused. Results-driven.",
-  "Real Estate Intelligence: Proven Since 2016.",
-  "More than 50\u00a0companies joined the hands",
-  "Specialization over generalization.",
+  "Verified licensed agents",
+  "Direct agent-to-agent connections",
+  "Buyer and renter needs",
+  "Properties being prepared for sale",
+  "Privacy when a seller requests it",
+  "Agents across brokerages",
 ];
 
 const FinalCTA = () => {
-  const allItems = [...marqueeItems, ...marqueeItems, ...marqueeItems, ...marqueeItems];
+  const allItems = [...marqueeItems, ...marqueeItems];
 
   return (
     <section className="w-full bg-[#070708] flex flex-col items-center overflow-hidden">
@@ -66,6 +66,9 @@ const FinalCTA = () => {
         }
         .homepage-v2-marquee {
           animation: homepageV2Marquee 52s linear infinite;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .homepage-v2-marquee { animation: none; }
         }
       `}</style>
     </section>
