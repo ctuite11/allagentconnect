@@ -1,6 +1,10 @@
 import { supabase } from "@/integrations/supabase/client";
 import { invokeEdgeFunction, resolveEdgeFunctionErrorMessage } from "@/lib/invokeEdgeFunction";
 
+export type AssistantScope =
+  | { kind: "agent" }
+  | { kind: "team"; teamId: string };
+
 export type AccountDelegateRow = {
   member_id: string;
   delegate_user_id: string | null;
@@ -31,6 +35,7 @@ export type DelegateInvitePreview = {
   is_licensed_agent?: boolean;
   blocked?: boolean;
   blocked_message?: string | null;
+  team_id?: string | null;
 };
 
 export type SetupDelegateInviteInput = {
@@ -58,6 +63,10 @@ export type SetupDelegateInviteResult =
       error: string;
       code?: string;
     };
+
+function scopeTeamId(scope?: AssistantScope): string | undefined {
+  return scope?.kind === "team" ? scope.teamId : undefined;
+}
 
 async function invokeDelegateEdgeFunction<T extends Record<string, unknown>>(
   name: string,
@@ -170,10 +179,20 @@ export async function inviteAccountDelegate(input: {
   member_id?: string;
   display_name?: string;
   role_label?: string;
+  scope?: AssistantScope;
+  update_only?: boolean;
 }): Promise<{ ok: boolean; error?: string; member_id?: string; resent?: boolean }> {
+  const teamId = scopeTeamId(input.scope);
   const result = await invokeDelegateEdgeFunction<{ member_id?: string; resent?: boolean }>(
     "invite-account-delegate",
-    input,
+    {
+      invite_email: input.invite_email,
+      ...(input.member_id ? { member_id: input.member_id } : {}),
+      ...(input.display_name !== undefined ? { display_name: input.display_name } : {}),
+      ...(input.role_label !== undefined ? { role_label: input.role_label } : {}),
+      ...(teamId ? { team_id: teamId } : {}),
+      ...(input.update_only ? { update_only: true } : {}),
+    },
   );
 
   if (result.ok !== true) {
@@ -185,9 +204,12 @@ export async function inviteAccountDelegate(input: {
 
 export async function revokeAccountDelegate(
   memberId: string,
+  scope?: AssistantScope,
 ): Promise<{ ok: boolean; error?: string }> {
+  const teamId = scopeTeamId(scope);
   const result = await invokeDelegateEdgeFunction("revoke-account-delegate", {
     member_id: memberId,
+    ...(teamId ? { team_id: teamId } : {}),
   });
 
   if (result.ok !== true) {
@@ -209,11 +231,17 @@ export function delegateInviteActivityLabel(action: DelegateInviteActivityRow["a
   return "Invitation sent";
 }
 
-export async function listDelegateInviteActivity(): Promise<DelegateInviteActivityRow[]> {
+export async function listDelegateInviteActivity(
+  scope?: AssistantScope,
+): Promise<DelegateInviteActivityRow[]> {
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return [];
+
+  // Activity is audited under the acting user; for team scope we still show
+  // the caller's recent invite actions (filtered client-side by loaded rows).
+  void scope;
 
   const { data, error } = await supabase
     .from("audit_logs")
@@ -232,7 +260,20 @@ export async function listDelegateInviteActivity(): Promise<DelegateInviteActivi
   return (data ?? []) as DelegateInviteActivityRow[];
 }
 
-export async function listAccountDelegatesForOwner(): Promise<AccountDelegateRow[]> {
+export async function listAccountDelegatesForOwner(
+  scope?: AssistantScope,
+): Promise<AccountDelegateRow[]> {
+  if (scope?.kind === "team") {
+    const { data, error } = await supabase.rpc("list_account_delegates_for_team", {
+      p_team_id: scope.teamId,
+    });
+    if (error) {
+      console.error("[listAccountDelegatesForTeam]", error.message);
+      return [];
+    }
+    return (data ?? []) as AccountDelegateRow[];
+  }
+
   const { data, error } = await supabase.rpc("list_account_delegates_for_owner");
   if (error) {
     console.error("[listAccountDelegatesForOwner]", error.message);
