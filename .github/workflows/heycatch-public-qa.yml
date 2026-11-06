@@ -24,7 +24,7 @@ jobs:
           node-version: "22"
           cache: "npm"
       - name: Install dependencies
-        run: npm ci --no-audit --no-fund
+        run: npm install --no-package-lock --legacy-peer-deps --no-audit --no-fund
       - name: Build production bundle (no deploy or email)
         run: npm run build
       - name: Install headless Chromium
