@@ -1,14 +1,15 @@
 /**
- * PUBLIC, AGGREGATE-ONLY snapshot for the marketing website.
- * Data source: internal read-only aggregate count on 2026-11-06 of agent_settings:
- * agent_status = 'verified' AND account_activated_at IS NOT NULL
- * AND UPPER(license_state) = 'MA'.
+ * Public aggregate snapshot supplied by the AAC founder on November 6, 2026:
+ * 347 active platform members. This is NOT the same as the narrower database
+ * query for verified/activated members with a Massachusetts license state
+ * (318 on the same date). Avoid mislabeling this total as MA-verified agents.
  *
- * Static by design: no anonymous client query, no private membership data,
- * no implied real-time accuracy. Refresh only after another validated aggregate.
+ * No anonymous database query, member profiles, or live count endpoint.
+ * Reconfirm and update this number before representing it as current later.
+ * Facebook-group participation is separate and is not included in this count.
  */
-export const verifiedMassachusettsAgentSnapshot = {
-  count: 318,
+export const activeAACMemberSnapshot = {
+  count: 347,
   asOf: "2026-11-06",
   displayDate: "November 6, 2026",
 } as const;

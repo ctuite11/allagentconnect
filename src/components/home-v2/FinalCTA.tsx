@@ -1,8 +1,8 @@
 import React from "react";
-import { verifiedMassachusettsAgentSnapshot } from "@/content/publicNetworkProof";
+import { activeAACMemberSnapshot } from "@/content/publicNetworkProof";
 
 const marqueeItems = [
-  `${verifiedMassachusettsAgentSnapshot.count.toLocaleString("en-US")} verified Massachusetts agents (as of November 2026)`,
+  `${activeAACMemberSnapshot.count.toLocaleString("en-US")} active AAC members (as of November 2026)`,
   "Direct agent-to-agent connections",
   "Buyer and renter needs",
   "Properties being prepared for sale",

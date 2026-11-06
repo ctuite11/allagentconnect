@@ -26,6 +26,10 @@ export default function FounderTrustSection() {
           to share opportunities and buyer needs without opening a private network to the public.
         </p>
         <p className="mt-4 max-w-3xl text-base leading-relaxed text-slate-600">
+          All Agent Connect also grew a separate Facebook community of thousands of agents.
+          That Facebook group is currently paused and its participants are not counted as active website members.
+        </p>
+        <p className="mt-4 max-w-3xl text-base leading-relaxed text-slate-600">
           He is the named inventor of U.S. Patent No. 11,379,939 B2, Real Estate Buyer Registry.
           The patent is a public record, not an endorsement of AAC or a claim of member results.
         </p>

@@ -15,8 +15,10 @@ Clarifying category line: a private property-sharing and buyer-demand network fo
 The public site does not expose member listings, client records, agent messages or private directory entries.
 
 ## Measurable network proof
-A read-only database aggregate on November 6, 2026 identified **318 verified, activated Massachusetts agents**. It excludes accounts lacking an MA license state or activation, and is displayed only as a dated aggregate. No real-time public database query is permitted.
-Retired claims: "Thousands of agents", "More than 50 companies joined", "Proven Since 2016".
+The founder confirmed **347 active AAC website members** as of November 6, 2026. That is the count displayed in the hero and marquee, explicitly dated and NOT labeled a Massachusetts-verified subset.
+A narrower internal aggregate on the same date identified 318 verified/activated members with an MA license state. These populations are different and should not be confused.
+The separate AAC Facebook community has included thousands of agent participants, but the group is currently paused. Do NOT add the Facebook figure to the website membership count or call the Facebook participants active website members.
+Retired unsubstantiated website claims: "Thousands of agents" *on the app*, "More than 50 companies joined", "Proven Since 2016".
 No member photo grid or testimonials will be public until individuals consent specifically to public marketing.
 Public founder portrait and verified LinkedIn URL are still pending.
 
@@ -24,6 +26,8 @@ Public founder portrait and verified LinkedIn URL are still pending.
 Membership is gated by license verification. Pricing is not stated on the live public site. Do not invent a free plan or price.
 
 ## Compliance
+The prominent MLS/Clear Cooperation warning was removed from the hero at the founder's request. Keep the accurate explanation on /faq, /agent-rules, and the relevant informational page. Do not remove or soften the underlying obligation.
+
 AAC is not an MLS and does not create an exception to local MLS, NAR Clear Cooperation or brokerage rules. Multi-brokerage listing promotion can constitute public marketing and may trigger MLS submission. Seller authorization by itself does not automatically exempt such promotion. Members are responsible for local requirements and seller instructions.
 
 ## SEO
