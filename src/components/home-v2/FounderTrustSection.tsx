@@ -1,10 +1,21 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import { approvedFounderProfile } from "@/content/publicNetworkProof";
 
 export default function FounderTrustSection() {
   return (
     <section aria-labelledby="founder-trust-title" className="bg-white px-6 py-16 md:py-20">
       <div className="mx-auto max-w-6xl rounded-3xl border border-slate-200 p-8 md:p-12">
+        {approvedFounderProfile.imageSrc && (
+          <img
+            src={approvedFounderProfile.imageSrc}
+            alt="Chris Tuite, founder of All Agent Connect"
+            width={128}
+            height={128}
+            loading="lazy"
+            className="mb-5 h-32 w-32 rounded-2xl object-cover"
+          />
+        )}
         <p className="text-sm font-semibold text-[#0E56F5]">Built by an agent, for agents</p>
         <h2 id="founder-trust-title" className="mt-3 font-['Manrope'] text-3xl font-semibold text-slate-900 md:text-4xl">
           Chris Tuite · Founder, All Agent Connect
@@ -21,6 +32,11 @@ export default function FounderTrustSection() {
         <div className="mt-7 flex flex-wrap gap-x-7 gap-y-3">
           <Link to="/about" className="font-semibold text-[#0E56F5] underline underline-offset-4">Read the founder story</Link>
           <a href="https://patents.google.com/patent/US11379939B2/en" target="_blank" rel="noopener noreferrer" className="font-semibold text-[#0E56F5] underline underline-offset-4">View patent record</a>
+          {approvedFounderProfile.linkedinUrl && (
+            <a href={approvedFounderProfile.linkedinUrl} target="_blank" rel="noopener noreferrer" className="font-semibold text-[#0E56F5] underline underline-offset-4">
+              Chris on LinkedIn
+            </a>
+          )}
         </div>
       </div>
     </section>
