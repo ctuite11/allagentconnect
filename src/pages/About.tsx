@@ -1,5 +1,6 @@
 import Footer from "@/components/Footer";
 import { Seo } from "@/components/Seo";
+import { approvedFounderProfile } from "@/content/publicNetworkProof";
 
 const ABOUT_JSON_LD = {
   "@context": "https://schema.org",
@@ -75,6 +76,14 @@ export default function About() {
           </ul>
 
           <h2 className="mt-10 text-2xl font-semibold tracking-tight text-foreground">Founder: Chris Tuite</h2>
+          {approvedFounderProfile.imageSrc && (
+            <img src={approvedFounderProfile.imageSrc} alt="Chris Tuite, AAC founder and Boston real estate broker" width={144} height={144} loading="lazy" className="mt-5 h-36 w-36 rounded-xl object-cover" />
+          )}
+          {approvedFounderProfile.linkedinUrl && (
+            <p className="mt-4">
+              <a href={approvedFounderProfile.linkedinUrl} target="_blank" rel="noopener noreferrer" className="text-[#0E56F5] underline underline-offset-4">Chris Tuite on LinkedIn</a>
+            </p>
+          )}
           <p className="mt-4 text-base text-muted-foreground leading-7">
             Chris Tuite has spent 33 years as a real estate broker in Boston, with deep experience in Charlestown and
             the Greater Boston market. He is a broker with Compass and the founder of All Agent Connect.

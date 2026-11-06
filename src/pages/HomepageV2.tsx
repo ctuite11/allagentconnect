@@ -134,8 +134,8 @@ const HomepageV2 = () => {
             <EcosystemSection />
             <HowAgentsUseAAC />
             <MemberPreviewSection />
-            <FounderTrustSection />
             <AgentStoriesSection />
+            <FounderTrustSection />
             <ScalePersistence />
             <GCIBenefits />
             <FinalCTA />

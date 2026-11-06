@@ -89,7 +89,7 @@ const HeroSection = () => {
             src={HERO_SRC}
             srcSet={HERO_WEBP_SRCSET}
             sizes={HERO_SIZES}
-            alt="Real estate agents collaborating"
+            alt="Illustrative collaboration among Massachusetts real estate agents sharing buyer needs and properties being prepared for sale"
             width={1920}
             height={1080}
             fetchPriority="high"
@@ -155,7 +155,7 @@ const HeroSection = () => {
             </span>
           </div>
 
-          {/* Headline */}
+          {/* Headline — keep the approved AAC brand statement unchanged. */}
           <h1
             className="mt-6 font-['Manrope'] font-semibold text-4xl sm:text-5xl md:text-6xl tracking-tight leading-[1.05]"
             style={{ textShadow: "0 2px 12px rgba(0,0,0,0.35)" }}
@@ -163,6 +163,10 @@ const HeroSection = () => {
             <span className="block whitespace-nowrap text-white">ONE NETWORK.</span>
             <span className="block whitespace-nowrap text-[#50C878]">ALL AGENTS.</span>
           </h1>
+
+          <p className="mt-4 font-['Manrope'] font-semibold text-white text-base sm:text-lg leading-snug">
+            A private property-sharing and buyer-demand network for Massachusetts real estate agents.
+          </p>
 
           {/* Sub-headline */}
           <p
@@ -179,7 +183,7 @@ const HeroSection = () => {
             Based in Greater Boston. Built for licensed agents across brokerages.
           </p>
 
-          {/* CTA */}
+          {/* Main application action plus a lower-commitment path for curious agents. */}
           <div className="flex items-center gap-4 mt-8 flex-wrap">
             <a
               href="/request-access"
@@ -189,6 +193,9 @@ const HeroSection = () => {
               <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
                 <path d="M7.5 5l5 5-5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
+            </a>
+            <a href="/faq" className="font-['Manrope'] text-sm sm:text-base font-semibold text-white underline underline-offset-4 hover:text-[#baf7d0]">
+              See how membership works
             </a>
           </div>
         </div>
