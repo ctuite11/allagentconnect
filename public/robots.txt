@@ -1,3 +1,55 @@
+# AAC public marketing pages may be summarized by search answer engines.
+# This file is crawl guidance only: authentication and backend authorization
+# protect the actual agent network. Cloudflare may prepend managed rules.
+User-agent: OAI-SearchBot
+Disallow: /
+Allow: /about
+Allow: /faq
+Allow: /off-market-listing-network
+Allow: /request-access
+Allow: /agent-rules
+Allow: /privacy
+Allow: /terms
+Allow: /cookies
+Allow: /fair-housing
+Allow: /disclosures
+Allow: /llms.txt
+
+User-agent: PerplexityBot
+Disallow: /
+Allow: /about
+Allow: /faq
+Allow: /off-market-listing-network
+Allow: /request-access
+Allow: /agent-rules
+Allow: /privacy
+Allow: /terms
+Allow: /cookies
+Allow: /fair-housing
+Allow: /disclosures
+Allow: /llms.txt
+
+User-agent: Claude-SearchBot
+Disallow: /
+Allow: /about
+Allow: /faq
+Allow: /off-market-listing-network
+Allow: /request-access
+Allow: /agent-rules
+Allow: /privacy
+Allow: /terms
+Allow: /cookies
+Allow: /fair-housing
+Allow: /disclosures
+Allow: /llms.txt
+
+# Separate model-training crawlers remain excluded by AAC policy.
+User-agent: GPTBot
+Disallow: /
+
+User-agent: ClaudeBot
+Disallow: /
+
 User-agent: Googlebot
 Allow: /
 
@@ -13,10 +65,15 @@ Allow: /
 User-agent: *
 Allow: /
 Disallow: /agent-dashboard
+Disallow: /agent/
 Disallow: /admin
 Disallow: /auth
 Disallow: /password-reset
 Disallow: /pending-verification
 Disallow: /client
+Disallow: /communications
+Disallow: /my-listings
+Disallow: /our-agents
+Disallow: /browse
 
 Sitemap: https://allagentconnect.com/sitemap.xml
