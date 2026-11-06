@@ -27,8 +27,8 @@ try {
     assert.equal(response?.status(), 200, path + " did not respond with 200");
     await page.getByRole("heading", { name: heading }).first().waitFor({ timeout: 25000 });
     if (path === "/") {
-      assert.equal(await page.getByText(/\\b(?:347|318)\\b\\s+(?:active AAC members|verified Massachusetts agents)/i).count(), 0,
-        "Public member number must remain hidden");
+      assert.equal(await page.getByText(/\\b[0-9][0-9,]*\\s+(?:active AAC members|verified Massachusetts agents)\\b/i).count(), 0,
+        "Public member numbers must remain hidden");
       await page.getByRole("link", { name: "See how membership works" }).waitFor({ timeout: 25000 });
       assert.equal(await page.getByRole("link", { name: /Sharing listings across brokerages may trigger MLS/i }).count(), 0,
         "Compliance text should stay in FAQ/rules, not the hero");

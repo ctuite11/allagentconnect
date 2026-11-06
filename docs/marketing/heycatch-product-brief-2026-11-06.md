@@ -14,13 +14,11 @@ Approved brand headline: **ONE NETWORK. ALL AGENTS.** Do not replace it with a m
 Clarifying category line: a private property-sharing and buyer-demand network for Massachusetts real estate agents.
 The public site does not expose member listings, client records, agent messages or private directory entries.
 
-## Measurable network proof
-The founder confirmed **347 active AAC website members** as of November 6, 2026. **Founder decision: do not display membership numbers publicly**, including the homepage hero and marquee. Keep numerical counts in this internal reference document only.
-A narrower internal aggregate on the same date identified 318 verified/activated members with an MA license state. These populations are different and should not be confused.
-The separate AAC Facebook community has included thousands of agent participants, but the group is currently paused. Do NOT add the Facebook figure to the website membership count or call the Facebook participants active website members.
-Retired unsubstantiated website claims: "Thousands of agents" *on the app*, "More than 50 companies joined", "Proven Since 2016".
-No member photo grid or testimonials will be public until individuals consent specifically to public marketing.
-Public founder portrait and verified LinkedIn URL are still pending.
+## Network privacy and proof
+The founder elected **not to display AAC member numbers publicly**. Do not put member totals in the hero, bottom marquee, testimonials, metadata, or other public content. Dated counts should remain in private business records rather than this public repository.
+The separate AAC Facebook community has included thousands of agent participants, but the group is currently paused. Do NOT present Facebook participation as active website membership.
+Retired website claims: "Thousands of agents" *on the app*, "More than 50 companies joined", "Proven Since 2016".
+No public member photo grid or testimonials will be published until each individual explicitly consents to public marketing. Founder portrait and verified LinkedIn URL are pending.
 
 ## Membership and pricing
 Membership is gated by license verification. Pricing is not stated on the live public site. Do not invent a free plan or price.
