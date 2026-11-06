@@ -8,7 +8,7 @@ const CheckIcon = () => (
   </svg>
 );
 
-const leftTags = ["No Days On Market", "Highest ROI", "Verified Agents"];
+const leftTags = ["Seller-directed visibility", "Verified agents only", "Private collaboration"];
 const rightTags = ["Pre-market data", "Agent controlled info, privacy and discretion", "Increased velocity and higher close rates"];
 
 const ScalePersistence = () => {

@@ -1,0 +1,13 @@
+# All Agent Connect
+> Public information about a private, verified collaboration network for licensed real estate agents. Based in Greater Boston, Massachusetts.
+
+## Public pages
+- [Home](https://allagentconnect.com/): Network overview and request-access CTA.
+- [About](https://allagentconnect.com/about): Founder and product mission.
+- [Request access](https://allagentconnect.com/request-access): Application entry point.
+- [Agent FAQ](https://allagentconnect.com/faq): Membership, verification, privacy, compliance and pricing questions.
+- [Off-market listing network](https://allagentconnect.com/off-market-listing-network): How the private agent collaboration service works.
+- [Agent Network Rules](https://allagentconnect.com/agent-rules): Member responsibilities.
+
+## Privacy boundaries
+AAC is an agent-only service. Private agent profiles, listings, buyer/renter needs, messages, and client information are not part of public indexing or AI retrieval. This file does not authorize access to protected content.

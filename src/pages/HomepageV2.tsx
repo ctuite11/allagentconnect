@@ -15,6 +15,7 @@ const FinalCTA = lazyWithRetry(() => import("@/components/home-v2/FinalCTA"));
 const FooterV2 = lazyWithRetry(() => import("@/components/home-v2/FooterV2"));
 const MemberPreviewSection = lazyWithRetry(() => import("@/components/home-v2/MemberPreviewSection"));
 const FounderTrustSection = lazyWithRetry(() => import("@/components/home-v2/FounderTrustSection"));
+const AgentStoriesSection = lazyWithRetry(() => import("@/components/home-v2/AgentStoriesSection"));
 
 const HOMEPAGE_DESCRIPTION =
   "A private network for verified real estate agents. Share buyer needs, properties being prepared for sale, and connect directly across brokerages.";
@@ -112,6 +113,7 @@ const HomepageV2 = () => {
             <HowAgentsUseAAC />
             <MemberPreviewSection />
             <FounderTrustSection />
+            <AgentStoriesSection />
             <ScalePersistence />
             <GCIBenefits />
             <FinalCTA />
