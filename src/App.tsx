@@ -171,6 +171,8 @@ const ShareLinkHandler = React.lazy(() => import("./pages/ShareLinkHandler"));
 const LandingPage = React.lazy(() => import("./pages/LandingPage"));
 const AgentMatch = React.lazy(() => import("./pages/AgentMatch"));
 const About = React.lazy(() => import("./pages/About"));
+const Faq = React.lazy(() => import("./pages/Faq"));
+const OffMarketListingNetwork = React.lazy(() => import("./pages/OffMarketListingNetwork"));
 const Contact = React.lazy(() => import("./pages/Contact"));
 const Blog = React.lazy(() => import("./pages/Blog"));
 const DesignMockup = React.lazy(() => import("./pages/DesignMockup"));
@@ -513,6 +515,8 @@ const App = () => (
                 <Route path="/seller/dashboard" element={<SellerDashboard />} />
                 <Route path="/home" element={<Index />} />
                 <Route path="/about" element={<About />} />
+                <Route path="/faq" element={<Faq />} />
+                <Route path="/off-market-listing-network" element={<OffMarketListingNetwork />} />
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/blog" element={<Blog />} />
                 {/* Auth routes */}

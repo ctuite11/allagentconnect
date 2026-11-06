@@ -151,7 +151,7 @@ const HeroSection = () => {
           <div className="inline-flex items-center gap-2.5 px-4 py-2 bg-white/10 border border-white/15 backdrop-blur-md rounded-full w-fit">
             <span className="w-[7px] h-[7px] rounded-full bg-[#50c878] shrink-0" />
             <span className="font-['Manrope'] font-medium text-white/90 text-sm tracking-[0.28px]">
-              Verified Agent Network
+              Verified Agent Network · Massachusetts
             </span>
           </div>
 
@@ -174,6 +174,9 @@ const HeroSection = () => {
             to share properties agents are preparing to list, properties sellers choose to
             market privately, buyer demand, and market intelligence — giving their clients
             a competitive edge.
+          </p>
+          <p className="mt-3 font-['Manrope'] text-white/85 text-sm sm:text-base">
+            Based in Greater Boston. Built for licensed agents across brokerages.
           </p>
 
           {/* CTA */}

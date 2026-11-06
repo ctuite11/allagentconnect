@@ -1,4 +1,4 @@
-import React, { Suspense, useLayoutEffect } from "react";
+import React, { Suspense, useEffect, useLayoutEffect } from "react";
 import { Seo } from "@/components/Seo";
 import { isDcmlsHost } from "@/lib/host";
 import { lazyWithRetry } from "@/lib/lazyWithRetry";
@@ -13,9 +13,12 @@ const ScalePersistence = lazyWithRetry(() => import("@/components/home-v2/ScaleP
 const GCIBenefits = lazyWithRetry(() => import("@/components/home-v2/GCIBenefits"));
 const FinalCTA = lazyWithRetry(() => import("@/components/home-v2/FinalCTA"));
 const FooterV2 = lazyWithRetry(() => import("@/components/home-v2/FooterV2"));
+const MemberPreviewSection = lazyWithRetry(() => import("@/components/home-v2/MemberPreviewSection"));
+const FounderTrustSection = lazyWithRetry(() => import("@/components/home-v2/FounderTrustSection"));
+const AgentStoriesSection = lazyWithRetry(() => import("@/components/home-v2/AgentStoriesSection"));
 
 const HOMEPAGE_DESCRIPTION =
-  "A private, verified network connecting real estate agents across brokerages. Share buyer needs, discover properties being prepared for sale, and collaborate directly.";
+  "A private network for verified real estate agents. Share buyer needs, properties being prepared for sale, and connect directly across brokerages.";
 
 const HOMEPAGE_JSON_LD = {
   "@context": "https://schema.org",
@@ -35,6 +38,17 @@ const HOMEPAGE_JSON_LD = {
       url: "https://allagentconnect.com/",
       description: HOMEPAGE_DESCRIPTION,
       publisher: { "@id": "https://allagentconnect.com/#organization" },
+    },
+    {
+      "@type": "Service",
+      "@id": "https://allagentconnect.com/#agent-network",
+      name: "All Agent Connect verified agent network",
+      serviceType: "Private real estate agent collaboration network",
+      audience: { "@type": "Audience", audienceType: "Licensed real estate agents" },
+      areaServed: { "@type": "AdministrativeArea", name: "Massachusetts" },
+      provider: { "@id": "https://allagentconnect.com/#organization" },
+      description: HOMEPAGE_DESCRIPTION,
+      url: "https://allagentconnect.com/",
     },
   ],
 };
@@ -68,6 +82,28 @@ const HomepageV2 = () => {
     pinHomeHeroShellToDocumentScroll();
   }, []);
 
+  // Home sections below the hero are loaded asynchronously. When a visitor
+  // follows a footer anchor from another page, the browser may try to scroll
+  // before the target section exists. Scroll after the target actually mounts.
+  useEffect(() => {
+    const sectionId = window.location.hash.slice(1);
+    if (sectionId !== "how-it-works" && sectionId !== "member-preview") return;
+
+    const scrollWhenReady = () => {
+      const target = document.getElementById(sectionId);
+      if (!target) return false;
+      requestAnimationFrame(() => target.scrollIntoView({ block: "start" }));
+      return true;
+    };
+
+    if (scrollWhenReady()) return;
+    const observer = new MutationObserver(() => {
+      if (scrollWhenReady()) observer.disconnect();
+    });
+    observer.observe(document.getElementById("root") || document.body, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <>
       <Seo
@@ -97,6 +133,9 @@ const HomepageV2 = () => {
             <NetworkIntelligence />
             <EcosystemSection />
             <HowAgentsUseAAC />
+            <MemberPreviewSection />
+            <FounderTrustSection />
+            <AgentStoriesSection />
             <ScalePersistence />
             <GCIBenefits />
             <FinalCTA />

@@ -15,7 +15,7 @@ const HowAgentsUseAAC = () => {
   });
 
   return (
-    <section className="w-full pt-4 md:pt-8 pb-20 md:pb-24 px-6 relative bg-white">
+    <section id="how-it-works" className="w-full pt-4 md:pt-8 pb-20 md:pb-24 px-6 relative bg-white">
       <div className="max-w-6xl mx-auto flex flex-col gap-14">
         {/* Header */}
         <div className="flex flex-col items-center gap-5 text-center max-w-2xl mx-auto">
@@ -72,13 +72,13 @@ const HowAgentsUseAAC = () => {
             <div className="relative flex flex-col items-center justify-center bg-[#f8fafc] px-5 pt-7 pb-6 overflow-hidden" style={{ minHeight: 260 }}>
               <div className="relative w-full flex justify-center items-end gap-1.5 mb-5" style={{ height: 120 }}>
                 <div className="relative rounded-xl overflow-hidden shrink-0" style={{ width: 80, height: 100, boxShadow: "0 6px 16px rgba(15,23,42,0.08)" }}>
-                  <img src="https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=200&q=80" alt="Property" className="w-full h-full object-cover" />
+                  <img src="https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=200&q=80" alt="Illustrative property image, not a member listing" className="w-full h-full object-cover" />
                 </div>
                 <div className="relative rounded-xl overflow-hidden shrink-0 z-10" style={{ width: 95, height: 120, boxShadow: "0 6px 16px rgba(15,23,42,0.08)" }}>
-                  <img src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=200&q=80" alt="Property" className="w-full h-full object-cover" />
+                  <img src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=200&q=80" alt="Illustrative property image, not a member listing" className="w-full h-full object-cover" />
                 </div>
                 <div className="relative rounded-xl overflow-hidden shrink-0" style={{ width: 80, height: 100, boxShadow: "0 6px 16px rgba(15,23,42,0.08)" }}>
-                  <img src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=200&q=80" alt="Property" className="w-full h-full object-cover" />
+                  <img src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=200&q=80" alt="Illustrative property image, not a member listing" className="w-full h-full object-cover" />
                 </div>
               </div>
 
@@ -135,27 +135,29 @@ const HowAgentsUseAAC = () => {
                 <path d="M170 148 Q215 148 262 148" stroke="#cbd5e1" strokeWidth="1.5" fill="none" strokeDasharray="5 4" />
               </svg>
               <div className="relative z-10 w-[72px] h-[72px] rounded-full overflow-hidden border-[3px] border-white" style={{ boxShadow: "0 6px 16px rgba(15,23,42,0.10)" }}>
-                <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="Agent" width={72} height={72} loading="lazy" decoding="async" className="w-full h-full object-cover" />
+                <span aria-hidden="true" className="flex h-full w-full items-center justify-center bg-[#0E56F5] font-['Manrope'] text-sm font-bold text-white">AAC</span>
               </div>
               {[
-                { src: "https://randomuser.me/api/portraits/men/32.jpg", size: 52, top: "18%", left: "14%" },
-                { src: "https://randomuser.me/api/portraits/men/75.jpg", size: 56, top: "16%", right: "16%" },
-                { src: "https://randomuser.me/api/portraits/women/68.jpg", size: 48, bottom: "12%", left: "16%" },
-                { src: "https://randomuser.me/api/portraits/men/52.jpg", size: 52, bottom: "10%", right: "10%" },
-                { src: "https://randomuser.me/api/portraits/women/29.jpg", size: 44, top: "46%", right: "7%" },
+                { size: 52, top: "18%", left: "14%" },
+                { size: 56, top: "16%", right: "16%" },
+                { size: 48, bottom: "12%", left: "16%" },
+                { size: 52, bottom: "10%", right: "10%" },
+                { size: 44, top: "46%", right: "7%" },
               ].map((a, i) => (
                 <div
                   key={`avatar-${i}`}
                   className="absolute rounded-full overflow-hidden border-[2.5px] border-white"
                   style={{ width: a.size, height: a.size, top: a.top, left: a.left, bottom: a.bottom, right: a.right, boxShadow: "0 6px 16px rgba(15,23,42,0.10)" }}
                 >
-                  <img src={a.src} alt="Agent" width={a.size} height={a.size} loading="lazy" decoding="async" className="w-full h-full object-cover" />
+                  <span aria-hidden="true" className="flex h-full w-full items-center justify-center bg-[#e7eefc] text-[#0E56F5]">
+                    <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="8" r="3.5"/><path d="M4.5 21v-2a7.5 7.5 0 0 1 15 0v2"/></svg>
+                  </span>
                 </div>
               ))}
             </div>
             <div className="flex flex-col gap-2 p-5">
-              <h3 className="font-['Manrope'] font-bold text-[#0f172a] text-[17px] leading-[1.3]">Collaborate with trusted agents</h3>
-              <p className="font-['Manrope'] font-normal text-[#64748b] text-[13px] leading-[1.45]">Connect directly with experienced agents to match buyers, solve deals, and move transactions forward faster.</p>
+              <h3 className="font-['Manrope'] font-bold text-[#0f172a] text-[17px] leading-[1.3]">Collaborate with verified agents</h3>
+              <p className="font-['Manrope'] font-normal text-[#64748b] text-[13px] leading-[1.45]">Connect with licensed agents to discuss buyer needs and properties privately. Illustration only; no member profiles are shown.</p>
             </div>
           </div>
         </div>

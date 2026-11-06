@@ -8,7 +8,7 @@ const CheckIcon = () => (
   </svg>
 );
 
-const leftTags = ["No Days On Market", "Highest ROI", "Verified Agents"];
+const leftTags = ["Seller-directed visibility", "Verified agents only", "Private collaboration"];
 const rightTags = ["Pre-market data", "Agent controlled info, privacy and discretion", "Increased velocity and higher close rates"];
 
 const ScalePersistence = () => {
@@ -21,10 +21,10 @@ const ScalePersistence = () => {
             <span className="font-['Manrope'] font-semibold text-[#2537ff] text-[14px] tracking-[0.3px]">Why choose All Agent Connect</span>
           </div>
           <h2 className="font-['Manrope'] font-semibold text-[#292d32] text-4xl md:text-6xl tracking-tight leading-[1.0]" style={{ textWrap: "balance" as any }}>
-            Deliberately designed<br />for scale and persistence
+            Keep private opportunities<br />moving across brokerages
           </h2>
           <p className="font-['Manrope'] font-medium text-[#6b7280] text-lg md:text-xl leading-relaxed max-w-2xl">
-            All Agent Connect is designed for scale and persistence: intelligence compounds, participation creates leverage, and network activity becomes visible and actionable.
+            Share property opportunities at the right time, discuss buyer demand, and connect directly with verified agents while respecting seller instructions.
           </p>
         </div>
 
@@ -32,7 +32,7 @@ const ScalePersistence = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           {/* Left card */}
           <div className="relative rounded-3xl overflow-hidden bg-[#111317] h-[520px] hover:-translate-y-1 hover:shadow-xl transition-all duration-300">
-            <img src={TILES.m1.url} alt="Property" width={800} height={520} loading="lazy" decoding="async" className="absolute inset-0 w-full h-full object-cover" />
+            <img src={TILES.m1.url} alt="Illustrative property image, not a live listing" width={800} height={520} loading="lazy" decoding="async" className="absolute inset-0 w-full h-full object-cover" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/15 to-transparent" />
             <div className="relative z-10 p-8 flex flex-col justify-between h-full">
               <h3 className="font-['Manrope'] font-semibold text-white text-3xl leading-tight max-w-[320px]">
@@ -51,7 +51,7 @@ const ScalePersistence = () => {
 
           {/* Right card */}
           <div className="relative rounded-3xl overflow-hidden bg-[#111317] h-[520px] hover:-translate-y-1 hover:shadow-xl transition-all duration-300">
-            <img src={TILES.m2.url} alt="Tech network" width={800} height={520} loading="lazy" decoding="async" className="absolute inset-0 w-full h-full object-cover" />
+            <img src={TILES.m2.url} alt="Abstract illustration of a connected real estate agent network" width={800} height={520} loading="lazy" decoding="async" className="absolute inset-0 w-full h-full object-cover" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/15 to-transparent" />
             <div className="relative z-10 p-8 flex flex-col justify-between h-full">
               <h3 className="font-['Manrope'] font-semibold text-white text-3xl leading-tight max-w-[320px]">

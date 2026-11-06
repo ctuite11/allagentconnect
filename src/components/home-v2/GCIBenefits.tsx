@@ -8,7 +8,7 @@ const features = [
   },
   {
     icon: <><polyline points="13 17 18 12 13 7" /><polyline points="6 17 11 12 6 7" /></>,
-    title: "Increased velocity and higher close rates",
+    title: "Work directly with agents on buyer and listing opportunities",
   },
   {
     icon: <><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /><line x1="11" y1="8" x2="11" y2="14" /><line x1="8" y1="11" x2="14" y2="11" /></>,
@@ -16,7 +16,7 @@ const features = [
   },
   {
     icon: <><line x1="12" y1="20" x2="12" y2="10" /><line x1="18" y1="20" x2="18" y2="4" /><line x1="6" y1="20" x2="6" y2="16" /></>,
-    title: "Meaningful increases in agent production",
+    title: "More ways to identify potential matches for clients",
   },
 ];
 
