@@ -3,14 +3,14 @@ import { Link } from "react-router-dom";
 import footerLogo from "@/assets/home/vuesax-bold-command.svg";
 
 const platformLinks = [
-  { label: "How it works", href: "#how-it-works" },
-  { label: "Member preview", href: "#member-preview" },
+  { label: "How it works", href: "/#how-it-works" },
+  { label: "Member preview", href: "/#member-preview" },
   { label: "Request access", href: "/request-access" },
   { label: "Login", href: "/login" },
 ];
 
 const exploreLinks = [
-  { label: "For licensed agents", href: "#how-it-works" },
+  { label: "For licensed agents", href: "/#how-it-works" },
   { label: "Off-market listing network", href: "/off-market-listing-network" },
   { label: "Frequently asked questions", href: "/faq" },
   { label: "Agent Network Rules", href: "/agent-rules" },
@@ -31,6 +31,8 @@ const legalLinks = [
 
 function FooterLink({ href, children }: { href: string; children: React.ReactNode }) {
   const className = "font-['Manrope'] font-medium text-white/85 text-sm hover:text-white underline-offset-4 focus-visible:underline";
+  // Full navigation to home anchors also works from /faq or other public pages.
+  if (href.startsWith("/#")) return <a href={href} className={className}>{children}</a>;
   return href.startsWith("/") ? <Link to={href} className={className}>{children}</Link> :
     <a href={href} className={className}>{children}</a>;
 }

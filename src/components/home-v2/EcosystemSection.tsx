@@ -67,7 +67,7 @@ function InputCard({ icon: Icon, label, description, delay = 0 }: { icon: Elemen
   const [hovered, setHovered] = useState(false);
   return (
     <motion.div
-      initial={{ opacity: 0, x: -24 }}
+      initial={false}
       whileInView={{ opacity: 1, x: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.6, delay, ease: "easeOut" }}
@@ -99,7 +99,7 @@ function ResultCard({ icon: Icon, label, description, delay = 0 }: { icon: Eleme
   const [hovered, setHovered] = useState(false);
   return (
     <motion.div
-      initial={{ opacity: 0, x: 24 }}
+      initial={false}
       whileInView={{ opacity: 1, x: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.6, delay, ease: "easeOut" }}
@@ -227,7 +227,7 @@ export default function EcosystemSection() {
 
         {/* Headline */}
         <motion.div className="mb-[80px] text-center"
-          initial={{ opacity: 0, y: 32 }}
+          initial={false}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.7, ease: "easeOut" }}

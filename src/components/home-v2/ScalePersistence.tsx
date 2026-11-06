@@ -32,7 +32,7 @@ const ScalePersistence = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           {/* Left card */}
           <div className="relative rounded-3xl overflow-hidden bg-[#111317] h-[520px] hover:-translate-y-1 hover:shadow-xl transition-all duration-300">
-            <img src={TILES.m1.url} alt="Property" width={800} height={520} loading="lazy" decoding="async" className="absolute inset-0 w-full h-full object-cover" />
+            <img src={TILES.m1.url} alt="Illustrative property image, not a live listing" width={800} height={520} loading="lazy" decoding="async" className="absolute inset-0 w-full h-full object-cover" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/15 to-transparent" />
             <div className="relative z-10 p-8 flex flex-col justify-between h-full">
               <h3 className="font-['Manrope'] font-semibold text-white text-3xl leading-tight max-w-[320px]">
@@ -51,7 +51,7 @@ const ScalePersistence = () => {
 
           {/* Right card */}
           <div className="relative rounded-3xl overflow-hidden bg-[#111317] h-[520px] hover:-translate-y-1 hover:shadow-xl transition-all duration-300">
-            <img src={TILES.m2.url} alt="Tech network" width={800} height={520} loading="lazy" decoding="async" className="absolute inset-0 w-full h-full object-cover" />
+            <img src={TILES.m2.url} alt="Abstract illustration of a connected real estate agent network" width={800} height={520} loading="lazy" decoding="async" className="absolute inset-0 w-full h-full object-cover" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/15 to-transparent" />
             <div className="relative z-10 p-8 flex flex-col justify-between h-full">
               <h3 className="font-['Manrope'] font-semibold text-white text-3xl leading-tight max-w-[320px]">
