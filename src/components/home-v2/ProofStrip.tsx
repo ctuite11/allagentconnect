@@ -33,10 +33,10 @@ const ProofStrip = () => (
           return (
             <div key={p.label} className="flex flex-col gap-3">
               <Icon className="w-5 h-5 text-[#0E56F5]" strokeWidth={1.8} />
-              <h3 className="font-['Manrope'] font-semibold text-[#0f172a] text-base leading-snug">
+              <h3 className="font-manrope font-semibold text-[#0f172a] text-base leading-snug">
                 {p.label}
               </h3>
-              <p className="font-['Manrope'] font-normal text-[#64748b] text-sm leading-relaxed">
+              <p className="font-manrope font-normal text-[#64748b] text-sm leading-relaxed">
                 {p.description}
               </p>
             </div>
