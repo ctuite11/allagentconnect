@@ -3,6 +3,7 @@
 # protect the actual agent network. Cloudflare may prepend managed rules.
 User-agent: OAI-SearchBot
 Disallow: /
+Allow: /$
 Allow: /about
 Allow: /faq
 Allow: /off-market-listing-network
@@ -17,6 +18,7 @@ Allow: /llms.txt
 
 User-agent: PerplexityBot
 Disallow: /
+Allow: /$
 Allow: /about
 Allow: /faq
 Allow: /off-market-listing-network
@@ -31,6 +33,7 @@ Allow: /llms.txt
 
 User-agent: Claude-SearchBot
 Disallow: /
+Allow: /$
 Allow: /about
 Allow: /faq
 Allow: /off-market-listing-network
