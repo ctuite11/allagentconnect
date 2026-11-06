@@ -1,8 +1,7 @@
 import React from "react";
-import { activeAACMemberSnapshot } from "@/content/publicNetworkProof";
 
 const marqueeItems = [
-  `${activeAACMemberSnapshot.count.toLocaleString("en-US")} active AAC members (as of November 2026)`,
+  "Verified licensed agents",
   "Direct agent-to-agent connections",
   "Buyer and renter needs",
   "Properties being prepared for sale",

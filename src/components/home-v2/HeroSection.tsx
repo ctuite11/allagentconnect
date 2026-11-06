@@ -1,6 +1,5 @@
 import React, { useLayoutEffect, useState } from "react";
 import AACMonogram from "@/components/ui/AACMonogram";
-import { activeAACMemberSnapshot, approvedPublicMemberPortraits } from "@/content/publicNetworkProof";
 
 /**
  * First-party responsive hero assets (Netlify static).
@@ -198,30 +197,6 @@ const HeroSection = () => {
             <a href="/faq" className="font-['Manrope'] text-sm sm:text-base font-semibold text-white underline underline-offset-4 hover:text-[#baf7d0]">
               See how membership works
             </a>
-          </div>
-           {/* Public aggregate only. Member names and faces require separate marketing consent. */}
-          <div className="mt-6 flex flex-col items-start gap-2" aria-label="All Agent Connect active member count">
-            <p className="font-['Manrope'] text-white font-semibold text-base">
-              {activeAACMemberSnapshot.count.toLocaleString("en-US")} active AAC members
-            </p>
-            <p className="font-['Manrope'] text-white/65 text-xs">
-              Membership count as of {activeAACMemberSnapshot.displayDate}
-            </p>
-            {approvedPublicMemberPortraits.length > 0 && (
-              <div className="mt-2 flex flex-wrap gap-2" aria-label="Agents who consented to appear in public marketing">
-                {approvedPublicMemberPortraits.map((member) => (
-                  <img
-                    key={member.id}
-                    src={member.imageSrc}
-                    alt={member.publicAlt}
-                    width={40}
-                    height={40}
-                    loading="lazy"
-                    className="h-10 w-10 rounded-full border-2 border-white/60 object-cover"
-                  />
-                ))}
-              </div>
-            )}
           </div>
         </div>
       </div>
