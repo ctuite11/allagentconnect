@@ -1,4 +1,4 @@
-import React, { Suspense, useLayoutEffect } from "react";
+import React, { Suspense, useEffect, useLayoutEffect } from "react";
 import { Seo } from "@/components/Seo";
 import { isDcmlsHost } from "@/lib/host";
 import { lazyWithRetry } from "@/lib/lazyWithRetry";
@@ -80,6 +80,28 @@ const HomepageV2 = () => {
 
   useLayoutEffect(() => {
     pinHomeHeroShellToDocumentScroll();
+  }, []);
+
+  // Home sections below the hero are loaded asynchronously. When a visitor
+  // follows a footer anchor from another page, the browser may try to scroll
+  // before the target section exists. Scroll after the target actually mounts.
+  useEffect(() => {
+    const sectionId = window.location.hash.slice(1);
+    if (sectionId !== "how-it-works" && sectionId !== "member-preview") return;
+
+    const scrollWhenReady = () => {
+      const target = document.getElementById(sectionId);
+      if (!target) return false;
+      requestAnimationFrame(() => target.scrollIntoView({ block: "start" }));
+      return true;
+    };
+
+    if (scrollWhenReady()) return;
+    const observer = new MutationObserver(() => {
+      if (scrollWhenReady()) observer.disconnect();
+    });
+    observer.observe(document.getElementById("root") || document.body, { childList: true, subtree: true });
+    return () => observer.disconnect();
   }, []);
 
   return (
