@@ -26,6 +26,10 @@ jobs:
       - name: Install dependencies
         run: npm install --no-package-lock --legacy-peer-deps --no-audit --no-fund
       - name: Build production bundle (no deploy or email)
+        env:
+          # Safe public placeholders for CI. No backend, data, or credentials connected.
+          VITE_SUPABASE_URL: "https://example.supabase.co"
+          VITE_SUPABASE_ANON_KEY: "test-public-key-placeholder"
         run: npm run build
       - name: Install headless Chromium
         run: npx playwright install --with-deps chromium

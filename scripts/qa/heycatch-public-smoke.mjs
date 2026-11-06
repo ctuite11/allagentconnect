@@ -20,7 +20,9 @@ const routes = [
 
 try {
   const page = await browser.newPage({ viewport: { width: 1365, height: 900 } });
+  page.on("pageerror", error => process.stderr.write("BROWSER ERROR: " + error.message + "\\n"));
   for (const { path, heading, footer } of routes) {
+    process.stdout.write("CHECKING " + path + "\\n");
     const response = await page.goto(baseUrl + path, { waitUntil: "domcontentloaded", timeout: 30000 });
     assert.equal(response?.status(), 200, path + " did not respond with 200");
     await page.getByRole("heading", { name: heading }).first().waitFor({ timeout: 25000 });
