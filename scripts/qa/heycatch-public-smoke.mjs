@@ -26,6 +26,13 @@ try {
     const response = await page.goto(baseUrl + path, { waitUntil: "domcontentloaded", timeout: 30000 });
     assert.equal(response?.status(), 200, path + " did not respond with 200");
     await page.getByRole("heading", { name: heading }).first().waitFor({ timeout: 25000 });
+    if (path === "/") {
+      await page.getByLabel("All Agent Connect active member count")
+        .getByText("347 active AAC members").waitFor({ timeout: 25000 });
+      await page.getByRole("link", { name: "See how membership works" }).waitFor({ timeout: 25000 });
+      assert.equal(await page.getByRole("link", { name: /Sharing listings across brokerages may trigger MLS/i }).count(), 0,
+        "Compliance text should stay in FAQ/rules, not the hero");
+    }
     if (footer) {
       const foot = page.locator("footer");
       await foot.getByRole("link", { name: "About & founder" }).waitFor({ timeout: 25000 });
