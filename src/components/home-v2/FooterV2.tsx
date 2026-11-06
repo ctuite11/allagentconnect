@@ -70,6 +70,10 @@ export default function FooterV2() {
         <nav aria-label="Legal" className="mt-14 flex flex-wrap gap-x-6 gap-y-3 border-t border-white/15 pt-7">
           {legalLinks.map(link => <FooterLink key={link.label} href={link.href}>{link.label}</FooterLink>)}
         </nav>
+        <p className="mt-6 max-w-3xl text-xs leading-relaxed text-white/60">
+          All Agent Connect is not a multiple listing service and is not affiliated with any MLS or REALTOR® association.
+          Agents must follow applicable MLS, brokerage, and seller requirements when sharing property information.
+        </p>
         <p className="mt-8 text-center text-sm text-white/60">© {new Date().getFullYear()} All Agent Connect, Inc. All rights reserved.</p>
       </div>
     </footer>
