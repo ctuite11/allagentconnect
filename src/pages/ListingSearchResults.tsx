@@ -23,7 +23,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import SaveToHotSheetDialog from "@/components/SaveToHotSheetDialog";
 import { listingEffectiveNumericPrice } from "@/lib/formatListingPriceDisplay";
 import { applyListingPriceOverlapFilter } from "@/lib/applyListingPriceOverlapFilter";
-import { propertyTypesForAgentListingQuery } from "@/lib/agentListingSearchDefaults";
+import { propertyTypesForAgentListingQuery, parseAgentSearchPositivePrice } from "@/lib/agentListingSearchDefaults";
 import { LISTING_DEFAULT_SORT_COLUMN } from "@/lib/listingRecencySort";
 import {
   listingAgentContactFromRow,
@@ -202,7 +202,8 @@ const ListingSearchResults = () => {
         query = query.in("id", radiusIds);
       }
 
-      if (filters.statuses.length > 0) query = query.in("status", filters.statuses);
+      const visibleStatuses = filters.statuses.filter((s) => s !== "draft");
+      query = query.in("status", visibleStatuses.length > 0 ? visibleStatuses : ["__none__"]);
       if (filters.internalFilter === "off_market") query = query.eq("status", "off_market");
       else if (filters.internalFilter === "coming_soon") query = query.eq("status", "coming_soon");
       const queryPropertyTypes = propertyTypesForAgentListingQuery(
@@ -212,12 +213,12 @@ const ListingSearchResults = () => {
       if (queryPropertyTypes.length > 0) query = query.in("property_type", queryPropertyTypes);
       if (filters.listingType) query = query.eq("listing_type", filters.listingType);
       {
-        const pmin = filters.priceMin ? parseInt(filters.priceMin, 10) : NaN;
-        const pmax = filters.priceMax ? parseInt(filters.priceMax, 10) : NaN;
+        const pmin = parseAgentSearchPositivePrice(filters.priceMin);
+        const pmax = parseAgentSearchPositivePrice(filters.priceMax);
         query = applyListingPriceOverlapFilter(
           query,
-          Number.isFinite(pmin) && pmin > 0 ? pmin : null,
-          Number.isFinite(pmax) && pmax > 0 ? pmax : null,
+          pmin,
+          pmax,
         );
       }
       if (filters.bedsMin) query = query.gte("bedrooms", parseInt(filters.bedsMin));
