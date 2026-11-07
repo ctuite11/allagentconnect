@@ -1,3 +1,4 @@
+import { listingDaysOnMarket } from "@/lib/listingDaysOnMarket";
 /**
  * SearchListingCard — MLS-style search results card.
  *
@@ -624,7 +625,7 @@ export const SearchListingCard = ({
               {listing.list_date && (
                 <span className="flex items-center gap-1 text-sm text-neutral-600">
                   <span className="text-[10px] font-medium uppercase tracking-wide text-neutral-500">DOM</span>
-                  {Math.max(0, Math.floor((Date.now() - new Date(listing.list_date).getTime()) / 86400000))}
+                  {listingDaysOnMarket(listing) ?? 0}
                 </span>
               )}
             </div>
