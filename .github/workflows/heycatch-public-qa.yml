@@ -25,6 +25,8 @@ jobs:
           cache: "npm"
       - name: Install dependencies
         run: npm install --no-package-lock --legacy-peer-deps --no-audit --no-fund
+      - name: Test agent search price-range regressions
+        run: npx vitest run src/lib/filterByPricePerSqft.test.ts src/lib/agentListingSearchDefaults.test.ts
       - name: Validate unique initial HTML metadata for public pages
         run: node --experimental-strip-types scripts/qa/heycatch-public-seo.mjs
       - name: Build production bundle (no deploy or email)

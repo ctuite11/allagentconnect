@@ -17,6 +17,7 @@ import {
   clampListingSearchPrices,
   defaultPropertyTypesForAgentListingSearch,
   propertyTypesForAgentListingQuery,
+  parseAgentSearchPositivePrice,
 } from "@/lib/agentListingSearchDefaults";
 import { agentWorkspacePageContainer } from "@/lib/agentWorkspaceLayout";
 import { cn } from "@/lib/utils";
@@ -111,16 +112,12 @@ const ListingSearch = () => {
         filters.listingType,
         filters.propertyTypes,
       );
-      if (filters.statuses.length > 0) {
-        query = query.in("status", filters.statuses);
-      } else {
-        // No statuses selected → return zero results (sentinel match)
-        query = query.in("status", ["__none__"]);
-      }
+      const visibleStatuses = filters.statuses.filter((s) => s !== "draft");
+      query = query.in("status", visibleStatuses.length > 0 ? visibleStatuses : ["__none__"]);
       if (queryPropertyTypes.length > 0) query = query.in("property_type", queryPropertyTypes);
       {
-        const pmin = filters.priceMin ? parseInt(filters.priceMin, 10) : NaN;
-        const pmax = filters.priceMax ? parseInt(filters.priceMax, 10) : NaN;
+        const pmin = parseAgentSearchPositivePrice(filters.priceMin);
+        const pmax = parseAgentSearchPositivePrice(filters.priceMax);
         query = applyListingPriceOverlapFilter(
           query,
           Number.isFinite(pmin) && pmin > 0 ? pmin : null,
