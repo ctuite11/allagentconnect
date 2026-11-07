@@ -99,7 +99,7 @@ const ListingSearch = () => {
 
       let query = supabase
         .from("listings")
-        .select("id, status, agent_id, price, square_feet")
+        .select("id, status, agent_id, price, price_range_min, price_range_max, square_feet")
         .limit(500);
 
       // Apply radius ID filter
