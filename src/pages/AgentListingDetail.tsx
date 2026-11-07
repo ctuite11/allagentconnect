@@ -1,3 +1,4 @@
+import { listingDaysOnMarket, listingMarketDate, formatListingMarketDate } from "@/lib/listingDaysOnMarket";
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -330,10 +331,8 @@ const AgentListingDetail = () => {
     ? getPhotoUrl(listing.photos[currentPhotoIndex])
     : '/placeholder.svg';
 
-  const listDate = listing.list_date || listing.active_date || listing.created_at;
-  const daysOnMarket = listDate 
-    ? Math.ceil((new Date().getTime() - new Date(listDate).getTime()) / (1000 * 60 * 60 * 24))
-    : null;
+  const listDate = listingMarketDate(listing);
+  const daysOnMarket = listingDaysOnMarket(listing);
 
   const displayAddress = listing.unit_number 
     ? `${listing.address} #${listing.unit_number}`
@@ -544,7 +543,7 @@ const AgentListingDetail = () => {
                   {listDate && (
                     <span className="flex items-center gap-1">
                       <Calendar className="w-3.5 h-3.5" />
-                      Listed {new Date(listDate).toLocaleDateString()}
+                      Listed {formatListingMarketDate(listing)}
                     </span>
                   )}
                   {listing.expiration_date && (
@@ -909,7 +908,7 @@ const AgentListingDetail = () => {
                     {listDate && (
                       <div className="text-center p-3 rounded-lg bg-muted/50">
                         <p className="text-sm text-muted-foreground">List Date</p>
-                        <p className="font-semibold">{new Date(listDate).toLocaleDateString()}</p>
+                        <p className="font-semibold">{formatListingMarketDate(listing)}</p>
                       </div>
                     )}
                     {daysOnMarket !== null && (

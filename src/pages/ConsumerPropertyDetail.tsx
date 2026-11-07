@@ -1,3 +1,4 @@
+import { listingDaysOnMarket, listingMarketDate } from "@/lib/listingDaysOnMarket";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -465,10 +466,8 @@ const ConsumerPropertyDetail = () => {
 
   const listingPriceDisplay = formatListingPriceDisplay(listing) ?? "—";
 
-  const listDate = listing.active_date || listing.created_at;
-  const daysOnMarket = listDate
-    ? Math.ceil((new Date().getTime() - new Date(listDate).getTime()) / (1000 * 60 * 60 * 24))
-    : null;
+  const listDate = listingMarketDate(listing);
+  const daysOnMarket = listingDaysOnMarket(listing);
 
   const compensationDisplay = getCompensationDisplay();
   const neighborhoodLabel =

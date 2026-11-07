@@ -94,7 +94,7 @@ const MarketInsights = () => {
 
   const averageDaysOnMarket = filteredListings.length > 0
     ? filteredListings.reduce((sum, l) => {
-        const days = l.listing_stats?.cumulative_active_days || 
+        const days = l.listing_stats?.cumulative_active_days ?? 
           differenceInDays(new Date(l.updated_at), new Date(l.active_date || l.created_at));
         return sum + days;
       }, 0) / filteredListings.length
@@ -142,7 +142,7 @@ const MarketInsights = () => {
     };
     
     filteredListings.forEach(listing => {
-      const days = listing.listing_stats?.cumulative_active_days || 
+      const days = listing.listing_stats?.cumulative_active_days ?? 
         differenceInDays(new Date(listing.updated_at), new Date(listing.active_date || listing.created_at));
       
       if (days <= 30) buckets["0-30"]++;

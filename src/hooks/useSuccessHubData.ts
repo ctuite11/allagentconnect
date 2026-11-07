@@ -282,7 +282,7 @@ export function useSuccessHubData(): UseSuccessHubDataResult {
         supabase
           .from("listings")
           .select(
-            "id,address,city,state,zip_code,neighborhood,status,photos,price,price_range_min,price_range_max,updated_at,created_at,active_date,listing_number,unit_number,condo_details,property_type,bedrooms,bathrooms,square_feet,listing_stats(view_count,showing_request_count)",
+            "id,address,city,state,zip_code,neighborhood,status,photos,price,price_range_min,price_range_max,updated_at,created_at,active_date,list_date,listing_number,unit_number,condo_details,property_type,bedrooms,bathrooms,square_feet,listing_stats(view_count,showing_request_count)",
           )
           .eq("agent_id", agentId)
           .in("status", ["active", "pending", "coming_soon", "off_market"])
@@ -451,6 +451,7 @@ export function useSuccessHubData(): UseSuccessHubDataResult {
             typeof (l as any).listing_number === "string" ? (l as any).listing_number : null,
           created_at: typeof (l as any).created_at === "string" ? (l as any).created_at : null,
           active_date: typeof (l as any).active_date === "string" ? (l as any).active_date : null,
+          list_date: typeof (l as any).list_date === "string" ? (l as any).list_date : null,
           unit_number:
             (l as any).unit_number != null && String((l as any).unit_number).trim() !== ""
               ? String((l as any).unit_number).trim()
