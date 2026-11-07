@@ -25,6 +25,8 @@ jobs:
           cache: "npm"
       - name: Install dependencies
         run: npm install --no-package-lock --legacy-peer-deps --no-audit --no-fund
+      - name: Install Vitest DOM peer dependency
+        run: npm install --no-save --no-package-lock --legacy-peer-deps --no-audit --no-fund @testing-library/dom
       - name: Test agent search price-range regressions
         run: npx vitest run src/lib/filterByPricePerSqft.test.ts src/lib/agentListingSearchDefaults.test.ts
       - name: Validate unique initial HTML metadata for public pages
