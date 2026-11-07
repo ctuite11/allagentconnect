@@ -29,6 +29,8 @@ jobs:
         run: npm install --no-save --no-package-lock --legacy-peer-deps --no-audit --no-fund @testing-library/dom
       - name: Test agent search price-range regressions
         run: npx vitest run src/lib/filterByPricePerSqft.test.ts src/lib/agentListingSearchDefaults.test.ts
+      - name: Test first-publication Days on Market
+        run: npx vitest run src/lib/listingDaysOnMarket.test.ts
       - name: Validate unique initial HTML metadata for public pages
         run: node --experimental-strip-types scripts/qa/heycatch-public-seo.mjs
       - name: Build production bundle (no deploy or email)
