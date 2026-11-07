@@ -120,8 +120,8 @@ const ListingSearch = () => {
         const pmax = parseAgentSearchPositivePrice(filters.priceMax);
         query = applyListingPriceOverlapFilter(
           query,
-          Number.isFinite(pmin) && pmin > 0 ? pmin : null,
-          Number.isFinite(pmax) && pmax > 0 ? pmax : null,
+          pmin,
+          pmax,
         );
       }
       if (filters.bedsMin) query = query.gte("bedrooms", parseInt(filters.bedsMin));

@@ -42,9 +42,9 @@ export function clampListingSearchPrices(
   const pmax = parseAgentSearchPositivePrice(filters.priceMax);
   return {
     priceMin:
-      Number.isFinite(pmin) && pmin >= bounds.min && pmin <= bounds.max ? filters.priceMin : "",
+      pmin !== null && pmin >= bounds.min && pmin <= bounds.max ? filters.priceMin : "",
     priceMax:
-      Number.isFinite(pmax) && pmax >= bounds.min && pmax <= bounds.max ? filters.priceMax : "",
+      pmax !== null && pmax >= bounds.min && pmax <= bounds.max ? filters.priceMax : "",
   };
 }
 
