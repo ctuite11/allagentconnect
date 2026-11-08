@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useState } from "react";
-import { Loader2, RefreshCw } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { FilePlus2, Loader2, Pencil, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Seo } from "@/components/Seo";
 import { AgentAacPage } from "@/components/layout/AgentAacPage";
 import { AgentPageHeader } from "@/components/layout/AgentPageHeader";
 import { supabase } from "@/integrations/supabase/client";
+import { createConciergeDraft, listConciergeDrafts } from "@/lib/conciergeListing";
 import { COMMS_CHANNEL_BY_KEY } from "@/lib/commsChannels";
 import { isCommsChannelKey } from "@/lib/commsChannels";
 
@@ -40,9 +42,12 @@ const statusOptions: { value: RequestStatus; label: string }[] = [
 
 /** Staff-only manual queue; never sends emails or auto-publishes listings. */
 export default function AdminConciergeRequests() {
+  const navigate = useNavigate();
   const [requests, setRequests] = useState<ConciergeRequest[]>([]);
   const [agents, setAgents] = useState<Record<string, AgentIdentity>>({});
   const [photos, setPhotos] = useState<Record<string, string[]>>({});
+  const [draftsByRequest, setDraftsByRequest] = useState<Record<string, string>>({});
+  const [preparingId, setPreparingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [changingId, setChangingId] = useState<string | null>(null);
 
@@ -57,6 +62,13 @@ export default function AdminConciergeRequests() {
       if (error) throw error;
       const rows = (data ?? []) as ConciergeRequest[];
       setRequests(rows);
+      // The existing admin-only concierge draft list maps source request IDs
+      // to saved drafts so refreshing does not offer to create duplicates.
+      const existingDrafts = await listConciergeDrafts().catch(() => []);
+      setDraftsByRequest(Object.fromEntries(
+        existingDrafts.filter((draft) => draft.creation_request_id).map((draft) =>
+          [draft.creation_request_id as string, draft.id]),
+      ));
       // One bounded storage request, not a request per listing.
       // Keep the staff queue fast even when a large number of agents submit.
       const photoPaths = rows.flatMap((request) => (request.photo_paths ?? []).slice(0, 3)).slice(0, 60);
@@ -110,6 +122,31 @@ export default function AdminConciergeRequests() {
       toast.error("Could not update this request.");
     } finally {
       setChangingId(null);
+    }
+  }
+
+  async function prepareDraft(request: ConciergeRequest) {
+    if (request.request_type !== "listing" || preparingId ||
+        request.status === "completed" || request.status === "declined") return;
+    const existing = draftsByRequest[request.id];
+    if (existing) {
+      navigate(`/admin/concierge-requests/edit/${existing}?request=${request.id}`);
+      return;
+    }
+    setPreparingId(request.id);
+    try {
+      // Server validates the source request, agent ID, current eligibility,
+      // and reads property details from the request—not from this browser.
+      const draft = await createConciergeDraft(request.agent_id, {}, request.id);
+      setDraftsByRequest((current) => ({ ...current, [request.id]: draft.id }));
+      setRequests((current) => current.map((entry) =>
+        entry.id === request.id ? { ...entry, status: "in_progress" } : entry));
+      toast.success("Agent-owned draft created. Nothing has been published or emailed.");
+      navigate(`/admin/concierge-requests/edit/${draft.id}?request=${request.id}`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not create the draft.");
+    } finally {
+      setPreparingId(null);
     }
   }
 
@@ -191,7 +228,28 @@ export default function AdminConciergeRequests() {
                     )}
                   </div>
                 )}
-                <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-zinc-700">{request.details}</p>
+                {request.request_type === "listing" && request.status !== "completed" && request.status !== "declined" && (
+                  <div className="mt-4 flex flex-wrap items-center gap-3">
+                    <Button size="sm" disabled={preparingId !== null || changingId === request.id}
+                      onClick={() => void prepareDraft(request)}>
+                      {preparingId === request.id
+                        ? <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        : draftsByRequest[request.id]
+                          ? <Pencil className="mr-2 h-4 w-4" />
+                          : <FilePlus2 className="mr-2 h-4 w-4" />}
+                      {draftsByRequest[request.id] ? "Continue agent draft" : "Create agent draft"}
+                    </Button>
+                    <p className="text-xs text-zinc-600">
+                      Saves under the requesting agent. No publishing or network email.
+                      Uploaded photos remain private in this request.
+                    </p>
+                  </div>
+                )}
+                {request.details && (
+                  <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-zinc-700">
+                    <strong>Agent instructions:</strong> {request.details}
+                  </p>
+                )}
                 {request.reference_url && <p className="mt-3 break-all text-sm">
                   <strong>Reference:</strong> {request.reference_url}
                 </p>}
