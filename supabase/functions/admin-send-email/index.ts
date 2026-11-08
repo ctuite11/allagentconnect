@@ -227,6 +227,7 @@ Deno.serve(async (req) => {
             : template === "admin-created-invite"
             ? "admin-created-invite"
             : "admin-adhoc",
+          ...(template === "personal-forward-invite" ? { category: "marketing" } : {}),
           to,
           subject,
           html,
