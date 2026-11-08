@@ -67,13 +67,45 @@ Deno.serve(async (req: Request): Promise<Response> => {
     // ── Listing must be a concierge draft ───────────────────────────────────
     const { data: listing, error: listingErr } = await service
       .from('listings')
-      .select('id, agent_id, status, address, city, creation_source')
+      .select('id, agent_id, status, address, city, state, zip_code, price, bedrooms, bathrooms, square_feet, creation_source, creation_request_id')
       .eq('id', body.listing_id)
       .maybeSingle()
 
     if (listingErr) return jsonResponse({ error: 'Failed to load listing' }, 500)
     if (!listing || listing.creation_source !== CONCIERGE_SOURCE || listing.status !== 'draft') {
       return jsonResponse({ error: 'Not a concierge draft listing' }, 403)
+    }
+
+    // Request-backed emails must NEVER point to the disabled legacy review
+    // workflow or imply private photos are attached when they aren't.
+    if (!isUuid(listing.creation_request_id)) {
+      return jsonResponse({ error: 'This listing does not have a verified Concierge request' }, 422)
+    }
+    const { data: request, error: requestErr } = await service
+      .from('agent_concierge_requests')
+      .select('id, agent_id, request_type, photo_paths, status')
+      .eq('id', listing.creation_request_id)
+      .maybeSingle()
+    if (requestErr) return jsonResponse({ error: 'Could not verify the source request' }, 500)
+    if (!request || request.agent_id !== listing.agent_id || request.request_type !== 'listing') {
+      return jsonResponse({ error: 'Source request does not match the listing owner' }, 403)
+    }
+    if (request.status === 'declined') {
+      return jsonResponse({ error: 'This Concierge request has been declined' }, 422)
+    }
+    if (Array.isArray(request.photo_paths) && request.photo_paths.length > 0) {
+      return jsonResponse({
+        error: 'Agent review is on hold until the submitted private photos are securely attached to the listing.',
+      }, 422)
+    }
+    if (!listing.address || listing.address === 'Draft' ||
+        !listing.city || listing.city === 'TBD' ||
+        !listing.zip_code || listing.zip_code === '00000' ||
+        !listing.state || !Number.isFinite(Number(listing.price)) || Number(listing.price) <= 0 ||
+        listing.bedrooms == null || listing.bathrooms == null || listing.square_feet == null) {
+      return jsonResponse({
+        error: 'Finish the listing address and essential property details before sending for review.',
+      }, 422)
     }
 
     // ── Target member must be verified (activated or not) ───────────────────
