@@ -6,12 +6,15 @@ import { Seo } from "@/components/Seo";
 import { AgentAacPage } from "@/components/layout/AgentAacPage";
 import { AgentPageHeader } from "@/components/layout/AgentPageHeader";
 import { supabase } from "@/integrations/supabase/client";
+import { COMMS_CHANNEL_BY_KEY } from "@/lib/commsChannels";
+import { isCommsChannelKey } from "@/lib/commsChannels";
 
 type RequestStatus = "new" | "in_progress" | "completed" | "declined";
 type ConciergeRequest = {
   id: string;
   agent_id: string;
   request_type: "listing" | "broadcast";
+  communication_channel: string | null;
   subject: string;
   property_address: string | null;
   details: string;
@@ -40,7 +43,7 @@ export default function AdminConciergeRequests() {
     try {
       const { data, error } = await (supabase as any)
         .from("agent_concierge_requests")
-        .select("id, agent_id, request_type, subject, property_address, details, reference_url, status, created_at")
+        .select("id, agent_id, request_type, communication_channel, subject, property_address, details, reference_url, status, created_at")
         .order("created_at", { ascending: false })
         .limit(100);
       if (error) throw error;
@@ -124,6 +127,14 @@ export default function AdminConciergeRequests() {
                     </select>
                   </label>
                 </div>
+                {request.request_type === "broadcast" && request.communication_channel && (
+                  <p className="mt-3 text-sm text-zinc-800">
+                    <strong>Communications channel:</strong>{" "}
+                    {isCommsChannelKey(request.communication_channel)
+                      ? COMMS_CHANNEL_BY_KEY[request.communication_channel].title
+                      : "Unknown channel"}
+                  </p>
+                )}
                 {request.property_address && <p className="mt-3 text-sm text-zinc-800"><strong>Property:</strong> {request.property_address}</p>}
                 <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-zinc-700">{request.details}</p>
                 {request.reference_url && <p className="mt-3 break-all text-sm">
