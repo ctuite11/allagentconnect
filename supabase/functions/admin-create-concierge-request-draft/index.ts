@@ -24,6 +24,13 @@ type ListingIntake = {
   status: string
   request_type: string
   property_address: string | null
+  address_street: string | null
+  address_city: string | null
+  address_state: string | null
+  address_zip: string | null
+  condo_fee_monthly: number | null
+  parking_spaces: number | null
+  parking_type: string | null
   property_type: string | null
   asking_price: number | null
   bedrooms: number | null
@@ -72,7 +79,7 @@ Deno.serve(async (req): Promise<Response> => {
     // data for this handoff; always load the saved, private intake.
     const { data: intake, error: intakeErr } = await service
       .from('agent_concierge_requests')
-      .select('id, agent_id, status, request_type, property_address, property_type, asking_price, bedrooms, bathrooms, square_feet, lot_acres')
+      .select('id, agent_id, status, request_type, property_address, address_street, address_city, address_state, address_zip, property_type, asking_price, bedrooms, bathrooms, square_feet, lot_acres, condo_fee_monthly, parking_spaces, parking_type')
       .eq('id', body.request_id)
       .maybeSingle()
     if (intakeErr) return jsonResponse({ error: 'Failed to load concierge request' }, 500)
@@ -111,8 +118,19 @@ Deno.serve(async (req): Promise<Response> => {
 
     // The only listing fields we may derive from intake. Agent instructions
     // remain internal; no description, broker comments, or public photo URLs.
+    const structuredAddress =
+      intake.address_street?.trim() && intake.address_city?.trim() &&
+      intake.address_state?.trim() && intake.address_zip?.trim()
+        ? {
+            address: intake.address_street.trim(),
+            city: intake.address_city.trim(),
+            state: intake.address_state.trim(),
+            zip_code: intake.address_zip.trim(),
+          }
+        : parseAddress(address)
+
     const { data, error } = await service.from('listings').insert({
-      ...parseAddress(address),
+      ...structuredAddress,
       agent_id: intake.agent_id,
       status: 'draft',
       listing_type: 'for_sale',
@@ -122,6 +140,14 @@ Deno.serve(async (req): Promise<Response> => {
       bathrooms: intake.bathrooms,
       square_feet: intake.square_feet,
       lot_size: intake.property_type === 'single_family' ? intake.lot_acres : null,
+      ...(intake.property_type === 'condo' ? {
+        condo_details: intake.condo_fee_monthly != null
+          ? { hoa_fee: Number(intake.condo_fee_monthly) } : null,
+        parking_spaces: intake.parking_spaces,
+        total_parking_spaces: intake.parking_spaces,
+        parking_features_list: intake.parking_type && intake.parking_type !== 'none'
+          ? [intake.parking_type.replace(/_/g, ' ')] : null,
+      } : {}),
       photos: [],
       created_by_user_id: adminId,
       creation_source: CONCIERGE_SOURCE,
