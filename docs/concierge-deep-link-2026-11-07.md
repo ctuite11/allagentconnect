@@ -5,7 +5,8 @@
 ## What this adds
 - Public, stable Facebook link: `https://allagentconnect.com/concierge`.
 - Page explains the member-only concierge service and links signed-out agents to Login / Request Access.
-- **Two distinct intake forms:** Property Listing is NOT an email. It collects address, property type, asking price, beds, baths, square feet, acres when Single Family, optional notes and up to 10 photos. Network Broadcast Email collects required Communications channel (Buyer Needs, Renter Needs, Sales Intel, General Discussion), email subject and message, optional reference URL.
+- **Two distinct intake forms:** Property Listing is NOT an email. It uses AAC's existing Google Places address autocomplete (with manual-entry fallback), formats asking price and square footage while typing, and collects property type, asking price, beds, baths, square feet, acres when Single Family, **monthly condo fee (optional) plus required parking spaces/type for Condo**, optional notes and up to 10 photos. Network Broadcast Email collects required Communications channel (Buyer Needs, Renter Needs, Sales Intel, General Discussion), email subject and message, optional reference URL.
+- Where a Google address is selected, normalized street/city/state/ZIP are stored separately and used directly to prefill the listing draft; manual typed addresses remain supported and must be verified by staff. Condo fee is stored in the draft's `condo_details.hoa_fee`, and parking in existing listing parking fields.
 - Listing requests store essential property data only in `agent_concierge_requests`. No published `listings` row or network broadcast is created. One staff-only notification is queued to **chris@allagentconnect.com** per new request.
 - Property photos live in dedicated **private** bucket `concierge-request-photos`, not the public `listing-photos` bucket. Max 10 JPG/PNG/WebP files at 10 MB each. Each object path is scoped to submitting agent and intake request.
 - Admin sees property details and short-lived signed photo previews in the private requests queue; the first three load as thumbnails and **View all submitted photos** signs the rest only on demand.
@@ -33,6 +34,8 @@ This request queue is **separate** from the staged listing-update concierge func
 
 ## Acceptance checks
 - Signed out: no form; sees only generic marketing copy and Login / Register buttons.
+- **Admin preview testing:** Admin sees the form with **Test Form (No Send)**. Completing the fields shows the agent-style confirmation without writing to any database, uploading photos, queuing an email or sending anything. This is NOT a successful real submission. Admin accounts intentionally cannot submit as a verified agent; a separate verified agent account is needed for staging end-to-end tests.
+- Test Google address suggestion and separately verify manual fallback. Google browser key must be configured for the Netlify preview domain; if the Google API referrer restriction blocks it, do not relax the production key globally. Configure the isolated preview host with an appropriately restricted browser key. Test formatted inputs visually (`$1,250,000`, `1,800`) and numeric values in staging. Condo fee/parking must show only when Property Type = Condo; Single Family shows acreage.
 - Unverified / invited / suspended agent: cannot submit, even by direct REST insert.
 - Verified **activated** agent: one request inserted with `status = new`, one staff notification queued, and a confirmation popup shown. Closing the popup leaves an inline acknowledgement. If the notification cannot enqueue, the request insert must fail atomically.
 - Agent A cannot read Agent B's request, change status, or post through this form.
