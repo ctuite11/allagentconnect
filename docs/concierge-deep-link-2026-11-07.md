@@ -5,7 +5,7 @@
 ## What this adds
 - Public, stable Facebook link: `https://allagentconnect.com/concierge`.
 - Page explains the member-only concierge service and links signed-out agents to Login / Request Access.
-- Verified agent form: request either a shareable property listing or a network broadcast; subject, optional address, details and reference URL.
+- Verified agent form: request either a shareable property listing or a network broadcast; subject, optional address, details and reference URL. Network broadcasts **require one Communications Center channel**: Buyer Needs, Renter Needs, Sales Intel or General Discussion.
 - Private requests table `public.agent_concierge_requests`; RLS denies anonymous access and cross-agent reads. The form is NOT a send or publish button.
 - Staff queue: `/admin/concierge-requests`, guarded to admins, with manual status changes.
 - No cron, email jobs, public listing visibility, social posting, reminder changes or external providers.
@@ -25,6 +25,7 @@ This request queue is **separate** from the staged listing-update concierge func
 - Unverified / invited / suspended agent: cannot submit, even by direct REST insert.
 - Verified **activated** agent: one request inserted with `status = new`, and a confirmation shown.
 - Agent A cannot read Agent B's request, change status, or post through this form.
+- Broadcast request cannot be submitted without a valid channel; listing requests cannot carry a broadcast channel. The selected channel is shown in the admin queue.
 - Admin sees the request, agent identity, details, and can update status.
 - Admin updates never send emails or publish listings.
 - Existing success hub, listings, Hot Sheets, email delivery and migration work are unchanged.
