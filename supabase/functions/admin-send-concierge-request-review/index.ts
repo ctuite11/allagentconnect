@@ -24,7 +24,6 @@
 //  - the plaintext token is never persisted; the queue worker re-derives it at
 //    send time (same contract as the activation and sign-in link emails)
 //  - nothing here publishes anything; the buttons are navigation only
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import {
   CONCIERGE_SOURCE,
   getAgentEligibility,
@@ -59,6 +58,7 @@ const ISSUANCE_REASONS: Record<string, string> = {
 
 Deno.serve(async (req: Request): Promise<Response> => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders })
+  if (req.method !== 'POST') return jsonResponse({ error: 'Method not allowed' }, 405)
 
   try {
     const ctx = await requireAdmin(req)
@@ -169,6 +169,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
     // ── Enqueue the review email (body is rendered at send time) ────────────
     const subject = 'Your listing is ready to review on All Agent Connect'
     const { error: jobErr } = await service.from('email_jobs').insert({
+      // The database queue deduplicates on this COLUMN, not payload JSON.
+      idempotency_key: `${CONCIERGE_REVIEW_TEMPLATE}/${tokenId}`,
       payload: {
         provider: 'resend',
         template: CONCIERGE_REVIEW_TEMPLATE,
@@ -176,6 +178,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
         subject,
         reply_to: 'hello@allagentconnect.com',
         listing_id: listing.id,
+        // Worker rechecks request ownership and private-photo readiness before delivery.
+        concierge_request_id: request.id,
         agent_name: profile?.first_name ?? null,
         access_token_id: tokenId,
         access_token_kind: tokenKind,
