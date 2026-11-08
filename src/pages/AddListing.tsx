@@ -328,7 +328,8 @@ const AddListing = () => {
    * Draft-only: the listing is owned by the selected member, saved through
    * admin-only server actions, and can never be published from here.
    */
-  const isConciergeMode = location.pathname.startsWith(CONCIERGE_BASE_PATH);
+  const isRequestConciergeEditor = location.pathname.startsWith('/admin/concierge-requests/edit/');
+  const isConciergeMode = location.pathname.startsWith(CONCIERGE_BASE_PATH) || isRequestConciergeEditor;
   const [conciergeAgentId, setConciergeAgentId] = useState<string | null>(
     searchParams.get("agent"),
   );
@@ -2147,6 +2148,10 @@ const AddListing = () => {
 
   const handleFileSelect = async (files: FileList | null, type: "photos" | "floorplans") => {
     if (!files) return;
+    if (isRequestConciergeEditor) {
+      toast.error('Concierge request media uploads are on hold until the private storage handoff is verified.');
+      return;
+    }
     
     // For photos, upload directly with spinner
     if (type === 'photos') {
@@ -2404,6 +2409,9 @@ const AddListing = () => {
     const uploadedDocuments: { url: string; name?: string; documentType?: string; customLabel?: string }[] = [];
 
     // ---- PHOTOS ----
+    if (isRequestConciergeEditor && [...photos, ...floorPlans, ...documents].some((item) => !item.uploaded)) {
+      throw new Error('Media uploads are on hold until the private storage handoff is verified.');
+    }
     for (const photo of photos) {
       // Preserve existing, already-uploaded items
       if (photo.uploaded && photo.url) {
@@ -2882,7 +2890,7 @@ const AddListing = () => {
 
       if (!isAutoSave) {
         toast.success("Draft saved successfully!");
-        navigate(isConciergeMode ? CONCIERGE_BASE_PATH : `${ROUTES.MY_LISTINGS}?status=draft`);
+        navigate(isRequestConciergeEditor ? '/admin/concierge-requests' : isConciergeMode ? CONCIERGE_BASE_PATH : `${ROUTES.MY_LISTINGS}?status=draft`);
       }
 
       return targetId;
@@ -4440,7 +4448,7 @@ const AddListing = () => {
           <AgentPageHeader
             withTopPadding
             title={inCreationFlow ? "Add listing" : "Edit listing"}
-            backTo={addListingBackTo}
+            backTo={isRequestConciergeEditor ? '/admin/concierge-requests' : addListingBackTo}
             actions={
               user?.email ? (
                 <span className="max-w-[14rem] truncate text-xs text-neutral-500 sm:max-w-xs" title={user.email}>
@@ -4449,6 +4457,19 @@ const AddListing = () => {
               ) : null
             }
           />
+
+          {isRequestConciergeEditor && (
+            <div className="mb-5 rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-700">
+              <strong>Concierge request draft.</strong> This listing belongs to the requesting agent.
+              You can complete and save it as a draft, but only the agent can publish it.
+              The original photos remain private in
+              <button type="button" onClick={() => navigate('/admin/concierge-requests')}
+                className="ml-1 font-medium text-[#0E56F5] underline">
+                Concierge Requests
+              </button>
+              ; they are not yet copied into this listing.
+            </div>
+          )}
 
           {/* Action Buttons - Sticky Top Bar */}
           <div ref={stickyActionBarRef} className={cn("-mx-4 sticky top-0 z-10 mb-6 border-b border-zinc-200/90 bg-white/95 px-4 py-2.5 shadow-[0_1px_3px_rgba(0,0,0,0.04)] backdrop-blur-sm transition-opacity supports-[backdrop-filter]:bg-white/90", bottomActionsVisible && "pointer-events-none opacity-0")}>
@@ -6184,7 +6205,9 @@ const AddListing = () => {
                       <div>
                         <Label className={agentSectionTitle}>Property Photos</Label>
                         <p className="mt-1 text-sm text-muted-foreground">
-                          Upload and manage photos on a dedicated page.
+                          {isRequestConciergeEditor
+                            ? "Submitted photos remain private in Concierge Requests. Uploads to the listing are disabled until privacy verification."
+                            : "Upload and manage photos on a dedicated page."}
                         </p>
                       </div>
                       <div className="flex shrink-0 flex-wrap gap-2">
@@ -6194,7 +6217,7 @@ const AddListing = () => {
                           size="sm"
                           className={ADD_LISTING_MEDIA_OUTLINE_BUTTON_CLASS}
                           onClick={() => document.getElementById("photo-upload")?.click()}
-                          disabled={isUploadingPhotos}
+                          disabled={isUploadingPhotos || isRequestConciergeEditor}
                         >
                           {isUploadingPhotos ? (
                             <>
@@ -6214,7 +6237,7 @@ const AddListing = () => {
                           size="sm"
                           className={ADD_LISTING_MEDIA_OUTLINE_BUTTON_CLASS}
                           onClick={handleNavigateToManagePhotos}
-                          disabled={isUploadingPhotos}
+                          disabled={isUploadingPhotos || isRequestConciergeEditor}
                         >
                           Manage Photos
                         </Button>
@@ -6228,7 +6251,7 @@ const AddListing = () => {
                       accept="image/*"
                       onChange={(e) => handleFileSelect(e.target.files, 'photos')}
                       className="hidden"
-                      disabled={isUploadingPhotos}
+                      disabled={isUploadingPhotos || isRequestConciergeEditor}
                     />
                     
                     {/* Display existing photos */}

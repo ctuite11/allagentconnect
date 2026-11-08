@@ -152,6 +152,7 @@ const ManageListingPhotos = React.lazy(() => import("./pages/ManageListingPhotos
 const AdminApprovals = React.lazy(() => import("./pages/AdminApprovals"));
 const AdminDebugAuth = React.lazy(() => import("./pages/AdminDebugAuth"));
 const AdminConciergeListings = React.lazy(() => import("./pages/AdminConciergeListings"));
+const AdminConciergeRequests = React.lazy(() => import("./pages/AdminConciergeRequests"));
 
 const AdminMatches = React.lazy(() => import("./pages/AdminMatches"));
 const AdminConsumers = React.lazy(() => import("./pages/AdminConsumers"));
@@ -174,6 +175,7 @@ const About = React.lazy(() => import("./pages/About"));
 const Faq = React.lazy(() => import("./pages/Faq"));
 const OffMarketListingNetwork = React.lazy(() => import("./pages/OffMarketListingNetwork"));
 const Contact = React.lazy(() => import("./pages/Contact"));
+const Concierge = React.lazy(() => import("./pages/Concierge"));
 const Blog = React.lazy(() => import("./pages/Blog"));
 const DesignMockup = React.lazy(() => import("./pages/DesignMockup"));
 // Eager: ~9 KB / ~3 KB gzip — removes Suspense waterfall on `/` after main evaluates.
@@ -518,6 +520,7 @@ const App = () => (
                 <Route path="/faq" element={<Faq />} />
                 <Route path="/off-market-listing-network" element={<OffMarketListingNetwork />} />
                 <Route path="/contact" element={<Contact />} />
+                <Route path="/concierge" element={<Concierge />} />
                 <Route path="/blog" element={<Blog />} />
                 {/* Auth routes */}
                 <Route element={<PublicLayout />}>
@@ -583,9 +586,9 @@ const App = () => (
                   <Route path="/agent/listings/:id/photos" element={<RouteGuard requireRole="agent"><ManageListingPhotos /></RouteGuard>} />
                   <Route path="/agent/listings/:id/floor-plans" element={<RouteGuard requireRole="agent"><ManageListingPhotos mode="floorPlans" /></RouteGuard>} />
                   <Route path="/agent/listings/edit/:id" element={<RouteGuard requireRole="agent"><AddListing /></RouteGuard>} />
-                  {CONCIERGE_LISTINGS_ENABLED && (
-                    <Route path="/agent/listings/review/:id" element={<RouteGuard requireRole="agent"><ListingReview /></RouteGuard>} />
-                  )}
+                  {/* Member-only request draft review (separate from disabled legacy concierge UI).
+                      The component itself restricts access to a matching, agent-owned intake. */}
+                  <Route path="/agent/listings/review/:id" element={<RouteGuard requireRole="agent"><ListingReview /></RouteGuard>} />
                   <Route path="/agent/listings/:id" element={<RouteGuard requireRole="agent"><AgentDetailRedirect /></RouteGuard>} />
                   <Route path="/client-needs" element={<RouteGuard requireRole="agent"><ClientNeedsDashboard /></RouteGuard>} />
                   <Route path="/listing-intel" element={<RouteGuard requireRole="agent"><ListingIntel /></RouteGuard>} />
@@ -656,6 +659,9 @@ const App = () => (
                   <Route path="/admin/founder-invite" element={<AdminFounderInvite />} />
                   <Route path="/admin/send-email" element={<AdminSendEmail />} />
                   <Route path="/admin/debug-auth" element={<AdminDebugAuth />} />
+                  <Route path="/admin/concierge-requests" element={<RouteGuard requireRole="admin"><AdminConciergeRequests /></RouteGuard>} />
+                  {/* Request-only admin editor. Draft-only AddListing mode; the legacy concierge UI flag stays off. */}
+                  <Route path="/admin/concierge-requests/edit/:id" element={<RouteGuard requireRole="admin"><AddListing /></RouteGuard>} />
                   {/* Admin concierge: create/edit a draft listing on behalf of a member */}
                   {CONCIERGE_LISTINGS_ENABLED && (
                     <>

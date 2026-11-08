@@ -150,6 +150,7 @@ const PUBLIC_RETURN_PREFIXES = [
   "/find-agent",
   "/about",
   "/contact",
+  "/concierge",
   "/blog",
   "/privacy",
   "/terms",

@@ -25,6 +25,7 @@ export interface ConciergeDraftSummary {
   created_at: string;
   updated_at: string | null;
   created_by_user_id: string | null;
+  creation_request_id?: string | null;
 }
 
 async function invoke<T>(fn: string, body: Record<string, unknown>): Promise<T> {
@@ -56,6 +57,20 @@ export async function createConciergeDraft(
     agent_id: agentId,
     listing,
   });
+  return res.listing;
+}
+
+/** A dedicated server-side handoff from submitted intake to agent-owned draft.
+ * Separate endpoint prevents older production backends from creating blank drafts.
+ */
+export async function createConciergeDraftFromRequest(
+  agentId: string,
+  requestId: string,
+): Promise<{ id: string }> {
+  const res = await invoke<{ listing: { id: string } }>(
+    "admin-create-concierge-request-draft",
+    { agent_id: agentId, request_id: requestId },
+  );
   return res.listing;
 }
 
@@ -97,4 +112,13 @@ export async function sendConciergeReviewEmail(
   listingId: string,
 ): Promise<{ sent: boolean; email: string; tokenType: string; expiresAt: string }> {
   return invoke("send-concierge-review-email", { listing_id: listingId });
+}
+
+/** New request-only sender. The old production backend lacks this endpoint,
+ * so a PR preview cannot accidentally send a real review email.
+ */
+export async function sendConciergeRequestReviewEmail(
+  listingId: string,
+): Promise<{ sent: boolean; email: string; tokenType: string; expiresAt: string }> {
+  return invoke("admin-send-concierge-request-review", { listing_id: listingId });
 }
