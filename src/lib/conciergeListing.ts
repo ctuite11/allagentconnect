@@ -62,6 +62,20 @@ export async function createConciergeDraft(
   return res.listing;
 }
 
+/** A dedicated server-side handoff from submitted intake to agent-owned draft.
+ * Separate endpoint prevents older production backends from creating blank drafts.
+ */
+export async function createConciergeDraftFromRequest(
+  agentId: string,
+  requestId: string,
+): Promise<{ id: string }> {
+  const res = await invoke<{ listing: { id: string } }>(
+    "admin-create-concierge-request-draft",
+    { agent_id: agentId, request_id: requestId },
+  );
+  return res.listing;
+}
+
 export async function loadConciergeDraft(listingId: string): Promise<Record<string, any>> {
   const res = await invoke<{ listing: Record<string, any> }>("admin-manage-concierge-listing", {
     action: "load",
