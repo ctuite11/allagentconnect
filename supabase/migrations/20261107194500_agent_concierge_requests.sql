@@ -204,8 +204,8 @@ BEGIN
   IF EXISTS (
     SELECT 1
       FROM public.agent_concierge_requests r
-      WHERE r.id::text = NEW.creation_request_id
-        AND r.agent_id = NEW.agent_id
+      WHERE r.id::text = OLD.creation_request_id
+        AND r.agent_id = OLD.agent_id
         AND r.request_type = 'listing'
         AND cardinality(r.photo_paths) > 0
   ) THEN
@@ -225,8 +225,8 @@ FOR EACH ROW
 WHEN (
   OLD.status = 'draft'
   AND NEW.status <> 'draft'
-  AND NEW.creation_source = 'admin_concierge'
-  AND NEW.creation_request_id IS NOT NULL
+  AND OLD.creation_source = 'admin_concierge'
+  AND OLD.creation_request_id IS NOT NULL
 )
 EXECUTE FUNCTION public.block_concierge_pending_photo_publication();
 
