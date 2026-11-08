@@ -93,11 +93,11 @@ export default function Concierge() {
           <section className="mt-10 rounded-xl border border-zinc-200 p-6">
             <h2 className="text-xl font-semibold">Already have an AAC account?</h2>
             <p className="mt-2 text-zinc-600">
-              Sign in, then return to this page to request concierge help.
+              Sign in to return here and request concierge help.
               New agents can register for free and submit requests once verified.
             </p>
             <div className="mt-5 flex flex-wrap gap-3">
-              <Button asChild><Link to="/login">Sign in</Link></Button>
+              <Button asChild><Link to="/auth?returnTo=%2Fconcierge">Sign in</Link></Button>
               <Button asChild variant="outline"><Link to="/request-access">Register free</Link></Button>
             </div>
           </section>
