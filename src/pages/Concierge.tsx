@@ -29,6 +29,8 @@ export default function Concierge() {
   const [submitted, setSubmitted] = useState(false);
 
   const canSubmit = Boolean(user && role === "agent" && isVerifiedAgent);
+  // Staff can inspect the form, but only verified agent accounts can submit requests.
+  const adminPreview = Boolean(user && role === "admin");
 
   async function submitRequest(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -101,7 +103,7 @@ export default function Concierge() {
               <Button asChild variant="outline"><Link to="/request-access">Register free</Link></Button>
             </div>
           </section>
-        ) : !canSubmit ? (
+        ) : !canSubmit && !adminPreview ? (
           <section className="mt-10 rounded-xl border border-zinc-200 p-6">
             <h2 className="text-xl font-semibold">Verified agent membership required</h2>
             <p className="mt-2 text-zinc-600">
@@ -131,6 +133,13 @@ export default function Concierge() {
         ) : (
           <form onSubmit={submitRequest} className="mt-10 space-y-6 rounded-xl border border-zinc-200 p-6 sm:p-8">
             <h2 className="text-xl font-semibold">Request concierge help</h2>
+            {adminPreview && (
+              <p className="rounded-lg border border-zinc-200 bg-zinc-50 p-3 text-sm text-zinc-700">
+                Admin preview: you can review the form here, but submissions are only
+                accepted from verified agent accounts. <Link to="/admin/concierge-requests"
+                className="font-medium text-[#0E56F5] underline">View staff requests</Link>.
+              </p>
+            )}
             <fieldset>
               <legend className="mb-2 text-sm font-medium text-zinc-800">What do you need help with?</legend>
               <div className="flex flex-wrap gap-5">
@@ -175,7 +184,7 @@ export default function Concierge() {
             <p className="text-sm text-zinc-600">
               Our team will contact you to review the draft before publication or network delivery.
             </p>
-            <Button type="submit" disabled={submitting}>
+            <Button type="submit" disabled={submitting || !canSubmit}>
               {submitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Submitting…</> : "Submit concierge request"}
             </Button>
           </form>
