@@ -14,6 +14,13 @@ type ConciergeRequest = {
   id: string;
   agent_id: string;
   request_type: "listing" | "broadcast";
+  property_type: string | null;
+  asking_price: number | null;
+  bedrooms: number | null;
+  bathrooms: number | null;
+  square_feet: number | null;
+  lot_acres: number | null;
+  photo_paths: string[];
   communication_channel: string | null;
   subject: string;
   property_address: string | null;
@@ -35,6 +42,7 @@ const statusOptions: { value: RequestStatus; label: string }[] = [
 export default function AdminConciergeRequests() {
   const [requests, setRequests] = useState<ConciergeRequest[]>([]);
   const [agents, setAgents] = useState<Record<string, AgentIdentity>>({});
+  const [photos, setPhotos] = useState<Record<string, string[]>>({});
   const [loading, setLoading] = useState(true);
   const [changingId, setChangingId] = useState<string | null>(null);
 
@@ -43,12 +51,22 @@ export default function AdminConciergeRequests() {
     try {
       const { data, error } = await (supabase as any)
         .from("agent_concierge_requests")
-        .select("id, agent_id, request_type, communication_channel, subject, property_address, details, reference_url, status, created_at")
+        .select("id, agent_id, request_type, communication_channel, subject, property_address, property_type, asking_price, bedrooms, bathrooms, square_feet, lot_acres, photo_paths, details, reference_url, status, created_at")
         .order("created_at", { ascending: false })
         .limit(100);
       if (error) throw error;
       const rows = (data ?? []) as ConciergeRequest[];
       setRequests(rows);
+      // Private objects are shown only via short-lived signed URLs to staff.
+      const signedRows = await Promise.all(rows.map(async (request) => {
+        if (!request.photo_paths?.length) return [request.id, []] as const;
+        const { data: signed, error: signedError } = await supabase.storage
+          .from("concierge-request-photos")
+          .createSignedUrls(request.photo_paths, 300);
+        if (signedError) return [request.id, []] as const;
+        return [request.id, (signed ?? []).flatMap((entry) => entry.signedUrl ? [entry.signedUrl] : [])] as const;
+      }));
+      setPhotos(Object.fromEntries(signedRows));
 
       const ids = Array.from(new Set(rows.map((r) => r.agent_id)));
       if (ids.length) {
@@ -135,7 +153,37 @@ export default function AdminConciergeRequests() {
                       : "Unknown channel"}
                   </p>
                 )}
-                {request.property_address && <p className="mt-3 text-sm text-zinc-800"><strong>Property:</strong> {request.property_address}</p>}
+                {request.request_type === "listing" && (
+                  <div className="mt-3 space-y-2 text-sm text-zinc-800">
+                    <p><strong>Property:</strong> {request.property_address ?? "—"}</p>
+                    <div className="flex flex-wrap gap-x-5 gap-y-1">
+                      <span><strong>Type:</strong> {request.property_type?.replace(/_/g, " ") ?? "—"}</span>
+                      <span><strong>Asking:</strong> {request.asking_price != null
+                        ? Number(request.asking_price).toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 })
+                        : "—"}</span>
+                      <span><strong>Beds:</strong> {request.bedrooms ?? "—"}</span>
+                      <span><strong>Baths:</strong> {request.bathrooms ?? "—"}</span>
+                      <span><strong>Sq ft:</strong> {request.square_feet?.toLocaleString() ?? "—"}</span>
+                      {request.property_type === "single_family" && (
+                        <span><strong>Acres:</strong> {request.lot_acres ?? "—"}</span>
+                      )}
+                    </div>
+                    {photos[request.id]?.length > 0 && (
+                      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                        {photos[request.id].map((src, index) => (
+                          <a key={src} href={src} target="_blank" rel="noopener noreferrer"
+                            title={`View submitted photo ${index + 1}`}>
+                            <img src={src} className="h-28 w-full rounded-lg border border-zinc-200 object-cover"
+                              alt={`Private submitted property photo ${index + 1}`} />
+                          </a>
+                        ))}
+                      </div>
+                    )}
+                    {request.photo_paths?.length > 0 && !photos[request.id]?.length && (
+                      <p className="text-amber-700">Attached photos could not be loaded.</p>
+                    )}
+                  </div>
+                )}
                 <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-zinc-700">{request.details}</p>
                 {request.reference_url && <p className="mt-3 break-all text-sm">
                   <strong>Reference:</strong> {request.reference_url}
