@@ -5,7 +5,10 @@
 ## What this adds
 - Public, stable Facebook link: `https://allagentconnect.com/concierge`.
 - Page explains the member-only concierge service and links signed-out agents to Login / Request Access.
-- Verified agent form: request either a shareable property listing or a network broadcast; subject, optional address, details and reference URL. Network broadcasts **require one Communications Center channel**: Buyer Needs, Renter Needs, Sales Intel or General Discussion.
+- **Two distinct intake forms:** Property Listing is NOT an email. It collects address, property type, asking price, beds, baths, square feet, acres when Single Family, optional notes and up to 10 photos. Network Broadcast Email collects required Communications channel (Buyer Needs, Renter Needs, Sales Intel, General Discussion), email subject and message, optional reference URL.
+- Listing requests store essential property data only in `agent_concierge_requests`. No published `listings` row, network email, or `email_jobs` entry is created.
+- Property photos live in dedicated **private** bucket `concierge-request-photos`, not the public `listing-photos` bucket. Max 10 JPG/PNG/WebP files at 10 MB each. Each object path is scoped to submitting agent and intake request.
+- Admin sees property details and short-lived signed photo previews in the private requests queue.
 - Private requests table `public.agent_concierge_requests`; RLS denies anonymous access and cross-agent reads. The form is NOT a send or publish button.
 - Staff queue: `/admin/concierge-requests`, guarded to admins, with manual status changes.
 - No cron, email jobs, public listing visibility, social posting, reminder changes or external providers.
@@ -26,6 +29,10 @@ This request queue is **separate** from the staged listing-update concierge func
 - Verified **activated** agent: one request inserted with `status = new`, and a confirmation shown.
 - Agent A cannot read Agent B's request, change status, or post through this form.
 - Broadcast request cannot be submitted without a valid channel; listing requests cannot carry a broadcast channel. The selected channel is shown in the admin queue.
+- Listing request cannot be submitted without address, type, positive price and square feet, nonnegative beds/baths and lot acres for single family. Non-single-family requests have no acres field.
+- Upload to private storage is restricted to the owner folder and a real owned new listing request. Admin can sign photo URLs; signed-out and other agents cannot access photos.
+- Photos remain private until AAC staff review. If a photo upload fails, the request remains with a prominent warning to the submitting agent; staff can see whatever photos succeeded.
+- Manual staff queue never sends emails or publishes a listing.
 - Admin sees the request, agent identity, details, and can update status.
 - Admin updates never send emails or publish listings.
 - Existing success hub, listings, Hot Sheets, email delivery and migration work are unchanged.
