@@ -25,6 +25,7 @@ export interface ConciergeDraftSummary {
   created_at: string;
   updated_at: string | null;
   created_by_user_id: string | null;
+  creation_request_id?: string | null;
 }
 
 async function invoke<T>(fn: string, body: Record<string, unknown>): Promise<T> {
@@ -51,10 +52,12 @@ async function invoke<T>(fn: string, body: Record<string, unknown>): Promise<T> 
 export async function createConciergeDraft(
   agentId: string,
   listing: Record<string, unknown>,
+  requestId?: string,
 ): Promise<{ id: string }> {
   const res = await invoke<{ listing: { id: string } }>("admin-create-listing-for-agent", {
     agent_id: agentId,
     listing,
+    ...(requestId ? { request_id: requestId } : {}),
   });
   return res.listing;
 }
