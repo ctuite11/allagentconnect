@@ -12,6 +12,7 @@
 - Admin sees property details and short-lived signed photo previews in the private requests queue; the first three load as thumbnails and **View all submitted photos** signs the rest only on demand.
 - Private requests table `public.agent_concierge_requests`; RLS denies anonymous access and cross-agent reads. The form is NOT a send or publish button.
 - Staff queue: `/admin/concierge-requests`, guarded to admins, with manual status changes.
+- Staff queue now includes **Status** and **Request type** filters with a New count. Broadcast requests also have **Copy email draft**, which copies the channel, subject, message and optional reference URL for manual review in Communications Center. This clipboard-only action sends nothing and does not mutate the database.
 - **Request → draft handoff:** `Create agent draft` uses the NEW isolated admin-only `admin-create-concierge-request-draft` function with the intake request ID. The server checks request identity and agent membership, copies essentials from the private intake, creates a member-owned listing in `draft` status, and marks the intake `in_progress`. This is a separate endpoint to prevent a preview pointing at the old backend from accidentally creating a blank production listing.
 - `Continue agent draft` opens the existing Add Listing editor in request-only admin draft mode at `/admin/concierge-requests/edit/:id`. `CONCIERGE_LISTINGS_ENABLED` remains **false**; no older concierge surfaces are enabled.
 - Private submitted photos stay in the **intake** queue. The listing-photo storage is not confirmed private, so photos are NOT copied to a public listing storage bucket; staff must review them and wait for the privacy-safe transfer flow. The existing Add Listing photo upload/management controls are disabled for request-linked draft editing to prevent staff from accidentally uploading private images into public storage.
@@ -20,6 +21,10 @@
 - No new cron, public listing visibility, social posting, reminder changes or external providers. Only the original staff request notice and explicitly clicked agent review email use AAC's existing transactional `email_jobs` queue; neither is a Communications Center broadcast.
 
 This request queue is **separate** from the staged listing-update concierge functionality (`CONCIERGE_LISTINGS_ENABLED = false`). Do NOT enable that flag in this rollout.
+
+## Code-review fixes
+- Corrected two hard blockers discovered during review: an accidental duplicated SQL migration tail / malformed ZIP check, and a missing `CONCIERGE_SOURCE` import in the new admin review-email function.
+- Do not confuse code review with staged execution: the SQL still requires migration testing against the independent backend, including agent-role RLS, storage policies, email queue and unique index.
 
 ## Required release order
 1. Include the SQL migration in Nenad's isolated environment and verify that it applies cleanly against the current schema; this adds one new requests table and a unique index on the existing listings creation_request_id column. Review for any legacy duplicate request IDs before applying.
