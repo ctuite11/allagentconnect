@@ -25,12 +25,22 @@ CREATE TABLE IF NOT EXISTS public.agent_concierge_requests (
   ),
   subject text NOT NULL CHECK (char_length(btrim(subject)) BETWEEN 1 AND 160),
   property_address text CHECK (property_address IS NULL OR char_length(property_address) <= 300),
+  address_street text CHECK (address_street IS NULL OR char_length(address_street) <= 220),
+  address_city text CHECK (address_city IS NULL OR char_length(address_city) <= 120),
+  address_state text CHECK (address_state IS NULL OR address_state ~ '^[A-Z]{2}$'),
+  address_zip text CHECK (address_zip IS NULL OR address_zip ~ '^\\d{5}$'),
   property_type text CHECK (property_type IN ('single_family', 'condo', 'townhouse', 'multi_family')),
   asking_price numeric CHECK (asking_price IS NULL OR asking_price > 0),
   bedrooms smallint CHECK (bedrooms IS NULL OR bedrooms BETWEEN 0 AND 30),
   bathrooms numeric(4,1) CHECK (bathrooms IS NULL OR bathrooms BETWEEN 0 AND 30),
   square_feet integer CHECK (square_feet IS NULL OR square_feet BETWEEN 1 AND 1000000),
   lot_acres numeric(12,4) CHECK (lot_acres IS NULL OR lot_acres >= 0),
+  condo_fee_monthly numeric(12,2) CHECK (condo_fee_monthly IS NULL OR condo_fee_monthly >= 0),
+  parking_spaces smallint CHECK (parking_spaces IS NULL OR parking_spaces BETWEEN 0 AND 100),
+  parking_type text CHECK (
+    parking_type IS NULL OR
+    parking_type IN ('none', 'garage', 'deeded', 'assigned', 'off_street', 'street', 'other')
+  ),
   details text NOT NULL DEFAULT '' CHECK (char_length(details) <= 4000),
   reference_url text CHECK (reference_url IS NULL OR char_length(reference_url) <= 1000),
   photo_paths text[] NOT NULL DEFAULT '{}'::text[],
@@ -50,6 +60,11 @@ CREATE TABLE IF NOT EXISTS public.agent_concierge_requests (
       AND square_feet IS NOT NULL
       AND (property_type <> 'single_family' OR lot_acres IS NOT NULL)
       AND (property_type = 'single_family' OR lot_acres IS NULL)
+      AND (
+        (property_type = 'condo' AND parking_spaces IS NOT NULL AND parking_type IS NOT NULL)
+        OR (property_type <> 'condo' AND condo_fee_monthly IS NULL
+            AND parking_spaces IS NULL AND parking_type IS NULL)
+      )
     )
     OR (
       request_type = 'broadcast'
@@ -62,6 +77,13 @@ CREATE TABLE IF NOT EXISTS public.agent_concierge_requests (
       AND bathrooms IS NULL
       AND square_feet IS NULL
       AND lot_acres IS NULL
+      AND condo_fee_monthly IS NULL
+      AND parking_spaces IS NULL
+      AND parking_type IS NULL
+      AND address_street IS NULL
+      AND address_city IS NULL
+      AND address_state IS NULL
+      AND address_zip IS NULL
       AND cardinality(photo_paths) = 0
     )
   ),
@@ -126,7 +148,9 @@ REVOKE ALL ON public.agent_concierge_requests FROM PUBLIC, anon, authenticated;
 GRANT SELECT ON public.agent_concierge_requests TO authenticated;
 GRANT INSERT (
   agent_id, request_type, communication_channel, subject, property_address,
+  address_street, address_city, address_state, address_zip,
   property_type, asking_price, bedrooms, bathrooms, square_feet, lot_acres,
+  condo_fee_monthly, parking_spaces, parking_type,
   details, reference_url
 ) ON public.agent_concierge_requests TO authenticated;
 GRANT UPDATE (status, photo_paths) ON public.agent_concierge_requests TO authenticated;
@@ -285,6 +309,16 @@ BEGIN
             || public.concierge_notification_escape_html(coalesce(NEW.asking_price::text, '')) || '</p>'
             || '<p><b>Beds / baths:</b> '
             || public.concierge_notification_escape_html(concat_ws(' / ', NEW.bedrooms::text, NEW.bathrooms::text)) || '</p>'
+            || CASE WHEN NEW.property_type = 'condo'
+               THEN '<p><b>Condo fee:</b> '
+                 || public.concierge_notification_escape_html(
+                      coalesce(NEW.condo_fee_monthly::text, 'Not provided')) || '/month</p>'
+                 || '<p><b>Parking:</b> '
+                 || public.concierge_notification_escape_html(
+                      coalesce(NEW.parking_spaces::text, '')) || ' spaces ('
+                 || public.concierge_notification_escape_html(
+                      replace(coalesce(NEW.parking_type, ''), '_', ' ')) || ')</p>'
+               ELSE '' END
             || '<p><b>Square feet:</b> '
             || public.concierge_notification_escape_html(coalesce(NEW.square_feet::text, '')) || '</p>'
             || CASE WHEN NEW.property_type = 'single_family'
