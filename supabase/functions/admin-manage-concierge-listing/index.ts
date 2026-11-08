@@ -39,7 +39,7 @@ Deno.serve(async (req) => {
     if (action === 'list') {
       const { data, error } = await service
         .from('listings')
-        .select('id, agent_id, address, city, state, zip_code, price, status, created_at, updated_at, created_by_user_id')
+        .select('id, agent_id, address, city, state, zip_code, price, status, created_at, updated_at, created_by_user_id, creation_request_id')
         .eq('creation_source', CONCIERGE_SOURCE)
         .eq('status', 'draft')
         .order('updated_at', { ascending: false })
