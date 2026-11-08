@@ -202,7 +202,7 @@ export default function Concierge() {
       if (error || !data?.id) throw error ?? new Error("Unable to create request");
 
       // Photos are private, scoped to the newly created request, and never added
-      // to the site's public listing-photo storage. No listing or email is created.
+      // to the site's public listing-photo storage. No listing or network email is created.
       let uploadedPaths: string[] = [];
       let failedCount = 0;
       if (isListing && photoFiles.length) {
@@ -300,7 +300,9 @@ export default function Concierge() {
         ) : submitted ? (
           <section aria-live="polite" className="mt-10 rounded-xl border border-zinc-200 p-7">
             <CheckCircle2 className="h-9 w-9 text-[#16A34A]" />
-            <h2 className="mt-3 text-xl font-semibold">Your concierge request is in</h2>
+            <h2 className="mt-3 text-xl font-semibold">
+              {adminPreview ? "Form test completed" : "Your concierge request is in"}
+            </h2>
             <p className="mt-2 text-zinc-600">
               {adminPreview
                 ? "Admin test complete. No request was saved and no email was sent."
@@ -311,7 +313,9 @@ export default function Concierge() {
                 {uploadWarning}
               </p>
             )}
-            <Button variant="outline" className="mt-5" onClick={resetForm}>Send another request</Button>
+            <Button variant="outline" className="mt-5" onClick={resetForm}>
+              {adminPreview ? "Test another request" : "Send another request"}
+            </Button>
           </section>
         ) : (
           <form onSubmit={submitRequest} className="mt-10 space-y-6 rounded-xl border border-zinc-200 p-6 sm:p-8">
@@ -506,7 +510,9 @@ export default function Concierge() {
             )}
 
             <p className="text-sm text-zinc-600">
-              Your request goes to AAC staff for review and notifies our team. No network broadcast or listing publication happens automatically.
+              {adminPreview
+                ? "Admin test only: no request, photo or email will be submitted."
+                : "Your request goes to AAC staff for review and notifies our team. No network broadcast or listing publication happens automatically."}
             </p>
             <Button type="submit" disabled={submitting || (!canSubmit && !adminPreview)}>
               {submitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Submitting…</>
@@ -521,7 +527,7 @@ export default function Concierge() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-xl">
               <CheckCircle2 className="h-6 w-6 text-[#16A34A]" />
-              Request sent to AAC Concierge
+              {adminPreview ? "Form test successful — nothing sent" : "Request sent to AAC Concierge"}
             </DialogTitle>
             <DialogDescription className="pt-2 text-base leading-6">
               {adminPreview
