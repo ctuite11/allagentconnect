@@ -113,3 +113,12 @@ export async function sendConciergeReviewEmail(
 ): Promise<{ sent: boolean; email: string; tokenType: string; expiresAt: string }> {
   return invoke("send-concierge-review-email", { listing_id: listingId });
 }
+
+/** New request-only sender. The old production backend lacks this endpoint,
+ * so a PR preview cannot accidentally send a real review email.
+ */
+export async function sendConciergeRequestReviewEmail(
+  listingId: string,
+): Promise<{ sent: boolean; email: string; tokenType: string; expiresAt: string }> {
+  return invoke("admin-send-concierge-request-review", { listing_id: listingId });
+}
