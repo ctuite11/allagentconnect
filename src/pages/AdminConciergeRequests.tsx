@@ -7,7 +7,7 @@ import { Seo } from "@/components/Seo";
 import { AgentAacPage } from "@/components/layout/AgentAacPage";
 import { AgentPageHeader } from "@/components/layout/AgentPageHeader";
 import { supabase } from "@/integrations/supabase/client";
-import { createConciergeDraft, listConciergeDrafts } from "@/lib/conciergeListing";
+import { createConciergeDraftFromRequest, listConciergeDrafts } from "@/lib/conciergeListing";
 import { COMMS_CHANNEL_BY_KEY } from "@/lib/commsChannels";
 import { isCommsChannelKey } from "@/lib/commsChannels";
 
@@ -137,7 +137,7 @@ export default function AdminConciergeRequests() {
     try {
       // Server validates the source request, agent ID, current eligibility,
       // and reads property details from the request—not from this browser.
-      const draft = await createConciergeDraft(request.agent_id, {}, request.id);
+      const draft = await createConciergeDraftFromRequest(request.agent_id, request.id);
       setDraftsByRequest((current) => ({ ...current, [request.id]: draft.id }));
       setRequests((current) => current.map((entry) =>
         entry.id === request.id ? { ...entry, status: "in_progress" } : entry));
