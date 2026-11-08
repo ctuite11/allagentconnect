@@ -11,7 +11,7 @@
 - Admin sees property details and short-lived signed photo previews in the private requests queue.
 - Private requests table `public.agent_concierge_requests`; RLS denies anonymous access and cross-agent reads. The form is NOT a send or publish button.
 - Staff queue: `/admin/concierge-requests`, guarded to admins, with manual status changes.
-- **Request → draft handoff:** `Create agent draft` uses the already-existing admin-only `admin-create-listing-for-agent` function with the intake request ID. The server checks request identity and agent membership, copies essentials from the private intake, creates a member-owned listing in `draft` status, and marks the intake `in_progress`.
+- **Request → draft handoff:** `Create agent draft` uses the NEW isolated admin-only `admin-create-concierge-request-draft` function with the intake request ID. The server checks request identity and agent membership, copies essentials from the private intake, creates a member-owned listing in `draft` status, and marks the intake `in_progress`. This is a separate endpoint to prevent a preview pointing at the old backend from accidentally creating a blank production listing.
 - `Continue agent draft` opens the existing Add Listing editor in request-only admin draft mode at `/admin/concierge-requests/edit/:id`. `CONCIERGE_LISTINGS_ENABLED` remains **false**; no older concierge surfaces are enabled.
 - Private submitted photos stay in the **intake** queue. The listing-photo storage is not confirmed private, so photos are NOT copied to a public listing storage bucket; staff must review them and wait for the privacy-safe transfer flow.
 - No new cron, public listing visibility, social posting, reminder changes or external providers. Notification uses AAC's existing transactional `email_jobs` queue, not the Communications Center broadcast stream.
@@ -19,10 +19,10 @@
 This request queue is **separate** from the staged listing-update concierge functionality (`CONCIERGE_LISTINGS_ENABLED = false`). Do NOT enable that flag in this rollout.
 
 ## Required release order
-1. Include the SQL migration in Nenad's isolated environment and verify that it applies cleanly against the current schema; this is a new table, not a modification of existing listing data.
+1. Include the SQL migration in Nenad's isolated environment and verify that it applies cleanly against the current schema; this adds one new requests table and a unique index on the existing listings creation_request_id column. Review for any legacy duplicate request IDs before applying.
 2. Test client form and RLS end to end using fake agents/requests. Confirm the admin queue receives new submissions.
 3. Test that submitting creates exactly one idempotent admin-notification `email_jobs` row (fixed recipient `chris@allagentconnect.com`) but **no** Communications Center broadcast, listing, or Facebook post. Test confirmation popup on accepted request; test no success popup on failed insert.
-4. Test Create agent draft, Continue draft, staff Save Draft, repeated/concurrent creates, ownership, and server-only prefill. Confirm one `listings` record per request, owned by the agent, status `draft`, with no public photos or network emails.
+4. Deploy the NEW `admin-create-concierge-request-draft` endpoint in isolated staging ONLY. Test Create agent draft, Continue draft, staff Save Draft, repeated/concurrent creates, ownership, and server-only prefill. Confirm one `listings` record per request, owned by the agent, status `draft`, with no public photos or network emails. Test that the preview against the old backend fails harmlessly instead of calling the old creator.
 5. Coordinate deployment with the Nov 8–9 code freeze/cutover. **Do not merge/deploy mid-migration** without developer coordination.
 6. Deploy migration to production **before** frontend. Confirm signed-out and verified-agent paths on live site.
 7. Only after successful live smoke test, paste `https://allagentconnect.com/concierge` into Facebook announcement and group-feedback template.
