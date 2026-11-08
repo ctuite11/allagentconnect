@@ -4,6 +4,9 @@ import { CheckCircle2, ImagePlus, Loader2, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { FormattedInput } from "@/components/ui/formatted-input";
+import AddressAutocomplete from "@/components/AddressAutocomplete";
+import { normalizeGooglePlace } from "@/lib/google-address";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -56,12 +59,16 @@ export default function Concierge() {
   const [communicationChannel, setCommunicationChannel] = useState<CommsChannelKey | "">("");
   const [subject, setSubject] = useState("");
   const [propertyAddress, setPropertyAddress] = useState("");
+  const [selectedAddress, setSelectedAddress] = useState<{ street: string; city: string; state: string; zip: string } | null>(null);
   const [propertyType, setPropertyType] = useState<PropertyType>("single_family");
   const [askingPrice, setAskingPrice] = useState("");
   const [bedrooms, setBedrooms] = useState("");
   const [bathrooms, setBathrooms] = useState("");
   const [squareFeet, setSquareFeet] = useState("");
   const [lotAcres, setLotAcres] = useState("");
+  const [condoFee, setCondoFee] = useState("");
+  const [parkingSpaces, setParkingSpaces] = useState("");
+  const [parkingType, setParkingType] = useState("");
   const [photoFiles, setPhotoFiles] = useState<File[]>([]);
   const [referenceUrl, setReferenceUrl] = useState("");
   const [details, setDetails] = useState("");
@@ -95,12 +102,16 @@ export default function Concierge() {
     setCommunicationChannel("");
     setSubject("");
     setPropertyAddress("");
+    setSelectedAddress(null);
     setPropertyType("single_family");
     setAskingPrice("");
     setBedrooms("");
     setBathrooms("");
     setSquareFeet("");
     setLotAcres("");
+    setCondoFee("");
+    setParkingSpaces("");
+    setParkingType("");
     setPhotoFiles([]);
     setDetails("");
     setReferenceUrl("");
@@ -111,7 +122,9 @@ export default function Concierge() {
 
   async function submitRequest(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!user || !canSubmit || submitting) return;
+    // Admin test mode is strictly client-side: no DB writes, uploads or emails.
+    const isAdminTest = adminPreview && !canSubmit;
+    if (!user || (!canSubmit && !isAdminTest) || submitting) return;
 
     const isListing = requestType === "listing";
     const address = propertyAddress.trim();
@@ -120,6 +133,8 @@ export default function Concierge() {
     const numericBathrooms = Number(bathrooms);
     const numericSquareFeet = Number(squareFeet);
     const numericLotAcres = Number(lotAcres);
+    const numericCondoFee = Number(condoFee);
+    const numericParkingSpaces = Number(parkingSpaces);
     if (isListing) {
       if (!address || !askingPrice || !bedrooms || !bathrooms || !squareFeet ||
           !Number.isFinite(numericPrice) || numericPrice <= 0 ||
@@ -127,12 +142,25 @@ export default function Concierge() {
           !Number.isFinite(numericBathrooms) || numericBathrooms < 0 || numericBathrooms > 30 ||
           !Number.isInteger(numericSquareFeet) || numericSquareFeet < 1 ||
           (propertyType === "single_family" &&
-            (!lotAcres || !Number.isFinite(numericLotAcres) || numericLotAcres < 0))) {
+            (!lotAcres || !Number.isFinite(numericLotAcres) || numericLotAcres < 0)) ||
+          (propertyType === "condo" && (
+            (condoFee !== "" && (!Number.isFinite(numericCondoFee) || numericCondoFee < 0)) ||
+            !parkingSpaces || !Number.isInteger(numericParkingSpaces) ||
+            numericParkingSpaces < 0 || numericParkingSpaces > 100 || !parkingType
+          ))) {
         toast.error("Complete the essential listing details before submitting.");
         return;
       }
     } else if (!communicationChannel || !subject.trim() || !details.trim()) {
       toast.error("Choose the channel and add the email subject and message.");
+      return;
+    }
+
+    if (isAdminTest) {
+      // View the same success popup without contacting the existing live backend.
+      setUploadWarning("");
+      setSubmitted(true);
+      setConfirmationOpen(true);
       return;
     }
 
@@ -143,12 +171,19 @@ export default function Concierge() {
             request_type: "listing",
             subject: address.slice(0, 160),
             property_address: address,
+            address_street: selectedAddress?.street || null,
+            address_city: selectedAddress?.city || null,
+            address_state: selectedAddress?.state || null,
+            address_zip: selectedAddress?.zip || null,
             property_type: propertyType,
             asking_price: numericPrice,
             bedrooms: numericBedrooms,
             bathrooms: numericBathrooms,
             square_feet: numericSquareFeet,
             lot_acres: propertyType === "single_family" ? numericLotAcres : null,
+            condo_fee_monthly: propertyType === "condo" && condoFee !== "" ? numericCondoFee : null,
+            parking_spaces: propertyType === "condo" ? numericParkingSpaces : null,
+            parking_type: propertyType === "condo" ? parkingType : null,
             details: details.trim(),
           }
         : {
@@ -234,7 +269,7 @@ export default function Concierge() {
           property listing or agent network broadcast.
         </p>
         <p className="mt-3 text-sm text-zinc-600">
-          Requests are reviewed by AAC staff. Nothing is published or emailed automatically.
+          Requests are reviewed by AAC staff. Nothing is published or sent to the agent network automatically.
         </p>
 
         {loading ? (
@@ -267,8 +302,9 @@ export default function Concierge() {
             <CheckCircle2 className="h-9 w-9 text-[#16A34A]" />
             <h2 className="mt-3 text-xl font-semibold">Your concierge request is in</h2>
             <p className="mt-2 text-zinc-600">
-              Your request was submitted to AAC Concierge. Our team will review it and follow up.
-              Nothing has been published or broadcast.
+              {adminPreview
+                ? "Admin test complete. No request was saved and no email was sent."
+                : "Your request was submitted to AAC Concierge. Our team will review it and follow up. Nothing has been published or broadcast."}
             </p>
             {uploadWarning && (
               <p role="alert" className="mt-3 rounded-md border border-amber-300 p-3 text-sm text-zinc-800">
@@ -282,8 +318,9 @@ export default function Concierge() {
             <h2 className="text-xl font-semibold">Request concierge help</h2>
             {adminPreview && (
               <p className="rounded-lg border border-zinc-200 bg-zinc-50 p-3 text-sm text-zinc-700">
-                Admin preview: you can review the form, but only verified agent accounts
-                can submit. <Link to="/admin/concierge-requests" className="font-medium text-[#0E56F5] underline">
+                Admin test mode: complete the form and click Test Form to see the
+                confirmation. Nothing will be saved, uploaded or emailed.
+                <Link to="/admin/concierge-requests" className="ml-1 font-medium text-[#0E56F5] underline">
                   View staff requests
                 </Link>.
               </p>
@@ -312,14 +349,26 @@ export default function Concierge() {
                 </p>
                 <div className="space-y-2">
                   <Label htmlFor="concierge-address">Property address *</Label>
-                  <Input id="concierge-address" required maxLength={300} value={propertyAddress}
-                    onChange={(e) => setPropertyAddress(e.target.value)}
-                    placeholder="Street, city, state and ZIP" />
+                  <AddressAutocomplete
+                    value={propertyAddress}
+                    onChange={(value) => { setPropertyAddress(value); setSelectedAddress(null); }}
+                    onPlaceSelect={(place) => {
+                      const a = normalizeGooglePlace(place);
+                      const formatted = [a.address_line1 || a.formatted_address || "", a.city, [a.state, a.zip].filter(Boolean).join(" ")]
+                        .filter(Boolean).join(", ").slice(0, 300);
+                      setPropertyAddress(formatted);
+                      setSelectedAddress(a.address_line1 && a.city && a.state && a.zip
+                        ? { street: a.address_line1, city: a.city, state: a.state, zip: a.zip }
+                        : null);
+                    }}
+                    placeholder="Start typing a street address…"
+                  />
+                  <p className="text-xs text-zinc-500">Choose a Google address suggestion or type the complete address manually.</p>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="concierge-type">Property type *</Label>
                   <select id="concierge-type" required value={propertyType}
-                    onChange={(e) => { setPropertyType(e.target.value as PropertyType); setLotAcres(""); }}
+                    onChange={(e) => { setPropertyType(e.target.value as PropertyType); setLotAcres(""); setCondoFee(""); setParkingSpaces(""); setParkingType(""); }}
                     className="flex h-11 w-full rounded-lg border border-zinc-300 bg-white px-3 text-sm text-zinc-900">
                     {PROPERTY_TYPES.map((type) => <option key={type.value} value={type.value}>{type.label}</option>)}
                   </select>
@@ -327,15 +376,15 @@ export default function Concierge() {
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="concierge-price">Asking price ($) *</Label>
-                    <Input id="concierge-price" type="number" min="1" step="1" required
-                      value={askingPrice} onChange={(e) => setAskingPrice(e.target.value)}
-                      placeholder="1250000" />
+                    <FormattedInput id="concierge-price" inputMode="numeric" required
+                      format="currency" value={askingPrice} onChange={setAskingPrice}
+                      placeholder="$1,250,000" />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="concierge-sqft">Square feet *</Label>
-                    <Input id="concierge-sqft" type="number" min="1" step="1" required
-                      value={squareFeet} onChange={(e) => setSquareFeet(e.target.value)}
-                      placeholder="1800" />
+                    <FormattedInput id="concierge-sqft" inputMode="numeric" required
+                      format="number" value={squareFeet} onChange={setSquareFeet}
+                      placeholder="1,800" />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="concierge-beds">Beds *</Label>
@@ -358,6 +407,37 @@ export default function Concierge() {
                     </div>
                   )}
                 </div>
+                {propertyType === "condo" && (
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="concierge-condo-fee">Condo fee ($ / month)</Label>
+                      <FormattedInput id="concierge-condo-fee" inputMode="numeric"
+                        format="currency" value={condoFee} onChange={setCondoFee}
+                        placeholder="$650" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="concierge-parking-spaces">Parking spaces *</Label>
+                      <Input id="concierge-parking-spaces" type="number" min="0" max="100" step="1" required
+                        value={parkingSpaces} onChange={(e) => setParkingSpaces(e.target.value)}
+                        placeholder="0" />
+                    </div>
+                    <div className="space-y-2 sm:col-span-2">
+                      <Label htmlFor="concierge-parking-type">Parking type *</Label>
+                      <select id="concierge-parking-type" required value={parkingType}
+                        onChange={(e) => setParkingType(e.target.value)}
+                        className="flex h-11 w-full rounded-lg border border-zinc-300 bg-white px-3 text-sm">
+                        <option value="" disabled>Select parking type</option>
+                        <option value="none">None</option>
+                        <option value="garage">Garage</option>
+                        <option value="deeded">Deeded</option>
+                        <option value="assigned">Assigned</option>
+                        <option value="off_street">Off-street</option>
+                        <option value="street">Street</option>
+                        <option value="other">Other</option>
+                      </select>
+                    </div>
+                  </div>
+                )}
                 <div className="space-y-2">
                   <Label htmlFor="concierge-photos">Property photos (up to 10)</Label>
                   <label htmlFor="concierge-photos"
@@ -428,8 +508,9 @@ export default function Concierge() {
             <p className="text-sm text-zinc-600">
               Your request goes to AAC staff for review and notifies our team. No network broadcast or listing publication happens automatically.
             </p>
-            <Button type="submit" disabled={submitting || !canSubmit}>
+            <Button type="submit" disabled={submitting || (!canSubmit && !adminPreview)}>
               {submitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Submitting…</>
+                : adminPreview ? "Test Form (No Send)"
                 : requestType === "listing" ? "Submit listing for concierge" : "Request network email"}
             </Button>
           </form>
@@ -443,8 +524,9 @@ export default function Concierge() {
               Request sent to AAC Concierge
             </DialogTitle>
             <DialogDescription className="pt-2 text-base leading-6">
-              Your request was received and our team has been notified. We'll review
-              your details and follow up. Nothing has been published or sent to the agent network.
+              {adminPreview
+                ? "This was a preview test. No request was saved, no photos were uploaded, and no emails were sent."
+                : "Your request was received and our team has been notified. We'll review your details and follow up. Nothing has been published or sent to the agent network."}
             </DialogDescription>
           </DialogHeader>
           {uploadWarning && (
