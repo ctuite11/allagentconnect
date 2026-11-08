@@ -190,6 +190,46 @@ USING (
   )
 );
 
+-- Fail closed at the DATABASE boundary, not just on the review page.
+-- Even an agent navigating directly to Edit Listing cannot publish a Concierge
+-- draft while submitted private photos have not been securely transferred.
+-- Other listings (including unrelated drafts) incur no request lookup.
+CREATE OR REPLACE FUNCTION public.block_concierge_pending_photo_publication()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+      FROM public.agent_concierge_requests r
+      WHERE r.id::text = NEW.creation_request_id
+        AND r.agent_id = NEW.agent_id
+        AND r.request_type = 'listing'
+        AND cardinality(r.photo_paths) > 0
+  ) THEN
+    RAISE EXCEPTION 'Concierge listing cannot be published until private photos are securely attached'
+      USING ERRCODE = '23514';
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.block_concierge_pending_photo_publication()
+  FROM PUBLIC, anon, authenticated;
+
+CREATE TRIGGER block_concierge_pending_photo_publication
+BEFORE UPDATE OF status ON public.listings
+FOR EACH ROW
+WHEN (
+  OLD.status = 'draft'
+  AND NEW.status <> 'draft'
+  AND NEW.creation_source = 'admin_concierge'
+  AND NEW.creation_request_id IS NOT NULL
+)
+EXECUTE FUNCTION public.block_concierge_pending_photo_publication();
+
 -- On submission, queue ONE fixed-recipient, staff-only notification in the
 -- SAME transaction as the request INSERT. If queue insertion fails, the request
 -- insertion fails, so the UI never claims a successful submission with no notice.
