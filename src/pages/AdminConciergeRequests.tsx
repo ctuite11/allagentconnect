@@ -57,16 +57,23 @@ export default function AdminConciergeRequests() {
       if (error) throw error;
       const rows = (data ?? []) as ConciergeRequest[];
       setRequests(rows);
-      // Private objects are shown only via short-lived signed URLs to staff.
-      const signedRows = await Promise.all(rows.map(async (request) => {
-        if (!request.photo_paths?.length) return [request.id, []] as const;
-        const { data: signed, error: signedError } = await supabase.storage
-          .from("concierge-request-photos")
-          .createSignedUrls(request.photo_paths, 300);
-        if (signedError) return [request.id, []] as const;
-        return [request.id, (signed ?? []).flatMap((entry) => entry.signedUrl ? [entry.signedUrl] : [])] as const;
-      }));
-      setPhotos(Object.fromEntries(signedRows));
+      // One bounded storage request, not a request per listing.
+      // Keep the staff queue fast even when a large number of agents submit.
+      const photoPaths = rows.flatMap((request) => (request.photo_paths ?? []).slice(0, 3)).slice(0, 60);
+      const { data: signed, error: signedError } = photoPaths.length
+        ? await supabase.storage.from("concierge-request-photos").createSignedUrls(photoPaths, 300)
+        : { data: [], error: null };
+      const signedByPath = new Map(
+        signedError ? [] : (signed ?? []).flatMap((entry, index) =>
+          entry.signedUrl ? [[photoPaths[index], entry.signedUrl] as const] : []),
+      );
+      setPhotos(Object.fromEntries(rows.map((request) => [
+        request.id,
+        (request.photo_paths ?? []).flatMap((path) => {
+          const url = signedByPath.get(path);
+          return url ? [url] : [];
+        }),
+      ])));
 
       const ids = Array.from(new Set(rows.map((r) => r.agent_id)));
       if (ids.length) {
