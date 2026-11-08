@@ -52,12 +52,10 @@ async function invoke<T>(fn: string, body: Record<string, unknown>): Promise<T> 
 export async function createConciergeDraft(
   agentId: string,
   listing: Record<string, unknown>,
-  requestId?: string,
 ): Promise<{ id: string }> {
   const res = await invoke<{ listing: { id: string } }>("admin-create-listing-for-agent", {
     agent_id: agentId,
     listing,
-    ...(requestId ? { request_id: requestId } : {}),
   });
   return res.listing;
 }
