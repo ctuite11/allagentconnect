@@ -60,6 +60,7 @@ export interface SuccessHubSummary {
     listing_number?: string | null;
     created_at?: string | null;
     active_date?: string | null;
+    list_date?: string | null;
     unit_number?: string | null;
     condo_details?: unknown;
   }>;
