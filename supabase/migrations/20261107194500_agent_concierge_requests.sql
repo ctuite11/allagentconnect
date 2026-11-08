@@ -6,6 +6,13 @@ CREATE TABLE IF NOT EXISTS public.agent_concierge_requests (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   agent_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   request_type text NOT NULL CHECK (request_type IN ('listing', 'broadcast')),
+  communication_channel text CHECK (
+    communication_channel IN ('buyer_need', 'renter_need', 'sales_intel', 'general_discussion')
+  ),
+  CONSTRAINT concierge_request_channel_match CHECK (
+    (request_type = 'listing' AND communication_channel IS NULL)
+    OR (request_type = 'broadcast' AND communication_channel IS NOT NULL)
+  ),
   subject text NOT NULL CHECK (char_length(btrim(subject)) BETWEEN 1 AND 160),
   property_address text CHECK (property_address IS NULL OR char_length(property_address) <= 300),
   details text NOT NULL CHECK (char_length(btrim(details)) BETWEEN 1 AND 4000),
@@ -50,7 +57,7 @@ CREATE POLICY agent_concierge_requests_admin_update ON public.agent_concierge_re
 
 REVOKE ALL ON public.agent_concierge_requests FROM PUBLIC, anon, authenticated;
 GRANT SELECT ON public.agent_concierge_requests TO authenticated;
-GRANT INSERT (agent_id, request_type, subject, property_address, details, reference_url)
+GRANT INSERT (agent_id, request_type, communication_channel, subject, property_address, details, reference_url)
   ON public.agent_concierge_requests TO authenticated;
 GRANT UPDATE (status) ON public.agent_concierge_requests TO authenticated;
 
