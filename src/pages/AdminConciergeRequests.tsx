@@ -47,6 +47,8 @@ export default function AdminConciergeRequests() {
   const [requests, setRequests] = useState<ConciergeRequest[]>([]);
   const [agents, setAgents] = useState<Record<string, AgentIdentity>>({});
   const [photos, setPhotos] = useState<Record<string, string[]>>({});
+  const [expandedPhotos, setExpandedPhotos] = useState<Record<string, boolean>>({});
+  const [loadingPhotosId, setLoadingPhotosId] = useState<string | null>(null);
   const [draftsByRequest, setDraftsByRequest] = useState<Record<string, string>>({});
   const [preparingId, setPreparingId] = useState<string | null>(null);
   const [reviewFor, setReviewFor] = useState<ConciergeRequest | null>(null);
@@ -126,6 +128,28 @@ export default function AdminConciergeRequests() {
       toast.error("Could not update this request.");
     } finally {
       setChangingId(null);
+    }
+  }
+
+  async function viewAllPhotos(request: ConciergeRequest) {
+    const paths = (request.photo_paths ?? []).slice(0, 10);
+    if (!paths.length || loadingPhotosId) return;
+    setLoadingPhotosId(request.id);
+    try {
+      const { data, error } = await supabase.storage
+        .from("concierge-request-photos")
+        .createSignedUrls(paths, 300);
+      if (error) throw error;
+      const urls = (data ?? []).flatMap((item) => item.signedUrl ? [item.signedUrl] : []);
+      if (urls.length !== paths.length) {
+        toast.warning("Some photos could not be displayed. Please review before preparing the listing.");
+      }
+      setPhotos((current) => ({ ...current, [request.id]: urls }));
+      setExpandedPhotos((current) => ({ ...current, [request.id]: true }));
+    } catch {
+      toast.error("Could not load the private photo gallery.");
+    } finally {
+      setLoadingPhotosId(null);
     }
   }
 
@@ -242,6 +266,13 @@ export default function AdminConciergeRequests() {
                           </a>
                         ))}
                       </div>
+                    )}
+                    {request.photo_paths?.length > 3 && !expandedPhotos[request.id] && (
+                      <Button size="sm" variant="outline" disabled={loadingPhotosId !== null}
+                        onClick={() => void viewAllPhotos(request)}>
+                        {loadingPhotosId === request.id ? "Loading private photos…" :
+                          `View all ${request.photo_paths.length} submitted photos`}
+                      </Button>
                     )}
                     {request.photo_paths?.length > 0 && !photos[request.id]?.length && (
                       <p className="text-amber-700">Attached photos could not be loaded.</p>
