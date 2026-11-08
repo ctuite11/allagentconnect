@@ -60,6 +60,7 @@ export default function Concierge() {
   const [subject, setSubject] = useState("");
   const [propertyAddress, setPropertyAddress] = useState("");
   const [selectedAddress, setSelectedAddress] = useState<{ street: string; city: string; state: string; zip: string } | null>(null);
+  const [googleAddressUnavailable, setGoogleAddressUnavailable] = useState(false);
   const [propertyType, setPropertyType] = useState<PropertyType>("single_family");
   const [askingPrice, setAskingPrice] = useState("");
   const [bedrooms, setBedrooms] = useState("");
@@ -353,21 +354,38 @@ export default function Concierge() {
                 </p>
                 <div className="space-y-2">
                   <Label htmlFor="concierge-address">Property address *</Label>
-                  <AddressAutocomplete
-                    value={propertyAddress}
-                    onChange={(value) => { setPropertyAddress(value); setSelectedAddress(null); }}
-                    onPlaceSelect={(place) => {
-                      const a = normalizeGooglePlace(place);
-                      const formatted = [a.address_line1 || a.formatted_address || "", a.city, [a.state, a.zip].filter(Boolean).join(" ")]
-                        .filter(Boolean).join(", ").slice(0, 300);
-                      setPropertyAddress(formatted);
-                      setSelectedAddress(a.address_line1 && a.city && a.state && a.zip
-                        ? { street: a.address_line1, city: a.city, state: a.state, zip: a.zip }
-                        : null);
-                    }}
-                    placeholder="Start typing a street address…"
-                  />
-                  <p className="text-xs text-zinc-500">Choose a Google address suggestion or type the complete address manually.</p>
+                  {googleAddressUnavailable ? (
+                    <>
+                      <Input id="concierge-address" required maxLength={300}
+                        value={propertyAddress}
+                        onChange={(event) => { setPropertyAddress(event.target.value); setSelectedAddress(null); }}
+                        placeholder="Street, city, state ZIP" autoComplete="street-address" />
+                      <p role="status" className="text-xs text-zinc-600">
+                        Google address suggestions are unavailable here. Enter the full address manually.
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <AddressAutocomplete
+                        value={propertyAddress}
+                        onError={() => setGoogleAddressUnavailable(true)}
+                        onChange={(value) => { setPropertyAddress(value); setSelectedAddress(null); }}
+                        onPlaceSelect={(place) => {
+                          const a = normalizeGooglePlace(place);
+                          const formatted = [a.address_line1 || a.formatted_address || "", a.city, [a.state, a.zip].filter(Boolean).join(" ")]
+                            .filter(Boolean).join(", ").slice(0, 300);
+                          setPropertyAddress(formatted);
+                          setSelectedAddress(a.address_line1 && a.city && a.state && a.zip
+                            ? { street: a.address_line1, city: a.city, state: a.state, zip: a.zip }
+                            : null);
+                        }}
+                        placeholder="Start typing a street address…"
+                      />
+                      <p className="text-xs text-zinc-500">
+                        Choose a Google address suggestion or type the complete address manually.
+                      </p>
+                    </>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="concierge-type">Property type *</Label>
@@ -382,13 +400,13 @@ export default function Concierge() {
                     <Label htmlFor="concierge-price">Asking price ($) *</Label>
                     <FormattedInput id="concierge-price" inputMode="numeric" required
                       format="currency" value={askingPrice} onChange={setAskingPrice}
-                      placeholder="$1,250,000" />
+                      placeholder="1250000" />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="concierge-sqft">Square feet *</Label>
                     <FormattedInput id="concierge-sqft" inputMode="numeric" required
                       format="number" value={squareFeet} onChange={setSquareFeet}
-                      placeholder="1,800" />
+                      placeholder="1800" />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="concierge-beds">Beds *</Label>
@@ -417,7 +435,7 @@ export default function Concierge() {
                       <Label htmlFor="concierge-condo-fee">Condo fee ($ / month)</Label>
                       <FormattedInput id="concierge-condo-fee" inputMode="numeric"
                         format="currency" value={condoFee} onChange={setCondoFee}
-                        placeholder="$650" />
+                        placeholder="650" />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="concierge-parking-spaces">Parking spaces *</Label>
