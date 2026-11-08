@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FilePlus2, Loader2, Pencil, RefreshCw } from "lucide-react";
+import { FilePlus2, Loader2, Pencil, RefreshCw, Send } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Seo } from "@/components/Seo";
 import { AgentAacPage } from "@/components/layout/AgentAacPage";
 import { AgentPageHeader } from "@/components/layout/AgentPageHeader";
 import { supabase } from "@/integrations/supabase/client";
-import { createConciergeDraftFromRequest, listConciergeDrafts } from "@/lib/conciergeListing";
+import { createConciergeDraftFromRequest, listConciergeDrafts, sendConciergeReviewEmail } from "@/lib/conciergeListing";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { COMMS_CHANNEL_BY_KEY } from "@/lib/commsChannels";
 import { isCommsChannelKey } from "@/lib/commsChannels";
 
@@ -48,6 +49,9 @@ export default function AdminConciergeRequests() {
   const [photos, setPhotos] = useState<Record<string, string[]>>({});
   const [draftsByRequest, setDraftsByRequest] = useState<Record<string, string>>({});
   const [preparingId, setPreparingId] = useState<string | null>(null);
+  const [reviewFor, setReviewFor] = useState<ConciergeRequest | null>(null);
+  const [reviewSendingId, setReviewSendingId] = useState<string | null>(null);
+  const [reviewQueuedIds, setReviewQueuedIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [changingId, setChangingId] = useState<string | null>(null);
 
@@ -150,6 +154,22 @@ export default function AdminConciergeRequests() {
     }
   }
 
+  async function queueReview(request: ConciergeRequest) {
+    const draftId = draftsByRequest[request.id];
+    if (!draftId || request.photo_paths?.length || reviewSendingId) return;
+    setReviewSendingId(request.id);
+    try {
+      const result = await sendConciergeReviewEmail(draftId);
+      setReviewQueuedIds((current) => current.includes(request.id) ? current : [...current, request.id]);
+      toast.success(`Review email queued for ${result.email}. It has not published the listing.`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not queue the review email.");
+    } finally {
+      setReviewSendingId(null);
+      setReviewFor(null);
+    }
+  }
+
   return (
     <AgentAacPage>
       <Seo title="Concierge Requests | AAC Admin" description="Private staff concierge queue." />
@@ -239,10 +259,24 @@ export default function AdminConciergeRequests() {
                           : <FilePlus2 className="mr-2 h-4 w-4" />}
                       {draftsByRequest[request.id] ? "Continue agent draft" : "Create agent draft"}
                     </Button>
-                    <p className="text-xs text-zinc-600">
-                      Saves under the requesting agent. No publishing or network email.
-                      Uploaded photos remain private in this request.
-                    </p>
+                    {draftsByRequest[request.id] && !request.photo_paths?.length && (
+                      <Button variant="outline" size="sm" disabled={reviewSendingId !== null}
+                        onClick={() => setReviewFor(request)}>
+                        {reviewSendingId === request.id
+                          ? <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          : <Send className="mr-2 h-4 w-4" />}
+                        {reviewQueuedIds.includes(request.id) ? "Send review email again" : "Send to agent for review"}
+                      </Button>
+                    )}
+                    {request.photo_paths?.length > 0 ? (
+                      <p className="text-xs text-amber-800">
+                        Review email held until the submitted private photos are securely attached.
+                      </p>
+                    ) : (
+                      <p className="text-xs text-zinc-600">
+                        Draft stays unpublished. Complete the full address and details before sending the review email.
+                      </p>
+                    )}
                   </div>
                 )}
                 {request.details && (
@@ -258,6 +292,31 @@ export default function AdminConciergeRequests() {
           })}
         </div>
       )}
+      <AlertDialog open={Boolean(reviewFor)} onOpenChange={(open) => {
+        if (!open && !reviewSendingId) setReviewFor(null);
+      }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Send this draft to the agent for review?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {reviewFor && (
+                <>
+                  This queues one review email to {agents[reviewFor.agent_id]?.email || "the agent"} for
+                  { " " }{reviewFor.property_address}. The agent must sign in to review,
+                  edit and explicitly publish the listing. No listing is published by this action.
+                </>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={reviewSendingId !== null}>Cancel</AlertDialogCancel>
+            <AlertDialogAction disabled={reviewSendingId !== null || !reviewFor}
+              onClick={() => { if (reviewFor) void queueReview(reviewFor); }}>
+              {reviewSendingId !== null ? "Queueing…" : "Queue review email"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AgentAacPage>
   );
 }
