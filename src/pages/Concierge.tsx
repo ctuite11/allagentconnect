@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { FormattedInput } from "@/components/ui/formatted-input";
 import AddressAutocomplete from "@/components/AddressAutocomplete";
 import { normalizeGooglePlace } from "@/lib/google-address";
+import { isConciergeNoSendPreviewHost } from "@/lib/conciergePreviewSafety";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -81,6 +82,8 @@ export default function Concierge() {
 
   const canSubmit = Boolean(user && role === "agent" && isVerifiedAgent);
   const adminPreview = Boolean(user && role === "admin");
+  const isPublicPreviewHost = isConciergeNoSendPreviewHost(window.location.hostname);
+  const isNoSendTest = adminPreview || isPublicPreviewHost;
 
   function onPhotoSelection(event: ChangeEvent<HTMLInputElement>) {
     const selected = Array.from(event.target.files ?? []);
@@ -123,9 +126,9 @@ export default function Concierge() {
 
   async function submitRequest(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    // Admin test mode is strictly client-side: no DB writes, uploads or emails.
-    const isAdminTest = adminPreview && !canSubmit;
-    if (!user || (!canSubmit && !isAdminTest) || submitting) return;
+    // Netlify PR previews may point to production: NO agent/admin preview
+    // can write requests, upload photos or queue staff emails on this host.
+    if (!user || (!canSubmit && !adminPreview) || submitting) return;
 
     const isListing = requestType === "listing";
     const address = propertyAddress.trim();
@@ -157,8 +160,8 @@ export default function Concierge() {
       return;
     }
 
-    if (isAdminTest) {
-      // View the same success popup without contacting the existing live backend.
+    if (isNoSendTest) {
+      // Simulate confirmation without contacting any backend.
       setUploadWarning("");
       setSubmitted(true);
       setConfirmationOpen(true);
@@ -302,11 +305,11 @@ export default function Concierge() {
           <section aria-live="polite" className="mt-10 rounded-xl border border-zinc-200 p-7">
             <CheckCircle2 className="h-9 w-9 text-[#16A34A]" />
             <h2 className="mt-3 text-xl font-semibold">
-              {adminPreview ? "Form test completed" : "Your concierge request is in"}
+              {isNoSendTest ? "Form test completed" : "Your concierge request is in"}
             </h2>
             <p className="mt-2 text-zinc-600">
-              {adminPreview
-                ? "Admin test complete. No request was saved and no email was sent."
+              {isNoSendTest
+                ? "Test complete. No request was saved, no photos were uploaded, and no email was sent."
                 : "Your request was submitted to AAC Concierge. Our team will review it and follow up. Nothing has been published or broadcast."}
             </p>
             {uploadWarning && (
@@ -315,19 +318,23 @@ export default function Concierge() {
               </p>
             )}
             <Button variant="outline" className="mt-5" onClick={resetForm}>
-              {adminPreview ? "Test another request" : "Send another request"}
+              {isNoSendTest ? "Test another request" : "Send another request"}
             </Button>
           </section>
         ) : (
           <form onSubmit={submitRequest} className="mt-10 space-y-6 rounded-xl border border-zinc-200 p-6 sm:p-8">
             <h2 className="text-xl font-semibold">Request concierge help</h2>
-            {adminPreview && (
+            {isNoSendTest && (
               <p className="rounded-lg border border-zinc-200 bg-zinc-50 p-3 text-sm text-zinc-700">
-                Admin test mode: complete the form and click Test Form to see the
-                confirmation. Nothing will be saved, uploaded or emailed.
-                <Link to="/admin/concierge-requests" className="ml-1 font-medium text-[#0E56F5] underline">
-                  View staff requests
-                </Link>.
+                Preview test mode: complete the form and click Test Form to see the
+                confirmation. No request will be saved, no photos uploaded and no email sent.
+                {adminPreview && (
+                  <>
+                    {" "}<Link to="/admin/concierge-requests" className="font-medium text-[#0E56F5] underline">
+                      View staff requests
+                    </Link>.
+                  </>
+                )}
               </p>
             )}
             <fieldset>
@@ -528,13 +535,13 @@ export default function Concierge() {
             )}
 
             <p className="text-sm text-zinc-600">
-              {adminPreview
-                ? "Admin test only: no request, photo or email will be submitted."
+              {isNoSendTest
+                ? "Preview test only: no request, photo or email will be submitted."
                 : "Your request goes to AAC staff for review and notifies our team. No network broadcast or listing publication happens automatically."}
             </p>
             <Button type="submit" disabled={submitting || (!canSubmit && !adminPreview)}>
               {submitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Submitting…</>
-                : adminPreview ? "Test Form (No Send)"
+                : isNoSendTest ? "Test Form (No Send)"
                 : requestType === "listing" ? "Submit listing for concierge" : "Request network email"}
             </Button>
           </form>
@@ -545,10 +552,10 @@ export default function Concierge() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-xl">
               <CheckCircle2 className="h-6 w-6 text-[#16A34A]" />
-              {adminPreview ? "Form test successful — nothing sent" : "Request sent to AAC Concierge"}
+              {isNoSendTest ? "Form test successful — nothing sent" : "Request sent to AAC Concierge"}
             </DialogTitle>
             <DialogDescription className="pt-2 text-base leading-6">
-              {adminPreview
+              {isNoSendTest
                 ? "This was a preview test. No request was saved, no photos were uploaded, and no emails were sent."
                 : "Your request was received and our team has been notified. We'll review your details and follow up. Nothing has been published or sent to the agent network."}
             </DialogDescription>
