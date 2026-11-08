@@ -10,6 +10,8 @@ import { Seo } from "@/components/Seo";
 import Footer from "@/components/Footer";
 import { useAuthRole } from "@/hooks/useAuthRole";
 import { supabase } from "@/integrations/supabase/client";
+import { COMMS_CHANNELS } from "@/lib/commsChannels";
+import type { CommsChannelKey } from "@/lib/commsChannelPrefs";
 
 type RequestType = "listing" | "broadcast";
 
@@ -21,6 +23,7 @@ type RequestType = "listing" | "broadcast";
 export default function Concierge() {
   const { user, role, loading, isVerifiedAgent } = useAuthRole();
   const [requestType, setRequestType] = useState<RequestType>("listing");
+  const [communicationChannel, setCommunicationChannel] = useState<CommsChannelKey | "">("");
   const [subject, setSubject] = useState("");
   const [propertyAddress, setPropertyAddress] = useState("");
   const [referenceUrl, setReferenceUrl] = useState("");
@@ -37,6 +40,10 @@ export default function Concierge() {
     if (!user || !canSubmit || submitting) return;
     const trimmedSubject = subject.trim();
     const trimmedDetails = details.trim();
+    if (requestType === "broadcast" && !communicationChannel) {
+      toast.error("Choose the Communications channel for your network email.");
+      return;
+    }
     if (!trimmedSubject || !trimmedDetails) {
       toast.error("Please add a subject and describe what you need.");
       return;
@@ -48,6 +55,7 @@ export default function Concierge() {
         .insert({
           agent_id: user.id,
           request_type: requestType,
+          communication_channel: requestType === "broadcast" ? communicationChannel : null,
           subject: trimmedSubject,
           property_address: requestType === "listing" ? propertyAddress.trim() || null : null,
           reference_url: referenceUrl.trim() || null,
@@ -123,6 +131,7 @@ export default function Concierge() {
             <Button variant="outline" className="mt-5" onClick={() => {
               setSubmitted(false);
               setSubject("");
+              setCommunicationChannel("");
               setPropertyAddress("");
               setReferenceUrl("");
               setDetails("");
@@ -145,7 +154,7 @@ export default function Concierge() {
               <div className="flex flex-wrap gap-5">
                 <label className="flex items-center gap-2 text-sm">
                   <input type="radio" name="requestType" value="listing"
-                    checked={requestType === "listing"} onChange={() => setRequestType("listing")} />
+                    checked={requestType === "listing"} onChange={() => { setRequestType("listing"); setCommunicationChannel(""); }} />
                   Shareable property listing
                 </label>
                 <label className="flex items-center gap-2 text-sm">
@@ -155,6 +164,26 @@ export default function Concierge() {
                 </label>
               </div>
             </fieldset>
+            {requestType === "broadcast" && (
+              <div className="space-y-2">
+                <Label htmlFor="concierge-channel">Which Communications channel? *</Label>
+                <select
+                  id="concierge-channel"
+                  required
+                  value={communicationChannel}
+                  onChange={(event) => setCommunicationChannel(event.target.value as CommsChannelKey | "")}
+                  className="flex h-11 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-[#0E56F5]"
+                >
+                  <option value="" disabled>Select a channel</option>
+                  {COMMS_CHANNELS.map((channel) => (
+                    <option key={channel.key} value={channel.key}>{channel.title}</option>
+                  ))}
+                </select>
+                <p className="text-xs text-zinc-500">
+                  Select where your proposed email belongs in the AAC Communications Center.
+                </p>
+              </div>
+            )}
             <div className="space-y-2">
               <Label htmlFor="concierge-subject">Listing or announcement title *</Label>
               <Input id="concierge-subject" required maxLength={160} value={subject}
