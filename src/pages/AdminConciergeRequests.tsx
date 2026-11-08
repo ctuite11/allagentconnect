@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FilePlus2, Loader2, Pencil, RefreshCw, Send } from "lucide-react";
+import { Copy, FilePlus2, Loader2, Pencil, RefreshCw, Send } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Seo } from "@/components/Seo";
@@ -155,6 +155,26 @@ export default function AdminConciergeRequests() {
       toast.error("Could not load the private photo gallery.");
     } finally {
       setLoadingPhotosId(null);
+    }
+  }
+
+  async function copyNetworkEmailDraft(request: ConciergeRequest) {
+    if (request.request_type !== "broadcast") return;
+    const channel = isCommsChannelKey(request.communication_channel ?? "")
+      ? COMMS_CHANNEL_BY_KEY[request.communication_channel as keyof typeof COMMS_CHANNEL_BY_KEY].title
+      : "Not selected";
+    const draft = [
+      `AAC Communications channel: ${channel}`,
+      `Subject: ${request.subject}`,
+      "",
+      request.details,
+      ...(request.reference_url ? ["", `Reference: ${request.reference_url}`] : []),
+    ].join("\n");
+    try {
+      await navigator.clipboard.writeText(draft);
+      toast.success("Network email draft copied. Review it before sending through Communications Center.");
+    } catch {
+      toast.error("Could not copy the draft. Please select the message text manually.");
     }
   }
 
@@ -362,6 +382,18 @@ export default function AdminConciergeRequests() {
                         Draft stays unpublished. Complete the full address and details before sending the review email.
                       </p>
                     )}
+                  </div>
+                )}
+                {request.request_type === "broadcast" && (
+                  <div className="mt-4">
+                    <Button type="button" variant="outline" size="sm"
+                      onClick={() => void copyNetworkEmailDraft(request)}>
+                      <Copy className="mr-2 h-4 w-4" />
+                      Copy email draft
+                    </Button>
+                    <p className="mt-1 text-xs text-zinc-600">
+                      Copies the channel, subject and message for manual review. Nothing is sent.
+                    </p>
                   </div>
                 )}
                 {request.details && (
