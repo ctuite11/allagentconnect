@@ -1,6 +1,6 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from "react";
 import { Link } from "react-router-dom";
-import { CheckCircle2, Loader2 } from "lucide-react";
+import { CheckCircle2, ImagePlus, Loader2, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,11 +14,40 @@ import { COMMS_CHANNELS } from "@/lib/commsChannels";
 import type { CommsChannelKey } from "@/lib/commsChannelPrefs";
 
 type RequestType = "listing" | "broadcast";
+type PropertyType = "single_family" | "condo" | "townhouse" | "multi_family";
+
+const MAX_PHOTOS = 10;
+const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
+const ALLOWED_PHOTO_TYPES: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+};
+const PHOTO_BUCKET = "concierge-request-photos";
+
+const PROPERTY_TYPES: { value: PropertyType; label: string }[] = [
+  { value: "single_family", label: "Single Family" },
+  { value: "condo", label: "Condo" },
+  { value: "townhouse", label: "Townhouse" },
+  { value: "multi_family", label: "Multi-Family" },
+];
+
+type PhotoPreview = { file: File; src: string };
+
+/** Private local photo previews, released on replacement/unmount. */
+function usePhotoPreviews(files: File[]): PhotoPreview[] {
+  const previews = useMemo(
+    () => files.map((file) => ({ file, src: URL.createObjectURL(file) })),
+    [files],
+  );
+  useEffect(() => () => previews.forEach((preview) => URL.revokeObjectURL(preview.src)), [previews]);
+  return previews;
+}
 
 /**
  * Stable Facebook deep link: /concierge.
- * Public content is marketing copy only; requests and identity are visible
- * exclusively to verified, activated AAC agents after sign-in.
+ * A listing request is NOT a network email and never creates a published listing.
+ * Submission is limited by RLS to verified/activated agents. Staff may preview.
  */
 export default function Concierge() {
   const { user, role, loading, isVerifiedAgent } = useAuthRole();
@@ -26,46 +55,156 @@ export default function Concierge() {
   const [communicationChannel, setCommunicationChannel] = useState<CommsChannelKey | "">("");
   const [subject, setSubject] = useState("");
   const [propertyAddress, setPropertyAddress] = useState("");
+  const [propertyType, setPropertyType] = useState<PropertyType>("single_family");
+  const [askingPrice, setAskingPrice] = useState("");
+  const [bedrooms, setBedrooms] = useState("");
+  const [bathrooms, setBathrooms] = useState("");
+  const [squareFeet, setSquareFeet] = useState("");
+  const [lotAcres, setLotAcres] = useState("");
+  const [photoFiles, setPhotoFiles] = useState<File[]>([]);
   const [referenceUrl, setReferenceUrl] = useState("");
   const [details, setDetails] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [uploadWarning, setUploadWarning] = useState("");
+  const photoPreviews = usePhotoPreviews(photoFiles);
 
   const canSubmit = Boolean(user && role === "agent" && isVerifiedAgent);
-  // Staff can inspect the form, but only verified agent accounts can submit requests.
   const adminPreview = Boolean(user && role === "admin");
+
+  function onPhotoSelection(event: ChangeEvent<HTMLInputElement>) {
+    const selected = Array.from(event.target.files ?? []);
+    event.target.value = "";
+    if (!selected.length) return;
+    const invalid = selected.find((file) => !ALLOWED_PHOTO_TYPES[file.type] || file.size > MAX_PHOTO_BYTES);
+    if (invalid) {
+      toast.error("Photos must be JPG, PNG or WebP, each no larger than 10 MB.");
+      return;
+    }
+    if (photoFiles.length + selected.length > MAX_PHOTOS) {
+      toast.error("You can upload up to 10 listing photos.");
+      return;
+    }
+    setPhotoFiles((current) => [...current, ...selected]);
+  }
+
+  function resetForm() {
+    setRequestType("listing");
+    setCommunicationChannel("");
+    setSubject("");
+    setPropertyAddress("");
+    setPropertyType("single_family");
+    setAskingPrice("");
+    setBedrooms("");
+    setBathrooms("");
+    setSquareFeet("");
+    setLotAcres("");
+    setPhotoFiles([]);
+    setDetails("");
+    setReferenceUrl("");
+    setUploadWarning("");
+    setSubmitted(false);
+  }
 
   async function submitRequest(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!user || !canSubmit || submitting) return;
-    const trimmedSubject = subject.trim();
-    const trimmedDetails = details.trim();
-    if (requestType === "broadcast" && !communicationChannel) {
-      toast.error("Choose the Communications channel for your network email.");
+
+    const isListing = requestType === "listing";
+    const address = propertyAddress.trim();
+    const numericPrice = Number(askingPrice);
+    const numericBedrooms = Number(bedrooms);
+    const numericBathrooms = Number(bathrooms);
+    const numericSquareFeet = Number(squareFeet);
+    const numericLotAcres = Number(lotAcres);
+    if (isListing) {
+      if (!address || !askingPrice || !bedrooms || !bathrooms || !squareFeet ||
+          !Number.isFinite(numericPrice) || numericPrice <= 0 ||
+          !Number.isInteger(numericBedrooms) || numericBedrooms < 0 || numericBedrooms > 30 ||
+          !Number.isFinite(numericBathrooms) || numericBathrooms < 0 || numericBathrooms > 30 ||
+          !Number.isInteger(numericSquareFeet) || numericSquareFeet < 1 ||
+          (propertyType === "single_family" &&
+            (!lotAcres || !Number.isFinite(numericLotAcres) || numericLotAcres < 0))) {
+        toast.error("Complete the essential listing details before submitting.");
+        return;
+      }
+    } else if (!communicationChannel || !subject.trim() || !details.trim()) {
+      toast.error("Choose the channel and add the email subject and message.");
       return;
     }
-    if (!trimmedSubject || !trimmedDetails) {
-      toast.error("Please add a subject and describe what you need.");
-      return;
-    }
+
     setSubmitting(true);
     try {
-      const { error } = await (supabase as any)
+      const requestBody = isListing
+        ? {
+            request_type: "listing",
+            subject: address.slice(0, 160),
+            property_address: address,
+            property_type: propertyType,
+            asking_price: numericPrice,
+            bedrooms: numericBedrooms,
+            bathrooms: numericBathrooms,
+            square_feet: numericSquareFeet,
+            lot_acres: propertyType === "single_family" ? numericLotAcres : null,
+            details: details.trim(),
+          }
+        : {
+            request_type: "broadcast",
+            communication_channel: communicationChannel,
+            subject: subject.trim(),
+            details: details.trim(),
+            reference_url: referenceUrl.trim() || null,
+          };
+
+      const { data, error } = await (supabase as any)
         .from("agent_concierge_requests")
-        .insert({
-          agent_id: user.id,
-          request_type: requestType,
-          communication_channel: requestType === "broadcast" ? communicationChannel : null,
-          subject: trimmedSubject,
-          property_address: requestType === "listing" ? propertyAddress.trim() || null : null,
-          reference_url: referenceUrl.trim() || null,
-          details: trimmedDetails,
-        });
-      if (error) throw error;
+        .insert({ agent_id: user.id, ...requestBody })
+        .select("id")
+        .single();
+      if (error || !data?.id) throw error ?? new Error("Unable to create request");
+
+      // Photos are private, scoped to the newly created request, and never added
+      // to the site's public listing-photo storage. No listing or email is created.
+      let uploadedPaths: string[] = [];
+      let failedCount = 0;
+      if (isListing && photoFiles.length) {
+        for (const file of photoFiles) {
+          const extension = ALLOWED_PHOTO_TYPES[file.type];
+          const path = `${user.id}/${data.id}/${crypto.randomUUID()}.${extension}`;
+          const { error: uploadError } = await supabase.storage
+            .from(PHOTO_BUCKET)
+            .upload(path, file, { contentType: file.type, upsert: false });
+          if (uploadError) {
+            failedCount += 1;
+          } else {
+            uploadedPaths.push(path);
+          }
+        }
+        if (uploadedPaths.length) {
+          const { error: pathsError } = await (supabase as any)
+            .from("agent_concierge_requests")
+            .update({ photo_paths: uploadedPaths })
+            .eq("id", data.id)
+            .eq("agent_id", user.id);
+          if (pathsError) {
+            // Avoid leaving successful but unlinked private uploads behind.
+            await supabase.storage.from(PHOTO_BUCKET).remove(uploadedPaths);
+            failedCount = photoFiles.length;
+            uploadedPaths = [];
+          }
+        }
+      }
+
+      setUploadWarning(
+        failedCount > 0
+          ? `Your request was saved, but ${failedCount} photo(s) could not be attached. Please contact AAC with the missing photos.`
+          : "",
+      );
       setSubmitted(true);
-      toast.success("Your request was received.");
+      if (failedCount) toast.warning("Request saved with a photo upload warning.");
+      else toast.success("Your concierge request was received.");
     } catch {
-      toast.error("We couldn't submit your request. Nothing was sent. Please try again.");
+      toast.error("We couldn't save your request. Nothing was sent. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -75,7 +214,7 @@ export default function Concierge() {
     <div className="min-h-screen bg-white flex flex-col">
       <Seo
         title="AAC Concierge Service | All Agent Connect"
-        description="Need help creating a shareable listing or agent network broadcast? AAC Concierge helps verified real estate agents prepare and share opportunities."
+        description="Need help preparing a shareable listing or agent network broadcast? AAC Concierge helps verified real estate agents."
         canonical="https://allagentconnect.com/concierge"
       />
       <main className="mx-auto w-full max-w-3xl flex-1 px-5 py-12 sm:py-16">
@@ -87,12 +226,11 @@ export default function Concierge() {
         </h1>
         <div className="mt-4 h-1 w-16 rounded bg-[#16A34A]" />
         <p className="mt-5 text-lg leading-8 text-zinc-700">
-          Short on time? Tell us what you'd like to share. Our team can help prepare a
-          complete, shareable property listing or an agent network broadcast for you.
+          Short on time? Submit the essentials and our team can help prepare your
+          property listing or agent network broadcast.
         </p>
         <p className="mt-3 text-sm text-zinc-600">
-          This service is for verified All Agent Connect members. Drafts and submissions
-          are not published or emailed to the network automatically.
+          Requests are reviewed by AAC staff. Nothing is published or emailed automatically.
         </p>
 
         {loading ? (
@@ -125,28 +263,25 @@ export default function Concierge() {
             <CheckCircle2 className="h-9 w-9 text-[#16A34A]" />
             <h2 className="mt-3 text-xl font-semibold">Your concierge request is in</h2>
             <p className="mt-2 text-zinc-600">
-              Our team will review the details and follow up. Your request has not
-              posted to Facebook or been sent as a network email.
+              Our team will review it and follow up. Your request has not been
+              published as a listing, posted to Facebook or sent as a network email.
             </p>
-            <Button variant="outline" className="mt-5" onClick={() => {
-              setSubmitted(false);
-              setSubject("");
-              setCommunicationChannel("");
-              setPropertyAddress("");
-              setReferenceUrl("");
-              setDetails("");
-            }}>
-              Send another request
-            </Button>
+            {uploadWarning && (
+              <p role="alert" className="mt-3 rounded-md border border-amber-300 p-3 text-sm text-zinc-800">
+                {uploadWarning}
+              </p>
+            )}
+            <Button variant="outline" className="mt-5" onClick={resetForm}>Send another request</Button>
           </section>
         ) : (
           <form onSubmit={submitRequest} className="mt-10 space-y-6 rounded-xl border border-zinc-200 p-6 sm:p-8">
             <h2 className="text-xl font-semibold">Request concierge help</h2>
             {adminPreview && (
               <p className="rounded-lg border border-zinc-200 bg-zinc-50 p-3 text-sm text-zinc-700">
-                Admin preview: you can review the form here, but submissions are only
-                accepted from verified agent accounts. <Link to="/admin/concierge-requests"
-                className="font-medium text-[#0E56F5] underline">View staff requests</Link>.
+                Admin preview: you can review the form, but only verified agent accounts
+                can submit. <Link to="/admin/concierge-requests" className="font-medium text-[#0E56F5] underline">
+                  View staff requests
+                </Link>.
               </p>
             )}
             <fieldset>
@@ -154,67 +289,144 @@ export default function Concierge() {
               <div className="flex flex-wrap gap-5">
                 <label className="flex items-center gap-2 text-sm">
                   <input type="radio" name="requestType" value="listing"
-                    checked={requestType === "listing"} onChange={() => { setRequestType("listing"); setCommunicationChannel(""); }} />
-                  Shareable property listing
+                    checked={requestType === "listing"} onChange={() => setRequestType("listing")} />
+                  Property Listing
                 </label>
                 <label className="flex items-center gap-2 text-sm">
                   <input type="radio" name="requestType" value="broadcast"
                     checked={requestType === "broadcast"} onChange={() => setRequestType("broadcast")} />
-                  Network broadcast email
+                  Network Broadcast Email
                 </label>
               </div>
             </fieldset>
-            {requestType === "broadcast" && (
-              <div className="space-y-2">
-                <Label htmlFor="concierge-channel">Which Communications channel? *</Label>
-                <select
-                  id="concierge-channel"
-                  required
-                  value={communicationChannel}
-                  onChange={(event) => setCommunicationChannel(event.target.value as CommsChannelKey | "")}
-                  className="flex h-11 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-[#0E56F5]"
-                >
-                  <option value="" disabled>Select a channel</option>
-                  {COMMS_CHANNELS.map((channel) => (
-                    <option key={channel.key} value={channel.key}>{channel.title}</option>
-                  ))}
-                </select>
-                <p className="text-xs text-zinc-500">
-                  Select where your proposed email belongs in the AAC Communications Center.
+
+            {requestType === "listing" ? (
+              <section className="space-y-5">
+                <p className="text-sm text-zinc-600">
+                  Enter the property essentials and upload photos. Our team will use them
+                  to prepare a listing for your review.
                 </p>
-              </div>
+                <div className="space-y-2">
+                  <Label htmlFor="concierge-address">Property address *</Label>
+                  <Input id="concierge-address" required maxLength={300} value={propertyAddress}
+                    onChange={(e) => setPropertyAddress(e.target.value)}
+                    placeholder="Street, city, state and ZIP" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="concierge-type">Property type *</Label>
+                  <select id="concierge-type" required value={propertyType}
+                    onChange={(e) => { setPropertyType(e.target.value as PropertyType); setLotAcres(""); }}
+                    className="flex h-11 w-full rounded-lg border border-zinc-300 bg-white px-3 text-sm text-zinc-900">
+                    {PROPERTY_TYPES.map((type) => <option key={type.value} value={type.value}>{type.label}</option>)}
+                  </select>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="concierge-price">Asking price ($) *</Label>
+                    <Input id="concierge-price" type="number" min="1" step="1" required
+                      value={askingPrice} onChange={(e) => setAskingPrice(e.target.value)}
+                      placeholder="1250000" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="concierge-sqft">Square feet *</Label>
+                    <Input id="concierge-sqft" type="number" min="1" step="1" required
+                      value={squareFeet} onChange={(e) => setSquareFeet(e.target.value)}
+                      placeholder="1800" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="concierge-beds">Beds *</Label>
+                    <Input id="concierge-beds" type="number" min="0" max="30" step="1" required
+                      value={bedrooms} onChange={(e) => setBedrooms(e.target.value)}
+                      placeholder="3" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="concierge-baths">Baths *</Label>
+                    <Input id="concierge-baths" type="number" min="0" max="30" step="0.5" required
+                      value={bathrooms} onChange={(e) => setBathrooms(e.target.value)}
+                      placeholder="2.5" />
+                  </div>
+                  {propertyType === "single_family" && (
+                    <div className="space-y-2">
+                      <Label htmlFor="concierge-acres">Lot size (acres) *</Label>
+                      <Input id="concierge-acres" type="number" min="0" step="0.0001" required
+                        value={lotAcres} onChange={(e) => setLotAcres(e.target.value)}
+                        placeholder="0.25" />
+                    </div>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="concierge-photos">Property photos (up to 10)</Label>
+                  <label htmlFor="concierge-photos"
+                    className="flex min-h-24 cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-zinc-300 px-4 text-sm font-medium text-[#0E56F5] hover:bg-zinc-50">
+                    <ImagePlus className="h-5 w-5" /> Add Photos
+                  </label>
+                  <Input id="concierge-photos" type="file" accept="image/jpeg,image/png,image/webp"
+                    multiple className="sr-only" onChange={onPhotoSelection} />
+                  <p className="text-xs text-zinc-500">JPG, PNG or WebP, maximum 10 MB per photo. Photos stay private until reviewed.</p>
+                  {photoPreviews.length > 0 && (
+                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3" aria-label="Selected photos">
+                      {photoPreviews.map((preview, index) => (
+                        <div key={preview.src} className="relative overflow-hidden rounded-lg border border-zinc-200">
+                          <img src={preview.src} alt={`Selected property photo ${index + 1}`}
+                            className="h-28 w-full object-cover" />
+                          <button type="button" aria-label={`Remove photo ${index + 1}`}
+                            className="absolute right-1 top-1 rounded-full bg-white p-1 text-zinc-800 shadow"
+                            onClick={() => setPhotoFiles((current) => current.filter((_, i) => i !== index))}>
+                            <X className="h-4 w-4" />
+                          </button>
+                          <p className="truncate px-2 py-1 text-xs text-zinc-600">{preview.file.name}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="concierge-listing-notes">Additional notes (optional)</Label>
+                  <Textarea id="concierge-listing-notes" maxLength={4000} rows={3} value={details}
+                    onChange={(e) => setDetails(e.target.value)}
+                    placeholder="Anything else we should know?" />
+                </div>
+              </section>
+            ) : (
+              <section className="space-y-5">
+                <div className="space-y-2">
+                  <Label htmlFor="concierge-channel">Which Communications channel? *</Label>
+                  <select id="concierge-channel" required value={communicationChannel}
+                    onChange={(e) => setCommunicationChannel(e.target.value as CommsChannelKey | "")}
+                    className="flex h-11 w-full rounded-lg border border-zinc-300 bg-white px-3 text-sm text-zinc-900">
+                    <option value="" disabled>Select a channel</option>
+                    {COMMS_CHANNELS.map((channel) => (
+                      <option key={channel.key} value={channel.key}>{channel.title}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="concierge-subject">Email subject *</Label>
+                  <Input id="concierge-subject" required maxLength={160} value={subject}
+                    onChange={(e) => setSubject(e.target.value)}
+                    placeholder="What should agents know?" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="concierge-details">Message or instructions *</Label>
+                  <Textarea id="concierge-details" required maxLength={4000} rows={5} value={details}
+                    onChange={(e) => setDetails(e.target.value)}
+                    placeholder="What should the network email say?" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="concierge-link">Reference link (optional)</Label>
+                  <Input id="concierge-link" type="url" maxLength={1000} value={referenceUrl}
+                    onChange={(e) => setReferenceUrl(e.target.value)}
+                    placeholder="https://…" />
+                </div>
+              </section>
             )}
-            <div className="space-y-2">
-              <Label htmlFor="concierge-subject">Listing or announcement title *</Label>
-              <Input id="concierge-subject" required maxLength={160} value={subject}
-                onChange={(event) => setSubject(event.target.value)}
-                placeholder="E.g., Coming-soon condo in Charlestown" />
-            </div>
-            {requestType === "listing" && (
-              <div className="space-y-2">
-                <Label htmlFor="concierge-address">Property address (if applicable)</Label>
-                <Input id="concierge-address" maxLength={300} value={propertyAddress}
-                  onChange={(event) => setPropertyAddress(event.target.value)} />
-              </div>
-            )}
-            <div className="space-y-2">
-              <Label htmlFor="concierge-details">What would you like us to prepare? *</Label>
-              <Textarea id="concierge-details" required maxLength={4000} rows={6} value={details}
-                onChange={(event) => setDetails(event.target.value)}
-                placeholder="Include the property details, buyer/renter need, timing, preferred wording and anything else we should know." />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="concierge-link">Reference link (optional)</Label>
-              <Input id="concierge-link" type="url" maxLength={1000} value={referenceUrl}
-                onChange={(event) => setReferenceUrl(event.target.value)}
-                placeholder="https://…" />
-              <p className="text-xs text-zinc-500">Link to photos or an existing listing, if you have one.</p>
-            </div>
+
             <p className="text-sm text-zinc-600">
-              Our team will contact you to review the draft before publication or network delivery.
+              Your request goes to AAC staff for review. Nothing is emailed or published automatically.
             </p>
             <Button type="submit" disabled={submitting || !canSubmit}>
-              {submitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Submitting…</> : "Submit concierge request"}
+              {submitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Submitting…</>
+                : requestType === "listing" ? "Submit listing for concierge" : "Request network email"}
             </Button>
           </form>
         )}
