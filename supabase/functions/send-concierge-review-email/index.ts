@@ -20,6 +20,7 @@
 //  - nothing here publishes anything; the buttons are navigation only
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import {
+  CONCIERGE_SOURCE,
   getAgentEligibility,
   isUuid,
   jsonResponse,
@@ -37,7 +38,6 @@ import {
   signLoginToken,
 } from '../_shared/loginTokens.ts'
 import { CONCIERGE_REVIEW_TEMPLATE } from '../_shared/hydrateConciergeReviewEmail.ts'
-import { conciergeReviewReadinessError } from '../_shared/conciergeReviewReadiness.ts'
 
 function expiryFromNow(days: number): Date {
   return new Date(Math.floor(Date.now() / 1000) * 1000 + days * 24 * 60 * 60 * 1000)
@@ -67,7 +67,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
     // ── Listing must be a concierge draft ───────────────────────────────────
     const { data: listing, error: listingErr } = await service
       .from('listings')
-      .select('id, agent_id, status, address, city, state, zip_code, price, bedrooms, bathrooms, square_feet, creation_source, creation_request_id')
+      .select('id, agent_id, status, address, city, creation_source')
       .eq('id', body.listing_id)
       .maybeSingle()
 
@@ -75,20 +75,6 @@ Deno.serve(async (req: Request): Promise<Response> => {
     if (!listing || listing.creation_source !== CONCIERGE_SOURCE || listing.status !== 'draft') {
       return jsonResponse({ error: 'Not a concierge draft listing' }, 403)
     }
-
-    // Request-backed emails must NEVER point to the disabled legacy review
-    // workflow or imply private photos are attached when they aren't.
-    if (!isUuid(listing.creation_request_id)) {
-      return jsonResponse({ error: 'This listing does not have a verified Concierge request' }, 422)
-    }
-    const { data: request, error: requestErr } = await service
-      .from('agent_concierge_requests')
-      .select('id, agent_id, request_type, photo_paths, status')
-      .eq('id', listing.creation_request_id)
-      .maybeSingle()
-    if (requestErr) return jsonResponse({ error: 'Could not verify the source request' }, 500)
-    const notReady = conciergeReviewReadinessError(listing, request)
-    if (notReady) return jsonResponse({ error: notReady }, 422)
 
     // ── Target member must be verified (activated or not) ───────────────────
     const eligibility = await getAgentEligibility(service, listing.agent_id as string)
