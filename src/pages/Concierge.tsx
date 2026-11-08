@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Seo } from "@/components/Seo";
 import Footer from "@/components/Footer";
 import { useAuthRole } from "@/hooks/useAuthRole";
@@ -66,6 +67,7 @@ export default function Concierge() {
   const [details, setDetails] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [confirmationOpen, setConfirmationOpen] = useState(false);
   const [uploadWarning, setUploadWarning] = useState("");
   const photoPreviews = usePhotoPreviews(photoFiles);
 
@@ -104,6 +106,7 @@ export default function Concierge() {
     setReferenceUrl("");
     setUploadWarning("");
     setSubmitted(false);
+    setConfirmationOpen(false);
   }
 
   async function submitRequest(event: FormEvent<HTMLFormElement>) {
@@ -201,6 +204,7 @@ export default function Concierge() {
           : "",
       );
       setSubmitted(true);
+      setConfirmationOpen(true);
       if (failedCount) toast.warning("Request saved with a photo upload warning.");
       else toast.success("Your concierge request was received.");
     } catch {
@@ -263,8 +267,8 @@ export default function Concierge() {
             <CheckCircle2 className="h-9 w-9 text-[#16A34A]" />
             <h2 className="mt-3 text-xl font-semibold">Your concierge request is in</h2>
             <p className="mt-2 text-zinc-600">
-              Our team will review it and follow up. Your request has not been
-              published as a listing, posted to Facebook or sent as a network email.
+              Your request was submitted to AAC Concierge. Our team will review it and follow up.
+              Nothing has been published or broadcast.
             </p>
             {uploadWarning && (
               <p role="alert" className="mt-3 rounded-md border border-amber-300 p-3 text-sm text-zinc-800">
@@ -422,7 +426,7 @@ export default function Concierge() {
             )}
 
             <p className="text-sm text-zinc-600">
-              Your request goes to AAC staff for review. Nothing is emailed or published automatically.
+              Your request goes to AAC staff for review and notifies our team. No network broadcast or listing publication happens automatically.
             </p>
             <Button type="submit" disabled={submitting || !canSubmit}>
               {submitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Submitting…</>
@@ -431,6 +435,28 @@ export default function Concierge() {
           </form>
         )}
       </main>
+      <Dialog open={confirmationOpen} onOpenChange={setConfirmationOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-xl">
+              <CheckCircle2 className="h-6 w-6 text-[#16A34A]" />
+              Request sent to AAC Concierge
+            </DialogTitle>
+            <DialogDescription className="pt-2 text-base leading-6">
+              Your request was received and our team has been notified. We'll review
+              your details and follow up. Nothing has been published or sent to the agent network.
+            </DialogDescription>
+          </DialogHeader>
+          {uploadWarning && (
+            <p role="alert" className="rounded-md border border-amber-300 p-3 text-sm text-zinc-800">
+              {uploadWarning}
+            </p>
+          )}
+          <DialogFooter>
+            <Button type="button" onClick={() => setConfirmationOpen(false)}>Done</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <Footer />
     </div>
   );
