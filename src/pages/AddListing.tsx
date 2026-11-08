@@ -2148,6 +2148,10 @@ const AddListing = () => {
 
   const handleFileSelect = async (files: FileList | null, type: "photos" | "floorplans") => {
     if (!files) return;
+    if (isRequestConciergeEditor && type === 'photos') {
+      toast.error('Photos from this concierge request remain private until the photo privacy handoff is tested.');
+      return;
+    }
     
     // For photos, upload directly with spinner
     if (type === 'photos') {
@@ -2405,6 +2409,9 @@ const AddListing = () => {
     const uploadedDocuments: { url: string; name?: string; documentType?: string; customLabel?: string }[] = [];
 
     // ---- PHOTOS ----
+    if (isRequestConciergeEditor && photos.some((photo) => !photo.uploaded)) {
+      throw new Error('Photo uploads are on hold until the private storage handoff is verified.');
+    }
     for (const photo of photos) {
       // Preserve existing, already-uploaded items
       if (photo.uploaded && photo.url) {
@@ -6198,7 +6205,9 @@ const AddListing = () => {
                       <div>
                         <Label className={agentSectionTitle}>Property Photos</Label>
                         <p className="mt-1 text-sm text-muted-foreground">
-                          Upload and manage photos on a dedicated page.
+                          {isRequestConciergeEditor
+                            ? "Submitted photos remain private in Concierge Requests. Uploads to the listing are disabled until privacy verification."
+                            : "Upload and manage photos on a dedicated page."}
                         </p>
                       </div>
                       <div className="flex shrink-0 flex-wrap gap-2">
@@ -6208,7 +6217,7 @@ const AddListing = () => {
                           size="sm"
                           className={ADD_LISTING_MEDIA_OUTLINE_BUTTON_CLASS}
                           onClick={() => document.getElementById("photo-upload")?.click()}
-                          disabled={isUploadingPhotos}
+                          disabled={isUploadingPhotos || isRequestConciergeEditor}
                         >
                           {isUploadingPhotos ? (
                             <>
@@ -6228,7 +6237,7 @@ const AddListing = () => {
                           size="sm"
                           className={ADD_LISTING_MEDIA_OUTLINE_BUTTON_CLASS}
                           onClick={handleNavigateToManagePhotos}
-                          disabled={isUploadingPhotos}
+                          disabled={isUploadingPhotos || isRequestConciergeEditor}
                         >
                           Manage Photos
                         </Button>
@@ -6242,7 +6251,7 @@ const AddListing = () => {
                       accept="image/*"
                       onChange={(e) => handleFileSelect(e.target.files, 'photos')}
                       className="hidden"
-                      disabled={isUploadingPhotos}
+                      disabled={isUploadingPhotos || isRequestConciergeEditor}
                     />
                     
                     {/* Display existing photos */}
