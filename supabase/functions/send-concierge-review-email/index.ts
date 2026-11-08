@@ -20,7 +20,6 @@
 //  - nothing here publishes anything; the buttons are navigation only
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import {
-  CONCIERGE_SOURCE,
   getAgentEligibility,
   isUuid,
   jsonResponse,
@@ -38,6 +37,7 @@ import {
   signLoginToken,
 } from '../_shared/loginTokens.ts'
 import { CONCIERGE_REVIEW_TEMPLATE } from '../_shared/hydrateConciergeReviewEmail.ts'
+import { conciergeReviewReadinessError } from '../_shared/conciergeReviewReadiness.ts'
 
 function expiryFromNow(days: number): Date {
   return new Date(Math.floor(Date.now() / 1000) * 1000 + days * 24 * 60 * 60 * 1000)
@@ -87,26 +87,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
       .eq('id', listing.creation_request_id)
       .maybeSingle()
     if (requestErr) return jsonResponse({ error: 'Could not verify the source request' }, 500)
-    if (!request || request.agent_id !== listing.agent_id || request.request_type !== 'listing') {
-      return jsonResponse({ error: 'Source request does not match the listing owner' }, 403)
-    }
-    if (request.status === 'declined') {
-      return jsonResponse({ error: 'This Concierge request has been declined' }, 422)
-    }
-    if (Array.isArray(request.photo_paths) && request.photo_paths.length > 0) {
-      return jsonResponse({
-        error: 'Agent review is on hold until the submitted private photos are securely attached to the listing.',
-      }, 422)
-    }
-    if (!listing.address || listing.address === 'Draft' ||
-        !listing.city || listing.city === 'TBD' ||
-        !listing.zip_code || listing.zip_code === '00000' ||
-        !listing.state || !Number.isFinite(Number(listing.price)) || Number(listing.price) <= 0 ||
-        listing.bedrooms == null || listing.bathrooms == null || listing.square_feet == null) {
-      return jsonResponse({
-        error: 'Finish the listing address and essential property details before sending for review.',
-      }, 422)
-    }
+    const notReady = conciergeReviewReadinessError(listing, request)
+    if (notReady) return jsonResponse({ error: notReady }, 422)
 
     // ── Target member must be verified (activated or not) ───────────────────
     const eligibility = await getAgentEligibility(service, listing.agent_id as string)
