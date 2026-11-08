@@ -13,7 +13,7 @@ RETURNS boolean LANGUAGE sql IMMUTABLE SET search_path = public AS $$
       path LIKE p_agent_id::text || '/' || p_request_id::text || '/%'
       AND length(path) <= 220
       AND path ~ '\.(jpg|jpeg|png|webp)$'
-    ) FROM unnest(p_paths) AS path), true)
+    ) FROM unnest(p_paths) AS photo(path)), true)
 $$;
 
 CREATE TABLE IF NOT EXISTS public.agent_concierge_requests (
