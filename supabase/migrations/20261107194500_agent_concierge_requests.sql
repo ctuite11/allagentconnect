@@ -75,6 +75,13 @@ CREATE INDEX IF NOT EXISTS idx_agent_concierge_requests_status_created
 CREATE INDEX IF NOT EXISTS idx_agent_concierge_requests_owner_created
   ON public.agent_concierge_requests (agent_id, created_at DESC);
 
+-- Each intake may have only one member-owned admin concierge listing draft.
+-- This index is the database-side duplicate protection for rapid/repeated clicks.
+CREATE UNIQUE INDEX IF NOT EXISTS idx_concierge_draft_one_per_request
+  ON public.listings (creation_request_id)
+  WHERE creation_request_id IS NOT NULL
+    AND creation_source = 'admin_concierge';
+
 ALTER TABLE public.agent_concierge_requests ENABLE ROW LEVEL SECURITY;
 
 -- Privacy: a verified, activated agent may submit and see ONLY their own requests.
