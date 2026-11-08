@@ -19,6 +19,7 @@ import { AAC_PUBLIC_URL } from "./aacPublicUrl.ts";
 import { activationUrl, epochSeconds, signActivationToken } from "./activationTokens.ts";
 import { loginLinkUrl, signLoginToken } from "./loginTokens.ts";
 import { resolveEmailPhotoUrl } from "./listingPhotoUrl.ts";
+import { conciergeReviewReadinessError } from "./conciergeReviewReadiness.ts";
 
 export const CONCIERGE_REVIEW_TEMPLATE = "concierge-listing-review";
 
@@ -103,7 +104,7 @@ export async function hydrateConciergeReviewEmail(
   const { data: listing, error: listingErr } = await admin
     .from("listings")
     .select(
-      "id, agent_id, status, address, unit_number, city, state, zip_code, price, bedrooms, bathrooms, square_feet, property_type, description, photos",
+      "id, agent_id, status, address, unit_number, city, state, zip_code, price, bedrooms, bathrooms, square_feet, property_type, description, photos, creation_source, creation_request_id",
     )
     .eq("id", listingId)
     .maybeSingle();
@@ -112,6 +113,28 @@ export async function hydrateConciergeReviewEmail(
   if (!listing) return { outcome: "skip", reason: "listing no longer exists" };
   if (listing.agent_id !== row.user_id) {
     return { outcome: "skip", reason: "listing no longer belongs to the recipient" };
+  }
+
+  // New request-backed Concierge email jobs are revalidated AT DELIVERY TIME,
+  // not just when staff queues them. Agents can upload photos or details can
+  // change while a job is pending. Never send a stale review invitation.
+  // Legacy Concierge jobs without a request marker retain their own workflow.
+  if (typeof payload.concierge_request_id === "string") {
+    if (payload.concierge_request_id !== listing.creation_request_id) {
+      return { outcome: "skip", reason: "Concierge source request changed" };
+    }
+    const { data: request, error: requestErr } = await admin
+      .from("agent_concierge_requests")
+      .select("id, agent_id, request_type, status, photo_paths")
+      .eq("id", payload.concierge_request_id)
+      .maybeSingle();
+    if (requestErr) {
+      return { outcome: "error", reason: `Concierge request lookup failed: ${requestErr.message}` };
+    }
+    const notReady = conciergeReviewReadinessError(listing, request);
+    if (notReady) {
+      return { outcome: "skip", reason: `Concierge review no longer ready: ${notReady}` };
+    }
   }
 
   const plaintext = tokenKind === "activation"
