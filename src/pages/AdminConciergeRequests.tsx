@@ -7,7 +7,7 @@ import { Seo } from "@/components/Seo";
 import { AgentAacPage } from "@/components/layout/AgentAacPage";
 import { AgentPageHeader } from "@/components/layout/AgentPageHeader";
 import { supabase } from "@/integrations/supabase/client";
-import { createConciergeDraftFromRequest, listConciergeDrafts, sendConciergeReviewEmail } from "@/lib/conciergeListing";
+import { createConciergeDraftFromRequest, listConciergeDrafts, sendConciergeRequestReviewEmail } from "@/lib/conciergeListing";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { COMMS_CHANNEL_BY_KEY } from "@/lib/commsChannels";
 import { isCommsChannelKey } from "@/lib/commsChannels";
@@ -183,7 +183,7 @@ export default function AdminConciergeRequests() {
     if (!draftId || request.photo_paths?.length || reviewSendingId) return;
     setReviewSendingId(request.id);
     try {
-      const result = await sendConciergeReviewEmail(draftId);
+      const result = await sendConciergeRequestReviewEmail(draftId);
       setReviewQueuedIds((current) => current.includes(request.id) ? current : [...current, request.id]);
       toast.success(`Review email queued for ${result.email}. It has not published the listing.`);
     } catch (err) {
