@@ -76,5 +76,6 @@ Deno.test("opt-out footer is injected exactly once", () => {
     buildAacEmail({ headline: "Hi", body: "<p>body</p>" }),
     { unsubscribeUrl: url, recipientEmail: "a@b.test", category: "marketing" },
   );
-  assertEquals(html.split("Manage email preferences").length - 1, 1);
+  assertEquals(html.split("Unsubscribe from marketing emails").length - 1, 1);
+  assert(!html.includes("Manage email preferences"), "marketing opt-out must not require account preferences");
 });
