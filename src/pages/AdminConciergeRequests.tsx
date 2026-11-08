@@ -23,6 +23,9 @@ type ConciergeRequest = {
   bathrooms: number | null;
   square_feet: number | null;
   lot_acres: number | null;
+  condo_fee_monthly: number | null;
+  parking_spaces: number | null;
+  parking_type: string | null;
   photo_paths: string[];
   communication_channel: string | null;
   subject: string;
@@ -62,7 +65,7 @@ export default function AdminConciergeRequests() {
     try {
       const { data, error } = await (supabase as any)
         .from("agent_concierge_requests")
-        .select("id, agent_id, request_type, communication_channel, subject, property_address, property_type, asking_price, bedrooms, bathrooms, square_feet, lot_acres, photo_paths, details, reference_url, status, created_at")
+        .select("id, agent_id, request_type, communication_channel, subject, property_address, property_type, asking_price, bedrooms, bathrooms, square_feet, lot_acres, condo_fee_monthly, parking_spaces, parking_type, photo_paths, details, reference_url, status, created_at")
         .order("created_at", { ascending: false })
         .limit(100);
       if (error) throw error;
@@ -254,6 +257,16 @@ export default function AdminConciergeRequests() {
                       <span><strong>Sq ft:</strong> {request.square_feet?.toLocaleString() ?? "—"}</span>
                       {request.property_type === "single_family" && (
                         <span><strong>Acres:</strong> {request.lot_acres ?? "—"}</span>
+                      )}
+                      {request.property_type === "condo" && (
+                        <>
+                          <span><strong>Condo fee:</strong> {request.condo_fee_monthly != null
+                            ? Number(request.condo_fee_monthly).toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }) + "/mo"
+                            : "Not provided"}</span>
+                          <span><strong>Parking:</strong> {request.parking_spaces ?? 0} spaces
+                            {request.parking_type ? ` (${request.parking_type.replace(/_/g, " ")})` : ""}
+                          </span>
+                        </>
                       )}
                     </div>
                     {photos[request.id]?.length > 0 && (
