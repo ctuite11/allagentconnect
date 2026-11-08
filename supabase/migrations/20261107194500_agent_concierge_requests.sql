@@ -198,15 +198,15 @@ USING (
 -- broadcast. No email is queued on photo upload or staff status changes.
 
 CREATE OR REPLACE FUNCTION public.concierge_notification_escape_html(p_value text)
-RETURNS text LANGUAGE sql IMMUTABLE SET search_path = public AS $
+RETURNS text LANGUAGE sql IMMUTABLE SET search_path = public AS $$
   SELECT replace(replace(replace(replace(replace(coalesce(p_value, ''),
     '&', '&amp;'), '<', '&lt;'), '>', '&gt;'), '"', '&quot;'), '''', '&#39;')
-$;
+$$;
 
 REVOKE ALL ON FUNCTION public.concierge_notification_escape_html(text) FROM PUBLIC, anon, authenticated;
 
 CREATE OR REPLACE FUNCTION public.queue_concierge_staff_notification()
-RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $
+RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
 DECLARE
   v_name text;
   v_email text;
@@ -241,8 +241,7 @@ BEGIN
             || public.concierge_notification_escape_html(NEW.property_address) || '</p>'
             || '<p><b>Property type:</b> '
             || public.concierge_notification_escape_html(replace(coalesce(NEW.property_type, ''), '_', ' ')) || '</p>'
-            || '<p><b>Asking price:</b> 
-
+            || '<p><b>Asking price:</b> $'
             || public.concierge_notification_escape_html(coalesce(NEW.asking_price::text, '')) || '</p>'
             || '<p><b>Beds / baths:</b> '
             || public.concierge_notification_escape_html(concat_ws(' / ', NEW.bedrooms::text, NEW.bathrooms::text)) || '</p>'
@@ -276,7 +275,7 @@ BEGIN
   );
   RETURN NEW;
 END;
-$;
+$$;
 
 REVOKE ALL ON FUNCTION public.queue_concierge_staff_notification() FROM PUBLIC, anon, authenticated;
 
