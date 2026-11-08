@@ -660,6 +660,8 @@ const App = () => (
                   <Route path="/admin/send-email" element={<AdminSendEmail />} />
                   <Route path="/admin/debug-auth" element={<AdminDebugAuth />} />
                   <Route path="/admin/concierge-requests" element={<RouteGuard requireRole="admin"><AdminConciergeRequests /></RouteGuard>} />
+                  {/* Request-only admin editor. Draft-only AddListing mode; the legacy concierge UI flag stays off. */}
+                  <Route path="/admin/concierge-requests/edit/:id" element={<RouteGuard requireRole="admin"><AddListing /></RouteGuard>} />
                   {/* Admin concierge: create/edit a draft listing on behalf of a member */}
                   {CONCIERGE_LISTINGS_ENABLED && (
                     <>
