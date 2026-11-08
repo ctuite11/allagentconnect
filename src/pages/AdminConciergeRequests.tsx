@@ -7,6 +7,7 @@ import { Seo } from "@/components/Seo";
 import { AgentAacPage } from "@/components/layout/AgentAacPage";
 import { AgentPageHeader } from "@/components/layout/AgentPageHeader";
 import { supabase } from "@/integrations/supabase/client";
+import { isConciergeNoSendPreviewHost } from "@/lib/conciergePreviewSafety";
 import { createConciergeDraftFromRequest, listConciergeDrafts, sendConciergeRequestReviewEmail } from "@/lib/conciergeListing";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { COMMS_CHANNEL_BY_KEY } from "@/lib/commsChannels";
@@ -47,6 +48,7 @@ const statusOptions: { value: RequestStatus; label: string }[] = [
 /** Staff-only manual queue; never sends emails or auto-publishes listings. */
 export default function AdminConciergeRequests() {
   const navigate = useNavigate();
+  const noWritePreview = isConciergeNoSendPreviewHost(window.location.hostname);
   const [requests, setRequests] = useState<ConciergeRequest[]>([]);
   const [statusFilter, setStatusFilter] = useState<"all" | RequestStatus>("all");
   const [typeFilter, setTypeFilter] = useState<"all" | ConciergeRequest["request_type"]>("all");
@@ -120,6 +122,10 @@ export default function AdminConciergeRequests() {
   useEffect(() => { void reload(); }, [reload]);
 
   async function setStatus(id: string, status: RequestStatus) {
+    if (noWritePreview) {
+      toast.info("Preview only. No request status was changed.");
+      return;
+    }
     setChangingId(id);
     try {
       const { error } = await (supabase as any)
@@ -179,6 +185,10 @@ export default function AdminConciergeRequests() {
   }
 
   async function prepareDraft(request: ConciergeRequest) {
+    if (noWritePreview) {
+      toast.info("Preview only. No draft was created.");
+      return;
+    }
     if (request.request_type !== "listing" || preparingId ||
         request.status === "completed" || request.status === "declined") return;
     const existing = draftsByRequest[request.id];
@@ -204,6 +214,11 @@ export default function AdminConciergeRequests() {
   }
 
   async function queueReview(request: ConciergeRequest) {
+    if (noWritePreview) {
+      toast.info("Preview only. No email was queued.");
+      setReviewFor(null);
+      return;
+    }
     const draftId = draftsByRequest[request.id];
     if (!draftId || request.photo_paths?.length || reviewSendingId) return;
     setReviewSendingId(request.id);
@@ -233,6 +248,12 @@ export default function AdminConciergeRequests() {
         actions={<Button variant="outline" size="sm" onClick={() => void reload()} disabled={loading}>
           <RefreshCw className="mr-2 h-4 w-4" /> Refresh
         </Button>} />
+      {noWritePreview && (
+        <p className="mb-4 rounded-lg border border-zinc-200 bg-zinc-50 p-3 text-sm text-zinc-700">
+          Preview read-only mode: status updates, draft creation and review emails are disabled.
+          This preview cannot change the live database or send emails.
+        </p>
+      )}
       <div className="mb-5 flex flex-wrap items-end gap-4 rounded-xl border border-zinc-200 bg-white p-4">
         <div className="min-w-[170px] space-y-1">
           <label htmlFor="concierge-status-filter" className="block text-xs font-semibold text-zinc-700">
@@ -291,7 +312,7 @@ export default function AdminConciergeRequests() {
                     Status
                     <select aria-label={`Status for ${request.subject}`}
                       className="h-10 rounded-lg border border-zinc-300 bg-white px-3 text-sm"
-                      value={request.status} disabled={changingId === request.id}
+                      value={request.status} disabled={noWritePreview || changingId === request.id}
                       onChange={(event) => void setStatus(request.id, event.target.value as RequestStatus)}>
                       {statusOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
                     </select>
@@ -355,7 +376,7 @@ export default function AdminConciergeRequests() {
                 )}
                 {request.request_type === "listing" && request.status !== "completed" && request.status !== "declined" && (
                   <div className="mt-4 flex flex-wrap items-center gap-3">
-                    <Button size="sm" disabled={preparingId !== null || changingId === request.id}
+                    <Button size="sm" disabled={noWritePreview || preparingId !== null || changingId === request.id}
                       onClick={() => void prepareDraft(request)}>
                       {preparingId === request.id
                         ? <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -365,7 +386,7 @@ export default function AdminConciergeRequests() {
                       {draftsByRequest[request.id] ? "Continue agent draft" : "Create agent draft"}
                     </Button>
                     {draftsByRequest[request.id] && !request.photo_paths?.length && (
-                      <Button variant="outline" size="sm" disabled={reviewSendingId !== null}
+                      <Button variant="outline" size="sm" disabled={noWritePreview || reviewSendingId !== null}
                         onClick={() => setReviewFor(request)}>
                         {reviewSendingId === request.id
                           ? <Loader2 className="mr-2 h-4 w-4 animate-spin" />
