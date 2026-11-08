@@ -2148,8 +2148,8 @@ const AddListing = () => {
 
   const handleFileSelect = async (files: FileList | null, type: "photos" | "floorplans") => {
     if (!files) return;
-    if (isRequestConciergeEditor && type === 'photos') {
-      toast.error('Photos from this concierge request remain private until the photo privacy handoff is tested.');
+    if (isRequestConciergeEditor) {
+      toast.error('Concierge request media uploads are on hold until the private storage handoff is verified.');
       return;
     }
     
@@ -2409,8 +2409,8 @@ const AddListing = () => {
     const uploadedDocuments: { url: string; name?: string; documentType?: string; customLabel?: string }[] = [];
 
     // ---- PHOTOS ----
-    if (isRequestConciergeEditor && photos.some((photo) => !photo.uploaded)) {
-      throw new Error('Photo uploads are on hold until the private storage handoff is verified.');
+    if (isRequestConciergeEditor && [...photos, ...floorPlans, ...documents].some((item) => !item.uploaded)) {
+      throw new Error('Media uploads are on hold until the private storage handoff is verified.');
     }
     for (const photo of photos) {
       // Preserve existing, already-uploaded items
