@@ -48,6 +48,8 @@ const statusOptions: { value: RequestStatus; label: string }[] = [
 export default function AdminConciergeRequests() {
   const navigate = useNavigate();
   const [requests, setRequests] = useState<ConciergeRequest[]>([]);
+  const [statusFilter, setStatusFilter] = useState<"all" | RequestStatus>("all");
+  const [typeFilter, setTypeFilter] = useState<"all" | ConciergeRequest["request_type"]>("all");
   const [agents, setAgents] = useState<Record<string, AgentIdentity>>({});
   const [photos, setPhotos] = useState<Record<string, string[]>>({});
   const [expandedPhotos, setExpandedPhotos] = useState<Record<string, boolean>>({});
@@ -197,6 +199,13 @@ export default function AdminConciergeRequests() {
     }
   }
 
+  const visibleRequests = requests.filter(
+    (request) =>
+      (statusFilter === "all" || request.status === statusFilter) &&
+      (typeFilter === "all" || request.request_type === typeFilter),
+  );
+  const openCount = requests.filter((request) => request.status === "new").length;
+
   return (
     <AgentAacPage>
       <Seo title="Concierge Requests | AAC Admin" description="Private staff concierge queue." />
@@ -204,13 +213,45 @@ export default function AdminConciergeRequests() {
         actions={<Button variant="outline" size="sm" onClick={() => void reload()} disabled={loading}>
           <RefreshCw className="mr-2 h-4 w-4" /> Refresh
         </Button>} />
+      <div className="mb-5 flex flex-wrap items-end gap-4 rounded-xl border border-zinc-200 bg-white p-4">
+        <div className="min-w-[170px] space-y-1">
+          <label htmlFor="concierge-status-filter" className="block text-xs font-semibold text-zinc-700">
+            Status
+          </label>
+          <select id="concierge-status-filter" value={statusFilter}
+            onChange={(event) => setStatusFilter(event.target.value as "all" | RequestStatus)}
+            className="h-10 w-full rounded-lg border border-zinc-300 bg-white px-3 text-sm">
+            <option value="all">All statuses</option>
+            {statusOptions.map((status) => (
+              <option key={status.value} value={status.value}>{status.label}</option>
+            ))}
+          </select>
+        </div>
+        <div className="min-w-[180px] space-y-1">
+          <label htmlFor="concierge-type-filter" className="block text-xs font-semibold text-zinc-700">
+            Request type
+          </label>
+          <select id="concierge-type-filter" value={typeFilter}
+            onChange={(event) => setTypeFilter(event.target.value as "all" | ConciergeRequest["request_type"])}
+            className="h-10 w-full rounded-lg border border-zinc-300 bg-white px-3 text-sm">
+            <option value="all">All requests</option>
+            <option value="listing">Property listings</option>
+            <option value="broadcast">Network emails</option>
+          </select>
+        </div>
+        <p aria-live="polite" className="pb-2 text-sm text-zinc-600">
+          {openCount} new · {visibleRequests.length} shown of {requests.length}
+        </p>
+      </div>
       {loading ? (
         <p className="flex items-center gap-2 text-zinc-600"><Loader2 className="h-4 w-4 animate-spin" />Loading…</p>
-      ) : requests.length === 0 ? (
-        <p className="text-zinc-600">No concierge requests yet.</p>
+      ) : visibleRequests.length === 0 ? (
+        <p className="text-zinc-600">
+          {requests.length === 0 ? "No concierge requests yet." : "No requests match these filters."}
+        </p>
       ) : (
         <div className="space-y-4">
-          {requests.map((request) => {
+          {visibleRequests.map((request) => {
             const agent = agents[request.agent_id];
             const name = [agent?.first_name, agent?.last_name].filter(Boolean).join(" ");
             return (
