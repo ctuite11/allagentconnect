@@ -70,7 +70,8 @@ jobs:
             exit 1
           fi
           supabase secrets set \
-            --project-ref kwfqjnepesiihjkdnxou \
+            --remote=kwfqjnepesiihjkdnxou \
+            --yes \
             MIGRATION_OUTBOUND_DISABLED=true \
             MIGRATION_RELEASE_APPROVED=false \
             EMAIL_SENDING_PAUSED=true \
@@ -84,11 +85,12 @@ jobs:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.MIGRATION_SUPABASE_ACCESS_TOKEN }}
         run: >-
           supabase functions deploy
-          --project-ref kwfqjnepesiihjkdnxou
+          --remote=kwfqjnepesiihjkdnxou
+          --yes
           --use-api
           --jobs 3
 
       - name: List deployed functions without invoking workers
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.MIGRATION_SUPABASE_ACCESS_TOKEN }}
-        run: supabase functions list --project-ref kwfqjnepesiihjkdnxou
+        run: supabase functions list --remote=kwfqjnepesiihjkdnxou
