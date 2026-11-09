@@ -68,6 +68,7 @@ const handler = async (req: Request): Promise<Response> => {
         payload: {
           provider: "resend",
           template: "founder-invite-1to1",
+          category: "marketing",
           to: recipientEmail,
           subject: "An invitation to become an All Agent Connect Founding Partner",
           reply_to: "hello@allagentconnect.com",

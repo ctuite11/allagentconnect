@@ -995,13 +995,27 @@ const HotSheetReview = () => {
   };
 
 
+  const firstBatchBuyerLabel = () => {
+    const names = reviewRecipients.map((r) => r.displayName.trim()).filter(Boolean);
+    if (names.length === 1) return names[0];
+    if (names.length > 1) return `${names.length} buyers`;
+    return "your buyer";
+  };
+
+  /** After a confirmed first-batch success, leave Review Matches for My Hot Sheets. */
+  const finishFirstBatchSuccess = (message: string) => {
+    toast.success(message);
+    navigate(AGENT_HOT_SHEETS_PATH);
+  };
+
   /**
    * Recipient-specific send: the buyers are the ones attached to this Hot Sheet.
    * Connected buyers get the selected listings now; pending buyers get them
    * stored with their invitation and delivered when they accept.
+   * @returns true only when the send confirmed success (safe to leave this screen).
    */
-  const sendRecipientBatch = async () => {
-    if (!hotSheet?.id || reviewRecipients.length === 0) return;
+  const sendRecipientBatch = async (opts?: { suppressSuccessToast?: boolean }): Promise<boolean> => {
+    if (!hotSheet?.id || reviewRecipients.length === 0) return false;
     const { data, error } = await supabase.functions.invoke("process-hot-sheet", {
       body: {
         hotSheetId: hotSheet.id,
@@ -1013,21 +1027,33 @@ const HotSheetReview = () => {
     if (error) {
       console.error("[HotSheetReview] sendRecipientBatch error", error);
       toast.error("Listings could not be sent. Please try again.");
-      return;
+      return false;
     }
     const rows = ((data as any)?.recipients ?? []) as Array<{ state: string; count?: number }>;
     const queued = rows.filter((r) => r.state === "queued");
     const pending = rows.filter((r) => r.state === "pending_invite").length;
     const failed = rows.filter((r) => r.state === "failed").length;
-    if (queued.length > 0) {
-      const n = Math.max(...queued.map((r) => r.count ?? 0));
-      toast.success(`Sent ${n} listing${n === 1 ? "" : "s"} to ${queued.length === 1 ? "your buyer" : `${queued.length} buyers`}.`);
-      void supabase.functions.invoke("kick-email-queue").catch(() => undefined);
-    } else if (pending === 0 && failed === 0) {
-      toast.message("Those listings were already sent to this buyer.");
+    if (failed > 0 && queued.length === 0 && pending === 0) {
+      toast.error(`Could not send to ${failed} buyer${failed === 1 ? "" : "s"}. Please try again.`);
+      return false;
     }
-    if (failed > 0) toast.error(`Could not send to ${failed} buyer${failed === 1 ? "" : "s"}. Please try again.`);
-    await loadRecipientBatches();
+    if (queued.length > 0) {
+      void supabase.functions.invoke("kick-email-queue").catch(() => undefined);
+      if (!opts?.suppressSuccessToast) {
+        const n = Math.max(...queued.map((r) => r.count ?? 0));
+        toast.success(
+          `Sent ${n} listing${n === 1 ? "" : "s"} to ${queued.length === 1 ? "your buyer" : `${queued.length} buyers`}.`,
+        );
+      }
+    } else if (pending === 0 && failed === 0) {
+      if (!opts?.suppressSuccessToast) {
+        toast.message("Those listings were already sent to this buyer.");
+      }
+    }
+    if (failed > 0) {
+      toast.error(`Could not send to ${failed} buyer${failed === 1 ? "" : "s"}. Please try again.`);
+    }
+    return true;
   };
 
   const handleHotSheetSend = async (skipSelfCheck = false) => {
@@ -1047,7 +1073,12 @@ const HotSheetReview = () => {
     selectionTouchedRef.current = true;
     setSending(true);
     try {
-      await sendRecipientBatch();
+      const ok = await sendRecipientBatch({ suppressSuccessToast: true });
+      if (ok) {
+        finishFirstBatchSuccess(
+          `Hot Sheet created and listings sent to ${firstBatchBuyerLabel()}.`,
+        );
+      }
     } finally {
       setSending(false);
     }
@@ -1332,7 +1363,12 @@ const HotSheetReview = () => {
         if (skippedAcceptedInvite > 0 && skippedAcceptedInvite >= recipientsWithEmail) {
           // Everyone already accepted — send selected listings directly via the
           // standard process-hot-sheet path instead of stopping.
-          await sendRecipientBatch();
+          const ok = await sendRecipientBatch({ suppressSuccessToast: true });
+          if (ok) {
+            finishFirstBatchSuccess(
+              `Hot Sheet created and listings sent to ${firstBatchBuyerLabel()}.`,
+            );
+          }
           return;
         }
         if (
@@ -1341,8 +1377,13 @@ const HotSheetReview = () => {
         ) {
           // No new invites needed (buyers already invited or already in search).
           // Just send the selected listings to accepted recipients.
-          await sendRecipientBatch();
+          const ok = await sendRecipientBatch({ suppressSuccessToast: true });
           await showSkippedInviteNotices();
+          if (ok) {
+            finishFirstBatchSuccess(
+              `Hot Sheet created and listings sent to ${firstBatchBuyerLabel()}.`,
+            );
+          }
           return;
         }
         if (skippedTokenInsert > 0) {
@@ -1370,9 +1411,8 @@ const HotSheetReview = () => {
       }
 
       setInvitesSent(true);
-      showInviteEmailSentToast();
       // Store pending buyers' first batch with their invite; send to connected buyers now.
-      await sendRecipientBatch();
+      const ok = await sendRecipientBatch({ suppressSuccessToast: true });
       await showSkippedInviteNotices();
       void supabase.functions.invoke("kick-email-queue").catch((e) => {
         console.warn(
@@ -1380,7 +1420,11 @@ const HotSheetReview = () => {
           e,
         );
       });
-      await fetchHotSheetAndListings();
+      if (ok) {
+        finishFirstBatchSuccess(
+          `Hot Sheet created and listings sent to ${firstBatchBuyerLabel()}.`,
+        );
+      }
     } catch (e: any) {
       console.error("[HotSheetReview] handleSendInvites error", e);
       toast.error(e?.message ?? "Failed to send invites");

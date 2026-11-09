@@ -32,8 +32,8 @@ export function injectOptOutFooter(
   const block =
     `<p style="margin:10px 0 0;font-size:11px;line-height:1.5;color:rgba(255,255,255,0.45);font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">` +
     `Sent to <span style="color:rgba(255,255,255,0.6);">${opts.recipientEmail}</span>.<br />` +
-    `<a href="${MANAGE_EMAIL_PREFERENCES_URL}" style="color:rgba(255,255,255,0.6);text-decoration:underline;">Manage email preferences</a>` +
-    ` &nbsp;·&nbsp; ` +
+    (opts.category === "marketing" ? "" :
+      `<a href="${MANAGE_EMAIL_PREFERENCES_URL}" style="color:rgba(255,255,255,0.6);text-decoration:underline;">Manage email preferences</a> &nbsp;·&nbsp; `) +
     `<a href="${opts.unsubscribeUrl}" style="color:rgba(255,255,255,0.6);text-decoration:underline;">Unsubscribe from ${label}</a>` +
     `</p>`;
 
@@ -201,7 +201,14 @@ export async function sendEmail(
 
   if (toList.length === 0) throw new Error("No valid recipients");
 
-  const category = (job.payload as { category?: string }).category;
+  // Also cover already-queued recruitment jobs created before classification.
+  const recruitmentInvite = job.payload.template === "founder-invite-1to1" ||
+    job.payload.template === "personal-forward-invite";
+  const category = recruitmentInvite ? "marketing" :
+    (job.payload as { category?: string }).category;
+  if (isSubscriptionCategory(category) && toList.length !== 1) {
+    throw new Error("Subscription email requires one recipient per job");
+  }
 
   // Subscription-style (opted-in / broadcast) mail is the ONLY traffic that
   // gets suppression checks, footer opt-out links and List-Unsubscribe
@@ -224,10 +231,13 @@ export async function sendEmail(
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supa = createClient(SUPABASE_URL, SERVICE_KEY);
-    const { data: suppressed } = await supa.rpc("is_email_unsubscribed", {
+    const { data: suppressed, error: suppressionError } = await supa.rpc("is_email_unsubscribed", {
       _email: toList[0],
       _category: category!,
     });
+    if (suppressionError || typeof suppressed !== "boolean") {
+      throw new Error("Email suppression check unavailable; delivery deferred");
+    }
     if (suppressed === true) {
       console.log(`[sendEmail] Suppressed ${toList[0]} for ${category}`);
       return { providerMessageId: `suppressed:${category}` };

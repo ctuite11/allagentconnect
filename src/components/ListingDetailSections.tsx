@@ -1,3 +1,5 @@
+import { formatListingMarketDate } from "@/lib/listingDaysOnMarket";
+import { listingDaysOnMarket, listingMarketDate } from "@/lib/listingDaysOnMarket";
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Home, DollarSign, Building2, Calendar, Info } from "lucide-react";
@@ -83,10 +85,8 @@ export const ListingDetailSections = ({
     return uniqueItems.join(', ');
   };
 
-  const listDate = listing.active_date || listing.created_at;
-  const daysOnMarket = listDate 
-    ? Math.ceil((new Date().getTime() - new Date(listDate).getTime()) / (1000 * 60 * 60 * 24))
-    : null;
+  const listDate = listingMarketDate(listing);
+  const daysOnMarket = listingDaysOnMarket(listing);
 
   // Gather all feature items for bullets
   const getFeatures = () => {
@@ -200,7 +200,7 @@ export const ListingDetailSections = ({
 
   // Market info rows (always fully open since typically few rows)
   const marketInfoRows = [
-    { label: "Listing Date", value: listDate ? new Date(listDate).toLocaleDateString() : null },
+    { label: "Listing Date", value: listDate ? formatListingMarketDate(listing) : null },
     { label: "Days on Market", value: daysOnMarket },
     { label: "Status", value: listing.status ? getListingStatusLabel(listing.status) : null },
     { label: listingCategoryMarketLabel(listing.listing_type), value: listingCategoryMarketValue(listing.listing_type) },

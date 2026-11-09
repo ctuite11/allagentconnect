@@ -18,7 +18,7 @@ const WATCHED_TABLES = new Set([
   "conversation_messages",
 ]);
 const WRITE_METHODS = ["insert", "update", "upsert", "delete"] as const;
-const MUTATING_RPC = /^(create|delete|update|end|accept|activate|archive|dispatch|enqueue|set|save|remove|add|upsert|agent_end|agent_reactivate|admin_)/;
+const MUTATING_RPC = /^(publish_listing$|finalize_hot_sheet$|resolve_or_create_agent_contact$|create|delete|update|end|accept|activate|archive|dispatch|enqueue|set|save|remove|add|upsert|agent_end|agent_reactivate|admin_)/;
 
 declare global {
   interface Window {
@@ -54,4 +54,4 @@ if (typeof window !== "undefined" && !window.__aacHubCacheInvalidationPatched) {
   };
 }
 
-export {};
+export const isHubMutatingRpc = (fn: string) => MUTATING_RPC.test(fn);

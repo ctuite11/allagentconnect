@@ -23,16 +23,13 @@ const VALID_CATEGORIES = new Set([
   "all",
 ]);
 
-function htmlPage(title: string, body: string, status = 200) {
-  return new Response(
-    `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title}</title>
-<style>body{font-family:-apple-system,system-ui,Segoe UI,Roboto,sans-serif;background:#0F172A;color:#fff;margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
-.card{background:#fff;color:#0f172a;max-width:480px;width:100%;padding:32px 28px;border-radius:14px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.25)}
-h1{font-size:20px;margin:0 0 10px;color:#0E56F5}
-p{font-size:14px;line-height:1.55;color:#475569;margin:0}
-.ok{color:#22C55E}</style></head><body><div class="card">${body}</div></body></html>`,
-    { status, headers: { ...corsHeaders, "Content-Type": "text/html; charset=utf-8" } },
-  );
+// Supabase's gateway serves function HTML as text/plain with nosniff.
+// Return actual text so existing signed URLs remain readable without login.
+function textPage(title: string, body: string, status = 200) {
+  return new Response(`${title}\n\n${body}\n`, {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" },
+  });
 }
 
 async function processUnsub(email: string, category: string, source: string): Promise<boolean> {
@@ -56,23 +53,27 @@ async function processUnsub(email: string, category: string, source: string): Pr
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
+  if (req.method !== "GET" && req.method !== "POST") {
+    return textPage("Method not allowed", "Use GET or POST.", 405);
+  }
+
   const url = new URL(req.url);
   const e = url.searchParams.get("e") || "";
   const c = url.searchParams.get("c") || "";
   const t = url.searchParams.get("t") || "";
 
   if (!e || !c || !t || !VALID_CATEGORIES.has(c)) {
-    return htmlPage("Invalid link", "<h1>Invalid unsubscribe link</h1><p>This link is malformed or expired. Please contact chris@allagentconnect.com.</p>", 400);
+    return textPage("Invalid link", "This link is malformed or expired. Please contact chris@allagentconnect.com.", 400);
   }
 
   let email = "";
   try { email = b64urlDecode(e); } catch {
-    return htmlPage("Invalid link", "<h1>Invalid unsubscribe link</h1><p>This link is malformed.</p>", 400);
+    return textPage("Invalid link", "This link is malformed.", 400);
   }
 
   const ok = await verifyUnsub(email, c, t);
   if (!ok) {
-    return htmlPage("Invalid link", "<h1>Invalid unsubscribe link</h1><p>This link could not be verified.</p>", 400);
+    return textPage("Invalid link", "This link could not be verified.", 400);
   }
 
   // POST = one-click unsubscribe (RFC 8058) — process immediately.
@@ -98,11 +99,11 @@ Deno.serve(async (req) => {
     "all marketing emails from All Agent Connect";
 
   if (!success) {
-    return htmlPage("Error", "<h1>Something went wrong</h1><p>We couldn't process your request. Please email chris@allagentconnect.com.</p>", 500);
+    return textPage("Error", "We couldn't process your request. Please email chris@allagentconnect.com.", 500);
   }
 
-  return htmlPage(
+  return textPage(
     "Unsubscribed",
-    `<h1 class="ok">You're unsubscribed</h1><p><strong>${email}</strong> will no longer receive ${label}.</p><p style="margin-top:14px;font-size:12px;color:#94a3b8">Account, security, and other essential messages will still be delivered.</p><p style="margin-top:14px;font-size:12px"><a href="https://allagentconnect.com/communications?prefs=1" style="color:#0E56F5;text-decoration:underline;">Manage email preferences</a></p>`,
+    `${email} will no longer receive ${label}.\n\nAccount, security, and other essential messages will still be delivered.\n\n`,
   );
 });

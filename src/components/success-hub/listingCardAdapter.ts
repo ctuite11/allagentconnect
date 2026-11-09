@@ -89,6 +89,7 @@ export function mapMarketRowToListingCard(row: {
   status: string;
   created_at: string;
   active_date?: string | null;
+  list_date?: string | null;
   listing_number?: string | null;
   agent_id: string;
   neighborhood?: string | null;
@@ -121,6 +122,7 @@ export function mapMarketRowToListingCard(row: {
     photos: row.photos,
     created_at: row.created_at,
     active_date: row.active_date ?? undefined,
+    list_date: row.list_date ?? undefined,
     listing_number: row.listing_number ?? undefined,
     agent_id: row.agent_id,
     neighborhood: row.neighborhood?.trim() || undefined,
@@ -171,6 +173,7 @@ export function mapSummaryListingToListingCard(
     photos: l.photos,
     listing_number: typeof l.listing_number === "string" ? l.listing_number : undefined,
     active_date: typeof l.active_date === "string" ? l.active_date : undefined,
+    list_date: typeof l.list_date === "string" ? l.list_date : undefined,
     created_at: typeof l.created_at === "string" ? l.created_at : undefined,
     brokerage_name: company,
     agent_email: safeTrim(listedByProfile?.email) || undefined,

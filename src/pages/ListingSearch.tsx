@@ -17,6 +17,7 @@ import {
   clampListingSearchPrices,
   defaultPropertyTypesForAgentListingSearch,
   propertyTypesForAgentListingQuery,
+  parseAgentSearchPositivePrice,
 } from "@/lib/agentListingSearchDefaults";
 import { agentWorkspacePageContainer } from "@/lib/agentWorkspaceLayout";
 import { cn } from "@/lib/utils";
@@ -98,7 +99,7 @@ const ListingSearch = () => {
 
       let query = supabase
         .from("listings")
-        .select("id, status, agent_id, price, square_feet")
+        .select("id, status, agent_id, price, price_range_min, price_range_max, square_feet")
         .limit(500);
 
       // Apply radius ID filter
@@ -111,20 +112,16 @@ const ListingSearch = () => {
         filters.listingType,
         filters.propertyTypes,
       );
-      if (filters.statuses.length > 0) {
-        query = query.in("status", filters.statuses);
-      } else {
-        // No statuses selected → return zero results (sentinel match)
-        query = query.in("status", ["__none__"]);
-      }
+      const visibleStatuses = filters.statuses.filter((s) => s !== "draft");
+      query = query.in("status", visibleStatuses.length > 0 ? visibleStatuses : ["__none__"]);
       if (queryPropertyTypes.length > 0) query = query.in("property_type", queryPropertyTypes);
       {
-        const pmin = filters.priceMin ? parseInt(filters.priceMin, 10) : NaN;
-        const pmax = filters.priceMax ? parseInt(filters.priceMax, 10) : NaN;
+        const pmin = parseAgentSearchPositivePrice(filters.priceMin);
+        const pmax = parseAgentSearchPositivePrice(filters.priceMax);
         query = applyListingPriceOverlapFilter(
           query,
-          Number.isFinite(pmin) && pmin > 0 ? pmin : null,
-          Number.isFinite(pmax) && pmax > 0 ? pmax : null,
+          pmin,
+          pmax,
         );
       }
       if (filters.bedsMin) query = query.gte("bedrooms", parseInt(filters.bedsMin));

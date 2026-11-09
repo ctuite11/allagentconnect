@@ -46,6 +46,12 @@ export function useAgentProfileOnboarding(user: User | null) {
     () => sessionStorage.getItem(AGENT_PROFILE_ONBOARDING_SESSION_KEY) === "1",
   );
   const evaluationRef = useRef(0);
+  // Latest helpers via refs: these functions are recreated on every render, so
+  // listing them as effect inputs re-ran the check (2 queries) on every render.
+  const checkProfileCompleteRef = useRef(checkProfileComplete);
+  checkProfileCompleteRef.current = checkProfileComplete;
+  const dismissWelcomeModalRef = useRef(dismissWelcomeModal);
+  dismissWelcomeModalRef.current = dismissWelcomeModal;
   const welcomeHandoffConsumedRef = useRef(false);
 
   useEffect(() => {
@@ -68,7 +74,7 @@ export function useAgentProfileOnboarding(user: User | null) {
       }
 
       const [profileDone, hotSheetDone] = await Promise.all([
-        checkProfileComplete(),
+        checkProfileCompleteRef.current(),
         hasAnyHotSheet(userId),
       ]);
       if (cancelled || evaluationId !== evaluationRef.current) return;
@@ -84,7 +90,7 @@ export function useAgentProfileOnboarding(user: User | null) {
       if (allDone) {
         // Fully set up — permanently suppress so the checklist does not keep
         // reappearing for members who already finished every step.
-        await dismissWelcomeModal();
+        await dismissWelcomeModalRef.current();
         if (cancelled || evaluationId !== evaluationRef.current) return;
         setVisible(false);
         return;
@@ -114,8 +120,6 @@ export function useAgentProfileOnboarding(user: User | null) {
     settingsLoading,
     settings?.welcome_modal_dismissed,
     settings?.preferences_set,
-    checkProfileComplete,
-    dismissWelcomeModal,
   ]);
 
   const dismissForSession = useCallback(() => {

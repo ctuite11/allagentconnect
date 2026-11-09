@@ -23,7 +23,7 @@ export default function RequestAccessPage() {
     <>
       <Seo
         title="Request Access | All Agent Connect"
-        description="Choose agent or developer access to All Agent Connect."
+        description="Request AAC agent access. Licensed real estate agents can apply for a private, verified network for buyer needs and property collaboration."
         canonical="https://allagentconnect.com/request-access"
       />
       <AuthShell maxWidth="1000px">

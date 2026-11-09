@@ -1,3 +1,4 @@
+import { listingDaysOnMarket, formatListingMarketDate } from "@/lib/listingDaysOnMarket";
 import { useState, useEffect } from "react";
 import { useListingBanners } from "@/hooks/useListingBanners";
 import { Card, CardContent } from "@/components/ui/card";
@@ -91,6 +92,7 @@ interface ListingCardProps {
     listing_type?: string | null;
     created_at?: string;
     active_date?: string | null;
+    list_date?: string | null;
     listing_number?: string | null;
     publish_to_dcmls?: boolean;
     is_relisting?: boolean;
@@ -599,17 +601,7 @@ const ListingCard = ({
     return `${buyerCount} Buyer Match${buyerCount !== 1 ? 'es' : ''}`;
   };
   const matchButtonStyle = getMatchButtonStyle();
-  const calculateDaysOnMarket = () => {
-    // Use active_date (MLS date) if available, otherwise fall back to created_at
-    const marketDate = listing.active_date || listing.created_at;
-    if (!marketDate) return 0;
-    const activeDate = new Date(marketDate);
-    const today = new Date();
-    const diffTime = Math.abs(today.getTime() - activeDate.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays;
-  };
-  const daysOnMarket = calculateDaysOnMarket();
+  const daysOnMarket = listingDaysOnMarket(listing);
 
   // Compact view (for HotSheets and search results)
   if (viewMode === 'compact') {
@@ -876,7 +868,7 @@ const ListingCard = ({
               <CircleParking className="h-3.5 w-3.5 shrink-0 text-[#0E56F5]" aria-hidden />
               <span className="font-medium">{listing.total_parking_spaces ?? listing.garage_spaces ?? 0}</span>
             </div>
-            {daysOnMarket >= 0 ? (
+            {daysOnMarket !== null ? (
               <div className="flex items-center gap-1">
                 <span className="text-[10px] font-medium uppercase tracking-wide text-neutral-500">DOM</span>
                 <span className="font-medium">{daysOnMarket}</span>
@@ -1163,7 +1155,7 @@ const ListingCard = ({
         openHouseBanner={openHouseBanner}
         openHouseBanners={openHouseBanners}
         nextOpenHouse={nextOpenHouse}
-        dateDisplay={listing.created_at ? format(new Date(listing.created_at), "MM/dd/yy") : null}
+        dateDisplay={formatListingMarketDate(listing)}
         onListingNumberClick={() => {
           sessionStorage.setItem('fromAgentDashboard', 'true');
           navigate(`/property/${listing.id}?from=my-listings`, { state: { fromAgentDashboard: true } });
@@ -1184,7 +1176,7 @@ const ListingCard = ({
             {listing.listing_number && <span>•</span>}
             <Badge variant="secondary" className="text-xs">Relisted</Badge>
           </>}
-          {listing.listing_stats?.cumulative_active_days && listing.listing_stats.cumulative_active_days > daysOnMarket && <>
+          {listing.listing_stats?.cumulative_active_days && daysOnMarket !== null && listing.listing_stats.cumulative_active_days > daysOnMarket && <>
             <span>•</span>
             <Badge variant="secondary" className="text-xs">
               {listing.listing_stats.cumulative_active_days} total active

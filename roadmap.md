@@ -154,3 +154,27 @@
 - [x] Capture recovery landing at boot (hash stripped before lazy /auth/callback rendered); admin reset now uses /auth/callback; reset no longer calls mark_agent_activated; 10 regression tests.
 - [x] Redirect allowlist checked: production + preview callbacks allowed; no fallback involved.
 - [ ] Production deploy — waits on Chris's approval; then his one controlled reset test.
+
+- [x] Admin Send Email: comma-separated recipients (validate all first, retry only failed, say "Queued" not "Delivered"; frontend-only)
+
+- [ ] Compare Success Hub checklist lookups 24h after the 2026-10-29 01:47 UTC fix (baseline: profile 125,415 / Hot Sheet 125,412). Waiting on 24h to pass.
+
+## SEO (Oct 31) — staged only, no production deploy without approval
+- [ ] P1 Sitemap privacy: only verified + publicly visible agents, only publicly authorized listings; check direct URLs of hidden agents/private listings; Google removal needs
+- [ ] P2 Homepage title/description/canonical/JSON-LD consistent in index.html and React SEO component
+- [ ] P3 Visible, compliant HTML fallback (no hidden text, no design change)
+- [ ] P4 Explain Search Console verification + sitemap submission
+- [ ] List backend changes for Weborik's migration
+- [~] DEFERRED by user (Oct 31, SEO-only focus): PRIVATE NETWORK: signed-out visitors see only homepage, Request Access, Login, info/legal pages. Read-only review of all anon data access (tables, views, functions, storage, routes, share links), Google-indexed private URLs + removal process, affected sharing features. Sitemap = marketing pages only. No deploy without approval.
+
+- [ ] Oct 31 refocus (staged + tested in private copy, awaiting 'Make it live'): SEO only — title/description/JSON-LD, visible HTML fallback, marketing-only sitemap, GSC prep, other tech SEO issues. Staged + tested, no deploy without approval.
+- [ ] About page + Organization/Person structured data in private test copy (awaiting approval before live)
+
+## Privacy lockdown (approved for isolated testing only, 2026-11-01)
+- [ ] Isolated draft: verify separate DB + storage from production
+- [ ] Backend lockdown + full anon/authenticated function review (verified-membership gating)
+- [ ] Private buckets for listing photos, floor plans, agent-match photos, email attachments; Email Option B (no access codes in image URLs)
+- [ ] Route guards, social-preview off, server noindex headers verified on all 3 domains (redirects, edge/server functions)
+- [ ] Test matrix, rollback that doesn't reopen data, release sequence, Nenad handover doc
+- [ ] Production deploy — BLOCKED on Chris's explicit approval
+- Note: GSC removals for /agent/ and /property/ already submitted by Chris; don't repeat

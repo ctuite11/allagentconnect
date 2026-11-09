@@ -725,6 +725,19 @@ const HotSheets = ({
       }
       await fetchData(user.id);
       setEditingHotSheetId(null);
+    } else if (user) {
+      // Refresh list so the new sheet is visible on My Hot Sheets.
+      await fetchData(user.id);
+      const { data: created } = await supabase
+        .from("hot_sheets")
+        .select("sheet_type")
+        .eq("id", hotSheetId)
+        .maybeSingle();
+      // Personal sheets don't need Review Matches first-batch; stay on My Hot Sheets.
+      if ((created as { sheet_type?: string | null } | null)?.sheet_type === "personal") {
+        return;
+      }
+      navigate(`/hot-sheets/${hotSheetId}/review`);
     } else {
       navigate(`/hot-sheets/${hotSheetId}/review`);
     }

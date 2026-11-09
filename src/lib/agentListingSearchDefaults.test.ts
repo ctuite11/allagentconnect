@@ -6,11 +6,21 @@ import {
   RESIDENTIAL_RENTAL_PROPERTY_TYPE,
   defaultPropertyTypesForAgentListingSearch,
   propertyTypesForAgentListingQuery,
+  parseAgentSearchPositivePrice,
   syncAgentListingSearchPropertyTypes,
   syncListingTypeFromPropertyTypes,
 } from "@/lib/agentListingSearchDefaults";
 
 describe("agent listing search property types", () => {
+  it("keeps Off Market in search and parses comma-formatted prices", () => {
+    expect(initialFilters.statuses).toContain("off_market");
+    expect(initialFilters.statuses).not.toContain("draft");
+    expect(parseAgentSearchPositivePrice("1,200,000")).toBe(1200000);
+    expect(parseAgentSearchPositivePrice("$1,400,000")).toBe(1400000);
+    expect(parseAgentSearchPositivePrice("")).toBeNull();
+    expect(parseAgentSearchPositivePrice("not-a-price")).toBeNull();
+  });
+
   it("does not offer Residential Rental for sale or rent", () => {
     const values = AGENT_LISTING_SEARCH_PROPERTY_TYPES.map((type) => type.value);
     expect(values).not.toContain(RESIDENTIAL_RENTAL_PROPERTY_TYPE);

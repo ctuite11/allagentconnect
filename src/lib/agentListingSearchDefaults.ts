@@ -23,6 +23,12 @@ export const AGENT_LISTING_SEARCH_PROPERTY_TYPES = PROPERTY_TYPES.filter(
 
 type ListingType = FilterState["listingType"];
 
+/** Positive price, accepts comma-formatted and currency inputs. */
+export function parseAgentSearchPositivePrice(raw: string): number | null {
+  const value = Number(raw.replace(/[,$\s]/g, ""));
+  return Number.isFinite(value) && value > 0 ? value : null;
+}
+
 /** Clamp price fields when switching between sale and rent bounds. */
 export function clampListingSearchPrices(
   filters: Pick<FilterState, "priceMin" | "priceMax">,
@@ -32,13 +38,13 @@ export function clampListingSearchPrices(
     listingType === "for_rent"
       ? { min: RENT_PRICE_ABS_MIN, max: RENT_PRICE_ABS_MAX }
       : { min: SALE_PRICE_ABS_MIN, max: SALE_PRICE_ABS_MAX };
-  const pmin = filters.priceMin ? parseInt(filters.priceMin, 10) : NaN;
-  const pmax = filters.priceMax ? parseInt(filters.priceMax, 10) : NaN;
+  const pmin = parseAgentSearchPositivePrice(filters.priceMin);
+  const pmax = parseAgentSearchPositivePrice(filters.priceMax);
   return {
     priceMin:
-      Number.isFinite(pmin) && pmin >= bounds.min && pmin <= bounds.max ? filters.priceMin : "",
+      pmin !== null && pmin >= bounds.min && pmin <= bounds.max ? filters.priceMin : "",
     priceMax:
-      Number.isFinite(pmax) && pmax >= bounds.min && pmax <= bounds.max ? filters.priceMax : "",
+      pmax !== null && pmax >= bounds.min && pmax <= bounds.max ? filters.priceMax : "",
   };
 }
 

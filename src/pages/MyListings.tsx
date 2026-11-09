@@ -1,3 +1,4 @@
+import { listingDaysOnMarket } from "@/lib/listingDaysOnMarket";
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -541,8 +542,8 @@ function MyListingsView({
     result = [...result].sort((a, b) => {
       switch (sortKey) {
         case "dom": {
-          const domA = a.list_date ? Math.floor((Date.now() - new Date(a.list_date).getTime()) / 86400000) : 0;
-          const domB = b.list_date ? Math.floor((Date.now() - new Date(b.list_date).getTime()) / 86400000) : 0;
+          const domA = listingDaysOnMarket(a) ?? 0;
+          const domB = listingDaysOnMarket(b) ?? 0;
           return domB - domA;
         }
         case "price": {

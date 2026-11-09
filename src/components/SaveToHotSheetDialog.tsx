@@ -323,7 +323,7 @@ const SaveToHotSheetDialog = ({ open, onOpenChange, selectedListingIds, currentS
       onOpenChange(false);
       if (createdHotSheet && selectedClients.length > 0) {
         // Hand the selected listings to Review as the first batch. Nothing is
-        // sent here — the agent must click Send First Batch (& Invite) there.
+        // sent here — the agent must click Send Invite with Listings / Send First Batch there.
         toast.success("Hot Sheet saved. Review and send the first batch.");
         navigate(`/hot-sheets/${createdHotSheet.id}/review`, {
           state: {
@@ -332,7 +332,9 @@ const SaveToHotSheetDialog = ({ open, onOpenChange, selectedListingIds, currentS
           },
         });
       } else {
-        toast.success("Hot sheet saved successfully!");
+        // Personal / no-recipient save — land on My Hot Sheets so the sheet is visible.
+        toast.success("Hot Sheet saved successfully.");
+        navigate("/agent/hot-sheets");
       }
     } catch (error: any) {
       console.error("Error saving hot sheet:", error);

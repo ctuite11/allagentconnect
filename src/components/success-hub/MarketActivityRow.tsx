@@ -7,7 +7,9 @@ import { mapMarketRowToListingCard } from "@/components/success-hub/listingCardA
 import { SuccessHubListingCard } from "@/components/success-hub/SuccessHubListingCard";
 import { SUCCESS_HUB_LISTINGS_GRID } from "@/components/success-hub/successHubListingLayout";
 import { BulkShareListingsDialog } from "@/components/BulkShareListingsDialog";
+import { Button } from "@/components/ui/button";
 import { LISTING_STATUS } from "@/constants/status";
+import { ROUTES } from "@/constants/routes";
 import { useAuthRole } from "@/hooks/useAuthRole";
 import { getPageData, setPageData } from "@/lib/pageDataCache";
 
@@ -308,12 +310,42 @@ export function MarketActivityRow() {
           Newest and pre-market listings across AAC — tap a card for details.
         </p>
       </div>
+      <Button
+        type="button"
+        size="sm"
+        className="shrink-0"
+        onClick={() => navigate(ROUTES.LISTING_SEARCH)}
+      >
+        Search Listings
+      </Button>
+    </div>
+  );
+
+  const marketTypeToggle = (
+    <div className="ml-auto flex shrink-0 items-center gap-1 rounded-md border border-neutral-200 bg-white p-1 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
       <button
         type="button"
-        onClick={() => navigate("/listing-search")}
-        className="shrink-0 rounded-sm text-sm font-medium text-neutral-700 underline-offset-2 transition-colors hover:text-neutral-900 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40 focus-visible:ring-offset-2"
+        onClick={() => setMarketTypeFilter("sale")}
+        className={[
+          "h-7 whitespace-nowrap rounded-sm px-2 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40 focus-visible:ring-offset-2",
+          marketTypeFilter === "sale"
+            ? "bg-neutral-900 text-white"
+            : "bg-white text-neutral-800 hover:bg-neutral-50",
+        ].join(" ")}
       >
-        Search
+        Sale
+      </button>
+      <button
+        type="button"
+        onClick={() => setMarketTypeFilter("rental")}
+        className={[
+          "h-7 whitespace-nowrap rounded-sm px-2 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40 focus-visible:ring-offset-2",
+          marketTypeFilter === "rental"
+            ? "bg-neutral-900 text-white"
+            : "bg-white text-neutral-800 hover:bg-neutral-50",
+        ].join(" ")}
+      >
+        Rental
       </button>
     </div>
   );
@@ -342,24 +374,6 @@ export function MarketActivityRow() {
     );
   }
 
-  if (visibleListings.length === 0) {
-    return (
-      <div className="min-w-0">
-        {headerBlock}
-        <div className="rounded-xl border border-dashed border-neutral-200 bg-white px-4 py-4 text-center">
-          <p className="text-sm text-neutral-600">No new market activity yet.</p>
-          <button
-            type="button"
-            onClick={() => navigate("/listing-search")}
-            className="mt-2 rounded-sm text-sm font-medium text-neutral-700 underline-offset-2 transition-colors hover:text-neutral-900 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40 focus-visible:ring-offset-2"
-          >
-            Search listings
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-w-0">
       {headerBlock}
@@ -378,32 +392,7 @@ export function MarketActivityRow() {
           onSuccessfulShare={clearSelection}
         />
 
-        <div className="ml-auto flex shrink-0 items-center gap-1 rounded-md border border-neutral-200 bg-white p-1 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
-          <button
-            type="button"
-            onClick={() => setMarketTypeFilter("sale")}
-            className={[
-              "h-7 whitespace-nowrap rounded-sm px-2 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40 focus-visible:ring-offset-2",
-              marketTypeFilter === "sale"
-                ? "bg-neutral-900 text-white"
-                : "bg-white text-neutral-800 hover:bg-neutral-50",
-            ].join(" ")}
-          >
-            Sale
-          </button>
-          <button
-            type="button"
-            onClick={() => setMarketTypeFilter("rental")}
-            className={[
-              "h-7 whitespace-nowrap rounded-sm px-2 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400/40 focus-visible:ring-offset-2",
-              marketTypeFilter === "rental"
-                ? "bg-neutral-900 text-white"
-                : "bg-white text-neutral-800 hover:bg-neutral-50",
-            ].join(" ")}
-          >
-            Rental
-          </button>
-        </div>
+        {marketTypeToggle}
 
         {selectedCount > 0 ? (
           <button
@@ -416,19 +405,25 @@ export function MarketActivityRow() {
         ) : null}
       </div>
 
-      {/* Same responsive grid as My listings — cards shrink to the section width (no forced horizontal scroll). */}
-      <div className={SUCCESS_HUB_LISTINGS_GRID}>
-        {visibleListings.map((listing) => (
-          <div key={listing.id} className="min-w-0">
-            <SuccessHubListingCard
-              listing={mapMarketRowToListingCard(listing)}
-              compactSelectionAccent="aacGreen"
-              onSelect={(id) => toggleSelection(id)}
-              isSelected={selectedIds.has(listing.id)}
-            />
-          </div>
-        ))}
-      </div>
+      {visibleListings.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-neutral-200 bg-white px-4 py-4 text-center">
+          <p className="text-sm text-neutral-600">No new market activity yet.</p>
+        </div>
+      ) : (
+        /* Same responsive grid as My listings — cards shrink to the section width (no forced horizontal scroll). */
+        <div className={SUCCESS_HUB_LISTINGS_GRID}>
+          {visibleListings.map((listing) => (
+            <div key={listing.id} className="min-w-0">
+              <SuccessHubListingCard
+                listing={mapMarketRowToListingCard(listing)}
+                compactSelectionAccent="aacGreen"
+                onSelect={(id) => toggleSelection(id)}
+                isSelected={selectedIds.has(listing.id)}
+              />
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

@@ -54,10 +54,53 @@
     Cache-Control = "public, max-age=31536000, immutable"
     Netlify-CDN-Cache-Control = "public, max-age=31536000, immutable"
 
-[[redirects]]
-  from = "/sitemap.xml"
-  to = "https://kwfqjnepesiihjkdnxou.supabase.co/functions/v1/sitemap"
-  status = 200
+# Static marketing-only sitemap (public/sitemap.xml).
+[[headers]]
+  for = "/sitemap.xml"
+  [headers.values]
+    Content-Type = "application/xml; charset=utf-8"
+
+# Initial HTML metadata for approved public AAC marketing/legal routes only.
+# Do not apply to private, login, listing or DCMLS consumer routes.
+[[edge_functions]]
+  path = "/about"
+  function = "public-page-seo"
+
+[[edge_functions]]
+  path = "/request-access"
+  function = "public-page-seo"
+
+[[edge_functions]]
+  path = "/faq"
+  function = "public-page-seo"
+
+[[edge_functions]]
+  path = "/off-market-listing-network"
+  function = "public-page-seo"
+
+[[edge_functions]]
+  path = "/agent-rules"
+  function = "public-page-seo"
+
+[[edge_functions]]
+  path = "/privacy"
+  function = "public-page-seo"
+
+[[edge_functions]]
+  path = "/terms"
+  function = "public-page-seo"
+
+[[edge_functions]]
+  path = "/cookies"
+  function = "public-page-seo"
+
+[[edge_functions]]
+  path = "/fair-housing"
+  function = "public-page-seo"
+
+[[edge_functions]]
+  path = "/disclosures"
+  function = "public-page-seo"
 
 [[edge_functions]]
   path = "/property/*"

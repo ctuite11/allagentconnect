@@ -1,26 +1,56 @@
-import React, { lazy, Suspense, useLayoutEffect } from "react";
+import React, { Suspense, useEffect, useLayoutEffect } from "react";
 import { Seo } from "@/components/Seo";
 import { isDcmlsHost } from "@/lib/host";
+import { lazyWithRetry } from "@/lib/lazyWithRetry";
 import HeroSection from "@/components/home-v2/HeroSection";
 import ProofStrip from "@/components/home-v2/ProofStrip";
 // Below-the-fold sections are lazy so they don't inflate the initial JS payload
 // on the public landing page. Hero + ProofStrip stay eager for LCP/FCP.
-const NetworkIntelligence = lazy(() => import("@/components/home-v2/NetworkIntelligence"));
-const EcosystemSection = lazy(() => import("@/components/home-v2/EcosystemSection"));
-const HowAgentsUseAAC = lazy(() => import("@/components/home-v2/HowAgentsUseAAC"));
-const ScalePersistence = lazy(() => import("@/components/home-v2/ScalePersistence"));
-const GCIBenefits = lazy(() => import("@/components/home-v2/GCIBenefits"));
-const FinalCTA = lazy(() => import("@/components/home-v2/FinalCTA"));
-const FooterV2 = lazy(() => import("@/components/home-v2/FooterV2"));
+const NetworkIntelligence = lazyWithRetry(() => import("@/components/home-v2/NetworkIntelligence"));
+const EcosystemSection = lazyWithRetry(() => import("@/components/home-v2/EcosystemSection"));
+const HowAgentsUseAAC = lazyWithRetry(() => import("@/components/home-v2/HowAgentsUseAAC"));
+const ScalePersistence = lazyWithRetry(() => import("@/components/home-v2/ScalePersistence"));
+const GCIBenefits = lazyWithRetry(() => import("@/components/home-v2/GCIBenefits"));
+const FinalCTA = lazyWithRetry(() => import("@/components/home-v2/FinalCTA"));
+const FooterV2 = lazyWithRetry(() => import("@/components/home-v2/FooterV2"));
+const MemberPreviewSection = lazyWithRetry(() => import("@/components/home-v2/MemberPreviewSection"));
+const FounderTrustSection = lazyWithRetry(() => import("@/components/home-v2/FounderTrustSection"));
+const AgentStoriesSection = lazyWithRetry(() => import("@/components/home-v2/AgentStoriesSection"));
+
+const HOMEPAGE_DESCRIPTION =
+  "A private network for verified real estate agents. Share buyer needs, properties being prepared for sale, and connect directly across brokerages.";
 
 const HOMEPAGE_JSON_LD = {
   "@context": "https://schema.org",
-  "@type": "Organization",
-  name: "All Agent Connect",
-  url: "https://allagentconnect.com",
-  description:
-    "A private, agent-only network for off-market and coming-soon listings, powered by real buyer and renter needs.",
-  sameAs: [],
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://allagentconnect.com/#organization",
+      name: "All Agent Connect",
+      url: "https://allagentconnect.com/",
+      logo: "https://allagentconnect.com/og-image.jpg?v=20260902",
+      description: HOMEPAGE_DESCRIPTION,
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://allagentconnect.com/#website",
+      name: "All Agent Connect",
+      url: "https://allagentconnect.com/",
+      description: HOMEPAGE_DESCRIPTION,
+      publisher: { "@id": "https://allagentconnect.com/#organization" },
+    },
+    {
+      "@type": "Service",
+      "@id": "https://allagentconnect.com/#agent-network",
+      name: "All Agent Connect verified agent network",
+      serviceType: "Private real estate agent collaboration network",
+      audience: { "@type": "Audience", audienceType: "Licensed real estate agents" },
+      areaServed: { "@type": "AdministrativeArea", name: "Massachusetts" },
+      provider: { "@id": "https://allagentconnect.com/#organization" },
+      description: HOMEPAGE_DESCRIPTION,
+      url: "https://allagentconnect.com/",
+    },
+  ],
 };
 
 /**
@@ -52,16 +82,38 @@ const HomepageV2 = () => {
     pinHomeHeroShellToDocumentScroll();
   }, []);
 
+  // Home sections below the hero are loaded asynchronously. When a visitor
+  // follows a footer anchor from another page, the browser may try to scroll
+  // before the target section exists. Scroll after the target actually mounts.
+  useEffect(() => {
+    const sectionId = window.location.hash.slice(1);
+    if (sectionId !== "how-it-works" && sectionId !== "member-preview") return;
+
+    const scrollWhenReady = () => {
+      const target = document.getElementById(sectionId);
+      if (!target) return false;
+      requestAnimationFrame(() => target.scrollIntoView({ block: "start" }));
+      return true;
+    };
+
+    if (scrollWhenReady()) return;
+    const observer = new MutationObserver(() => {
+      if (scrollWhenReady()) observer.disconnect();
+    });
+    observer.observe(document.getElementById("root") || document.body, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <>
       <Seo
         title={
           isDcmls
             ? "See the Market Before It Hits the MLS"
-            : "All Agent Connect | Private Listing Network"
+            : "All Agent Connect | Private Network for Real Estate Agents"
         }
-        description="The private network where agents share off-market listings, buyer demand, and deal intelligence before properties go public."
-        canonical={isDcmls ? undefined : "https://allagentconnect.com"}
+        description={HOMEPAGE_DESCRIPTION}
+        canonical={isDcmls ? undefined : "https://allagentconnect.com/"}
         brandType={isDcmls ? "dcmls" : "aac"}
         jsonLd={HOMEPAGE_JSON_LD}
       />
@@ -81,6 +133,9 @@ const HomepageV2 = () => {
             <NetworkIntelligence />
             <EcosystemSection />
             <HowAgentsUseAAC />
+            <MemberPreviewSection />
+            <AgentStoriesSection />
+            <FounderTrustSection />
             <ScalePersistence />
             <GCIBenefits />
             <FinalCTA />
