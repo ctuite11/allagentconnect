@@ -1,8 +1,11 @@
-import "../../supabase/functions/_shared/migrationRuntime.ts";
+import { createMigrationFetch } from "../../supabase/functions/_shared/migrationSafety.ts";
 // Same-origin password reset endpoint with database-backed rate limiting
 // Uses Supabase RPC for durable rate limits across cold starts
 
 import { createClient } from "https://esm.sh/v135/@supabase/supabase-js@2.42.3?target=denonext";
+
+// Scope the guard to application requests; Netlify's context.next() needs native fetch.
+const migrationFetch = createMigrationFetch(globalThis.fetch.bind(globalThis));
 
 interface PasswordResetRequest {
   email: string;
@@ -22,7 +25,7 @@ async function checkRateLimit(
   windowSeconds: number,
   limit: number
 ): Promise<RateLimitResult> {
-  const supabase = createClient(supabaseUrl, supabaseAnonKey);
+  const supabase = createClient(supabaseUrl, supabaseAnonKey, { global: { fetch: migrationFetch } });
   
   const { data, error } = await supabase.rpc('rate_limit_consume', {
     p_key: key,
@@ -185,7 +188,7 @@ export default async function handler(request: Request, context: any) {
     }
 
     // Generate recovery link using Supabase Admin API
-    const generateLinkResponse = await fetch(`${SUPABASE_URL}/auth/v1/admin/generate_link`, {
+    const generateLinkResponse = await migrationFetch(`${SUPABASE_URL}/auth/v1/admin/generate_link`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -231,7 +234,7 @@ export default async function handler(request: Request, context: any) {
     console.log("Recovery link generated successfully");
 
     // Send branded email via Resend with locked template
-    const emailResponse = await fetch("https://api.resend.com/emails", {
+    const emailResponse = await migrationFetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

@@ -1,4 +1,3 @@
-import "../../supabase/functions/_shared/migrationRuntime.ts";
 import { isPublicMarketingPath } from "../../supabase/functions/_shared/privacyRoutes.ts";
 
 export default async function handler(request: Request, context: { next(): Promise<Response> }) {

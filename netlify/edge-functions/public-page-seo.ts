@@ -1,4 +1,3 @@
-import "../../supabase/functions/_shared/migrationRuntime.ts";
 /**
  * Provide route-specific initial HTML SEO metadata before the client-side SPA
  * hydrates. This runs ONLY on the ten explicitly named PUBLIC AAC pages.

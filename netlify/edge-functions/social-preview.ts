@@ -1,4 +1,3 @@
-import "../../supabase/functions/_shared/migrationRuntime.ts";
 import { PRIVATE_PREVIEW_HTML, PRIVATE_PREVIEW_HEADERS } from "../../supabase/functions/_shared/privatePreview.ts";
 
 export default async function handler(request: Request, context: { next(): Promise<Response> }) {

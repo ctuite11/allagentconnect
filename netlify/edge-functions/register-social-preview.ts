@@ -1,4 +1,7 @@
-import "../../supabase/functions/_shared/migrationRuntime.ts";
+import { createMigrationFetch } from "../../supabase/functions/_shared/migrationSafety.ts";
+
+// Scope the guard to application requests; Netlify's context.next() needs native fetch.
+const migrationFetch = createMigrationFetch(globalThis.fetch.bind(globalThis));
 const CRAWLER_REGEX = /facebookexternalhit|facebot|Twitterbot|LinkedInBot|pinterest|slackbot|whatsapp|telegrambot|discordbot/i;
 
 // Derive Supabase function URL from environment variable
@@ -30,7 +33,7 @@ export default async function handler(request: Request, context: any) {
     const supabaseFunctionUrl = getSupabaseFunctionUrl();
     const proxyUrl = `${supabaseFunctionUrl}/property/${listingId}`;
     
-    const response = await fetch(proxyUrl, {
+    const response = await migrationFetch(proxyUrl, {
       headers: {
         "User-Agent": userAgent,
         "X-Forwarded-Host": url.hostname,
