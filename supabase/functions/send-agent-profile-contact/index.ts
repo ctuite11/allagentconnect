@@ -1,4 +1,9 @@
 import "../_shared/migrationRuntime.ts";
+// @auth-classification: user-jwt
+// Verified network correspondence or publication-scoped DCMLS intake.
+import { verifiedPrivacyClient } from "../_shared/privacyAuth.ts";
+import { assertMigrationDeliveryAllowed } from "../_shared/migrationSafety.ts";
+import { verifyTurnstileToken, TURNSTILE_GENERIC_ERROR } from "../_shared/verifyTurnstile.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.0";
 import { buildAacEmail } from "../_shared/aacEmailTemplate.ts";
@@ -7,10 +12,14 @@ const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
 interface AgentProfileContactRequest {
+  agentId?: string;
+  dcmls?: boolean;
+  turnstile_token?: string;
   agentEmail: string;
   agentName: string;
   senderName: string;
@@ -43,10 +52,11 @@ async function checkRateLimit(
 
   if (error) {
     console.error("[rate-limit] RPC error:", error);
-    return { allowed: true, remaining: limit, reset_at: new Date().toISOString(), current_count: 0 };
+    return { allowed: false, remaining: 0, reset_at: new Date(Date.now() + 60000).toISOString(), current_count: limit };
   }
 
-  return data as RateLimitResult;
+  const row = Array.isArray(data) ? data[0] : data;
+  return row?.allowed === true ? row : { allowed: false, remaining: 0, reset_at: new Date(Date.now() + 60000).toISOString(), current_count: limit };
 }
 
 function build429Response(resetAt: string): Response {
@@ -79,39 +89,60 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  if (req.method !== "POST") return new Response(null, { status: 405, headers: corsHeaders });
+
   try {
+    const raw = await req.text();
+    if (raw.length > 16384) return new Response(JSON.stringify({ error: "Invalid message" }), { status: 400, headers: corsHeaders });
+    const body: AgentProfileContactRequest = JSON.parse(raw);
+    const { agentId, dcmls, senderName, senderEmail, senderPhone, message, subject, turnstile_token } = body;
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (typeof senderName !== "string" || !senderName.trim() || senderName.length > 100 ||
+      typeof senderEmail !== "string" || senderEmail.length > 254 || !emailPattern.test(senderEmail) ||
+      (senderPhone != null && (typeof senderPhone !== "string" || senderPhone.length > 32)) ||
+      typeof message !== "string" || message.length > 5000 ||
+      (subject != null && (typeof subject !== "string" || subject.length > 200 || /[\r\n]/.test(subject))) ||
+      (agentId != null && !/^[0-9a-f-]{36}$/i.test(agentId)) || (dcmls != null && typeof dcmls !== "boolean")) {
+      return new Response(JSON.stringify({ error: "Invalid message" }), { status: 400, headers: corsHeaders });
+    }
+    const caller = await verifiedPrivacyClient(req);
+    if (!caller && dcmls !== true) return new Response(JSON.stringify({ error: "Not authorized" }), { status: 403, headers: corsHeaders });
+    assertMigrationDeliveryAllowed();
+    if (dcmls === true) {
+      if (!agentId) return new Response(JSON.stringify({ error: "Agent is required" }), { status: 400, headers: corsHeaders });
+      const check = await verifyTurnstileToken(turnstile_token, req);
+      if (!check.ok) return new Response(JSON.stringify({ error: TURNSTILE_GENERIC_ERROR }), { status: 403, headers: corsHeaders });
+    }
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
-    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY") || Deno.env.get("SUPABASE_PUBLISHABLE_KEY");
-
-    // Get IP for rate limiting
-    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || 
-               req.headers.get("x-real-ip") || 
-               "unknown";
-
-    // Database-backed rate limiting: 10 contact emails per minute per IP
-    if (supabaseUrl && supabaseAnonKey) {
-      const rateLimitKey = `route:send-agent-profile-contact|ip:${ip}`;
-      const rateLimitResult = await checkRateLimit(supabaseUrl, supabaseAnonKey, rateLimitKey, 60, 10);
-      
-      if (!rateLimitResult.allowed) {
-        console.log(`[rate-limit] Blocked IP: ${ip}, count: ${rateLimitResult.current_count}`);
-        return build429Response(rateLimitResult.reset_at);
-      }
+    const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    if (!supabaseUrl || !SERVICE_KEY) return new Response(JSON.stringify({ error: "Server configuration unavailable" }), { status: 503, headers: corsHeaders });
+    const admin = createClient(supabaseUrl, SERVICE_KEY);
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || req.headers.get("x-real-ip") || "unknown";
+    const actor = dcmls === true ? `dcmls:${agentId}` : `user:${caller!.userId}`;
+    for (const [key, limit] of [["global", 120], [actor, 10], [`ip:${ip}`, 20]] as const) {
+      const rate = await checkRateLimit(supabaseUrl, SERVICE_KEY, `route:send-agent-profile-contact|${key}`, 60, limit);
+      if (!rate.allowed) return build429Response(rate.reset_at);
     }
 
-    const {
-      agentEmail,
-      agentName,
-      senderName,
-      senderEmail,
-      senderPhone,
-      message,
-      subject,
-    }: AgentProfileContactRequest = await req.json();
-
-    console.log("Sending profile contact email to agent:", agentEmail);
-
-    const firstName = (agentName || "").split(" ")[0] || "there";
+    let recipient: { email: string; first_name?: string; last_name?: string } | null = null;
+    if (dcmls === true) {
+      const { data, error } = await admin.rpc("get_dcmls_agent_profile", { p_id_or_code: agentId });
+      if (!error) recipient = data;
+    } else {
+      const { data: isAdmin } = await caller!.client.rpc("has_role", { _user_id: caller!.userId, _role: "admin" });
+      let query = caller!.client.from("agent_profiles").select("email,first_name,last_name");
+      if (agentId) query = query.eq("id", agentId);
+      else if (typeof body.agentEmail === "string" && body.agentEmail.length <= 254 && emailPattern.test(body.agentEmail)) query = query.eq("email", body.agentEmail.trim());
+      else return new Response(JSON.stringify({ error: "Agent is required" }), { status: 400, headers: corsHeaders });
+      const { data, error } = await query.maybeSingle();
+      if (error) throw error;
+      recipient = data;
+      // Administrators retain deliberate outreach to early-access contacts.
+      if (!recipient && !agentId && isAdmin === true) recipient = { email: body.agentEmail.trim(), first_name: typeof body.agentName === "string" ? body.agentName.slice(0,100) : "" };
+    }
+    if (!recipient?.email) return new Response(JSON.stringify({ error: "Agent unavailable" }), { status: 404, headers: corsHeaders });
+    const agentEmail = recipient.email;
+    const firstName = recipient.first_name || "there";
 
     const bodyHtml = `
       <p style="margin:0 0 12px;color:#334155;">Hi ${esc(firstName)},</p>
@@ -151,16 +182,6 @@ const handler = async (req: Request): Promise<Response> => {
       `Reply directly to ${senderEmail} to respond.`,
     ].join("\n");
 
-    const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-    if (!supabaseUrl || !SERVICE_KEY) {
-      console.error("[send-agent-profile-contact] Missing Supabase env");
-      return new Response(JSON.stringify({ error: "config" }), {
-        status: 500,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      });
-    }
-
-    const admin = createClient(supabaseUrl, SERVICE_KEY);
     const finalSubject = subject || `${senderName} sent you a message on All Agent Connect`;
 
     const { data: job, error: insertErr } = await admin
@@ -209,8 +230,8 @@ const handler = async (req: Request): Promise<Response> => {
   } catch (error: any) {
     console.error("Error sending profile contact email:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
-      { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      JSON.stringify({ error: error?.code === "MIGRATION_OUTBOUND_BLOCKED" ? "Delivery is paused" : "Could not queue message" }),
+      { status: error?.code === "MIGRATION_OUTBOUND_BLOCKED" ? 503 : 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
   }
 };

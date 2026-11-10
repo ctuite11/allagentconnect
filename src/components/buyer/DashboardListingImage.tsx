@@ -1,3 +1,4 @@
+import { PrivateImage } from "@/components/PrivateImage";
 import { useState } from "react";
 import AACMonogram from "@/components/ui/AACMonogram";
 
@@ -27,7 +28,7 @@ export function DashboardListingImage({
     );
   }
   return (
-    <img
+    <PrivateImage
       src={photoUrl}
       alt={alt}
       className={imageClassName}

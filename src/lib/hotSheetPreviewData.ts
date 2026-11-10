@@ -8,6 +8,7 @@ import { buildListingsQuery } from "@/lib/buildListingsQuery";
 export async function loadHotSheetPhotosAndCounts(
   supabase: SupabaseClient,
   sheets: { id: string; criteria: Record<string, unknown> | null }[],
+  options?: { buyerScope?: boolean },
 ): Promise<{ photosById: Record<string, string[]>; countsById: Record<string, number> }> {
   if (!sheets.length) {
     return { photosById: {}, countsById: {} };
@@ -16,7 +17,7 @@ export async function loadHotSheetPhotosAndCounts(
   const previewEntries = await Promise.all(
     sheets.map(async (sheet) => {
       try {
-        const { data: listings, error } = await buildListingsQuery(supabase, sheet.criteria || {}).limit(1000);
+        const { data: listings, error } = await buildListingsQuery(supabase, sheet.criteria || {}, options).limit(1000);
         if (error) {
           console.error("Failed to load preview listings for hot sheet", sheet.id, error);
           return [sheet.id, [] as string[], 0] as const;

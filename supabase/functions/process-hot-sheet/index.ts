@@ -3,6 +3,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { renderHotSheetMatchListingEmailCard } from "../_shared/listingEmailCard.ts";
 import { resolveEmailBaseUrl } from "../_shared/aacPublicUrl.ts";
+import { listingEmailPrivacy } from "../_shared/privacyEmail.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -158,7 +159,12 @@ const handler = async (req: Request): Promise<Response> => {
           const { data } = await adminClient.from("listings").select("*").in("id", missing);
           for (const l of data ?? []) listingCache.set(String(l.id), l);
         }
-        return ids.map((i) => listingCache.get(i)).filter(Boolean);
+        const { data: approved, error } = await adminClient.rpc("privacy_external_listing_ids", {
+          p_listing_ids: ids.slice(0, 200), p_hot_sheet_id: hotSheetId,
+        });
+        if (error) throw new Error("Listing sharing authorization unavailable");
+        const permitted = new Set(approved ?? []);
+        return ids.map((i) => listingCache.get(i)).filter(l => l && permitted.has(l.id));
       };
 
       for (const row of attached ?? []) {
@@ -199,7 +205,8 @@ const handler = async (req: Request): Promise<Response> => {
 
         const accessUrl = `${baseUrl}/client/hot-sheets/${hotSheetId}`;
         let listingsHtml = listings.slice(0, 5)
-          .map((l: any) => renderHotSheetMatchListingEmailCard(l, { baseUrl })).join("");
+          .map((l: any) => renderHotSheetMatchListingEmailCard(l, { baseUrl,
+            listingUrl: `${baseUrl}/client/shared-property/${l.id}?sheet=${hotSheetId}` })).join("");
         if (listings.length > 5) {
           listingsHtml += `<p style="color: #6b7280; margin: 16px 0;">And ${listings.length - 5} more ${listings.length - 5 === 1 ? "property" : "properties"}...</p>`;
         }
@@ -216,6 +223,7 @@ const handler = async (req: Request): Promise<Response> => {
           payload: {
             provider: "resend",
             template: "hot-sheet-alert",
+            privacy: listingEmailPrivacy(listings.map((l: any) => l.id), hotSheetId, "external"),
             to: [email],
             subject: `${listings.length} New Properties Match Your Search - ${hotSheet.name}`,
             variables: { userName: clientName, hotSheetName: hotSheet.name, matchCount: listings.length, listingsHtml },
@@ -233,6 +241,7 @@ const handler = async (req: Request): Promise<Response> => {
             payload: {
               provider: "resend",
               template: "hot-sheet-alert",
+              privacy: listingEmailPrivacy(listings.map((l: any) => l.id), hotSheetId, "agent"),
               to: [agentProfile.email.toLowerCase().trim()],
               subject: `Copy: Hot Sheet sent to ${clientName}`,
               variables: {
@@ -536,6 +545,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (shouldSendEmail) {
       const recipientSet = new Set<string>();
+      let agentRecipient: string | null = null;
       
       if (hotSheet.notify_agent_email) {
         const { data: agentProfile } = await supabaseClient
@@ -545,7 +555,7 @@ const handler = async (req: Request): Promise<Response> => {
           .single();
         
         if (agentProfile?.email) {
-          recipientSet.add(agentProfile.email.toLowerCase().trim());
+          agentRecipient = agentProfile.email.toLowerCase().trim();
           console.log("Added agent email:", agentProfile.email);
         }
       }
@@ -581,18 +591,22 @@ const handler = async (req: Request): Promise<Response> => {
         }
       }
 
-      const recipients = Array.from(recipientSet);
-      console.log("Final recipients (deduplicated):", recipients);
-
-      if (recipients.length > 0) {
+      const { data: approvedIds, error: approvalError } = await adminClient.rpc("privacy_external_listing_ids", {
+        p_listing_ids: newListings.map((l: any) => l.id).slice(0, 200), p_hot_sheet_id: hotSheetId,
+      });
+      if (approvalError) throw new Error("Listing sharing authorization unavailable");
+      const approved = new Set(approvedIds ?? []);
+      const externalListings = newListings.filter((l: any) => approved.has(l.id));
+      const groups: Array<{ audience: "agent" | "external"; recipients: string[]; listings: any[] }> = [];
+      if (agentRecipient) groups.push({ audience: "agent", recipients: [agentRecipient], listings: newListings });
+      if (recipientSet.size && externalListings.length) groups.push({ audience: "external", recipients: [...recipientSet], listings: externalListings });
+      if (groups.length > 0) {
+        for (const group of groups) {
+        const recipients = group.recipients;
+        const deliveryListings = group.listings;
         // Create share token BEFORE sending email
         const token = crypto.randomUUID();
-        console.log("Creating share token for client hotsheet:", {
-          token,
-          hot_sheet_id: hotSheet.id,
-          agent_id: hotSheet.user_id,
-          client_id: hotSheet.client_id
-        });
+        // Do not log the bearer token or invitation payload.
         
         // Get client email from hot_sheet_clients junction table OR from criteria
         let clientEmail = null;
@@ -640,7 +654,7 @@ const handler = async (req: Request): Promise<Response> => {
               client_phone: clientPhone,
               suppress_initial_matches: true,
             },
-            expires_at: null
+            expires_at: new Date(Date.now() + 90 * 86400000).toISOString()
           })
           .select()
           .single();
@@ -650,27 +664,26 @@ const handler = async (req: Request): Promise<Response> => {
           throw new Error(`Failed to create share token: ${tokenError.message}`);
         }
         
-        console.log("✅ Share token created successfully:", {
-          token: tokenRow.token,
-          payload: tokenRow.payload
-        });
+        console.log("Share link created for scoped Hot Sheet delivery");
 
         const baseUrl = resolveEmailBaseUrl(Deno.env.get("EMAIL_BASE_URL"));
         const accessUrl = `${baseUrl}/client-hot-sheet/${token}`;
         
         // Render compact AAC listing cards (same as message notification emails)
-        const listingsHtml = newListings
+        const listingsHtml = deliveryListings
           .slice(0, 5)
-          .map((listing: any) => renderHotSheetMatchListingEmailCard(listing, { baseUrl }))
+          .map((listing: any) => renderHotSheetMatchListingEmailCard(listing, { baseUrl,
+            listingUrl: group.audience === "agent" ? `${baseUrl}/property/${listing.id}`
+              : `${baseUrl}/s/${token}?kind=hotsheet&listing=${listing.id}` }))
           .join('');
 
         // Wrap with overflow note and CTA
         let fullListingsHtml = listingsHtml;
         
-        if (newListings.length > 5) {
+        if (deliveryListings.length > 5) {
           fullListingsHtml += `
             <p style="color: #6b7280; margin: 16px 0;">
-              And ${newListings.length - 5} more ${newListings.length - 5 === 1 ? 'property' : 'properties'}...
+              And ${deliveryListings.length - 5} more ${deliveryListings.length - 5 === 1 ? 'property' : 'properties'}...
             </p>
           `;
         }
@@ -704,12 +717,13 @@ const handler = async (req: Request): Promise<Response> => {
           payload: {
             provider: "resend",
             template: "hot-sheet-alert",
+            privacy: listingEmailPrivacy(deliveryListings.map((l: any) => l.id), hotSheetId, group.audience),
             to: recipients,
-            subject: `${newListings.length} New Properties Match Your Search - ${hotSheet.name}`,
+            subject: `${deliveryListings.length} New Properties Match Your Search - ${hotSheet.name}`,
             variables: {
               userName: clientName,
               hotSheetName: hotSheet.name,
-              matchCount: newListings.length,
+              matchCount: deliveryListings.length,
               listingsHtml: fullListingsHtml,
             },
           },
@@ -722,7 +736,7 @@ const handler = async (req: Request): Promise<Response> => {
 
         console.log("✅ Email job enqueued successfully");
         console.log("Recipients:", recipients);
-        console.log("Listing count:", newListings.length);
+        console.log("Listing count:", deliveryListings.length);
         console.log("Hot sheet:", hotSheet.name);
 
         // ── Agent copy email (always sent) ────────────────────────────────
@@ -730,7 +744,7 @@ const handler = async (req: Request): Promise<Response> => {
         // always receive the copy of what their buyer received. This path
         // no longer consults notification_preferences.new_matches_enabled
         // (that flag is a Comms Center channel mute, not a hot-sheet gate).
-        try {
+        if (group.audience === "external") try {
           const { data: agentProfile2 } = await adminClient
             .from("agent_profiles")
             .select("email, first_name")
@@ -755,12 +769,13 @@ const handler = async (req: Request): Promise<Response> => {
               payload: {
                 provider: "resend",
                 template: "hot-sheet-alert",
+                privacy: listingEmailPrivacy(deliveryListings.map((l: any) => l.id), hotSheetId, "agent"),
                 to: [agentEmail],
                 subject: `Copy: Hot Sheet sent to ${buyerLabel}`,
                 variables: {
                   userName: agentProfile2?.first_name || "there",
                   hotSheetName: hotSheet.name,
-                  matchCount: newListings.length,
+                  matchCount: deliveryListings.length,
                   listingsHtml: agentCopyHtml,
                 },
               },
@@ -780,6 +795,7 @@ const handler = async (req: Request): Promise<Response> => {
           }
         } catch (agentCopyErr) {
           console.warn("⚠️ Agent copy email failed (non-fatal):", agentCopyErr);
+        }
         }
       } else {
         console.log("No recipients configured - skipping email");

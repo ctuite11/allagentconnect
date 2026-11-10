@@ -1,10 +1,12 @@
 import "../_shared/migrationRuntime.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { verifiedPrivacyClient } from "../_shared/privacyAuth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+  "Cache-Control": "private, no-store",
 };
 
 /** Normalize an address string for matching: lowercase, trim, strip punctuation, collapse whitespace */
@@ -42,6 +44,10 @@ Deno.serve(async (req) => {
   }
 
   try {
+    const caller = await verifiedPrivacyClient(req);
+    if (!caller) return new Response(JSON.stringify({ error: "Not authorized" }), {
+      status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const adminClient = createClient(supabaseUrl, serviceRoleKey);
@@ -67,7 +73,7 @@ Deno.serve(async (req) => {
 
     // Priority 1: attom_id match (strongest signal)
     if (attomId) {
-      const { data } = await adminClient
+      const { data } = await caller.client
         .from("listings")
         .select("id, listing_type, status, price, created_at, active_date, expiration_date, cancelled_at, property_type, is_relisting, original_listing_id, agent_id, address, unit_number, city, state, attom_id")
         .eq("attom_id", attomId)
@@ -82,7 +88,7 @@ Deno.serve(async (req) => {
     // Priority 2: normalized address/city/state
     if (matchedListings.length === 0) {
       // Fetch broader set and filter in-memory for normalized matching
-      const { data } = await adminClient
+      const { data } = await caller.client
         .from("listings")
         .select("id, listing_type, status, price, created_at, active_date, expiration_date, cancelled_at, property_type, is_relisting, original_listing_id, agent_id, address, unit_number, city, state, attom_id")
         .ilike("city", city.trim())
@@ -122,7 +128,7 @@ Deno.serve(async (req) => {
     // Fetch agent display names (whitelisted fields only)
     const agentMap: Record<string, { name: string; office: string | null }> = {};
     if (agentIds.length > 0) {
-      const { data: agents } = await adminClient
+      const { data: agents } = await caller.client
         .from("agent_profiles")
         .select("id, first_name, last_name, office_name")
         .in("id", agentIds);

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { privacyReadClient } from "@/lib/privacyApi";
 import { Button } from "@/components/ui/button";
 import { Heart, Flame, Sparkle, MessageSquare } from "lucide-react";
 import { clearPrimaryAgentId } from "@/utils/agentTracking";
@@ -293,11 +294,7 @@ export default function ClientDashboard() {
 
     if (relationship) {
       setRelationshipId(relationship.id);
-      const { data: agentData } = await supabase
-        .from("agent_profiles")
-        .select("id, first_name, last_name, email, phone, company, headshot_url")
-        .eq("id", relationship.agent_id)
-        .single();
+      const { data: agentData } = await privacyReadClient.rpc("get_buyer_agent", { p_agent_id: relationship.agent_id });
 
       if (agentData) {
         setAgent(agentData);
@@ -369,6 +366,7 @@ export default function ClientDashboard() {
     const { photosById, countsById } = await loadHotSheetPhotosAndCounts(
       supabase,
       sheets.map((s) => ({ id: s.id, criteria: s.criteria })),
+      { buyerScope: true },
     );
     setHotSheetPreviewPhotosById(photosById);
     setHotSheetPreviewMatchCountsById(countsById);
@@ -435,8 +433,8 @@ export default function ClientDashboard() {
   }, [currentUserId]);
 
   const loadMarketListings = async () => {
-    const { data, error } = await supabase
-      .from("listings")
+    const { data, error } = await privacyReadClient
+      .from("buyer_listings")
       .select(
         "id, address, city, state, price, bedrooms, bathrooms, square_feet, photos, created_at, listing_number, unit_number, condo_details, agent_id",
       )

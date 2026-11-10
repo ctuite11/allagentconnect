@@ -15,44 +15,29 @@ function rewriteToCdn(url: string): string {
 }
 
 /**
- * Public helper: resolve any single image URL to a working public host for
- * use in email <img src>. Currently bypasses cdn.allagentconnect.com (which
- * returns 403/text-plain) and returns the direct Supabase storage URL.
- * Safe to call with absolute URLs, relative paths (leading slash optional),
- * or empty strings. Non-Supabase absolute URLs pass through untouched.
+ * Confidential property media becomes a neutral email image. Public branding
+ * may keep its normal URL. No buyer credential or property signature is put
+ * into an email image address.
  */
 export function rewriteEmailImageUrl(url: string | null | undefined): string {
   if (!url) return "";
   const raw = String(url).trim();
   if (!raw) return "";
-  if (/^https?:\/\//i.test(raw)) {
-    // If it's already on the broken CDN host, swap it for direct Supabase storage.
-    const cdnMatch = raw.match(/^https?:\/\/cdn\.allagentconnect\.com(\/storage\/v1\/.*)$/i);
-    if (cdnMatch) return `${SUPABASE_STORAGE_HOST}${cdnMatch[1]}`;
-    return raw;
+  if (!/^https?:\/\//i.test(raw) || /\/storage\/v1\/(?:object|render\/image)\/(?:public|sign|authenticated)\/(?:listing-photos|listing-floorplans|agent-match-photos|email-attachments)\//i.test(raw)) {
+    return "https://allagentconnect.com/og/aac-og-2026-01-22.jpg";
   }
-  // Relative storage path → absolute Supabase storage URL.
-  const path = raw.replace(/^\/+/, "");
-  if (/^storage\/v1\//i.test(path)) return `${SUPABASE_STORAGE_HOST}/${path}`;
-  return `${SUPABASE_STORAGE_HOST}/storage/v1/object/public/${LISTING_PHOTOS_BUCKET}/${path}`;
+  // Public branding can still use the direct host when the CNAME is unavailable.
+  const cdnMatch = raw.match(/^https?:\/\/cdn\.allagentconnect\.com(\/storage\/v1\/.*)$/i);
+  return cdnMatch ? `${SUPABASE_STORAGE_HOST}${cdnMatch[1]}` : raw;
 }
 
 /**
- * Public helper: resolve the first photo from a JSON/array/string `photos`
- * field to a CDN-hosted public URL suitable for an email <img src>.
- * Returns "" when no photo is available.
+ * Property photos in email use the neutral brand image. Empty photo sets
+ * remain empty; authorized photos are available on the secure page.
  */
 export function resolveEmailPhotoUrl(photos: unknown): string {
-  const first = extractFirstPhoto(photos);
-  if (!first) return "";
-  let raw = "";
-  if (typeof first === "string") {
-    raw = first.trim();
-  } else if (first && typeof first === "object") {
-    const row = first as Record<string, unknown>;
-    raw = String(row.url || row.publicUrl || row.src || row.image_url || "").trim();
-  }
-  return rewriteEmailImageUrl(raw);
+  return photos && (!Array.isArray(photos) || photos.length > 0)
+    ? "https://allagentconnect.com/og/aac-og-2026-01-22.jpg" : "";
 }
 
 /** Resolve the first listing photo to a public HTTPS URL (handles storage paths). */

@@ -37,17 +37,24 @@ interface SearchCriteria {
  * Property type mapping from UI codes to database values
  */
 const PROPERTY_TYPE_MAP: Record<string, string> = {
-  'single_family': 'Single Family',
+  'single_family': 'single_family',
+  'Single Family': 'single_family',
   'condo': 'condo',
   'Condominium': 'condo',
-  'multi_family': 'Multi Family',
-  'townhouse': 'Townhouse',
-  'land': 'Land',
-  'commercial': 'Commercial',
+  'multi_family': 'multi_family',
+  'Multi Family': 'multi_family',
+  'townhouse': 'townhouse',
+  'Townhouse': 'townhouse',
+  'land': 'land',
+  'Land': 'land',
+  'commercial': 'commercial',
+  'Commercial': 'commercial',
   'business_opp': 'Business Opportunity'
 };
 
 export type BuildListingsQueryOptions = {
+  /** Server exposes only seller-approved matches of this buyer's own Hot Sheets. */
+  buyerScope?: boolean;
   /**
    * Return an exact head-count query (no row payload). Prefer this for live
    * matching counters so results are not capped by a fetch limit like 1000.
@@ -73,7 +80,9 @@ export function buildListingsQuery(
   // on `dcmls_listings_public` — do not re-apply participation/publication filters here.
   const dcmlsOnly = rawCriteria.dcmlsOnly === true;
   const countExact = options?.countExact === true;
-  let query = dcmlsOnly
+  let query = options?.buyerScope && !dcmlsOnly
+    ? supabase.from("buyer_listings").select(countExact ? "id" : "*", countExact ? { count: "exact", head: true } : undefined)
+    : dcmlsOnly
     ? supabase
         .from("dcmls_listings_public")
         .select(countExact ? "id" : "*", countExact ? { count: "exact", head: true } : undefined)

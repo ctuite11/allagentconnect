@@ -1,4 +1,5 @@
 import "../_shared/migrationRuntime.ts";
+import { verifiedPrivacyClient } from "../_shared/privacyAuth.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 import { buildAgentSharedPropertyEmailSubject } from "../_shared/listingEmailSubject.ts";
@@ -160,8 +161,12 @@ const handler = async (req: Request): Promise<Response> => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
+  if (req.method !== 'POST') return jsonResponse({ success: false, error: 'Method not allowed' }, 405);
 
   try {
+    const caller = await verifiedPrivacyClient(req);
+    if (!caller) return jsonResponse({ success: false, error: 'Not authorized' }, 403);
+    assertMigrationDeliveryAllowed();
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const resendApiKey = Deno.env.get('RESEND_API_KEY');
@@ -183,13 +188,18 @@ const handler = async (req: Request): Promise<Response> => {
       listingId,
       recipientEmail,
       recipientName,
-      agentName,
-      agentEmail,
-      agentPhone = '',
-      agentBrokerage = '',
       message = '',
-      senderRole = 'agent',
     } = parsed;
+
+    // Caller-supplied names/contact fields never determine the sharing identity.
+    const { data: sender, error: senderError } = await supabase.from('agent_profiles')
+      .select('first_name,last_name,email,cell_phone,phone,company').eq('id', caller.ownerId).single();
+    if (senderError || !sender) return jsonResponse({ success: false, error: 'Not authorized' }, 403);
+    const agentName = `${sender.first_name} ${sender.last_name}`.trim();
+    const agentEmail = sender.email;
+    const agentPhone = sender.cell_phone || sender.phone || '';
+    const agentBrokerage = sender.company || '';
+    const senderRole = 'agent';
 
     console.log('[send-listing-share] Received request:', {
       listingId,
@@ -217,7 +227,12 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
-    // Fetch listing details
+    const { data: shareToken, error: shareError } = await caller.client.rpc('create_listing_share_link', {
+      p_listing_id: listingId, p_recipient_label: recipientEmail,
+    });
+    if (shareError || !shareToken) return jsonResponse({ success: false, error: 'External sharing is not authorized for this listing' }, 403);
+
+    // Fetch listing details only after the database authorizes external sharing.
     const { data: listing, error: listingError } = await supabase
       .from('listings')
       .select('*')
@@ -232,7 +247,8 @@ const handler = async (req: Request): Promise<Response> => {
     const appUrl = resolveEmailBaseUrl(
       Deno.env.get('EMAIL_BASE_URL') || Deno.env.get('APP_URL'),
     );
-    const listingUrl = `${appUrl}/property/${listingId}`;
+    const listingUrl = `${appUrl}/s/${shareToken}`;
+    listing.secure_share_url = listingUrl;
 
     const subject = buildAgentSharedPropertyEmailSubject(agentName, listing);
     const variables = {
@@ -256,6 +272,8 @@ const handler = async (req: Request): Promise<Response> => {
       listing,
     });
 
+    const { data: stillAuthorized, error: recheckError } = await caller.client.rpc('get_shared_listing', { p_token: shareToken });
+    if (recheckError || !stillAuthorized) return jsonResponse({ success: false, error: 'External sharing is no longer authorized' }, 403);
     console.log(`[send-listing-share] Sending SMTP listing-share to ${recipientEmail}`);
     const providerMessageId = await sendListingShareViaSmtp({
       to: recipientEmail,

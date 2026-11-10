@@ -1,91 +1,42 @@
 import "../_shared/migrationRuntime.ts";
+// @auth-classification: user-jwt
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.76.1";
+import { verifiedPrivacyClient } from "../_shared/privacyAuth.ts";
+import { assertMigrationDeliveryAllowed } from "../_shared/migrationSafety.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Content-Type": "application/json",
 };
 
-interface FavoritesShareRequest {
-  recipientEmail: string;
-  senderName: string;
-  properties: Array<{
-    address: string;
-    price: string;
-    bedrooms?: number;
-    bathrooms?: number;
-  }>;
-  shareLink: string;
-}
-
-const handler = async (req: Request): Promise<Response> => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
-
+serve(async (req: Request): Promise<Response> => {
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  if (req.method !== "POST") return new Response(null, { status: 405, headers: corsHeaders });
   try {
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
-
-    const {
-      recipientEmail,
-      senderName,
-      properties,
-      shareLink,
-    }: FavoritesShareRequest = await req.json();
-
-    console.log("[send-favorites-share] Enqueuing job for:", recipientEmail);
-
-    const propertiesHtml = properties.map(p => `
-      <li style="margin-bottom: 15px; padding: 15px; background: #f9f9f9; border-radius: 8px;">
-        <strong>${p.address}</strong><br>
-        Price: ${p.price}
-        ${p.bedrooms ? ` | ${p.bedrooms} bed` : ''}
-        ${p.bathrooms ? ` | ${p.bathrooms} bath` : ''}
-      </li>
-    `).join('');
-
-    // Enqueue job instead of sending directly
-    const { error: insertError } = await supabase
-      .from("email_jobs")
-      .insert({
-        payload: {
-          provider: "resend",
-          template: "favorites-share",
-          to: recipientEmail,
-          subject: `${senderName} shared favorite properties with you`,
-          variables: {
-            senderName,
-            shareLink,
-            propertiesHtml: `<ul style="list-style: none; padding: 0;">${propertiesHtml}</ul>`,
-            propertyCount: properties.length,
-          },
-        },
-      });
-
-    if (insertError) {
-      console.error("[send-favorites-share] Failed to enqueue job:", insertError);
-      throw insertError;
+    const caller = await verifiedPrivacyClient(req);
+    if (!caller) return new Response(JSON.stringify({ error: "Not authorized" }), { status: 403, headers: corsHeaders });
+    assertMigrationDeliveryAllowed();
+    const raw = await req.text();
+    if (raw.length > 8192) return new Response(JSON.stringify({ error: "Invalid share request" }), { status: 400, headers: corsHeaders });
+    const { listingIds, recipientEmail, recipientName = "" } = JSON.parse(raw);
+    if (!Array.isArray(listingIds) || listingIds.length < 1 || listingIds.length > 50 ||
+      listingIds.some(id => typeof id !== "string" || !/^[0-9a-f-]{36}$/i.test(id)) ||
+      typeof recipientEmail !== "string" || recipientEmail.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipientEmail) ||
+      typeof recipientName !== "string" || recipientName.length > 100) {
+      return new Response(JSON.stringify({ error: "Valid listing IDs and recipient are required" }), { status: 400, headers: corsHeaders });
     }
-
-    console.log("[send-favorites-share] Job enqueued successfully");
-
-    return new Response(
-      JSON.stringify({ success: true, message: "Email queued for delivery" }),
-      {
-        status: 200,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      }
-    );
-  } catch (error: any) {
-    console.error("[send-favorites-share] Error:", error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
-    );
+    // Reuse the existing share workflow: it resolves current property data,
+    // records seller-approved expiring links, rate-limits and rechecks delivery.
+    // Client-supplied property HTML, sender identity and page links are ignored.
+    const { data, error } = await caller.client.functions.invoke("send-bulk-listing-share", {
+      body: { listingIds: [...new Set(listingIds)], recipientEmail: recipientEmail.trim(), recipientName: recipientName.trim() },
+    });
+    if (error || data?.success !== true) return new Response(JSON.stringify({ error: "Could not authorize or queue this share" }), { status: 400, headers: corsHeaders });
+    return new Response(JSON.stringify(data), { headers: corsHeaders });
+  } catch (error) {
+    const paused = (error as { code?: string }).code === "MIGRATION_OUTBOUND_BLOCKED";
+    return new Response(JSON.stringify({ error: paused ? "Delivery is paused" : "Could not queue this share" }), { status: paused ? 503 : 400, headers: corsHeaders });
   }
-};
-
-serve(handler);
+});

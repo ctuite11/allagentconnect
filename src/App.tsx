@@ -55,6 +55,7 @@ const ListingIntel = React.lazy(() => import("./pages/ListingIntel"));
 const AddListing = React.lazy(() => import("./pages/AddListing"));
 const AddRentalListing = React.lazy(() => import("./pages/AddRentalListing"));
 const PropertyDetail = React.lazy(() => import("./pages/PropertyDetail"));
+const SecureSharedListing = React.lazy(() => import("./pages/SecureSharedListing"));
 const AgentDetailRedirect = React.lazy(() => import("./pages/AgentDetailRedirect"));
 const ListingReview = React.lazy(() => import("./pages/ListingReview"));
 const ConsumerPropertyDetail = React.lazy(() => import("./pages/ConsumerPropertyDetail"));
@@ -248,6 +249,11 @@ function LegacyDashboardRedirect() {
   return decision.status === "loading"
     ? <LoadingScreen message="Checking your session..." />
     : null;
+}
+
+function ScopedClientHotSheetRoute() {
+  const { token, id } = useParams();
+  return <ClientHotsheetPage key={`${token ?? ""}|${id ?? ""}`} />;
 }
 
 // Legacy redirect for /client-hot-sheet/:token → /client/hotsheet/:token
@@ -717,7 +723,8 @@ const App = () => (
                   <Route path="/messages" element={<RouteGuard requireAuth><MessagesEntry /></RouteGuard>} />
                   <Route path="/messages/:id" element={<RouteGuard requireAuth><MessagesEntry /></RouteGuard>} />
                   <Route path="/consumer-property/:id" element={<ConsumerPropertyDetail />} />
-                  <Route path="/client/hot-sheets/:id" element={<ClientHotsheetPage />} />
+                  <Route path="/client/shared-property/:id" element={<RouteGuard requireAuth><ConsumerPropertyDetail /></RouteGuard>} />
+                  <Route path="/client/hot-sheets/:id" element={<ScopedClientHotSheetRoute />} />
                 </Route>
 
                 {/* Public routes outside AppShell */}
@@ -742,7 +749,7 @@ const App = () => (
                 {/* Clean opaque-token invite URL — used by hot sheet / buyer workspace invitation emails */}
                 <Route path="/invite/:token" element={<ClientInvitationSetup />} />
                 <Route path="/client-hot-sheet/:token" element={<LegacyClientHotSheetRedirect />} />
-                <Route path="/client/hotsheet/:token" element={<ClientHotsheetPage />} />
+                <Route path="/client/hotsheet/:token" element={<ScopedClientHotSheetRoute />} />
                 {/* Legacy consumer routes */}
                 <Route path="/consumer/home" element={<Navigate to="/auth" replace />} />
                 <Route path="/consumer/dashboard" element={<Navigate to="/auth" replace />} />
@@ -757,6 +764,7 @@ const App = () => (
                 <Route path="/unsubscribe-hotsheet" element={<UnsubscribeHotSheet />} />
                 <Route path="/hotsheet-preview" element={<HotSheetPreview />} />
                 <Route path="/link/:token" element={<ShareLinkHandler />} />
+                <Route path="/s/:token" element={<SecureSharedListing />} />
                 {/* Legal pages */}
                 <Route path="/privacy" element={<PrivacyPolicy />} />
                 <Route path="/terms" element={<TermsOfService />} />

@@ -35,7 +35,7 @@ function resolvePhotoUrl(photos: unknown): string {
 }
 
 function renderListingShareCard(listing: any, opts?: { baseUrl?: string }): string {
-  return renderListingEmailCard(listing, { baseUrl: opts?.baseUrl });
+  return renderListingEmailCard(listing, { baseUrl: opts?.baseUrl, listingUrl: listing.secure_share_url });
 }
 
 function renderAgentContactBlock(opts: { agentName: string; agentEmail: string; agentPhone?: string }): string {

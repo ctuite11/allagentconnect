@@ -1,11 +1,8 @@
 /**
  * Email composer toolbar.
  *
- * SECURITY: images inserted here are uploaded to the `email-attachments`
- * bucket, which is intentionally PUBLIC (email clients must fetch images
- * anonymously) and is served via `getPublicUrl()`. Only non-sensitive inline
- * email images belong here. Sensitive attachments must use the private
- * `email-attachments-private` bucket with signed/authenticated downloads.
+ * Property imagery stays private. Insert a secure page link rather than
+ * publishing a reusable image address inside an email.
  * See docs/security/storage-buckets-classification.md
  */
 import { useRef, useState } from "react";
@@ -147,14 +144,18 @@ export function EmailComposerToolbar({
         variant="outline"
         size="sm"
         disabled={uploading}
-        onClick={() => fileInputRef.current?.click()}
+        onClick={() => {
+          setLinkText("View photos securely");
+          setLinkOpen(true);
+          toast.info("Create a secure link from the listing's External sharing settings, then insert it here.");
+        }}
       >
         {uploading ? (
           <Loader2 className="h-4 w-4 mr-2 animate-spin" />
         ) : (
           <ImageIcon className="h-4 w-4 mr-2" />
         )}
-        {uploading ? "Uploading..." : "Insert photo"}
+        {uploading ? "Uploading..." : "Secure photo link"}
       </Button>
       <input
         ref={fileInputRef}
@@ -167,7 +168,7 @@ export function EmailComposerToolbar({
         }}
       />
       <span className="text-xs text-muted-foreground ml-auto">
-        PNG/JPG/WEBP up to 5 MB · HTML supported
+        Property photos are viewed through secure links
       </span>
     </div>
   );

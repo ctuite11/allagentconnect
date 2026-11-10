@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { PrivateImage } from "@/components/PrivateImage";
 
 interface SellerSubmission {
   id: string;
@@ -249,7 +250,7 @@ const SellerListingDetail = () => {
         {submission.photos && submission.photos.length > 0 && (
           <div className="mb-8">
             <div className="aspect-[16/9] rounded-xl overflow-hidden bg-zinc-100 mb-3">
-              <img
+              <PrivateImage storageBucket="agent-match-photos"
                 src={submission.photos[selectedPhoto]}
                 alt={`Property photo ${selectedPhoto + 1}`}
                 className="w-full h-full object-cover"
@@ -265,7 +266,7 @@ const SellerListingDetail = () => {
                       index === selectedPhoto ? "border-[#0E56F5]" : "border-transparent"
                     }`}
                   >
-                    <img src={photo} alt={`Thumbnail ${index + 1}`} className="w-full h-full object-cover" />
+                    <PrivateImage storageBucket="agent-match-photos" src={photo} alt={`Thumbnail ${index + 1}`} className="w-full h-full object-cover" />
                   </button>
                 ))}
               </div>

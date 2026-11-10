@@ -11,7 +11,7 @@
  *     tighter padding) used by message notification emails where multiple
  *     listings stack.
  *   renderHotSheetMatchListingEmailCard — compact card with buyer-facing
- *     consumer-property links for Hot Sheet match / subscriber emails.
+ *     scoped page links for Hot Sheet match / subscriber emails.
  *
  * Pure email-safe HTML: nested <table>s, inline styles, no flex/grid.
  */
@@ -20,7 +20,7 @@ import {
   formatListingShareEmailFullAddress,
   formatListingShareEmailStreetLine,
 } from "./listingShareEmailAddress.ts";
-import { resolveEmailPhotoUrl, rewriteEmailImageUrl } from "./listingPhotoUrl.ts";
+import { resolveEmailPhotoUrl } from "./listingPhotoUrl.ts";
 
 const AAC_PRIMARY_BLUE = "#0E56F5";
 /** AAC email CTA green (matches buildAacEmail). */
@@ -377,7 +377,7 @@ export function renderSearchStyleListingEmailCard(
   const listingUrl = opts.listingUrl || (listing?.id ? `${baseUrl}/property/${listing.id}` : "");
   const safeUrl = escapeHtml(listingUrl);
 
-  const photoUrl = rewriteEmailImageUrl(listing.photoUrl) || resolvePhotoUrl(listing.photos);
+  const photoUrl = resolvePhotoUrl(listing.photoUrl ? [listing.photoUrl] : listing.photos);
   const price = formatListingEmailPrice(listing);
   const propertyType = formatPropertyTypeLabel(listing.property_type);
   const fullAddress =
@@ -435,7 +435,7 @@ export function renderSearchStyleListingEmailCard(
        </table>`
     : "";
 
-  const footerRow = (brokerage || agentName)
+  const footerRow = opts.showListingAgentContact && (brokerage || agentName)
     ? `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:16px 0 0;border-top:1px solid #f1f5f9;padding-top:12px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
          <tr>
            <td align="left" style="font-size:12px;color:#737373;line-height:1.3;">${escapeHtml(brokerage)}</td>
@@ -498,7 +498,7 @@ export function renderCompactListingEmailCard(
   const listingUrl = opts.listingUrl || (listing?.id ? `${baseUrl}/property/${listing.id}` : "");
   const safeUrl = escapeHtml(listingUrl);
 
-  const photoUrl = rewriteEmailImageUrl(listing.photoUrl) || resolvePhotoUrl(listing.photos);
+  const photoUrl = resolvePhotoUrl(listing.photoUrl ? [listing.photoUrl] : listing.photos);
   const price = formatListingEmailPrice(listing);
   const propertyType = formatPropertyTypeLabel(listing.property_type);
   const fullAddress =
@@ -543,7 +543,7 @@ export function renderCompactListingEmailCard(
        </table>`
     : "";
 
-  const footerRow = (brokerage || agentName)
+  const footerRow = opts.showListingAgentContact && (brokerage || agentName)
     ? `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:10px 0 0;border-top:1px solid #f1f5f9;padding-top:8px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;">
          <tr>
            <td align="left" style="font-size:11px;color:#737373;line-height:1.3;">${escapeHtml(brokerage)}</td>
@@ -585,13 +585,13 @@ export function renderCompactListingEmailCard(
 /** Compact AAC card for Hot Sheet match / subscriber notification emails (buyer-facing). */
 export function renderHotSheetMatchListingEmailCard(
   listing: any,
-  opts: { baseUrl: string },
+  opts: { baseUrl: string; listingUrl?: string },
 ): string {
   const baseUrl = opts.baseUrl.replace(/\/$/, "");
   const id = listing?.id ? String(listing.id) : "";
   return renderCompactListingEmailCard(listing, {
     baseUrl,
-    listingUrl: id ? `${baseUrl}/consumer-property/${id}` : "",
+    listingUrl: opts.listingUrl || (id ? `${baseUrl}/client/shared-property/${id}` : ""),
     ctaLabel: "View listing",
     greenCta: true,
   });

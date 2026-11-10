@@ -1,3 +1,4 @@
+import { PrivateImage } from "@/components/PrivateImage";
 import { listingDaysOnMarket } from "@/lib/listingDaysOnMarket";
 /**
  * SearchListingCard — MLS-style search results card.
@@ -339,9 +340,9 @@ export const SearchListingCard = ({
                 }
               />
               {allPhotos.length > 0 ? (
-                <img src={allPhotos[currentPhotoIndex] || photoUrl!} alt="" className="w-full h-full object-cover" />
+                <PrivateImage src={allPhotos[currentPhotoIndex] || photoUrl!} alt="" className="w-full h-full object-cover" />
               ) : photoUrl ? (
-                <img src={photoUrl} alt="" className="w-full h-full object-cover" />
+                <PrivateImage src={photoUrl} alt="" className="w-full h-full object-cover" />
               ) : (
                 <div className="flex h-full w-full items-center justify-center">
                   <Home className="h-10 w-10 text-neutral-400" />
@@ -568,7 +569,7 @@ export const SearchListingCard = ({
                   }
                 />
                 {photoUrl ? (
-                  <img src={photoUrl} alt="" className="h-full w-full object-cover" />
+                  <PrivateImage src={photoUrl} alt="" className="h-full w-full object-cover" />
                 ) : (
                   <div className="flex h-full w-full items-center justify-center">
                     <Home className="h-6 w-6 text-neutral-400" />

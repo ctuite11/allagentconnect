@@ -1,3 +1,4 @@
+import { PrivateImage } from "@/components/PrivateImage";
 import React, { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronRight, Home } from "lucide-react";
@@ -29,7 +30,7 @@ const resolvePhoto = (photos: unknown): string | null => {
   const p = photos[0] as string | { url?: string };
   if (typeof p === "string") return p;
   if (p?.url) {
-    if (p.url.startsWith("http")) return p.url;
+    if (p.url.startsWith("http") || p.url.startsWith("aac-private://")) return p.url;
     const { data } = supabase.storage.from("listing-photos").getPublicUrl(p.url);
     return data.publicUrl;
   }
@@ -164,7 +165,7 @@ const DcmlsSeeItFirst: React.FC = () => {
               >
                 <div className="relative aspect-[4/3] overflow-hidden bg-neutral-100">
                   {photo ? (
-                    <img
+                    <PrivateImage
                       src={photo}
                       alt={listing.address}
                       className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"

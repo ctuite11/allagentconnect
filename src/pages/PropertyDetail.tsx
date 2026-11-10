@@ -1,4 +1,6 @@
 import { listingDaysOnMarket, listingMarketDate } from "@/lib/listingDaysOnMarket";
+import { ExternalShareControls } from "@/components/ExternalShareControls";
+import { PrivateImage } from "@/components/PrivateImage";
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation, useNavigationType } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -108,6 +110,8 @@ import {
 } from "@/lib/publicListing";
 
 interface Listing {
+  external_sharing_allowed?: boolean;
+  external_sharing_authorization?: string;
   id: string;
   agent_id: string;
   address: string;
@@ -681,7 +685,7 @@ const PropertyDetail = () => {
               >
                 <div className="absolute inset-0 bg-neutral-950">
                   {activeMediaTab === "photos" && (
-                    <img
+                    <PrivateImage
                       src={mainPhoto}
                       alt={listing.address}
                       className="h-full w-full cursor-pointer object-cover"
@@ -782,7 +786,7 @@ const PropertyDetail = () => {
                     className="!mt-0 min-w-0 !px-0"
                     trailing={
                       <div className="flex items-center gap-2">
-                      <SocialShareMenu
+                      {listing.external_sharing_allowed && <SocialShareMenu
                         url={getListingShareUrl(id!)}
                         title={listing.address}
                         description={listing.description || ""}
@@ -800,7 +804,7 @@ const PropertyDetail = () => {
                             Share
                           </Button>
                         }
-                      />
+                      />}
                       </div>
                     }
                   />
@@ -907,6 +911,9 @@ const PropertyDetail = () => {
 
               {isAgentView && (
                 <div id="agent-tools-section" className="mt-4 border-t pt-6 pb-8">
+              <ExternalShareControls listingId={listing.id} isOwner={isListingOwner}
+                allowed={listing.external_sharing_allowed === true}
+                authorization={listing.external_sharing_authorization ?? ""} />
               <div className="flex items-center justify-between mb-4">
                 <h2 className="flex items-center gap-2 text-lg font-semibold text-neutral-900">
                   <Activity className="h-5 w-5 text-neutral-500" />

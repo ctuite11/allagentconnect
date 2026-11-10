@@ -1,6 +1,7 @@
 import { Helmet } from "react-helmet-async";
 import { useLocation } from "react-router-dom";
 import { getBrandForRoute, type BrandType, AAC_BRAND, DCMLS_BRAND } from "@/lib/branding";
+import { isPrivateListingPath, isPublicMarketingPath } from "../../supabase/functions/_shared/privacyRoutes";
 
 interface SeoProps {
   title?: string;
@@ -31,6 +32,14 @@ export function Seo({
   brandType,
 }: SeoProps) {
   const location = useLocation();
+  if (isPrivateListingPath(location.pathname)) {
+    title = "Private shared link";
+    description = "Secure access through All Agent Connect.";
+    image = undefined;
+    jsonLd = undefined;
+    type = "website";
+  }
+  noindex = noindex || !isPublicMarketingPath(location.pathname);
   const brand =
     brandType === "aac" ? AAC_BRAND : brandType === "dcmls" ? DCMLS_BRAND : getBrandForRoute(location.pathname);
 

@@ -1,3 +1,4 @@
+import { PrivateImage } from "@/components/PrivateImage";
 import { listingDaysOnMarket, formatListingMarketDate } from "@/lib/listingDaysOnMarket";
 import { useState, useEffect } from "react";
 import { useListingBanners } from "@/hooks/useListingBanners";
@@ -503,7 +504,7 @@ const ListingCard = ({
       const p = photo as { url?: string };
       if (p.url) {
         // Check if it's a full URL or a storage path
-        if (p.url.startsWith('http')) {
+        if (p.url.startsWith('http') || p.url.startsWith('aac-private://')) {
           return p.url;
         }
         // If it's a storage path, construct the public URL
@@ -752,7 +753,7 @@ const ListingCard = ({
           
           <div className="relative h-48 w-full shrink-0 overflow-hidden bg-zinc-50">
             {compactPhotoUrl && !compactPhotoFailed ? (
-              <img
+              <PrivateImage
                 src={compactPhotoUrl}
                 alt={listing.address ? `${listing.address}, ${listing.city}` : "Listing photo"}
                 className="h-full w-full cursor-pointer object-cover"
@@ -1328,7 +1329,7 @@ const ListingCard = ({
       {/* Photo Container with scrolling */}
       <div className="group relative aspect-[4/3]">
         {currentPhoto ? (
-          <img 
+          <PrivateImage
             src={currentPhoto} 
             alt={listing.address} 
             className="h-full w-full object-cover" 

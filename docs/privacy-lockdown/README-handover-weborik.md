@@ -1,70 +1,62 @@
-# AAC Privacy Lockdown — Handover for Nenad (Weborik)
+# AAC Privacy Lockdown
 
-Status: **STAGED. Nothing here has been applied to production.** Chris must approve each production step explicitly.
+Privacy lockdown restricts access to AAC listings, agent information and
+confidential media. External listing access requires explicit authorization and
+a valid share link, authenticated Hot Sheet membership, or an eligible DCMLS
+publication.
 
-## Stage 1 — done (local throwaway database, fake data)
+## Release status
 
-- `scripts/run-privacy-lockdown-tests.sh` starts a temporary Postgres in `/tmp` on a Unix socket only, with every `PG*`/`DATABASE_URL` variable unset first. Nothing can reach production. It deletes itself when it finishes.
-- `supabase/tests/db/20_privacy_lockdown_fixture.sql` recreates the affected production objects, using the same names and signatures and fake rows only.
-- The tests run in three phases: current behaviour, then after `01_lockdown_up.sql`, then after `02_lockdown_down.sql`.
+| Area | Status |
+|---|---|
+| Base privacy migration, `20261110120000_privacy_lockdown.sql` | Applied; do not reapply |
+| Workflow repair migration, `20261110143000_privacy_workflow_repairs.sql` | Validated locally; not applied to destination |
+| Access boundary migration, `20261110160000_privacy_access_boundary_fixes.sql` | Validated locally; hosted execution pending |
+| Application and backend functions | Deployment verification required |
+| Private Storage configuration and CDN clearance | Verification required |
+| Hosted acceptance checks | Required before release |
+| Email, notifications, cron and social publishing | Keep paused until separately approved |
 
-Result: **ALL PRIVACY LOCKDOWN ASSERTIONS PASSED**
+The base migration remains applied. Both follow-up migrations are prerequisites
+for the corresponding backend and application release. Apply any outstanding
+follow-up in timestamp order; retain migrations already applied. No hosted SQL
+has been executed during local validation.
 
-| Viewer | Before | After lockdown | After rollback |
-|---|---|---|---|
-| Signed-out | Sees all listings, every agent profile (including hidden, invited and unverified), presence, radius search | DENIED on every probe | Still DENIED (rollback does not reopen public access) |
-| Invited / unverified / restricted | Sees everything | 0 rows | Original signed-in behaviour restored |
-| Verified agent | Sees everything | Listings unchanged; hidden, invited and unverified agents no longer returned | Original |
-| Hidden agent | — | Can still see their own profile | Original |
+## Privacy controls
 
-Limits of this test: the fixture uses stand-in versions of the function bodies. The real bodies are preserved untouched as `<name>__ungated`. `seller_matches_public` is a security-invoker view, so it relies on the `seller_matches` RLS policies, which the fixture does not reproduce.
+| Area | Implemented behavior |
+|---|---|
+| Network access | Database permissions, restrictive RLS and backend authorization restrict listings and directory information to authorized accounts |
+| External sharing | Disabled by default; the listing agent records seller authorization and marketing restrictions |
+| Listing links | Single-listing scope, hashed tokens, expiry, revocation and atomic replacement |
+| Buyer contact card | Sharing agent or Hot Sheet owner, labelled Your Agent / Shared by |
+| Unavailable links | Neutral page and generic previews, without property or agent details |
+| Hot Sheets | Recipient-bound invitations, valid token or authenticated membership, and approved matches only |
+| Buyer property details | Full property sections, favorites, showing requests and messaging within authenticated membership scope |
+| DCMLS | Only seller-authorized, published listings from visible, verified participating agents |
+| Confidential media | Private Storage access and authorized, short-lived signed URLs |
+| Email | Neutral property imagery, secure page links and current-permission checks before delivery |
+| Price alerts | Internal service authentication, current favorite and recipient scope, and permission checks before queueing and delivery |
+| Inquiry persistence | Authorized server handlers only; direct browser inserts denied |
+| Profile correspondence | Verified network authority or verified public DCMLS intake; server-resolved agent recipients and enforced rate limits |
+| Replacement requests | Authenticated, throttled in-app request with review and acknowledgement in the sharing account |
+| Public search and previews | Marketing-only sitemap and generic private-page metadata |
+| Seller intake | Rate-limited aggregate matching without exposing agent records |
 
-## Files
+## Documentation
 
-- `01_lockdown_up.sql` covers `listings_public`, `dcmls_listings_public` and `seller_matches_public`, plus 9 lookups: `get_public_agent_profile`, `get_public_listing`, `get_public_listing_agent`, `get_verified_agent_ids`, `get_newest_verified_agents`, `get_agent_presence`, `get_listing_interest_signals`, `listings_within_radius`, `get_dcmls_listing`. For each lookup it renames the original to `__ungated` (no grants) and adds a wrapper with the same signature that requires `is_verified_agent()`. It revokes anon access. View definitions are backed up in `privacy_lockdown_backup`.
-- `02_lockdown_down.sql` restores the original functions and views for signed-in users and **never re-grants anon**.
+- [Privacy policy and access requirements](05-decisions-and-public-function-review.md)
+- [Technical implementation](06-implementation-and-release.md)
+- [Database function access](07-effective-function-access.md)
+- [Release readiness and operational checks](08-release-runbook.md)
+- [Validation and acceptance status](validation-results.md)
 
-## Stage 2 — for Weborik's independent Supabase + Netlify environment
+## Operational requirements
 
-Conditions: use no copied real user data (seed fakes from the fixture), send no email (unset `RESEND_API_KEY`), and have no connection to production. Agree the timing with Chris before integration testing.
+Existing listings retain external sharing disabled until the listing agent
+records authorization. Buyer results may therefore remain empty for listings
+that have not been approved.
 
-1. Apply `01_lockdown_up.sql` to the staging copy of the real schema. Run the app as signed-out, invited, unverified, verified and hidden test accounts.
-2. Review the remaining **150 SECURITY DEFINER functions** that anon can execute (49 of them are trigger functions, which cannot be called directly). The other ~100 need a per-function keep/revoke decision. Known keepers include token-scoped flows such as `get_hot_sheet_by_token` and `accept_client_hot_sheet_invite`, and `get_verified_early_access_count`. `resolve_share_token` currently returns the whole token row and should return only the fields the page needs.
-3. Many public tables still grant SELECT to anon and rely on RLS alone. Revoke anon table grants except where a signed-out flow is required.
-4. Storage: these buckets are **public** today: `listing-photos`, `listing-floorplans`, `agent-match-photos`, `email-attachments`, `agent-headshots`, `agent-logos`, `brand-assets`. The plan is to move confidential photos and floor plans into private buckets served by an image service that checks access (Email Option B: no reusable buyer codes in image URLs). Not built yet; it needs this environment to test.
-5. Website, prepared but not applied: `X-Robots-Tag: noindex` on every route except the marketing allowlist; a signed-out guard on `/agent/*` and `/property/*`; and `/property/*` social previews must stop returning address, price, description and photo.
-
-## Known impact to decide before production
-
-- **Listing share links are not token-based today.** Guest access is decided in the browser (`SharedListingGate`). After the lockdown, signed-out people who open shared listing links, including links in sent emails and social posts, would be asked to sign in, unless a new token-checked share lookup is built first.
-- Hot Sheet email links use tokens, so they can keep working through their token functions (verify this in Stage 2).
-- Previously sent emails that embed public photo URLs will show broken images once those buckets become private. The proposal is to keep existing objects reachable through the image service.
-
-## Proposed production sequence (each step needs Chris's approval)
-
-1. Website headers and route guards.
-2. Database lockdown (`01`), followed by checks on all three domains.
-3. Function and table grant cleanup.
-4. Private buckets and the image service.
-5. Rollback path for any step: `02_lockdown_down.sql`, or revert the website change. Neither reopens public access.
-
-## Update — Secure share links (staged, locally tested)
-
-Files: `03_secure_share_links_up.sql`, `04_secure_share_links_down.sql`, `edge-function-draft/shared-listing-photos.ts`.
-
-How it works:
-- A verified agent creates a link for one public-status listing. It expires after 90 days by default (maximum 365). Only a SHA-256 hash of the token is stored, and the agent can revoke the link.
-- `get_shared_listing(token)` is the only lookup open to signed-out visitors. It returns that one listing's safe fields and the sharing agent's contact card.
-- The link stops working when it expires, is revoked, the listing leaves public status, or the sharing agent is no longer verified.
-- Photos are served by the edge function: the token goes in the POST body, and the function returns 10-minute signed URLs from a private bucket.
-
-Local result: **20/20 share-link assertions passed**. The lockdown and rollback assertions also passed. Not yet built: the app screens (share button and `/s/<token>` page). These are deliberately not added to the live code, because saving to `main` deploys automatically.
-
-### Impact on existing links and emails
-
-| Item | What happens after lockdown | Plan |
-|---|---|---|
-| Hot Sheet invitation links (52 tokens, 10 still valid) | Keep working. Token-based. | Verify in staging. |
-| Plain `/property/<id>` links already shared (emails, texts, social posts) | Cannot be preserved securely: there is no token, so anyone with the ID could read the listing. | Signed-out visitors see a "This link has been updated. Ask your agent for a new link" page with no listing data. Agents re-share with new links. Optional: notify agents with a list of their recent shares (needs approval; no sends). |
-| Photos inside already-sent Hot Sheet / listing emails (public bucket URLs) | Break if the originals are moved or deleted. | Recommended: put new uploads in the private bucket, leave existing public objects in place for a fixed grace period (e.g. 90 days), then remove them. Chris decides the length. |
-| Agent headshots and logos, brand assets | Unchanged (public by design). | — |
+Complete the remaining application, backend, Storage and acceptance checks in
+the release runbook. Keep copied-user communications and all scheduled delivery
+paused throughout migration verification.

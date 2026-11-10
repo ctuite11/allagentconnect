@@ -30,6 +30,7 @@ import {
   hydrateConciergeReviewEmail,
 } from "./hydrateConciergeReviewEmail.ts";
 import { preSendBlockReason } from "./emailStreams.ts";
+import { PRIVACY_EMAIL_BLOCKED } from "./privacyEmail.ts";
 
 // deno-lint-ignore no-explicit-any
 type SupabaseLike = any;
@@ -448,8 +449,9 @@ export async function deliverEmailJob(opts: {
     // (payload is broken, not transient) and never let a subsequent attempt
     // fall through to a placeholder body.
     const isUnsupportedTemplate = msg.startsWith(UNSUPPORTED_TEMPLATE_ERROR_PREFIX);
+    const isPrivacyBlocked = msg.startsWith(PRIVACY_EMAIL_BLOCKED);
 
-    if (!isUnsupportedTemplate && nextAttempt < maxAttempts) {
+    if (!isUnsupportedTemplate && !isPrivacyBlocked && nextAttempt < maxAttempts) {
       const backoffSec = computeBackoffSeconds(attemptsSoFar);
       const runAfter = new Date(Date.now() + backoffSec * 1000).toISOString();
 
@@ -477,7 +479,7 @@ export async function deliverEmailJob(opts: {
     await updateJob(
       job.id,
       { status: "failed", last_error: msg },
-      { stage: isUnsupportedTemplate ? "unsupported_template" : "terminal_fail" },
+      { stage: isUnsupportedTemplate ? "unsupported_template" : isPrivacyBlocked ? "privacy_authorization" : "terminal_fail" },
     );
 
     await logEvent(job.id, "failed", {

@@ -1,4 +1,7 @@
 import "../_shared/migrationRuntime.ts";
+import { verifiedPrivacyClient } from "../_shared/privacyAuth.ts";
+import { assertMigrationDeliveryAllowed } from "../_shared/migrationSafety.ts";
+import { resolveEmailBaseUrl } from "../_shared/aacPublicUrl.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { buildBulkListingShareEmailSubject } from "../_shared/listingEmailSubject.ts";
@@ -39,7 +42,7 @@ async function checkRateLimit(
 
   if (error) {
     console.error("[rate-limit] RPC error:", error);
-    return { allowed: true, remaining: limit, reset_at: new Date().toISOString(), current_count: 0 };
+    return { allowed: false, remaining: 0, reset_at: new Date(Date.now() + 60000).toISOString(), current_count: limit };
   }
 
   // Handle array or single object return from RPC
@@ -67,8 +70,14 @@ const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+  if (req.method !== "POST") return new Response(JSON.stringify({ error: "Method not allowed" }), {
+    status: 405, headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
 
   try {
+    const caller = await verifiedPrivacyClient(req);
+    if (!caller) return new Response(JSON.stringify({ error: "Not authorized" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    assertMigrationDeliveryAllowed();
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
@@ -91,11 +100,17 @@ const handler = async (req: Request): Promise<Response> => {
       listingIds,
       recipientName,
       recipientEmail,
-      agentName,
-      agentEmail,
-      agentPhone,
       message,
     }: BulkShareRequest = await req.json();
+    if (!Array.isArray(listingIds) || listingIds.length === 0 || listingIds.length > 50 ||
+      listingIds.some(id => !/^[0-9a-f-]{36}$/i.test(id))) throw new Error("Invalid listings");
+    const { data: sender, error: senderError } = await supabase.from("agent_profiles")
+      .select("first_name,last_name,email,cell_phone,phone").eq("id", caller.ownerId).single();
+    if (senderError || !sender) throw new Error("Not authorized");
+    const agentName = `${sender.first_name} ${sender.last_name}`.trim();
+    const agentEmail = sender.email;
+    const agentPhone = sender.cell_phone || sender.phone || "";
+    const appUrl = resolveEmailBaseUrl(Deno.env.get("EMAIL_BASE_URL") || Deno.env.get("APP_URL"));
 
     console.log(`[send-bulk-listing-share] Enqueuing ${listingIds.length} listings to ${recipientEmail}`);
 
@@ -110,6 +125,13 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("Failed to fetch listings");
     }
 
+    const links = new Map<string, string>();
+    for (const id of listingIds) {
+      const { data: token, error } = await caller.client.rpc("create_listing_share_link", { p_listing_id: id, p_recipient_label: recipientEmail });
+      if (error || !token) throw new Error("External sharing is not authorized for every selected listing");
+      links.set(id, `${appUrl}/s/${token}`);
+    }
+
     // Normalize listings for the unified renderer
     const normalizedListings = listings.map((l: any) => {
       const photos = l.photos || [];
@@ -117,6 +139,8 @@ const handler = async (req: Request): Promise<Response> => {
         ? (typeof photos[0] === "string" ? photos[0] : (photos[0] as any)?.url || "")
         : "";
       return {
+        id: l.id,
+        secure_share_url: links.get(l.id),
         address: l.address,
         city: l.city,
         state: l.state,
@@ -139,6 +163,8 @@ const handler = async (req: Request): Promise<Response> => {
         payload: {
           provider: "resend",
           template: "bulk-listing-share",
+          privacy: { version: 1, audience: "external", listing_ids: listingIds,
+            share_tokens: listingIds.map(id => ({ token: links.get(id)!.split("/s/")[1] })) },
           to: recipientEmail,
           subject: buildBulkListingShareEmailSubject(
             agentName,

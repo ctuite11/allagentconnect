@@ -1,5 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { PublicListingRow } from "@/lib/publicListingModel";
+import type { PublicListingAgentRow } from "@/lib/publicListingModel";
+import { privacyRpc } from "@/lib/privacyApi";
 
 function firstRow<T>(data: T[] | T | null | undefined): T | null {
   if (data == null) return null;
@@ -19,6 +21,11 @@ export async function fetchDcmlsListing(
   });
   if (error) throw error;
   return firstRow(data) as PublicListingRow | null;
+}
+
+/** Business contact only for a currently authorized DCMLS publication. */
+export function fetchDcmlsListingAgent(listingId: string): Promise<PublicListingAgentRow | null> {
+  return privacyRpc("get_dcmls_listing_agent", { p_listing_id: listingId });
 }
 
 /** Agent-level DCMLS participation from agent_settings.

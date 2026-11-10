@@ -1,6 +1,9 @@
+import { PrivateImage, PrivateMediaScope } from "@/components/PrivateImage";
 import { buildDisplayAddress } from "@/lib/utils";
 import { useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
+import { UnavailableShareLink } from "@/components/UnavailableShareLink";
+import { Seo } from "@/components/Seo";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -43,6 +46,8 @@ export default function HotSheetPreview() {
   const [subscribed, setSubscribed] = useState(false);
 
   useEffect(() => {
+    let cancelled = false;
+    setLoading(true); setError(false); setListings([]); setAgentName(null); setAgentCompany(null);
     if (!token) {
       setError(true);
       setLoading(false);
@@ -54,6 +59,7 @@ export default function HotSheetPreview() {
         const { data, error: fnError } = await supabase.functions.invoke("get-hotsheet-preview", {
           body: { token },
         });
+        if (cancelled) return;
 
         if (fnError || !data?.success) {
           setError(true);
@@ -64,11 +70,12 @@ export default function HotSheetPreview() {
           setListings(data.listings || []);
         }
       } catch {
-        setError(true);
+        if (!cancelled) setError(true);
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     })();
+    return () => { cancelled = true; };
   }, [token]);
 
   const handleSubscribe = async () => {
@@ -105,26 +112,18 @@ export default function HotSheetPreview() {
     );
   }
 
-  if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background p-4">
-        <Card className="max-w-md w-full">
-          <CardContent className="pt-8 pb-8 text-center space-y-4">
-            <h1 className="text-xl font-semibold">Preview not available</h1>
-            <p className="text-muted-foreground">This link may have expired or is invalid.</p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  if (error) return <UnavailableShareLink />;
 
   return (
+    <PrivateMediaScope token={token ?? undefined}>
+    <Seo title="Private shared Hot Sheet" description="Secure access through All Agent Connect." noindex />
     <div className="min-h-screen bg-background">
       {/* Header */}
       <div className="bg-card border-b border-border">
         <div className="container mx-auto px-4 py-8 text-center">
           <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">Hot Sheet Preview</p>
           <h1 className="text-2xl sm:text-3xl font-bold text-foreground">{hotSheetName}</h1>
+          {agentName && <p className="mt-2 text-sm">Your Agent · Shared by {agentName}{agentCompany ? ` · ${agentCompany}` : ""}</p>}
           <p className="text-sm text-muted-foreground mt-1">
             {listings.length} listing{listings.length !== 1 ? "s" : ""} matching this search
           </p>
@@ -204,8 +203,8 @@ export default function HotSheetPreview() {
                 <Card key={listing.id} className="overflow-hidden">
                   {photoUrl && (
                     <div className="aspect-[16/10] bg-muted overflow-hidden">
-                      <img
-                        src={photoUrl}
+                      <PrivateImage
+                        src={typeof photoUrl === "string" ? photoUrl : photoUrl?.url}
                         alt={listing.address}
                         className="w-full h-full object-cover"
                         loading="lazy"
@@ -242,6 +241,7 @@ export default function HotSheetPreview() {
                         </span>
                       )}
                     </div>
+                    <Button variant="outline" size="sm" asChild><Link to={`/s/${token}?kind=hotsheet&listing=${listing.id}`}>View listing</Link></Button>
                   </CardContent>
                 </Card>
               );
@@ -272,5 +272,6 @@ export default function HotSheetPreview() {
         </div>
       </div>
     </div>
+    </PrivateMediaScope>
   );
 }

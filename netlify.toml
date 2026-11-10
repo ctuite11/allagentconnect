@@ -9,7 +9,8 @@
 [[headers]]
   for = "/*"
   [headers.values]
-    X-Robots-Tag = "all"
+    X-Robots-Tag = "noindex, nofollow, noarchive"
+    Referrer-Policy = "no-referrer"
     Cache-Control = "no-cache, no-store, must-revalidate, max-age=0"
     Pragma = "no-cache"
     Expires = "0"
@@ -63,6 +64,10 @@
 # Initial HTML metadata for approved public AAC marketing/legal routes only.
 # Do not apply to private, login, listing or DCMLS consumer routes.
 [[edge_functions]]
+  path = "/*"
+  function = "privacy-headers"
+
+[[edge_functions]]
   path = "/about"
   function = "public-page-seo"
 
@@ -104,6 +109,14 @@
 
 [[edge_functions]]
   path = "/property/*"
+  function = "social-preview"
+
+[[edge_functions]]
+  path = "/consumer-property/*"
+  function = "social-preview"
+
+[[edge_functions]]
+  path = "/s/*"
   function = "social-preview"
 
 [[edge_functions]]

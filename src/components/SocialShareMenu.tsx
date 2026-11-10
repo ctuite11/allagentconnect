@@ -11,6 +11,8 @@ import { XIcon } from "@/components/icons/XIcon";
 import { toast } from "sonner";
 import { ShareListingDialog } from "@/components/ShareListingDialog";
 import { trackShare } from "@/lib/trackShare";
+import { privacyRpc } from "@/lib/privacyApi";
+import { getPublicOrigin } from "@/lib/getPublicUrl";
 
 interface SocialShareMenuProps {
   url: string;
@@ -41,28 +43,33 @@ const SocialShareMenu = ({
   const encodedTitle = encodeURIComponent(title);
   const encodedDescription = encodeURIComponent(description);
 
-  const shareLinks = {
-    facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
-    twitter: `https://x.com/intent/post?url=${encodedUrl}&text=${encodedTitle}`,
-    linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`,
-    whatsapp: `https://wa.me/?text=${encodedTitle}%20${encodedUrl}`,
+  const getSecureUrl = async () => {
+    if (!listingId) return url;
+    const token = await privacyRpc<string>("create_listing_share_link", { p_listing_id: listingId });
+    return `${getPublicOrigin().replace(/\/$/, "")}/s/${token}`;
   };
 
   const handleCopyLink = async () => {
-    navigator.clipboard.writeText(url);
-    toast.success("Link copied to clipboard");
-
-    if (listingId) {
-      await trackShare(listingId, "copy_link");
-    }
+    try {
+      await navigator.clipboard.writeText(await getSecureUrl());
+      toast.success("Link copied to clipboard");
+      if (listingId) await trackShare(listingId, "copy_link");
+    } catch { toast.error("External sharing must be authorized by the listing agent first."); }
   };
 
-  const handleSocialShare = async (platform: keyof typeof shareLinks) => {
-    window.open(shareLinks[platform], "_blank", "noopener,noreferrer,width=600,height=400");
-
-    if (listingId) {
-      await trackShare(listingId, platform);
-    }
+  const handleSocialShare = async (platform: "facebook" | "twitter" | "linkedin" | "whatsapp") => {
+    try {
+      const link = encodeURIComponent(await getSecureUrl());
+      const shareTitle = listingId ? encodeURIComponent("Private shared listing") : encodedTitle;
+      const shareLinks = {
+        facebook: `https://www.facebook.com/sharer/sharer.php?u=${link}`,
+        twitter: `https://x.com/intent/post?url=${link}&text=${shareTitle}`,
+        linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${link}`,
+        whatsapp: `https://wa.me/?text=${shareTitle}%20${link}`,
+      };
+      window.open(shareLinks[platform], "_blank", "noopener,noreferrer,width=600,height=400");
+      if (listingId) await trackShare(listingId, platform);
+    } catch { toast.error("External sharing must be authorized by the listing agent first."); }
   };
 
   const handleEmailShare = () => {

@@ -8,6 +8,7 @@ import { useAuthRole } from "@/hooks/useAuthRole";
 import { useAgentPresence } from "@/hooks/useAgentPresence";
 import { DelegateContextBanner } from "@/components/DelegateContextBanner";
 import { MessagingSystemUpdateAnnouncement } from "@/components/MessagingSystemUpdateAnnouncement";
+import { ShareLinkRequests } from "@/components/ShareLinkRequests";
 import { agentPageShellTopClass } from "@/lib/agentUi";
 import { cn } from "@/lib/utils";
 
@@ -84,6 +85,7 @@ export function AppShell({ children }: AppShellProps) {
             </span>
           </div>
         </header>
+        <ShareLinkRequests />
         <AgentContentInsetProvider value>
           <div
             data-app-scroll-root

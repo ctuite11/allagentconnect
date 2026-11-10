@@ -1,3 +1,4 @@
+import { PrivateImage } from "@/components/PrivateImage";
 import { useEffect, useMemo, useState } from "react";
 
 export interface ListingRecord {
@@ -80,7 +81,7 @@ export function ListingImage({ photos, alt }: { photos?: unknown; alt: string })
   }
 
   return (
-    <img
+    <PrivateImage
       src={src}
       alt={alt}
       className="h-full w-full object-cover"

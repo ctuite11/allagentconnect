@@ -1,5 +1,9 @@
+import { PrivateImage, PrivateMediaScope } from "@/components/PrivateImage";
+import { privacyRpc, type SharedAgent, type SharedListing } from "@/lib/privacyApi";
+import { UnavailableShareLink } from "@/components/UnavailableShareLink";
+import { resolveFirstListingPhotoUrl } from "@/lib/resolveListingPhotoUrl";
 import { listingDaysOnMarket, listingMarketDate } from "@/lib/listingDaysOnMarket";
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { LoadingScreen } from "@/components/LoadingScreen";
@@ -93,7 +97,7 @@ import {
   toPublicAgentProfile,
   toPublicListingViewModel,
 } from "@/lib/publicListing";
-import { fetchDcmlsListing } from "@/lib/dcmlsListing";
+import { fetchDcmlsListing, fetchDcmlsListingAgent } from "@/lib/dcmlsListing";
 
 // ATTRIBUTION MASKING (BUYER UI — authenticated buyers only on AAC)
 // Logged-in buyers on AAC must NEVER contact listing.agent_id from this page.
@@ -201,6 +205,16 @@ const ConsumerPropertyDetail = () => {
     () => isDcmlsHost(),
     [location.pathname, location.search],
   );
+  const sheetId = new URLSearchParams(location.search).get("sheet") ?? undefined;
+  const sourceKey = `${id ?? ""}|${sheetId ?? ""}|${isDcmls}|${user?.id ?? ""}|${role ?? ""}`;
+  const [loadedKey, setLoadedKey] = useState<string>();
+  const loadRequest = useRef(0);
+  const showingPreview = useMemo(() => listing ? {
+    address: listing.address, cityStateZip: `${listing.city}, ${listing.state} ${listing.zip_code ?? ""}`,
+    price: formatListingPriceDisplay(listing) ?? undefined, beds: listing.bedrooms ?? undefined,
+    baths: listing.bathrooms ?? undefined, sqft: listing.square_feet ?? undefined,
+    photoUrl: resolveFirstListingPhotoUrl(listing.photos),
+  } : undefined, [listing]);
 
   // Shared-listing guest mode: unauthenticated viewers anchor on this listing.
   useEffect(() => {
@@ -263,7 +277,11 @@ const ConsumerPropertyDetail = () => {
 
   // Resolve sticky agent for buyer masking
   useEffect(() => {
+    // Buyer attribution comes from the authorized listing response, not browser tracking.
+    if (role === "buyer" && !isDcmls) return;
+    let cancelled = false;
     syncStickyFromDB().then(async (agentId) => {
+      if (cancelled) return;
       setStickyAgentId(agentId);
       if (!agentId) {
         setStickyAgentProfile(null);
@@ -274,33 +292,53 @@ const ConsumerPropertyDetail = () => {
         .select("id, first_name, last_name, title, headshot_url, logo_url, company, office_name, social_links")
         .eq("id", agentId)
         .maybeSingle();
-      setStickyAgentProfile(data as AgentProfile | null);
+      if (!cancelled) setStickyAgentProfile(data as AgentProfile | null);
     });
-  }, []);
+    return () => { cancelled = true; };
+  }, [role, isDcmls, user?.id]);
 
   // Track listing view
   useListingView(id);
 
-  const loadListing = useCallback(async () => {
+  const loadListing = useCallback(async (quiet = false) => {
     if (!id || authLoading) return;
+    const request = ++loadRequest.current;
     try {
       setLoadError(false);
-      setLoading(true);
+      if (!quiet) setLoading(true);
       // Clear immediately so AAC data never remains visible after entering DCMLS mode.
-      setListing(null);
-      setAgentProfile(null);
+      if (!quiet) { setListing(null); setAgentProfile(null); }
+      if (!quiet && role === "buyer" && !isDcmls) {
+        setStickyAgentId(null);
+        setStickyAgentProfile(null);
+      }
 
       // DCMLS host: gated lookup only — never fall back to AAC public/listings paths.
       if (isDcmls) {
-        const dcmlsListing = await fetchDcmlsListing(id);
+        const [dcmlsListing, publicAgent] = await Promise.all([fetchDcmlsListing(id), fetchDcmlsListingAgent(id)]);
+        if (request !== loadRequest.current) return;
         if (!dcmlsListing) {
           setListing(null);
           setAgentProfile(null);
           return;
         }
-        const publicAgent = await fetchPublicListingAgent(id);
         setListing(toPublicListingViewModel(dcmlsListing, publicAgent));
         setAgentProfile(publicAgent ? toPublicAgentProfile(publicAgent) : null);
+        return;
+      }
+
+      if (user && role === "buyer") {
+        const result = await privacyRpc<{ listing: SharedListing; agent: SharedAgent } | null>("get_buyer_listing", {
+          p_listing_id: id, p_hot_sheet_id: sheetId ?? null,
+        });
+        if (request !== loadRequest.current) return;
+        if (!result?.listing || !result.agent) {
+          setListing(null); setStickyAgentProfile(null); setStickyAgentId(null); return;
+        }
+        setListing(result.listing);
+        setStickyAgentId(result.agent.id);
+        setStickyAgentProfile({ title: null, logo_url: null, office_name: null,
+          headshot_url: null, cell_phone: null, phone: null, company: null, email: "", ...result.agent });
         return;
       }
 
@@ -308,6 +346,7 @@ const ConsumerPropertyDetail = () => {
       // Do not fall back to anonymous listings.select("*").
       if (!user) {
         const publicListing = await fetchPublicListing(id);
+        if (request !== loadRequest.current) return;
         if (!publicListing) {
           setListing(null);
           setAgentProfile(null);
@@ -315,6 +354,7 @@ const ConsumerPropertyDetail = () => {
         }
 
         const publicAgent = await fetchPublicListingAgent(id);
+        if (request !== loadRequest.current) return;
         setListing(toPublicListingViewModel(publicListing, publicAgent));
         setAgentProfile(publicAgent ? toPublicAgentProfile(publicAgent) : null);
         return;
@@ -322,6 +362,7 @@ const ConsumerPropertyDetail = () => {
 
       // Authenticated buyer/agent/admin on AAC: existing member data path.
       const { data, error } = await supabase.from("listings").select("*").eq("id", id).maybeSingle();
+      if (request !== loadRequest.current) return;
 
       if (error) throw error;
 
@@ -341,25 +382,32 @@ const ConsumerPropertyDetail = () => {
           .select("id, first_name, last_name, title, company, office_name, headshot_url, logo_url, social_links")
           .eq("id", data.agent_id)
           .maybeSingle();
+        if (request !== loadRequest.current) return;
 
         setAgentProfile(profile ? (profile as AgentProfile) : null);
       } else {
         setAgentProfile(null);
       }
     } catch (error: unknown) {
+      if (request !== loadRequest.current) return;
       console.error("Error fetching data:", error);
       setLoadError(true);
       setListing(null);
       setAgentProfile(null);
       toast.error("Failed to load property details");
     } finally {
-      setLoading(false);
+      if (request === loadRequest.current) {
+        setLoadedKey(sourceKey);
+        setLoading(false);
+      }
     }
-  }, [id, authLoading, user, isDcmls]);
+  }, [id, authLoading, user?.id, role, isDcmls, sheetId, sourceKey]);
 
   useEffect(() => {
     if (authLoading) return;
     void loadListing();
+    const timer = window.setInterval(() => void loadListing(true), 5 * 60 * 1000);
+    return () => { loadRequest.current++; window.clearInterval(timer); };
   }, [loadListing, authLoading]);
 
   const handlePrevPhoto = () => {
@@ -410,9 +458,11 @@ const ConsumerPropertyDetail = () => {
 
   const getCompensationDisplay = () => formatBuyerAgentFeeDisplay(listing ?? {});
 
-  if (loading) {
+  if (authLoading || loading || loadedKey !== sourceKey) {
     return <ConsumerPropertyDetailSkeleton />;
   }
+
+  if (role === "buyer" && !isDcmls && (loadError || !listing)) return <UnavailableShareLink />;
 
   if (loadError) {
     return (
@@ -481,6 +531,7 @@ const ConsumerPropertyDetail = () => {
     );
 
   return (
+    <PrivateMediaScope hotSheetId={sheetId} dcmls={isDcmls}>
     <div className="min-h-screen bg-white flex flex-col">
       {isDcmls ? <DcmlsConsumerHeader /> : null}
       <PropertyMetaTags
@@ -557,7 +608,7 @@ const ConsumerPropertyDetail = () => {
                 <div className="absolute inset-0 bg-neutral-950">
                   {/* Media Content */}
                   {activeMediaTab === "photos" && (
-                    <img
+                    <PrivateImage
                       src={mainPhoto}
                       alt={listing.address}
                       className="w-full h-full object-cover cursor-pointer"
@@ -594,7 +645,7 @@ const ConsumerPropertyDetail = () => {
                       className="absolute top-3 right-3 z-20"
                       onClick={(e) => e.stopPropagation()}
                     >
-                      <FavoriteButton listingId={listing.id} size="icon" photoIcon />
+                      <FavoriteButton listingId={listing.id} hotSheetId={sheetId} size="icon" photoIcon />
                     </div>
                   )}
 
@@ -655,7 +706,7 @@ const ConsumerPropertyDetail = () => {
                     neutralTone
                     className="!mt-0 min-w-0 !px-0"
                     trailing={
-                      <SocialShareMenu
+                      isAgentView && <SocialShareMenu
                         url={getListingShareUrl(id!)}
                         title={listing.address}
                         description={listing.description || ""}
@@ -847,6 +898,7 @@ const ConsumerPropertyDetail = () => {
                       </Button>
                       <ScheduleShowingDialog
                         listingId={listing.id}
+                        preview={showingPreview}
                         listingAddress={
                           formatListingEmailSubjectLocation(listing) ||
                           `${listing.address}, ${listing.city}, ${listing.state}`
@@ -1125,7 +1177,7 @@ const ConsumerPropertyDetail = () => {
                         fallbackClassName="bg-neutral-100"
                       />
                       <div className="flex-1 min-w-0">
-                        <p className={propertyDetailAgentEyebrow}>Your agent</p>
+                        <p className={propertyDetailAgentEyebrow}>Your Agent / Shared by</p>
                         <p className="mt-1 font-bold text-lg leading-tight">
                           {stickyAgentProfile.first_name} {stickyAgentProfile.last_name}
                         </p>
@@ -1289,6 +1341,8 @@ const ConsumerPropertyDetail = () => {
                 <div className="px-6">
                   <ScheduleShowingDialog
                     listingId={listing.id}
+                    hotSheetId={sheetId}
+                    preview={showingPreview}
                     listingAddress={formatListingEmailSubjectLocation(listing) || `${listing.address}, ${listing.city}, ${listing.state}`}
                     triggerVariant="outline"
                     triggerClassName={cn(propertyDetailScheduleCtaBase, propertyDetailScheduleCta)}
@@ -1434,6 +1488,7 @@ const ConsumerPropertyDetail = () => {
       )}
       {isDcmls ? <Footer /> : null}
     </div>
+    </PrivateMediaScope>
   );
 };
 

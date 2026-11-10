@@ -239,20 +239,21 @@ const AgentMatch = () => {
     if (step === "property") setStep("photos");
     else if (step === "photos") setStep("confirm");
     else if (step === "confirm") {
-      // Calculate match count immediately (no auth required)
+      // Public intake receives a bounded aggregate, never network records.
       setIsLoading(true);
       try {
-        const { data: matchData, error: matchError } = await supabase.rpc("count_matching_agents", {
+        const { data: matchData, error: matchError } = await supabase.functions.invoke("agent-match-count", { body: {
           p_city: propertyData.city,
           p_state: propertyData.state,
           p_property_type: propertyData.property_type,
           p_price: parseFloat(propertyData.asking_price) || 0,
           p_bedrooms: parseInt(propertyData.bedrooms) || 0,
           p_bathrooms: parseFloat(propertyData.bathrooms) || 0,
-        });
+        } });
 
         if (matchError) throw matchError;
-        setMatchCount(matchData || 0);
+        if (!Number.isSafeInteger(matchData?.count) || matchData.count < 0) throw new Error("Matching is temporarily unavailable. Please try again.");
+        setMatchCount(matchData.count);
         setStep("results");
       } catch (error: any) {
         console.error("Error calculating matches:", error);

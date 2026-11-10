@@ -21,9 +21,7 @@ import { fetchListingPreview } from "@/lib/fetchListingPreview";
 import { ListingPreviewCard } from "@/components/share/ListingPreviewCard";
 import type { ListingPreview } from "@/components/share/ShareListingsDialog";
 import { cn } from "@/lib/utils";
-import type { Database } from "@/integrations/supabase/types";
-
-type ShowingRequestInsert = Database["public"]["Tables"]["showing_requests"]["Insert"];
+import { isDcmlsHost } from "@/lib/host";
 
 const showingRequestSchema = z.object({
   requester_name: z.string().trim().min(1, "Please enter your name").max(100),
@@ -39,6 +37,8 @@ const INPUT_CLASS =
 interface ScheduleShowingDialogProps {
   listingId: string;
   listingAddress: string;
+  hotSheetId?: string;
+  preview?: ListingPreview;
   triggerLabel?: string;
   triggerClassName?: string;
   triggerVariant?: "default" | "outline" | "secondary";
@@ -55,6 +55,8 @@ const TIME_OPTIONS = [
 const ScheduleShowingDialog = ({
   listingId,
   listingAddress,
+  hotSheetId,
+  preview: providedPreview,
   triggerLabel = "Schedule Showing",
   triggerClassName,
   triggerVariant = "default",
@@ -77,7 +79,7 @@ const ScheduleShowingDialog = ({
     if (!open) return;
 
     void (async () => {
-      const preview = await fetchListingPreview(listingId);
+      const preview = providedPreview ?? await fetchListingPreview(listingId);
       setListingPreview(preview);
 
       const {
@@ -95,7 +97,7 @@ const ScheduleShowingDialog = ({
         }));
       }
     })();
-  }, [open, listingId]);
+  }, [open, listingId, providedPreview]);
 
   const resetForm = () => {
     setFormData({
@@ -124,43 +126,25 @@ const ScheduleShowingDialog = ({
 
       setLoading(true);
 
-      const showingRow: ShowingRequestInsert = {
-        listing_id: listingId,
-        requester_name: validatedData.requester_name,
-        requester_email: validatedData.requester_email,
-        requester_phone: null,
-        preferred_date: validatedData.preferred_date,
-        preferred_time: validatedData.preferred_time,
-        message: validatedData.message || null,
-      };
-      const { error } = await supabase.from("showing_requests").insert([showingRow]);
-
-      if (error) throw error;
-
-      // Authoritative delivery: server resolves listing agent from listingId.
-      // Do not treat a client-supplied agentEmail as the destination.
-      try {
-        const { error: emailError } = await supabase.functions.invoke(
-          "send-showing-request-email",
-          {
-            body: {
-              listingId,
-              requesterName: validatedData.requester_name,
-              requesterEmail: validatedData.requester_email,
-              listingAddress,
-              preferredDate: validatedData.preferred_date,
-              preferredTime: validatedData.preferred_time,
-              message: validatedData.message,
-              photoUrl: listingPreview?.photoUrl,
-            },
+      // The server authorizes scope before saving, and resolves the recipient.
+      const { error: emailError } = await supabase.functions.invoke(
+        "send-showing-request-email",
+        {
+          body: {
+            listingId,
+            hotSheetId,
+            dcmls: isDcmlsHost(),
+            requesterName: validatedData.requester_name,
+            requesterEmail: validatedData.requester_email,
+            listingAddress,
+            preferredDate: validatedData.preferred_date,
+            preferredTime: validatedData.preferred_time,
+            message: validatedData.message,
+            photoUrl: listingPreview?.photoUrl,
           },
-        );
-        if (emailError) {
-          console.error("Failed to send email notification:", emailError);
-        }
-      } catch (emailError) {
-        console.error("Failed to send email notification:", emailError);
-      }
+        },
+      );
+      if (emailError) throw emailError;
 
       toast.success("Showing request submitted successfully! The agent will contact you soon.");
       handleOpenChange(false);

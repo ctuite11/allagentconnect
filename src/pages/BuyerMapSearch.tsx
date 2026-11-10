@@ -669,7 +669,7 @@ export default function BuyerMapSearch() {
 
       if (isDcmlsHost()) queryParams.dcmlsOnly = true;
 
-      const { data, error } = await buildListingsQuery(supabase, queryParams).limit(250);
+      const { data, error } = await buildListingsQuery(supabase, queryParams, { buyerScope: true }).limit(250);
       if (error) throw error;
 
       const baseListings = (data || []) as ListingRecord[];

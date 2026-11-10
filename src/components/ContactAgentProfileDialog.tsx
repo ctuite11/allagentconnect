@@ -9,6 +9,9 @@ import { Mail } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { cn } from "@/lib/utils";
+import { isDcmlsHost } from "@/lib/host";
+import { TurnstileField } from "@/components/security/TurnstileField";
+import { useTurnstile } from "@/hooks/useTurnstile";
 import {
   getCurrentSenderProfile,
   type SenderProfile,
@@ -41,7 +44,7 @@ interface ContactAgentProfileDialogProps {
 }
 
 const ContactAgentProfileDialog = ({
-  agentId: _agentId,
+  agentId,
   agentName,
   agentEmail,
   buttonText = "Contact Agent",
@@ -53,6 +56,8 @@ const ContactAgentProfileDialog = ({
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState(EMPTY_FORM);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const dcmls = isDcmlsHost();
+  const turnstile = useTurnstile("contact_agent_profile", open && dcmls);
 
   const prefillSenderFields = useCallback(async () => {
     if (initialSender?.name || initialSender?.email) {
@@ -87,12 +92,17 @@ const ContactAgentProfileDialog = ({
 
     try {
       const validatedData = contactMessageSchema.parse(formData);
+      const turnstileToken = dcmls ? await turnstile.getFreshToken() : null;
+      if (dcmls && !turnstileToken) return;
 
       setLoading(true);
 
       try {
-        await supabase.functions.invoke("send-agent-profile-contact", {
+        const { error } = await supabase.functions.invoke("send-agent-profile-contact", {
           body: {
+            agentId,
+            dcmls,
+            turnstile_token: turnstileToken,
             agentEmail: agentEmail,
             agentName: agentName,
             senderName: validatedData.sender_name,
@@ -101,9 +111,11 @@ const ContactAgentProfileDialog = ({
             subject: validatedData.subject,
           },
         });
+        if (error) throw error;
       } catch (emailError) {
         console.error("Failed to send email notification:", emailError);
         toast.error("Failed to send message. Please try again.");
+        if (dcmls) turnstile.reset();
         return;
       }
 
@@ -202,6 +214,7 @@ const ContactAgentProfileDialog = ({
             <p className="text-xs text-muted-foreground">{formData.message.length}/1000</p>
           </div>
 
+          {dcmls && <TurnstileField containerRef={turnstile.containerRef} error={turnstile.error} />}
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" size="sm" className="border-neutral-200" onClick={() => setOpen(false)}>
               Cancel

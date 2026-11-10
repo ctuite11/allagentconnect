@@ -42,6 +42,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
+import { privacyReadClient } from "@/lib/privacyApi";
 import { cn, formatListingConversationTitle } from "@/lib/utils";
 import { useAuthRole } from "@/hooks/useAuthRole";
 import { ArrowLeft, MapPin, Heart } from "lucide-react";
@@ -365,7 +366,7 @@ const Favorites = ({
   const fetchFavorites = async (userId: string) => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      const { data, error } = buyerMode ? await privacyReadClient.rpc("list_buyer_favorites") : await supabase
         .from("favorites")
         .select(`
           id,
@@ -412,8 +413,8 @@ const Favorites = ({
         .map((l) => l.id);
 
       if (idsMissingCoords.length > 0) {
-        const { data: coordRows, error: coordErr } = await supabase
-          .from("listings")
+        const { data: coordRows, error: coordErr } = await privacyReadClient
+          .from(buyerMode ? "buyer_listings" : "listings")
           .select("id, latitude, longitude")
           .in("id", idsMissingCoords);
         if (!coordErr && coordRows?.length) {

@@ -122,7 +122,7 @@ test('errors omit tokens, query strings, bodies and recipients', () => {
   assert.fail('request was not blocked');
 });
 
-test('all 121 supplied Edge Function entrypoints install the guard first', () => {
+test('all 123 Edge Function entrypoints install the guard first', () => {
   let entries = 0;
   for (const dir of readdirSync(resolve(root, 'supabase/functions'), { withFileTypes: true })) {
     if (!dir.isDirectory() || dir.name === '_shared') continue;
@@ -131,7 +131,7 @@ test('all 121 supplied Edge Function entrypoints install the guard first', () =>
     assert.ok(source.startsWith('import "../_shared/migrationRuntime.ts";'), path);
     entries++;
   }
-  assert.equal(entries, 121);
+  assert.equal(entries, 123);
   for (const folder of ['netlify/functions', 'netlify/edge-functions']) {
     for (const name of readdirSync(resolve(root, folder)).filter(name => name.endsWith('.ts'))) {
       assert.ok(readFileSync(resolve(root, folder, name), 'utf8')

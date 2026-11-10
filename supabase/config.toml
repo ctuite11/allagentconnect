@@ -42,6 +42,12 @@ verify_jwt = false
 [functions.social-preview]
 verify_jwt = false
 
+[functions.shared-listing-photos]
+verify_jwt = false
+
+[functions.agent-match-count]
+verify_jwt = false
+
 [functions.send-verification-submitted]
 verify_jwt = false
 

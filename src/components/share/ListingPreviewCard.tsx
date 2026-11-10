@@ -1,3 +1,4 @@
+import { PrivateImage } from "@/components/PrivateImage";
 import { Home } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ListingPreview } from "@/components/share/ShareListingsDialog";
@@ -16,7 +17,7 @@ export function ListingPreviewCard({ preview, className }: ListingPreviewCardPro
       )}
     >
       {preview.photoUrl ? (
-        <img
+        <PrivateImage
           src={preview.photoUrl}
           alt=""
           className="h-16 w-[4.5rem] shrink-0 rounded-md border border-neutral-100 object-cover"

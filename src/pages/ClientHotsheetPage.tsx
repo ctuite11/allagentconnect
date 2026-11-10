@@ -9,7 +9,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { buildListingsQuery } from "@/lib/buildListingsQuery";
+import { privacyRpc, type SharedHotSheet } from "@/lib/privacyApi";
+import { PrivateMediaScope } from "@/components/PrivateImage";
+import { UnavailableShareLink } from "@/components/UnavailableShareLink";
 import { ListChecks, MapPin, Pencil, Plus, Trash2, UserPlus } from "lucide-react";
 import { BulkShareListingsDialog } from "@/components/BulkShareListingsDialog";
 import { cn, formatListingConversationTitle } from "@/lib/utils";
@@ -99,27 +101,6 @@ interface HotSheetListingRow {
   [key: string]: unknown;
 }
 
-function mergeListingAgentProfiles<T extends { agent_id?: string | null }>(
-  rows: T[],
-  agentsData: { id: string; first_name: string; last_name: string; company: string | null; office_name: string | null }[],
-): (T & { agent_profile?: ListedByAgentProfile })[] {
-  const byId = new Map(agentsData.map((a) => [a.id, a]));
-  return rows.map((l) => {
-    const aid = l.agent_id;
-    if (typeof aid !== "string" || !byId.has(aid)) return { ...l } as T & { agent_profile?: ListedByAgentProfile };
-    const a = byId.get(aid)!;
-    return {
-      ...l,
-      agent_profile: {
-        company: a.company,
-        office_name: a.office_name,
-        first_name: a.first_name,
-        last_name: a.last_name,
-      },
-    };
-  });
-}
-
 const ClientHotsheetPage = () => {
   const { token, id: hotSheetIdParam } = useParams<{ token?: string; id?: string }>();
   const navigate = useNavigate();
@@ -164,14 +145,10 @@ const ClientHotsheetPage = () => {
     return `/client/hot-sheets/${hotSheet.id}`;
   }, [hotSheet?.id, currentUser, isBuyerHotSheetByIdRoute, hotSheetIdParam]);
 
-  const getBuyerListingDetailPath = useCallback(
-    (listingId: string) => {
-      if (!buyerHotSheetReturnPath) return undefined;
-      const q = new URLSearchParams({ returnTo: buyerHotSheetReturnPath });
-      return `/consumer-property/${listingId}?${q.toString()}`;
-    },
-    [buyerHotSheetReturnPath],
-  );
+  const getBuyerListingDetailPath = useCallback((listingId: string) => {
+    if (token) return `/s/${encodeURIComponent(token)}?kind=hotsheet&listing=${encodeURIComponent(listingId)}`;
+    return `/client/shared-property/${listingId}?sheet=${encodeURIComponent(hotSheet?.id ?? "")}`;
+  }, [token, hotSheet?.id]);
 
   const toggleListingSelection = useCallback((id: string) => {
     setSelectedListingIds((prev) => {
@@ -290,13 +267,7 @@ const ClientHotsheetPage = () => {
       if (tokenData.accepted_by_user_id === currentUser.id && tokenData.accepted_at) return;
 
       const acceptedAt = new Date().toISOString();
-      const { error } = await supabase
-        .from("share_tokens")
-        .update({
-          accepted_at: tokenData.accepted_at || acceptedAt,
-          accepted_by_user_id: currentUser.id,
-        })
-        .eq("token", token);
+      const { error } = await supabase.rpc("accept_client_hot_sheet_invite", { _token: token });
 
       if (error) {
         console.error("Failed to persist token acceptance", error);
@@ -354,241 +325,40 @@ const ClientHotsheetPage = () => {
     };
   }, [hotSheet?.id, listings]);
 
-  const loadBuyerHotSheetById = async (hotSheetId: string) => {
+  const loadScopedHotSheet = async (hotSheetId?: string) => {
+    setLoading(true);
+    setError(null);
+    setListings([]);
+    setAgentProfile(null);
+    setAgent(null);
     try {
-      setLoading(true);
-      setError(null);
-
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        setLoading(false);
-        toast.error("Please sign in to view this hot sheet.");
-        navigate("/auth", { replace: true });
-        return;
+      setCurrentUser(user);
+      if (hotSheetId && !user) throw new Error("unavailable");
+      const result = await privacyRpc<SharedHotSheet | null>("get_shared_hot_sheet", {
+        p_token: hotSheetId ? null : token, p_hot_sheet_id: hotSheetId ?? null,
+      });
+      if (!result?.hot_sheet || !result.agent) throw new Error("unavailable");
+      setHotSheet(result.hot_sheet);
+      setAgentProfile(result.agent);
+      setAgent(result.agent);
+      setListings(result.listings as unknown as HotSheetListingRow[]);
+      if (token && !hotSheetId) {
+        const { data, error: tokenError } = await supabase.rpc("resolve_share_token", { _token: token });
+        if (tokenError || !data) throw new Error("unavailable");
+        setTokenData(data);
       }
-
-      const { data: linkRow, error: linkError } = await supabase
-        .from("hot_sheet_clients")
-        .select("hot_sheet_id")
-        .eq("hot_sheet_id", hotSheetId)
-        .maybeSingle();
-
-      if (linkError) {
-        throw linkError;
-      }
-      if (!linkRow) {
-        throw new Error("You do not have access to this hot sheet.");
-      }
-
-      const { data: hotSheetRaw, error: hotSheetError } = await supabase
-        .rpc("get_hot_sheet_for_member" as any, { _hot_sheet_id: hotSheetId } as any)
-        .single();
-
-      if (hotSheetError || !hotSheetRaw) {
-        throw hotSheetError || new Error("Saved search not found");
-      }
-      const hotSheetData = hotSheetRaw as any;
-
-      if (hotSheetData.user_id) {
-        document.cookie = `primary_agent_id=${hotSheetData.user_id}; path=/; max-age=${
-          60 * 60 * 24 * 365
-        }`;
-        localStorage.setItem("primary_agent_id", hotSheetData.user_id);
-      }
-      if (hotSheetData.client_id) {
-        localStorage.setItem("client_id", hotSheetData.client_id);
-      }
-
-      setHotSheet(hotSheetData);
-
-      const { data: agentData, error: agentError } = await supabase
-        .from("agent_profiles")
-        .select("*")
-        .eq("id", hotSheetData.user_id)
-        .single();
-
-      if (agentError) {
-        throw agentError;
-      }
-
-      setAgentProfile(agentData);
-      setAgent(agentData);
-
-      const loadedCriteria = (hotSheetData.criteria as any) || {};
-      const query = buildListingsQuery(supabase, loadedCriteria).limit(200);
-      const { data: listingsData, error: listingsError } = await query;
-
-      if (listingsError) {
-        throw listingsError;
-      }
-
-      const rawListings = listingsData || [];
-      const agentIds = Array.from(
-        new Set(rawListings.map((l: { agent_id?: string | null }) => l.agent_id).filter((id): id is string => Boolean(id))),
-      );
-      let hydrated: HotSheetListingRow[] = rawListings as HotSheetListingRow[];
-      if (agentIds.length > 0) {
-        const { data: agentsData, error: agentsError } = await supabase
-          .from("agent_profiles")
-          .select("id, first_name, last_name, company, office_name")
-          .in("id", agentIds);
-        if (!agentsError && agentsData?.length) {
-          hydrated = mergeListingAgentProfiles(rawListings as { agent_id?: string }[], agentsData) as any;
-        }
-      }
-      setListings(hydrated);
-
-      setLoading(false);
-    } catch (err: any) {
-      console.error("Client hotsheet by id load error", err);
-      setLoading(false);
-      toast.error("We couldn't open this hot sheet.");
-      navigate("/hot-sheets", { replace: true });
-    }
+    } catch {
+      setHotSheet(null);
+      setListings([]);
+      setAgentProfile(null);
+      setAgent(null);
+      setError("unavailable");
+    } finally { setLoading(false); }
   };
 
-  const validateAndLoadHotsheet = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      if (!token) {
-        throw new Error("Missing token in URL params");
-      }
-
-      // 1) Validate token via SECURITY DEFINER RPC
-      const { data: tokenRpc, error: tokenError } = await supabase
-        .rpc("resolve_share_token", { _token: token });
-      const tokenData = (tokenRpc ?? null) as any;
-
-      if (tokenError) {
-        throw tokenError;
-      }
-
-      if (!tokenData) {
-        throw new Error("Share token not found");
-      }
-
-      console.log("Client hotsheet share token", tokenData);
-      
-      // Store token data for identity enforcement
-      setTokenData(tokenData);
-
-      // Check if token is expired (only if expires_at is set and in the past)
-      if (tokenData.expires_at && new Date(tokenData.expires_at) < new Date()) {
-        throw new Error("Share token expired");
-      }
-
-      // 2) Parse payload - assume it contains hot_sheet_id and optional client_id
-      let payload: any = tokenData.payload;
-      if (typeof payload === "string") {
-        try {
-          payload = JSON.parse(payload);
-        } catch (parseError) {
-          throw new Error("Invalid payload JSON on share token");
-        }
-      }
-
-      console.log("Client hotsheet payload", payload);
-
-      const hotSheetId =
-        payload?.hot_sheet_id || payload?.hotSheetId || payload?.hotsheetId;
-
-      if (!hotSheetId) {
-        throw new Error("No hot_sheet_id found in share token payload");
-      }
-
-      // 3) Set agent + client context (cookie / localStorage)
-      if (tokenData.agent_id) {
-        document.cookie = `primary_agent_id=${tokenData.agent_id}; path=/; max-age=${
-          60 * 60 * 24 * 365
-        }; SameSite=Lax`;
-        localStorage.setItem("primary_agent_id", tokenData.agent_id);
-      }
-
-      if (payload.client_id) {
-        localStorage.setItem("client_id", payload.client_id);
-      }
-
-      // 4) Fetch agent profile
-      if (tokenData.agent_id) {
-        const { data: agentData, error: agentError } = await supabase
-          .from("agent_profiles")
-          .select("*")
-          .eq("id", tokenData.agent_id)
-          .single();
-
-        if (agentError) {
-          throw agentError;
-        }
-
-        setAgentProfile(agentData);
-        setAgent(agentData);
-      }
-
-      // 5) Fetch hot sheet details
-      const { data: hotSheetRaw, error: hotSheetError } = await supabase
-        .rpc("get_hot_sheet_by_token" as any, { _token: token } as any)
-        .single();
-
-      if (hotSheetError || !hotSheetRaw) {
-        throw hotSheetError || new Error("Saved search not found");
-      }
-      const hotSheetData = hotSheetRaw as any;
-
-      console.log("Client hotsheet hotSheet", hotSheetData);
-      setHotSheet(hotSheetData);
-
-      // 6) Fetch matching listings using hot sheet criteria
-      const loadedCriteria = (hotSheetData.criteria as any) || {};
-      const query = buildListingsQuery(supabase, loadedCriteria).limit(200);
-      const { data: listingsData, error: listingsError } = await query;
-
-      if (listingsError) {
-        throw listingsError;
-      }
-
-      console.log("Client hotsheet listings", listingsData);
-      const rawListings = listingsData || [];
-      const agentIds = Array.from(
-        new Set(rawListings.map((l: { agent_id?: string | null }) => l.agent_id).filter((id): id is string => Boolean(id))),
-      );
-      let hydrated: HotSheetListingRow[] = rawListings as HotSheetListingRow[];
-      if (agentIds.length > 0) {
-        const { data: agentsData, error: agentsError } = await supabase
-          .from("agent_profiles")
-          .select("id, first_name, last_name, company, office_name")
-          .in("id", agentIds);
-        if (!agentsError && agentsData?.length) {
-          hydrated = mergeListingAgentProfiles(rawListings as { agent_id?: string }[], agentsData) as any;
-        }
-      }
-      setListings(hydrated);
-
-      // ✅ SUCCESS – stop loading
-      setLoading(false);
-    } catch (err: any) {
-      console.error("Client hotsheet load error", err);
-
-      const reason =
-        err?.message ||
-        err?.error_description ||
-        err?.hint ||
-        (typeof err === "string" ? err : JSON.stringify(err));
-
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        toast.error("We could not open this specific shared hot sheet. Taking you to your dashboard.");
-        navigate("/client/dashboard", { replace: true });
-        return;
-      }
-
-      setError(
-        `We could not load this saved search. (${reason}) Please contact your agent or try the link again.`
-      );
-      setLoading(false);
-    }
-  };
+  const loadBuyerHotSheetById = (id: string) => loadScopedHotSheet(id);
+  const validateAndLoadHotsheet = () => loadScopedHotSheet();
 
   const handleUpdateCriteria = async (
     _hotSheetId?: string,
@@ -662,22 +432,7 @@ const ClientHotsheetPage = () => {
     );
   }
 
-  if (!loading && error) {
-    return (
-      <div className={`flex min-h-screen flex-col bg-white ${contentTopClass}`}>
-        <main className="flex-1 flex items-center justify-center px-4">
-          <Card className="max-w-md w-full p-6 text-center">
-            <h1 className="text-xl font-semibold mb-2">We hit a snag</h1>
-            <p className="text-muted-foreground mb-4">
-              We could not load this saved search. Please contact your agent or try the link again.
-            </p>
-            <Button onClick={() => navigate("/")}>Back to home</Button>
-          </Card>
-        </main>
-        {!hidePublicFooter && <Footer />}
-      </div>
-    );
-  }
+  if (!loading && error) return <UnavailableShareLink />;
 
   const criteriaSummary = getCriteriaSummaryLine(
     (hotSheet?.criteria || {}) as Record<string, unknown>
@@ -767,9 +522,17 @@ const ClientHotsheetPage = () => {
   }
 
   return (
+    <PrivateMediaScope token={token} hotSheetId={hotSheetIdParam}>
     <div className={`flex flex-col ${buyerPageShell} ${contentTopClass}`}>
       <main className={`flex-1 ${buyerHotSheetMainClass}`}>
         <div>
+          {agentProfile && <div className="mb-4 rounded-xl border border-neutral-200 p-4">
+            <p className="text-sm text-muted-foreground">Your Agent · Shared by</p>
+            <p className="font-semibold">{agentProfile.first_name} {agentProfile.last_name}</p>
+            <p>{agentProfile.company}</p>
+            {agentProfile.phone && <p><a href={`tel:${agentProfile.phone}`}>{formatPhoneNumber(agentProfile.phone)}</a></p>}
+            {agentProfile.email && <p><a href={`mailto:${agentProfile.email}`}>{agentProfile.email}</a></p>}
+          </div>}
           <header className="mb-4">
             <AacBackButton
               type="button"
@@ -1018,7 +781,7 @@ const ClientHotsheetPage = () => {
                   chatMessages={listingChatByListingId[listing.id] ?? []}
                   onNewMessage={handleListingChatMessage}
                   compactListingDetailTo={
-                    buyerHotSheetReturnPath ? getBuyerListingDetailPath(listing.id) : undefined
+                    getBuyerListingDetailPath(listing.id)
                   }
                   compactDetailNavigateState={
                     buyerHotSheetReturnPath ? { from: buyerHotSheetReturnPath } : undefined
@@ -1110,6 +873,7 @@ const ClientHotsheetPage = () => {
 
       {!hidePublicFooter && <Footer />}
     </div>
+    </PrivateMediaScope>
   );
 };
 

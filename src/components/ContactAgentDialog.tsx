@@ -22,9 +22,7 @@ import type { ListingPreview } from "@/components/share/ShareListingsDialog";
 import { cn } from "@/lib/utils";
 import { TurnstileField } from "@/components/security/TurnstileField";
 import { useTurnstile } from "@/hooks/useTurnstile";
-import type { Database } from "@/integrations/supabase/types";
-
-type AgentMessageInsert = Database["public"]["Tables"]["agent_messages"]["Insert"];
+import { isDcmlsHost } from "@/lib/host";
 
 const contactMessageSchema = z.object({
   sender_name: z.string().trim().min(1, "Please enter your name").max(100),
@@ -59,7 +57,7 @@ interface ContactAgentDialogProps {
 
 const ContactAgentDialog = ({
   listingId,
-  agentId,
+  agentId: _agentId,
   listingAddress,
   buttonSize = "lg",
   buttonVariant = "outline",
@@ -136,28 +134,11 @@ const ContactAgentDialog = ({
 
       setLoading(true);
 
-      // Best-effort lead row. Current RLS is `WITH CHECK (true)` and does NOT prove
-      // agent_id belongs to listing_id — flagged for Lovable (Phase 3 / follow-up).
-      // Do not treat this insert as the authoritative recipient path.
-      if (agentId) {
-        const leadRow: AgentMessageInsert = {
-          listing_id: listingId,
-          agent_id: agentId,
-          sender_name: validatedData.sender_name,
-          sender_email: validatedData.sender_email,
-          sender_phone: null,
-          message: validatedData.message || "",
-        };
-        const { error: insertError } = await supabase.from("agent_messages").insert([leadRow]);
-        if (insertError) {
-          console.error("agent_messages insert failed:", insertError);
-        }
-      }
-
-      // Authoritative delivery: server resolves listing agent from listingId.
+      // The server authorizes the listing and saves the lead with its actual recipient.
       const { error: emailError } = await supabase.functions.invoke("send-contact-email", {
         body: {
           listingId,
+          dcmls: isDcmlsHost(),
           senderName: validatedData.sender_name,
           senderEmail: validatedData.sender_email,
           message: validatedData.message || "",

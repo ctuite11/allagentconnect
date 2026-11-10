@@ -2,6 +2,7 @@ import "../_shared/migrationRuntime.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.0";
 import { verifyTurnstileToken, TURNSTILE_GENERIC_ERROR } from "../_shared/verifyTurnstile.ts";
+import { verifiedPrivacyClient } from "../_shared/privacyAuth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -14,6 +15,7 @@ const SUPPORT_TO_NAME = "AAC Support";
 interface ContactEmailRequest {
   /** Required for listing inquiries: backend resolves the recipient from this ID. */
   listingId?: string;
+  dcmls?: boolean;
   /**
    * Access-error / platform support only. Destination is hardcoded server-side;
    * callers cannot choose the recipient.
@@ -34,16 +36,14 @@ interface ContactEmailRequest {
  * listing is not publicly eligible (e.g. draft) or does not exist.
  */
 async function resolveListingRecipient(
-  supabaseUrl: string,
-  serviceKey: string,
-  listingId: string
-): Promise<{ email: string; name: string; address: string } | null> {
-  const admin = createClient(supabaseUrl, serviceKey);
-
+  admin: NonNullable<Awaited<ReturnType<typeof verifiedPrivacyClient>>>["client"],
+  listingId: string,
+  dcmls = false,
+): Promise<{ agentId: string; email: string; name: string; address: string } | null> {
   const [{ data: listingRows, error: listingErr }, { data: agentRows, error: agentErr }] =
     await Promise.all([
-      admin.rpc("get_public_listing", { p_listing_id: listingId }),
-      admin.rpc("get_public_listing_agent", { p_listing_id: listingId }),
+      admin.rpc(dcmls ? "get_dcmls_listing" : "get_public_listing", { p_listing_id: listingId }),
+      (admin as any).rpc(dcmls ? "get_dcmls_listing_agent" : "get_public_listing_agent", { p_listing_id: listingId }),
     ]);
 
   if (listingErr || agentErr) {
@@ -65,6 +65,7 @@ async function resolveListingRecipient(
     .join(", ");
 
   return {
+    agentId: agent.agent_id,
     email: agent.email,
     name: [agent.first_name, agent.last_name].filter(Boolean).join(" ").trim() || "there",
     address,
@@ -94,10 +95,10 @@ async function checkRateLimit(
 
   if (error) {
     console.error("[rate-limit] RPC error:", error);
-    return { allowed: true, remaining: limit, reset_at: new Date().toISOString(), current_count: 0 };
+    return { allowed: false, remaining: 0, reset_at: new Date().toISOString(), current_count: limit };
   }
 
-  return data as RateLimitResult;
+  return (Array.isArray(data) ? data[0] : data) ?? { allowed: false, remaining: 0, reset_at: new Date().toISOString(), current_count: limit };
 }
 
 function build429Response(resetAt: string): Response {
@@ -135,7 +136,7 @@ const handler = async (req: Request): Promise<Response> => {
 
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
-    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY") || Deno.env.get("SUPABASE_PUBLISHABLE_KEY");
+    const limiterKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
     // Get IP for rate limiting
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || 
@@ -143,9 +144,9 @@ const handler = async (req: Request): Promise<Response> => {
                "unknown";
 
     // Database-backed rate limiting: 10 contact emails per minute per IP
-    if (supabaseUrl && supabaseAnonKey) {
+    if (supabaseUrl && limiterKey) {
       const rateLimitKey = `route:send-contact-email|ip:${ip}`;
-      const rateLimitResult = await checkRateLimit(supabaseUrl, supabaseAnonKey, rateLimitKey, 60, 10);
+      const rateLimitResult = await checkRateLimit(supabaseUrl, limiterKey, rateLimitKey, 60, 10);
       
       if (!rateLimitResult.allowed) {
         console.log(`[rate-limit] Blocked IP: ${ip}, count: ${rateLimitResult.current_count}`);
@@ -155,6 +156,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     const {
       listingId,
+      dcmls,
       purpose,
       senderName,
       senderEmail,
@@ -163,6 +165,12 @@ const handler = async (req: Request): Promise<Response> => {
       listingAddress,
       turnstile_token,
     }: ContactEmailRequest = await req.json();
+
+    if (typeof senderName !== "string" || !senderName.trim() || senderName.length > 100 ||
+      typeof senderEmail !== "string" || senderEmail.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(senderEmail) ||
+      typeof message !== "string" || message.length > 1000) return new Response(JSON.stringify({ error: "Invalid inquiry" }), {
+      status: 400, headers: { "Content-Type": "application/json", ...corsHeaders },
+    });
 
     // Server-side Cloudflare Turnstile verification — blocks direct API abuse.
     const turnstileResult = await verifyTurnstileToken(turnstile_token, req);
@@ -181,6 +189,8 @@ const handler = async (req: Request): Promise<Response> => {
     let toEmail: string | undefined;
     let toName: string | undefined;
     let addressLine = listingAddress || "";
+    let recipientAgentId: string | undefined;
+    const admin = createClient(supabaseUrl, supabaseServiceKey);
 
     if (purpose === "support") {
       // Access-error / platform support: fixed inbox only. Never trust a
@@ -190,7 +200,9 @@ const handler = async (req: Request): Promise<Response> => {
       addressLine = addressLine || "Access Error — Support Request";
       console.log("[send-contact-email] support purpose →", SUPPORT_TO_EMAIL);
     } else if (listingId && UUID_RE.test(listingId)) {
-      const resolved = await resolveListingRecipient(supabaseUrl, supabaseServiceKey, listingId);
+      const caller = await verifiedPrivacyClient(req);
+      // Public inquiries are limited to an explicitly authorized DCMLS publication.
+      const resolved = await resolveListingRecipient(caller && !dcmls ? caller.client : admin, listingId, !caller || Boolean(dcmls));
       if (!resolved) {
         return new Response(JSON.stringify({ error: "Listing not available" }), {
           status: 404,
@@ -199,6 +211,7 @@ const handler = async (req: Request): Promise<Response> => {
       }
       toEmail = resolved.email;
       toName = resolved.name;
+      recipientAgentId = resolved.agentId;
       addressLine = resolved.address || addressLine;
       console.log("[send-contact-email] listingId resolve →", listingId);
     } else {
@@ -247,14 +260,21 @@ ${senderPhone ? `<p><strong>Phone:</strong> ${escapeHtml(senderPhone)}</p>` : ""
     // DELIVERABILITY TEST: route Listing → Message Agent through the same
     // queued email_jobs + worker path that delivers AAC Messages notifications
     // (inboxing from chris@allagentconnect.com).
-    const admin = createClient(supabaseUrl, supabaseServiceKey);
+    if (recipientAgentId && listingId) {
+      const { error: leadError } = await admin.from("agent_messages").insert({
+        listing_id: listingId, agent_id: recipientAgentId, sender_name: senderName.trim(),
+        sender_email: senderEmail, sender_phone: senderPhone || null, message,
+      });
+      if (leadError) throw leadError;
+    }
 
     const { data: jobRow, error: enqueueError } = await admin
       .from("email_jobs")
       .insert({
         payload: {
           provider: "resend",
-          template: "listing-contact-inquiry",
+          template: purpose === "support" ? "platform-support" : "listing-contact-inquiry",
+          ...(listingId && recipientAgentId ? { privacy: { version: 1, audience: "agent", listing_ids: [listingId] } } : {}),
           to: toEmail,
           subject: `Message about ${addressLine}`,
           html: htmlOut,

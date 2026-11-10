@@ -188,6 +188,8 @@ export function BulkShareListingsDialog({
     listingIds.length > 0,
   );
 
+  if (senderProfileSource === "buyer") return null;
+
   return (
     <>
       <Button

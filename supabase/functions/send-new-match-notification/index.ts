@@ -288,9 +288,11 @@ serve(async (req) => {
         continue;
       }
 
-      const renderBuyerCards = (items: any[]) =>
+      const renderBuyerCards = (items: any[], previewToken?: string) =>
         items
-          .map((listing: any) => renderHotSheetMatchListingEmailCard(listing, { baseUrl: appBaseUrl }))
+          .map((listing: any) => renderHotSheetMatchListingEmailCard(listing, { baseUrl: appBaseUrl,
+            listingUrl: previewToken ? `${appBaseUrl}/s/${previewToken}?kind=hotsheet&listing=${listing.id}`
+              : `${appBaseUrl}/client/shared-property/${listing.id}?sheet=${hotSheet.id}` }))
           .join("");
 
       // Agent-facing cards: enrich listing-agent contact + AAC agent card layout.
@@ -797,7 +799,7 @@ serve(async (req) => {
               hotSheet.id,
               listing.id, status,
             ), deliveryEventId);
-            const html = renderBuyerCards([listing]);
+            const html = renderBuyerCards([listing], sub.preview_token);
             const outcome = await enqueueHotSheetDelivery(supabase, {
               eventId: deliveryEventId,
               listingId: listing.id,
@@ -854,7 +856,7 @@ serve(async (req) => {
                 hotSheet.id,
                 listing.id, status,
               ), deliveryEventId);
-              const html = renderBuyerCards([listing]);
+              const html = renderBuyerCards([listing], sub.preview_token);
               const outcome = await enqueueHotSheetDelivery(supabase, {
                 eventId: deliveryEventId,
                 listingId: listing.id,

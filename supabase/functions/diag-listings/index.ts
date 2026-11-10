@@ -1,4 +1,5 @@
 import "../_shared/migrationRuntime.ts";
+import { verifiedPrivacyClient } from "../_shared/privacyAuth.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
@@ -13,6 +14,9 @@ Deno.serve(async (req) => {
   }
 
   try {
+    if (!await verifiedPrivacyClient(req)) return new Response(JSON.stringify({ error: "Not authorized" }), {
+      status: 403, headers: { ...corsHeaders, "Content-Type": "application/json", "Cache-Control": "no-store" },
+    });
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const projectRef = supabaseUrl.match(/https:\/\/([^.]+)\./)?.[1] ?? "unknown";

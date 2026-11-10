@@ -1,3 +1,4 @@
+import { PrivateImage } from "@/components/PrivateImage";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -24,7 +25,7 @@ const resolvePhoto = (photos: any): string | null => {
   const p = photos[0];
   if (typeof p === "string") return p;
   if (p?.url) {
-    if (p.url.startsWith("http")) return p.url;
+    if (p.url.startsWith("http") || p.url.startsWith("aac-private://")) return p.url;
     const { data } = supabase.storage.from("listing-photos").getPublicUrl(p.url);
     return data.publicUrl;
   }
@@ -72,7 +73,7 @@ const DcmlsExclusiveListings = () => {
               >
                 <div className="relative aspect-[4/3] bg-muted">
                   {photo ? (
-                    <img src={photo} alt={listing.address} className="w-full h-full object-cover" />
+                    <PrivateImage src={photo} alt={listing.address} className="w-full h-full object-cover" />
                   ) : (
                     <div className="flex h-full w-full items-center justify-center">
                       <Home className="w-10 h-10 text-muted-foreground/40" />

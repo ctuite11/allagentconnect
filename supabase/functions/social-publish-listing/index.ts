@@ -6,15 +6,12 @@ import "../_shared/migrationRuntime.ts";
 import { z } from 'npm:zod@3'
 import {
   authenticateGated,
-  buildCaption,
   bundleFetch,
   canActOnListing,
   corsHeaders,
   enforceCaptionLimit,
   getConnectedPlatforms,
-  heroPhotoUrl,
   json,
-  ListingForPost,
   PLATFORMS,
   providerErrorDetail,
   publicListingUrl,
@@ -56,6 +53,12 @@ Deno.serve(async (req) => {
   const allowed = await canActOnListing(svc, auth.userId, auth.admin, listing.agent_id)
   if (!allowed) return json({ error: 'You do not own this listing' }, 403)
 
+  const { data: shareToken, error: shareError } = await auth.userClient.rpc('create_listing_share_link', {
+    p_listing_id: listingId, p_recipient_label: 'Social share',
+  })
+  if (shareError || !shareToken) return json({ error: 'External sharing is not authorized for this listing' }, 403)
+  const secureLink = `${new URL(publicListingUrl(listingId)).origin}/s/${shareToken}`
+
   if (SOCIAL_EXCLUDED_STATUSES.includes(listing.status)) {
     return json({ error: 'This listing status is not eligible for social publishing', status: listing.status }, 409)
   }
@@ -78,7 +81,7 @@ Deno.serve(async (req) => {
 
   // Hero photo: image-required platforms (Instagram) are skipped with a reason
   // when the listing has no photo; text/link platforms continue.
-  const imageUrl = heroPhotoUrl(listing.photos)
+  const imageUrl = 'https://allagentconnect.com/og/aac-og-2026-01-22.jpg'
   const skipped: { platform: string; reason: string }[] = notConnected.map((p) => ({
     platform: p,
     reason: 'not_connected',
@@ -147,11 +150,11 @@ Deno.serve(async (req) => {
 
   const data: Record<string, unknown> = {}
   for (const platform of finalTargets) {
-    const text = enforceCaptionLimit(platform, buildCaption(eventType, listing as ListingForPost, caption))
+    const text = enforceCaptionLimit(platform, `View a property securely on All Agent Connect. ${secureLink}`)
     const base: Record<string, unknown> = { text }
     if (uploadId) base.uploadIds = [uploadId]
     if (platform === 'FACEBOOK' || platform === 'LINKEDIN') {
-      base.link = publicListingUrl(listingId)
+      base.link = secureLink
     }
     data[platform] = base
   }
@@ -160,7 +163,7 @@ Deno.serve(async (req) => {
     method: 'POST',
     body: JSON.stringify({
       teamId: account.bundle_team_id,
-      title: `AAC ${eventType} ${listing.address ?? listingId}`,
+      title: `AAC secure property share`,
       referenceKey,
       socialAccountTypes: finalTargets,
       data,

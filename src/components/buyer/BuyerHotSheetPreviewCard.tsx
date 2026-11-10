@@ -1,3 +1,4 @@
+import { PrivateImage } from "@/components/PrivateImage";
 import { useState, type KeyboardEvent, type MouseEvent } from "react";
 import { Eye, Heart, Pencil, Trash2 } from "lucide-react";
 import { DashboardListingImage } from "@/components/buyer/DashboardListingImage";
@@ -20,7 +21,7 @@ function HotSheetPagePhotoCell({ src }: { src?: string }) {
   }
   return (
     <div className={buyerImageMosaicCell}>
-      <img
+      <PrivateImage
         src={src}
         alt=""
         className="absolute inset-0 h-full w-full object-cover"

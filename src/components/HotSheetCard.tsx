@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Eye, Bell } from "lucide-react";
+import { PrivateImage } from "@/components/PrivateImage";
 
 interface HotSheetCardProps {
   id: string;
@@ -31,7 +32,7 @@ export const HotSheetCard = ({
   const safePhotos = photos.filter((photo): photo is string => typeof photo === "string" && photo.trim().length > 0).slice(0, 4);
 
   const renderImage = (src: string, index: number) => (
-    <img
+    <PrivateImage
       key={`${src}-${index}`}
       src={src}
       alt={`${name} listing preview ${index + 1}`}

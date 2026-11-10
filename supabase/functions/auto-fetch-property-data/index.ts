@@ -1,6 +1,6 @@
 import "../_shared/migrationRuntime.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.76.1";
+import { verifiedPrivacyClient } from "../_shared/privacyAuth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -23,6 +23,10 @@ serve(async (req) => {
   }
 
   try {
+    const caller = await verifiedPrivacyClient(req);
+    if (!caller) return new Response(JSON.stringify({ error: "Not authorized" }), {
+      status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
     const { listing_id } = await req.json();
 
     if (!listing_id) {
@@ -31,19 +35,17 @@ serve(async (req) => {
 
     console.log(`[auto-fetch-property-data] Processing listing: ${listing_id}`);
 
-    // Initialize Supabase client with service role key for full access
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     // Server-side Google Maps key, provisioned by the Google Maps Platform connector.
     const googleMapsApiKey = Deno.env.get("GOOGLE_MAPS_API_KEY");
     
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const supabase = caller.client;
 
     // Fetch the listing data
     const { data: listing, error: fetchError } = await supabase
       .from("listings")
       .select("id, address, city, state, zip_code, latitude, longitude, property_type, condo_details")
       .eq("id", listing_id)
+      .eq("agent_id", caller.ownerId)
       .single();
 
     if (fetchError || !listing) {

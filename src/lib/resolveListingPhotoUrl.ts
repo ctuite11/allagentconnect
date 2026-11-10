@@ -9,7 +9,7 @@ export function resolveListingPhotoUrl(photo: unknown): string | undefined {
     const record = photo as Record<string, unknown>;
     const raw = record.url ?? record.publicUrl;
     if (typeof raw !== "string" || !raw.trim()) return undefined;
-    if (raw.startsWith("http")) return raw;
+    if (raw.startsWith("http") || raw.startsWith("aac-private://")) return raw;
     const { data } = supabase.storage.from("listing-photos").getPublicUrl(raw);
     return data.publicUrl || undefined;
   }

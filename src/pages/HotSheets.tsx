@@ -368,6 +368,7 @@ const HotSheets = ({
       const { photosById, countsById } = await loadHotSheetPhotosAndCounts(
         supabase,
         rows.map((r) => ({ id: r.id, criteria: r.criteria })),
+        { buyerScope: true },
       );
       setBuyerPreviewPhotosById(photosById);
       setBuyerMatchCountsById(countsById);

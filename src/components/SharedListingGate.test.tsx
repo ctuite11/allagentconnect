@@ -1,153 +1,75 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
-
-// ---------------------------------------------------------------------------
-// Mocks
-// ---------------------------------------------------------------------------
-
-const LISTING_ID = "11111111-1111-1111-1111-111111111111";
-const AGENT_ID = "22222222-2222-2222-2222-222222222222";
-const OTHER_AGENT_ID = "33333333-3333-3333-3333-333333333333";
-
-const WALL_TEXT = /create a free account to keep exploring/i;
-const CHILD_TEXT = "protected child content";
-
-// Scriptable supabase mock. Each test sets `listingResult` / `profileResult`.
-let listingResult: { data: unknown; error: unknown } = { data: null, error: null };
-let profileResult: { data: unknown; error: unknown } = { data: null, error: null };
-let listingPromise: Promise<unknown> | null = null;
-
-vi.mock("@/integrations/supabase/client", () => ({
-  supabase: {
-    from: (table: string) => {
-      if (table !== "listings_public") throw new Error(`unexpected table: ${table}`);
-      const builder = {
-        select: () => builder,
-        eq: () => builder,
-        maybeSingle: () => listingPromise ?? Promise.resolve(listingResult),
-      };
-      return builder;
-    },
-    rpc: (fn: string) => {
-      if (fn !== "get_public_agent_profile") throw new Error(`unexpected rpc: ${fn}`);
-      return Promise.resolve(profileResult);
-    },
-  },
-}));
-
-vi.mock("@/hooks/useAuthRole", () => ({
-  useAuthRole: () => ({ user: null, loading: false }),
-}));
-
-vi.mock("@/contexts/SharedListingGuestContext", () => ({
-  useSharedListingGuest: () => ({
-    isGuest: true,
-    allowedListingId: LISTING_ID,
-    registerGuestListing: () => {},
-    clearGuest: () => {},
-  }),
-}));
-
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { render, screen } from "@testing-library/react";
+import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { SharedListingGate } from "./SharedListingGate";
 
-function renderAt(path: string) {
-  return render(
-    <MemoryRouter initialEntries={[path]}>
-      <SharedListingGate>
-        <div>{CHILD_TEXT}</div>
-      </SharedListingGate>
-    </MemoryRouter>,
-  );
-}
+const auth = vi.hoisted(() => ({ user: null as null | { id: string }, role: null as null | string, loading: false, isVerifiedAgent: false, isAdmin: false }));
+const host = vi.hoisted(() => ({ dcmls: false }));
+vi.mock("@/lib/host", () => ({ isDcmlsHost: () => host.dcmls }));
+vi.mock("@/hooks/useAuthRole", () => ({ useAuthRole: () => auth }));
+vi.mock("@/components/Seo", () => ({ Seo: () => null }));
+vi.mock("@/components/LoadingScreen", () => ({ LoadingScreen: () => <p>Checking access</p> }));
+vi.mock("@/lib/privacyApi", () => ({ privacyRpc: vi.fn() }));
 
-function expectWallVisible() {
-  expect(screen.getByText(WALL_TEXT)).toBeInTheDocument();
-  expect(screen.queryByText(CHILD_TEXT)).not.toBeInTheDocument();
-}
+function LocationProbe() { const location = useLocation(); return <output data-testid="location">{JSON.stringify(location)}</output>; }
+const mount = (path: string, state?: unknown) => render(<MemoryRouter initialEntries={[{ pathname: path.split("?")[0], search: path.includes("?") ? `?${path.split("?")[1]}` : "", state }]}><LocationProbe /><Routes>
+  <Route path="/client/shared-property/:id" element={<p>Scoped buyer page</p>} />
+  <Route path="*" element={<SharedListingGate><p>Private child</p></SharedListingGate>} />
+</Routes></MemoryRouter>);
 
 beforeEach(() => {
-  listingResult = { data: null, error: null };
-  profileResult = { data: null, error: null };
-  listingPromise = null;
+  Object.assign(auth, { user: null, role: null, loading: false, isVerifiedAgent: false, isAdmin: false });
+  host.dcmls = false;
+  localStorage.clear();
 });
 
-describe("SharedListingGate guest agent-profile exception", () => {
-  it("allows the listing agent's profile when the guest listing matches (UUID route)", async () => {
-    listingResult = { data: { agent_id: AGENT_ID, status: "active" }, error: null };
-    renderAt(`/agent/${AGENT_ID}`);
-
-    // Authorization happens in an async effect — wait for it to resolve.
-    expect(await screen.findByText(CHILD_TEXT)).toBeInTheDocument();
-    expect(screen.queryByText(WALL_TEXT)).not.toBeInTheDocument();
+describe("privacy route enforcement", () => {
+  it.each(["/property/fixture", "/consumer-property/fixture", "/agent/fixture", "/our-agents", "/browse", "/search"])("blocks signed-out access to %s before children mount", path => {
+    mount(path);
+    expect(screen.queryByText("Private child")).not.toBeInTheDocument();
+    expect(screen.getByText("This link is no longer available.")).toBeInTheDocument();
   });
-
-  it("blocks a different agent's profile", async () => {
-    listingResult = { data: { agent_id: OTHER_AGENT_ID, status: "active" }, error: null };
-    // The requested profile resolves to itself, which is NOT the listing's agent.
-    profileResult = { data: { id: AGENT_ID }, error: null };
-    renderAt(`/agent/${AGENT_ID}`);
-
-    // Give the async check a chance to (not) resolve in the guest's favor.
-    await waitFor(() => expect(screen.getByText(WALL_TEXT)).toBeInTheDocument());
-    await new Promise((r) => setTimeout(r, 20));
-    expectWallVisible();
+  it("ignores forged browser guest permission and URL IDs", () => {
+    localStorage.setItem("aac_shared_listing_guest", "fixture");
+    mount("/property/fixture?agent_id=someone");
+    expect(screen.queryByText("Private child")).not.toBeInTheDocument();
   });
-
-  it("ignores query-string listing manipulation and stays blocked", async () => {
-    listingResult = { data: { agent_id: AGENT_ID, status: "active" }, error: null };
-    // Attacker tries to point the gate at a different listing via query string;
-    // the gate must only use the stored first-write-wins listing id.
-    renderAt(`/agent/${OTHER_AGENT_ID}?listing=${LISTING_ID}`);
-
-    await waitFor(() => expect(screen.getByText(WALL_TEXT)).toBeInTheDocument());
-    await new Promise((r) => setTimeout(r, 20));
-    expectWallVisible();
+  it("keeps children unmounted while role verification is pending", () => {
+    auth.loading = true; mount("/property/fixture");
+    expect(screen.getByText("Checking access")).toBeInTheDocument();
+    expect(screen.queryByText("Private child")).not.toBeInTheDocument();
   });
-
-  it("fails closed when the public-listing lookup errors", async () => {
-    listingResult = { data: null, error: { message: "permission denied" } };
-    renderAt(`/agent/${AGENT_ID}`);
-
-    await waitFor(() => expect(screen.getByText(WALL_TEXT)).toBeInTheDocument());
-    await new Promise((r) => setTimeout(r, 20));
-    expectWallVisible();
+  it("blocks signed-in unverified accounts", () => {
+    auth.user = { id: "unverified" }; auth.role = "agent"; mount("/property/fixture");
+    expect(screen.queryByText("Private child")).not.toBeInTheDocument();
   });
-
-  it("does not expose the profile while the lookup is still pending", async () => {
-    listingPromise = new Promise(() => {}); // never resolves
-    renderAt(`/agent/${AGENT_ID}`);
-
-    await waitFor(() => expect(screen.getByText(WALL_TEXT)).toBeInTheDocument());
-    await new Promise((r) => setTimeout(r, 20));
-    expectWallVisible();
+  it("permits a verified network account", () => {
+    auth.user = { id: "verified" }; auth.role = "agent"; auth.isVerifiedAgent = true; mount("/property/fixture");
+    expect(screen.getByText("Private child")).toBeInTheDocument();
   });
-
-  it("blocks a draft listing's agent profile", async () => {
-    listingResult = { data: { agent_id: AGENT_ID, status: "draft" }, error: null };
-    renderAt(`/agent/${AGENT_ID}`);
-
-    await waitFor(() => expect(screen.getByText(WALL_TEXT)).toBeInTheDocument());
-    await new Promise((r) => setTimeout(r, 20));
-    expectWallVisible();
+  it("routes authenticated buyers through a server-scoped lookup", () => {
+    auth.user = { id: "buyer" }; auth.role = "buyer"; mount("/property/fixture");
+    expect(screen.getByText("Scoped buyer page")).toBeInTheDocument();
+    expect(screen.queryByText("Private child")).not.toBeInTheDocument();
   });
-
-  it("resolves an AAC-code route via get_public_agent_profile and allows on id match", async () => {
-    listingResult = { data: { agent_id: AGENT_ID, status: "active" }, error: null };
-    profileResult = { data: { id: AGENT_ID }, error: null };
-    renderAt("/agent/AAC-0639");
-
-    expect(await screen.findByText(CHILD_TEXT)).toBeInTheDocument();
-    expect(screen.queryByText(WALL_TEXT)).not.toBeInTheDocument();
+  it("preserves the Hot Sheet, return path and navigation state for buyers", () => {
+    auth.user = { id: "buyer" }; auth.role = "buyer";
+    mount("/consumer-property/fixture?sheet=own-sheet&returnTo=%2Ffavorites", { from: "/hot-sheets" });
+    const location = JSON.parse(screen.getByTestId("location").textContent!);
+    expect(location.pathname).toBe("/client/shared-property/fixture");
+    expect(new URLSearchParams(location.search).get("sheet")).toBe("own-sheet");
+    expect(new URLSearchParams(location.search).get("returnTo")).toBe("/favorites");
+    expect(location.state).toEqual({ from: "/hot-sheets" });
   });
-
-  it("blocks an AAC-code route when the profile id does not match the listing agent", async () => {
-    listingResult = { data: { agent_id: AGENT_ID, status: "active" }, error: null };
-    profileResult = { data: { id: OTHER_AGENT_ID }, error: null };
-    renderAt("/agent/AAC-0639");
-
-    await waitFor(() => expect(screen.getByText(WALL_TEXT)).toBeInTheDocument());
-    await new Promise((r) => setTimeout(r, 20));
-    expectWallVisible();
+  it.each(["/browse", "/search", "/consumer-property/published", "/agent/published-agent"])("allows the separately gated DCMLS surface %s", path => {
+    host.dcmls = true; mount(path);
+    expect(screen.getByText("Private child")).toBeInTheDocument();
+  });
+  it("routes DCMLS property IDs to its consumer lookup without an AAC fallback", () => {
+    host.dcmls = true; mount("/property/published?dcmls=1");
+    expect(JSON.parse(screen.getByTestId("location").textContent!).pathname).toBe("/consumer-property/published");
+  });
+  it.each(["/", "/about", "/s/opaque-token", "/invite/opaque-token", "/auth/callback", "/activate"])("preserves %s for its own checks", path => {
+    mount(path); expect(screen.getByText("Private child")).toBeInTheDocument();
   });
 });

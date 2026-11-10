@@ -1,6 +1,7 @@
 import "../_shared/migrationRuntime.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.0";
+import { verifiedPrivacyClient } from "../_shared/privacyAuth.ts";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
@@ -12,6 +13,8 @@ const corsHeaders = {
 interface ShowingRequestEmailRequest {
   /** Required: backend resolves the listing agent + email from this ID. */
   listingId: string;
+  hotSheetId?: string;
+  dcmls?: boolean;
   requesterName: string;
   requesterEmail: string;
   requesterPhone?: string;
@@ -24,12 +27,9 @@ interface ShowingRequestEmailRequest {
 }
 
 async function resolveListingRecipient(
-  supabaseUrl: string,
-  serviceKey: string,
+  admin: NonNullable<Awaited<ReturnType<typeof verifiedPrivacyClient>>>["client"],
   listingId: string
 ): Promise<{ email: string; name: string; address: string } | null> {
-  const admin = createClient(supabaseUrl, serviceKey);
-
   const [{ data: listingRows, error: listingErr }, { data: agentRows, error: agentErr }] =
     await Promise.all([
       admin.rpc("get_public_listing", { p_listing_id: listingId }),
@@ -84,10 +84,10 @@ async function checkRateLimit(
 
   if (error) {
     console.error("[rate-limit] RPC error:", error);
-    return { allowed: true, remaining: limit, reset_at: new Date().toISOString(), current_count: 0 };
+    return { allowed: false, remaining: 0, reset_at: new Date().toISOString(), current_count: limit };
   }
 
-  return data as RateLimitResult;
+  return (Array.isArray(data) ? data[0] : data) ?? { allowed: false, remaining: 0, reset_at: new Date().toISOString(), current_count: limit };
 }
 
 function build429Response(resetAt: string): Response {
@@ -157,8 +157,9 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    const caller = await verifiedPrivacyClient(req);
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
-    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY") || Deno.env.get("SUPABASE_PUBLISHABLE_KEY");
+    const limiterKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
     // Get IP for rate limiting
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || 
@@ -166,9 +167,9 @@ const handler = async (req: Request): Promise<Response> => {
                "unknown";
 
     // Database-backed rate limiting: 10 showing requests per minute per IP
-    if (supabaseUrl && supabaseAnonKey) {
+    if (supabaseUrl && limiterKey) {
       const rateLimitKey = `route:send-showing-request-email|ip:${ip}`;
-      const rateLimitResult = await checkRateLimit(supabaseUrl, supabaseAnonKey, rateLimitKey, 60, 10);
+      const rateLimitResult = await checkRateLimit(supabaseUrl, limiterKey, rateLimitKey, 60, 10);
       
       if (!rateLimitResult.allowed) {
         console.log(`[rate-limit] Blocked IP: ${ip}, count: ${rateLimitResult.current_count}`);
@@ -178,6 +179,8 @@ const handler = async (req: Request): Promise<Response> => {
 
     const {
       listingId,
+      hotSheetId,
+      dcmls,
       requesterName,
       requesterEmail,
       requesterPhone,
@@ -193,14 +196,47 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("Server misconfigured: missing Supabase service credentials");
     }
 
-    if (!listingId || !UUID_RE.test(listingId)) {
+    if (!listingId || !UUID_RE.test(listingId) || (hotSheetId != null && !UUID_RE.test(hotSheetId)) ||
+      typeof requesterName !== "string" || requesterName.trim().length < 1 || requesterName.length > 100 ||
+      typeof requesterEmail !== "string" || requesterEmail.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(requesterEmail) ||
+      typeof preferredDate !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(preferredDate) ||
+      typeof preferredTime !== "string" || !/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(preferredTime) ||
+      (message != null && (typeof message !== "string" || message.length > 1000))) {
       return new Response(
-        JSON.stringify({ error: "listingId is required" }),
+        JSON.stringify({ error: "Invalid showing request" }),
         { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } },
       );
     }
 
-    const resolved = await resolveListingRecipient(supabaseUrl, supabaseServiceKey, listingId);
+    const admin = createClient(supabaseUrl, supabaseServiceKey);
+    let resolved: { email: string; name: string; address: string } | null = null;
+    if (caller && !dcmls) resolved = await resolveListingRecipient(caller.client, listingId);
+    else if (!dcmls && req.headers.get("Authorization")?.startsWith("Bearer ")) {
+      const client = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
+        global: { headers: { Authorization: req.headers.get("Authorization")! } },
+      });
+      const { data: identity, error: identityError } = await client.auth.getUser();
+      if (!identityError && identity.user) {
+        const { data: scoped, error } = await client.rpc("get_buyer_listing", {
+          p_listing_id: listingId, p_hot_sheet_id: hotSheetId ?? null,
+        });
+        if (!error && scoped?.listing && scoped.agent?.email) resolved = {
+          email: scoped.agent.email, name: [scoped.agent.first_name,scoped.agent.last_name].filter(Boolean).join(" "),
+          address: [scoped.listing.address,scoped.listing.unit_number,scoped.listing.city,scoped.listing.state].filter(Boolean).join(", "),
+        };
+      }
+    }
+    if (dcmls || !req.headers.get("Authorization")) {
+      const [{ data: rows, error: listingError }, { data: agent, error: agentError }] = await Promise.all([
+        admin.rpc("get_dcmls_listing", { p_listing_id: listingId }),
+        admin.rpc("get_dcmls_listing_agent", { p_listing_id: listingId }),
+      ]);
+      const listing = Array.isArray(rows) ? rows[0] : rows;
+      if (!listingError && !agentError && listing && agent?.email) resolved = {
+        email: agent.email, name: [agent.first_name,agent.last_name].filter(Boolean).join(" "),
+        address: [listing.address,listing.unit_number,listing.city,listing.state].filter(Boolean).join(", "),
+      };
+    }
     if (!resolved) {
       return new Response(JSON.stringify({ error: "Listing not available" }), {
         status: 404,
@@ -211,6 +247,14 @@ const handler = async (req: Request): Promise<Response> => {
     const toEmail = resolved.email;
     const toName = resolved.name;
     const addressLine = resolved.address || listingAddress || "";
+
+    // Save only after the server has authorized the listing and resolved scope.
+    const { error: requestError } = await admin.from("showing_requests").insert({
+      listing_id: listingId, requester_name: requesterName.trim(), requester_email: requesterEmail,
+      requester_phone: requesterPhone || null, preferred_date: preferredDate, preferred_time: preferredTime,
+      message: message || null,
+    });
+    if (requestError) throw requestError;
 
     const formattedDate = formatPreferredDate(preferredDate);
     const safeListingAddress = escapeHtml(addressLine);
@@ -245,14 +289,13 @@ ${message ? `<p><strong>Message:</strong></p><p>${escapeHtml(message)}</p>` : ""
     // email_jobs + worker path as AAC Messages and the Listing → Message
     // Agent route (both reliably inboxing). Drop direct Resend SDK call
     // and Reply-To to mirror the proven-inboxing pattern.
-    const admin = createClient(supabaseUrl, supabaseServiceKey);
-
     const { data: jobRow, error: enqueueError } = await admin
       .from("email_jobs")
       .insert({
         payload: {
           provider: "resend",
           template: "showing-request",
+          privacy: { version: 1, audience: "agent", listing_ids: [listingId] },
           to: toEmail,
           subject: `Showing request: ${addressLine}`,
           html: htmlOut,

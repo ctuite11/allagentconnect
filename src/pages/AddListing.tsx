@@ -1,3 +1,4 @@
+import { PrivateImage } from "@/components/PrivateImage";
 import { clearDraftFiller } from "@/lib/draftFillerValues";
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { ConnectSocialExplainerDialog } from "@/components/social/ConnectSocialExplainerDialog";
@@ -6240,7 +6241,7 @@ const AddListing = () => {
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                           {photos.map((photo, index) => (
                             <div key={photo.id} className="group relative aspect-video overflow-hidden rounded-lg border border-zinc-200/90 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
-                              <img 
+                              <PrivateImage
                                 src={photo.preview || photo.url} 
                                 alt={`Photo ${index + 1}`}
                                 className="w-full h-full object-cover"
@@ -6308,7 +6309,7 @@ const AddListing = () => {
                         {floorPlans.map((plan) => (
                           <div key={plan.id} className="group relative overflow-hidden rounded-lg border border-zinc-200/90 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
                             {plan.preview ? (
-                              <img src={plan.preview} alt="Floor plan" className="w-full h-40 object-cover" />
+                              <PrivateImage src={plan.preview} alt="Floor plan" className="w-full h-40 object-cover" />
                             ) : (
                               <div className="flex h-40 w-full items-center justify-center bg-zinc-50">
                                 <FileText className="h-10 w-10 text-zinc-400" aria-hidden />
@@ -6519,7 +6520,7 @@ const AddListing = () => {
           <div className="grid grid-cols-3 gap-3 sm:grid-cols-5">
             {photos.slice(0, 10).map((photo, index) => (
               <div key={photo.id} className="relative overflow-hidden rounded-md border bg-muted">
-                <img
+                <PrivateImage
                   src={photo.preview || photo.url || ""}
                   alt={`Listing photo ${index + 1}`}
                   className="h-20 w-full object-cover"

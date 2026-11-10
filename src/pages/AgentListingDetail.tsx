@@ -1,3 +1,4 @@
+import { PrivateImage, PrivateFileLink } from "@/components/PrivateImage";
 import { listingDaysOnMarket, listingMarketDate, formatListingMarketDate } from "@/lib/listingDaysOnMarket";
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
@@ -561,7 +562,7 @@ const AgentListingDetail = () => {
         {/* Photo Gallery */}
         <Card className="bg-card border-border rounded-xl shadow-xl mb-6 overflow-hidden ring-1 ring-black/5">
           <div className="relative aspect-[16/9] bg-muted">
-            <img
+            <PrivateImage
               src={mainPhoto}
               alt={listing.address}
               className="w-full h-full object-cover cursor-pointer"
@@ -612,7 +613,7 @@ const AgentListingDetail = () => {
                         : 'border-transparent hover:border-muted-foreground/30'
                     }`}
                   >
-                    <img
+                    <PrivateImage
                       src={getPhotoUrl(photo)}
                       alt={`Photo ${index + 1}`}
                       className="w-full h-full object-cover"
@@ -1152,7 +1153,7 @@ const AgentListingDetail = () => {
                       const docName = typeof doc === 'string' ? `Document ${index + 1}` : (doc.name || `Document ${index + 1}`);
                       const docType = typeof doc === 'object' ? doc.documentType : null;
                       return (
-                        <a
+                        <PrivateFileLink
                           key={index}
                           href={docUrl}
                           target="_blank"
@@ -1166,7 +1167,7 @@ const AgentListingDetail = () => {
                               <p className="text-xs text-muted-foreground capitalize">{docType.replace(/_/g, ' ')}</p>
                             )}
                           </div>
-                        </a>
+                        </PrivateFileLink>
                       );
                     })}
                   </div>
@@ -1217,7 +1218,7 @@ const AgentListingDetail = () => {
                     }}
                     className="aspect-square rounded-lg overflow-hidden hover:ring-2 hover:ring-primary transition-all"
                   >
-                    <img
+                    <PrivateImage
                       src={getPhotoUrl(photo)}
                       alt={`Photo ${index + 1}`}
                       className="w-full h-full object-cover"

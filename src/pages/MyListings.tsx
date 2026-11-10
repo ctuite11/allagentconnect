@@ -1,3 +1,4 @@
+import { PrivateImage } from "@/components/PrivateImage";
 import { listingDaysOnMarket } from "@/lib/listingDaysOnMarket";
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -887,7 +888,7 @@ function MyListingsView({
                     onClick={() => setListingCardMenuId(l.id)}
                     aria-label={`View or edit listing: ${formatAddressWithUnit(l)}`}
                   >
-                    <img
+                    <PrivateImage
                       src={thumbnail || "/placeholder.svg"}
                       alt=""
                       className="pointer-events-none h-full w-full object-cover"

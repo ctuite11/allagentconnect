@@ -1,3 +1,4 @@
+import { PrivateImage } from "@/components/PrivateImage";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
@@ -156,7 +157,7 @@ export default function ListingReview() {
 
       <article className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
         {photoUrl && (
-          <img
+          <PrivateImage
             src={photoUrl}
             alt={addressLine || "Listing photo"}
             className="h-64 w-full object-cover sm:h-80"

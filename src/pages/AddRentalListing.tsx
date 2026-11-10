@@ -1,3 +1,4 @@
+import { PrivateImage } from "@/components/PrivateImage";
 import { useState, useEffect, useMemo, useRef } from "react";
 import { PageTitle } from "@/components/ui/page-title";
 import { useNavigate } from "react-router-dom";
@@ -756,7 +757,7 @@ const AddRentalListing = () => {
               <PageTitle>
                 <span className="text-primary">Gotcha,</span> Let's Help You add a Rental Listing
               </PageTitle>
-              <img src={listingIcon} alt="Listing creation" className="w-16 h-16" />
+              <PrivateImage src={listingIcon} alt="Listing creation" className="w-16 h-16" />
             </div>
             <p className="text-muted-foreground">
               Hovering over your Dashboard within the Menu will give you easy access to your Account. 
@@ -1439,7 +1440,7 @@ const AddRentalListing = () => {
                           onDragEnd={handleDragEnd}
                           className="relative group cursor-move border rounded-lg overflow-hidden"
                         >
-                          <img src={photo.preview} alt="Property" className="w-full h-40 object-cover" />
+                          <PrivateImage src={photo.preview} alt="Property" className="w-full h-40 object-cover" />
                           <div className="absolute top-2 left-2 bg-background/80 px-2 py-1 rounded text-xs">
                             {index === 0 ? 'Main' : `#${index + 1}`}
                           </div>
@@ -1486,7 +1487,7 @@ const AddRentalListing = () => {
                         <div key={plan.id} className="flex items-center justify-between p-3 border rounded-lg">
                           <div className="flex items-center gap-2">
                             {plan.preview ? (
-                              <img src={plan.preview} alt="Floor plan" className="w-16 h-16 object-cover rounded" />
+                              <PrivateImage src={plan.preview} alt="Floor plan" className="w-16 h-16 object-cover rounded" />
                             ) : (
                               <FileText className="w-8 h-8" />
                             )}

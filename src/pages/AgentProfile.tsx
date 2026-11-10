@@ -2,6 +2,8 @@ import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { IncentiveAvailabilitySection } from "@/components/dcmls/IncentiveAvailabilitySection";
 import { supabase } from "@/integrations/supabase/client";
+import { privacyRpc } from "@/lib/privacyApi";
+import { isDcmlsHost } from "@/lib/host";
 import { Button } from "@/components/ui/button";
 import ListingCard from "@/components/ListingCard";
 import { mapMarketRowToListingCard } from "@/components/success-hub/listingCardAdapter";
@@ -181,9 +183,10 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
   const { id: idOrCode } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
+  const isDcmls = isDcmlsHost();
   const backTo =
     ((location.state as any)?.from as string | undefined) ??
-    (publicMode ? "/our-agents" : "/our-members");
+    (isDcmls ? "/browse?dcmls=1" : publicMode ? "/our-agents" : "/our-members");
   /**
    * Restore the origin state the referring page handed us (e.g. a listing's own
    * `from` = search results) and mark the return so the listing never uses
@@ -244,7 +247,7 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
 
   useEffect(() => {
     fetchAgentProfile();
-  }, [idOrCode]);
+  }, [idOrCode, isDcmls]);
 
   const fetchAgentProfile = async () => {
     try {
@@ -260,7 +263,10 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
       const { data: sessionData } = await supabase.auth.getSession();
       const isAuthed = Boolean(sessionData.session);
 
-      const agentQuery = isAuthed
+      const agentQuery = isDcmls
+        ? privacyRpc<any>("get_dcmls_agent_profile", { p_id_or_code: idOrCode ?? "" })
+            .then(data => ({ data, error: null }))
+        : isAuthed
         ? supabase
             .from("agent_profiles")
             .select(`
@@ -287,7 +293,7 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
       const agentUuid = agentData.id;
 
       const { data: listingsData, error: listingsError } = await supabase
-        .from("listings_public")
+        .from(isDcmls ? "dcmls_listings_public" : "listings_public")
         .select("*")
         .eq("agent_id", agentUuid)
         .in("status", ["active", "coming_soon", "off_market", "sold", "rented"])
@@ -296,6 +302,11 @@ const AgentProfile = ({ publicMode = false }: AgentProfileProps) => {
 
       if (listingsError) throw listingsError;
       setListings(listingsData || []);
+
+      if (isDcmls) {
+        setTestimonials(Array.isArray(agentData.testimonials) ? agentData.testimonials : []);
+        return;
+      }
 
       const { data: testimonialsData, error: testimonialsError } = await supabase
         .from("testimonials")

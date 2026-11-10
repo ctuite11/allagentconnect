@@ -1,4 +1,5 @@
 import { assertMigrationDeliveryAllowed } from "./migrationSafety.ts";
+import { listingEmailAllowed, PRIVATE_LISTING_TEMPLATES, PRIVACY_EMAIL_BLOCKED } from "./privacyEmail.ts";
 import type { EmailJob } from "./emailTypes.ts";
 import { renderEmailTemplate } from "./renderEmailTemplate.ts";
 import {
@@ -201,6 +202,20 @@ export async function sendEmail(
 
   if (toList.length === 0) throw new Error("No valid recipients");
 
+  // Deliver the conversation message, but do not automatically attach private
+  // property details for buyers or accounts that are no longer verified. Old
+  // queued role flags cannot authorize a fresh listing card.
+  if (job.payload.template === "new-message-notification" && job.payload.variables?.listing) {
+    const client = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    const internal = await listingEmailAllowed(client, { version: 1, audience: "agent",
+      listing_ids: [job.payload.variables.listing.id] }, toList);
+    if (!internal) {
+      job = { ...job, payload: { ...job.payload, html: undefined, variables: { ...job.payload.variables,
+        listing: null, listing_id: null, listing_address: null, listing_url: null } } };
+      options = { ...options, htmlOverride: undefined };
+    }
+  }
+
   // Also cover already-queued recruitment jobs created before classification.
   const recruitmentInvite = job.payload.template === "founder-invite-1to1" ||
     job.payload.template === "personal-forward-invite";
@@ -312,6 +327,12 @@ export async function sendEmail(
   }
 
   assertMigrationDeliveryAllowed();
+  if (PRIVATE_LISTING_TEMPLATES.has(job.payload.template)) {
+    const client = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    if (!await listingEmailAllowed(client, (job.payload as { privacy?: unknown }).privacy, toList)) {
+      throw new Error(PRIVACY_EMAIL_BLOCKED + " missing or obsolete listing authorization; recreate this delivery");
+    }
+  }
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: requestHeaders,

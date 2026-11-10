@@ -1,3 +1,4 @@
+import { PrivateImage } from "@/components/PrivateImage";
 /**
  * ListingCardShell — Canonical desktop list-view layout.
  *
@@ -202,7 +203,7 @@ export function ListingCardShell({
           <DcmlsBadge listing={listing} />
 
           {photoUrl ? (
-            <img
+            <PrivateImage
               src={photoUrl}
               alt={listing.address}
               className={`w-full h-full object-cover ${photoAspect === "wide" ? "rounded-lg" : "rounded"}`}

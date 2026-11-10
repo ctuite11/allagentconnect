@@ -1,4 +1,9 @@
 import "../_shared/migrationRuntime.ts";
+// @auth-classification: internal-cron
+import { authorizeInternalServiceRole } from "../_shared/internalServiceRoleAuth.ts";
+import { assertMigrationDeliveryAllowed } from "../_shared/migrationSafety.ts";
+import { LISTING_OG_PLACEHOLDER } from "../_shared/listingPhotoUrl.ts";
+import { formatListingShareEmailStreetLine } from "../_shared/listingShareEmailAddress.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { resolveEmailBaseUrl } from "../_shared/aacPublicUrl.ts";
@@ -12,7 +17,12 @@ const appBaseUrl = resolveEmailBaseUrl(
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
+
+function escapeHtml(value: string): string {
+  return value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#39;");
+}
 
 interface PriceChange {
   id: string;
@@ -21,11 +31,13 @@ interface PriceChange {
   old_price: number;
   new_price: number;
   changed_at: string;
+  scope: { listing_id: string; network: boolean; hot_sheet_id?: string; authorized_at?: string };
   listing: {
     address: string;
     city: string;
     state: string;
-    photos: any[];
+    unit_number?: string;
+    zip_code?: string;
   };
   favorite: {
     user_id: string;
@@ -40,15 +52,19 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  if (req.method !== "POST") return new Response(null, { status: 405, headers: corsHeaders });
+  const auth = authorizeInternalServiceRole(req);
+  if (!auth.ok) return new Response(JSON.stringify({ error: auth.error }), { status: auth.status, headers: corsHeaders });
+
   try {
+    assertMigrationDeliveryAllowed();
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Fetch price changes that need notification
     const { data: priceChanges, error: fetchError } = await supabase
       .from("favorite_price_history")
       .select(`
-        *,
-        listing:listings(address, city, state, photos),
+        id, favorite_id, listing_id, old_price, new_price, changed_at,
         favorite:favorites(user_id)
       `)
       .eq("notification_sent", false)
@@ -69,32 +85,12 @@ serve(async (req) => {
 
     console.log(`Found ${priceChanges.length} price changes to notify`);
 
-    // Resolve emails via profiles (no FK relationship to favorites)
-    const userIds = Array.from(
-      new Set(
-        (priceChanges as any[])
-          .map((c) => c.favorite?.user_id)
-          .filter((v) => !!v)
-      )
-    );
-    const emailByUserId = new Map<string, string>();
-    if (userIds.length > 0) {
-      const { data: profs } = await supabase
-        .from("profiles")
-        .select("id, email")
-        .in("id", userIds);
-      for (const p of profs ?? []) {
-        if (p?.id && p?.email) emailByUserId.set(p.id, p.email);
-      }
-    }
-
     // Group by user to send one email per user
     const changesByUser = priceChanges.reduce((acc: any, change: any) => {
       const userId = change.favorite?.user_id;
       if (!userId) return acc;
       if (!acc[userId]) {
         acc[userId] = {
-          email: emailByUserId.get(userId),
           changes: [],
         };
       }
@@ -107,10 +103,30 @@ serve(async (req) => {
 
     // Send emails
     for (const [userId, data] of Object.entries(changesByUser) as any) {
-      if (!data.email) {
-        console.log(`No email for user ${userId}, skipping`);
-        continue;
+      const allowed: PriceChange[] = [];
+      const contexts = new Map<string, { email: string; listing: PriceChange["listing"]; scope: PriceChange["scope"] } | null>();
+      for (const change of data.changes) {
+        if (!contexts.has(change.listing_id)) {
+          const { data: context, error } = await supabase.rpc("get_price_alert_context", {
+            p_user_id: userId, p_listing_id: change.listing_id,
+          });
+          if (error) throw new Error("Price alert authorization unavailable");
+          contexts.set(change.listing_id, context);
+        }
+        const context = contexts.get(change.listing_id);
+        if (!context?.listing || !context.email || !context.scope) continue;
+        if (!context.scope.network) {
+          const changedAt = Date.parse(change.changed_at);
+          const authorizedAt = Date.parse(context.scope.authorized_at ?? "");
+          if (!Number.isFinite(changedAt) || !Number.isFinite(authorizedAt) || changedAt < authorizedAt) continue;
+        }
+        allowed.push({ ...change, listing: context.listing, scope: context.scope });
+        if (allowed.length >= 200) break;
       }
+      if (allowed.length === 0) continue;
+      data.changes = allowed;
+      data.email = contexts.get(allowed[0].listing_id)!.email;
+      const scopes = [...new Map(allowed.map(change => [change.listing_id, change.scope])).values()];
 
       const priceChangesHtml = data.changes
         .map((change: PriceChange) => {
@@ -118,14 +134,17 @@ serve(async (req) => {
           const percentChange = ((priceDiff / change.old_price) * 100).toFixed(1);
           const direction = priceDiff > 0 ? "increased" : "decreased";
           const color = priceDiff > 0 ? "#ef4444" : "#22c55e";
-          const photoUrl = change.listing.photos?.[0]?.url || '';
+          const photoUrl = LISTING_OG_PLACEHOLDER;
+          const address = escapeHtml(formatListingShareEmailStreetLine(change.listing));
+          const path = change.scope.network ? `/property/${change.listing_id}`
+            : `/client/shared-property/${change.listing_id}?sheet=${encodeURIComponent(change.scope.hot_sheet_id!)}`;
 
           return `
             <div style="margin-bottom: 24px; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;">
-              ${photoUrl ? `<img src="${photoUrl}" alt="${change.listing.address}" style="width: 100%; height: 200px; object-fit: cover;" />` : ''}
+              ${photoUrl ? `<img src="${photoUrl}" alt="${address}" style="width: 100%; height: 200px; object-fit: cover;" />` : ''}
               <div style="padding: 16px;">
-                <h3 style="margin: 0 0 8px 0; font-size: 18px;">${change.listing.address}</h3>
-                <p style="margin: 0 0 12px 0; color: #6b7280;">${change.listing.city}, ${change.listing.state}</p>
+                <h3 style="margin: 0 0 8px 0; font-size: 18px;">${address}</h3>
+                <p style="margin: 0 0 12px 0; color: #6b7280;">${escapeHtml(change.listing.city)}, ${escapeHtml(change.listing.state)}</p>
                 <div style="display: flex; align-items: center; gap: 16px;">
                   <div>
                     <p style="margin: 0; font-size: 14px; color: #6b7280;">Old Price</p>
@@ -139,7 +158,7 @@ serve(async (req) => {
                 <p style="margin: 12px 0 0 0; color: ${color}; font-weight: 600;">
                   Price ${direction} by $${Math.abs(priceDiff).toLocaleString()} (${percentChange}%)
                 </p>
-                <a href="${appBaseUrl}/consumer-property/${change.listing_id}" 
+                <a href="${appBaseUrl}${path}" 
                    style="display: inline-block; margin-top: 12px; padding: 8px 16px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px;">
                   View Property
                 </a>
@@ -190,6 +209,8 @@ serve(async (req) => {
             payload: {
               provider: "resend",
               template: "price-change-notification",
+              privacy: { version: 1, audience: "favorite", recipient_user_id: userId,
+                listing_ids: scopes.map(scope => scope.listing_id), scopes },
               to: data.email,
               subject,
               html,
@@ -247,9 +268,9 @@ serve(async (req) => {
   } catch (error: any) {
     console.error("Error in send-price-change-notification:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: error?.code === "MIGRATION_OUTBOUND_BLOCKED" ? "Delivery is paused" : "Price alert processing failed" }),
       {
-        status: 500,
+        status: error?.code === "MIGRATION_OUTBOUND_BLOCKED" ? 503 : 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       }
     );

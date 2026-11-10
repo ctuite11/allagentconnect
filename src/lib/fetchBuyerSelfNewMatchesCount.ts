@@ -41,6 +41,7 @@ export async function fetchBuyerSelfNewMatchesCount(
         const { data: matched } = await buildListingsQuery(
           supabase,
           sheet.criteria as Parameters<typeof buildListingsQuery>[1],
+          { buyerScope: true },
         ).limit(200);
         const sent = sentBySheet.get(sheet.id) ?? new Set<string>();
         for (const l of matched ?? []) {

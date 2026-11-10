@@ -1,3 +1,4 @@
+import { PrivateImage } from "@/components/PrivateImage";
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -516,7 +517,7 @@ const ManageListingPhotos: React.FC<ManageListingPhotosProps> = ({ mode = 'photo
               </button>
 
               {/* Image */}
-              <img
+              <PrivateImage
                 src={item.url}
                 alt={`${config.itemLabel} ${index + 1}`}
                 className="w-full h-48 object-cover"

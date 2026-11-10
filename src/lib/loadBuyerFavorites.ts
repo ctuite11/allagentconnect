@@ -93,22 +93,13 @@ export async function loadBuyerGenericFavorites(
   const crmClientId = options?.crmClientId ?? null;
 
   if (access === "buyer_self") {
-    const { data, error } = await supabase
-      .from("favorites")
-      .select(
-        `
-        id,
-        listing:listings (${LISTING_FIELDS})
-      `,
-      )
-      .eq("user_id", buyerAuthUserId)
-      .limit(limit);
+    const { data, error } = await supabase.rpc("list_buyer_favorites");
 
     if (error) {
       console.warn("loadBuyerGenericFavorites buyer_self:", error.message);
       return [];
     }
-    return normalizeFavoritesJoin(data, limit);
+    return normalizeFavoritesJoin((data ?? []).map((row: { id: string; listings: unknown }) => ({ id: row.id, listing: row.listings })), limit);
   }
 
   const rpcPayload: {

@@ -5,17 +5,23 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Cache-Control": "private, no-store",
+  "Referrer-Policy": "no-referrer",
+  "X-Robots-Tag": "noindex, nofollow, noarchive",
 };
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+  if (req.method !== "POST") return new Response(null, { status: 405, headers: corsHeaders });
 
   try {
-    const { token, email, first_name } = await req.json();
+    const raw = await req.text();
+    if (raw.length > 2048) return new Response(null, { status: 400, headers: corsHeaders });
+    const { token, email, first_name } = JSON.parse(raw);
 
-    if (!token || typeof token !== "string") {
+    if (!token || typeof token !== "string" || token.length < 20 || token.length > 200) {
       return new Response(
         JSON.stringify({ success: false, error: "Missing token" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
@@ -34,7 +40,7 @@ serve(async (req) => {
       .eq("preview_token", token)
       .maybeSingle();
 
-    if (!subscriber) {
+    if (!subscriber || subscriber.status !== "active") {
       return new Response(
         JSON.stringify({ success: false, error: "Invalid token" }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } },
@@ -56,6 +62,11 @@ serve(async (req) => {
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
+
+    const { data: scoped, error: scopeError } = await supabase.rpc("get_shared_hot_sheet", { p_token: token });
+    if (scopeError || !scoped) return new Response(JSON.stringify({ success: false, error: "Link unavailable" }), {
+      status: 404, headers: { ...corsHeaders, "Content-Type": "application/json", "Cache-Control": "no-store" },
+    });
 
     // If email provided → self-subscribe
     if (email && typeof email === "string") {
@@ -99,71 +110,12 @@ serve(async (req) => {
       );
     }
 
-    // Otherwise → return preview data (listings)
-    const criteria = hotSheet.criteria || {};
+    return new Response(JSON.stringify({
+      success: true, hotSheetName: scoped.hot_sheet.name,
+      agentName: `${scoped.agent.first_name} ${scoped.agent.last_name}`.trim(),
+      agentCompany: scoped.agent.company || null, listings: scoped.listings,
+    }), { headers: { ...corsHeaders, "Content-Type": "application/json", "Cache-Control": "no-store" } });
 
-    // Build a simple query based on hot sheet criteria
-    let query = supabase
-      .from("listings")
-      .select("id, address, city, state, zip_code, price, bedrooms, bathrooms, square_feet, property_type, photos, status, created_at")
-      .in("status", ["active", "new", "coming_soon"]);
-
-    if (criteria.state) {
-      query = query.ilike("state", criteria.state);
-    }
-    if (criteria.cities?.length) {
-      query = query.in("city", criteria.cities);
-    }
-    if (criteria.minPrice) {
-      query = query.gte("price", criteria.minPrice);
-    }
-    if (criteria.maxPrice) {
-      query = query.lte("price", criteria.maxPrice);
-    }
-    if (criteria.bedrooms) {
-      query = query.gte("bedrooms", criteria.bedrooms);
-    }
-    if (criteria.bathrooms) {
-      query = query.gte("bathrooms", criteria.bathrooms);
-    }
-    if (criteria.propertyTypes?.length) {
-      // Map property types
-      const typeMap: Record<string, string> = {
-        single_family: "Single Family",
-        condo: "condo",
-        Condominium: "condo",
-        multi_family: "Multi Family",
-        townhouse: "Townhouse",
-        land: "Land",
-        commercial: "Commercial",
-      };
-      const mappedTypes = criteria.propertyTypes.map((t: string) => typeMap[t] || t);
-      query = query.in("property_type", mappedTypes);
-    }
-
-    const { data: listings } = await query
-      .order("created_at", { ascending: false })
-      .limit(20);
-
-    // Fetch agent info for attribution
-    const { data: agentProfile } = await supabase
-      .from("agent_profiles")
-      .select("first_name, last_name, company")
-      .eq("id", hotSheet.user_id)
-      .single();
-
-    return new Response(
-      JSON.stringify({
-        success: true,
-        hotSheetName: hotSheet.name,
-        agentName: agentProfile
-          ? `${agentProfile.first_name} ${agentProfile.last_name}`.trim()
-          : null,
-        agentCompany: agentProfile?.company || null,
-        listings: listings || [],
-      }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
-    );
   } catch (error: any) {
     console.error("[get-hotsheet-preview] Error:", error);
     return new Response(

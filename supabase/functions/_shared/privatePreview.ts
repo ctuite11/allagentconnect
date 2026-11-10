@@ -1,0 +1,5 @@
+export const PRIVATE_PREVIEW_HTML = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Private shared link | All Agent Connect</title><meta name="robots" content="noindex,nofollow,noarchive"><meta name="referrer" content="no-referrer"><meta name="description" content="Secure access through All Agent Connect."><meta property="og:title" content="Private shared link | All Agent Connect"><meta property="og:description" content="Secure access through All Agent Connect."><meta property="og:image" content="https://allagentconnect.com/og/aac-og-2026-01-22.jpg"><meta name="twitter:card" content="summary"><meta name="twitter:title" content="Private shared link | All Agent Connect"><meta name="twitter:description" content="Secure access through All Agent Connect."></head><body><h1>Private shared link</h1><p>Open your secure link to continue.</p></body></html>`;
+export const PRIVATE_PREVIEW_HEADERS = {
+  "Content-Type": "text/html; charset=utf-8", "Cache-Control": "private, no-store",
+  "X-Robots-Tag": "noindex, nofollow, noarchive", "Referrer-Policy": "no-referrer",
+};
