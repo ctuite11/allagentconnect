@@ -21,6 +21,14 @@ interface BulkEmailRequest {
   sendAsGroup?: boolean;
   template?: string;
   /**
+   * Admin-only custom member send. Used by the Admin → Email Selected Agents
+   * composer so one-recipient tests and full member announcements use the
+   * same HTML renderer while the general bulk-outreach pause remains active.
+   * This flag is never trusted by itself; the handler verifies the bearer
+   * token and admin role server-side before honoring it.
+   */
+  adminMemberSend?: boolean;
+  /**
    * Diagnostic mode — bypasses the BULK_OUTREACH_PAUSED gate for a single
    * stripped-down one-recipient test. Sends minimal HTML (plain copy + a
    * single direct AAC link + visible unsubscribe). Used to isolate whether
@@ -535,7 +543,63 @@ const handler = async (req: Request): Promise<Response> => {
     const isProfileReminder = body.template === "profile-reminder";
     const isJoinInvitation = body.template === "join-invitation";
 
-    if (BULK_OUTREACH_PAUSED && !isDiagnostic && !isProfileReminder && !isJoinInvitation) {
+    // Narrow admin-only bypass for custom member communications.
+    // General bulk outreach remains paused. The client flag is not trusted:
+    // verify the bearer token, require admin role, and require agentId to
+    // match the authenticated admin before bypassing the pause gate.
+    let isAuthorizedAdminMemberSend = false;
+    const wantsAdminMemberSend = body.adminMemberSend === true && !body.template;
+    if (wantsAdminMemberSend) {
+      const authHeader = req.headers.get("Authorization") ?? "";
+      const token = authHeader.replace(/^Bearer\s+/i, "").trim();
+
+      if (!token) {
+        return new Response(
+          JSON.stringify({ error: "Session expired, please sign in again" }),
+          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+
+      const { data: userData, error: userError } = await supabase.auth.getUser(token);
+      const authUser = userData?.user ?? null;
+      if (userError || !authUser) {
+        console.warn("[send-bulk-email] admin member send auth rejected:", userError?.message ?? "no user");
+        return new Response(
+          JSON.stringify({ error: "Session expired, please sign in again" }),
+          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+
+      if (body.agentId !== authUser.id) {
+        console.warn("[send-bulk-email] admin member send agentId mismatch");
+        return new Response(
+          JSON.stringify({ error: "Invalid sender identity" }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+
+      const { data: isAdmin, error: roleError } = await supabase.rpc("has_role", {
+        _user_id: authUser.id,
+        _role: "admin",
+      });
+      if (roleError || isAdmin !== true) {
+        console.warn("[send-bulk-email] admin member send role denied:", roleError?.message ?? "");
+        return new Response(
+          JSON.stringify({ error: "Admin access required" }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+
+      isAuthorizedAdminMemberSend = true;
+    }
+
+    if (
+      BULK_OUTREACH_PAUSED &&
+      !isDiagnostic &&
+      !isProfileReminder &&
+      !isJoinInvitation &&
+      !isAuthorizedAdminMemberSend
+    ) {
       return new Response(
         JSON.stringify({
           error: "Bulk outreach is temporarily paused to protect email deliverability.",
