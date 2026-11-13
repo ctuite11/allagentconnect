@@ -112,11 +112,17 @@ export function EmailAgentDialog({
           if (error) throw error;
         }
       } else {
-      // Single-agent custom message path uses the dedicated agent-contact
-      // function so it isn't blocked by the bulk-outreach pause.
-      const isSingleCustom =
-        currentBatch.length === 1 && (!isTemplated) && template === "custom";
-      if ((!showTemplatePicker && currentBatch.length === 1) || isSingleCustom) {
+      // Direct listing/agent-contact dialogs keep using the dedicated 1:1
+      // profile-contact function. The admin bulk composer must use the bulk
+      // pipeline even when only one recipient is selected so a one-recipient
+      // test renders exactly like the eventual bulk send (including inserted
+      // images/links and the same unsubscribe/footer handling).
+      const useDirectProfileContact =
+        !showTemplatePicker &&
+        currentBatch.length === 1 &&
+        !isTemplated &&
+        template === "custom";
+      if (useDirectProfileContact) {
         const recipient = currentBatch[0];
         const { error } = await supabase.functions.invoke("send-agent-profile-contact", {
           body: {
