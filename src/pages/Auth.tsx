@@ -28,6 +28,12 @@ import {
 } from "@/lib/sharedListingGuest";
 import { isVerifiedAgentEmail, VERIFIED_AGENT_SIGNIN_HINT } from "@/lib/agentActivationHint";
 import { clearRecoveryState } from "@/lib/authRecovery";
+import { FunctionsHttpError } from "@supabase/supabase-js";
+import {
+  interpretRequestAccessResponse,
+  requestAccessFailure,
+  type RequestAccessOutcome,
+} from "@/lib/requestAccessOutcome";
 
 /** Premium white card — email-template aligned (soft border, subtle shadow). */
 const authCardSurface =
@@ -576,10 +582,9 @@ const Auth = () => {
       return;
     }
 
-    if (!navigator.onLine) {
-      toast.error("No internet connection. Please check your network and try again.");
-      return;
-    }
+    // Do NOT pre-check navigator.onLine: in-app browsers (e.g. Facebook's)
+    // can report "offline" while connected, which blocked real agents. Always
+    // attempt the request and rely on the actual response.
 
     cancelledRef.current = false;
     abortRef.current?.abort();
@@ -643,32 +648,26 @@ const Auth = () => {
         "Submit request"
       );
 
+      let outcome: RequestAccessOutcome;
       if (fnError) {
         console.error('[REGISTER] submit-agent-verification-request error:', fnError);
-        toast.error("Couldn't submit your request. Please try again.");
-        return;
+        if (fnError instanceof FunctionsHttpError) {
+          // The server answered with a non-2xx status — use its explanation.
+          let body: unknown = null;
+          try { body = await fnError.context.json(); } catch { /* no body */ }
+          outcome = interpretRequestAccessResponse(body);
+        } else {
+          // The request never got a server answer (connection / relay failure).
+          outcome = requestAccessFailure("network");
+        }
+      } else {
+        outcome = interpretRequestAccessResponse(data);
       }
 
-      const result = (data ?? {}) as {
-        ok?: boolean;
-        code?: string;
-        message?: string;
-        error?: string;
-        errors?: string[];
-      };
-
-      switch (result.code) {
-        case "submitted":
-          toast.success("Request received. We'll email you when your license is verified.");
-          submissionSucceeded = true;
-          if (!didNavigate.current) {
-            didNavigate.current = true;
-            navigate('/pending-verification?submitted=1', { replace: true });
-          }
-          return;
-
-        case "already_pending":
-          toast.info(result.message || "We already have your request on file. We'll be in touch shortly.");
+      switch (outcome.kind) {
+        case "received":
+          if (outcome.alreadyOnFile) toast.info(outcome.message);
+          else toast.success(outcome.message);
           submissionSucceeded = true;
           if (!didNavigate.current) {
             didNavigate.current = true;
@@ -677,25 +676,21 @@ const Auth = () => {
           return;
 
         case "account_exists":
-          toast.error("An account with this email already exists. Please sign in.");
+          toast.error(outcome.message);
           // Break the "reset-password loop" — do NOT push to recovery.
           // Flip to sign-in with email prefilled.
           switchMode("signin");
           setEmail(validatedEmail);
           return;
 
-        case "validation_failed":
-          toast.error(result.errors?.[0] || result.error || "Please review your submission.");
-          return;
-
         case "turnstile_failed":
-          toast.error(result.error || "Verification failed. Please refresh and try again.");
+          toast.error(outcome.message);
           turnstile.reset();
           return;
 
         default:
-          console.error('[REGISTER] Unexpected response:', result);
-          toast.error(result.error || "Something went wrong. Please try again.");
+          // Form fields are left untouched so the agent can simply retry.
+          toast.error(outcome.message, { duration: 10000 });
           return;
       }
     } catch (error: any) {
@@ -704,20 +699,12 @@ const Auth = () => {
       if (error instanceof z.ZodError) {
         toast.error(error.errors[0].message);
       } else if (error.message?.includes('timed out')) {
-        // The backend records the request and notifies admin in well under a
-        // second; a client-side timeout here means the response was lost in
-        // transit, not that the submission failed. Submitting again is safe
-        // (idempotent), but sending the agent to an error state is misleading.
-        toast.info(
-          "Your request was submitted. If you don't hear from us shortly, contact support."
-        );
-        submissionSucceeded = true;
-        if (!didNavigate.current) {
-          didNavigate.current = true;
-          navigate('/pending-verification?submitted=1', { replace: true });
-        }
+        // No server confirmation arrived, so never claim success. Retrying is
+        // safe: the server de-duplicates open requests by email and answers
+        // "already_pending" if the first attempt did land.
+        toast.error(requestAccessFailure("timeout").message, { duration: 10000 });
       } else {
-        toast.error(error.message || "Failed to submit request. Please try again.");
+        toast.error(requestAccessFailure("network").message, { duration: 10000 });
       }
     } finally {
       if (!submissionSucceeded) {
