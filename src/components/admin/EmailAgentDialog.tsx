@@ -145,6 +145,10 @@ export function EmailAgentDialog({
             agentId: user.id,
             agentEmail: senderEmail.trim() || undefined,
             sendAsGroup: false,
+            // Admin member announcements/tests use the bulk renderer even for
+            // one recipient. The backend verifies admin role before allowing
+            // this custom-message path through the bulk-outreach pause gate.
+            adminMemberSend: showTemplatePicker && template === "custom",
             template: isTemplated
               ? template
               : template === "profile-reminder"
